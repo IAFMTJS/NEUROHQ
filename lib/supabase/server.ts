@@ -21,9 +21,12 @@ export const createClient = cache(async () => {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
   if (!supabaseUrl || !supabaseAnonKey) {
-    throw new Error("Missing Supabase config. Set NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY in Vercel → Project → Settings → Environment Variables.");
+    const err = new Error("Missing Supabase config. Set NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY in Vercel → Project → Settings → Environment Variables.");
+    console.error("[Supabase server]", err.message);
+    throw err;
   }
-  return createServerClient(supabaseUrl, supabaseAnonKey, {
+  try {
+    return createServerClient(supabaseUrl, supabaseAnonKey, {
     cookies: {
       getAll() {
         return cookieStore.getAll();
@@ -43,4 +46,8 @@ export const createClient = cache(async () => {
       },
     },
   });
+  } catch (e) {
+    console.error("[Supabase server]", e instanceof Error ? e.message : e);
+    throw e;
+  }
 });
