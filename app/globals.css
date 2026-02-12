@@ -1,0 +1,15 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --neuro-silver: #c0c0c0;
+  --neuro-blue: #3b82f6;
+  --neuro-dark: #0a0a0a;
+  --neuro-surface: #141414;
+}
+
+body {
+  background-color: var(--neuro-dark);
+  color: var(--neuro-silver);
+}
