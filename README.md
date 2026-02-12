@@ -93,7 +93,7 @@ See `.env.example`. Required:
 3. Add **CRON_SECRET** in Vercel and (optional) in Vercel Cron config set “Authorization: Bearer \<CRON_SECRET\>” for cron invocations.  
 4. Cron routes (send `Authorization: Bearer <CRON_SECRET>` if set):
    - **Daily** (`/api/cron/daily`) — 00:00 UTC: rollover + quote for users without timezone; freeze reminders, avoidance alert
-   - **Hourly** (`/api/cron/hourly`) — every hour: rollover + quote for users with timezone when it’s 00:00 in their TZ
+   - **Hourly** (`/api/cron/hourly`) — not scheduled on Vercel Hobby (limit: 1 run/day). Endpoint exists for manual/Pro use: rollover + quote for users with timezone when it’s 00:00 in their TZ
    - **Evening** (`/api/cron/evening`) — 21:00 UTC: shutdown reminder
    - **Weekly** (`/api/cron/weekly`) — Monday 09:00 UTC: reality report, learning reminder, savings alert
    - **Quarterly** (`/api/cron/quarterly`) — 1st of Jan/Apr/Jul/Oct 06:00 UTC: ensure current quarter strategy row per user

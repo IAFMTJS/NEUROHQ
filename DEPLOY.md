@@ -106,7 +106,7 @@ Push to the connected branch or click Deploy. Wait for build to succeed.
 
 ### 3.4 Cron jobs (Vercel)
 
-Crons are defined in `vercel.json`. Ensure they are enabled in Vercel (Pro plan may be required for crons). To authorize cron invocations, set **CRON_SECRET** and in Vercel Cron configuration (if available) set header: `Authorization: Bearer <CRON_SECRET>`.
+Crons are defined in `vercel.json`. **Hobby plan:** Vercel allows only one run per day per cron; the hourly job is not in `vercel.json` so the project deploys. Timezone-aware rollover (hourly) can be triggered manually or use Pro/external cron. **Pro plan:** you can add the hourly cron back (`"schedule": "0 * * * *"` for `/api/cron/hourly`). To authorize cron invocations, set **CRON_SECRET** and in Vercel Cron configuration (if available) set header: `Authorization: Bearer <CRON_SECRET>`.
 
 ---
 
@@ -154,13 +154,35 @@ Run through this after deploy (or locally) to validate core flows.
 If you have **CRON_SECRET** and a way to call APIs (e.g. curl or Vercel Cron logs):
 
 - [ ] `GET /api/cron/daily` with `Authorization: Bearer <CRON_SECRET>` returns 200 and JSON (`ok: true`, `job: "daily"`). In Supabase, next day’s date: incomplete tasks from yesterday have moved to today and `carry_over_count` increased.
-- [ ] `GET /api/cron/hourly` with auth: 200. For users with `timezone` set, when it’s 00:00 in that TZ, rollover and quote run (check `users.last_rollover_date` and push logs).
+- [ ] `GET /api/cron/hourly` with auth: 200 (not scheduled on Hobby; use for manual or Pro). For users with `timezone` set, when it’s 00:00 in that TZ, rollover and quote run (check `users.last_rollover_date` and push logs).
 - [ ] `GET /api/cron/weekly` with auth: 200. `reality_reports` has new rows for last week; learning/savings push sent if conditions met.
 - [ ] `GET /api/cron/evening` with auth: 200. Shutdown reminder push sent (if push enabled).
 
 ---
 
 ## 5. Troubleshooting
+
+### 5.1 Git push not triggering Vercel deployment
+
+If pushing to Git does **not** create an automatic deployment on Vercel:
+
+1. **Confirm the project uses Git (not upload)**  
+   Vercel → Your Project → **Settings** → **Git**.  
+   It must show a connected repository (e.g. `IAFMTJS/NEUROHQ`). If it says “No Git repository connected”, the project was created without Git. Either:
+   - **Reconnect:** Settings → Git → Connect Git Repository and choose the repo, or  
+   - Create a **new** Vercel project via **Add New → Project** and **Import** the same Git repo.
+
+2. **Check the production branch**  
+   Settings → Git → **Production Branch**. It must match the branch you push to (e.g. `main`). Pushes to other branches create **Preview** deployments only if “Preview” deployments are enabled for that branch.
+
+3. **Reconnect GitHub (if repo is on GitHub)**  
+   [Vercel → Account Settings → Integrations](https://vercel.com/account/integrations) → **GitHub** → Configure. Ensure the **NEUROHQ** repo (or the org that owns it) is allowed. If you recently moved the repo or changed permissions, disconnect and reconnect the integration, then in the project go to Settings → Git and confirm the repo is linked.
+
+4. **Check GitHub webhooks**  
+   On GitHub: repo **Settings → Webhooks**. You should see a webhook for `https://api.vercel.com/...` (Vercel). If it’s missing, reconnect the Vercel Git integration (step 3); Vercel will recreate the webhook.
+
+5. **Trigger a deploy manually**  
+   Vercel → Project → **Deployments** → **Deploy** (or “Redeploy” latest). If manual deploy works but push doesn’t, the issue is Git/webhook or production-branch related.
 
 - **Redirect loop:** Check middleware: protected paths redirect to `/login`; after login redirect to `/dashboard` or `/`.
 - **RLS errors:** Ensure migrations 002 (RLS) and 003 ran; policies use `auth.uid() = user_id`.

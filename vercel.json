@@ -18,10 +18,6 @@
     {
       "path": "/api/cron/evening",
       "schedule": "0 21 * * *"
-    },
-    {
-      "path": "/api/cron/hourly",
-      "schedule": "0 * * * *"
     }
   ]
 }
