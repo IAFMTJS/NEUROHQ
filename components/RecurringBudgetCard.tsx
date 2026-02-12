@@ -43,11 +43,11 @@ export function RecurringBudgetCard({
     const next = nextDate || new Date().toISOString().slice(0, 10);
     const dayM = rule === "monthly" ? parseInt(dayOfMonth, 10) : null;
     const dayW = rule === "weekly" ? parseInt(dayOfWeek, 10) : null;
-    if (rule === "monthly" && (dayM < 1 || dayM > 31)) {
+    if (rule === "monthly" && (dayM == null || dayM < 1 || dayM > 31)) {
       setError("Day of month must be 1–31.");
       return;
     }
-    if (rule === "weekly" && (dayW < 0 || dayW > 6)) {
+    if (rule === "weekly" && (dayW == null || dayW < 0 || dayW > 6)) {
       setError("Day of week must be 0 (Sun)–6 (Sat).");
       return;
     }

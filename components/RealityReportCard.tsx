@@ -4,8 +4,8 @@ import { formatCents } from "@/lib/utils/currency";
 
 export function RealityReportCard({ report }: { report: RealityReport }) {
   const budgetRemaining = "budgetRemainingCents" in report ? report.budgetRemainingCents : null;
-  const budgetSpent = "budgetSpentCents" in report ? report.budgetSpentCents : 0;
-  const currency = "currency" in report ? report.currency : "EUR";
+  const budgetSpent = ("budgetSpentCents" in report ? report.budgetSpentCents : undefined) ?? 0;
+  const currency = ("currency" in report ? report.currency : undefined) ?? "EUR";
 
   return (
     <div className="card-modern overflow-hidden p-0">
@@ -38,7 +38,7 @@ export function RealityReportCard({ report }: { report: RealityReport }) {
           <div className="flex justify-between">
             <dt className="text-neuro-muted">Budget (month)</dt>
             <dd className={budgetRemaining >= 0 ? "text-neuro-silver" : "text-amber-400"}>
-              {formatCents(budgetRemaining, currency)} remaining · {formatCents(-budgetSpent, currency)} spent
+              {formatCents(budgetRemaining, currency)} remaining · {formatCents(-(budgetSpent ?? 0), currency)} spent
             </dd>
           </div>
         )}
