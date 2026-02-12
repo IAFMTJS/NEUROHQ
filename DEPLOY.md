@@ -207,6 +207,7 @@ If pushing to Git does **not** create an automatic deployment on Vercel:
 5. **Trigger a deploy manually**  
    Vercel → Project → **Deployments** → **Deploy** (or “Redeploy” latest). If manual deploy works but push doesn’t, the issue is Git/webhook or production-branch related.
 
+- **“Something went wrong” / Server Components error after deploy:** Next.js hides the real error in production. Most often the cause is **missing env vars on Vercel**. In Vercel → Project → **Settings** → **Environment Variables**, add **NEXT_PUBLIC_SUPABASE_URL** and **NEXT_PUBLIC_SUPABASE_ANON_KEY** (from Supabase Project Settings → API), then **redeploy**. The error page will also show a short checklist. If env vars are set, run all migrations in Supabase SQL Editor (see §1.4).
 - **Redirect loop:** Check middleware: protected paths redirect to `/login`; after login redirect to `/dashboard` or `/`.
 - **RLS errors:** Ensure migrations 002 (RLS) and 003 ran; policies use `auth.uid() = user_id`.
 - **No quote on dashboard:** Ensure migration 005 (quotes seed) ran and `quotes` has rows for id 1–365.
