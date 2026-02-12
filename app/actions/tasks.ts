@@ -70,8 +70,8 @@ export async function getTasksForDate(date: string) {
 export async function createTask(params: {
   title: string;
   due_date: string;
-  energy_required?: number;
-  priority?: number;
+  energy_required?: number | null;
+  priority?: number | null;
   parent_task_id?: string | null;
   recurrence_rule?: "daily" | "weekly" | "monthly" | null;
   recurrence_weekdays?: string | null;

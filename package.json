@@ -6,6 +6,7 @@
     "dev": "node -e \"console.log('\\n=== NEUROHQ dev server – watch THIS terminal for compilation (✓ Compiled) and errors (⨯ Error) ===\\n')\" && next dev -p 3000",
     "start": "next dev -p 3000",
     "build": "next build",
+    "deploy:check": "next build",
     "serve": "next start -p 3000",
     "serve:prod": "next start -p 3001",
     "lint": "next lint",

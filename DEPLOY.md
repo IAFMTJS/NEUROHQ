@@ -4,6 +4,29 @@ Step-by-step Supabase + Vercel setup and smoke test checklist. Use this for firs
 
 ---
 
+## 0. Before you push — avoid Vercel build failures
+
+**Always run a full production build locally before pushing** so you catch the same TypeScript and build errors Vercel will run:
+
+```bash
+npm run build
+```
+
+If the build fails locally, it will fail on Vercel. Fix any TypeScript or compile errors, then push.
+
+**Common causes of failed Vercel builds (and how to avoid them):**
+
+| Cause | What to do |
+|-------|------------|
+| **Strict null (TS)** | “X is possibly null” or “Type 'number \| null' is not assignable to 'number \| undefined'”. Use optional chaining (`obj?.prop`) for possibly-null objects, and align types: action params that receive `null` from forms should be typed `number \| null` (or `undefined`), not just `number`. |
+| **Peer dependency conflict** | `ERESOLVE` during `npm install`. Align versions (e.g. `eslint-config-next@16` needs `eslint@>=9`). Run `npm install` locally and commit `package.json` + `package-lock.json`. |
+| **Cron schedule (Hobby)** | Vercel Hobby allows only one run per day per cron. Remove or comment out any cron with a schedule that runs more than once per day (e.g. hourly `0 * * * *`) from `vercel.json`. |
+| **Middleware deprecation** | Next.js 16 warns that `middleware` is deprecated in favor of `proxy`. The app still builds; to remove the warning later, migrate to `proxy.ts` and the `proxy()` export when ready. |
+
+Run **`npm run deploy:check`** before pushing (runs `next build` only). On Windows with the project on a non-C: drive, `next lint` can fail with “Invalid project directory provided”; `deploy:check` skips lint so the build still runs. To lint locally, use **`npx eslint .`** or run the project from C: or WSL.
+
+---
+
 ## 1. Supabase setup
 
 ### 1.1 Create project
