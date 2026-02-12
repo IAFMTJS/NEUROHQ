@@ -49,7 +49,7 @@ export function StrategySummaryCard({ strategy, goals, year, quarter }: Props) {
           <div>
             <p className="text-xs font-medium uppercase tracking-wide text-neuro-muted">Themes</p>
             <p className="mt-1 text-sm text-neuro-silver">
-              {[strategy.primary_theme, strategy.secondary_theme].filter(Boolean).join(" · ")}
+              {[strategy?.primary_theme, strategy?.secondary_theme].filter(Boolean).join(" · ")}
             </p>
           </div>
         )}
@@ -57,7 +57,7 @@ export function StrategySummaryCard({ strategy, goals, year, quarter }: Props) {
           <div>
             <p className="text-xs font-medium uppercase tracking-wide text-neuro-muted">Identity</p>
             <p className="mt-1 text-sm italic leading-relaxed text-neuro-silver">
-              &ldquo;{strategy.identity_statement}&rdquo;
+              &ldquo;{strategy?.identity_statement}&rdquo;
             </p>
           </div>
         )}
