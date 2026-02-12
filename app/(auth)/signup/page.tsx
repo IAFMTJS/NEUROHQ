@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { createClient } from "@/lib/supabase/client";
 
 export default function SignupPage() {
@@ -27,13 +28,13 @@ export default function SignupPage() {
 
   if (success) {
     return (
-      <main className="flex min-h-screen flex-col items-center justify-center p-6">
-        <div className="w-full max-w-sm space-y-4 text-center">
+      <main className="w-full max-w-[400px]">
+        <div className="card-modern p-6 sm:p-8 text-center space-y-4">
           <h1 className="text-xl font-bold text-neuro-silver">Check your email</h1>
           <p className="text-sm text-neutral-400">
             We sent a confirmation link to {email}. Click it to activate your account, then sign in.
           </p>
-          <Link href="/login" className="inline-block text-neuro-blue hover:underline">
+          <Link href="/login" className="inline-block font-medium text-neuro-blue hover:underline">
             Back to sign in
           </Link>
         </div>
@@ -42,15 +43,16 @@ export default function SignupPage() {
   }
 
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center p-6">
-      <div className="w-full max-w-sm space-y-8">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold text-neuro-silver">
-            NEURO<span className="text-neuro-blue">HQ</span>
-          </h1>
-          <p className="mt-2 text-sm text-neutral-400">Create your account</p>
+    <main className="w-full max-w-[400px]">
+      <div className="card-modern p-6 sm:p-8">
+        <div className="text-center mb-8">
+          <div className="flex flex-col items-center gap-3">
+            <Image src="/app-icon.png" alt="" width={40} height={40} className="mx-auto h-10 w-10 rounded-lg object-contain" priority />
+            <Image src="/logo-naam.png" alt="NEUROHQ" width={160} height={42} className="mx-auto mt-2 h-9 w-auto object-contain" priority />
+          </div>
+          <p className="mt-3 text-sm text-neutral-400">Create your account</p>
         </div>
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-5">
           <div>
             <label htmlFor="email" className="block text-sm font-medium text-neutral-300">
               Email
@@ -58,10 +60,11 @@ export default function SignupPage() {
             <input
               id="email"
               type="email"
+              autoComplete="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
-              className="mt-1 w-full rounded border border-neutral-600 bg-neuro-surface px-3 py-2 text-white placeholder-neutral-500 focus:border-neuro-blue focus:outline-none focus:ring-1 focus:ring-neuro-blue"
+              className="mt-1.5 w-full rounded-lg border border-neuro-border bg-[#0d1117] px-3 py-2.5 text-neuro-silver placeholder-neuro-muted focus:border-neuro-blue focus:outline-none focus:ring-1 focus:ring-neuro-blue"
               placeholder="you@example.com"
             />
           </div>
@@ -72,28 +75,31 @@ export default function SignupPage() {
             <input
               id="password"
               type="password"
+              autoComplete="new-password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
               minLength={6}
-              className="mt-1 w-full rounded border border-neutral-600 bg-neuro-surface px-3 py-2 text-white placeholder-neutral-500 focus:border-neuro-blue focus:outline-none focus:ring-1 focus:ring-neuro-blue"
+              className="mt-1.5 w-full rounded-lg border border-neuro-border bg-[#0d1117] px-3 py-2.5 text-neuro-silver placeholder-neuro-muted focus:border-neuro-blue focus:outline-none focus:ring-1 focus:ring-neuro-blue"
               placeholder="At least 6 characters"
             />
           </div>
           {error && (
-            <p className="text-sm text-red-400">{error}</p>
+            <p className="rounded-lg bg-red-500/10 px-3 py-2 text-sm text-red-400" role="alert">
+              {error}
+            </p>
           )}
           <button
             type="submit"
             disabled={loading}
-            className="w-full rounded bg-neuro-blue py-2 font-medium text-white transition hover:opacity-90 disabled:opacity-50"
+            className="btn-primary w-full cursor-pointer py-3 disabled:cursor-not-allowed disabled:opacity-50"
           >
             {loading ? "Creating account…" : "Sign up"}
           </button>
         </form>
-        <p className="text-center text-sm text-neutral-400">
+        <p className="mt-6 text-center text-sm text-neutral-400">
           Already have an account?{" "}
-          <Link href="/login" className="text-neuro-blue hover:underline">
+          <Link href="/login" className="font-medium text-neuro-blue hover:underline">
             Sign in
           </Link>
         </p>

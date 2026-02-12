@@ -1,7 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import { ensureUserProfile } from "@/app/actions/auth";
-import { DashboardNav } from "@/components/DashboardNav";
+import { AppHeader, BottomNav } from "@/components/DashboardNav";
 
 export default async function DashboardLayout({
   children,
@@ -14,9 +14,17 @@ export default async function DashboardLayout({
   await ensureUserProfile(user.id, user.email);
 
   return (
-    <div className="flex min-h-screen flex-col bg-neuro-dark md:flex-row">
-      <DashboardNav />
-      <main className="flex-1 p-4 md:p-6 lg:p-8">{children}</main>
+    <div className="min-h-screen bg-neuro-dark">
+      <div className="mx-auto flex min-h-screen max-w-[420px] flex-col bg-neuro-dark md:min-h-[640px]">
+        <a href="#main-content" className="skip-link">
+          Skip to main content
+        </a>
+        <AppHeader />
+        <main id="main-content" className="main-with-footer flex-1 overflow-auto p-4" tabIndex={-1}>
+          {children}
+        </main>
+        <BottomNav />
+      </div>
     </div>
   );
 }

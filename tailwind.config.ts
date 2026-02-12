@@ -8,13 +8,18 @@ const config: Config = {
   ],
   theme: {
     extend: {
+      fontFamily: {
+        sans: ["var(--font-sans)", "system-ui", "sans-serif"],
+      },
       colors: {
-        // NEUROHQ brand: silver/grey + blue accent (see Logo Naam)
         neuro: {
-          silver: "#c0c0c0",
-          blue: "#3b82f6",
-          dark: "#0a0a0a",
-          surface: "#141414",
+          silver: "#e6edf3",
+          blue: "#58a6ff",
+          "blue-light": "#79c0ff",
+          dark: "#0d1117",
+          surface: "#161b22",
+          border: "#21262d",
+          muted: "#8b949e",
         },
       },
     },

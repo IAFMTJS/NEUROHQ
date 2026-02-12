@@ -1,10 +1,16 @@
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
+import { SettingsExport } from "@/components/SettingsExport";
+import { SettingsPush } from "@/components/SettingsPush";
+import { SettingsDeleteAccount } from "@/components/SettingsDeleteAccount";
+import { SettingsGoogleCalendar } from "@/components/SettingsGoogleCalendar";
+import { hasGoogleCalendarToken } from "@/app/actions/calendar";
 
 export default async function SettingsPage() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/login");
+  const hasGoogle = await hasGoogleCalendarToken();
 
   return (
     <div className="space-y-6">
@@ -13,6 +19,10 @@ export default async function SettingsPage() {
         <h2 className="text-sm font-medium text-neuro-silver">Account</h2>
         <p className="mt-2 text-sm text-neutral-400">{user.email}</p>
       </div>
+      <SettingsPush />
+      <SettingsExport />
+      <SettingsDeleteAccount />
+      <SettingsGoogleCalendar hasToken={hasGoogle} />
       <div className="rounded-lg border border-neutral-700 bg-neuro-surface p-4">
         <h2 className="text-sm font-medium text-neuro-silver">About</h2>
         <p className="mt-2 text-sm text-neutral-400">

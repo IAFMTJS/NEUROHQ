@@ -1,7 +1,5 @@
-import { getDayOfYear } from "date-fns";
-import { getTasksForDate } from "@/app/actions/tasks";
+import { getTodaysTasks, getSubtasksForTaskIds, type TaskListMode } from "@/app/actions/tasks";
 import { getMode } from "@/app/actions/mode";
-import { getCarryOverCountForDate } from "@/app/actions/tasks";
 import { TaskList } from "@/components/TaskList";
 import { ModeBanner } from "@/components/ModeBanner";
 
@@ -9,8 +7,15 @@ export default async function TasksPage() {
   const today = new Date();
   const dateStr = today.toISOString().slice(0, 10);
   const mode = await getMode(dateStr);
-  const tasks = await getTasksForDate(dateStr);
-  const carryOverCount = await getCarryOverCountForDate(dateStr);
+  const taskMode: TaskListMode = mode === "stabilize" ? "stabilize" : mode === "low_energy" ? "low_energy" : mode === "driven" ? "driven" : "normal";
+  const { tasks, carryOverCount } = await getTodaysTasks(dateStr, taskMode);
+  const subtaskRows = await getSubtasksForTaskIds(tasks.map((t) => t.id));
+  const subtasksByParent: Record<string, typeof subtaskRows> = {};
+  for (const s of subtaskRows) {
+    const pid = s.parent_task_id;
+    if (!subtasksByParent[pid]) subtasksByParent[pid] = [];
+    subtasksByParent[pid].push(s);
+  }
 
   return (
     <div className="space-y-6">
@@ -22,8 +27,9 @@ export default async function TasksPage() {
       <TaskList
         date={dateStr}
         tasks={tasks as import("@/types/database.types").Task[]}
-        mode={mode === "stabilize" ? "stabilize" : mode === "low_energy" ? "low_energy" : "normal"}
+        mode={taskMode}
         carryOverCount={carryOverCount}
+        subtasksByParent={subtasksByParent}
       />
     </div>
   );

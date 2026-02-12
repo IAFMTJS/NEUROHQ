@@ -14,6 +14,62 @@ type Props = {
   };
 };
 
+const DIMENSIONS = [
+  { key: "energy" as const, label: "Energy" },
+  { key: "focus" as const, label: "Focus" },
+  { key: "sensory" as const, label: "Sensory load" },
+  { key: "social" as const, label: "Social load" },
+];
+
+function SliderRow({
+  label,
+  value,
+  onChange,
+  min = 1,
+  max = 10,
+}: {
+  label: string;
+  value: number;
+  onChange: (n: number) => void;
+  min?: number;
+  max?: number;
+}) {
+  const pct = ((value - min) / (max - min)) * 100;
+  return (
+    <div>
+      <div className="flex items-center justify-between text-sm">
+        <span className="font-medium text-neuro-silver">{label}</span>
+        <span className="tabular-nums text-neuro-muted">{value}</span>
+      </div>
+      <input
+        type="range"
+        min={min}
+        max={max}
+        value={value}
+        onChange={(e) => onChange(Number(e.target.value))}
+        className="daily-state-slider mt-1.5 h-2 w-full cursor-pointer appearance-none rounded-full bg-neuro-border focus:outline-none focus:ring-2 focus:ring-neuro-blue focus:ring-offset-2 focus:ring-offset-neuro-surface"
+        style={{
+          background: `linear-gradient(to right, #58a6ff 0%, #58a6ff ${pct}%, var(--neuro-border) ${pct}%, var(--neuro-border) 100%)`,
+        }}
+        aria-label={`${label}: ${value} out of ${max}`}
+      />
+    </div>
+  );
+}
+
+function summaryLine(energy: number, focus: number, sleep: string) {
+  const sleepNum = sleep ? parseFloat(sleep) : null;
+  const parts: string[] = [];
+  if (energy >= 7) parts.push("good energy");
+  else if (energy >= 4) parts.push("moderate energy");
+  else parts.push("low energy");
+  if (focus >= 7) parts.push("focused");
+  else if (focus >= 4) parts.push("some focus");
+  if (sleepNum !== null && sleepNum >= 7) parts.push("rested");
+  else if (sleepNum !== null && sleepNum < 5) parts.push("short sleep");
+  return parts.length ? `You're ${parts.join(" · ")} today.` : "Set your check-in to see your day at a glance.";
+}
+
 export function DailyStateForm({ date, initial }: Props) {
   const [energy, setEnergy] = useState(initial.energy ?? 5);
   const [focus, setFocus] = useState(initial.focus ?? 5);
@@ -35,86 +91,66 @@ export function DailyStateForm({ date, initial }: Props) {
         social_load: social,
       });
       setSaved(true);
-      setTimeout(() => setSaved(false), 2000);
+      setTimeout(() => setSaved(false), 2500);
     });
   }
 
+  const summary = summaryLine(energy, focus, sleep);
+
   return (
-    <form onSubmit={handleSubmit} className="rounded-lg border border-neutral-700 bg-neuro-surface p-4">
-      <h2 className="mb-3 text-sm font-medium text-neuro-silver">Today&apos;s state</h2>
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
-        <div>
-          <label className="block text-xs text-neutral-400">Energy (1–10)</label>
-          <input
-            type="range"
-            min={1}
-            max={10}
-            value={energy}
-            onChange={(e) => setEnergy(Number(e.target.value))}
-            className="mt-1 w-full accent-neuro-blue"
-          />
-          <span className="text-sm text-neutral-300">{energy}</span>
-        </div>
-        <div>
-          <label className="block text-xs text-neutral-400">Focus (1–10)</label>
-          <input
-            type="range"
-            min={1}
-            max={10}
-            value={focus}
-            onChange={(e) => setFocus(Number(e.target.value))}
-            className="mt-1 w-full accent-neuro-blue"
-          />
-          <span className="text-sm text-neutral-300">{focus}</span>
-        </div>
-        <div>
-          <label className="block text-xs text-neutral-400">Sensory load (1–10)</label>
-          <input
-            type="range"
-            min={1}
-            max={10}
-            value={sensory}
-            onChange={(e) => setSensory(Number(e.target.value))}
-            className="mt-1 w-full accent-neuro-blue"
-          />
-          <span className="text-sm text-neutral-300">{sensory}</span>
-        </div>
-        <div>
-          <label className="block text-xs text-neutral-400">Sleep (hours)</label>
-          <input
-            type="number"
-            min={0}
-            max={24}
-            step={0.5}
-            value={sleep}
-            onChange={(e) => setSleep(e.target.value)}
-            className="mt-1 w-full rounded border border-neutral-600 bg-neuro-dark px-2 py-1 text-sm text-white"
-            placeholder="7"
-          />
-        </div>
-        <div>
-          <label className="block text-xs text-neutral-400">Social load (1–10)</label>
-          <input
-            type="range"
-            min={1}
-            max={10}
-            value={social}
-            onChange={(e) => setSocial(Number(e.target.value))}
-            className="mt-1 w-full accent-neuro-blue"
-          />
-          <span className="text-sm text-neutral-300">{social}</span>
-        </div>
+    <section className="card-modern overflow-hidden" aria-labelledby="daily-state-heading">
+      <div className="border-b border-neuro-border px-4 py-3">
+        <h2 id="daily-state-heading" className="text-base font-semibold text-neuro-silver">
+          How are you today?
+        </h2>
+        <p className="mt-1 text-sm text-neuro-muted">{summary}</p>
       </div>
-      <div className="mt-3 flex items-center gap-2">
-        <button
-          type="submit"
-          disabled={pending}
-          className="rounded bg-neuro-blue px-3 py-1.5 text-sm font-medium text-white hover:opacity-90 disabled:opacity-50"
-        >
-          {pending ? "Saving…" : "Save"}
-        </button>
-        {saved && <span className="text-xs text-green-400">Saved</span>}
-      </div>
-    </form>
+      <form onSubmit={handleSubmit} className="p-4">
+        <div className="space-y-4">
+          {DIMENSIONS.map((d) => (
+            <SliderRow
+              key={d.key}
+              label={d.label}
+              value={
+                d.key === "energy" ? energy :
+                d.key === "focus" ? focus :
+                d.key === "sensory" ? sensory : social
+              }
+              onChange={
+                d.key === "energy" ? setEnergy :
+                d.key === "focus" ? setFocus :
+                d.key === "sensory" ? setSensory : setSocial
+              }
+            />
+          ))}
+        </div>
+        <div className="mt-4 flex flex-wrap items-center gap-4 border-t border-neuro-border pt-4">
+          <div className="flex items-center gap-2">
+            <label htmlFor="daily-sleep" className="text-sm text-neuro-muted">
+              Sleep (hours)
+            </label>
+            <input
+              id="daily-sleep"
+              type="number"
+              min={0}
+              max={24}
+              step={0.5}
+              value={sleep}
+              onChange={(e) => setSleep(e.target.value)}
+              className="w-20 rounded border border-neuro-border bg-[#0d1117] px-3 py-2 text-center text-sm tabular-nums text-neuro-silver placeholder-neuro-muted focus:border-neuro-blue focus:outline-none focus:ring-1 focus:ring-neuro-blue"
+              placeholder="7"
+              aria-label="Sleep hours"
+            />
+          </div>
+          <button
+            type="submit"
+            disabled={pending}
+            className="btn-primary ml-auto px-4 py-2 text-sm disabled:opacity-50"
+          >
+            {pending ? "Saving…" : saved ? "Saved" : "Save check-in"}
+          </button>
+        </div>
+      </form>
+    </section>
   );
 }

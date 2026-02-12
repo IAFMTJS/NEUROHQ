@@ -14,6 +14,9 @@ export interface Database {
           push_subscription_json: Json | null;
           push_quote_enabled: boolean | null;
           push_quote_time: string | null;
+          push_sent_count: number | null;
+          push_sent_date: string | null;
+          last_rollover_date: string | null;
           created_at: string;
           updated_at: string;
         };

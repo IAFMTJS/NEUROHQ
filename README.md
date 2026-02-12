@@ -17,6 +17,9 @@ Nervous-system-aware personal operating system — calendar-based, mood-adaptive
    - `supabase/migrations/002_rls.sql`
    - `supabase/migrations/003_triggers.sql`
    - `supabase/migrations/005_seed_quotes_full.sql` (generate with `npm run seed:quotes` if needed)
+   - `supabase/migrations/006_push_and_reports.sql` (push tracking + weekly reality reports)
+   - `supabase/migrations/007_user_rollover_and_google_tokens.sql` (per-user rollover date + Google Calendar tokens)
+   - `supabase/migrations/008_tasks_recurring_subtasks_snooze.sql` (recurrence, subtasks, snooze)
 
    Create `public.users` on signup: use Supabase Auth → Webhooks (Database or Edge Function) to insert into `public.users` when a user signs up, or rely on the app’s `ensureUserProfile` on first dashboard load.
 
@@ -36,6 +39,8 @@ Nervous-system-aware personal operating system — calendar-based, mood-adaptive
 | `npm run lint` | ESLint |
 | `npm run test` | Run tests (Vitest) |
 | `npm run seed:quotes` | Generate full quotes SQL from `365_Philosophical_Quotes_Structured.txt` |
+| `npm run build:icons` | Generate PWA icons (192 & 512). Optional arg: path to source image. |
+| `npm run generate-vapid` | Generate VAPID keys for Web Push (add to `.env.local`) |
 | `npm run db:types` | Generate TypeScript types from Supabase (requires Supabase CLI + project id) |
 
 ## Environment variables
@@ -46,6 +51,7 @@ See `.env.example`. Required:
 - `NEXT_PUBLIC_SUPABASE_ANON_KEY` — Supabase anon key  
 - `SUPABASE_SERVICE_ROLE_KEY` — For cron and server-side admin  
 - Optional: `CRON_SECRET` — Protects cron routes on Vercel  
+- Optional (push): `NEXT_PUBLIC_VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY` — from `npm run generate-vapid`  
 
 ## Database (Supabase)
 
@@ -55,6 +61,9 @@ See `.env.example`. Required:
    - `supabase/migrations/002_rls.sql`
    - `supabase/migrations/003_triggers.sql`
    - `supabase/migrations/005_seed_quotes_full.sql` (generate first with `npm run seed:quotes`)
+   - `supabase/migrations/006_push_and_reports.sql`
+   - `supabase/migrations/007_user_rollover_and_google_tokens.sql`
+   - `supabase/migrations/008_tasks_recurring_subtasks_snooze.sql`
 3. See `supabase/README.md` for auth trigger (create `public.users` on signup).
 
 ## Vercel deployment
@@ -62,10 +71,13 @@ See `.env.example`. Required:
 1. Connect the repo to Vercel.  
 2. Set environment variables in Vercel (same as `.env.local`).  
 3. Add **CRON_SECRET** in Vercel and (optional) in Vercel Cron config set “Authorization: Bearer \<CRON_SECRET\>” for cron invocations.  
-4. Cron routes:
-   - **Daily** (`/api/cron/daily`) — 00:00 UTC: task rollover, quote push  
-   - **Weekly** (`/api/cron/weekly`) — Monday 09:00 UTC: reality report  
-   - **Quarterly** (`/api/cron/quarterly`) — 1st of Jan/Apr/Jul/Oct 06:00 UTC: strategy reset  
+4. Cron routes (send `Authorization: Bearer <CRON_SECRET>` if set):
+   - **Daily** (`/api/cron/daily`) — 00:00 UTC: rollover + quote for users without timezone; freeze reminders, avoidance alert
+   - **Hourly** (`/api/cron/hourly`) — every hour: rollover + quote for users with timezone when it’s 00:00 in their TZ
+   - **Evening** (`/api/cron/evening`) — 21:00 UTC: shutdown reminder
+   - **Weekly** (`/api/cron/weekly`) — Monday 09:00 UTC: reality report, learning reminder, savings alert
+   - **Quarterly** (`/api/cron/quarterly`) — 1st of Jan/Apr/Jul/Oct 06:00 UTC: ensure current quarter strategy row per user
+5. Deploy checklist: run migrations 001–008, enable Email/Password auth, set env vars. See **DEPLOY.md** for step-by-step Supabase/Vercel setup and a full smoke test checklist. For PWA installability and Lighthouse, see **LIGHTHOUSE_PWA.md**.
 
 Build command: `npm run build`. Framework: Next.js.
 
@@ -82,6 +94,11 @@ Build command: `npm run build`. Framework: Next.js.
 | `NEUROHQ_CALENDAR_PHASE2_AND_TESTING.md` | Calendar Phase 2, testing strategy |
 | `NEUROHQ_VISUAL_AND_UX_DIRECTION.md` | Visual and UX direction |
 | `NEUROHQ_SUGGESTIONS_AND_ENHANCEMENTS.md` | Backlog: actions, features, adjustments |
+| `NEUROHQ_STARTUP_ANALYSIS_AND_REMAINING_TASKS.md` | Analysis of spec vs implementation and remaining work |
+
+## Google Calendar (optional, Phase 8)
+
+Manual calendar events are supported on the dashboard. Google Calendar read-only sync: set `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET`, add redirect URI `https://your-domain.com/api/auth/google/callback` in Google Cloud Console, then run migration 007. Users can connect in Settings; events sync on dashboard load.
 
 ## License
 

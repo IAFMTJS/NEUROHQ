@@ -1,0 +1,1 @@
+{"name":"NEUROHQ","short_name":"NEUROHQ","description":"Nervous-system-aware personal operating system","start_url":"/dashboard","display":"standalone","background_color":"#0a0a0a","theme_color":"#3b82f6","icons":[{"src":"/app-icon.png","sizes":"192x192","type":"image/png","purpose":"any"},{"src":"/app-icon.png","sizes":"512x512","type":"image/png","purpose":"any maskable"}]}
