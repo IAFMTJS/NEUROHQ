@@ -1,6 +1,12 @@
+import Link from "next/link";
 import type { RealityReport } from "@/app/actions/report";
+import { formatCents } from "@/lib/utils/currency";
 
 export function RealityReportCard({ report }: { report: RealityReport }) {
+  const budgetRemaining = "budgetRemainingCents" in report ? report.budgetRemainingCents : null;
+  const budgetSpent = "budgetSpentCents" in report ? report.budgetSpentCents : 0;
+  const currency = "currency" in report ? report.currency : "EUR";
+
   return (
     <div className="card-modern overflow-hidden p-0">
       <div className="border-b border-neuro-border px-4 py-3">
@@ -28,6 +34,14 @@ export function RealityReportCard({ report }: { report: RealityReport }) {
             {report.learningMinutes} / {report.learningTarget} min
           </dd>
         </div>
+        {budgetRemaining != null && (
+          <div className="flex justify-between">
+            <dt className="text-neuro-muted">Budget (month)</dt>
+            <dd className={budgetRemaining >= 0 ? "text-neuro-silver" : "text-amber-400"}>
+              {formatCents(budgetRemaining, currency)} remaining · {formatCents(-budgetSpent, currency)} spent
+            </dd>
+          </div>
+        )}
         {report.avgEnergy != null && (
           <div className="flex justify-between">
             <dt className="text-neuro-muted">Avg energy</dt>
@@ -59,6 +73,11 @@ export function RealityReportCard({ report }: { report: RealityReport }) {
             ))}
           </ul>
         </div>
+      )}
+      {(budgetRemaining != null || report.savingsProgress.length > 0) && (
+        <Link href="/budget" className="mt-3 inline-block text-sm font-medium text-neuro-blue hover:underline">
+          Budget & goals →
+        </Link>
       )}
       </div>
     </div>

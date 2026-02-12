@@ -1,5 +1,5 @@
 import { getWeekBounds } from "@/lib/utils/learning";
-import { getWeeklyMinutes, getLearningStreak, getEducationOptions, getLearningSessions, getMonthlyBookForCurrentMonth } from "@/app/actions/learning";
+import { getWeeklyMinutes, getWeeklyLearningTarget, getLearningStreak, getEducationOptions, getLearningSessions, getPastTopics, getTopicBreakdown, getMonthlyLearningWeeks, getMonthlyBooksForCurrentMonth, getMonthlyBookForCurrentMonth, getTotalLearningMinutes, getMonthlyBooksHistory } from "@/app/actions/learning";
 import { LearningProgress } from "@/components/LearningProgress";
 import { AddLearningSessionForm } from "@/components/AddLearningSessionForm";
 import { AddEducationOptionForm } from "@/components/AddEducationOptionForm";
@@ -7,60 +7,115 @@ import { EducationOptionsList } from "@/components/EducationOptionsList";
 import { LearningRecentSessions } from "@/components/LearningRecentSessions";
 import { LearningTips } from "@/components/LearningTips";
 import { MonthlyBookBlock } from "@/components/MonthlyBookBlock";
+import { ClarityExplain } from "@/components/ClarityExplain";
+import { LearningTopicBreakdown } from "@/components/LearningTopicBreakdown";
+import { LearningMonthlyView } from "@/components/LearningMonthlyView";
+import { LearningExportCSV } from "@/components/LearningExportCSV";
+import { LearningMilestone } from "@/components/LearningMilestone";
+import { LearningNudge } from "@/components/LearningNudge";
+import { MonthlyBooksHistory } from "@/components/MonthlyBooksHistory";
+import { getQuarterlyStrategy } from "@/app/actions/strategy";
+import { GrowthStrategyBanner } from "@/components/GrowthStrategyBanner";
 
-export default async function LearningPage() {
+type Props = { searchParams: Promise<{ toward?: string }> };
+
+export default async function LearningPage({ searchParams }: Props) {
+  const params = await searchParams;
+  const towardOptionId = params.toward ?? null;
   const today = new Date();
   const { start: weekStart, end: weekEnd } = getWeekBounds(today);
-  const [minutes, streak, options, sessionsThisWeek, monthlyBook] = await Promise.all([
+  const thisYear = today.getFullYear();
+  const thisMonth = today.getMonth() + 1;
+  const [minutes, target, streak, options, sessionsThisWeek, pastTopics, topicBreakdown, monthlyWeeks, monthlyBooks, monthlyBookFirst, totalMinutes, booksHistory, strategy] = await Promise.all([
     getWeeklyMinutes(weekStart, weekEnd),
+    getWeeklyLearningTarget(),
     getLearningStreak(),
     getEducationOptions(),
     getLearningSessions(weekStart, weekEnd),
+    getPastTopics(),
+    getTopicBreakdown(weekStart, weekEnd),
+    getMonthlyLearningWeeks(thisYear, thisMonth),
+    getMonthlyBooksForCurrentMonth(),
     getMonthlyBookForCurrentMonth(),
+    getTotalLearningMinutes(),
+    getMonthlyBooksHistory(),
+    getQuarterlyStrategy(),
   ]);
 
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold tracking-tight text-neuro-silver">Learning</h1>
-        <p className="mt-1 text-sm text-neuro-muted">Weekly minutes, streak, education options, and recent sessions.</p>
+        <h1 className="text-2xl font-bold tracking-tight text-neuro-silver">Growth</h1>
+        <p className="mt-1 text-sm text-neuro-muted">Learning & growth — weekly minutes, streak, education options, and recent sessions.</p>
+        <div className="mt-3">
+          <GrowthStrategyBanner strategy={strategy} />
+        </div>
       </div>
 
       <section>
         <LearningProgress
           minutes={minutes}
-          target={60}
+          target={target}
           streak={streak}
           weekStart={weekStart}
           weekEnd={weekEnd}
+          totalMinutes={totalMinutes}
         />
       </section>
 
       <LearningTips />
 
-      <MonthlyBookBlock initial={monthlyBook ? { title: monthlyBook.title, completed_at: monthlyBook.completed_at } : null} />
+      <MonthlyBookBlock
+        initial={monthlyBookFirst ? { title: monthlyBookFirst.title, completed_at: monthlyBookFirst.completed_at } : null}
+        books={monthlyBooks.map((b) => ({ id: b.id, title: b.title, completed_at: b.completed_at, pages_per_day: b.pages_per_day, chapters_per_week: b.chapters_per_week }))}
+      />
+      {booksHistory.length > 0 && <MonthlyBooksHistory books={booksHistory} />}
 
       <section className="card-modern overflow-hidden p-0">
         <div className="border-b border-neuro-border px-4 py-3">
           <h2 className="text-base font-semibold text-neuro-silver">Log session</h2>
-          <p className="mt-0.5 text-xs text-neuro-muted">Record time spent learning.</p>
+          <p className="mt-0.5 text-xs text-neuro-muted">Record time spent learning. Quick-add presets or custom minutes.</p>
         </div>
         <div className="p-4">
-          <AddLearningSessionForm date={today.toISOString().slice(0, 10)} />
+          <AddLearningSessionForm
+            date={today.toISOString().slice(0, 10)}
+            targetMinutes={target}
+            educationOptions={options.filter((o) => !(o as { archived_at?: string | null }).archived_at).map((o) => ({ id: o.id, name: o.name }))}
+            pastTopics={pastTopics}
+            initialEducationOptionId={towardOptionId}
+          />
         </div>
       </section>
 
-      <LearningRecentSessions sessions={sessionsThisWeek} weekEnd={weekEnd} />
+      {(topicBreakdown.length > 0 || monthlyWeeks.length > 0) && (
+        <section className="card-modern overflow-hidden p-0">
+          <div className="border-b border-neuro-border px-4 py-3 flex items-center justify-between">
+            <h2 className="text-base font-semibold text-neuro-silver">This week & month</h2>
+            <LearningExportCSV />
+          </div>
+          <div className="p-4 flex flex-wrap gap-4">
+            {topicBreakdown.length > 0 && <LearningTopicBreakdown breakdown={topicBreakdown} />}
+            {monthlyWeeks.length > 0 && <LearningMonthlyView weeks={monthlyWeeks} target={target} />}
+          </div>
+        </section>
+      )}
 
-      <section className="card-modern overflow-hidden p-0">
+      <LearningRecentSessions
+        sessions={sessionsThisWeek}
+        weekEnd={weekEnd}
+        weekStart={weekStart}
+      />
+
+      <section className="card-modern overflow-hidden p-0" id="education-options">
         <div className="border-b border-neuro-border px-4 py-3">
           <h2 className="text-base font-semibold text-neuro-silver">Education options</h2>
-          <p className="mt-0.5 text-xs text-neuro-muted">Clarity score: interest + future value − effort.</p>
+          <p className="mt-0.5 text-xs text-neuro-muted">Compare paths by clarity. Higher = better fit.</p>
+          <ClarityExplain />
         </div>
         <div className="p-4">
           <AddEducationOptionForm />
           <div className="mt-4">
-            <EducationOptionsList options={options} />
+            <EducationOptionsList options={options} logSessionHref="/learning" />
           </div>
         </div>
       </section>

@@ -8,6 +8,7 @@ export function AddEducationOptionForm() {
   const [interest, setInterest] = useState("5");
   const [futureValue, setFutureValue] = useState("5");
   const [effort, setEffort] = useState("5");
+  const [category, setCategory] = useState("");
   const [pending, startTransition] = useTransition();
 
   function handleSubmit(e: React.FormEvent) {
@@ -22,11 +23,13 @@ export function AddEducationOptionForm() {
         interest_score: Math.max(1, Math.min(10, i)),
         future_value_score: Math.max(1, Math.min(10, f)),
         effort_score: Math.max(1, Math.min(10, eff)),
+        category: category.trim() || null,
       });
       setName("");
       setInterest("5");
       setFutureValue("5");
       setEffort("5");
+      setCategory("");
     });
   }
 
@@ -41,6 +44,16 @@ export function AddEducationOptionForm() {
           placeholder="e.g. Learn TypeScript"
           className="w-48 rounded border border-neutral-600 bg-neuro-dark px-2 py-1.5 text-sm text-white"
           required
+        />
+      </label>
+      <label className="flex flex-col gap-1">
+        <span className="text-xs text-neutral-400">Category (optional)</span>
+        <input
+          type="text"
+          value={category}
+          onChange={(e) => setCategory(e.target.value)}
+          placeholder="e.g. Programming"
+          className="w-32 rounded border border-neutral-600 bg-neuro-dark px-2 py-1.5 text-sm text-white"
         />
       </label>
       <label className="flex flex-col gap-1">

@@ -6,9 +6,12 @@ type Strategy = {
   identity_statement: string | null;
   key_results: string | null;
   savings_goal_id: string | null;
+  anti_goals?: string | null;
+  one_word?: string | null;
+  north_star?: string | null;
 } | null;
 
-type Goal = { id: string; name: string };
+type Goal = { id: string; name: string; current_cents?: number; target_cents?: number };
 
 type Props = {
   strategy: Strategy;
@@ -28,11 +31,14 @@ function keyResultsList(text: string | null): string[] {
 export function StrategySummaryCard({ strategy, goals, year, quarter }: Props) {
   const hasTheme = strategy?.primary_theme || strategy?.secondary_theme;
   const hasIdentity = !!strategy?.identity_statement?.trim();
+  const hasOneWord = !!strategy?.one_word?.trim();
+  const hasNorthStar = !!strategy?.north_star?.trim();
+  const hasAntiGoals = !!strategy?.anti_goals?.trim();
   const results = keyResultsList(strategy?.key_results ?? null);
   const linkedGoal = strategy?.savings_goal_id
     ? goals.find((g) => g.id === strategy!.savings_goal_id)
     : null;
-  const hasContent = hasTheme || hasIdentity || results.length > 0 || linkedGoal;
+  const hasContent = hasTheme || hasIdentity || hasOneWord || hasNorthStar || hasAntiGoals || results.length > 0 || linkedGoal;
 
   return (
     <div className="card-modern overflow-hidden p-0">
@@ -45,12 +51,24 @@ export function StrategySummaryCard({ strategy, goals, year, quarter }: Props) {
           <p className="text-sm text-neuro-muted">No strategy set yet. Fill in the form below and save.</p>
         ) : (
           <>
+        {hasOneWord && (
+          <div>
+            <p className="text-xs font-medium uppercase tracking-wide text-neuro-muted">One word</p>
+            <p className="mt-1 text-sm font-semibold text-neuro-blue">{strategy?.one_word}</p>
+          </div>
+        )}
         {hasTheme && (
           <div>
             <p className="text-xs font-medium uppercase tracking-wide text-neuro-muted">Themes</p>
             <p className="mt-1 text-sm text-neuro-silver">
               {[strategy?.primary_theme, strategy?.secondary_theme].filter(Boolean).join(" · ")}
             </p>
+          </div>
+        )}
+        {hasNorthStar && (
+          <div>
+            <p className="text-xs font-medium uppercase tracking-wide text-neuro-muted">North star</p>
+            <p className="mt-1 text-sm text-neuro-silver">{strategy?.north_star}</p>
           </div>
         )}
         {hasIdentity && (
@@ -71,6 +89,12 @@ export function StrategySummaryCard({ strategy, goals, year, quarter }: Props) {
             </ul>
           </div>
         )}
+        {hasAntiGoals && (
+          <div>
+            <p className="text-xs font-medium uppercase tracking-wide text-neuro-muted">Anti-goals</p>
+            <p className="mt-1 text-sm text-neuro-muted">{strategy?.anti_goals}</p>
+          </div>
+        )}
         {linkedGoal && (
           <div>
             <p className="text-xs font-medium uppercase tracking-wide text-neuro-muted">Linked goal</p>
@@ -78,7 +102,11 @@ export function StrategySummaryCard({ strategy, goals, year, quarter }: Props) {
               href="/budget"
               className="mt-1 inline-block text-sm font-medium text-neuro-blue hover:underline"
             >
-              {linkedGoal.name} →
+              {linkedGoal.name}
+              {linkedGoal.target_cents != null && linkedGoal.current_cents != null && linkedGoal.target_cents > 0
+                ? ` — ${Math.min(100, Math.round(((linkedGoal.current_cents ?? 0) / linkedGoal.target_cents) * 100))}%`
+                : ""}{" "}
+              →
             </Link>
           </div>
         )}

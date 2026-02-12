@@ -2,7 +2,9 @@
 
 import { createClient } from "@/lib/supabase/server";
 import { getWeekBounds } from "@/lib/utils/learning";
-import { getWeeklyMinutes } from "./learning";
+import { getWeeklyMinutes, getWeeklyLearningTarget } from "./learning";
+import { getBudgetSettings } from "./budget";
+import { getCurrentMonthExpensesCents } from "./budget";
 
 export type RealityReport = {
   weekStart: string;
@@ -17,6 +19,10 @@ export type RealityReport = {
   carryOverCount: number;
   /** Execution score 0–100: (tasks × 0.5) + (learning × 0.2) + (savings × 0.2) − (carryover × 0.1) per Ultra Spec */
   executionScore: number | null;
+  /** Budget: remaining to spend this month (spendable − expenses); null if no budget set. Optional for backward compat with stored reports. */
+  budgetRemainingCents?: number | null;
+  budgetSpentCents?: number;
+  currency?: string;
 };
 
 export async function getRealityReport(weekStart: string, weekEnd: string): Promise<RealityReport> {
@@ -35,6 +41,9 @@ export async function getRealityReport(weekStart: string, weekEnd: string): Prom
       avgFocus: null,
       carryOverCount: 0,
       executionScore: null,
+      budgetRemainingCents: null,
+      budgetSpentCents: 0,
+      currency: "EUR",
     };
   }
 
@@ -47,13 +56,17 @@ export async function getRealityReport(weekStart: string, weekEnd: string): Prom
   const tasksCompleted = tasks?.filter((t) => t.completed).length ?? 0;
   const tasksPlanned = tasks?.length ?? 0;
 
-  const learningMinutes = await getWeeklyMinutes(weekStart, weekEnd);
+  const [learningMinutes, learningTarget] = await Promise.all([
+    getWeeklyMinutes(weekStart, weekEnd),
+    getWeeklyLearningTarget(),
+  ]);
 
   const { data: goals } = await supabase
     .from("savings_goals")
-    .select("name, current_cents, target_cents")
+    .select("name, current_cents, target_cents, status")
     .eq("user_id", user.id);
-  const savingsProgress = (goals ?? []).map((g) => ({
+  const activeGoals = (goals ?? []).filter((g: { status?: string }) => g.status !== "completed" && g.status !== "cancelled");
+  const savingsProgress = activeGoals.map((g: { name: string; current_cents?: number; target_cents?: number }) => ({
     name: g.name,
     current: g.current_cents ?? 0,
     target: g.target_cents ?? 1,
@@ -79,7 +92,6 @@ export async function getRealityReport(weekStart: string, weekEnd: string): Prom
     .eq("completed", false);
   const carryOverCount = Math.max(0, ...(lastDayTasks ?? []).map((t) => t.carry_over_count ?? 0));
 
-  const learningTarget = 60;
   const learningConsistency = learningTarget > 0
     ? Math.min(1, learningMinutes / learningTarget)
     : 0;
@@ -94,6 +106,15 @@ export async function getRealityReport(weekStart: string, weekEnd: string): Prom
     taskScore + learningScore + savingsScore - carryoverPenalty;
   const executionScore = raw >= 0 ? Math.round(Math.min(100, raw * 100)) : null;
 
+  const [budgetSettings, budgetSpentCents] = await Promise.all([
+    getBudgetSettings(),
+    getCurrentMonthExpensesCents(),
+  ]);
+  const spendableCents = Math.max(0, (budgetSettings.monthly_budget_cents ?? 0) - (budgetSettings.monthly_savings_cents ?? 0));
+  const budgetRemainingCents = budgetSettings.monthly_budget_cents != null
+    ? spendableCents - budgetSpentCents
+    : null;
+
   return {
     weekStart,
     weekEnd,
@@ -106,6 +127,9 @@ export async function getRealityReport(weekStart: string, weekEnd: string): Prom
     avgFocus: avgFocus != null ? Math.round(avgFocus * 10) / 10 : null,
     carryOverCount,
     executionScore,
+    budgetRemainingCents,
+    budgetSpentCents,
+    currency: budgetSettings.currency,
   };
 }
 

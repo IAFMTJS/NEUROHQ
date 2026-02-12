@@ -5,16 +5,19 @@ import { SettingsPush } from "@/components/SettingsPush";
 import { SettingsDeleteAccount } from "@/components/SettingsDeleteAccount";
 import { SettingsGoogleCalendar } from "@/components/SettingsGoogleCalendar";
 import { SettingsTimezone } from "@/components/SettingsTimezone";
+import { SettingsBudget } from "@/components/SettingsBudget";
 import { hasGoogleCalendarToken } from "@/app/actions/calendar";
 import { getUserTimezone } from "@/app/actions/auth";
+import { getBudgetSettings } from "@/app/actions/budget";
 
 export default async function SettingsPage() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/login");
-  const [hasGoogle, userTimezone] = await Promise.all([
+  const [hasGoogle, userTimezone, budgetSettings] = await Promise.all([
     hasGoogleCalendarToken(),
     getUserTimezone(),
+    getBudgetSettings(),
   ]);
   const appVersion = process.env.NEXT_PUBLIC_APP_VERSION ?? "1.0.0";
 
@@ -33,6 +36,13 @@ export default async function SettingsPage() {
         </div>
       </div>
       <SettingsTimezone initialTimezone={userTimezone} />
+      <SettingsBudget
+        initialCurrency={budgetSettings.currency}
+        initialImpulseThresholdPct={budgetSettings.impulse_threshold_pct}
+        initialBudgetPeriod={budgetSettings.budget_period}
+        initialImpulseQuickAddMinutes={budgetSettings.impulse_quick_add_minutes}
+        initialImpulseRiskCategories={budgetSettings.impulse_risk_categories}
+      />
       <SettingsPush />
       <SettingsExport />
       <SettingsDeleteAccount />

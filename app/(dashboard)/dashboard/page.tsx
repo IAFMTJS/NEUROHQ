@@ -9,8 +9,10 @@ import { getEnergyBudget } from "@/app/actions/energy";
 import { getUpcomingCalendarEvents, hasGoogleCalendarToken } from "@/app/actions/calendar";
 import { getRealityReport } from "@/app/actions/report";
 import { getQuarterlyStrategy } from "@/app/actions/strategy";
-import { getLearningStreak, getWeeklyMinutes } from "@/app/actions/learning";
+import { getLearningStreak, getWeeklyMinutes, getWeeklyLearningTarget } from "@/app/actions/learning";
+import { getBudgetSettings, getCurrentMonthExpensesCents } from "@/app/actions/budget";
 import { getWeekBounds } from "@/lib/utils/learning";
+import { getCurrencySymbol } from "@/lib/utils/currency";
 import {
   HQHeader,
   BrainStatusCard,
@@ -23,6 +25,7 @@ import { ModeBanner } from "@/components/ModeBanner";
 import { AvoidanceNotice } from "@/components/AvoidanceNotice";
 import { FocusBlock } from "@/components/FocusBlock";
 import { RealityReportBlock } from "@/components/RealityReportBlock";
+import { OnTrackCard } from "@/components/OnTrackCard";
 import { OnboardingBanner } from "@/components/OnboardingBanner";
 import { AddCalendarEventForm } from "@/components/AddCalendarEventForm";
 import { UpcomingCalendarList } from "@/components/UpcomingCalendarList";
@@ -92,39 +95,44 @@ export default async function DashboardPage() {
   const lastWeekDate = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000);
   const { start: lastWeekStart, end: lastWeekEnd } = getWeekBounds(lastWeekDate);
   const { start: thisWeekStart, end: thisWeekEnd } = getWeekBounds(today);
-  const [lastWeekReport, strategy, weeklyLearningMinutes] = await Promise.all([
+  const [lastWeekReport, strategy, weeklyLearningMinutes, weeklyLearningTarget, budgetSettings, currentMonthExpenses] = await Promise.all([
     getRealityReport(lastWeekStart, lastWeekEnd),
     getQuarterlyStrategy(),
     getWeeklyMinutes(thisWeekStart, thisWeekEnd),
+    getWeeklyLearningTarget(),
+    getBudgetSettings(),
+    getCurrentMonthExpensesCents(),
   ]);
+  const spendableCents = Math.max(0, (budgetSettings.monthly_budget_cents ?? 0) - (budgetSettings.monthly_savings_cents ?? 0));
+  const budgetRemainingCents = budgetSettings.monthly_budget_cents != null ? spendableCents - currentMonthExpenses : null;
 
   const energyPct = scale1To10ToPct(state?.energy ?? null);
   const focusPct = scale1To10ToPct(state?.focus ?? null);
   const loadPct = scale1To10ToPct(state?.sensory_load ?? null);
 
-  const learningNeeded = weeklyLearningMinutes < 60;
+  const learningNeeded = weeklyLearningMinutes < weeklyLearningTarget;
   const todaysTasks = (tasks ?? []).map((t) => ({ id: (t as { id: string }).id, title: (t as { title: string }).title }));
   const emptyMissionMessage = learningNeeded
-    ? "60 min this week to stay on track. Log time on Learning."
-    : "Add a task on Missions or head to Learning.";
+    ? `${weeklyLearningTarget} min this week to stay on track. Log time on Growth.`
+    : "Add a task on Missions or head to Growth.";
   const emptyMissionHref = learningNeeded ? "/learning" : "/tasks";
   const { window: timeWindow, isActive: isTimeWindowActive } = defaultTimeWindow();
   const insight = defaultInsight(energyPct, focusPct, loadPct);
 
   return (
     <div
-      className="flex flex-col pb-6"
+      className="flex flex-col pb-6 -mt-1"
       style={{ gap: "var(--hq-card-gap)" }}
     >
       <OnboardingBanner />
       <div className="flex flex-col gap-0">
-        <div className="w-full -mx-[var(--hq-padding-x)] flex justify-center shrink-0 ml-0.5" aria-hidden>
+        <div className="w-full -mx-[var(--hq-padding-x)] flex justify-center shrink-0 ml-0.5 pt-0" aria-hidden>
           <Image
             src="/Header Image.PNG"
             alt=""
             width={420}
-            height={200}
-            className="w-full max-w-[420px] h-auto object-contain"
+            height={160}
+            className="w-full max-w-[420px] h-auto object-contain object-top"
             priority
           />
         </div>
@@ -190,13 +198,34 @@ export default async function DashboardPage() {
           <span className="text-2xl" aria-hidden>🔥</span>
           <div>
             <p className="text-sm font-medium text-neuro-silver">Learning streak</p>
-            <p className="text-xs text-neuro-muted">{learningStreak} week{learningStreak !== 1 ? "s" : ""} in a row (≥60 min)</p>
+            <p className="text-xs text-neuro-muted">{learningStreak} week{learningStreak !== 1 ? "s" : ""} in a row (≥{weeklyLearningTarget} min)</p>
           </div>
           <Link href="/learning" className="ml-auto text-sm font-medium text-neuro-blue hover:underline">
             Growth →
           </Link>
         </div>
       )}
+      {budgetRemainingCents != null && (
+        <Link
+          href="/budget"
+          className="card-modern flex items-center gap-3 px-4 py-3 hover:bg-neuro-surface/50 transition"
+        >
+          <span className="text-xl font-bold tabular-nums text-neuro-silver">
+            {getCurrencySymbol(budgetSettings.currency)}
+            {budgetRemainingCents >= 0 ? (budgetRemainingCents / 100).toFixed(0) : (Math.abs(budgetRemainingCents) / 100).toFixed(0)}
+          </span>
+          <div className="min-w-0">
+            <p className="text-sm font-medium text-neuro-silver">Budget remaining this month</p>
+            <p className="text-xs text-neuro-muted">Spendable after savings</p>
+          </div>
+          <span className="ml-auto text-sm font-medium text-neuro-blue">Budget →</span>
+        </Link>
+      )}
+      <OnTrackCard
+        learningMinutes={weeklyLearningMinutes}
+        learningTarget={weeklyLearningTarget}
+        strategySet={!!(strategy?.identity_statement || strategy?.primary_theme)}
+      />
       <RealityReportBlock report={lastWeekReport} />
       <PatternInsightCard insight={insight} detailsHref="/report" />
     </div>

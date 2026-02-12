@@ -18,7 +18,7 @@ export default function DashboardLayout({
         </a>
         <main
           id="main-content"
-          className="main-with-footer relative z-10 flex-1 overflow-auto px-5 py-4"
+          className="main-with-footer relative z-10 flex-1 overflow-auto px-5 py-2"
           style={{ paddingLeft: "var(--hq-padding-x)", paddingRight: "var(--hq-padding-x)" }}
           tabIndex={-1}
         >

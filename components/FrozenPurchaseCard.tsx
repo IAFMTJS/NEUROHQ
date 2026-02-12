@@ -1,7 +1,8 @@
 "use client";
 
-import { useTransition } from "react";
+import { useState, useTransition } from "react";
 import { confirmFreeze, cancelFreeze } from "@/app/actions/budget";
+import { formatCents } from "@/lib/utils/currency";
 
 type Entry = {
   id: string;
@@ -12,15 +13,14 @@ type Entry = {
   freeze_until: string | null;
 };
 
+type Goal = { id: string; name: string; target_cents: number; current_cents: number; status?: string };
+
 type Props = {
   activeFrozen: Entry[];
   readyForAction: Entry[];
+  currency?: string;
+  goals?: Goal[];
 };
-
-function formatCents(cents: number): string {
-  const abs = Math.abs(cents);
-  return (abs / 100).toFixed(2);
-}
 
 function formatDate(s: string): string {
   return new Date(s).toLocaleString(undefined, {
@@ -29,8 +29,9 @@ function formatDate(s: string): string {
   });
 }
 
-export function FrozenPurchaseCard({ activeFrozen, readyForAction }: Props) {
+export function FrozenPurchaseCard({ activeFrozen, readyForAction, currency = "EUR", goals = [] }: Props) {
   const [pending, startTransition] = useTransition();
+  const activeGoals = goals.filter((g) => g.status !== "completed" && g.status !== "cancelled");
 
   if (activeFrozen.length === 0 && readyForAction.length === 0) return null;
 
@@ -38,7 +39,7 @@ export function FrozenPurchaseCard({ activeFrozen, readyForAction }: Props) {
     <section className="card-modern overflow-hidden p-0">
       <div className="border-b border-neuro-border px-4 py-3">
         <h2 className="text-base font-semibold text-neuro-silver">24h freeze</h2>
-        <p className="mt-0.5 text-xs text-neuro-muted">Confirm or cancel after 24 hours.</p>
+        <p className="mt-0.5 text-xs text-neuro-muted">Confirm or cancel. You can cancel early or add the amount to a goal.</p>
       </div>
       <div className="p-4 space-y-4">
         {activeFrozen.length > 0 && (
@@ -46,12 +47,20 @@ export function FrozenPurchaseCard({ activeFrozen, readyForAction }: Props) {
             <h3 className="text-xs font-medium text-neuro-muted mb-2">Still frozen</h3>
             <ul className="space-y-2">
               {activeFrozen.map((e) => (
-                <li key={e.id} className="flex justify-between items-start rounded-lg border border-neuro-border bg-neuro-dark/50 px-3 py-2.5 text-sm">
+                <li key={e.id} className="flex justify-between items-center gap-2 rounded-lg border border-neuro-border bg-neuro-dark/50 px-3 py-2.5 text-sm">
                   <div>
-                    <span className="text-neuro-silver">€{formatCents(e.amount_cents)}</span>
+                    <span className="text-neuro-silver">{formatCents(e.amount_cents, currency)}</span>
                     {e.note && <span className="ml-2 text-neuro-muted">— {e.note}</span>}
                     <p className="mt-1 text-xs text-neuro-muted">Until {e.freeze_until ? formatDate(e.freeze_until) : ""}</p>
                   </div>
+                  <button
+                    type="button"
+                    onClick={() => startTransition(() => cancelFreeze(e.id))}
+                    disabled={pending}
+                    className="rounded-lg border border-neuro-border px-3 py-1.5 text-xs font-medium text-neuro-silver hover:bg-neuro-border/50 disabled:opacity-50"
+                  >
+                    Cancel freeze
+                  </button>
                 </li>
               ))}
             </ul>
@@ -64,10 +73,10 @@ export function FrozenPurchaseCard({ activeFrozen, readyForAction }: Props) {
               {readyForAction.map((e) => (
                 <li key={e.id} className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-neuro-border bg-neuro-dark/50 px-3 py-2.5 text-sm">
                   <div>
-                    <span className="text-neuro-silver">€{formatCents(e.amount_cents)}</span>
+                    <span className="text-neuro-silver">{formatCents(e.amount_cents, currency)}</span>
                     {e.note && <span className="ml-2 text-neuro-muted">— {e.note}</span>}
                   </div>
-                  <div className="flex gap-2">
+                  <div className="flex flex-wrap items-center gap-2">
                     <button
                       type="button"
                       onClick={() => startTransition(() => confirmFreeze(e.id))}
@@ -84,6 +93,17 @@ export function FrozenPurchaseCard({ activeFrozen, readyForAction }: Props) {
                     >
                       Cancel
                     </button>
+                    {activeGoals.length > 0 && (
+                      <CancelAndAddToGoal
+                        entryId={e.id}
+                        amountCents={Math.abs(e.amount_cents)}
+                        goals={activeGoals}
+                        currency={currency}
+                        pending={pending}
+                        onCancel={() => startTransition(() => cancelFreeze(e.id, {}))}
+                        onAddToGoal={(goalId) => startTransition(() => cancelFreeze(e.id, { addToGoalId: goalId }))}
+                      />
+                    )}
                   </div>
                 </li>
               ))}
@@ -92,5 +112,46 @@ export function FrozenPurchaseCard({ activeFrozen, readyForAction }: Props) {
         )}
       </div>
     </section>
+  );
+}
+
+function CancelAndAddToGoal({
+  entryId,
+  amountCents,
+  goals,
+  currency,
+  pending,
+  onAddToGoal,
+}: {
+  entryId: string;
+  amountCents: number;
+  goals: Goal[];
+  currency: string;
+  pending: boolean;
+  onCancel: () => void;
+  onAddToGoal: (goalId: string) => void;
+}) {
+  const [selected, setSelected] = useState("");
+  return (
+    <span className="inline-flex items-center gap-1">
+      <select
+        value={selected}
+        onChange={(e) => setSelected(e.target.value)}
+        className="rounded border border-neuro-border bg-neuro-dark px-2 py-1 text-xs text-neuro-silver focus:border-neuro-blue focus:outline-none"
+      >
+        <option value="">Add to goal…</option>
+        {goals.map((g) => (
+          <option key={g.id} value={g.id}>{g.name}</option>
+        ))}
+      </select>
+      <button
+        type="button"
+        disabled={pending || !selected}
+        onClick={() => selected && onAddToGoal(selected)}
+        className="rounded-lg bg-neuro-blue/80 px-2 py-1 text-xs font-medium text-white hover:bg-neuro-blue disabled:opacity-50"
+      >
+        Cancel & add
+      </button>
+    </span>
   );
 }

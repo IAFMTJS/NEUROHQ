@@ -38,7 +38,7 @@ export function HQHeader({ energyPct: _energyPct = 0, focusPct: _focusPct = 0, l
   }, []);
 
   return (
-    <header className="flex flex-col items-center gap-2 pt-0 pb-2 -mt-[7.5rem]">
+    <header className="flex flex-col items-center gap-1 pt-0 pb-1 -mt-[5.5rem]">
       <h1 className="hq-h1 text-center leading-tight">{greeting}, Commander</h1>
       <p className="hq-date text-center">{dateStr}</p>
     </header>
