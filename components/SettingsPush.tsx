@@ -61,18 +61,21 @@ export function SettingsPush() {
   }, []);
 
   return (
-    <div className="rounded-lg border border-neutral-700 bg-neuro-surface p-4">
-      <h2 className="text-sm font-medium text-neuro-silver">Notifications</h2>
-      <p className="mt-2 text-sm text-neutral-400">
+    <div className="card-modern overflow-hidden p-0">
+      <div className="border-b border-neuro-border px-4 py-3">
+        <h2 className="text-base font-semibold text-neuro-silver">Notifications</h2>
+      </div>
+      <div className="p-4">
+      <p className="text-sm text-neuro-muted">
         Enable daily quote and reminders (max 3 per day). Requires a supported browser.
       </p>
       {!VAPID_PUBLIC && (
         <p className="mt-2 text-xs text-amber-500">
-          Add <code className="rounded bg-neutral-800 px-1">NEXT_PUBLIC_VAPID_PUBLIC_KEY</code> to enable push.
+          Add <code className="rounded bg-neuro-dark px-1 py-0.5">NEXT_PUBLIC_VAPID_PUBLIC_KEY</code> to enable push.
         </p>
       )}
       {message && (
-        <p className={`mt-2 text-sm ${status === "error" ? "text-red-400" : "text-neutral-300"}`} role="status">
+        <p className={`mt-2 text-sm ${status === "error" ? "text-red-400" : "text-neuro-silver"}`} role="status">
           {message}
         </p>
       )}
@@ -80,10 +83,11 @@ export function SettingsPush() {
         type="button"
         onClick={enable}
         disabled={status === "loading" || status === "enabled"}
-        className="mt-3 rounded bg-neuro-blue px-3 py-2 text-sm font-medium text-white transition hover:bg-neuro-blue/90 disabled:opacity-50"
+        className="btn-primary mt-3 rounded-lg px-4 py-2.5 text-sm font-medium disabled:opacity-50"
       >
         {status === "loading" ? "Enabling…" : status === "enabled" ? "Enabled" : "Enable notifications"}
       </button>
+      </div>
     </div>
   );
 }

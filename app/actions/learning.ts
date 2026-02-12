@@ -148,3 +148,64 @@ export async function deleteEducationOption(id: string) {
   if (error) throw new Error(error.message);
   revalidatePath("/learning");
 }
+
+export type MonthlyBookRow = { id: string; year: number; month: number; title: string; completed_at: string | null };
+
+export async function getMonthlyBookForCurrentMonth(): Promise<MonthlyBookRow | null> {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return null;
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = now.getMonth() + 1;
+  const { data } = await supabase
+    .from("monthly_books")
+    .select("id, year, month, title, completed_at")
+    .eq("user_id", user.id)
+    .eq("year", year)
+    .eq("month", month)
+    .maybeSingle();
+  return data as MonthlyBookRow | null;
+}
+
+export async function setMonthlyBook(title: string) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error("Not authenticated");
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = now.getMonth() + 1;
+  const existing = await getMonthlyBookForCurrentMonth();
+  if (existing) {
+    const { error } = await supabase
+      .from("monthly_books")
+      .update({ title })
+      .eq("id", existing.id);
+    if (error) throw new Error(error.message);
+  } else {
+    const { error } = await supabase
+      .from("monthly_books")
+      .insert({ user_id: user.id, year, month, title });
+    if (error) throw new Error(error.message);
+  }
+  revalidatePath("/learning");
+  revalidatePath("/dashboard");
+}
+
+export async function completeMonthlyBook() {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error("Not authenticated");
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = now.getMonth() + 1;
+  const { error } = await supabase
+    .from("monthly_books")
+    .update({ completed_at: new Date().toISOString() })
+    .eq("user_id", user.id)
+    .eq("year", year)
+    .eq("month", month);
+  if (error) throw new Error(error.message);
+  revalidatePath("/learning");
+  revalidatePath("/dashboard");
+}

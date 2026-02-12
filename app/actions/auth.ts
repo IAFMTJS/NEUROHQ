@@ -18,6 +18,26 @@ export async function ensureUserProfile(userId: string, email: string | undefine
   });
 }
 
+/** Call after login so dashboard layout does not block on profile creation. */
+export async function ensureUserProfileForSession() {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return;
+  await ensureUserProfile(user.id, user.email ?? undefined);
+}
+
+export async function getUserTimezone(): Promise<string | null> {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return null;
+  const { data } = await supabase
+    .from("users")
+    .select("timezone")
+    .eq("id", user.id)
+    .single();
+  return (data as { timezone?: string | null } | null)?.timezone ?? null;
+}
+
 export async function updateUserTimezone(timezone: string) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
@@ -25,4 +45,5 @@ export async function updateUserTimezone(timezone: string) {
   const { error } = await supabase.from("users").update({ timezone }).eq("id", user.id);
   if (error) throw new Error(error.message);
   revalidatePath("/dashboard");
+  revalidatePath("/settings");
 }

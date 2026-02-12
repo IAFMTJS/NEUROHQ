@@ -2,6 +2,7 @@
 
 import { createClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
+import { getEnergyBudget } from "./energy";
 
 export type TaskListMode = "normal" | "low_energy" | "stabilize" | "driven";
 
@@ -21,21 +22,28 @@ export async function getTodaysTasks(date: string, mode: TaskListMode) {
     .or(`snooze_until.is.null,snooze_until.lt.${nowIso}`);
 
   if (mode === "low_energy") {
-    query = query.or("energy_required.is.null,energy_required.lt.7");
+    query = query.or("energy_required.is.null,energy_required.lt.4");
   }
 
   query = query.order("created_at", { ascending: true });
   const { data: tasks } = await query;
   const limit = mode === "stabilize" ? 2 : mode === "low_energy" ? 3 : 999;
   let limited = tasks ?? [];
-  if (mode === "driven") {
-    limited = [...limited].sort((a, b) => {
-      const pa = (a as { priority?: number }).priority ?? 0;
-      const pb = (b as { priority?: number }).priority ?? 0;
+  const categoryOrder = (c: string | null) => (c === "work" ? 0 : c === "personal" ? 1 : 2);
+  limited = [...limited].sort((a, b) => {
+    const catA = categoryOrder((a as { category?: string | null }).category ?? null);
+    const catB = categoryOrder((b as { category?: string | null }).category ?? null);
+    if (catA !== catB) return catA - catB;
+    if (mode === "driven") {
+      const ia = (a as { impact?: number | null }).impact ?? 0;
+      const ib = (b as { impact?: number | null }).impact ?? 0;
+      if (ib !== ia) return ib - ia;
+      const pa = (a as { priority?: number | null }).priority ?? 0;
+      const pb = (b as { priority?: number | null }).priority ?? 0;
       if (pb !== pa) return pb - pa;
-      return new Date((a as { created_at?: string }).created_at ?? 0).getTime() - new Date((b as { created_at?: string }).created_at ?? 0).getTime();
-    });
-  }
+    }
+    return new Date((a as { created_at?: string }).created_at ?? 0).getTime() - new Date((b as { created_at?: string }).created_at ?? 0).getTime();
+  });
   limited = limited.slice(0, limit);
 
   const maxCarryOver = Math.max(0, ...(tasks ?? []).map((t) => (t as { carry_over_count?: number }).carry_over_count ?? 0));
@@ -65,7 +73,12 @@ export async function createTask(params: {
   energy_required?: number;
   priority?: number;
   parent_task_id?: string | null;
-  recurrence_rule?: "daily" | "weekly" | null;
+  recurrence_rule?: "daily" | "weekly" | "monthly" | null;
+  recurrence_weekdays?: string | null;
+  category?: "work" | "personal" | null;
+  impact?: number | null;
+  urgency?: number | null;
+  notes?: string | null;
 }) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
@@ -81,18 +94,53 @@ export async function createTask(params: {
   const carryCount = existing?.length ?? 0;
   if (carryCount >= 5) throw new Error("Stabilize mode: finish or reschedule tasks before adding more.");
 
-  const { error } = await supabase.from("tasks").insert({
-    user_id: user.id,
-    title: params.title,
-    due_date: params.due_date,
-    energy_required: params.energy_required ?? null,
-    priority: params.priority ?? null,
-    parent_task_id: params.parent_task_id ?? null,
-    recurrence_rule: params.recurrence_rule ?? null,
-  });
+  const energyRequired = params.energy_required ?? null;
+  if (energyRequired != null && energyRequired >= 7) {
+    const budget = await getEnergyBudget(params.due_date);
+    const heavyCost = energyRequired * 6;
+    if (budget.remaining < heavyCost) {
+      throw new Error(`Energy budget low (${budget.remaining} left). This task needs ~${heavyCost}. Finish tasks or pick a lighter one.`);
+    }
+  }
+
+  const { data, error } = await supabase
+    .from("tasks")
+    .insert({
+      user_id: user.id,
+      title: params.title,
+      due_date: params.due_date,
+      energy_required: params.energy_required ?? null,
+      priority: params.priority ?? null,
+      parent_task_id: params.parent_task_id ?? null,
+      recurrence_rule: params.recurrence_rule ?? null,
+      recurrence_weekdays: params.recurrence_weekdays ?? null,
+      category: params.category ?? null,
+      impact: params.impact ?? null,
+      urgency: params.urgency ?? null,
+      notes: params.notes ?? null,
+    } as Record<string, unknown>)
+    .select("id")
+    .single();
   if (error) throw new Error(error.message);
   revalidatePath("/dashboard");
   revalidatePath("/tasks");
+  return { ok: true as const, id: data?.id };
+}
+
+/** ISO weekday 1=Mon .. 7=Sun. JS getDay() 0=Sun..6=Sat so ISO = getDay() || 7 */
+function getISOWeekday(d: Date): number {
+  const day = d.getUTCDay();
+  return day === 0 ? 7 : day;
+}
+
+/** Next date on or after start whose ISO weekday is in weekdays (1-7). */
+function nextWeekdayDate(start: Date, weekdays: number[]): string {
+  let d = new Date(start.getTime());
+  for (let i = 0; i < 8; i++) {
+    if (weekdays.includes(getISOWeekday(d))) return d.toISOString().slice(0, 10);
+    d.setUTCDate(d.getUTCDate() + 1);
+  }
+  return d.toISOString().slice(0, 10);
 }
 
 export async function completeTask(id: string) {
@@ -101,7 +149,7 @@ export async function completeTask(id: string) {
   if (!user) throw new Error("Not authenticated");
   const { data: task } = await supabase
     .from("tasks")
-    .select("recurrence_rule, due_date, title, energy_required, priority")
+    .select("recurrence_rule, recurrence_weekdays, due_date, title, energy_required, priority, category, impact, urgency")
     .eq("id", id)
     .eq("user_id", user.id)
     .single();
@@ -111,19 +159,44 @@ export async function completeTask(id: string) {
     .eq("id", id)
     .eq("user_id", user.id);
   if (error) throw new Error(error.message);
-  if (task?.recurrence_rule === "daily" || task?.recurrence_rule === "weekly") {
-    const nextDate = new Date(task.due_date + "T12:00:00Z");
-    if (task.recurrence_rule === "daily") nextDate.setUTCDate(nextDate.getUTCDate() + 1);
-    else nextDate.setUTCDate(nextDate.getUTCDate() + 7);
-    const nextStr = nextDate.toISOString().slice(0, 10);
+  const t = task as { recurrence_rule?: string; recurrence_weekdays?: string | null; due_date: string; title: string; energy_required?: number | null; priority?: number | null; category?: string | null; impact?: number | null; urgency?: number | null } | null;
+  if (t?.recurrence_rule === "daily" || t?.recurrence_rule === "weekly" || t?.recurrence_rule === "monthly") {
+    let nextStr: string;
+    const base = new Date(t.due_date + "T12:00:00Z");
+    if (t.recurrence_rule === "daily") {
+      base.setUTCDate(base.getUTCDate() + 1);
+      nextStr = base.toISOString().slice(0, 10);
+    } else if (t.recurrence_rule === "weekly" && t.recurrence_weekdays?.trim()) {
+      const weekdays = t.recurrence_weekdays.split(",").map((s) => parseInt(s.trim(), 10)).filter((n) => n >= 1 && n <= 7);
+      if (weekdays.length) {
+        const nextDay = new Date(base);
+        nextDay.setUTCDate(nextDay.getUTCDate() + 1);
+        nextStr = nextWeekdayDate(nextDay, weekdays);
+      } else {
+        base.setUTCDate(base.getUTCDate() + 7);
+        nextStr = base.toISOString().slice(0, 10);
+      }
+    } else if (t.recurrence_rule === "weekly") {
+      base.setUTCDate(base.getUTCDate() + 7);
+      nextStr = base.toISOString().slice(0, 10);
+    } else {
+      const day = base.getUTCDate();
+      base.setUTCMonth(base.getUTCMonth() + 1);
+      if (base.getUTCDate() !== day) base.setUTCDate(0);
+      nextStr = base.toISOString().slice(0, 10);
+    }
     await supabase.from("tasks").insert({
       user_id: user.id,
-      title: task.title,
+      title: t.title,
       due_date: nextStr,
-      energy_required: task.energy_required ?? null,
-      priority: task.priority ?? null,
-      recurrence_rule: task.recurrence_rule,
-    });
+      energy_required: t.energy_required ?? null,
+      priority: t.priority ?? null,
+      recurrence_rule: t.recurrence_rule,
+      recurrence_weekdays: t.recurrence_weekdays ?? null,
+      category: t.category ?? null,
+      impact: t.impact ?? null,
+      urgency: t.urgency ?? null,
+    } as Record<string, unknown>);
   }
   revalidatePath("/dashboard");
   revalidatePath("/tasks");
@@ -205,4 +278,119 @@ export async function getSubtasksForTaskIds(parentIds: string[]): Promise<Subtas
     .in("parent_task_id", parentIds)
     .order("created_at", { ascending: true });
   return (data ?? []) as SubtaskRow[];
+}
+
+/** Tasks with no due_date or due_date > today (backlog / future). */
+export async function getBacklogTasks(todayDate: string) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return [];
+  const { data } = await supabase
+    .from("tasks")
+    .select("*")
+    .eq("user_id", user.id)
+    .eq("completed", false)
+    .is("parent_task_id", null)
+    .or(`due_date.is.null,due_date.gt.${todayDate}`)
+    .order("due_date", { ascending: true, nullsFirst: true })
+    .order("created_at", { ascending: true })
+    .limit(50);
+  return data ?? [];
+}
+
+/** Completed tasks for a given date (top-level only). */
+export async function getCompletedTodayTasks(date: string) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return [];
+  const { data } = await supabase
+    .from("tasks")
+    .select("*")
+    .eq("user_id", user.id)
+    .eq("due_date", date)
+    .eq("completed", true)
+    .is("parent_task_id", null)
+    .order("completed_at", { ascending: false });
+  return data ?? [];
+}
+
+/** Reschedule a task (e.g. from backlog to today). */
+export async function rescheduleTask(id: string, due_date: string) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error("Not authenticated");
+  const { error } = await supabase
+    .from("tasks")
+    .update({ due_date })
+    .eq("id", id)
+    .eq("user_id", user.id);
+  if (error) throw new Error(error.message);
+  revalidatePath("/dashboard");
+  revalidatePath("/tasks");
+}
+
+/** Update a task (edit modal). */
+export async function updateTask(
+  id: string,
+  params: {
+    title?: string;
+    due_date?: string;
+    category?: "work" | "personal" | null;
+    recurrence_rule?: "daily" | "weekly" | "monthly" | null;
+    recurrence_weekdays?: string | null;
+    impact?: number | null;
+    urgency?: number | null;
+    energy_required?: number | null;
+    priority?: number | null;
+    notes?: string | null;
+  }
+) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error("Not authenticated");
+  const payload: Record<string, unknown> = {};
+  if (params.title !== undefined) payload.title = params.title;
+  if (params.due_date !== undefined) payload.due_date = params.due_date;
+  if (params.category !== undefined) payload.category = params.category;
+  if (params.recurrence_rule !== undefined) payload.recurrence_rule = params.recurrence_rule;
+  if (params.recurrence_weekdays !== undefined) payload.recurrence_weekdays = params.recurrence_weekdays;
+  if (params.impact !== undefined) payload.impact = params.impact;
+  if (params.urgency !== undefined) payload.urgency = params.urgency;
+  if (params.energy_required !== undefined) payload.energy_required = params.energy_required;
+  if (params.priority !== undefined) payload.priority = params.priority;
+  if (params.notes !== undefined) payload.notes = params.notes;
+  const { error } = await supabase.from("tasks").update(payload).eq("id", id).eq("user_id", user.id);
+  if (error) throw new Error(error.message);
+  revalidatePath("/dashboard");
+  revalidatePath("/tasks");
+}
+
+/** Duplicate a task to a given due date (same fields, new id). */
+export async function duplicateTask(id: string, due_date: string) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error("Not authenticated");
+  const { data: task } = await supabase
+    .from("tasks")
+    .select("title, category, recurrence_rule, recurrence_weekdays, impact, urgency, energy_required, priority")
+    .eq("id", id)
+    .eq("user_id", user.id)
+    .single();
+  if (!task) throw new Error("Task not found");
+  const t = task as { title: string; category?: string | null; recurrence_rule?: string | null; recurrence_weekdays?: string | null; impact?: number | null; urgency?: number | null; energy_required?: number | null; priority?: number | null };
+  const { error } = await supabase.from("tasks").insert({
+    user_id: user.id,
+    title: t.title,
+    due_date,
+    category: t.category ?? null,
+    recurrence_rule: t.recurrence_rule ?? null,
+    recurrence_weekdays: t.recurrence_weekdays ?? null,
+    impact: t.impact ?? null,
+    urgency: t.urgency ?? null,
+    energy_required: t.energy_required ?? null,
+    priority: t.priority ?? null,
+  } as Record<string, unknown>);
+  if (error) throw new Error(error.message);
+  revalidatePath("/dashboard");
+  revalidatePath("/tasks");
 }

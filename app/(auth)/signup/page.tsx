@@ -29,12 +29,18 @@ export default function SignupPage() {
   if (success) {
     return (
       <main className="w-full max-w-[400px]">
-        <div className="card-modern p-6 sm:p-8 text-center space-y-4">
+        <Link href="/" className="mb-4 inline-block text-sm text-neuro-muted hover:text-neuro-silver transition">
+          ← Back to home
+        </Link>
+        <div className="card-modern p-8 text-center space-y-5 shadow-xl">
+          <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-neuro-blue/20 text-neuro-blue" aria-hidden>
+            <span className="text-xl">✓</span>
+          </div>
           <h1 className="text-xl font-bold text-neuro-silver">Check your email</h1>
-          <p className="text-sm text-neutral-400">
-            We sent a confirmation link to {email}. Click it to activate your account, then sign in.
+          <p className="text-sm text-neuro-muted leading-relaxed">
+            We sent a confirmation link to <span className="font-medium text-neuro-silver">{email}</span>. Click it to activate your account, then sign in.
           </p>
-          <Link href="/login" className="inline-block font-medium text-neuro-blue hover:underline">
+          <Link href="/login" className="btn-primary inline-block rounded-lg px-5 py-2.5 text-sm font-medium">
             Back to sign in
           </Link>
         </div>
@@ -44,17 +50,20 @@ export default function SignupPage() {
 
   return (
     <main className="w-full max-w-[400px]">
-      <div className="card-modern p-6 sm:p-8">
+      <Link href="/" className="mb-4 inline-block text-sm text-neuro-muted hover:text-neuro-silver transition">
+        ← Back to home
+      </Link>
+      <div className="card-modern p-6 sm:p-8 shadow-xl">
         <div className="text-center mb-8">
-          <div className="flex flex-col items-center gap-3">
-            <Image src="/app-icon.png" alt="" width={40} height={40} className="mx-auto h-10 w-10 rounded-lg object-contain" priority />
-            <Image src="/logo-naam.png" alt="NEUROHQ" width={160} height={42} className="mx-auto mt-2 h-9 w-auto object-contain" priority />
+          <div className="flex flex-col items-center gap-4">
+            <Image src="/app-icon.png" alt="" width={72} height={72} className="h-[4.5rem] w-[4.5rem] rounded-xl object-contain" priority />
+            <Image src="/logo-naam.png" alt="NEUROHQ" width={200} height={52} className="h-12 w-auto max-w-[200px] object-contain" priority />
           </div>
-          <p className="mt-3 text-sm text-neutral-400">Create your account</p>
+          <p className="mt-4 text-sm text-neuro-muted">Create your account</p>
         </div>
         <form onSubmit={handleSubmit} className="space-y-5">
           <div>
-            <label htmlFor="email" className="block text-sm font-medium text-neutral-300">
+            <label htmlFor="email" className="block text-sm font-medium text-neuro-silver">
               Email
             </label>
             <input
@@ -64,13 +73,13 @@ export default function SignupPage() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
-              className="mt-1.5 w-full rounded-lg border border-neuro-border bg-[#0d1117] px-3 py-2.5 text-neuro-silver placeholder-neuro-muted focus:border-neuro-blue focus:outline-none focus:ring-1 focus:ring-neuro-blue"
+              className="mt-1.5 w-full rounded-lg border border-neuro-border bg-neuro-dark px-3 py-2.5 text-neuro-silver placeholder-neuro-muted focus:border-neuro-blue focus:outline-none focus:ring-2 focus:ring-neuro-blue/30"
               placeholder="you@example.com"
             />
           </div>
           <div>
-            <label htmlFor="password" className="block text-sm font-medium text-neutral-300">
-              Password
+            <label htmlFor="password" className="block text-sm font-medium text-neuro-silver">
+              Password <span className="text-neuro-muted font-normal">(at least 6 characters)</span>
             </label>
             <input
               id="password"
@@ -80,7 +89,7 @@ export default function SignupPage() {
               onChange={(e) => setPassword(e.target.value)}
               required
               minLength={6}
-              className="mt-1.5 w-full rounded-lg border border-neuro-border bg-[#0d1117] px-3 py-2.5 text-neuro-silver placeholder-neuro-muted focus:border-neuro-blue focus:outline-none focus:ring-1 focus:ring-neuro-blue"
+              className="mt-1.5 w-full rounded-lg border border-neuro-border bg-neuro-dark px-3 py-2.5 text-neuro-silver placeholder-neuro-muted focus:border-neuro-blue focus:outline-none focus:ring-2 focus:ring-neuro-blue/30"
               placeholder="At least 6 characters"
             />
           </div>
@@ -92,12 +101,12 @@ export default function SignupPage() {
           <button
             type="submit"
             disabled={loading}
-            className="btn-primary w-full cursor-pointer py-3 disabled:cursor-not-allowed disabled:opacity-50"
+            className="btn-primary w-full cursor-pointer rounded-lg py-3 font-medium disabled:cursor-not-allowed disabled:opacity-50"
           >
             {loading ? "Creating account…" : "Sign up"}
           </button>
         </form>
-        <p className="mt-6 text-center text-sm text-neutral-400">
+        <p className="mt-6 text-center text-sm text-neuro-muted">
           Already have an account?{" "}
           <Link href="/login" className="font-medium text-neuro-blue hover:underline">
             Sign in

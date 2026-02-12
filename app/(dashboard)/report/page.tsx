@@ -2,6 +2,7 @@ import { getRealityReport, getStoredReport, getStoredReportWeeks } from "@/app/a
 import { getWeekBounds } from "@/lib/utils/learning";
 import { RealityReportCard } from "@/components/RealityReportCard";
 import { ReportWeekSelector } from "@/components/ReportWeekSelector";
+import { ReportAnalysis } from "@/components/ReportAnalysis";
 
 type Props = { searchParams: Promise<{ weekStart?: string }> };
 
@@ -25,15 +26,18 @@ export default async function ReportPage({ searchParams }: Props) {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-xl font-bold text-neuro-silver">Reality report</h1>
-      <p className="text-sm text-neutral-400">
-        {isCurrentWeek ? "Summary of this week." : `Past week: ${report.weekStart} – ${report.weekEnd}.`}
-      </p>
+      <div>
+        <h1 className="text-2xl font-bold tracking-tight text-neuro-silver">Reality report</h1>
+        <p className="mt-1 text-sm text-neuro-muted">
+          {isCurrentWeek ? "Summary of this week." : `Past week: ${report.weekStart} – ${report.weekEnd}.`}
+        </p>
+      </div>
       <ReportWeekSelector
         storedWeeks={storedWeeks}
         currentWeekStart={currentWeekStart}
         selectedWeekStart={selectedWeekStart}
       />
+      <ReportAnalysis report={report} />
       <RealityReportCard report={report} />
     </div>
   );

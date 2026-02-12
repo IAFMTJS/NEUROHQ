@@ -2,6 +2,8 @@
 
 ## Version 1.0
 
+Where this document conflicts with **NEUROHQ_ULTRA_MASTER_SPEC.md**, the Ultra Master Spec is authoritative.
+
 ------------------------------------------------------------------------
 
 # 1. PRODUCT DEFINITION

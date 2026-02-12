@@ -1,0 +1,46 @@
+"use client";
+
+import { useState, useEffect } from "react";
+
+function getGreeting(): string {
+  const h = new Date().getHours();
+  if (h < 12) return "Good morning";
+  if (h < 17) return "Good afternoon";
+  return "Good evening";
+}
+
+function formatDate(): string {
+  return new Date().toLocaleDateString("en-US", {
+    weekday: "long",
+    month: "short",
+    day: "numeric",
+  });
+}
+
+type Props = {
+  energyPct?: number;
+  focusPct?: number;
+  loadPct?: number;
+};
+
+export function HQHeader({ energyPct: _energyPct = 0, focusPct: _focusPct = 0, loadPct: _loadPct = 0 }: Props) {
+  const [greeting, setGreeting] = useState(getGreeting);
+  const [dateStr, setDateStr] = useState(formatDate);
+
+  useEffect(() => {
+    const tick = () => {
+      setGreeting(getGreeting());
+      setDateStr(formatDate());
+    };
+    tick();
+    const id = setInterval(tick, 60_000);
+    return () => clearInterval(id);
+  }, []);
+
+  return (
+    <header className="flex flex-col items-center gap-2 pt-0 pb-2 -mt-[7.5rem]">
+      <h1 className="hq-h1 text-center leading-tight">{greeting}, Commander</h1>
+      <p className="hq-date text-center">{dateStr}</p>
+    </header>
+  );
+}

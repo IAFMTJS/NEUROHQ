@@ -49,33 +49,33 @@ export function Modal({ open, onClose, title, children, showBranding = true, noP
   return (
     <div
       ref={overlayRef}
-      className="fixed inset-0 z-[100] flex items-center justify-center p-4"
+      className="fixed inset-0 z-[100] flex items-center justify-center p-4 modal-overlay"
       role="dialog"
       aria-modal="true"
       aria-labelledby="modal-title"
     >
       {/* Backdrop */}
       <div
-        className="absolute inset-0 bg-black/60"
+        className="modal-backdrop absolute inset-0"
         aria-hidden
         onClick={onClose}
       />
       {/* Card */}
       <div
-        className="modal-card relative w-full max-w-sm overflow-hidden"
+        className="modal-card relative w-full max-w-md overflow-hidden"
         onClick={(e) => e.stopPropagation()}
       >
         {showBranding && (
-          <div className="flex items-center justify-center gap-2 border-b border-neuro-border px-4 py-2.5">
-            <Image src="/app-icon.png" alt="" width={24} height={24} className="h-6 w-6 rounded object-contain" />
-            <span className="text-xs font-medium text-neuro-muted">NEUROHQ</span>
+          <div className="flex items-center justify-center gap-3 border-b border-neuro-border/80 px-5 py-4">
+            <Image src="/app-icon.png" alt="" width={40} height={40} className="h-10 w-10 rounded-xl object-contain shrink-0" />
+            <span className="text-sm font-semibold tracking-tight text-neuro-silver">NEUROHQ</span>
           </div>
         )}
-        <div className={noPadding ? undefined : "p-5"}>
-          <h2 id="modal-title" className="text-lg font-semibold text-neuro-silver">
+        <div className={noPadding ? undefined : "p-6"}>
+          <h2 id="modal-title" className="text-xl font-semibold text-neuro-silver">
             {title}
           </h2>
-          <div className={noPadding ? undefined : "mt-3"}>{children}</div>
+          <div className={noPadding ? undefined : "mt-4"}>{children}</div>
         </div>
       </div>
     </div>

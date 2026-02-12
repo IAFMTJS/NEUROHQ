@@ -165,3 +165,9 @@ create index if not exists idx_budget_entries_user_date on public.budget_entries
 create index if not exists idx_learning_sessions_user_date on public.learning_sessions(user_id, date);
 create index if not exists idx_calendar_events_user_start on public.calendar_events(user_id, start_at);
 create index if not exists idx_feature_flags_name on public.feature_flags(name);
+
+-- RLS helper: check if current user is admin without triggering RLS on public.users (avoids infinite recursion)
+create or replace function public.current_user_is_admin()
+returns boolean language sql security definer set search_path = public stable as $$
+  select exists (select 1 from public.users where id = auth.uid() and role = 'admin');
+$$;

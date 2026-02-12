@@ -24,6 +24,25 @@ export async function getCalendarEventsForDate(date: string) {
   return data ?? [];
 }
 
+/** Events from startDate through startDate + (numDays - 1), for showing "Today" and upcoming days. */
+export async function getUpcomingCalendarEvents(startDate: string, numDays: number) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return [];
+  const start = `${startDate}T00:00:00`;
+  const endDate = new Date(startDate);
+  endDate.setDate(endDate.getDate() + numDays);
+  const endStr = endDate.toISOString().slice(0, 10) + "T00:00:00";
+  const { data } = await supabase
+    .from("calendar_events")
+    .select("*")
+    .eq("user_id", user.id)
+    .gte("start_at", start)
+    .lt("start_at", endStr)
+    .order("start_at", { ascending: true });
+  return data ?? [];
+}
+
 export async function addManualEvent(params: {
   title: string;
   start_at: string;
@@ -71,6 +90,7 @@ export async function addManualEvent(params: {
   });
   if (error) throw new Error(error.message);
   revalidatePath("/dashboard");
+  revalidatePath("/dashboard/tasks");
   revalidatePath("/budget");
 }
 
@@ -97,6 +117,8 @@ export async function deleteCalendarEvent(id: string) {
   const { error } = await supabase.from("calendar_events").delete().eq("id", id).eq("user_id", user.id);
   if (error) throw new Error(error.message);
   revalidatePath("/dashboard");
+  revalidatePath("/dashboard/tasks");
+  revalidatePath("/budget");
 }
 
 export async function hasGoogleCalendarToken(): Promise<boolean> {

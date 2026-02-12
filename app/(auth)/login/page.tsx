@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { createClient } from "@/lib/supabase/client";
+import { ensureUserProfileForSession } from "@/app/actions/auth";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
@@ -23,6 +24,7 @@ export default function LoginPage() {
         setLoading(false);
         return;
       }
+      await ensureUserProfileForSession();
       // Full page navigation so cookies are sent and middleware sees the session
       window.location.href = "/dashboard";
       return;
@@ -34,13 +36,16 @@ export default function LoginPage() {
 
   return (
     <main className="w-full max-w-[400px]">
-      <div className="card-modern p-6 sm:p-8">
+      <Link href="/" className="mb-4 inline-block text-sm text-neuro-muted hover:text-neuro-silver transition">
+        ← Back to home
+      </Link>
+      <div className="card-modern p-6 sm:p-8 shadow-xl">
         <div className="text-center mb-8">
-          <div className="flex flex-col items-center gap-3">
-            <Image src="/app-icon.png" alt="" width={40} height={40} className="mx-auto h-10 w-10 rounded-lg object-contain" priority />
-            <Image src="/logo-naam.png" alt="NEUROHQ" width={160} height={42} className="mx-auto mt-2 h-9 w-auto object-contain" priority />
+          <div className="flex flex-col items-center gap-4">
+            <Image src="/app-icon.png" alt="" width={72} height={72} className="h-[4.5rem] w-[4.5rem] rounded-xl object-contain" priority />
+            <Image src="/logo-naam.png" alt="NEUROHQ" width={200} height={52} className="h-12 w-auto max-w-[200px] object-contain" priority />
           </div>
-          <p className="mt-3 text-sm text-neuro-muted">Sign in to your account</p>
+          <p className="mt-4 text-sm text-neuro-muted">Sign in to your account</p>
         </div>
         <form onSubmit={handleSubmit} className="space-y-5">
           <div>
@@ -54,14 +59,19 @@ export default function LoginPage() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
-              className="mt-1.5 w-full rounded-lg border border-neuro-border bg-[#0d1117] px-3 py-2.5 text-neuro-silver placeholder-neuro-muted focus:border-neuro-blue focus:outline-none focus:ring-1 focus:ring-neuro-blue"
+              className="mt-1.5 w-full rounded-lg border border-neuro-border bg-neuro-dark px-3 py-2.5 text-neuro-silver placeholder-neuro-muted focus:border-neuro-blue focus:outline-none focus:ring-2 focus:ring-neuro-blue/30"
               placeholder="you@example.com"
             />
           </div>
           <div>
-            <label htmlFor="password" className="block text-sm font-medium text-neuro-silver">
-              Password
-            </label>
+            <div className="flex justify-between items-center">
+              <label htmlFor="password" className="block text-sm font-medium text-neuro-silver">
+                Password
+              </label>
+              <Link href="/forgot-password" className="text-xs text-neuro-muted hover:text-neuro-blue">
+                Forgot password?
+              </Link>
+            </div>
             <input
               id="password"
               type="password"
@@ -69,7 +79,7 @@ export default function LoginPage() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
-              className="mt-1.5 w-full rounded-lg border border-neuro-border bg-[#0d1117] px-3 py-2.5 text-neuro-silver placeholder-neuro-muted focus:border-neuro-blue focus:outline-none focus:ring-1 focus:ring-neuro-blue"
+              className="mt-1.5 w-full rounded-lg border border-neuro-border bg-neuro-dark px-3 py-2.5 text-neuro-silver placeholder-neuro-muted focus:border-neuro-blue focus:outline-none focus:ring-2 focus:ring-neuro-blue/30"
             />
           </div>
           {error && (
@@ -80,7 +90,7 @@ export default function LoginPage() {
           <button
             type="submit"
             disabled={loading}
-            className="btn-primary w-full cursor-pointer py-3 disabled:cursor-not-allowed disabled:opacity-50"
+            className="btn-primary w-full cursor-pointer rounded-lg py-3 font-medium disabled:cursor-not-allowed disabled:opacity-50"
           >
             {loading ? "Signing in…" : "Sign in"}
           </button>

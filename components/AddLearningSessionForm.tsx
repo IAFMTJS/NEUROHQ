@@ -20,29 +20,29 @@ export function AddLearningSessionForm({ date }: { date: string }) {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="flex flex-wrap items-end gap-2 rounded-lg border border-neutral-700 bg-neuro-surface p-4">
-      <label className="flex flex-col gap-1">
-        <span className="text-xs text-neutral-400">Minutes</span>
+    <form onSubmit={handleSubmit} className="flex flex-wrap items-end gap-4">
+      <label className="flex flex-col gap-1.5">
+        <span className="text-sm font-medium text-neuro-muted">Minutes</span>
         <input
           type="number"
           min="1"
           value={minutes}
           onChange={(e) => setMinutes(e.target.value)}
-          className="w-20 rounded border border-neutral-600 bg-neuro-dark px-2 py-1.5 text-sm text-white"
+          className="w-24 rounded-lg border border-neuro-border bg-neuro-dark px-3 py-2.5 text-sm text-neuro-silver placeholder-neuro-muted focus:border-neuro-blue focus:outline-none focus:ring-2 focus:ring-neuro-blue/30"
           required
         />
       </label>
-      <label className="flex flex-col gap-1">
-        <span className="text-xs text-neutral-400">Topic (optional)</span>
+      <label className="flex flex-col gap-1.5">
+        <span className="text-sm font-medium text-neuro-muted">Topic (optional)</span>
         <input
           type="text"
           value={topic}
           onChange={(e) => setTopic(e.target.value)}
           placeholder="e.g. React"
-          className="w-40 rounded border border-neutral-600 bg-neuro-dark px-2 py-1.5 text-sm text-white"
+          className="w-44 rounded-lg border border-neuro-border bg-neuro-dark px-3 py-2.5 text-sm text-neuro-silver placeholder-neuro-muted focus:border-neuro-blue focus:outline-none focus:ring-2 focus:ring-neuro-blue/30"
         />
       </label>
-      <button type="submit" disabled={pending} className="rounded bg-neuro-blue px-3 py-1.5 text-sm text-white">
+      <button type="submit" disabled={pending} className="btn-primary rounded-lg px-4 py-2.5 text-sm font-medium disabled:opacity-50">
         Log session
       </button>
     </form>

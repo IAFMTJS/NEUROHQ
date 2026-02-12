@@ -33,46 +33,48 @@ export function SavingsGoalCard({ goal, weeklyReq }: { goal: Goal; weeklyReq: nu
   }
 
   return (
-    <div className="rounded-lg border border-neutral-700 bg-neuro-surface p-4">
-      <div className="flex items-start justify-between">
+    <div className="card-modern overflow-hidden p-0">
+      <div className="flex items-start justify-between border-b border-neuro-border px-4 py-3">
         <div>
-          <h3 className="font-medium text-neuro-silver">{goal.name}</h3>
-          <p className="text-sm text-neutral-400">
+          <h3 className="font-semibold text-neuro-silver">{goal.name}</h3>
+          <p className="mt-0.5 text-sm text-neuro-muted">
             {(goal.current_cents / 100).toFixed(2)} / {(goal.target_cents / 100).toFixed(2)}
             {goal.deadline && ` · Deadline ${goal.deadline}`}
           </p>
           {weeklyReq !== null && weeklyReq > 0 && (
-            <p className="mt-1 text-xs text-neuro-blue">~{(weeklyReq / 100).toFixed(0)}/week to reach goal</p>
+            <p className="mt-1 text-xs font-medium text-neuro-blue">~{(weeklyReq / 100).toFixed(0)}/week to reach goal</p>
           )}
         </div>
         <button
           type="button"
           onClick={handleDelete}
           disabled={pending}
-          className="text-xs text-neutral-500 hover:text-red-400"
+          className="rounded-lg px-2 py-1 text-xs text-neuro-muted hover:bg-red-500/10 hover:text-red-400 transition"
         >
           Delete
         </button>
       </div>
-      <div className="mt-2 h-2 w-full overflow-hidden rounded-full bg-neutral-700">
-        <div
-          className="h-full rounded-full bg-neuro-blue transition-all"
-          style={{ width: `${pct}%` }}
-        />
+      <div className="p-4">
+        <div className="h-2.5 w-full overflow-hidden rounded-full bg-neuro-border">
+          <div
+            className="h-full rounded-full bg-neuro-blue transition-all duration-300"
+            style={{ width: `${pct}%` }}
+          />
+        </div>
+        <form onSubmit={handleAdd} className="mt-3 flex gap-2">
+          <input
+            name="amount"
+            type="number"
+            min="1"
+            step="100"
+            placeholder="Add (cents)"
+            className="w-24 rounded-lg border border-neuro-border bg-neuro-dark px-3 py-2 text-sm text-neuro-silver placeholder-neuro-muted focus:border-neuro-blue focus:outline-none focus:ring-2 focus:ring-neuro-blue/30"
+          />
+          <button type="submit" disabled={pending} className="btn-primary rounded-lg px-3 py-2 text-sm font-medium disabled:opacity-50">
+            Add
+          </button>
+        </form>
       </div>
-      <form onSubmit={handleAdd} className="mt-2 flex gap-2">
-        <input
-          name="amount"
-          type="number"
-          min="1"
-          step="100"
-          placeholder="Add (cents)"
-          className="w-24 rounded border border-neutral-600 bg-neuro-dark px-2 py-1 text-sm text-white"
-        />
-        <button type="submit" disabled={pending} className="rounded bg-neuro-blue px-2 py-1 text-sm text-white">
-          Add
-        </button>
-      </form>
     </div>
   );
 }

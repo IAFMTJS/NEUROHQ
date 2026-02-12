@@ -39,27 +39,31 @@ export function SettingsDeleteAccount() {
   }
 
   return (
-    <div className="rounded-lg border border-red-900/50 bg-red-900/20 p-4">
-      <h2 className="text-sm font-medium text-red-200">Delete account</h2>
-      <p className="mt-2 text-sm text-neutral-400">
-        Permanently delete your account and all data. This cannot be undone.
-      </p>
-      <input
-        type="text"
-        value={confirm}
-        onChange={(e) => setConfirm(e.target.value)}
-        placeholder={`Type ${CONFIRM_TEXT} to confirm`}
-        className="mt-3 w-full max-w-xs rounded border border-neutral-600 bg-neuro-dark px-3 py-2 text-sm text-white placeholder-neutral-500"
-      />
-      {error && <p className="mt-2 text-sm text-red-400">{error}</p>}
-      <button
-        type="button"
-        onClick={handleDelete}
-        disabled={loading || confirm !== CONFIRM_TEXT}
-        className="mt-3 rounded bg-red-700 px-3 py-2 text-sm text-white hover:bg-red-600 disabled:opacity-50"
-      >
-        {loading ? "Deleting…" : "Delete my account"}
-      </button>
+    <div className="overflow-hidden rounded-2xl border border-red-900/40 bg-red-950/20">
+      <div className="border-b border-red-900/30 px-4 py-3">
+        <h2 className="text-base font-semibold text-red-200">Delete account</h2>
+      </div>
+      <div className="p-4">
+        <p className="text-sm text-neuro-muted">
+          Permanently delete your account and all data. This cannot be undone.
+        </p>
+        <input
+          type="text"
+          value={confirm}
+          onChange={(e) => setConfirm(e.target.value)}
+          placeholder={`Type ${CONFIRM_TEXT} to confirm`}
+          className="mt-3 w-full max-w-xs rounded-lg border border-neuro-border bg-neuro-dark px-3 py-2.5 text-sm text-neuro-silver placeholder-neuro-muted focus:border-red-500 focus:outline-none focus:ring-2 focus:ring-red-500/30"
+        />
+        {error && <p className="mt-2 text-sm text-red-400">{error}</p>}
+        <button
+          type="button"
+          onClick={handleDelete}
+          disabled={loading || confirm !== CONFIRM_TEXT}
+          className="mt-3 rounded-lg bg-red-600 px-4 py-2.5 text-sm font-medium text-white hover:bg-red-500 disabled:opacity-50"
+        >
+          {loading ? "Deleting…" : "Delete my account"}
+        </button>
+      </div>
     </div>
   );
 }

@@ -15,6 +15,8 @@ export type RealityReport = {
   avgEnergy: number | null;
   avgFocus: number | null;
   carryOverCount: number;
+  /** Execution score 0–100: (tasks × 0.5) + (learning × 0.2) + (savings × 0.2) − (carryover × 0.1) per Ultra Spec */
+  executionScore: number | null;
 };
 
 export async function getRealityReport(weekStart: string, weekEnd: string): Promise<RealityReport> {
@@ -32,6 +34,7 @@ export async function getRealityReport(weekStart: string, weekEnd: string): Prom
       avgEnergy: null,
       avgFocus: null,
       carryOverCount: 0,
+      executionScore: null,
     };
   }
 
@@ -76,17 +79,33 @@ export async function getRealityReport(weekStart: string, weekEnd: string): Prom
     .eq("completed", false);
   const carryOverCount = Math.max(0, ...(lastDayTasks ?? []).map((t) => t.carry_over_count ?? 0));
 
+  const learningTarget = 60;
+  const learningConsistency = learningTarget > 0
+    ? Math.min(1, learningMinutes / learningTarget)
+    : 0;
+  const savingsAdherence = savingsProgress.length > 0
+    ? savingsProgress.reduce((s, g) => s + g.pct / 100, 0) / savingsProgress.length
+    : 0.5;
+  const taskScore = tasksPlanned > 0 ? (tasksCompleted / tasksPlanned) * 0.5 : 0;
+  const learningScore = learningConsistency * 0.2;
+  const savingsScore = savingsAdherence * 0.2;
+  const carryoverPenalty = Math.min(0.1, carryOverCount * 0.02);
+  const raw =
+    taskScore + learningScore + savingsScore - carryoverPenalty;
+  const executionScore = raw >= 0 ? Math.round(Math.min(100, raw * 100)) : null;
+
   return {
     weekStart,
     weekEnd,
     tasksCompleted,
     tasksPlanned,
     learningMinutes,
-    learningTarget: 60,
+    learningTarget,
     savingsProgress,
     avgEnergy: avgEnergy != null ? Math.round(avgEnergy * 10) / 10 : null,
     avgFocus: avgFocus != null ? Math.round(avgFocus * 10) / 10 : null,
     carryOverCount,
+    executionScore,
   };
 }
 

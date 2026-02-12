@@ -75,44 +75,44 @@ export function AddBudgetEntryForm({ date }: { date: string }) {
           </button>
         </div>
       </Modal>
-    <form onSubmit={handleSubmit} className="card-modern flex flex-wrap items-end gap-2 p-4">
-      <label className="flex flex-col gap-1">
-        <span className="text-xs text-neutral-400">Amount</span>
+    <form onSubmit={handleSubmit} className="flex flex-wrap items-end gap-4">
+      <label className="flex flex-col gap-1.5">
+        <span className="text-sm font-medium text-neuro-muted">Amount</span>
         <input
           type="number"
           step="0.01"
           min="0"
           value={amount}
           onChange={(e) => setAmount(e.target.value)}
-          className="w-24 rounded border border-neutral-600 bg-neuro-dark px-2 py-1.5 text-sm text-white"
+          className="w-28 rounded-lg border border-neuro-border bg-neuro-dark px-3 py-2.5 text-sm text-neuro-silver placeholder-neuro-muted focus:border-neuro-blue focus:outline-none focus:ring-2 focus:ring-neuro-blue/30"
           required
         />
       </label>
       <label className="flex items-center gap-2">
-        <input type="checkbox" checked={isExpense} onChange={(e) => setIsExpense(e.target.checked)} />
-        <span className="text-sm text-neutral-400">Expense</span>
+        <input type="checkbox" checked={isExpense} onChange={(e) => setIsExpense(e.target.checked)} className="rounded border-neuro-border text-neuro-blue focus:ring-neuro-blue" />
+        <span className="text-sm text-neuro-muted">Expense</span>
       </label>
-      <label className="flex flex-col gap-1">
-        <span className="text-xs text-neutral-400">Category</span>
+      <label className="flex flex-col gap-1.5">
+        <span className="text-sm font-medium text-neuro-muted">Category</span>
         <input
           type="text"
           value={category}
           onChange={(e) => setCategory(e.target.value)}
           placeholder="e.g. food"
-          className="w-28 rounded border border-neutral-600 bg-neuro-dark px-2 py-1.5 text-sm text-white"
+          className="w-32 rounded-lg border border-neuro-border bg-neuro-dark px-3 py-2.5 text-sm text-neuro-silver placeholder-neuro-muted focus:border-neuro-blue focus:outline-none focus:ring-2 focus:ring-neuro-blue/30"
         />
       </label>
-      <label className="flex flex-col gap-1">
-        <span className="text-xs text-neutral-400">Note</span>
+      <label className="flex flex-col gap-1.5">
+        <span className="text-sm font-medium text-neuro-muted">Note</span>
         <input
           type="text"
           value={note}
           onChange={(e) => setNote(e.target.value)}
           placeholder="Optional"
-          className="w-40 rounded border border-neutral-600 bg-neuro-dark px-2 py-1.5 text-sm text-white"
+          className="w-44 rounded-lg border border-neuro-border bg-neuro-dark px-3 py-2.5 text-sm text-neuro-silver placeholder-neuro-muted focus:border-neuro-blue focus:outline-none focus:ring-2 focus:ring-neuro-blue/30"
         />
       </label>
-      <button type="submit" disabled={pending} className="btn-primary rounded-xl px-4 py-2 text-sm">
+      <button type="submit" disabled={pending} className="btn-primary rounded-lg px-4 py-2.5 text-sm font-medium disabled:opacity-50">
         Add
       </button>
     </form>

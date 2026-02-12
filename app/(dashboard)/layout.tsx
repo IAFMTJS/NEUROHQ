@@ -1,26 +1,27 @@
-import { createClient } from "@/lib/supabase/server";
-import { redirect } from "next/navigation";
-import { ensureUserProfile } from "@/app/actions/auth";
-import { AppHeader, BottomNav } from "@/components/DashboardNav";
+import { BottomNav } from "@/components/DashboardNav";
+import { HQBackground } from "@/components/hq/HQBackground";
 
-export default async function DashboardLayout({
+/** Auth enforced by middleware; layout is sync so nav shows shell + loading immediately. */
+export default function DashboardLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) redirect("/login");
-  await ensureUserProfile(user.id, user.email);
-
   return (
-    <div className="min-h-screen bg-neuro-dark">
-      <div className="mx-auto flex min-h-screen max-w-[420px] flex-col bg-neuro-dark md:min-h-[640px]">
+    <div className="relative min-h-screen">
+      <div className="hq-bg-layer" aria-hidden />
+      <HQBackground />
+      <div className="hq-vignette" aria-hidden />
+      <div className="relative z-10 mx-auto flex min-h-screen max-w-[420px] flex-col md:min-h-[640px]">
         <a href="#main-content" className="skip-link">
           Skip to main content
         </a>
-        <AppHeader />
-        <main id="main-content" className="main-with-footer flex-1 overflow-auto p-4" tabIndex={-1}>
+        <main
+          id="main-content"
+          className="main-with-footer relative z-10 flex-1 overflow-auto px-5 py-4"
+          style={{ paddingLeft: "var(--hq-padding-x)", paddingRight: "var(--hq-padding-x)" }}
+          tabIndex={-1}
+        >
           {children}
         </main>
         <BottomNav />

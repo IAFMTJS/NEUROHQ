@@ -24,21 +24,28 @@ export async function getDailyState(date: string) {
   return data;
 }
 
-export async function saveDailyState(input: DailyStateInput) {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) throw new Error("Not authenticated");
-  const { error } = await supabase.from("daily_state").upsert(
-    {
+export type SaveDailyStateResult = { ok: true } | { ok: false; error: string };
+
+export async function saveDailyState(input: DailyStateInput): Promise<SaveDailyStateResult> {
+  try {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return { ok: false, error: "Not signed in." };
+    const row = {
       user_id: user.id,
       date: input.date,
-      energy: input.energy,
-      focus: input.focus,
-      sensory_load: input.sensory_load,
+      energy: input.energy ?? null,
+      focus: input.focus ?? null,
+      sensory_load: input.sensory_load ?? null,
       sleep_hours: input.sleep_hours,
-      social_load: input.social_load,
-    },
-    { onConflict: "user_id,date" }
-  );
-  if (error) throw new Error(error.message);
+      social_load: input.social_load ?? null,
+    };
+    const { error } = await supabase.from("daily_state").upsert(row, {
+      onConflict: "user_id,date",
+    });
+    if (error) return { ok: false, error: error.message };
+    return { ok: true };
+  } catch (e) {
+    return { ok: false, error: e instanceof Error ? e.message : "Failed to save." };
+  }
 }

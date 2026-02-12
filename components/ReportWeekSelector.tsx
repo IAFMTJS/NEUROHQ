@@ -15,11 +15,13 @@ export function ReportWeekSelector({
 }) {
   const isCurrent = selectedWeekStart === currentWeekStart;
   return (
-    <nav aria-label="Select report week" className="mb-4 flex flex-wrap gap-2">
+    <nav aria-label="Select report week" className="flex flex-wrap gap-2">
       <Link
         href="/report"
-        className={`rounded px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-neuro-blue ${
-          isCurrent ? "bg-neuro-blue text-white" : "bg-neutral-700 text-neutral-300 hover:bg-neutral-600"
+        className={`rounded-full px-4 py-2 text-sm font-medium transition focus:outline-none focus:ring-2 focus:ring-neuro-blue focus:ring-offset-2 focus:ring-offset-neuro-dark ${
+          isCurrent
+            ? "bg-neuro-blue text-neuro-dark"
+            : "border border-neuro-border bg-neuro-surface text-neuro-muted hover:bg-neuro-border/50 hover:text-neuro-silver"
         }`}
       >
         This week
@@ -30,8 +32,10 @@ export function ReportWeekSelector({
           <Link
             key={w.week_start}
             href={`/report?weekStart=${encodeURIComponent(w.week_start)}`}
-            className={`rounded px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-neuro-blue ${
-              selectedWeekStart === w.week_start ? "bg-neuro-blue text-white" : "bg-neutral-700 text-neutral-300 hover:bg-neutral-600"
+            className={`rounded-full px-4 py-2 text-sm font-medium transition focus:outline-none focus:ring-2 focus:ring-neuro-blue focus:ring-offset-2 focus:ring-offset-neuro-dark ${
+              selectedWeekStart === w.week_start
+                ? "bg-neuro-blue text-neuro-dark"
+                : "border border-neuro-border bg-neuro-surface text-neuro-muted hover:bg-neuro-border/50 hover:text-neuro-silver"
             }`}
           >
             {w.week_start} – {w.week_end}

@@ -24,6 +24,7 @@ export async function upsertQuarterlyStrategy(params: {
   secondary_theme?: string | null;
   savings_goal_id?: string | null;
   identity_statement?: string | null;
+  key_results?: string | null;
 }) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
@@ -37,6 +38,7 @@ export async function upsertQuarterlyStrategy(params: {
     secondary_theme: params.secondary_theme ?? null,
     savings_goal_id: params.savings_goal_id ?? null,
     identity_statement: params.identity_statement ?? null,
+    key_results: params.key_results ?? null,
   };
   const { error } = await supabase
     .from("quarterly_strategy")

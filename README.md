@@ -29,13 +29,33 @@ Nervous-system-aware personal operating system — calendar-based, mood-adaptive
    ```
    Open [http://localhost:3000](http://localhost:3000). Sign up, then use Dashboard (daily state, quote, energy budget, tasks).
 
+## Local servers (what to run when)
+
+| Command | Port | Use when |
+|---------|------|----------|
+| `npm run dev` | 3000 | Day-to-day dev: hot reload, fast feedback. |
+| `npm run build` then `npm run serve` | 3000 | Production-like: faster page switches, no HMR. Stop dev first or port 3000 is in use. |
+| `npm run serve:prod` | 3001 | Run production build alongside dev: dev on 3000, production on 3001 to compare speed. |
+| `npm run test` | — | Run Vitest tests. `npm run test:watch` for watch mode. |
+
+**Supabase local (optional)** — If you have [Docker](https://docs.docker.com/get-docker/) and [Supabase CLI](https://supabase.com/docs/guides/cli):
+
+```bash
+supabase init    # once, creates config if missing
+supabase start   # Postgres, Auth, etc. locally
+```
+
+Then point `.env.local` at the URLs Supabase prints (e.g. `NEXT_PUBLIC_SUPABASE_URL=http://127.0.0.1:54321`, anon key from `supabase status`). Good for: faster DB/auth (no network), offline dev, or testing without touching cloud.
+
 ## Scripts
 
 | Command | Description |
 |---------|-------------|
 | `npm run dev` | Start Next.js dev server (local) |
 | `npm run build` | Production build |
-| `npm run start` | Run production server (after build) |
+| `npm run serve` | Production server on port 3000 (run after build) |
+| `npm run serve:prod` | Production server on port 3001 (use when dev is on 3000) |
+| `npm run start` | Same as dev (Next.js dev on 3000) |
 | `npm run lint` | ESLint |
 | `npm run test` | Run tests (Vitest) |
 | `npm run seed:quotes` | Generate full quotes SQL from `365_Philosophical_Quotes_Structured.txt` |

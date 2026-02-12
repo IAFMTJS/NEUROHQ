@@ -2,33 +2,261 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ========== NEUROHQ UI SYSTEM – Design Tokens (v1.0) ========== */
 :root {
-  --neuro-bg: #0d1117;
-  --neuro-surface: #161b22;
-  --neuro-border: #21262d;
-  --neuro-text: #e6edf3;
-  --neuro-muted: #8b949e;
-  --neuro-accent: #58a6ff;
+  /* Backgrounds */
+  --bg-primary: #0B1220;
+  --bg-surface: #121A2A;
+  --bg-elevated: #162033;
+  --bg-overlay: rgba(11, 18, 32, 0.85);
+
+  /* Accents */
+  --accent-focus: #00E5FF;
+  --accent-energy: #00FFC6;
+  --accent-warning: #FF7A1A;
+  --accent-neutral: #2A3A52;
+
+  /* Text */
+  --text-primary: #E6F1FF;
+  --text-secondary: #8FA3BF;
+  --text-muted: #5F6C80;
+
+  /* Glows (subtle) */
+  --glow-focus: 0 0 12px rgba(0, 229, 255, 0.6);
+  --glow-energy: 0 0 12px rgba(0, 255, 198, 0.5);
+  --glow-warning: 0 0 12px rgba(255, 122, 26, 0.6);
+  --glow-neutral: 0 0 12px rgba(42, 58, 82, 0.6);
+
+  /* Layout (8pt grid) */
   --footer-height: 6rem;
+  --hq-padding-x: 20px;
+  --hq-card-gap: 20px;
+  --hq-card-radius: 16px;
+  --hq-card-radius-sharp: 14px;
+  --hq-btn-radius: 12px;
+  --space-8: 8px;
+  --space-16: 16px;
+  --space-24: 24px;
+  --space-32: 32px;
+
+  /* Upgrade: card gradient */
+  --card-bg-top: #121A2A;
+  --card-bg-bottom: #0F172A;
+  --card-border: rgba(255, 255, 255, 0.04);
+  --card-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+  --card-inner-glow: inset 0 0 20px rgba(0, 200, 255, 0.03);
+  --mascot-halo: rgba(0, 200, 255, 0.15);
+  --ring-glow-energy: rgba(0, 255, 200, 0.4);
+  --ring-glow-focus: rgba(0, 200, 255, 0.5);
+  --ring-glow-load: rgba(255, 140, 0, 0.5);
+
+  /* Legacy (alias to new tokens for compatibility) */
+  --neuro-bg: var(--bg-primary);
+  --neuro-surface: var(--bg-surface);
+  --neuro-border: var(--accent-neutral);
+  --neuro-text: var(--text-primary);
+  --neuro-muted: var(--text-muted);
+  --neuro-accent: var(--accent-focus);
 }
 
 body {
-  background: var(--neuro-bg);
-  color: var(--neuro-text);
+  background: var(--bg-primary);
+  background-image: url("/BACKGROUND.PNG");
+  background-size: cover;
+  background-position: center;
+  background-attachment: fixed;
+  background-repeat: no-repeat;
+  color: var(--text-primary);
   min-height: 100vh;
 }
 
-/* Single card style: flat, clear */
+/* ========== NEUROHQ Visual Upgrade – Layered Background ========== */
+.hq-bg-layer {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background: transparent;
+}
+.hq-bg-layer::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    ellipse 140% 100% at 50% -10%,
+    rgba(0, 200, 255, 0.08) 0%,
+    transparent 50%
+  );
+}
+.hq-bg-layer::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.2);
+  pointer-events: none;
+}
+.hq-vignette {
+  position: fixed;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  background: radial-gradient(
+    ellipse 75% 75% at 50% 50%,
+    transparent 45%,
+    rgba(0, 0, 0, 0.35) 100%
+  );
+}
+@media (prefers-reduced-motion: reduce) {
+  .hq-bg-layer::before,
+  .hq-bg-layer::after {
+    animation: none;
+  }
+}
+
+/* ========== NEUROHQ Typography (Upgrade) ========== */
+.hq-h1 {
+  font-weight: 700;
+  font-size: clamp(26px, 5vw, 30px);
+  color: var(--text-primary);
+  letter-spacing: -0.005em;
+}
+.hq-date {
+  font-weight: 400;
+  font-size: 14px;
+  color: var(--text-secondary);
+  opacity: 0.7;
+}
+.hq-h2 {
+  font-weight: 600;
+  font-size: clamp(18px, 3vw, 20px);
+  color: var(--text-primary);
+}
+.hq-label {
+  font-weight: 500;
+  font-size: 12px;
+  letter-spacing: 1px;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+}
+.hq-body {
+  font-weight: 400;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--text-secondary);
+}
+.hq-body-lg {
+  font-size: 15px;
+  line-height: 1.5;
+}
+
+/* ========== NEUROHQ Motion (150–400ms interactions, 800–1200ms data, ease-out) ========== */
+.hq-card-enter {
+  animation: hq-fade-up 400ms cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+}
+@keyframes hq-fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.hq-breathing {
+  animation: hq-breathe 4s ease-in-out infinite;
+}
+@keyframes hq-breathe {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.02); }
+}
+.hq-nav-underline {
+  transform: translateX(-50%);
+  animation: hq-nav-underline 0.25s ease-out forwards;
+}
+@keyframes hq-nav-underline {
+  from { opacity: 0; transform: translateX(-50%) scaleX(0); }
+  to { opacity: 1; transform: translateX(-50%) scaleX(1); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .hq-card-enter,
+  .hq-breathing,
+  .btn-hq-primary-time-window,
+  .hq-nav-underline {
+    animation: none;
+  }
+}
+
+/* ========== NEUROHQ Card Upgrade ========== */
+.hq-card {
+  background: linear-gradient(180deg, var(--card-bg-top) 0%, var(--card-bg-bottom) 100%);
+  border: 1px solid var(--card-border);
+  border-radius: var(--hq-card-radius-sharp);
+  box-shadow: var(--card-shadow);
+  position: relative;
+  overflow: hidden;
+}
+.hq-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  box-shadow: var(--card-inner-glow);
+  pointer-events: none;
+}
+.hq-card-mission {
+  background: linear-gradient(180deg, #151E30 0%, #111827 100%);
+  border: 1px solid var(--card-border);
+  border-radius: var(--hq-card-radius-sharp);
+  box-shadow: var(--card-shadow), 0 4px 20px rgba(0, 200, 255, 0.08);
+  position: relative;
+  overflow: hidden;
+}
+.hq-card-mission::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  background: linear-gradient(180deg, var(--accent-focus), var(--accent-energy));
+  border-radius: var(--hq-card-radius-sharp) 0 0 var(--hq-card-radius-sharp);
+  pointer-events: none;
+}
+.hq-card-mission::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  box-shadow: var(--card-inner-glow);
+  pointer-events: none;
+}
+
+/* Single card style: flat, clear, slightly softer */
 .card-modern,
 .card-modern-accent {
   background: var(--neuro-surface);
   border: 1px solid var(--neuro-border);
-  border-radius: 12px;
+  border-radius: 16px;
 }
 
 .card-modern-accent {
-  border-color: rgba(88, 166, 255, 0.25);
-  background: rgba(88, 166, 255, 0.05);
+  border-color: rgba(88, 166, 255, 0.35);
+  background: linear-gradient(180deg, #162238 0%, #121b2e 100%);
+}
+
+/* Today's state block: prominent, calm */
+.daily-state-card {
+  background: var(--neuro-surface);
+  border: 1px solid rgba(88, 166, 255, 0.2);
+  border-radius: 18px;
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.02);
+}
+
+.daily-state-header {
+  background: linear-gradient(135deg, rgba(88, 166, 255, 0.12) 0%, rgba(88, 166, 255, 0.04) 100%);
+  border-bottom: 1px solid rgba(88, 166, 255, 0.15);
+  padding: 1rem 1.25rem;
 }
 
 /* One primary button: solid, no tricks */
@@ -46,12 +274,49 @@ body {
   opacity: 1;
 }
 
-/* Modal: same flat language */
+/* Modal: solid overlay for readability over background image */
+.modal-backdrop {
+  background: rgba(11, 18, 32, 0.92);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+.modal-overlay {
+  animation: modal-fade-in 0.2s ease-out;
+}
+
 .modal-card {
-  background: var(--neuro-surface);
+  background: #121A2A;
   border: 1px solid var(--neuro-border);
-  border-radius: 12px;
-  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.4);
+  border-radius: 20px;
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.05),
+    0 25px 50px -12px rgba(0, 0, 0, 0.6),
+    0 0 80px -20px rgba(88, 166, 255, 0.08);
+  animation: modal-scale-in 0.25s ease-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .modal-overlay,
+  .modal-card {
+    animation: none;
+  }
+}
+
+@keyframes modal-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes modal-scale-in {
+  from {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -65,8 +330,48 @@ body {
 }
 
 :focus-visible {
-  outline: 2px solid var(--neuro-accent);
+  outline: 2px solid var(--accent-focus);
   outline-offset: 2px;
+}
+
+/* ========== NEUROHQ Buttons (Upgrade: 100ms active, subtle hover glow) ========== */
+.btn-hq-primary {
+  background: linear-gradient(135deg, var(--accent-focus), var(--accent-energy));
+  color: var(--bg-primary);
+  font-weight: 600;
+  font-size: 14px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  border-radius: var(--hq-btn-radius);
+  box-shadow: 0 0 12px rgba(0, 229, 255, 0.4);
+  transition: box-shadow 0.25s ease-out, transform 0.1s ease-out;
+}
+.btn-hq-primary:hover:not(:disabled) {
+  box-shadow: 0 0 18px rgba(0, 229, 255, 0.5);
+}
+.btn-hq-primary:active:not(:disabled) {
+  transform: scale(0.98);
+  transition-duration: 100ms;
+}
+.btn-hq-primary-time-window {
+  animation: hq-btn-glow-pulse 2.5s ease-in-out infinite;
+}
+@keyframes hq-btn-glow-pulse {
+  0%, 100% { box-shadow: 0 0 12px rgba(0, 229, 255, 0.4); }
+  50% { box-shadow: 0 0 20px rgba(0, 229, 255, 0.6); }
+}
+.btn-hq-secondary {
+  background: transparent;
+  color: var(--accent-focus);
+  font-weight: 500;
+  font-size: 14px;
+  letter-spacing: 0.5px;
+  border: 1px solid var(--accent-focus);
+  border-radius: var(--hq-btn-radius);
+  transition: box-shadow 0.25s ease-out;
+}
+.btn-hq-secondary:hover:not(:disabled) {
+  box-shadow: 0 0 10px rgba(0, 229, 255, 0.4);
 }
 
 .skip-link {
@@ -75,9 +380,9 @@ body {
   left: 0.5rem;
   z-index: 100;
   padding: 0.5rem 1rem;
-  background: var(--neuro-accent);
-  color: #0d1117;
-  border-radius: 6px;
+  background: var(--accent-focus);
+  color: var(--bg-primary);
+  border-radius: var(--hq-btn-radius);
   font-size: 0.875rem;
   font-weight: 600;
   transition: top 0.2s;
@@ -111,25 +416,56 @@ input[type="range"]::-moz-range-track {
 
 .daily-state-slider::-webkit-slider-thumb {
   appearance: none;
-  width: 18px;
-  height: 18px;
+  width: 20px;
+  height: 20px;
   border-radius: 50%;
   background: var(--neuro-accent);
   cursor: pointer;
+  box-shadow: 0 0 0 2px var(--neuro-surface);
 }
 .daily-state-slider::-webkit-slider-thumb:hover {
-  opacity: 0.9;
+  opacity: 0.95;
 }
 .daily-state-slider::-moz-range-thumb {
-  width: 18px;
-  height: 18px;
+  width: 20px;
+  height: 20px;
   border-radius: 50%;
   background: var(--neuro-accent);
   border: 0;
   cursor: pointer;
+  box-shadow: 0 0 0 2px var(--neuro-surface);
 }
 .daily-state-slider::-moz-range-track {
-  height: 6px;
-  border-radius: 3px;
+  height: 8px;
+  border-radius: 4px;
   background: var(--neuro-border);
+}
+
+/* HQ check-in sliders (Brain Status) */
+.hq-slider::-webkit-slider-thumb {
+  appearance: none;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--accent-focus);
+  cursor: pointer;
+  box-shadow: 0 0 8px rgba(0, 229, 255, 0.5);
+}
+.hq-slider::-webkit-slider-runnable-track {
+  height: 8px;
+  border-radius: 4px;
+}
+.hq-slider::-moz-range-thumb {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--accent-focus);
+  border: 0;
+  cursor: pointer;
+  box-shadow: 0 0 8px rgba(0, 229, 255, 0.5);
+}
+.hq-slider::-moz-range-track {
+  height: 8px;
+  border-radius: 4px;
+  background: var(--accent-neutral);
 }
