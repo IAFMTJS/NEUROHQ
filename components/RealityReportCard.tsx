@@ -21,19 +21,35 @@ export function RealityReportCard({ report }: { report: RealityReport }) {
           <p className="text-2xl font-bold tabular-nums text-neuro-blue">{report.executionScore}/100</p>
         </div>
       )}
-      <dl className="grid gap-3 text-sm">
-        <div className="flex justify-between">
-          <dt className="text-neuro-muted">Tasks</dt>
-          <dd className="text-neuro-silver">
-            {report.tasksCompleted} / {report.tasksPlanned} completed
-          </dd>
+      <div className="space-y-4">
+        <div>
+          <div className="flex justify-between text-sm mb-1.5">
+            <span className="text-neuro-muted">Tasks</span>
+            <span className="text-neuro-silver">{report.tasksCompleted} / {report.tasksPlanned} completed</span>
+          </div>
+          <div className="h-2 w-full overflow-hidden rounded-full bg-[var(--accent-neutral)]">
+            <div
+              className="h-full rounded-full bg-gradient-to-r from-[var(--accent-focus)] to-[var(--accent-energy)] transition-all duration-500"
+              style={{ width: `${report.tasksPlanned > 0 ? Math.min(100, (report.tasksCompleted / report.tasksPlanned) * 100) : 0}%` }}
+              aria-hidden
+            />
+          </div>
         </div>
-        <div className="flex justify-between">
-          <dt className="text-neuro-muted">Learning</dt>
-          <dd className="text-neuro-silver">
-            {report.learningMinutes} / {report.learningTarget} min
-          </dd>
+        <div>
+          <div className="flex justify-between text-sm mb-1.5">
+            <span className="text-neuro-muted">Learning</span>
+            <span className="text-neuro-silver">{report.learningMinutes} / {report.learningTarget} min</span>
+          </div>
+          <div className="h-2 w-full overflow-hidden rounded-full bg-[var(--accent-neutral)]">
+            <div
+              className="h-full rounded-full bg-gradient-to-r from-[var(--accent-energy)] to-[var(--accent-focus)] transition-all duration-500"
+              style={{ width: `${report.learningTarget > 0 ? Math.min(100, (report.learningMinutes / report.learningTarget) * 100) : 0}%` }}
+              aria-hidden
+            />
+          </div>
         </div>
+      </div>
+      <dl className="grid gap-3 text-sm mt-4">
         {budgetRemaining != null && (
           <div className="flex justify-between">
             <dt className="text-neuro-muted">Budget (month)</dt>

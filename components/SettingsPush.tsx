@@ -70,9 +70,15 @@ export function SettingsPush() {
         Enable daily quote and reminders (max 3 per day). Requires a supported browser.
       </p>
       {!VAPID_PUBLIC && (
-        <p className="mt-2 text-xs text-amber-500">
-          Add <code className="rounded bg-neuro-dark px-1 py-0.5">NEXT_PUBLIC_VAPID_PUBLIC_KEY</code> to enable push.
-        </p>
+        <div className="mt-2 space-y-1 text-xs text-amber-500">
+          <p>
+            Add <code className="rounded bg-neuro-dark px-1 py-0.5">NEXT_PUBLIC_VAPID_PUBLIC_KEY</code> and{" "}
+            <code className="rounded bg-neuro-dark px-1 py-0.5">VAPID_PRIVATE_KEY</code> to <code className="rounded bg-neuro-dark px-1 py-0.5">.env.local</code> to enable push.
+          </p>
+          <p>
+            Run <code className="rounded bg-neuro-dark px-1 py-0.5">npm run generate-vapid</code> to generate keys, then add the output to your env.
+          </p>
+        </div>
       )}
       {message && (
         <p className={`mt-2 text-sm ${status === "error" ? "text-red-400" : "text-neuro-silver"}`} role="status">

@@ -5,11 +5,13 @@ import Link from "next/link";
 type Props = {
   insight: string;
   detailsHref?: string;
+  suggestion?: string | null;
 };
 
 export function PatternInsightCard({
   insight,
   detailsHref = "/report",
+  suggestion,
 }: Props) {
   return (
     <section
@@ -19,6 +21,11 @@ export function PatternInsightCard({
     >
       <h2 className="hq-h2 mb-4">Patterns Insight</h2>
       <p className="hq-body hq-body-lg mb-4">{insight}</p>
+      {suggestion && (
+        <p className="mb-4 rounded-lg border border-[var(--accent-focus)]/30 bg-[var(--accent-focus)]/5 px-3 py-2 text-sm text-[var(--text-secondary)]">
+          💡 {suggestion}
+        </p>
+      )}
       <Link
         href={detailsHref}
         className="btn-hq-secondary inline-flex w-full items-center justify-center rounded-[var(--hq-btn-radius)] py-2.5 px-4"

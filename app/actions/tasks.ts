@@ -3,6 +3,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
 import { getEnergyBudget } from "./energy";
+import { splitTaskCost } from "@/lib/utils/energy";
 
 export type TaskListMode = "normal" | "low_energy" | "stabilize" | "driven";
 
@@ -84,23 +85,23 @@ export async function createTask(params: {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) throw new Error("Not authenticated");
 
-  const { data: existing } = await supabase
-    .from("tasks")
-    .select("id")
-    .eq("user_id", user.id)
-    .eq("due_date", params.due_date)
-    .eq("completed", false)
-    .is("parent_task_id", null);
-  const carryCount = existing?.length ?? 0;
-  if (carryCount >= 5) throw new Error("Stabilize mode: finish or reschedule tasks before adding more.");
+  const carryOverCount = await getCarryOverCountForDate(params.due_date);
+  if (carryOverCount >= 5) {
+    throw new Error("Stabilize mode: finish or reschedule carried-over tasks before adding more.");
+  }
 
-  const energyRequired = params.energy_required ?? null;
-  if (energyRequired != null && energyRequired >= 7) {
-    const budget = await getEnergyBudget(params.due_date);
-    const heavyCost = energyRequired * 6;
-    if (budget.remaining < heavyCost) {
-      throw new Error(`Energy budget low (${budget.remaining} left). This task needs ~${heavyCost}. Finish tasks or pick a lighter one.`);
-    }
+  const budget = await getEnergyBudget(params.due_date);
+  const energyRequired = params.energy_required ?? 5;
+  const cost = splitTaskCost(energyRequired);
+  const fitsEnergy = budget.energy.remaining >= cost.energy;
+  const fitsFocus = budget.focus.remaining >= cost.focus;
+  const fitsLoad = budget.load.remaining >= cost.load;
+  if (!fitsEnergy || !fitsFocus || !fitsLoad) {
+    const bottleneck = !fitsEnergy ? "energy" : !fitsFocus ? "focus" : "load";
+    throw new Error(
+      `Capacity low (${bottleneck} pool). Brain status suggests ~${budget.suggestedTaskCount} tasks. ` +
+        `Finish tasks, pick a lighter one, or update your check-in.`
+    );
   }
 
   const { data, error } = await supabase
@@ -198,6 +199,21 @@ export async function completeTask(id: string) {
       urgency: t.urgency ?? null,
     } as Record<string, unknown>);
   }
+  revalidatePath("/dashboard");
+  revalidatePath("/tasks");
+}
+
+/** Mark a task as not done (uncheck). Use if completed by accident. */
+export async function uncompleteTask(id: string) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error("Not authenticated");
+  const { error } = await supabase
+    .from("tasks")
+    .update({ completed: false, completed_at: null })
+    .eq("id", id)
+    .eq("user_id", user.id);
+  if (error) throw new Error(error.message);
   revalidatePath("/dashboard");
   revalidatePath("/tasks");
 }

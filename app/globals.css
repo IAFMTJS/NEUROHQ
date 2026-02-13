@@ -187,6 +187,11 @@ body {
   }
 }
 
+/* HIGH_SENSORY minimal UI: reduced motion for calmer experience */
+[data-minimal="true"] .hq-card-enter {
+  animation-duration: 0.05s !important;
+}
+
 /* ========== NEUROHQ Card Upgrade ========== */
 .hq-card {
   background: linear-gradient(180deg, var(--card-bg-top) 0%, var(--card-bg-bottom) 100%);
@@ -389,6 +394,10 @@ body {
 }
 .skip-link:focus {
   top: 0.5rem;
+}
+.skip-link:focus-visible {
+  outline: 3px solid var(--bg-primary);
+  outline-offset: 2px;
 }
 
 .safe-area-pb {

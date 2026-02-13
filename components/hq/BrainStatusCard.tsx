@@ -1,8 +1,9 @@
 "use client";
 
-import { useState, useTransition, useEffect } from "react";
+import { useState, useTransition, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { saveDailyState } from "@/app/actions/daily-state";
+import { getSuggestedTaskCount } from "@/lib/utils/energy";
 import { RadialMeter } from "./RadialMeter";
 
 function scale1To10ToPct(value: number | null): number {
@@ -39,9 +40,16 @@ type Props = {
     sleep_hours: number | null;
     social_load: number | null;
   };
+  yesterday?: {
+    energy: number | null;
+    focus: number | null;
+    sensory_load: number | null;
+    sleep_hours: number | null;
+    social_load: number | null;
+  };
 };
 
-export function BrainStatusCard({ date, initial }: Props) {
+export function BrainStatusCard({ date, initial, yesterday }: Props) {
   const router = useRouter();
   const [expanded, setExpanded] = useState(false);
   const [pending, startTransition] = useTransition();
@@ -67,6 +75,19 @@ export function BrainStatusCard({ date, initial }: Props) {
   const energyPct = scale1To10ToPct(energy);
   const focusPct = scale1To10ToPct(focus);
   const loadPct = scale1To10ToPct(load);
+
+  const hasYesterday = !!yesterday && (yesterday.energy != null || yesterday.focus != null || yesterday.sensory_load != null);
+
+  const suggestedTasks = useMemo(
+    () => getSuggestedTaskCount({
+      energy,
+      focus,
+      sensory_load: load,
+      social_load: social,
+      sleep_hours: sleep ? parseFloat(sleep) : null,
+    }),
+    [energy, focus, load, social, sleep]
+  );
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -98,6 +119,9 @@ export function BrainStatusCard({ date, initial }: Props) {
       aria-label="Brain Status"
     >
       <h2 className="hq-h2 mb-5">Brain Status</h2>
+      <p className="mb-4 text-xs text-[var(--text-muted)]">
+        Energy, focus, and load drive your daily task capacity. Sleep and social load affect headroom.
+      </p>
       <div className="grid grid-cols-3 gap-4">
         <RadialMeter
           value={energyPct}
@@ -144,6 +168,31 @@ export function BrainStatusCard({ date, initial }: Props) {
 
         {expanded && (
           <form onSubmit={handleSubmit} className="mt-5 space-y-5">
+            {hasYesterday && (
+              <button
+                type="button"
+                onClick={() => {
+                  if (yesterday) {
+                    setEnergy(yesterday.energy ?? 5);
+                    setFocus(yesterday.focus ?? 5);
+                    setLoad(yesterday.sensory_load ?? 5);
+                    setSleep(yesterday.sleep_hours != null ? String(yesterday.sleep_hours) : "");
+                    setSocial(yesterday.social_load ?? 5);
+                  }
+                }}
+                className="w-full rounded-lg border border-[var(--accent-neutral)] bg-[var(--bg-primary)]/60 px-4 py-2 text-sm text-[var(--text-secondary)] hover:bg-[var(--bg-surface)] hover:text-[var(--text-primary)] transition"
+              >
+                Same as yesterday
+              </button>
+            )}
+            <div className="rounded-xl border border-[var(--accent-focus)]/20 bg-[var(--bg-primary)]/80 px-4 py-3">
+              <p className="text-sm font-medium text-[var(--text-primary)]">
+                Live preview: ~{suggestedTasks} task{suggestedTasks !== 1 ? "s" : ""} suggested today
+              </p>
+              <p className="mt-0.5 text-[10px] text-[var(--text-muted)]">
+                Higher energy + focus, lower load, better sleep → more capacity. Save to update your budget.
+              </p>
+            </div>
             <HQSliderRow
               label="Energy"
               value={energy}

@@ -48,7 +48,10 @@ export function StrategySummaryCard({ strategy, goals, year, quarter }: Props) {
       </div>
       <div className="space-y-4 p-4">
         {!hasContent ? (
-          <p className="text-sm text-neuro-muted">No strategy set yet. Fill in the form below and save.</p>
+          <div className="rounded-xl border border-dashed border-neuro-border bg-neuro-surface/50 px-4 py-6 text-center">
+            <p className="text-sm text-neuro-muted">No strategy set yet.</p>
+            <p className="mt-1 text-xs text-neuro-muted">Fill in themes, identity, and key results below to direct your quarter.</p>
+          </div>
         ) : (
           <>
         {hasOneWord && (

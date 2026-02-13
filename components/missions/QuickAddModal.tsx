@@ -111,8 +111,18 @@ export function QuickAddModal({ open, onClose, date, onAdded }: Props) {
             </div>
           </div>
         )}
+        <div className="rounded-lg border border-neuro-border/50 bg-neuro-dark/50 p-3">
+          <label className="block text-xs font-medium text-neuro-muted">Energy (1–10)</label>
+          <p className="mt-0.5 text-[10px] text-neuro-muted">How much mental energy this task takes. Affects your daily capacity.</p>
+          <select value={energy} onChange={(e) => setEnergy(e.target.value)} className="mt-1 w-full rounded border border-neuro-border bg-neuro-dark px-2 py-1.5 text-sm text-neuro-silver">
+            <option value="">— Default (5)</option>
+            {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((n) => (
+              <option key={n} value={n}>{n} {n <= 3 ? "Low" : n <= 6 ? "Medium" : "High"}</option>
+            ))}
+          </select>
+        </div>
         <button type="button" onClick={() => setShowMore((v) => !v)} className="text-xs font-medium text-neuro-muted hover:text-neuro-silver">
-          {showMore ? "− Less options" : "+ Impact, urgency, energy, priority"}
+          {showMore ? "− Less options" : "+ Impact, urgency, priority"}
         </button>
         {showMore && (
           <div className="grid grid-cols-2 gap-2 rounded-lg border border-neuro-border/50 bg-neuro-dark/50 p-3">
@@ -132,15 +142,6 @@ export function QuickAddModal({ open, onClose, date, onAdded }: Props) {
                 <option value="1">1 Low</option>
                 <option value="2">2 Medium</option>
                 <option value="3">3 High</option>
-              </select>
-            </div>
-            <div>
-              <label className="block text-xs font-medium text-neuro-muted">Energy (1–10)</label>
-              <select value={energy} onChange={(e) => setEnergy(e.target.value)} className="mt-1 w-full rounded border border-neuro-border bg-neuro-dark px-2 py-1.5 text-sm text-neuro-silver">
-                <option value="">—</option>
-                {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((n) => (
-                  <option key={n} value={n}>{n}</option>
-                ))}
               </select>
             </div>
             <div>

@@ -18,9 +18,35 @@ export type GoogleCalendarEvent = {
 
 const CALENDAR_API = "https://www.googleapis.com/calendar/v3";
 
+async function fetchWithRetry(
+  url: string,
+  opts: RequestInit,
+  maxAttempts = 3
+): Promise<Response> {
+  let lastErr: Error | null = null;
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    try {
+      const res = await fetch(url, opts);
+      if (res.ok || res.status === 401 || res.status === 403) return res;
+      if (attempt < maxAttempts) {
+        const delay = Math.min(1000 * Math.pow(2, attempt - 1), 5000);
+        await new Promise((r) => setTimeout(r, delay));
+      }
+      lastErr = new Error(`HTTP ${res.status}`);
+    } catch (e) {
+      lastErr = e instanceof Error ? e : new Error(String(e));
+      if (attempt < maxAttempts) {
+        const delay = Math.min(1000 * Math.pow(2, attempt - 1), 5000);
+        await new Promise((r) => setTimeout(r, delay));
+      }
+    }
+  }
+  throw lastErr ?? new Error("Fetch failed");
+}
+
 /**
  * Fetch events for a date from Google Calendar API (primary calendar).
- * timeMin/timeMax in ISO format for that date in UTC.
+ * timeMin/timeMax in ISO format for that date in UTC. Retries on 5xx/network errors.
  */
 export async function fetchGoogleCalendarEventsForDate(
   accessToken: string,
@@ -29,12 +55,16 @@ export async function fetchGoogleCalendarEventsForDate(
   const timeMin = `${dateStr}T00:00:00Z`;
   const timeMax = `${dateStr}T23:59:59Z`;
   const url = `${CALENDAR_API}/calendars/primary/events?timeMin=${encodeURIComponent(timeMin)}&timeMax=${encodeURIComponent(timeMax)}&singleEvents=true`;
-  const res = await fetch(url, {
-    headers: { Authorization: `Bearer ${accessToken}` },
-  });
-  if (!res.ok) return [];
-  const data = (await res.json()) as { items?: GoogleCalendarEvent[] };
-  return data.items ?? [];
+  try {
+    const res = await fetchWithRetry(url, {
+      headers: { Authorization: `Bearer ${accessToken}` },
+    });
+    if (!res.ok) return [];
+    const data = (await res.json()) as { items?: GoogleCalendarEvent[] };
+    return data.items ?? [];
+  } catch {
+    return [];
+  }
 }
 
 /**

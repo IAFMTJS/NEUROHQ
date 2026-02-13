@@ -9,23 +9,24 @@ export default async function HomePage() {
   if (user) redirect("/dashboard");
 
   return (
-    <main className="min-h-screen bg-neuro-dark">
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_70%_60%_at_50%_0%,rgba(88,166,255,0.06),transparent_50%)]" aria-hidden />
-      <div className="relative mx-auto flex min-h-screen max-w-[420px] flex-col items-center justify-center p-6">
-        <div className="card-modern w-full max-w-[360px] p-10 text-center shadow-xl">
+    <main className="relative min-h-screen">
+      <div className="hq-bg-layer" aria-hidden />
+      <div className="hq-vignette" aria-hidden />
+      <div className="relative z-10 mx-auto flex min-h-screen max-w-[420px] flex-col items-center justify-center p-6">
+        <div className="hq-card hq-card-enter w-full max-w-[360px] rounded-[var(--hq-card-radius)] p-10 text-center shadow-[var(--card-shadow)]">
           <Image src="/app-icon.png" alt="" width={96} height={96} className="mx-auto h-24 w-24 rounded-2xl object-contain" priority />
           <Image src="/logo-naam.png" alt="NEUROHQ" width={220} height={58} className="mx-auto mt-5 h-14 w-auto max-w-[200px] object-contain" priority />
-          <p className="mt-3 text-xs font-semibold uppercase tracking-widest text-neuro-muted">Your daily HQ</p>
-          <p className="mt-4 text-sm text-neuro-muted">
+          <p className="mt-3 text-xs font-semibold uppercase tracking-widest text-[var(--text-muted)]">Your daily HQ</p>
+          <p className="mt-4 text-sm text-[var(--text-muted)]">
             The place you open every day. Tasks, energy, learning, finances. Built for focus and energy awareness.
           </p>
           <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:justify-center">
-            <Link href="/login" className="btn-primary inline-flex items-center justify-center px-5 py-2.5 text-sm">
+            <Link href="/login" className="btn-hq-primary inline-flex items-center justify-center rounded-[var(--hq-btn-radius)] px-6 py-2.5 text-sm font-medium">
               Sign in
             </Link>
             <Link
               href="/signup"
-              className="inline-flex items-center justify-center rounded-lg border border-neuro-border bg-transparent px-5 py-2.5 text-sm font-medium text-neuro-silver transition hover:bg-neuro-border/50 hover:border-neuro-border"
+              className="inline-flex items-center justify-center rounded-[var(--hq-btn-radius)] border border-[var(--accent-neutral)] bg-transparent px-6 py-2.5 text-sm font-medium text-[var(--text-primary)] transition hover:bg-[var(--accent-neutral)]/20 hover:border-[var(--accent-focus)]/50 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-focus)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--bg-surface)]"
             >
               Sign up
             </Link>

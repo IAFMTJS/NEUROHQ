@@ -13,6 +13,7 @@ import { getLearningStreak, getWeeklyMinutes, getWeeklyLearningTarget } from "@/
 import { getBudgetSettings, getCurrentMonthExpensesCents } from "@/app/actions/budget";
 import { getWeekBounds } from "@/lib/utils/learning";
 import { getCurrencySymbol } from "@/lib/utils/currency";
+import { yesterdayDate } from "@/lib/utils/timezone";
 import {
   HQHeader,
   BrainStatusCard,
@@ -22,6 +23,7 @@ import {
 import { QuoteCard } from "@/components/QuoteCard";
 import { EnergyBudgetBar } from "@/components/EnergyBudgetBar";
 import { ModeBanner } from "@/components/ModeBanner";
+import { ModeExplanationModal } from "@/components/ModeExplanationModal";
 import { AvoidanceNotice } from "@/components/AvoidanceNotice";
 import { FocusBlock } from "@/components/FocusBlock";
 import { RealityReportBlock } from "@/components/RealityReportBlock";
@@ -69,6 +71,14 @@ function defaultInsight(energy: number, focus: number, load: number): string {
   return "Stable baseline. Schedule your most important mission in the next 2 hours.";
 }
 
+function defaultSuggestion(energy: number, focus: number, load: number): string | null {
+  if (load >= 70 && energy < 50) return "Pick one task. Reschedule the rest to reduce overwhelm.";
+  if (focus >= 70) return "Use Focus block on Missions to lock in. 25 min is ideal.";
+  if (energy >= 70 && focus < 40) return "Batch emails, admin, or routine items now.";
+  if (new Date().getHours() >= 16) return "Wind-down tasks: light admin, reading, or planning tomorrow.";
+  return "Check your first incomplete mission and start there.";
+}
+
 function dayOfYear(d: Date): number {
   const start = new Date(d.getFullYear(), 0, 0);
   return Math.min(365, Math.max(1, Math.floor((d.getTime() - start.getTime()) / 86400000)));
@@ -79,9 +89,15 @@ export default async function DashboardPage() {
   const today = new Date();
   const dateStr = today.toISOString().slice(0, 10);
   const quoteDay = dayOfYear(today);
-  const [state, quote, mode, energyBudget, upcomingCalendarEvents, hasGoogle, learningStreak] = await Promise.all([
+  const yesterdayStr = yesterdayDate(dateStr);
+  const [state, yesterdayState, quotesResult, mode, energyBudget, upcomingCalendarEvents, hasGoogle, learningStreak] = await Promise.all([
     getDailyState(dateStr),
-    getQuoteForDay(quoteDay),
+    getDailyState(yesterdayStr),
+    Promise.all([
+      getQuoteForDay(Math.max(1, quoteDay - 1)),
+      getQuoteForDay(quoteDay),
+      getQuoteForDay(Math.min(365, quoteDay + 1)),
+    ]),
     getMode(dateStr),
     getEnergyBudget(dateStr),
     getUpcomingCalendarEvents(dateStr, 2),
@@ -111,31 +127,41 @@ export default async function DashboardPage() {
   const loadPct = scale1To10ToPct(state?.sensory_load ?? null);
 
   const learningNeeded = weeklyLearningMinutes < weeklyLearningTarget;
-  const todaysTasks = (tasks ?? []).map((t) => ({ id: (t as { id: string }).id, title: (t as { title: string }).title }));
+  const todaysTasks = (tasks ?? []).map((t) => ({
+    id: (t as { id: string }).id,
+    title: (t as { title: string }).title,
+    carryOverCount: (t as { carry_over_count?: number }).carry_over_count ?? 0,
+  }));
   const emptyMissionMessage = learningNeeded
     ? `${weeklyLearningTarget} min this week to stay on track. Log time on Growth.`
     : "Add a task on Missions or head to Growth.";
   const emptyMissionHref = learningNeeded ? "/learning" : "/tasks";
   const { window: timeWindow, isActive: isTimeWindowActive } = defaultTimeWindow();
   const insight = defaultInsight(energyPct, focusPct, loadPct);
+  const patternSuggestion = defaultSuggestion(energyPct, focusPct, loadPct);
+
+  const isMinimalUI = mode === "high_sensory";
 
   return (
     <div
-      className="flex flex-col pb-6 -mt-1"
+      className={`flex flex-col pb-6 -mt-1 ${isMinimalUI ? "minimal-ui" : ""}`}
       style={{ gap: "var(--hq-card-gap)" }}
+      data-minimal={isMinimalUI ? "true" : undefined}
     >
-      <OnboardingBanner />
+      {!isMinimalUI && <OnboardingBanner />}
       <div className="flex flex-col gap-0">
-        <div className="w-full -mx-[var(--hq-padding-x)] flex justify-center shrink-0 ml-0.5 pt-0" aria-hidden>
-          <Image
-            src="/Header Image.PNG"
-            alt=""
-            width={420}
-            height={160}
-            className="w-full max-w-[420px] h-auto object-contain object-top"
-            priority
-          />
-        </div>
+        {!isMinimalUI && (
+          <div className="w-full -mx-[var(--hq-padding-x)] flex justify-center shrink-0 ml-0.5 pt-0" aria-hidden>
+            <Image
+              src="/Header Image.PNG"
+              alt=""
+              width={420}
+              height={160}
+              className="w-full max-w-[420px] h-auto object-contain object-top"
+              priority
+            />
+          </div>
+        )}
         <HQHeader
           energyPct={energyPct}
           focusPct={focusPct}
@@ -151,9 +177,16 @@ export default async function DashboardPage() {
           sleep_hours: state?.sleep_hours ?? null,
           social_load: state?.social_load ?? null,
         }}
+        yesterday={{
+          energy: yesterdayState?.energy ?? null,
+          focus: yesterdayState?.focus ?? null,
+          sensory_load: yesterdayState?.sensory_load ?? null,
+          sleep_hours: yesterdayState?.sleep_hours ?? null,
+          social_load: yesterdayState?.social_load ?? null,
+        }}
       />
+      {(!isMinimalUI || energyBudget.remaining < 20) && (
       <EnergyBudgetBar
-        used={energyBudget.used}
         remaining={energyBudget.remaining}
         capacity={energyBudget.capacity}
         suggestedTaskCount={energyBudget.suggestedTaskCount}
@@ -161,9 +194,22 @@ export default async function DashboardPage() {
         completedTaskCount={energyBudget.completedTaskCount}
         taskPlanned={energyBudget.taskPlanned}
         calendarCost={energyBudget.calendarCost}
+        energy={energyBudget.energy}
+        focus={energyBudget.focus}
+        load={energyBudget.load}
+        insight={energyBudget.insight}
+        segments={energyBudget.segments}
       />
-      <QuoteCard quote={quote} dayOfYear={quoteDay} />
+      )}
+      {!isMinimalUI && (
+        <QuoteCard
+          prev={{ quote: quotesResult[0], day: Math.max(1, quoteDay - 1) }}
+          current={{ quote: quotesResult[1], day: quoteDay }}
+          next={{ quote: quotesResult[2], day: Math.min(365, quoteDay + 1) }}
+        />
+      )}
       <ModeBanner mode={mode} />
+      <ModeExplanationModal mode={mode} />
       <AvoidanceNotice carryOverCount={carryOverCount} />
       <ActiveMissionCard
         tasks={todaysTasks}
@@ -172,7 +218,8 @@ export default async function DashboardPage() {
         timeWindow={timeWindow}
         isTimeWindowActive={isTimeWindowActive}
       />
-      {mode === "driven" && <FocusBlock />}
+      {mode === "driven" && !isMinimalUI && <FocusBlock />}
+      {!isMinimalUI && (
       <section className="card-modern overflow-hidden p-0">
         <div className="border-b border-neuro-border px-4 py-3">
           <h2 className="text-base font-semibold text-neuro-silver">Calendar</h2>
@@ -187,13 +234,14 @@ export default async function DashboardPage() {
           <AddCalendarEventForm date={dateStr} hasGoogleToken={hasGoogle} />
         </div>
       </section>
-      {strategy?.identity_statement && (
+      )}
+      {!isMinimalUI && strategy?.identity_statement && (
         <div className="card-modern px-4 py-3">
           <h2 className="text-sm font-semibold text-neuro-muted">This quarter</h2>
           <p className="mt-1 text-sm text-neuro-silver italic">&ldquo;{strategy.identity_statement}&rdquo;</p>
         </div>
       )}
-      {learningStreak >= 1 && (
+      {!isMinimalUI && learningStreak >= 1 && (
         <div className="card-modern-accent flex items-center gap-3 px-4 py-3">
           <span className="text-2xl" aria-hidden>🔥</span>
           <div>
@@ -205,7 +253,7 @@ export default async function DashboardPage() {
           </Link>
         </div>
       )}
-      {budgetRemainingCents != null && (
+      {!isMinimalUI && budgetRemainingCents != null && (
         <Link
           href="/budget"
           className="card-modern flex items-center gap-3 px-4 py-3 hover:bg-neuro-surface/50 transition"
@@ -221,13 +269,15 @@ export default async function DashboardPage() {
           <span className="ml-auto text-sm font-medium text-neuro-blue">Budget →</span>
         </Link>
       )}
+      {!isMinimalUI && (
       <OnTrackCard
         learningMinutes={weeklyLearningMinutes}
         learningTarget={weeklyLearningTarget}
         strategySet={!!(strategy?.identity_statement || strategy?.primary_theme)}
       />
-      <RealityReportBlock report={lastWeekReport} />
-      <PatternInsightCard insight={insight} detailsHref="/report" />
+      )}
+      {!isMinimalUI && <RealityReportBlock report={lastWeekReport} />}
+      {!isMinimalUI && <PatternInsightCard insight={insight} suggestion={patternSuggestion} detailsHref="/report" />}
     </div>
   );
 }

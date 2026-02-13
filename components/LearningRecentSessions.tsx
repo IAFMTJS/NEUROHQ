@@ -27,9 +27,9 @@ export function LearningRecentSessions({ sessions, weekEnd, weekStart }: Props) 
       </div>
       <div className="p-4">
         {sorted.length === 0 ? (
-          <div className="rounded-xl border border-dashed border-neuro-border bg-neuro-dark/40 px-4 py-6 text-center">
+          <div className="rounded-xl border border-dashed border-neuro-border bg-neuro-surface/50 px-4 py-6 text-center">
             <p className="text-sm text-neuro-muted">No sessions logged this week.</p>
-            <p className="mt-1 text-xs text-neuro-muted">Log one above to get started.</p>
+            <p className="mt-1 text-xs text-neuro-muted">Log time above to count toward your weekly target. Every minute builds the streak.</p>
           </div>
         ) : (
           <ul className="space-y-2">

@@ -58,7 +58,7 @@ export function BacklogList({ backlog, todayDate }: Props) {
         )}
       </div>
       <ul className="divide-y divide-neuro-border">
-        {displayList.map((t) => (
+        {backlog.length > 0 && displayList.map((t) => (
           <li key={t.id} className="flex flex-wrap items-center justify-between gap-2 px-4 py-2.5">
             <div className="min-w-0 flex-1">
               <span className="text-sm font-medium text-neuro-silver">{t.title}</span>
@@ -89,6 +89,12 @@ export function BacklogList({ backlog, todayDate }: Props) {
           </li>
         ))}
       </ul>
+      {backlog.length === 0 && (
+        <div className="px-4 py-8 text-center">
+          <p className="text-sm text-neuro-muted">No backlog.</p>
+          <p className="mt-1 text-xs text-neuro-muted">All tasks are scheduled. Add new tasks on Missions and leave due date empty for backlog.</p>
+        </div>
+      )}
       {filtered.length > 20 && (
         <p className="px-4 py-2 text-xs text-neuro-muted">+ {filtered.length - 20} more</p>
       )}

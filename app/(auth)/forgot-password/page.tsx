@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { createClient } from "@/lib/supabase/client";
+import { IconHQ } from "@/components/hq/NavIcons";
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState("");
@@ -34,19 +35,24 @@ export default function ForgotPasswordPage() {
 
   if (sent) {
     return (
-      <main className="w-full max-w-[400px]">
-        <Link href="/login" className="mb-4 inline-block text-sm text-neuro-muted hover:text-neuro-silver transition">
-          ← Back to sign in
-        </Link>
-        <div className="card-modern p-8 text-center space-y-5 shadow-xl">
-          <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-neuro-blue/20 text-neuro-blue" aria-hidden>
-            <span className="text-xl">✓</span>
+      <main className="w-full max-w-[380px] hq-card-enter">
+        <div className="hq-card rounded-[var(--hq-card-radius)] p-8 text-center shadow-[var(--card-shadow)]">
+          <div
+            className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-[var(--accent-energy)]/20 text-[var(--accent-energy)]"
+            aria-hidden
+          >
+            <span className="text-2xl">✓</span>
           </div>
-          <h1 className="text-xl font-bold text-neuro-silver">Check your email</h1>
-          <p className="text-sm text-neuro-muted leading-relaxed">
-            We sent a password reset link to <span className="font-medium text-neuro-silver">{email}</span>. Click it to set a new password, then sign in.
+          <h1 className="mt-5 hq-h2">Check your email</h1>
+          <p className="mt-3 text-sm text-[var(--text-muted)] leading-relaxed">
+            We sent a password reset link to{" "}
+            <span className="font-medium text-[var(--text-primary)]">{email}</span>. Click it to set a new
+            password, then sign in.
           </p>
-          <Link href="/login" className="btn-primary inline-block rounded-lg px-5 py-2.5 text-sm font-medium">
+          <Link
+            href="/login"
+            className="btn-hq-primary mt-6 inline-block rounded-[var(--hq-btn-radius)] px-6 py-2.5 text-sm font-medium"
+          >
             Back to sign in
           </Link>
         </div>
@@ -55,21 +61,41 @@ export default function ForgotPasswordPage() {
   }
 
   return (
-    <main className="w-full max-w-[400px]">
-      <Link href="/login" className="mb-4 inline-block text-sm text-neuro-muted hover:text-neuro-silver transition">
-        ← Back to sign in
-      </Link>
-      <div className="card-modern p-6 sm:p-8 shadow-xl">
-        <div className="text-center mb-8">
-          <div className="flex flex-col items-center gap-4">
-            <Image src="/app-icon.png" alt="" width={72} height={72} className="h-[4.5rem] w-[4.5rem] rounded-xl object-contain" priority />
-            <Image src="/logo-naam.png" alt="NEUROHQ" width={200} height={52} className="h-12 w-auto max-w-[200px] object-contain" priority />
+    <main className="w-full max-w-[380px] hq-card-enter" style={{ animationDelay: "50ms" }}>
+      <div className="hq-card rounded-[var(--hq-card-radius)] p-6 sm:p-8 shadow-[var(--card-shadow)]">
+        <div className="flex flex-col items-center gap-5 mb-8">
+          <div className="flex items-center justify-center gap-3">
+            <Image
+              src="/app-icon.png"
+              alt=""
+              width={64}
+              height={64}
+              className="h-16 w-16 rounded-xl object-contain shrink-0"
+              priority
+            />
+            <div>
+              <Image
+                src="/logo-naam.png"
+                alt="NEUROHQ"
+                width={180}
+                height={48}
+                className="h-10 w-auto max-w-[180px] object-contain"
+                priority
+              />
+              <p className="mt-1 text-xs font-medium text-[var(--text-muted)] uppercase tracking-wider">
+                Reset your password
+              </p>
+            </div>
           </div>
-          <p className="mt-4 text-sm text-neuro-muted">Reset your password</p>
+          <div className="flex items-center gap-2 rounded-full border border-[var(--accent-neutral)]/60 bg-[var(--bg-primary)]/60 px-4 py-2">
+            <IconHQ active />
+            <span className="text-sm font-medium text-[var(--text-secondary)]">We&apos;ll send you a reset link</span>
+          </div>
         </div>
+
         <form onSubmit={handleSubmit} className="space-y-5">
           <div>
-            <label htmlFor="email" className="block text-sm font-medium text-neuro-silver">
+            <label htmlFor="email" className="hq-label block mb-1.5">
               Email
             </label>
             <input
@@ -79,26 +105,34 @@ export default function ForgotPasswordPage() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
-              className="mt-1.5 w-full rounded-lg border border-neuro-border bg-neuro-dark px-3 py-2.5 text-neuro-silver placeholder-neuro-muted focus:border-neuro-blue focus:outline-none focus:ring-2 focus:ring-neuro-blue/30"
+              className="w-full rounded-[var(--hq-btn-radius)] border border-[var(--accent-neutral)] bg-[var(--bg-primary)] px-4 py-2.5 text-sm text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:border-[var(--accent-focus)] focus:outline-none focus:ring-2 focus:ring-[var(--accent-focus)]/30 transition"
               placeholder="you@example.com"
+              aria-invalid={!!error}
             />
           </div>
           {error && (
-            <p className="rounded-lg bg-red-500/10 px-3 py-2 text-sm text-red-400" role="alert">
+            <div
+              className="rounded-lg border border-red-500/30 bg-red-500/10 px-3 py-2.5 text-sm text-red-400"
+              role="alert"
+            >
               {error}
-            </p>
+            </div>
           )}
           <button
             type="submit"
             disabled={loading}
-            className="btn-primary w-full cursor-pointer rounded-lg py-3 font-medium disabled:cursor-not-allowed disabled:opacity-50"
+            className="btn-hq-primary w-full rounded-[var(--hq-btn-radius)] py-3 font-medium disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {loading ? "Sending…" : "Send reset link"}
           </button>
         </form>
-        <p className="mt-6 text-center text-sm text-neuro-muted">
+
+        <p className="mt-6 text-center text-sm text-[var(--text-muted)]">
           Remember your password?{" "}
-          <Link href="/login" className="font-medium text-neuro-blue hover:underline">
+          <Link
+            href="/login"
+            className="font-medium text-[var(--accent-focus)] hover:underline focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-focus)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--bg-surface)] rounded"
+          >
             Sign in
           </Link>
         </p>

@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 
-export type TaskForMission = { id: string; title: string };
+export type TaskForMission = { id: string; title: string; carryOverCount?: number };
 
 type Props = {
   /** All tasks/missions for today. When empty, emptyMessage and emptyHref are used. */
@@ -38,9 +38,18 @@ export function ActiveMissionCard({
       {tasks.length > 0 ? (
         <ul className="mb-3 space-y-2" aria-label="Today's missions">
           {tasks.map((task) => (
-            <li key={task.id} className="flex items-center gap-2 text-[var(--text-primary)]">
-              <span className="h-2 w-2 shrink-0 rounded-full bg-[var(--accent-focus)]" aria-hidden />
+            <li
+              key={task.id}
+              className={`flex items-center gap-2 ${task.carryOverCount && task.carryOverCount > 0 ? "rounded-lg border border-amber-500/40 bg-amber-500/10 px-2 py-1" : ""}`}
+            >
+              <span
+                className={`h-2 w-2 shrink-0 rounded-full ${task.carryOverCount && task.carryOverCount > 0 ? "bg-amber-500" : "bg-[var(--accent-focus)]"}`}
+                aria-hidden
+              />
               <span className="font-medium">{task.title}</span>
+              {task.carryOverCount && task.carryOverCount > 0 && (
+                <span className="ml-auto rounded bg-amber-500/20 px-1.5 py-0.5 text-[10px] font-medium text-amber-300">Carried over</span>
+              )}
             </li>
           ))}
         </ul>

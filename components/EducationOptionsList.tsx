@@ -43,7 +43,12 @@ export function EducationOptionsList({ options, logSessionHref = "/learning" }: 
     <div className="space-y-4">
       <ul className="space-y-2">
         {activeWithScore.length === 0 ? (
-          <li className="text-sm text-neuro-muted">No education options yet. Add one above.</li>
+          <li className="list-none">
+            <div className="rounded-xl border border-dashed border-neuro-border bg-neuro-surface/50 px-4 py-6 text-center">
+              <p className="text-sm text-neuro-muted">No education options yet.</p>
+              <p className="mt-1 text-xs text-neuro-muted">Add what you want to learn — courses, books, skills — and score interest, value, and effort.</p>
+            </div>
+          </li>
         ) : (
           activeWithScore.map((o) => (
             <li key={o.id} className="rounded-xl border border-neuro-border bg-neuro-surface px-3 py-2">

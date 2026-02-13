@@ -34,45 +34,46 @@ export function FocusBlock() {
 
   return (
     <section
-      className="card-modern-accent p-5"
+      className="card-modern-accent p-5 hq-card rounded-[var(--hq-card-radius-sharp)] border border-[var(--accent-focus)]/20"
       aria-label="Focus block timer"
     >
-      <h2 className="mb-3 text-sm font-semibold text-neuro-silver">Focus block</h2>
+      <h2 className="mb-3 hq-h2">Focus block</h2>
+      <p className="mb-4 text-xs text-[var(--text-muted)]">Deep work timer. Pick a block and commit.</p>
       {!running ? (
         <div className="flex flex-wrap items-center gap-2">
-          <span className="text-sm text-neutral-400">Start a block:</span>
+          <span className="text-sm text-[var(--text-secondary)]">Start a block:</span>
           {[15, 25, 45].map((m) => (
             <button
               key={m}
               type="button"
               onClick={() => start(m)}
-              className="btn-primary rounded-xl px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-neuro-blue focus:ring-offset-2 focus:ring-offset-neuro-dark"
+              className="btn-hq-primary rounded-[var(--hq-btn-radius)] px-4 py-2 text-sm font-medium"
             >
               {m} min
             </button>
           ))}
         </div>
       ) : (
-        <div className="flex items-center justify-between gap-4">
-          <p className="text-3xl font-mono font-semibold tabular-nums text-neuro-silver">
-            {String(minutes).padStart(2, "0")}:{String(seconds).padStart(2, "0")}
-          </p>
-          <button
-            type="button"
-            onClick={() => setRunning(false)}
-            className="text-sm text-neutral-400 hover:text-neuro-silver focus:outline-none focus:underline"
-          >
-            Stop
-          </button>
-        </div>
-      )}
-      {running && (
-        <div className="mt-3 h-2 w-full overflow-hidden rounded-full bg-neutral-800">
-          <div
-            className="h-full rounded-full bg-gradient-to-r from-neuro-blue to-neuro-blue-light transition-all duration-1000"
-            style={{ width: `${pct}%` }}
-          />
-        </div>
+        <>
+          <div className="flex items-center justify-between gap-4 flex-wrap">
+            <p className="text-3xl font-mono font-semibold tabular-nums text-[var(--text-primary)]">
+              {String(minutes).padStart(2, "0")}:{String(seconds).padStart(2, "0")}
+            </p>
+            <button
+              type="button"
+              onClick={() => setRunning(false)}
+              className="text-sm text-[var(--text-muted)] hover:text-[var(--text-primary)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-focus)] rounded px-2 py-1"
+            >
+              Stop
+            </button>
+          </div>
+          <div className="mt-3 h-2 w-full overflow-hidden rounded-full bg-[var(--accent-neutral)]">
+            <div
+              className="h-full rounded-full bg-gradient-to-r from-[var(--accent-focus)] to-[var(--accent-energy)] transition-all duration-1000"
+              style={{ width: `${pct}%` }}
+            />
+          </div>
+        </>
       )}
     </section>
   );

@@ -6,6 +6,7 @@ import { SettingsDeleteAccount } from "@/components/SettingsDeleteAccount";
 import { SettingsGoogleCalendar } from "@/components/SettingsGoogleCalendar";
 import { SettingsTimezone } from "@/components/SettingsTimezone";
 import { SettingsBudget } from "@/components/SettingsBudget";
+import { SettingsAbout } from "@/components/SettingsAbout";
 import { hasGoogleCalendarToken } from "@/app/actions/calendar";
 import { getUserTimezone } from "@/app/actions/auth";
 import { getBudgetSettings } from "@/app/actions/budget";
@@ -47,16 +48,7 @@ export default async function SettingsPage() {
       <SettingsExport />
       <SettingsDeleteAccount />
       <SettingsGoogleCalendar hasToken={hasGoogle} />
-      <div className="card-modern overflow-hidden p-0">
-        <div className="border-b border-neuro-border px-4 py-3">
-          <h2 className="text-base font-semibold text-neuro-silver">About</h2>
-        </div>
-        <div className="p-4">
-          <p className="text-sm text-neuro-muted">
-            NEUROHQ — nervous-system-aware personal operating system. Version {appVersion}.
-          </p>
-        </div>
-      </div>
+      <SettingsAbout appVersion={appVersion} />
     </div>
   );
 }

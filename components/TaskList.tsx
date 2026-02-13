@@ -2,7 +2,7 @@
 
 import { useState, useTransition, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { completeTask, createTask, deleteTask, duplicateTask, snoozeTask } from "@/app/actions/tasks";
+import { completeTask, createTask, deleteTask, duplicateTask, snoozeTask, uncompleteTask } from "@/app/actions/tasks";
 import type { Task } from "@/types/database.types";
 import type { SubtaskRow } from "@/app/actions/tasks";
 import { nextRecurrenceDates, formatShortDate } from "@/lib/utils/recurrence";
@@ -146,6 +146,13 @@ export function TaskList({ date, tasks: initialTasks, completedToday, mode, carr
     });
   }
 
+  function handleUncomplete(id: string) {
+    startTransition(async () => {
+      await uncompleteTask(id);
+      router.refresh();
+    });
+  }
+
   function handleAdd(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setAddError(null);
@@ -231,7 +238,13 @@ export function TaskList({ date, tasks: initialTasks, completedToday, mode, carr
           onClick={(e) => { if ((e.target as HTMLElement).closest("button")) return; setDetailsTask(task); }}
           onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setDetailsTask(task); } }}
           className={`flex cursor-pointer items-center gap-3 rounded-lg border px-3 py-2.5 ${
-            task.completed ? "border-neuro-border bg-neuro-surface/50 opacity-70" : isFirstIncomplete ? "border-neuro-blue/50 bg-neuro-blue/5" : "border-neuro-border bg-neuro-surface/50"
+            task.completed
+              ? "border-neuro-border bg-neuro-surface/50 opacity-70"
+              : task.carry_over_count > 0
+                ? "border-amber-500/50 bg-amber-500/10"
+                : isFirstIncomplete
+                  ? "border-neuro-blue/50 bg-neuro-blue/5"
+                  : "border-neuro-border bg-neuro-surface/50"
           }`}
         >
           <button
@@ -250,8 +263,14 @@ export function TaskList({ date, tasks: initialTasks, completedToday, mode, carr
               {isFirstIncomplete && !task.completed && (
                 <span className="rounded bg-neuro-blue/20 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-neuro-blue">Today&apos;s mission</span>
               )}
+              {task.carry_over_count > 0 && !task.completed && (
+                <span className="rounded bg-amber-500/20 px-2 py-0.5 text-[10px] font-semibold text-amber-400">Carried over</span>
+              )}
               {task.category && (
                 <span className="rounded bg-neuro-surface px-1.5 py-0.5 text-[10px] font-medium text-neuro-muted">{task.category}</span>
+              )}
+              {task.energy_required != null && (
+                <span className="rounded bg-[var(--accent-energy)]/20 px-1.5 py-0.5 text-[10px] font-medium text-[var(--accent-energy)]" title="Energy cost">⚡{task.energy_required}</span>
               )}
               <span className={`text-sm text-neuro-silver ${task.completed ? "line-through text-neuro-muted" : ""}`}>{task.title}</span>
             </div>
@@ -326,7 +345,7 @@ export function TaskList({ date, tasks: initialTasks, completedToday, mode, carr
         )}
 
         {initialTasks.length === 0 ? (
-          <p className="rounded-lg border border-dashed border-neuro-border bg-neuro-surface/50 px-3 py-5 text-center text-sm text-neuro-muted">No missions for today. Add one below or move from backlog.</p>
+          <p className="rounded-lg border border-dashed border-neuro-border bg-neuro-surface/50 px-3 py-5 text-center text-sm text-neuro-muted">No missions for today. Add one below, move from backlog, or enjoy the space.</p>
         ) : (
           sectionsToShow.map((section) => (
             <div key={section.label} className={section.label !== "Today" ? "mb-4" : ""}>
@@ -372,6 +391,15 @@ export function TaskList({ date, tasks: initialTasks, completedToday, mode, carr
                   <option value="weekly">Weekly</option>
                   <option value="monthly">Monthly</option>
                 </select>
+                <label className="flex flex-col gap-1">
+                  <span className="text-xs font-medium text-neuro-muted">Energy</span>
+                  <select name="energy" className="rounded-lg border border-neuro-border bg-neuro-dark px-2 py-2.5 text-sm text-neuro-silver" aria-label="Energy (1-10)">
+                    <option value="">—</option>
+                    {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((n) => (
+                      <option key={n} value={n}>{n}</option>
+                    ))}
+                  </select>
+                </label>
                 <button type="submit" disabled={pending} className="btn-primary rounded-lg px-4 py-2.5 text-sm font-medium disabled:opacity-50">Add</button>
               </div>
               {showRoutine && (
@@ -473,7 +501,16 @@ export function TaskList({ date, tasks: initialTasks, completedToday, mode, carr
             <ul className="space-y-1">
               {(completedToday as ExtendedTask[]).map((t) => (
                 <li key={t.id} className="flex items-center gap-2 rounded-lg border border-neuro-border/50 bg-neuro-surface/30 px-3 py-2 text-sm text-neuro-muted line-through">
-                  <span className="text-green-500">✓</span>
+                  <button
+                    type="button"
+                    onClick={() => handleUncomplete(t.id)}
+                    disabled={pending}
+                    className="h-6 w-6 shrink-0 rounded-lg border-2 border-green-500 bg-green-500/20 flex items-center justify-center text-green-400 hover:bg-green-500/30 hover:border-green-400 disabled:opacity-50"
+                    aria-label="Mark incomplete"
+                    title="Mark incomplete (e.g. if done by accident)"
+                  >
+                    <span className="text-sm">✓</span>
+                  </button>
                   {t.title}
                   {t.category && <span className="rounded bg-neuro-surface px-1.5 py-0.5 text-[10px]">{t.category}</span>}
                 </li>

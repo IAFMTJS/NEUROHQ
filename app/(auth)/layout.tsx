@@ -1,13 +1,24 @@
+import Link from "next/link";
+
+/** Auth pages: login, signup, forgot-password. Same visual system as dashboard. */
 export default function AuthLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
   return (
-    <div className="min-h-screen bg-neuro-dark">
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_50%_at_50%_-20%,rgba(59,130,246,0.08),transparent)]" />
-      {/* Same mobile-first strip as dashboard for consistent PWA feel */}
-      <div className="relative mx-auto flex min-h-screen max-w-[420px] flex-col items-center justify-center p-4 shadow-[0_0_60px_rgba(0,0,0,0.5)] sm:p-6">
+    <div className="relative min-h-screen">
+      {/* Same background as dashboard: BACKGROUND.PNG + layers */}
+      <div className="hq-bg-layer" aria-hidden />
+      <div className="hq-vignette" aria-hidden />
+      <div className="relative z-10 mx-auto flex min-h-screen max-w-[420px] flex-col items-center justify-center p-5 md:min-h-[640px]">
+        <Link
+          href="/"
+          className="absolute top-5 left-5 z-20 flex items-center gap-2 text-sm text-[var(--text-muted)] hover:text-[var(--text-primary)] transition focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-focus)] focus-visible:ring-offset-2 focus-visible:ring-offset-transparent rounded"
+        >
+          <span aria-hidden>←</span>
+          Back to home
+        </Link>
         {children}
       </div>
     </div>
