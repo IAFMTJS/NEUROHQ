@@ -1,5 +1,4 @@
 import Link from "next/link";
-import Image from "next/image";
 import { ensureUserProfileForSession } from "@/app/actions/auth";
 import { getDailyState } from "@/app/actions/daily-state";
 import { getTodaysTasks, type TaskListMode } from "@/app/actions/tasks";
@@ -20,6 +19,7 @@ import {
   ActiveMissionCard,
   PatternInsightCard,
 } from "@/components/hq";
+import { Brain3DModelClient } from "@/components/hq/Brain3DModelClient";
 import { QuoteCard } from "@/components/QuoteCard";
 import { EnergyBudgetBar } from "@/components/EnergyBudgetBar";
 import { ModeBanner } from "@/components/ModeBanner";
@@ -149,19 +149,15 @@ export default async function DashboardPage() {
       data-minimal={isMinimalUI ? "true" : undefined}
     >
       {!isMinimalUI && <OnboardingBanner />}
-      <div className="flex flex-col gap-0">
-        {!isMinimalUI && (
-          <div className="w-full -mx-[var(--hq-padding-x)] flex justify-center shrink-0 ml-0.5 pt-0" aria-hidden>
-            <Image
-              src="/Header Image.PNG"
-              alt=""
-              width={420}
-              height={160}
-              className="w-full max-w-[420px] h-auto object-contain object-top"
-              priority
-            />
-          </div>
-        )}
+      <div className="flex flex-col items-center gap-3">
+        <div className="w-full flex justify-center shrink-0 max-w-[180px] mx-auto" aria-hidden>
+          <Brain3DModelClient
+            energyPct={energyPct}
+            focusPct={focusPct}
+            loadPct={loadPct}
+            className="max-w-[180px] mx-auto"
+          />
+        </div>
         <HQHeader
           energyPct={energyPct}
           focusPct={focusPct}
