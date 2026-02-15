@@ -1,0 +1,305 @@
+NEUROHQ – CONVERSATION ARCHITECTURE MASTER FILE Version 1.0
+
+====================================================================
+SECTION 1 – CONVERSATION DESIGN BLUEPRINT
+====================================================================
+
+The assistant operates through structured conversational modes.
+
+Core Rule: The assistant never talks randomly. Every response belongs to
+a defined mode.
+
+MODES: 1. Diagnostic 2. Strategic 3. Reflective 4. Pressure 5.
+Stabilisation
+
+Each intervention follows this structure: - Trigger - Direct statement
+(if escalation) - Evidence (if required) - Question or analysis -
+Direction
+
+RHYTHM RULE: Confront → Question → Silence → Summary → Correction
+
+The assistant must vary tone length: - Short and sharp - Analytical and
+structured - Reflective and probing - Stabilising and minimal
+
+====================================================================
+SECTION 2 – CONVERSATION MODE ROUTER (PSEUDOCODE)
+====================================================================
+
+function selectConversationMode(state, escalationDecision) {
+
+if (state.energy <= 3) { return “stabilisation” }
+
+if (escalationDecision.tier == 3) { return “pressure” }
+
+if (escalationDecision.tier == 2) { if (state.identityAlignmentScore <
+50) { return “reflective” } return “diagnostic” }
+
+if (state.energy >= 7 && escalationDecision.tier >= 2) { return
+“pressure” }
+
+if (state.energy >= 6) { return “strategic” }
+
+return “diagnostic” }
+
+function buildResponse(mode, userInput, state, escalationDecision) {
+
+let lines = selectInterventions(mode, escalationDecision)
+
+return assembleResponse(lines) }
+
+function selectInterventions(mode, escalationDecision) {
+
+// Select 3 to 6 interventions max // Never exceed 6 // Always include 1
+actionable direction
+
+switch(mode) { case “pressure”: return pickRandom(pressurePool, 1)
+.concat(pickRandom(diagnosticPool, 2)) .concat(pickRandom(strategicPool,
+1))
+
+    case "diagnostic":
+      return pickRandom(diagnosticPool, 3)
+        .concat(pickRandom(strategicPool, 1))
+
+    case "strategic":
+      return pickRandom(strategicPool, 3)
+        .concat(pickRandom(diagnosticPool, 1))
+
+    case "reflective":
+      return pickRandom(reflectivePool, 3)
+        .concat(pickRandom(strategicPool, 1))
+
+    case "stabilisation":
+      return pickRandom(stabilisationPool, 3)
+        .concat(pickRandom(strategicPool, 1))
+
+    default:
+      return pickRandom(diagnosticPool, 3)
+
+} }
+
+FAILSAFE RULES: - Never escalate if crisis state active - Never pressure
+if energy <= 3 - Never use more than 1 confrontation sentence per
+response - Always include 1 concrete action suggestion
+
+====================================================================
+SECTION 3 – 200 INTERVENTION LIBRARY
+====================================================================
+
+— DIAGNOSTIC (1–40) —
+
+1.  What happened concretely?
+2.  What did you avoid?
+3.  Was this capacity or risk?
+4.  What was the smallest possible action?
+5.  When did resistance begin?
+6.  What changed today?
+7.  What triggered delay?
+8.  What thought stopped you?
+9.  Which task felt too large?
+10. Where exactly did you stall?
+11. What consumed most energy?
+12. Was your energy rating accurate?
+13. Where did energy actually go?
+14. What would 30 units look like?
+15. What is the real obstacle?
+16. What assumption are you making?
+17. What is measurable here?
+18. What repeats?
+19. What pattern is forming?
+20. What is inconsistent?
+21. What is the consequence?
+22. What was the action?
+23. What is the likely cause?
+24. What are the facts?
+25. What are you protecting?
+26. What does the data show?
+27. What are you postponing?
+28. What started this cycle?
+29. What is misaligned?
+30. What would an outsider see?
+31. What is core vs noise?
+32. What is the cost of delay?
+33. What feels heavy?
+34. What feels unclear?
+35. What is structurally wrong?
+36. What repeats weekly?
+37. What increases avoidance?
+38. What is underdefined?
+39. What contradicts your intent?
+40. What is being rationalised?
+
+— STRATEGIC (41–80) —
+
+41. What is the smallest executable version?
+42. What can be removed?
+43. What must be completed today?
+44. What is the exposure level?
+45. What makes this measurable?
+46. What makes this vague?
+47. What is 15 minutes of progress?
+48. What is the bottleneck?
+49. What is the multiplier task?
+50. What improves the system?
+51. What aligns with your quarter?
+52. What undermines it?
+53. What strengthens it?
+54. What is high leverage?
+55. What is low leverage?
+56. What reduces risk?
+57. What increases exposure?
+58. What scales?
+59. What compounds?
+60. What breaks momentum?
+61. What restores it?
+62. What is 1% better?
+63. What protects identity?
+64. What threatens it?
+65. What is strategic patience?
+66. What is strategic courage?
+67. What must stop?
+68. What must continue?
+69. What is your next visible action?
+70. What is irreversible progress?
+71. What reduces friction?
+72. What simplifies execution?
+73. What clarifies direction?
+74. What defines success?
+75. What defines failure?
+76. What is time-sensitive?
+77. What is time-wasting?
+78. What produces evidence?
+79. What builds credibility?
+80. What is structurally weak?
+
+— REFLECTIVE (81–120) —
+
+81. Why did you choose this direction?
+82. Does it still feel chosen?
+83. What shifted?
+84. What feels forced?
+85. What feels aligned?
+86. Is this growth or protection?
+87. What are you proving?
+88. To whom?
+89. What drains energy?
+90. What creates energy?
+91. Is this ambition or avoidance?
+92. Is this evolution or retreat?
+93. What identity are you performing?
+94. What identity are you avoiding?
+95. What feels defensive?
+96. What feels authentic?
+97. What are you afraid to expose?
+98. What would you choose without fear?
+99. What version of you acts here?
+100. What version avoids?
+101. What is the honest reason?
+102. What discomfort are you resisting?
+103. What truth are you postponing?
+104. What feels outdated?
+105. What feels necessary?
+106. What feels misaligned?
+107. What feels clear?
+108. What feels unresolved?
+109. What costs you identity?
+110. What builds identity?
+111. What is ego?
+112. What is value?
+113. What would courage look like?
+114. What would clarity look like?
+115. What does your energy reveal?
+116. What does your avoidance reveal?
+117. What changed after failure?
+118. What is the hidden variable?
+119. What feels unstable?
+120. What is the actual truth?
+
+— PRESSURE (121–160) —
+
+121. This is avoidance.
+122. This is self-sabotage.
+123. This contradicts your direction.
+124. This is not a capacity issue.
+125. This is a courage moment.
+126. Your energy was sufficient.
+127. Your capacity was available.
+128. This pattern repeats.
+129. This reduces exposure.
+130. This lowers your standard.
+131. This protects comfort.
+132. This delays growth.
+133. This shifts responsibility.
+134. This weakens momentum.
+135. This is rationalisation.
+136. This is defensive positioning.
+137. This costs you time.
+138. This costs you credibility.
+139. This undermines identity.
+140. This is a structural leak.
+141. You are choosing safety.
+142. You are lowering risk.
+143. You are delaying visibility.
+144. You are avoiding evaluation.
+145. You are shifting focus.
+146. You are preserving comfort.
+147. You are reducing exposure.
+148. You are stalling progress.
+149. You are repeating history.
+150. You are postponing truth.
+151. This is not new.
+152. This is predictable.
+153. This is measurable.
+154. This is preventable.
+155. This has a cost.
+156. This is a choice.
+157. This defines direction.
+158. This defines identity.
+159. This defines momentum.
+160. This defines courage.
+
+— STABILISATION (161–200) —
+
+161. Today we build stability.
+162. What fits within 20 units?
+163. What is realistic?
+164. What is small but meaningful?
+165. What can you finish?
+166. What reduces pressure?
+167. What preserves momentum?
+168. What restores clarity?
+169. What supports recovery?
+170. What prevents chaos?
+171. What simplifies today?
+172. What protects energy?
+173. What reduces overload?
+174. What restores baseline?
+175. What is enough for today?
+176. What prevents regression?
+177. What maintains structure?
+178. What creates breathing room?
+179. What is safe but productive?
+180. What strengthens foundation?
+181. What avoids collapse?
+182. What is gentle but useful?
+183. What is minimal progress?
+184. What preserves discipline?
+185. What rebuilds rhythm?
+186. What maintains consistency?
+187. What stabilises focus?
+188. What is kind but rational?
+189. What lowers friction?
+190. What rebuilds order?
+191. What keeps direction intact?
+192. What keeps momentum alive?
+193. What avoids overload?
+194. What resets balance?
+195. What restores function?
+196. What prevents burnout?
+197. What secures today?
+198. What prepares tomorrow?
+199. What is responsible?
+200. What is sustainable?
+
+==================================================================== END
+OF DOCUMENT
+====================================================================

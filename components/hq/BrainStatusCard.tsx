@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { saveDailyState } from "@/app/actions/daily-state";
 import { getSuggestedTaskCount } from "@/lib/utils/energy";
 import { RadialMeter } from "./RadialMeter";
+import { useAppState } from "@/components/providers/AppStateProvider";
 
 function scale1To10ToPct(value: number | null): number {
   if (value == null) return 50;
@@ -51,6 +52,7 @@ type Props = {
 
 export function BrainStatusCard({ date, initial, yesterday }: Props) {
   const router = useRouter();
+  const appState = useAppState();
   const [expanded, setExpanded] = useState(false);
   const [pending, startTransition] = useTransition();
   const [saved, setSaved] = useState(false);
@@ -104,10 +106,12 @@ export function BrainStatusCard({ date, initial, yesterday }: Props) {
       if (result.ok) {
         setSaved(true);
         setExpanded(false);
+        appState?.triggerReward();
         router.refresh();
         setTimeout(() => setSaved(false), 2500);
       } else {
         setError(result.error);
+        appState?.triggerError();
       }
     });
   }

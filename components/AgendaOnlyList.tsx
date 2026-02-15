@@ -84,16 +84,25 @@ export function AgendaOnlyList({
                       {e.is_social && " · Social"}
                     </span>
                   </div>
-                  {e.source === "manual" && (
-                    <button
-                      type="button"
-                      onClick={() => handleDelete(e.id)}
-                      disabled={pending}
-                      className="text-xs text-neutral-500 hover:text-red-400"
+                  <div className="flex items-center gap-2">
+                    <a
+                      href={`/api/calendar/event/${e.id}/ics`}
+                      download
+                      className="text-xs text-neuro-muted hover:text-neuro-silver"
                     >
-                      Delete
-                    </button>
-                  )}
+                      Apple Kalender
+                    </a>
+                    {e.source === "manual" && (
+                      <button
+                        type="button"
+                        onClick={() => handleDelete(e.id)}
+                        disabled={pending}
+                        className="text-xs text-neutral-500 hover:text-red-400"
+                      >
+                        Delete
+                      </button>
+                    )}
+                  </div>
                 </li>
               ))}
             </ul>

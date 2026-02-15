@@ -2,8 +2,6 @@
 
 import { createClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
-import { getEnergyBudget } from "./energy";
-import { splitTaskCost } from "@/lib/utils/energy";
 
 export type TaskListMode = "normal" | "low_energy" | "stabilize" | "driven";
 
@@ -28,10 +26,9 @@ export async function getTodaysTasks(date: string, mode: TaskListMode) {
 
   query = query.order("created_at", { ascending: true });
   const { data: tasks } = await query;
-  const limit = mode === "stabilize" ? 2 : mode === "low_energy" ? 3 : 999;
-  let limited = tasks ?? [];
+  let ordered = tasks ?? [];
   const categoryOrder = (c: string | null) => (c === "work" ? 0 : c === "personal" ? 1 : 2);
-  limited = [...limited].sort((a, b) => {
+  ordered = [...ordered].sort((a, b) => {
     const catA = categoryOrder((a as { category?: string | null }).category ?? null);
     const catB = categoryOrder((b as { category?: string | null }).category ?? null);
     if (catA !== catB) return catA - catB;
@@ -45,10 +42,9 @@ export async function getTodaysTasks(date: string, mode: TaskListMode) {
     }
     return new Date((a as { created_at?: string }).created_at ?? 0).getTime() - new Date((b as { created_at?: string }).created_at ?? 0).getTime();
   });
-  limited = limited.slice(0, limit);
 
   const maxCarryOver = Math.max(0, ...(tasks ?? []).map((t) => (t as { carry_over_count?: number }).carry_over_count ?? 0));
-  return { tasks: limited, carryOverCount: maxCarryOver };
+  return { tasks: ordered, carryOverCount: maxCarryOver };
 }
 
 export async function getTasksForDate(date: string) {
@@ -72,6 +68,8 @@ export async function createTask(params: {
   title: string;
   due_date: string;
   energy_required?: number | null;
+  mental_load?: number | null;
+  social_load?: number | null;
   priority?: number | null;
   parent_task_id?: string | null;
   recurrence_rule?: "daily" | "weekly" | "monthly" | null;
@@ -85,25 +83,6 @@ export async function createTask(params: {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) throw new Error("Not authenticated");
 
-  const carryOverCount = await getCarryOverCountForDate(params.due_date);
-  if (carryOverCount >= 5) {
-    throw new Error("Stabilize mode: finish or reschedule carried-over tasks before adding more.");
-  }
-
-  const budget = await getEnergyBudget(params.due_date);
-  const energyRequired = params.energy_required ?? 5;
-  const cost = splitTaskCost(energyRequired);
-  const fitsEnergy = budget.energy.remaining >= cost.energy;
-  const fitsFocus = budget.focus.remaining >= cost.focus;
-  const fitsLoad = budget.load.remaining >= cost.load;
-  if (!fitsEnergy || !fitsFocus || !fitsLoad) {
-    const bottleneck = !fitsEnergy ? "energy" : !fitsFocus ? "focus" : "load";
-    throw new Error(
-      `Capacity low (${bottleneck} pool). Brain status suggests ~${budget.suggestedTaskCount} tasks. ` +
-        `Finish tasks, pick a lighter one, or update your check-in.`
-    );
-  }
-
   const { data, error } = await supabase
     .from("tasks")
     .insert({
@@ -111,6 +90,8 @@ export async function createTask(params: {
       title: params.title,
       due_date: params.due_date,
       energy_required: params.energy_required ?? null,
+      mental_load: params.mental_load ?? null,
+      social_load: params.social_load ?? null,
       priority: params.priority ?? null,
       parent_task_id: params.parent_task_id ?? null,
       recurrence_rule: params.recurrence_rule ?? null,
@@ -150,7 +131,7 @@ export async function completeTask(id: string) {
   if (!user) throw new Error("Not authenticated");
   const { data: task } = await supabase
     .from("tasks")
-    .select("recurrence_rule, recurrence_weekdays, due_date, title, energy_required, priority, category, impact, urgency")
+    .select("recurrence_rule, recurrence_weekdays, due_date, title, energy_required, mental_load, social_load, priority, category, impact, urgency")
     .eq("id", id)
     .eq("user_id", user.id)
     .single();
@@ -160,7 +141,7 @@ export async function completeTask(id: string) {
     .eq("id", id)
     .eq("user_id", user.id);
   if (error) throw new Error(error.message);
-  const t = task as { recurrence_rule?: string; recurrence_weekdays?: string | null; due_date: string; title: string; energy_required?: number | null; priority?: number | null; category?: string | null; impact?: number | null; urgency?: number | null } | null;
+  const t = task as { recurrence_rule?: string; recurrence_weekdays?: string | null; due_date: string; title: string; energy_required?: number | null; mental_load?: number | null; social_load?: number | null; priority?: number | null; category?: string | null; impact?: number | null; urgency?: number | null } | null;
   if (t?.recurrence_rule === "daily" || t?.recurrence_rule === "weekly" || t?.recurrence_rule === "monthly") {
     let nextStr: string;
     const base = new Date(t.due_date + "T12:00:00Z");
@@ -191,6 +172,8 @@ export async function completeTask(id: string) {
       title: t.title,
       due_date: nextStr,
       energy_required: t.energy_required ?? null,
+      mental_load: t.mental_load ?? null,
+      social_load: t.social_load ?? null,
       priority: t.priority ?? null,
       recurrence_rule: t.recurrence_rule,
       recurrence_weekdays: t.recurrence_weekdays ?? null,
@@ -199,6 +182,10 @@ export async function completeTask(id: string) {
       urgency: t.urgency ?? null,
     } as Record<string, unknown>);
   }
+  const { awardXPForTaskComplete } = await import("./xp");
+  const { upsertDailyAnalytics } = await import("./analytics");
+  await awardXPForTaskComplete();
+  if (t?.due_date) await upsertDailyAnalytics(t.due_date);
   revalidatePath("/dashboard");
   revalidatePath("/tasks");
 }
@@ -357,6 +344,8 @@ export async function updateTask(
     impact?: number | null;
     urgency?: number | null;
     energy_required?: number | null;
+    mental_load?: number | null;
+    social_load?: number | null;
     priority?: number | null;
     notes?: string | null;
   }
@@ -373,6 +362,8 @@ export async function updateTask(
   if (params.impact !== undefined) payload.impact = params.impact;
   if (params.urgency !== undefined) payload.urgency = params.urgency;
   if (params.energy_required !== undefined) payload.energy_required = params.energy_required;
+  if (params.mental_load !== undefined) payload.mental_load = params.mental_load;
+  if (params.social_load !== undefined) payload.social_load = params.social_load;
   if (params.priority !== undefined) payload.priority = params.priority;
   if (params.notes !== undefined) payload.notes = params.notes;
   const { error } = await supabase.from("tasks").update(payload).eq("id", id).eq("user_id", user.id);
@@ -388,12 +379,12 @@ export async function duplicateTask(id: string, due_date: string) {
   if (!user) throw new Error("Not authenticated");
   const { data: task } = await supabase
     .from("tasks")
-    .select("title, category, recurrence_rule, recurrence_weekdays, impact, urgency, energy_required, priority")
+    .select("title, category, recurrence_rule, recurrence_weekdays, impact, urgency, energy_required, mental_load, social_load, priority")
     .eq("id", id)
     .eq("user_id", user.id)
     .single();
   if (!task) throw new Error("Task not found");
-  const t = task as { title: string; category?: string | null; recurrence_rule?: string | null; recurrence_weekdays?: string | null; impact?: number | null; urgency?: number | null; energy_required?: number | null; priority?: number | null };
+  const t = task as { title: string; category?: string | null; recurrence_rule?: string | null; recurrence_weekdays?: string | null; impact?: number | null; urgency?: number | null; energy_required?: number | null; mental_load?: number | null; social_load?: number | null; priority?: number | null };
   const { error } = await supabase.from("tasks").insert({
     user_id: user.id,
     title: t.title,
@@ -404,6 +395,8 @@ export async function duplicateTask(id: string, due_date: string) {
     impact: t.impact ?? null,
     urgency: t.urgency ?? null,
     energy_required: t.energy_required ?? null,
+    mental_load: t.mental_load ?? null,
+    social_load: t.social_load ?? null,
     priority: t.priority ?? null,
   } as Record<string, unknown>);
   if (error) throw new Error(error.message);

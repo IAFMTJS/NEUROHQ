@@ -1,5 +1,6 @@
 "use server";
 
+import { unstable_cache, revalidateTag } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 
 export type DailyStateInput = {
@@ -15,13 +16,20 @@ export async function getDailyState(date: string) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return null;
-  const { data } = await supabase
-    .from("daily_state")
-    .select("*")
-    .eq("user_id", user.id)
-    .eq("date", date)
-    .single();
-  return data;
+  return unstable_cache(
+    async () => {
+      const client = await createClient();
+      const { data } = await client
+        .from("daily_state")
+        .select("*")
+        .eq("user_id", user.id)
+        .eq("date", date)
+        .single();
+      return data;
+    },
+    ["daily_state", user.id, date],
+    { tags: [`daily-${user.id}-${date}`] }
+  )();
 }
 
 export type SaveDailyStateResult = { ok: true } | { ok: false; error: string };
@@ -44,6 +52,11 @@ export async function saveDailyState(input: DailyStateInput): Promise<SaveDailyS
       onConflict: "user_id,date",
     });
     if (error) return { ok: false, error: error.message };
+    revalidateTag(`daily-${user.id}-${input.date}`, "max");
+    const { awardXPForBrainStatus } = await import("./xp");
+    const { upsertDailyAnalytics } = await import("./analytics");
+    await awardXPForBrainStatus();
+    await upsertDailyAnalytics(input.date);
     return { ok: true };
   } catch (e) {
     return { ok: false, error: e instanceof Error ? e.message : "Failed to save." };

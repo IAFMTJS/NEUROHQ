@@ -1,0 +1,234 @@
+Kijk eens aan. Nu praten we.
+We doen dit correct.
+Eerst fundering. Dan skelet. Dan executie.
+⸻
+🔥
+ STAP 1 — VOLLEDIGE PRISMA SCHEMA (PRODUCTION READY)
+Copy-paste dit in:
+/apps/api/prisma/schema.prisma
+generator client {
+ provider = "prisma-client-js"
+}
+datasource db {
+ provider = "postgresql"
+ url = env("DATABASE_URL")
+}
+model User {
+ id String @id @default(uuid())
+ email String @unique
+ passwordHash String
+ createdAt DateTime @default(now())
+ updatedAt DateTime @updatedAt
+ state UserState?
+ checkins DailyCheckin[]
+ tasks Task[]
+ identityQuarters IdentityQuarter[]
+ identityEvents IdentityEvent[]
+ escalationLogs EscalationLog[]
+ featureFlag FeatureFlag?
+}
+model UserState {
+ userId String @id
+ user User @relation(fields:
+[userId], references: [id])
+ energy Int
+ focus Int
+ sensoryLoad Int
+ sleepHours Int
+ mode String
+ progress Int @default(0)
+ carryOverLevel Int @default(0)
+ avoidanceTrend Float @default(0)
+ identityAlignmentScore Float @default(0)
+ stabilityIndex Float @default(50)
+ intensityTier Int @default(1)
+ defensiveIdentityProbability Float @default(0)
+ courageGapScore Float @default(0)
+ updatedAt DateTime @updatedAt
+}
+model DailyCheckin {
+ id String @id @default(uuid())
+ userId String
+ user User @relation(fields: [userId],
+references: [id])
+ energy Int
+ focus Int
+ sensoryLoad Int
+ sleepHours Int
+ socialExposure Int
+ createdAt DateTime @default(now())
+}
+model Task {
+ id String @id @default(uuid())
+ userId String
+ user User @relation(fields: [userId],
+references: [id])
+ title String
+ energyCost Int
+ priority Int
+ isCoreTask Boolean @default(false)
+ completed Boolean @default(false)
+ completedAt DateTime?
+ createdAt DateTime @default(now())
+}
+model IdentityQuarter {
+ id String @id @default(uuid())
+ userId String
+ user User @relation(fields: [userId],
+references: [id])
+ primaryFocus String
+ secondaryFocus String
+ savingsTarget Float
+ identityStatement String
+ startDate DateTime
+ endDate DateTime
+ active Boolean @default(true)
+ createdAt DateTime @default(now())
+}
+model IdentityEvent {
+ id String @id @default(uuid())
+ userId String
+ user User @relation(fields: [userId],
+references: [id])
+ type String // soft | forced | override
+ reason String
+ createdAt DateTime @default(now())
+}
+model EscalationLog {
+ id String @id @default(uuid())
+ userId String
+ user User @relation(fields: [userId],
+references: [id])
+ tier Int
+ triggerType String
+ evidenceSnapshot Json
+ createdAt DateTime @default(now())
+}
+model FeatureFlag {
+ userId String @id
+ user User @relation(fields:
+[userId], references: [id])
+ confrontationLevel String
+@default("adaptive")
+ identityIntervention Boolean @default(false)
+ defensiveIdentityDetection Boolean @default(false)
+ courageAttribution Boolean @default(false)
+ energyFactCheck Boolean @default(true)
+}
+Daarna:
+npx prisma migrate dev --name init
+npx prisma generate
+Fundering staat.
+⸻
+ STAP 2 — NESTJS MODULE SKELETON (PROPER STRUCTURE)
+Installeer eerst:
+npm install @nestjs/common @nestjs/core @nestjs/jwt @nestjs/passport passport bcrypt prisma
+@prisma/client
+⸻
+ assistant.module.ts
+@Module({
+ controllers: [AssistantController],
+ providers: [
+ AssistantService,
+ EscalationEngine,
+ PromptService,
+ AiService
+ ]
+})
+export class AssistantModule {}
+⸻
+assistant.controller.ts
+@Post("message")
+@UseGuards(AuthGuard)
+async message(@Req() req, @Body() body: { message:
+string }) {
+ return this.assistantService.handleMessage(req.user.id,
+body.message);
+}
+⸻
+assistant.service.ts
+async handleMessage(userId: string, message: string) {
+ const state = await this.stateService.getState(userId);
+ const decision = this.escalationEngine.evaluate(state);
+ const prompt = this.promptService.build({
+ state,
+ decision,
+ userMessage: message
+ });
+ const response = await this.aiService.generate(prompt);
+ if (decision.tier > 1) {
+ await this.logEscalation(userId, decision);
+ }
+ return {
+ response,
+ escalationTier: decision.tier,
+ identityAlert: decision.identityAlert,
+ courageFlag: decision.courageFlag
+ };
+}
+⸻
+escalation.engine.ts (pure logic)
+evaluate(state: UserState) {
+ let tier = 1;
+ if (state.avoidanceTrend > 0.6 && state.energy >= 6) {
+ tier = 2;
+ }
+ if (
+ state.avoidanceTrend > 0.8 &&
+ state.identityAlignmentScore < 40 &&
+ state.energy >= 6
+ ) {
+ tier = 3;
+ }
+ return {
+ tier,
+ identityAlert: state.identityAlignmentScore < 50,
+ courageFlag: state.courageGapScore > 0.7
+ };
+}
+Geen AI hier. Alleen regels.
+⸻
+ STAP 3 — 30 DAGEN EXECUTIEPLAN (GEEN THEORIE)
+DAG 1–2
+• Repo setup
+• Prisma schema
+• DB connectie
+• Auth werkend
+DAG 3–5
+• Check-in endpoint
+• UserState update logic
+• Task CRUD
+• Capacity berekening
+DAG 6–8
+• Escalation engine (pure functions)
+• Unit tests voor thresholds
+DAG 9–11
+• Assistant endpoint
+• Prompt builder
+• AI wrapper
+DAG 12–15
+• IdentityQuarter module
+• Identity Alignment Score
+• Escalation logs
+DAG 16–20
+• Stability index
+• Feature flags
+• Crisis guard middleware
+DAG 21–25
+• Defensive identity logic
+• Courage gap engine
+DAG 26–30
+• Deployment
+• Monitoring
+• Beta users onboarden
+• Feedback analyseren
+⸻
+ REALITEIT
+Als je dit in 30 dagen doet, full focus?
+Dan heb je een werkend publiek systeem.
+Als je begint te twijfelen en herstructureren?
+Dan ben je 90 dagen bezig.
+Discipline is een systeem, niet een gevoel.
+Nu is de vraag niet wat je wil bouwen.
+Nu is de vraag:
+Ga je dit echt 30 dagen strak uitvoeren?

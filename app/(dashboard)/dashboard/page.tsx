@@ -1,4 +1,5 @@
 import Link from "next/link";
+import dynamic from "next/dynamic";
 import { ensureUserProfileForSession } from "@/app/actions/auth";
 import { getDailyState } from "@/app/actions/daily-state";
 import { getTodaysTasks, type TaskListMode } from "@/app/actions/tasks";
@@ -10,27 +11,72 @@ import { getRealityReport } from "@/app/actions/report";
 import { getQuarterlyStrategy } from "@/app/actions/strategy";
 import { getLearningStreak, getWeeklyMinutes, getWeeklyLearningTarget } from "@/app/actions/learning";
 import { getBudgetSettings, getCurrentMonthExpensesCents } from "@/app/actions/budget";
+import { getUserPreferencesOrDefaults } from "@/app/actions/preferences";
+import { getXP } from "@/app/actions/xp";
+import { getWeekSummary, upsertDailyAnalytics } from "@/app/actions/analytics";
+import { getAdaptiveSuggestions } from "@/app/actions/adaptive";
 import { getWeekBounds } from "@/lib/utils/learning";
 import { getCurrencySymbol } from "@/lib/utils/currency";
-import { yesterdayDate } from "@/lib/utils/timezone";
-import {
-  HQHeader,
-  BrainStatusCard,
-  ActiveMissionCard,
-  PatternInsightCard,
-} from "@/components/hq";
-import { Brain3DModelClient } from "@/components/hq/Brain3DModelClient";
-import { QuoteCard } from "@/components/QuoteCard";
-import { EnergyBudgetBar } from "@/components/EnergyBudgetBar";
-import { ModeBanner } from "@/components/ModeBanner";
-import { ModeExplanationModal } from "@/components/ModeExplanationModal";
-import { AvoidanceNotice } from "@/components/AvoidanceNotice";
-import { FocusBlock } from "@/components/FocusBlock";
-import { RealityReportBlock } from "@/components/RealityReportBlock";
-import { OnTrackCard } from "@/components/OnTrackCard";
-import { OnboardingBanner } from "@/components/OnboardingBanner";
-import { AddCalendarEventForm } from "@/components/AddCalendarEventForm";
-import { UpcomingCalendarList } from "@/components/UpcomingCalendarList";
+import { yesterdayDate, getDayOfYearFromDateString } from "@/lib/utils/timezone";
+import { EMOTION_2D_PATHS, getEmotionImagePath } from "@/lib/emotions";
+import type { EmotionKey } from "@/lib/emotions";
+import type { ThemeId } from "@/lib/theme-tokens";
+import { HQHeader, BrainStatusCard, ActiveMissionCard } from "@/components/hq";
+import { ModeBanner, ModeExplanationModal, AddCalendarEventForm } from "@/components/dashboard/DashboardClientOnly";
+
+const QuoteCard = dynamic(
+  () => import("@/components/QuoteCard").then((m) => ({ default: m.QuoteCard })),
+  { loading: () => <div className="card-modern min-h-[120px] animate-pulse rounded-xl" aria-hidden /> }
+);
+
+const RealityReportBlock = dynamic(
+  () => import("@/components/RealityReportBlock").then((m) => ({ default: m.RealityReportBlock })),
+  { loading: () => <div className="card-modern min-h-[100px] animate-pulse rounded-xl" aria-hidden /> }
+);
+
+const PatternInsightCard = dynamic(
+  () => import("@/components/hq/PatternInsightCard").then((m) => ({ default: m.PatternInsightCard })),
+  { loading: () => <div className="card-modern min-h-[80px] animate-pulse rounded-xl" aria-hidden /> }
+);
+
+const EnergyBudgetBar = dynamic(
+  () => import("@/components/EnergyBudgetBar").then((m) => ({ default: m.EnergyBudgetBar })),
+  { loading: () => <div className="h-3 w-full animate-pulse rounded-full bg-white/10" aria-hidden /> }
+);
+const AvoidanceNotice = dynamic(
+  () => import("@/components/AvoidanceNotice").then((m) => ({ default: m.AvoidanceNotice })),
+  { loading: () => null }
+);
+const FocusBlock = dynamic(
+  () => import("@/components/FocusBlock").then((m) => ({ default: m.FocusBlock })),
+  { loading: () => <div className="min-h-[80px] animate-pulse rounded-xl bg-white/5" aria-hidden /> }
+);
+const OnTrackCard = dynamic(
+  () => import("@/components/OnTrackCard").then((m) => ({ default: m.OnTrackCard })),
+  { loading: () => <div className="card-modern min-h-[60px] animate-pulse rounded-xl" aria-hidden /> }
+);
+const OnboardingBanner = dynamic(
+  () => import("@/components/OnboardingBanner").then((m) => ({ default: m.OnboardingBanner })),
+  { loading: () => null }
+);
+const UpcomingCalendarList = dynamic(
+  () => import("@/components/UpcomingCalendarList").then((m) => ({ default: m.UpcomingCalendarList })),
+  { loading: () => <div className="min-h-[60px] animate-pulse rounded-xl" aria-hidden /> }
+);
+const XPBadge = dynamic(
+  () => import("@/components/XPBadge").then((m) => ({ default: m.XPBadge })),
+  { loading: () => null }
+);
+const AnalyticsWeekWidget = dynamic(
+  () => import("@/components/AnalyticsWeekWidget").then((m) => ({ default: m.AnalyticsWeekWidget })),
+  { loading: () => <div className="card-modern min-h-[100px] animate-pulse rounded-xl" aria-hidden /> }
+);
+const AdaptiveSuggestionBanner = dynamic(
+  () => import("@/components/AdaptiveSuggestionBanner").then((m) => ({ default: m.AdaptiveSuggestionBanner })),
+  { loading: () => null }
+);
+
+import Image from "next/image";
 
 function scale1To10ToPct(value: number | null): number {
   if (value == null) return 50;
@@ -79,18 +125,14 @@ function defaultSuggestion(energy: number, focus: number, load: number): string 
   return "Check your first incomplete mission and start there.";
 }
 
-function dayOfYear(d: Date): number {
-  const start = new Date(d.getFullYear(), 0, 0);
-  return Math.min(365, Math.max(1, Math.floor((d.getTime() - start.getTime()) / 86400000)));
-}
-
 export default async function DashboardPage() {
   void ensureUserProfileForSession();
   const today = new Date();
   const dateStr = today.toISOString().slice(0, 10);
-  const quoteDay = dayOfYear(today);
+  // One quote per calendar day: quote id = day of year (1–365)
+  const quoteDay = Math.max(1, Math.min(365, getDayOfYearFromDateString(dateStr)));
   const yesterdayStr = yesterdayDate(dateStr);
-  const [state, yesterdayState, quotesResult, mode, energyBudget, upcomingCalendarEvents, hasGoogle, learningStreak] = await Promise.all([
+  const [state, yesterdayState, quotesResult, mode, energyBudget, upcomingCalendarEvents, hasGoogle, learningStreak, prefs, xp] = await Promise.all([
     getDailyState(dateStr),
     getDailyState(yesterdayStr),
     Promise.all([
@@ -103,6 +145,8 @@ export default async function DashboardPage() {
     getUpcomingCalendarEvents(dateStr, 2),
     hasGoogleCalendarToken(),
     getLearningStreak(),
+    getUserPreferencesOrDefaults(),
+    getXP(),
   ]);
   const taskMode: TaskListMode =
     mode === "stabilize" ? "stabilize" : mode === "low_energy" ? "low_energy" : mode === "driven" ? "driven" : "normal";
@@ -119,12 +163,28 @@ export default async function DashboardPage() {
     getBudgetSettings(),
     getCurrentMonthExpensesCents(),
   ]);
+  const [weekSummary, adaptiveSuggestions] = await Promise.all([
+    getWeekSummary(thisWeekStart, thisWeekEnd, weeklyLearningTarget),
+    getAdaptiveSuggestions(dateStr),
+  ]);
+  void upsertDailyAnalytics(dateStr);
   const spendableCents = Math.max(0, (budgetSettings.monthly_budget_cents ?? 0) - (budgetSettings.monthly_savings_cents ?? 0));
   const budgetRemainingCents = budgetSettings.monthly_budget_cents != null ? spendableCents - currentMonthExpenses : null;
 
   const energyPct = scale1To10ToPct(state?.energy ?? null);
   const focusPct = scale1To10ToPct(state?.focus ?? null);
   const loadPct = scale1To10ToPct(state?.sensory_load ?? null);
+
+  const derivedMood = (() => {
+    if (loadPct >= 75) return "angry";
+    if (energyPct < 25) return "drained";
+    if (energyPct < 45) return "sleepy";
+    if (energyPct < 60) return "questioning";
+    if (energyPct < 80) return "motivated";
+    if (energyPct >= 95) return "neon";
+    return "excited";
+  })() as "drained" | "sleepy" | "questioning" | "motivated" | "excited" | "angry" | "neon";
+  const displayEmotion = prefs.selected_emotion ?? derivedMood;
 
   const learningNeeded = weeklyLearningMinutes < weeklyLearningTarget;
   const todaysTasks = (tasks ?? []).map((t) => ({
@@ -149,19 +209,37 @@ export default async function DashboardPage() {
       data-minimal={isMinimalUI ? "true" : undefined}
     >
       {!isMinimalUI && <OnboardingBanner />}
-      <div className="flex flex-col items-center gap-3">
-        <div className="w-full flex justify-center shrink-0 max-w-[180px] mx-auto" aria-hidden>
-          <Brain3DModelClient
-            energyPct={energyPct}
-            focusPct={focusPct}
-            loadPct={loadPct}
-            className="max-w-[180px] mx-auto"
-          />
+      {!isMinimalUI && (
+        <div className="flex justify-end">
+          <XPBadge totalXp={xp.total_xp} level={xp.level} compact />
         </div>
+      )}
+      <div className="flex flex-col gap-0">
+        {!isMinimalUI && (
+          <div className="w-full flex justify-center shrink-0 pt-0 max-w-[260px] mx-auto" aria-hidden>
+            <div className="relative w-full aspect-square min-h-[160px] rounded-xl overflow-hidden">
+              {displayEmotion && displayEmotion in EMOTION_2D_PATHS ? (
+                <Image
+                  src={getEmotionImagePath(displayEmotion as EmotionKey, (prefs.theme ?? "normal") as ThemeId)}
+                  alt=""
+                  fill
+                  sizes="260px"
+                  className="object-contain p-2"
+                  priority
+                />
+              ) : (
+                <div className="absolute inset-0 bg-[var(--bg-surface)]/50">
+                  <Image src="/app-icon.png" alt="" fill sizes="260px" className="object-contain p-4" priority />
+                </div>
+              )}
+            </div>
+          </div>
+        )}
         <HQHeader
           energyPct={energyPct}
           focusPct={focusPct}
           loadPct={loadPct}
+          copyVariant={adaptiveSuggestions.copyVariant}
         />
       </div>
       <BrainStatusCard
@@ -237,6 +315,10 @@ export default async function DashboardPage() {
           <p className="mt-1 text-sm text-neuro-silver italic">&ldquo;{strategy.identity_statement}&rdquo;</p>
         </div>
       )}
+      {!isMinimalUI && (adaptiveSuggestions.themeSuggestion || adaptiveSuggestions.emotionSuggestion || adaptiveSuggestions.taskCountSuggestion != null) && (
+        <AdaptiveSuggestionBanner suggestions={adaptiveSuggestions} />
+      )}
+      {!isMinimalUI && <AnalyticsWeekWidget summary={weekSummary} />}
       {!isMinimalUI && learningStreak >= 1 && (
         <div className="card-modern-accent flex items-center gap-3 px-4 py-3">
           <span className="text-2xl" aria-hidden>🔥</span>

@@ -59,6 +59,150 @@
   --neuro-accent: var(--accent-focus);
 }
 
+/* ========== Theme: Normal + Light ========== */
+[data-theme="normal"][data-color-mode="light"] {
+  --bg-primary: #E8EEF4;
+  --bg-surface: #F0F5FA;
+  --bg-elevated: #F6FAFD;
+  --bg-overlay: rgba(232, 238, 244, 0.92);
+  --accent-focus: #0099B3;
+  --accent-energy: #00C9A0;
+  --accent-warning: #E56A00;
+  --accent-neutral: #8FA3BF;
+  --text-primary: #0B1220;
+  --text-secondary: #2A3A52;
+  --text-muted: #5F6C80;
+  --glow-focus: 0 0 12px rgba(0, 153, 179, 0.4);
+  --glow-energy: 0 0 12px rgba(0, 201, 160, 0.4);
+  --card-bg-top: #F0F5FA;
+  --card-bg-bottom: #E8EEF4;
+  --card-border: rgba(11, 18, 32, 0.08);
+  --card-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
+  --card-inner-glow: none;
+  --neuro-bg: var(--bg-primary);
+  --neuro-surface: var(--bg-surface);
+  --neuro-border: var(--accent-neutral);
+  --neuro-text: var(--text-primary);
+  --neuro-muted: var(--text-muted);
+  --neuro-accent: var(--accent-focus);
+}
+
+/* ========== Theme: Girly + Dark ========== */
+[data-theme="girly"][data-color-mode="dark"] {
+  --bg-primary: #1A1425;
+  --bg-surface: #251B33;
+  --bg-elevated: #2E2340;
+  --bg-overlay: rgba(26, 20, 37, 0.9);
+  --accent-focus: #E8A0C8;
+  --accent-energy: #F0B8D8;
+  --accent-warning: #E8956A;
+  --accent-neutral: #4A3D5C;
+  --text-primary: #F5E6F0;
+  --text-secondary: #C4A8B8;
+  --text-muted: #8A7A8A;
+  --hq-card-radius: 20px;
+  --hq-card-radius-sharp: 18px;
+  --hq-btn-radius: 14px;
+  --card-bg-top: #251B33;
+  --card-bg-bottom: #1E1630;
+  --card-border: rgba(232, 160, 200, 0.12);
+  --card-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+  --card-inner-glow: inset 0 0 24px rgba(232, 160, 200, 0.04);
+  --neuro-bg: var(--bg-primary);
+  --neuro-surface: var(--bg-surface);
+  --neuro-border: var(--accent-neutral);
+  --neuro-text: var(--text-primary);
+  --neuro-muted: var(--text-muted);
+  --neuro-accent: var(--accent-focus);
+}
+
+/* ========== Theme: Girly + Light ========== */
+[data-theme="girly"][data-color-mode="light"] {
+  --bg-primary: #F8F0F5;
+  --bg-surface: #FFF5FB;
+  --bg-elevated: #FFF8FC;
+  --bg-overlay: rgba(248, 240, 245, 0.92);
+  --accent-focus: #C45A9E;
+  --accent-energy: #D870B0;
+  --accent-warning: #D96A40;
+  --accent-neutral: #B8A0B8;
+  --text-primary: #2A1F2E;
+  --text-secondary: #5C4A5C;
+  --text-muted: #7A6A7A;
+  --hq-card-radius: 20px;
+  --hq-card-radius-sharp: 18px;
+  --hq-btn-radius: 14px;
+  --card-bg-top: #FFF5FB;
+  --card-bg-bottom: #F8F0F5;
+  --card-border: rgba(196, 90, 158, 0.15);
+  --card-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
+  --card-inner-glow: none;
+  --neuro-bg: var(--bg-primary);
+  --neuro-surface: var(--bg-surface);
+  --neuro-border: var(--accent-neutral);
+  --neuro-text: var(--text-primary);
+  --neuro-muted: var(--text-muted);
+  --neuro-accent: var(--accent-focus);
+}
+
+/* ========== Theme: Industrial + Dark ========== */
+[data-theme="industrial"][data-color-mode="dark"] {
+  --bg-primary: #0D0D0D;
+  --bg-surface: #161616;
+  --bg-elevated: #1E1E1E;
+  --bg-overlay: rgba(13, 13, 13, 0.92);
+  --accent-focus: #00A8E8;
+  --accent-energy: #00A8E8;
+  --accent-warning: #E8A000;
+  --accent-neutral: #3A3A3A;
+  --text-primary: #E8E8E8;
+  --text-secondary: #A0A0A0;
+  --text-muted: #6A6A6A;
+  --hq-card-radius: 8px;
+  --hq-card-radius-sharp: 6px;
+  --hq-btn-radius: 6px;
+  --card-bg-top: #161616;
+  --card-bg-bottom: #121212;
+  --card-border: rgba(255, 255, 255, 0.06);
+  --card-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
+  --card-inner-glow: none;
+  --neuro-bg: var(--bg-primary);
+  --neuro-surface: var(--bg-surface);
+  --neuro-border: var(--accent-neutral);
+  --neuro-text: var(--text-primary);
+  --neuro-muted: var(--text-muted);
+  --neuro-accent: var(--accent-focus);
+}
+
+/* ========== Theme: Industrial + Light ========== */
+[data-theme="industrial"][data-color-mode="light"] {
+  --bg-primary: #F2F2F2;
+  --bg-surface: #FFFFFF;
+  --bg-elevated: #FAFAFA;
+  --bg-overlay: rgba(242, 242, 242, 0.92);
+  --accent-focus: #0077B6;
+  --accent-energy: #0077B6;
+  --accent-warning: #B8860B;
+  --accent-neutral: #8A8A8A;
+  --text-primary: #1A1A1A;
+  --text-secondary: #4A4A4A;
+  --text-muted: #6A6A6A;
+  --hq-card-radius: 8px;
+  --hq-card-radius-sharp: 6px;
+  --hq-btn-radius: 6px;
+  --card-bg-top: #FFFFFF;
+  --card-bg-bottom: #F8F8F8;
+  --card-border: rgba(0, 0, 0, 0.08);
+  --card-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+  --card-inner-glow: none;
+  --neuro-bg: var(--bg-primary);
+  --neuro-surface: var(--bg-surface);
+  --neuro-border: var(--accent-neutral);
+  --neuro-text: var(--text-primary);
+  --neuro-muted: var(--text-muted);
+  --neuro-accent: var(--accent-focus);
+}
+
 body {
   background: var(--bg-primary);
   background-image: url("/BACKGROUND.PNG");
@@ -68,6 +212,16 @@ body {
   background-repeat: no-repeat;
   color: var(--text-primary);
   min-height: 100vh;
+}
+
+/* Girly theme: use custom background from public/Girly Theme */
+html[data-theme="girly"] body {
+  background-image: url("/Girly%20Theme/Background.png");
+}
+
+/* Industrial theme: use custom background from public/Industrial Theme */
+html[data-theme="industrial"] body {
+  background-image: url("/Industrial%20Theme/Background.png");
 }
 
 /* ========== NEUROHQ Visual Upgrade – Layered Background ========== */
@@ -149,9 +303,56 @@ body {
   line-height: 1.5;
 }
 
+/* ========== NEUROHQ Animation tokens ========== */
+:root {
+  --hq-duration-fast: 150ms;
+  --hq-duration-normal: 300ms;
+  --hq-duration-slow: 500ms;
+  --hq-ease-out: cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  --hq-ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
 /* ========== NEUROHQ Motion (150–400ms interactions, 800–1200ms data, ease-out) ========== */
 .hq-card-enter {
-  animation: hq-fade-up 400ms cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+  animation: hq-fade-up 400ms var(--hq-ease-out) forwards;
+}
+.hq-anim-scale-in {
+  animation: hq-scale-in var(--hq-duration-normal) var(--hq-ease-out) forwards;
+}
+@keyframes hq-scale-in {
+  from { opacity: 0; transform: scale(0.95); }
+  to { opacity: 1; transform: scale(1); }
+}
+.hq-anim-pulse {
+  animation: hq-pulse 2s ease-in-out infinite;
+}
+@keyframes hq-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.85; }
+}
+.hq-anim-shake {
+  animation: hq-shake var(--hq-duration-normal) ease-in-out;
+}
+@keyframes hq-shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-4px); }
+  75% { transform: translateX(4px); }
+}
+.hq-anim-bounce {
+  animation: hq-bounce var(--hq-duration-normal) var(--hq-ease-spring) forwards;
+}
+@keyframes hq-bounce {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.15); }
+  100% { transform: scale(1); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .hq-anim-scale-in,
+  .hq-anim-pulse,
+  .hq-anim-shake,
+  .hq-anim-bounce {
+    animation: none;
+  }
 }
 @keyframes hq-fade-up {
   from {

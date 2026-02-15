@@ -16,6 +16,9 @@ type ExtendedTask = {
   category?: string | null;
   recurrence_rule?: string | null;
   recurrence_weekdays?: string | null;
+  energy_required?: number | null;
+  mental_load?: number | null;
+  social_load?: number | null;
   notes?: string | null;
 };
 
@@ -94,6 +97,9 @@ export function TaskDetailsModal({
           {task.category && <span className="rounded bg-neuro-surface px-2 py-0.5 text-xs font-medium text-neuro-muted">{task.category}</span>}
           {recurrenceLabel(task) && <span className="rounded bg-neuro-surface px-2 py-0.5 text-xs text-neuro-muted">{recurrenceLabel(task)}</span>}
           {task.due_date && <span className="text-xs text-neuro-muted">Due {task.due_date}</span>}
+          {task.energy_required != null && <span className="rounded bg-[var(--accent-energy)]/20 px-2 py-0.5 text-xs font-medium text-[var(--accent-energy)]" title="Energy cost">⚡ {task.energy_required}</span>}
+          {task.mental_load != null && <span className="rounded bg-purple-500/20 px-2 py-0.5 text-xs font-medium text-purple-300" title="Mental load">🧠 {task.mental_load}</span>}
+          {task.social_load != null && <span className="rounded bg-cyan-500/20 px-2 py-0.5 text-xs font-medium text-cyan-300" title="Social load">👥 {task.social_load}</span>}
         </div>
         {task.notes?.trim() && (
           <div>

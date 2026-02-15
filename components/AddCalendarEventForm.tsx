@@ -13,17 +13,11 @@ function toLocalDateStr(d: Date): string {
 
 export function AddCalendarEventForm({ date, hasGoogleToken = false }: { date: string; hasGoogleToken?: boolean }) {
   const router = useRouter();
-  const { tomorrowStr, minDateTime } = useMemo(() => {
-    const now = new Date();
-    const tomorrow = new Date(now);
-    tomorrow.setDate(tomorrow.getDate() + 1);
-    const tomorrowStr = toLocalDateStr(tomorrow);
-    return { tomorrowStr, minDateTime: `${tomorrowStr}T00:00` };
-  }, []);
+  const minDateTime = `${date}T00:00`;
 
   const [title, setTitle] = useState("");
-  const [start, setStart] = useState(`${tomorrowStr}T09:00`);
-  const [end, setEnd] = useState(`${tomorrowStr}T10:00`);
+  const [start, setStart] = useState(`${date}T09:00`);
+  const [end, setEnd] = useState(`${date}T10:00`);
   const [isSocial, setIsSocial] = useState(false);
   const [syncToGoogle, setSyncToGoogle] = useState(false);
   const [pending, startTransition] = useTransition();
@@ -35,12 +29,6 @@ export function AddCalendarEventForm({ date, hasGoogleToken = false }: { date: s
     setError(null);
     setSuccess(null);
     const startDate = new Date(start);
-    const startDateStr = toLocalDateStr(startDate);
-    const todayStr = toLocalDateStr(new Date());
-    if (startDateStr <= todayStr) {
-      setError("You can only add events for another day (not today).");
-      return;
-    }
     const startAt = startDate.toISOString();
     const endAt = new Date(end).toISOString();
     if (!title.trim() || endAt <= startAt) {
@@ -59,8 +47,8 @@ export function AddCalendarEventForm({ date, hasGoogleToken = false }: { date: s
         const dayLabel = startDate.toLocaleDateString(undefined, { weekday: "short", day: "numeric", month: "short" });
         setSuccess(`Event saved for ${dayLabel}. It appears under that day above.`);
         setTitle("");
-        setStart(`${tomorrowStr}T09:00`);
-        setEnd(`${tomorrowStr}T10:00`);
+        setStart(`${date}T09:00`);
+        setEnd(`${date}T10:00`);
         router.refresh();
         setTimeout(() => setSuccess(null), 5000);
       } catch (err) {

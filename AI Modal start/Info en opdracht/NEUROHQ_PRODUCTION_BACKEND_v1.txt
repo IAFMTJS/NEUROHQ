@@ -1,0 +1,88 @@
+NEUROHQ – PRODUCTION BACKEND ARCHITECTURE Version 1.0
+
+============================================================ 1.
+PRODUCTION-READY BACKEND FOLDER STRUCTURE
+============================================================
+
+/src │ ├── app.ts ├── server.ts │ ├── config/ │ ├── env.ts │ └──
+featureFlags.ts │ ├── modules/ │ ├── auth/ │ ├── users/ │ ├── energy/ │
+├── capacity/ │ ├── patterns/ │ ├── identity/ │ ├── escalation/ │ ├──
+courage/ │ ├── stability/ │ ├── assistant/ │ └── analytics/ │ ├──
+domain/ │ ├── state/ │ ├── scoring/ │ ├── escalationRules.ts │ ├──
+identityRules.ts │ └── courageRules.ts │ ├── services/ │ ├──
+promptBuilder.service.ts │ ├── stateAggregator.service.ts │ ├──
+escalationEngine.service.ts │ ├── stabilityEngine.service.ts │ └──
+identityEngine.service.ts │ ├── infrastructure/ │ ├── database/ │ ├──
+repositories/ │ ├── logger/ │ └── aiClient/ │ ├── middlewares/ │ ├──
+auth.middleware.ts │ └── crisisGuard.middleware.ts │ ├── utils/ │ └──
+calculations.ts │ └── tests/ ├── unit/ └── integration/
+
+============================================================ 2. DATABASE
+SCHEMA (POSTGRESQL)
+============================================================
+
+USERS - id (uuid, pk) - email - password_hash - created_at - updated_at
+
+USER_STATE - user_id (fk) - energy - focus - sensory_load -
+sleep_hours - mode - progress - carry_over_level - avoidance_trend -
+identity_alignment_score - stability_index - intensity_tier -
+defensive_identity_probability - courage_gap_score - last_updated
+
+DAILY_CHECKINS - id - user_id - energy - focus - sensory_load -
+sleep_hours - social_exposure - created_at
+
+TASKS - id - user_id - title - energy_cost - priority - is_core_task -
+completed - completed_at - created_at
+
+IDENTITY_QUARTERS - id - user_id - primary_focus - secondary_focus -
+savings_target - identity_statement - start_date - end_date - active
+
+IDENTITY_EVENTS - id - user_id - type (soft | forced | override) -
+reason - created_at
+
+ESCALATION_LOGS - id - user_id - tier - trigger_type - evidence_snapshot
+(jsonb) - created_at
+
+FEATURE_FLAGS - user_id - confrontation_level - identity_intervention -
+defensive_identity_detection - courage_attribution - energy_fact_check
+
+============================================================ 3. API
+CONTRACT ============================================================
+
+AUTH POST /auth/register POST /auth/login
+
+CHECK-IN POST /checkin Body: { “energy”: number, “focus”: number,
+“sensoryLoad”: number, “sleepHours”: number, “socialExposure”: number }
+
+TASKS POST /tasks GET /tasks PATCH /tasks/:id/complete
+
+IDENTITY GET /identity/current POST /identity/update POST
+/identity/override
+
+ASSISTANT POST /assistant/message Body: { “message”: “string” }
+
+Response: { “response”: “string”, “escalationTier”: number,
+“identityAlert”: boolean, “courageFlag”: boolean }
+
+============================================================ 4.
+ESCALATION ENGINE FLOW
+============================================================
+
+1.  Validate crisis guard
+2.  Evaluate energy-capacity mismatch
+3.  Evaluate avoidance pattern
+4.  Evaluate identity alignment
+5.  Evaluate courage gap
+6.  Compute escalation tier
+7.  Return escalation decision object
+
+============================================================ 5.
+ENGINEERING RULES
+============================================================
+
+-   Escalation must be deterministic
+-   No confrontation without data
+-   Prompt logic separated from state logic
+-   Domain logic independent from AI provider
+-   All escalation events logged
+-   Crisis state suppresses escalation

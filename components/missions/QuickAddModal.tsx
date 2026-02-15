@@ -26,6 +26,8 @@ export function QuickAddModal({ open, onClose, date, onAdded }: Props) {
   const [impact, setImpact] = useState("");
   const [urgency, setUrgency] = useState("");
   const [energy, setEnergy] = useState("");
+  const [mentalLoad, setMentalLoad] = useState("");
+  const [socialLoad, setSocialLoad] = useState("");
   const [priority, setPriority] = useState("");
   const [showMore, setShowMore] = useState(false);
 
@@ -48,6 +50,8 @@ export function QuickAddModal({ open, onClose, date, onAdded }: Props) {
           impact: impact ? (parseInt(impact, 10) >= 1 && parseInt(impact, 10) <= 3 ? parseInt(impact, 10) : null) : null,
           urgency: urgency ? (parseInt(urgency, 10) >= 1 && parseInt(urgency, 10) <= 3 ? parseInt(urgency, 10) : null) : null,
           energy_required: energy ? (parseInt(energy, 10) >= 1 && parseInt(energy, 10) <= 10 ? parseInt(energy, 10) : null) : null,
+          mental_load: mentalLoad ? (parseInt(mentalLoad, 10) >= 1 && parseInt(mentalLoad, 10) <= 10 ? parseInt(mentalLoad, 10) : null) : null,
+          social_load: socialLoad ? (parseInt(socialLoad, 10) >= 1 && parseInt(socialLoad, 10) <= 10 ? parseInt(socialLoad, 10) : null) : null,
           priority: priority ? (parseInt(priority, 10) >= 1 && parseInt(priority, 10) <= 5 ? parseInt(priority, 10) : null) : null,
         });
         setTitle("");
@@ -58,6 +62,8 @@ export function QuickAddModal({ open, onClose, date, onAdded }: Props) {
         setImpact("");
         setUrgency("");
         setEnergy("");
+        setMentalLoad("");
+        setSocialLoad("");
         setPriority("");
         onAdded?.();
         router.refresh();
@@ -111,15 +117,37 @@ export function QuickAddModal({ open, onClose, date, onAdded }: Props) {
             </div>
           </div>
         )}
-        <div className="rounded-lg border border-neuro-border/50 bg-neuro-dark/50 p-3">
-          <label className="block text-xs font-medium text-neuro-muted">Energy (1–10)</label>
-          <p className="mt-0.5 text-[10px] text-neuro-muted">How much mental energy this task takes. Affects your daily capacity.</p>
-          <select value={energy} onChange={(e) => setEnergy(e.target.value)} className="mt-1 w-full rounded border border-neuro-border bg-neuro-dark px-2 py-1.5 text-sm text-neuro-silver">
-            <option value="">— Default (5)</option>
-            {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((n) => (
-              <option key={n} value={n}>{n} {n <= 3 ? "Low" : n <= 6 ? "Medium" : "High"}</option>
-            ))}
-          </select>
+        <div className="grid grid-cols-1 gap-2 rounded-lg border border-neuro-border/50 bg-neuro-dark/50 p-3 sm:grid-cols-3">
+          <div>
+            <label className="block text-xs font-medium text-neuro-muted">Energy (1–10)</label>
+            <p className="mt-0.5 text-[10px] text-neuro-muted">Energy cost</p>
+            <select value={energy} onChange={(e) => setEnergy(e.target.value)} className="mt-1 w-full rounded border border-neuro-border bg-neuro-dark px-2 py-1.5 text-sm text-neuro-silver">
+              <option value="">—</option>
+              {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((n) => (
+                <option key={n} value={n}>{n}</option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label className="block text-xs font-medium text-neuro-muted">Mental load (1–10)</label>
+            <p className="mt-0.5 text-[10px] text-neuro-muted">How draining</p>
+            <select value={mentalLoad} onChange={(e) => setMentalLoad(e.target.value)} className="mt-1 w-full rounded border border-neuro-border bg-neuro-dark px-2 py-1.5 text-sm text-neuro-silver">
+              <option value="">—</option>
+              {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((n) => (
+                <option key={n} value={n}>{n}</option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label className="block text-xs font-medium text-neuro-muted">Social load (1–10)</label>
+            <p className="mt-0.5 text-[10px] text-neuro-muted">People/social</p>
+            <select value={socialLoad} onChange={(e) => setSocialLoad(e.target.value)} className="mt-1 w-full rounded border border-neuro-border bg-neuro-dark px-2 py-1.5 text-sm text-neuro-silver">
+              <option value="">—</option>
+              {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((n) => (
+                <option key={n} value={n}>{n}</option>
+              ))}
+            </select>
+          </div>
         </div>
         <button type="button" onClick={() => setShowMore((v) => !v)} className="text-xs font-medium text-neuro-muted hover:text-neuro-silver">
           {showMore ? "− Less options" : "+ Impact, urgency, priority"}

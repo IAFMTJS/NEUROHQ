@@ -12,11 +12,13 @@ import {
   IconSettings,
   IconBudget,
   IconStrategy,
+  IconAssistant,
 } from "@/components/hq/NavIcons";
 
 /** Bottom nav: all main app sections */
 const hqNavLinks = [
   { href: "/dashboard", label: "HQ", icon: IconHQ },
+  { href: "/assistant", label: "Assistant", icon: IconAssistant },
   { href: "/tasks", label: "Missions", icon: IconMissions },
   { href: "/budget", label: "Budget", icon: IconBudget },
   { href: "/learning", label: "Growth", icon: IconGrowth },

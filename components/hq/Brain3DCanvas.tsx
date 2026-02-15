@@ -4,14 +4,16 @@ import * as THREE from "three";
 import { Canvas } from "@react-three/fiber";
 import { OrbitControls } from "@react-three/drei";
 import { PenguinScene } from "./PenguinScene";
+import type { UIState } from "@/lib/ui-state";
 
 type Props = {
   energyPct: number;
   focusPct: number;
   loadPct: number;
+  uiState?: UIState;
 };
 
-export function Brain3DCanvas({ energyPct, focusPct, loadPct }: Props) {
+export function Brain3DCanvas({ energyPct, focusPct, loadPct, uiState = "idle" }: Props) {
   return (
     <Canvas
       camera={{ position: [0, 0, 2.5], fov: 45 }}
@@ -41,6 +43,7 @@ export function Brain3DCanvas({ energyPct, focusPct, loadPct }: Props) {
         energyPct={energyPct}
         focusPct={focusPct}
         loadPct={loadPct}
+        uiState={uiState}
       />
     </Canvas>
   );

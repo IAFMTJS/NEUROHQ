@@ -245,6 +245,58 @@ Not a separate table in the original list; can live on `users` or a `quarterly_s
 
 ---
 
+## 13. `user_preferences` (theme, emotion)
+
+Theme, color mode, and selected emotion for mood-based UI.
+
+| Column | Type | Nullable | Description |
+|--------|------|----------|-------------|
+| user_id | uuid | NO | PK, FK users |
+| theme | text | NO | 'normal' \| 'girly' \| 'industrial', default 'normal' |
+| color_mode | text | NO | 'dark' \| 'light', default 'dark' |
+| selected_emotion | text | YES | e.g. drained, sleepy, motivated, excited, angry, hyped, neon, evil |
+| updated_at | timestamptz | NO | default now() |
+
+**RLS:** auth.uid() = user_id.
+
+---
+
+## 14. `user_xp`
+
+Accumulated XP for gamification (level derivable from total_xp if needed).
+
+| Column | Type | Nullable | Description |
+|--------|------|----------|-------------|
+| user_id | uuid | NO | PK, FK users |
+| total_xp | integer | NO | Default 0, check >= 0 |
+| updated_at | timestamptz | NO | default now() |
+
+**RLS:** auth.uid() = user_id.
+
+---
+
+## 15. `user_analytics_daily`
+
+Daily aggregates for personal analytics: time used, consistency, improvements.
+
+| Column | Type | Nullable | Description |
+|--------|------|----------|-------------|
+| id | uuid | NO | PK |
+| user_id | uuid | NO | FK users |
+| date | date | NO | |
+| active_seconds | integer | NO | Default 0 |
+| tasks_completed | smallint | NO | Default 0 |
+| tasks_planned | smallint | NO | Default 0 |
+| learning_minutes | smallint | NO | Default 0 |
+| brain_status_logged | boolean | NO | Default false |
+| carry_over_count | smallint | NO | Default 0 |
+| created_at | timestamptz | NO | |
+| updated_at | timestamptz | NO | default now() |
+
+**Unique:** (user_id, date). **RLS:** auth.uid() = user_id.
+
+---
+
 ## Indexes (recommended)
 
 - `daily_state(user_id, date)` unique  
@@ -254,6 +306,7 @@ Not a separate table in the original list; can live on `users` or a `quarterly_s
 - `calendar_events(user_id, start_at)`  
 - `feature_flags(name), feature_flags(name, user_id)`  
 - `quotes(id)` (PK)
+- `user_analytics_daily(user_id, date)` unique
 
 ---
 

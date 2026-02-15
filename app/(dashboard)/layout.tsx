@@ -1,5 +1,10 @@
 import { BottomNav } from "@/components/DashboardNav";
+import { QuickAdd } from "@/components/QuickAdd";
 import { HQBackground } from "@/components/hq/HQBackground";
+import { ThemeHydrate } from "@/components/providers/ThemeHydrate";
+import { AppStateProvider } from "@/components/providers/AppStateProvider";
+import { ActiveTimeTracker } from "@/components/ActiveTimeTracker";
+import { NewDayRefresh } from "@/components/NewDayRefresh";
 
 /** Auth enforced by middleware; layout is sync so nav shows shell + loading immediately. */
 export default function DashboardLayout({
@@ -8,7 +13,11 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }) {
   return (
+    <AppStateProvider>
     <div className="relative min-h-screen">
+      <ThemeHydrate />
+      <ActiveTimeTracker />
+      <NewDayRefresh />
       <div className="hq-bg-layer" aria-hidden />
       <HQBackground />
       <div className="hq-vignette" aria-hidden />
@@ -16,6 +25,7 @@ export default function DashboardLayout({
         <a href="#main-content" className="skip-link">
           Skip to main content
         </a>
+        <QuickAdd />
         <main
           id="main-content"
           className="main-with-footer relative z-10 flex-1 overflow-auto px-5 py-2"
@@ -27,5 +37,6 @@ export default function DashboardLayout({
         <BottomNav />
       </div>
     </div>
+    </AppStateProvider>
   );
 }

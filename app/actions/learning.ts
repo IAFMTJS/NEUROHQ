@@ -159,6 +159,10 @@ export async function addLearningSession(params: {
     strategy_year: params.strategy_year ?? null,
   });
   if (error) throw new Error(error.message);
+  const { awardXPForLearningSession } = await import("./xp");
+  const { upsertDailyAnalytics } = await import("./analytics");
+  await awardXPForLearningSession();
+  await upsertDailyAnalytics(params.date);
   revalidatePath("/learning");
   revalidatePath("/dashboard");
 }

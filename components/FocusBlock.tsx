@@ -1,10 +1,12 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import { useAppState } from "@/components/providers/AppStateProvider";
 
 const DEFAULT_MINUTES = 25;
 
 export function FocusBlock() {
+  const appState = useAppState();
   const [remainingSeconds, setRemainingSeconds] = useState(0);
   const [totalSeconds, setTotalSeconds] = useState(DEFAULT_MINUTES * 60);
   const [running, setRunning] = useState(false);
@@ -17,18 +19,22 @@ export function FocusBlock() {
     setTotalSeconds(total);
     setRemainingSeconds(total);
     setRunning(true);
-  }, []);
+    appState?.triggerFocus();
+  }, [appState]);
 
   useEffect(() => {
     if (!running) return;
     const t = setInterval(() => {
       setRemainingSeconds((r) => {
-        if (r <= 1) setRunning(false);
+        if (r <= 1) {
+          appState?.triggerIdle();
+          setRunning(false);
+        }
         return Math.max(0, r - 1);
       });
     }, 1000);
     return () => clearInterval(t);
-  }, [running]);
+  }, [running, appState]);
 
   const pct = totalSeconds > 0 ? (remainingSeconds / totalSeconds) * 100 : 0;
 
@@ -61,7 +67,7 @@ export function FocusBlock() {
             </p>
             <button
               type="button"
-              onClick={() => setRunning(false)}
+              onClick={() => { setRunning(false); appState?.triggerIdle(); }}
               className="text-sm text-[var(--text-muted)] hover:text-[var(--text-primary)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-focus)] rounded px-2 py-1"
             >
               Stop

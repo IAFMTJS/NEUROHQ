@@ -3,22 +3,28 @@ import { redirect } from "next/navigation";
 import { SettingsExport } from "@/components/SettingsExport";
 import { SettingsPush } from "@/components/SettingsPush";
 import { SettingsDeleteAccount } from "@/components/SettingsDeleteAccount";
+import { SettingsAppleCalendar } from "@/components/SettingsAppleCalendar";
 import { SettingsGoogleCalendar } from "@/components/SettingsGoogleCalendar";
 import { SettingsTimezone } from "@/components/SettingsTimezone";
 import { SettingsBudget } from "@/components/SettingsBudget";
 import { SettingsAbout } from "@/components/SettingsAbout";
+import { ThemePicker } from "@/components/settings/ThemePicker";
+import { EmotionPicker } from "@/components/settings/EmotionPicker";
+import { XPBadge } from "@/components/XPBadge";
 import { hasGoogleCalendarToken } from "@/app/actions/calendar";
 import { getUserTimezone } from "@/app/actions/auth";
 import { getBudgetSettings } from "@/app/actions/budget";
+import { getXP } from "@/app/actions/xp";
 
 export default async function SettingsPage() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/login");
-  const [hasGoogle, userTimezone, budgetSettings] = await Promise.all([
+  const [hasGoogle, userTimezone, budgetSettings, xp] = await Promise.all([
     hasGoogleCalendarToken(),
     getUserTimezone(),
     getBudgetSettings(),
+    getXP(),
   ]);
   const appVersion = process.env.NEXT_PUBLIC_APP_VERSION ?? "1.0.0";
 
@@ -36,6 +42,9 @@ export default async function SettingsPage() {
           <p className="text-sm text-neuro-muted">{user.email}</p>
         </div>
       </div>
+      <ThemePicker />
+      <EmotionPicker />
+      <XPBadge totalXp={xp.total_xp} level={xp.level} />
       <SettingsTimezone initialTimezone={userTimezone} />
       <SettingsBudget
         initialCurrency={budgetSettings.currency}
@@ -47,6 +56,7 @@ export default async function SettingsPage() {
       <SettingsPush />
       <SettingsExport />
       <SettingsDeleteAccount />
+      <SettingsAppleCalendar />
       <SettingsGoogleCalendar hasToken={hasGoogle} />
       <SettingsAbout appVersion={appVersion} />
     </div>

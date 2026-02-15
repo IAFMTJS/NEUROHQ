@@ -14,6 +14,7 @@ import {
   FocusModal,
   QuickAddModal,
 } from "@/components/missions";
+import { useAppState } from "@/components/providers/AppStateProvider";
 
 const WEEKDAY_LABELS: Record<number, string> = { 1: "Mon", 2: "Tue", 3: "Wed", 4: "Thu", 5: "Fri", 6: "Sat", 7: "Sun" };
 
@@ -23,6 +24,8 @@ type ExtendedTask = Task & {
   recurrence_weekdays?: string | null;
   impact?: number | null;
   urgency?: number | null;
+  mental_load?: number | null;
+  social_load?: number | null;
   notes?: string | null;
 };
 
@@ -60,6 +63,7 @@ function groupByCategory(tasks: ExtendedTask[]): { work: ExtendedTask[]; persona
 
 export function TaskList({ date, tasks: initialTasks, completedToday, mode, carryOverCount, subtasksByParent = {} }: Props) {
   const router = useRouter();
+  const appState = useAppState();
   const [pending, startTransition] = useTransition();
   const [addDueDate, setAddDueDate] = useState(date);
   const [addError, setAddError] = useState<string | null>(null);
@@ -114,9 +118,10 @@ export function TaskList({ date, tasks: initialTasks, completedToday, mode, carr
     startTransition(async () => {
       try {
         await completeTask(id);
+        appState?.triggerReward();
         router.refresh();
       } catch {
-        // error surfaced by action throw
+        appState?.triggerError();
       }
     });
   }
@@ -165,10 +170,14 @@ export function TaskList({ date, tasks: initialTasks, completedToday, mode, carr
     const impactRaw = (form.elements.namedItem("impact") as HTMLSelectElement)?.value;
     const urgencyRaw = (form.elements.namedItem("urgency") as HTMLSelectElement)?.value;
     const energyRaw = (form.elements.namedItem("energy") as HTMLSelectElement)?.value;
+    const mentalLoadRaw = (form.elements.namedItem("mental_load") as HTMLSelectElement)?.value;
+    const socialLoadRaw = (form.elements.namedItem("social_load") as HTMLSelectElement)?.value;
     const priorityRaw = (form.elements.namedItem("priority") as HTMLSelectElement)?.value;
     const impact = impactRaw ? parseInt(impactRaw, 10) : null;
     const urgency = urgencyRaw ? parseInt(urgencyRaw, 10) : null;
     const energy = energyRaw ? parseInt(energyRaw, 10) : null;
+    const mentalLoad = mentalLoadRaw ? parseInt(mentalLoadRaw, 10) : null;
+    const socialLoad = socialLoadRaw ? parseInt(socialLoadRaw, 10) : null;
     const priority = priorityRaw ? parseInt(priorityRaw, 10) : null;
     const recurrence_weekdays = recurrence === "weekly" && weekdays.length > 0 ? weekdays.sort((a, b) => a - b).join(",") : null;
     if (!title) return;
@@ -183,6 +192,8 @@ export function TaskList({ date, tasks: initialTasks, completedToday, mode, carr
           impact: impact && impact >= 1 && impact <= 3 ? impact : null,
           urgency: urgency && urgency >= 1 && urgency <= 3 ? urgency : null,
           energy_required: energy && energy >= 1 && energy <= 10 ? energy : null,
+          mental_load: mentalLoad && mentalLoad >= 1 && mentalLoad <= 10 ? mentalLoad : null,
+          social_load: socialLoad && socialLoad >= 1 && socialLoad <= 10 ? socialLoad : null,
           priority: priority && priority >= 1 && priority <= 5 ? priority : null,
         });
         form.reset();
@@ -217,7 +228,7 @@ export function TaskList({ date, tasks: initialTasks, completedToday, mode, carr
     setWeekdays((prev) => (prev.includes(d) ? prev.filter((x) => x !== d) : [...prev, d].sort((a, b) => a - b)));
   }
 
-  const canAdd = mode !== "stabilize";
+  const canAdd = true;
   const showAvoidance = carryOverCount >= 3 && carryOverCount < 5;
 
   function recurrencePreview(task: ExtendedTask): string {
@@ -271,6 +282,12 @@ export function TaskList({ date, tasks: initialTasks, completedToday, mode, carr
               )}
               {task.energy_required != null && (
                 <span className="rounded bg-[var(--accent-energy)]/20 px-1.5 py-0.5 text-[10px] font-medium text-[var(--accent-energy)]" title="Energy cost">⚡{task.energy_required}</span>
+              )}
+              {task.mental_load != null && (
+                <span className="rounded bg-purple-500/20 px-1.5 py-0.5 text-[10px] font-medium text-purple-300" title="Mental load">🧠{task.mental_load}</span>
+              )}
+              {task.social_load != null && (
+                <span className="rounded bg-cyan-500/20 px-1.5 py-0.5 text-[10px] font-medium text-cyan-300" title="Social load">👥{task.social_load}</span>
               )}
               <span className={`text-sm text-neuro-silver ${task.completed ? "line-through text-neuro-muted" : ""}`}>{task.title}</span>
             </div>
@@ -345,7 +362,15 @@ export function TaskList({ date, tasks: initialTasks, completedToday, mode, carr
         )}
 
         {initialTasks.length === 0 ? (
-          <p className="rounded-lg border border-dashed border-neuro-border bg-neuro-surface/50 px-3 py-5 text-center text-sm text-neuro-muted">No missions for today. Add one below, move from backlog, or enjoy the space.</p>
+          <div className="rounded-lg border border-dashed border-neuro-border bg-neuro-surface/50 px-3 py-5 text-center text-sm text-neuro-muted">
+            <p>Geen taken vandaag.</p>
+            <p className="mt-2">
+              Zeg tegen de assistant: &quot;voeg taak X toe&quot;, of voeg hieronder toe.
+            </p>
+            <a href="/assistant" className="mt-3 inline-block rounded-lg bg-neuro-accent/20 px-3 py-2 text-xs font-medium text-neuro-silver hover:bg-neuro-accent/30">
+              Naar assistant
+            </a>
+          </div>
         ) : (
           sectionsToShow.map((section) => (
             <div key={section.label} className={section.label !== "Today" ? "mb-4" : ""}>
@@ -432,8 +457,8 @@ export function TaskList({ date, tasks: initialTasks, completedToday, mode, carr
                       <option value="3">3 High</option>
                     </select>
                   </label>
-                  <div className="flex gap-2">
-                    <label className="flex flex-1 flex-col gap-1">
+                  <div className="flex flex-wrap gap-2">
+                    <label className="flex flex-1 min-w-[80px] flex-col gap-1">
                       <span className="text-xs font-medium text-neuro-muted">Energy (1–10)</span>
                       <select name="energy" className="rounded border border-neuro-border bg-neuro-dark px-2 py-1.5 text-sm text-neuro-silver">
                         <option value="">—</option>
@@ -442,7 +467,25 @@ export function TaskList({ date, tasks: initialTasks, completedToday, mode, carr
                         ))}
                       </select>
                     </label>
-                    <label className="flex flex-1 flex-col gap-1">
+                    <label className="flex flex-1 min-w-[80px] flex-col gap-1">
+                      <span className="text-xs font-medium text-neuro-muted">Mental (1–10)</span>
+                      <select name="mental_load" className="rounded border border-neuro-border bg-neuro-dark px-2 py-1.5 text-sm text-neuro-silver">
+                        <option value="">—</option>
+                        {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((n) => (
+                          <option key={n} value={n}>{n}</option>
+                        ))}
+                      </select>
+                    </label>
+                    <label className="flex flex-1 min-w-[80px] flex-col gap-1">
+                      <span className="text-xs font-medium text-neuro-muted">Social (1–10)</span>
+                      <select name="social_load" className="rounded border border-neuro-border bg-neuro-dark px-2 py-1.5 text-sm text-neuro-silver">
+                        <option value="">—</option>
+                        {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((n) => (
+                          <option key={n} value={n}>{n}</option>
+                        ))}
+                      </select>
+                    </label>
+                    <label className="flex flex-1 min-w-[80px] flex-col gap-1">
                       <span className="text-xs font-medium text-neuro-muted">Priority (1–5)</span>
                       <select name="priority" className="rounded border border-neuro-border bg-neuro-dark px-2 py-1.5 text-sm text-neuro-silver">
                         <option value="">—</option>

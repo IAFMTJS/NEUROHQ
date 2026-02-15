@@ -17,6 +17,8 @@ type ExtendedTask = {
   impact?: number | null;
   urgency?: number | null;
   energy_required?: number | null;
+  mental_load?: number | null;
+  social_load?: number | null;
   priority?: number | null;
   notes?: string | null;
 };
@@ -42,6 +44,8 @@ export function EditMissionModal({ open, onClose, task, onSaved }: Props) {
   const [impact, setImpact] = useState<string>(task.impact != null ? String(task.impact) : "");
   const [urgency, setUrgency] = useState<string>(task.urgency != null ? String(task.urgency) : "");
   const [energy, setEnergy] = useState<string>(task.energy_required != null ? String(task.energy_required) : "");
+  const [mentalLoad, setMentalLoad] = useState<string>(task.mental_load != null ? String(task.mental_load) : "");
+  const [socialLoad, setSocialLoad] = useState<string>(task.social_load != null ? String(task.social_load) : "");
   const [priority, setPriority] = useState<string>(task.priority != null ? String(task.priority) : "");
   const [notes, setNotes] = useState(task.notes ?? "");
 
@@ -64,6 +68,8 @@ export function EditMissionModal({ open, onClose, task, onSaved }: Props) {
           impact: impact ? (parseInt(impact, 10) >= 1 && parseInt(impact, 10) <= 3 ? parseInt(impact, 10) : null) : null,
           urgency: urgency ? (parseInt(urgency, 10) >= 1 && parseInt(urgency, 10) <= 3 ? parseInt(urgency, 10) : null) : null,
           energy_required: energy ? (parseInt(energy, 10) >= 1 && parseInt(energy, 10) <= 10 ? parseInt(energy, 10) : null) : null,
+          mental_load: mentalLoad ? (parseInt(mentalLoad, 10) >= 1 && parseInt(mentalLoad, 10) <= 10 ? parseInt(mentalLoad, 10) : null) : null,
+          social_load: socialLoad ? (parseInt(socialLoad, 10) >= 1 && parseInt(socialLoad, 10) <= 10 ? parseInt(socialLoad, 10) : null) : null,
           priority: priority ? (parseInt(priority, 10) >= 1 && parseInt(priority, 10) <= 5 ? parseInt(priority, 10) : null) : null,
           notes: notes.trim() || null,
         });
@@ -139,6 +145,24 @@ export function EditMissionModal({ open, onClose, task, onSaved }: Props) {
           <div>
             <label className="block text-xs font-medium text-neuro-muted">Energy (1–10)</label>
             <select value={energy} onChange={(e) => setEnergy(e.target.value)} className="mt-1 w-full rounded border border-neuro-border bg-neuro-dark px-2 py-1.5 text-sm text-neuro-silver">
+              <option value="">—</option>
+              {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((n) => (
+                <option key={n} value={n}>{n}</option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label className="block text-xs font-medium text-neuro-muted">Mental load (1–10)</label>
+            <select value={mentalLoad} onChange={(e) => setMentalLoad(e.target.value)} className="mt-1 w-full rounded border border-neuro-border bg-neuro-dark px-2 py-1.5 text-sm text-neuro-silver">
+              <option value="">—</option>
+              {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((n) => (
+                <option key={n} value={n}>{n}</option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label className="block text-xs font-medium text-neuro-muted">Social load (1–10)</label>
+            <select value={socialLoad} onChange={(e) => setSocialLoad(e.target.value)} className="mt-1 w-full rounded border border-neuro-border bg-neuro-dark px-2 py-1.5 text-sm text-neuro-silver">
               <option value="">—</option>
               {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((n) => (
                 <option key={n} value={n}>{n}</option>

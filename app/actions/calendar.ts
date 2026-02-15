@@ -121,6 +121,40 @@ export async function deleteCalendarEvent(id: string) {
   revalidatePath("/budget");
 }
 
+/** Genereert of haalt calendar_feed_token op voor iOS / Apple Kalender subscribe-URL. */
+export async function getOrCreateCalendarFeedToken(): Promise<string> {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error("Not authenticated");
+  const { data: row } = await supabase
+    .from("users")
+    .select("calendar_feed_token")
+    .eq("id", user.id)
+    .single();
+  const existing = (row as { calendar_feed_token?: string } | null)?.calendar_feed_token;
+  if (existing) return existing;
+  const token = crypto.randomUUID() + "-" + crypto.randomUUID().replace(/-/g, "");
+  const { error } = await supabase
+    .from("users")
+    .update({ calendar_feed_token: token })
+    .eq("id", user.id);
+  if (error) throw new Error(error.message);
+  revalidatePath("/settings");
+  return token;
+}
+
+/** Haalt feed-URL op (of genereert token). Geef baseUrl voor volledige URL; anders alleen path (voor client: origin + path). */
+export async function getCalendarFeedUrl(baseUrl?: string): Promise<string | null> {
+  try {
+    const token = await getOrCreateCalendarFeedToken();
+    const path = `/api/calendar/feed?token=${encodeURIComponent(token)}`;
+    if (baseUrl) return baseUrl.replace(/\/$/, "") + path;
+    return path;
+  } catch {
+    return null;
+  }
+}
+
 export async function hasGoogleCalendarToken(): Promise<boolean> {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();

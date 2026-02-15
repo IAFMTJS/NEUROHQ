@@ -1,6 +1,7 @@
 "use client";
 
 import dynamic from "next/dynamic";
+import { useAppState } from "@/components/providers/AppStateProvider";
 
 const Brain3DCanvas = dynamic(() => import("./Brain3DCanvas").then((m) => m.Brain3DCanvas), {
   ssr: false,
@@ -22,6 +23,8 @@ type Props = {
 };
 
 export function Brain3DModel({ energyPct, focusPct, loadPct, className = "" }: Props) {
+  const appState = useAppState();
+  const uiState = appState?.uiState ?? "idle";
   return (
     <div
       className={`relative overflow-hidden rounded-xl ${className}`}
@@ -32,6 +35,7 @@ export function Brain3DModel({ energyPct, focusPct, loadPct, className = "" }: P
         energyPct={energyPct}
         focusPct={focusPct}
         loadPct={loadPct}
+        uiState={uiState}
       />
     </div>
   );
