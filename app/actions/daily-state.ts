@@ -1,6 +1,6 @@
 "use server";
 
-import { unstable_cache, revalidateTag } from "next/cache";
+import { unstable_cache, revalidateTag, revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 
 export type DailyStateInput = {
@@ -51,14 +51,23 @@ export async function saveDailyState(input: DailyStateInput): Promise<SaveDailyS
     const { error } = await supabase.from("daily_state").upsert(row, {
       onConflict: "user_id,date",
     });
-    if (error) return { ok: false, error: error.message };
-    revalidateTag(`daily-${user.id}-${input.date}`, "max");
+    if (error) {
+      const msg = error.code === "PGRST301" || error.message?.includes("auth")
+        ? "Je sessie is verlopen. Log opnieuw in."
+        : error.message?.includes("daily_state") || error.message?.includes("unique")
+          ? "Deze dag staat al in het systeem. Vernieuw de pagina."
+          : "Kon dagstatus niet opslaan. Probeer het opnieuw.";
+      return { ok: false, error: msg };
+    }
+    revalidateTag(`daily-${user.id}-${input.date}`);
+    revalidatePath("/dashboard");
+    revalidatePath("/report");
     const { awardXPForBrainStatus } = await import("./xp");
     const { upsertDailyAnalytics } = await import("./analytics");
     await awardXPForBrainStatus();
     await upsertDailyAnalytics(input.date);
     return { ok: true };
   } catch (e) {
-    return { ok: false, error: e instanceof Error ? e.message : "Failed to save." };
+    return { ok: false, error: e instanceof Error ? e.message : "Kon dagstatus niet opslaan. Probeer het opnieuw." };
   }
 }

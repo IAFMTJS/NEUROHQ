@@ -44,14 +44,14 @@ export function EducationOptionsList({ options, logSessionHref = "/learning" }: 
       <ul className="space-y-2">
         {activeWithScore.length === 0 ? (
           <li className="list-none">
-            <div className="rounded-xl border border-dashed border-neuro-border bg-neuro-surface/50 px-4 py-6 text-center">
-              <p className="text-sm text-neuro-muted">No education options yet.</p>
-              <p className="mt-1 text-xs text-neuro-muted">Add what you want to learn — courses, books, skills — and score interest, value, and effort.</p>
+            <div className="rounded-xl border border-dashed border-[var(--card-border)] bg-[var(--bg-surface)]/50 px-4 py-6 text-center">
+              <p className="text-sm text-[var(--text-muted)]">Nog geen opleidingen of opties.</p>
+              <p className="mt-1 text-xs text-[var(--text-muted)]">Voeg er hierboven een toe om ze op helderheid te vergelijken.</p>
             </div>
           </li>
         ) : (
           activeWithScore.map((o) => (
-            <li key={o.id} className="rounded-xl border border-neuro-border bg-neuro-surface px-3 py-2">
+            <li key={o.id} className="rounded-xl border border-[var(--card-border)] bg-[var(--bg-surface)] px-3 py-2">
                 {editingId === o.id ? (
                   <EducationOptionEditForm
                     option={o}
@@ -62,11 +62,11 @@ export function EducationOptionsList({ options, logSessionHref = "/learning" }: 
               ) : (
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <div>
-                    <span className="text-sm font-medium text-neuro-silver">{o.name}</span>
+                    <span className="text-sm font-medium text-[var(--text-primary)]">{o.name}</span>
                     {o.category && (
-                      <span className="ml-2 text-xs text-neuro-muted">{o.category}</span>
+                      <span className="ml-2 text-xs text-[var(--text-muted)]">{o.category}</span>
                     )}
-                    <span className="ml-2 text-xs text-neuro-muted">
+                    <span className="ml-2 text-xs text-[var(--text-muted)]">
                       Clarity: {o.clarity} (I:{o.interest_score ?? "-"} F:{o.future_value_score ?? "-"} E:{o.effort_score ?? "-"})
                     </span>
                   </div>
@@ -74,7 +74,7 @@ export function EducationOptionsList({ options, logSessionHref = "/learning" }: 
                     {logSessionHref && (
                       <Link
                         href={`${logSessionHref}?toward=${o.id}`}
-                        className="text-xs font-medium text-neuro-blue hover:underline"
+                        className="text-xs font-medium text-[var(--accent-focus)] hover:underline"
                       >
                         Start learning
                       </Link>
@@ -82,7 +82,7 @@ export function EducationOptionsList({ options, logSessionHref = "/learning" }: 
                     <button
                       type="button"
                       onClick={() => setEditingId(o.id)}
-                      className="text-xs text-neuro-muted hover:text-neuro-silver"
+                      className="text-xs text-[var(--text-muted)] hover:text-[var(--text-primary)]"
                     >
                       Edit
                     </button>
@@ -90,7 +90,7 @@ export function EducationOptionsList({ options, logSessionHref = "/learning" }: 
                       type="button"
                       onClick={() => startTransition(() => archiveEducationOption(o.id))}
                       disabled={pending}
-                      className="text-xs text-neuro-muted hover:text-amber-400 disabled:opacity-50"
+                      className="text-xs text-[var(--text-muted)] hover:text-amber-400 disabled:opacity-50"
                     >
                       Archive
                     </button>
@@ -115,16 +115,16 @@ export function EducationOptionsList({ options, logSessionHref = "/learning" }: 
       </ul>
       {archivedWithScore.length > 0 && (
         <div>
-          <p className="mb-2 text-xs font-medium text-neuro-muted">Archived</p>
+          <p className="mb-2 text-xs font-medium text-[var(--text-muted)]">Archived</p>
           <ul className="space-y-2">
             {archivedWithScore.map((o) => (
-              <li key={o.id} className="flex items-center justify-between rounded border border-neuro-border/60 bg-neuro-dark/40 px-3 py-2">
-                <span className="text-sm text-neuro-muted">{o.name}</span>
+              <li key={o.id} className="flex items-center justify-between rounded border border-[var(--card-border)]/60 bg-[var(--bg-primary)]/40 px-3 py-2">
+                <span className="text-sm text-[var(--text-muted)]">{o.name}</span>
                 <button
                   type="button"
                   onClick={() => startTransition(() => unarchiveEducationOption(o.id))}
                   disabled={pending}
-                  className="text-xs text-neuro-blue hover:underline disabled:opacity-50"
+                  className="text-xs text-[var(--accent-focus)] hover:underline disabled:opacity-50"
                 >
                   Restore
                 </button>
@@ -180,14 +180,14 @@ function EducationOptionEditForm({
           value={name}
           onChange={(e) => setName(e.target.value)}
           placeholder="Name"
-          className="min-w-[120px] rounded border border-neuro-border bg-neuro-dark px-2 py-1 text-sm text-neuro-silver"
+          className="min-w-[120px] rounded border border-[var(--card-border)] bg-[var(--bg-primary)] px-2 py-1 text-sm text-[var(--text-primary)]"
         />
         <input
           type="text"
           value={category}
           onChange={(e) => setCategory(e.target.value)}
           placeholder="Category"
-          className="w-24 rounded border border-neuro-border bg-neuro-dark px-2 py-1 text-sm text-neuro-silver"
+          className="w-24 rounded border border-[var(--card-border)] bg-[var(--bg-primary)] px-2 py-1 text-sm text-[var(--text-primary)]"
         />
         <input
           type="number"
@@ -195,7 +195,7 @@ function EducationOptionEditForm({
           max="10"
           value={interest}
           onChange={(e) => setInterest(e.target.value)}
-          className="w-12 rounded border border-neuro-border bg-neuro-dark px-2 py-1 text-sm text-neuro-silver"
+          className="w-12 rounded border border-[var(--card-border)] bg-[var(--bg-primary)] px-2 py-1 text-sm text-[var(--text-primary)]"
           title="Interest"
         />
         <input
@@ -204,7 +204,7 @@ function EducationOptionEditForm({
           max="10"
           value={futureValue}
           onChange={(e) => setFutureValue(e.target.value)}
-          className="w-12 rounded border border-neuro-border bg-neuro-dark px-2 py-1 text-sm text-neuro-silver"
+          className="w-12 rounded border border-[var(--card-border)] bg-[var(--bg-primary)] px-2 py-1 text-sm text-[var(--text-primary)]"
           title="Future value"
         />
         <input
@@ -213,7 +213,7 @@ function EducationOptionEditForm({
           max="10"
           value={effort}
           onChange={(e) => setEffort(e.target.value)}
-          className="w-12 rounded border border-neuro-border bg-neuro-dark px-2 py-1 text-sm text-neuro-silver"
+          className="w-12 rounded border border-[var(--card-border)] bg-[var(--bg-primary)] px-2 py-1 text-sm text-[var(--text-primary)]"
           title="Effort"
         />
       </div>
@@ -221,7 +221,7 @@ function EducationOptionEditForm({
         <button type="submit" disabled={pending} className="btn-primary rounded px-2 py-1 text-xs font-medium disabled:opacity-50">
           Save
         </button>
-        <button type="button" onClick={onClose} className="rounded border border-neuro-border px-2 py-1 text-xs text-neuro-muted hover:text-neuro-silver">
+        <button type="button" onClick={onClose} className="rounded border border-[var(--card-border)] px-2 py-1 text-xs text-[var(--text-muted)] hover:text-[var(--text-primary)]">
           Cancel
         </button>
       </div>

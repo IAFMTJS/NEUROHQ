@@ -20,6 +20,8 @@ type Goal = { id: string; name: string; target_cents: number; current_cents: num
 
 const ENTRY_PAGE_SIZE = 30;
 
+const BUDGET_CATEGORY_PRESETS = ["Eten", "Vervoer", "Abonnementen", "Boodschappen", "Uit eten", "Gezondheid", "Overig"];
+
 export function BudgetEntryList({
   entries,
   currency = "EUR",
@@ -85,12 +87,13 @@ export function BudgetEntryList({
   const frozen = entries.filter((e) => e.freeze_until && e.freeze_until > now);
   const readyReminder = entries.filter((e) => e.freeze_until && e.freeze_until <= now && !e.freeze_reminder_sent);
   const baseRest = entries.filter((e) => !e.freeze_until || (e.freeze_until <= now && e.freeze_reminder_sent));
-  const allCategories = Array.from(
-    new Set(baseRest.filter((e) => e.amount_cents < 0).map((e) => e.category || "Uncategorised"))
+  const allCategoriesFromEntries = Array.from(
+    new Set(baseRest.filter((e) => e.amount_cents < 0).map((e) => e.category || "Ongecategoriseerd"))
   ).sort();
+  const allCategories = Array.from(new Set([...BUDGET_CATEGORY_PRESETS, ...allCategoriesFromEntries]));
 
   let rest = baseRest;
-  if (categoryFilter) rest = rest.filter((e) => (e.category || "Uncategorised") === categoryFilter);
+  if (categoryFilter) rest = rest.filter((e) => (e.category || "Ongecategoriseerd") === categoryFilter);
   if (dateFrom) rest = rest.filter((e) => e.date >= dateFrom);
   if (dateTo) rest = rest.filter((e) => e.date <= dateTo);
   if (searchQuery.trim()) {
@@ -110,7 +113,7 @@ export function BudgetEntryList({
   });
 
   const categoryTotals = allCategories.map((cat) => {
-    const total = rest.filter((e) => e.amount_cents < 0 && (e.category || "Uncategorised") === cat).reduce((s, e) => s + Math.abs(e.amount_cents), 0);
+    const total = rest.filter((e) => e.amount_cents < 0 && (e.category || "Ongecategoriseerd") === cat).reduce((s, e) => s + Math.abs(e.amount_cents), 0);
     return { category: cat, totalCents: total };
   }).filter(({ totalCents }) => totalCents > 0);
 
@@ -126,15 +129,15 @@ export function BudgetEntryList({
             placeholder="Search note or category"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="rounded-lg border border-neuro-border bg-neuro-dark px-2 py-1.5 text-sm text-neuro-silver placeholder-neuro-muted focus:border-neuro-blue focus:outline-none w-44"
+            className="rounded-lg border border-[var(--card-border)] bg-[var(--bg-primary)] px-2 py-1.5 text-sm text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:border-[var(--accent-focus)] focus:outline-none w-44"
             aria-label="Search entries by note or category"
           />
           <label className="flex items-center gap-2">
-            <span className="text-xs text-neuro-muted">Sort</span>
+            <span className="text-xs text-[var(--text-muted)]">Sort</span>
             <select
               value={typeFilter}
               onChange={(e) => setTypeFilter(e.target.value as "all" | "income" | "expenses")}
-              className="rounded-lg border border-neuro-border bg-neuro-dark px-2 py-1.5 text-sm text-neuro-silver focus:border-neuro-blue focus:outline-none"
+              className="rounded-lg border border-[var(--card-border)] bg-[var(--bg-primary)] px-2 py-1.5 text-sm text-[var(--text-primary)] focus:border-[var(--accent-focus)] focus:outline-none"
               aria-label="Filter by type"
             >
               <option value="all">All</option>
@@ -143,11 +146,11 @@ export function BudgetEntryList({
             </select>
           </label>
           <label className="flex items-center gap-2">
-            <span className="text-xs text-neuro-muted">Sort</span>
+            <span className="text-xs text-[var(--text-muted)]">Sort</span>
             <select
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value as "date" | "amount" | "category")}
-              className="rounded-lg border border-neuro-border bg-neuro-dark px-2 py-1.5 text-sm text-neuro-silver focus:border-neuro-blue focus:outline-none"
+              className="rounded-lg border border-[var(--card-border)] bg-[var(--bg-primary)] px-2 py-1.5 text-sm text-[var(--text-primary)] focus:border-[var(--accent-focus)] focus:outline-none"
               aria-label="Sort entries"
             >
               <option value="date">Date</option>
@@ -156,11 +159,11 @@ export function BudgetEntryList({
             </select>
           </label>
           <label className="flex items-center gap-2">
-            <span className="text-xs text-neuro-muted">Category</span>
+            <span className="text-xs text-[var(--text-muted)]">Category</span>
             <select
               value={categoryFilter}
               onChange={(e) => setCategoryFilter(e.target.value)}
-              className="rounded-lg border border-neuro-border bg-neuro-dark px-2 py-1.5 text-sm text-neuro-silver focus:border-neuro-blue focus:outline-none"
+              className="rounded-lg border border-[var(--card-border)] bg-[var(--bg-primary)] px-2 py-1.5 text-sm text-[var(--text-primary)] focus:border-[var(--accent-focus)] focus:outline-none"
             >
               <option value="">All</option>
               {allCategories.map((c) => (
@@ -169,29 +172,29 @@ export function BudgetEntryList({
             </select>
           </label>
           <label className="flex items-center gap-2">
-            <span className="text-xs text-neuro-muted">From</span>
+            <span className="text-xs text-[var(--text-muted)]">From</span>
             <input
               type="date"
               value={dateFrom}
               onChange={(e) => setDateFrom(e.target.value)}
-              className="rounded-lg border border-neuro-border bg-neuro-dark px-2 py-1.5 text-sm text-neuro-silver focus:border-neuro-blue focus:outline-none"
+              className="rounded-lg border border-[var(--card-border)] bg-[var(--bg-primary)] px-2 py-1.5 text-sm text-[var(--text-primary)] focus:border-[var(--accent-focus)] focus:outline-none"
             />
           </label>
           <label className="flex items-center gap-2">
-            <span className="text-xs text-neuro-muted">To</span>
+            <span className="text-xs text-[var(--text-muted)]">To</span>
             <input
               type="date"
               value={dateTo}
               onChange={(e) => setDateTo(e.target.value)}
-              className="rounded-lg border border-neuro-border bg-neuro-dark px-2 py-1.5 text-sm text-neuro-silver focus:border-neuro-blue focus:outline-none"
+              className="rounded-lg border border-[var(--card-border)] bg-[var(--bg-primary)] px-2 py-1.5 text-sm text-[var(--text-primary)] focus:border-[var(--accent-focus)] focus:outline-none"
             />
           </label>
         </div>
 
         {categoryTotals.length > 0 && (
-          <div className="rounded-lg border border-neuro-border bg-neuro-dark/40 px-3 py-2">
-            <p className="text-xs font-medium text-neuro-muted mb-2">This month by category (filtered)</p>
-            <ul className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-neuro-silver">
+          <div className="rounded-lg border border-[var(--card-border)] bg-[var(--bg-primary)]/40 px-3 py-2">
+            <p className="text-xs font-medium text-[var(--text-muted)] mb-2">This month by category (filtered)</p>
+            <ul className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-[var(--text-primary)]">
               {categoryTotals.map(({ category, totalCents }) => (
                 <li key={category}>{category}: {formatCents(-totalCents, currency)}</li>
               ))}
@@ -202,7 +205,7 @@ export function BudgetEntryList({
         <ul className="space-y-2">
           {frozen.map((e) => (
             <li key={e.id} className="flex items-center justify-between rounded border border-amber-700/50 bg-amber-900/20 px-3 py-2">
-              <span className="text-sm text-neuro-silver">
+              <span className="text-sm text-[var(--text-primary)]">
                 {formatCents(e.amount_cents, currency)} · {e.date}
                 {e.note && ` · ${e.note}`}
               </span>
@@ -210,8 +213,8 @@ export function BudgetEntryList({
             </li>
           ))}
           {readyReminder.map((e) => (
-            <li key={e.id} className="flex items-center justify-between rounded border border-neutral-700 bg-neuro-surface px-3 py-2">
-              <span className="text-sm text-neuro-silver">
+            <li key={e.id} className="flex items-center justify-between rounded border border-neutral-700 bg-[var(--bg-surface)] px-3 py-2">
+              <span className="text-sm text-[var(--text-primary)]">
                 {formatCents(e.amount_cents, currency)} · {e.date}
                 {e.note && ` · ${e.note}`}
               </span>
@@ -222,16 +225,16 @@ export function BudgetEntryList({
             </li>
           ))}
           {visible.map((e) => (
-            <li key={e.id} className="flex items-center justify-between rounded border border-neutral-700 bg-neuro-surface px-3 py-2">
-              <span className="text-sm text-neuro-silver">
+            <li key={e.id} className="flex items-center justify-between rounded border border-neutral-700 bg-[var(--bg-surface)] px-3 py-2">
+              <span className="text-sm text-[var(--text-primary)]">
                 {formatCents(e.amount_cents, currency)} · {e.date}
                 {e.category && ` · ${e.category}`}
                 {e.note && ` · ${e.note}`}
               </span>
               <div className="flex gap-2">
-                <button type="button" onClick={() => openEdit(e)} disabled={pending} className="text-xs text-neuro-blue hover:underline">Edit</button>
+                <button type="button" onClick={() => openEdit(e)} disabled={pending} className="text-xs text-[var(--accent-focus)] hover:underline">Edit</button>
                 {e.amount_cents < 0 && !e.freeze_until && (
-                  <button type="button" onClick={() => handleFreeze(e.id)} disabled={pending} className="text-xs text-neuro-blue hover:underline">Freeze 24h</button>
+                  <button type="button" onClick={() => handleFreeze(e.id)} disabled={pending} className="text-xs text-[var(--accent-focus)] hover:underline">Freeze 24h</button>
                 )}
                 <button type="button" onClick={() => handleDelete(e.id)} disabled={pending} className="text-xs text-neutral-500 hover:text-red-400">Delete</button>
               </div>
@@ -242,7 +245,7 @@ export function BudgetEntryList({
           <button
             type="button"
             onClick={() => setVisibleCount((n) => n + ENTRY_PAGE_SIZE)}
-            className="text-sm text-neuro-blue hover:underline"
+            className="text-sm text-[var(--accent-focus)] hover:underline"
           >
             Load more ({rest.length - visibleCount} left)
           </button>
@@ -253,47 +256,47 @@ export function BudgetEntryList({
         {editing && (
           <div className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-neuro-silver">Amount</label>
+              <label className="block text-sm font-medium text-[var(--text-primary)]">Amount</label>
               <input
                 type="number"
                 step="0.01"
                 min="0"
                 value={editAmount}
                 onChange={(e) => setEditAmount(e.target.value)}
-                className="mt-1 w-full rounded-lg border border-neuro-border bg-neuro-dark px-3 py-2 text-sm text-neuro-silver focus:border-neuro-blue focus:outline-none"
+                className="mt-1 w-full rounded-lg border border-[var(--card-border)] bg-[var(--bg-primary)] px-3 py-2 text-sm text-[var(--text-primary)] focus:border-[var(--accent-focus)] focus:outline-none"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-neuro-silver">Date</label>
+              <label className="block text-sm font-medium text-[var(--text-primary)]">Date</label>
               <input
                 type="date"
                 value={editDate}
                 onChange={(e) => setEditDate(e.target.value)}
-                className="mt-1 w-full rounded-lg border border-neuro-border bg-neuro-dark px-3 py-2 text-sm text-neuro-silver focus:border-neuro-blue focus:outline-none"
+                className="mt-1 w-full rounded-lg border border-[var(--card-border)] bg-[var(--bg-primary)] px-3 py-2 text-sm text-[var(--text-primary)] focus:border-[var(--accent-focus)] focus:outline-none"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-neuro-silver">Category</label>
+              <label className="block text-sm font-medium text-[var(--text-primary)]">Category</label>
               <input
                 type="text"
                 value={editCategory}
                 onChange={(e) => setEditCategory(e.target.value)}
                 placeholder="e.g. Food"
-                className="mt-1 w-full rounded-lg border border-neuro-border bg-neuro-dark px-3 py-2 text-sm text-neuro-silver focus:border-neuro-blue focus:outline-none"
+                className="mt-1 w-full rounded-lg border border-[var(--card-border)] bg-[var(--bg-primary)] px-3 py-2 text-sm text-[var(--text-primary)] focus:border-[var(--accent-focus)] focus:outline-none"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-neuro-silver">Note</label>
+              <label className="block text-sm font-medium text-[var(--text-primary)]">Note</label>
               <input
                 type="text"
                 value={editNote}
                 onChange={(e) => setEditNote(e.target.value)}
-                className="mt-1 w-full rounded-lg border border-neuro-border bg-neuro-dark px-3 py-2 text-sm text-neuro-silver focus:border-neuro-blue focus:outline-none"
+                className="mt-1 w-full rounded-lg border border-[var(--card-border)] bg-[var(--bg-primary)] px-3 py-2 text-sm text-[var(--text-primary)] focus:border-[var(--accent-focus)] focus:outline-none"
               />
             </div>
             <div className="flex gap-2">
               <button type="button" onClick={handleSaveEdit} disabled={pending} className="btn-primary rounded-lg px-4 py-2 text-sm font-medium disabled:opacity-50">Save</button>
-              <button type="button" onClick={() => setEditing(null)} className="rounded-lg border border-neuro-border px-4 py-2 text-sm text-neuro-silver hover:bg-neuro-border/50">Cancel</button>
+              <button type="button" onClick={() => setEditing(null)} className="rounded-lg border border-[var(--card-border)] px-4 py-2 text-sm text-[var(--text-primary)] hover:bg-[var(--card-border)]/50">Cancel</button>
             </div>
           </div>
         )}

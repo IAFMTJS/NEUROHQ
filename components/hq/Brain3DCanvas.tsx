@@ -27,11 +27,11 @@ export function Brain3DCanvas({ energyPct, focusPct, loadPct, uiState = "idle" }
       dpr={[1, 2]}
     >
       <ambientLight intensity={1.8} />
-      <hemisphereLight args={["#00E5FF", "#1a2a40", 1.1]} />
-      <pointLight position={[2, 2, 2]} color="#00E5FF" intensity={0.8} />
-      <pointLight position={[-1, 1, 1]} color="#00FFC6" intensity={0.4} />
-      <directionalLight position={[3, 5, 3]} intensity={2} color="#e6f1ff" />
-      <directionalLight position={[-2, 4, 2]} intensity={1.2} color="#e6f1ff" />
+      <hemisphereLight args={["#00D4E8", "#0A1020", 1.1]} />
+      <pointLight position={[2, 2, 2]} color="#00D4E8" intensity={0.7} />
+      <pointLight position={[-1, 1, 1]} color="#00E876" intensity={0.3} />
+      <directionalLight position={[3, 5, 3]} intensity={2} color="#F0F6FC" />
+      <directionalLight position={[-2, 4, 2]} intensity={1.2} color="#F0F6FC" />
       <OrbitControls
         enablePan={false}
         enableZoom={true}

@@ -55,7 +55,7 @@ export function BottomNav() {
       className="fixed bottom-0 left-1/2 z-50 w-full max-w-[420px] -translate-x-1/2 border-t border-[var(--accent-neutral)] safe-area-pb backdrop-blur-[12px]"
       style={{
         minHeight: "var(--footer-height)",
-        backgroundColor: "rgba(18, 26, 42, 0.85)",
+        backgroundColor: "var(--nav-bg)",
       }}
       aria-label="Main navigation"
     >
@@ -67,26 +67,18 @@ export function BottomNav() {
             <li key={link.href} className="flex-1 min-w-0">
               <Link
                 href={link.href}
-                className={`flex flex-col items-center justify-center gap-1 rounded-lg py-2 min-h-[44px] transition-all duration-200 ease-out ${
-                  active
-                    ? "text-[var(--text-primary)]"
-                    : "opacity-60 text-[var(--text-muted)] hover:opacity-80 hover:text-[var(--text-secondary)]"
+                className={`flex flex-col items-center justify-center gap-1 rounded-xl py-2 px-2 min-h-[44px] transition-all duration-200 ease-out ${
+                  active ? "nav-link-active text-[var(--text-primary)] bg-[var(--bg-elevated)]/80" : "nav-link text-[var(--text-muted)] hover:bg-[var(--bg-elevated)]/50 hover:text-[var(--text-secondary)]"
                 }`}
               >
-                <span
-                  className="inline-flex items-center justify-center transition-transform duration-200 ease-out"
-                  style={{
-                    transform: active ? "scale(1.1)" : "scale(1)",
-                    filter: active ? "drop-shadow(0 0 6px rgba(0,229,255,0.5))" : "none",
-                  }}
-                >
+                <span className="nav-icon-wrap inline-flex items-center justify-center w-8 h-8 rounded-lg transition-all duration-200 ease-out" style={{ transform: active ? "scale(1.05)" : "scale(1)" }}>
                   <Icon active={active} />
                 </span>
                 <span className="text-[11px] font-medium tracking-wide relative inline-block pb-1.5">
                   {link.label}
                   {active && (
                     <span
-                      className="absolute bottom-0 left-1/2 h-0.5 w-5 rounded-full bg-[var(--accent-focus)] origin-center hq-nav-underline"
+                      className="absolute bottom-0 left-1/2 h-0.5 w-5 rounded-full bg-[var(--accent-cta)] origin-center hq-nav-underline"
                       aria-hidden
                     />
                   )}

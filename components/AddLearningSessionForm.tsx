@@ -55,14 +55,14 @@ export function AddLearningSessionForm({ date, targetMinutes = 60, educationOpti
     <form onSubmit={handleSubmit} className="space-y-4">
       <div className="flex flex-wrap items-end gap-4">
         <div>
-          <p className="mb-1.5 text-xs font-medium text-neuro-muted">Quick add</p>
+          <p className="mb-1.5 text-xs font-medium text-[var(--text-muted)]">Quick add</p>
           <div className="flex gap-2">
             {[15, 30, 45, 60].map((m) => (
               <button
                 key={m}
                 type="button"
                 onClick={() => quickLog(m)}
-                className="rounded-lg border border-neuro-border bg-neuro-dark px-3 py-2 text-sm font-medium text-neuro-silver hover:border-neuro-blue hover:text-neuro-blue"
+                className="rounded-lg border border-[var(--card-border)] bg-[var(--bg-primary)] px-3 py-2 text-sm font-medium text-[var(--text-primary)] hover:border-[var(--accent-focus)] hover:text-[var(--accent-focus)]"
               >
                 +{m}
               </button>
@@ -70,25 +70,25 @@ export function AddLearningSessionForm({ date, targetMinutes = 60, educationOpti
           </div>
         </div>
         <label className="flex flex-col gap-1.5">
-          <span className="text-sm font-medium text-neuro-muted">Minutes</span>
+          <span className="text-sm font-medium text-[var(--text-muted)]">Minutes</span>
           <input
             type="number"
             min="1"
             value={minutes}
             onChange={(e) => setMinutes(e.target.value)}
-            className="w-24 rounded-lg border border-neuro-border bg-neuro-dark px-3 py-2.5 text-sm text-neuro-silver placeholder-neuro-muted focus:border-neuro-blue focus:outline-none focus:ring-2 focus:ring-neuro-blue/30"
+            className="w-24 rounded-lg border border-[var(--card-border)] bg-[var(--bg-primary)] px-3 py-2.5 text-sm text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:border-[var(--accent-focus)] focus:outline-none focus:ring-2 focus:ring-[var(--accent-focus)]/30"
             required
           />
         </label>
         <label className="flex flex-col gap-1.5">
-          <span className="text-sm font-medium text-neuro-muted">Topic (optional)</span>
+          <span className="text-sm font-medium text-[var(--text-muted)]">Topic (optional)</span>
           <input
             type="text"
             value={topic}
             onChange={(e) => setTopic(e.target.value)}
             list="past-topics"
             placeholder="e.g. React"
-            className="w-44 rounded-lg border border-neuro-border bg-neuro-dark px-3 py-2.5 text-sm text-neuro-silver placeholder-neuro-muted focus:border-neuro-blue focus:outline-none focus:ring-2 focus:ring-neuro-blue/30"
+            className="w-44 rounded-lg border border-[var(--card-border)] bg-[var(--bg-primary)] px-3 py-2.5 text-sm text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:border-[var(--accent-focus)] focus:outline-none focus:ring-2 focus:ring-[var(--accent-focus)]/30"
           />
           {pastTopics.length > 0 && (
             <datalist id="past-topics">
@@ -102,14 +102,14 @@ export function AddLearningSessionForm({ date, targetMinutes = 60, educationOpti
           Log session
         </button>
       </div>
-      <div className="flex flex-wrap gap-4 border-t border-neuro-border pt-3">
+      <div className="flex flex-wrap gap-4 border-t border-[var(--card-border)] pt-3">
         {educationOptions.length > 0 && (
           <label className="flex flex-col gap-1.5">
-            <span className="text-xs font-medium text-neuro-muted">Log toward</span>
+            <span className="text-xs font-medium text-[var(--text-muted)]">Log toward</span>
             <select
               value={educationOptionId}
               onChange={(e) => setEducationOptionId(e.target.value)}
-              className="w-48 rounded-lg border border-neuro-border bg-neuro-dark px-3 py-2 text-sm text-neuro-silver focus:border-neuro-blue focus:outline-none focus:ring-2 focus:ring-neuro-blue/30"
+              className="w-48 rounded-lg border border-[var(--card-border)] bg-[var(--bg-primary)] px-3 py-2 text-sm text-[var(--text-primary)] focus:border-[var(--accent-focus)] focus:outline-none focus:ring-2 focus:ring-[var(--accent-focus)]/30"
             >
               <option value="">None</option>
               {educationOptions.map((o) => (
@@ -121,11 +121,11 @@ export function AddLearningSessionForm({ date, targetMinutes = 60, educationOpti
           </label>
         )}
         <label className="flex flex-col gap-1.5">
-          <span className="text-xs font-medium text-neuro-muted">Type</span>
+          <span className="text-xs font-medium text-[var(--text-muted)]">Type</span>
           <select
             value={learningType}
             onChange={(e) => setLearningType(e.target.value as typeof learningType)}
-            className="w-32 rounded-lg border border-neuro-border bg-neuro-dark px-3 py-2 text-sm text-neuro-silver focus:border-neuro-blue focus:outline-none focus:ring-2 focus:ring-neuro-blue/30"
+            className="w-32 rounded-lg border border-[var(--card-border)] bg-[var(--bg-primary)] px-3 py-2 text-sm text-[var(--text-primary)] focus:border-[var(--accent-focus)] focus:outline-none focus:ring-2 focus:ring-[var(--accent-focus)]/30"
           >
             {LEARNING_TYPES.map((t) => (
               <option key={t.value} value={t.value}>

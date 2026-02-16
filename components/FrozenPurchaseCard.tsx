@@ -37,27 +37,27 @@ export function FrozenPurchaseCard({ activeFrozen, readyForAction, currency = "E
 
   return (
     <section className="card-modern overflow-hidden p-0">
-      <div className="border-b border-neuro-border px-4 py-3">
-        <h2 className="text-base font-semibold text-neuro-silver">24h freeze</h2>
-        <p className="mt-0.5 text-xs text-neuro-muted">Confirm or cancel. You can cancel early or add the amount to a goal.</p>
+      <div className="border-b border-[var(--card-border)] px-4 py-3">
+        <h2 className="text-base font-semibold text-[var(--text-primary)]">24h freeze</h2>
+        <p className="mt-0.5 text-xs text-[var(--text-muted)]">Confirm or cancel. You can cancel early or add the amount to a goal.</p>
       </div>
       <div className="p-4 space-y-4">
         {activeFrozen.length > 0 && (
           <div>
-            <h3 className="text-xs font-medium text-neuro-muted mb-2">Still frozen</h3>
+            <h3 className="text-xs font-medium text-[var(--text-muted)] mb-2">Still frozen</h3>
             <ul className="space-y-2">
               {activeFrozen.map((e) => (
-                <li key={e.id} className="flex justify-between items-center gap-2 rounded-lg border border-neuro-border bg-neuro-dark/50 px-3 py-2.5 text-sm">
+                <li key={e.id} className="flex justify-between items-center gap-2 rounded-lg border border-[var(--card-border)] bg-[var(--bg-primary)]/50 px-3 py-2.5 text-sm">
                   <div>
-                    <span className="text-neuro-silver">{formatCents(e.amount_cents, currency)}</span>
-                    {e.note && <span className="ml-2 text-neuro-muted">— {e.note}</span>}
-                    <p className="mt-1 text-xs text-neuro-muted">Until {e.freeze_until ? formatDate(e.freeze_until) : ""}</p>
+                    <span className="text-[var(--text-primary)]">{formatCents(e.amount_cents, currency)}</span>
+                    {e.note && <span className="ml-2 text-[var(--text-muted)]">— {e.note}</span>}
+                    <p className="mt-1 text-xs text-[var(--text-muted)]">Until {e.freeze_until ? formatDate(e.freeze_until) : ""}</p>
                   </div>
                   <button
                     type="button"
                     onClick={() => startTransition(() => cancelFreeze(e.id))}
                     disabled={pending}
-                    className="rounded-lg border border-neuro-border px-3 py-1.5 text-xs font-medium text-neuro-silver hover:bg-neuro-border/50 disabled:opacity-50"
+                    className="rounded-lg border border-[var(--card-border)] px-3 py-1.5 text-xs font-medium text-[var(--text-primary)] hover:bg-[var(--card-border)]/50 disabled:opacity-50"
                   >
                     Cancel freeze
                   </button>
@@ -68,13 +68,13 @@ export function FrozenPurchaseCard({ activeFrozen, readyForAction, currency = "E
         )}
         {readyForAction.length > 0 && (
           <div>
-            <h3 className="text-xs font-medium text-neuro-muted mb-2">Ready to confirm or cancel</h3>
+            <h3 className="text-xs font-medium text-[var(--text-muted)] mb-2">Ready to confirm or cancel</h3>
             <ul className="space-y-2">
               {readyForAction.map((e) => (
-                <li key={e.id} className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-neuro-border bg-neuro-dark/50 px-3 py-2.5 text-sm">
+                <li key={e.id} className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-[var(--card-border)] bg-[var(--bg-primary)]/50 px-3 py-2.5 text-sm">
                   <div>
-                    <span className="text-neuro-silver">{formatCents(e.amount_cents, currency)}</span>
-                    {e.note && <span className="ml-2 text-neuro-muted">— {e.note}</span>}
+                    <span className="text-[var(--text-primary)]">{formatCents(e.amount_cents, currency)}</span>
+                    {e.note && <span className="ml-2 text-[var(--text-muted)]">— {e.note}</span>}
                   </div>
                   <div className="flex flex-wrap items-center gap-2">
                     <button
@@ -89,7 +89,7 @@ export function FrozenPurchaseCard({ activeFrozen, readyForAction, currency = "E
                       type="button"
                       onClick={() => startTransition(() => cancelFreeze(e.id))}
                       disabled={pending}
-                      className="rounded-lg border border-neuro-border px-3 py-1.5 text-xs font-medium text-neuro-silver hover:bg-neuro-border/50 disabled:opacity-50"
+                      className="rounded-lg border border-[var(--card-border)] px-3 py-1.5 text-xs font-medium text-[var(--text-primary)] hover:bg-[var(--card-border)]/50 disabled:opacity-50"
                     >
                       Cancel
                     </button>
@@ -137,7 +137,7 @@ function CancelAndAddToGoal({
       <select
         value={selected}
         onChange={(e) => setSelected(e.target.value)}
-        className="rounded border border-neuro-border bg-neuro-dark px-2 py-1 text-xs text-neuro-silver focus:border-neuro-blue focus:outline-none"
+        className="rounded border border-[var(--card-border)] bg-[var(--bg-primary)] px-2 py-1 text-xs text-[var(--text-primary)] focus:border-[var(--accent-focus)] focus:outline-none"
       >
         <option value="">Add to goal…</option>
         {goals.map((g) => (
@@ -148,7 +148,7 @@ function CancelAndAddToGoal({
         type="button"
         disabled={pending || !selected}
         onClick={() => selected && onAddToGoal(selected)}
-        className="rounded-lg bg-neuro-blue/80 px-2 py-1 text-xs font-medium text-white hover:bg-neuro-blue disabled:opacity-50"
+        className="rounded-lg bg-[var(--accent-focus)]/80 px-2 py-1 text-xs font-medium text-white hover:bg-[var(--accent-focus)] disabled:opacity-50"
       >
         Cancel & add
       </button>

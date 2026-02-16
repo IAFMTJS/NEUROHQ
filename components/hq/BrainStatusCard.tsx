@@ -122,32 +122,41 @@ export function BrainStatusCard({ date, initial, yesterday }: Props) {
       style={{ animationDelay: "50ms" }}
       aria-label="Brain Status"
     >
-      <h2 className="hq-h2 mb-5">Brain Status</h2>
+      <h2 className="hq-title-variant-2 mb-5">Brain Status</h2>
       <p className="mb-4 text-xs text-[var(--text-muted)]">
         Energy, focus, and load drive your daily task capacity. Sleep and social load affect headroom.
       </p>
-      <div className="grid grid-cols-3 gap-4">
-        <RadialMeter
-          value={energyPct}
-          label="Energy"
-          description={description(energyPct, "energy")}
-          variant="energy"
-          delay={0}
-        />
-        <RadialMeter
-          value={focusPct}
-          label="Focus"
-          description={description(focusPct, "focus")}
-          variant="focus"
-          delay={80}
-        />
-        <RadialMeter
-          value={loadPct}
-          label="Load"
-          description={description(loadPct, "load")}
-          variant="warning"
-          delay={160}
-        />
+      {/* Stat rings in glass container with top border glow (reference: Brain Status detail) */}
+      <div className="rounded-2xl bg-[rgba(11,18,32,0.75)] backdrop-blur-xl border border-white/[0.08] border-t-[rgba(0,229,255,0.2)] shadow-[0_-2px_0_0_rgba(0,229,255,0.06)] p-4 mb-5">
+        <div className="grid grid-cols-3 gap-4">
+          <RadialMeter
+            value={energyPct}
+            label="Energy"
+            description={description(energyPct, "energy")}
+            variant="energy"
+            delay={0}
+          />
+          <RadialMeter
+            value={focusPct}
+            label="Focus"
+            description={description(focusPct, "focus")}
+            variant="focus"
+            delay={80}
+          />
+          <RadialMeter
+            value={loadPct}
+            label="Load"
+            description={description(loadPct, "load")}
+            variant="warning"
+            delay={160}
+          />
+        </div>
+        {/* Horizontal progress bars (reference: Energy/Focus/Load with gradient fill) */}
+        <div className="mt-5 pt-5 border-t border-white/[0.08] space-y-3">
+          <HqProgressBar label="Energy" value={energyPct} variant="energy" />
+          <HqProgressBar label="Focus" value={focusPct} variant="focus" />
+          <HqProgressBar label="Load" value={loadPct} variant="load" />
+        </div>
       </div>
 
       <div className="mt-5 border-t border-[var(--card-border)] pt-5">
@@ -258,6 +267,23 @@ export function BrainStatusCard({ date, initial, yesterday }: Props) {
         )}
       </div>
     </section>
+  );
+}
+
+function HqProgressBar({ label, value, variant }: { label: string; value: number; variant: "energy" | "focus" | "load" }) {
+  const pct = Math.min(100, Math.max(0, value));
+  const gradient = variant === "energy" ? "var(--bar-energy-gradient)" : variant === "focus" ? "var(--bar-focus-gradient)" : "var(--bar-load-gradient)";
+  return (
+    <div className="flex items-center gap-3">
+      <span className="w-14 text-xs font-medium text-[var(--text-secondary)] shrink-0">{label}</span>
+      <div className="flex-1 h-2.5 rounded-full bg-white/10 overflow-hidden">
+        <div
+          className="h-full rounded-full transition-all duration-500 ease-out"
+          style={{ width: `${pct}%`, background: gradient, boxShadow: `0 0 12px ${variant === "energy" ? "rgba(0,255,163,0.4)" : variant === "focus" ? "rgba(0,229,255,0.4)" : "rgba(251,191,36,0.4)"}` }}
+        />
+      </div>
+      <span className="hq-percentage w-10 text-right text-sm font-semibold text-[var(--text-primary)] tabular-nums">{Math.round(pct)}%</span>
+    </div>
   );
 }
 

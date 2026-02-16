@@ -91,60 +91,67 @@ export function TaskDetailsModal({
   }
 
   return (
-    <Modal open={open} onClose={onClose} title={task.title} showBranding={false}>
-      <div className="space-y-4">
-        <div className="flex flex-wrap items-center gap-2">
-          {task.category && <span className="rounded bg-neuro-surface px-2 py-0.5 text-xs font-medium text-neuro-muted">{task.category}</span>}
-          {recurrenceLabel(task) && <span className="rounded bg-neuro-surface px-2 py-0.5 text-xs text-neuro-muted">{recurrenceLabel(task)}</span>}
-          {task.due_date && <span className="text-xs text-neuro-muted">Due {task.due_date}</span>}
-          {task.energy_required != null && <span className="rounded bg-[var(--accent-energy)]/20 px-2 py-0.5 text-xs font-medium text-[var(--accent-energy)]" title="Energy cost">⚡ {task.energy_required}</span>}
-          {task.mental_load != null && <span className="rounded bg-purple-500/20 px-2 py-0.5 text-xs font-medium text-purple-300" title="Mental load">🧠 {task.mental_load}</span>}
-          {task.social_load != null && <span className="rounded bg-cyan-500/20 px-2 py-0.5 text-xs font-medium text-cyan-300" title="Social load">👥 {task.social_load}</span>}
-        </div>
-        {task.notes?.trim() && (
-          <div>
-            <p className="text-xs font-medium text-neuro-muted">Notes</p>
-            <p className="mt-1 whitespace-pre-wrap text-sm text-neuro-silver">{task.notes}</p>
-          </div>
-        )}
-        {subtasks.length > 0 && (
-          <div>
-            <p className="text-xs font-medium text-neuro-muted">Subtasks</p>
-            <ul className="mt-1 space-y-1">
-              {subtasks.map((s) => (
-                <li key={s.id} className={`flex items-center gap-2 text-sm ${s.completed ? "text-neuro-muted line-through" : "text-neuro-silver"}`}>
-                  <span className={s.completed ? "text-green-500" : ""}>{s.completed ? "✓" : "○"}</span>
-                  {s.title}
-                </li>
-              ))}
-            </ul>
-          </div>
-        )}
-        <div className="flex flex-wrap gap-2 border-t border-neuro-border pt-4">
+    <Modal
+      open={open}
+      onClose={onClose}
+      title={task.title}
+      size="lg"
+      footer={
+        <div className="flex flex-wrap items-center justify-end gap-2">
           {!task.completed && (
             <>
-              <button type="button" onClick={handleComplete} disabled={pending} className="btn-primary rounded-lg px-4 py-2 text-sm font-medium disabled:opacity-50">
+              <button type="button" onClick={handleComplete} disabled={pending} className="btn-primary rounded-xl px-4 py-2.5 text-sm font-medium disabled:opacity-50">
                 Complete
               </button>
-              <button type="button" onClick={handleSnooze} disabled={pending} className="rounded-lg border border-neuro-border px-4 py-2 text-sm font-medium text-neuro-silver hover:bg-neuro-surface">
+              <button type="button" onClick={handleSnooze} disabled={pending} className="rounded-xl border border-[var(--card-border)] bg-transparent px-4 py-2.5 text-sm font-medium text-[var(--text-primary)] transition-colors hover:bg-[var(--accent-neutral)] disabled:opacity-50">
                 Snooze
               </button>
             </>
           )}
           {onEdit && (
-            <button type="button" onClick={onEdit} className="rounded-lg border border-neuro-border px-4 py-2 text-sm font-medium text-neuro-silver hover:bg-neuro-surface">
+            <button type="button" onClick={onEdit} className="rounded-xl border border-[var(--card-border)] bg-transparent px-4 py-2.5 text-sm font-medium text-[var(--text-primary)] transition-colors hover:bg-[var(--accent-neutral)]">
               Edit
             </button>
           )}
           {onDuplicate && (
-            <button type="button" onClick={onDuplicate} className="rounded-lg border border-neuro-border px-4 py-2 text-sm font-medium text-neuro-silver hover:bg-neuro-surface">
+            <button type="button" onClick={onDuplicate} className="rounded-xl border border-[var(--card-border)] bg-transparent px-4 py-2.5 text-sm font-medium text-[var(--text-primary)] transition-colors hover:bg-[var(--accent-neutral)]">
               Duplicate
             </button>
           )}
-          <button type="button" onClick={handleDeleteClick} disabled={pending} className="rounded-lg border border-red-500/50 px-4 py-2 text-sm font-medium text-red-400 hover:bg-red-500/10">
+          <button type="button" onClick={handleDeleteClick} disabled={pending} className="rounded-xl border border-red-500/50 bg-transparent px-4 py-2.5 text-sm font-medium text-red-400 transition-colors hover:bg-red-500/10 disabled:opacity-50">
             Delete
           </button>
         </div>
+      }
+    >
+      <div className="space-y-5">
+        <div className="flex flex-wrap items-center gap-2">
+          {task.category && <span className="rounded-lg bg-[var(--accent-neutral)] px-2.5 py-1 text-xs font-medium text-[var(--text-secondary)]">{task.category}</span>}
+          {recurrenceLabel(task) && <span className="rounded-lg bg-[var(--accent-neutral)] px-2.5 py-1 text-xs text-[var(--text-muted)]">{recurrenceLabel(task)}</span>}
+          {task.due_date && <span className="text-xs text-[var(--text-muted)]">Due {task.due_date}</span>}
+          {task.energy_required != null && <span className="rounded-lg bg-[var(--accent-energy)]/20 px-2.5 py-1 text-xs font-medium text-[var(--accent-energy)]" title="Energy cost">⚡ {task.energy_required}</span>}
+          {task.mental_load != null && <span className="rounded-lg bg-[var(--accent-focus)]/15 px-2.5 py-1 text-xs font-medium text-[var(--accent-focus)]" title="Mental load">🧠 {task.mental_load}</span>}
+          {task.social_load != null && <span className="rounded-lg bg-[var(--accent-focus)]/15 px-2.5 py-1 text-xs font-medium text-[var(--accent-focus)]" title="Social load">👥 {task.social_load}</span>}
+        </div>
+        {task.notes?.trim() && (
+          <section>
+            <h3 className="text-xs font-semibold uppercase tracking-wider text-[var(--text-muted)]">Notes</h3>
+            <p className="mt-1.5 whitespace-pre-wrap text-[15px] leading-relaxed text-[var(--text-primary)]">{task.notes}</p>
+          </section>
+        )}
+        {subtasks.length > 0 && (
+          <section>
+            <h3 className="text-xs font-semibold uppercase tracking-wider text-[var(--text-muted)]">Subtasks</h3>
+            <ul className="mt-1.5 space-y-1.5">
+              {subtasks.map((s) => (
+                <li key={s.id} className={`flex items-center gap-2.5 text-sm ${s.completed ? "text-[var(--text-muted)] line-through" : "text-[var(--text-primary)]"}`}>
+                  <span className={s.completed ? "text-[var(--accent-energy)]" : "text-[var(--text-muted)]"}>{s.completed ? "✓" : "○"}</span>
+                  {s.title}
+                </li>
+              ))}
+            </ul>
+          </section>
+        )}
       </div>
     </Modal>
   );

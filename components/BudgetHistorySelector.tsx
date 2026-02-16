@@ -25,11 +25,11 @@ export function BudgetHistorySelector({ currentMonth }: { currentMonth?: string 
 
   return (
     <label className="flex items-center gap-2 text-sm">
-      <span className="text-neuro-muted">View</span>
+      <span className="text-[var(--text-muted)]">View</span>
       <select
         value={currentMonth ?? ""}
         onChange={handleChange}
-        className="rounded-lg border border-neuro-border bg-neuro-dark px-2 py-1.5 text-neuro-silver focus:border-neuro-blue focus:outline-none"
+        className="rounded-lg border border-[var(--card-border)] bg-[var(--bg-primary)] px-2 py-1.5 text-[var(--text-primary)] focus:border-[var(--accent-focus)] focus:outline-none"
         aria-label="Select budget period to view"
       >
         {options.map((o) => (

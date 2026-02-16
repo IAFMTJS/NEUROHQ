@@ -29,23 +29,23 @@ export default async function StrategyPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold tracking-tight text-neuro-silver">Quarterly strategy</h1>
-        <p className="mt-1 text-sm text-neuro-muted">
+        <h1 className="text-2xl font-bold tracking-tight text-[var(--text-primary)]">Quarterly strategy</h1>
+        <p className="mt-1 text-sm text-[var(--text-muted)]">
           Q{quarter} {year} — theme, identity, key results, anti-goals, and linked goals.
         </p>
         <div className="mt-4 flex flex-wrap items-center gap-3">
-          <div className="rounded-xl border border-neuro-border bg-neuro-surface/50 px-4 py-3">
-            <p className="mb-2 text-xs font-medium uppercase tracking-wide text-neuro-muted">Quick links</p>
+          <div className="rounded-xl border border-[var(--card-border)] bg-[var(--bg-surface)]/50 px-4 py-3">
+            <p className="mb-2 text-xs font-medium uppercase tracking-wide text-[var(--text-muted)]">Quick links</p>
             <div className="flex flex-wrap gap-2">
               <Link
                 href="/report"
-                className="inline-flex items-center rounded-lg border border-neuro-border bg-neuro-dark px-4 py-2 text-sm font-medium text-neuro-silver hover:border-neuro-blue hover:text-neuro-blue"
+                className="inline-flex items-center rounded-lg border border-[var(--card-border)] bg-[var(--bg-primary)] px-4 py-2 text-sm font-medium text-[var(--text-primary)] hover:border-[var(--accent-focus)] hover:text-[var(--accent-focus)]"
               >
                 Reality report →
               </Link>
               <Link
                 href="/budget"
-                className="inline-flex items-center rounded-lg border border-neuro-border bg-neuro-dark px-4 py-2 text-sm font-medium text-neuro-silver hover:border-neuro-blue hover:text-neuro-blue"
+                className="inline-flex items-center rounded-lg border border-[var(--card-border)] bg-[var(--bg-primary)] px-4 py-2 text-sm font-medium text-[var(--text-primary)] hover:border-[var(--accent-focus)] hover:text-[var(--accent-focus)]"
               >
                 Budget & goals →
               </Link>
@@ -55,7 +55,7 @@ export default async function StrategyPage() {
           <StrategyExportButton />
         </div>
         {nextQuarterStrategy == null && (
-          <p className="mt-2 text-xs text-neuro-muted">
+          <p className="mt-2 text-xs text-[var(--text-muted)]">
             Next quarter (Q{next.quarter} {next.year}) starts soon. You can draft your strategy then or copy from this quarter.
           </p>
         )}

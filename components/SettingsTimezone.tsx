@@ -23,12 +23,12 @@ export function SettingsTimezone({ initialTimezone }: Props) {
 
   return (
     <div className="card-modern overflow-hidden p-0">
-      <div className="border-b border-neuro-border px-4 py-3">
-        <h2 className="text-base font-semibold text-neuro-silver">Timezone</h2>
-        <p className="mt-0.5 text-xs text-neuro-muted">Used for &quot;today&quot; and daily rollover.</p>
+      <div className="border-b border-[var(--card-border)] px-4 py-3">
+        <h2 className="text-base font-semibold text-[var(--text-primary)]">Timezone</h2>
+        <p className="mt-0.5 text-xs text-[var(--text-muted)]">Used for &quot;today&quot; and daily rollover.</p>
       </div>
       <div className="p-4">
-        <label htmlFor="timezone" className="block text-sm font-medium text-neuro-silver mb-2">
+        <label htmlFor="timezone" className="block text-sm font-medium text-[var(--text-primary)] mb-2">
           Your timezone
         </label>
         <select
@@ -36,7 +36,7 @@ export function SettingsTimezone({ initialTimezone }: Props) {
           value={tz}
           onChange={(e) => handleChange(e.target.value)}
           disabled={pending}
-          className="w-full rounded-lg border border-neuro-border bg-neuro-dark px-3 py-2.5 text-neuro-silver focus:border-neuro-blue focus:outline-none focus:ring-2 focus:ring-neuro-blue/30 disabled:opacity-50"
+          className="w-full rounded-lg border border-[var(--card-border)] bg-[var(--bg-primary)] px-3 py-2.5 text-[var(--text-primary)] focus:border-[var(--accent-focus)] focus:outline-none focus:ring-2 focus:ring-[var(--accent-focus)]/30 disabled:opacity-50"
         >
           <option value={TIMEZONE}>{TIMEZONE}</option>
         </select>

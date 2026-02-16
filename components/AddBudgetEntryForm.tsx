@@ -5,7 +5,7 @@ import { addBudgetEntry, checkImpulseSignal, freezePurchase, updateBudgetEntry }
 import { Modal } from "@/components/Modal";
 import { getCurrencySymbol } from "@/lib/utils/currency";
 
-const CATEGORY_PRESETS = ["Food", "Transport", "Subscriptions", "Shopping", "Eating out", "Health", "Other"];
+const CATEGORY_PRESETS = ["Eten", "Vervoer", "Abonnementen", "Boodschappen", "Uit eten", "Gezondheid", "Overig"];
 
 const QUICK_ADD_AMOUNTS = [5, 10, 20, 50];
 
@@ -82,7 +82,7 @@ export function AddBudgetEntryForm({ date: initialDate, currency = "EUR" }: { da
             type="button"
             onClick={() => handleImpulseChoice("planned")}
             disabled={pending}
-            className="rounded-xl border border-white/20 bg-white/5 px-4 py-2.5 text-sm font-medium text-neuro-silver transition hover:bg-white/10"
+            className="rounded-xl border border-white/20 bg-white/5 px-4 py-2.5 text-sm font-medium text-[var(--text-primary)] transition hover:bg-white/10"
           >
             It&apos;s planned
           </button>
@@ -90,7 +90,7 @@ export function AddBudgetEntryForm({ date: initialDate, currency = "EUR" }: { da
             type="button"
             onClick={() => handleImpulseChoice("skip")}
             disabled={pending}
-            className="rounded-xl px-4 py-2.5 text-sm text-neutral-500 transition hover:text-neuro-silver"
+            className="rounded-xl px-4 py-2.5 text-sm text-neutral-500 transition hover:text-[var(--text-primary)]"
           >
             Skip
           </button>
@@ -98,16 +98,16 @@ export function AddBudgetEntryForm({ date: initialDate, currency = "EUR" }: { da
       </Modal>
       <form onSubmit={handleSubmit} className="flex flex-wrap items-end gap-4">
         <label className="flex flex-col gap-1.5">
-          <span className="text-sm font-medium text-neuro-muted">Date</span>
+          <span className="text-sm font-medium text-[var(--text-muted)]">Date</span>
           <input
             type="date"
             value={date}
             onChange={(e) => setDate(e.target.value)}
-            className="w-36 rounded-lg border border-neuro-border bg-neuro-dark px-3 py-2.5 text-sm text-neuro-silver focus:border-neuro-blue focus:outline-none focus:ring-2 focus:ring-neuro-blue/30"
+            className="w-36 rounded-lg border border-[var(--card-border)] bg-[var(--bg-primary)] px-3 py-2.5 text-sm text-[var(--text-primary)] focus:border-[var(--accent-focus)] focus:outline-none focus:ring-2 focus:ring-[var(--accent-focus)]/30"
           />
         </label>
         <label className="flex flex-col gap-1.5">
-          <span className="text-sm font-medium text-neuro-muted">Amount ({symbol})</span>
+          <span className="text-sm font-medium text-[var(--text-muted)]">Amount ({symbol})</span>
           <div className="flex flex-wrap items-center gap-2">
             <input
               type="number"
@@ -115,16 +115,16 @@ export function AddBudgetEntryForm({ date: initialDate, currency = "EUR" }: { da
               min="0"
               value={amount}
               onChange={(e) => setAmount(e.target.value)}
-              className="w-28 rounded-lg border border-neuro-border bg-neuro-dark px-3 py-2.5 text-sm text-neuro-silver placeholder-neuro-muted focus:border-neuro-blue focus:outline-none focus:ring-2 focus:ring-neuro-blue/30"
+              className="w-28 rounded-lg border border-[var(--card-border)] bg-[var(--bg-primary)] px-3 py-2.5 text-sm text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:border-[var(--accent-focus)] focus:outline-none focus:ring-2 focus:ring-[var(--accent-focus)]/30"
               required
             />
-            <span className="text-xs text-neuro-muted">Quick:</span>
+            <span className="text-xs text-[var(--text-muted)]">Quick:</span>
             {QUICK_ADD_AMOUNTS.map((a) => (
               <button
                 key={a}
                 type="button"
                 onClick={() => setAmount(String(a))}
-                className="rounded-lg border border-neuro-border px-2 py-1 text-xs text-neuro-silver hover:bg-neuro-border/50"
+                className="rounded-lg border border-[var(--card-border)] px-2 py-1 text-xs text-[var(--text-primary)] hover:bg-[var(--card-border)]/50"
               >
                 {symbol}{a}
               </button>
@@ -132,39 +132,39 @@ export function AddBudgetEntryForm({ date: initialDate, currency = "EUR" }: { da
           </div>
         </label>
         <label className="flex items-center gap-2">
-          <input type="checkbox" checked={isExpense} onChange={(e) => setIsExpense(e.target.checked)} className="rounded border-neuro-border text-neuro-blue focus:ring-neuro-blue" />
-          <span className="text-sm text-neuro-muted">Expense</span>
+          <input type="checkbox" checked={isExpense} onChange={(e) => setIsExpense(e.target.checked)} className="rounded border-[var(--card-border)] text-[var(--accent-focus)] focus:ring-[var(--accent-focus)]" />
+          <span className="text-sm text-[var(--text-muted)]">Expense</span>
         </label>
         <label className="flex flex-col gap-1.5">
-          <span className="text-sm font-medium text-neuro-muted">Category</span>
+          <span className="text-sm font-medium text-[var(--text-muted)]">Category</span>
           <select
             value={category || ""}
             onChange={(e) => setCategory(e.target.value)}
-            className="w-36 rounded-lg border border-neuro-border bg-neuro-dark px-3 py-2.5 text-sm text-neuro-silver focus:border-neuro-blue focus:outline-none focus:ring-2 focus:ring-neuro-blue/30"
+            className="w-36 rounded-lg border border-[var(--card-border)] bg-[var(--bg-primary)] px-3 py-2.5 text-sm text-[var(--text-primary)] focus:border-[var(--accent-focus)] focus:outline-none focus:ring-2 focus:ring-[var(--accent-focus)]/30"
           >
             <option value="">—</option>
             {CATEGORY_PRESETS.map((c) => (
               <option key={c} value={c}>{c}</option>
             ))}
           </select>
-          {category === "Other" && (
+          {category === "Overig" && (
             <input
               type="text"
               value={categoryOther}
               onChange={(e) => setCategoryOther(e.target.value)}
               placeholder="Category name"
-              className="mt-1 w-full rounded-lg border border-neuro-border bg-neuro-dark px-3 py-2 text-sm text-neuro-silver placeholder-neuro-muted focus:border-neuro-blue focus:outline-none focus:ring-2 focus:ring-neuro-blue/30"
+              className="mt-1 w-full rounded-lg border border-[var(--card-border)] bg-[var(--bg-primary)] px-3 py-2 text-sm text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:border-[var(--accent-focus)] focus:outline-none focus:ring-2 focus:ring-[var(--accent-focus)]/30"
             />
           )}
         </label>
         <label className="flex flex-col gap-1.5">
-          <span className="text-sm font-medium text-neuro-muted">Note</span>
+          <span className="text-sm font-medium text-[var(--text-muted)]">Note</span>
           <input
             type="text"
             value={note}
             onChange={(e) => setNote(e.target.value)}
             placeholder="Optional"
-            className="w-44 rounded-lg border border-neuro-border bg-neuro-dark px-3 py-2.5 text-sm text-neuro-silver placeholder-neuro-muted focus:border-neuro-blue focus:outline-none focus:ring-2 focus:ring-neuro-blue/30"
+            className="w-44 rounded-lg border border-[var(--card-border)] bg-[var(--bg-primary)] px-3 py-2.5 text-sm text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:border-[var(--accent-focus)] focus:outline-none focus:ring-2 focus:ring-[var(--accent-focus)]/30"
           />
         </label>
         <button type="submit" disabled={pending} className="btn-primary rounded-lg px-4 py-2.5 text-sm font-medium disabled:opacity-50">

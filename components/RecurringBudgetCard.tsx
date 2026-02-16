@@ -75,15 +75,15 @@ export function RecurringBudgetCard({
   if (templates.length === 0 && !showAdd) {
     return (
       <section className="card-modern overflow-hidden p-0">
-        <div className="border-b border-neuro-border px-4 py-3">
-          <h2 className="text-base font-semibold text-neuro-silver">Recurring</h2>
-          <p className="mt-0.5 text-xs text-neuro-muted">Rent, salary, subscriptions — auto-create entries.</p>
+        <div className="border-b border-[var(--card-border)] px-4 py-3">
+          <h2 className="text-base font-semibold text-[var(--text-primary)]">Recurring</h2>
+          <p className="mt-0.5 text-xs text-[var(--text-muted)]">Rent, salary, subscriptions — auto-create entries.</p>
         </div>
         <div className="p-4">
           <button
             type="button"
             onClick={() => setShowAdd(true)}
-            className="text-sm font-medium text-neuro-blue hover:underline"
+            className="text-sm font-medium text-[var(--accent-focus)] hover:underline"
           >
             + Add recurring template
           </button>
@@ -95,14 +95,14 @@ export function RecurringBudgetCard({
 
   return (
     <section className="card-modern overflow-hidden p-0">
-      <div className="border-b border-neuro-border px-4 py-3">
-        <h2 className="text-base font-semibold text-neuro-silver">Recurring</h2>
-        <p className="mt-0.5 text-xs text-neuro-muted">Auto-create entries on schedule.</p>
+      <div className="border-b border-[var(--card-border)] px-4 py-3">
+        <h2 className="text-base font-semibold text-[var(--text-primary)]">Recurring</h2>
+        <p className="mt-0.5 text-xs text-[var(--text-muted)]">Auto-create entries on schedule.</p>
       </div>
       <div className="p-4 space-y-2">
         {templates.map((t) => (
-          <div key={t.id} className="flex items-center justify-between rounded-lg border border-neuro-border bg-neuro-dark/40 px-3 py-2 text-sm">
-            <span className="text-neuro-silver">
+          <div key={t.id} className="flex items-center justify-between rounded-lg border border-[var(--card-border)] bg-[var(--bg-primary)]/40 px-3 py-2 text-sm">
+            <span className="text-[var(--text-primary)]">
               {formatCents(t.amount_cents, currency)} · {t.recurrence_rule} · next {t.next_generate_date}
               {t.category && ` · ${t.category}`}
             </span>
@@ -116,7 +116,7 @@ export function RecurringBudgetCard({
             </button>
           </div>
         ))}
-        <button type="button" onClick={() => setShowAdd(true)} className="text-sm font-medium text-neuro-blue hover:underline">
+        <button type="button" onClick={() => setShowAdd(true)} className="text-sm font-medium text-[var(--accent-focus)] hover:underline">
           + Add recurring
         </button>
       </div>
@@ -170,44 +170,44 @@ function AddModal({
     <Modal open={open} onClose={onClose} title="Add recurring" showBranding>
       <form onSubmit={onSubmit} className="space-y-4">
         <div>
-          <label className="block text-sm font-medium text-neuro-silver">Amount</label>
-          <input type="number" step="0.01" min="0" value={amount} onChange={(e) => setAmount(e.target.value)} required className="mt-1 w-full rounded-lg border border-neuro-border bg-neuro-dark px-3 py-2 text-sm text-neuro-silver focus:border-neuro-blue focus:outline-none" />
+          <label className="block text-sm font-medium text-[var(--text-primary)]">Amount</label>
+          <input type="number" step="0.01" min="0" value={amount} onChange={(e) => setAmount(e.target.value)} required className="mt-1 w-full rounded-lg border border-[var(--card-border)] bg-[var(--bg-primary)] px-3 py-2 text-sm text-[var(--text-primary)] focus:border-[var(--accent-focus)] focus:outline-none" />
         </div>
         <div>
-          <label className="block text-sm font-medium text-neuro-silver">Category</label>
-          <input type="text" value={category} onChange={(e) => setCategory(e.target.value)} className="mt-1 w-full rounded-lg border border-neuro-border bg-neuro-dark px-3 py-2 text-sm text-neuro-silver focus:border-neuro-blue focus:outline-none" />
+          <label className="block text-sm font-medium text-[var(--text-primary)]">Category</label>
+          <input type="text" value={category} onChange={(e) => setCategory(e.target.value)} className="mt-1 w-full rounded-lg border border-[var(--card-border)] bg-[var(--bg-primary)] px-3 py-2 text-sm text-[var(--text-primary)] focus:border-[var(--accent-focus)] focus:outline-none" />
         </div>
         <div>
-          <label className="block text-sm font-medium text-neuro-silver">Note</label>
-          <input type="text" value={note} onChange={(e) => setNote(e.target.value)} className="mt-1 w-full rounded-lg border border-neuro-border bg-neuro-dark px-3 py-2 text-sm text-neuro-silver focus:border-neuro-blue focus:outline-none" />
+          <label className="block text-sm font-medium text-[var(--text-primary)]">Note</label>
+          <input type="text" value={note} onChange={(e) => setNote(e.target.value)} className="mt-1 w-full rounded-lg border border-[var(--card-border)] bg-[var(--bg-primary)] px-3 py-2 text-sm text-[var(--text-primary)] focus:border-[var(--accent-focus)] focus:outline-none" />
         </div>
         <div>
-          <label className="block text-sm font-medium text-neuro-silver">Frequency</label>
-          <select value={rule} onChange={(e) => setRule(e.target.value as "weekly" | "monthly")} className="mt-1 w-full rounded-lg border border-neuro-border bg-neuro-dark px-3 py-2 text-sm text-neuro-silver focus:border-neuro-blue focus:outline-none">
+          <label className="block text-sm font-medium text-[var(--text-primary)]">Frequency</label>
+          <select value={rule} onChange={(e) => setRule(e.target.value as "weekly" | "monthly")} className="mt-1 w-full rounded-lg border border-[var(--card-border)] bg-[var(--bg-primary)] px-3 py-2 text-sm text-[var(--text-primary)] focus:border-[var(--accent-focus)] focus:outline-none">
             <option value="monthly">Monthly</option>
             <option value="weekly">Weekly</option>
           </select>
         </div>
         {rule === "monthly" && (
           <div>
-            <label className="block text-sm font-medium text-neuro-silver">Day of month (1–31)</label>
-            <input type="number" min="1" max="31" value={dayOfMonth} onChange={(e) => setDayOfMonth(e.target.value)} className="mt-1 w-full rounded-lg border border-neuro-border bg-neuro-dark px-3 py-2 text-sm text-neuro-silver focus:border-neuro-blue focus:outline-none" />
+            <label className="block text-sm font-medium text-[var(--text-primary)]">Day of month (1–31)</label>
+            <input type="number" min="1" max="31" value={dayOfMonth} onChange={(e) => setDayOfMonth(e.target.value)} className="mt-1 w-full rounded-lg border border-[var(--card-border)] bg-[var(--bg-primary)] px-3 py-2 text-sm text-[var(--text-primary)] focus:border-[var(--accent-focus)] focus:outline-none" />
           </div>
         )}
         {rule === "weekly" && (
           <div>
-            <label className="block text-sm font-medium text-neuro-silver">Day of week (0=Sun … 6=Sat)</label>
-            <input type="number" min="0" max="6" value={dayOfWeek} onChange={(e) => setDayOfWeek(e.target.value)} className="mt-1 w-full rounded-lg border border-neuro-border bg-neuro-dark px-3 py-2 text-sm text-neuro-silver focus:border-neuro-blue focus:outline-none" />
+            <label className="block text-sm font-medium text-[var(--text-primary)]">Day of week (0=Sun … 6=Sat)</label>
+            <input type="number" min="0" max="6" value={dayOfWeek} onChange={(e) => setDayOfWeek(e.target.value)} className="mt-1 w-full rounded-lg border border-[var(--card-border)] bg-[var(--bg-primary)] px-3 py-2 text-sm text-[var(--text-primary)] focus:border-[var(--accent-focus)] focus:outline-none" />
           </div>
         )}
         <div>
-          <label className="block text-sm font-medium text-neuro-silver">Next run date</label>
-          <input type="date" value={nextDate} onChange={(e) => setNextDate(e.target.value)} className="mt-1 w-full rounded-lg border border-neuro-border bg-neuro-dark px-3 py-2 text-sm text-neuro-silver focus:border-neuro-blue focus:outline-none" />
+          <label className="block text-sm font-medium text-[var(--text-primary)]">Next run date</label>
+          <input type="date" value={nextDate} onChange={(e) => setNextDate(e.target.value)} className="mt-1 w-full rounded-lg border border-[var(--card-border)] bg-[var(--bg-primary)] px-3 py-2 text-sm text-[var(--text-primary)] focus:border-[var(--accent-focus)] focus:outline-none" />
         </div>
         {error && <p className="text-sm text-red-400">{error}</p>}
         <div className="flex gap-2">
           <button type="submit" disabled={pending} className="btn-primary rounded-lg px-4 py-2 text-sm font-medium disabled:opacity-50">Add</button>
-          <button type="button" onClick={onClose} className="rounded-lg border border-neuro-border px-4 py-2 text-sm text-neuro-silver hover:bg-neuro-border/50">Cancel</button>
+          <button type="button" onClick={onClose} className="rounded-lg border border-[var(--card-border)] px-4 py-2 text-sm text-[var(--text-primary)] hover:bg-[var(--card-border)]/50">Cancel</button>
         </div>
       </form>
     </Modal>

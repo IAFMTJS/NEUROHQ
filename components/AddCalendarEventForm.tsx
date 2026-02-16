@@ -44,7 +44,7 @@ export function AddCalendarEventForm({ date, hasGoogleToken = false }: { date: s
           is_social: isSocial,
           sync_to_google: hasGoogleToken && syncToGoogle,
         });
-        const dayLabel = startDate.toLocaleDateString(undefined, { weekday: "short", day: "numeric", month: "short" });
+        const dayLabel = startDate.toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "short" });
         setSuccess(`Event saved for ${dayLabel}. It appears under that day above.`);
         setTitle("");
         setStart(`${date}T09:00`);
@@ -70,44 +70,44 @@ export function AddCalendarEventForm({ date, hasGoogleToken = false }: { date: s
         </p>
       )}
       <label className="flex flex-col gap-1.5">
-        <span className="text-sm font-medium text-neuro-muted">Title</span>
+        <span className="text-sm font-medium text-[var(--text-muted)]">Title</span>
         <input
           type="text"
           value={title}
           onChange={(e) => setTitle(e.target.value)}
           placeholder="e.g. Meeting"
-          className="w-40 rounded-lg border border-neuro-border bg-neuro-dark px-3 py-2.5 text-sm text-neuro-silver placeholder-neuro-muted focus:border-neuro-blue focus:outline-none focus:ring-2 focus:ring-neuro-blue/30"
+          className="w-40 rounded-lg border border-[var(--card-border)] bg-[var(--bg-primary)] px-3 py-2.5 text-sm text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:border-[var(--accent-focus)] focus:outline-none focus:ring-2 focus:ring-[var(--accent-focus)]/30"
           required
         />
       </label>
       <label className="flex flex-col gap-1.5">
-        <span className="text-sm font-medium text-neuro-muted">Start</span>
+        <span className="text-sm font-medium text-[var(--text-muted)]">Start</span>
         <input
           type="datetime-local"
           value={start}
           min={minDateTime}
           onChange={(e) => setStart(e.target.value)}
-          className="rounded-lg border border-neuro-border bg-neuro-dark px-3 py-2.5 text-sm text-neuro-silver focus:border-neuro-blue focus:outline-none focus:ring-2 focus:ring-neuro-blue/30"
+          className="rounded-lg border border-[var(--card-border)] bg-[var(--bg-primary)] px-3 py-2.5 text-sm text-[var(--text-primary)] focus:border-[var(--accent-focus)] focus:outline-none focus:ring-2 focus:ring-[var(--accent-focus)]/30"
         />
       </label>
       <label className="flex flex-col gap-1.5">
-        <span className="text-sm font-medium text-neuro-muted">End</span>
+        <span className="text-sm font-medium text-[var(--text-muted)]">End</span>
         <input
           type="datetime-local"
           value={end}
           min={minDateTime}
           onChange={(e) => setEnd(e.target.value)}
-          className="rounded-lg border border-neuro-border bg-neuro-dark px-3 py-2.5 text-sm text-neuro-silver focus:border-neuro-blue focus:outline-none focus:ring-2 focus:ring-neuro-blue/30"
+          className="rounded-lg border border-[var(--card-border)] bg-[var(--bg-primary)] px-3 py-2.5 text-sm text-[var(--text-primary)] focus:border-[var(--accent-focus)] focus:outline-none focus:ring-2 focus:ring-[var(--accent-focus)]/30"
         />
       </label>
       <label className="flex items-center gap-2">
-        <input type="checkbox" checked={isSocial} onChange={(e) => setIsSocial(e.target.checked)} className="rounded border-neuro-border text-neuro-blue focus:ring-neuro-blue" />
-        <span className="text-sm text-neuro-muted">Social (×1.5 energy)</span>
+        <input type="checkbox" checked={isSocial} onChange={(e) => setIsSocial(e.target.checked)} className="rounded border-[var(--card-border)] text-[var(--accent-focus)] focus:ring-[var(--accent-focus)]" />
+        <span className="text-sm text-[var(--text-muted)]">Social (×1.5 energy)</span>
       </label>
       {hasGoogleToken && (
         <label className="flex items-center gap-2">
-          <input type="checkbox" checked={syncToGoogle} onChange={(e) => setSyncToGoogle(e.target.checked)} className="rounded border-neuro-border text-neuro-blue focus:ring-neuro-blue" />
-          <span className="text-sm text-neuro-muted">Sync to Google</span>
+          <input type="checkbox" checked={syncToGoogle} onChange={(e) => setSyncToGoogle(e.target.checked)} className="rounded border-[var(--card-border)] text-[var(--accent-focus)] focus:ring-[var(--accent-focus)]" />
+          <span className="text-sm text-[var(--text-muted)]">Sync to Google</span>
         </label>
       )}
       <button type="submit" disabled={pending} className="btn-primary rounded-lg px-4 py-2.5 text-sm font-medium disabled:opacity-50">

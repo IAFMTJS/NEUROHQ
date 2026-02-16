@@ -3,6 +3,7 @@
 import { useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { deleteCalendarEvent } from "@/app/actions/calendar";
+import { formatDayShort } from "@/lib/utils/date-locale";
 
 type Event = {
   id: string;
@@ -15,13 +16,12 @@ type Event = {
 
 function dayLabel(dateKey: string, todayStr: string): string {
   if (dateKey === todayStr) return "Today";
-  const today = new Date(todayStr);
-  const d = new Date(dateKey);
+  const today = new Date(todayStr + "T12:00:00Z");
   const tomorrow = new Date(today);
-  tomorrow.setDate(tomorrow.getDate() + 1);
+  tomorrow.setUTCDate(today.getUTCDate() + 1);
   const tomorrowStr = tomorrow.toISOString().slice(0, 10);
   if (dateKey === tomorrowStr) return "Tomorrow";
-  return d.toLocaleDateString(undefined, { weekday: "short", day: "numeric", month: "short" });
+  return formatDayShort(dateKey);
 }
 
 export function UpcomingCalendarList({
@@ -66,20 +66,20 @@ export function UpcomingCalendarList({
         const label = dayLabel(dateKey, todayStr);
         return (
           <div key={dateKey}>
-            <h3 className="mb-1.5 text-xs font-medium uppercase tracking-wide text-neuro-muted">
+            <h3 className="mb-1.5 text-xs font-medium uppercase tracking-wide text-[var(--text-muted)]">
               {label}
             </h3>
             {events.length === 0 ? (
-              <p className="text-sm text-neuro-muted">No events</p>
+              <p className="text-sm text-[var(--text-muted)]">No events</p>
             ) : (
               <ul className="space-y-2">
                 {events.map((e) => (
                   <li
                     key={e.id}
-                    className="flex items-center justify-between rounded-xl border border-neuro-border bg-neuro-dark/50 px-3 py-2.5"
+                    className="flex items-center justify-between rounded-xl border border-[var(--card-border)] bg-[var(--bg-primary)]/50 px-3 py-2.5"
                   >
                     <div>
-                      <span className="text-sm font-medium text-neuro-silver">
+                      <span className="text-sm font-medium text-[var(--text-primary)]">
                         {e.title ?? "Untitled"}
                       </span>
                       <span className="ml-2 text-xs text-neutral-400">

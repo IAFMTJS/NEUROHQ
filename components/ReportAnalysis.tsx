@@ -52,12 +52,12 @@ export function ReportAnalysis({ report }: Props) {
 
   return (
     <div className="card-modern-accent overflow-hidden p-0">
-      <div className="border-b border-neuro-border/80 px-4 py-3">
-        <h2 className="text-base font-semibold text-neuro-silver">Summary & analysis</h2>
-        <p className="mt-0.5 text-xs text-neuro-muted">What the numbers suggest for this week.</p>
+      <div className="border-b border-[var(--card-border)]/80 px-4 py-3">
+        <h2 className="text-base font-semibold text-[var(--text-primary)]">Summary & analysis</h2>
+        <p className="mt-0.5 text-xs text-[var(--text-muted)]">What the numbers suggest for this week.</p>
       </div>
       <div className="p-4">
-        <ul className="space-y-2 text-sm text-neuro-silver leading-relaxed">
+        <ul className="space-y-2 text-sm text-[var(--text-primary)] leading-relaxed">
           {lines.map((line, i) => (
             <li key={i}>{line}</li>
           ))}

@@ -12,7 +12,7 @@ export function LearningTargetSelect({ currentTarget }: Props) {
 
   return (
     <div className="mt-2 flex items-center gap-2">
-      <span className="text-xs text-neuro-muted">Weekly target:</span>
+      <span className="text-xs text-[var(--text-muted)]">Weekly target:</span>
       <select
         value={currentTarget}
         onChange={(e) => {
@@ -21,7 +21,7 @@ export function LearningTargetSelect({ currentTarget }: Props) {
           startTransition(() => updateWeeklyLearningTarget(v));
         }}
         disabled={pending}
-        className="rounded border border-neuro-border bg-neuro-dark/80 px-2 py-1 text-xs text-neuro-silver focus:border-neuro-blue focus:outline-none disabled:opacity-50"
+        className="rounded border border-[var(--card-border)] bg-[var(--bg-primary)]/80 px-2 py-1 text-xs text-[var(--text-primary)] focus:border-[var(--accent-focus)] focus:outline-none disabled:opacity-50"
       >
         {PRESETS.map((m) => (
           <option key={m} value={m}>

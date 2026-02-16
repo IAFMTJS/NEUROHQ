@@ -63,17 +63,17 @@ export function SettingsBudget({
 
   return (
     <div className="card-modern overflow-hidden p-0">
-        <div className="border-b border-neuro-border px-4 py-3">
-          <h2 className="text-base font-semibold text-neuro-silver">Budget & spending</h2>
-          <p className="mt-0.5 text-xs text-neuro-muted">Currency and impulse detection threshold.</p>
+        <div className="border-b border-[var(--card-border)] px-4 py-3">
+          <h2 className="text-base font-semibold text-[var(--text-primary)]">Budget & spending</h2>
+          <p className="mt-0.5 text-xs text-[var(--text-muted)]">Currency and impulse detection threshold.</p>
         </div>
         <div className="p-4 space-y-4">
           <div>
-            <label className="block text-sm font-medium text-neuro-silver mb-1">Currency</label>
+            <label className="block text-sm font-medium text-[var(--text-primary)] mb-1">Currency</label>
             <select
               value={currency}
               onChange={(e) => setCurrency(e.target.value)}
-              className="w-full rounded-lg border border-neuro-border bg-neuro-dark px-3 py-2.5 text-sm text-neuro-silver focus:border-neuro-blue focus:outline-none focus:ring-2 focus:ring-neuro-blue/30"
+              className="w-full rounded-lg border border-[var(--card-border)] bg-[var(--bg-primary)] px-3 py-2.5 text-sm text-[var(--text-primary)] focus:border-[var(--accent-focus)] focus:outline-none focus:ring-2 focus:ring-[var(--accent-focus)]/30"
             >
               {CURRENCIES.map((c) => (
                 <option key={c} value={c}>{c} ({getCurrencySymbol(c)})</option>
@@ -81,8 +81,8 @@ export function SettingsBudget({
             </select>
           </div>
           <div>
-            <label className="block text-sm font-medium text-neuro-silver mb-1">Impulse threshold (%)</label>
-            <p className="text-xs text-neuro-muted mb-1">
+            <label className="block text-sm font-medium text-[var(--text-primary)] mb-1">Impulse threshold (%)</label>
+            <p className="text-xs text-[var(--text-muted)] mb-1">
               Flag an unplanned expense as possible impulse when it’s above this % of your 4‑week average spend.
             </p>
             <input
@@ -91,23 +91,23 @@ export function SettingsBudget({
               max="100"
               value={impulsePct}
               onChange={(e) => setImpulsePct(e.target.value)}
-              className="w-full rounded-lg border border-neuro-border bg-neuro-dark px-3 py-2.5 text-sm text-neuro-silver focus:border-neuro-blue focus:outline-none focus:ring-2 focus:ring-neuro-blue/30"
+              className="w-full rounded-lg border border-[var(--card-border)] bg-[var(--bg-primary)] px-3 py-2.5 text-sm text-[var(--text-primary)] focus:border-[var(--accent-focus)] focus:outline-none focus:ring-2 focus:ring-[var(--accent-focus)]/30"
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-neuro-silver mb-1">Budget period</label>
+            <label className="block text-sm font-medium text-[var(--text-primary)] mb-1">Budget period</label>
             <select
               value={budgetPeriod}
               onChange={(e) => setBudgetPeriod(e.target.value as "monthly" | "weekly")}
-              className="w-full rounded-lg border border-neuro-border bg-neuro-dark px-3 py-2.5 text-sm text-neuro-silver focus:border-neuro-blue focus:outline-none focus:ring-2 focus:ring-neuro-blue/30"
+              className="w-full rounded-lg border border-[var(--card-border)] bg-[var(--bg-primary)] px-3 py-2.5 text-sm text-[var(--text-primary)] focus:border-[var(--accent-focus)] focus:outline-none focus:ring-2 focus:ring-[var(--accent-focus)]/30"
             >
               <option value="monthly">Monthly</option>
               <option value="weekly">Weekly</option>
             </select>
           </div>
           <div>
-            <label className="block text-sm font-medium text-neuro-silver mb-1">Quick-add window (minutes)</label>
-            <p className="text-xs text-neuro-muted mb-1">Flag as possible impulse if expense is added within this many minutes. Leave empty to disable.</p>
+            <label className="block text-sm font-medium text-[var(--text-primary)] mb-1">Quick-add window (minutes)</label>
+            <p className="text-xs text-[var(--text-muted)] mb-1">Flag as possible impulse if expense is added within this many minutes. Leave empty to disable.</p>
             <input
               type="number"
               min="0"
@@ -115,18 +115,18 @@ export function SettingsBudget({
               placeholder="e.g. 2"
               value={quickAddMins}
               onChange={(e) => setQuickAddMins(e.target.value)}
-              className="w-full rounded-lg border border-neuro-border bg-neuro-dark px-3 py-2.5 text-sm text-neuro-silver placeholder-neuro-muted focus:border-neuro-blue focus:outline-none focus:ring-2 focus:ring-neuro-blue/30"
+              className="w-full rounded-lg border border-[var(--card-border)] bg-[var(--bg-primary)] px-3 py-2.5 text-sm text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:border-[var(--accent-focus)] focus:outline-none focus:ring-2 focus:ring-[var(--accent-focus)]/30"
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-neuro-silver mb-1">High-risk categories (comma-separated)</label>
-            <p className="text-xs text-neuro-muted mb-1">Unplanned expenses in these categories will be flagged as possible impulse.</p>
+            <label className="block text-sm font-medium text-[var(--text-primary)] mb-1">High-risk categories (comma-separated)</label>
+            <p className="text-xs text-[var(--text-muted)] mb-1">Unplanned expenses in these categories will be flagged as possible impulse.</p>
             <input
               type="text"
               placeholder="e.g. Shopping, Eating out"
               value={riskCategories}
               onChange={(e) => setRiskCategories(e.target.value)}
-              className="w-full rounded-lg border border-neuro-border bg-neuro-dark px-3 py-2.5 text-sm text-neuro-silver placeholder-neuro-muted focus:border-neuro-blue focus:outline-none focus:ring-2 focus:ring-neuro-blue/30"
+              className="w-full rounded-lg border border-[var(--card-border)] bg-[var(--bg-primary)] px-3 py-2.5 text-sm text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:border-[var(--accent-focus)] focus:outline-none focus:ring-2 focus:ring-[var(--accent-focus)]/30"
             />
           </div>
           {error && <p className="text-sm text-red-400" role="alert">{error}</p>}

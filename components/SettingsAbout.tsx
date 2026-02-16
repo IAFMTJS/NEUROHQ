@@ -11,17 +11,17 @@ export function SettingsAbout({ appVersion }: Props) {
   return (
     <>
       <div className="card-modern overflow-hidden p-0">
-        <div className="border-b border-neuro-border px-4 py-3">
-          <h2 className="text-base font-semibold text-neuro-silver">About</h2>
+        <div className="border-b border-[var(--card-border)] px-4 py-3">
+          <h2 className="text-base font-semibold text-[var(--text-primary)]">About</h2>
         </div>
         <div className="p-4">
-          <p className="text-sm text-neuro-muted">
+          <p className="text-sm text-[var(--text-muted)]">
             NEUROHQ — nervous-system-aware personal operating system. Version {appVersion}.
           </p>
           <button
             type="button"
             onClick={() => setShowHow(true)}
-            className="mt-3 text-sm font-medium text-neuro-blue hover:underline"
+            className="mt-3 text-sm font-medium text-[var(--accent-focus)] hover:underline"
           >
             How it works
           </button>

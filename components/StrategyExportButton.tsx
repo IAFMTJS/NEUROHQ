@@ -30,7 +30,7 @@ a.download = `strategy-q${q}-${d.getFullYear()}.md`;
       type="button"
       onClick={handleExport}
       disabled={loading}
-      className="text-sm font-medium text-neuro-blue hover:underline disabled:opacity-50"
+      className="text-sm font-medium text-[var(--accent-focus)] hover:underline disabled:opacity-50"
     >
       {loading ? "Exporting…" : "Export (Markdown)"}
     </button>

@@ -42,9 +42,7 @@ export async function getAdaptiveSuggestions(date: string): Promise<AdaptiveSugg
   let emotionSuggestion: EmotionKey | null = null;
   let taskCountSuggestion: number | null = null;
 
-  if (mode === "low_energy" && prefs?.theme !== "girly") {
-    themeSuggestion = "girly";
-  }
+  /* Theme is fixed to Commander v2 (normal); no theme suggestions. */
   if (state) {
     const energy = state.energy ?? 5;
     const focus = state.focus ?? 5;

@@ -27,7 +27,7 @@ export function AnalyticsWeekWidget({ summary }: Props) {
   return (
     <Link
       href="/analytics"
-      className="card-modern flex flex-col gap-2 p-4 hover:bg-[var(--neuro-surface)]/80 transition"
+      className="card-simple flex flex-col gap-2 p-4 hover:opacity-90 transition-opacity"
     >
       <div className="flex items-center justify-between">
         <h2 className="text-sm font-semibold text-[var(--text-primary)]">Your week</h2>

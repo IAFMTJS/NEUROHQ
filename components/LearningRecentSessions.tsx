@@ -8,7 +8,8 @@ function useTransitionOnce() {
   return { pending: isPending, startTransition };
 }
 
-type Session = { id: string; date: string; minutes: number; topic: string | null };
+const LEARNING_TYPE_LABELS: Record<string, string> = { general: "General", reading: "Reading", course: "Course", podcast: "Podcast", video: "Video" };
+type Session = { id: string; date: string; minutes: number; topic: string | null; learning_type?: string | null };
 
 type Props = { sessions: Session[]; weekEnd: string; weekStart: string };
 
@@ -21,22 +22,22 @@ export function LearningRecentSessions({ sessions, weekEnd, weekStart }: Props) 
 
   return (
     <section className="card-modern overflow-hidden p-0">
-      <div className="border-b border-neuro-border px-4 py-3">
-        <h2 className="text-base font-semibold text-neuro-silver">Sessions this week</h2>
-        <p className="mt-0.5 text-xs text-neuro-muted">Recent learning sessions (Mon – {weekEnd}). Edit or delete to correct.</p>
+      <div className="border-b border-[var(--card-border)] px-4 py-3">
+        <h2 className="text-base font-semibold text-[var(--text-primary)]">Sessions this week</h2>
+        <p className="mt-0.5 text-xs text-[var(--text-muted)]">Recent learning sessions (Mon – {weekEnd}). Edit or delete to correct.</p>
       </div>
       <div className="p-4">
         {sorted.length === 0 ? (
-          <div className="rounded-xl border border-dashed border-neuro-border bg-neuro-surface/50 px-4 py-6 text-center">
-            <p className="text-sm text-neuro-muted">No sessions logged this week.</p>
-            <p className="mt-1 text-xs text-neuro-muted">Log time above to count toward your weekly target. Every minute builds the streak.</p>
+          <div className="rounded-xl border border-dashed border-[var(--card-border)] bg-[var(--bg-surface)]/50 px-4 py-6 text-center">
+            <p className="text-sm text-[var(--text-muted)]">No sessions logged this week.</p>
+            <p className="mt-1 text-xs text-[var(--text-muted)]">Log time above to count toward your weekly target. Every minute builds the streak.</p>
           </div>
         ) : (
           <ul className="space-y-2">
             {sorted.map((s) => (
               <li
                 key={s.id}
-                className="rounded-xl border border-neuro-border bg-neuro-dark/50 px-3 py-2.5"
+                className="rounded-xl border border-[var(--card-border)] bg-[var(--bg-primary)]/50 px-3 py-2.5"
               >
                 {editingId === s.id ? (
                   <LearningSessionEditForm
@@ -48,13 +49,14 @@ export function LearningRecentSessions({ sessions, weekEnd, weekStart }: Props) 
                   />
                 ) : (
                   <div className="flex items-center justify-between gap-2">
-                    <span className="text-sm font-medium text-neuro-silver">
+                    <span className="text-sm font-medium text-[var(--text-primary)]">
                       {s.minutes} min{s.minutes !== 1 ? "s" : ""}
+                      {s.learning_type && s.learning_type !== "general" ? ` · ${LEARNING_TYPE_LABELS[s.learning_type] ?? s.learning_type}` : ""}
                       {s.topic ? ` · ${s.topic}` : ""}
                     </span>
                     <span className="flex items-center gap-2">
-                      <span className="text-xs text-neuro-muted">
-                        {new Date(s.date).toLocaleDateString(undefined, {
+                      <span className="text-xs text-[var(--text-muted)]">
+                        {new Date(s.date).toLocaleDateString("en-GB", {
                           weekday: "short",
                           month: "short",
                           day: "numeric",
@@ -63,7 +65,7 @@ export function LearningRecentSessions({ sessions, weekEnd, weekStart }: Props) 
                       <button
                         type="button"
                         onClick={() => setEditingId(s.id)}
-                        className="text-xs text-neuro-blue hover:underline"
+                        className="text-xs text-[var(--accent-focus)] hover:underline"
                       >
                         Edit
                       </button>
@@ -107,6 +109,7 @@ function LearningSessionEditForm({
   const [minutes, setMinutes] = useState(String(session.minutes));
   const [date, setDate] = useState(session.date);
   const [topic, setTopic] = useState(session.topic ?? "");
+  const [learningType, setLearningType] = useState<"general" | "reading" | "course" | "podcast" | "video">((session.learning_type as "general" | "reading" | "course" | "podcast" | "video") ?? "general");
   const { pending, startTransition } = useTransitionOnce();
 
   function handleSubmit(e: React.FormEvent) {
@@ -117,10 +120,10 @@ function LearningSessionEditForm({
     const end = new Date(weekEnd).getTime();
     const d = new Date(date).getTime();
     if (d < start || d > end) {
-      if (!confirm("This date is outside the current week. Save anyway?")) return;
+      if (!confirm("Deze datum valt buiten deze week. Toch opslaan?")) return;
     }
     startTransition(async () => {
-      await updateLearningSession(session.id, { minutes: m, date, topic: topic || null });
+      await updateLearningSession(session.id, { minutes: m, date, topic: topic || null, learning_type: learningType });
       onSave();
     });
   }
@@ -133,28 +136,37 @@ function LearningSessionEditForm({
           min="1"
           value={minutes}
           onChange={(e) => setMinutes(e.target.value)}
-          className="w-16 rounded border border-neuro-border bg-neuro-dark px-2 py-1 text-sm text-neuro-silver"
+          className="w-16 rounded border border-[var(--card-border)] bg-[var(--bg-primary)] px-2 py-1 text-sm text-[var(--text-primary)]"
         />
-        <span className="flex items-center text-sm text-neuro-muted">min</span>
+        <span className="flex items-center text-sm text-[var(--text-muted)]">min</span>
         <input
           type="date"
           value={date}
           onChange={(e) => setDate(e.target.value)}
-          className="rounded border border-neuro-border bg-neuro-dark px-2 py-1 text-sm text-neuro-silver"
+          className="rounded border border-[var(--card-border)] bg-[var(--bg-primary)] px-2 py-1 text-sm text-[var(--text-primary)]"
         />
         <input
           type="text"
           value={topic}
           onChange={(e) => setTopic(e.target.value)}
           placeholder="Topic"
-          className="min-w-[100px] flex-1 rounded border border-neuro-border bg-neuro-dark px-2 py-1 text-sm text-neuro-silver"
+          className="min-w-[100px] flex-1 rounded border border-[var(--card-border)] bg-[var(--bg-primary)] px-2 py-1 text-sm text-[var(--text-primary)]"
         />
+        <select
+          value={learningType}
+          onChange={(e) => setLearningType(e.target.value as typeof learningType)}
+          className="rounded border border-[var(--card-border)] bg-[var(--bg-primary)] px-2 py-1 text-sm text-[var(--text-primary)]"
+        >
+          {(["general", "reading", "course", "podcast", "video"] as const).map((t) => (
+            <option key={t} value={t}>{LEARNING_TYPE_LABELS[t]}</option>
+          ))}
+        </select>
       </div>
       <div className="flex gap-2">
         <button type="submit" disabled={pending} className="btn-primary rounded px-2 py-1 text-xs font-medium disabled:opacity-50">
           Save
         </button>
-        <button type="button" onClick={onClose} className="rounded border border-neuro-border px-2 py-1 text-xs text-neuro-muted hover:text-neuro-silver">
+        <button type="button" onClick={onClose} className="rounded border border-[var(--card-border)] px-2 py-1 text-xs text-[var(--text-muted)] hover:text-[var(--text-primary)]">
           Cancel
         </button>
       </div>

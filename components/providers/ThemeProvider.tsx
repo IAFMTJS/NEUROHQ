@@ -19,17 +19,12 @@ const STORAGE_KEYS = {
   emotion: "neurohq-emotion",
 } as const;
 
+/** Commander v2 is de enige stijl – theme/colorMode genegeerd, altijd normal + dark. */
 function readStorageTheme(): ThemeId {
-  if (typeof window === "undefined") return "normal";
-  const v = window.localStorage.getItem(STORAGE_KEYS.theme);
-  if (v === "normal" || v === "girly" || v === "industrial") return v;
   return "normal";
 }
 
 function readStorageColorMode(): ColorMode {
-  if (typeof window === "undefined") return "dark";
-  const v = window.localStorage.getItem(STORAGE_KEYS.colorMode);
-  if (v === "dark" || v === "light") return v;
   return "dark";
 }
 
@@ -69,12 +64,8 @@ type ThemeProviderProps = {
 };
 
 export function ThemeProvider({ children, initialPrefs }: ThemeProviderProps) {
-  const [theme, setThemeState] = useState<ThemeId>(() =>
-    initialPrefs?.theme ?? readStorageTheme()
-  );
-  const [colorMode, setColorModeState] = useState<ColorMode>(() =>
-    initialPrefs?.color_mode ?? readStorageColorMode()
-  );
+  const [theme, setThemeState] = useState<ThemeId>("normal");
+  const [colorMode, setColorModeState] = useState<ColorMode>("dark");
   const [emotion, setEmotionState] = useState<EmotionKey | null>(() =>
     initialPrefs?.selected_emotion ?? readStorageEmotion()
   );
@@ -93,26 +84,26 @@ export function ThemeProvider({ children, initialPrefs }: ThemeProviderProps) {
   }, [theme, colorMode, emotion]);
 
   const hydrate = useCallback((prefs: UserPreferences) => {
-    setThemeState(prefs.theme);
-    setColorModeState(prefs.color_mode);
+    setThemeState("normal");
+    setColorModeState("dark");
     setEmotionState(prefs.selected_emotion);
   }, []);
 
-  const setTheme = useCallback(async (t: ThemeId) => {
-    setThemeState(t);
+  const setTheme = useCallback(async (_t: ThemeId) => {
+    setThemeState("normal");
     try {
-      await updateUserPreferences({ theme: t });
+      await updateUserPreferences({ theme: "normal" });
     } catch {
-      // persist in localStorage only
+      /* Commander v2 only */
     }
   }, []);
 
-  const setColorMode = useCallback(async (c: ColorMode) => {
-    setColorModeState(c);
+  const setColorMode = useCallback(async (_c: ColorMode) => {
+    setColorModeState("dark");
     try {
-      await updateUserPreferences({ color_mode: c });
+      await updateUserPreferences({ color_mode: "dark" });
     } catch {
-      // persist in localStorage only
+      /* Commander v2 only */
     }
   }, []);
 

@@ -30,51 +30,51 @@ export function SettingsAppleCalendar() {
 
   return (
     <div className="card-modern overflow-hidden p-0">
-      <div className="border-b border-neuro-border px-4 py-3">
-        <h2 className="text-base font-semibold text-neuro-silver">iOS / Apple Kalender</h2>
+      <div className="border-b border-[var(--card-border)] px-4 py-3">
+        <h2 className="text-base font-semibold text-[var(--text-primary)]">iOS / Apple Kalender</h2>
       </div>
       <div className="p-4 space-y-4">
-        <p className="text-sm text-neuro-muted">
+        <p className="text-sm text-[var(--text-muted)]">
           Je agenda in de Apple Kalender-app (iPhone, iPad, Mac). Eénmalig instellen, daarna verschijnen events automatisch.
         </p>
 
         <div>
-          <p className="text-xs font-medium text-neuro-muted mb-1">Abonnement-URL (kopieer en plak in Apple Kalender)</p>
+          <p className="text-xs font-medium text-[var(--text-muted)] mb-1">Abonnement-URL (kopieer en plak in Apple Kalender)</p>
           {feedUrl ? (
             <div className="flex gap-2">
               <input
                 type="text"
                 readOnly
                 value={feedUrl}
-                className="flex-1 rounded-lg border border-neuro-border bg-neuro-card px-3 py-2 text-xs text-neuro-silver"
+                className="flex-1 rounded-lg border border-[var(--card-border)] bg-[var(--bg-surface)] px-3 py-2 text-xs text-[var(--text-primary)]"
                 aria-label="Feed-URL voor Apple Kalender"
               />
               <button
                 type="button"
                 onClick={copyUrl}
-                className="shrink-0 rounded-lg bg-neuro-accent px-3 py-2 text-xs font-medium text-neuro-bg"
+                className="shrink-0 rounded-lg bg-[var(--accent-focus)] px-3 py-2 text-xs font-medium text-[var(--bg-primary)]"
               >
                 {copied ? "Gekopieerd" : "Kopieer"}
               </button>
             </div>
           ) : (
-            <p className="text-xs text-neuro-muted">URL laden…</p>
+            <p className="text-xs text-[var(--text-muted)]">URL laden…</p>
           )}
         </div>
 
-        <div className="text-xs text-neuro-muted space-y-1">
-          <p className="font-medium text-neuro-silver">Op iPhone / iPad:</p>
+        <div className="text-xs text-[var(--text-muted)] space-y-1">
+          <p className="font-medium text-[var(--text-primary)]">Op iPhone / iPad:</p>
           <p>Instellingen → Kalenders → Abonnement toevoegen → plak de URL.</p>
-          <p className="font-medium text-neuro-silver mt-2">Op Mac:</p>
+          <p className="font-medium text-[var(--text-primary)] mt-2">Op Mac:</p>
           <p>Apple Kalender → Bestand → Nieuw abonnement op kalender → plak de URL.</p>
         </div>
 
-        <div className="pt-2 border-t border-neuro-border">
-          <p className="text-xs text-neuro-muted mb-2">Eenmalige export (bv. om handmatig toe te voegen):</p>
+        <div className="pt-2 border-t border-[var(--card-border)]">
+          <p className="text-xs text-[var(--text-muted)] mb-2">Eenmalige export (bv. om handmatig toe te voegen):</p>
           <a
             href={exportUrl}
             download
-            className="inline-block rounded-lg border border-neuro-border bg-neuro-card px-3 py-2 text-xs font-medium text-neuro-silver hover:bg-neuro-elevated"
+            className="inline-block rounded-lg border border-[var(--card-border)] bg-[var(--bg-surface)] px-3 py-2 text-xs font-medium text-[var(--text-primary)] hover:bg-[var(--bg-elevated)]"
           >
             Exporteer vandaag (.ics)
           </a>

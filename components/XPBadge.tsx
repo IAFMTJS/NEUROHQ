@@ -13,7 +13,7 @@ export function XPBadge({ totalXp, level, compact = false }: Props) {
     return (
       <Link
         href="/settings"
-        className="inline-flex items-center gap-1.5 rounded-full border border-[var(--neuro-border)] bg-[var(--neuro-surface)]/80 px-2.5 py-1 text-xs font-medium text-[var(--text-secondary)] hover:border-[var(--accent-focus)]/50 hover:text-[var(--text-primary)] transition"
+        className="inline-flex items-center gap-1.5 rounded-full border border-[var(--card-border)] bg-[var(--bg-surface)]/80 px-2.5 py-1 text-xs font-medium text-[var(--text-secondary)] hover:border-[var(--accent-focus)]/50 hover:text-[var(--text-primary)] transition"
         aria-label={`Level ${level}, ${totalXp} XP`}
       >
         <span aria-hidden>⭐</span>
@@ -25,7 +25,7 @@ export function XPBadge({ totalXp, level, compact = false }: Props) {
   return (
     <Link
       href="/settings"
-      className="card-modern flex items-center gap-3 px-4 py-3 hover:bg-[var(--neuro-surface)]/80 transition"
+      className="card-simple flex items-center gap-3 px-4 py-3 hover:opacity-90 transition"
     >
       <span className="text-2xl" aria-hidden>⭐</span>
       <div>

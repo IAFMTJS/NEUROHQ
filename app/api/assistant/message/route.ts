@@ -29,6 +29,7 @@ import {
 import { createTask } from "@/app/actions/tasks";
 import { addManualEvent } from "@/app/actions/calendar";
 import { addBudgetEntry } from "@/app/actions/budget";
+import { addLearningSession } from "@/app/actions/learning";
 
 const MAX_MESSAGE_LENGTH = 2000;
 const RATE_LIMIT_WINDOW_MS = 60_000;
@@ -145,6 +146,15 @@ export async function POST(request: Request) {
           });
           executedAction = "calendar";
           responseText = responseText + ` Afspraak '${requestedAction.payload.title}' in agenda gezet.`;
+        } else if (requestedAction.type === "add_learning") {
+          await addLearningSession({
+            minutes: requestedAction.payload.minutes,
+            date: requestedAction.payload.date,
+            topic: requestedAction.payload.topic,
+          });
+          executedAction = "learning";
+          const topicPart = requestedAction.payload.topic ? ` (${requestedAction.payload.topic})` : "";
+          responseText = responseText + ` ${requestedAction.payload.minutes} min geleerd${topicPart} gelogd.`;
         }
       } catch (err) {
         console.error("[assistant] Execute action failed", err);

@@ -44,23 +44,42 @@ export function ModeExplanationModal({ mode }: Props) {
   const { title, body } = content[mode];
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-black/60" aria-hidden onClick={handleDismiss} />
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 modal-overlay">
+      <div className="modal-backdrop absolute inset-0" aria-hidden onClick={handleDismiss} />
       <div
-        className="relative card-modern max-w-sm p-5 shadow-xl"
+        className="modal-card relative w-full max-w-sm"
+        onClick={(e) => e.stopPropagation()}
         role="dialog"
         aria-labelledby="mode-modal-title"
         aria-describedby="mode-modal-desc"
       >
-        <h2 id="mode-modal-title" className="text-lg font-semibold text-neuro-silver">{title}</h2>
-        <p id="mode-modal-desc" className="mt-2 text-sm text-neuro-muted">{body}</p>
-        <button
-          type="button"
-          onClick={handleDismiss}
-          className="btn-hq-primary mt-4 w-full rounded-lg py-2.5"
-        >
-          Got it
-        </button>
+        <header className="modal-card-header">
+          <h2 id="mode-modal-title" className="text-xl font-semibold tracking-tight text-[var(--text-primary)]">
+            {title}
+          </h2>
+          <button
+            type="button"
+            onClick={handleDismiss}
+            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-[var(--text-muted)] transition-colors hover:bg-[var(--accent-neutral)] hover:text-[var(--text-primary)]"
+            aria-label="Close"
+          >
+            <span className="text-xl leading-none">×</span>
+          </button>
+        </header>
+        <div className="modal-card-body">
+          <p id="mode-modal-desc" className="text-[15px] leading-relaxed text-[var(--text-secondary)]">
+            {body}
+          </p>
+        </div>
+        <footer className="modal-card-footer">
+          <button
+            type="button"
+            onClick={handleDismiss}
+            className="btn-primary w-full rounded-xl py-3 text-base font-medium"
+          >
+            Got it
+          </button>
+        </footer>
       </div>
     </div>
   );

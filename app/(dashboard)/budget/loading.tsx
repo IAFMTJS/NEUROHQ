@@ -9,20 +9,20 @@ export default function BudgetLoading() {
       </div>
       <Skeleton className="h-32 w-full rounded-xl" />
       <Skeleton className="h-28 w-full rounded-xl" />
-      <div className="rounded-xl overflow-hidden border border-neuro-border">
+      <div className="rounded-xl overflow-hidden border border-[var(--card-border)]">
         <Skeleton className="h-12 w-full" />
         <div className="p-4 space-y-3">
           <Skeleton className="h-10 w-full" />
           <Skeleton className="h-20 w-3/4" />
         </div>
       </div>
-      <div className="rounded-xl overflow-hidden border border-neuro-border">
+      <div className="rounded-xl overflow-hidden border border-[var(--card-border)]">
         <Skeleton className="h-12 w-full" />
         <div className="p-4">
           <Skeleton className="h-10 w-48" />
         </div>
       </div>
-      <div className="rounded-xl overflow-hidden border border-neuro-border">
+      <div className="rounded-xl overflow-hidden border border-[var(--card-border)]">
         <Skeleton className="h-12 w-full" />
         <div className="p-4 space-y-2">
           <Skeleton className="h-12 w-full" />

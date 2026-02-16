@@ -7,8 +7,8 @@ export default function manifest(): MetadataRoute.Manifest {
     description: "Nervous-system-aware personal operating system",
     start_url: "/dashboard",
     display: "standalone",
-    background_color: "#0d1117",
-    theme_color: "#58a6ff",
+    background_color: "#060A16",
+    theme_color: "#00E876",
     icons: [
       { src: "/app-icon.png", sizes: "192x192", type: "image/png", purpose: "any" },
       { src: "/app-icon.png", sizes: "512x512", type: "image/png", purpose: "maskable" },

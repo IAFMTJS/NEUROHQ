@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getDayOfYear } from "date-fns";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { sendPushToUser } from "@/lib/push";
+import { isInQuietHours } from "@/lib/utils/timezone";
 
 /**
  * Vercel Cron: runs daily at 00:00 UTC.
@@ -56,16 +57,20 @@ export async function GET(request: Request) {
     const dayOfYear = Math.max(1, Math.min(365, getDayOfYear(today)));
     const { data: quoteRow } = await supabase.from("quotes").select("quote_text, author_name").eq("id", dayOfYear).single();
     const quoteText = quoteRow?.quote_text ?? "Your daily focus.";
+    const utcHour = today.getUTCHours();
     const { data: pushUsers } = await supabase
       .from("users")
-      .select("id")
+      .select("id, push_quiet_hours_start, push_quiet_hours_end")
       .is("timezone", null)
       .not("push_subscription_json", "is", null)
       .or("push_quote_enabled.is.null,push_quote_enabled.eq.true");
 
-    for (const { id: uid } of pushUsers ?? []) {
+    for (const u of pushUsers ?? []) {
+      const quietStart = u.push_quiet_hours_start ? String(u.push_quiet_hours_start).slice(0, 5) : null;
+      const quietEnd = u.push_quiet_hours_end ? String(u.push_quiet_hours_end).slice(0, 5) : null;
+      if (isInQuietHours(utcHour, quietStart, quietEnd)) continue;
       try {
-        const ok = await sendPushToUser(supabase, uid, {
+        const ok = await sendPushToUser(supabase, u.id, {
           title: "NEUROHQ",
           body: quoteText.length > 120 ? quoteText.slice(0, 117) + "…" : quoteText,
           tag: "daily-quote",

@@ -5,14 +5,14 @@ type Props = { past: Past[] };
 export function StrategyPastQuarters({ past }: Props) {
   if (past.length === 0) return null;
   return (
-    <div className="rounded-xl border border-neuro-border bg-neuro-surface/50 px-4 py-3">
-      <p className="mb-2 text-xs font-medium uppercase tracking-wide text-neuro-muted">Past quarters</p>
+    <div className="rounded-xl border border-[var(--card-border)] bg-[var(--bg-surface)]/50 px-4 py-3">
+      <p className="mb-2 text-xs font-medium uppercase tracking-wide text-[var(--text-muted)]">Past quarters</p>
       <ul className="space-y-2 text-sm">
         {past.map((s) => (
           <li key={s.id} className="flex flex-wrap items-baseline gap-2">
-            <span className="font-medium text-neuro-silver">Q{s.quarter} {s.year}</span>
+            <span className="font-medium text-[var(--text-primary)]">Q{s.quarter} {s.year}</span>
             {(s.one_word || s.primary_theme) && (
-              <span className="text-neuro-muted">
+              <span className="text-[var(--text-muted)]">
                 — {[s.one_word, s.primary_theme, s.secondary_theme].filter(Boolean).join(" · ")}
               </span>
             )}

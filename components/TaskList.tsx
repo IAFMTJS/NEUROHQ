@@ -250,12 +250,12 @@ export function TaskList({ date, tasks: initialTasks, completedToday, mode, carr
           onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setDetailsTask(task); } }}
           className={`flex cursor-pointer items-center gap-3 rounded-lg border px-3 py-2.5 ${
             task.completed
-              ? "border-neuro-border bg-neuro-surface/50 opacity-70"
+              ? "border-[var(--card-border)] bg-[var(--bg-surface)]/50 opacity-70"
               : task.carry_over_count > 0
                 ? "border-amber-500/50 bg-amber-500/10"
                 : isFirstIncomplete
-                  ? "border-neuro-blue/50 bg-neuro-blue/5"
-                  : "border-neuro-border bg-neuro-surface/50"
+                  ? "border-[var(--accent-focus)]/50 bg-[var(--accent-focus)]/5"
+                  : "border-[var(--card-border)] bg-[var(--bg-surface)]/50"
           }`}
         >
           <button
@@ -263,7 +263,7 @@ export function TaskList({ date, tasks: initialTasks, completedToday, mode, carr
             onClick={(e) => { e.stopPropagation(); if (!task.completed) handleComplete(task.id); }}
             disabled={pending || task.completed}
             className={`h-6 w-6 shrink-0 rounded-lg border-2 flex items-center justify-center ${
-              task.completed ? "border-green-500 bg-green-500/20 text-green-400" : "border-neutral-500 bg-transparent hover:border-neuro-blue hover:bg-neuro-blue/20 text-transparent"
+              task.completed ? "border-green-500 bg-green-500/20 text-green-400" : "border-neutral-500 bg-transparent hover:border-[var(--accent-focus)] hover:bg-[var(--accent-focus)]/20 text-transparent"
             } disabled:opacity-50`}
             aria-label={task.completed ? "Completed" : "Complete task"}
           >
@@ -272,13 +272,13 @@ export function TaskList({ date, tasks: initialTasks, completedToday, mode, carr
           <div className="min-w-0 flex-1">
             <div className="flex flex-wrap items-center gap-2">
               {isFirstIncomplete && !task.completed && (
-                <span className="rounded bg-neuro-blue/20 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-neuro-blue">Today&apos;s mission</span>
+                <span className="rounded bg-[var(--accent-focus)]/20 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-[var(--accent-focus)]">Today&apos;s mission</span>
               )}
               {task.carry_over_count > 0 && !task.completed && (
                 <span className="rounded bg-amber-500/20 px-2 py-0.5 text-[10px] font-semibold text-amber-400">Carried over</span>
               )}
               {task.category && (
-                <span className="rounded bg-neuro-surface px-1.5 py-0.5 text-[10px] font-medium text-neuro-muted">{task.category}</span>
+                <span className="rounded bg-[var(--bg-surface)] px-1.5 py-0.5 text-[10px] font-medium text-[var(--text-muted)]">{task.category}</span>
               )}
               {task.energy_required != null && (
                 <span className="rounded bg-[var(--accent-energy)]/20 px-1.5 py-0.5 text-[10px] font-medium text-[var(--accent-energy)]" title="Energy cost">⚡{task.energy_required}</span>
@@ -287,20 +287,20 @@ export function TaskList({ date, tasks: initialTasks, completedToday, mode, carr
                 <span className="rounded bg-purple-500/20 px-1.5 py-0.5 text-[10px] font-medium text-purple-300" title="Mental load">🧠{task.mental_load}</span>
               )}
               {task.social_load != null && (
-                <span className="rounded bg-cyan-500/20 px-1.5 py-0.5 text-[10px] font-medium text-cyan-300" title="Social load">👥{task.social_load}</span>
+                <span className="rounded bg-white/10 px-1.5 py-0.5 text-[10px] font-medium text-white/80" title="Social load">👥{task.social_load}</span>
               )}
-              <span className={`text-sm text-neuro-silver ${task.completed ? "line-through text-neuro-muted" : ""}`}>{task.title}</span>
+              <span className={`text-sm text-[var(--text-primary)] ${task.completed ? "line-through text-[var(--text-muted)]" : ""}`}>{task.title}</span>
             </div>
-            {recurrenceLabel(task) && <p className="mt-0.5 text-xs text-neuro-muted">{recurrenceLabel(task)}</p>}
-            {preview && <p className="mt-0.5 text-[10px] text-neuro-muted">{preview}</p>}
+            {recurrenceLabel(task) && <p className="mt-0.5 text-xs text-[var(--text-muted)]">{recurrenceLabel(task)}</p>}
+            {preview && <p className="mt-0.5 text-[10px] text-[var(--text-muted)]">{preview}</p>}
           </div>
           {isFirstIncomplete && !task.completed && (
-            <button type="button" onClick={(e) => { e.stopPropagation(); setFocusTask(task); }} className="rounded-lg px-2 py-1 text-xs font-medium text-neuro-blue hover:bg-neuro-blue/10">
+            <button type="button" onClick={(e) => { e.stopPropagation(); setFocusTask(task); }} className="rounded-lg px-2 py-1 text-xs font-medium text-[var(--accent-focus)] hover:bg-[var(--accent-focus)]/10">
               Focus
             </button>
           )}
           {!task.completed && (
-            <button type="button" onClick={(e) => { e.stopPropagation(); handleSnooze(task.id); }} disabled={pending} className="rounded-lg px-2 py-1 text-xs text-neuro-muted hover:bg-neuro-blue/10 hover:text-neuro-blue">
+            <button type="button" onClick={(e) => { e.stopPropagation(); handleSnooze(task.id); }} disabled={pending} className="rounded-lg px-2 py-1 text-xs text-[var(--text-muted)] hover:bg-[var(--accent-focus)]/10 hover:text-[var(--accent-focus)]">
               Snooze
             </button>
           )}
@@ -323,8 +323,8 @@ export function TaskList({ date, tasks: initialTasks, completedToday, mode, carr
         {subtaskError && <p className="ml-9 mt-1 text-xs text-red-400" role="alert">{subtaskError}</p>}
         {canAdd && (
           <form onSubmit={(e) => handleAddSubtask(task.id, e)} className="ml-9 flex gap-2">
-            <input name="subtask-title" type="text" placeholder="Add subtask…" className="flex-1 rounded-lg border border-white/10 bg-neuro-dark px-2 py-1 text-xs text-white placeholder-neutral-500" />
-            <button type="submit" disabled={pending} className="rounded-lg px-2 py-1 text-xs text-neuro-blue">Add</button>
+            <input name="subtask-title" type="text" placeholder="Add subtask…" className="flex-1 rounded-lg border border-white/10 bg-[var(--bg-primary)] px-2 py-1 text-xs text-white placeholder-neutral-500" />
+            <button type="submit" disabled={pending} className="rounded-lg px-2 py-1 text-xs text-[var(--accent-focus)]">Add</button>
           </form>
         )}
       </li>
@@ -333,9 +333,9 @@ export function TaskList({ date, tasks: initialTasks, completedToday, mode, carr
 
   return (
     <div className="card-modern overflow-hidden p-0">
-      <div className="border-b border-neuro-border px-4 py-3">
+      <div className="border-b border-[var(--card-border)] px-4 py-3">
         <div className="flex items-center justify-between">
-          <h2 className="text-base font-semibold text-neuro-silver">Today&apos;s missions</h2>
+          <h2 className="text-base font-semibold text-[var(--text-primary)]">Today&apos;s missions</h2>
           {mode === "stabilize" && <span className="rounded-full bg-amber-500/15 px-3 py-1 text-xs font-medium text-amber-200">Stabilize mode</span>}
         </div>
       </div>
@@ -352,7 +352,7 @@ export function TaskList({ date, tasks: initialTasks, completedToday, mode, carr
                 type="button"
                 onClick={() => setFilter(f)}
                 className={`rounded-full px-3 py-1.5 text-xs font-medium ${
-                  filter === f ? "bg-neuro-blue/20 text-neuro-blue" : "border border-neuro-border text-neuro-muted hover:bg-neuro-surface hover:text-neuro-silver"
+                  filter === f ? "bg-[var(--accent-focus)]/20 text-[var(--accent-focus)]" : "border border-[var(--card-border)] text-[var(--text-muted)] hover:bg-[var(--bg-surface)] hover:text-[var(--text-primary)]"
                 }`}
               >
                 {f === "all" ? "All" : f === "work" ? "Work" : f === "personal" ? "Personal" : "Recurring"}
@@ -362,21 +362,21 @@ export function TaskList({ date, tasks: initialTasks, completedToday, mode, carr
         )}
 
         {initialTasks.length === 0 ? (
-          <div className="rounded-lg border border-dashed border-neuro-border bg-neuro-surface/50 px-3 py-5 text-center text-sm text-neuro-muted">
+          <div className="rounded-lg border border-dashed border-[var(--card-border)] bg-[var(--bg-surface)]/50 px-3 py-5 text-center text-sm text-[var(--text-muted)]">
             <p>Geen taken vandaag.</p>
             <p className="mt-2">
               Zeg tegen de assistant: &quot;voeg taak X toe&quot;, of voeg hieronder toe.
             </p>
-            <a href="/assistant" className="mt-3 inline-block rounded-lg bg-neuro-accent/20 px-3 py-2 text-xs font-medium text-neuro-silver hover:bg-neuro-accent/30">
+            <a href="/assistant" className="mt-3 inline-block rounded-lg bg-[var(--accent-focus)]/20 px-3 py-2 text-xs font-medium text-[var(--text-primary)] hover:bg-[var(--accent-focus)]/30">
               Naar assistant
             </a>
           </div>
         ) : (
           sectionsToShow.map((section) => (
             <div key={section.label} className={section.label !== "Today" ? "mb-4" : ""}>
-              {section.label !== "Today" && <h3 className="mb-2 text-xs font-semibold uppercase tracking-wide text-neuro-muted">{section.label}</h3>}
+              {section.label !== "Today" && <h3 className="mb-2 text-xs font-semibold uppercase tracking-wide text-[var(--text-muted)]">{section.label}</h3>}
               {section.tasks.length === 0 ? (
-                <p className="rounded-lg border border-dashed border-neuro-border/50 bg-neuro-surface/30 px-3 py-4 text-center text-xs text-neuro-muted">
+                <p className="rounded-lg border border-dashed border-[var(--card-border)]/50 bg-[var(--bg-surface)]/30 px-3 py-4 text-center text-xs text-[var(--text-muted)]">
                   No {section.label.toLowerCase()} missions today. Add one or move from backlog.
                 </p>
               ) : (
@@ -394,31 +394,31 @@ export function TaskList({ date, tasks: initialTasks, completedToday, mode, carr
         {addError && <p className="mt-2 text-sm text-red-400" role="alert">{addError}</p>}
 
         {canAdd && (
-          <div className="mt-4 rounded-xl border border-neuro-border bg-neuro-surface/30 p-4">
-            <button type="button" onClick={() => setShowRoutine((v) => !v)} className="mb-2 text-xs font-medium text-neuro-muted hover:text-neuro-silver">
+          <div className="mt-4 rounded-xl border border-[var(--card-border)] bg-[var(--bg-surface)]/30 p-4">
+            <button type="button" onClick={() => setShowRoutine((v) => !v)} className="mb-2 text-xs font-medium text-[var(--text-muted)] hover:text-[var(--text-primary)]">
               {showRoutine ? "− Simple form" : "+ Routine & options (category, weekly days, impact)"}
             </button>
             <form onSubmit={handleAdd} className="space-y-3">
               <div className="flex flex-wrap items-end gap-2">
-                <input name="title" type="text" placeholder="Add a mission…" className="flex-1 min-w-[140px] rounded-lg border border-neuro-border bg-neuro-dark px-3 py-2.5 text-sm text-neuro-silver placeholder-neuro-muted focus:border-neuro-blue focus:outline-none focus:ring-2 focus:ring-neuro-blue/30" required />
+                <input name="title" type="text" placeholder="Add a mission…" className="flex-1 min-w-[140px] rounded-lg border border-[var(--card-border)] bg-[var(--bg-primary)] px-3 py-2.5 text-sm text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:border-[var(--accent-focus)] focus:outline-none focus:ring-2 focus:ring-[var(--accent-focus)]/30" required />
                 <label className="flex flex-col gap-1">
-                  <span className="text-xs font-medium text-neuro-muted">Due</span>
-                  <input name="due_date" type="date" value={addDueDate} onChange={(e) => setAddDueDate(e.target.value)} className="rounded-lg border border-neuro-border bg-neuro-dark px-2.5 py-2 text-sm text-neuro-silver" aria-label="Due date" />
+                  <span className="text-xs font-medium text-[var(--text-muted)]">Due</span>
+                  <input name="due_date" type="date" value={addDueDate} onChange={(e) => setAddDueDate(e.target.value)} className="rounded-lg border border-[var(--card-border)] bg-[var(--bg-primary)] px-2.5 py-2 text-sm text-[var(--text-primary)]" aria-label="Due date" />
                 </label>
-                <select name="category" className="rounded-lg border border-neuro-border bg-neuro-dark px-2 py-2.5 text-sm text-neuro-silver" aria-label="Category">
+                <select name="category" className="rounded-lg border border-[var(--card-border)] bg-[var(--bg-primary)] px-2 py-2.5 text-sm text-[var(--text-primary)]" aria-label="Category">
                   <option value="">Category</option>
                   <option value="work">Work</option>
                   <option value="personal">Personal</option>
                 </select>
-                <select name="recurrence" className="rounded-lg border border-neuro-border bg-neuro-dark px-2 py-2.5 text-sm text-neuro-silver" aria-label="Recurrence">
+                <select name="recurrence" className="rounded-lg border border-[var(--card-border)] bg-[var(--bg-primary)] px-2 py-2.5 text-sm text-[var(--text-primary)]" aria-label="Recurrence">
                   <option value="">Once</option>
                   <option value="daily">Daily</option>
                   <option value="weekly">Weekly</option>
                   <option value="monthly">Monthly</option>
                 </select>
                 <label className="flex flex-col gap-1">
-                  <span className="text-xs font-medium text-neuro-muted">Energy</span>
-                  <select name="energy" className="rounded-lg border border-neuro-border bg-neuro-dark px-2 py-2.5 text-sm text-neuro-silver" aria-label="Energy (1-10)">
+                  <span className="text-xs font-medium text-[var(--text-muted)]">Energy</span>
+                  <select name="energy" className="rounded-lg border border-[var(--card-border)] bg-[var(--bg-primary)] px-2 py-2.5 text-sm text-[var(--text-primary)]" aria-label="Energy (1-10)">
                     <option value="">—</option>
                     {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((n) => (
                       <option key={n} value={n}>{n}</option>
@@ -428,20 +428,20 @@ export function TaskList({ date, tasks: initialTasks, completedToday, mode, carr
                 <button type="submit" disabled={pending} className="btn-primary rounded-lg px-4 py-2.5 text-sm font-medium disabled:opacity-50">Add</button>
               </div>
               {showRoutine && (
-                <div className="grid grid-cols-2 gap-3 rounded-lg border border-neuro-border/50 bg-neuro-dark/50 p-3 sm:grid-cols-4">
+                <div className="grid grid-cols-2 gap-3 rounded-lg border border-[var(--card-border)]/50 bg-[var(--bg-primary)]/50 p-3 sm:grid-cols-4">
                   <div>
-                    <label className="block text-xs font-medium text-neuro-muted">Repeat on (weekly)</label>
+                    <label className="block text-xs font-medium text-[var(--text-muted)]">Repeat on (weekly)</label>
                     <div className="mt-1 flex flex-wrap gap-1">
                       {[1, 2, 3, 4, 5, 6, 7].map((d) => (
-                        <button key={d} type="button" onClick={() => toggleWeekday(d)} className={`rounded px-2 py-1 text-xs ${weekdays.includes(d) ? "bg-neuro-blue/20 text-neuro-blue" : "bg-neuro-surface text-neuro-muted hover:text-neuro-silver"}`}>
+                        <button key={d} type="button" onClick={() => toggleWeekday(d)} className={`rounded px-2 py-1 text-xs ${weekdays.includes(d) ? "bg-[var(--accent-focus)]/20 text-[var(--accent-focus)]" : "bg-[var(--bg-surface)] text-[var(--text-muted)] hover:text-[var(--text-primary)]"}`}>
                           {WEEKDAY_LABELS[d]}
                         </button>
                       ))}
                     </div>
                   </div>
                   <label className="flex flex-col gap-1">
-                    <span className="text-xs font-medium text-neuro-muted">Impact (1–3)</span>
-                    <select name="impact" className="rounded border border-neuro-border bg-neuro-dark px-2 py-1.5 text-sm text-neuro-silver">
+                    <span className="text-xs font-medium text-[var(--text-muted)]">Impact (1–3)</span>
+                    <select name="impact" className="rounded border border-[var(--card-border)] bg-[var(--bg-primary)] px-2 py-1.5 text-sm text-[var(--text-primary)]">
                       <option value="">—</option>
                       <option value="1">1 Low</option>
                       <option value="2">2 Medium</option>
@@ -449,8 +449,8 @@ export function TaskList({ date, tasks: initialTasks, completedToday, mode, carr
                     </select>
                   </label>
                   <label className="flex flex-col gap-1">
-                    <span className="text-xs font-medium text-neuro-muted">Urgency (1–3)</span>
-                    <select name="urgency" className="rounded border border-neuro-border bg-neuro-dark px-2 py-1.5 text-sm text-neuro-silver">
+                    <span className="text-xs font-medium text-[var(--text-muted)]">Urgency (1–3)</span>
+                    <select name="urgency" className="rounded border border-[var(--card-border)] bg-[var(--bg-primary)] px-2 py-1.5 text-sm text-[var(--text-primary)]">
                       <option value="">—</option>
                       <option value="1">1 Low</option>
                       <option value="2">2 Medium</option>
@@ -459,8 +459,8 @@ export function TaskList({ date, tasks: initialTasks, completedToday, mode, carr
                   </label>
                   <div className="flex flex-wrap gap-2">
                     <label className="flex flex-1 min-w-[80px] flex-col gap-1">
-                      <span className="text-xs font-medium text-neuro-muted">Energy (1–10)</span>
-                      <select name="energy" className="rounded border border-neuro-border bg-neuro-dark px-2 py-1.5 text-sm text-neuro-silver">
+                      <span className="text-xs font-medium text-[var(--text-muted)]">Energy (1–10)</span>
+                      <select name="energy" className="rounded border border-[var(--card-border)] bg-[var(--bg-primary)] px-2 py-1.5 text-sm text-[var(--text-primary)]">
                         <option value="">—</option>
                         {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((n) => (
                           <option key={n} value={n}>{n}</option>
@@ -468,8 +468,8 @@ export function TaskList({ date, tasks: initialTasks, completedToday, mode, carr
                       </select>
                     </label>
                     <label className="flex flex-1 min-w-[80px] flex-col gap-1">
-                      <span className="text-xs font-medium text-neuro-muted">Mental (1–10)</span>
-                      <select name="mental_load" className="rounded border border-neuro-border bg-neuro-dark px-2 py-1.5 text-sm text-neuro-silver">
+                      <span className="text-xs font-medium text-[var(--text-muted)]">Mental (1–10)</span>
+                      <select name="mental_load" className="rounded border border-[var(--card-border)] bg-[var(--bg-primary)] px-2 py-1.5 text-sm text-[var(--text-primary)]">
                         <option value="">—</option>
                         {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((n) => (
                           <option key={n} value={n}>{n}</option>
@@ -477,8 +477,8 @@ export function TaskList({ date, tasks: initialTasks, completedToday, mode, carr
                       </select>
                     </label>
                     <label className="flex flex-1 min-w-[80px] flex-col gap-1">
-                      <span className="text-xs font-medium text-neuro-muted">Social (1–10)</span>
-                      <select name="social_load" className="rounded border border-neuro-border bg-neuro-dark px-2 py-1.5 text-sm text-neuro-silver">
+                      <span className="text-xs font-medium text-[var(--text-muted)]">Social (1–10)</span>
+                      <select name="social_load" className="rounded border border-[var(--card-border)] bg-[var(--bg-primary)] px-2 py-1.5 text-sm text-[var(--text-primary)]">
                         <option value="">—</option>
                         {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((n) => (
                           <option key={n} value={n}>{n}</option>
@@ -486,8 +486,8 @@ export function TaskList({ date, tasks: initialTasks, completedToday, mode, carr
                       </select>
                     </label>
                     <label className="flex flex-1 min-w-[80px] flex-col gap-1">
-                      <span className="text-xs font-medium text-neuro-muted">Priority (1–5)</span>
-                      <select name="priority" className="rounded border border-neuro-border bg-neuro-dark px-2 py-1.5 text-sm text-neuro-silver">
+                      <span className="text-xs font-medium text-[var(--text-muted)]">Priority (1–5)</span>
+                      <select name="priority" className="rounded border border-[var(--card-border)] bg-[var(--bg-primary)] px-2 py-1.5 text-sm text-[var(--text-primary)]">
                         <option value="">—</option>
                         {[1, 2, 3, 4, 5].map((n) => (
                           <option key={n} value={n}>{n}</option>
@@ -500,11 +500,11 @@ export function TaskList({ date, tasks: initialTasks, completedToday, mode, carr
             </form>
           </div>
         )}
-        {!canAdd && <p className="mt-2 text-xs text-neuro-muted">Finish or reschedule the 2 tasks above before adding more.</p>}
+        {!canAdd && <p className="mt-2 text-xs text-[var(--text-muted)]">Finish or reschedule the 2 tasks above before adding more.</p>}
 
         {canAdd && (
           <div className="mt-3 flex justify-end">
-            <button type="button" onClick={() => setQuickAddOpen(true)} className="rounded-full bg-neuro-blue px-4 py-2 text-sm font-medium text-white hover:bg-neuro-blue/90">
+            <button type="button" onClick={() => setQuickAddOpen(true)} className="rounded-full bg-[var(--accent-focus)] px-4 py-2 text-sm font-medium text-white hover:opacity-90">
               + Add mission (N)
             </button>
           </div>
@@ -539,11 +539,11 @@ export function TaskList({ date, tasks: initialTasks, completedToday, mode, carr
         <QuickAddModal open={quickAddOpen} onClose={() => setQuickAddOpen(false)} date={date} onAdded={() => setQuickAddOpen(false)} />
 
         {completedToday.length > 0 && (
-          <div className="mt-6 border-t border-neuro-border pt-4">
-            <h3 className="mb-2 text-xs font-semibold uppercase tracking-wide text-neuro-muted">Done today</h3>
+          <div className="mt-6 border-t border-[var(--card-border)] pt-4">
+            <h3 className="mb-2 text-xs font-semibold uppercase tracking-wide text-[var(--text-muted)]">Done today</h3>
             <ul className="space-y-1">
               {(completedToday as ExtendedTask[]).map((t) => (
-                <li key={t.id} className="flex items-center gap-2 rounded-lg border border-neuro-border/50 bg-neuro-surface/30 px-3 py-2 text-sm text-neuro-muted line-through">
+                <li key={t.id} className="flex items-center gap-2 rounded-lg border border-[var(--card-border)]/50 bg-[var(--bg-surface)]/30 px-3 py-2 text-sm text-[var(--text-muted)] line-through">
                   <button
                     type="button"
                     onClick={() => handleUncomplete(t.id)}
@@ -555,7 +555,7 @@ export function TaskList({ date, tasks: initialTasks, completedToday, mode, carr
                     <span className="text-sm">✓</span>
                   </button>
                   {t.title}
-                  {t.category && <span className="rounded bg-neuro-surface px-1.5 py-0.5 text-[10px]">{t.category}</span>}
+                  {t.category && <span className="rounded bg-[var(--bg-surface)] px-1.5 py-0.5 text-[10px]">{t.category}</span>}
                 </li>
               ))}
             </ul>

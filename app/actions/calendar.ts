@@ -90,7 +90,7 @@ export async function addManualEvent(params: {
   });
   if (error) throw new Error(error.message);
   revalidatePath("/dashboard");
-  revalidatePath("/dashboard/tasks");
+  revalidatePath("/tasks");
   revalidatePath("/budget");
 }
 
@@ -117,7 +117,7 @@ export async function deleteCalendarEvent(id: string) {
   const { error } = await supabase.from("calendar_events").delete().eq("id", id).eq("user_id", user.id);
   if (error) throw new Error(error.message);
   revalidatePath("/dashboard");
-  revalidatePath("/dashboard/tasks");
+  revalidatePath("/tasks");
   revalidatePath("/budget");
 }
 

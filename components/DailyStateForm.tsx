@@ -36,10 +36,10 @@ function SliderRow({
 }) {
   const pct = ((value - min) / (max - min)) * 100;
   return (
-    <div className="rounded-xl bg-neuro-dark/50 px-3 py-3">
+    <div className="rounded-xl bg-[var(--bg-primary)]/50 px-3 py-3">
       <div className="flex items-center justify-between text-sm">
-        <span className="font-medium text-neuro-silver">{label}</span>
-        <span className="tabular-nums font-medium text-neuro-blue">{value}</span>
+        <span className="font-medium text-[var(--text-primary)]">{label}</span>
+        <span className="tabular-nums font-medium text-[var(--accent-focus)]">{value}</span>
       </div>
       <input
         type="range"
@@ -47,9 +47,9 @@ function SliderRow({
         max={max}
         value={value}
         onChange={(e) => onChange(Number(e.target.value))}
-        className="daily-state-slider mt-2 h-2.5 w-full cursor-pointer appearance-none rounded-full bg-neuro-border focus:outline-none focus:ring-2 focus:ring-neuro-blue focus:ring-offset-2 focus:ring-offset-neuro-surface"
+        className="daily-state-slider mt-2 h-2.5 w-full cursor-pointer appearance-none rounded-full bg-[var(--card-border)] focus:outline-none focus:ring-2 focus:ring-[var(--accent-focus)] focus:ring-offset-2 focus:ring-offset-[var(--bg-surface)]"
         style={{
-          background: `linear-gradient(to right, #58a6ff 0%, #58a6ff ${pct}%, var(--neuro-border) ${pct}%, var(--neuro-border) 100%)`,
+          background: `linear-gradient(to right, var(--accent-focus) 0%, var(--accent-focus) ${pct}%, var(--card-border) ${pct}%, var(--card-border) 100%)`,
         }}
         aria-label={`${label}: ${value} out of ${max}`}
       />
@@ -106,10 +106,10 @@ export function DailyStateForm({ date, initial }: Props) {
   return (
     <section className="daily-state-card overflow-hidden" aria-labelledby="daily-state-heading">
       <div className="daily-state-header">
-        <h2 id="daily-state-heading" className="text-lg font-semibold text-neuro-silver">
+        <h2 id="daily-state-heading" className="text-lg font-semibold text-[var(--text-primary)]">
           How are you today?
         </h2>
-        <p className="mt-2 text-sm leading-relaxed text-neuro-muted/95">{summary}</p>
+        <p className="mt-2 text-sm leading-relaxed text-[var(--text-muted)]/95">{summary}</p>
       </div>
       <form onSubmit={handleSubmit} className="p-5">
         <div className="space-y-5">
@@ -130,9 +130,9 @@ export function DailyStateForm({ date, initial }: Props) {
             />
           ))}
         </div>
-        <div className="mt-6 flex flex-wrap items-center gap-4 border-t border-neuro-border/80 pt-5">
+        <div className="mt-6 flex flex-wrap items-center gap-4 border-t border-[var(--card-border)]/80 pt-5">
           <div className="flex items-center gap-2">
-            <label htmlFor="daily-sleep" className="text-sm font-medium text-neuro-muted">
+            <label htmlFor="daily-sleep" className="text-sm font-medium text-[var(--text-muted)]">
               Sleep (hours)
             </label>
             <input
@@ -143,7 +143,7 @@ export function DailyStateForm({ date, initial }: Props) {
               step={0.5}
               value={sleep}
               onChange={(e) => setSleep(e.target.value)}
-              className="w-20 rounded-lg border border-neuro-border bg-neuro-dark px-3 py-2.5 text-center text-sm tabular-nums text-neuro-silver placeholder-neuro-muted focus:border-neuro-blue focus:outline-none focus:ring-2 focus:ring-neuro-blue/30"
+              className="w-20 rounded-lg border border-[var(--card-border)] bg-[var(--bg-primary)] px-3 py-2.5 text-center text-sm tabular-nums text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:border-[var(--accent-focus)] focus:outline-none focus:ring-2 focus:ring-[var(--accent-focus)]/30"
               placeholder="7"
               aria-label="Sleep hours"
             />

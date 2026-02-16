@@ -66,26 +66,26 @@ export function SavingsGoalCard({
 
   return (
     <div className="card-modern overflow-hidden p-0">
-      <div className="flex items-start justify-between border-b border-neuro-border px-4 py-3">
+      <div className="flex items-start justify-between border-b border-[var(--card-border)] px-4 py-3">
         <div>
-          <h3 className="font-semibold text-neuro-silver">{goal.name}</h3>
-          <p className="mt-0.5 text-sm text-neuro-muted">
+          <h3 className="font-semibold text-[var(--text-primary)]">{goal.name}</h3>
+          <p className="mt-0.5 text-sm text-[var(--text-muted)]">
             {symbol}{(goal.current_cents / 100).toFixed(2)} / {symbol}{(goal.target_cents / 100).toFixed(2)}
             {goal.deadline && ` · Deadline ${goal.deadline}`}
           </p>
           {weeklyReq !== null && weeklyReq > 0 && (
-            <p className="mt-1 text-xs font-medium text-neuro-blue">
+            <p className="mt-1 text-xs font-medium text-[var(--accent-focus)]">
               ~{symbol}{(weeklyReq / 100).toFixed(2)}/week to reach goal
               {weeksLeft !== null && ` · ${weeksLeft} week${weeksLeft !== 1 ? "s" : ""} left`}
             </p>
           )}
           {weeksLeft !== null && weeklyReq !== null && weeklyReq > 0 && (
-            <p className="mt-0.5 text-xs text-neuro-muted">
+            <p className="mt-0.5 text-xs text-[var(--text-muted)]">
               {isReached ? "Goal reached!" : (goal.current_cents + weeklyReq * weeksLeft >= goal.target_cents ? "On track" : "Add more to stay on track")}
             </p>
           )}
           {contributedThisMonthCents > 0 && (
-            <p className="mt-0.5 text-xs text-neuro-muted">Added this month: {symbol}{(contributedThisMonthCents / 100).toFixed(2)}</p>
+            <p className="mt-0.5 text-xs text-[var(--text-muted)]">Added this month: {symbol}{(contributedThisMonthCents / 100).toFixed(2)}</p>
           )}
         </div>
         <div className="flex items-center gap-1">
@@ -103,7 +103,7 @@ export function SavingsGoalCard({
             type="button"
             onClick={handleCancelGoal}
             disabled={pending}
-            className="rounded-lg px-2 py-1 text-xs text-neuro-muted hover:bg-neuro-border/50 transition"
+            className="rounded-lg px-2 py-1 text-xs text-[var(--text-muted)] hover:bg-[var(--card-border)]/50 transition"
           >
             Archive
           </button>
@@ -111,16 +111,16 @@ export function SavingsGoalCard({
             type="button"
             onClick={handleDelete}
             disabled={pending}
-            className="rounded-lg px-2 py-1 text-xs text-neuro-muted hover:bg-red-500/10 hover:text-red-400 transition"
+            className="rounded-lg px-2 py-1 text-xs text-[var(--text-muted)] hover:bg-red-500/10 hover:text-red-400 transition"
           >
             Delete
           </button>
         </div>
       </div>
       <div className="p-4">
-        <div className="h-2.5 w-full overflow-hidden rounded-full bg-neuro-border">
+        <div className="h-2.5 w-full overflow-hidden rounded-full bg-[var(--card-border)]">
           <div
-            className="h-full rounded-full bg-neuro-blue transition-all duration-300"
+            className="h-full rounded-full bg-[var(--accent-focus)] transition-all duration-300"
             style={{ width: `${pct}%` }}
           />
         </div>
@@ -132,13 +132,13 @@ export function SavingsGoalCard({
               step="0.01"
               min="0.01"
               placeholder="e.g. 50"
-              className="w-28 rounded-lg border border-neuro-border bg-neuro-dark px-3 py-2 text-sm text-neuro-silver placeholder-neuro-muted focus:border-neuro-blue focus:outline-none focus:ring-2 focus:ring-neuro-blue/30"
+              className="w-28 rounded-lg border border-[var(--card-border)] bg-[var(--bg-primary)] px-3 py-2 text-sm text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:border-[var(--accent-focus)] focus:outline-none focus:ring-2 focus:ring-[var(--accent-focus)]/30"
             />
             <input
               name="note"
               type="text"
               placeholder="Note (optional)"
-              className="w-32 rounded-lg border border-neuro-border bg-neuro-dark px-3 py-2 text-sm text-neuro-silver placeholder-neuro-muted focus:border-neuro-blue focus:outline-none focus:ring-2 focus:ring-neuro-blue/30"
+              className="w-32 rounded-lg border border-[var(--card-border)] bg-[var(--bg-primary)] px-3 py-2 text-sm text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:border-[var(--accent-focus)] focus:outline-none focus:ring-2 focus:ring-[var(--accent-focus)]/30"
             />
             <button type="submit" disabled={pending} className="btn-primary rounded-lg px-3 py-2 text-sm font-medium disabled:opacity-50">
               Add

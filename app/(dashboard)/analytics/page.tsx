@@ -45,8 +45,8 @@ export default async function AnalyticsPage() {
       </div>
 
       {summary && (
-        <section className="card-modern overflow-hidden p-0">
-          <div className="border-b border-[var(--neuro-border)] px-4 py-3">
+        <section className="card-simple overflow-hidden p-0">
+          <div className="border-b border-[var(--card-border)] px-4 py-3">
             <h2 className="text-base font-semibold text-[var(--text-primary)]">This week</h2>
             <p className="text-xs text-[var(--text-muted)]">{weekStart} – {weekEnd}</p>
           </div>
@@ -84,7 +84,7 @@ export default async function AnalyticsPage() {
       )}
 
       {lastWeekSummary && summary && (
-        <section className="card-modern p-4">
+        <section className="card-simple p-4">
           <h2 className="text-base font-semibold text-[var(--text-primary)] mb-3">Vs last week</h2>
           <ul className="space-y-2 text-sm">
             <li className="flex justify-between">
@@ -106,11 +106,11 @@ export default async function AnalyticsPage() {
       )}
 
       {thisWeekDays.length > 0 && (
-        <section className="card-modern overflow-hidden p-0">
-          <div className="border-b border-[var(--neuro-border)] px-4 py-3">
+        <section className="card-simple overflow-hidden p-0">
+          <div className="border-b border-[var(--card-border)] px-4 py-3">
             <h2 className="text-base font-semibold text-[var(--text-primary)]">Day by day</h2>
           </div>
-          <ul className="divide-y divide-[var(--neuro-border)]">
+          <ul className="divide-y divide-[var(--card-border)]">
             {thisWeekDays.map((d) => (
               <li key={d.date} className="flex items-center justify-between px-4 py-3 text-sm">
                 <span className="text-[var(--text-muted)]">{d.date}</span>

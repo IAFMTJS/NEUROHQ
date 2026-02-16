@@ -13,8 +13,8 @@ const labels: Record<AppMode, string> = {
 export function ModeBanner({ mode }: Props) {
   if (mode === "normal" || !labels[mode]) return null;
   return (
-    <div className="card-modern-accent flex items-start gap-3 px-4 py-3.5 text-sm text-neuro-silver">
-      <span className="mt-0.5 h-2 w-2 shrink-0 rounded-full bg-neuro-blue" aria-hidden />
+    <div className="card-simple flex items-start gap-3 px-4 py-3.5 text-sm text-[var(--text-primary)]">
+      <span className="mt-0.5 h-2 w-2 shrink-0 rounded-full bg-[var(--accent-focus)]" aria-hidden />
       <span>{labels[mode]}</span>
     </div>
   );

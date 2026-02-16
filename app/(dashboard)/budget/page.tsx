@@ -83,13 +83,13 @@ export default async function BudgetPage({ searchParams }: Props) {
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-neuro-silver">Budget</h1>
-          <p className="mt-1 text-sm text-neuro-muted">Savings goals, entries, and spending awareness.</p>
+          <h1 className="text-2xl font-bold tracking-tight text-[var(--text-primary)]">Budget</h1>
+          <p className="mt-1 text-sm text-[var(--text-muted)]">Savings goals, entries, and spending awareness.</p>
         </div>
         <div className="flex items-center gap-3">
           <BudgetHistorySelector currentMonth={monthParam} />
           <ExportBudgetCsvButton />
-          <Link href="/strategy" className="text-sm font-medium text-neuro-blue hover:underline">Strategy →</Link>
+          <Link href="/strategy" className="text-sm font-medium text-[var(--accent-focus)] hover:underline">Strategy →</Link>
         </div>
       </div>
 
@@ -105,7 +105,7 @@ export default async function BudgetPage({ searchParams }: Props) {
       />
 
       {unplannedSummary.count > 0 && (
-        <div className="rounded-lg border border-neuro-border bg-neuro-dark/40 px-4 py-2 text-sm text-neuro-muted">
+        <div className="rounded-lg border border-[var(--card-border)] bg-[var(--bg-primary)]/40 px-4 py-2 text-sm text-[var(--text-muted)]">
           Unplanned expenses this week: {unplannedSummary.count} ({(unplannedSummary.totalCents / 100).toFixed(2)} {currency})
         </div>
       )}
@@ -113,18 +113,18 @@ export default async function BudgetPage({ searchParams }: Props) {
       <FrozenPurchaseCard activeFrozen={activeFrozen} readyForAction={readyForAction} currency={currency} goals={goals} />
 
       <section className="card-modern overflow-hidden p-0">
-        <div className="border-b border-neuro-border px-4 py-3">
-          <h2 className="text-base font-semibold text-neuro-silver">Savings goals</h2>
-          <p className="mt-0.5 text-xs text-neuro-muted">Track progress toward your targets. Savings are reserved from your budget (pay savings first).</p>
+        <div className="border-b border-[var(--card-border)] px-4 py-3">
+          <h2 className="text-base font-semibold text-[var(--text-primary)]">Savings goals</h2>
+          <p className="mt-0.5 text-xs text-[var(--text-muted)]">Track progress toward your targets. Savings are reserved from your budget (pay savings first).</p>
         </div>
         <div className="p-4">
           <AddSavingsGoalForm />
           <div className="mt-4 space-y-4">
             {goals.length === 0 ? (
-              <div id="savings-goals-empty" className="rounded-xl border border-dashed border-neuro-border bg-neuro-dark/40 px-4 py-6 text-center">
-                <p className="text-sm text-neuro-muted">No savings goals yet.</p>
-                <p className="mt-1 text-xs text-neuro-muted">Set a target and track progress.</p>
-                <p className="mt-2 text-sm font-medium text-neuro-silver">Add your first goal above ↑</p>
+              <div id="savings-goals-empty" className="rounded-xl border border-dashed border-[var(--card-border)] bg-[var(--bg-primary)]/40 px-4 py-6 text-center">
+                <p className="text-sm text-[var(--text-muted)]">Nog geen spaardoelen.</p>
+                <p className="mt-1 text-xs text-[var(--text-muted)]">Stel een doel in en volg je voortgang.</p>
+                <p className="mt-2 text-sm font-medium text-[var(--text-primary)]">Voeg hierboven je eerste doel toe ↑</p>
               </div>
             ) : (
               goals.map((g) => (
@@ -144,9 +144,9 @@ export default async function BudgetPage({ searchParams }: Props) {
       <RecurringBudgetCard templates={recurringTemplates} currency={currency} />
 
       <section id="add-entry" className="card-modern overflow-hidden p-0">
-        <div className="border-b border-neuro-border px-4 py-3">
-          <h2 className="text-base font-semibold text-neuro-silver">Add entry</h2>
-          <p className="mt-0.5 text-xs text-neuro-muted">Log income or expenses.</p>
+        <div className="border-b border-[var(--card-border)] px-4 py-3">
+          <h2 className="text-base font-semibold text-[var(--text-primary)]">Add entry</h2>
+          <p className="mt-0.5 text-xs text-[var(--text-muted)]">Log income or expenses.</p>
         </div>
         <div className="p-4">
           <AddBudgetEntryForm date={today} currency={currency} />
@@ -154,16 +154,16 @@ export default async function BudgetPage({ searchParams }: Props) {
       </section>
 
       <section className="card-modern overflow-hidden p-0">
-        <div className="border-b border-neuro-border px-4 py-3">
-          <h2 className="text-base font-semibold text-neuro-silver">Entries & frozen</h2>
-          <p className="mt-0.5 text-xs text-neuro-muted">Recent activity and 24h freezes.</p>
+        <div className="border-b border-[var(--card-border)] px-4 py-3">
+          <h2 className="text-base font-semibold text-[var(--text-primary)]">Entries & frozen</h2>
+          <p className="mt-0.5 text-xs text-[var(--text-muted)]">Recent activity and 24h freezes.</p>
         </div>
         <div className="p-4">
           {entries.length === 0 ? (
-            <div className="rounded-xl border border-dashed border-neuro-border bg-neuro-dark/40 px-4 py-6 text-center">
-              <p className="text-sm text-neuro-muted">No entries yet.</p>
-              <p className="mt-1 text-xs text-neuro-muted">Log income and expenses to see them here.</p>
-              <a href="#add-entry" className="mt-2 inline-block text-sm font-medium text-neuro-blue hover:underline">Log your first entry ↑</a>
+            <div className="rounded-xl border border-dashed border-[var(--card-border)] bg-[var(--bg-primary)]/40 px-4 py-6 text-center">
+              <p className="text-sm text-[var(--text-muted)]">Nog geen boekingen.</p>
+              <p className="mt-1 text-xs text-[var(--text-muted)]">Log inkomsten en uitgaven om ze hier te zien.</p>
+              <a href="#add-entry" className="mt-2 inline-block rounded-lg bg-[var(--accent-focus)]/20 px-3 py-2 text-sm font-medium text-[var(--text-primary)] hover:bg-[var(--accent-focus)]/30">Eerste boeking toevoegen ↑</a>
             </div>
           ) : (
             <BudgetEntryList entries={entries} currency={currency} goals={goals} />
@@ -173,9 +173,9 @@ export default async function BudgetPage({ searchParams }: Props) {
 
       {alternatives.length > 0 && (
         <section className="card-modern-accent overflow-hidden p-0">
-          <div className="border-b border-neuro-border/80 px-4 py-3">
-            <h2 className="text-base font-semibold text-neuro-silver">Suggestions</h2>
-            <p className="mt-0.5 text-xs text-neuro-muted">Ideas based on your choices.</p>
+          <div className="border-b border-[var(--card-border)]/80 px-4 py-3">
+            <h2 className="text-base font-semibold text-[var(--text-primary)]">Suggestions</h2>
+            <p className="mt-0.5 text-xs text-[var(--text-muted)]">Ideas based on your choices.</p>
           </div>
           <div className="p-4">
             <AlternativesList alternatives={alternatives} goals={goals} currency={currency} />

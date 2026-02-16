@@ -33,3 +33,15 @@ export function getDayOfYearFromDateString(dateStr: string): number {
   const end = new Date(y, m - 1, d);
   return Math.ceil((end.getTime() - start.getTime()) / 86400000);
 }
+
+/** Whether current local hour is inside quiet window [start, end). start/end are "HH:MM". Overnight: e.g. "22:00"-"08:00" = quiet when hour >= 22 or hour < 8. */
+export function isInQuietHours(localHour: number, start: string | null, end: string | null): boolean {
+  if (!start || !end) return false;
+  const [sH, sM] = start.split(":").map(Number);
+  const [eH, eM] = end.split(":").map(Number);
+  const startMin = sH * 60 + (sM || 0);
+  const endMin = eH * 60 + (eM || 0);
+  const nowMin = localHour * 60;
+  if (startMin > endMin) return nowMin >= startMin || nowMin < endMin;
+  return nowMin >= startMin && nowMin < endMin;
+}

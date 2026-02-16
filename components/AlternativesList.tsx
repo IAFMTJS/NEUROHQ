@@ -50,12 +50,12 @@ export function AlternativesList({
   return (
     <div className="space-y-4">
       {activeGoals.length > 0 && (
-        <form onSubmit={handleAddToGoal} className="flex flex-wrap items-end gap-3 rounded-lg border border-neuro-border bg-neuro-dark/40 p-3">
-          <span className="text-xs font-medium text-neuro-muted w-full">Quick add to goal</span>
+        <form onSubmit={handleAddToGoal} className="flex flex-wrap items-end gap-3 rounded-lg border border-[var(--card-border)] bg-[var(--bg-primary)]/40 p-3">
+          <span className="text-xs font-medium text-[var(--text-muted)] w-full">Quick add to goal</span>
           <select
             value={goalId}
             onChange={(e) => setGoalId(e.target.value)}
-            className="rounded-lg border border-neuro-border bg-neuro-dark px-3 py-2 text-sm text-neuro-silver focus:border-neuro-blue focus:outline-none"
+            className="rounded-lg border border-[var(--card-border)] bg-[var(--bg-primary)] px-3 py-2 text-sm text-[var(--text-primary)] focus:border-[var(--accent-focus)] focus:outline-none"
           >
             <option value="">Select goal</option>
             {activeGoals.map((g) => (
@@ -69,7 +69,7 @@ export function AlternativesList({
             value={amount}
             onChange={(e) => setAmount(e.target.value)}
             placeholder={`Amount (${symbol})`}
-            className="w-28 rounded-lg border border-neuro-border bg-neuro-dark px-3 py-2 text-sm text-neuro-silver placeholder-neuro-muted focus:border-neuro-blue focus:outline-none"
+            className="w-28 rounded-lg border border-[var(--card-border)] bg-[var(--bg-primary)] px-3 py-2 text-sm text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:border-[var(--accent-focus)] focus:outline-none"
           />
           <button type="submit" disabled={pending} className="btn-primary rounded-lg px-3 py-2 text-sm font-medium disabled:opacity-50">
             Add to goal
@@ -82,14 +82,14 @@ export function AlternativesList({
           {alternatives.map((a) => (
             <li
               key={a.id}
-              className="flex items-center justify-between rounded border border-neutral-700 bg-neuro-surface px-3 py-2 text-sm text-neuro-silver"
+              className="flex items-center justify-between rounded border border-neutral-700 bg-[var(--bg-surface)] px-3 py-2 text-sm text-[var(--text-primary)]"
             >
               <span>{a.suggestion_text}</span>
               <button
                 type="button"
                 onClick={() => startTransition(() => dismissAlternative(a.id))}
                 disabled={pending}
-                className="text-xs text-neutral-500 hover:text-neuro-silver focus:outline-none focus:underline"
+                className="text-xs text-neutral-500 hover:text-[var(--text-primary)] focus:outline-none focus:underline"
                 aria-label="Dismiss suggestion"
               >
                 Dismiss

@@ -61,10 +61,8 @@ export const EMOTION_2D_PATHS_INDUSTRIAL: Record<EmotionKey, string> = {
 /** Public path for Industrial theme background image */
 export const INDUSTRIAL_THEME_BACKGROUND_PATH = "/Industrial Theme/Background.png";
 
-/** Returns the 2D emotion image path for the current theme. */
-export function getEmotionImagePath(emotion: EmotionKey, theme: ThemeId): string {
-  if (theme === "girly") return EMOTION_2D_PATHS_GIRLY[emotion];
-  if (theme === "industrial") return EMOTION_2D_PATHS_INDUSTRIAL[emotion];
+/** Returns the 2D emotion image path. Commander v2 only – always normal set. */
+export function getEmotionImagePath(emotion: EmotionKey, _theme?: ThemeId): string {
   return EMOTION_2D_PATHS[emotion];
 }
 

@@ -36,12 +36,12 @@ export function OnboardingBanner() {
   if (step === null || step < 0) return null;
 
   return (
-    <div className="card-modern-accent mb-2 px-4 py-3 text-sm text-neuro-silver">
+    <div className="card-modern-accent mb-2 px-4 py-3 text-sm text-[var(--text-primary)]">
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0 flex-1">
           {step === 0 && (
             <>
-              <p className="mb-2 font-medium text-neuro-blue">Welcome. Step 1: Set your daily state</p>
+              <p className="mb-2 font-medium text-[var(--accent-focus)]">Welcome. Step 1: Set your daily state</p>
               <p className="mb-2 text-neutral-300">Fill in energy, focus, and sensory load in the form below so your dashboard adapts to you.</p>
               <button
                 type="button"
@@ -54,7 +54,7 @@ export function OnboardingBanner() {
           )}
           {step === 1 && (
             <>
-              <p className="mb-2 font-medium text-neuro-blue">Step 2: Add your first task or goal</p>
+              <p className="mb-2 font-medium text-[var(--accent-focus)]">Step 2: Add your first task or goal</p>
               <p className="mb-2 text-neutral-300">You’re all set. Add a task for today or set a savings goal to get started.</p>
               <div className="flex flex-wrap gap-2">
                 <Link href="/dashboard#tasks" className="btn-primary rounded-xl px-3 py-1.5 text-sm">
@@ -66,7 +66,7 @@ export function OnboardingBanner() {
                 <button
                   type="button"
                   onClick={() => advance(-1)}
-                  className="text-neutral-500 hover:text-neuro-silver"
+                  className="text-neutral-500 hover:text-[var(--text-primary)]"
                 >
                   Skip
                 </button>

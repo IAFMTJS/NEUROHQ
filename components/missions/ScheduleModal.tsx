@@ -51,19 +51,19 @@ export function ScheduleModal({
 
   return (
     <Modal open={open} onClose={onClose} title="Schedule" showBranding={false}>
-      {taskTitle && <p className="mb-2 text-sm text-neuro-muted">{taskTitle}</p>}
+      {taskTitle && <p className="mb-2 text-sm text-[var(--text-muted)]">{taskTitle}</p>}
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
-          <label className="block text-xs font-medium text-neuro-muted">Due date</label>
+          <label className="block text-xs font-medium text-[var(--text-muted)]">Due date</label>
           <input
             type="date"
             value={date}
             onChange={(e) => setDate(e.target.value)}
-            className="mt-1 w-full rounded-lg border border-neuro-border bg-neuro-dark px-3 py-2.5 text-sm text-neuro-silver"
+            className="mt-1 w-full rounded-lg border border-[var(--card-border)] bg-[var(--bg-primary)] px-3 py-2.5 text-sm text-[var(--text-primary)]"
           />
         </div>
         <div>
-          <p className="mb-2 text-xs font-medium text-neuro-muted">Quick</p>
+          <p className="mb-2 text-xs font-medium text-[var(--text-muted)]">Quick</p>
           <div className="flex flex-wrap gap-2">
             {shortcuts.map(({ label, date: d }) => (
               <button
@@ -71,7 +71,7 @@ export function ScheduleModal({
                 type="button"
                 onClick={() => setDate(d)}
                 className={`rounded-lg border px-3 py-1.5 text-xs font-medium ${
-                  date === d ? "border-neuro-blue bg-neuro-blue/20 text-neuro-blue" : "border-neuro-border text-neuro-silver hover:bg-neuro-surface"
+                  date === d ? "border-[var(--accent-focus)] bg-[var(--accent-focus)]/20 text-[var(--accent-focus)]" : "border-[var(--card-border)] text-[var(--text-primary)] hover:bg-[var(--bg-surface)]"
                 }`}
               >
                 {label}
@@ -80,7 +80,7 @@ export function ScheduleModal({
           </div>
         </div>
         <div className="flex justify-end gap-2">
-          <button type="button" onClick={onClose} className="rounded-lg border border-neuro-border px-4 py-2 text-sm font-medium text-neuro-silver hover:bg-neuro-surface">
+          <button type="button" onClick={onClose} className="rounded-lg border border-[var(--card-border)] px-4 py-2 text-sm font-medium text-[var(--text-primary)] hover:bg-[var(--bg-surface)]">
             Cancel
           </button>
           <button type="submit" disabled={loading} className="btn-primary rounded-lg px-4 py-2 text-sm font-medium disabled:opacity-50">

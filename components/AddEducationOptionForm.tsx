@@ -34,7 +34,7 @@ export function AddEducationOptionForm() {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="flex flex-wrap items-end gap-2 rounded-lg border border-neutral-700 bg-neuro-surface p-4">
+    <form onSubmit={handleSubmit} className="flex flex-wrap items-end gap-2 rounded-lg border border-neutral-700 bg-[var(--bg-surface)] p-4">
       <label className="flex flex-col gap-1">
         <span className="text-xs text-neutral-400">Name</span>
         <input
@@ -42,7 +42,7 @@ export function AddEducationOptionForm() {
           value={name}
           onChange={(e) => setName(e.target.value)}
           placeholder="e.g. Learn TypeScript"
-          className="w-48 rounded border border-neutral-600 bg-neuro-dark px-2 py-1.5 text-sm text-white"
+          className="w-48 rounded border border-neutral-600 bg-[var(--bg-primary)] px-2 py-1.5 text-sm text-white"
           required
         />
       </label>
@@ -53,7 +53,7 @@ export function AddEducationOptionForm() {
           value={category}
           onChange={(e) => setCategory(e.target.value)}
           placeholder="e.g. Programming"
-          className="w-32 rounded border border-neutral-600 bg-neuro-dark px-2 py-1.5 text-sm text-white"
+          className="w-32 rounded border border-neutral-600 bg-[var(--bg-primary)] px-2 py-1.5 text-sm text-white"
         />
       </label>
       <label className="flex flex-col gap-1">
@@ -64,7 +64,7 @@ export function AddEducationOptionForm() {
           max="10"
           value={interest}
           onChange={(e) => setInterest(e.target.value)}
-          className="w-14 rounded border border-neutral-600 bg-neuro-dark px-2 py-1.5 text-sm text-white"
+          className="w-14 rounded border border-neutral-600 bg-[var(--bg-primary)] px-2 py-1.5 text-sm text-white"
         />
       </label>
       <label className="flex flex-col gap-1">
@@ -75,7 +75,7 @@ export function AddEducationOptionForm() {
           max="10"
           value={futureValue}
           onChange={(e) => setFutureValue(e.target.value)}
-          className="w-14 rounded border border-neutral-600 bg-neuro-dark px-2 py-1.5 text-sm text-white"
+          className="w-14 rounded border border-neutral-600 bg-[var(--bg-primary)] px-2 py-1.5 text-sm text-white"
         />
       </label>
       <label className="flex flex-col gap-1">
@@ -86,10 +86,10 @@ export function AddEducationOptionForm() {
           max="10"
           value={effort}
           onChange={(e) => setEffort(e.target.value)}
-          className="w-14 rounded border border-neutral-600 bg-neuro-dark px-2 py-1.5 text-sm text-white"
+          className="w-14 rounded border border-neutral-600 bg-[var(--bg-primary)] px-2 py-1.5 text-sm text-white"
         />
       </label>
-      <button type="submit" disabled={pending} className="rounded bg-neuro-blue px-3 py-1.5 text-sm text-white">
+      <button type="submit" disabled={pending} className="rounded bg-[var(--accent-focus)] px-3 py-1.5 text-sm text-white">
         Add option
       </button>
     </form>

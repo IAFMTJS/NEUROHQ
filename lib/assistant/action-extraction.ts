@@ -1,6 +1,12 @@
 /**
- * NEUROHQ – Action extraction: uit chat halen wat de user wil toevoegen (taak, uitgave, agenda).
+ * NEUROHQ – Action extraction: uit chat halen wat de user wil toevoegen.
  * Rule-based; geen AI. Zie docs/ASSISTANT_SPRAAKBOT_ACTIES.md.
+ *
+ * Assistant kan alle trackbare input afhandelen:
+ * - Taken (add_task): taak, todo, plan X voor vandaag, zet X op de lijst, etc.
+ * - Uitgaven (add_expense): X euro, X euro aan Y, uitgegeven, besteed, etc.
+ * - Agenda (add_calendar): afspraak, plan X om 14:00, zet X in agenda, blok, event, etc.
+ * - Leren (add_learning): X min geleerd, geleerd: onderwerp 20 min, log 30 min, growth: X, etc.
  */
 
 export type AddTaskPayload = {
@@ -22,10 +28,17 @@ export type AddCalendarPayload = {
   sync_to_google?: boolean;
 };
 
+export type AddLearningPayload = {
+  minutes: number;
+  date: string;
+  topic?: string;
+};
+
 export type RequestedAction =
   | { type: "add_task"; payload: AddTaskPayload }
   | { type: "add_expense"; payload: AddExpensePayload }
-  | { type: "add_calendar"; payload: AddCalendarPayload };
+  | { type: "add_calendar"; payload: AddCalendarPayload }
+  | { type: "add_learning"; payload: AddLearningPayload };
 
 function todayISO(): string {
   return new Date().toISOString().slice(0, 10);
@@ -177,6 +190,11 @@ export function parseAddCalendar(message: string): AddCalendarPayload | null {
     /event\s+(.+?)(?:\s+(vanavond|morgen))?/i,
     /inplannen\s*:\s*(.+?)(?:\s+(vanavond|morgen))?$/i,
     /kalender\s*:\s*(.+?)(?:\s+(vanavond|morgen))?$/i,
+    /plan\s+(.+?)\s+(vanavond|morgen|vanmiddag)(?:\s+(\d{1,2}(?::\d{2})?))?/i,
+    /voeg\s+(.+?)\s+toe\s+aan\s+(?:de\s+)?agenda(?:\s+(vanavond|morgen))?/i,
+    /zet\s+(.+?)\s+op\s+(?:de\s+)?agenda(?:\s+(vanavond|morgen))?/i,
+    /blokkeer\s+(.+?)(?:\s+(vanavond|morgen|\d{1,2}(?::\d{2})?))?/i,
+    /agenda\s+(.+?)(?:\s+(vanavond|morgen))$/i,
   ];
 
   let title = "";
@@ -191,10 +209,11 @@ export function parseAddCalendar(message: string): AddCalendarPayload | null {
       break;
     }
   }
-  if (!title && (lower.includes("afspraak") || lower.includes("agenda") || lower.includes("inplannen") || lower.includes("blok") || lower.includes("event"))) {
+  if (!title && (lower.includes("afspraak") || lower.includes("agenda") || lower.includes("inplannen") || lower.includes("blok") || lower.includes("event") || lower.includes("blokkeer"))) {
     const withoutKeyword = m
-      .replace(/^(afspraak|agenda|plan|inplannen|zet|blok|meeting|event|kalender)\s*[:\s]+/i, "")
-      .replace(/\s+in\s+(?:de\s+)?agenda.*$/i, "")
+      .replace(/^(afspraak|agenda|plan|inplannen|zet|blok|blokkeer|meeting|event|kalender|voeg)\s*[:\s]+/i, "")
+      .replace(/\s+(?:in|op|aan)\s+(?:de\s+)?agenda.*$/i, "")
+      .replace(/\s+toe\s*$/i, "")
       .trim();
     if (withoutKeyword.length >= 2) title = withoutKeyword;
   }
@@ -204,17 +223,57 @@ export function parseAddCalendar(message: string): AddCalendarPayload | null {
   return { title, start_at, end_at, sync_to_google: sync_to_google || undefined };
 }
 
+/** Haalt add_learning intent + payload uit het bericht: minuten, optioneel onderwerp, datum. */
+export function parseAddLearning(message: string): AddLearningPayload | null {
+  const m = message.trim();
+  const lower = m.toLowerCase();
+  const today = todayISO();
+  const tomorrow = tomorrowISO();
+
+  const learningKeywords = [
+    "geleerd", "gelezen", "gestudeerd", "gestudeer", "leren", "growth", "geleerd:", "log",
+    "minuten geleerd", "min geleerd", "minuten lezen", "min lezen", "minuten gestudeerd",
+    "leersessie", "leer sessie", "study", "studied", "reading", "read",
+  ];
+  if (!learningKeywords.some((k) => lower.includes(k)) && !/^\d+\s*min\s+/i.test(m) && !/\d+\s*min\s+(geleerd|gelezen|gestudeerd|leren)/i.test(m)) {
+    return null;
+  }
+
+  const minMatch = m.match(/(\d{1,3})\s*(?:min|minuten|minuut)/i);
+  const minutes = minMatch ? Math.min(120, Math.max(1, parseInt(minMatch[1], 10))) : 30;
+  let date = today;
+  if (/\bmorgen\b/i.test(m)) date = tomorrow;
+
+  let topic: string | undefined;
+  const topicAfterMin = m.match(/(?:\d+\s*min(?:uten)?)\s+(?:geleerd|gelezen|gestudeerd)?\s*[:\s]*([^.]+?)(?:\s+vandaag|\s+morgen|$)/i);
+  if (topicAfterMin && topicAfterMin[1].trim().length >= 2) {
+    topic = topicAfterMin[1].trim().slice(0, 100);
+  }
+  const topicBeforeMin = m.match(/(?:geleerd|gelezen|gestudeerd|leren|growth)\s*[:\s]*([^0-9]+?)\s+(\d+)\s*min/i);
+  if (topicBeforeMin && topicBeforeMin[1].trim().length >= 2) {
+    topic = topicBeforeMin[1].trim().slice(0, 100);
+  }
+  const topicColon = m.match(/(?:growth|leren|leersessie)\s*[:\s]+(.+?)(?:\s+\d+\s*min|\s*$)/i);
+  if (topicColon && topicColon[1].trim().length >= 2) {
+    topic = topicColon[1].trim().slice(0, 100);
+  }
+
+  return { minutes, date, topic };
+}
+
 /**
- * Bepaalt of het bericht expliciet om een actie vraagt (taak, uitgave of agenda).
- * Retourneert de eerste gevonden actie.
+ * Bepaalt of het bericht expliciet om een actie vraagt (taak, uitgave, agenda of leren).
+ * Retourneert de eerste gevonden actie. Volgorde: expense (getal+eur) → learning (min+keyword) → calendar → task.
  */
 export function extractRequestedAction(message: string): RequestedAction | null {
-  const task = parseAddTask(message);
-  if (task) return { type: "add_task", payload: task };
   const expense = parseAddExpense(message);
   if (expense) return { type: "add_expense", payload: expense };
+  const learning = parseAddLearning(message);
+  if (learning) return { type: "add_learning", payload: learning };
   const calendar = parseAddCalendar(message);
   if (calendar) return { type: "add_calendar", payload: calendar };
+  const task = parseAddTask(message);
+  if (task) return { type: "add_task", payload: task };
   return null;
 }
 
@@ -233,7 +292,8 @@ export function getCalendarSlotFromMessage(message: string): { start_at: string;
 export type SuggestedAction =
   | { type: "add_task"; label: string; payload: AddTaskPayload }
   | { type: "add_expense"; label: string; payload: AddExpensePayload }
-  | { type: "add_calendar"; label: string; payload: AddCalendarPayload };
+  | { type: "add_calendar"; label: string; payload: AddCalendarPayload }
+  | { type: "add_learning"; label: string; payload: AddLearningPayload };
 
 /** Volgende week,zelfde weekdag, 19:00–20:00 (voor wekelijkse blok-suggestie). */
 function getNextWeekSameDaySlot(): { start_at: string; end_at: string } {
@@ -293,6 +353,11 @@ export function getSuggestedActionsFromContext(
         type: "add_calendar",
         label: `Wekelijks blok '${title}' (deze week)`,
         payload: { title: weeklyTitle, start_at: slot.start_at, end_at: slot.end_at },
+      });
+      suggestions.push({
+        type: "add_learning",
+        label: `Log 30 min '${title}'`,
+        payload: { minutes: 30, date: today, topic: title },
       });
     }
   }

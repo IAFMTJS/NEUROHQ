@@ -6,6 +6,8 @@ import Image from "next/image";
 import { createClient } from "@/lib/supabase/client";
 import { ensureUserProfileForSession } from "@/app/actions/auth";
 import { IconHQ } from "@/components/hq/NavIcons";
+import GlassCard from "@/components/ui/GlassCard";
+import PrimaryButton from "@/components/ui/PrimaryButton";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
@@ -37,7 +39,7 @@ export default function LoginPage() {
 
   return (
     <main className="w-full max-w-[420px] hq-card-enter" style={{ animationDelay: "50ms" }}>
-      <div className="hq-card rounded-[var(--hq-card-radius)] p-6 sm:p-8 shadow-[var(--card-shadow)]">
+      <GlassCard className="p-6 sm:p-8">
         <div className="flex flex-col items-center gap-5 mb-8">
           <div className="flex flex-col items-center gap-1 -mt-2">
             <Image src="/app-icon.png" alt="" width={400} height={400} className="w-[min(95vw,400px)] h-auto aspect-square rounded-2xl object-contain shrink-0" priority style={{ minHeight: 300 }} />
@@ -89,21 +91,17 @@ export default function LoginPage() {
               {error}
             </div>
           )}
-          <button
-            type="submit"
-            disabled={loading}
-            className="btn-hq-primary w-full rounded-[var(--hq-btn-radius)] py-3 font-medium disabled:opacity-50 disabled:cursor-not-allowed"
-          >
+          <PrimaryButton type="submit" disabled={loading} className="disabled:opacity-50 disabled:cursor-not-allowed">
             {loading ? "Signing in…" : "Sign in"}
-          </button>
+          </PrimaryButton>
         </form>
-        <p className="mt-6 text-center text-sm text-[var(--text-muted)]">
+        <p className="mt-6 text-center text-sm text-white/70">
           No account?{" "}
-          <Link href="/signup" className="font-medium text-[var(--accent-focus)] hover:underline focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-focus)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--bg-surface)] rounded">
+          <Link href="/signup" className="font-medium text-[var(--accent-focus)] hover:underline rounded">
             Sign up
           </Link>
         </p>
-      </div>
+      </GlassCard>
     </main>
   );
 }

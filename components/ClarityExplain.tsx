@@ -9,7 +9,7 @@ export function ClarityExplain() {
       <button
         type="button"
         onClick={() => setOpen((o) => !o)}
-        className="text-xs text-neuro-muted hover:text-neuro-silver hover:underline focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-focus)] focus-visible:ring-offset-1 rounded"
+        className="text-xs text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:underline focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-focus)] focus-visible:ring-offset-1 rounded"
         aria-expanded={open}
         aria-controls="clarity-formula"
         id="clarity-toggle"

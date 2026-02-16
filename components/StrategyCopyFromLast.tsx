@@ -13,7 +13,7 @@ export function StrategyCopyFromLast({ hasLastQuarter }: Props) {
       type="button"
       onClick={() => startTransition(() => copyStrategyFromLastQuarter())}
       disabled={pending}
-      className="rounded-lg border border-neuro-border bg-neuro-dark px-3 py-2 text-sm font-medium text-neuro-silver hover:border-neuro-blue hover:text-neuro-blue disabled:opacity-50"
+      className="rounded-lg border border-[var(--card-border)] bg-[var(--bg-primary)] px-3 py-2 text-sm font-medium text-[var(--text-primary)] hover:border-[var(--accent-focus)] hover:text-[var(--accent-focus)] disabled:opacity-50"
     >
       {pending ? "Copying…" : "Copy from last quarter"}
     </button>

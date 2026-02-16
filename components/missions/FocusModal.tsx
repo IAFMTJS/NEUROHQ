@@ -64,33 +64,99 @@ export function FocusModal({ open, onClose, taskId, taskTitle, onComplete, onSno
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-[var(--bg-primary)] p-6" role="dialog" aria-modal="true" aria-labelledby="focus-title">
-      <h1 id="focus-title" className="mb-2 text-center text-lg font-semibold text-neuro-silver">Focus</h1>
-      <p className="mb-6 max-w-sm text-center text-sm text-neuro-muted">{taskTitle}</p>
-      {!running ? (
-        <div className="mb-6 flex items-center gap-2">
-          <label className="text-sm text-neuro-muted">Minutes</label>
-          <input
-            type="number"
-            min={1}
-            max={120}
-            value={minutes}
-            onChange={(e) => setMinutes(Math.max(1, Math.min(120, parseInt(e.target.value, 10) || 1)))}
-            className="w-16 rounded-lg border border-neuro-border bg-neuro-dark px-3 py-2 text-center text-neuro-silver"
-          />
+    <div
+      className="fixed inset-0 z-[100] flex items-center justify-center p-4 modal-overlay"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="focus-modal-title"
+    >
+      <div className="modal-backdrop absolute inset-0" aria-hidden onClick={onClose} />
+      <div
+        className="modal-card relative w-full max-w-sm"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <header className="modal-card-header">
+          <div className="flex-1">
+            <h2 id="focus-modal-title" className="text-xl font-semibold tracking-tight text-[var(--text-primary)]">
+              Focus
+            </h2>
+            <p className="mt-0.5 text-sm text-[var(--text-muted)]">{taskTitle}</p>
+          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-[var(--text-muted)] transition-colors hover:bg-[var(--accent-neutral)] hover:text-[var(--text-primary)]"
+            aria-label="Close"
+          >
+            <span className="text-xl leading-none">×</span>
+          </button>
+        </header>
+
+        <div className="modal-card-body">
+          {!running ? (
+            <div className="flex flex-col items-center gap-4">
+              <label className="text-sm font-medium text-[var(--text-muted)]">Minutes</label>
+              <input
+                type="number"
+                min={1}
+                max={120}
+                value={minutes}
+                onChange={(e) => setMinutes(Math.max(1, Math.min(120, parseInt(e.target.value, 10) || 1)))}
+                className="w-20 rounded-xl border border-[var(--card-border)] bg-[var(--bg-overlay)] px-4 py-3 text-center text-2xl font-semibold tabular-nums text-[var(--text-primary)] focus:border-[var(--accent-focus)] focus:outline-none focus:ring-2 focus:ring-[var(--accent-focus)]/30"
+              />
+            </div>
+          ) : (
+            <div className="flex flex-col items-center gap-2 py-4">
+              <span className="font-mono text-5xl font-bold tabular-nums text-[var(--accent-focus)]" aria-live="polite">
+                {formatTime(secondsLeft)}
+              </span>
+              <span className="text-sm text-[var(--text-muted)]">remaining</span>
+            </div>
+          )}
         </div>
-      ) : (
-        <p className="mb-6 font-mono text-4xl font-bold tabular-nums text-neuro-blue">{formatTime(secondsLeft)}</p>
-      )}
-      <div className="flex flex-wrap justify-center gap-3">
-        {!running ? (
-          <button type="button" onClick={() => setRunning(true)} className="btn-primary rounded-lg px-6 py-3 text-base font-medium">Start timer</button>
-        ) : (
-          <button type="button" onClick={() => setRunning(false)} className="rounded-lg border border-neuro-border px-6 py-3 text-base font-medium text-neuro-silver hover:bg-neuro-surface">Pause</button>
-        )}
-        <button type="button" onClick={handleComplete} disabled={pending} className="rounded-lg border border-green-500/50 px-6 py-3 text-base font-medium text-green-400 hover:bg-green-500/10 disabled:opacity-50">Complete</button>
-        <button type="button" onClick={handleSnooze} disabled={pending} className="rounded-lg border border-neuro-border px-6 py-3 text-base font-medium text-neuro-silver hover:bg-neuro-surface disabled:opacity-50">Snooze</button>
-        <button type="button" onClick={onClose} className="rounded-lg border border-neuro-border px-6 py-3 text-base font-medium text-neuro-muted hover:bg-neuro-surface">Close</button>
+
+        <footer className="modal-card-footer flex-wrap justify-center gap-2">
+          {!running ? (
+            <button
+              type="button"
+              onClick={() => setRunning(true)}
+              className="btn-primary rounded-xl px-6 py-3 text-base font-medium"
+            >
+              Start timer
+            </button>
+          ) : (
+            <button
+              type="button"
+              onClick={() => setRunning(false)}
+              className="rounded-xl border border-[var(--card-border)] bg-transparent px-6 py-3 text-base font-medium text-[var(--text-primary)] transition-colors hover:bg-[var(--accent-neutral)]"
+            >
+              Pause
+            </button>
+          )}
+          <button
+            type="button"
+            onClick={handleComplete}
+            disabled={pending}
+            className="rounded-xl border border-[var(--accent-energy)]/50 bg-[var(--accent-energy)]/10 px-6 py-3 text-base font-medium text-[var(--accent-energy)] transition-colors hover:bg-[var(--accent-energy)]/20 disabled:opacity-50"
+          >
+            Complete
+          </button>
+          <button
+            type="button"
+            onClick={handleSnooze}
+            disabled={pending}
+            className="rounded-xl border border-[var(--card-border)] bg-transparent px-6 py-3 text-base font-medium text-[var(--text-primary)] transition-colors hover:bg-[var(--accent-neutral)] disabled:opacity-50"
+          >
+            Snooze
+          </button>
+          <button
+            type="button"
+            onClick={onClose}
+            className="rounded-xl border border-[var(--card-border)] bg-transparent px-6 py-3 text-base font-medium text-[var(--text-muted)] transition-colors hover:bg-[var(--accent-neutral)]"
+          >
+            Close
+          </button>
+        </footer>
       </div>
     </div>
   );

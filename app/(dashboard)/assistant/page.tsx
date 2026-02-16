@@ -5,11 +5,13 @@ import { useSearchParams } from "next/navigation";
 import { createTask } from "@/app/actions/tasks";
 import { addManualEvent } from "@/app/actions/calendar";
 import { addBudgetEntry } from "@/app/actions/budget";
+import { addLearningSession } from "@/app/actions/learning";
 
 type SuggestedAction =
   | { type: "add_task"; label: string; payload: { title: string; due_date: string } }
   | { type: "add_expense"; label: string; payload: { amount_cents: number; date: string; category?: string; note?: string } }
-  | { type: "add_calendar"; label: string; payload: { title: string; start_at: string; end_at: string; sync_to_google?: boolean } };
+  | { type: "add_calendar"; label: string; payload: { title: string; start_at: string; end_at: string; sync_to_google?: boolean } }
+  | { type: "add_learning"; label: string; payload: { minutes: number; date: string; topic?: string } };
 
 type Message = {
   id: string;
@@ -139,6 +141,12 @@ export default function AssistantPage() {
             start_at: action.payload.start_at,
             end_at: action.payload.end_at,
             sync_to_google: action.payload.sync_to_google ?? false,
+          });
+        } else if (action.type === "add_learning") {
+          await addLearningSession({
+            minutes: action.payload.minutes,
+            date: action.payload.date,
+            topic: action.payload.topic,
           });
         }
         setMessages((prev) =>

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
+import "../styles/visual-system.css";
 import { ThemeProvider } from "@/components/providers/ThemeProvider";
 
 const font = Plus_Jakarta_Sans({
@@ -18,16 +19,14 @@ export const metadata: Metadata = {
 export const viewport = {
   width: "device-width",
   initialScale: 1,
-  themeColor: "#0B1220",
+  themeColor: "#05070F",
 };
 
-/** Inline script to set theme before first paint (avoids flash). */
+/** Commander v2 is de enige visuele stijl – altijd normal + dark. */
 const themeScript = `
 (function(){
-  var t=localStorage.getItem('neurohq-theme')||'normal';
-  var c=localStorage.getItem('neurohq-color-mode')||'dark';
-  if (!document.documentElement.hasAttribute('data-theme')) document.documentElement.setAttribute('data-theme',t);
-  if (!document.documentElement.hasAttribute('data-color-mode')) document.documentElement.setAttribute('data-color-mode',c);
+  document.documentElement.setAttribute('data-theme','normal');
+  document.documentElement.setAttribute('data-color-mode','dark');
 })();
 `;
 
@@ -41,7 +40,7 @@ export default function RootLayout({
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
       </head>
-      <body className="min-h-screen bg-[var(--bg-primary)] font-sans text-[var(--text-primary)] antialiased">
+      <body className="min-h-screen font-sans antialiased">
         <ThemeProvider>{children}</ThemeProvider>
       </body>
     </html>

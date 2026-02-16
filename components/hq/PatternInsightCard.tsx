@@ -15,7 +15,7 @@ export function PatternInsightCard({
 }: Props) {
   return (
     <section
-      className="hq-card hq-card-enter rounded-[var(--hq-card-radius-sharp)] p-5"
+      className="card-simple hq-card-enter rounded-[var(--hq-card-radius-sharp)] p-5"
       style={{ animationDelay: "150ms" }}
       aria-label="Patterns Insight"
     >

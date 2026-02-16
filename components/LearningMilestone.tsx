@@ -11,7 +11,7 @@ export function LearningMilestone({ totalMinutes }: Props) {
   const text = milestone(totalMinutes);
   if (!text) return null;
   return (
-    <p className="mt-1 text-xs text-neuro-muted">
+    <p className="mt-1 text-xs text-[var(--text-muted)]">
       {text} logged.
     </p>
   );

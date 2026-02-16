@@ -45,9 +45,9 @@ export function MonthlyBookBlock({ initial, books: initialBooks = [] }: Props) {
 
   return (
     <section className="card-modern overflow-hidden p-0">
-      <div className="border-b border-neuro-border px-4 py-3">
-        <h2 className="text-base font-semibold text-neuro-silver">This month&apos;s book{books.length > 1 ? "s" : ""}</h2>
-        <p className="mt-0.5 text-xs text-neuro-muted">1+ book per month. Optional: set pages/day or chapters/week.</p>
+      <div className="border-b border-[var(--card-border)] px-4 py-3">
+        <h2 className="text-base font-semibold text-[var(--text-primary)]">This month&apos;s book{books.length > 1 ? "s" : ""}</h2>
+        <p className="mt-0.5 text-xs text-[var(--text-muted)]">1+ book per month. Optional: set pages/day or chapters/week.</p>
       </div>
       <div className="p-4 space-y-4">
         {books.length === 0 && (
@@ -57,7 +57,7 @@ export function MonthlyBookBlock({ initial, books: initialBooks = [] }: Props) {
               value={newTitle}
               onChange={(e) => setNewTitle(e.target.value)}
               placeholder="Book title"
-              className="flex-1 rounded-lg border border-neuro-border bg-neuro-dark px-3 py-2 text-sm text-neuro-silver placeholder-neuro-muted focus:border-neuro-blue focus:outline-none focus:ring-2 focus:ring-neuro-blue/30"
+              className="flex-1 rounded-lg border border-[var(--card-border)] bg-[var(--bg-primary)] px-3 py-2 text-sm text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:border-[var(--accent-focus)] focus:outline-none focus:ring-2 focus:ring-[var(--accent-focus)]/30"
             />
             <button type="submit" disabled={pending} className="btn-primary rounded-lg px-4 py-2 text-sm font-medium disabled:opacity-50">
               Set
@@ -76,15 +76,15 @@ export function MonthlyBookBlock({ initial, books: initialBooks = [] }: Props) {
           />
         ))}
         {books.length > 0 && (
-          <form onSubmit={handleAddBook} className="flex gap-2 border-t border-neuro-border pt-3">
+          <form onSubmit={handleAddBook} className="flex gap-2 border-t border-[var(--card-border)] pt-3">
             <input
               type="text"
               value={newTitle}
               onChange={(e) => setNewTitle(e.target.value)}
               placeholder="Add another book"
-              className="flex-1 rounded-lg border border-neuro-border bg-neuro-dark px-3 py-2 text-sm text-neuro-silver placeholder-neuro-muted focus:border-neuro-blue focus:outline-none focus:ring-2 focus:ring-neuro-blue/30"
+              className="flex-1 rounded-lg border border-[var(--card-border)] bg-[var(--bg-primary)] px-3 py-2 text-sm text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:border-[var(--accent-focus)] focus:outline-none focus:ring-2 focus:ring-[var(--accent-focus)]/30"
             />
-            <button type="submit" disabled={pending} className="rounded-lg border border-neuro-border px-4 py-2 text-sm font-medium text-neuro-silver hover:bg-neuro-dark disabled:opacity-50">
+            <button type="submit" disabled={pending} className="rounded-lg border border-[var(--card-border)] px-4 py-2 text-sm font-medium text-[var(--text-primary)] hover:bg-[var(--bg-primary)] disabled:opacity-50">
               Add
             </button>
           </form>
@@ -119,17 +119,17 @@ function MonthlyBookRow({
   }
 
   return (
-    <div className="rounded-lg border border-neuro-border bg-neuro-dark/40 px-3 py-2">
-      <p className="text-sm font-medium text-neuro-silver">{book.title}</p>
+    <div className="rounded-lg border border-[var(--card-border)] bg-[var(--bg-primary)]/40 px-3 py-2">
+      <p className="text-sm font-medium text-[var(--text-primary)]">{book.title}</p>
       {(book.pages_per_day != null || book.chapters_per_week != null) && (
-        <p className="text-xs text-neuro-muted">
+        <p className="text-xs text-[var(--text-muted)]">
           {book.pages_per_day != null && `${book.pages_per_day} pp/day`}
           {book.pages_per_day != null && book.chapters_per_week != null && " · "}
           {book.chapters_per_week != null && `${book.chapters_per_week} ch/week`}
         </p>
       )}
       {!showGoal && (
-        <button type="button" onClick={() => setShowGoal(true)} className="mt-1 text-xs text-neuro-blue hover:underline">
+        <button type="button" onClick={() => setShowGoal(true)} className="mt-1 text-xs text-[var(--accent-focus)] hover:underline">
           Set reading goal (pages/day or chapters/week)
         </button>
       )}
@@ -142,7 +142,7 @@ function MonthlyBookRow({
             value={pages}
             onChange={(e) => setPages(e.target.value)}
             onBlur={saveGoal}
-            className="w-20 rounded border border-neuro-border bg-neuro-dark px-2 py-1 text-xs text-neuro-silver"
+            className="w-20 rounded border border-[var(--card-border)] bg-[var(--bg-primary)] px-2 py-1 text-xs text-[var(--text-primary)]"
           />
           <input
             type="number"
@@ -152,7 +152,7 @@ function MonthlyBookRow({
             value={chapters}
             onChange={(e) => setChapters(e.target.value)}
             onBlur={saveGoal}
-            className="w-20 rounded border border-neuro-border bg-neuro-dark px-2 py-1 text-xs text-neuro-silver"
+            className="w-20 rounded border border-[var(--card-border)] bg-[var(--bg-primary)] px-2 py-1 text-xs text-[var(--text-primary)]"
           />
         </div>
       )}

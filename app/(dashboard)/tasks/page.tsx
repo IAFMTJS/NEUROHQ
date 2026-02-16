@@ -1,20 +1,24 @@
 import Link from "next/link";
-import { getTodaysTasks, getSubtasksForTaskIds, getBacklogTasks, getCompletedTodayTasks, type TaskListMode } from "@/app/actions/tasks";
+import { getTodaysTasks, getTasksForDate, getSubtasksForTaskIds, getBacklogTasks, getCompletedTodayTasks, type TaskListMode } from "@/app/actions/tasks";
 import { getMode } from "@/app/actions/mode";
 import { getUpcomingCalendarEvents } from "@/app/actions/calendar";
+import { yesterdayDate } from "@/lib/utils/timezone";
 import { TaskList } from "@/components/TaskList";
 import { ModeBanner } from "@/components/ModeBanner";
 import { BacklogList } from "@/components/BacklogList";
 import { AgendaOnlyList } from "@/components/AgendaOnlyList";
+import { YesterdayTasksSection } from "@/components/missions/YesterdayTasksSection";
 
 export default async function TasksPage() {
   const today = new Date();
   const dateStr = today.toISOString().slice(0, 10);
-  const [mode, upcomingCalendarEvents, backlog, completedToday] = await Promise.all([
+  const yesterdayStr = yesterdayDate(dateStr);
+  const [mode, upcomingCalendarEvents, backlog, completedToday, yesterdayTasksRaw] = await Promise.all([
     getMode(dateStr),
     getUpcomingCalendarEvents(dateStr, 60),
     getBacklogTasks(dateStr),
     getCompletedTodayTasks(dateStr),
+    getTasksForDate(yesterdayStr),
   ]);
   const taskMode: TaskListMode = mode === "stabilize" ? "stabilize" : mode === "low_energy" ? "low_energy" : mode === "driven" ? "driven" : "normal";
   const { tasks, carryOverCount } = await getTodaysTasks(dateStr, taskMode);
@@ -25,6 +29,11 @@ export default async function TasksPage() {
     if (!subtasksByParent[pid]) subtasksByParent[pid] = [];
     subtasksByParent[pid].push(s);
   }
+  const yesterdayTasks = (yesterdayTasksRaw ?? []).map((t) => ({
+    id: (t as { id: string }).id,
+    title: (t as { title: string | null }).title ?? null,
+    completed: !!(t as { completed?: boolean }).completed,
+  }));
 
   const modeHint = taskMode === "stabilize"
     ? "Showing top 2 — complete or reschedule to add more."
@@ -35,18 +44,21 @@ export default async function TasksPage() {
   return (
     <div className="space-y-6">
       <div>
-        <Link href="/dashboard" className="mb-2 inline-block text-sm font-medium text-neuro-muted hover:text-neuro-silver">
+        <Link href="/dashboard" className="mb-2 inline-block text-sm font-medium text-[var(--text-muted)] hover:text-[var(--text-primary)]">
           ← HQ
         </Link>
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <h1 className="text-2xl font-bold tracking-tight text-neuro-silver">Missions</h1>
-            <p className="mt-1 text-sm text-neuro-muted">{dateStr} · One focus at a time</p>
-            {modeHint && <p className="mt-1 text-xs text-neuro-muted">{modeHint}</p>}
+            <h1 className="text-2xl font-bold tracking-tight text-[var(--text-primary)]">Missions</h1>
+            <p className="mt-1 text-sm text-[var(--text-muted)]">{dateStr} · One focus at a time</p>
+            {modeHint && <p className="mt-1 text-xs text-[var(--text-muted)]">{modeHint}</p>}
           </div>
-          <div className="inline-flex items-center gap-2 rounded-full border border-neuro-border/80 bg-neuro-surface px-4 py-2 text-sm font-medium text-neuro-silver">
-            <span className="h-2 w-2 rounded-full bg-neuro-blue" aria-hidden />
-            Today
+          <div className="flex items-center gap-2">
+            <YesterdayTasksSection yesterdayTasks={yesterdayTasks} todayStr={dateStr} />
+            <div className="inline-flex items-center gap-2 rounded-full border border-[var(--card-border)] bg-[var(--bg-surface)] px-4 py-2 text-sm font-medium text-[var(--text-primary)]">
+              <span className="h-2 w-2 rounded-full bg-[var(--accent-focus)]" aria-hidden />
+              Today
+            </div>
           </div>
         </div>
       </div>
@@ -62,10 +74,10 @@ export default async function TasksPage() {
       {backlog.length > 0 && (
         <BacklogList backlog={backlog} todayDate={dateStr} />
       )}
-      <section className="card-modern overflow-hidden p-0">
-        <div className="border-b border-neuro-border px-4 py-3">
-          <h2 className="text-base font-semibold text-neuro-silver">Agenda</h2>
-          <p className="mt-0.5 text-xs text-neuro-muted">All agenda items. Only days with events are shown.</p>
+      <section className="card-simple overflow-hidden p-0">
+        <div className="border-b border-[var(--card-border)] px-4 py-3">
+          <h2 className="text-base font-semibold text-[var(--text-primary)]">Agenda</h2>
+          <p className="mt-0.5 text-xs text-[var(--text-muted)]">All agenda items. Only days with events are shown.</p>
         </div>
         <div className="p-4">
           <AgendaOnlyList

@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { sendPushToUser } from "@/lib/push";
-import { getLocalDateHour, yesterdayDate, getDayOfYearFromDateString } from "@/lib/utils/timezone";
+import { getLocalDateHour, yesterdayDate, getDayOfYearFromDateString, isInQuietHours } from "@/lib/utils/timezone";
 
 /**
  * Vercel Cron: runs every hour.
@@ -18,7 +18,7 @@ export async function GET(request: Request) {
   const supabase = createAdminClient();
   const { data: users } = await supabase
     .from("users")
-    .select("id, timezone, last_rollover_date")
+    .select("id, timezone, last_rollover_date, push_quiet_hours_start, push_quiet_hours_end")
     .not("timezone", "is", null);
 
   let rolled = 0;
@@ -57,6 +57,9 @@ export async function GET(request: Request) {
       .eq("id", u.id);
 
     if (process.env.VAPID_PRIVATE_KEY && process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY) {
+      const quietStart = u.push_quiet_hours_start ? String(u.push_quiet_hours_start).slice(0, 5) : null;
+      const quietEnd = u.push_quiet_hours_end ? String(u.push_quiet_hours_end).slice(0, 5) : null;
+      if (isInQuietHours(hour, quietStart, quietEnd)) continue;
       const dayOfYear = Math.max(1, Math.min(365, getDayOfYearFromDateString(todayStr)));
       const { data: quoteRow } = await supabase.from("quotes").select("quote_text").eq("id", dayOfYear).single();
       const quoteText = quoteRow?.quote_text ?? "Your daily focus.";

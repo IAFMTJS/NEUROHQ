@@ -31,11 +31,11 @@ export function SettingsExport() {
 
   return (
     <div className="card-modern overflow-hidden p-0">
-      <div className="border-b border-neuro-border px-4 py-3">
-        <h2 className="text-base font-semibold text-neuro-silver">Export data</h2>
+      <div className="border-b border-[var(--card-border)] px-4 py-3">
+        <h2 className="text-base font-semibold text-[var(--text-primary)]">Export data</h2>
       </div>
       <div className="p-4">
-        <p className="text-sm text-neuro-muted">
+        <p className="text-sm text-[var(--text-muted)]">
           Download all your data (tasks, budget, learning, etc.) as JSON.
         </p>
         <button
@@ -49,7 +49,7 @@ export function SettingsExport() {
         {error && <p className="mt-2 text-sm text-red-400" role="alert">{error}</p>}
       </div>
       <Modal open={open} onClose={() => setOpen(false)} title="Export complete" showBranding={false}>
-        <p className="text-sm text-neuro-silver">
+        <p className="text-sm text-[var(--text-primary)]">
           Your data has been downloaded as neurohq-export.json.
         </p>
         <div className="mt-4 flex justify-end">

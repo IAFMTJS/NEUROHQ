@@ -49,12 +49,12 @@ export function HQHeader({ energyPct: _energyPct = 0, focusPct: _focusPct = 0, l
   }, []);
 
   const copyLine = COPY_SUBTITLE[copyVariant];
-  const dateLine = copyLine ? `${dateStr} — ${copyLine}` : dateStr;
 
   return (
     <header className="flex flex-col items-center gap-1 pt-0 pb-1 mt-0">
-      <h1 className="hq-h1 text-center leading-tight">{greeting}, Commander</h1>
-      <p className="hq-date text-center">{dateLine}</p>
+      <h1 className="hq-h1 text-center leading-tight">Commander HQ</h1>
+      <p className="hq-date text-center opacity-70">{greeting}, Commander</p>
+      {copyLine && <p className="hq-date text-center text-xs opacity-70">{copyLine}</p>}
     </header>
   );
 }

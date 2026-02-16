@@ -44,7 +44,7 @@ export function SettingsDeleteAccount() {
         <h2 className="text-base font-semibold text-red-200">Delete account</h2>
       </div>
       <div className="p-4">
-        <p className="text-sm text-neuro-muted">
+        <p className="text-sm text-[var(--text-muted)]">
           Permanently delete your account and all data. This cannot be undone.
         </p>
         <input
@@ -52,7 +52,7 @@ export function SettingsDeleteAccount() {
           value={confirm}
           onChange={(e) => setConfirm(e.target.value)}
           placeholder={`Type ${CONFIRM_TEXT} to confirm`}
-          className="mt-3 w-full max-w-xs rounded-lg border border-neuro-border bg-neuro-dark px-3 py-2.5 text-sm text-neuro-silver placeholder-neuro-muted focus:border-red-500 focus:outline-none focus:ring-2 focus:ring-red-500/30"
+          className="mt-3 w-full max-w-xs rounded-lg border border-[var(--card-border)] bg-[var(--bg-primary)] px-3 py-2.5 text-sm text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:border-red-500 focus:outline-none focus:ring-2 focus:ring-red-500/30"
         />
         {error && <p className="mt-2 text-sm text-red-400">{error}</p>}
         <button

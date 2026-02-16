@@ -11,12 +11,12 @@ export function LearningStreakExplain({ target }: Props) {
       <button
         type="button"
         onClick={() => setOpen((o) => !o)}
-        className="text-xs text-neuro-muted hover:text-neuro-silver hover:underline"
+        className="text-xs text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:underline"
       >
         {open ? "Hide" : "How is streak calculated?"}
       </button>
       {open && (
-        <p className="mt-1 text-xs text-neuro-muted leading-relaxed">
+        <p className="mt-1 text-xs text-[var(--text-muted)] leading-relaxed">
           Consecutive weeks where you hit at least {target} minutes. This week counts once it’s over (after Sunday). No penalties for missing a week — the streak just resets.
         </p>
       )}

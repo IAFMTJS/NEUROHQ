@@ -64,24 +64,24 @@ export function StrategyForm({ initial, goals }: { initial: Strategy; goals: Goa
 
   return (
     <form onSubmit={handleSubmit} className="card-modern overflow-hidden p-0">
-      <div className="border-b border-neuro-border px-4 py-3">
-        <h2 className="text-base font-semibold text-neuro-silver">Quarterly strategy</h2>
-        <p className="mt-0.5 text-xs text-neuro-muted">Theme, identity, key results, anti-goals, and linked savings goal.</p>
+      <div className="border-b border-[var(--card-border)] px-4 py-3">
+        <h2 className="text-base font-semibold text-[var(--text-primary)]">Quarterly strategy</h2>
+        <p className="mt-0.5 text-xs text-[var(--text-muted)]">Theme, identity, key results, anti-goals, and linked savings goal.</p>
       </div>
-      <div className="divide-y divide-neuro-border">
+      <div className="divide-y divide-[var(--card-border)]">
         <section>
           <button
             type="button"
             onClick={() => toggleSection("themes")}
             className="flex w-full items-center justify-between px-4 py-3 text-left"
           >
-            <span className="text-sm font-medium text-neuro-silver">Themes & one word</span>
-            <span className="text-neuro-muted">{openSections.themes ? "−" : "+"}</span>
+            <span className="text-sm font-medium text-[var(--text-primary)]">Themes & one word</span>
+            <span className="text-[var(--text-muted)]">{openSections.themes ? "−" : "+"}</span>
           </button>
           {openSections.themes && (
             <div className="space-y-3 px-4 pb-4">
               <div>
-                <p className="mb-1.5 text-xs font-medium text-neuro-muted">Quick picks</p>
+                <p className="mb-1.5 text-xs font-medium text-[var(--text-muted)]">Quick picks</p>
                 <div className="flex flex-wrap gap-2">
                   {THEME_PRESETS.map((t) => (
                     <button
@@ -90,8 +90,8 @@ export function StrategyForm({ initial, goals }: { initial: Strategy; goals: Goa
                       onClick={() => setPrimary(primary === t ? "" : t)}
                       className={`rounded-lg border px-2.5 py-1 text-xs font-medium ${
                         primary === t
-                          ? "border-neuro-blue bg-neuro-blue/20 text-neuro-blue"
-                          : "border-neuro-border text-neuro-muted hover:border-neuro-silver hover:text-neuro-silver"
+                          ? "border-[var(--accent-focus)] bg-[var(--accent-focus)]/20 text-[var(--accent-focus)]"
+                          : "border-[var(--card-border)] text-[var(--text-muted)] hover:border-[var(--text-primary)] hover:text-[var(--text-primary)]"
                       }`}
                     >
                       {t}
@@ -100,36 +100,36 @@ export function StrategyForm({ initial, goals }: { initial: Strategy; goals: Goa
                 </div>
               </div>
               <div>
-                <label className="block text-sm font-medium text-neuro-silver">Primary theme</label>
+                <label className="block text-sm font-medium text-[var(--text-primary)]">Primary theme</label>
                 <input
                   type="text"
                   value={primary}
                   onChange={(e) => setPrimary(e.target.value)}
                   placeholder="e.g. Focus"
                   maxLength={80}
-                  className="mt-1.5 w-full rounded-lg border border-neuro-border bg-neuro-dark px-3 py-2.5 text-sm text-neuro-silver placeholder-neuro-muted focus:border-neuro-blue focus:outline-none focus:ring-2 focus:ring-neuro-blue/30"
+                  className="mt-1.5 w-full rounded-lg border border-[var(--card-border)] bg-[var(--bg-primary)] px-3 py-2.5 text-sm text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:border-[var(--accent-focus)] focus:outline-none focus:ring-2 focus:ring-[var(--accent-focus)]/30"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-neuro-silver">Secondary theme</label>
+                <label className="block text-sm font-medium text-[var(--text-primary)]">Secondary theme</label>
                 <input
                   type="text"
                   value={secondary}
                   onChange={(e) => setSecondary(e.target.value)}
                   placeholder="e.g. Health"
                   maxLength={80}
-                  className="mt-1.5 w-full rounded-lg border border-neuro-border bg-neuro-dark px-3 py-2.5 text-sm text-neuro-silver placeholder-neuro-muted focus:border-neuro-blue focus:outline-none focus:ring-2 focus:ring-neuro-blue/30"
+                  className="mt-1.5 w-full rounded-lg border border-[var(--card-border)] bg-[var(--bg-primary)] px-3 py-2.5 text-sm text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:border-[var(--accent-focus)] focus:outline-none focus:ring-2 focus:ring-[var(--accent-focus)]/30"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-neuro-silver">One word for the quarter</label>
+                <label className="block text-sm font-medium text-[var(--text-primary)]">One word for the quarter</label>
                 <input
                   type="text"
                   value={oneWord}
                   onChange={(e) => setOneWord(e.target.value.slice(0, 30))}
                   placeholder="e.g. Ship"
                   maxLength={30}
-                  className="mt-1.5 w-full max-w-[140px] rounded-lg border border-neuro-border bg-neuro-dark px-3 py-2.5 text-sm text-neuro-silver placeholder-neuro-muted focus:border-neuro-blue focus:outline-none focus:ring-2 focus:ring-neuro-blue/30"
+                  className="mt-1.5 w-full max-w-[140px] rounded-lg border border-[var(--card-border)] bg-[var(--bg-primary)] px-3 py-2.5 text-sm text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:border-[var(--accent-focus)] focus:outline-none focus:ring-2 focus:ring-[var(--accent-focus)]/30"
                 />
               </div>
             </div>
@@ -142,34 +142,34 @@ export function StrategyForm({ initial, goals }: { initial: Strategy; goals: Goa
             onClick={() => toggleSection("identity")}
             className="flex w-full items-center justify-between px-4 py-3 text-left"
           >
-            <span className="text-sm font-medium text-neuro-silver">Identity & north star</span>
-            <span className="text-neuro-muted">{openSections.identity ? "−" : "+"}</span>
+            <span className="text-sm font-medium text-[var(--text-primary)]">Identity & north star</span>
+            <span className="text-[var(--text-muted)]">{openSections.identity ? "−" : "+"}</span>
           </button>
           {openSections.identity && (
             <div className="space-y-3 px-4 pb-4">
               <div>
-                <label className="block text-sm font-medium text-neuro-silver">Identity statement</label>
+                <label className="block text-sm font-medium text-[var(--text-primary)]">Identity statement</label>
                 <textarea
                   value={identity}
                   onChange={(e) => setIdentity(e.target.value.slice(0, IDENTITY_MAX))}
                   placeholder={IDENTITY_PROMPTS[0]}
                   rows={3}
                   maxLength={IDENTITY_MAX}
-                  className="mt-1.5 w-full rounded-lg border border-neuro-border bg-neuro-dark px-3 py-2.5 text-sm text-neuro-silver placeholder-neuro-muted focus:border-neuro-blue focus:outline-none focus:ring-2 focus:ring-neuro-blue/30"
+                  className="mt-1.5 w-full rounded-lg border border-[var(--card-border)] bg-[var(--bg-primary)] px-3 py-2.5 text-sm text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:border-[var(--accent-focus)] focus:outline-none focus:ring-2 focus:ring-[var(--accent-focus)]/30"
                 />
-                <p className="mt-1 text-xs text-neuro-muted">
+                <p className="mt-1 text-xs text-[var(--text-muted)]">
                   Who you want to be this quarter. {identity.length}/{IDENTITY_MAX}
                 </p>
               </div>
               <div>
-                <label className="block text-sm font-medium text-neuro-silver">North star (if one thing only)</label>
+                <label className="block text-sm font-medium text-[var(--text-primary)]">North star (if one thing only)</label>
                 <input
                   type="text"
                   value={northStar}
                   onChange={(e) => setNorthStar(e.target.value.slice(0, 120))}
                   placeholder="The single outcome that would make this quarter a success"
                   maxLength={120}
-                  className="mt-1.5 w-full rounded-lg border border-neuro-border bg-neuro-dark px-3 py-2.5 text-sm text-neuro-silver placeholder-neuro-muted focus:border-neuro-blue focus:outline-none focus:ring-2 focus:ring-neuro-blue/30"
+                  className="mt-1.5 w-full rounded-lg border border-[var(--card-border)] bg-[var(--bg-primary)] px-3 py-2.5 text-sm text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:border-[var(--accent-focus)] focus:outline-none focus:ring-2 focus:ring-[var(--accent-focus)]/30"
                 />
               </div>
             </div>
@@ -182,13 +182,13 @@ export function StrategyForm({ initial, goals }: { initial: Strategy; goals: Goa
             onClick={() => toggleSection("results")}
             className="flex w-full items-center justify-between px-4 py-3 text-left"
           >
-            <span className="text-sm font-medium text-neuro-silver">Key results & anti-goals</span>
-            <span className="text-neuro-muted">{openSections.results ? "−" : "+"}</span>
+            <span className="text-sm font-medium text-[var(--text-primary)]">Key results & anti-goals</span>
+            <span className="text-[var(--text-muted)]">{openSections.results ? "−" : "+"}</span>
           </button>
           {openSections.results && (
             <div className="space-y-3 px-4 pb-4">
               <div>
-                <label className="block text-sm font-medium text-neuro-silver">Key results / milestones</label>
+                <label className="block text-sm font-medium text-[var(--text-primary)]">Key results / milestones</label>
                 <textarea
                   value={keyResults}
                   onChange={(e) => {
@@ -197,21 +197,21 @@ export function StrategyForm({ initial, goals }: { initial: Strategy; goals: Goa
                   }}
                   placeholder="e.g. Ship feature X. Complete course Y. Save €Z."
                   rows={4}
-                  className="mt-1.5 w-full rounded-lg border border-neuro-border bg-neuro-dark px-3 py-2.5 text-sm text-neuro-silver placeholder-neuro-muted focus:border-neuro-blue focus:outline-none focus:ring-2 focus:ring-neuro-blue/30"
+                  className="mt-1.5 w-full rounded-lg border border-[var(--card-border)] bg-[var(--bg-primary)] px-3 py-2.5 text-sm text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:border-[var(--accent-focus)] focus:outline-none focus:ring-2 focus:ring-[var(--accent-focus)]/30"
                 />
-                <p className="mt-1 text-xs text-neuro-muted">
+                <p className="mt-1 text-xs text-[var(--text-muted)]">
                   One per line, up to {KEY_RESULTS_MAX_LINES}. {keyResultsLines}/{KEY_RESULTS_MAX_LINES}
                 </p>
               </div>
               <div>
-                <label className="block text-sm font-medium text-neuro-silver">Anti-goals (what I’m not doing)</label>
+                <label className="block text-sm font-medium text-[var(--text-primary)]">Anti-goals (what I’m not doing)</label>
                 <textarea
                   value={antiGoals}
                   onChange={(e) => setAntiGoals(e.target.value.slice(0, 400))}
                   placeholder="e.g. No new side projects. No extra meetings on Fridays."
                   rows={2}
                   maxLength={400}
-                  className="mt-1.5 w-full rounded-lg border border-neuro-border bg-neuro-dark px-3 py-2.5 text-sm text-neuro-silver placeholder-neuro-muted focus:border-neuro-blue focus:outline-none focus:ring-2 focus:ring-neuro-blue/30"
+                  className="mt-1.5 w-full rounded-lg border border-[var(--card-border)] bg-[var(--bg-primary)] px-3 py-2.5 text-sm text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:border-[var(--accent-focus)] focus:outline-none focus:ring-2 focus:ring-[var(--accent-focus)]/30"
                 />
               </div>
             </div>
@@ -224,17 +224,17 @@ export function StrategyForm({ initial, goals }: { initial: Strategy; goals: Goa
             onClick={() => toggleSection("other")}
             className="flex w-full items-center justify-between px-4 py-3 text-left"
           >
-            <span className="text-sm font-medium text-neuro-silver">Linked goal & save</span>
-            <span className="text-neuro-muted">{openSections.other ? "−" : "+"}</span>
+            <span className="text-sm font-medium text-[var(--text-primary)]">Linked goal & save</span>
+            <span className="text-[var(--text-muted)]">{openSections.other ? "−" : "+"}</span>
           </button>
           {openSections.other && (
             <div className="space-y-3 px-4 pb-4">
               <div>
-                <label className="block text-sm font-medium text-neuro-silver">Savings goal (optional)</label>
+                <label className="block text-sm font-medium text-[var(--text-primary)]">Savings goal (optional)</label>
                 <select
                   value={savingsGoalId}
                   onChange={(e) => setSavingsGoalId(e.target.value)}
-                  className="mt-1.5 w-full rounded-lg border border-neuro-border bg-neuro-dark px-3 py-2.5 text-sm text-neuro-silver focus:border-neuro-blue focus:outline-none focus:ring-2 focus:ring-neuro-blue/30"
+                  className="mt-1.5 w-full rounded-lg border border-[var(--card-border)] bg-[var(--bg-primary)] px-3 py-2.5 text-sm text-[var(--text-primary)] focus:border-[var(--accent-focus)] focus:outline-none focus:ring-2 focus:ring-[var(--accent-focus)]/30"
                 >
                   <option value="">None</option>
                   {goals.map((g) => (

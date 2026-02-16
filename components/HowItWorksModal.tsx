@@ -26,40 +26,49 @@ export function HowItWorksModal({ open, onClose }: Props) {
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-black/60" aria-hidden onClick={onClose} />
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 modal-overlay">
+      <div className="modal-backdrop absolute inset-0" aria-hidden onClick={onClose} />
       <div
-        className="relative card-modern max-w-sm max-h-[85vh] overflow-y-auto p-5 shadow-xl"
+        className="modal-card relative w-full max-w-md max-h-[90vh] overflow-hidden"
+        onClick={(e) => e.stopPropagation()}
         role="dialog"
         aria-labelledby="how-title"
         aria-modal
       >
-        <div className="flex items-center justify-between mb-4">
-          <h2 id="how-title" className="text-lg font-semibold text-neuro-silver">How it works</h2>
+        <header className="modal-card-header">
+          <h2 id="how-title" className="text-xl font-semibold tracking-tight text-[var(--text-primary)]">
+            How it works
+          </h2>
           <button
             type="button"
             onClick={onClose}
-            className="rounded-lg p-1.5 text-neuro-muted hover:bg-neuro-surface hover:text-neuro-silver"
+            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-[var(--text-muted)] transition-colors hover:bg-[var(--accent-neutral)] hover:text-[var(--text-primary)]"
             aria-label="Close"
           >
-            ×
+            <span className="text-xl leading-none">×</span>
           </button>
-        </div>
-        <div className="space-y-4 text-sm text-neuro-muted">
+        </header>
+        <div className="modal-card-body space-y-5">
           {sections.map((s, i) => (
-            <div key={i}>
-              <strong className="text-neuro-silver">{s.title}</strong>
-              <span> — {s.text}</span>
-            </div>
+            <section key={i}>
+              <h3 className="text-sm font-semibold uppercase tracking-wider text-[var(--accent-focus)]">
+                {s.title}
+              </h3>
+              <p className="mt-1.5 text-[15px] leading-relaxed text-[var(--text-secondary)]">
+                {s.text}
+              </p>
+            </section>
           ))}
         </div>
-        <button
-          type="button"
-          onClick={onClose}
-          className="btn-hq-primary mt-4 w-full rounded-lg py-2.5"
-        >
-          Got it
-        </button>
+        <footer className="modal-card-footer">
+          <button
+            type="button"
+            onClick={onClose}
+            className="btn-primary w-full rounded-xl py-3 text-base font-medium sm:w-auto sm:px-8"
+          >
+            Got it
+          </button>
+        </footer>
       </div>
     </div>
   );

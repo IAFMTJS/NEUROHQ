@@ -45,8 +45,8 @@ export default async function LearningPage({ searchParams }: Props) {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold tracking-tight text-neuro-silver">Growth</h1>
-        <p className="mt-1 text-sm text-neuro-muted">Learning & growth — weekly minutes, streak, education options, and recent sessions.</p>
+        <h1 className="text-2xl font-bold tracking-tight text-[var(--text-primary)]">Growth</h1>
+        <p className="mt-1 text-sm text-[var(--text-muted)]">Learning & growth — weekly minutes, streak, education options, and recent sessions.</p>
         <div className="mt-3">
           <GrowthStrategyBanner strategy={strategy} />
         </div>
@@ -72,9 +72,9 @@ export default async function LearningPage({ searchParams }: Props) {
       {booksHistory.length > 0 && <MonthlyBooksHistory books={booksHistory} />}
 
       <section className="card-modern overflow-hidden p-0">
-        <div className="border-b border-neuro-border px-4 py-3">
-          <h2 className="text-base font-semibold text-neuro-silver">Log session</h2>
-          <p className="mt-0.5 text-xs text-neuro-muted">Record time spent learning. Quick-add presets or custom minutes.</p>
+        <div className="border-b border-[var(--card-border)] px-4 py-3">
+          <h2 className="text-base font-semibold text-[var(--text-primary)]">Log session</h2>
+          <p className="mt-0.5 text-xs text-[var(--text-muted)]">Record time spent learning. Quick-add presets or custom minutes.</p>
         </div>
         <div className="p-4">
           <AddLearningSessionForm
@@ -89,8 +89,8 @@ export default async function LearningPage({ searchParams }: Props) {
 
       {(topicBreakdown.length > 0 || monthlyWeeks.length > 0) && (
         <section className="card-modern overflow-hidden p-0">
-          <div className="border-b border-neuro-border px-4 py-3 flex items-center justify-between">
-            <h2 className="text-base font-semibold text-neuro-silver">This week & month</h2>
+          <div className="border-b border-[var(--card-border)] px-4 py-3 flex items-center justify-between">
+            <h2 className="text-base font-semibold text-[var(--text-primary)]">This week & month</h2>
             <LearningExportCSV />
           </div>
           <div className="p-4 flex flex-wrap gap-4">
@@ -107,9 +107,9 @@ export default async function LearningPage({ searchParams }: Props) {
       />
 
       <section className="card-modern overflow-hidden p-0" id="education-options">
-        <div className="border-b border-neuro-border px-4 py-3">
-          <h2 className="text-base font-semibold text-neuro-silver">Education options</h2>
-          <p className="mt-0.5 text-xs text-neuro-muted">Compare paths by clarity. Higher = better fit.</p>
+        <div className="border-b border-[var(--card-border)] px-4 py-3">
+          <h2 className="text-base font-semibold text-[var(--text-primary)]">Education options</h2>
+          <p className="mt-0.5 text-xs text-[var(--text-muted)]">Compare paths by clarity. Higher = better fit.</p>
           <ClarityExplain />
         </div>
         <div className="p-4">

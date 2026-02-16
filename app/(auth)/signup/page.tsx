@@ -5,6 +5,8 @@ import Link from "next/link";
 import Image from "next/image";
 import { createClient } from "@/lib/supabase/client";
 import { IconHQ } from "@/components/hq/NavIcons";
+import GlassCard from "@/components/ui/GlassCard";
+import PrimaryButton from "@/components/ui/PrimaryButton";
 
 export default function SignupPage() {
   const [email, setEmail] = useState("");
@@ -30,7 +32,7 @@ export default function SignupPage() {
   if (success) {
     return (
       <main className="w-full max-w-[380px] hq-card-enter">
-        <div className="hq-card rounded-[var(--hq-card-radius)] p-8 text-center shadow-[var(--card-shadow)]">
+        <GlassCard className="p-8 text-center">
           <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-[var(--accent-energy)]/20 text-[var(--accent-energy)]" aria-hidden>
             <span className="text-2xl">✓</span>
           </div>
@@ -38,17 +40,17 @@ export default function SignupPage() {
           <p className="mt-3 text-sm text-[var(--text-muted)] leading-relaxed">
             We sent a confirmation link to <span className="font-medium text-[var(--text-primary)]">{email}</span>. Click it to activate your account, then sign in.
           </p>
-          <Link href="/login" className="btn-hq-primary mt-6 inline-block rounded-[var(--hq-btn-radius)] px-6 py-2.5 text-sm font-medium">
+          <Link href="/login" className="neon-button mt-6 inline-flex min-h-[48px] items-center justify-center px-6 py-2.5 text-sm font-semibold text-white">
             Back to sign in
           </Link>
-        </div>
+        </GlassCard>
       </main>
     );
   }
 
   return (
     <main className="w-full max-w-[380px] hq-card-enter" style={{ animationDelay: "50ms" }}>
-      <div className="hq-card rounded-[var(--hq-card-radius)] p-6 sm:p-8 shadow-[var(--card-shadow)]">
+      <GlassCard className="p-6 sm:p-8">
         <div className="flex flex-col items-center gap-5 mb-8">
           <div className="flex items-center justify-center gap-3">
             <Image src="/app-icon.png" alt="" width={64} height={64} className="h-16 w-16 rounded-xl object-contain shrink-0" priority />
@@ -99,13 +101,9 @@ export default function SignupPage() {
               {error}
             </div>
           )}
-          <button
-            type="submit"
-            disabled={loading}
-            className="btn-hq-primary w-full rounded-[var(--hq-btn-radius)] py-3 font-medium disabled:opacity-50 disabled:cursor-not-allowed"
-          >
+          <PrimaryButton type="submit" disabled={loading} className="disabled:opacity-50 disabled:cursor-not-allowed">
             {loading ? "Creating account…" : "Sign up"}
-          </button>
+          </PrimaryButton>
         </form>
         <p className="mt-6 text-center text-sm text-[var(--text-muted)]">
           Already have an account?{" "}
@@ -113,7 +111,7 @@ export default function SignupPage() {
             Sign in
           </Link>
         </p>
-      </div>
+      </GlassCard>
     </main>
   );
 }

@@ -34,9 +34,10 @@ export function QuickAdd() {
         type="text"
         value={value}
         onChange={(e) => setValue(e.target.value)}
-        placeholder="Taak of bericht…"
+        placeholder="Taak of bericht… (N = focus, A = assistant)"
         maxLength={500}
         aria-label="Taak of bericht naar assistant"
+        data-quick-add-input
         className="w-full rounded-xl border border-[var(--accent-neutral)] bg-[var(--bg-primary)] px-3 py-2 text-sm text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:border-[var(--accent-focus)] focus:outline-none focus:ring-2 focus:ring-[var(--accent-focus)]"
       />
     </form>

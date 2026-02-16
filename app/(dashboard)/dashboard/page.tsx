@@ -18,25 +18,23 @@ import { getAdaptiveSuggestions } from "@/app/actions/adaptive";
 import { getWeekBounds } from "@/lib/utils/learning";
 import { getCurrencySymbol } from "@/lib/utils/currency";
 import { yesterdayDate, getDayOfYearFromDateString } from "@/lib/utils/timezone";
-import { EMOTION_2D_PATHS, getEmotionImagePath } from "@/lib/emotions";
-import type { EmotionKey } from "@/lib/emotions";
-import type { ThemeId } from "@/lib/theme-tokens";
-import { HQHeader, BrainStatusCard, ActiveMissionCard } from "@/components/hq";
+import { HQHeader, BrainStatusCard, ActiveMissionCard, WatNuBlock, HQShortcutGrid, RadialMeter } from "@/components/hq";
+import { HeroMascotImage } from "@/components/HeroMascotImage";
 import { ModeBanner, ModeExplanationModal, AddCalendarEventForm } from "@/components/dashboard/DashboardClientOnly";
 
 const QuoteCard = dynamic(
   () => import("@/components/QuoteCard").then((m) => ({ default: m.QuoteCard })),
-  { loading: () => <div className="card-modern min-h-[120px] animate-pulse rounded-xl" aria-hidden /> }
+  { loading: () => <div className="glass-card min-h-[120px] animate-pulse rounded-[22px]" aria-hidden /> }
 );
 
 const RealityReportBlock = dynamic(
   () => import("@/components/RealityReportBlock").then((m) => ({ default: m.RealityReportBlock })),
-  { loading: () => <div className="card-modern min-h-[100px] animate-pulse rounded-xl" aria-hidden /> }
+  { loading: () => <div className="glass-card min-h-[100px] animate-pulse rounded-[22px]" aria-hidden /> }
 );
 
 const PatternInsightCard = dynamic(
   () => import("@/components/hq/PatternInsightCard").then((m) => ({ default: m.PatternInsightCard })),
-  { loading: () => <div className="card-modern min-h-[80px] animate-pulse rounded-xl" aria-hidden /> }
+  { loading: () => <div className="glass-card min-h-[80px] animate-pulse rounded-[22px]" aria-hidden /> }
 );
 
 const EnergyBudgetBar = dynamic(
@@ -53,7 +51,7 @@ const FocusBlock = dynamic(
 );
 const OnTrackCard = dynamic(
   () => import("@/components/OnTrackCard").then((m) => ({ default: m.OnTrackCard })),
-  { loading: () => <div className="card-modern min-h-[60px] animate-pulse rounded-xl" aria-hidden /> }
+  { loading: () => <div className="glass-card min-h-[60px] animate-pulse rounded-[22px]" aria-hidden /> }
 );
 const OnboardingBanner = dynamic(
   () => import("@/components/OnboardingBanner").then((m) => ({ default: m.OnboardingBanner })),
@@ -69,14 +67,13 @@ const XPBadge = dynamic(
 );
 const AnalyticsWeekWidget = dynamic(
   () => import("@/components/AnalyticsWeekWidget").then((m) => ({ default: m.AnalyticsWeekWidget })),
-  { loading: () => <div className="card-modern min-h-[100px] animate-pulse rounded-xl" aria-hidden /> }
+  { loading: () => <div className="glass-card min-h-[100px] animate-pulse rounded-[22px]" aria-hidden /> }
 );
 const AdaptiveSuggestionBanner = dynamic(
   () => import("@/components/AdaptiveSuggestionBanner").then((m) => ({ default: m.AdaptiveSuggestionBanner })),
   { loading: () => null }
 );
 
-import Image from "next/image";
 
 function scale1To10ToPct(value: number | null): number {
   if (value == null) return 50;
@@ -175,17 +172,6 @@ export default async function DashboardPage() {
   const focusPct = scale1To10ToPct(state?.focus ?? null);
   const loadPct = scale1To10ToPct(state?.sensory_load ?? null);
 
-  const derivedMood = (() => {
-    if (loadPct >= 75) return "angry";
-    if (energyPct < 25) return "drained";
-    if (energyPct < 45) return "sleepy";
-    if (energyPct < 60) return "questioning";
-    if (energyPct < 80) return "motivated";
-    if (energyPct >= 95) return "neon";
-    return "excited";
-  })() as "drained" | "sleepy" | "questioning" | "motivated" | "excited" | "angry" | "neon";
-  const displayEmotion = prefs.selected_emotion ?? derivedMood;
-
   const learningNeeded = weeklyLearningMinutes < weeklyLearningTarget;
   const todaysTasks = (tasks ?? []).map((t) => ({
     id: (t as { id: string }).id,
@@ -204,8 +190,8 @@ export default async function DashboardPage() {
 
   return (
     <div
-      className={`flex flex-col pb-6 -mt-1 ${isMinimalUI ? "minimal-ui" : ""}`}
-      style={{ gap: "var(--hq-card-gap)" }}
+      className={`flex flex-col -mt-1 ${isMinimalUI ? "minimal-ui" : ""}`}
+      style={{ gap: "var(--space-section)", paddingBottom: "var(--space-section)" }}
       data-minimal={isMinimalUI ? "true" : undefined}
     >
       {!isMinimalUI && <OnboardingBanner />}
@@ -214,24 +200,13 @@ export default async function DashboardPage() {
           <XPBadge totalXp={xp.total_xp} level={xp.level} compact />
         </div>
       )}
-      <div className="flex flex-col gap-0">
+      {/* Hero: mascot – emotion disabled; fixed Homepagemascotte.png */}
+      <div className="flex flex-col gap-0 relative justify-center min-h-[65vh]">
         {!isMinimalUI && (
-          <div className="w-full flex justify-center shrink-0 pt-0 max-w-[260px] mx-auto" aria-hidden>
-            <div className="relative w-full aspect-square min-h-[160px] rounded-xl overflow-hidden">
-              {displayEmotion && displayEmotion in EMOTION_2D_PATHS ? (
-                <Image
-                  src={getEmotionImagePath(displayEmotion as EmotionKey, (prefs.theme ?? "normal") as ThemeId)}
-                  alt=""
-                  fill
-                  sizes="260px"
-                  className="object-contain p-2"
-                  priority
-                />
-              ) : (
-                <div className="absolute inset-0 bg-[var(--bg-surface)]/50">
-                  <Image src="/app-icon.png" alt="" fill sizes="260px" className="object-contain p-4" priority />
-                </div>
-              )}
+          <div className="hq-hero-mascot-wrap w-full pt-0" aria-hidden>
+            <div className="hq-mascot-glow" />
+            <div className="hq-mascot-img">
+              <HeroMascotImage />
             </div>
           </div>
         )}
@@ -241,7 +216,24 @@ export default async function DashboardPage() {
           loadPct={loadPct}
           copyVariant={adaptiveSuggestions.copyVariant}
         />
+        {!isMinimalUI && (
+          <div className="flex flex-col items-center gap-4 pt-2 pb-2">
+            <Link
+              href={todaysTasks.length > 0 ? "/tasks" : "/assistant"}
+              className="space-btn w-full max-w-[280px] py-2 px-6 text-[14px] sm:text-base"
+              aria-label={todaysTasks.length > 0 ? "Go to missions" : "Begin mission"}
+            >
+              BEGIN MISSION
+            </Link>
+            <div className="grid grid-cols-3 gap-4 w-full max-w-[320px] justify-items-center">
+              <RadialMeter value={energyPct} label="ENERGY" variant="energy" thin />
+              <RadialMeter value={focusPct} label="FOCUS" variant="focus" thin />
+              <RadialMeter value={loadPct} label="LOAD" variant="warning" thin />
+            </div>
+          </div>
+        )}
       </div>
+      {!isMinimalUI && <HQShortcutGrid />}
       <BrainStatusCard
         date={dateStr}
         initial={{
@@ -294,10 +286,10 @@ export default async function DashboardPage() {
       />
       {mode === "driven" && !isMinimalUI && <FocusBlock />}
       {!isMinimalUI && (
-      <section className="card-modern overflow-hidden p-0">
-        <div className="border-b border-neuro-border px-4 py-3">
-          <h2 className="text-base font-semibold text-neuro-silver">Calendar</h2>
-          <p className="mt-0.5 text-xs text-neuro-muted">Today and tomorrow. Events count toward your energy budget on that day.</p>
+      <section className="glass-card glass-card-glow-blue overflow-hidden p-0">
+        <div className="border-b border-[var(--card-border)] px-4 py-3">
+          <h2 className="text-base font-semibold text-[var(--text-primary)]">Calendar</h2>
+          <p className="mt-0.5 text-xs text-[var(--text-muted)]">Today and tomorrow. Events count toward your energy budget on that day.</p>
         </div>
         <div className="p-4 space-y-4">
           <UpcomingCalendarList
@@ -310,9 +302,9 @@ export default async function DashboardPage() {
       </section>
       )}
       {!isMinimalUI && strategy?.identity_statement && (
-        <div className="card-modern px-4 py-3">
-          <h2 className="text-sm font-semibold text-neuro-muted">This quarter</h2>
-          <p className="mt-1 text-sm text-neuro-silver italic">&ldquo;{strategy.identity_statement}&rdquo;</p>
+        <div className="glass-card glass-card-glow-purple p-4">
+          <h2 className="text-sm font-semibold text-[var(--text-muted)]">This quarter</h2>
+          <p className="mt-1 text-sm text-[var(--text-secondary)] italic">&ldquo;{strategy.identity_statement}&rdquo;</p>
         </div>
       )}
       {!isMinimalUI && (adaptiveSuggestions.themeSuggestion || adaptiveSuggestions.emotionSuggestion || adaptiveSuggestions.taskCountSuggestion != null) && (
@@ -320,13 +312,13 @@ export default async function DashboardPage() {
       )}
       {!isMinimalUI && <AnalyticsWeekWidget summary={weekSummary} />}
       {!isMinimalUI && learningStreak >= 1 && (
-        <div className="card-modern-accent flex items-center gap-3 px-4 py-3">
+        <div className="glass-card flex items-center gap-3 p-4">
           <span className="text-2xl" aria-hidden>🔥</span>
           <div>
-            <p className="text-sm font-medium text-neuro-silver">Learning streak</p>
-            <p className="text-xs text-neuro-muted">{learningStreak} week{learningStreak !== 1 ? "s" : ""} in a row (≥{weeklyLearningTarget} min)</p>
+            <p className="text-sm font-medium text-[var(--text-primary)]">Learning streak</p>
+            <p className="text-xs text-[var(--text-muted)]">{learningStreak} week{learningStreak !== 1 ? "s" : ""} in a row (≥{weeklyLearningTarget} min)</p>
           </div>
-          <Link href="/learning" className="ml-auto text-sm font-medium text-neuro-blue hover:underline">
+          <Link href="/learning" className="ml-auto text-sm font-medium text-[var(--accent-focus)] hover:underline">
             Growth →
           </Link>
         </div>
@@ -334,17 +326,17 @@ export default async function DashboardPage() {
       {!isMinimalUI && budgetRemainingCents != null && (
         <Link
           href="/budget"
-          className="card-modern flex items-center gap-3 px-4 py-3 hover:bg-neuro-surface/50 transition"
+          className="glass-card flex items-center gap-3 p-4 transition-opacity hover:opacity-90"
         >
-          <span className="text-xl font-bold tabular-nums text-neuro-silver">
+          <span className="text-xl font-bold tabular-nums text-[var(--text-primary)]">
             {getCurrencySymbol(budgetSettings.currency)}
             {budgetRemainingCents >= 0 ? (budgetRemainingCents / 100).toFixed(0) : (Math.abs(budgetRemainingCents) / 100).toFixed(0)}
           </span>
           <div className="min-w-0">
-            <p className="text-sm font-medium text-neuro-silver">Budget remaining this month</p>
-            <p className="text-xs text-neuro-muted">Spendable after savings</p>
+            <p className="text-sm font-medium text-[var(--text-primary)]">Budget remaining this month</p>
+            <p className="text-xs text-[var(--text-muted)]">Spendable after savings</p>
           </div>
-          <span className="ml-auto text-sm font-medium text-neuro-blue">Budget →</span>
+          <span className="ml-auto text-sm font-medium text-[var(--accent-focus)]">Budget →</span>
         </Link>
       )}
       {!isMinimalUI && (

@@ -35,27 +35,38 @@ export function ConfirmModal({
   }
 
   return (
-    <Modal open={open} onClose={onClose} title={title} showBranding={false}>
-      <p className="text-sm text-neuro-muted">{message}</p>
-      <div className="mt-4 flex justify-end gap-2">
-        <button
-          type="button"
-          onClick={onClose}
-          className="rounded-lg border border-neuro-border px-4 py-2 text-sm font-medium text-neuro-silver hover:bg-neuro-surface"
-        >
-          Cancel
-        </button>
-        <button
-          type="button"
-          onClick={handleConfirm}
-          disabled={loading}
-          className={`rounded-lg px-4 py-2 text-sm font-medium text-white disabled:opacity-50 ${
-            danger ? "bg-red-600 hover:bg-red-500" : "bg-neuro-blue hover:bg-neuro-blue/90"
-          }`}
-        >
-          {loading ? "…" : confirmLabel}
-        </button>
-      </div>
+    <Modal
+      open={open}
+      onClose={onClose}
+      title={title}
+      size="sm"
+      footer={
+        <>
+          <button
+            type="button"
+            onClick={onClose}
+            className="rounded-xl border border-[var(--card-border)] bg-transparent px-5 py-2.5 text-sm font-medium text-[var(--text-primary)] transition-colors hover:bg-[var(--accent-neutral)]"
+          >
+            Cancel
+          </button>
+          <button
+            type="button"
+            onClick={handleConfirm}
+            disabled={loading}
+            className={`rounded-xl px-5 py-2.5 text-sm font-semibold text-white transition-opacity disabled:opacity-50 ${
+              danger
+                ? "bg-red-500 hover:bg-red-600"
+                : "bg-[var(--accent-focus)] hover:opacity-90"
+            }`}
+          >
+            {loading ? "…" : confirmLabel}
+          </button>
+        </>
+      }
+    >
+      <p className="text-[15px] leading-relaxed text-[var(--text-secondary)]">
+        {message}
+      </p>
     </Modal>
   );
 }

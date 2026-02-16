@@ -81,7 +81,7 @@ export async function createTask(params: {
 }) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
-  if (!user) throw new Error("Not authenticated");
+  if (!user) throw new Error("Je bent niet ingelogd. Log opnieuw in.");
 
   const { data, error } = await supabase
     .from("tasks")
@@ -103,7 +103,14 @@ export async function createTask(params: {
     } as Record<string, unknown>)
     .select("id")
     .single();
-  if (error) throw new Error(error.message);
+  if (error) {
+    const msg = error.code === "PGRST301" || error.message?.toLowerCase().includes("auth") || error.message?.toLowerCase().includes("jwt")
+      ? "Je sessie is verlopen. Log opnieuw in."
+      : error.message?.toLowerCase().includes("unique") || error.message?.toLowerCase().includes("violates")
+        ? "Deze taak kon niet worden opgeslagen. Vernieuw de pagina en probeer opnieuw."
+        : "De taak kon niet worden toegevoegd. Controleer of je nog bent ingelogd en probeer het opnieuw.";
+    throw new Error(msg);
+  }
   revalidatePath("/dashboard");
   revalidatePath("/tasks");
   return { ok: true as const, id: data?.id };

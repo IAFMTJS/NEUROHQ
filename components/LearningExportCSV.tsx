@@ -27,7 +27,7 @@ export function LearningExportCSV() {
       type="button"
       onClick={handleExport}
       disabled={loading}
-      className="text-xs font-medium text-neuro-blue hover:underline disabled:opacity-50"
+      className="text-xs font-medium text-[var(--accent-focus)] hover:underline disabled:opacity-50"
     >
       {loading ? "Exporting…" : "Export sessions (CSV)"}
     </button>

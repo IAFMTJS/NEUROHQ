@@ -87,24 +87,24 @@ export function EditMissionModal({ open, onClose, task, onSaved }: Props) {
       <form onSubmit={handleSubmit} className="space-y-4">
         {error && <p className="text-sm text-red-400" role="alert">{error}</p>}
         <div>
-          <label className="block text-xs font-medium text-neuro-muted">Title</label>
-          <input type="text" value={title} onChange={(e) => setTitle(e.target.value)} className="mt-1 w-full rounded-lg border border-neuro-border bg-neuro-dark px-3 py-2.5 text-sm text-neuro-silver" required />
+          <label className="block text-xs font-medium text-[var(--text-muted)]">Title</label>
+          <input type="text" value={title} onChange={(e) => setTitle(e.target.value)} className="mt-1 w-full rounded-lg border border-[var(--card-border)] bg-[var(--bg-primary)] px-3 py-2.5 text-sm text-[var(--text-primary)]" required />
         </div>
         <div>
-          <label className="block text-xs font-medium text-neuro-muted">Due date</label>
-          <input type="date" value={dueDate} onChange={(e) => setDueDate(e.target.value)} className="mt-1 w-full rounded-lg border border-neuro-border bg-neuro-dark px-3 py-2.5 text-sm text-neuro-silver" />
+          <label className="block text-xs font-medium text-[var(--text-muted)]">Due date</label>
+          <input type="date" value={dueDate} onChange={(e) => setDueDate(e.target.value)} className="mt-1 w-full rounded-lg border border-[var(--card-border)] bg-[var(--bg-primary)] px-3 py-2.5 text-sm text-[var(--text-primary)]" />
         </div>
         <div>
-          <label className="block text-xs font-medium text-neuro-muted">Category</label>
-          <select value={category} onChange={(e) => setCategory(e.target.value)} className="mt-1 w-full rounded-lg border border-neuro-border bg-neuro-dark px-3 py-2.5 text-sm text-neuro-silver">
+          <label className="block text-xs font-medium text-[var(--text-muted)]">Category</label>
+          <select value={category} onChange={(e) => setCategory(e.target.value)} className="mt-1 w-full rounded-lg border border-[var(--card-border)] bg-[var(--bg-primary)] px-3 py-2.5 text-sm text-[var(--text-primary)]">
             <option value="">—</option>
             <option value="work">Work</option>
             <option value="personal">Personal</option>
           </select>
         </div>
         <div>
-          <label className="block text-xs font-medium text-neuro-muted">Recurrence</label>
-          <select value={recurrence} onChange={(e) => setRecurrence(e.target.value)} className="mt-1 w-full rounded-lg border border-neuro-border bg-neuro-dark px-3 py-2.5 text-sm text-neuro-silver">
+          <label className="block text-xs font-medium text-[var(--text-muted)]">Recurrence</label>
+          <select value={recurrence} onChange={(e) => setRecurrence(e.target.value)} className="mt-1 w-full rounded-lg border border-[var(--card-border)] bg-[var(--bg-primary)] px-3 py-2.5 text-sm text-[var(--text-primary)]">
             <option value="">Once</option>
             <option value="daily">Daily</option>
             <option value="weekly">Weekly</option>
@@ -113,10 +113,10 @@ export function EditMissionModal({ open, onClose, task, onSaved }: Props) {
         </div>
         {recurrence === "weekly" && (
           <div>
-            <label className="block text-xs font-medium text-neuro-muted">Repeat on (weekdays)</label>
+            <label className="block text-xs font-medium text-[var(--text-muted)]">Repeat on (weekdays)</label>
             <div className="mt-1 flex flex-wrap gap-1">
               {[1, 2, 3, 4, 5, 6, 7].map((d) => (
-                <button key={d} type="button" onClick={() => toggleWeekday(d)} className={`rounded px-2 py-1 text-xs ${weekdays.includes(d) ? "bg-neuro-blue/20 text-neuro-blue" : "bg-neuro-surface text-neuro-muted hover:text-neuro-silver"}`}>
+                <button key={d} type="button" onClick={() => toggleWeekday(d)} className={`rounded px-2 py-1 text-xs ${weekdays.includes(d) ? "bg-[var(--accent-focus)]/20 text-[var(--accent-focus)]" : "bg-[var(--bg-surface)] text-[var(--text-muted)] hover:text-[var(--text-primary)]"}`}>
                   {WEEKDAY_LABELS[d]}
                 </button>
               ))}
@@ -125,8 +125,8 @@ export function EditMissionModal({ open, onClose, task, onSaved }: Props) {
         )}
         <div className="grid grid-cols-2 gap-2">
           <div>
-            <label className="block text-xs font-medium text-neuro-muted">Impact (1–3)</label>
-            <select value={impact} onChange={(e) => setImpact(e.target.value)} className="mt-1 w-full rounded border border-neuro-border bg-neuro-dark px-2 py-1.5 text-sm text-neuro-silver">
+            <label className="block text-xs font-medium text-[var(--text-muted)]">Impact (1–3)</label>
+            <select value={impact} onChange={(e) => setImpact(e.target.value)} className="mt-1 w-full rounded border border-[var(--card-border)] bg-[var(--bg-primary)] px-2 py-1.5 text-sm text-[var(--text-primary)]">
               <option value="">—</option>
               <option value="1">1 Low</option>
               <option value="2">2 Medium</option>
@@ -134,8 +134,8 @@ export function EditMissionModal({ open, onClose, task, onSaved }: Props) {
             </select>
           </div>
           <div>
-            <label className="block text-xs font-medium text-neuro-muted">Urgency (1–3)</label>
-            <select value={urgency} onChange={(e) => setUrgency(e.target.value)} className="mt-1 w-full rounded border border-neuro-border bg-neuro-dark px-2 py-1.5 text-sm text-neuro-silver">
+            <label className="block text-xs font-medium text-[var(--text-muted)]">Urgency (1–3)</label>
+            <select value={urgency} onChange={(e) => setUrgency(e.target.value)} className="mt-1 w-full rounded border border-[var(--card-border)] bg-[var(--bg-primary)] px-2 py-1.5 text-sm text-[var(--text-primary)]">
               <option value="">—</option>
               <option value="1">1 Low</option>
               <option value="2">2 Medium</option>
@@ -143,8 +143,8 @@ export function EditMissionModal({ open, onClose, task, onSaved }: Props) {
             </select>
           </div>
           <div>
-            <label className="block text-xs font-medium text-neuro-muted">Energy (1–10)</label>
-            <select value={energy} onChange={(e) => setEnergy(e.target.value)} className="mt-1 w-full rounded border border-neuro-border bg-neuro-dark px-2 py-1.5 text-sm text-neuro-silver">
+            <label className="block text-xs font-medium text-[var(--text-muted)]">Energy (1–10)</label>
+            <select value={energy} onChange={(e) => setEnergy(e.target.value)} className="mt-1 w-full rounded border border-[var(--card-border)] bg-[var(--bg-primary)] px-2 py-1.5 text-sm text-[var(--text-primary)]">
               <option value="">—</option>
               {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((n) => (
                 <option key={n} value={n}>{n}</option>
@@ -152,8 +152,8 @@ export function EditMissionModal({ open, onClose, task, onSaved }: Props) {
             </select>
           </div>
           <div>
-            <label className="block text-xs font-medium text-neuro-muted">Mental load (1–10)</label>
-            <select value={mentalLoad} onChange={(e) => setMentalLoad(e.target.value)} className="mt-1 w-full rounded border border-neuro-border bg-neuro-dark px-2 py-1.5 text-sm text-neuro-silver">
+            <label className="block text-xs font-medium text-[var(--text-muted)]">Mental load (1–10)</label>
+            <select value={mentalLoad} onChange={(e) => setMentalLoad(e.target.value)} className="mt-1 w-full rounded border border-[var(--card-border)] bg-[var(--bg-primary)] px-2 py-1.5 text-sm text-[var(--text-primary)]">
               <option value="">—</option>
               {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((n) => (
                 <option key={n} value={n}>{n}</option>
@@ -161,8 +161,8 @@ export function EditMissionModal({ open, onClose, task, onSaved }: Props) {
             </select>
           </div>
           <div>
-            <label className="block text-xs font-medium text-neuro-muted">Social load (1–10)</label>
-            <select value={socialLoad} onChange={(e) => setSocialLoad(e.target.value)} className="mt-1 w-full rounded border border-neuro-border bg-neuro-dark px-2 py-1.5 text-sm text-neuro-silver">
+            <label className="block text-xs font-medium text-[var(--text-muted)]">Social load (1–10)</label>
+            <select value={socialLoad} onChange={(e) => setSocialLoad(e.target.value)} className="mt-1 w-full rounded border border-[var(--card-border)] bg-[var(--bg-primary)] px-2 py-1.5 text-sm text-[var(--text-primary)]">
               <option value="">—</option>
               {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((n) => (
                 <option key={n} value={n}>{n}</option>
@@ -170,8 +170,8 @@ export function EditMissionModal({ open, onClose, task, onSaved }: Props) {
             </select>
           </div>
           <div>
-            <label className="block text-xs font-medium text-neuro-muted">Priority (1–5)</label>
-            <select value={priority} onChange={(e) => setPriority(e.target.value)} className="mt-1 w-full rounded border border-neuro-border bg-neuro-dark px-2 py-1.5 text-sm text-neuro-silver">
+            <label className="block text-xs font-medium text-[var(--text-muted)]">Priority (1–5)</label>
+            <select value={priority} onChange={(e) => setPriority(e.target.value)} className="mt-1 w-full rounded border border-[var(--card-border)] bg-[var(--bg-primary)] px-2 py-1.5 text-sm text-[var(--text-primary)]">
               <option value="">—</option>
               {[1, 2, 3, 4, 5].map((n) => (
                 <option key={n} value={n}>{n}</option>
@@ -180,11 +180,11 @@ export function EditMissionModal({ open, onClose, task, onSaved }: Props) {
           </div>
         </div>
         <div>
-          <label className="block text-xs font-medium text-neuro-muted">Notes</label>
-          <textarea value={notes} onChange={(e) => setNotes(e.target.value)} rows={3} className="mt-1 w-full rounded-lg border border-neuro-border bg-neuro-dark px-3 py-2.5 text-sm text-neuro-silver placeholder-neuro-muted" placeholder="Optional notes…" />
+          <label className="block text-xs font-medium text-[var(--text-muted)]">Notes</label>
+          <textarea value={notes} onChange={(e) => setNotes(e.target.value)} rows={3} className="mt-1 w-full rounded-lg border border-[var(--card-border)] bg-[var(--bg-primary)] px-3 py-2.5 text-sm text-[var(--text-primary)] placeholder-[var(--text-muted)]" placeholder="Optional notes…" />
         </div>
         <div className="flex justify-end gap-2">
-          <button type="button" onClick={onClose} className="rounded-lg border border-neuro-border px-4 py-2 text-sm font-medium text-neuro-silver hover:bg-neuro-surface">Cancel</button>
+          <button type="button" onClick={onClose} className="rounded-lg border border-[var(--card-border)] px-4 py-2 text-sm font-medium text-[var(--text-primary)] hover:bg-[var(--bg-surface)]">Cancel</button>
           <button type="submit" disabled={pending} className="btn-primary rounded-lg px-4 py-2 text-sm font-medium disabled:opacity-50">{pending ? "Saving…" : "Save"}</button>
         </div>
       </form>
