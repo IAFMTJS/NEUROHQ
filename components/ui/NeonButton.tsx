@@ -35,8 +35,9 @@ export function NeonButton(props: ButtonProps | LinkProps) {
   } ${className}`.trim();
 
   if (isLink) {
+    const { href, ...linkRest } = rest as LinkProps;
     return (
-      <Link href={props.href} className={classes} {...(rest as LinkProps)}>
+      <Link href={href} className={classes} {...linkRest}>
         {children}
       </Link>
     );
