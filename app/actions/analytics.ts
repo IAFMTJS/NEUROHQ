@@ -96,9 +96,8 @@ export async function upsertDailyAnalytics(date: string) {
     },
     { onConflict: "user_id,date" }
   );
-  revalidatePath("/dashboard");
-  revalidatePath("/analytics");
-  revalidatePath("/report");
+  // Do not call revalidatePath here: this function may be invoked during page render
+  // (e.g. dashboard). Revalidation is done in recordActiveSeconds and other user-triggered actions.
 }
 
 /** Record active seconds for today (client can call periodically). */

@@ -18,7 +18,7 @@ import { getAdaptiveSuggestions } from "@/app/actions/adaptive";
 import { getWeekBounds } from "@/lib/utils/learning";
 import { getCurrencySymbol } from "@/lib/utils/currency";
 import { yesterdayDate, getDayOfYearFromDateString } from "@/lib/utils/timezone";
-import { HQHeader, BrainStatusCard, ActiveMissionCard, WatNuBlock, HQShortcutGrid, RadialMeter } from "@/components/hq";
+import { HQHeader, BrainStatusCard, MissionButton, ActiveMissionCard, WatNuBlock, HQShortcutGrid, RadialMeter } from "@/components/hq";
 import { HeroMascotImage } from "@/components/HeroMascotImage";
 import { ModeBanner, ModeExplanationModal, AddCalendarEventForm } from "@/components/dashboard/DashboardClientOnly";
 
@@ -218,17 +218,12 @@ export default async function DashboardPage() {
         />
         {!isMinimalUI && (
           <div className="flex flex-col items-center gap-4 pt-2 pb-2">
-            <div className="mission-wrapper w-full max-w-[320px]">
-              <div className="glow-blur" aria-hidden />
-              <div className="glass-border" aria-hidden />
-              <Link
-                href={todaysTasks.length > 0 ? "/tasks" : "/assistant"}
-                className="mission-btn"
-                aria-label={todaysTasks.length > 0 ? "Go to missions" : "Begin mission"}
-              >
-                BEGIN MISSION
-              </Link>
-            </div>
+            <MissionButton
+              href={todaysTasks.length > 0 ? "/tasks" : "/assistant"}
+              aria-label={todaysTasks.length > 0 ? "Go to missions" : "Begin mission"}
+            >
+              BEGIN MISSION
+            </MissionButton>
             <div className="grid grid-cols-3 gap-4 w-full max-w-[320px] justify-items-center">
               <RadialMeter value={energyPct} label="ENERGY" variant="energy" thin />
               <RadialMeter value={focusPct} label="FOCUS" variant="focus" thin />

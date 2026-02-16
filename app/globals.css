@@ -185,6 +185,13 @@ body {
   --card-glow-green: 0 0 0 1px rgba(34, 197, 94, 0.35), 0 0 24px rgba(34, 197, 94, 0.1);
   --card-glow-orange: 0 0 0 1px rgba(251, 191, 36, 0.35), 0 0 24px rgba(251, 191, 36, 0.1);
   --card-glow-purple: 0 0 0 1px rgba(168, 85, 247, 0.35), 0 0 24px rgba(168, 85, 247, 0.12);
+
+  /* Mission button – neon emissie (kleur in layers, glas kleurloos) */
+  --neon-cyan: #00f2ff;
+  --neon-purple: #7a5cff;
+  --neon-green: #00ffa3;
+  --glass-blur: 32px;
+  --neon-radius: 80px;
 }
 
 /* Layer 4: THEME (MD §8 – theme_dark accent_primary = cyan, theme_minimal = #000/#FFF) */
@@ -1116,121 +1123,204 @@ body {
 }
 
 /* =========================
-   BEGIN MISSION – 6-layer pixel-perfect (glass neon)
-   Layers: 1 outer glow blur, 2 glass border ring, 3 glass body,
-   4 inner gradient highlight, 5 border ring, 6 text glow
+   BEGIN MISSION – Correct neon physics
+   Kleur zit in de EMISSIE erachter; knop is bijna kleurloos glas.
+   beam-blur (diffused) → beam (hard neon) → glass-btn (translucency only)
 ========================= */
 
-.mission-wrapper {
+.neon-wrap {
   position: relative;
   width: 100%;
-  max-width: 320px;
-  height: 72px;
+  max-width: 600px;
+  min-width: 320px;
+  height: 110px;
 }
 
-/* 1️⃣ Outer neon glow blur (diffusion layer – separate div so blur sits outside glass) */
-.mission-wrapper .glow-blur {
+/* 1️⃣ Diffused glow (achter de knop, z-index 0) */
+.neon-wrap .beam-blur {
   position: absolute;
-  inset: 0;
-  border-radius: 18px;
+  inset: -35px;
+  border-radius: 100px;
   background: linear-gradient(
     90deg,
-    #2ee6ff 0%,
-    #8a5cff 50%,
-    #00f5a0 100%
+    #00f0ff 0%,
+    #7a5cff 50%,
+    #00ff9d 100%
   );
-  filter: blur(22px);
+  filter: blur(45px);
   opacity: 0.85;
-  z-index: 1;
-  background-blend-mode: screen;
+  z-index: 0;
 }
 
-/* 2️⃣ Glass border ring (gradient frost ring) */
-.mission-wrapper .glass-border {
+/* 2️⃣ Hard neon beam (kleur zit hier, niet in de knop) */
+.neon-wrap .beam {
   position: absolute;
   inset: 0;
-  border-radius: 18px;
+  border-radius: 70px;
   background: linear-gradient(
     90deg,
-    rgba(46, 230, 255, 0.7),
-    rgba(138, 92, 255, 0.7),
-    rgba(0, 245, 160, 0.7)
+    #00f0ff 0%,
+    #7a5cff 50%,
+    #00ff9d 100%
   );
-  padding: 1.5px;
-  -webkit-mask:
-    linear-gradient(#000 0 0) content-box,
-    linear-gradient(#000 0 0);
-  -webkit-mask-composite: xor;
-  mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
-  mask-composite: exclude;
-  z-index: 2;
-  opacity: 0.7;
-  pointer-events: none;
+  opacity: 1;
+  z-index: 1;
 }
 
-/* 3️⃣ Main glass button (body + text) */
-.mission-wrapper .mission-btn {
+/* 3️⃣ Glass button – bijna kleurloos, puur translucency + highlight */
+.neon-wrap .glass-btn {
   position: relative;
-  z-index: 3;
+  z-index: 2;
   width: 100%;
   height: 100%;
-  border-radius: 18px;
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  background: linear-gradient(
-    180deg,
-    rgba(255, 255, 255, 0.12) 0%,
-    rgba(255, 255, 255, 0.04) 100%
+  border-radius: 70px;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  background: radial-gradient(
+    150% 200% at 50% 0%,
+    rgba(255, 255, 255, 0.35) 0%,
+    rgba(255, 255, 255, 0.15) 30%,
+    rgba(255, 255, 255, 0.05) 60%,
+    rgba(255, 255, 255, 0.02) 100%
   );
-  backdrop-filter: blur(18px);
-  -webkit-backdrop-filter: blur(18px);
+  backdrop-filter: blur(28px);
+  -webkit-backdrop-filter: blur(28px);
+  box-shadow:
+    inset 0 3px 6px rgba(255, 255, 255, 0.4),
+    inset 0 -8px 14px rgba(0, 0, 0, 0.5);
   color: #fff;
-  font-size: 18px;
+  font-size: 26px;
   font-weight: 600;
-  letter-spacing: 1.5px;
+  letter-spacing: 3px;
   text-transform: uppercase;
+  text-shadow:
+    0 0 10px rgba(255, 255, 255, 0.9),
+    0 0 25px rgba(122, 92, 255, 0.9);
   cursor: pointer;
   text-decoration: none;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  box-shadow:
-    inset 0 1px 1px rgba(255, 255, 255, 0.25),
-    inset 0 -1px 2px rgba(0, 0, 0, 0.4),
-    0 0 12px rgba(138, 92, 255, 0.35);
+  overflow: hidden;
   transition: all 0.3s ease;
-  text-shadow:
-    0 0 6px rgba(138, 92, 255, 0.9),
-    0 0 12px rgba(46, 230, 255, 0.8),
-    0 0 18px rgba(0, 245, 160, 0.6);
 }
 
-/* 4️⃣ Inner light sweep (::before on button) */
-.mission-wrapper .mission-btn::before {
+/* Edge refract highlight (rand-licht breking) */
+.neon-wrap .glass-btn::after {
   content: "";
   position: absolute;
   inset: 0;
-  border-radius: 18px;
-  background: linear-gradient(
-    120deg,
-    rgba(255, 255, 255, 0.25) 0%,
-    rgba(255, 255, 255, 0.05) 40%,
-    rgba(255, 255, 255, 0.02) 100%
-  );
+  border-radius: 70px;
+  box-shadow:
+    0 0 30px rgba(122, 92, 255, 0.6),
+    0 0 60px rgba(0, 240, 255, 0.4);
   opacity: 0.5;
   pointer-events: none;
 }
 
-/* 6️⃣ Hover – stronger glow */
-.mission-wrapper:hover .glow-blur {
-  filter: blur(28px);
+/* Hover – sterkere emissie */
+.neon-wrap:hover .beam-blur {
   opacity: 1;
+  filter: blur(50px);
 }
 
-.mission-wrapper:hover .mission-btn {
-  box-shadow:
-    inset 0 1px 1px rgba(255, 255, 255, 0.3),
-    inset 0 -1px 2px rgba(0, 0, 0, 0.5),
-    0 0 18px rgba(138, 92, 255, 0.6);
+.neon-wrap:hover .glass-btn::after {
+  opacity: 0.65;
+}
+
+/* =========================
+   Mission button – Tailwind utilities (production-ready)
+   Kleur in emissie; glas blijft bijna kleurloos. Ook bruikbaar in pure HTML/CSS.
+========================= */
+
+@layer utilities {
+  .neon-diffuse {
+    background: linear-gradient(
+      90deg,
+      var(--neon-cyan) 0%,
+      var(--neon-purple) 50%,
+      var(--neon-green) 100%
+    );
+    filter: blur(55px);
+    opacity: 0.9;
+  }
+
+  .neon-core {
+    background: linear-gradient(
+      90deg,
+      var(--neon-cyan) 0%,
+      var(--neon-purple) 50%,
+      var(--neon-green) 100%
+    );
+  }
+
+  .glass-surface {
+    backdrop-filter: blur(var(--glass-blur));
+    -webkit-backdrop-filter: blur(var(--glass-blur));
+    background: radial-gradient(
+      180% 200% at 50% 0%,
+      rgba(255, 255, 255, 0.45) 0%,
+      rgba(255, 255, 255, 0.18) 30%,
+      rgba(255, 255, 255, 0.06) 55%,
+      rgba(255, 255, 255, 0.02) 100%
+    );
+  }
+}
+
+/* Ultra neon variant – emissive text + pulse + light sweep */
+@keyframes neonPulse {
+  0%, 100% { opacity: 0.9; }
+  50% { opacity: 1; }
+}
+
+.neon-animate {
+  animation: neonPulse 4s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .neon-animate {
+    animation: none;
+  }
+}
+
+.neon-text {
+  text-shadow:
+    0 0 15px rgba(255, 255, 255, 1),
+    0 0 35px rgba(122, 92, 255, 0.9),
+    0 0 60px rgba(0, 242, 255, 0.7);
+}
+
+.light-sweep {
+  position: relative;
+  overflow: hidden;
+}
+
+.light-sweep::before {
+  content: "";
+  position: absolute;
+  width: 50%;
+  height: 250%;
+  background: linear-gradient(
+    120deg,
+    transparent,
+    rgba(255, 255, 255, 0.5),
+    transparent
+  );
+  transform: rotate(25deg);
+  left: -70%;
+  top: -60%;
+  animation: sweep 5s infinite linear;
+  pointer-events: none;
+}
+
+@keyframes sweep {
+  0% { left: -70%; }
+  100% { left: 130%; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .light-sweep::before {
+    animation: none;
+  }
 }
 
 @keyframes gradientShift {

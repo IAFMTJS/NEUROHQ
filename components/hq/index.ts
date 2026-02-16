@@ -1,5 +1,6 @@
 export { HQHeader } from "./HQHeader";
 export { BrainStatusCard } from "./BrainStatusCard";
+export { MissionButton } from "./MissionButton";
 export { ActiveMissionCard } from "./ActiveMissionCard";
 export { WatNuBlock } from "./WatNuBlock";
 export { HQShortcutGrid } from "./HQShortcutGrid";

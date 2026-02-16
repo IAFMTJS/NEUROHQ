@@ -1,6 +1,6 @@
 "use client";
 
-import Link from "next/link";
+import { MissionButton } from "./MissionButton";
 
 export type TaskForMission = { id: string; title: string; carryOverCount?: number };
 
@@ -62,17 +62,13 @@ export function ActiveMissionCard({
         </p>
 
         <div className="pt-4 flex justify-center">
-          <div className="mission-wrapper w-full max-w-[320px] h-[72px]">
-            <div className="glow-blur" aria-hidden />
-            <div className="glass-border" aria-hidden />
-            <Link
-              href={href}
-              className="mission-btn gap-2"
-              aria-label={tasks.length > 0 ? "Go to missions" : "Begin mission"}
-            >
-              {tasks.length > 0 ? "GO TO MISSIONS" : "BEGIN MISSION"} →
-            </Link>
-          </div>
+          <MissionButton
+            href={href}
+            aria-label={tasks.length > 0 ? "Go to missions" : "Begin mission"}
+            className="gap-2"
+          >
+            {tasks.length > 0 ? "GO TO MISSIONS" : "BEGIN MISSION"} →
+          </MissionButton>
         </div>
 
         <p className="text-center text-[var(--text-muted)] text-xs pt-2">
