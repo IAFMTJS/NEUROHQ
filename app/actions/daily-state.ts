@@ -59,7 +59,7 @@ export async function saveDailyState(input: DailyStateInput): Promise<SaveDailyS
           : "Kon dagstatus niet opslaan. Probeer het opnieuw.";
       return { ok: false, error: msg };
     }
-    revalidateTag(`daily-${user.id}-${input.date}`);
+    revalidateTag(`daily-${user.id}-${input.date}`, "max");
     revalidatePath("/dashboard");
     revalidatePath("/report");
     const { awardXPForBrainStatus } = await import("./xp");
