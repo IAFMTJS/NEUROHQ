@@ -62,13 +62,17 @@ export function ActiveMissionCard({
         </p>
 
         <div className="pt-4 flex justify-center">
-          <Link
-            href={href}
-            className="space-btn inline-flex items-center justify-center gap-2 px-6 py-2 text-[14px] sm:text-base"
-            aria-label={tasks.length > 0 ? "Go to missions" : "Begin mission"}
-          >
-            {tasks.length > 0 ? "GO TO MISSIONS" : "BEGIN MISSION"} →
-          </Link>
+          <div className="mission-wrapper w-full max-w-[320px] h-[72px]">
+            <div className="glow-blur" aria-hidden />
+            <div className="glass-border" aria-hidden />
+            <Link
+              href={href}
+              className="mission-btn gap-2"
+              aria-label={tasks.length > 0 ? "Go to missions" : "Begin mission"}
+            >
+              {tasks.length > 0 ? "GO TO MISSIONS" : "BEGIN MISSION"} →
+            </Link>
+          </div>
         </div>
 
         <p className="text-center text-[var(--text-muted)] text-xs pt-2">

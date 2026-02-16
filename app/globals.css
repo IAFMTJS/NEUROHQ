@@ -1114,6 +1114,125 @@ body {
     0 0 20px rgba(140, 100, 255, 0.5),
     0 0 35px rgba(93, 225, 255, 0.4);
 }
+
+/* =========================
+   BEGIN MISSION – 6-layer pixel-perfect (glass neon)
+   Layers: 1 outer glow blur, 2 glass border ring, 3 glass body,
+   4 inner gradient highlight, 5 border ring, 6 text glow
+========================= */
+
+.mission-wrapper {
+  position: relative;
+  width: 100%;
+  max-width: 320px;
+  height: 72px;
+}
+
+/* 1️⃣ Outer neon glow blur (diffusion layer – separate div so blur sits outside glass) */
+.mission-wrapper .glow-blur {
+  position: absolute;
+  inset: 0;
+  border-radius: 18px;
+  background: linear-gradient(
+    90deg,
+    #2ee6ff 0%,
+    #8a5cff 50%,
+    #00f5a0 100%
+  );
+  filter: blur(22px);
+  opacity: 0.85;
+  z-index: 1;
+  background-blend-mode: screen;
+}
+
+/* 2️⃣ Glass border ring (gradient frost ring) */
+.mission-wrapper .glass-border {
+  position: absolute;
+  inset: 0;
+  border-radius: 18px;
+  background: linear-gradient(
+    90deg,
+    rgba(46, 230, 255, 0.7),
+    rgba(138, 92, 255, 0.7),
+    rgba(0, 245, 160, 0.7)
+  );
+  padding: 1.5px;
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  mask-composite: exclude;
+  z-index: 2;
+  opacity: 0.7;
+  pointer-events: none;
+}
+
+/* 3️⃣ Main glass button (body + text) */
+.mission-wrapper .mission-btn {
+  position: relative;
+  z-index: 3;
+  width: 100%;
+  height: 100%;
+  border-radius: 18px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.12) 0%,
+    rgba(255, 255, 255, 0.04) 100%
+  );
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  color: #fff;
+  font-size: 18px;
+  font-weight: 600;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  cursor: pointer;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow:
+    inset 0 1px 1px rgba(255, 255, 255, 0.25),
+    inset 0 -1px 2px rgba(0, 0, 0, 0.4),
+    0 0 12px rgba(138, 92, 255, 0.35);
+  transition: all 0.3s ease;
+  text-shadow:
+    0 0 6px rgba(138, 92, 255, 0.9),
+    0 0 12px rgba(46, 230, 255, 0.8),
+    0 0 18px rgba(0, 245, 160, 0.6);
+}
+
+/* 4️⃣ Inner light sweep (::before on button) */
+.mission-wrapper .mission-btn::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 18px;
+  background: linear-gradient(
+    120deg,
+    rgba(255, 255, 255, 0.25) 0%,
+    rgba(255, 255, 255, 0.05) 40%,
+    rgba(255, 255, 255, 0.02) 100%
+  );
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+/* 6️⃣ Hover – stronger glow */
+.mission-wrapper:hover .glow-blur {
+  filter: blur(28px);
+  opacity: 1;
+}
+
+.mission-wrapper:hover .mission-btn {
+  box-shadow:
+    inset 0 1px 1px rgba(255, 255, 255, 0.3),
+    inset 0 -1px 2px rgba(0, 0, 0, 0.5),
+    0 0 18px rgba(138, 92, 255, 0.6);
+}
+
 @keyframes gradientShift {
   0% { background-position: 0% 50%; }
   50% { background-position: 100% 50%; }

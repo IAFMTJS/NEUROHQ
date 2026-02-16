@@ -163,8 +163,8 @@ export default async function DashboardPage() {
   const [weekSummary, adaptiveSuggestions] = await Promise.all([
     getWeekSummary(thisWeekStart, thisWeekEnd, weeklyLearningTarget),
     getAdaptiveSuggestions(dateStr),
+    upsertDailyAnalytics(dateStr),
   ]);
-  void upsertDailyAnalytics(dateStr);
   const spendableCents = Math.max(0, (budgetSettings.monthly_budget_cents ?? 0) - (budgetSettings.monthly_savings_cents ?? 0));
   const budgetRemainingCents = budgetSettings.monthly_budget_cents != null ? spendableCents - currentMonthExpenses : null;
 
@@ -218,13 +218,17 @@ export default async function DashboardPage() {
         />
         {!isMinimalUI && (
           <div className="flex flex-col items-center gap-4 pt-2 pb-2">
-            <Link
-              href={todaysTasks.length > 0 ? "/tasks" : "/assistant"}
-              className="space-btn w-full max-w-[280px] py-2 px-6 text-[14px] sm:text-base"
-              aria-label={todaysTasks.length > 0 ? "Go to missions" : "Begin mission"}
-            >
-              BEGIN MISSION
-            </Link>
+            <div className="mission-wrapper w-full max-w-[320px]">
+              <div className="glow-blur" aria-hidden />
+              <div className="glass-border" aria-hidden />
+              <Link
+                href={todaysTasks.length > 0 ? "/tasks" : "/assistant"}
+                className="mission-btn"
+                aria-label={todaysTasks.length > 0 ? "Go to missions" : "Begin mission"}
+              >
+                BEGIN MISSION
+              </Link>
+            </div>
             <div className="grid grid-cols-3 gap-4 w-full max-w-[320px] justify-items-center">
               <RadialMeter value={energyPct} label="ENERGY" variant="energy" thin />
               <RadialMeter value={focusPct} label="FOCUS" variant="focus" thin />
