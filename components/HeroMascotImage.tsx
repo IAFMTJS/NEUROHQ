@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 
-const HERO_SRC = "/Homepagemascotte.png";
+const HERO_SRC = "/Homepage%20Mascotte.png";
 const FALLBACK_SRC = "/app-icon.png";
 
 export function HeroMascotImage() {
@@ -11,7 +11,7 @@ export function HeroMascotImage() {
       src={HERO_SRC}
       alt=""
       fill
-      sizes="200px"
+      sizes="(max-width: 768px) 85vw, 80vh"
       className="object-contain"
       priority
       onError={(e) => {
