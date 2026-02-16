@@ -5,7 +5,7 @@ import { AppStateProvider } from "@/components/providers/AppStateProvider";
 import { ActiveTimeTracker } from "@/components/ActiveTimeTracker";
 import { NewDayRefresh } from "@/components/NewDayRefresh";
 
-/** Auth enforced by middleware. Single BottomNavigation (visual-system v2). */
+/** Auth enforced by middleware. Cinematic UI: main, BottomNavigation (no system status bar). */
 export default function DashboardLayout({
   children,
 }: {

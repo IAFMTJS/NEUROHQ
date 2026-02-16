@@ -103,18 +103,18 @@ export function TaskDetailsModal({
               <button type="button" onClick={handleComplete} disabled={pending} className="btn-primary rounded-xl px-4 py-2.5 text-sm font-medium disabled:opacity-50">
                 Complete
               </button>
-              <button type="button" onClick={handleSnooze} disabled={pending} className="rounded-xl border border-[var(--card-border)] bg-transparent px-4 py-2.5 text-sm font-medium text-[var(--text-primary)] transition-colors hover:bg-[var(--accent-neutral)] disabled:opacity-50">
+              <button type="button" onClick={handleSnooze} disabled={pending} className="btn-secondary rounded-xl px-4 py-2.5 text-sm font-medium disabled:opacity-50">
                 Snooze
               </button>
             </>
           )}
           {onEdit && (
-            <button type="button" onClick={onEdit} className="rounded-xl border border-[var(--card-border)] bg-transparent px-4 py-2.5 text-sm font-medium text-[var(--text-primary)] transition-colors hover:bg-[var(--accent-neutral)]">
+            <button type="button" onClick={onEdit} className="btn-secondary rounded-xl px-4 py-2.5 text-sm font-medium">
               Edit
             </button>
           )}
           {onDuplicate && (
-            <button type="button" onClick={onDuplicate} className="rounded-xl border border-[var(--card-border)] bg-transparent px-4 py-2.5 text-sm font-medium text-[var(--text-primary)] transition-colors hover:bg-[var(--accent-neutral)]">
+            <button type="button" onClick={onDuplicate} className="btn-secondary rounded-xl px-4 py-2.5 text-sm font-medium">
               Duplicate
             </button>
           )}

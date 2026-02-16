@@ -4,9 +4,9 @@ import { useEffect, useId, useState } from "react";
 
 const SIZE = 104;
 const STROKE = 10;
-/** Reference: progress ring 3–4px thickness on hero */
-const STROKE_THIN = 4;
-const SIZE_COMPACT = 72;
+/** Reference: thin glowing ring on hero – cinematic 3D */
+const STROKE_THIN = 5;
+const SIZE_COMPACT = 80;
 const R = (SIZE - STROKE) / 2;
 const R_THIN = (SIZE_COMPACT - STROKE_THIN) / 2;
 const CIRCUMFERENCE = 2 * Math.PI * R;
@@ -14,17 +14,16 @@ const CIRCUMFERENCE_THIN = 2 * Math.PI * R_THIN;
 
 type GlowVariant = "focus" | "energy" | "warning";
 
-/** Design tokens: --ring-*-start, --ring-*-gradient, --ring-*-glow */
 const gradientStops: Record<GlowVariant, [string, string]> = {
-  energy: ["var(--ring-energy-start)", "var(--ring-energy-gradient)"],
-  focus: ["var(--ring-focus-start)", "var(--ring-focus-gradient)"],
-  warning: ["var(--ring-load-start)", "var(--ring-load-gradient)"],
+  energy: ["#14B8A6", "#00E876"],
+  focus: ["#38BDF8", "#A78BFA"],
+  warning: ["#F97316", "#FBBF24"],
 };
 
 const glowColors: Record<GlowVariant, string> = {
-  energy: "var(--ring-energy-glow)",
-  focus: "var(--ring-focus-glow)",
-  warning: "var(--ring-load-glow)",
+  energy: "rgba(0, 232, 118, 0.7)",
+  focus: "rgba(0, 229, 255, 0.65)",
+  warning: "rgba(251, 191, 36, 0.6)",
 };
 
 type Props = {
@@ -33,7 +32,6 @@ type Props = {
   description?: string;
   variant: GlowVariant;
   delay?: number;
-  /** Hero variant: smaller circle, 3–4px stroke, no description (reference) */
   thin?: boolean;
 };
 
@@ -59,7 +57,7 @@ export function RadialMeter({ value, label, description, variant, delay = 0, thi
   return (
     <div className="flex flex-col items-center gap-2">
       <div
-        className="relative"
+        className="radial-meter-3d relative"
         style={{ width: size, height: size }}
         aria-hidden
       >
@@ -74,24 +72,35 @@ export function RadialMeter({ value, label, description, variant, delay = 0, thi
               <stop offset="0%" stopColor={gradientStops[variant][0]} />
               <stop offset="100%" stopColor={gradientStops[variant][1]} />
             </linearGradient>
-            <filter id={filterId} x="-80%" y="-80%" width="260%" height="260%">
-              <feGaussianBlur stdDeviation={thin ? "2" : "4"} result="blur" />
-              <feFlood floodColor={glowColors[variant]} floodOpacity="1" />
-              <feComposite in2="blur" operator="in" />
+            <filter id={filterId} x="-100%" y="-100%" width="300%" height="300%">
+              <feGaussianBlur stdDeviation={thin ? "4" : "6"} result="glowBlur" />
+              <feFlood floodColor={glowColors[variant]} floodOpacity="1" result="glowColor" />
+              <feComposite in="glowColor" in2="glowBlur" operator="in" result="softGlow" />
               <feMerge>
-                <feMergeNode />
+                <feMergeNode in="softGlow" />
+                <feMergeNode in="softGlow" />
                 <feMergeNode in="SourceGraphic" />
               </feMerge>
             </filter>
           </defs>
+          {/* Recessed track – dark, inner feel */}
           <circle
             cx={size / 2}
             cy={size / 2}
             r={r}
             fill="none"
-            stroke="rgba(0, 229, 255, 0.12)"
+            stroke="rgba(0, 0, 0, 0.4)"
+            strokeWidth={stroke + 2}
+          />
+          <circle
+            cx={size / 2}
+            cy={size / 2}
+            r={r}
+            fill="none"
+            stroke="rgba(0, 229, 255, 0.08)"
             strokeWidth={stroke}
           />
+          {/* Progress arc – bright gradient + strong glow (3D raised) */}
           <circle
             cx={size / 2}
             cy={size / 2}
@@ -109,17 +118,18 @@ export function RadialMeter({ value, label, description, variant, delay = 0, thi
           />
         </svg>
         <div
-          className="absolute inset-0 flex flex-col items-center justify-center gap-0 hq-percentage"
+          className="absolute inset-0 flex flex-col items-center justify-center gap-0 radial-meter-value"
           style={{
-            fontSize: thin ? "1rem" : "1.5rem",
+            fontSize: thin ? "1.05rem" : "1.5rem",
             fontWeight: 700,
             color: "var(--text-primary)",
+            textShadow: "0 0 20px rgba(0,0,0,0.5), 0 1px 2px rgba(0,0,0,0.4)",
           }}
         >
           {Math.round(clamped)}%
         </div>
       </div>
-      <span className="hq-label text-[var(--text-secondary)]">{label}</span>
+      <span className="hq-label text-[var(--text-secondary)] text-xs font-medium">{label}</span>
       {description != null && !thin && (
         <span className="hq-body text-center text-sm max-w-[120px] leading-relaxed">{description}</span>
       )}

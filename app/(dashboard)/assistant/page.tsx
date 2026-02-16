@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
+import { HQPageHeader } from "@/components/hq";
 import { createTask } from "@/app/actions/tasks";
 import { addManualEvent } from "@/app/actions/calendar";
 import { addBudgetEntry } from "@/app/actions/budget";
@@ -163,14 +164,12 @@ export default function AssistantPage() {
 
   return (
     <div className="flex h-full min-h-0 flex-col">
-      <header className="shrink-0 border-b border-[var(--accent-neutral)] bg-[var(--bg-surface)] px-4 py-3">
-        <h1 className="text-lg font-semibold text-[var(--text-primary)]">
-          Assistant
-        </h1>
-        <p className="text-xs text-[var(--text-muted)]">
-          Gedragsarchitectuur – evidence-based
-        </p>
-      </header>
+      <HQPageHeader
+        title="Assistant"
+        subtitle="Gedragsarchitectuur – evidence-based"
+        backHref="/dashboard"
+        mascotVariant="assistant"
+      />
 
       <div
         ref={listRef}

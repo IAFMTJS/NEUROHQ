@@ -40,7 +40,7 @@ export function FocusBlock() {
 
   return (
     <section
-      className="card-modern-accent p-5 hq-card rounded-[var(--hq-card-radius-sharp)] border border-[var(--accent-focus)]/20"
+      className="card-simple-accent p-5 hq-card rounded-[var(--hq-card-radius-sharp)] border border-[var(--accent-focus)]/20"
       aria-label="Focus block timer"
     >
       <h2 className="mb-3 hq-h2">Focus block</h2>

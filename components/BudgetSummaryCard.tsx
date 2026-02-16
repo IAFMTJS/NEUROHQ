@@ -81,7 +81,7 @@ export function BudgetSummaryCard({
 
   return (
     <>
-      <section className="card-modern-accent overflow-hidden p-0">
+      <section className="card-simple-accent overflow-hidden p-0">
         <div className="border-b border-[var(--card-border)]/80 px-4 py-3">
           <div className="flex items-center justify-between">
             <h2 className="text-base font-semibold text-[var(--text-primary)]">Your budget {periodLabel}</h2>

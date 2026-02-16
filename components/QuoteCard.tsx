@@ -18,11 +18,14 @@ export function QuoteCard({ prev, current, next }: Props) {
   const day = active.day;
 
   return (
-    <div className="card-simple glass-card-glow-blue overflow-hidden p-0">
+    <div className="glass-card glass-card-glow-blue overflow-hidden p-0">
       <div className="border-b border-[var(--card-border)] px-4 py-3 flex items-center justify-between">
-        <div>
-          <h2 className="text-base font-semibold text-[var(--text-primary)]">Quote of the day</h2>
-          <p className="mt-0.5 text-xs text-[var(--text-muted)]">Day {day} of 365</p>
+        <div className="flex items-center gap-2">
+          <span className="text-amber-400/90 text-lg drop-shadow-[0_0_6px_rgba(251,191,36,0.5)]" aria-hidden>★</span>
+          <div>
+            <h2 className="text-base font-semibold text-[var(--text-primary)]">Quote of the day</h2>
+            <p className="mt-0.5 text-xs text-[var(--text-muted)]">Day {day} of 365</p>
+          </div>
         </div>
         <div className="flex items-center gap-1">
           <button

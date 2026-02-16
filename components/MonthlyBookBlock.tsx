@@ -44,7 +44,7 @@ export function MonthlyBookBlock({ initial, books: initialBooks = [] }: Props) {
   }
 
   return (
-    <section className="card-modern overflow-hidden p-0">
+    <section className="card-simple overflow-hidden p-0">
       <div className="border-b border-[var(--card-border)] px-4 py-3">
         <h2 className="text-base font-semibold text-[var(--text-primary)]">This month&apos;s book{books.length > 1 ? "s" : ""}</h2>
         <p className="mt-0.5 text-xs text-[var(--text-muted)]">1+ book per month. Optional: set pages/day or chapters/week.</p>

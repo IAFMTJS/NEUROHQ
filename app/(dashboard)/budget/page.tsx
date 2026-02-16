@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { HQPageHeader } from "@/components/hq";
 import { getSavingsGoals, getSavingsContributions } from "@/app/actions/savings";
 import { weeklyRequired } from "@/lib/utils/savings";
 import {
@@ -81,16 +82,16 @@ export default async function BudgetPage({ searchParams }: Props) {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight text-[var(--text-primary)]">Budget</h1>
-          <p className="mt-1 text-sm text-[var(--text-muted)]">Savings goals, entries, and spending awareness.</p>
-        </div>
-        <div className="flex items-center gap-3">
-          <BudgetHistorySelector currentMonth={monthParam} />
-          <ExportBudgetCsvButton />
-          <Link href="/strategy" className="text-sm font-medium text-[var(--accent-focus)] hover:underline">Strategy →</Link>
-        </div>
+      <HQPageHeader
+        title="Budget"
+        subtitle="Savings goals, entries, and spending awareness."
+        backHref="/dashboard"
+        mascotVariant="budget"
+      />
+      <div className="flex flex-wrap items-center justify-end gap-3 -mt-2">
+        <BudgetHistorySelector currentMonth={monthParam} />
+        <ExportBudgetCsvButton />
+        <Link href="/strategy" className="text-sm font-medium text-[var(--accent-focus)] hover:underline">Strategy →</Link>
       </div>
 
       <BudgetSummaryCard
@@ -112,7 +113,7 @@ export default async function BudgetPage({ searchParams }: Props) {
 
       <FrozenPurchaseCard activeFrozen={activeFrozen} readyForAction={readyForAction} currency={currency} goals={goals} />
 
-      <section className="card-modern overflow-hidden p-0">
+      <section className="card-simple overflow-hidden p-0">
         <div className="border-b border-[var(--card-border)] px-4 py-3">
           <h2 className="text-base font-semibold text-[var(--text-primary)]">Savings goals</h2>
           <p className="mt-0.5 text-xs text-[var(--text-muted)]">Track progress toward your targets. Savings are reserved from your budget (pay savings first).</p>
@@ -143,7 +144,7 @@ export default async function BudgetPage({ searchParams }: Props) {
 
       <RecurringBudgetCard templates={recurringTemplates} currency={currency} />
 
-      <section id="add-entry" className="card-modern overflow-hidden p-0">
+      <section id="add-entry" className="card-simple overflow-hidden p-0">
         <div className="border-b border-[var(--card-border)] px-4 py-3">
           <h2 className="text-base font-semibold text-[var(--text-primary)]">Add entry</h2>
           <p className="mt-0.5 text-xs text-[var(--text-muted)]">Log income or expenses.</p>
@@ -153,7 +154,7 @@ export default async function BudgetPage({ searchParams }: Props) {
         </div>
       </section>
 
-      <section className="card-modern overflow-hidden p-0">
+      <section className="card-simple overflow-hidden p-0">
         <div className="border-b border-[var(--card-border)] px-4 py-3">
           <h2 className="text-base font-semibold text-[var(--text-primary)]">Entries & frozen</h2>
           <p className="mt-0.5 text-xs text-[var(--text-muted)]">Recent activity and 24h freezes.</p>
@@ -172,7 +173,7 @@ export default async function BudgetPage({ searchParams }: Props) {
       </section>
 
       {alternatives.length > 0 && (
-        <section className="card-modern-accent overflow-hidden p-0">
+        <section className="card-simple-accent overflow-hidden p-0">
           <div className="border-b border-[var(--card-border)]/80 px-4 py-3">
             <h2 className="text-base font-semibold text-[var(--text-primary)]">Suggestions</h2>
             <p className="mt-0.5 text-xs text-[var(--text-muted)]">Ideas based on your choices.</p>

@@ -70,7 +70,7 @@ export function EnergyBudgetBar({
   }
 
   return (
-    <div className="card-modern-accent overflow-hidden p-0">
+    <div className="card-simple-accent overflow-hidden p-0">
       <div className="border-b border-[var(--card-border)]/80 px-4 py-3">
         <h2 className="text-base font-semibold text-[var(--text-primary)]">Energy budget</h2>
         <p className="mt-0.5 text-xs text-[var(--text-muted)]">

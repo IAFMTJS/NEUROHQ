@@ -4,9 +4,8 @@ const nextConfig = {
   experimental: {
     browserDebugInfoInTerminal: true,
     serverComponentsHmrCache: true,
-    // Turbopack filesystem cache: 5–14x faster route compiles after first run. If you see
-    // "Failed to restore task data" / corrupted DB, run: npm run dev:clean
-    turbopackFileSystemCacheForDev: true,
+    /* Disabled: can cause endless recompilation. Re-enable for faster dev after first compile. */
+    turbopackFileSystemCacheForDev: false,
   },
   logging: {
     fetches: {

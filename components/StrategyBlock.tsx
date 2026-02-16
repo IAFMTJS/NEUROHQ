@@ -6,7 +6,7 @@ export async function StrategyBlock() {
   const { year, quarter } = getCurrentQuarter();
   if (!strategy?.identity_statement && !strategy?.primary_theme) return null;
   return (
-    <div className="card-modern-accent overflow-hidden p-0">
+    <div className="card-simple-accent overflow-hidden p-0">
       <div className="border-b border-[var(--card-border)]/80 px-4 py-3">
         <h2 className="text-base font-semibold text-[var(--text-primary)]">Q{quarter} {year}</h2>
         {strategy?.primary_theme && (

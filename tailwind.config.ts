@@ -1,10 +1,19 @@
 import type { Config } from "tailwindcss";
+import path from "path";
+import { fileURLToPath } from "url";
+
+const projectRoot =
+  typeof __dirname !== "undefined"
+    ? __dirname
+    : path.dirname(fileURLToPath(import.meta.url));
 
 const config: Config = {
   content: [
-    "./pages/**/*.{js,ts,jsx,tsx,mdx}",
-    "./components/**/*.{js,ts,jsx,tsx,mdx}",
-    "./app/**/*.{js,ts,jsx,tsx,mdx}",
+    path.join(projectRoot, "app", "**", "*.{js,ts,jsx,tsx,mdx}"),
+    path.join(projectRoot, "components", "**", "*.{js,ts,jsx,tsx,mdx}"),
+    path.join(projectRoot, "pages", "**", "*.{js,ts,jsx,tsx,mdx}"),
+    path.join(projectRoot, "hooks", "**", "*.{js,ts,jsx,tsx,mdx}"),
+    path.join(projectRoot, "lib", "**", "*.{js,ts,jsx,tsx,mdx}"),
   ],
   theme: {
     extend: {

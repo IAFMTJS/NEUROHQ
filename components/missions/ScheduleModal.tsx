@@ -80,7 +80,7 @@ export function ScheduleModal({
           </div>
         </div>
         <div className="flex justify-end gap-2">
-          <button type="button" onClick={onClose} className="rounded-lg border border-[var(--card-border)] px-4 py-2 text-sm font-medium text-[var(--text-primary)] hover:bg-[var(--bg-surface)]">
+          <button type="button" onClick={onClose} className="btn-secondary rounded-lg px-4 py-2 text-sm font-medium">
             Cancel
           </button>
           <button type="submit" disabled={loading} className="btn-primary rounded-lg px-4 py-2 text-sm font-medium disabled:opacity-50">

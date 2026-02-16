@@ -29,7 +29,7 @@ export function SettingsAppleCalendar() {
   const exportUrl = `/api/calendar/export?from=${today}&to=${today}`;
 
   return (
-    <div className="card-modern overflow-hidden p-0">
+    <div className="card-simple overflow-hidden p-0">
       <div className="border-b border-[var(--card-border)] px-4 py-3">
         <h2 className="text-base font-semibold text-[var(--text-primary)]">iOS / Apple Kalender</h2>
       </div>

@@ -36,7 +36,7 @@ export function OnboardingBanner() {
   if (step === null || step < 0) return null;
 
   return (
-    <div className="card-modern-accent mb-2 px-4 py-3 text-sm text-[var(--text-primary)]">
+    <div className="card-simple-accent mb-2 px-4 py-3 text-sm text-[var(--text-primary)]">
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0 flex-1">
           {step === 0 && (

@@ -36,7 +36,7 @@ export function FrozenPurchaseCard({ activeFrozen, readyForAction, currency = "E
   if (activeFrozen.length === 0 && readyForAction.length === 0) return null;
 
   return (
-    <section className="card-modern overflow-hidden p-0">
+    <section className="card-simple overflow-hidden p-0">
       <div className="border-b border-[var(--card-border)] px-4 py-3">
         <h2 className="text-base font-semibold text-[var(--text-primary)]">24h freeze</h2>
         <p className="mt-0.5 text-xs text-[var(--text-muted)]">Confirm or cancel. You can cancel early or add the amount to a goal.</p>

@@ -1,3 +1,4 @@
+import { HQPageHeader } from "@/components/hq";
 import { getRealityReport, getStoredReport, getStoredReportWeeks } from "@/app/actions/report";
 import { getWeekBounds } from "@/lib/utils/learning";
 import { RealityReportCard } from "@/components/RealityReportCard";
@@ -26,12 +27,12 @@ export default async function ReportPage({ searchParams }: Props) {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight text-[var(--text-primary)]">Reality report</h1>
-        <p className="mt-1 text-sm text-[var(--text-muted)]">
-          {isCurrentWeek ? "Summary of this week." : `Past week: ${report.weekStart} – ${report.weekEnd}.`}
-        </p>
-      </div>
+      <HQPageHeader
+        title="Reality report"
+        subtitle={isCurrentWeek ? "Summary of this week." : `Past week: ${report.weekStart} – ${report.weekEnd}.`}
+        backHref="/dashboard"
+        mascotVariant="report"
+      />
       <ReportWeekSelector
         storedWeeks={storedWeeks}
         currentWeekStart={currentWeekStart}

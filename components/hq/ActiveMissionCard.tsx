@@ -63,6 +63,7 @@ export function ActiveMissionCard({
 
         <div className="pt-4 flex justify-center">
           <MissionButton
+            variant="pill"
             href={href}
             aria-label={tasks.length > 0 ? "Go to missions" : "Begin mission"}
             className="gap-2"

@@ -74,7 +74,7 @@ export function RecurringBudgetCard({
 
   if (templates.length === 0 && !showAdd) {
     return (
-      <section className="card-modern overflow-hidden p-0">
+      <section className="card-simple overflow-hidden p-0">
         <div className="border-b border-[var(--card-border)] px-4 py-3">
           <h2 className="text-base font-semibold text-[var(--text-primary)]">Recurring</h2>
           <p className="mt-0.5 text-xs text-[var(--text-muted)]">Rent, salary, subscriptions — auto-create entries.</p>
@@ -94,7 +94,7 @@ export function RecurringBudgetCard({
   }
 
   return (
-    <section className="card-modern overflow-hidden p-0">
+    <section className="card-simple overflow-hidden p-0">
       <div className="border-b border-[var(--card-border)] px-4 py-3">
         <h2 className="text-base font-semibold text-[var(--text-primary)]">Recurring</h2>
         <p className="mt-0.5 text-xs text-[var(--text-muted)]">Auto-create entries on schedule.</p>
@@ -207,7 +207,7 @@ function AddModal({
         {error && <p className="text-sm text-red-400">{error}</p>}
         <div className="flex gap-2">
           <button type="submit" disabled={pending} className="btn-primary rounded-lg px-4 py-2 text-sm font-medium disabled:opacity-50">Add</button>
-          <button type="button" onClick={onClose} className="rounded-lg border border-[var(--card-border)] px-4 py-2 text-sm text-[var(--text-primary)] hover:bg-[var(--card-border)]/50">Cancel</button>
+          <button type="button" onClick={onClose} className="btn-secondary rounded-lg px-4 py-2 text-sm font-medium">Cancel</button>
         </div>
       </form>
     </Modal>

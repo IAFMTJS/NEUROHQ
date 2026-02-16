@@ -23,7 +23,7 @@ export function AdaptiveSuggestionBanner({ suggestions, onDismiss }: Props) {
 
   return (
     <div
-      className="card-modern-accent flex flex-wrap items-center justify-between gap-2 px-4 py-3 border border-[var(--accent-focus)]/20"
+      className="card-simple-accent flex flex-wrap items-center justify-between gap-2 px-4 py-3 border border-[var(--accent-focus)]/20"
       role="status"
       aria-live="polite"
     >

@@ -65,7 +65,7 @@ export function SavingsGoalCard({
   }
 
   return (
-    <div className="card-modern overflow-hidden p-0">
+    <div className="card-simple overflow-hidden p-0">
       <div className="flex items-start justify-between border-b border-[var(--card-border)] px-4 py-3">
         <div>
           <h3 className="font-semibold text-[var(--text-primary)]">{goal.name}</h3>

@@ -221,7 +221,7 @@ function EducationOptionEditForm({
         <button type="submit" disabled={pending} className="btn-primary rounded px-2 py-1 text-xs font-medium disabled:opacity-50">
           Save
         </button>
-        <button type="button" onClick={onClose} className="rounded border border-[var(--card-border)] px-2 py-1 text-xs text-[var(--text-muted)] hover:text-[var(--text-primary)]">
+        <button type="button" onClick={onClose} className="btn-secondary rounded px-2 py-1 text-xs font-medium">
           Cancel
         </button>
       </div>

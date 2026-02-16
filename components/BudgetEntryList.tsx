@@ -296,7 +296,7 @@ export function BudgetEntryList({
             </div>
             <div className="flex gap-2">
               <button type="button" onClick={handleSaveEdit} disabled={pending} className="btn-primary rounded-lg px-4 py-2 text-sm font-medium disabled:opacity-50">Save</button>
-              <button type="button" onClick={() => setEditing(null)} className="rounded-lg border border-[var(--card-border)] px-4 py-2 text-sm text-[var(--text-primary)] hover:bg-[var(--card-border)]/50">Cancel</button>
+              <button type="button" onClick={() => setEditing(null)} className="btn-secondary rounded-lg px-4 py-2 text-sm font-medium">Cancel</button>
             </div>
           </div>
         )}

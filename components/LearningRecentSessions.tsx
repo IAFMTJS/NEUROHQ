@@ -21,7 +21,7 @@ export function LearningRecentSessions({ sessions, weekEnd, weekStart }: Props) 
   );
 
   return (
-    <section className="card-modern overflow-hidden p-0">
+    <section className="card-simple overflow-hidden p-0">
       <div className="border-b border-[var(--card-border)] px-4 py-3">
         <h2 className="text-base font-semibold text-[var(--text-primary)]">Sessions this week</h2>
         <p className="mt-0.5 text-xs text-[var(--text-muted)]">Recent learning sessions (Mon – {weekEnd}). Edit or delete to correct.</p>
@@ -166,7 +166,7 @@ function LearningSessionEditForm({
         <button type="submit" disabled={pending} className="btn-primary rounded px-2 py-1 text-xs font-medium disabled:opacity-50">
           Save
         </button>
-        <button type="button" onClick={onClose} className="rounded border border-[var(--card-border)] px-2 py-1 text-xs text-[var(--text-muted)] hover:text-[var(--text-primary)]">
+        <button type="button" onClick={onClose} className="btn-secondary rounded px-2 py-1 text-xs font-medium">
           Cancel
         </button>
       </div>

@@ -120,7 +120,7 @@ export function Modal({
           <button
             type="button"
             onClick={onClose}
-            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[18px] border border-[var(--border-subtle)] text-[var(--text-muted)] transition-colors hover:border-[var(--accent-focus)] hover:bg-[var(--accent-focus)]/10 hover:text-[var(--text-primary)] hover:shadow-[0_0_12px_rgba(0,229,255,0.2)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-focus)]"
+            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[18px] border border-[var(--glass-border-soft)] text-[var(--text-muted)] transition-colors hover:border-[var(--accent-focus)] hover:bg-[var(--accent-focus)]/10 hover:text-[var(--text-primary)] hover:shadow-[0_0_12px_rgba(0,229,255,0.2)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-focus)]"
             aria-label="Close"
           >
             <span className="text-xl leading-none" aria-hidden>×</span>

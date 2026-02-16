@@ -1,6 +1,6 @@
 export function LearningTips() {
   return (
-    <div className="card-modern-accent overflow-hidden p-0">
+    <div className="card-simple-accent overflow-hidden p-0">
       <div className="border-b border-[var(--card-border)]/80 px-4 py-3">
         <h2 className="text-base font-semibold text-[var(--text-primary)]">Why track learning?</h2>
       </div>

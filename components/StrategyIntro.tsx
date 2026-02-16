@@ -2,7 +2,7 @@ import Link from "next/link";
 
 export function StrategyIntro() {
   return (
-    <div className="card-modern-accent overflow-hidden p-0">
+    <div className="card-simple-accent overflow-hidden p-0">
       <div className="border-b border-[var(--card-border)]/80 px-4 py-3">
         <h2 className="text-base font-semibold text-[var(--text-primary)]">Why set a quarterly strategy?</h2>
       </div>

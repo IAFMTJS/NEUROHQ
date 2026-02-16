@@ -63,7 +63,7 @@ export function StrategyForm({ initial, goals }: { initial: Strategy; goals: Goa
   const keyResultsLines = keyResults.trim().split(/\n/).filter(Boolean).length;
 
   return (
-    <form onSubmit={handleSubmit} className="card-modern overflow-hidden p-0">
+    <form onSubmit={handleSubmit} className="card-simple overflow-hidden p-0">
       <div className="border-b border-[var(--card-border)] px-4 py-3">
         <h2 className="text-base font-semibold text-[var(--text-primary)]">Quarterly strategy</h2>
         <p className="mt-0.5 text-xs text-[var(--text-muted)]">Theme, identity, key results, anti-goals, and linked savings goal.</p>

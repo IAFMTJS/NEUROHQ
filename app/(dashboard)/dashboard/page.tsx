@@ -18,7 +18,7 @@ import { getAdaptiveSuggestions } from "@/app/actions/adaptive";
 import { getWeekBounds } from "@/lib/utils/learning";
 import { getCurrencySymbol } from "@/lib/utils/currency";
 import { yesterdayDate, getDayOfYearFromDateString } from "@/lib/utils/timezone";
-import { HQHeader, BrainStatusCard, MissionButton, ActiveMissionCard, WatNuBlock, HQShortcutGrid, RadialMeter } from "@/components/hq";
+import { HQHeader, BrainStatusCard, MissionButton, ActiveMissionCard, WatNuBlock, HQShortcutGrid, RadialMeter, HQChart } from "@/components/hq";
 import { HeroMascotImage } from "@/components/HeroMascotImage";
 import { ModeBanner, ModeExplanationModal, AddCalendarEventForm } from "@/components/dashboard/DashboardClientOnly";
 
@@ -200,25 +200,28 @@ export default async function DashboardPage() {
           <XPBadge totalXp={xp.total_xp} level={xp.level} compact />
         </div>
       )}
-      {/* Hero: mascot – emotion disabled; fixed Homepagemascotte.png */}
-      <div className="flex flex-col gap-0 relative justify-center min-h-[65vh]">
+      {/* Header: hero lower on page, mascot just above Commander HQ, then CTA + rings */}
+      <header className="flex flex-col gap-0 relative pt-14 overflow-visible">
         {!isMinimalUI && (
-          <div className="hq-hero-mascot-wrap w-full pt-0" aria-hidden>
+          <div className="hq-hero-mascot-wrap w-full" aria-hidden>
             <div className="hq-mascot-glow" />
             <div className="hq-mascot-img">
               <HeroMascotImage />
             </div>
           </div>
         )}
-        <HQHeader
-          energyPct={energyPct}
-          focusPct={focusPct}
-          loadPct={loadPct}
-          copyVariant={adaptiveSuggestions.copyVariant}
-        />
+        <div className="relative z-10 -mt-72">
+          <HQHeader
+            energyPct={energyPct}
+            focusPct={focusPct}
+            loadPct={loadPct}
+            copyVariant={adaptiveSuggestions.copyVariant}
+          />
+        </div>
         {!isMinimalUI && (
           <div className="flex flex-col items-center gap-4 pt-2 pb-2">
             <MissionButton
+              variant="pill"
               href={todaysTasks.length > 0 ? "/tasks" : "/assistant"}
               aria-label={todaysTasks.length > 0 ? "Go to missions" : "Begin mission"}
             >
@@ -231,7 +234,7 @@ export default async function DashboardPage() {
             </div>
           </div>
         )}
-      </div>
+      </header>
       {!isMinimalUI && <HQShortcutGrid />}
       <BrainStatusCard
         date={dateStr}
@@ -310,6 +313,7 @@ export default async function DashboardPage() {
         <AdaptiveSuggestionBanner suggestions={adaptiveSuggestions} />
       )}
       {!isMinimalUI && <AnalyticsWeekWidget summary={weekSummary} />}
+      {!isMinimalUI && <HQChart title="Mission Growth" variant="area" />}
       {!isMinimalUI && learningStreak >= 1 && (
         <div className="glass-card flex items-center gap-3 p-4">
           <span className="text-2xl" aria-hidden>🔥</span>

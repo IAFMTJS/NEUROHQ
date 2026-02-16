@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
+import { HQPageHeader } from "@/components/hq";
 import { SettingsExport } from "@/components/SettingsExport";
 import { SettingsPush } from "@/components/SettingsPush";
 import { SettingsDeleteAccount } from "@/components/SettingsDeleteAccount";
@@ -32,11 +33,13 @@ export default async function SettingsPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight text-[var(--text-primary)]">Settings</h1>
-        <p className="mt-1 text-sm text-[var(--text-muted)]">Account, notifications, export, and integrations.</p>
-      </div>
-      <div className="card-modern overflow-hidden p-0">
+      <HQPageHeader
+        title="Settings"
+        subtitle="Account, notifications, export, and integrations."
+        backHref="/dashboard"
+        mascotVariant="settings"
+      />
+      <div className="card-simple overflow-hidden p-0">
         <div className="border-b border-[var(--card-border)] px-4 py-3">
           <h2 className="text-base font-semibold text-[var(--text-primary)]">Account</h2>
         </div>

@@ -332,7 +332,7 @@ export function TaskList({ date, tasks: initialTasks, completedToday, mode, carr
   }
 
   return (
-    <div className="card-modern overflow-hidden p-0">
+    <div className="card-simple overflow-hidden p-0">
       <div className="border-b border-[var(--card-border)] px-4 py-3">
         <div className="flex items-center justify-between">
           <h2 className="text-base font-semibold text-[var(--text-primary)]">Today&apos;s missions</h2>

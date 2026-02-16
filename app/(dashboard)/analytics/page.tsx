@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { HQPageHeader } from "@/components/hq";
 import { getWeekBounds } from "@/lib/utils/learning";
 import { getWeekSummary, getAnalyticsRange } from "@/app/actions/analytics";
 import { getWeeklyLearningTarget } from "@/app/actions/learning";
@@ -37,15 +38,15 @@ export default async function AnalyticsPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight text-[var(--text-primary)]">Analytics</h1>
-        <p className="mt-1 text-sm text-[var(--text-muted)]">
-          Time used, consistency, and mood over time.
-        </p>
-      </div>
+      <HQPageHeader
+        title="Analytics"
+        subtitle="Time used, consistency, and mood over time."
+        backHref="/dashboard"
+        mascotVariant="analytics"
+      />
 
       {summary && (
-        <section className="card-simple overflow-hidden p-0">
+        <section className="glass-card overflow-hidden p-0">
           <div className="border-b border-[var(--card-border)] px-4 py-3">
             <h2 className="text-base font-semibold text-[var(--text-primary)]">This week</h2>
             <p className="text-xs text-[var(--text-muted)]">{weekStart} – {weekEnd}</p>
@@ -84,7 +85,7 @@ export default async function AnalyticsPage() {
       )}
 
       {lastWeekSummary && summary && (
-        <section className="card-simple p-4">
+        <section className="glass-card p-4">
           <h2 className="text-base font-semibold text-[var(--text-primary)] mb-3">Vs last week</h2>
           <ul className="space-y-2 text-sm">
             <li className="flex justify-between">
@@ -106,7 +107,7 @@ export default async function AnalyticsPage() {
       )}
 
       {thisWeekDays.length > 0 && (
-        <section className="card-simple overflow-hidden p-0">
+        <section className="glass-card overflow-hidden p-0">
           <div className="border-b border-[var(--card-border)] px-4 py-3">
             <h2 className="text-base font-semibold text-[var(--text-primary)]">Day by day</h2>
           </div>

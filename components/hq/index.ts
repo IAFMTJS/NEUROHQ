@@ -1,4 +1,5 @@
 export { HQHeader } from "./HQHeader";
+export { HQPageHeader } from "./HQPageHeader";
 export { BrainStatusCard } from "./BrainStatusCard";
 export { MissionButton } from "./MissionButton";
 export { ActiveMissionCard } from "./ActiveMissionCard";
@@ -7,3 +8,10 @@ export { HQShortcutGrid } from "./HQShortcutGrid";
 export { PatternInsightCard } from "./PatternInsightCard";
 export { RadialMeter } from "./RadialMeter";
 export { HQBackground } from "./HQBackground";
+/* Commander HQ UI Kit */
+export { HQButton } from "./HQButton";
+export { HQCard } from "./HQCard";
+export { HQStatusRing } from "./HQStatusRing";
+export { HQNav } from "./HQNav";
+export { HQModal } from "./HQModal";
+export { HQChart } from "./HQChart";

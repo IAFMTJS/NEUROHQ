@@ -147,15 +147,29 @@ body {
   --neuro-muted: var(--text-muted);
   --neuro-accent: var(--status-info);
 
-  /* Dominant Game UI – canvas #05070F–#0B1220 */
-  --cinematic-bg: #05070F;
-  --cinematic-navy: #0B1220;
-  --cinematic-glow-cyan: rgba(0, 229, 255, 0.4);
-  --cinematic-glow-purple: rgba(124, 92, 255, 0.45);
+  /* Cinematic sci-fi HUD – deep navy, galaxy gradient, never flat (layered glow) */
+  --cinematic-bg: #050816;
+  --cinematic-bg-mid: #0A0F25;
+  --cinematic-bg-dark: #0C1024;
+  --cinematic-navy: #0A0F25;
+  --cinematic-glow-cyan: rgba(0, 229, 255, 0.5);
+  --cinematic-glow-purple: rgba(138, 92, 255, 0.5);
+  --cinematic-glow-teal: rgba(0, 255, 179, 0.4);
   --cinematic-glow-green: rgba(0, 255, 163, 0.35);
-  --cinematic-radial-top: radial-gradient(ellipse 120% 70% at 50% 0%, rgba(0, 229, 255, 0.2), transparent 55%);
-  --cinematic-radial-bottom: radial-gradient(ellipse 90% 60% at 75% 100%, rgba(108, 92, 231, 0.22), transparent 50%);
-  --cinematic-radial-mascot: radial-gradient(ellipse 80% 60% at 50% 50%, rgba(0, 229, 255, 0.28), transparent 55%);
+  --cinematic-radial-top: radial-gradient(ellipse 140% 80% at 50% -10%, rgba(0, 191, 255, 0.18), rgba(138, 92, 255, 0.08) 40%, transparent 55%);
+  --cinematic-radial-mid: radial-gradient(ellipse 100% 80% at 50% 50%, rgba(0, 229, 255, 0.12), rgba(138, 92, 255, 0.1) 45%, transparent 60%);
+  --cinematic-radial-bottom: radial-gradient(ellipse 90% 60% at 75% 100%, rgba(138, 92, 255, 0.15), rgba(10, 15, 37, 0.4) 70%, transparent 100%);
+  --cinematic-radial-mascot: radial-gradient(ellipse 90% 70% at 50% 50%, rgba(0, 229, 255, 0.2), rgba(138, 92, 255, 0.1) 45%, transparent 60%);
+  --cinematic-nebula: radial-gradient(ellipse 80% 60% at 30% 40%, rgba(138, 92, 255, 0.12), transparent 45%),
+    radial-gradient(ellipse 70% 50% at 70% 60%, rgba(0, 229, 255, 0.08), transparent 45%);
+  /* Stacked glow system (4–6 layers: tight, medium, wide bloom, rim) – never single shadow */
+  --glow-stack-cyan: 0 0 8px rgba(0, 229, 255, 0.5), 0 0 20px rgba(0, 229, 255, 0.35), 0 0 40px rgba(0, 229, 255, 0.2), 0 0 60px rgba(0, 229, 255, 0.08);
+  --glow-stack-purple: 0 0 8px rgba(138, 92, 255, 0.5), 0 0 20px rgba(138, 92, 255, 0.35), 0 0 40px rgba(138, 92, 255, 0.2), 0 0 60px rgba(138, 92, 255, 0.08);
+  --glow-stack-green: 0 0 8px rgba(0, 255, 179, 0.45), 0 0 20px rgba(0, 255, 163, 0.3), 0 0 40px rgba(0, 255, 163, 0.15), 0 0 56px rgba(0, 255, 163, 0.06);
+  --glow-stack-cta: 0 0 8px rgba(0, 229, 255, 0.6), 0 0 24px rgba(124, 92, 255, 0.4), 0 0 48px rgba(0, 229, 255, 0.25), 0 0 72px rgba(0, 229, 255, 0.1);
+  --glow-depth: 0 8px 32px rgba(0, 0, 0, 0.4), 0 12px 40px rgba(0, 0, 0, 0.25);
+  --glass-border-soft: rgba(255, 255, 255, 0.08);
+  --glass-panel-bg-cinematic: rgba(15, 25, 55, 0.5);
   --glass-border: linear-gradient(135deg, rgba(0, 229, 255, 0.3), rgba(124, 92, 255, 0.25));
   --glass-panel-bg: linear-gradient(145deg, rgba(11, 18, 32, 0.78), rgba(5, 7, 15, 0.88));
   --glass-panel-shadow: 0 24px 56px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(0, 229, 255, 0.12), 0 0 40px rgba(0, 229, 255, 0.06);
@@ -192,6 +206,22 @@ body {
   --neon-green: #00ffa3;
   --glass-blur: 32px;
   --neon-radius: 80px;
+
+  /* ===== Commander HQ UI Kit – design foundation ===== */
+  --hq-bg-1: #0b1020;
+  --hq-bg-2: #070b16;
+  --hq-bg-3: #04070d;
+  --hq-cyan: #00f2ff;
+  --hq-purple: #7a5cff;
+  --hq-green: #00ffa3;
+  --hq-glass-bg: rgba(255, 255, 255, 0.08);
+  --hq-glass-border: rgba(255, 255, 255, 0.18);
+  --hq-blur-sm: 16px;
+  --hq-blur-md: 28px;
+  --hq-blur-lg: 40px;
+  --hq-radius-xl: 80px;
+  --hq-radius-lg: 32px;
+  --hq-radius-md: 20px;
 }
 
 /* Layer 4: THEME (MD §8 – theme_dark accent_primary = cyan, theme_minimal = #000/#FFF) */
@@ -310,42 +340,89 @@ body {
   );
 }
 
-/* Hero mascot: dead center = authority. Larger vertical = emotional anchor. Glow = psychological framing (MD: placement/size/glow). */
+/* Header mascot: 2× size, way lower – almost right above Commander HQ text. */
 .hq-hero-mascot-wrap {
   position: relative;
   width: 100%;
-  height: clamp(65vh, 70vh, 80vh);
+  height: clamp(100vh, 120vh, 140vh);
+  min-height: 500px;
   margin-left: auto;
   margin-right: auto;
   padding-top: 0;
+  margin-top: 0;
+  margin-bottom: -18rem;
   flex-shrink: 0;
   display: flex;
   justify-content: center;
-  align-items: center;
+  align-items: flex-end;
+  overflow: visible;
 }
-/* Glow: background behind mascot — a bit bigger for atmospheric depth. */
+
+/* Compact mascot for other pages: 2× size, way lower – almost right above page title. */
+.hq-hero-mascot-wrap--compact {
+  height: clamp(80vh, 95vh, 105vh);
+  min-height: 400px;
+  padding-top: 0;
+  margin-bottom: -14rem;
+}
+.hq-hero-mascot-wrap--compact .hq-mascot-img {
+  width: 160vh;
+  height: 160vh;
+  max-width: min(100vw, 600px);
+  max-height: none;
+  aspect-ratio: 1;
+}
+/* Ambient glow behind mascot + soft rim (volumetric lighting) */
 .hq-hero-mascot-wrap .hq-mascot-glow {
   position: absolute;
   pointer-events: none;
   border-radius: 50%;
-  width: 200%;
-  height: 200%;
+  width: 90%;
+  height: 90%;
   left: 50%;
   top: 50%;
   transform: translate(-50%, -50%);
-  background: var(--cinematic-radial-mascot);
+  background: radial-gradient(
+    ellipse 80% 80% at 50% 50%,
+    rgba(0, 229, 255, 0.2) 0%,
+    rgba(138, 92, 255, 0.12) 35%,
+    rgba(0, 229, 255, 0.05) 55%,
+    transparent 70%
+  );
+  filter: blur(20px);
+  box-shadow:
+    0 0 60px rgba(0, 229, 255, 0.15),
+    0 0 120px rgba(138, 92, 255, 0.08);
 }
-.hq-hero-mascot-wrap .hq-mascot-img {
+.hq-hero-mascot-wrap .hq-mascot-halo {
+  display: none;
+}
+/* Dashboard mascot – 2× size, square, almost right above title. */
+.hq-hero-mascot-wrap:not(.hq-hero-mascot-wrap--compact) .hq-mascot-img {
   position: relative;
-  height: 100%;
-  width: auto;
-  max-width: min(95vw, 80vh);
+  z-index: 1;
+  width: 180vh;
+  height: 180vh;
+  max-width: none;
   aspect-ratio: 1;
   overflow: visible;
   border: none;
   outline: none;
   box-shadow: none;
   background: transparent;
+  object-fit: contain;
+  object-position: center bottom;
+}
+.hq-hero-mascot-wrap .hq-mascot-img {
+  position: relative;
+  z-index: 1;
+  overflow: visible;
+  border: none;
+  outline: none;
+  box-shadow: none;
+  background: transparent;
+  object-fit: contain;
+  object-position: center bottom;
 }
 .hq-hero-mascot-wrap .hq-mascot-img *,
 .hq-hero-mascot-wrap .hq-mascot-img img {
@@ -353,16 +430,23 @@ body {
   outline: none !important;
   box-shadow: none !important;
   border-radius: 0;
+  object-fit: contain !important;
+  object-position: center bottom !important;
 }
 
-/* Glass panel (cinematic glassmorphism + gradient border) */
+/* Glass panel: semi-transparent dark blue, blur(20px), soft border, multi-layer glow */
 .glass-panel {
-  background: var(--glass-panel-bg);
-  backdrop-filter: blur(24px);
-  -webkit-backdrop-filter: blur(24px);
-  border: 1px solid transparent;
+  background: rgba(15, 25, 55, 0.5);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid var(--glass-border-soft);
   border-radius: var(--modal-panel-radius);
-  box-shadow: var(--glass-panel-shadow);
+  box-shadow:
+    var(--glow-depth),
+    0 0 8px rgba(0, 229, 255, 0.1),
+    0 0 24px rgba(0, 229, 255, 0.06),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06),
+    inset 0 0 48px rgba(0, 229, 255, 0.02);
   position: relative;
   overflow: hidden;
 }
@@ -372,7 +456,7 @@ body {
   inset: 0;
   border-radius: inherit;
   padding: 1px;
-  background: var(--glass-border);
+  background: linear-gradient(135deg, rgba(0, 229, 255, 0.2), rgba(138, 92, 255, 0.15));
   -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
   mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
   -webkit-mask-composite: xor;
@@ -424,6 +508,26 @@ body {
   color: var(--text-secondary);
   text-transform: uppercase;
 }
+
+/* Brain status rings – gradient stroke, soft outer glow, dark inner core, slight shimmer */
+.radial-meter-3d {
+  border-radius: 50%;
+  box-shadow:
+    inset 0 2px 16px rgba(0, 0, 0, 0.55),
+    inset 0 -1px 4px rgba(255, 255, 255, 0.03),
+    0 0 8px rgba(0, 229, 255, 0.15),
+    0 0 24px rgba(0, 229, 255, 0.08),
+    0 0 40px rgba(0, 229, 255, 0.04);
+  animation: radial-ring-shimmer 4s ease-in-out infinite;
+}
+@keyframes radial-ring-shimmer {
+  0%, 100% { filter: brightness(1); }
+  50% { filter: brightness(1.08); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .radial-meter-3d { animation: none; }
+}
+
 .hq-body {
   font-weight: 400;
   font-size: 14px;
@@ -440,6 +544,40 @@ body {
   border-radius: 6px;
   background: color-mix(in srgb, var(--primitive-neutral-900) 25%, transparent);
   color: var(--text-primary);
+}
+
+/* ========== Commander HQ UI Kit – ambient + glass ========== */
+.hq-background {
+  background:
+    radial-gradient(
+      circle at 30% 40%,
+      rgba(0, 242, 255, 0.15),
+      transparent 40%
+    ),
+    radial-gradient(
+      circle at 60% 50%,
+      rgba(122, 92, 255, 0.15),
+      transparent 45%
+    ),
+    radial-gradient(
+      circle at 75% 65%,
+      rgba(0, 255, 163, 0.15),
+      transparent 40%
+    ),
+    linear-gradient(
+      180deg,
+      var(--hq-bg-1),
+      var(--hq-bg-2),
+      var(--hq-bg-3)
+    );
+}
+
+.hq-glass {
+  backdrop-filter: blur(var(--hq-blur-md));
+  -webkit-backdrop-filter: blur(var(--hq-blur-md));
+  background: var(--hq-glass-bg);
+  border: 1px solid var(--hq-glass-border);
+  border-radius: var(--hq-radius-lg);
 }
 
 /* ========== COMMANDER v2 MOTION CONTRACT (MD §5) ========== */
@@ -593,17 +731,23 @@ body {
 .hq-section-gap { gap: var(--space-section); }
 .hq-card-internal { padding: var(--space-card); }
 
-/* ========== Neon glass cards (cinematic glassmorphism) ========== */
+/* ========== Neon glass cards (cinematic HUD – glass + stacked glow + inner bloom) ========== */
 .hq-card,
 .card-simple {
-  background: var(--glass-panel-bg);
-  backdrop-filter: blur(24px);
-  -webkit-backdrop-filter: blur(24px);
-  border: 1px solid transparent;
+  background: rgba(15, 25, 55, 0.5);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid var(--glass-border-soft);
   border-radius: 22px;
   position: relative;
   overflow: hidden;
-  box-shadow: var(--glass-panel-shadow);
+  box-shadow:
+    var(--glow-depth),
+    0 0 8px rgba(0, 229, 255, 0.12),
+    0 0 24px rgba(0, 229, 255, 0.08),
+    0 0 40px rgba(0, 229, 255, 0.04),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06),
+    inset 0 0 60px rgba(0, 229, 255, 0.03);
 }
 .hq-card::before,
 .card-simple::before {
@@ -612,11 +756,20 @@ body {
   inset: 0;
   border-radius: inherit;
   padding: 1px;
-  background: var(--glass-border);
+  background: linear-gradient(135deg, rgba(0, 229, 255, 0.2), rgba(138, 92, 255, 0.15));
   -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
   mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
   -webkit-mask-composite: xor;
   mask-composite: exclude;
+  pointer-events: none;
+}
+.hq-card::after,
+.card-simple::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: radial-gradient(ellipse 80% 50% at 50% 0%, rgba(255, 255, 255, 0.08), transparent 55%);
   pointer-events: none;
 }
 /* Mission card: alleen linker accentbalk; rest (glass, border, shadow) in component */
@@ -680,15 +833,22 @@ body {
 }
 
 /* Primary button: reference style (same as BEGIN MISSION – glass neon, 16–22px radius) */
+/* Primary: 4-layer glow + depth (same as neon-button, used in modals/forms everywhere) */
 .btn-primary {
   background: var(--neon-btn-gradient);
   color: #FFFFFF;
   font-weight: 600;
   border-radius: 18px;
   border: none;
-  box-shadow: var(--neon-btn-shadow-layered);
+  box-shadow:
+    0 0 8px rgba(0, 229, 255, 0.5),
+    0 0 24px rgba(124, 92, 255, 0.35),
+    0 0 48px rgba(0, 229, 255, 0.2),
+    0 8px 32px rgba(0, 0, 0, 0.45),
+    inset 0 1px 0 rgba(255, 255, 255, 0.15);
   min-height: 44px;
   position: relative;
+  transition: transform 0.12s ease-out, box-shadow 0.2s ease-out;
   transition: transform 120ms ease-out, box-shadow 120ms ease-out;
   text-shadow: 0 0 20px rgba(255, 255, 255, 0.2);
 }
@@ -706,7 +866,12 @@ body {
   pointer-events: none;
 }
 .btn-primary:hover:not(:disabled) {
-  box-shadow: 0 0 56px rgba(0, 229, 255, 0.4), 0 0 36px rgba(124, 92, 255, 0.35), 0 10px 40px rgba(0, 0, 0, 0.5), 0 0 24px rgba(124, 92, 255, 0.35), 0 0 48px rgba(0, 229, 255, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.18);
+  box-shadow:
+    0 0 12px rgba(0, 229, 255, 0.6),
+    0 0 32px rgba(124, 92, 255, 0.45),
+    0 0 56px rgba(0, 229, 255, 0.3),
+    0 10px 40px rgba(0, 0, 0, 0.5),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
 }
 .btn-primary:active:not(:disabled) {
   transform: scale(0.97);
@@ -717,9 +882,172 @@ body {
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
 }
 
-/* Modal: glass overlay + panel (matches background) */
+/* Secondary / Cancel: cinematic ghost – soft border, glow on hover */
+.btn-secondary {
+  background: transparent;
+  color: var(--text-primary);
+  font-weight: 500;
+  border-radius: 18px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  min-height: 44px;
+  padding: 0 1rem;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+  box-shadow: 0 0 0 0 rgba(0, 229, 255, 0);
+}
+.btn-secondary:hover:not(:disabled) {
+  border-color: rgba(0, 229, 255, 0.35);
+  background: rgba(0, 229, 255, 0.06);
+  box-shadow: 0 0 12px rgba(0, 229, 255, 0.15), 0 0 24px rgba(0, 229, 255, 0.06);
+}
+.btn-secondary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Mission pill button — cubic polynomial fit (linear RGB→sRGB), 11 stops. Same math as gradient.wgsl. */
+
+/* Wrapper: 4-layer glow stack + depth shadow (cinematic button) */
+.mission-pill-wrap {
+  display: inline-flex;
+  width: 100%;
+  max-width: 324px;
+  border-radius: 80px;
+  padding: 4px;
+  background: linear-gradient(
+    90deg,
+    #BF73FE 0%,
+    #B67BFD 9%,
+    #AE81FD 18%,
+    #A787FD 27%,
+    #A18EFC 36%,
+    #9B96FC 45%,
+    #94A0FA 55%,
+    #8CADF8 64%,
+    #83BBF5 73%,
+    #76CCF1 82%,
+    #63E0EB 91%,
+    #45F5E3 100%
+  );
+  box-shadow:
+    0 0 8px rgba(124, 92, 255, 0.6),
+    0 0 24px rgba(124, 92, 255, 0.4),
+    0 0 48px rgba(0, 229, 255, 0.3),
+    0 0 72px rgba(0, 229, 255, 0.12),
+    0 8px 32px rgba(0, 0, 0, 0.45),
+    0 12px 40px rgba(0, 0, 0, 0.25);
+  transition: transform 0.12s ease-out, box-shadow 0.2s ease-out;
+}
+.mission-pill-wrap:hover {
+  transform: scale(1.02);
+  box-shadow:
+    0 0 12px rgba(124, 92, 255, 0.7),
+    0 0 32px rgba(124, 92, 255, 0.5),
+    0 0 56px rgba(0, 229, 255, 0.35),
+    0 0 88px rgba(0, 229, 255, 0.15),
+    0 10px 40px rgba(0, 0, 0, 0.5),
+    0 14px 48px rgba(0, 0, 0, 0.3);
+}
+.mission-pill-wrap:active {
+  transform: scale(0.98);
+}
+
+.mission-pill {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-height: 76px;
+  padding: 0 28px;
+  border: none;
+  border-radius: 76px;
+  font-weight: 700;
+  font-size: 1rem;
+  letter-spacing: 0.12em;
+  color: #fff !important;
+  text-decoration: none !important;
+  text-shadow: 0 0 24px rgba(0, 0, 0, 0.5), 0 1px 2px rgba(0, 0, 0, 0.4);
+  cursor: pointer;
+  overflow: hidden;
+  background: linear-gradient(
+    90deg,
+    #BF73FE 0%,
+    #B67BFD 9%,
+    #AE81FD 18%,
+    #A787FD 27%,
+    #A18EFC 36%,
+    #9B96FC 45%,
+    #94A0FA 55%,
+    #8CADF8 64%,
+    #83BBF5 73%,
+    #76CCF1 82%,
+    #63E0EB 91%,
+    #45F5E3 100%
+  );
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.25),
+    inset 0 0 40px rgba(255, 255, 255, 0.04);
+}
+/* Inner glow overlay: volumetric glass (reference: 35% → 8% → 0% by 55%) */
+.mission-pill::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.4) 0%,
+    rgba(255, 255, 255, 0.1) 30%,
+    rgba(255, 255, 255, 0) 55%
+  );
+  pointer-events: none;
+}
+.mission-pill:hover {
+  color: #fff !important;
+  text-decoration: none !important;
+  background: linear-gradient(
+    90deg,
+    #BF73FE 0%,
+    #B67BFD 9%,
+    #AE81FD 18%,
+    #A787FD 27%,
+    #A18EFC 36%,
+    #9B96FC 45%,
+    #94A0FA 55%,
+    #8CADF8 64%,
+    #83BBF5 73%,
+    #76CCF1 82%,
+    #63E0EB 91%,
+    #45F5E3 100%
+  );
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.25),
+    inset 0 0 48px rgba(255, 255, 255, 0.05),
+    0 0 8px rgba(0, 229, 255, 0.4),
+    0 0 24px rgba(124, 92, 255, 0.3);
+}
+.mission-pill:active {
+  color: #fff !important;
+  background: linear-gradient(
+    90deg,
+    #a864e8 0%,
+    #9f6ce7 9%,
+    #9672e7 18%,
+    #8e78e7 27%,
+    #877fe6 36%,
+    #8087e6 45%,
+    #7991e4 55%,
+    #719ee2 64%,
+    #68acdf 73%,
+    #5cbddb 82%,
+    #4dd1d7 91%,
+    #3ae6cf 100%
+  );
+}
+
+/* Modal: cinematic glass overlay + panel (same as glass-panel + stacked glow) */
 .modal-backdrop {
-  background: var(--modal-backdrop);
+  background: rgba(5, 8, 22, 0.75);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
 }
@@ -728,14 +1056,20 @@ body {
   animation: modal-fade-in 0.2s ease-out;
 }
 
-/* Reference: modals = glass neon square – gradient border, top glow, 18–24px radius */
+/* Modals = cinematic glass – rgba(15,25,55), blur(20px), 1px white 8%, multi-layer glow */
 .modal-card {
-  background: var(--glass-panel-bg);
-  backdrop-filter: blur(24px);
-  -webkit-backdrop-filter: blur(24px);
-  border: 1px solid transparent;
+  background: rgba(15, 25, 55, 0.55);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid var(--glass-border-soft);
   border-radius: var(--modal-panel-radius);
-  box-shadow: var(--glass-panel-shadow), 0 -2px 0 0 rgba(0, 229, 255, 0.12);
+  box-shadow:
+    var(--glow-depth),
+    0 0 8px rgba(0, 229, 255, 0.12),
+    0 0 24px rgba(0, 229, 255, 0.08),
+    0 0 40px rgba(0, 229, 255, 0.04),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06),
+    inset 0 0 48px rgba(0, 229, 255, 0.02);
   animation: modal-scale-in var(--duration-standard) var(--ease-decelerate);
   max-height: calc(100vh - 2rem);
   display: flex;
@@ -749,7 +1083,7 @@ body {
   inset: 0;
   border-radius: inherit;
   padding: 1px;
-  background: var(--glass-border);
+  background: linear-gradient(135deg, rgba(0, 229, 255, 0.2), rgba(138, 92, 255, 0.15));
   -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
   mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
   -webkit-mask-composite: xor;
@@ -761,9 +1095,13 @@ body {
   position: absolute;
   inset: 0;
   border-radius: inherit;
-  background: radial-gradient(ellipse 80% 50% at 50% 0%, rgba(255, 255, 255, 0.05), transparent 55%);
+  background: radial-gradient(ellipse 80% 50% at 50% 0%, rgba(255, 255, 255, 0.08), transparent 55%);
   pointer-events: none;
 }
+.modal-card {
+  color: var(--text-primary);
+}
+
 .modal-card-header {
   flex-shrink: 0;
   display: flex;
@@ -774,12 +1112,46 @@ body {
   padding-bottom: 1rem;
   border-bottom: 1px solid var(--modal-border);
   background: var(--modal-title-bg);
+  color: var(--text-primary);
 }
+.modal-card-header h2 {
+  color: #ffffff;
+  font-weight: 600;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+.modal-card-header p {
+  color: rgba(255, 255, 255, 0.88);
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.2);
+}
+
 .modal-card-body {
   flex: 1;
   overflow-y: auto;
   padding: var(--modal-panel-padding);
+  color: var(--text-primary);
+  font-size: 15px;
+  line-height: 1.5;
 }
+.modal-card-body p,
+.modal-card-body label,
+.modal-card-body span {
+  color: inherit;
+}
+.modal-card-body p {
+  color: rgba(255, 255, 255, 0.95);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
+}
+.modal-card-body label {
+  color: rgba(255, 255, 255, 0.9);
+}
+.modal-card-body input::placeholder,
+.modal-card-body textarea::placeholder {
+  color: rgba(255, 255, 255, 0.5);
+}
+.modal-card-body .text-muted {
+  color: rgba(255, 255, 255, 0.82) !important;
+}
+
 .modal-card-footer {
   flex-shrink: 0;
   display: flex;
@@ -789,6 +1161,10 @@ body {
   padding: 1rem var(--modal-panel-padding) var(--modal-panel-padding);
   border-top: 1px solid var(--modal-border);
   background: var(--modal-title-bg);
+  color: var(--text-primary);
+}
+.modal-card-footer button {
+  color: inherit;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -844,7 +1220,13 @@ body {
   letter-spacing: 0.02em;
   border: none;
   border-radius: 18px;
-  box-shadow: var(--neon-btn-shadow-layered);
+  box-shadow:
+    0 0 8px rgba(0, 229, 255, 0.5),
+    0 0 24px rgba(124, 92, 255, 0.35),
+    0 0 48px rgba(0, 229, 255, 0.2),
+    0 8px 32px rgba(0, 0, 0, 0.45),
+    inset 0 1px 0 rgba(255, 255, 255, 0.15);
+  transition: transform 0.12s ease-out, box-shadow 0.2s ease-out;
   transform: scale(1);
   min-height: 44px;
   position: relative;
@@ -1236,20 +1618,20 @@ body {
   .neon-diffuse {
     background: linear-gradient(
       90deg,
-      var(--neon-cyan) 0%,
-      var(--neon-purple) 50%,
-      var(--neon-green) 100%
+      rgba(0, 240, 255, 0.95) 0%,
+      rgba(120, 92, 255, 0.92) 45%,
+      rgba(0, 220, 255, 0.95) 100%
     );
-    filter: blur(55px);
-    opacity: 0.9;
+    filter: blur(48px);
+    opacity: 0.95;
   }
 
   .neon-core {
     background: linear-gradient(
       90deg,
-      var(--neon-cyan) 0%,
-      var(--neon-purple) 50%,
-      var(--neon-green) 100%
+      rgba(0, 240, 255, 0.95) 0%,
+      rgba(122, 92, 255, 0.95) 50%,
+      rgba(0, 235, 255, 0.95) 100%
     );
   }
 
@@ -1263,6 +1645,80 @@ body {
       rgba(255, 255, 255, 0.06) 55%,
       rgba(255, 255, 255, 0.02) 100%
     );
+  }
+}
+
+/* BEGIN MISSION — contrast-first HDR shader wrapper */
+.mission-hdr-wrap {
+  width: 100%;
+  max-width: 336px;
+}
+
+.mission-hdr-button {
+  position: relative;
+  display: inline-flex;
+  width: 100%;
+  min-height: 86px;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  border: 0;
+  border-radius: 36px;
+  background: transparent;
+  padding: 0 24px;
+  transition: transform 170ms ease;
+}
+
+.mission-hdr-button:hover {
+  transform: translateY(-1px) scale(1.006);
+}
+
+.mission-hdr-button:active {
+  transform: translateY(1px) scale(0.995);
+}
+
+.mission-hdr-canvas {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+}
+
+.mission-hdr-canvas canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+  border-radius: inherit;
+}
+
+.mission-hdr-label {
+  position: relative;
+  z-index: 2;
+  color: #f7fcff;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1;
+  text-shadow:
+    0 0 6px rgba(255, 255, 255, 0.78),
+    0 0 12px rgba(120, 236, 255, 0.34);
+}
+
+.mission-hdr-button-ultra .mission-hdr-label {
+  text-shadow:
+    0 0 7px rgba(255, 255, 255, 0.86),
+    0 0 14px rgba(120, 236, 255, 0.45),
+    0 0 16px rgba(243, 88, 222, 0.2);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mission-hdr-button,
+  .mission-hdr-button:hover,
+  .mission-hdr-button:active {
+    transform: none;
   }
 }
 
@@ -1352,14 +1808,15 @@ body {
   color: var(--accent-cta);
   font-weight: 500;
   font-size: 14px;
-  border: 1.5px solid var(--accent-cta);
-  border-radius: var(--hq-btn-radius);
+  border: 1px solid rgba(0, 229, 255, 0.4);
+  border-radius: 18px;
   min-height: 44px;
-  transition: background var(--duration-standard) var(--ease-standard),
-    color var(--duration-standard) var(--ease-standard);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+  box-shadow: 0 0 0 0 rgba(0, 229, 255, 0);
 }
 .btn-hq-secondary:hover:not(:disabled) {
-  background: color-mix(in srgb, var(--component-primary-cta) 12%, transparent);
+  background: rgba(0, 229, 255, 0.08);
+  box-shadow: 0 0 12px rgba(0, 229, 255, 0.2), 0 0 24px rgba(0, 229, 255, 0.08);
 }
 
 .skip-link {
@@ -1394,6 +1851,16 @@ body {
   opacity: 0.9;
 }
 
+/* Status bar: reference – time, signals, battery ZP; subtle bar for readability */
+.status-bar {
+  background: linear-gradient(180deg, rgba(5, 10, 22, 0.85) 0%, transparent 100%);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+.safe-area-pt {
+  padding-top: max(0.5rem, env(safe-area-inset-top));
+}
 .safe-area-pb {
   padding-bottom: max(0.5rem, env(safe-area-inset-bottom));
 }
