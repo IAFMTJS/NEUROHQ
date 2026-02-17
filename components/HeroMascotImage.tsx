@@ -1,46 +1,32 @@
 "use client";
 
 import Image from "next/image";
+import { getMascotSrcForPage, MASCOT_VARIANT_TO_PAGE, type DashboardPage } from "@/lib/mascots";
 
-export type HeroMascotVariant =
-  | "homepage"
-  | "missions"
-  | "assistant"
-  | "analytics"
-  | "budget"
-  | "report"
-  | "growth"
-  | "strategy"
-  | "settings";
+export type HeroMascotVariant = keyof typeof MASCOT_VARIANT_TO_PAGE;
 
-/** Mascots from "New styling idea" folder – file names = page names (e.g. "Budget page.png", "Mission page.png"). */
-const HERO_MASCOT_SRC_BY_VARIANT: Record<HeroMascotVariant, string> = {
-  homepage: "/mascots/Homepage%20Mascotte.png",
-  missions: "/mascots/Mission%20page.png",
-  assistant: "/mascots/page.png",
-  analytics: "/mascots/page.png",
-  budget: "/mascots/Budget%20page.png",
-  report: "/mascots/page.png",
-  growth: "/mascots/Growth%20page.png",
-  strategy: "/mascots/Strategy%20page.png",
-  settings: "/mascots/Settings%20page.png",
-};
 const FALLBACK_SRC = "/app-icon.png";
 
 type HeroMascotImageProps = {
+  /** Current page (route segment). When set, mascot is chosen by page name; overrides variant. */
+  page?: DashboardPage;
+  /** Fallback when page is not set. Maps to page then to file (files are named after pages). */
   variant?: HeroMascotVariant;
+  /** Optional class for the img (e.g. mascot-img in hero layout). */
+  className?: string;
 };
 
-export function HeroMascotImage({ variant = "homepage" }: HeroMascotImageProps) {
-  const heroSrc = HERO_MASCOT_SRC_BY_VARIANT[variant];
+export function HeroMascotImage({ page, variant = "homepage", className }: HeroMascotImageProps) {
+  const routePage = page ?? MASCOT_VARIANT_TO_PAGE[variant];
+  const heroSrc = getMascotSrcForPage(routePage);
 
   return (
     <Image
       src={heroSrc}
       alt=""
       fill
-      sizes="(max-width: 768px) 85vw, 80vh"
-      className="object-contain"
+      sizes="(max-width: 420px) 96vw, 420px"
+      className={`object-contain object-[center_0%] ${className ?? ""}`.trim()}
       priority
       onError={(e) => {
         const el = e.target as HTMLImageElement;

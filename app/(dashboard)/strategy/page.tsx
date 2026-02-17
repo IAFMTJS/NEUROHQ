@@ -33,7 +33,6 @@ export default async function StrategyPage() {
         title="Quarterly strategy"
         subtitle={`Q${quarter} ${year} — theme, identity, key results, anti-goals, and linked goals.`}
         backHref="/dashboard"
-        mascotVariant="strategy"
       />
       <div className="mt-4 flex flex-wrap items-center gap-3">
         <div className="glass-card rounded-xl px-4 py-3">

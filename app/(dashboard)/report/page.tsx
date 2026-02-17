@@ -31,7 +31,6 @@ export default async function ReportPage({ searchParams }: Props) {
         title="Reality report"
         subtitle={isCurrentWeek ? "Summary of this week." : `Past week: ${report.weekStart} – ${report.weekEnd}.`}
         backHref="/dashboard"
-        mascotVariant="report"
       />
       <ReportWeekSelector
         storedWeeks={storedWeeks}

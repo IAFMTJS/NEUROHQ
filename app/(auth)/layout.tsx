@@ -8,9 +8,6 @@ export default function AuthLayout({
 }) {
   return (
     <div className="relative min-h-screen">
-      {/* Same background as dashboard: BACKGROUND.PNG + layers */}
-      <div className="hq-bg-layer" aria-hidden />
-      <div className="hq-vignette" aria-hidden />
       <div className="relative z-10 mx-auto flex min-h-screen max-w-[420px] flex-col items-center justify-center p-5 md:min-h-[640px]">
         <Link
           href="/"

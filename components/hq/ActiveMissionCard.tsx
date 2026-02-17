@@ -61,18 +61,18 @@ export function ActiveMissionCard({
           Optimal time frame: {timeWindow.replace("–", " – ")}
         </p>
 
-        <div className="pt-4 flex justify-center">
+        <div className="mission-cta-wrap pt-1 flex justify-center">
           <MissionButton
             variant="pill"
             href={href}
             aria-label={tasks.length > 0 ? "Go to missions" : "Begin mission"}
-            className="gap-2"
+            className="gap-2 mission-cta-button"
           >
             {tasks.length > 0 ? "GO TO MISSIONS" : "BEGIN MISSION"} →
           </MissionButton>
         </div>
 
-        <p className="text-center text-[var(--text-muted)] text-xs pt-2">
+        <p className="text-center text-[var(--text-muted)] text-xs pt-1.5">
           All systems active
         </p>
       </div>

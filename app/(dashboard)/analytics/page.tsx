@@ -42,7 +42,6 @@ export default async function AnalyticsPage() {
         title="Analytics"
         subtitle="Time used, consistency, and mood over time."
         backHref="/dashboard"
-        mascotVariant="analytics"
       />
 
       {summary && (

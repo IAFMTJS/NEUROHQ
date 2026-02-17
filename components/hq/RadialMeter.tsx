@@ -26,6 +26,12 @@ const glowColors: Record<GlowVariant, string> = {
   warning: "rgba(251, 191, 36, 0.6)",
 };
 
+const textGlowShadow: Record<GlowVariant, string> = {
+  energy: "0 0 12px rgba(0, 232, 118, 0.5), 0 0 4px rgba(34, 211, 238, 0.3)",
+  focus: "0 0 12px rgba(0, 229, 255, 0.5), 0 0 4px rgba(147, 197, 253, 0.3)",
+  warning: "0 0 12px rgba(251, 191, 36, 0.4), 0 1px 2px rgba(0,0,0,0.3)",
+};
+
 type Props = {
   value: number;
   label: string;
@@ -100,6 +106,15 @@ export function RadialMeter({ value, label, description, variant, delay = 0, thi
             stroke="rgba(0, 229, 255, 0.08)"
             strokeWidth={stroke}
           />
+          {/* Rim highlight – thin cyan/blue edge on track */}
+          <circle
+            cx={size / 2}
+            cy={size / 2}
+            r={r}
+            fill="none"
+            stroke="rgba(255, 255, 255, 0.06)"
+            strokeWidth={1.5}
+          />
           {/* Progress arc – bright gradient + strong glow (3D raised) */}
           <circle
             cx={size / 2}
@@ -117,13 +132,21 @@ export function RadialMeter({ value, label, description, variant, delay = 0, thi
             }}
           />
         </svg>
+        {/* Soft inner gradient – cinematic depth inside ring */}
         <div
-          className="absolute inset-0 flex flex-col items-center justify-center gap-0 radial-meter-value"
+          className="absolute inset-0 flex items-center justify-center pointer-events-none rounded-full"
+          style={{
+            background: "radial-gradient(ellipse 75% 75% at 50% 50%, rgba(15,22,35,0.5), transparent 70%)",
+          }}
+          aria-hidden
+        />
+        <div
+          className="absolute inset-0 flex flex-col items-center justify-center gap-0 radial-meter-value pointer-events-none"
           style={{
             fontSize: thin ? "1.05rem" : "1.5rem",
             fontWeight: 700,
             color: "var(--text-primary)",
-            textShadow: "0 0 20px rgba(0,0,0,0.5), 0 1px 2px rgba(0,0,0,0.4)",
+            textShadow: `${textGlowShadow[variant]}, 0 1px 2px rgba(0,0,0,0.35)`,
           }}
         >
           {Math.round(clamped)}%

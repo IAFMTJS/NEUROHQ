@@ -168,7 +168,6 @@ export default function AssistantPage() {
         title="Assistant"
         subtitle="Gedragsarchitectuur – evidence-based"
         backHref="/dashboard"
-        mascotVariant="assistant"
       />
 
       <div

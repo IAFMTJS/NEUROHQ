@@ -19,6 +19,7 @@ import { getWeekBounds } from "@/lib/utils/learning";
 import { getCurrencySymbol } from "@/lib/utils/currency";
 import { yesterdayDate, getDayOfYearFromDateString } from "@/lib/utils/timezone";
 import { HQHeader, BrainStatusCard, MissionButton, ActiveMissionCard, WatNuBlock, HQShortcutGrid, RadialMeter, HQChart } from "@/components/hq";
+import { CommanderHomeHero } from "@/components/commander";
 import { HeroMascotImage } from "@/components/HeroMascotImage";
 import { ModeBanner, ModeExplanationModal, AddCalendarEventForm } from "@/components/dashboard/DashboardClientOnly";
 
@@ -190,8 +191,7 @@ export default async function DashboardPage() {
 
   return (
     <div
-      className={`flex flex-col -mt-1 ${isMinimalUI ? "minimal-ui" : ""}`}
-      style={{ gap: "var(--space-section)", paddingBottom: "var(--space-section)" }}
+      className={`${!isMinimalUI ? "container page" : ""} ${isMinimalUI ? "minimal-ui" : ""}`}
       data-minimal={isMinimalUI ? "true" : undefined}
     >
       {!isMinimalUI && <OnboardingBanner />}
@@ -200,41 +200,28 @@ export default async function DashboardPage() {
           <XPBadge totalXp={xp.total_xp} level={xp.level} compact />
         </div>
       )}
-      {/* Header: hero lower on page, mascot just above Commander HQ, then CTA + rings */}
-      <header className="flex flex-col gap-0 relative pt-14 overflow-visible">
-        {!isMinimalUI && (
-          <div className="hq-hero-mascot-wrap w-full" aria-hidden>
-            <div className="hq-mascot-glow" />
-            <div className="hq-mascot-img">
-              <HeroMascotImage />
-            </div>
+      {/* Dark Commander home: header, mascot, stat rings, Start Mission, then Brain Status */}
+      {!isMinimalUI && (
+        <CommanderHomeHero
+          energyPct={energyPct}
+          focusPct={focusPct}
+          loadPct={loadPct}
+          missionHref={todaysTasks.length > 0 ? "/tasks" : "/assistant"}
+          missionLabel="Start Mission"
+        />
+      )}
+      {isMinimalUI && (
+        <header className="flex flex-col gap-0 relative pt-14 overflow-visible">
+          <div className="relative z-10 -mt-72">
+            <HQHeader
+              energyPct={energyPct}
+              focusPct={focusPct}
+              loadPct={loadPct}
+              copyVariant={adaptiveSuggestions.copyVariant}
+            />
           </div>
-        )}
-        <div className="relative z-10 -mt-72">
-          <HQHeader
-            energyPct={energyPct}
-            focusPct={focusPct}
-            loadPct={loadPct}
-            copyVariant={adaptiveSuggestions.copyVariant}
-          />
-        </div>
-        {!isMinimalUI && (
-          <div className="flex flex-col items-center gap-4 pt-2 pb-2">
-            <MissionButton
-              variant="pill"
-              href={todaysTasks.length > 0 ? "/tasks" : "/assistant"}
-              aria-label={todaysTasks.length > 0 ? "Go to missions" : "Begin mission"}
-            >
-              BEGIN MISSION
-            </MissionButton>
-            <div className="grid grid-cols-3 gap-4 w-full max-w-[320px] justify-items-center">
-              <RadialMeter value={energyPct} label="ENERGY" variant="energy" thin />
-              <RadialMeter value={focusPct} label="FOCUS" variant="focus" thin />
-              <RadialMeter value={loadPct} label="LOAD" variant="warning" thin />
-            </div>
-          </div>
-        )}
-      </header>
+        </header>
+      )}
       {!isMinimalUI && <HQShortcutGrid />}
       <BrainStatusCard
         date={dateStr}

@@ -118,12 +118,24 @@ export function BrainStatusCard({ date, initial, yesterday }: Props) {
 
   return (
     <section
-      className="hq-card hq-card-enter rounded-[var(--hq-card-radius-sharp)] p-5"
-      style={{ animationDelay: "50ms" }}
+      className="card page"
       aria-label="Brain Status"
     >
-      <h2 className="hq-title-variant-2 mb-5">Brain Status</h2>
-      <p className="mb-4 text-xs text-[var(--text-muted)]">
+      <h3>Brain Status</h3>
+      <div className="progress" style={{ marginTop: "12px" }}>
+        <div
+          className="progress-fill"
+          style={{ width: `${focusPct}%` }}
+          role="progressbar"
+          aria-valuenow={focusPct}
+          aria-valuemin={0}
+          aria-valuemax={100}
+        />
+      </div>
+      <p className="text-soft" style={{ marginTop: "8px" }}>
+        Focus stability at {focusPct}%
+      </p>
+      <p className="text-soft">
         Energy, focus, and load drive your daily task capacity. Sleep and social load affect headroom.
       </p>
       {/* Stat rings in glass container with top border glow (reference: Brain Status detail) */}

@@ -9,6 +9,7 @@ import { BacklogList } from "@/components/BacklogList";
 import { AgendaOnlyList } from "@/components/AgendaOnlyList";
 import { YesterdayTasksSection } from "@/components/missions/YesterdayTasksSection";
 import { HQPageHeader } from "@/components/hq";
+import { CommanderMissionCard } from "@/components/commander";
 
 export default async function TasksPage() {
   const today = new Date();
@@ -42,22 +43,55 @@ export default async function TasksPage() {
       ? "Sorted by impact and priority."
       : null;
 
+  const missionCards = [
+    ...tasks.slice(0, 4).map((t, i) => ({
+      id: (t as { id: string }).id,
+      title: (t as { title: string }).title ?? "Task",
+      subtitle: i === 0 ? "Active" : undefined,
+      state: (i === 0 ? "active" : "locked") as "active" | "locked",
+      progressPct: 0,
+      href: "/tasks",
+    })),
+    ...(completedToday as { id: string; title: string | null }[]).slice(0, 2).map((t) => ({
+      id: t.id,
+      title: t.title ?? "Done",
+      subtitle: "Completed",
+      state: "completed" as const,
+      progressPct: 100,
+      href: undefined,
+    })),
+  ];
+
   return (
-    <div className="space-y-6">
+    <div className="container page space-y-6">
       <HQPageHeader
         title="Missions"
         subtitle={<>{dateStr} · One focus at a time {modeHint && <span className="block mt-1 text-xs">{modeHint}</span>}</>}
         backHref="/dashboard"
-        mascotVariant="missions"
       />
       <div className="flex flex-wrap items-center justify-end gap-2 -mt-4">
         <YesterdayTasksSection yesterdayTasks={yesterdayTasks} todayStr={dateStr} />
-        <div className="inline-flex items-center gap-2 rounded-full border border-[var(--card-border)] bg-[var(--bg-surface)] px-4 py-2 text-sm font-medium text-[var(--text-primary)]">
-          <span className="h-2 w-2 rounded-full bg-[var(--accent-focus)]" aria-hidden />
+        <div className="inline-flex items-center gap-2 rounded-full border border-[var(--dc-border-soft)] bg-[var(--dc-bg-elevated)] px-4 py-2 text-sm font-medium text-[var(--dc-text-main)]">
+          <span className="h-2 w-2 rounded-full bg-[var(--dc-accent-primary)]" aria-hidden />
           Today
         </div>
       </div>
       <ModeBanner mode={mode} />
+      {missionCards.length > 0 && (
+        <section className="mission-grid">
+          {missionCards.map((m) => (
+            <CommanderMissionCard
+              key={m.id}
+              id={m.id}
+              title={m.title}
+              subtitle={m.subtitle}
+              state={m.state}
+              progressPct={m.progressPct}
+              href={m.href}
+            />
+          ))}
+        </section>
+      )}
       <TaskList
         date={dateStr}
         tasks={tasks as import("@/types/database.types").Task[]}

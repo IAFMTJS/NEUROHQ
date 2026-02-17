@@ -40,6 +40,7 @@ export function EmotionPicker() {
                   fill
                   sizes={`${PICKER_IMAGE_SIZE}px`}
                   className="object-contain"
+                  unoptimized
                 />
               </div>
               <span className="text-[10px] sm:text-xs font-medium text-[var(--text-primary)] text-center leading-tight line-clamp-2">

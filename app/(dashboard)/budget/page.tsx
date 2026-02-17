@@ -86,7 +86,6 @@ export default async function BudgetPage({ searchParams }: Props) {
         title="Budget"
         subtitle="Savings goals, entries, and spending awareness."
         backHref="/dashboard"
-        mascotVariant="budget"
       />
       <div className="flex flex-wrap items-center justify-end gap-3 -mt-2">
         <BudgetHistorySelector currentMonth={monthParam} />

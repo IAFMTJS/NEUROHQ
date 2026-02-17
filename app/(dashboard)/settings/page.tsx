@@ -37,7 +37,6 @@ export default async function SettingsPage() {
         title="Settings"
         subtitle="Account, notifications, export, and integrations."
         backHref="/dashboard"
-        mascotVariant="settings"
       />
       <div className="card-simple overflow-hidden p-0">
         <div className="border-b border-[var(--card-border)] px-4 py-3">

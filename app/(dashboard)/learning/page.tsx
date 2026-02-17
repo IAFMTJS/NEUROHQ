@@ -1,4 +1,6 @@
 import { HQPageHeader } from "@/components/hq";
+import { CommanderXPBar, CommanderSkillTree } from "@/components/commander";
+import { getXP } from "@/app/actions/xp";
 import { getWeekBounds } from "@/lib/utils/learning";
 import { getWeeklyMinutes, getWeeklyLearningTarget, getLearningStreak, getEducationOptions, getLearningSessions, getPastTopics, getTopicBreakdown, getMonthlyLearningWeeks, getMonthlyBooksForCurrentMonth, getMonthlyBookForCurrentMonth, getTotalLearningMinutes, getMonthlyBooksHistory } from "@/app/actions/learning";
 import { LearningProgress } from "@/components/LearningProgress";
@@ -27,7 +29,8 @@ export default async function LearningPage({ searchParams }: Props) {
   const { start: weekStart, end: weekEnd } = getWeekBounds(today);
   const thisYear = today.getFullYear();
   const thisMonth = today.getMonth() + 1;
-  const [minutes, target, streak, options, sessionsThisWeek, pastTopics, topicBreakdown, monthlyWeeks, monthlyBooks, monthlyBookFirst, totalMinutes, booksHistory, strategy] = await Promise.all([
+  const [xp, minutes, target, streak, options, sessionsThisWeek, pastTopics, topicBreakdown, monthlyWeeks, monthlyBooks, monthlyBookFirst, totalMinutes, booksHistory, strategy] = await Promise.all([
+    getXP(),
     getWeeklyMinutes(weekStart, weekEnd),
     getWeeklyLearningTarget(),
     getLearningStreak(),
@@ -43,17 +46,25 @@ export default async function LearningPage({ searchParams }: Props) {
     getQuarterlyStrategy(),
   ]);
 
+  const commanderSkills = [
+    { id: "focus1", label: "Focus I", unlocked: xp.level >= 1 },
+    { id: "focus2", label: "Focus II", unlocked: xp.level >= 3 },
+    { id: "deepFocus", label: "Deep Focus", unlocked: xp.level >= 6 },
+  ];
+
   return (
-    <div className="space-y-6">
+    <div className="container page space-y-6">
       <HQPageHeader
         title="Growth"
         subtitle="Learning & growth — weekly minutes, streak, education options, and recent sessions."
         backHref="/dashboard"
-        mascotVariant="growth"
       />
       <div className="-mt-2">
         <GrowthStrategyBanner strategy={strategy} />
       </div>
+
+      <CommanderXPBar totalXP={xp.total_xp} />
+      <CommanderSkillTree skills={commanderSkills} />
 
       <section>
         <LearningProgress
