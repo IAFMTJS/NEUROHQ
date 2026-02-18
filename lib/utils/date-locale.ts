@@ -23,17 +23,12 @@ export function formatDayShort(dateKey: string): string {
  * Prefer slicing (no locale/timezone dependence); fall back to Intl if needed.
  */
 export function formatIsoTimeHms(isoDateTime: string): string {
-  // Common shapes:
-  // - 2026-02-18T09:00:00.000Z
-  // - 2026-02-18T09:00:00Z
-  // - 2026-02-18T09:00:00+01:00
+  // Common shapes: 2026-02-18T09:00:00.000Z, 2026-02-18T09:00:00Z, 2026-02-18T09:00:00+01:00
   if (isoDateTime.length >= 19 && isoDateTime[10] === "T") {
     return isoDateTime.slice(11, 19);
   }
-
   const d = new Date(isoDateTime);
   if (Number.isNaN(d.getTime())) return "Invalid time";
-
   return new Intl.DateTimeFormat(DATE_LOCALE, {
     hour: "2-digit",
     minute: "2-digit",

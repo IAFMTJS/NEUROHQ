@@ -1,3 +1,4 @@
+import { getMascotSrcForPage } from "@/lib/mascots";
 import { HQPageHeader } from "@/components/hq";
 import { CommanderXPBar, CommanderSkillTree } from "@/components/commander";
 import { getXP } from "@/app/actions/xp";
@@ -59,6 +60,9 @@ export default async function LearningPage({ searchParams }: Props) {
         subtitle="Learning & growth — weekly minutes, streak, education options, and recent sessions."
         backHref="/dashboard"
       />
+      <section className="mascot-hero mascot-hero-top" data-mascot-page="learning" aria-hidden>
+        <img src={getMascotSrcForPage("learning")} alt="" className="mascot-img" />
+      </section>
       <div className="-mt-2">
         <GrowthStrategyBanner strategy={strategy} />
       </div>

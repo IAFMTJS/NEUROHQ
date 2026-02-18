@@ -1,3 +1,4 @@
+import { getMascotSrcForPage } from "@/lib/mascots";
 import { HQPageHeader } from "@/components/hq";
 import { getRealityReport, getStoredReport, getStoredReportWeeks } from "@/app/actions/report";
 import { getWeekBounds } from "@/lib/utils/learning";
@@ -32,6 +33,9 @@ export default async function ReportPage({ searchParams }: Props) {
         subtitle={isCurrentWeek ? "Summary of this week." : `Past week: ${report.weekStart} – ${report.weekEnd}.`}
         backHref="/dashboard"
       />
+      <section className="mascot-hero mascot-hero-top" data-mascot-page="report" aria-hidden>
+        <img src={getMascotSrcForPage("report")} alt="" className="mascot-img" />
+      </section>
       <ReportWeekSelector
         storedWeeks={storedWeeks}
         currentWeekStart={currentWeekStart}

@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
+import { getMascotSrcForPage } from "@/lib/mascots";
 import { HQPageHeader } from "@/components/hq";
 import { SettingsExport } from "@/components/SettingsExport";
 import { SettingsPush } from "@/components/SettingsPush";
@@ -38,6 +39,9 @@ export default async function SettingsPage() {
         subtitle="Account, notifications, export, and integrations."
         backHref="/dashboard"
       />
+      <section className="mascot-hero mascot-hero-top" data-mascot-page="settings" aria-hidden>
+        <img src={getMascotSrcForPage("settings")} alt="" className="mascot-img" />
+      </section>
       <div className="card-simple overflow-hidden p-0">
         <div className="border-b border-[var(--card-border)] px-4 py-3">
           <h2 className="text-base font-semibold text-[var(--text-primary)]">Account</h2>

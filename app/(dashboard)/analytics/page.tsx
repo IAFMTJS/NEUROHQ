@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { getMascotSrcForPage } from "@/lib/mascots";
 import { HQPageHeader } from "@/components/hq";
 import { getWeekBounds } from "@/lib/utils/learning";
 import { getWeekSummary, getAnalyticsRange } from "@/app/actions/analytics";
@@ -43,7 +44,9 @@ export default async function AnalyticsPage() {
         subtitle="Time used, consistency, and mood over time."
         backHref="/dashboard"
       />
-
+      <section className="mascot-hero mascot-hero-top" data-mascot-page="analytics" aria-hidden>
+        <img src={getMascotSrcForPage("analytics")} alt="" className="mascot-img" />
+      </section>
       {summary && (
         <section className="glass-card overflow-hidden p-0">
           <div className="border-b border-[var(--card-border)] px-4 py-3">

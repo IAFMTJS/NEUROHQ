@@ -3,6 +3,7 @@ import { getTodaysTasks, getTasksForDate, getSubtasksForTaskIds, getBacklogTasks
 import { getMode } from "@/app/actions/mode";
 import { getUpcomingCalendarEvents } from "@/app/actions/calendar";
 import { yesterdayDate } from "@/lib/utils/timezone";
+import { getMascotSrcForPage } from "@/lib/mascots";
 import { TaskList } from "@/components/TaskList";
 import { ModeBanner } from "@/components/ModeBanner";
 import { BacklogList } from "@/components/BacklogList";
@@ -69,6 +70,13 @@ export default async function TasksPage() {
         subtitle={<>{dateStr} · One focus at a time {modeHint && <span className="block mt-1 text-xs">{modeHint}</span>}</>}
         backHref="/dashboard"
       />
+      <section className="mascot-hero mascot-hero-top" data-mascot-page="tasks" aria-hidden>
+        <img
+          src={getMascotSrcForPage("tasks")}
+          alt=""
+          className="mascot-img"
+        />
+      </section>
       <div className="flex flex-wrap items-center justify-end gap-2 -mt-4">
         <YesterdayTasksSection yesterdayTasks={yesterdayTasks} todayStr={dateStr} />
         <div className="inline-flex items-center gap-2 rounded-full border border-[var(--dc-border-soft)] bg-[var(--dc-bg-elevated)] px-4 py-2 text-sm font-medium text-[var(--dc-text-main)]">

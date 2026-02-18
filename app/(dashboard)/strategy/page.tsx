@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { getMascotSrcForPage } from "@/lib/mascots";
 import { HQPageHeader } from "@/components/hq";
 import { getQuarterlyStrategy, getPastQuarterlyStrategies } from "@/app/actions/strategy";
 import { getCurrentQuarter, getNextQuarter, getPreviousQuarter } from "@/lib/utils/strategy";
@@ -34,6 +35,9 @@ export default async function StrategyPage() {
         subtitle={`Q${quarter} ${year} — theme, identity, key results, anti-goals, and linked goals.`}
         backHref="/dashboard"
       />
+      <section className="mascot-hero mascot-hero-top" data-mascot-page="strategy" aria-hidden>
+        <img src={getMascotSrcForPage("strategy")} alt="" className="mascot-img" />
+      </section>
       <div className="mt-4 flex flex-wrap items-center gap-3">
         <div className="glass-card rounded-xl px-4 py-3">
             <p className="mb-2 text-xs font-medium uppercase tracking-wide text-[var(--text-muted)]">Quick links</p>

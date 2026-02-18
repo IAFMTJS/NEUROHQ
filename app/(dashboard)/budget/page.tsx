@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { getMascotSrcForPage } from "@/lib/mascots";
 import { HQPageHeader } from "@/components/hq";
 import { getSavingsGoals, getSavingsContributions } from "@/app/actions/savings";
 import { weeklyRequired } from "@/lib/utils/savings";
@@ -87,6 +88,9 @@ export default async function BudgetPage({ searchParams }: Props) {
         subtitle="Savings goals, entries, and spending awareness."
         backHref="/dashboard"
       />
+      <section className="mascot-hero mascot-hero-top" data-mascot-page="budget" aria-hidden>
+        <img src={getMascotSrcForPage("budget")} alt="" className="mascot-img" />
+      </section>
       <div className="flex flex-wrap items-center justify-end gap-3 -mt-2">
         <BudgetHistorySelector currentMonth={monthParam} />
         <ExportBudgetCsvButton />

@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
+import { getMascotSrcForPage } from "@/lib/mascots";
 import { HQPageHeader } from "@/components/hq";
 import { createTask } from "@/app/actions/tasks";
 import { addManualEvent } from "@/app/actions/calendar";
@@ -169,7 +170,9 @@ export default function AssistantPage() {
         subtitle="Gedragsarchitectuur – evidence-based"
         backHref="/dashboard"
       />
-
+      <section className="mascot-hero mascot-hero-top" data-mascot-page="assistant" aria-hidden>
+        <img src={getMascotSrcForPage("assistant")} alt="" className="mascot-img" />
+      </section>
       <div
         ref={listRef}
         className="min-h-0 flex-1 overflow-y-auto px-4 py-4"
