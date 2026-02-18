@@ -14,7 +14,7 @@ export default function DashboardLayout({
 }) {
   return (
     <AppStateProvider>
-    <div className="relative min-h-screen" data-ui="dark-commander">
+    <div className="relative min-h-screen bg-transparent" data-ui="dark-commander">
       <ThemeHydrate />
       <ActiveTimeTracker />
       <NewDayRefresh />
@@ -22,10 +22,10 @@ export default function DashboardLayout({
         Skip to main content
       </a>
       <KeyboardShortcuts />
-      <div className="relative z-10 mx-auto flex min-h-screen max-w-[420px] flex-col md:min-h-[640px]">
+      <div className="relative z-10 mx-auto flex min-h-screen max-w-[420px] flex-col bg-transparent md:min-h-[640px]">
         <main
           id="main-content"
-          className="relative z-10 flex-1 overflow-auto"
+          className="relative z-10 flex-1 overflow-auto bg-transparent"
           style={{
             paddingLeft: "var(--hq-padding-x)",
             paddingRight: "var(--hq-padding-x)",

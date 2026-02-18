@@ -22,7 +22,7 @@ export function HQShortcutGrid() {
         <Link
           key={href + label}
           href={href}
-          className={`cinematic-card ${glow} flex flex-col gap-2 min-h-[100px] p-4 relative z-[1]`}
+          className={`cinematic-card glass-card-3d ${glow} flex flex-col gap-2 min-h-[100px] p-4 relative z-[1]`}
         >
           <span className="icon-neon-wrap w-10 h-10 shrink-0" aria-hidden>
             <Icon active={false} />

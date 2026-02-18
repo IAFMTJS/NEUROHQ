@@ -3,7 +3,7 @@
 import { useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { deleteCalendarEvent } from "@/app/actions/calendar";
-import { formatDayShort } from "@/lib/utils/date-locale";
+import { formatDayShort, formatIsoTimeHms } from "@/lib/utils/date-locale";
 
 type Event = {
   id: string;
@@ -45,10 +45,11 @@ export function UpcomingCalendarList({
   }
 
   const days: string[] = [];
-  const start = new Date(todayStr);
+  // Use UTC math so server/client timezones can't shift the day keys.
+  const start = new Date(todayStr + "T12:00:00Z");
   for (let i = 0; i < maxDays; i++) {
     const d = new Date(start);
-    d.setDate(start.getDate() + i);
+    d.setUTCDate(start.getUTCDate() + i);
     days.push(d.toISOString().slice(0, 10));
   }
 
@@ -83,8 +84,7 @@ export function UpcomingCalendarList({
                         {e.title ?? "Untitled"}
                       </span>
                       <span className="ml-2 text-xs text-neutral-400">
-                        {new Date(e.start_at).toLocaleTimeString()} –{" "}
-                        {new Date(e.end_at).toLocaleTimeString()}
+                        {formatIsoTimeHms(e.start_at)} – {formatIsoTimeHms(e.end_at)}
                         {e.is_social && " · Social"}
                       </span>
                     </div>

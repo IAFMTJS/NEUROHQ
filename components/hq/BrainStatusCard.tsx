@@ -118,7 +118,7 @@ export function BrainStatusCard({ date, initial, yesterday }: Props) {
 
   return (
     <section
-      className="card page"
+      className="card page glass-card-3d"
       aria-label="Brain Status"
     >
       <h3>Brain Status</h3>

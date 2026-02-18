@@ -240,6 +240,22 @@ export default async function DashboardPage() {
           social_load: yesterdayState?.social_load ?? null,
         }}
       />
+      {!isMinimalUI && budgetRemainingCents != null && (
+        <Link
+          href="/budget"
+          className="glass-card glass-card-3d flex items-center gap-3 p-4 transition-opacity hover:opacity-90"
+        >
+          <span className="text-xl font-bold tabular-nums text-[var(--text-primary)]">
+            {getCurrencySymbol(budgetSettings.currency)}
+            {budgetRemainingCents >= 0 ? (budgetRemainingCents / 100).toFixed(0) : (Math.abs(budgetRemainingCents) / 100).toFixed(0)}
+          </span>
+          <div className="min-w-0">
+            <p className="text-sm font-medium text-[var(--text-primary)]">Budget remaining this month</p>
+            <p className="text-xs text-[var(--text-muted)]">Spendable after savings</p>
+          </div>
+          <span className="ml-auto text-sm font-medium text-[var(--accent-focus)]">Budget →</span>
+        </Link>
+      )}
       {(!isMinimalUI || energyBudget.remaining < 20) && (
       <EnergyBudgetBar
         remaining={energyBudget.remaining}
@@ -275,7 +291,7 @@ export default async function DashboardPage() {
       />
       {mode === "driven" && !isMinimalUI && <FocusBlock />}
       {!isMinimalUI && (
-      <section className="glass-card glass-card-glow-blue overflow-hidden p-0">
+      <section className="glass-card glass-card-3d glass-card-glow-blue overflow-hidden p-0">
         <div className="border-b border-[var(--card-border)] px-4 py-3">
           <h2 className="text-base font-semibold text-[var(--text-primary)]">Calendar</h2>
           <p className="mt-0.5 text-xs text-[var(--text-muted)]">Today and tomorrow. Events count toward your energy budget on that day.</p>
@@ -291,7 +307,7 @@ export default async function DashboardPage() {
       </section>
       )}
       {!isMinimalUI && strategy?.identity_statement && (
-        <div className="glass-card glass-card-glow-purple p-4">
+        <div className="glass-card glass-card-3d glass-card-glow-purple p-4">
           <h2 className="text-sm font-semibold text-[var(--text-muted)]">This quarter</h2>
           <p className="mt-1 text-sm text-[var(--text-secondary)] italic">&ldquo;{strategy.identity_statement}&rdquo;</p>
         </div>
@@ -312,22 +328,6 @@ export default async function DashboardPage() {
             Growth →
           </Link>
         </div>
-      )}
-      {!isMinimalUI && budgetRemainingCents != null && (
-        <Link
-          href="/budget"
-          className="glass-card flex items-center gap-3 p-4 transition-opacity hover:opacity-90"
-        >
-          <span className="text-xl font-bold tabular-nums text-[var(--text-primary)]">
-            {getCurrencySymbol(budgetSettings.currency)}
-            {budgetRemainingCents >= 0 ? (budgetRemainingCents / 100).toFixed(0) : (Math.abs(budgetRemainingCents) / 100).toFixed(0)}
-          </span>
-          <div className="min-w-0">
-            <p className="text-sm font-medium text-[var(--text-primary)]">Budget remaining this month</p>
-            <p className="text-xs text-[var(--text-muted)]">Spendable after savings</p>
-          </div>
-          <span className="ml-auto text-sm font-medium text-[var(--accent-focus)]">Budget →</span>
-        </Link>
       )}
       {!isMinimalUI && (
       <OnTrackCard

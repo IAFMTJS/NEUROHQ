@@ -335,6 +335,7 @@
     rgba(255,255,255,0.05) 82% 100%
   );
   box-shadow: 0 0 20px var(--glow-cyan), 0 0 0 1px rgba(34,211,238,0.15);
+  animation: statRingGlowCyan 3s ease-in-out infinite;
 }
 
 .stat-ring.focus {
@@ -343,6 +344,7 @@
     rgba(255,255,255,0.05) 65% 100%
   );
   box-shadow: 0 0 20px var(--glow-primary), 0 0 0 1px rgba(37,99,235,0.2);
+  animation: statRingGlowBlue 3s ease-in-out infinite;
 }
 
 .stat-ring.load {
@@ -350,7 +352,8 @@
     var(--accent-amber) 0% 30%,
     rgba(255,255,255,0.05) 30% 100%
   );
-  box-shadow: 0 0 16px rgba(245,158,11,0.2), 0 0 0 1px rgba(255,255,255,0.06);
+  box-shadow: 0 0 20px rgba(245,158,11,0.35), 0 0 0 1px rgba(251,191,36,0.2);
+  animation: statRingGlowAmber 3s ease-in-out infinite;
 }
 
 .stat-inner {
@@ -590,39 +593,7 @@
   margin-bottom: -44px;
 }
 
-/* Assistant + Insight: mascot 4× bigger */
-[data-mascot-page="assistant"] .mascot-hero-inner,
-[data-mascot-page="report"] .mascot-hero-inner {
-  max-width: min(420px, 95vw);
-  height: 560px;
-  min-height: 480px;
-}
-[data-mascot-page="assistant"] .mascot-img,
-[data-mascot-page="report"] .mascot-img {
-  max-width: min(420px, 95vw) !important;
-  max-height: 560px !important;
-}
-
-/* Mission: shift left so centered, a bit more down */
-[data-mascot-page="tasks"] .mascot-hero {
-  justify-content: flex-start;
-}
-[data-mascot-page="tasks"] .mascot-hero-inner {
-  transform: translateX(-24px);
-  margin-left: 12px;
-}
-[data-mascot-page="tasks"].mascot-hero-top {
-  margin-top: 8px;
-}
-
-/* Budget, Growth, Strategy, Settings: a little more down */
-[data-mascot-page="budget"].mascot-hero-top,
-[data-mascot-page="learning"].mascot-hero-top,
-[data-mascot-page="strategy"].mascot-hero-top,
-[data-mascot-page="settings"].mascot-hero-top {
-  margin-top: 12px;
-}
-
+/* All pages (except dashboard): mascot same placement and size as homepage/dashboard */
 /* When mascot is below first card – pull it way up so it sits right under the card */
 .mascot-hero-below-card {
   margin-top: -64px;
@@ -644,6 +615,10 @@ header:has(+ .mascot-hero) {
 }
 
 /* ========== CINEMATIC NEON – Full background (starfield + nebula + vignette + depth) ========== */
+html {
+  background: linear-gradient(180deg, var(--cinematic-navy) 0%, var(--cinematic-navy-mid) 38%, var(--cinematic-navy-bottom) 72%, var(--cinematic-navy) 100%);
+  min-height: 100%;
+}
 body {
   margin: 0;
   min-height: 100vh;
@@ -776,8 +751,17 @@ header h1 { margin: 0; }
   }
 }
 
-.stat-ring.energy {
-  animation: energyPulse 3s infinite ease-in-out;
+@keyframes statRingGlowCyan {
+  0%, 100% { box-shadow: 0 0 20px var(--glow-cyan), 0 0 0 1px rgba(34,211,238,0.15); }
+  50% { box-shadow: 0 0 28px var(--glow-cyan), 0 0 32px rgba(0,212,255,0.15), 0 0 0 1px rgba(34,211,238,0.2); }
+}
+@keyframes statRingGlowBlue {
+  0%, 100% { box-shadow: 0 0 20px var(--glow-primary), 0 0 0 1px rgba(37,99,235,0.2); }
+  50% { box-shadow: 0 0 28px var(--glow-primary), 0 0 32px rgba(37,99,235,0.2), 0 0 0 1px rgba(37,99,235,0.25); }
+}
+@keyframes statRingGlowAmber {
+  0%, 100% { box-shadow: 0 0 20px rgba(245,158,11,0.35), 0 0 0 1px rgba(251,191,36,0.2); }
+  50% { box-shadow: 0 0 28px rgba(245,158,11,0.45), 0 0 32px rgba(251,191,36,0.2), 0 0 0 1px rgba(251,191,36,0.25); }
 }
 
 .page {
@@ -1145,6 +1129,40 @@ header h1 { margin: 0; }
 .glass-card.glass-card-glow-teal,
 .glass-card.glass-card-glow-green {
   box-shadow: 0 0 0 1px rgba(0, 232, 118, 0.12), 0 0 12px rgba(0, 232, 118, 0.1), 0 0 28px rgba(0, 232, 118, 0.05), 0 10px 40px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.08), inset 0 0 60px rgba(0, 232, 118, 0.02);
+}
+
+/* See-through 3D glass cards – underneath Start Mission */
+.glass-card-3d,
+.glass-card.glass-card-3d,
+.card.glass-card-3d {
+  background: linear-gradient(165deg, rgba(18, 28, 55, 0.35) 0%, rgba(12, 20, 42, 0.45) 100%) !important;
+  backdrop-filter: blur(28px);
+  -webkit-backdrop-filter: blur(28px);
+  box-shadow:
+    0 0 0 1px rgba(0, 229, 255, 0.12),
+    0 0 16px rgba(0, 229, 255, 0.08),
+    0 0 36px rgba(139, 92, 246, 0.06),
+    0 12px 44px rgba(0, 0, 0, 0.35),
+    inset 0 1px 0 rgba(255, 255, 255, 0.14),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.1),
+    inset 0 0 80px rgba(0, 229, 255, 0.03);
+}
+.glass-card-3d::before,
+.glass-card.glass-card-3d::before,
+.card.glass-card-3d::before {
+  background: linear-gradient(90deg, transparent 5%, rgba(0, 212, 255, 0.6) 25%, rgba(255, 255, 255, 0.5) 50%, rgba(0, 212, 255, 0.6) 75%, transparent 95%);
+  box-shadow: 0 0 14px rgba(0, 212, 255, 0.35);
+}
+.cinematic-card.glass-card-3d {
+  background: linear-gradient(165deg, rgba(18, 28, 55, 0.35) 0%, rgba(12, 20, 42, 0.45) 100%) !important;
+  backdrop-filter: blur(28px);
+  -webkit-backdrop-filter: blur(28px);
+  box-shadow:
+    0 0 0 1px rgba(0, 229, 255, 0.12),
+    0 0 16px rgba(0, 229, 255, 0.08),
+    0 12px 44px rgba(0, 0, 0, 0.35),
+    inset 0 1px 0 rgba(255, 255, 255, 0.14),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.1);
 }
 
 .skip-link {

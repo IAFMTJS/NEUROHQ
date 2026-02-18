@@ -24,7 +24,7 @@ export function ActiveMissionCard({
 
   return (
     <section
-      className="glass-card glass-card-glow-cyan hq-card-enter relative w-full mx-auto overflow-visible"
+      className="glass-card glass-card-3d glass-card-glow-cyan hq-card-enter relative w-full mx-auto overflow-visible"
       style={{ animationDelay: "100ms" }}
       aria-label="Active missions"
     >
