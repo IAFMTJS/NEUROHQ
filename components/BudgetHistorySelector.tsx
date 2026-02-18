@@ -1,6 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import { formatMonthYearShort } from "@/lib/utils/date-locale";
 
 const MONTHS_BACK = 12;
 
@@ -13,7 +14,7 @@ export function BudgetHistorySelector({ currentMonth }: { currentMonth?: string 
     const value = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
     options.push({
       value,
-      label: d.toLocaleString("default", { month: "short", year: "numeric" }),
+      label: formatMonthYearShort(d.getFullYear(), d.getMonth() + 1),
     });
   }
 

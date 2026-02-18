@@ -29,6 +29,7 @@ import { FrozenPurchaseCard } from "@/components/FrozenPurchaseCard";
 import { BudgetHistorySelector } from "@/components/BudgetHistorySelector";
 import { ExportBudgetCsvButton } from "@/components/ExportBudgetCsvButton";
 import { RecurringBudgetCard } from "@/components/RecurringBudgetCard";
+import { formatMonthYearShort } from "@/lib/utils/date-locale";
 
 type Props = { searchParams: Promise<{ month?: string }> };
 
@@ -72,8 +73,7 @@ export default async function BudgetPage({ searchParams }: Props) {
   if (isHistoryView) {
     expensesCents = await getMonthExpensesCents(year, month);
     incomeCents = await getMonthIncomeCents(year, month);
-    const d = new Date(year, month - 1, 1);
-    periodLabel = d.toLocaleString("default", { month: "short", year: "numeric" });
+    periodLabel = formatMonthYearShort(year, month);
     historyMode = true;
   } else if (isWeekly) {
     expensesCents = currentWeekExpenses;

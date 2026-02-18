@@ -7,6 +7,12 @@ export const DATE_LOCALE = "en-GB";
 const WEEKDAYS_SHORT = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 const MONTHS_SHORT = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
+export function formatMonthYearShort(year: number, month1to12: number): string {
+  const idx = month1to12 - 1;
+  if (idx < 0 || idx > 11) return "Invalid month";
+  return `${MONTHS_SHORT[idx]} ${year}`;
+}
+
 /**
  * Format YYYY-MM-DD as "Thu 19 Feb" (no comma). Uses UTC so server and client match.
  */
