@@ -19,6 +19,7 @@ export const viewport = {
   width: "device-width",
   initialScale: 1,
   themeColor: "#05070F",
+  viewportFit: "cover" as const,
 };
 
 /** Commander v2 is de enige visuele stijl – altijd normal + dark. */
