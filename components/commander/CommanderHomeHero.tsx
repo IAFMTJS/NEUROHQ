@@ -1,6 +1,6 @@
 import Link from "next/link";
+import { getMascotSrcForPage } from "@/lib/mascots";
 import { CommanderStatRing } from "./CommanderStatRing";
-import { HeroMascotImage } from "@/components/HeroMascotImage";
 
 type Props = {
   energyPct: number;
@@ -24,10 +24,12 @@ export function CommanderHomeHero({
         <p className="text-soft">System Overview</p>
       </header>
 
-      <section className="mascot-hero mascot-hero-top" data-mascot-page="dashboard" aria-hidden>
-        <div className="mascot-hero-inner">
-          <HeroMascotImage page="dashboard" className="mascot-img" />
-        </div>
+      <section className="mascot-hero mascot-hero-top" aria-hidden>
+        <img
+          src={getMascotSrcForPage("dashboard")}
+          alt=""
+          className="mascot-img"
+        />
       </section>
 
       <section className="stats">
