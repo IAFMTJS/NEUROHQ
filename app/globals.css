@@ -615,15 +615,28 @@ header:has(+ .mascot-hero) {
 }
 
 /* ========== CINEMATIC NEON – Full background (starfield + nebula + vignette + depth) ========== */
-/* Fill safe area on mobile (notch/status bar) so no white strip; viewport-fit=cover in layout */
+/* Zelfde achtergrond op html zodat die tot bovenaan het scherm doorloopt (geen witte strook in PWA) */
 html {
-  background: linear-gradient(180deg, var(--cinematic-navy) 0%, var(--cinematic-navy-mid) 38%, var(--cinematic-navy-bottom) 72%, var(--cinematic-navy) 100%);
   min-height: 100%;
+  min-height: 100dvh;
+  background:
+    var(--cinematic-vignette),
+    var(--cinematic-nebula),
+    var(--cinematic-radial-top),
+    var(--cinematic-radial-mid),
+    var(--cinematic-radial-bottom),
+    radial-gradient(circle at 50% 35%, var(--cinematic-glow-cyan), transparent 45%),
+    linear-gradient(180deg, var(--cinematic-navy) 0%, var(--cinematic-navy-mid) 38%, var(--cinematic-navy-bottom) 72%, var(--cinematic-navy) 100%),
+    var(--starfield);
+  background-attachment: fixed;
+  background-size: 100% 100%, 100% 100%, 100% 100%, 100% 100%, 100% 100%, 100% 100%, 100% 100%, var(--starfield-size, 600px) var(--starfield-size, 600px);
+  background-repeat: no-repeat, no-repeat, no-repeat, no-repeat, no-repeat, no-repeat, no-repeat, repeat;
+  background-position: 0 0, 0 0, 0 0, 0 0, 0 0, 50% 35%, 0 0, 0 0;
 }
 body {
   margin: 0;
   min-height: 100vh;
-  padding-top: env(safe-area-inset-top, 0);
+  min-height: 100dvh;
   color: var(--text-main);
   font-family: var(--font-sans), Inter, system-ui, sans-serif;
   background:

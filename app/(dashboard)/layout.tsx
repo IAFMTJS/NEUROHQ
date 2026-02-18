@@ -29,7 +29,7 @@ export default function DashboardLayout({
           style={{
             paddingLeft: "var(--hq-padding-x)",
             paddingRight: "var(--hq-padding-x)",
-            paddingTop: "0",
+            paddingTop: "calc(env(safe-area-inset-top, 0px) + 40px)",
             paddingBottom: "calc(var(--footer-height, 70px) + env(safe-area-inset-bottom) + 16px)",
           }}
           tabIndex={-1}
