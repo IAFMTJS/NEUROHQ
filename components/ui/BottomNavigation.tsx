@@ -1,28 +1,19 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
-import {
-  IconHQ,
-  IconMissions,
-  IconGrowth,
-  IconInsights,
-  IconSettings,
-  IconBudget,
-  IconStrategy,
-  IconAssistant,
-} from "@/components/hq/NavIcons";
 
 const navLinks = [
-  { href: "/dashboard", label: "HQ", icon: IconHQ },
-  { href: "/assistant", label: "Assistant", icon: IconAssistant },
-  { href: "/tasks", label: "Missions", icon: IconMissions },
-  { href: "/budget", label: "Budget", icon: IconBudget },
-  { href: "/learning", label: "Growth", icon: IconGrowth },
-  { href: "/strategy", label: "Strategy", icon: IconStrategy },
-  { href: "/report", label: "Insight", icon: IconInsights },
-  { href: "/settings", label: "Settings", icon: IconSettings },
-];
+  { href: "/dashboard", label: "HQ", iconFile: "Dashboard.png" },
+  { href: "/assistant", label: "Assistant", iconFile: "Assistent.png" },
+  { href: "/tasks", label: "Missions", iconFile: "Missions.png" },
+  { href: "/budget", label: "Budget", iconFile: "Budget.png" },
+  { href: "/learning", label: "Growth", iconFile: "Growth.png" },
+  { href: "/strategy", label: "Strategy", iconFile: "Strategy.png" },
+  { href: "/report", label: "Insight", iconFile: "Insights.png" },
+  { href: "/settings", label: "Settings", iconFile: "Settings.png" },
+] as const;
 
 export default function BottomNavigation() {
   const pathname = usePathname();
@@ -34,14 +25,19 @@ export default function BottomNavigation() {
     >
       {navLinks.map((link) => {
         const active = pathname === link.href;
-        const Icon = link.icon;
         return (
           <Link
             key={link.href}
             href={link.href}
             className={`nav-item ${active ? "active" : ""}`}
           >
-            <Icon active={active} />
+            <Image
+              src={`/icons/${link.iconFile}`}
+              alt=""
+              width={24}
+              height={24}
+              className="nav-item-icon"
+            />
             <span>{link.label}</span>
           </Link>
         );

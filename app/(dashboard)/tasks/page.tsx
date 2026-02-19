@@ -64,26 +64,30 @@ export default async function TasksPage() {
   ];
 
   return (
-    <div className="container page space-y-6">
-      <HQPageHeader
-        title="Missions"
-        subtitle={<>{dateStr} · One focus at a time {modeHint && <span className="block mt-1 text-xs">{modeHint}</span>}</>}
-        backHref="/dashboard"
-      />
-      <section className="mascot-hero mascot-hero-top" data-mascot-page="tasks" aria-hidden>
-        <img
-          src={getMascotSrcForPage("tasks")}
-          alt=""
-          className="mascot-img"
+    <div className="container page">
+      {/* Geen space-y tussen header, mascot en Gisteren – marges bepalen de ruimte */}
+      <div className="[&>*+*]:mt-0">
+        <HQPageHeader
+          title="Missions"
+          subtitle={<>{dateStr} · One focus at a time {modeHint && <span className="block mt-1 text-xs">{modeHint}</span>}</>}
+          backHref="/dashboard"
         />
-      </section>
-      <div className="flex flex-wrap items-center justify-end gap-2 -mt-4">
-        <YesterdayTasksSection yesterdayTasks={yesterdayTasks} todayStr={dateStr} />
-        <div className="inline-flex items-center gap-2 rounded-full border border-[var(--dc-border-soft)] bg-[var(--dc-bg-elevated)] px-4 py-2 text-sm font-medium text-[var(--dc-text-main)]">
-          <span className="h-2 w-2 rounded-full bg-[var(--dc-accent-primary)]" aria-hidden />
-          Today
+        <section className="mascot-hero mascot-hero-top mascot-hero-mission" data-mascot-page="tasks" aria-hidden>
+          <img
+            src={getMascotSrcForPage("tasks")}
+            alt=""
+            className="mascot-img"
+          />
+        </section>
+        <div className="mascot-follow-row flex flex-wrap items-center justify-end gap-2">
+          <YesterdayTasksSection yesterdayTasks={yesterdayTasks} todayStr={dateStr} />
+          <div className="inline-flex items-center gap-2 rounded-full border border-[var(--dc-border-soft)] bg-[var(--dc-bg-elevated)] px-4 py-2 text-sm font-medium text-[var(--dc-text-main)]">
+            <span className="h-2 w-2 rounded-full bg-[var(--dc-accent-primary)]" aria-hidden />
+            Today
+          </div>
         </div>
       </div>
+      <div className="mt-6 space-y-6">
       <ModeBanner mode={mode} />
       {missionCards.length > 0 && (
         <section className="mission-grid">
@@ -123,6 +127,7 @@ export default async function TasksPage() {
           />
         </div>
       </section>
+      </div>
     </div>
   );
 }

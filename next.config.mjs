@@ -7,6 +7,7 @@ const nextConfig = {
         pathname: "/mascots/**",
         // search omitted so ?v=2 (cache-bust) and any other query string are allowed
       },
+      { pathname: "/icons/**" },
       { pathname: "/app-icon.png" },
       { pathname: "/logo-naam.png" },
       { pathname: "/2D Emotions PNGs/**" },

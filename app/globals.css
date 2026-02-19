@@ -51,6 +51,12 @@
   /* Denser starfield – two layers: fine + medium stars */
   --starfield: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='600' height='600'%3E%3Cg fill='%23fff' fill-opacity='0.18'%3E%3Ccircle cx='15' cy='25' r='0.4'/%3E%3Ccircle cx='95' cy='110' r='0.5'/%3E%3Ccircle cx='180' cy='35' r='0.35'/%3E%3Ccircle cx='260' cy='165' r='0.45'/%3E%3Ccircle cx='340' cy='75' r='0.6'/%3E%3Ccircle cx='420' cy='190' r='0.4'/%3E%3Ccircle cx='50' cy='230' r='0.5'/%3E%3Ccircle cx='200' cy='280' r='0.55'/%3E%3Ccircle cx='320' cy='330' r='0.4'/%3E%3Ccircle cx='30' cy='360' r='0.45'/%3E%3Ccircle cx='280' cy='45' r='0.35'/%3E%3Ccircle cx='140' cy='155' r='0.6'/%3E%3Ccircle cx='380' cy='260' r='0.5'/%3E%3Ccircle cx='110' cy='380' r='0.45'/%3E%3Ccircle cx='350' cy='115' r='0.55'/%3E%3Ccircle cx='220' cy='400' r='0.4'/%3E%3Ccircle cx='470' cy='320' r='0.5'/%3E%3Ccircle cx='70' cy='450' r='0.35'/%3E%3Ccircle cx='250' cy='500' r='0.6'/%3E%3Ccircle cx='400' cy='450' r='0.4'/%3E%3Ccircle cx='500' cy='80' r='0.45'/%3E%3Ccircle cx='550' cy='250' r='0.5'/%3E%3C/g%3E%3Cg fill='%23fff' fill-opacity='0.08'%3E%3Ccircle cx='45' cy='70' r='0.25'/%3E%3Ccircle cx='130' cy='180' r='0.3'/%3E%3Ccircle cx='290' cy='95' r='0.2'/%3E%3Ccircle cx='170' cy='240' r='0.28'/%3E%3Ccircle cx='360' cy='200' r='0.25'/%3E%3Ccircle cx='80' cy='310' r='0.3'/%3E%3Ccircle cx='240' cy='350' r='0.22'/%3E%3Ccircle cx='410' cy='380' r='0.28'/%3E%3Ccircle cx='520' cy='150' r='0.25'/%3E%3C/g%3E%3C/svg%3E");
   --starfield-size: 600px;
+  /* Galaxy vibe: milky band, core glow, dust clouds */
+  --galaxy-band: linear-gradient(105deg, transparent 0%, transparent 35%, rgba(120, 100, 180, 0.06) 48%, rgba(80, 120, 200, 0.08) 50%, rgba(120, 100, 180, 0.06) 52%, transparent 65%, transparent 100%);
+  --galaxy-core: radial-gradient(ellipse 80% 40% at 50% 8%, rgba(100, 140, 255, 0.12), transparent 50%),
+    radial-gradient(ellipse 60% 80% at 85% 60%, rgba(100, 80, 180, 0.06), transparent 45%),
+    radial-gradient(ellipse 50% 60% at 15% 70%, rgba(60, 100, 200, 0.05), transparent 40%);
+  --galaxy-dust: radial-gradient(ellipse 100% 50% at 50% 20%, rgba(70, 90, 160, 0.07), transparent 55%);
   --glow-depth: 0 8px 32px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.04);
   /* Realistic neon – electric cyan, deep blue, warm orange (real tube glow) */
   --neon-cyan: #00d4ff;
@@ -381,14 +387,25 @@
   background: var(--accent-primary);
 }
 
-/* ========== CINEMATIC NEON – Bottom nav (compact, all 8 items, realistic neon) ========== */
+/* Hide scrollbar but keep scroll – main content area */
+.scrollbar-hide {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+  width: 0;
+  height: 0;
+}
+
+/* ========== CINEMATIC NEON – Bottom nav (compact, mobile-first, fits on screen) ========== */
 .bottom-nav {
   position: fixed;
   bottom: 0;
-  left: 0;
-  right: 0;
+  left: 50%;
+  transform: translateX(-50%);
   width: 100%;
-  max-width: 100vw;
+  max-width: min(420px, 100vw);
   height: var(--footer-height, 48px);
   min-height: 44px;
   padding-bottom: env(safe-area-inset-bottom);
@@ -412,7 +429,7 @@
   flex: 1 1 0;
   min-width: 0;
   color: rgba(255, 255, 255, 0.5);
-  font-size: 8px;
+  font-size: 7px;
   font-weight: 600;
   letter-spacing: 0.01em;
   text-transform: uppercase;
@@ -420,8 +437,8 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 1px;
-  padding: 4px 1px 6px;
+  gap: 0;
+  padding: 2px 0 4px;
   text-decoration: none;
   transition: color 0.15s ease, background 0.15s ease, box-shadow 0.15s ease;
   border-right: 1px solid rgba(255, 255, 255, 0.05);
@@ -466,14 +483,26 @@
 }
 
 .nav-item svg {
-  width: 16px;
-  height: 16px;
+  width: 14px;
+  height: 14px;
   flex-shrink: 0;
   filter: drop-shadow(0 0 1px rgba(0, 212, 255, 0.1));
 }
 
 .nav-item.active svg {
   color: #00d4ff;
+  filter: drop-shadow(0 0 4px rgba(0, 212, 255, 0.6));
+}
+
+.nav-item .nav-item-icon {
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+  opacity: 0.6;
+  filter: drop-shadow(0 0 1px rgba(0, 212, 255, 0.1));
+}
+.nav-item.active .nav-item-icon {
+  opacity: 1;
   filter: drop-shadow(0 0 4px rgba(0, 212, 255, 0.6));
 }
 
@@ -593,6 +622,15 @@
   margin-bottom: -44px;
 }
 
+/* Mission page: onderkant mascot net boven Gisteren-knop, kleine tussenruimte */
+.mascot-hero-mission {
+  margin-top: -32px;
+  margin-bottom: -24px;
+}
+.mascot-hero-mission + .mascot-follow-row {
+  margin-top: 0.75rem;
+}
+
 /* All pages (except dashboard): mascot same placement and size as homepage/dashboard */
 /* When mascot is below first card – pull it way up so it sits right under the card */
 .mascot-hero-below-card {
@@ -615,12 +653,17 @@ header:has(+ .mascot-hero) {
 }
 
 /* ========== CINEMATIC NEON – Full background (starfield + nebula + vignette + depth) ========== */
-/* Zelfde achtergrond op html zodat die tot bovenaan het scherm doorloopt (geen witte strook in PWA) */
+/* Background slightly larger than viewport so it's blue on all screen sizes; no white edges */
 html {
   min-height: 100%;
   min-height: 100dvh;
+  min-width: 100vw;
+  overflow-x: hidden;
   background:
     var(--cinematic-vignette),
+    var(--galaxy-band),
+    var(--galaxy-core),
+    var(--galaxy-dust),
     var(--cinematic-nebula),
     var(--cinematic-radial-top),
     var(--cinematic-radial-mid),
@@ -629,18 +672,23 @@ html {
     linear-gradient(180deg, var(--cinematic-navy) 0%, var(--cinematic-navy-mid) 38%, var(--cinematic-navy-bottom) 72%, var(--cinematic-navy) 100%),
     var(--starfield);
   background-attachment: fixed;
-  background-size: 100% 100%, 100% 100%, 100% 100%, 100% 100%, 100% 100%, 100% 100%, 100% 100%, var(--starfield-size, 600px) var(--starfield-size, 600px);
-  background-repeat: no-repeat, no-repeat, no-repeat, no-repeat, no-repeat, no-repeat, no-repeat, repeat;
-  background-position: 0 0, 0 0, 0 0, 0 0, 0 0, 50% 35%, 0 0, 0 0;
+  background-size: 110% 110%, 110% 110%, 110% 110%, 110% 110%, 110% 110%, 110% 110%, 110% 110%, 110% 110%, 110% 110%, 110% 110%, 110% 110%, 110% 110%, var(--starfield-size, 600px) var(--starfield-size, 600px);
+  background-repeat: no-repeat, no-repeat, no-repeat, no-repeat, no-repeat, no-repeat, no-repeat, no-repeat, no-repeat, no-repeat, no-repeat, no-repeat, repeat;
+  background-position: center, center, center, center, center, center, center, center, center, 50% 35%, center, center, 0 0;
 }
 body {
   margin: 0;
   min-height: 100vh;
   min-height: 100dvh;
+  min-width: 100vw;
+  overflow-x: hidden;
   color: var(--text-main);
   font-family: var(--font-sans), Inter, system-ui, sans-serif;
   background:
     var(--cinematic-vignette),
+    var(--galaxy-band),
+    var(--galaxy-core),
+    var(--galaxy-dust),
     var(--cinematic-nebula),
     var(--cinematic-radial-top),
     var(--cinematic-radial-mid),
@@ -649,9 +697,9 @@ body {
     linear-gradient(180deg, var(--cinematic-navy) 0%, var(--cinematic-navy-mid) 38%, var(--cinematic-navy-bottom) 72%, var(--cinematic-navy) 100%),
     var(--starfield);
   background-attachment: fixed;
-  background-size: 100% 100%, 100% 100%, 100% 100%, 100% 100%, 100% 100%, 100% 100%, 100% 100%, var(--starfield-size, 600px) var(--starfield-size, 600px);
-  background-repeat: no-repeat, no-repeat, no-repeat, no-repeat, no-repeat, no-repeat, no-repeat, repeat;
-  background-position: 0 0, 0 0, 0 0, 0 0, 0 0, 50% 35%, 0 0, 0 0;
+  background-size: 110% 110%, 110% 110%, 110% 110%, 110% 110%, 110% 110%, 110% 110%, 110% 110%, 110% 110%, 110% 110%, 110% 110%, 110% 110%, 110% 110%, var(--starfield-size, 600px) var(--starfield-size, 600px);
+  background-repeat: no-repeat, no-repeat, no-repeat, no-repeat, no-repeat, no-repeat, no-repeat, no-repeat, no-repeat, no-repeat, no-repeat, no-repeat, repeat;
+  background-position: center, center, center, center, center, center, center, center, center, 50% 35%, center, center, 0 0;
 }
 /* Subtle film grain overlay for cinematic finesse (very low opacity) */
 body::after {
@@ -867,8 +915,8 @@ header h1 { margin: 0; }
 
 /* ========== STAP 8 – VISUAL MICRO ========== */
 .nav-item svg {
-  width: 24px;
-  height: 24px;
+  width: 14px;
+  height: 14px;
 }
 
 .badge-dot {

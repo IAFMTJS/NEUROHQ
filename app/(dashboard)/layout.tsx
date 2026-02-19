@@ -14,7 +14,7 @@ export default function DashboardLayout({
 }) {
   return (
     <AppStateProvider>
-    <div className="relative min-h-screen bg-transparent" data-ui="dark-commander">
+    <div className="relative flex min-h-screen max-h-[100dvh] w-full max-w-[100vw] flex-col overflow-x-hidden bg-transparent" data-ui="dark-commander">
       <ThemeHydrate />
       <ActiveTimeTracker />
       <NewDayRefresh />
@@ -22,10 +22,10 @@ export default function DashboardLayout({
         Skip to main content
       </a>
       <KeyboardShortcuts />
-      <div className="relative z-10 mx-auto flex min-h-screen max-w-[420px] flex-col bg-transparent md:min-h-[640px]">
+      <div className="relative z-10 mx-auto flex min-h-0 max-h-[100dvh] w-full max-w-[420px] flex-1 flex-col overflow-hidden bg-transparent md:min-h-[640px]">
         <main
           id="main-content"
-          className="relative z-10 flex-1 overflow-auto bg-transparent"
+          className="scrollbar-hide relative z-10 min-h-0 flex-1 overflow-auto bg-transparent"
           style={{
             paddingLeft: "var(--hq-padding-x)",
             paddingRight: "var(--hq-padding-x)",
