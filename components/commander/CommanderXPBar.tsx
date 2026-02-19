@@ -12,7 +12,7 @@ export function CommanderXPBar({ totalXP }: Props) {
   const pct = needed <= 0 ? 100 : Math.min(100, Math.round((current / needed) * 100));
 
   return (
-    <section className="card">
+    <section className="glass-card glass-card-glow-cyan">
       <h3>Level {level}</h3>
       <div className="progress">
         <div

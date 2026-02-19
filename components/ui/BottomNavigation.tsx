@@ -12,6 +12,7 @@ const navLinks = [
   { href: "/learning", label: "Growth", iconFile: "Growth.png" },
   { href: "/strategy", label: "Strategy", iconFile: "Strategy.png" },
   { href: "/report", label: "Insight", iconFile: "Insights.png" },
+  { href: "/design", label: "Design", iconFile: "Strategy.png" },
   { href: "/settings", label: "Settings", iconFile: "Settings.png" },
 ] as const;
 

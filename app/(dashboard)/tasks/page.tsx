@@ -81,8 +81,8 @@ export default async function TasksPage() {
         </section>
         <div className="mascot-follow-row flex flex-wrap items-center justify-end gap-2">
           <YesterdayTasksSection yesterdayTasks={yesterdayTasks} todayStr={dateStr} />
-          <div className="inline-flex items-center gap-2 rounded-full border border-[var(--dc-border-soft)] bg-[var(--dc-bg-elevated)] px-4 py-2 text-sm font-medium text-[var(--dc-text-main)]">
-            <span className="h-2 w-2 rounded-full bg-[var(--dc-accent-primary)]" aria-hidden />
+          <div className="glow-pill inline-flex items-center gap-2 rounded-full bg-[var(--dc-bg-elevated)] px-4 py-2 text-sm font-medium text-[var(--dc-text-main)]">
+            <span className="h-2 w-2 rounded-full bg-[var(--dc-accent-primary)] shadow-[0_0_8px_rgba(37,99,235,0.6)]" aria-hidden />
             Today
           </div>
         </div>

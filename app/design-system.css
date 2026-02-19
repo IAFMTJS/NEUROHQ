@@ -1,0 +1,222 @@
+/* ========== SITE-WIDE DESIGN SYSTEM: POWER CORE + DATA SPLIT ========== */
+/* Power core = primary actions (CTAs, confirm, save). Data split = secondary + content (cards, panels). */
+
+@keyframes game-core-breathe {
+  0%, 100% { box-shadow: 0 0 24px rgba(0, 212, 255, 0.5), 0 0 48px rgba(0, 212, 255, 0.25), inset 0 0 30px rgba(0, 212, 255, 0.12); }
+  50% { box-shadow: 0 0 36px rgba(0, 212, 255, 0.7), 0 0 64px rgba(0, 212, 255, 0.35), inset 0 0 40px rgba(0, 212, 255, 0.18); }
+}
+@keyframes game-data-flow {
+  0% { background-position: 0% 50%; }
+  100% { background-position: 200% 50%; }
+}
+
+/* ----- PRIMARY BUTTONS → Power core ----- */
+.btn-primary,
+.btn-hq-primary,
+.primary-btn,
+.neon-button {
+  display: inline-flex !important;
+  align-items: center;
+  justify-content: center;
+  min-height: 48px;
+  padding: 0 24px;
+  border-radius: 0;
+  border: 2px solid rgba(0, 230, 255, 0.9) !important;
+  background: rgba(2, 8, 18, 0.98) !important;
+  color: #00e6ff !important;
+  font-weight: 700;
+  font-size: 13px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: 0.2s ease;
+  position: relative;
+  overflow: hidden;
+  animation: game-core-breathe 2.2s ease-in-out infinite;
+  box-shadow:
+    0 0 24px rgba(0, 212, 255, 0.5),
+    0 0 48px rgba(0, 212, 255, 0.25),
+    inset 0 0 30px rgba(0, 212, 255, 0.1);
+  text-shadow: 0 0 16px rgba(0, 212, 255, 0.8);
+  text-decoration: none !important;
+}
+.btn-primary::before,
+.btn-primary::after,
+.btn-hq-primary::before,
+.btn-hq-primary::after,
+.primary-btn::before,
+.primary-btn::after,
+.neon-button::before,
+.neon-button::after {
+  content: "";
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  border-color: #00e6ff;
+  border-style: solid;
+  border-width: 0;
+  pointer-events: none;
+}
+.btn-primary::before,
+.btn-hq-primary::before,
+.primary-btn::before,
+.neon-button::before {
+  top: 4px;
+  left: 4px;
+  border-top-width: 2px;
+  border-left-width: 2px;
+  box-shadow: 0 0 8px rgba(0, 230, 255, 0.8);
+}
+.btn-primary::after,
+.btn-hq-primary::after,
+.primary-btn::after,
+.neon-button::after {
+  bottom: 4px;
+  right: 4px;
+  border-bottom-width: 2px;
+  border-right-width: 2px;
+  box-shadow: 0 0 8px rgba(0, 230, 255, 0.8);
+}
+.btn-primary:hover,
+.btn-hq-primary:hover,
+.primary-btn:hover,
+.neon-button:hover {
+  animation: none;
+  border-color: #00e6ff !important;
+  box-shadow:
+    0 0 40px rgba(0, 212, 255, 0.8),
+    0 0 80px rgba(0, 212, 255, 0.4),
+    inset 0 0 40px rgba(0, 212, 255, 0.15);
+  text-shadow: 0 0 24px rgba(0, 212, 255, 1);
+  filter: none;
+}
+.btn-primary:active,
+.btn-hq-primary:active,
+.primary-btn:active,
+.neon-button:active {
+  transform: scale(0.98);
+}
+
+/* ----- SECONDARY BUTTONS → Data split outline ----- */
+.btn-secondary,
+.btn-hq-secondary {
+  display: inline-flex !important;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  padding: 0 20px;
+  border-radius: 0;
+  border: 2px solid rgba(80, 140, 255, 0.6) !important;
+  background: rgba(8, 12, 24, 0.95) !important;
+  color: rgba(255, 255, 255, 0.9) !important;
+  font-weight: 600;
+  font-size: 13px;
+  letter-spacing: 0.08em;
+  cursor: pointer;
+  transition: 0.2s ease;
+  box-shadow: 0 0 12px rgba(0, 212, 255, 0.15), 0 0 12px rgba(30, 144, 255, 0.15);
+}
+.btn-secondary:hover,
+.btn-hq-secondary:hover {
+  box-shadow: 0 0 24px rgba(0, 212, 255, 0.3), 0 0 24px rgba(30, 144, 255, 0.3);
+  border-color: rgba(80, 140, 255, 0.8) !important;
+}
+.btn-secondary:active,
+.btn-hq-secondary:active {
+  transform: scale(0.98);
+}
+
+/* ----- CARDS / PANELS → Data split (exclude 3D glass cards and modals) ----- */
+.card:not(.glass-card-3d),
+.glass-card:not(.glass-card-3d),
+.hq-card:not(.glass-card-3d),
+.card-simple-accent:not(.glass-card-3d),
+.glass-panel:not(.glass-card-3d) {
+  border-radius: 0;
+  border: 1px solid rgba(80, 140, 255, 0.35) !important;
+  background: linear-gradient(135deg,
+    rgba(0, 100, 140, 0.1) 0%,
+    transparent 45%,
+    transparent 55%,
+    rgba(40, 80, 160, 0.1) 100%) !important;
+  background-color: rgba(6, 10, 22, 0.98) !important;
+  box-shadow:
+    0 0 16px rgba(0, 212, 255, 0.12),
+    0 0 16px rgba(30, 144, 255, 0.12) !important;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+}
+.card:not(.glass-card-3d)::before,
+.glass-card:not(.glass-card-3d)::before,
+.hq-card:not(.glass-card-3d)::before,
+.glass-panel:not(.glass-card-3d)::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  height: auto;
+  border-radius: 0;
+  background: linear-gradient(135deg,
+    transparent 48%,
+    rgba(255, 255, 255, 0.03) 50%,
+    transparent 52%);
+  box-shadow: none;
+  pointer-events: none;
+}
+.card:not(.glass-card-3d)::after,
+.glass-card:not(.glass-card-3d)::after,
+.hq-card:not(.glass-card-3d)::after,
+.glass-panel:not(.glass-card-3d)::after {
+  background: none;
+  -webkit-mask: none;
+  mask: none;
+}
+
+/* ----- MODALS (BrainStatus-sized and app modals) – clean Power core style ----- */
+.modal-overlay {
+  background: rgba(0, 0, 0, 0.75);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+.modal-backdrop {
+  background: transparent;
+}
+.modal-card {
+  background: rgba(4, 10, 22, 0.98);
+  border: 2px solid rgba(0, 212, 255, 0.4);
+  border-radius: 12px;
+  box-shadow:
+    0 0 32px rgba(0, 212, 255, 0.2),
+    0 24px 56px rgba(0, 0, 0, 0.5),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  overflow: hidden;
+}
+.modal-card-header {
+  padding: 20px 20px 16px;
+  border-bottom: 1px solid rgba(0, 212, 255, 0.2);
+  background: rgba(0, 0, 0, 0.2);
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+.modal-card-body {
+  padding: 20px;
+  color: var(--text-secondary, rgba(255, 255, 255, 0.85));
+  font-size: 15px;
+  line-height: 1.5;
+}
+.modal-card-footer {
+  padding: 16px 20px 20px;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  background: rgba(0, 0, 0, 0.15);
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+}
+.modal-card .btn-primary {
+  min-height: 44px;
+  padding: 0 20px;
+  font-size: 14px;
+  letter-spacing: 0.06em;
+}

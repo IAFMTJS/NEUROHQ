@@ -24,11 +24,11 @@ export function LearningProgress({ minutes, target, streak, weekStart, weekEnd, 
       </div>
       <div className="p-5">
         <div className="flex items-baseline gap-2">
-          <span className="text-3xl font-bold tabular-nums text-[var(--accent-focus)]">{minutes}</span>
+          <span className="text-3xl font-bold tabular-nums text-[var(--accent-focus)] text-glow-accent">{minutes}</span>
           <span className="text-[var(--text-muted)]">/ {target} min</span>
         </div>
         <div className="mt-3 h-2.5 w-full overflow-hidden rounded-full bg-[var(--card-border)]">
-          <div className="h-full rounded-full bg-[var(--accent-focus)] transition-all duration-300" style={{ width: `${pct}%` }} />
+          <div className="progress-fill-glow h-full rounded-full bg-[var(--accent-focus)] transition-all duration-300" style={{ width: `${pct}%` }} />
         </div>
         <LearningTargetSelect currentTarget={target} />
         {streak > 0 && (

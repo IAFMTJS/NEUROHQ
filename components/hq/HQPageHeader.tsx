@@ -21,7 +21,7 @@ export function HQPageHeader({ title, subtitle, backHref }: Props) {
           ← HQ
         </Link>
       )}
-      <h1>{title}</h1>
+      <h1 className="page-title-glow">{title}</h1>
       {subtitle != null && (
         <p className="text-soft">
           {typeof subtitle === "string" ? subtitle : subtitle}
