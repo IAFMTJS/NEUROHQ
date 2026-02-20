@@ -22,6 +22,39 @@ export interface TodayItem {
   category?: string | null;
 }
 
+/** Raw task shape from server — used by client engine to run bucketing locally. */
+export interface RawTodayTask {
+  id: string;
+  title: string | null;
+  energy_required: number | null;
+  impact: number | null;
+  carry_over_count: number | null;
+  category: string | null;
+}
+
+const DEFAULT_ENERGY = 2;
+const DEFAULT_XP = 50;
+
+/** Map raw task to TodayItem. Pure, runs on client or server. */
+export function rawTaskToTodayItem(
+  raw: RawTodayTask,
+  index: number,
+  streakAtRisk: boolean
+): TodayItem {
+  const energy = Math.min(5, Math.max(1, raw.energy_required ?? DEFAULT_ENERGY));
+  const xp = Math.max(10, Math.min(100, (raw.impact ?? 5) * 15)) || DEFAULT_XP;
+  const item: TodayItem = {
+    id: raw.id,
+    title: raw.title ?? "Task",
+    energyCost: energy,
+    xpReward: xp,
+    carryOverCount: raw.carry_over_count ?? 0,
+    category: raw.category ?? null,
+  };
+  if (streakAtRisk && index < 2) item.streakCritical = true;
+  return item;
+}
+
 export interface BucketedToday {
   critical: TodayItem[];
   high_impact: TodayItem[];

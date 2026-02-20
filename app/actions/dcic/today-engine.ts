@@ -3,7 +3,8 @@
 import { createClient } from "@/lib/supabase/server";
 import { getTodaysTasks, type TaskListMode } from "@/app/actions/tasks";
 import { getMode } from "@/app/actions/mode";
-import { bucketTodayItems, type BucketedToday, type TodayItem } from "@/lib/today-engine";
+import { getXP } from "@/app/actions/xp";
+import { bucketTodayItems, type BucketedToday, type TodayItem, type RawTodayTask } from "@/lib/today-engine";
 import { yesterdayDate } from "@/lib/utils/timezone";
 
 const DEFAULT_ENERGY = 2;
@@ -67,4 +68,82 @@ export async function getTodayEngine(dateStr: string): Promise<TodayEngineResult
   const bucketed = bucketTodayItems(items, { streakAtRisk, nearUnlockSkills: [] });
 
   return { bucketed, streakAtRisk, date: dateStr };
+}
+
+/** Raw data for client-side engine: no bucketing, no suggestion. Client runs lib/today-engine locally. */
+export interface TodayEngineData {
+  tasks: RawTodayTask[];
+  streakAtRisk: boolean;
+  mode: string;
+  date: string;
+  xp: { total_xp: number };
+  dailyState: {
+    energy: number;
+    focus: number;
+    sensory_load: number;
+    social_load: number;
+    sleep_hours: number | null;
+  } | null;
+}
+
+export async function getTodayEngineData(dateStr: string): Promise<TodayEngineData> {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) {
+    return {
+      tasks: [],
+      streakAtRisk: false,
+      mode: "normal",
+      date: dateStr,
+      xp: { total_xp: 0 },
+      dailyState: null,
+    };
+  }
+
+  const mode = await getMode(dateStr);
+  const taskMode: TaskListMode =
+    mode === "stabilize" ? "stabilize" : mode === "low_energy" ? "low_energy" : mode === "driven" ? "driven" : "normal";
+  const { tasks } = await getTodaysTasks(dateStr, taskMode);
+
+  const yesterdayStr = yesterdayDate(dateStr);
+  const [xpRes, streakRow, dailyRow] = await Promise.all([
+    getXP(),
+    supabase.from("user_streak").select("last_completion_date").eq("user_id", user.id).single(),
+    supabase.from("daily_state").select("energy, focus, sensory_load, sleep_hours, social_load").eq("user_id", user.id).eq("date", dateStr).single(),
+  ]);
+
+  const lastCompletion = (streakRow.data as { last_completion_date?: string | null } | null)?.last_completion_date ?? null;
+  const streakAtRisk = lastCompletion !== yesterdayStr && lastCompletion !== dateStr;
+
+  const rawTasks: RawTodayTask[] = (tasks ?? []).map((t) => {
+    const r = t as { id: string; title?: string | null; energy_required?: number | null; impact?: number | null; carry_over_count?: number | null; category?: string | null };
+    return {
+      id: r.id,
+      title: r.title ?? null,
+      energy_required: r.energy_required ?? null,
+      impact: r.impact ?? null,
+      carry_over_count: r.carry_over_count ?? null,
+      category: r.category ?? null,
+    };
+  });
+
+  const ds = dailyRow.data as { energy?: number; focus?: number; sensory_load?: number; social_load?: number; sleep_hours?: number | null } | null;
+  const dailyState = ds
+    ? {
+        energy: ds.energy ?? 5,
+        focus: ds.focus ?? 5,
+        sensory_load: ds.sensory_load ?? 5,
+        social_load: ds.social_load ?? 5,
+        sleep_hours: ds.sleep_hours ?? null,
+      }
+    : null;
+
+  return {
+    tasks: rawTasks,
+    streakAtRisk,
+    mode: mode ?? "normal",
+    date: dateStr,
+    xp: { total_xp: xpRes.total_xp },
+    dailyState,
+  };
 }
