@@ -66,7 +66,7 @@ export async function getXPIdentity(): Promise<{
   };
 }
 
-async function addXP(points: number): Promise<void> {
+export async function addXP(points: number): Promise<void> {
   if (points <= 0) return;
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
