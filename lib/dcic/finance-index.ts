@@ -8,9 +8,9 @@ export type {
   BudgetTarget,
   Expense,
   SavingsGoal,
-  Insight,
-  InsightType,
 } from "./types";
+
+export type { Insight, InsightType } from "./finance-engine";
 
 export {
   getDaysUntilNextIncome,

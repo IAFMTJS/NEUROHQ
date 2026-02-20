@@ -37,8 +37,6 @@ const nextConfig = {
       fullUrl: true,
     },
   },
-  // Optimize production builds
-  swcMinify: true,
   compiler: {
     removeConsole: process.env.NODE_ENV === 'production' ? {
       exclude: ['error', 'warn'],

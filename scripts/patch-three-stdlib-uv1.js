@@ -23,11 +23,20 @@ if (!fs.existsSync(uv1Path)) {
   console.log("patched three-stdlib: added missing _polyfill/uv1.js");
 }
 
-// 2. @types/three Cylindrical.d.ts (repair corrupted file with null bytes)
-const cylindricalPath = path.join(
-  root,
-  "node_modules/@types/three/src/math/Cylindrical.d.ts"
-);
+// 2. @types/three – repair corrupted .d.ts files (null bytes / BOM)
+function repairIfCorrupted(filePath, validContent) {
+  if (!fs.existsSync(filePath)) return;
+  const buf = fs.readFileSync(filePath);
+  const hasNulls = buf.some((b) => b === 0);
+  const start = buf.length >= 7 ? buf.toString("utf8", 0, 7) : "";
+  const validStart = start === "export " || start === "import ";
+  if (hasNulls || !validStart || buf.length < 80) {
+    fs.writeFileSync(filePath, validContent, "utf8");
+    console.log("patched @types/three: repaired " + path.basename(filePath));
+  }
+}
+
+const cylindricalPath = path.join(root, "node_modules/@types/three/src/math/Cylindrical.d.ts");
 const cylindricalContent = `import { Vector3 } from "./Vector3.js";
 
 export class Cylindrical {
@@ -56,11 +65,82 @@ export class Cylindrical {
 }
 `;
 
-if (fs.existsSync(cylindricalPath)) {
-  const buf = fs.readFileSync(cylindricalPath);
-  const hasNulls = buf.some((b) => b === 0);
-  if (hasNulls || buf.length < 100) {
-    fs.writeFileSync(cylindricalPath, cylindricalContent, "utf8");
-    console.log("patched @types/three: repaired corrupted Cylindrical.d.ts");
+const interpolantPath = path.join(root, "node_modules/@types/three/src/math/Interpolant.d.ts");
+const interpolantContent = `export abstract class Interpolant {
+ constructor(parameterPositions: any, sampleValues: any, sampleSize: number, resultBuffer?: any);
+
+ parameterPositions: any;
+ sampleValues: any;
+ valueSize: number;
+ resultBuffer: any;
+
+ evaluate(time: number): any;
+}
+`;
+
+const sphericalPath = path.join(root, "node_modules/@types/three/src/math/Spherical.d.ts");
+const sphericalContent = `import { Vector3 } from "./Vector3.js";
+
+export class Spherical {
+ constructor(radius?: number, phi?: number, theta?: number);
+
+ /**
+  * @default 1
+  */
+ radius: number;
+
+ /**
+  * @default 0
+  */
+ phi: number;
+
+ /**
+  * @default 0
+  */
+ theta: number;
+
+ set(radius: number, phi: number, theta: number): this;
+ clone(): this;
+ copy(other: Spherical): this;
+ makeSafe(): this;
+ setFromVector3(v: Vector3): this;
+ setFromCartesianCoords(x: number, y: number, z: number): this;
+}
+`;
+
+repairIfCorrupted(cylindricalPath, cylindricalContent);
+repairIfCorrupted(interpolantPath, interpolantContent);
+repairIfCorrupted(sphericalPath, sphericalContent);
+
+// ExternalTexture.d.ts (often corrupted)
+const externalTexturePath = path.join(root, "node_modules/@types/three/src/textures/ExternalTexture.d.ts");
+const externalTextureContent = `import { Texture } from "./Texture.js";
+
+declare class ExternalTexture extends Texture {
+  sourceTexture: WebGLTexture | GPUTexture | null;
+  readonly isExternalTexture: true;
+  constructor(sourceTexture?: WebGLTexture | GPUTexture | null);
+}
+
+export { ExternalTexture };
+`;
+repairIfCorrupted(externalTexturePath, externalTextureContent);
+
+// Any .d.ts with null bytes anywhere under node_modules: overwrite with minimal valid stub so TS parse succeeds (known npm/cache corruption)
+function walkRecursive(dir, relRoot) {
+  if (!fs.existsSync(dir)) return;
+  const entries = fs.readdirSync(dir, { withFileTypes: true });
+  for (const ent of entries) {
+    const full = path.join(dir, ent.name);
+    if (ent.name === "node_modules" && relRoot) continue; // don't recurse into nested node_modules
+    if (ent.isDirectory()) walkRecursive(full, relRoot || dir);
+    else if (ent.isFile() && ent.name.endsWith(".d.ts")) {
+      const buf = fs.readFileSync(full);
+      if (buf.some((b) => b === 0)) {
+        fs.writeFileSync(full, "export {};\n", "utf8");
+        console.log("patched (null bytes): " + path.relative(path.join(root, "node_modules"), full));
+      }
+    }
   }
 }
+walkRecursive(path.join(root, "node_modules"), null);

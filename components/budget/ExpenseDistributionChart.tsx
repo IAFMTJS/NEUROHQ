@@ -50,13 +50,13 @@ export function ExpenseDistributionChart({ categoryTotals, currency = "EUR" }: P
               innerRadius={60}
               outerRadius={90}
               paddingAngle={2}
-              label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+              label={({ name, percent }) => `${name} ${((percent ?? 0) * 100).toFixed(0)}%`}
             >
               {data.map((_, i) => (
                 <Cell key={i} fill={COLORS[i % COLORS.length]} />
               ))}
             </Pie>
-            <Tooltip formatter={(value: number) => [`${symbol}${(value / 100).toFixed(2)}`, "Uitgegeven"]} />
+            <Tooltip formatter={(value: number | undefined) => [`${symbol}${((value ?? 0) / 100).toFixed(2)}`, "Uitgegeven"]} />
             <Legend />
           </PieChart>
         </ResponsiveContainer>
