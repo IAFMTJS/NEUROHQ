@@ -420,6 +420,12 @@
   box-shadow: 0 8px 28px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(0, 212, 255, 0.1), 0 0 16px rgba(0, 212, 255, 0.06);
 }
 
+/* Compact UI: minder witruimte op dashboard en cards (alleen binnen main content) */
+[data-compact-ui="true"] .container.page .card-simple { padding: 0.75rem 1rem; }
+[data-compact-ui="true"] .container.page .space-y-6 > * + * { margin-top: 0.75rem; }
+[data-compact-ui="true"] .container.page .space-y-4 > * + * { margin-top: 0.5rem; }
+[data-compact-ui="true"] .container.page { padding-bottom: 0.5rem; }
+
 /* Card-simple-accent: neon rand + zachte glow (zoals actieve rings) */
 .card-simple-accent {
   background: linear-gradient(165deg, rgba(18, 28, 55, 0.55) 0%, rgba(12, 20, 42, 0.65) 100%);
@@ -1521,6 +1527,13 @@ header h1 { margin: 0; }
   border-radius: var(--modal-panel-radius);
   border: 1px solid var(--modal-border);
   box-shadow: 0 24px 48px rgba(0, 0, 0, 0.5);
+  max-height: min(80dvh, calc(100dvh - 3rem));
+}
+.modal-card-body {
+  -webkit-overflow-scrolling: touch;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
 }
 .modal-card-header {
   border-bottom: 1px solid var(--modal-border);

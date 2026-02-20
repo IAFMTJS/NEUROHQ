@@ -1,15 +1,17 @@
 import Link from "next/link";
 import { getTodaysTasks, getTasksForDate, getSubtasksForTaskIds, getBacklogTasks, getCompletedTodayTasks, type TaskListMode } from "@/app/actions/tasks";
 import { getMode } from "@/app/actions/mode";
-import { getUpcomingCalendarEvents } from "@/app/actions/calendar";
+import { getUpcomingCalendarEvents, hasGoogleCalendarToken } from "@/app/actions/calendar";
 import { getSmartSuggestion } from "@/app/actions/dcic/smart-suggestion";
 import { getEnergyCapToday } from "@/app/actions/dcic/energy-cap";
+import { getEnergyBudget } from "@/app/actions/energy";
 import { yesterdayDate } from "@/lib/utils/timezone";
 import { getMascotSrcForPage } from "@/lib/mascots";
 import { TaskList } from "@/components/TaskList";
 import { ModeBanner } from "@/components/ModeBanner";
 import { BacklogList } from "@/components/BacklogList";
 import { AgendaOnlyList } from "@/components/AgendaOnlyList";
+import { AddCalendarEventForm } from "@/components/AddCalendarEventForm";
 import { YesterdayTasksSection } from "@/components/missions/YesterdayTasksSection";
 import { SmartSuggestionBanner } from "@/components/missions/SmartSuggestionBanner";
 import { EnergyCapBar } from "@/components/missions/EnergyCapBar";
@@ -20,14 +22,16 @@ export default async function TasksPage() {
   const today = new Date();
   const dateStr = today.toISOString().slice(0, 10);
   const yesterdayStr = yesterdayDate(dateStr);
-  const [mode, upcomingCalendarEvents, backlog, completedToday, yesterdayTasksRaw, smartSuggestion, energyCap] = await Promise.all([
+  const [mode, upcomingCalendarEvents, hasGoogle, backlog, completedToday, yesterdayTasksRaw, smartSuggestion, energyCap, energyBudget] = await Promise.all([
     getMode(dateStr),
     getUpcomingCalendarEvents(dateStr, 60),
+    hasGoogleCalendarToken(),
     getBacklogTasks(dateStr),
     getCompletedTodayTasks(dateStr),
     getTasksForDate(yesterdayStr),
     getSmartSuggestion(dateStr),
     getEnergyCapToday(dateStr),
+    getEnergyBudget(dateStr),
   ]);
   const taskMode: TaskListMode = mode === "stabilize" ? "stabilize" : mode === "low_energy" ? "low_energy" : mode === "driven" ? "driven" : "normal";
   const { tasks, carryOverCount } = await getTodaysTasks(dateStr, taskMode);
@@ -51,7 +55,7 @@ export default async function TasksPage() {
       : null;
 
   const missionCards = [
-    ...tasks.slice(0, 4).map((t, i) => ({
+    ...tasks.slice(0, 8).map((t, i) => ({
       id: (t as { id: string }).id,
       title: (t as { title: string }).title ?? "Task",
       subtitle: i === 0 ? "Active" : undefined,
@@ -59,7 +63,7 @@ export default async function TasksPage() {
       progressPct: 0,
       href: "/tasks",
     })),
-    ...(completedToday as { id: string; title: string | null }[]).slice(0, 2).map((t) => ({
+    ...(completedToday as { id: string; title: string | null }[]).slice(0, 4).map((t) => ({
       id: t.id,
       title: t.title ?? "Done",
       subtitle: "Completed",
@@ -121,16 +125,18 @@ export default async function TasksPage() {
         mode={taskMode}
         carryOverCount={carryOverCount}
         subtasksByParent={subtasksByParent}
+        suggestedTaskCount={energyBudget.suggestedTaskCount}
       />
       {backlog.length > 0 && (
         <BacklogList backlog={backlog} todayDate={dateStr} />
       )}
-      <section className="glass-card overflow-hidden p-0">
+      <section className="glass-card overflow-hidden p-0" id="agenda">
         <div className="border-b border-[var(--card-border)] px-4 py-3">
-          <h2 className="text-base font-semibold text-[var(--text-primary)]">Agenda</h2>
-          <p className="mt-0.5 text-xs text-[var(--text-muted)]">All agenda items. Only days with events are shown.</p>
+          <h2 className="text-base font-semibold text-[var(--text-primary)]">Algemene kalender</h2>
+          <p className="mt-0.5 text-xs text-[var(--text-muted)]">Agenda-items voor elke datum. Kies hieronder een datum en voeg een item toe voor vandaag, morgen of een andere dag.</p>
         </div>
-        <div className="p-4">
+        <div className="p-4 space-y-4">
+          <AddCalendarEventForm date={dateStr} hasGoogleToken={hasGoogle} allowAnyDate />
           <AgendaOnlyList
             upcomingEvents={upcomingCalendarEvents as { id: string; title: string | null; start_at: string; end_at: string; is_social: boolean; source: string | null }[]}
             todayStr={dateStr}

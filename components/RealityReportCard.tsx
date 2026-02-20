@@ -11,14 +11,18 @@ export function RealityReportCard({ report }: { report: RealityReport }) {
     <div className="card-simple overflow-hidden p-0">
       <div className="border-b border-[var(--card-border)] px-4 py-3">
         <h2 className="text-base font-semibold text-[var(--text-primary)]">
-          Week of {report.weekStart} – {report.weekEnd}
+          Week {report.weekStart} – {report.weekEnd}
         </h2>
+        <p className="mt-0.5 text-xs text-[var(--text-muted)]">
+          Taken = geplande vs voltooide taken in deze week. Learning = gelogde minuten vs wekelijkse doel (Growth). Carry-over = openstaande taken aan het einde van de week; vermindert de execution score. Budget = maandbudget (Budget-pagina).
+        </p>
       </div>
       <div className="p-4">
       {report.executionScore != null && (
         <div className="mb-3 rounded-lg bg-[var(--bg-surface)] px-3 py-2">
           <span className="text-xs font-medium text-[var(--text-muted)]">Execution score</span>
           <p className="text-2xl font-bold tabular-nums text-[var(--accent-focus)]">{report.executionScore}/100</p>
+          <p className="mt-1 text-[10px] text-[var(--text-muted)]">Combinatie van taken, learning, spaarvoortgang en carry-over. Hoger = betere week-uitvoering.</p>
         </div>
       )}
       <div className="space-y-4">

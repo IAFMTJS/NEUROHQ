@@ -47,14 +47,18 @@ export function ReportAnalysis({ report }: Props) {
   }
 
   if (lines.length === 0) {
-    lines.push("Log tasks, learning, and daily state to get a richer summary next week.");
+    lines.push("Nog weinig data deze week. Voeg taken toe op Missions, log learning op Growth en doe je brain status-check-in op het dashboard — dan krijg je hier een samenvatting en execution score.");
+  }
+
+  if (report.tasksPlanned === 0 && report.learningTarget === 0 && report.avgEnergy == null) {
+    lines.push("Tip: Stel een wekelijkse learning-doel in op Growth en plan een paar taken om de insights nuttig te maken.");
   }
 
   return (
     <div className="card-simple-accent overflow-hidden p-0">
       <div className="border-b border-[var(--card-border)]/80 px-4 py-3">
-        <h2 className="text-base font-semibold text-[var(--text-primary)]">Summary & analysis</h2>
-        <p className="mt-0.5 text-xs text-[var(--text-muted)]">What the numbers suggest for this week.</p>
+        <h2 className="text-base font-semibold text-[var(--text-primary)]">Samenvatting & analyse</h2>
+        <p className="mt-0.5 text-xs text-[var(--text-muted)]">Wat de cijfers zeggen over deze week. Execution score combineert voltooide taken, learning-doel, spaarvoortgang en aftrek voor carry-over. Hieronder een korte uitleg per onderdeel.</p>
       </div>
       <div className="p-4">
         <ul className="space-y-2 text-sm text-[var(--text-primary)] leading-relaxed">

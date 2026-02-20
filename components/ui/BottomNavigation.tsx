@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { memo } from "react";
+import { memo, useState } from "react";
 import {
   IconHQ,
   IconAssistant,
@@ -14,17 +14,34 @@ import {
   IconSettings,
 } from "@/components/hq/NavIcons";
 
+/** PNG filename in public/nav/ (exact name, case-sensitive on server). No value = use SVG only. */
 const navLinks = [
-  { href: "/dashboard", label: "HQ", Icon: IconHQ },
-  { href: "/assistant", label: "Assistant", Icon: IconAssistant },
-  { href: "/tasks", label: "Missions", Icon: IconMissions },
-  { href: "/budget", label: "Budget", Icon: IconBudget },
-  { href: "/learning", label: "Growth", Icon: IconGrowth },
-  { href: "/strategy", label: "Strategy", Icon: IconStrategy },
-  { href: "/report", label: "Insight", Icon: IconInsights },
-  { href: "/design", label: "Design", Icon: IconStrategy },
-  { href: "/settings", label: "Settings", Icon: IconSettings },
+  { href: "/dashboard", label: "HQ", Icon: IconHQ, pngFile: "Dashboard.png" },
+  { href: "/assistant", label: "Assistant", Icon: IconAssistant, pngFile: "Assistent.png" },
+  { href: "/tasks", label: "Missions", Icon: IconMissions, pngFile: "Missions.png" },
+  { href: "/budget", label: "Budget", Icon: IconBudget, pngFile: "Budget.png" },
+  { href: "/learning", label: "Growth", Icon: IconGrowth, pngFile: "Growth.png" },
+  { href: "/strategy", label: "Strategy", Icon: IconStrategy, pngFile: "Strategy.png" },
+  { href: "/report", label: "Insight", Icon: IconInsights, pngFile: "Insights.png" },
+  { href: "/design", label: "Design", Icon: IconStrategy, pngFile: "Layer 6.png" },
+  { href: "/settings", label: "Settings", Icon: IconSettings, pngFile: "Settings.png" },
 ] as const;
+
+/** Try PNG from public/nav/*.png first (for deployment). Falls back to SVG on 404. Add dashboard.png, missions.png, etc. to public/nav/ to use PNG icons. */
+function NavIcon({ src, Icon, active }: { src: string; Icon: React.ComponentType<{ active?: boolean }>; active: boolean }) {
+  const [useSvg, setUseSvg] = useState(false);
+  if (useSvg) return <Icon active={active} />;
+  return (
+    <img
+      src={src}
+      alt=""
+      width={20}
+      height={20}
+      className="object-contain"
+      onError={() => setUseSvg(true)}
+    />
+  );
+}
 
 export default memo(function BottomNavigation() {
   const pathname = usePathname();
@@ -45,7 +62,11 @@ export default memo(function BottomNavigation() {
             prefetch={true}
           >
             <span className="nav-item-icon flex items-center justify-center [&_svg]:w-5 [&_svg]:h-5">
-              <Icon active={active} />
+              <NavIcon
+                src={`/nav/${encodeURIComponent(link.pngFile)}`}
+                Icon={Icon}
+                active={active}
+              />
             </span>
             <span>{link.label}</span>
           </Link>

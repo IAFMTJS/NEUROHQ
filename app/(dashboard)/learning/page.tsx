@@ -77,6 +77,8 @@ export default async function LearningPage({ searchParams }: Props) {
 
       <BehaviorEngine 
         hasMonthlyBook={monthlyBooks.length > 0} 
+        hasEducationOptions={options.length > 0}
+        hasStudyPlan={studyPlan.dailyGoalMinutes > 0}
         currentStreak={streak}
       />
 

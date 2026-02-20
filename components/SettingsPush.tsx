@@ -142,14 +142,11 @@ export function SettingsPush({ initialPushQuoteTime = null, initialQuietHours = 
         <span className="text-xs text-[var(--text-muted)]">No notifications in this window (your local time).</span>
       </div>
       {!VAPID_PUBLIC && (
-        <div className="mt-2 space-y-1 text-xs text-amber-500">
-          <p>
-            Add <code className="rounded bg-[var(--bg-primary)] px-1 py-0.5">NEXT_PUBLIC_VAPID_PUBLIC_KEY</code> and{" "}
-            <code className="rounded bg-[var(--bg-primary)] px-1 py-0.5">VAPID_PRIVATE_KEY</code> to <code className="rounded bg-[var(--bg-primary)] px-1 py-0.5">.env.local</code> to enable push.
-          </p>
-          <p>
-            Run <code className="rounded bg-[var(--bg-primary)] px-1 py-0.5">npm run generate-vapid</code> to generate keys, then add the output to your env.
-          </p>
+        <div className="mt-2 space-y-2 rounded-lg border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-xs text-amber-200">
+          <p className="font-medium">Push not configured (missing VAPID key).</p>
+          <p>1. In your project root run: <code className="rounded bg-[var(--bg-primary)] px-1 py-0.5">npm run generate-vapid</code></p>
+          <p>2. Copy the two printed lines into <code className="rounded bg-[var(--bg-primary)] px-1 py-0.5">.env.local</code> (create it from <code className="rounded bg-[var(--bg-primary)] px-1 py-0.5">.env.example</code> if needed).</p>
+          <p>3. Restart the dev server so the new env vars are picked up.</p>
         </div>
       )}
       {message && (

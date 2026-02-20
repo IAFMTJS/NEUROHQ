@@ -8,7 +8,7 @@ import { getQuoteForDay } from "@/app/actions/quote";
 import { getEnergyBudget } from "@/app/actions/energy";
 import { getUpcomingCalendarEvents, hasGoogleCalendarToken } from "@/app/actions/calendar";
 import { getRealityReport } from "@/app/actions/report";
-import { getQuarterlyStrategy } from "@/app/actions/strategy";
+import { getQuarterlyStrategy, shouldShowStrategyCheckInReminder } from "@/app/actions/strategy";
 import { getLearningStreak, getWeeklyMinutes, getWeeklyLearningTarget } from "@/app/actions/learning";
 import { getBudgetSettings, getCurrentMonthExpensesCents } from "@/app/actions/budget";
 import { getUserPreferencesOrDefaults } from "@/app/actions/preferences";
@@ -27,7 +27,7 @@ import { HQHeader, BrainStatusCard, MissionButton, ActiveMissionCard, WatNuBlock
 import { CommanderHomeHero } from "@/components/commander";
 import { HeroMascotImage } from "@/components/HeroMascotImage";
 import { ModeBanner, ModeExplanationModal, AddCalendarEventForm } from "@/components/dashboard/DashboardClientOnly";
-import { IdentityBlock, MomentumScore, TodayEngineCard, XPForecastWidget, WeeklyHeatmap, FrictionBanner } from "@/components/dashboard";
+import { IdentityBlock, MomentumScore, TodayEngineCard, XPForecastWidget, WeeklyHeatmap, FrictionBanner, StrategyCheckInBanner } from "@/components/dashboard";
 import { getFrictionSignals } from "@/app/actions/friction";
 
 const QuoteCard = dynamic(
@@ -167,9 +167,10 @@ export default async function DashboardPage() {
   const lastWeekDate = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000);
   const { start: lastWeekStart, end: lastWeekEnd } = getWeekBounds(lastWeekDate);
   const { start: thisWeekStart, end: thisWeekEnd } = getWeekBounds(today);
-  const [lastWeekReport, strategy, weeklyLearningMinutes, weeklyLearningTarget, budgetSettings, currentMonthExpenses] = await Promise.all([
+  const [lastWeekReport, strategy, showStrategyCheckIn, weeklyLearningMinutes, weeklyLearningTarget, budgetSettings, currentMonthExpenses] = await Promise.all([
     getRealityReport(lastWeekStart, lastWeekEnd),
     getQuarterlyStrategy(),
+    shouldShowStrategyCheckInReminder(),
     getWeeklyMinutes(thisWeekStart, thisWeekEnd),
     getWeeklyLearningTarget(),
     getBudgetSettings(),
@@ -285,6 +286,9 @@ export default async function DashboardPage() {
         </>
       )}
 
+      {!isMinimalUI && showStrategyCheckIn && (
+        <StrategyCheckInBanner show />
+      )}
       {!isMinimalUI && (
         <div className="dashboard-bento grid grid-cols-1 gap-4 lg:grid-cols-2 lg:gap-6">
           <IdentityBlock
@@ -387,7 +391,7 @@ export default async function DashboardPage() {
                   todayStr={dateStr}
                   maxDays={2}
                 />
-                <AddCalendarEventForm date={dateStr} hasGoogleToken={hasGoogle} />
+                <AddCalendarEventForm date={dateStr} hasGoogleToken={hasGoogle} allowAnyDate />
               </div>
             </section>
             {strategy?.identity_statement && (

@@ -8,6 +8,7 @@ const DEFAULTS: UserPreferences = {
   theme: "normal",
   color_mode: "dark",
   selected_emotion: null,
+  compact_ui: false,
   updated_at: new Date().toISOString(),
 };
 
@@ -17,7 +18,7 @@ export async function getUserPreferences(): Promise<UserPreferences | null> {
   if (!user) return null;
   const { data, error } = await supabase
     .from("user_preferences")
-    .select("theme, color_mode, selected_emotion, updated_at")
+    .select("theme, color_mode, selected_emotion, compact_ui, updated_at")
     .eq("user_id", user.id)
     .single();
   if (error) {
@@ -29,6 +30,7 @@ export async function getUserPreferences(): Promise<UserPreferences | null> {
     theme: (data.theme as UserPreferences["theme"]) ?? DEFAULTS.theme,
     color_mode: (data.color_mode as UserPreferences["color_mode"]) ?? DEFAULTS.color_mode,
     selected_emotion: (data.selected_emotion as UserPreferences["selected_emotion"]) ?? null,
+    compact_ui: data.compact_ui ?? DEFAULTS.compact_ui,
     updated_at: data.updated_at ?? DEFAULTS.updated_at,
   };
 }
@@ -39,18 +41,20 @@ export async function getUserPreferencesOrDefaults(): Promise<UserPreferences> {
   return prefs ?? DEFAULTS;
 }
 
-type UpdatePayload = Partial<Pick<UserPreferences, "theme" | "color_mode" | "selected_emotion">>;
+type UpdatePayload = Partial<Pick<UserPreferences, "theme" | "color_mode" | "selected_emotion" | "compact_ui">>;
 
 export async function updateUserPreferences(payload: UpdatePayload) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) throw new Error("Not authenticated");
+  const current = await getUserPreferencesOrDefaults();
 
   const row = {
     user_id: user.id,
-    theme: payload.theme ?? "normal",
-    color_mode: payload.color_mode ?? "dark",
-    selected_emotion: payload.selected_emotion ?? null,
+    theme: payload.theme ?? current.theme,
+    color_mode: payload.color_mode ?? current.color_mode,
+    selected_emotion: payload.selected_emotion !== undefined ? payload.selected_emotion : current.selected_emotion,
+    compact_ui: payload.compact_ui ?? current.compact_ui,
     updated_at: new Date().toISOString(),
   };
 

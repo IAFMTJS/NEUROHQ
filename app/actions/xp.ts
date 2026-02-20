@@ -90,6 +90,8 @@ export async function addXP(points: number): Promise<void> {
   if (!error) {
     revalidatePath("/dashboard");
     revalidatePath("/settings");
+    revalidatePath("/tasks");
+    revalidatePath("/learning");
   }
 }
 
@@ -145,5 +147,6 @@ export async function deductXP(points: number): Promise<void> {
     revalidatePath("/dashboard");
     revalidatePath("/learning");
     revalidatePath("/settings");
+    revalidatePath("/tasks");
   }
 }

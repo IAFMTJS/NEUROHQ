@@ -1,5 +1,5 @@
-// NEUROHQ Service Worker - Caching + Push Notifications
-const CACHE_VERSION = "v1";
+// NEUROHQ Service Worker - Network-first for JS/CSS so deployment always serves new nav/icons
+const CACHE_VERSION = "v3";
 const STATIC_CACHE = `neurohq-static-${CACHE_VERSION}`;
 const DYNAMIC_CACHE = `neurohq-dynamic-${CACHE_VERSION}`;
 const OFFLINE_PAGE = "/offline";
@@ -70,10 +70,28 @@ self.addEventListener("fetch", function (event) {
     return;
   }
 
-  // Static assets: CSS, JS, images, fonts - Cache First
+  // JS/CSS: Network First so deployment always serves new bundle (nav icons, etc.)
+  if (url.pathname.startsWith("/_next/static/") && (url.pathname.endsWith(".js") || url.pathname.endsWith(".css"))) {
+    event.respondWith(
+      fetch(event.request)
+        .then(function (response) {
+          if (response.ok) {
+            const clone = response.clone();
+            caches.open(DYNAMIC_CACHE).then(function (cache) {
+              cache.put(event.request, clone);
+            });
+          }
+          return response;
+        })
+        .catch(function () {
+          return caches.match(event.request);
+        })
+    );
+    return;
+  }
+  // Other static assets: images, fonts, icons - Cache First
   if (
-    url.pathname.match(/\.(css|js|png|jpg|jpeg|gif|svg|ico|woff|woff2|ttf|eot)$/) ||
-    url.pathname.startsWith("/_next/static/") ||
+    url.pathname.match(/\.(png|jpg|jpeg|gif|svg|ico|woff|woff2|ttf|eot)$/) ||
     url.pathname.startsWith("/icons/") ||
     url.pathname.startsWith("/mascots/")
   ) {

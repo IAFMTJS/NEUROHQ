@@ -5,7 +5,24 @@ import { saveBudgetTarget } from "@/app/actions/dcic/finance-state";
 import { Modal } from "@/components/Modal";
 import { getCurrencySymbol } from "@/lib/utils/currency";
 
-const DEFAULT_CATEGORIES = ["Housing", "Food", "Transport", "Subscriptions", "Fun", "Savings", "Other"];
+const DEFAULT_CATEGORIES = ["Housing", "Food", "Transport", "Vervoer", "Subscriptions", "Fun", "Savings", "Other"];
+/** Link entry categories (Dutch) to plan categories (EN): Transport = Vervoer and vice versa, Food = Eten, etc. */
+const CATEGORY_ALIASES: Record<string, string[]> = {
+  Transport: ["Vervoer"],
+  Vervoer: ["Transport"],
+  Food: ["Eten", "Boodschappen", "Uit eten"],
+  Subscriptions: ["Abonnementen"],
+  Other: ["Overig"],
+  Fun: [],
+  Housing: [],
+  Savings: [],
+};
+function spentForCategory(category: string, spentByCategory: Record<string, number>): number {
+  const aliases = CATEGORY_ALIASES[category];
+  let total = spentByCategory[category] ?? 0;
+  if (aliases) for (const a of aliases) total += spentByCategory[a] ?? 0;
+  return total;
+}
 
 type TargetRow = { category: string; target_cents: number; priority: number; flexible: boolean };
 
@@ -73,7 +90,7 @@ export function BudgetPlanCard({ targets: initialTargets, spentByCategory, curre
                 .filter((t) => t.target_cents > 0)
                 .sort((a, b) => a.category.localeCompare(b.category))
                 .map((t) => {
-                  const spent = spentByCategory[t.category] ?? 0;
+                  const spent = spentForCategory(t.category, spentByCategory);
                   const pct = t.target_cents > 0 ? Math.min(150, (spent / t.target_cents) * 100) : 0;
                   const over = spent > t.target_cents;
                   return (
@@ -90,6 +107,9 @@ export function BudgetPlanCard({ targets: initialTargets, spentByCategory, curre
                 })}
             </ul>
           )}
+          <p className="mt-3 rounded-lg border border-[var(--card-border)]/80 bg-[var(--bg-surface)]/30 px-3 py-2 text-xs text-[var(--text-muted)]">
+            <strong className="text-[var(--text-secondary)]">Overspend?</strong> Je hebt meer uitgegeven dan je maandelijkse doel voor die categorie. <strong>Wat kun je doen:</strong> (1) Uitgaven de komende weken verlagen in die categorie, (2) je doel verhogen als het realistisch is, (3) budget van een andere, flexibele categorie verschuiven naar deze. Transport en Vervoer tellen als dezelfde categorie.
+          </p>
         </div>
       </section>
 

@@ -17,6 +17,7 @@ type ExtendedTask = {
   impact?: number | null;
   urgency?: number | null;
   energy_required?: number | null;
+  focus_required?: number | null;
   mental_load?: number | null;
   social_load?: number | null;
   priority?: number | null;
@@ -44,6 +45,7 @@ export function EditMissionModal({ open, onClose, task, onSaved }: Props) {
   const [impact, setImpact] = useState<string>(task.impact != null ? String(task.impact) : "");
   const [urgency, setUrgency] = useState<string>(task.urgency != null ? String(task.urgency) : "");
   const [energy, setEnergy] = useState<string>(task.energy_required != null ? String(task.energy_required) : "");
+  const [focusRequired, setFocusRequired] = useState<string>(task.focus_required != null ? String(task.focus_required) : "");
   const [mentalLoad, setMentalLoad] = useState<string>(task.mental_load != null ? String(task.mental_load) : "");
   const [socialLoad, setSocialLoad] = useState<string>(task.social_load != null ? String(task.social_load) : "");
   const [priority, setPriority] = useState<string>(task.priority != null ? String(task.priority) : "");
@@ -68,6 +70,7 @@ export function EditMissionModal({ open, onClose, task, onSaved }: Props) {
           impact: impact ? (parseInt(impact, 10) >= 1 && parseInt(impact, 10) <= 3 ? parseInt(impact, 10) : null) : null,
           urgency: urgency ? (parseInt(urgency, 10) >= 1 && parseInt(urgency, 10) <= 3 ? parseInt(urgency, 10) : null) : null,
           energy_required: energy ? (parseInt(energy, 10) >= 1 && parseInt(energy, 10) <= 10 ? parseInt(energy, 10) : null) : null,
+          focus_required: focusRequired ? (parseInt(focusRequired, 10) >= 1 && parseInt(focusRequired, 10) <= 10 ? parseInt(focusRequired, 10) : null) : null,
           mental_load: mentalLoad ? (parseInt(mentalLoad, 10) >= 1 && parseInt(mentalLoad, 10) <= 10 ? parseInt(mentalLoad, 10) : null) : null,
           social_load: socialLoad ? (parseInt(socialLoad, 10) >= 1 && parseInt(socialLoad, 10) <= 10 ? parseInt(socialLoad, 10) : null) : null,
           priority: priority ? (parseInt(priority, 10) >= 1 && parseInt(priority, 10) <= 5 ? parseInt(priority, 10) : null) : null,
@@ -134,14 +137,17 @@ export function EditMissionModal({ open, onClose, task, onSaved }: Props) {
             </select>
           </div>
           <div>
-            <label className="block text-xs font-medium text-[var(--text-muted)]">Urgency (1–3)</label>
-            <select value={urgency} onChange={(e) => setUrgency(e.target.value)} className="mt-1 w-full rounded border border-[var(--card-border)] bg-[var(--bg-primary)] px-2 py-1.5 text-sm text-[var(--text-primary)]">
+            <label className="block text-xs font-medium text-[var(--text-muted)]">Importance</label>
+            <select value={urgency} onChange={(e) => setUrgency(e.target.value)} className="mt-1 w-full rounded border border-[var(--card-border)] bg-[var(--bg-primary)] px-2 py-1.5 text-sm text-[var(--text-primary)]" title="Urgent = must do today; Low = ok to skip a day or two">
               <option value="">—</option>
-              <option value="1">1 Low</option>
-              <option value="2">2 Medium</option>
-              <option value="3">3 High</option>
+              <option value="1">Low (ok to skip)</option>
+              <option value="2">Medium</option>
+              <option value="3">Urgent (must do)</option>
             </select>
           </div>
+        </div>
+        <p className="text-[10px] text-[var(--text-muted)]">Brain circles: energy, focus and load affect how many tasks fit today.</p>
+        <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
           <div>
             <label className="block text-xs font-medium text-[var(--text-muted)]">Energy (1–10)</label>
             <select value={energy} onChange={(e) => setEnergy(e.target.value)} className="mt-1 w-full rounded border border-[var(--card-border)] bg-[var(--bg-primary)] px-2 py-1.5 text-sm text-[var(--text-primary)]">
@@ -152,7 +158,16 @@ export function EditMissionModal({ open, onClose, task, onSaved }: Props) {
             </select>
           </div>
           <div>
-            <label className="block text-xs font-medium text-[var(--text-muted)]">Mental load (1–10)</label>
+            <label className="block text-xs font-medium text-[var(--text-muted)]">Focus (1–10)</label>
+            <select value={focusRequired} onChange={(e) => setFocusRequired(e.target.value)} className="mt-1 w-full rounded border border-[var(--card-border)] bg-[var(--bg-primary)] px-2 py-1.5 text-sm text-[var(--text-primary)]">
+              <option value="">—</option>
+              {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((n) => (
+                <option key={n} value={n}>{n}</option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label className="block text-xs font-medium text-[var(--text-muted)]">Load (1–10)</label>
             <select value={mentalLoad} onChange={(e) => setMentalLoad(e.target.value)} className="mt-1 w-full rounded border border-[var(--card-border)] bg-[var(--bg-primary)] px-2 py-1.5 text-sm text-[var(--text-primary)]">
               <option value="">—</option>
               {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((n) => (

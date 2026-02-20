@@ -21,5 +21,6 @@ export interface UserPreferences {
   theme: ThemeId;
   color_mode: ColorMode;
   selected_emotion: EmotionKey | null;
+  compact_ui: boolean;
   updated_at: string;
 }

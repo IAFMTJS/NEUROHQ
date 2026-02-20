@@ -18,12 +18,18 @@ import { getWeekBounds } from "@/lib/utils/learning";
 
 interface BehaviorEngineProps {
   hasMonthlyBook: boolean;
+  /** When true, user has at least one education option (path) – lock hides too */
+  hasEducationOptions?: boolean;
+  /** When true, user has set a study plan (daily goal etc.) – lock hides too */
+  hasStudyPlan?: boolean;
   currentStreak: number;
   previousStreak?: number;
 }
 
 export function BehaviorEngine({ 
   hasMonthlyBook, 
+  hasEducationOptions = false,
+  hasStudyPlan = false,
   currentStreak,
   previousStreak 
 }: BehaviorEngineProps) {
@@ -89,7 +95,7 @@ export function BehaviorEngine({
   return (
     <>
       <InactivityWarning />
-      <LearningPathLock hasBook={hasMonthlyBook} />
+      <LearningPathLock hasBook={hasMonthlyBook || hasEducationOptions || hasStudyPlan} />
       <AICoach />
       {showFailureIntervention && (
         <FailureIntervention onClose={() => setShowFailureIntervention(false)} />

@@ -130,6 +130,63 @@ export async function getStrategyCompletion(): Promise<{
   return { completed, total, percent, items };
 }
 
+const CHECK_IN_REMINDER_DAYS = 14;
+
+export async function getStrategyCheckIn(): Promise<{ checked_at: string } | null> {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return null;
+  const { data } = await supabase
+    .from("strategy_check_in")
+    .select("checked_at")
+    .eq("user_id", user.id)
+    .single();
+  if (!data?.checked_at) return null;
+  return { checked_at: data.checked_at as string };
+}
+
+export async function setStrategyCheckIn(): Promise<void> {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error("Not authenticated");
+  await supabase
+    .from("strategy_check_in")
+    .upsert({ user_id: user.id, checked_at: new Date().toISOString() }, { onConflict: "user_id" });
+  revalidatePath("/dashboard");
+  revalidatePath("/strategy");
+}
+
+export async function shouldShowStrategyCheckInReminder(): Promise<boolean> {
+  const row = await getStrategyCheckIn();
+  if (!row) return true;
+  const checked = new Date(row.checked_at).getTime();
+  const daysSince = (Date.now() - checked) / (24 * 60 * 60 * 1000);
+  return daysSince >= CHECK_IN_REMINDER_DAYS;
+}
+
+/** Update checklist for key result at index (0-based). Checked = done for that line. */
+export async function updateStrategyKrCheck(index: number, checked: boolean): Promise<void> {
+  const strategy = await getQuarterlyStrategy();
+  if (!strategy?.id) throw new Error("No strategy");
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error("Not authenticated");
+  const keyResults = (strategy.key_results as string)?.trim().split(/\n/).filter(Boolean) ?? [];
+  if (index < 0 || index >= keyResults.length) return;
+  const raw = (strategy as { kr_checked?: boolean[] }).kr_checked;
+  const arr = Array.isArray(raw) ? [...raw] : [];
+  while (arr.length <= index) arr.push(false);
+  arr[index] = checked;
+  const { error } = await supabase
+    .from("quarterly_strategy")
+    .update({ kr_checked: arr })
+    .eq("id", strategy.id)
+    .eq("user_id", user.id);
+  if (error) throw new Error(error.message);
+  revalidatePath("/strategy");
+  revalidatePath("/dashboard");
+}
+
 export async function copyStrategyFromLastQuarter() {
   const prev = getPreviousQuarter();
   const strategy = await getQuarterlyStrategy(prev);

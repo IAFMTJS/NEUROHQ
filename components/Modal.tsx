@@ -23,9 +23,9 @@ type Props = {
 };
 
 const sizeClasses: Record<ModalSize, string> = {
-  sm: "max-w-[320px]",
-  md: "max-w-[400px]",
-  lg: "max-w-[480px]",
+  sm: "max-w-[min(320px,calc(100vw-2rem))]",
+  md: "max-w-[min(400px,calc(100vw-2rem))]",
+  lg: "max-w-[min(480px,calc(100vw-2rem))]",
 };
 
 export function Modal({
@@ -73,7 +73,7 @@ export function Modal({
   return (
     <div
       ref={overlayRef}
-      className="fixed inset-0 z-[100] flex items-center justify-center overflow-y-auto overflow-x-hidden p-4 modal-overlay"
+      className="fixed inset-0 z-[100] flex items-start justify-center overflow-y-auto overflow-x-hidden p-4 pt-[min(2rem,env(safe-area-inset-top))] pb-8 modal-overlay"
       role="dialog"
       aria-modal="true"
       aria-labelledby="modal-title"
@@ -85,7 +85,7 @@ export function Modal({
         onClick={onClose}
       />
       <div
-        className={`modal-card relative flex w-full max-h-[90vh] flex-col ${sizeClasses[size]}`}
+        className={`modal-card relative flex w-full max-h-[min(80dvh,calc(100dvh-3rem))] flex-col ${sizeClasses[size]} my-4`}
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header: logo (optional) + title + close */}

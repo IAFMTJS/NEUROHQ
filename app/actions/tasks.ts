@@ -78,6 +78,7 @@ export async function createTask(params: {
   title: string;
   due_date: string;
   energy_required?: number | null;
+  focus_required?: number | null;
   mental_load?: number | null;
   social_load?: number | null;
   priority?: number | null;
@@ -100,6 +101,7 @@ export async function createTask(params: {
       title: params.title,
       due_date: params.due_date,
       energy_required: params.energy_required ?? null,
+      focus_required: params.focus_required ?? null,
       mental_load: params.mental_load ?? null,
       social_load: params.social_load ?? null,
       priority: params.priority ?? null,
@@ -148,7 +150,7 @@ export async function completeTask(id: string) {
   if (!user) throw new Error("Not authenticated");
   const { data: task } = await supabase
     .from("tasks")
-    .select("recurrence_rule, recurrence_weekdays, due_date, title, energy_required, mental_load, social_load, priority, category, impact, urgency")
+    .select("recurrence_rule, recurrence_weekdays, due_date, title, energy_required, focus_required, mental_load, social_load, priority, category, impact, urgency")
     .eq("id", id)
     .eq("user_id", user.id)
     .single();
@@ -158,7 +160,7 @@ export async function completeTask(id: string) {
     .eq("id", id)
     .eq("user_id", user.id);
   if (error) throw new Error(error.message);
-  const t = task as { recurrence_rule?: string; recurrence_weekdays?: string | null; due_date: string; title: string; energy_required?: number | null; mental_load?: number | null; social_load?: number | null; priority?: number | null; category?: string | null; impact?: number | null; urgency?: number | null } | null;
+  const t = task as { recurrence_rule?: string; recurrence_weekdays?: string | null; due_date: string; title: string; energy_required?: number | null; focus_required?: number | null; mental_load?: number | null; social_load?: number | null; priority?: number | null; category?: string | null; impact?: number | null; urgency?: number | null } | null;
   if (t?.recurrence_rule === "daily" || t?.recurrence_rule === "weekly" || t?.recurrence_rule === "monthly") {
     let nextStr: string;
     const base = new Date(t.due_date + "T12:00:00Z");
@@ -189,6 +191,7 @@ export async function completeTask(id: string) {
       title: t.title,
       due_date: nextStr,
       energy_required: t.energy_required ?? null,
+      focus_required: t.focus_required ?? null,
       mental_load: t.mental_load ?? null,
       social_load: t.social_load ?? null,
       priority: t.priority ?? null,
@@ -361,6 +364,7 @@ export async function updateTask(
     impact?: number | null;
     urgency?: number | null;
     energy_required?: number | null;
+    focus_required?: number | null;
     mental_load?: number | null;
     social_load?: number | null;
     priority?: number | null;
@@ -379,6 +383,7 @@ export async function updateTask(
   if (params.impact !== undefined) payload.impact = params.impact;
   if (params.urgency !== undefined) payload.urgency = params.urgency;
   if (params.energy_required !== undefined) payload.energy_required = params.energy_required;
+  if (params.focus_required !== undefined) payload.focus_required = params.focus_required;
   if (params.mental_load !== undefined) payload.mental_load = params.mental_load;
   if (params.social_load !== undefined) payload.social_load = params.social_load;
   if (params.priority !== undefined) payload.priority = params.priority;
@@ -396,12 +401,12 @@ export async function duplicateTask(id: string, due_date: string) {
   if (!user) throw new Error("Not authenticated");
   const { data: task } = await supabase
     .from("tasks")
-    .select("title, category, recurrence_rule, recurrence_weekdays, impact, urgency, energy_required, mental_load, social_load, priority")
+    .select("title, category, recurrence_rule, recurrence_weekdays, impact, urgency, energy_required, focus_required, mental_load, social_load, priority")
     .eq("id", id)
     .eq("user_id", user.id)
     .single();
   if (!task) throw new Error("Task not found");
-  const t = task as { title: string; category?: string | null; recurrence_rule?: string | null; recurrence_weekdays?: string | null; impact?: number | null; urgency?: number | null; energy_required?: number | null; mental_load?: number | null; social_load?: number | null; priority?: number | null };
+  const t = task as { title: string; category?: string | null; recurrence_rule?: string | null; recurrence_weekdays?: string | null; impact?: number | null; urgency?: number | null; energy_required?: number | null; focus_required?: number | null; mental_load?: number | null; social_load?: number | null; priority?: number | null };
   const { error } = await supabase.from("tasks").insert({
     user_id: user.id,
     title: t.title,
@@ -412,6 +417,7 @@ export async function duplicateTask(id: string, due_date: string) {
     impact: t.impact ?? null,
     urgency: t.urgency ?? null,
     energy_required: t.energy_required ?? null,
+    focus_required: t.focus_required ?? null,
     mental_load: t.mental_load ?? null,
     social_load: t.social_load ?? null,
     priority: t.priority ?? null,

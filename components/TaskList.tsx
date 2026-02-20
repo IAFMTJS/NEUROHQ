@@ -14,6 +14,7 @@ import {
   FocusModal,
   QuickAddModal,
 } from "@/components/missions";
+import { Modal } from "@/components/Modal";
 import { useAppState } from "@/components/providers/AppStateProvider";
 
 const WEEKDAY_LABELS: Record<number, string> = { 1: "Mon", 2: "Tue", 3: "Wed", 4: "Thu", 5: "Fri", 6: "Sat", 7: "Sun" };
@@ -36,6 +37,8 @@ type Props = {
   mode: "normal" | "low_energy" | "stabilize" | "driven";
   carryOverCount: number;
   subtasksByParent?: Record<string, SubtaskRow[]>;
+  /** Suggested number of tasks for today (from energy budget). After completing this many, show "Do another?" modal. */
+  suggestedTaskCount?: number;
 };
 
 function recurrenceLabel(task: ExtendedTask): string {
@@ -61,7 +64,7 @@ function groupByCategory(tasks: ExtendedTask[]): { work: ExtendedTask[]; persona
   return { work, personal, other };
 }
 
-export function TaskList({ date, tasks: initialTasks, completedToday, mode, carryOverCount, subtasksByParent = {} }: Props) {
+export function TaskList({ date, tasks: initialTasks, completedToday, mode, carryOverCount, subtasksByParent = {}, suggestedTaskCount = 3 }: Props) {
   const router = useRouter();
   const appState = useAppState();
   const [pending, startTransition] = useTransition();
@@ -76,6 +79,8 @@ export function TaskList({ date, tasks: initialTasks, completedToday, mode, carr
   const [focusTask, setFocusTask] = useState<ExtendedTask | null>(null);
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
   const [quickAddOpen, setQuickAddOpen] = useState(false);
+  const [showDoAnotherModal, setShowDoAnotherModal] = useState(false);
+  const [showAllTasksModal, setShowAllTasksModal] = useState(false);
 
   const extendedTasks = initialTasks as ExtendedTask[];
   const filteredTasks =
@@ -115,10 +120,14 @@ export function TaskList({ date, tasks: initialTasks, completedToday, mode, carr
   }, []);
 
   function handleComplete(id: string) {
+    const completedCountBefore = completedToday.length;
     startTransition(async () => {
       try {
         await completeTask(id);
         appState?.triggerReward();
+        if ((completedCountBefore + 1) >= suggestedTaskCount) {
+          setShowDoAnotherModal(true);
+        }
         router.refresh();
       } catch {
         appState?.triggerError();
@@ -170,12 +179,14 @@ export function TaskList({ date, tasks: initialTasks, completedToday, mode, carr
     const impactRaw = (form.elements.namedItem("impact") as HTMLSelectElement)?.value;
     const urgencyRaw = (form.elements.namedItem("urgency") as HTMLSelectElement)?.value;
     const energyRaw = (form.elements.namedItem("energy") as HTMLSelectElement)?.value;
+    const focusRaw = (form.elements.namedItem("focus_required") as HTMLSelectElement)?.value;
     const mentalLoadRaw = (form.elements.namedItem("mental_load") as HTMLSelectElement)?.value;
     const socialLoadRaw = (form.elements.namedItem("social_load") as HTMLSelectElement)?.value;
     const priorityRaw = (form.elements.namedItem("priority") as HTMLSelectElement)?.value;
     const impact = impactRaw ? parseInt(impactRaw, 10) : null;
     const urgency = urgencyRaw ? parseInt(urgencyRaw, 10) : null;
     const energy = energyRaw ? parseInt(energyRaw, 10) : null;
+    const focusRequired = focusRaw ? parseInt(focusRaw, 10) : null;
     const mentalLoad = mentalLoadRaw ? parseInt(mentalLoadRaw, 10) : null;
     const socialLoad = socialLoadRaw ? parseInt(socialLoadRaw, 10) : null;
     const priority = priorityRaw ? parseInt(priorityRaw, 10) : null;
@@ -192,6 +203,7 @@ export function TaskList({ date, tasks: initialTasks, completedToday, mode, carr
           impact: impact && impact >= 1 && impact <= 3 ? impact : null,
           urgency: urgency && urgency >= 1 && urgency <= 3 ? urgency : null,
           energy_required: energy && energy >= 1 && energy <= 10 ? energy : null,
+          focus_required: focusRequired && focusRequired >= 1 && focusRequired <= 10 ? focusRequired : null,
           mental_load: mentalLoad && mentalLoad >= 1 && mentalLoad <= 10 ? mentalLoad : null,
           social_load: socialLoad && socialLoad >= 1 && socialLoad <= 10 ? socialLoad : null,
           priority: priority && priority >= 1 && priority <= 5 ? priority : null,
@@ -299,6 +311,9 @@ export function TaskList({ date, tasks: initialTasks, completedToday, mode, carr
               Focus
             </button>
           )}
+          <button type="button" onClick={(e) => { e.stopPropagation(); setEditTask(task); }} className="rounded-lg px-2 py-1 text-xs text-[var(--text-muted)] hover:bg-[var(--accent-focus)]/10 hover:text-[var(--accent-focus)]" title="Naam, energy en andere velden bewerken">
+            Bewerken
+          </button>
           {!task.completed && (
             <button type="button" onClick={(e) => { e.stopPropagation(); handleSnooze(task.id); }} disabled={pending} className="rounded-lg px-2 py-1 text-xs text-[var(--text-muted)] hover:bg-[var(--accent-focus)]/10 hover:text-[var(--accent-focus)]">
               Snooze
@@ -334,9 +349,20 @@ export function TaskList({ date, tasks: initialTasks, completedToday, mode, carr
   return (
     <div className="card-simple overflow-hidden p-0">
       <div className="border-b border-[var(--card-border)] px-4 py-3">
-        <div className="flex items-center justify-between">
+        <div className="flex flex-wrap items-center justify-between gap-2">
           <h2 className="text-base font-semibold text-[var(--text-primary)]">Today&apos;s missions</h2>
-          {mode === "stabilize" && <span className="rounded-full bg-amber-500/15 px-3 py-1 text-xs font-medium text-amber-200">Stabilize mode</span>}
+          <div className="flex items-center gap-2">
+            {mode === "stabilize" && <span className="rounded-full bg-amber-500/15 px-3 py-1 text-xs font-medium text-amber-200">Stabilize mode</span>}
+            {initialTasks.length + completedToday.length > 0 && (
+              <button
+                type="button"
+                onClick={() => setShowAllTasksModal(true)}
+                className="rounded-full border border-[var(--card-border)] px-3 py-1.5 text-xs font-medium text-[var(--text-muted)] hover:bg-[var(--bg-surface)] hover:text-[var(--text-primary)]"
+              >
+                All tasks ({initialTasks.length + completedToday.length})
+              </button>
+            )}
+          </div>
         </div>
       </div>
       <div className="p-4">
@@ -449,17 +475,17 @@ export function TaskList({ date, tasks: initialTasks, completedToday, mode, carr
                     </select>
                   </label>
                   <label className="flex flex-col gap-1">
-                    <span className="text-xs font-medium text-[var(--text-muted)]">Urgency (1–3)</span>
-                    <select name="urgency" className="rounded border border-[var(--card-border)] bg-[var(--bg-primary)] px-2 py-1.5 text-sm text-[var(--text-primary)]">
+                    <span className="text-xs font-medium text-[var(--text-muted)]">Importance</span>
+                    <select name="urgency" className="rounded border border-[var(--card-border)] bg-[var(--bg-primary)] px-2 py-1.5 text-sm text-[var(--text-primary)]" title="Urgent = must do; Low = ok to skip">
                       <option value="">—</option>
-                      <option value="1">1 Low</option>
-                      <option value="2">2 Medium</option>
-                      <option value="3">3 High</option>
+                      <option value="1">Low</option>
+                      <option value="2">Medium</option>
+                      <option value="3">Urgent</option>
                     </select>
                   </label>
-                  <div className="flex flex-wrap gap-2">
-                    <label className="flex flex-1 min-w-[80px] flex-col gap-1">
-                      <span className="text-xs font-medium text-[var(--text-muted)]">Energy (1–10)</span>
+                  <div className="col-span-2 flex flex-wrap gap-2 text-[10px] text-[var(--text-muted)]">Brain: Energy, Focus, Load</div>
+                  <label className="flex flex-1 min-w-[80px] flex-col gap-1">
+                    <span className="text-xs font-medium text-[var(--text-muted)]">Energy (1–10)</span>
                       <select name="energy" className="rounded border border-[var(--card-border)] bg-[var(--bg-primary)] px-2 py-1.5 text-sm text-[var(--text-primary)]">
                         <option value="">—</option>
                         {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((n) => (
@@ -468,7 +494,16 @@ export function TaskList({ date, tasks: initialTasks, completedToday, mode, carr
                       </select>
                     </label>
                     <label className="flex flex-1 min-w-[80px] flex-col gap-1">
-                      <span className="text-xs font-medium text-[var(--text-muted)]">Mental (1–10)</span>
+                      <span className="text-xs font-medium text-[var(--text-muted)]">Focus (1–10)</span>
+                      <select name="focus_required" className="rounded border border-[var(--card-border)] bg-[var(--bg-primary)] px-2 py-1.5 text-sm text-[var(--text-primary)]">
+                        <option value="">—</option>
+                        {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((n) => (
+                          <option key={n} value={n}>{n}</option>
+                        ))}
+                      </select>
+                    </label>
+                    <label className="flex flex-1 min-w-[80px] flex-col gap-1">
+                      <span className="text-xs font-medium text-[var(--text-muted)]">Load (1–10)</span>
                       <select name="mental_load" className="rounded border border-[var(--card-border)] bg-[var(--bg-primary)] px-2 py-1.5 text-sm text-[var(--text-primary)]">
                         <option value="">—</option>
                         {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((n) => (
@@ -494,7 +529,6 @@ export function TaskList({ date, tasks: initialTasks, completedToday, mode, carr
                         ))}
                       </select>
                     </label>
-                  </div>
                 </div>
               )}
             </form>
@@ -537,6 +571,26 @@ export function TaskList({ date, tasks: initialTasks, completedToday, mode, carr
           onConfirm={handleConfirmDelete}
         />
         <QuickAddModal open={quickAddOpen} onClose={() => setQuickAddOpen(false)} date={date} onAdded={() => setQuickAddOpen(false)} />
+
+        <Modal open={showDoAnotherModal} onClose={() => setShowDoAnotherModal(false)} title="Nice work!" size="sm">
+          <p className="text-sm text-[var(--text-muted)]">You&apos;ve hit your suggested minimum for today. Want to do one more?</p>
+          <div className="mt-4 flex gap-2">
+            <button type="button" onClick={() => setShowDoAnotherModal(false)} className="flex-1 rounded-lg border border-[var(--card-border)] px-3 py-2 text-sm font-medium text-[var(--text-primary)] hover:bg-[var(--bg-surface)]">Maybe later</button>
+            <button type="button" onClick={() => { setShowDoAnotherModal(false); }} className="flex-1 rounded-lg bg-[var(--accent-focus)] px-3 py-2 text-sm font-medium text-white hover:opacity-90">Keep going</button>
+          </div>
+        </Modal>
+
+        <Modal open={showAllTasksModal} onClose={() => setShowAllTasksModal(false)} title="All today&apos;s tasks" size="lg">
+          <ul className="max-h-[60vh] space-y-2 overflow-y-auto">
+            {([...extendedTasks, ...(completedToday as ExtendedTask[])] as ExtendedTask[]).filter((t, i, arr) => arr.findIndex((x) => x.id === t.id) === i).map((t) => (
+              <li key={t.id} className="flex items-center gap-2 rounded-lg border border-[var(--card-border)]/50 bg-[var(--bg-surface)]/30 px-3 py-2 text-sm">
+                <span className={t.completed ? "line-through text-[var(--text-muted)]" : "text-[var(--text-primary)]"}>{t.title}</span>
+                {t.completed && <span className="rounded bg-green-500/20 px-1.5 py-0.5 text-[10px] text-green-400">Done</span>}
+                {t.energy_required != null && <span className="rounded bg-[var(--accent-energy)]/20 px-1.5 py-0.5 text-[10px] text-[var(--accent-energy)]">⚡{t.energy_required}</span>}
+              </li>
+            ))}
+          </ul>
+        </Modal>
 
         {completedToday.length > 0 && (
           <div className="mt-6 border-t border-[var(--card-border)] pt-4">

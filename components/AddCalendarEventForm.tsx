@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition, useMemo } from "react";
+import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { addManualEvent } from "@/app/actions/calendar";
 
@@ -11,13 +11,14 @@ function toLocalDateStr(d: Date): string {
   return `${y}-${m}-${day}`;
 }
 
-export function AddCalendarEventForm({ date, hasGoogleToken = false }: { date: string; hasGoogleToken?: boolean }) {
+export function AddCalendarEventForm({ date, hasGoogleToken = false, allowAnyDate = false }: { date: string; hasGoogleToken?: boolean; allowAnyDate?: boolean }) {
   const router = useRouter();
-  const minDateTime = `${date}T00:00`;
+  const minDateTime = allowAnyDate ? "2020-01-01T00:00" : `${date}T00:00`;
 
+  const [eventDate, setEventDate] = useState(date);
   const [title, setTitle] = useState("");
-  const [start, setStart] = useState(`${date}T09:00`);
-  const [end, setEnd] = useState(`${date}T10:00`);
+  const [start, setStart] = useState(`${eventDate}T09:00`);
+  const [end, setEnd] = useState(`${eventDate}T10:00`);
   const [isSocial, setIsSocial] = useState(false);
   const [syncToGoogle, setSyncToGoogle] = useState(false);
   const [pending, startTransition] = useTransition();
@@ -44,9 +45,10 @@ export function AddCalendarEventForm({ date, hasGoogleToken = false }: { date: s
           is_social: isSocial,
           sync_to_google: hasGoogleToken && syncToGoogle,
         });
-        const dayLabel = startDate.toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "short" });
-        setSuccess(`Event saved for ${dayLabel}. It appears under that day above.`);
+        const dayLabel = startDate.toLocaleDateString("nl-NL", { weekday: "short", day: "numeric", month: "short" });
+        setSuccess(`Agenda-item opgeslagen voor ${dayLabel}.`);
         setTitle("");
+        setEventDate(date);
         setStart(`${date}T09:00`);
         setEnd(`${date}T10:00`);
         router.refresh();
@@ -69,13 +71,29 @@ export function AddCalendarEventForm({ date, hasGoogleToken = false }: { date: s
           {success}
         </p>
       )}
+      {allowAnyDate && (
+        <label className="flex flex-col gap-1.5">
+          <span className="text-sm font-medium text-[var(--text-muted)]">Datum</span>
+          <input
+            type="date"
+            value={eventDate}
+            onChange={(e) => {
+              const d = e.target.value;
+              setEventDate(d);
+              setStart(`${d}T09:00`);
+              setEnd(`${d}T10:00`);
+            }}
+            className="rounded-lg border border-[var(--card-border)] bg-[var(--bg-primary)] px-3 py-2.5 text-sm text-[var(--text-primary)] focus:border-[var(--accent-focus)] focus:outline-none focus:ring-2 focus:ring-[var(--accent-focus)]/30"
+          />
+        </label>
+      )}
       <label className="flex flex-col gap-1.5">
-        <span className="text-sm font-medium text-[var(--text-muted)]">Title</span>
+        <span className="text-sm font-medium text-[var(--text-muted)]">Titel</span>
         <input
           type="text"
           value={title}
           onChange={(e) => setTitle(e.target.value)}
-          placeholder="e.g. Meeting"
+          placeholder="bijv. Vergadering"
           className="w-40 rounded-lg border border-[var(--card-border)] bg-[var(--bg-primary)] px-3 py-2.5 text-sm text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:border-[var(--accent-focus)] focus:outline-none focus:ring-2 focus:ring-[var(--accent-focus)]/30"
           required
         />

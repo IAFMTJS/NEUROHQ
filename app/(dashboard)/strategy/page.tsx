@@ -12,6 +12,10 @@ import { StrategyCopyFromLast } from "@/components/StrategyCopyFromLast";
 import { StrategyPastQuarters } from "@/components/StrategyPastQuarters";
 import { StrategyProgressCard } from "@/components/strategy/StrategyProgressCard";
 import { StrategyTipsCard } from "@/components/strategy/StrategyTipsCard";
+import { StrategyCheckInButton } from "@/components/strategy/StrategyCheckInButton";
+import { StrategyFocusBlock } from "@/components/strategy/StrategyFocusBlock";
+import { StrategyKeyResultsChecklist } from "@/components/strategy/StrategyKeyResultsChecklist";
+import { StrategySuccessActions } from "@/components/strategy/StrategySuccessActions";
 
 export default async function StrategyPage() {
   const { year, quarter } = getCurrentQuarter();
@@ -75,12 +79,27 @@ export default async function StrategyPage() {
         percent={completion.percent}
         items={completion.items}
       />
+      <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-[var(--card-border)] bg-[var(--bg-surface)]/30 px-4 py-3">
+        <p className="text-sm text-[var(--text-muted)]">
+          Heb je je voortgang bekeken? Doe je check-in zodat de melding op het dashboard verdwijnt.
+        </p>
+        <StrategyCheckInButton />
+      </div>
+      <StrategyFocusBlock
+        focusText={strategy?.key_results ? (strategy.key_results as string).trim().split(/\n/).map((s) => s.trim()).filter(Boolean)[0] ?? null : null}
+        identityStatement={strategy?.identity_statement ?? null}
+      />
+      <StrategyKeyResultsChecklist
+        keyResultsText={strategy?.key_results ?? null}
+        krChecked={Array.isArray((strategy as { kr_checked?: boolean[] })?.kr_checked) ? (strategy as { kr_checked: boolean[] }).kr_checked : []}
+      />
       <StrategySummaryCard
         strategy={strategy}
         goals={goalList}
         year={year}
         quarter={quarter}
       />
+      <StrategySuccessActions />
       <StrategyTipsCard />
       <StrategyForm initial={strategy} goals={goalList} />
       <StrategyPastQuarters past={past} />

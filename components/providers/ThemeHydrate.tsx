@@ -11,7 +11,10 @@ export function ThemeHydrate() {
   useEffect(() => {
     let cancelled = false;
     getUserPreferencesOrDefaults().then((prefs) => {
-      if (!cancelled) hydrate(prefs);
+      if (!cancelled) {
+        hydrate(prefs);
+        document.documentElement.dataset.compactUi = prefs.compact_ui ? "true" : "false";
+      }
     });
     return () => { cancelled = true; };
   }, [hydrate]);

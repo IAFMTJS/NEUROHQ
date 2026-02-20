@@ -104,6 +104,9 @@ export const EnergyBudgetBar = memo(function EnergyBudgetBar({
           </span>
           <span className="text-[var(--text-muted)]">/ {capacity} headroom</span>
         </div>
+        <p className="rounded-lg border border-[var(--card-border)]/80 bg-[var(--bg-surface)]/30 px-3 py-2 text-xs text-[var(--text-muted)]">
+          <strong className="text-[var(--text-secondary)]">Wat is headroom?</strong> De energy budget houdt rekening met alle drie de aspecten: Energy, Focus en Load. Headroom is het <strong>minimum</strong> van wat er in die drie pools overblijft — de beperkende factor. Zodra één pool op is, past er geen extra taak meer. <strong>Acceptabel:</strong> zolang headroom &gt; 0 past er nog iets; ~{suggestedTaskCount} taak{suggestedTaskCount !== 1 ? "ken" : ""} is een veilige richtlijn. Bij headroom 0: stop met toevoegen of kies lichtere taken. Bij lage headroom: minder gepland, iets verzetten of taken met lagere energy/focus/load.
+        </p>
 
         {/* Stacked breakdown */}
         {(segments.length > 0 || remaining > 0) && (
