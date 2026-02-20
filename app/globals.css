@@ -796,12 +796,14 @@ header:has(+ .mascot-hero) {
 }
 
 /* ========== CINEMATIC NEON – Full background (starfield + nebula + vignette + depth) ========== */
-/* Background slightly larger than viewport so it's blue on all screen sizes; no white edges */
+/* Background extends past viewport so PWA has no white margins; use 120% and fallback color */
 html {
   min-height: 100%;
   min-height: 100dvh;
-  min-width: 100vw;
+  min-width: 100%;
+  width: 100%;
   overflow-x: hidden;
+  background-color: var(--cinematic-navy);
   background:
     var(--cinematic-vignette),
     var(--galaxy-band),
@@ -815,7 +817,7 @@ html {
     linear-gradient(180deg, var(--cinematic-navy) 0%, var(--cinematic-navy-mid) 38%, var(--cinematic-navy-bottom) 72%, var(--cinematic-navy) 100%),
     var(--starfield);
   background-attachment: fixed;
-  background-size: 110% 110%, 110% 110%, 110% 110%, 110% 110%, 110% 110%, 110% 110%, 110% 110%, 110% 110%, 110% 110%, 110% 110%, 110% 110%, 110% 110%, var(--starfield-size, 600px) var(--starfield-size, 600px);
+  background-size: 120% 120%, 120% 120%, 120% 120%, 120% 120%, 120% 120%, 120% 120%, 120% 120%, 120% 120%, 120% 120%, 120% 120%, 120% 120%, 120% 120%, var(--starfield-size, 600px) var(--starfield-size, 600px);
   background-repeat: no-repeat, no-repeat, no-repeat, no-repeat, no-repeat, no-repeat, no-repeat, no-repeat, no-repeat, no-repeat, no-repeat, no-repeat, repeat;
   background-position: center, center, center, center, center, center, center, center, center, 50% 35%, center, center, 0 0;
 }
@@ -824,10 +826,12 @@ body {
   padding-top: env(safe-area-inset-top);
   min-height: 100vh;
   min-height: 100dvh;
-  min-width: 100vw;
+  min-width: 100%;
+  width: 100%;
   overflow-x: hidden;
   color: var(--text-main);
   font-family: var(--font-sans), Inter, system-ui, sans-serif;
+  background-color: var(--cinematic-navy);
   background:
     var(--cinematic-vignette),
     var(--galaxy-band),
@@ -841,7 +845,7 @@ body {
     linear-gradient(180deg, var(--cinematic-navy) 0%, var(--cinematic-navy-mid) 38%, var(--cinematic-navy-bottom) 72%, var(--cinematic-navy) 100%),
     var(--starfield);
   background-attachment: fixed;
-  background-size: 110% 110%, 110% 110%, 110% 110%, 110% 110%, 110% 110%, 110% 110%, 110% 110%, 110% 110%, 110% 110%, 110% 110%, 110% 110%, 110% 110%, var(--starfield-size, 600px) var(--starfield-size, 600px);
+  background-size: 120% 120%, 120% 120%, 120% 120%, 120% 120%, 120% 120%, 120% 120%, 120% 120%, 120% 120%, 120% 120%, 120% 120%, 120% 120%, 120% 120%, var(--starfield-size, 600px) var(--starfield-size, 600px);
   background-repeat: no-repeat, no-repeat, no-repeat, no-repeat, no-repeat, no-repeat, no-repeat, no-repeat, no-repeat, no-repeat, no-repeat, no-repeat, repeat;
   background-position: center, center, center, center, center, center, center, center, center, 50% 35%, center, center, 0 0;
 }
@@ -1506,4 +1510,21 @@ header h1 { margin: 0; }
   left: 50%;
   transform: translateX(-50%);
   top: 12px;
+}
+
+/* Modal: overlay scrollable; card body scrolls so content is always accessible */
+.modal-overlay {
+  background: var(--modal-backdrop);
+}
+.modal-card {
+  background: var(--modal-bg);
+  border-radius: var(--modal-panel-radius);
+  border: 1px solid var(--modal-border);
+  box-shadow: 0 24px 48px rgba(0, 0, 0, 0.5);
+}
+.modal-card-header {
+  border-bottom: 1px solid var(--modal-border);
+}
+.modal-card-footer {
+  border-top: 1px solid var(--modal-border);
 }

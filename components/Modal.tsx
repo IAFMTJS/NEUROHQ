@@ -73,7 +73,7 @@ export function Modal({
   return (
     <div
       ref={overlayRef}
-      className="fixed inset-0 z-[100] flex items-center justify-center p-4 modal-overlay"
+      className="fixed inset-0 z-[100] flex items-center justify-center overflow-y-auto overflow-x-hidden p-4 modal-overlay"
       role="dialog"
       aria-modal="true"
       aria-labelledby="modal-title"
@@ -85,11 +85,11 @@ export function Modal({
         onClick={onClose}
       />
       <div
-        className={`modal-card relative w-full ${sizeClasses[size]} ${size === "lg" ? "max-h-[90vh]" : ""}`}
+        className={`modal-card relative flex w-full max-h-[90vh] flex-col ${sizeClasses[size]}`}
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header: logo (optional) + title + close */}
-        <header className="modal-card-header">
+        <header className="modal-card-header shrink-0">
           <div className="flex min-w-0 flex-1 items-center gap-3">
             {showBranding && (
               <Image
@@ -127,16 +127,16 @@ export function Modal({
           </button>
         </header>
 
-        {/* Body */}
+        {/* Body: scrollable so all modals stay fully accessible */}
         <div
-          className={`modal-card-body ${noPadding ? "p-0" : ""}`}
+          className={`modal-card-body flex-1 min-h-0 overflow-y-auto overflow-x-hidden ${noPadding ? "p-0" : "p-4 sm:p-6"}`}
         >
           {children}
         </div>
 
         {/* Footer (optional) */}
         {footer != null && (
-          <footer className="modal-card-footer">
+          <footer className="modal-card-footer shrink-0">
             {footer}
           </footer>
         )}

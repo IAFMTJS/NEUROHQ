@@ -1,20 +1,29 @@
 "use client";
 
 import Link from "next/link";
-import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { memo } from "react";
+import {
+  IconHQ,
+  IconAssistant,
+  IconMissions,
+  IconBudget,
+  IconGrowth,
+  IconStrategy,
+  IconInsights,
+  IconSettings,
+} from "@/components/hq/NavIcons";
 
 const navLinks = [
-  { href: "/dashboard", label: "HQ", iconFile: "Dashboard.png" },
-  { href: "/assistant", label: "Assistant", iconFile: "Assistent.png" },
-  { href: "/tasks", label: "Missions", iconFile: "Missions.png" },
-  { href: "/budget", label: "Budget", iconFile: "Budget.png" },
-  { href: "/learning", label: "Growth", iconFile: "Growth.png" },
-  { href: "/strategy", label: "Strategy", iconFile: "Strategy.png" },
-  { href: "/report", label: "Insight", iconFile: "Insights.png" },
-  { href: "/design", label: "Design", iconFile: "Strategy.png" },
-  { href: "/settings", label: "Settings", iconFile: "Settings.png" },
+  { href: "/dashboard", label: "HQ", Icon: IconHQ },
+  { href: "/assistant", label: "Assistant", Icon: IconAssistant },
+  { href: "/tasks", label: "Missions", Icon: IconMissions },
+  { href: "/budget", label: "Budget", Icon: IconBudget },
+  { href: "/learning", label: "Growth", Icon: IconGrowth },
+  { href: "/strategy", label: "Strategy", Icon: IconStrategy },
+  { href: "/report", label: "Insight", Icon: IconInsights },
+  { href: "/design", label: "Design", Icon: IconStrategy },
+  { href: "/settings", label: "Settings", Icon: IconSettings },
 ] as const;
 
 export default memo(function BottomNavigation() {
@@ -27,6 +36,7 @@ export default memo(function BottomNavigation() {
     >
       {navLinks.map((link) => {
         const active = pathname === link.href;
+        const Icon = link.Icon;
         return (
           <Link
             key={link.href}
@@ -34,13 +44,9 @@ export default memo(function BottomNavigation() {
             className={`nav-item ${active ? "active" : ""}`}
             prefetch={true}
           >
-            <Image
-              src={`/icons/${link.iconFile}`}
-              alt=""
-              width={20}
-              height={20}
-              className="nav-item-icon"
-            />
+            <span className="nav-item-icon flex items-center justify-center [&_svg]:w-5 [&_svg]:h-5">
+              <Icon active={active} />
+            </span>
             <span>{link.label}</span>
           </Link>
         );
