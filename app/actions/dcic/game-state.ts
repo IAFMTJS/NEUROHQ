@@ -37,7 +37,7 @@ export async function getGameState(): Promise<GameState | null> {
     .order("created_at", { ascending: false })
     .limit(20);
 
-  const missions: Mission[] = (missionsData || []).map((m) => ({
+  const missions: Mission[] = (missionsData || []).map((m: Record<string, unknown>) => ({
     id: m.id,
     name: m.name,
     xpReward: m.xp_reward,
@@ -46,7 +46,12 @@ export async function getGameState(): Promise<GameState | null> {
     active: m.active ?? false,
     startedAt: m.started_at,
     completedAt: m.completed_at,
-    difficultyLevel: parseFloat(m.difficulty_level) || 0.5,
+    difficultyLevel: parseFloat((m.difficulty_level as string) ?? "0.5") || 0.5,
+    missionType: m.mission_type as Mission["missionType"],
+    category: m.category as Mission["category"],
+    skillLink: m.skill_link as Mission["skillLink"],
+    recurrenceType: m.recurrence_type as Mission["recurrenceType"],
+    streakEligible: m.streak_eligible as boolean | undefined,
   }));
 
   // Get streak from user_streak table

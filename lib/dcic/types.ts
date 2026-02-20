@@ -7,6 +7,9 @@
 // GAME STATE (Gameplay Core)
 // ============================================================================
 
+export type MissionType = "routine" | "milestone" | "skill_bound" | "challenge" | "habit";
+export type LifeArea = "physical" | "mental" | "work" | "social" | "financial";
+
 export interface Mission {
   id: string;
   name: string;
@@ -17,6 +20,11 @@ export interface Mission {
   startedAt: string | null;
   completedAt: string | null;
   difficultyLevel: number; // 0.1 - 1.0
+  missionType?: MissionType;
+  category?: LifeArea | string | null;
+  skillLink?: string | null;
+  recurrenceType?: "daily" | "weekly" | "monthly" | null;
+  streakEligible?: boolean;
 }
 
 // ============================================================================

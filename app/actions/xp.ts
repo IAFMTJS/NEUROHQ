@@ -2,7 +2,7 @@
 
 import { createClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
-import { levelFromTotalXP } from "@/lib/xp";
+import { levelFromTotalXP, xpToNextLevel, rankFromLevel, nextUnlockPreview } from "@/lib/xp";
 
 const XP_TASK_COMPLETE = 10;
 const XP_BRAIN_STATUS = 5;
@@ -21,6 +21,49 @@ export async function getXP(): Promise<{ total_xp: number; level: number }> {
     .single();
   const total = (data?.total_xp as number | undefined) ?? 0;
   return { total_xp: total, level: levelFromTotalXP(total) };
+}
+
+/** Extended identity for dashboard: level, rank, streak, xp to next level, next unlock preview. */
+export async function getXPIdentity(): Promise<{
+  total_xp: number;
+  level: number;
+  rank: string;
+  xp_to_next_level: number;
+  next_unlock: { level: number; rank: string; xpNeeded: number };
+  streak: { current: number; longest: number; last_completion_date: string | null };
+}> {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  const defaultStreak = { current: 0, longest: 0, last_completion_date: null as string | null };
+  if (!user) {
+    return {
+      total_xp: 0,
+      level: 1,
+      rank: rankFromLevel(1),
+      xp_to_next_level: 100,
+      next_unlock: nextUnlockPreview(0),
+      streak: defaultStreak,
+    };
+  }
+  const [xpRes, streakRes] = await Promise.all([
+    supabase.from("user_xp").select("total_xp").eq("user_id", user.id).single(),
+    supabase.from("user_streak").select("current_streak, longest_streak, last_completion_date").eq("user_id", user.id).single(),
+  ]);
+  const total = (xpRes.data?.total_xp as number | undefined) ?? 0;
+  const level = levelFromTotalXP(total);
+  const streakData = streakRes.data as { current_streak?: number; longest_streak?: number; last_completion_date?: string | null } | null;
+  return {
+    total_xp: total,
+    level,
+    rank: rankFromLevel(level),
+    xp_to_next_level: xpToNextLevel(total),
+    next_unlock: nextUnlockPreview(total),
+    streak: {
+      current: streakData?.current_streak ?? 0,
+      longest: streakData?.longest_streak ?? 0,
+      last_completion_date: streakData?.last_completion_date ?? null,
+    },
+  };
 }
 
 async function addXP(points: number): Promise<void> {

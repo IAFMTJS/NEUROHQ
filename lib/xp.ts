@@ -33,3 +33,34 @@ export function xpRangeForNextLevel(totalXP: number): { current: number; needed:
   const end = level < XP_PER_LEVEL.length ? XP_PER_LEVEL[level] : start + 1000;
   return { current: totalXP - start, needed: end - start };
 }
+
+/** Rank title by level (identity / dopamine hub). */
+const RANKS_BY_LEVEL: Record<number, string> = {
+  1: "Recruit",
+  2: "Recruit",
+  3: "Operator",
+  4: "Operator",
+  5: "Specialist",
+  6: "Specialist",
+  7: "Veteran",
+  8: "Veteran",
+  9: "Elite",
+  10: "Master",
+};
+
+export function rankFromLevel(level: number): string {
+  if (level >= 10) return "Legend";
+  return RANKS_BY_LEVEL[level] ?? "Recruit";
+}
+
+/** Next unlock preview text for dashboard (e.g. "Level 3" or "Elite rank"). */
+export function nextUnlockPreview(totalXP: number): { level: number; rank: string; xpNeeded: number } {
+  const level = levelFromTotalXP(totalXP);
+  const xpNeeded = xpToNextLevel(totalXP);
+  const nextLevel = level >= XP_PER_LEVEL.length ? level : level + 1;
+  return {
+    level: nextLevel,
+    rank: rankFromLevel(nextLevel),
+    xpNeeded,
+  };
+}

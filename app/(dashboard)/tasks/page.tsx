@@ -2,6 +2,8 @@ import Link from "next/link";
 import { getTodaysTasks, getTasksForDate, getSubtasksForTaskIds, getBacklogTasks, getCompletedTodayTasks, type TaskListMode } from "@/app/actions/tasks";
 import { getMode } from "@/app/actions/mode";
 import { getUpcomingCalendarEvents } from "@/app/actions/calendar";
+import { getSmartSuggestion } from "@/app/actions/dcic/smart-suggestion";
+import { getEnergyCapToday } from "@/app/actions/dcic/energy-cap";
 import { yesterdayDate } from "@/lib/utils/timezone";
 import { getMascotSrcForPage } from "@/lib/mascots";
 import { TaskList } from "@/components/TaskList";
@@ -9,6 +11,8 @@ import { ModeBanner } from "@/components/ModeBanner";
 import { BacklogList } from "@/components/BacklogList";
 import { AgendaOnlyList } from "@/components/AgendaOnlyList";
 import { YesterdayTasksSection } from "@/components/missions/YesterdayTasksSection";
+import { SmartSuggestionBanner } from "@/components/missions/SmartSuggestionBanner";
+import { EnergyCapBar } from "@/components/missions/EnergyCapBar";
 import { HQPageHeader } from "@/components/hq";
 import { CommanderMissionCard } from "@/components/commander";
 
@@ -16,12 +20,14 @@ export default async function TasksPage() {
   const today = new Date();
   const dateStr = today.toISOString().slice(0, 10);
   const yesterdayStr = yesterdayDate(dateStr);
-  const [mode, upcomingCalendarEvents, backlog, completedToday, yesterdayTasksRaw] = await Promise.all([
+  const [mode, upcomingCalendarEvents, backlog, completedToday, yesterdayTasksRaw, smartSuggestion, energyCap] = await Promise.all([
     getMode(dateStr),
     getUpcomingCalendarEvents(dateStr, 60),
     getBacklogTasks(dateStr),
     getCompletedTodayTasks(dateStr),
     getTasksForDate(yesterdayStr),
+    getSmartSuggestion(dateStr),
+    getEnergyCapToday(dateStr),
   ]);
   const taskMode: TaskListMode = mode === "stabilize" ? "stabilize" : mode === "low_energy" ? "low_energy" : mode === "driven" ? "driven" : "normal";
   const { tasks, carryOverCount } = await getTodaysTasks(dateStr, taskMode);
@@ -89,6 +95,10 @@ export default async function TasksPage() {
       </div>
       <div className="mt-6 space-y-6">
       <ModeBanner mode={mode} />
+      <EnergyCapBar used={energyCap.used} cap={energyCap.cap} remaining={energyCap.remaining} planned={energyCap.planned} />
+      {smartSuggestion.text ? (
+        <SmartSuggestionBanner text={smartSuggestion.text} type={smartSuggestion.type} />
+      ) : null}
       {missionCards.length > 0 && (
         <section className="mission-grid">
           {missionCards.map((m) => (

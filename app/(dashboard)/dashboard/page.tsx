@@ -12,7 +12,11 @@ import { getQuarterlyStrategy } from "@/app/actions/strategy";
 import { getLearningStreak, getWeeklyMinutes, getWeeklyLearningTarget } from "@/app/actions/learning";
 import { getBudgetSettings, getCurrentMonthExpensesCents } from "@/app/actions/budget";
 import { getUserPreferencesOrDefaults } from "@/app/actions/preferences";
-import { getXP } from "@/app/actions/xp";
+import { getXP, getXPIdentity } from "@/app/actions/xp";
+import { getMomentum } from "@/app/actions/dcic/momentum";
+import { getTodayEngine } from "@/app/actions/dcic/today-engine";
+import { getXPForecast } from "@/app/actions/dcic/xp-forecast";
+import { getHeatmapLast30Days } from "@/app/actions/dcic/heatmap";
 import { getWeekSummary, upsertDailyAnalytics } from "@/app/actions/analytics";
 import { getAdaptiveSuggestions } from "@/app/actions/adaptive";
 import { getWeekBounds } from "@/lib/utils/learning";
@@ -22,6 +26,7 @@ import { HQHeader, BrainStatusCard, MissionButton, ActiveMissionCard, WatNuBlock
 import { CommanderHomeHero } from "@/components/commander";
 import { HeroMascotImage } from "@/components/HeroMascotImage";
 import { ModeBanner, ModeExplanationModal, AddCalendarEventForm } from "@/components/dashboard/DashboardClientOnly";
+import { IdentityBlock, MomentumScore, TodayEngineCard, XPForecastWidget, WeeklyHeatmap } from "@/components/dashboard";
 
 const QuoteCard = dynamic(
   () => import("@/components/QuoteCard").then((m) => ({ default: m.QuoteCard })),
@@ -130,7 +135,7 @@ export default async function DashboardPage() {
   // One quote per calendar day: quote id = day of year (1–365)
   const quoteDay = Math.max(1, Math.min(365, getDayOfYearFromDateString(dateStr)));
   const yesterdayStr = yesterdayDate(dateStr);
-  const [state, yesterdayState, quotesResult, mode, energyBudget, upcomingCalendarEvents, hasGoogle, learningStreak, prefs, xp] = await Promise.all([
+  const [state, yesterdayState, quotesResult, mode, energyBudget, upcomingCalendarEvents, hasGoogle, learningStreak, prefs, xp, identity, momentum, todayEngine, xpForecast, heatmapDays] = await Promise.all([
     getDailyState(dateStr),
     getDailyState(yesterdayStr),
     Promise.all([
@@ -145,6 +150,11 @@ export default async function DashboardPage() {
     getLearningStreak(),
     getUserPreferencesOrDefaults(),
     getXP(),
+    getXPIdentity(),
+    getMomentum(),
+    getTodayEngine(dateStr),
+    getXPForecast(dateStr),
+    getHeatmapLast30Days(),
   ]);
   const taskMode: TaskListMode =
     mode === "stabilize" ? "stabilize" : mode === "low_energy" ? "low_energy" : mode === "driven" ? "driven" : "normal";
@@ -209,6 +219,18 @@ export default async function DashboardPage() {
           missionHref={todaysTasks.length > 0 ? "/tasks" : "/assistant"}
           missionLabel="Start Mission"
         />
+      )}
+      {!isMinimalUI && (
+        <>
+          <IdentityBlock
+            level={identity.level}
+            rank={identity.rank}
+            streak={identity.streak.current}
+            xpToNextLevel={identity.xp_to_next_level}
+            nextUnlock={identity.next_unlock}
+          />
+          <MomentumScore score={momentum.score} band={momentum.band} />
+        </>
       )}
       {isMinimalUI && (
         <header className="flex flex-col gap-0 relative pt-14 overflow-visible">
@@ -282,6 +304,13 @@ export default async function DashboardPage() {
       <ModeBanner mode={mode} />
       <ModeExplanationModal mode={mode} />
       <AvoidanceNotice carryOverCount={carryOverCount} />
+      {!isMinimalUI && (
+        <TodayEngineCard
+          bucketed={todayEngine.bucketed}
+          streakAtRisk={todayEngine.streakAtRisk}
+          date={todayEngine.date}
+        />
+      )}
       <ActiveMissionCard
         tasks={todaysTasks}
         emptyMessage={emptyMissionMessage}
@@ -289,6 +318,7 @@ export default async function DashboardPage() {
         timeWindow={timeWindow}
         isTimeWindowActive={isTimeWindowActive}
       />
+      {!isMinimalUI && <XPForecastWidget forecasts={xpForecast} currentLevel={identity.level} />}
       {mode === "driven" && !isMinimalUI && <FocusBlock />}
       {!isMinimalUI && (
       <section className="glass-card glass-card-3d glass-card-glow-blue overflow-hidden p-0">
@@ -315,6 +345,7 @@ export default async function DashboardPage() {
       {!isMinimalUI && (adaptiveSuggestions.themeSuggestion || adaptiveSuggestions.emotionSuggestion || adaptiveSuggestions.taskCountSuggestion != null) && (
         <AdaptiveSuggestionBanner suggestions={adaptiveSuggestions} />
       )}
+      {!isMinimalUI && <WeeklyHeatmap days={heatmapDays} />}
       {!isMinimalUI && <AnalyticsWeekWidget summary={weekSummary} />}
       {!isMinimalUI && <HQChart title="Mission Growth" variant="area" />}
       {!isMinimalUI && learningStreak >= 1 && (
