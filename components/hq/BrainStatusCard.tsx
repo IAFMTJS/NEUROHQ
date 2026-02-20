@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, memo } from "react";
+import { useState, memo, useEffect } from "react";
 import { BrainStatusModal } from "./BrainStatusModal";
 import { RadialMeter } from "./RadialMeter";
 
@@ -30,6 +30,18 @@ type Props = {
 export const BrainStatusCard = memo(function BrainStatusCard({ date, initial, yesterday }: Props) {
   const [modalOpen, setModalOpen] = useState(false);
 
+  useEffect(() => {
+    const openIfHash = () => {
+      if (typeof window !== "undefined" && window.location.hash === "#brain-status-modal") {
+        setModalOpen(true);
+        window.history.replaceState(null, "", window.location.pathname + window.location.search);
+      }
+    };
+    openIfHash();
+    window.addEventListener("hashchange", openIfHash);
+    return () => window.removeEventListener("hashchange", openIfHash);
+  }, []);
+
   const energyPct = scale1To10ToPct(initial.energy);
   const focusPct = scale1To10ToPct(initial.focus);
   const loadPct = scale1To10ToPct(initial.sensory_load);
@@ -37,6 +49,7 @@ export const BrainStatusCard = memo(function BrainStatusCard({ date, initial, ye
   return (
     <>
       <section
+        id="brain-status-modal"
         className="card page glass-card-3d"
         aria-label="Brain Status"
       >

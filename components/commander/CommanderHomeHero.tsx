@@ -44,6 +44,13 @@ export function CommanderHomeHero({
       >
         {missionLabel}
       </Link>
+
+      <Link
+        href="#brain-status-modal"
+        className="block w-full mt-2 py-2 text-center text-sm text-[var(--text-muted)] hover:text-[var(--text-secondary)] transition-colors no-underline rounded-lg border border-white/10 hover:border-[rgba(0,212,255,0.25)] hover:bg-white/5"
+      >
+        Brain Status
+      </Link>
     </>
   );
 }

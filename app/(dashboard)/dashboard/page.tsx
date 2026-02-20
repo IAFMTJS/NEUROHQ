@@ -206,27 +206,87 @@ export default async function DashboardPage() {
 
   return (
     <div
-      className={`${!isMinimalUI ? "container page" : ""} ${isMinimalUI ? "minimal-ui" : ""}`}
+      className={`${!isMinimalUI ? "container page dashboard-page" : ""} ${isMinimalUI ? "minimal-ui" : ""}`}
       data-minimal={isMinimalUI ? "true" : undefined}
     >
-      {!isMinimalUI && <OnboardingBanner />}
       {!isMinimalUI && (
-        <div className="flex justify-end">
+        <div className="relative z-10 flex flex-wrap items-center justify-between gap-2">
+          <OnboardingBanner />
           <XPBadge totalXp={xp.total_xp} level={xp.level} compact />
         </div>
       )}
-      {/* Dark Commander home: header, mascot, stat rings, Start Mission, then Brain Status */}
       {!isMinimalUI && (
-        <CommanderHomeHero
-          energyPct={energyPct}
-          focusPct={focusPct}
-          loadPct={loadPct}
-          missionHref={todaysTasks.length > 0 ? "/tasks" : "/assistant"}
-          missionLabel="Start Mission"
-        />
+        <div className="dashboard-bridge glass-card glass-card-3d glass-card-glow-blue">
+          <span className="dashboard-bridge-label" aria-hidden>Command</span>
+          <CommanderHomeHero
+            energyPct={energyPct}
+            focusPct={focusPct}
+            loadPct={loadPct}
+            missionHref={todaysTasks.length > 0 ? "/tasks" : "/assistant"}
+            missionLabel="Start Mission"
+          />
+        </div>
       )}
-      {!isMinimalUI && (
+      {isMinimalUI && (
         <>
+          <header className="flex flex-col gap-0 relative pt-14 overflow-visible">
+            <div className="relative z-10 -mt-72">
+              <HQHeader
+                energyPct={energyPct}
+                focusPct={focusPct}
+                loadPct={loadPct}
+                copyVariant={adaptiveSuggestions.copyVariant}
+              />
+            </div>
+          </header>
+          <BrainStatusCard
+            date={dateStr}
+            initial={{
+              energy: state?.energy ?? null,
+              focus: state?.focus ?? null,
+              sensory_load: state?.sensory_load ?? null,
+              sleep_hours: state?.sleep_hours ?? null,
+              social_load: state?.social_load ?? null,
+            }}
+            yesterday={{
+              energy: yesterdayState?.energy ?? null,
+              focus: yesterdayState?.focus ?? null,
+              sensory_load: yesterdayState?.sensory_load ?? null,
+              sleep_hours: yesterdayState?.sleep_hours ?? null,
+              social_load: yesterdayState?.social_load ?? null,
+            }}
+          />
+          {energyBudget.remaining < 20 && (
+            <EnergyBudgetBar
+              remaining={energyBudget.remaining}
+              capacity={energyBudget.capacity}
+              suggestedTaskCount={energyBudget.suggestedTaskCount}
+              taskUsed={energyBudget.taskUsed}
+              completedTaskCount={energyBudget.completedTaskCount}
+              taskPlanned={energyBudget.taskPlanned}
+              calendarCost={energyBudget.calendarCost}
+              energy={energyBudget.energy}
+              focus={energyBudget.focus}
+              load={energyBudget.load}
+              insight={energyBudget.insight}
+              segments={energyBudget.segments}
+            />
+          )}
+          <ModeBanner mode={mode} />
+          <ModeExplanationModal mode={mode} />
+          <AvoidanceNotice carryOverCount={carryOverCount} />
+          <ActiveMissionCard
+            tasks={todaysTasks}
+            emptyMessage={emptyMissionMessage}
+            emptyHref={emptyMissionHref}
+            timeWindow={timeWindow}
+            isTimeWindowActive={isTimeWindowActive}
+          />
+        </>
+      )}
+
+      {!isMinimalUI && (
+        <div className="dashboard-bento grid grid-cols-1 gap-4 lg:grid-cols-2 lg:gap-6">
           <IdentityBlock
             level={identity.level}
             rank={identity.rank}
@@ -238,146 +298,132 @@ export default async function DashboardPage() {
             reputation={identityEngine.reputation}
           />
           <MomentumScore score={momentum.score} band={momentum.band} />
-        </>
-      )}
-      {isMinimalUI && (
-        <header className="flex flex-col gap-0 relative pt-14 overflow-visible">
-          <div className="relative z-10 -mt-72">
-            <HQHeader
-              energyPct={energyPct}
-              focusPct={focusPct}
-              loadPct={loadPct}
-              copyVariant={adaptiveSuggestions.copyVariant}
+          <div className="lg:col-span-2 dashboard-mission-hero">
+            <ActiveMissionCard
+              tasks={todaysTasks}
+              emptyMessage={emptyMissionMessage}
+              emptyHref={emptyMissionHref}
+              timeWindow={timeWindow}
+              isTimeWindowActive={isTimeWindowActive}
             />
           </div>
-        </header>
-      )}
-      {!isMinimalUI && <HQShortcutGrid />}
-      <BrainStatusCard
-        date={dateStr}
-        initial={{
-          energy: state?.energy ?? null,
-          focus: state?.focus ?? null,
-          sensory_load: state?.sensory_load ?? null,
-          sleep_hours: state?.sleep_hours ?? null,
-          social_load: state?.social_load ?? null,
-        }}
-        yesterday={{
-          energy: yesterdayState?.energy ?? null,
-          focus: yesterdayState?.focus ?? null,
-          sensory_load: yesterdayState?.sensory_load ?? null,
-          sleep_hours: yesterdayState?.sleep_hours ?? null,
-          social_load: yesterdayState?.social_load ?? null,
-        }}
-      />
-      {!isMinimalUI && budgetRemainingCents != null && (
-        <Link
-          href="/budget"
-          className="glass-card glass-card-3d flex items-center gap-3 p-4 transition-opacity hover:opacity-90"
-        >
-          <span className="text-xl font-bold tabular-nums text-[var(--text-primary)]">
-            {getCurrencySymbol(budgetSettings.currency)}
-            {budgetRemainingCents >= 0 ? (budgetRemainingCents / 100).toFixed(0) : (Math.abs(budgetRemainingCents) / 100).toFixed(0)}
-          </span>
-          <div className="min-w-0">
-            <p className="text-sm font-medium text-[var(--text-primary)]">Budget remaining this month</p>
-            <p className="text-xs text-[var(--text-muted)]">Spendable after savings</p>
+          <div className="flex flex-col gap-4">
+            <TodayEngineCard
+              bucketed={todayEngine.bucketed}
+              streakAtRisk={todayEngine.streakAtRisk}
+              date={todayEngine.date}
+            />
+            <XPForecastWidget forecasts={xpForecast} currentLevel={identity.level} />
           </div>
-          <span className="ml-auto text-sm font-medium text-[var(--accent-focus)]">Budget →</span>
-        </Link>
-      )}
-      {(!isMinimalUI || energyBudget.remaining < 20) && (
-      <EnergyBudgetBar
-        remaining={energyBudget.remaining}
-        capacity={energyBudget.capacity}
-        suggestedTaskCount={energyBudget.suggestedTaskCount}
-        taskUsed={energyBudget.taskUsed}
-        completedTaskCount={energyBudget.completedTaskCount}
-        taskPlanned={energyBudget.taskPlanned}
-        calendarCost={energyBudget.calendarCost}
-        energy={energyBudget.energy}
-        focus={energyBudget.focus}
-        load={energyBudget.load}
-        insight={energyBudget.insight}
-        segments={energyBudget.segments}
-      />
-      )}
-      {!isMinimalUI && (
-        <QuoteCard
-          prev={{ quote: quotesResult[0], day: Math.max(1, quoteDay - 1) }}
-          current={{ quote: quotesResult[1], day: quoteDay }}
-          next={{ quote: quotesResult[2], day: Math.min(365, quoteDay + 1) }}
-        />
-      )}
-      <ModeBanner mode={mode} />
-      <ModeExplanationModal mode={mode} />
-      {!isMinimalUI && frictionSignals.length > 0 && <FrictionBanner signals={frictionSignals} />}
-      <AvoidanceNotice carryOverCount={carryOverCount} />
-      {!isMinimalUI && (
-        <TodayEngineCard
-          bucketed={todayEngine.bucketed}
-          streakAtRisk={todayEngine.streakAtRisk}
-          date={todayEngine.date}
-        />
-      )}
-      <ActiveMissionCard
-        tasks={todaysTasks}
-        emptyMessage={emptyMissionMessage}
-        emptyHref={emptyMissionHref}
-        timeWindow={timeWindow}
-        isTimeWindowActive={isTimeWindowActive}
-      />
-      {!isMinimalUI && <XPForecastWidget forecasts={xpForecast} currentLevel={identity.level} />}
-      {mode === "driven" && !isMinimalUI && <FocusBlock />}
-      {!isMinimalUI && (
-      <section className="glass-card glass-card-3d glass-card-glow-blue overflow-hidden p-0">
-        <div className="border-b border-[var(--card-border)] px-4 py-3">
-          <h2 className="text-base font-semibold text-[var(--text-primary)]">Calendar</h2>
-          <p className="mt-0.5 text-xs text-[var(--text-muted)]">Today and tomorrow. Events count toward your energy budget on that day.</p>
-        </div>
-        <div className="p-4 space-y-4">
-          <UpcomingCalendarList
-            upcomingEvents={upcomingCalendarEvents as { id: string; title: string | null; start_at: string; end_at: string; is_social: boolean; source: string | null }[]}
-            todayStr={dateStr}
-            maxDays={2}
-          />
-          <AddCalendarEventForm date={dateStr} hasGoogleToken={hasGoogle} />
-        </div>
-      </section>
-      )}
-      {!isMinimalUI && strategy?.identity_statement && (
-        <div className="glass-card glass-card-3d glass-card-glow-purple p-4">
-          <h2 className="text-sm font-semibold text-[var(--text-muted)]">This quarter</h2>
-          <p className="mt-1 text-sm text-[var(--text-secondary)] italic">&ldquo;{strategy.identity_statement}&rdquo;</p>
-        </div>
-      )}
-      {!isMinimalUI && (adaptiveSuggestions.themeSuggestion || adaptiveSuggestions.emotionSuggestion || adaptiveSuggestions.taskCountSuggestion != null) && (
-        <AdaptiveSuggestionBanner suggestions={adaptiveSuggestions} />
-      )}
-      {!isMinimalUI && <WeeklyHeatmap days={heatmapDays} />}
-      {!isMinimalUI && <AnalyticsWeekWidget summary={weekSummary} />}
-      {!isMinimalUI && <HQChart title="Mission Growth" variant="area" />}
-      {!isMinimalUI && learningStreak >= 1 && (
-        <div className="glass-card flex items-center gap-3 p-4">
-          <span className="text-2xl" aria-hidden>🔥</span>
-          <div>
-            <p className="text-sm font-medium text-[var(--text-primary)]">Learning streak</p>
-            <p className="text-xs text-[var(--text-muted)]">{learningStreak} week{learningStreak !== 1 ? "s" : ""} in a row (≥{weeklyLearningTarget} min)</p>
+          <div className="flex flex-col gap-4">
+            <HQShortcutGrid />
+            <BrainStatusCard
+              date={dateStr}
+              initial={{
+                energy: state?.energy ?? null,
+                focus: state?.focus ?? null,
+                sensory_load: state?.sensory_load ?? null,
+                sleep_hours: state?.sleep_hours ?? null,
+                social_load: state?.social_load ?? null,
+              }}
+              yesterday={{
+                energy: yesterdayState?.energy ?? null,
+                focus: yesterdayState?.focus ?? null,
+                sensory_load: yesterdayState?.sensory_load ?? null,
+                sleep_hours: yesterdayState?.sleep_hours ?? null,
+                social_load: yesterdayState?.social_load ?? null,
+              }}
+            />
+            {budgetRemainingCents != null && (
+              <Link
+                href="/budget"
+                className="glass-card glass-card-3d flex items-center gap-3 p-4 transition-opacity hover:opacity-90"
+              >
+                <span className="text-xl font-bold tabular-nums text-[var(--text-primary)]">
+                  {getCurrencySymbol(budgetSettings.currency)}
+                  {budgetRemainingCents >= 0 ? (budgetRemainingCents / 100).toFixed(0) : (Math.abs(budgetRemainingCents) / 100).toFixed(0)}
+                </span>
+                <div className="min-w-0">
+                  <p className="text-sm font-medium text-[var(--text-primary)]">Budget remaining this month</p>
+                  <p className="text-xs text-[var(--text-muted)]">Spendable after savings</p>
+                </div>
+                <span className="ml-auto text-sm font-medium text-[var(--accent-focus)]">Budget →</span>
+              </Link>
+            )}
+            {(!isMinimalUI || energyBudget.remaining < 20) && (
+              <EnergyBudgetBar
+                remaining={energyBudget.remaining}
+                capacity={energyBudget.capacity}
+                suggestedTaskCount={energyBudget.suggestedTaskCount}
+                taskUsed={energyBudget.taskUsed}
+                completedTaskCount={energyBudget.completedTaskCount}
+                taskPlanned={energyBudget.taskPlanned}
+                calendarCost={energyBudget.calendarCost}
+                energy={energyBudget.energy}
+                focus={energyBudget.focus}
+                load={energyBudget.load}
+                insight={energyBudget.insight}
+                segments={energyBudget.segments}
+              />
+            )}
+            <QuoteCard
+              prev={{ quote: quotesResult[0], day: Math.max(1, quoteDay - 1) }}
+              current={{ quote: quotesResult[1], day: quoteDay }}
+              next={{ quote: quotesResult[2], day: Math.min(365, quoteDay + 1) }}
+            />
+            <ModeBanner mode={mode} />
+            <ModeExplanationModal mode={mode} />
+            {frictionSignals.length > 0 && <FrictionBanner signals={frictionSignals} />}
+            <AvoidanceNotice carryOverCount={carryOverCount} />
+            {mode === "driven" && <FocusBlock />}
+            <section className="glass-card glass-card-3d glass-card-glow-blue overflow-hidden p-0">
+              <div className="border-b border-[var(--card-border)] px-4 py-3">
+                <h2 className="text-base font-semibold text-[var(--text-primary)]">Calendar</h2>
+                <p className="mt-0.5 text-xs text-[var(--text-muted)]">Today and tomorrow. Events count toward your energy budget on that day.</p>
+              </div>
+              <div className="p-4 space-y-4">
+                <UpcomingCalendarList
+                  upcomingEvents={upcomingCalendarEvents as { id: string; title: string | null; start_at: string; end_at: string; is_social: boolean; source: string | null }[]}
+                  todayStr={dateStr}
+                  maxDays={2}
+                />
+                <AddCalendarEventForm date={dateStr} hasGoogleToken={hasGoogle} />
+              </div>
+            </section>
+            {strategy?.identity_statement && (
+              <div className="glass-card glass-card-3d glass-card-glow-purple p-4">
+                <h2 className="text-sm font-semibold text-[var(--text-muted)]">This quarter</h2>
+                <p className="mt-1 text-sm text-[var(--text-secondary)] italic">&ldquo;{strategy.identity_statement}&rdquo;</p>
+              </div>
+            )}
+            {(adaptiveSuggestions.themeSuggestion || adaptiveSuggestions.emotionSuggestion || adaptiveSuggestions.taskCountSuggestion != null) && (
+              <AdaptiveSuggestionBanner suggestions={adaptiveSuggestions} />
+            )}
+            <WeeklyHeatmap days={heatmapDays} />
+            <AnalyticsWeekWidget summary={weekSummary} />
+            <HQChart title="Mission Growth" variant="area" />
+            {learningStreak >= 1 && (
+              <div className="glass-card flex items-center gap-3 p-4">
+                <span className="text-2xl" aria-hidden>🔥</span>
+                <div>
+                  <p className="text-sm font-medium text-[var(--text-primary)]">Learning streak</p>
+                  <p className="text-xs text-[var(--text-muted)]">{learningStreak} week{learningStreak !== 1 ? "s" : ""} in a row (≥{weeklyLearningTarget} min)</p>
+                </div>
+                <Link href="/learning" className="ml-auto text-sm font-medium text-[var(--accent-focus)] hover:underline">
+                  Growth →
+                </Link>
+              </div>
+            )}
+            <OnTrackCard
+              learningMinutes={weeklyLearningMinutes}
+              learningTarget={weeklyLearningTarget}
+              strategySet={!!(strategy?.identity_statement || strategy?.primary_theme)}
+            />
+            <RealityReportBlock report={lastWeekReport} />
+            <PatternInsightCard insight={insight} suggestion={patternSuggestion} detailsHref="/report" />
           </div>
-          <Link href="/learning" className="ml-auto text-sm font-medium text-[var(--accent-focus)] hover:underline">
-            Growth →
-          </Link>
         </div>
       )}
-      {!isMinimalUI && (
-      <OnTrackCard
-        learningMinutes={weeklyLearningMinutes}
-        learningTarget={weeklyLearningTarget}
-        strategySet={!!(strategy?.identity_statement || strategy?.primary_theme)}
-      />
-      )}
-      {!isMinimalUI && <RealityReportBlock report={lastWeekReport} />}
-      {!isMinimalUI && <PatternInsightCard insight={insight} suggestion={patternSuggestion} detailsHref="/report" />}
     </div>
   );
 }
