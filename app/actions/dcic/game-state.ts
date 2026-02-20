@@ -38,14 +38,14 @@ export async function getGameState(): Promise<GameState | null> {
     .limit(20);
 
   const missions: Mission[] = (missionsData || []).map((m: Record<string, unknown>) => ({
-    id: m.id,
-    name: m.name,
-    xpReward: m.xp_reward,
-    energyCost: m.energy_cost,
-    completed: m.completed ?? false,
-    active: m.active ?? false,
-    startedAt: m.started_at,
-    completedAt: m.completed_at,
+    id: m.id as string,
+    name: m.name as string,
+    xpReward: (m.xp_reward as number) ?? 100,
+    energyCost: (m.energy_cost as number) ?? 15,
+    completed: (m.completed as boolean) ?? false,
+    active: (m.active as boolean) ?? false,
+    startedAt: m.started_at as string | null,
+    completedAt: m.completed_at as string | null,
     difficultyLevel: parseFloat((m.difficulty_level as string) ?? "0.5") || 0.5,
     missionType: m.mission_type as Mission["missionType"],
     category: m.category as Mission["category"],
