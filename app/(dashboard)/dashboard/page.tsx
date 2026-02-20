@@ -17,6 +17,7 @@ import { getMomentum } from "@/app/actions/dcic/momentum";
 import { getTodayEngine } from "@/app/actions/dcic/today-engine";
 import { getXPForecast } from "@/app/actions/dcic/xp-forecast";
 import { getHeatmapLast30Days } from "@/app/actions/dcic/heatmap";
+import { getIdentityEngine, ensureIdentityEngineRows } from "@/app/actions/identity-engine";
 import { getWeekSummary, upsertDailyAnalytics } from "@/app/actions/analytics";
 import { getAdaptiveSuggestions } from "@/app/actions/adaptive";
 import { getWeekBounds } from "@/lib/utils/learning";
@@ -26,7 +27,8 @@ import { HQHeader, BrainStatusCard, MissionButton, ActiveMissionCard, WatNuBlock
 import { CommanderHomeHero } from "@/components/commander";
 import { HeroMascotImage } from "@/components/HeroMascotImage";
 import { ModeBanner, ModeExplanationModal, AddCalendarEventForm } from "@/components/dashboard/DashboardClientOnly";
-import { IdentityBlock, MomentumScore, TodayEngineCard, XPForecastWidget, WeeklyHeatmap } from "@/components/dashboard";
+import { IdentityBlock, MomentumScore, TodayEngineCard, XPForecastWidget, WeeklyHeatmap, FrictionBanner } from "@/components/dashboard";
+import { getFrictionSignals } from "@/app/actions/friction";
 
 const QuoteCard = dynamic(
   () => import("@/components/QuoteCard").then((m) => ({ default: m.QuoteCard })),
@@ -135,7 +137,8 @@ export default async function DashboardPage() {
   // One quote per calendar day: quote id = day of year (1–365)
   const quoteDay = Math.max(1, Math.min(365, getDayOfYearFromDateString(dateStr)));
   const yesterdayStr = yesterdayDate(dateStr);
-  const [state, yesterdayState, quotesResult, mode, energyBudget, upcomingCalendarEvents, hasGoogle, learningStreak, prefs, xp, identity, momentum, todayEngine, xpForecast, heatmapDays] = await Promise.all([
+  await ensureIdentityEngineRows();
+  const [state, yesterdayState, quotesResult, mode, energyBudget, upcomingCalendarEvents, hasGoogle, learningStreak, prefs, xp, identity, identityEngine, momentum, todayEngine, xpForecast, heatmapDays] = await Promise.all([
     getDailyState(dateStr),
     getDailyState(yesterdayStr),
     Promise.all([
@@ -151,6 +154,7 @@ export default async function DashboardPage() {
     getUserPreferencesOrDefaults(),
     getXP(),
     getXPIdentity(),
+    getIdentityEngine(),
     getMomentum(),
     getTodayEngine(dateStr),
     getXPForecast(dateStr),
@@ -171,10 +175,11 @@ export default async function DashboardPage() {
     getBudgetSettings(),
     getCurrentMonthExpensesCents(),
   ]);
-  const [weekSummary, adaptiveSuggestions] = await Promise.all([
+  const [weekSummary, adaptiveSuggestions, , frictionSignals] = await Promise.all([
     getWeekSummary(thisWeekStart, thisWeekEnd, weeklyLearningTarget),
     getAdaptiveSuggestions(dateStr),
     upsertDailyAnalytics(dateStr),
+    getFrictionSignals(),
   ]);
   const spendableCents = Math.max(0, (budgetSettings.monthly_budget_cents ?? 0) - (budgetSettings.monthly_savings_cents ?? 0));
   const budgetRemainingCents = budgetSettings.monthly_budget_cents != null ? spendableCents - currentMonthExpenses : null;
@@ -228,6 +233,9 @@ export default async function DashboardPage() {
             streak={identity.streak.current}
             xpToNextLevel={identity.xp_to_next_level}
             nextUnlock={identity.next_unlock}
+            archetype={identityEngine.archetype}
+            evolutionPhase={identityEngine.evolutionPhase}
+            reputation={identityEngine.reputation}
           />
           <MomentumScore score={momentum.score} band={momentum.band} />
         </>
@@ -303,6 +311,7 @@ export default async function DashboardPage() {
       )}
       <ModeBanner mode={mode} />
       <ModeExplanationModal mode={mode} />
+      {!isMinimalUI && frictionSignals.length > 0 && <FrictionBanner signals={frictionSignals} />}
       <AvoidanceNotice carryOverCount={carryOverCount} />
       {!isMinimalUI && (
         <TodayEngineCard

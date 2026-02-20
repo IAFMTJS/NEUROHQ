@@ -1,8 +1,12 @@
 "use client";
 
 /**
- * Dashboard Identity Block: Level, Rank, Streak, Next unlock preview, XP needed today for level up.
+ * Identity Engine block: Level, Rank, Streak, Archetype, Reputation (Discipline/Consistency/Impact), Evolution Phase.
+ * "Mensen komen terug voor wie ze aan het worden zijn."
  */
+
+import type { Archetype, EvolutionPhase, ReputationScore } from "@/lib/identity-engine";
+import { ARCHETYPE_LABELS, EVOLUTION_PHASE_LABELS } from "@/lib/identity-engine";
 
 type Props = {
   level: number;
@@ -10,13 +14,40 @@ type Props = {
   streak: number;
   xpToNextLevel: number;
   nextUnlock: { level: number; rank: string; xpNeeded: number };
+  archetype?: Archetype;
+  evolutionPhase?: EvolutionPhase;
+  reputation?: ReputationScore;
 };
 
-export function IdentityBlock({ level, rank, streak, xpToNextLevel, nextUnlock }: Props) {
+function ReputationBar({ label, value }: { label: string; value: number }) {
+  return (
+    <div className="flex items-center gap-2">
+      <span className="w-20 text-xs text-[var(--text-muted)]">{label}</span>
+      <div className="h-1.5 flex-1 max-w-24 overflow-hidden rounded-full bg-white/10">
+        <div
+          className="h-full rounded-full bg-[var(--accent-focus)]"
+          style={{ width: `${Math.min(100, value)}%` }}
+        />
+      </div>
+      <span className="text-xs tabular-nums text-[var(--text-secondary)]">{value}</span>
+    </div>
+  );
+}
+
+export function IdentityBlock({
+  level,
+  rank,
+  streak,
+  xpToNextLevel,
+  nextUnlock,
+  archetype = "operator",
+  evolutionPhase = "initiate",
+  reputation,
+}: Props) {
   return (
     <section
       className="glass-card glass-card-3d p-4 rounded-2xl border border-[var(--card-border)]"
-      aria-label="Identity & progress"
+      aria-label="Identity Engine"
     >
       <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
         <span className="text-2xl font-bold text-[var(--text-primary)] tabular-nums">Level {level}</span>
@@ -27,6 +58,24 @@ export function IdentityBlock({ level, rank, streak, xpToNextLevel, nextUnlock }
           </span>
         )}
       </div>
+
+      <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm">
+        <span className="rounded bg-white/10 px-2 py-0.5 font-medium text-[var(--text-secondary)]">
+          {ARCHETYPE_LABELS[archetype]}
+        </span>
+        <span className="text-[var(--text-muted)]">·</span>
+        <span className="text-[var(--text-muted)]">{EVOLUTION_PHASE_LABELS[evolutionPhase]}</span>
+      </div>
+
+      {reputation && (
+        <div className="mt-3 space-y-1.5 border-t border-[var(--card-border)] pt-3">
+          <p className="text-xs font-medium uppercase tracking-wider text-[var(--text-muted)]">Reputatie</p>
+          <ReputationBar label="Discipline" value={reputation.discipline} />
+          <ReputationBar label="Consistentie" value={reputation.consistency} />
+          <ReputationBar label="Impact" value={reputation.impact} />
+        </div>
+      )}
+
       <p className="mt-2 text-sm text-[var(--text-secondary)]">
         Volgende unlock: <strong className="text-[var(--text-primary)]">Level {nextUnlock.level}</strong> — {nextUnlock.rank}
       </p>
