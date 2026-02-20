@@ -26,6 +26,7 @@ export function QuickAddModal({ open, onClose, date, onAdded }: Props) {
   const [impact, setImpact] = useState("");
   const [urgency, setUrgency] = useState("");
   const [energy, setEnergy] = useState("");
+  const [focusRequired, setFocusRequired] = useState("");
   const [mentalLoad, setMentalLoad] = useState("");
   const [socialLoad, setSocialLoad] = useState("");
   const [priority, setPriority] = useState("");
@@ -50,6 +51,7 @@ export function QuickAddModal({ open, onClose, date, onAdded }: Props) {
           impact: impact ? (parseInt(impact, 10) >= 1 && parseInt(impact, 10) <= 3 ? parseInt(impact, 10) : null) : null,
           urgency: urgency ? (parseInt(urgency, 10) >= 1 && parseInt(urgency, 10) <= 3 ? parseInt(urgency, 10) : null) : null,
           energy_required: energy ? (parseInt(energy, 10) >= 1 && parseInt(energy, 10) <= 10 ? parseInt(energy, 10) : null) : null,
+          focus_required: focusRequired ? (parseInt(focusRequired, 10) >= 1 && parseInt(focusRequired, 10) <= 10 ? parseInt(focusRequired, 10) : null) : null,
           mental_load: mentalLoad ? (parseInt(mentalLoad, 10) >= 1 && parseInt(mentalLoad, 10) <= 10 ? parseInt(mentalLoad, 10) : null) : null,
           social_load: socialLoad ? (parseInt(socialLoad, 10) >= 1 && parseInt(socialLoad, 10) <= 10 ? parseInt(socialLoad, 10) : null) : null,
           priority: priority ? (parseInt(priority, 10) >= 1 && parseInt(priority, 10) <= 5 ? parseInt(priority, 10) : null) : null,
@@ -62,6 +64,7 @@ export function QuickAddModal({ open, onClose, date, onAdded }: Props) {
         setImpact("");
         setUrgency("");
         setEnergy("");
+        setFocusRequired("");
         setMentalLoad("");
         setSocialLoad("");
         setPriority("");
@@ -117,7 +120,8 @@ export function QuickAddModal({ open, onClose, date, onAdded }: Props) {
             </div>
           </div>
         )}
-        <div className="grid grid-cols-1 gap-2 rounded-lg border border-[var(--card-border)]/50 bg-[var(--bg-primary)]/50 p-3 sm:grid-cols-3">
+        <p className="text-[10px] text-[var(--text-muted)]">Brain circles: energy, focus and load affect how many tasks fit today.</p>
+        <div className="grid grid-cols-1 gap-2 rounded-lg border border-[var(--card-border)]/50 bg-[var(--bg-primary)]/50 p-3 sm:grid-cols-2 lg:grid-cols-4">
           <div>
             <label className="block text-xs font-medium text-[var(--text-muted)]">Energy (1–10)</label>
             <p className="mt-0.5 text-[10px] text-[var(--text-muted)]">Energy cost</p>
@@ -129,8 +133,18 @@ export function QuickAddModal({ open, onClose, date, onAdded }: Props) {
             </select>
           </div>
           <div>
-            <label className="block text-xs font-medium text-[var(--text-muted)]">Mental load (1–10)</label>
-            <p className="mt-0.5 text-[10px] text-[var(--text-muted)]">How draining</p>
+            <label className="block text-xs font-medium text-[var(--text-muted)]">Focus (1–10)</label>
+            <p className="mt-0.5 text-[10px] text-[var(--text-muted)]">Focus needed</p>
+            <select value={focusRequired} onChange={(e) => setFocusRequired(e.target.value)} className="mt-1 w-full rounded border border-[var(--card-border)] bg-[var(--bg-primary)] px-2 py-1.5 text-sm text-[var(--text-primary)]">
+              <option value="">—</option>
+              {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((n) => (
+                <option key={n} value={n}>{n}</option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label className="block text-xs font-medium text-[var(--text-muted)]">Load (1–10)</label>
+            <p className="mt-0.5 text-[10px] text-[var(--text-muted)]">Mental load</p>
             <select value={mentalLoad} onChange={(e) => setMentalLoad(e.target.value)} className="mt-1 w-full rounded border border-[var(--card-border)] bg-[var(--bg-primary)] px-2 py-1.5 text-sm text-[var(--text-primary)]">
               <option value="">—</option>
               {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((n) => (

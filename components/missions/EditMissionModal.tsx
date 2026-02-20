@@ -9,7 +9,7 @@ const WEEKDAY_LABELS: Record<number, string> = { 1: "Mon", 2: "Tue", 3: "Wed", 4
 
 type ExtendedTask = {
   id: string;
-  title: string;
+  title: string | null;
   due_date: string | null;
   category?: string | null;
   recurrence_rule?: string | null;
@@ -35,7 +35,7 @@ export function EditMissionModal({ open, onClose, task, onSaved }: Props) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
-  const [title, setTitle] = useState(task.title);
+  const [title, setTitle] = useState(task.title ?? "");
   const [dueDate, setDueDate] = useState(task.due_date ?? "");
   const [category, setCategory] = useState<string>(task.category ?? "");
   const [recurrence, setRecurrence] = useState<string>(task.recurrence_rule ?? "");

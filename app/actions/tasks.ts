@@ -1,7 +1,7 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
-import { revalidatePath, unstable_cache } from "next/cache";
+import { revalidatePath, revalidateTag, unstable_cache } from "next/cache";
 
 export type TaskListMode = "normal" | "low_energy" | "stabilize" | "driven";
 
@@ -206,6 +206,8 @@ export async function completeTask(id: string) {
   const { upsertDailyAnalytics } = await import("./analytics");
   await awardXPForTaskComplete();
   if (t?.due_date) await upsertDailyAnalytics(t.due_date);
+  const dateTag = t?.due_date ?? new Date().toISOString().slice(0, 10);
+  revalidateTag(`tasks-${user.id}-${dateTag}`);
   revalidatePath("/dashboard");
   revalidatePath("/tasks");
 }
@@ -215,12 +217,15 @@ export async function uncompleteTask(id: string) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) throw new Error("Not authenticated");
+  const { data: task } = await supabase.from("tasks").select("due_date").eq("id", id).eq("user_id", user.id).single();
   const { error } = await supabase
     .from("tasks")
     .update({ completed: false, completed_at: null })
     .eq("id", id)
     .eq("user_id", user.id);
   if (error) throw new Error(error.message);
+  const dateTag = (task as { due_date?: string } | null)?.due_date ?? new Date().toISOString().slice(0, 10);
+  revalidateTag(`tasks-${user.id}-${dateTag}`);
   revalidatePath("/dashboard");
   revalidatePath("/tasks");
 }
