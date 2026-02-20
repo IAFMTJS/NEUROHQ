@@ -207,7 +207,7 @@ export async function completeTask(id: string) {
   await awardXPForTaskComplete();
   if (t?.due_date) await upsertDailyAnalytics(t.due_date);
   const dateTag = t?.due_date ?? new Date().toISOString().slice(0, 10);
-  revalidateTag(`tasks-${user.id}-${dateTag}`);
+  revalidateTag(`tasks-${user.id}-${dateTag}`, "max");
   revalidatePath("/dashboard");
   revalidatePath("/tasks");
 }
@@ -225,7 +225,7 @@ export async function uncompleteTask(id: string) {
     .eq("user_id", user.id);
   if (error) throw new Error(error.message);
   const dateTag = (task as { due_date?: string } | null)?.due_date ?? new Date().toISOString().slice(0, 10);
-  revalidateTag(`tasks-${user.id}-${dateTag}`);
+  revalidateTag(`tasks-${user.id}-${dateTag}`, "max");
   revalidatePath("/dashboard");
   revalidatePath("/tasks");
 }
