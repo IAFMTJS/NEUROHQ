@@ -1,3 +1,6 @@
+"use client";
+
+import { useEffect } from "react";
 import BottomNavigation from "@/components/ui/BottomNavigation";
 import { KeyboardShortcuts } from "@/components/KeyboardShortcuts";
 import { PageMascot } from "@/components/PageMascot";
@@ -5,6 +8,8 @@ import { ThemeHydrate } from "@/components/providers/ThemeHydrate";
 import { AppStateProvider } from "@/components/providers/AppStateProvider";
 import { ActiveTimeTracker } from "@/components/ActiveTimeTracker";
 import { NewDayRefresh } from "@/components/NewDayRefresh";
+import { RoutePrefetcher } from "@/components/RoutePrefetcher";
+import { updateLastActiveDate } from "@/app/actions/behavior";
 
 /** Auth enforced by middleware. Cinematic UI: main, BottomNavigation (no system status bar). */
 export default function DashboardLayout({
@@ -12,12 +17,21 @@ export default function DashboardLayout({
 }: {
   children: React.ReactNode;
 }) {
+  useEffect(() => {
+    // Update last active date on app start (behavior tracking)
+    updateLastActiveDate().catch((err) => {
+      console.error("Failed to update last active date:", err);
+      // Silently fail - this is not critical
+    });
+  }, []);
+
   return (
     <AppStateProvider>
     <div className="relative flex min-h-screen max-h-[100dvh] w-full max-w-[100vw] flex-col overflow-x-hidden bg-transparent" data-ui="dark-commander">
       <ThemeHydrate />
       <ActiveTimeTracker />
       <NewDayRefresh />
+      <RoutePrefetcher />
       <a href="#main-content" className="skip-link">
         Skip to main content
       </a>

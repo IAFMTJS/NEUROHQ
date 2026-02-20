@@ -63,6 +63,7 @@ export async function updateBudgetSettings(params: {
   budget_period?: "monthly" | "weekly" | null;
   impulse_quick_add_minutes?: number | null;
   impulse_risk_categories?: string[] | null;
+  payday_day_of_month?: number | null;
 }) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
@@ -76,10 +77,28 @@ export async function updateBudgetSettings(params: {
   if (params.budget_period !== undefined) updates.budget_period = params.budget_period ?? "monthly";
   if (params.impulse_quick_add_minutes !== undefined) updates.impulse_quick_add_minutes = params.impulse_quick_add_minutes;
   if (params.impulse_risk_categories !== undefined) updates.impulse_risk_categories = params.impulse_risk_categories;
+  if (params.payday_day_of_month !== undefined) {
+    const d = params.payday_day_of_month;
+    updates.payday_day_of_month = d == null ? null : Math.max(1, Math.min(31, d));
+  }
   const { error } = await supabase.from("users").update(updates).eq("id", user.id);
   if (error) throw new Error(error.message);
   revalidatePath("/budget");
   revalidatePath("/settings");
+}
+
+/** Get payday day of month (1–31) when no income_sources; used for "days until next income" */
+export async function getPaydayDayOfMonth(): Promise<number | null> {
+  try {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return null;
+    const { data } = await supabase.from("users").select("payday_day_of_month").eq("id", user.id).single();
+    const d = (data as { payday_day_of_month?: number | null } | null)?.payday_day_of_month;
+    return d != null && d >= 1 && d <= 31 ? d : null;
+  } catch {
+    return null;
+  }
 }
 
 /** Sum of expenses (absolute value of negative amount_cents) for current calendar month */

@@ -1,7 +1,13 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
+  compress: true,
+  poweredByHeader: false,
   images: {
+    formats: ['image/avif', 'image/webp'],
+    deviceSizes: [420, 640, 750, 828, 1080, 1200],
+    imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
+    minimumCacheTTL: 60 * 60 * 24 * 7, // 7 days
     localPatterns: [
       {
         pathname: "/mascots/**",
@@ -22,6 +28,7 @@ const nextConfig = {
   experimental: {
     browserDebugInfoInTerminal: true,
     serverComponentsHmrCache: true,
+    optimizePackageImports: ['@react-three/fiber', '@react-three/drei', 'recharts'],
     /* Disabled: can cause endless recompilation. Re-enable for faster dev after first compile. */
     turbopackFileSystemCacheForDev: false,
   },
@@ -29,6 +36,13 @@ const nextConfig = {
     fetches: {
       fullUrl: true,
     },
+  },
+  // Optimize production builds
+  swcMinify: true,
+  compiler: {
+    removeConsole: process.env.NODE_ENV === 'production' ? {
+      exclude: ['error', 'warn'],
+    } : false,
   },
   // PWA: uncomment when using next-pwa
   // ...(require('next-pwa')({ dest: 'public', disable: process.env.NODE_ENV === 'development' })),

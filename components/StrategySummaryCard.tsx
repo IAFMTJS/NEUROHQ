@@ -54,6 +54,14 @@ export function StrategySummaryCard({ strategy, goals, year, quarter }: Props) {
           </div>
         ) : (
           <>
+        {hasIdentity && (
+          <div className="rounded-xl border border-[var(--accent-focus)]/30 bg-[var(--accent-focus)]/5 px-4 py-3">
+            <p className="text-xs font-medium uppercase tracking-wide text-[var(--text-muted)]">Identity</p>
+            <p className="mt-1.5 text-base italic leading-relaxed text-[var(--text-primary)]">
+              &ldquo;{strategy?.identity_statement}&rdquo;
+            </p>
+          </div>
+        )}
         {hasOneWord && (
           <div>
             <p className="text-xs font-medium uppercase tracking-wide text-[var(--text-muted)]">One word</p>
@@ -72,14 +80,6 @@ export function StrategySummaryCard({ strategy, goals, year, quarter }: Props) {
           <div>
             <p className="text-xs font-medium uppercase tracking-wide text-[var(--text-muted)]">North star</p>
             <p className="mt-1 text-sm text-[var(--text-primary)]">{strategy?.north_star}</p>
-          </div>
-        )}
-        {hasIdentity && (
-          <div>
-            <p className="text-xs font-medium uppercase tracking-wide text-[var(--text-muted)]">Identity</p>
-            <p className="mt-1 text-sm italic leading-relaxed text-[var(--text-primary)]">
-              &ldquo;{strategy?.identity_statement}&rdquo;
-            </p>
           </div>
         )}
         {results.length > 0 && (

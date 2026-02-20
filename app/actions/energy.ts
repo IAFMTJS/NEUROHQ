@@ -1,6 +1,7 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
+import { unstable_cache } from "next/cache";
 import { splitTaskCost, taskCost, getSuggestedTaskCount } from "@/lib/utils/energy";
 
 /** Default capacity when no brain status (daily_state) exists. */
@@ -139,17 +140,38 @@ export async function getEnergyBudget(date: string): Promise<EnergyBudget> {
     };
   }
 
-  const [
-    { data: dailyState },
-    { data: completedTasks },
-    { data: incompleteTasks },
-    { data: events },
-  ] = await Promise.all([
-    supabase.from("daily_state").select("energy, focus, sensory_load, sleep_hours, social_load").eq("user_id", user.id).eq("date", date).single(),
-    supabase.from("tasks").select("energy_required").eq("user_id", user.id).eq("due_date", date).eq("completed", true),
-    supabase.from("tasks").select("energy_required").eq("user_id", user.id).eq("due_date", date).eq("completed", false),
-    supabase.from("calendar_events").select("duration_hours, is_social").eq("user_id", user.id).gte("start_at", `${date}T00:00:00Z`).lt("start_at", `${date}T23:59:59Z`),
-  ]);
+  return unstable_cache(
+    async () => {
+      const client = await createClient();
+      const { data: { user: u } } = await client.auth.getUser();
+      if (!u) {
+        return {
+          remaining: DEFAULT_CAPACITY,
+          capacity: DEFAULT_CAPACITY,
+          suggestedTaskCount: 3,
+          taskUsed: 0,
+          completedTaskCount: 0,
+          taskPlanned: 0,
+          calendarCost: 0,
+          energy: { capacity: 80, used: 0, remaining: 80, planned: 0 },
+          focus: { capacity: 80, used: 0, remaining: 80, planned: 0 },
+          load: { capacity: 80, used: 0, remaining: 80, planned: 0 },
+          insight: "Sign in to see your energy budget.",
+          segments: [],
+        };
+      }
+
+      const [
+        { data: dailyState },
+        { data: completedTasks },
+        { data: incompleteTasks },
+        { data: events },
+      ] = await Promise.all([
+        client.from("daily_state").select("energy, focus, sensory_load, sleep_hours, social_load").eq("user_id", u.id).eq("date", date).single(),
+        client.from("tasks").select("energy_required").eq("user_id", u.id).eq("due_date", date).eq("completed", true),
+        client.from("tasks").select("energy_required").eq("user_id", u.id).eq("due_date", date).eq("completed", false),
+        client.from("calendar_events").select("duration_hours, is_social").eq("user_id", u.id).gte("start_at", `${date}T00:00:00Z`).lt("start_at", `${date}T23:59:59Z`),
+      ]);
 
   const base = capacityFromDailyState(dailyState as DailyStateRow);
   const energy = { ...base.energy };
@@ -202,19 +224,23 @@ export async function getEnergyBudget(date: string): Promise<EnergyBudget> {
     { label: "Calendar", value: Math.round(calendarTotal), color: "bg-blue-500/70" },
   ].filter((s) => s.value > 0);
 
-  return {
-    remaining: Math.round(minRemaining),
-    capacity: Math.round(totalCapacity),
-    suggestedTaskCount: base.suggestedTaskCount,
-    taskUsed: taskUsedTotal,
-    completedTaskCount: (completedTasks ?? []).length,
-    taskPlanned: taskPlannedTotal,
-    calendarCost: Math.round(calendarTotal),
-    energy,
-    focus,
-    load,
-    insight: base.insight,
-    segments,
-  };
+      return {
+        remaining: Math.round(minRemaining),
+        capacity: Math.round(totalCapacity),
+        suggestedTaskCount: base.suggestedTaskCount,
+        taskUsed: taskUsedTotal,
+        completedTaskCount: (completedTasks ?? []).length,
+        taskPlanned: taskPlannedTotal,
+        calendarCost: Math.round(calendarTotal),
+        energy,
+        focus,
+        load,
+        insight: base.insight,
+        segments,
+      };
+    },
+    ["energy-budget", user.id, date],
+    { tags: [`energy-${user.id}-${date}`], revalidate: 60 }
+  )();
 }
 

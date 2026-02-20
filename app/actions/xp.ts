@@ -74,3 +74,33 @@ export async function awardXPForWeeklyLearningTarget() {
 export async function awardXPForStreakDay() {
   await addXP(XP_STREAK_DAY);
 }
+
+/** Deduct XP (for accountability penalties). */
+export async function deductXP(points: number): Promise<void> {
+  if (points <= 0) return;
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return;
+  const { data: existing } = await supabase
+    .from("user_xp")
+    .select("total_xp")
+    .eq("user_id", user.id)
+    .single();
+  const current = (existing?.total_xp as number | undefined) ?? 0;
+  const newTotal = Math.max(0, current - points);
+  const { error } = await supabase
+    .from("user_xp")
+    .upsert(
+      {
+        user_id: user.id,
+        total_xp: newTotal,
+        updated_at: new Date().toISOString(),
+      },
+      { onConflict: "user_id" }
+    );
+  if (!error) {
+    revalidatePath("/dashboard");
+    revalidatePath("/learning");
+    revalidatePath("/settings");
+  }
+}

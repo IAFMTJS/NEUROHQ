@@ -322,10 +322,12 @@
 /* ========== 8. SKILL TREE (Stap 5) ========== */
 .dc-skill-tree {
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   align-items: center;
+  justify-content: center;
   gap: 24px;
   margin-top: 24px;
+  flex-wrap: wrap;
 }
 
 .dc-skill-node {
@@ -362,8 +364,8 @@
 }
 
 .dc-skill-connector {
-  width: 2px;
-  height: 40px;
+  width: 40px;
+  height: 2px;
   background: var(--dc-border-soft);
 }
 

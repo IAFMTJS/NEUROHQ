@@ -1,6 +1,7 @@
 export { HQHeader } from "./HQHeader";
 export { HQPageHeader } from "./HQPageHeader";
 export { BrainStatusCard } from "./BrainStatusCard";
+export { BrainStatusModal } from "./BrainStatusModal";
 export { MissionButton } from "./MissionButton";
 export { ActiveMissionCard } from "./ActiveMissionCard";
 export { WatNuBlock } from "./WatNuBlock";

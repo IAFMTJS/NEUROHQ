@@ -161,8 +161,48 @@ export async function addLearningSession(params: {
   if (error) throw new Error(error.message);
   const { awardXPForLearningSession } = await import("./xp");
   const { upsertDailyAnalytics } = await import("./analytics");
-  await awardXPForLearningSession();
+  const { updateLastStudyDate, calculateWeeklyConsistency, detectBehaviorPatterns } = await import("./behavior");
+  
+  // Update behavior tracking
+  await updateLastStudyDate(params.date);
+  await calculateWeeklyConsistency();
+  
+  // Adaptive difficulty: reduce XP for very short sessions
+  const minutes = params.minutes;
+  let xpMultiplier = 1;
+  if (minutes < 10) {
+    xpMultiplier = 0.5; // Half XP for sessions under 10 minutes
+  } else if (minutes < 15) {
+    xpMultiplier = 0.75; // 75% XP for sessions under 15 minutes
+  }
+  
+  // Award XP with adaptive multiplier
+  const baseXP = 8; // XP_LEARNING_SESSION
+  const adjustedXP = Math.floor(baseXP * xpMultiplier);
+  
+  if (adjustedXP > 0) {
+    // Add XP directly with adaptive multiplier
+    const supabase = await createClient();
+    const { data: existing } = await supabase
+      .from("user_xp")
+      .select("total_xp")
+      .eq("user_id", user.id)
+      .single();
+    const currentTotal = (existing?.total_xp as number | undefined) ?? 0;
+    await supabase.from("user_xp").upsert({
+      user_id: user.id,
+      total_xp: currentTotal + adjustedXP,
+      updated_at: new Date().toISOString(),
+    }, { onConflict: "user_id" });
+    revalidatePath("/dashboard");
+    revalidatePath("/learning");
+  }
+  
   await upsertDailyAnalytics(params.date);
+  
+  // Detect behavior patterns
+  await detectBehaviorPatterns();
+  
   revalidatePath("/learning");
   revalidatePath("/dashboard");
 }

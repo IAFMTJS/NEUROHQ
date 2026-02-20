@@ -3,6 +3,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
+import { memo } from "react";
 
 const navLinks = [
   { href: "/dashboard", label: "HQ", iconFile: "Dashboard.png" },
@@ -16,7 +17,7 @@ const navLinks = [
   { href: "/settings", label: "Settings", iconFile: "Settings.png" },
 ] as const;
 
-export default function BottomNavigation() {
+export default memo(function BottomNavigation() {
   const pathname = usePathname();
 
   return (
@@ -31,12 +32,13 @@ export default function BottomNavigation() {
             key={link.href}
             href={link.href}
             className={`nav-item ${active ? "active" : ""}`}
+            prefetch={true}
           >
             <Image
               src={`/icons/${link.iconFile}`}
               alt=""
-              width={24}
-              height={24}
+              width={20}
+              height={20}
               className="nav-item-icon"
             />
             <span>{link.label}</span>
@@ -45,4 +47,4 @@ export default function BottomNavigation() {
       })}
     </nav>
   );
-}
+});

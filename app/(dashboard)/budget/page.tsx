@@ -1,4 +1,6 @@
 import Link from "next/link";
+import { addDays, format } from "date-fns";
+import { nl } from "date-fns/locale";
 import { getMascotSrcForPage } from "@/lib/mascots";
 import { HQPageHeader } from "@/components/hq";
 import { getSavingsGoals, getSavingsContributions } from "@/app/actions/savings";
@@ -14,10 +16,13 @@ import {
   getFrozenEntriesReadyForAction,
   getMonthExpensesCents,
   getMonthIncomeCents,
+  getPaydayDayOfMonth,
   getRecurringTemplates,
   generateRecurringEntries,
   getUnplannedWeeklySummary,
 } from "@/app/actions/budget";
+import { getFinanceState, getFinancialInsightsSafe, getBudgetTargets } from "@/app/actions/dcic/finance-state";
+import { getIncomeSources } from "@/app/actions/dcic/income-sources";
 import { getAlternatives } from "@/app/actions/alternatives";
 import { SavingsGoalCard } from "@/components/SavingsGoalCard";
 import { BudgetEntryList } from "@/components/BudgetEntryList";
@@ -29,6 +34,13 @@ import { FrozenPurchaseCard } from "@/components/FrozenPurchaseCard";
 import { BudgetHistorySelector } from "@/components/BudgetHistorySelector";
 import { ExportBudgetCsvButton } from "@/components/ExportBudgetCsvButton";
 import { RecurringBudgetCard } from "@/components/RecurringBudgetCard";
+import { FinancialStatusCard } from "@/components/dcic/FinancialStatusCard";
+import { FinancialInsightsCard } from "@/components/dcic/FinancialInsightsCard";
+import { WeeklyTacticalCard } from "@/components/dcic/WeeklyTacticalCard";
+import { ExpenseDistributionChart } from "@/components/budget/ExpenseDistributionChart";
+import { BudgetPlanCard } from "@/components/budget/BudgetPlanCard";
+import { PaydayCard } from "@/components/budget/PaydayCard";
+import { SavingsTipsCard } from "@/components/budget/SavingsTipsCard";
 import { formatMonthYearShort } from "@/lib/utils/date-locale";
 
 type Props = { searchParams: Promise<{ month?: string }> };
@@ -44,7 +56,7 @@ export default async function BudgetPage({ searchParams }: Props) {
   const now = new Date();
   const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().slice(0, 10);
   const monthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0).toISOString().slice(0, 10);
-  const [goals, entries, alternatives, budgetSettings, currentMonthExpenses, currentMonthIncome, currentWeekExpenses, currentWeekIncome, activeFrozen, readyForAction, unplannedSummary, contributions, recurringTemplates] = await Promise.all([
+  const [goals, entries, alternatives, budgetSettings, currentMonthExpenses, currentMonthIncome, currentWeekExpenses, currentWeekIncome, activeFrozen, readyForAction, unplannedSummary, contributions, recurringTemplates, financeState, financialInsights, incomeSources, budgetTargets, paydayDayOfMonth] = await Promise.all([
     getSavingsGoals(),
     getBudgetEntries(),
     getAlternatives(),
@@ -58,7 +70,22 @@ export default async function BudgetPage({ searchParams }: Props) {
     getUnplannedWeeklySummary(),
     getSavingsContributions({ fromDate: monthStart, toDate: monthEnd }),
     getRecurringTemplates(),
+    getFinanceState(),
+    getFinancialInsightsSafe(),
+    getIncomeSources(),
+    getBudgetTargets(),
+    getPaydayDayOfMonth(),
   ]);
+  const categoryTotals = (entries as { date: string; amount_cents: number; category: string | null }[])
+    .filter((e) => e.date >= monthStart && e.date <= monthEnd && (e.amount_cents ?? 0) < 0)
+    .reduce((acc, e) => {
+      const cat = e.category?.trim() || "Other";
+      acc[cat] = (acc[cat] ?? 0) + Math.abs(e.amount_cents ?? 0);
+      return acc;
+    }, {} as Record<string, number>);
+  const nextPaydayLabel = financialInsights
+    ? `Volgende loondag: ${format(addDays(new Date(), financialInsights.daysUntilNextIncome), "d MMMM", { locale: nl })}`
+    : "Stel loondag in om te zien hoeveel dagen nog.";
   const contributedByGoal = (contributions as { goal_id: string; amount_cents: number }[]).reduce((acc, c) => {
     acc[c.goal_id] = (acc[c.goal_id] || 0) + c.amount_cents;
     return acc;
@@ -107,6 +134,37 @@ export default async function BudgetPage({ searchParams }: Props) {
         budgetPeriod={budgetSettings.budget_period}
         historyMode={historyMode}
       />
+
+      {!historyMode && (
+        <>
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            <FinancialStatusCard financeState={financeState} />
+            <WeeklyTacticalCard financeState={financeState} />
+            <PaydayCard
+              daysUntilNextIncome={financialInsights?.daysUntilNextIncome ?? 0}
+              nextPaydayLabel={nextPaydayLabel}
+              incomeSources={incomeSources}
+              paydayDayOfMonth={paydayDayOfMonth}
+              currency={currency}
+            />
+          </div>
+          {financialInsights && financialInsights.insights.length > 0 && (
+            <FinancialInsightsCard insights={financialInsights.insights} />
+          )}
+          {financialInsights?.emergencyMode.active && (
+            <div className="rounded-lg border border-amber-500/50 bg-amber-500/10 px-4 py-3 text-sm text-amber-700 dark:text-amber-300">
+              <strong>Let op:</strong> {financialInsights.emergencyMode.reason.join(" ")}
+            </div>
+          )}
+          <ExpenseDistributionChart categoryTotals={categoryTotals} currency={currency} />
+          <BudgetPlanCard
+            targets={budgetTargets}
+            spentByCategory={categoryTotals}
+            currency={currency}
+          />
+          <SavingsTipsCard insights={financialInsights?.insights} />
+        </>
+      )}
 
       {unplannedSummary.count > 0 && (
         <div className="rounded-lg border border-[var(--card-border)] bg-[var(--bg-primary)]/40 px-4 py-2 text-sm text-[var(--text-muted)]">

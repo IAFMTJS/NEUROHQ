@@ -30,6 +30,7 @@ import { createTask } from "@/app/actions/tasks";
 import { addManualEvent } from "@/app/actions/calendar";
 import { addBudgetEntry } from "@/app/actions/budget";
 import { addLearningSession } from "@/app/actions/learning";
+import { processDCICMessage } from "@/lib/dcic/assistant-integration";
 
 const MAX_MESSAGE_LENGTH = 2000;
 const RATE_LIMIT_WINDOW_MS = 60_000;
@@ -74,6 +75,25 @@ export async function POST(request: Request) {
         { error: "Rate limit exceeded" },
         { status: 429 }
       );
+    }
+
+    // Check if message is DCIC mission-related
+    const dcicResponse = await processDCICMessage(message);
+    
+    // If DCIC action, return early with simulation for confirmation
+    if (dcicResponse?.isDCICAction) {
+      return NextResponse.json({
+        response: dcicResponse.responseText || "Actie herkend.",
+        dcicAction: {
+          intent: dcicResponse.intent,
+          requiresConfirmation: dcicResponse.requiresConfirmation,
+          simulation: dcicResponse.simulation,
+          action: dcicResponse.action,
+        },
+        escalationTier: 1,
+        identityAlert: false,
+        courageFlag: false,
+      });
     }
 
     const intent = classifyIntent(message);
@@ -205,6 +225,7 @@ export async function POST(request: Request) {
       courageFlag: escalationDecision.courageFlag,
       suggestedActions: suggestedActions.length > 0 ? suggestedActions : undefined,
       executedAction: executedAction ?? undefined,
+      dcicAction: undefined, // Not a DCIC action
     });
   } catch (e) {
     const err = e instanceof Error ? e : new Error(String(e));

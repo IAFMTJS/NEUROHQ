@@ -107,6 +107,29 @@ export async function exportStrategyMarkdown(): Promise<string> {
   return lines.filter(Boolean).join("\n");
 }
 
+/** Returns completion score for current quarter strategy (0–100) and which items are set. */
+export async function getStrategyCompletion(): Promise<{
+  completed: number;
+  total: number;
+  percent: number;
+  items: { key: string; label: string; done: boolean }[];
+}> {
+  const strategy = await getQuarterlyStrategy();
+  const items: { key: string; label: string; done: boolean }[] = [
+    { key: "one_word", label: "One word", done: !!strategy?.one_word?.trim() },
+    { key: "primary_theme", label: "Primary theme", done: !!strategy?.primary_theme?.trim() },
+    { key: "identity_statement", label: "Identity statement", done: !!strategy?.identity_statement?.trim() },
+    { key: "key_results", label: "Key results", done: !!(strategy?.key_results?.trim() && (strategy.key_results as string).trim().split(/\n/).filter(Boolean).length > 0) },
+    { key: "north_star", label: "North star", done: !!strategy?.north_star?.trim() },
+    { key: "anti_goals", label: "Anti-goals", done: !!strategy?.anti_goals?.trim() },
+    { key: "savings_goal_id", label: "Linked goal", done: !!strategy?.savings_goal_id },
+  ];
+  const completed = items.filter((i) => i.done).length;
+  const total = items.length;
+  const percent = total === 0 ? 0 : Math.round((completed / total) * 100);
+  return { completed, total, percent, items };
+}
+
 export async function copyStrategyFromLastQuarter() {
   const prev = getPreviousQuarter();
   const strategy = await getQuarterlyStrategy(prev);

@@ -8,12 +8,26 @@ import { createTask } from "@/app/actions/tasks";
 import { addManualEvent } from "@/app/actions/calendar";
 import { addBudgetEntry } from "@/app/actions/budget";
 import { addLearningSession } from "@/app/actions/learning";
+import { MissionConfirmationModal } from "@/components/dcic/MissionConfirmationModal";
+import type { Intent, SimulationResult } from "@/lib/dcic/types";
 
 type SuggestedAction =
   | { type: "add_task"; label: string; payload: { title: string; due_date: string } }
   | { type: "add_expense"; label: string; payload: { amount_cents: number; date: string; category?: string; note?: string } }
   | { type: "add_calendar"; label: string; payload: { title: string; start_at: string; end_at: string; sync_to_google?: boolean } }
   | { type: "add_learning"; label: string; payload: { minutes: number; date: string; topic?: string } };
+
+type DCICAction = {
+  intent: Intent;
+  requiresConfirmation: boolean;
+  simulation?: SimulationResult;
+  action?: {
+    data?: {
+      missionId?: string;
+      missionName?: string;
+    };
+  };
+};
 
 type Message = {
   id: string;
@@ -23,6 +37,7 @@ type Message = {
   identityAlert?: boolean;
   courageFlag?: boolean;
   suggestedActions?: SuggestedAction[];
+  dcicAction?: DCICAction;
 };
 
 export default function AssistantPage() {
@@ -32,6 +47,12 @@ export default function AssistantPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [rateLimited, setRateLimited] = useState(false);
+  const [pendingDCICAction, setPendingDCICAction] = useState<{
+    intent: Intent;
+    missionId?: string;
+    missionName: string;
+    simulation: SimulationResult;
+  } | null>(null);
   const listRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -103,8 +124,21 @@ export default function AssistantPage() {
         identityAlert: data.identityAlert,
         courageFlag: data.courageFlag,
         suggestedActions: data.suggestedActions ?? undefined,
+        dcicAction: data.dcicAction ?? undefined,
       };
       setMessages((prev) => [...prev, assistantMsg]);
+      
+      // If DCIC action requires confirmation, show modal
+      if (data.dcicAction?.requiresConfirmation && data.dcicAction?.simulation) {
+        // Store pending action for confirmation modal
+        setPendingDCICAction({
+          intent: data.dcicAction.intent,
+          missionId: data.dcicAction.action?.data?.missionId,
+          missionName: data.dcicAction.action?.data?.missionName || "Mission",
+          simulation: data.dcicAction.simulation,
+        });
+      }
+      
       setTimeout(scrollToBottom, 100);
     } catch {
       setError(
@@ -285,6 +319,20 @@ export default function AssistantPage() {
           </button>
         </div>
       </div>
+
+      {/* DCIC Confirmation Modal */}
+      {pendingDCICAction && (
+        <MissionConfirmationModal
+          open={!!pendingDCICAction}
+          onClose={() => setPendingDCICAction(null)}
+          missionId={pendingDCICAction.missionId || ""}
+          missionName={pendingDCICAction.missionName}
+          actionType={
+            pendingDCICAction.intent === "start_mission" ? "start" : "complete"
+          }
+          simulation={pendingDCICAction.simulation}
+        />
+      )}
     </div>
   );
 }

@@ -20,6 +20,9 @@ import { LearningNudge } from "@/components/LearningNudge";
 import { MonthlyBooksHistory } from "@/components/MonthlyBooksHistory";
 import { getQuarterlyStrategy } from "@/app/actions/strategy";
 import { GrowthStrategyBanner } from "@/components/GrowthStrategyBanner";
+import { BehaviorEngine } from "@/components/behavior/BehaviorEngine";
+import { StudyPlanSettings } from "@/components/behavior/StudyPlanSettings";
+import { getBehaviorState, getStudyPlan } from "@/app/actions/behavior";
 
 type Props = { searchParams: Promise<{ toward?: string }> };
 
@@ -30,7 +33,7 @@ export default async function LearningPage({ searchParams }: Props) {
   const { start: weekStart, end: weekEnd } = getWeekBounds(today);
   const thisYear = today.getFullYear();
   const thisMonth = today.getMonth() + 1;
-  const [xp, minutes, target, streak, options, sessionsThisWeek, pastTopics, topicBreakdown, monthlyWeeks, monthlyBooks, monthlyBookFirst, totalMinutes, booksHistory, strategy] = await Promise.all([
+  const [xp, minutes, target, streak, options, sessionsThisWeek, pastTopics, topicBreakdown, monthlyWeeks, monthlyBooks, monthlyBookFirst, totalMinutes, booksHistory, strategy, behaviorState, studyPlan] = await Promise.all([
     getXP(),
     getWeeklyMinutes(weekStart, weekEnd),
     getWeeklyLearningTarget(),
@@ -45,6 +48,8 @@ export default async function LearningPage({ searchParams }: Props) {
     getTotalLearningMinutes(),
     getMonthlyBooksHistory(),
     getQuarterlyStrategy(),
+    getBehaviorState(),
+    getStudyPlan(),
   ]);
 
   const commanderSkills = [
@@ -70,6 +75,11 @@ export default async function LearningPage({ searchParams }: Props) {
       <CommanderXPBar totalXP={xp.total_xp} />
       <CommanderSkillTree skills={commanderSkills} />
 
+      <BehaviorEngine 
+        hasMonthlyBook={monthlyBooks.length > 0} 
+        currentStreak={streak}
+      />
+
       <section>
         <LearningProgress
           minutes={minutes}
@@ -80,6 +90,8 @@ export default async function LearningPage({ searchParams }: Props) {
           totalMinutes={totalMinutes}
         />
       </section>
+
+      <StudyPlanSettings initialPlan={studyPlan} />
 
       <LearningTips />
 

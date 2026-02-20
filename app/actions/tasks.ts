@@ -1,7 +1,7 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
-import { revalidatePath } from "next/cache";
+import { revalidatePath, unstable_cache } from "next/cache";
 
 export type TaskListMode = "normal" | "low_energy" | "stabilize" | "driven";
 
@@ -9,6 +9,12 @@ export async function getTodaysTasks(date: string, mode: TaskListMode) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return { tasks: [], carryOverCount: 0 };
+
+  return unstable_cache(
+    async () => {
+      const client = await createClient();
+      const { data: { user: u } } = await client.auth.getUser();
+      if (!u) return { tasks: [], carryOverCount: 0 };
 
   const nowIso = new Date().toISOString();
   let query = supabase
@@ -43,8 +49,12 @@ export async function getTodaysTasks(date: string, mode: TaskListMode) {
     return new Date((a as { created_at?: string }).created_at ?? 0).getTime() - new Date((b as { created_at?: string }).created_at ?? 0).getTime();
   });
 
-  const maxCarryOver = Math.max(0, ...(tasks ?? []).map((t) => (t as { carry_over_count?: number }).carry_over_count ?? 0));
-  return { tasks: ordered, carryOverCount: maxCarryOver };
+      const maxCarryOver = Math.max(0, ...(tasks ?? []).map((t) => (t as { carry_over_count?: number }).carry_over_count ?? 0));
+      return { tasks: ordered, carryOverCount: maxCarryOver };
+    },
+    ["tasks", user.id, date, mode],
+    { tags: [`tasks-${user.id}-${date}`], revalidate: 60 }
+  )();
 }
 
 export async function getTasksForDate(date: string) {

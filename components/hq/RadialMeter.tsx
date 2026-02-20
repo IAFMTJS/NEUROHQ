@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useId, useState } from "react";
+import { useEffect, useState, useId } from "react";
 
 const SIZE = 104;
 const STROKE = 10;
@@ -43,9 +43,12 @@ type Props = {
 
 export function RadialMeter({ value, label, description, variant, delay = 0, thin = false }: Props) {
   const [mounted, setMounted] = useState(false);
-  const id = useId().replace(/:/g, "");
-  const gradId = `grad-${variant}-${id}`;
-  const filterId = `glow-${variant}-${id}`;
+  // useId() generates stable IDs that match between server and client in React 18+
+  const reactId = useId();
+  // Remove colons and other special chars that might cause issues in SVG IDs
+  const safeId = reactId.replace(/[:]/g, "-");
+  const gradId = `grad-${variant}-${safeId}`;
+  const filterId = `glow-${variant}-${safeId}`;
 
   const size = thin ? SIZE_COMPACT : SIZE;
   const stroke = thin ? STROKE_THIN : STROKE;
@@ -72,13 +75,14 @@ export function RadialMeter({ value, label, description, variant, delay = 0, thi
           height={size}
           className="-rotate-90"
           aria-hidden
+          suppressHydrationWarning
         >
-          <defs>
-            <linearGradient id={gradId} x1="0%" y1="0%" x2="100%" y2="100%">
+          <defs suppressHydrationWarning>
+            <linearGradient id={gradId} x1="0%" y1="0%" x2="100%" y2="100%" suppressHydrationWarning>
               <stop offset="0%" stopColor={gradientStops[variant][0]} />
               <stop offset="100%" stopColor={gradientStops[variant][1]} />
             </linearGradient>
-            <filter id={filterId} x="-100%" y="-100%" width="300%" height="300%">
+            <filter id={filterId} x="-100%" y="-100%" width="300%" height="300%" suppressHydrationWarning>
               <feGaussianBlur stdDeviation={thin ? "4" : "6"} result="glowBlur" />
               <feFlood floodColor={glowColors[variant]} floodOpacity="1" result="glowColor" />
               <feComposite in="glowColor" in2="glowBlur" operator="in" result="softGlow" />
@@ -127,6 +131,7 @@ export function RadialMeter({ value, label, description, variant, delay = 0, thi
             strokeDasharray={circumference}
             strokeDashoffset={mounted ? offset : circumference}
             filter={`url(#${filterId})`}
+            suppressHydrationWarning
             style={{
               transition: "stroke-dashoffset 1.2s cubic-bezier(0.25, 0.46, 0.45, 0.94)",
             }}
