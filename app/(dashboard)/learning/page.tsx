@@ -1,28 +1,28 @@
+import dynamic from "next/dynamic";
 import { getMascotSrcForPage } from "@/lib/mascots";
 import { HQPageHeader } from "@/components/hq";
 import { CommanderXPBar, CommanderSkillTree } from "@/components/commander";
 import { getXP } from "@/app/actions/xp";
 import { getWeekBounds } from "@/lib/utils/learning";
 import { getWeeklyMinutes, getWeeklyLearningTarget, getLearningStreak, getEducationOptions, getLearningSessions, getPastTopics, getTopicBreakdown, getMonthlyLearningWeeks, getMonthlyBooksForCurrentMonth, getMonthlyBookForCurrentMonth, getTotalLearningMinutes, getMonthlyBooksHistory } from "@/app/actions/learning";
-import { LearningProgress } from "@/components/LearningProgress";
-import { AddLearningSessionForm } from "@/components/AddLearningSessionForm";
-import { AddEducationOptionForm } from "@/components/AddEducationOptionForm";
-import { EducationOptionsList } from "@/components/EducationOptionsList";
-import { LearningRecentSessions } from "@/components/LearningRecentSessions";
-import { LearningTips } from "@/components/LearningTips";
-import { MonthlyBookBlock } from "@/components/MonthlyBookBlock";
-import { ClarityExplain } from "@/components/ClarityExplain";
-import { LearningTopicBreakdown } from "@/components/LearningTopicBreakdown";
-import { LearningMonthlyView } from "@/components/LearningMonthlyView";
-import { LearningExportCSV } from "@/components/LearningExportCSV";
-import { LearningMilestone } from "@/components/LearningMilestone";
-import { LearningNudge } from "@/components/LearningNudge";
-import { MonthlyBooksHistory } from "@/components/MonthlyBooksHistory";
 import { getQuarterlyStrategy } from "@/app/actions/strategy";
-import { GrowthStrategyBanner } from "@/components/GrowthStrategyBanner";
-import { BehaviorEngine } from "@/components/behavior/BehaviorEngine";
-import { StudyPlanSettings } from "@/components/behavior/StudyPlanSettings";
 import { getBehaviorState, getStudyPlan } from "@/app/actions/behavior";
+
+const GrowthStrategyBanner = dynamic(() => import("@/components/GrowthStrategyBanner").then((m) => ({ default: m.GrowthStrategyBanner })), { loading: () => <div className="min-h-[56px] animate-pulse rounded-xl bg-white/5" aria-hidden /> });
+const BehaviorEngine = dynamic(() => import("@/components/behavior/BehaviorEngine").then((m) => ({ default: m.BehaviorEngine })), { loading: () => <div className="min-h-[100px] animate-pulse rounded-xl bg-white/5" aria-hidden /> });
+const LearningProgress = dynamic(() => import("@/components/LearningProgress").then((m) => ({ default: m.LearningProgress })), { loading: () => <div className="min-h-[120px] animate-pulse rounded-xl bg-white/5" aria-hidden /> });
+const StudyPlanSettings = dynamic(() => import("@/components/behavior/StudyPlanSettings").then((m) => ({ default: m.StudyPlanSettings })), { loading: () => null });
+const LearningTips = dynamic(() => import("@/components/LearningTips").then((m) => ({ default: m.LearningTips })), { loading: () => null });
+const MonthlyBookBlock = dynamic(() => import("@/components/MonthlyBookBlock").then((m) => ({ default: m.MonthlyBookBlock })), { loading: () => <div className="min-h-[120px] animate-pulse rounded-xl bg-white/5" aria-hidden /> });
+const MonthlyBooksHistory = dynamic(() => import("@/components/MonthlyBooksHistory").then((m) => ({ default: m.MonthlyBooksHistory })), { loading: () => null });
+const AddLearningSessionForm = dynamic(() => import("@/components/AddLearningSessionForm").then((m) => ({ default: m.AddLearningSessionForm })), { loading: () => <div className="min-h-[180px] animate-pulse rounded-lg bg-white/5" aria-hidden /> });
+const LearningTopicBreakdown = dynamic(() => import("@/components/LearningTopicBreakdown").then((m) => ({ default: m.LearningTopicBreakdown })), { loading: () => null });
+const LearningMonthlyView = dynamic(() => import("@/components/LearningMonthlyView").then((m) => ({ default: m.LearningMonthlyView })), { loading: () => null });
+const LearningExportCSV = dynamic(() => import("@/components/LearningExportCSV").then((m) => ({ default: m.LearningExportCSV })), { loading: () => null });
+const LearningRecentSessions = dynamic(() => import("@/components/LearningRecentSessions").then((m) => ({ default: m.LearningRecentSessions })), { loading: () => <div className="min-h-[120px] animate-pulse rounded-xl bg-white/5" aria-hidden /> });
+const AddEducationOptionForm = dynamic(() => import("@/components/AddEducationOptionForm").then((m) => ({ default: m.AddEducationOptionForm })), { loading: () => null });
+const EducationOptionsList = dynamic(() => import("@/components/EducationOptionsList").then((m) => ({ default: m.EducationOptionsList })), { loading: () => <div className="min-h-[80px] animate-pulse rounded-lg bg-white/5" aria-hidden /> });
+const ClarityExplain = dynamic(() => import("@/components/ClarityExplain").then((m) => ({ default: m.ClarityExplain })), { loading: () => null });
 
 type Props = { searchParams: Promise<{ toward?: string }> };
 

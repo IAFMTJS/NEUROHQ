@@ -37,14 +37,20 @@ export function AICoach() {
         .limit(3);
 
       if (error) {
-        console.error("Failed to load behavior patterns:", error);
+        const msg = error.message ?? "";
+        const isMissingTable =
+          msg.includes("schema cache") || msg.includes("relation") && msg.includes("does not exist");
+        if (!isMissingTable) {
+          console.error("Failed to load behavior patterns:", msg || error.code || JSON.stringify(error));
+        }
         setPatterns([]);
       } else {
         setPatterns(data || []);
       }
       setLoading(false);
     } catch (err) {
-      console.error("Failed to load behavior patterns:", err);
+      const message = err instanceof Error ? err.message : String(err);
+      console.error("Failed to load behavior patterns:", message);
       setPatterns([]);
       setLoading(false);
     }
@@ -59,13 +65,13 @@ export function AICoach() {
         .eq("id", id);
 
       if (error) {
-        console.error("Failed to acknowledge pattern:", error);
+        console.error("Failed to acknowledge pattern:", error.message ?? error.code ?? JSON.stringify(error));
         return;
       }
 
       setPatterns((prev) => prev.filter((p) => p.id !== id));
     } catch (err) {
-      console.error("Failed to acknowledge pattern:", err);
+      console.error("Failed to acknowledge pattern:", err instanceof Error ? err.message : String(err));
     }
   };
 

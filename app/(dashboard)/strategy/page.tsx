@@ -1,21 +1,23 @@
+import dynamic from "next/dynamic";
 import Link from "next/link";
 import { getMascotSrcForPage } from "@/lib/mascots";
 import { HQPageHeader } from "@/components/hq";
 import { getQuarterlyStrategy, getPastQuarterlyStrategies, getStrategyCompletion } from "@/app/actions/strategy";
 import { getCurrentQuarter, getNextQuarter, getPreviousQuarter } from "@/lib/utils/strategy";
 import { getSavingsGoals } from "@/app/actions/savings";
-import { StrategyForm } from "@/components/StrategyForm";
-import { StrategyIntro } from "@/components/StrategyIntro";
-import { StrategySummaryCard } from "@/components/StrategySummaryCard";
-import { StrategyExportButton } from "@/components/StrategyExportButton";
-import { StrategyCopyFromLast } from "@/components/StrategyCopyFromLast";
-import { StrategyPastQuarters } from "@/components/StrategyPastQuarters";
-import { StrategyProgressCard } from "@/components/strategy/StrategyProgressCard";
-import { StrategyTipsCard } from "@/components/strategy/StrategyTipsCard";
-import { StrategyCheckInButton } from "@/components/strategy/StrategyCheckInButton";
-import { StrategyFocusBlock } from "@/components/strategy/StrategyFocusBlock";
-import { StrategyKeyResultsChecklist } from "@/components/strategy/StrategyKeyResultsChecklist";
-import { StrategySuccessActions } from "@/components/strategy/StrategySuccessActions";
+
+const StrategyForm = dynamic(() => import("@/components/StrategyForm").then((m) => ({ default: m.StrategyForm })), { loading: () => <div className="min-h-[200px] animate-pulse rounded-xl bg-white/5" aria-hidden /> });
+const StrategyIntro = dynamic(() => import("@/components/StrategyIntro").then((m) => ({ default: m.StrategyIntro })), { loading: () => null });
+const StrategySummaryCard = dynamic(() => import("@/components/StrategySummaryCard").then((m) => ({ default: m.StrategySummaryCard })), { loading: () => <div className="glass-card min-h-[140px] animate-pulse rounded-[22px]" aria-hidden /> });
+const StrategyExportButton = dynamic(() => import("@/components/StrategyExportButton").then((m) => ({ default: m.StrategyExportButton })), { loading: () => null });
+const StrategyCopyFromLast = dynamic(() => import("@/components/StrategyCopyFromLast").then((m) => ({ default: m.StrategyCopyFromLast })), { loading: () => null });
+const StrategyPastQuarters = dynamic(() => import("@/components/StrategyPastQuarters").then((m) => ({ default: m.StrategyPastQuarters })), { loading: () => <div className="min-h-[100px] animate-pulse rounded-xl bg-white/5" aria-hidden /> });
+const StrategyProgressCard = dynamic(() => import("@/components/strategy/StrategyProgressCard").then((m) => ({ default: m.StrategyProgressCard })), { loading: () => <div className="min-h-[80px] animate-pulse rounded-xl bg-white/5" aria-hidden /> });
+const StrategyTipsCard = dynamic(() => import("@/components/strategy/StrategyTipsCard").then((m) => ({ default: m.StrategyTipsCard })), { loading: () => null });
+const StrategyCheckInButton = dynamic(() => import("@/components/strategy/StrategyCheckInButton").then((m) => ({ default: m.StrategyCheckInButton })), { loading: () => null });
+const StrategyFocusBlock = dynamic(() => import("@/components/strategy/StrategyFocusBlock").then((m) => ({ default: m.StrategyFocusBlock })), { loading: () => null });
+const StrategyKeyResultsChecklist = dynamic(() => import("@/components/strategy/StrategyKeyResultsChecklist").then((m) => ({ default: m.StrategyKeyResultsChecklist })), { loading: () => <div className="min-h-[80px] animate-pulse rounded-xl bg-white/5" aria-hidden /> });
+const StrategySuccessActions = dynamic(() => import("@/components/strategy/StrategySuccessActions").then((m) => ({ default: m.StrategySuccessActions })), { loading: () => null });
 
 export default async function StrategyPage() {
   const { year, quarter } = getCurrentQuarter();

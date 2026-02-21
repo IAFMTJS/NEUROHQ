@@ -1,26 +1,28 @@
+import dynamic from "next/dynamic";
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import { getMascotSrcForPage } from "@/lib/mascots";
 import { HQPageHeader } from "@/components/hq";
-import { SettingsExport } from "@/components/SettingsExport";
-import { SettingsPush } from "@/components/SettingsPush";
-import { SettingsDeleteAccount } from "@/components/SettingsDeleteAccount";
-import { SettingsAppleCalendar } from "@/components/SettingsAppleCalendar";
-import { SettingsGoogleCalendar } from "@/components/SettingsGoogleCalendar";
-import { SettingsTimezone } from "@/components/SettingsTimezone";
-import { SettingsBudget } from "@/components/SettingsBudget";
-import { SettingsAbout } from "@/components/SettingsAbout";
-import { ThemePicker } from "@/components/settings/ThemePicker";
-import { EmotionPicker } from "@/components/settings/EmotionPicker";
-import { XPBadge } from "@/components/XPBadge";
 import { hasGoogleCalendarToken } from "@/app/actions/calendar";
 import { getUserTimezone, getPushQuoteTime, getPushQuietHours } from "@/app/actions/auth";
 import { getBudgetSettings } from "@/app/actions/budget";
 import { getXP } from "@/app/actions/xp";
 import { getUserPreferencesOrDefaults } from "@/app/actions/preferences";
-import { SettingsCompactUi } from "@/components/settings/SettingsCompactUi";
-import { SettingsQuickLinks } from "@/components/settings/SettingsQuickLinks";
-import { SettingsWhereToConfigure } from "@/components/settings/SettingsWhereToConfigure";
+
+const SettingsExport = dynamic(() => import("@/components/SettingsExport").then((m) => ({ default: m.SettingsExport })), { loading: () => null });
+const SettingsPush = dynamic(() => import("@/components/SettingsPush").then((m) => ({ default: m.SettingsPush })), { loading: () => <div className="min-h-[120px] animate-pulse rounded-xl bg-white/5" aria-hidden /> });
+const SettingsDeleteAccount = dynamic(() => import("@/components/SettingsDeleteAccount").then((m) => ({ default: m.SettingsDeleteAccount })), { loading: () => null });
+const SettingsAppleCalendar = dynamic(() => import("@/components/SettingsAppleCalendar").then((m) => ({ default: m.SettingsAppleCalendar })), { loading: () => null });
+const SettingsGoogleCalendar = dynamic(() => import("@/components/SettingsGoogleCalendar").then((m) => ({ default: m.SettingsGoogleCalendar })), { loading: () => null });
+const SettingsTimezone = dynamic(() => import("@/components/SettingsTimezone").then((m) => ({ default: m.SettingsTimezone })), { loading: () => null });
+const SettingsBudget = dynamic(() => import("@/components/SettingsBudget").then((m) => ({ default: m.SettingsBudget })), { loading: () => null });
+const SettingsAbout = dynamic(() => import("@/components/SettingsAbout").then((m) => ({ default: m.SettingsAbout })), { loading: () => null });
+const ThemePicker = dynamic(() => import("@/components/settings/ThemePicker").then((m) => ({ default: m.ThemePicker })), { loading: () => null });
+const EmotionPicker = dynamic(() => import("@/components/settings/EmotionPicker").then((m) => ({ default: m.EmotionPicker })), { loading: () => null });
+const XPBadge = dynamic(() => import("@/components/XPBadge").then((m) => ({ default: m.XPBadge })), { loading: () => null });
+const SettingsCompactUi = dynamic(() => import("@/components/settings/SettingsCompactUi").then((m) => ({ default: m.SettingsCompactUi })), { loading: () => null });
+const SettingsQuickLinks = dynamic(() => import("@/components/settings/SettingsQuickLinks").then((m) => ({ default: m.SettingsQuickLinks })), { loading: () => <div className="min-h-[60px] animate-pulse rounded-lg bg-white/5" aria-hidden /> });
+const SettingsWhereToConfigure = dynamic(() => import("@/components/settings/SettingsWhereToConfigure").then((m) => ({ default: m.SettingsWhereToConfigure })), { loading: () => null });
 
 export default async function SettingsPage() {
   const supabase = await createClient();

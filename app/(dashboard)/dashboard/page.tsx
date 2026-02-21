@@ -23,12 +23,21 @@ import { getAdaptiveSuggestions } from "@/app/actions/adaptive";
 import { getWeekBounds } from "@/lib/utils/learning";
 import { getCurrencySymbol } from "@/lib/utils/currency";
 import { yesterdayDate, getDayOfYearFromDateString } from "@/lib/utils/timezone";
-import { HQHeader, BrainStatusCard, MissionButton, ActiveMissionCard, WatNuBlock, HQShortcutGrid, RadialMeter, HQChart } from "@/components/hq";
+import { HQHeader, BrainStatusCard, ActiveMissionCard } from "@/components/hq";
 import { CommanderHomeHero } from "@/components/commander";
 import { HeroMascotImage } from "@/components/HeroMascotImage";
 import { ModeBanner, ModeExplanationModal, AddCalendarEventForm } from "@/components/dashboard/DashboardClientOnly";
-import { IdentityBlock, MomentumScore, TodayEngineCard, XPForecastWidget, WeeklyHeatmap, FrictionBanner, StrategyCheckInBanner } from "@/components/dashboard";
 import { getFrictionSignals } from "@/app/actions/friction";
+
+const IdentityBlock = dynamic(() => import("@/components/dashboard/IdentityBlock").then((m) => ({ default: m.IdentityBlock })), { loading: () => <div className="glass-card min-h-[140px] animate-pulse rounded-[22px]" aria-hidden /> });
+const MomentumScore = dynamic(() => import("@/components/dashboard/MomentumScore").then((m) => ({ default: m.MomentumScore })), { loading: () => <div className="glass-card min-h-[100px] animate-pulse rounded-[22px]" aria-hidden /> });
+const TodayEngineCard = dynamic(() => import("@/components/dashboard/TodayEngineCard").then((m) => ({ default: m.TodayEngineCard })), { loading: () => <div className="glass-card min-h-[160px] animate-pulse rounded-[22px]" aria-hidden /> });
+const XPForecastWidget = dynamic(() => import("@/components/dashboard/XPForecastWidget").then((m) => ({ default: m.XPForecastWidget })), { loading: () => <div className="glass-card min-h-[120px] animate-pulse rounded-[22px]" aria-hidden /> });
+const WeeklyHeatmap = dynamic(() => import("@/components/dashboard/WeeklyHeatmap").then((m) => ({ default: m.WeeklyHeatmap })), { loading: () => <div className="glass-card min-h-[80px] animate-pulse rounded-[22px]" aria-hidden /> });
+const FrictionBanner = dynamic(() => import("@/components/dashboard/FrictionBanner").then((m) => ({ default: m.FrictionBanner })), { loading: () => null });
+const StrategyCheckInBanner = dynamic(() => import("@/components/dashboard/StrategyCheckInBanner").then((m) => ({ default: m.StrategyCheckInBanner })), { loading: () => null });
+const HQShortcutGrid = dynamic(() => import("@/components/hq").then((m) => ({ default: m.HQShortcutGrid })), { loading: () => <div className="min-h-[100px] animate-pulse rounded-xl bg-white/5" aria-hidden /> });
+const HQChart = dynamic(() => import("@/components/hq").then((m) => ({ default: m.HQChart })), { loading: () => <div className="glass-card min-h-[180px] animate-pulse rounded-[22px]" aria-hidden /> });
 
 const QuoteCard = dynamic(
   () => import("@/components/QuoteCard").then((m) => ({ default: m.QuoteCard })),

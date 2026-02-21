@@ -1,5 +1,6 @@
 "use client";
 
+import dynamic from "next/dynamic";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { getMascotSrcForPage } from "@/lib/mascots";
@@ -8,8 +9,12 @@ import { createTask } from "@/app/actions/tasks";
 import { addManualEvent } from "@/app/actions/calendar";
 import { addBudgetEntry } from "@/app/actions/budget";
 import { addLearningSession } from "@/app/actions/learning";
-import { MissionConfirmationModal } from "@/components/dcic/MissionConfirmationModal";
 import type { Intent, SimulationResult } from "@/lib/dcic/types";
+
+const MissionConfirmationModal = dynamic(
+  () => import("@/components/dcic/MissionConfirmationModal").then((m) => ({ default: m.MissionConfirmationModal })),
+  { ssr: false, loading: () => null }
+);
 
 type SuggestedAction =
   | { type: "add_task"; label: string; payload: { title: string; due_date: string } }

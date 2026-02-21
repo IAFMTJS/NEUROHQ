@@ -1,3 +1,4 @@
+import dynamic from "next/dynamic";
 import Link from "next/link";
 import { addDays, format } from "date-fns";
 import { nl } from "date-fns/locale";
@@ -24,24 +25,25 @@ import {
 import { getFinanceState, getFinancialInsightsSafe, getBudgetTargets } from "@/app/actions/dcic/finance-state";
 import { getIncomeSources } from "@/app/actions/dcic/income-sources";
 import { getAlternatives } from "@/app/actions/alternatives";
-import { SavingsGoalCard } from "@/components/SavingsGoalCard";
-import { BudgetEntryList } from "@/components/BudgetEntryList";
-import { AddBudgetEntryForm } from "@/components/AddBudgetEntryForm";
-import { AddSavingsGoalForm } from "@/components/AddSavingsGoalForm";
-import { AlternativesList } from "@/components/AlternativesList";
-import { BudgetSummaryCard } from "@/components/BudgetSummaryCard";
-import { FrozenPurchaseCard } from "@/components/FrozenPurchaseCard";
-import { BudgetHistorySelector } from "@/components/BudgetHistorySelector";
-import { ExportBudgetCsvButton } from "@/components/ExportBudgetCsvButton";
-import { RecurringBudgetCard } from "@/components/RecurringBudgetCard";
-import { FinancialStatusCard } from "@/components/dcic/FinancialStatusCard";
-import { FinancialInsightsCard } from "@/components/dcic/FinancialInsightsCard";
-import { WeeklyTacticalCard } from "@/components/dcic/WeeklyTacticalCard";
-import { ExpenseDistributionChart } from "@/components/budget/ExpenseDistributionChart";
-import { BudgetPlanCard } from "@/components/budget/BudgetPlanCard";
-import { PaydayCard } from "@/components/budget/PaydayCard";
-import { SavingsTipsCard } from "@/components/budget/SavingsTipsCard";
 import { formatMonthYearShort } from "@/lib/utils/date-locale";
+
+const BudgetHistorySelector = dynamic(() => import("@/components/BudgetHistorySelector").then((m) => ({ default: m.BudgetHistorySelector })), { loading: () => null });
+const ExportBudgetCsvButton = dynamic(() => import("@/components/ExportBudgetCsvButton").then((m) => ({ default: m.ExportBudgetCsvButton })), { loading: () => null });
+const BudgetSummaryCard = dynamic(() => import("@/components/BudgetSummaryCard").then((m) => ({ default: m.BudgetSummaryCard })), { loading: () => <div className="min-h-[100px] animate-pulse rounded-xl bg-white/5" aria-hidden /> });
+const FinancialStatusCard = dynamic(() => import("@/components/dcic/FinancialStatusCard").then((m) => ({ default: m.FinancialStatusCard })), { loading: () => <div className="min-h-[120px] animate-pulse rounded-xl bg-white/5" aria-hidden /> });
+const WeeklyTacticalCard = dynamic(() => import("@/components/dcic/WeeklyTacticalCard").then((m) => ({ default: m.WeeklyTacticalCard })), { loading: () => <div className="min-h-[100px] animate-pulse rounded-xl bg-white/5" aria-hidden /> });
+const PaydayCard = dynamic(() => import("@/components/budget/PaydayCard").then((m) => ({ default: m.PaydayCard })), { loading: () => <div className="min-h-[80px] animate-pulse rounded-xl bg-white/5" aria-hidden /> });
+const FinancialInsightsCard = dynamic(() => import("@/components/dcic/FinancialInsightsCard").then((m) => ({ default: m.FinancialInsightsCard })), { loading: () => null });
+const ExpenseDistributionChart = dynamic(() => import("@/components/budget/ExpenseDistributionChart").then((m) => ({ default: m.ExpenseDistributionChart })), { loading: () => <div className="min-h-[200px] animate-pulse rounded-xl bg-white/5" aria-hidden /> });
+const BudgetPlanCard = dynamic(() => import("@/components/budget/BudgetPlanCard").then((m) => ({ default: m.BudgetPlanCard })), { loading: () => <div className="min-h-[120px] animate-pulse rounded-xl bg-white/5" aria-hidden /> });
+const SavingsTipsCard = dynamic(() => import("@/components/budget/SavingsTipsCard").then((m) => ({ default: m.SavingsTipsCard })), { loading: () => null });
+const FrozenPurchaseCard = dynamic(() => import("@/components/FrozenPurchaseCard").then((m) => ({ default: m.FrozenPurchaseCard })), { loading: () => null });
+const SavingsGoalCard = dynamic(() => import("@/components/SavingsGoalCard").then((m) => ({ default: m.SavingsGoalCard })), { loading: () => <div className="min-h-[100px] animate-pulse rounded-xl bg-white/5" aria-hidden /> });
+const AddSavingsGoalForm = dynamic(() => import("@/components/AddSavingsGoalForm").then((m) => ({ default: m.AddSavingsGoalForm })), { loading: () => null });
+const RecurringBudgetCard = dynamic(() => import("@/components/RecurringBudgetCard").then((m) => ({ default: m.RecurringBudgetCard })), { loading: () => null });
+const AddBudgetEntryForm = dynamic(() => import("@/components/AddBudgetEntryForm").then((m) => ({ default: m.AddBudgetEntryForm })), { loading: () => <div className="min-h-[140px] animate-pulse rounded-lg bg-white/5" aria-hidden /> });
+const BudgetEntryList = dynamic(() => import("@/components/BudgetEntryList").then((m) => ({ default: m.BudgetEntryList })), { loading: () => <div className="min-h-[120px] animate-pulse rounded-xl bg-white/5" aria-hidden /> });
+const AlternativesList = dynamic(() => import("@/components/AlternativesList").then((m) => ({ default: m.AlternativesList })), { loading: () => null });
 
 type Props = { searchParams: Promise<{ month?: string }> };
 

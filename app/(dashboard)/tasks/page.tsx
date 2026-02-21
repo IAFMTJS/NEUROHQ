@@ -1,4 +1,4 @@
-import Link from "next/link";
+import dynamic from "next/dynamic";
 import { getTodaysTasks, getTasksForDate, getSubtasksForTaskIds, getBacklogTasks, getCompletedTodayTasks, type TaskListMode } from "@/app/actions/tasks";
 import { getMode } from "@/app/actions/mode";
 import { getUpcomingCalendarEvents, hasGoogleCalendarToken } from "@/app/actions/calendar";
@@ -7,16 +7,17 @@ import { getEnergyCapToday } from "@/app/actions/dcic/energy-cap";
 import { getEnergyBudget } from "@/app/actions/energy";
 import { yesterdayDate } from "@/lib/utils/timezone";
 import { getMascotSrcForPage } from "@/lib/mascots";
-import { TaskList } from "@/components/TaskList";
-import { ModeBanner } from "@/components/ModeBanner";
-import { BacklogList } from "@/components/BacklogList";
-import { AgendaOnlyList } from "@/components/AgendaOnlyList";
-import { AddCalendarEventForm } from "@/components/AddCalendarEventForm";
-import { YesterdayTasksSection } from "@/components/missions/YesterdayTasksSection";
-import { SmartSuggestionBanner } from "@/components/missions/SmartSuggestionBanner";
-import { EnergyCapBar } from "@/components/missions/EnergyCapBar";
 import { HQPageHeader } from "@/components/hq";
-import { CommanderMissionCard } from "@/components/commander";
+
+const ModeBanner = dynamic(() => import("@/components/ModeBanner").then((m) => ({ default: m.ModeBanner })), { loading: () => <div className="min-h-[44px]" aria-hidden /> });
+const EnergyCapBar = dynamic(() => import("@/components/missions/EnergyCapBar").then((m) => ({ default: m.EnergyCapBar })), { loading: () => <div className="h-10 animate-pulse rounded-lg bg-white/5" aria-hidden /> });
+const SmartSuggestionBanner = dynamic(() => import("@/components/missions/SmartSuggestionBanner").then((m) => ({ default: m.SmartSuggestionBanner })), { loading: () => null });
+const YesterdayTasksSection = dynamic(() => import("@/components/missions/YesterdayTasksSection").then((m) => ({ default: m.YesterdayTasksSection })), { loading: () => null });
+const CommanderMissionCard = dynamic(() => import("@/components/commander").then((m) => ({ default: m.CommanderMissionCard })), { loading: () => <div className="min-h-[72px] animate-pulse rounded-xl bg-white/5" aria-hidden /> });
+const TaskList = dynamic(() => import("@/components/TaskList").then((m) => ({ default: m.TaskList })), { loading: () => <div className="card-simple min-h-[200px] animate-pulse rounded-xl bg-white/5 p-4" aria-hidden /> });
+const BacklogList = dynamic(() => import("@/components/BacklogList").then((m) => ({ default: m.BacklogList })), { loading: () => null });
+const AddCalendarEventForm = dynamic(() => import("@/components/AddCalendarEventForm").then((m) => ({ default: m.AddCalendarEventForm })), { loading: () => <div className="min-h-[120px] animate-pulse rounded-lg bg-white/5" aria-hidden /> });
+const AgendaOnlyList = dynamic(() => import("@/components/AgendaOnlyList").then((m) => ({ default: m.AgendaOnlyList })), { loading: () => <div className="min-h-[80px] animate-pulse rounded-lg bg-white/5" aria-hidden /> });
 
 export default async function TasksPage() {
   const today = new Date();

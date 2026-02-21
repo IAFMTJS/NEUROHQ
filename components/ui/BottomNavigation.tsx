@@ -23,7 +23,6 @@ const navLinks = [
   { href: "/learning", label: "Growth", Icon: IconGrowth, pngFile: "Growth.png" },
   { href: "/strategy", label: "Strategy", Icon: IconStrategy, pngFile: "Strategy.png" },
   { href: "/report", label: "Insight", Icon: IconInsights, pngFile: "Insights.png" },
-  { href: "/design", label: "Design", Icon: IconStrategy, pngFile: "Layer 6.png" },
   { href: "/settings", label: "Settings", Icon: IconSettings, pngFile: "Settings.png" },
 ] as const;
 

@@ -1,10 +1,12 @@
+import dynamic from "next/dynamic";
 import { getMascotSrcForPage } from "@/lib/mascots";
 import { HQPageHeader } from "@/components/hq";
 import { getRealityReport, getStoredReport, getStoredReportWeeks } from "@/app/actions/report";
 import { getWeekBounds } from "@/lib/utils/learning";
-import { RealityReportCard } from "@/components/RealityReportCard";
-import { ReportWeekSelector } from "@/components/ReportWeekSelector";
-import { ReportAnalysis } from "@/components/ReportAnalysis";
+
+const ReportWeekSelector = dynamic(() => import("@/components/ReportWeekSelector").then((m) => ({ default: m.ReportWeekSelector })), { loading: () => <div className="min-h-[48px] animate-pulse rounded-lg bg-white/5" aria-hidden /> });
+const ReportAnalysis = dynamic(() => import("@/components/ReportAnalysis").then((m) => ({ default: m.ReportAnalysis })), { loading: () => <div className="min-h-[120px] animate-pulse rounded-xl bg-white/5" aria-hidden /> });
+const RealityReportCard = dynamic(() => import("@/components/RealityReportCard").then((m) => ({ default: m.RealityReportCard })), { loading: () => <div className="glass-card min-h-[180px] animate-pulse rounded-[22px]" aria-hidden /> });
 
 type Props = { searchParams: Promise<{ weekStart?: string }> };
 
