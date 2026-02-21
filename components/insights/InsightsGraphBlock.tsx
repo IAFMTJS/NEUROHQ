@@ -89,8 +89,11 @@ export function InsightsGraphBlock({ graphData }: Props) {
             />
             <Tooltip
               contentStyle={tooltipStyle}
-              formatter={(value: number) =>
-                [layer === "xp" ? value : `${Number(value)}/10`, layer === "xp" ? "XP" : layer === "energy" ? "Energie" : "Focus"]
+              formatter={(value: number | undefined) =>
+                [
+                  value == null ? "–" : layer === "xp" ? value : `${Number(value)}/10`,
+                  layer === "xp" ? "XP" : layer === "energy" ? "Energie" : "Focus",
+                ]
               }
             />
             <Area
