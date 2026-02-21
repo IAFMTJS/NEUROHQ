@@ -371,7 +371,7 @@ export async function getDriftAlert(strategyId: string): Promise<{ drift: boolea
     .single();
   if (!strategy) return null;
   const planned = normalizeAllocation(strategy.weekly_allocation as Record<string, unknown>);
-  const plannedTop = (DOMAINS as readonly string[]).sort((a, b) => (planned[b as StrategyDomain] ?? 0) - (planned[a as StrategyDomain] ?? 0))[0];
+  const plannedTop = [...DOMAINS].sort((a, b) => (planned[b as StrategyDomain] ?? 0) - (planned[a as StrategyDomain] ?? 0))[0];
 
   const end = new Date();
   const days: string[] = [];
@@ -388,7 +388,7 @@ export async function getDriftAlert(strategyId: string): Promise<{ drift: boolea
     const xp = await getXPByDomain(date, date);
     const total = Object.values(xp).reduce((a, b) => a + b, 0);
     if (total === 0) continue;
-    const actualTop = (DOMAINS as readonly string[]).sort((a, b) => (xp[b as StrategyDomain] ?? 0) - (xp[a as StrategyDomain] ?? 0))[0];
+    const actualTop = [...DOMAINS].sort((a, b) => (xp[b as StrategyDomain] ?? 0) - (xp[a as StrategyDomain] ?? 0))[0];
     const plannedFrac = (planned[plannedTop as StrategyDomain] ?? 0) / 100;
     const actualFrac = (xp[actualTop as StrategyDomain] ?? 0) / total;
     totalScore += 1 - Math.abs(plannedFrac - actualFrac);
