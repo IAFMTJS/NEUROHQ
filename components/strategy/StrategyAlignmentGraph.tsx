@@ -86,7 +86,7 @@ export function StrategyAlignmentGraph({
                 borderRadius: "8px",
                 color: "var(--text-primary)",
               }}
-              formatter={(value: number) => [`${value}%`, ""]}
+              formatter={(value: number | undefined) => [value != null ? `${value}%` : "", ""]}
               labelFormatter={(label) => label}
             />
             <Legend
