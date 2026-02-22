@@ -9,16 +9,18 @@ export type UserEconomy = {
   momentum_boosters: number;
 };
 
+const DEFAULT_ECONOMY: UserEconomy = { discipline_points: 0, focus_credits: 0, momentum_boosters: 0 };
+
 export async function getUserEconomy(): Promise<UserEconomy> {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
-  if (!user)
-    return { discipline_points: 0, focus_credits: 0, momentum_boosters: 0 };
-  const { data } = await supabase
+  if (!user) return DEFAULT_ECONOMY;
+  const { data, error } = await supabase
     .from("user_economy")
     .select("discipline_points, focus_credits, momentum_boosters")
     .eq("user_id", user.id)
-    .single();
+    .maybeSingle();
+  if (error) return DEFAULT_ECONOMY;
   return {
     discipline_points: (data?.discipline_points as number | undefined) ?? 0,
     focus_credits: (data?.focus_credits as number | undefined) ?? 0,

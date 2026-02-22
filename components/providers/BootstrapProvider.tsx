@@ -32,6 +32,9 @@ export function BootstrapProvider({ children }: BootstrapProviderProps) {
     try {
       const data = await getAppBootstrap();
       setBootstrap(data);
+    } catch (err) {
+      console.error("Bootstrap failed:", err);
+      setBootstrap(null);
     } finally {
       setLoading(false);
     }

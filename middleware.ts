@@ -1,7 +1,7 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
-const APP_ROUTES = ["/dashboard", "/tasks", "/settings", "/budget", "/learning", "/strategy", "/report"];
+const APP_ROUTES = ["/dashboard", "/tasks", "/settings", "/budget", "/learning", "/strategy", "/report", "/xp", "/assistant", "/analytics"];
 const AUTH_ROUTES = ["/login", "/signup", "/forgot-password"];
 
 function isAppRoute(pathname: string) {
