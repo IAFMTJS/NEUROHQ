@@ -2,15 +2,7 @@
 
 import { createClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
-import type { UserPreferences } from "@/types/preferences.types";
-
-export const PREFERENCES_DEFAULTS: UserPreferences = {
-  theme: "normal",
-  color_mode: "dark",
-  selected_emotion: null,
-  compact_ui: false,
-  updated_at: new Date().toISOString(),
-};
+import { PREFERENCES_DEFAULTS, type UserPreferences } from "@/types/preferences.types";
 
 const DEFAULTS = PREFERENCES_DEFAULTS;
 

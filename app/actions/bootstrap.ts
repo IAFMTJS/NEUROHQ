@@ -3,7 +3,8 @@
 import { createClient } from "@/lib/supabase/server";
 import { getXP } from "@/app/actions/xp";
 import { getDailyState } from "@/app/actions/daily-state";
-import { getUserPreferencesOrDefaults, PREFERENCES_DEFAULTS } from "@/app/actions/preferences";
+import { getUserPreferencesOrDefaults } from "@/app/actions/preferences";
+import { PREFERENCES_DEFAULTS } from "@/types/preferences.types";
 import { getUserEconomy } from "@/app/actions/economy";
 
 export type AppBootstrap = {
