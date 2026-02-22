@@ -73,7 +73,7 @@ export function StrategyAllocationSliders({
         Weekly focus budget (100 punten)
       </h2>
       <p className="mt-1 text-xs text-[var(--text-muted)]">
-        Verdeling via sliders. Dit wordt de geplande distributie.
+        Verdeling via sliders (live opportunity cost bij aanpassen). Dit wordt de geplande distributie.
       </p>
       <div className="mt-3 space-y-3">
         {DOMAINS.map((d) => (

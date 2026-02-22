@@ -92,12 +92,51 @@ export async function addXP(points: number): Promise<void> {
     revalidatePath("/settings");
     revalidatePath("/tasks");
     revalidatePath("/learning");
+    revalidatePath("/xp");
   }
 }
 
-/** Call when user completes a task. */
-export async function awardXPForTaskComplete() {
-  await addXP(XP_TASK_COMPLETE);
+/** Alignment <60% for 5 days → XP -10% (Performance Engine consequences). */
+async function getAlignmentPenaltyMultiplier(): Promise<number> {
+  const { getActiveStrategyFocus } = await import("./strategyFocus");
+  const strategy = await getActiveStrategyFocus();
+  if (!strategy) return 1;
+  const { getAlignmentLog } = await import("./strategyFocus");
+  const log = await getAlignmentLog(strategy.id, 5);
+  if (log.length < 5) return 1;
+  const avg = log.reduce((a, r) => a + r.alignment_score, 0) / log.length;
+  return avg < 0.6 ? 0.9 : 1;
+}
+
+/** Anti-grind: XP diminishing returns when repeating same domain in one day (3+ → 0.9, 5+ → 0.8). */
+async function getAntiGrindMultiplier(domain: string | null): Promise<number> {
+  if (!domain) return 1;
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return 1;
+  const today = new Date().toISOString().slice(0, 10);
+  const { data: tasks } = await supabase
+    .from("tasks")
+    .select("id")
+    .eq("user_id", user.id)
+    .eq("completed", true)
+    .eq("domain", domain)
+    .gte("completed_at", today + "T00:00:00Z")
+    .lt("completed_at", today + "T23:59:59.999Z");
+  const n = (tasks ?? []).length;
+  if (n >= 5) return 0.8;
+  if (n >= 3) return 0.9;
+  return 1;
+}
+
+/** Call when user completes a task. Pass task domain for anti-grind. */
+export async function awardXPForTaskComplete(taskDomain?: string | null) {
+  const [alignMult, antiGrindMult] = await Promise.all([
+    getAlignmentPenaltyMultiplier(),
+    getAntiGrindMultiplier(taskDomain ?? null),
+  ]);
+  const mult = alignMult * antiGrindMult;
+  await addXP(Math.max(1, Math.floor(XP_TASK_COMPLETE * mult)));
 }
 
 /** Call when user saves brain status (daily check-in). */
@@ -148,5 +187,6 @@ export async function deductXP(points: number): Promise<void> {
     revalidatePath("/learning");
     revalidatePath("/settings");
     revalidatePath("/tasks");
+    revalidatePath("/xp");
   }
 }

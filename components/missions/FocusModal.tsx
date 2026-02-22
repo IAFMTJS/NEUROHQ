@@ -2,15 +2,30 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { completeTask, snoozeTask } from "@/app/actions/tasks";
+import { logTaskEvent, snoozeTask } from "@/app/actions/tasks";
+import { useOfflineCompleteTask } from "@/app/hooks/useOfflineCompleteTask";
+import { getDailyState, setEmotionalStatePreStart, type EmotionalStatePreStart } from "@/app/actions/daily-state";
 
 const DEFAULT_MINUTES = 25;
+
+const EMOTIONAL_OPTIONS: { value: EmotionalStatePreStart; label: string }[] = [
+  { value: "focused", label: "Gefocust" },
+  { value: "tired", label: "Moe" },
+  { value: "resistance", label: "Weerstand" },
+  { value: "distracted", label: "Afgeleid" },
+  { value: "motivated", label: "Gemotiveerd" },
+];
 
 type Props = {
   open: boolean;
   onClose: () => void;
   taskId: string;
   taskTitle: string;
+  /** For Emotional State Check (default: today). */
+  date?: string;
+  /** Anti-Distraction Guard: show "Dit verlaagt je Alignment Score" when outside primary/secondary. */
+  taskDomain?: string | null;
+  strategyMapping?: { primaryDomain: string; secondaryDomains: string[] } | null;
   onComplete?: () => void;
   onSnooze?: () => void;
 };
@@ -21,12 +36,27 @@ function formatTime(seconds: number): string {
   return `${m}:${s.toString().padStart(2, "0")}`;
 }
 
-export function FocusModal({ open, onClose, taskId, taskTitle, onComplete, onSnooze }: Props) {
+export function FocusModal({ open, onClose, taskId, taskTitle, date: dateProp, taskDomain, strategyMapping, onComplete, onSnooze }: Props) {
   const router = useRouter();
+  const completeTaskOffline = useOfflineCompleteTask();
+  const today = new Date().toISOString().slice(0, 10);
+  const date = dateProp ?? today;
   const [pending, setPending] = useState(false);
   const [minutes, setMinutes] = useState(DEFAULT_MINUTES);
   const [secondsLeft, setSecondsLeft] = useState(minutes * 60);
   const [running, setRunning] = useState(false);
+  const [dailyState, setDailyState] = useState<{ emotional_state?: string | null } | null>(null);
+  const [emotionalStateSet, setEmotionalStateSet] = useState(false);
+  const outsideFocus =
+    taskDomain &&
+    strategyMapping &&
+    taskDomain !== strategyMapping.primaryDomain &&
+    !strategyMapping.secondaryDomains.includes(taskDomain);
+
+  useEffect(() => {
+    if (!open) return;
+    getDailyState(date).then((d) => setDailyState(d as { emotional_state?: string | null } | null));
+  }, [open, date]);
 
   const totalSeconds = minutes * 60;
   useEffect(() => {
@@ -45,12 +75,12 @@ export function FocusModal({ open, onClose, taskId, taskTitle, onComplete, onSno
 
   const handleComplete = useCallback(() => {
     setPending(true);
-    completeTask(taskId).then(() => {
+    completeTaskOffline(taskId).then(() => {
       onComplete?.();
       router.refresh();
       onClose();
     }).finally(() => setPending(false));
-  }, [taskId, onComplete, router, onClose]);
+  }, [taskId, completeTaskOffline, onComplete, router, onClose]);
 
   const handleSnooze = useCallback(() => {
     setPending(true);
@@ -93,8 +123,34 @@ export function FocusModal({ open, onClose, taskId, taskTitle, onComplete, onSno
         </header>
 
         <div className="modal-card-body">
-          {!running ? (
+          {!emotionalStateSet && dailyState && dailyState.emotional_state == null && !running ? (
+            <div className="flex flex-col items-center gap-3 py-2">
+              <p className="text-sm font-medium text-[var(--text-primary)]">Hoe voel je je nu?</p>
+              <div className="flex flex-wrap justify-center gap-2">
+                {EMOTIONAL_OPTIONS.map(({ value, label }) => (
+                  <button
+                    key={value}
+                    type="button"
+                    onClick={() => {
+                      setEmotionalStatePreStart(date, value).then(() => {
+                        setEmotionalStateSet(true);
+                        router.refresh();
+                      });
+                    }}
+                    className="rounded-xl border border-[var(--card-border)] bg-[var(--bg-surface)] px-3 py-2 text-sm font-medium text-[var(--text-primary)] transition-colors hover:bg-[var(--accent-focus)]/20 hover:border-[var(--accent-focus)]/50"
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
+            </div>
+          ) : !running ? (
             <div className="flex flex-col items-center gap-4">
+              {outsideFocus && (
+                <p className="rounded-xl border border-amber-500/40 bg-amber-500/10 px-3 py-2 text-center text-sm text-amber-200">
+                  Dit verlaagt je Alignment Score (missie buiten je focus).
+                </p>
+              )}
               <label className="text-sm font-medium text-[var(--text-muted)]">Minutes</label>
               <input
                 type="number"
@@ -119,7 +175,10 @@ export function FocusModal({ open, onClose, taskId, taskTitle, onComplete, onSno
           {!running ? (
             <button
               type="button"
-              onClick={() => setRunning(true)}
+              onClick={() => {
+                setRunning(true);
+                logTaskEvent({ taskId, eventType: "start" });
+              }}
               className="btn-primary rounded-xl px-6 py-3 text-base font-medium"
             >
               Start timer

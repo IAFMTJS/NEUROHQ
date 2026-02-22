@@ -13,6 +13,7 @@ import { getLearningStreak, getWeeklyMinutes, getWeeklyLearningTarget } from "@/
 import { getBudgetSettings, getCurrentMonthExpensesCents } from "@/app/actions/budget";
 import { getUserPreferencesOrDefaults } from "@/app/actions/preferences";
 import { getXP, getXPIdentity } from "@/app/actions/xp";
+import { getUserEconomy } from "@/app/actions/economy";
 import { getMomentum } from "@/app/actions/dcic/momentum";
 import { getTodayEngine } from "@/app/actions/dcic/today-engine";
 import { getXPForecast } from "@/app/actions/dcic/xp-forecast";
@@ -24,6 +25,7 @@ import { getWeekBounds } from "@/lib/utils/learning";
 import { getCurrencySymbol } from "@/lib/utils/currency";
 import { yesterdayDate, getDayOfYearFromDateString } from "@/lib/utils/timezone";
 import { HQHeader, BrainStatusCard, ActiveMissionCard } from "@/components/hq";
+import { EconomyBadge } from "@/components/EconomyBadge";
 import { CommanderHomeHero } from "@/components/commander";
 import { HeroMascotImage } from "@/components/HeroMascotImage";
 import { ModeBanner, ModeExplanationModal, AddCalendarEventForm } from "@/components/dashboard/DashboardClientOnly";
@@ -147,7 +149,7 @@ export default async function DashboardPage() {
   const quoteDay = Math.max(1, Math.min(365, getDayOfYearFromDateString(dateStr)));
   const yesterdayStr = yesterdayDate(dateStr);
   await ensureIdentityEngineRows();
-  const [state, yesterdayState, quotesResult, mode, energyBudget, upcomingCalendarEvents, hasGoogle, learningStreak, prefs, xp, identity, identityEngine, momentum, todayEngine, xpForecast, heatmapDays] = await Promise.all([
+  const [state, yesterdayState, quotesResult, mode, energyBudget, upcomingCalendarEvents, hasGoogle, learningStreak, prefs, xp, identity, economy, identityEngine, momentum, todayEngine, xpForecast, heatmapDays] = await Promise.all([
     getDailyState(dateStr),
     getDailyState(yesterdayStr),
     Promise.all([
@@ -163,6 +165,7 @@ export default async function DashboardPage() {
     getUserPreferencesOrDefaults(),
     getXP(),
     getXPIdentity(),
+    getUserEconomy(),
     getIdentityEngine(),
     getMomentum(),
     getTodayEngine(dateStr),
@@ -222,7 +225,10 @@ export default async function DashboardPage() {
       {!isMinimalUI && (
         <div className="relative z-10 flex flex-wrap items-center justify-between gap-2">
           <OnboardingBanner />
-          <XPBadge totalXp={xp.total_xp} level={xp.level} compact />
+          <div className="flex items-center gap-2">
+            <XPBadge totalXp={xp.total_xp} level={xp.level} compact />
+            <EconomyBadge disciplinePoints={economy.discipline_points} focusCredits={economy.focus_credits} momentumBoosters={economy.momentum_boosters} compact />
+          </div>
         </div>
       )}
       {!isMinimalUI && (

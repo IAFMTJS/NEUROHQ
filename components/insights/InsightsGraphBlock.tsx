@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import {
   AreaChart,
   Area,
@@ -107,6 +108,11 @@ export function InsightsGraphBlock({ graphData }: Props) {
             />
           </AreaChart>
         </ResponsiveContainer>
+      </div>
+      <div className="border-t border-[var(--card-border)] p-4">
+        <Link href="/report" className="btn-hq-secondary inline-flex w-full items-center justify-center rounded-[var(--hq-btn-radius)] py-2.5 px-4">
+          Meer data
+        </Link>
       </div>
     </section>
   );

@@ -407,7 +407,7 @@ export async function getDriftAlert(strategyId: string): Promise<{ drift: boolea
   return null;
 }
 
-/** Strategic pressure index: (TargetRemaining / DaysRemaining) * MomentumFactor. <1 comfort, 1–1.5 health, >1.5 risk. */
+/** Strategic pressure index: (TargetRemaining / DaysRemaining) * MomentumFactor. <1 comfort, 1–1.5 health, >1.5 risk. Deadline gemist → pressure_boost_after_deadline, volgende cycle risk. */
 export async function getPressureIndex(strategyId: string): Promise<{
   pressure: number;
   zone: "comfort" | "healthy" | "risk";
@@ -417,7 +417,7 @@ export async function getPressureIndex(strategyId: string): Promise<{
   const supabase = await createClient();
   const { data: strategy } = await supabase
     .from("strategy_focus")
-    .select("deadline, target_metric")
+    .select("deadline, target_metric, pressure_boost_after_deadline")
     .eq("id", strategyId)
     .single();
   if (!strategy) {
@@ -426,15 +426,19 @@ export async function getPressureIndex(strategyId: string): Promise<{
   const deadline = new Date((strategy.deadline as string) + "T23:59:59");
   const now = new Date();
   const daysRemaining = Math.max(0, Math.ceil((deadline.getTime() - now.getTime()) / 86400000));
+  const boost = (strategy as { pressure_boost_after_deadline?: boolean }).pressure_boost_after_deadline === true;
+  if (daysRemaining <= 0 && !boost) {
+    await supabase.from("strategy_focus").update({ pressure_boost_after_deadline: true, updated_at: new Date().toISOString() }).eq("id", strategyId);
+  }
   const momentum = await getMomentumByDomain();
   const avgMomentum = Object.values(momentum).reduce((a, b) => a + b, 0) / 4;
   const momentumFactor = avgMomentum > 0 ? Math.min(2, avgMomentum) : 0.5;
   const targetRemaining = 100;
   const pressure = daysRemaining > 0 ? (targetRemaining / daysRemaining) * momentumFactor : 2;
   let zone: "comfort" | "healthy" | "risk" = "comfort";
-  if (pressure >= 1.5) zone = "risk";
+  if (boost || daysRemaining <= 0 || pressure >= 1.5) zone = "risk";
   else if (pressure >= 1) zone = "healthy";
-  return { pressure, zone, daysRemaining, targetRemaining };
+  return { pressure: boost || daysRemaining <= 0 ? Math.max(pressure, 1.5) : pressure, zone, daysRemaining, targetRemaining };
 }
 
 /** Strategy reviews: last one and whether weekly review is due. */

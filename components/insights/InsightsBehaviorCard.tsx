@@ -42,7 +42,7 @@ export function InsightsBehaviorCard({ bestDayOfWeek }: Props) {
         </>
       )}
       <p className="mt-3 text-xs text-[var(--text-muted)]">
-        Beste tijdstip (heatmap) en drop-off patronen volgen later.
+        Heatmap per uur en drop-off patronen staan verderop op deze pagina.
       </p>
     </section>
   );

@@ -12,7 +12,7 @@ export function XPBadge({ totalXp, level, compact = false }: Props) {
   if (compact) {
     return (
       <Link
-        href="/settings"
+        href="/xp"
         className="inline-flex items-center gap-1.5 rounded-full border border-[var(--card-border)] bg-[var(--bg-surface)]/80 px-2.5 py-1 text-xs font-medium text-[var(--text-secondary)] hover:border-[var(--accent-focus)]/50 hover:text-[var(--text-primary)] transition"
         aria-label={`Level ${level}, ${totalXp} XP`}
       >

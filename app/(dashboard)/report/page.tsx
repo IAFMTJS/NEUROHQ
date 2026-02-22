@@ -2,7 +2,16 @@ import dynamic from "next/dynamic";
 import { getMascotSrcForPage } from "@/lib/mascots";
 import { HQPageHeader } from "@/components/hq";
 import { getRealityReport, getStoredReport, getStoredReportWeeks } from "@/app/actions/report";
-import { getInsightEngineState } from "@/app/actions/dcic/insight-engine";
+import {
+  getInsightEngineState,
+  getBestHourHeatmap,
+  getConsistencyMap,
+  getDropOffPattern,
+  getCorrelationInsights,
+  getStrengthWeaknessRadar,
+  getComparativeIntelligence,
+  getFriction40Insight,
+} from "@/app/actions/dcic/insight-engine";
 import { getWeekBounds } from "@/lib/utils/learning";
 import {
   InsightsMomentumHero,
@@ -10,6 +19,14 @@ import {
   InsightsBehaviorCard,
   InsightsRiskForecastCard,
   InsightsCoachCard,
+  InsightsHourHeatmap,
+  InsightsConsistencyMap,
+  PowerUserModeToggle,
+  InsightsDropOffCard,
+  InsightsCorrelationCard,
+  InsightsRadarChart,
+  InsightsComparativeCard,
+  InsightsFriction40Card,
 } from "@/components/insights";
 
 const ReportWeekSelector = dynamic(() => import("@/components/ReportWeekSelector").then((m) => ({ default: m.ReportWeekSelector })), { loading: () => <div className="min-h-[48px] animate-pulse rounded-lg bg-white/5" aria-hidden /> });
@@ -28,10 +45,17 @@ export default async function ReportPage({ searchParams }: Props) {
   const params = await searchParams;
   const weekStartParam = params.weekStart;
 
-  const [storedWeeks, currentReport, insightState] = await Promise.all([
+  const [storedWeeks, currentReport, insightState, hourHeatmap, consistencyMap, dropOff, correlation, radar, comparative, friction40] = await Promise.all([
     getStoredReportWeeks(),
     getRealityReport(currentWeekStart, currentWeekEnd),
     getInsightEngineState(),
+    getBestHourHeatmap(),
+    getConsistencyMap(),
+    getDropOffPattern(),
+    getCorrelationInsights(),
+    getStrengthWeaknessRadar(),
+    getComparativeIntelligence(),
+    getFriction40Insight(),
   ]);
 
   const selectedWeekStart = weekStartParam ?? currentWeekStart;
@@ -80,6 +104,37 @@ export default async function ReportPage({ searchParams }: Props) {
 
           {/* Section 5 – Coach */}
           <InsightsCoachCard recommendations={insightState.coachRecommendations} />
+
+          {/* Beste tijdstip (heatmap per uur) */}
+          <InsightsHourHeatmap byHour={hourHeatmap} />
+
+          {/* Drop-off pattern */}
+          <InsightsDropOffCard message={dropOff.message} />
+
+          {/* Correlation Insight Engine */}
+          <InsightsCorrelationCard sentence={correlation.sentence} />
+
+          {/* Strength vs Weakness Radar (domeinen) */}
+          <InsightsRadarChart data={radar} />
+
+          {/* Comparative Intelligence */}
+          <InsightsComparativeCard sentence={comparative.sentence} />
+
+          {/* Friction 40% langer */}
+          <InsightsFriction40Card sentence={friction40.sentence} />
+
+          {/* Consistency Map (groen/geel/rood) */}
+          <InsightsConsistencyMap days={consistencyMap} />
+
+          {/* Power User Mode: ruwe data + export CSV */}
+          <PowerUserModeToggle
+            graphData={insightState.graphData}
+            rawSummary={{
+              xpLast7: insightState.xpLast7,
+              xpPrevious7: insightState.xpPrevious7,
+              completionRate: insightState.completionRateLast7,
+            }}
+          />
         </>
       )}
 

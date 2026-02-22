@@ -1,9 +1,10 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState, useTransition } from "react";
+import { useEffect, useRef, useTransition } from "react";
 import { Modal } from "@/components/Modal";
-import { completeTask, deleteTask, snoozeTask } from "@/app/actions/tasks";
+import { deleteTask, logTaskEvent, snoozeTask } from "@/app/actions/tasks";
+import { useOfflineCompleteTask } from "@/app/hooks/useOfflineCompleteTask";
 import type { SubtaskRow } from "@/app/actions/tasks";
 
 const WEEKDAY_LABELS: Record<number, string> = { 1: "Mon", 2: "Tue", 3: "Wed", 4: "Thu", 5: "Fri", 6: "Sat", 7: "Sun" };
@@ -20,6 +21,20 @@ type ExtendedTask = {
   mental_load?: number | null;
   social_load?: number | null;
   notes?: string | null;
+  domain?: string | null;
+  impact?: number | null;
+};
+
+/** Strategic impact preview (Performance Engine): XP, discipline, ROI, pressure, alignment. */
+export type StrategicPreview = {
+  domain?: string | null;
+  alignmentImpactPct?: number;
+  expectedXP?: number;
+  disciplineImpact?: number;
+  roi?: number;
+  pressureEffect?: string;
+  strategicValue?: number;
+  psychologyLabel?: string | null;
 };
 
 type Props = {
@@ -27,6 +42,7 @@ type Props = {
   onClose: () => void;
   task: ExtendedTask;
   subtasks?: SubtaskRow[];
+  strategicPreview?: StrategicPreview | null;
   onComplete?: () => void;
   onSnooze?: () => void;
   onEdit?: () => void;
@@ -45,23 +61,41 @@ function recurrenceLabel(task: ExtendedTask): string {
   return "Weekly";
 }
 
+function expectedXPFromTask(task: ExtendedTask): number {
+  const impact = task.impact ?? 2;
+  return Math.max(10, Math.min(100, impact * 35)) || 50;
+}
+
 export function TaskDetailsModal({
   open,
   onClose,
   task,
   subtasks = [],
+  strategicPreview,
   onComplete,
   onSnooze,
   onEdit,
   onDelete,
   onDuplicate,
 }: Props) {
+  const hasStrategic = strategicPreview && (strategicPreview.domain ?? strategicPreview.expectedXP ?? strategicPreview.roi != null);
+  const fallbackXP = expectedXPFromTask(task);
   const router = useRouter();
   const [pending, startTransition] = useTransition();
+  const viewLoggedRef = useRef<string | null>(null);
 
+  useEffect(() => {
+    if (open && task.id && viewLoggedRef.current !== task.id) {
+      viewLoggedRef.current = task.id;
+      logTaskEvent({ taskId: task.id, eventType: "view" });
+    }
+    if (!open) viewLoggedRef.current = null;
+  }, [open, task.id]);
+
+  const completeTaskOffline = useOfflineCompleteTask();
   function handleComplete() {
     startTransition(async () => {
-      await completeTask(task.id);
+      await completeTaskOffline(task.id);
       onComplete?.();
       router.refresh();
       onClose();
@@ -78,6 +112,7 @@ export function TaskDetailsModal({
   }
 
   function handleDeleteClick() {
+    if (!task.completed) logTaskEvent({ taskId: task.id, eventType: "abandon" });
     if (onDelete) {
       onDelete();
       onClose();
@@ -90,10 +125,15 @@ export function TaskDetailsModal({
     }
   }
 
+  function handleClose() {
+    if (!task.completed) logTaskEvent({ taskId: task.id, eventType: "abandon" });
+    onClose();
+  }
+
   return (
     <Modal
       open={open}
-      onClose={onClose}
+      onClose={handleClose}
       title={task.title}
       size="lg"
       footer={
@@ -109,12 +149,12 @@ export function TaskDetailsModal({
             </>
           )}
           {onEdit && (
-            <button type="button" onClick={onEdit} className="btn-secondary rounded-xl px-4 py-2.5 text-sm font-medium">
+            <button type="button" onClick={() => { if (!task.completed) logTaskEvent({ taskId: task.id, eventType: "abandon" }); onEdit(); }} className="btn-secondary rounded-xl px-4 py-2.5 text-sm font-medium">
               Edit
             </button>
           )}
           {onDuplicate && (
-            <button type="button" onClick={onDuplicate} className="btn-secondary rounded-xl px-4 py-2.5 text-sm font-medium">
+            <button type="button" onClick={() => { if (!task.completed) logTaskEvent({ taskId: task.id, eventType: "abandon" }); onDuplicate(); }} className="btn-secondary rounded-xl px-4 py-2.5 text-sm font-medium">
               Duplicate
             </button>
           )}
@@ -127,12 +167,31 @@ export function TaskDetailsModal({
       <div className="space-y-5">
         <div className="flex flex-wrap items-center gap-2">
           {task.category && <span className="rounded-lg bg-[var(--accent-neutral)] px-2.5 py-1 text-xs font-medium text-[var(--text-secondary)]">{task.category}</span>}
+          {(strategicPreview?.domain ?? task.domain) && (
+            <span className="rounded-lg bg-[var(--accent-focus)]/15 px-2.5 py-1 text-xs font-medium text-[var(--accent-focus)]" title="Strategy domain">
+              🎯 {strategicPreview?.domain ?? task.domain}
+            </span>
+          )}
           {recurrenceLabel(task) && <span className="rounded-lg bg-[var(--accent-neutral)] px-2.5 py-1 text-xs text-[var(--text-muted)]">{recurrenceLabel(task)}</span>}
           {task.due_date && <span className="text-xs text-[var(--text-muted)]">Due {task.due_date}</span>}
           {task.energy_required != null && <span className="rounded-lg bg-[var(--accent-energy)]/20 px-2.5 py-1 text-xs font-medium text-[var(--accent-energy)]" title="Energy cost">⚡ {task.energy_required}</span>}
           {task.mental_load != null && <span className="rounded-lg bg-[var(--accent-focus)]/15 px-2.5 py-1 text-xs font-medium text-[var(--accent-focus)]" title="Mental load">🧠 {task.mental_load}</span>}
           {task.social_load != null && <span className="rounded-lg bg-[var(--accent-focus)]/15 px-2.5 py-1 text-xs font-medium text-[var(--accent-focus)]" title="Social load">👥 {task.social_load}</span>}
         </div>
+        {hasStrategic && (
+          <section className="rounded-lg border border-[var(--card-border)] bg-[var(--bg-surface)]/50 p-3">
+            <h3 className="text-xs font-semibold uppercase tracking-wider text-[var(--text-muted)]">Strategische impact</h3>
+            <ul className="mt-2 space-y-1.5 text-sm text-[var(--text-primary)]">
+              <li>Verwachte XP: <strong>{strategicPreview?.expectedXP ?? fallbackXP}</strong></li>
+              {strategicPreview?.alignmentImpactPct != null && <li>Alignment: <strong>{strategicPreview.alignmentImpactPct > 0 ? "+" : ""}{strategicPreview.alignmentImpactPct}%</strong></li>}
+              {strategicPreview?.disciplineImpact != null && <li>Discipline effect: <strong>{Math.round(strategicPreview.disciplineImpact * 100)}%</strong></li>}
+              {strategicPreview?.roi != null && <li>ROI (XP/tijd): <strong>{Math.round(strategicPreview.roi)}%</strong></li>}
+              {strategicPreview?.pressureEffect && <li>Pressure: {strategicPreview.pressureEffect}</li>}
+              {strategicPreview?.strategicValue != null && <li>Strategische waarde: <strong>{Math.round(strategicPreview.strategicValue * 100)}%</strong></li>}
+              {strategicPreview?.psychologyLabel && <li className="text-[var(--text-muted)]">Label: {strategicPreview.psychologyLabel}</li>}
+            </ul>
+          </section>
+        )}
         {task.notes?.trim() && (
           <section>
             <h3 className="text-xs font-semibold uppercase tracking-wider text-[var(--text-muted)]">Notes</h3>

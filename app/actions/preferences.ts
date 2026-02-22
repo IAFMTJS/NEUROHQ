@@ -4,13 +4,15 @@ import { createClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
 import type { UserPreferences } from "@/types/preferences.types";
 
-const DEFAULTS: UserPreferences = {
+export const PREFERENCES_DEFAULTS: UserPreferences = {
   theme: "normal",
   color_mode: "dark",
   selected_emotion: null,
   compact_ui: false,
   updated_at: new Date().toISOString(),
 };
+
+const DEFAULTS = PREFERENCES_DEFAULTS;
 
 export async function getUserPreferences(): Promise<UserPreferences | null> {
   const supabase = await createClient();

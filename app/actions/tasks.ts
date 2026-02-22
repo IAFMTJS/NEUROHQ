@@ -74,6 +74,52 @@ export async function getTasksForDate(date: string) {
   return data ?? [];
 }
 
+/** Per-day planned load for a week (Calendar Modal 3.0: time budget, overload, burnout). */
+export type DayPlannedLoad = { date: string; taskCount: number; totalEnergy: number; totalPlannedMinutes?: number; isOverload?: boolean };
+
+const MINUTES_PER_ENERGY = 8;
+
+export async function getWeekPlannedLoad(weekStartStr: string): Promise<DayPlannedLoad[]> {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return [];
+  const start = new Date(weekStartStr + "T12:00:00Z");
+  const dates: string[] = [];
+  for (let i = 0; i < 7; i++) {
+    const d = new Date(start);
+    d.setUTCDate(start.getUTCDate() + i);
+    dates.push(d.toISOString().slice(0, 10));
+  }
+  const { data: tasks } = await supabase
+    .from("tasks")
+    .select("due_date, energy_required")
+    .eq("user_id", user.id)
+    .eq("completed", false)
+    .in("due_date", dates);
+  const byDate: Record<string, { count: number; energy: number; minutes: number }> = {};
+  for (const date of dates) byDate[date] = { count: 0, energy: 0, minutes: 0 };
+  for (const t of tasks ?? []) {
+    const d = (t as { due_date: string; energy_required: number | null }).due_date;
+    const energy = Math.min(10, Math.max(1, (t as { energy_required: number | null }).energy_required ?? 2));
+    if (byDate[d]) {
+      byDate[d].count++;
+      byDate[d].energy += energy;
+      byDate[d].minutes += energy * MINUTES_PER_ENERGY;
+    }
+  }
+  const ENERGY_CAP = 10;
+  return dates.map((date) => ({
+    date,
+    taskCount: byDate[date].count,
+    totalEnergy: byDate[date].energy,
+    totalPlannedMinutes: byDate[date].minutes,
+    isOverload: byDate[date].energy > ENERGY_CAP,
+  }));
+}
+
+export type MissionIntent = "discipline" | "recovery" | "pressure" | "alignment" | "experiment";
+export type StrategyDomainTask = "discipline" | "health" | "learning" | "business";
+
 export async function createTask(params: {
   title: string;
   due_date: string;
@@ -89,30 +135,46 @@ export async function createTask(params: {
   impact?: number | null;
   urgency?: number | null;
   notes?: string | null;
+  domain?: StrategyDomainTask | null;
+  cognitive_load?: number | null;
+  emotional_resistance?: number | null;
+  discipline_weight?: number | null;
+  strategic_value?: number | null;
+  psychology_label?: string | null;
+  mission_intent?: MissionIntent | null;
 }) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) throw new Error("Je bent niet ingelogd. Log opnieuw in.");
 
+  const row: Record<string, unknown> = {
+    user_id: user.id,
+    title: params.title,
+    due_date: params.due_date,
+    energy_required: params.energy_required ?? null,
+    focus_required: params.focus_required ?? null,
+    mental_load: params.mental_load ?? null,
+    social_load: params.social_load ?? null,
+    priority: params.priority ?? null,
+    parent_task_id: params.parent_task_id ?? null,
+    recurrence_rule: params.recurrence_rule ?? null,
+    recurrence_weekdays: params.recurrence_weekdays ?? null,
+    category: params.category ?? null,
+    impact: params.impact ?? null,
+    urgency: params.urgency ?? null,
+    notes: params.notes ?? null,
+  };
+  if (params.domain != null) row.domain = params.domain;
+  if (params.cognitive_load != null) row.cognitive_load = params.cognitive_load;
+  if (params.emotional_resistance != null) row.emotional_resistance = params.emotional_resistance;
+  if (params.discipline_weight != null) row.discipline_weight = params.discipline_weight;
+  if (params.strategic_value != null) row.strategic_value = params.strategic_value;
+  if (params.psychology_label != null) row.psychology_label = params.psychology_label;
+  if (params.mission_intent != null) row.mission_intent = params.mission_intent;
+
   const { data, error } = await supabase
     .from("tasks")
-    .insert({
-      user_id: user.id,
-      title: params.title,
-      due_date: params.due_date,
-      energy_required: params.energy_required ?? null,
-      focus_required: params.focus_required ?? null,
-      mental_load: params.mental_load ?? null,
-      social_load: params.social_load ?? null,
-      priority: params.priority ?? null,
-      parent_task_id: params.parent_task_id ?? null,
-      recurrence_rule: params.recurrence_rule ?? null,
-      recurrence_weekdays: params.recurrence_weekdays ?? null,
-      category: params.category ?? null,
-      impact: params.impact ?? null,
-      urgency: params.urgency ?? null,
-      notes: params.notes ?? null,
-    } as Record<string, unknown>)
+    .insert(row as Record<string, unknown>)
     .select("id")
     .single();
   if (error) {
@@ -144,13 +206,32 @@ function nextWeekdayDate(start: Date, weekdays: number[]): string {
   return d.toISOString().slice(0, 10);
 }
 
+/** Log task lifecycle event for completion rate, resistance index, ROI (Performance Engine). */
+export async function logTaskEvent(params: {
+  taskId: string;
+  eventType: "view" | "start" | "complete" | "abandon";
+  durationBeforeStartSeconds?: number | null;
+  durationToCompleteSeconds?: number | null;
+}) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return;
+  await supabase.from("task_events").insert({
+    user_id: user.id,
+    task_id: params.taskId,
+    event_type: params.eventType,
+    duration_before_start_seconds: params.durationBeforeStartSeconds ?? null,
+    duration_to_complete_seconds: params.durationToCompleteSeconds ?? null,
+  });
+}
+
 export async function completeTask(id: string) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) throw new Error("Not authenticated");
   const { data: task } = await supabase
     .from("tasks")
-    .select("recurrence_rule, recurrence_weekdays, due_date, title, energy_required, focus_required, mental_load, social_load, priority, category, impact, urgency")
+    .select("recurrence_rule, recurrence_weekdays, due_date, title, energy_required, focus_required, mental_load, social_load, priority, category, impact, urgency, domain, discipline_weight")
     .eq("id", id)
     .eq("user_id", user.id)
     .single();
@@ -160,7 +241,8 @@ export async function completeTask(id: string) {
     .eq("id", id)
     .eq("user_id", user.id);
   if (error) throw new Error(error.message);
-  const t = task as { recurrence_rule?: string; recurrence_weekdays?: string | null; due_date: string; title: string; energy_required?: number | null; focus_required?: number | null; mental_load?: number | null; social_load?: number | null; priority?: number | null; category?: string | null; impact?: number | null; urgency?: number | null } | null;
+  await logTaskEvent({ taskId: id, eventType: "complete" });
+  const t = task as { recurrence_rule?: string; recurrence_weekdays?: string | null; due_date: string; title: string; energy_required?: number | null; focus_required?: number | null; mental_load?: number | null; social_load?: number | null; priority?: number | null; category?: string | null; impact?: number | null; urgency?: number | null; domain?: string | null; discipline_weight?: number | null } | null;
   if (t?.recurrence_rule === "daily" || t?.recurrence_rule === "weekly" || t?.recurrence_rule === "monthly") {
     let nextStr: string;
     const base = new Date(t.due_date + "T12:00:00Z");
@@ -203,8 +285,12 @@ export async function completeTask(id: string) {
     } as Record<string, unknown>);
   }
   const { awardXPForTaskComplete } = await import("./xp");
+  const { awardEconomyForTaskComplete } = await import("./economy");
+  const { checkChainCompletionOnTaskComplete } = await import("./mission-chains");
   const { upsertDailyAnalytics } = await import("./analytics");
-  await awardXPForTaskComplete();
+  await awardXPForTaskComplete(t?.domain ?? null);
+  const chainResult = await checkChainCompletionOnTaskComplete(id);
+  await awardEconomyForTaskComplete({ chainCompleted: chainResult.chainCompleted });
   if (t?.due_date) await upsertDailyAnalytics(t.due_date);
   const dateTag = t?.due_date ?? new Date().toISOString().slice(0, 10);
   revalidateTag(`tasks-${user.id}-${dateTag}`, "max");

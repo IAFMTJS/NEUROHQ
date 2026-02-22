@@ -1,8 +1,9 @@
 "use client";
 
 import { useState, useTransition, useEffect } from "react";
-import { useRouter } from "next/navigation";
-import { completeTask, createTask, deleteTask, duplicateTask, snoozeTask, uncompleteTask } from "@/app/actions/tasks";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { createTask, deleteTask, duplicateTask, snoozeTask, uncompleteTask } from "@/app/actions/tasks";
+import { useOfflineCompleteTask } from "@/app/hooks/useOfflineCompleteTask";
 import type { Task } from "@/types/database.types";
 import type { SubtaskRow } from "@/app/actions/tasks";
 import { nextRecurrenceDates, formatShortDate } from "@/lib/utils/recurrence";
@@ -11,8 +12,9 @@ import {
   ScheduleModal,
   EditMissionModal,
   TaskDetailsModal,
+  type StrategicPreview,
   FocusModal,
-  QuickAddModal,
+  AddMissionModal3,
 } from "@/components/missions";
 import { Modal } from "@/components/Modal";
 import { useAppState } from "@/components/providers/AppStateProvider";
@@ -39,6 +41,10 @@ type Props = {
   subtasksByParent?: Record<string, SubtaskRow[]>;
   /** Suggested number of tasks for today (from energy budget). After completing this many, show "Do another?" modal. */
   suggestedTaskCount?: number;
+  /** Optional strategic preview per task (UMS, alignment, XP, ROI) for Performance Engine. */
+  strategicByTaskId?: Record<string, StrategicPreview>;
+  /** For Add Mission 3.0 Step 2: Primary (+30%), Secondary (+10%), Outside (-20%). */
+  strategyMapping?: { primaryDomain: string; secondaryDomains: string[] } | null;
 };
 
 function recurrenceLabel(task: ExtendedTask): string {
@@ -64,9 +70,12 @@ function groupByCategory(tasks: ExtendedTask[]): { work: ExtendedTask[]; persona
   return { work, personal, other };
 }
 
-export function TaskList({ date, tasks: initialTasks, completedToday, mode, carryOverCount, subtasksByParent = {}, suggestedTaskCount = 3 }: Props) {
+export function TaskList({ date, tasks: initialTasks, completedToday, mode, carryOverCount, subtasksByParent = {}, suggestedTaskCount = 3, strategicByTaskId, strategyMapping }: Props) {
   const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
   const appState = useAppState();
+  const completeTaskOffline = useOfflineCompleteTask();
   const [pending, startTransition] = useTransition();
   const [addDueDate, setAddDueDate] = useState(date);
   const [addError, setAddError] = useState<string | null>(null);
@@ -78,7 +87,12 @@ export function TaskList({ date, tasks: initialTasks, completedToday, mode, carr
   const [editTask, setEditTask] = useState<ExtendedTask | null>(null);
   const [focusTask, setFocusTask] = useState<ExtendedTask | null>(null);
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
+  const addParam = searchParams.get("add");
   const [quickAddOpen, setQuickAddOpen] = useState(false);
+
+  useEffect(() => {
+    if (addParam && /^\d{4}-\d{2}-\d{2}$/.test(addParam)) setQuickAddOpen(true);
+  }, [addParam]);
   const [showDoAnotherModal, setShowDoAnotherModal] = useState(false);
   const [showAllTasksModal, setShowAllTasksModal] = useState(false);
 
@@ -123,7 +137,7 @@ export function TaskList({ date, tasks: initialTasks, completedToday, mode, carr
     const completedCountBefore = completedToday.length;
     startTransition(async () => {
       try {
-        await completeTask(id);
+        await completeTaskOffline(id);
         appState?.triggerReward();
         if ((completedCountBefore + 1) >= suggestedTaskCount) {
           setShowDoAnotherModal(true);
@@ -327,7 +341,7 @@ export function TaskList({ date, tasks: initialTasks, completedToday, mode, carr
           <ul className="ml-9 space-y-1 border-l-2 border-white/10 pl-3">
             {subtasks.map((s) => (
               <li key={s.id} className="flex items-center gap-2 text-sm">
-                <button type="button" onClick={() => !s.completed && startTransition(() => completeTask(s.id))} disabled={pending || s.completed} className="h-4 w-4 shrink-0 rounded border border-neutral-500" aria-label={s.completed ? "Completed" : "Complete subtask"}>
+                <button type="button" onClick={() => !s.completed && startTransition(() => completeTaskOffline(s.id))} disabled={pending || s.completed} className="h-4 w-4 shrink-0 rounded border border-neutral-500" aria-label={s.completed ? "Completed" : "Complete subtask"}>
                   {s.completed && <span className="text-xs">✓</span>}
                 </button>
                 <span className={s.completed ? "line-through text-neutral-500" : "text-neutral-400"}>{s.title}</span>
@@ -550,6 +564,7 @@ export function TaskList({ date, tasks: initialTasks, completedToday, mode, carr
             onClose={() => setDetailsTask(null)}
             task={detailsTask}
             subtasks={subtasksByParent[detailsTask.id]}
+            strategicPreview={strategicByTaskId?.[detailsTask.id]}
             onEdit={() => { setDetailsTask(null); setEditTask(detailsTask); }}
             onDuplicate={() => { handleDuplicate(detailsTask); setDetailsTask(null); }}
             onDelete={() => { setDetailsTask(null); setConfirmDeleteId(detailsTask.id); }}
@@ -559,7 +574,17 @@ export function TaskList({ date, tasks: initialTasks, completedToday, mode, carr
           <EditMissionModal open={!!editTask} onClose={() => setEditTask(null)} task={editTask} onSaved={() => setEditTask(null)} />
         )}
         {focusTask && (
-          <FocusModal open={!!focusTask} onClose={() => setFocusTask(null)} taskId={focusTask.id} taskTitle={focusTask.title} onComplete={() => setFocusTask(null)} onSnooze={() => setFocusTask(null)} />
+          <FocusModal
+            open={!!focusTask}
+            onClose={() => setFocusTask(null)}
+            taskId={focusTask.id}
+            taskTitle={focusTask.title}
+            date={date}
+            taskDomain={strategicByTaskId?.[focusTask.id]?.domain ?? (focusTask as { domain?: string | null }).domain ?? null}
+            strategyMapping={strategyMapping ?? null}
+            onComplete={() => setFocusTask(null)}
+            onSnooze={() => setFocusTask(null)}
+          />
         )}
         <ConfirmModal
           open={!!confirmDeleteId}
@@ -570,7 +595,13 @@ export function TaskList({ date, tasks: initialTasks, completedToday, mode, carr
           danger
           onConfirm={handleConfirmDelete}
         />
-        <QuickAddModal open={quickAddOpen} onClose={() => setQuickAddOpen(false)} date={date} onAdded={() => setQuickAddOpen(false)} />
+        <AddMissionModal3
+          open={quickAddOpen}
+          onClose={() => { setQuickAddOpen(false); if (addParam) router.replace(pathname); }}
+          date={addParam && /^\d{4}-\d{2}-\d{2}$/.test(addParam) ? addParam : date}
+          strategyMapping={strategyMapping}
+          onAdded={() => { setQuickAddOpen(false); if (addParam) router.replace(pathname); }}
+        />
 
         <Modal open={showDoAnotherModal} onClose={() => setShowDoAnotherModal(false)} title="Nice work!" size="sm">
           <p className="text-sm text-[var(--text-muted)]">You&apos;ve hit your suggested minimum for today. Want to do one more?</p>

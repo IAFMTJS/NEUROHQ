@@ -24,14 +24,20 @@ const CRITICAL_ROUTES = [
   "/settings",
 ];
 
-// Install: Cache static assets
+// Install: Cache static assets (do not skipWaiting here so app can show "Nieuwe versie beschikbaar" toast)
 self.addEventListener("install", function (event) {
   event.waitUntil(
     caches.open(STATIC_CACHE).then(function (cache) {
       return cache.addAll(STATIC_ASSETS);
     })
   );
-  self.skipWaiting(); // Activate immediately
+});
+
+// When app requests it (toast "Vernieuwen" clicked), activate new SW
+self.addEventListener("message", function (event) {
+  if (event.data && event.data.type === "SKIP_WAITING") {
+    self.skipWaiting();
+  }
 });
 
 // Activate: Clean up old caches and prefetch critical routes

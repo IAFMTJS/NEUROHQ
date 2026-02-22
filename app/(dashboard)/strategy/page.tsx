@@ -127,6 +127,12 @@ export default async function StrategyPage() {
       <section className="mascot-hero mascot-hero-top" data-mascot-page="strategy" aria-hidden>
         <img src={getMascotSrcForPage("strategy")} alt="" className="mascot-img" />
       </section>
+      {reviewStatus.reviewDue && (
+        <div className="rounded-xl border border-amber-500/40 bg-amber-500/10 px-4 py-3 text-sm text-amber-200">
+          <strong>Zonder review: nieuwe week inactive.</strong> Voltooi je wekelijkse review hieronder om de strategie actief te houden.
+        </div>
+      )}
+
       <div className="flex flex-wrap items-center justify-end gap-3">
         <Link
           href="/report"
