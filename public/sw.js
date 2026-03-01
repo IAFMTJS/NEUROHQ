@@ -1,12 +1,23 @@
 // NEUROHQ Service Worker – offline-first PWA (hele site)
 // Wat blijft staan op het apparaat (zodat minder opnieuw geladen hoeft):
-// - STATIC_CACHE (install): /offline, manifest, app-icon (geen / of /dashboard: voorkomt lege/verkeerde HTML na login)
-// - DYNAMIC_CACHE: openbare routes, JS/CSS; app-routes (dashboard, tasks, …) worden NIET gecached zodat na login altijd verse HTML
+// - STATIC_CACHE (install): /offline, manifest, app-icon
+// - DYNAMIC_CACHE (per dag): alle HTML, JS, CSS, API GETs – cache-first voor dezelfde dag zodat reopen PWA direct uit cache laadt
 // - IndexedDB (neurohq-offline): offline mutaties (POST/PUT etc.) → gesynchroniseerd zodra er weer netwerk is
-const CACHE_VERSION = "v9";
+const CACHE_VERSION = "v11";
 const STATIC_CACHE = `neurohq-static-${CACHE_VERSION}`;
-const DYNAMIC_CACHE = `neurohq-dynamic-${CACHE_VERSION}`;
 const OFFLINE_PAGE = "/offline";
+
+function getTodayDateString() {
+  var d = new Date();
+  var y = d.getFullYear();
+  var m = String(d.getMonth() + 1).padStart(2, "0");
+  var day = String(d.getDate()).padStart(2, "0");
+  return y + "-" + m + "-" + day;
+}
+
+function getDynamicCacheName() {
+  return "neurohq-dynamic-" + CACHE_VERSION + "-" + getTodayDateString();
+}
 
 // Offline mutation queue (IndexedDB) for API writes
 const OFFLINE_DB_NAME = "neurohq-offline";
@@ -154,7 +165,7 @@ const PUBLIC_ROUTES_TO_PREFETCH = [
 ];
 
 function warmupBackgroundCaches() {
-  return caches.open(DYNAMIC_CACHE).then(function (cache) {
+  return caches.open(getDynamicCacheName()).then(function (cache) {
     const routesToPrefetch = PUBLIC_ROUTES_TO_PREFETCH;
     return Promise.all(
       routesToPrefetch.map(function (route) {
@@ -220,10 +231,11 @@ self.addEventListener("activate", function (event) {
       caches
         .keys()
         .then(function (cacheNames) {
+          var todayDynamic = getDynamicCacheName();
           return Promise.all(
             cacheNames
               .filter(function (name) {
-                return name.startsWith("neurohq-") && name !== STATIC_CACHE && name !== DYNAMIC_CACHE;
+                return name.startsWith("neurohq-") && name !== STATIC_CACHE && name !== todayDynamic;
               })
               .map(function (name) {
                 return caches.delete(name);
@@ -231,8 +243,8 @@ self.addEventListener("activate", function (event) {
           );
         })
         .then(function () {
-          // Alleen openbare routes prefetchen; auth-routes (dashboard, tasks, …) alleen cachen bij echte navigatie
-          return caches.open(DYNAMIC_CACHE).then(function (cache) {
+          // Prefetch public routes into today's cache
+          return caches.open(getDynamicCacheName()).then(function (cache) {
             return Promise.all(
               PUBLIC_ROUTES_TO_PREFETCH.map(function (route) {
                 var request = new Request(route, { method: "GET" });
@@ -269,24 +281,29 @@ self.addEventListener("fetch", function (event) {
     return;
   }
 
-  // JS/CSS: Network-first zodat mobile altijd verse styles krijgt; cache alleen als fallback bij offline
+  // JS/CSS: cache-first for today – serve from cache immediately on reopen, revalidate in background
   if (url.pathname.startsWith("/_next/static/") && (url.pathname.endsWith(".js") || url.pathname.endsWith(".css"))) {
     event.respondWith(
-      fetch(event.request)
-        .then(function (response) {
-          if (response.ok && event.request.method === "GET") {
-            const clone = response.clone();
-            caches.open(DYNAMIC_CACHE).then(function (cache) {
+      caches.open(getDynamicCacheName()).then(function (cache) {
+        return cache.match(event.request).then(function (cached) {
+          var revalidate = fetch(event.request).then(function (response) {
+            if (response.ok && event.request.method === "GET") {
+              var clone = response.clone();
               cache.put(event.request, clone);
-            });
-          }
-          return response;
-        })
-        .catch(function () {
-          return caches.match(event.request).then(function (cached) {
-            return cached || new Response("Offline", { status: 503 });
+            }
+            return response;
           });
-        })
+          if (cached) {
+            revalidate.catch(function () {});
+            return cached;
+          }
+          return revalidate.catch(function () {
+            return cache.match(event.request).then(function (c) {
+              return c || new Response("Offline", { status: 503 });
+            });
+          });
+        });
+      })
     );
     return;
   }
@@ -364,114 +381,109 @@ self.addEventListener("fetch", function (event) {
       return;
     }
 
-    // GETs: network-first with cache + offline fallback (Cache API only supports GET)
+    // GETs: cache-first for today – serve cached API response on reopen, then revalidate in background
     event.respondWith(
-      fetch(event.request)
-        .then(function (response) {
-          if (response.ok && event.request.method === "GET") {
-            const clone = response.clone();
-            caches.open(DYNAMIC_CACHE).then(function (cache) {
+      caches.open(getDynamicCacheName()).then(function (cache) {
+        return cache.match(event.request).then(function (cached) {
+          var fetchPromise = fetch(event.request).then(function (response) {
+            if (response.ok && event.request.method === "GET") {
+              var clone = response.clone();
               cache.put(event.request, clone);
-            });
-          }
-          return response;
-        })
-        .catch(function () {
-          return caches.match(event.request).then(function (cached) {
-            return (
-              cached ||
-              new Response(JSON.stringify({ error: "Offline" }), {
-                status: 503,
-                headers: { "Content-Type": "application/json" },
-              })
-            );
-          });
-        })
-    );
-    return;
-  }
-
-  // HTML pages: network-first; app-routes (dashboard, tasks, …) nooit cachen zodat na login geen oude/lege HTML uit cache
-  if (event.request.headers.get("accept")?.includes("text/html")) {
-    const pathname = url.pathname.replace(/\/$/, "") || "/";
-    const isAppRoute =
-      pathname === "/dashboard" ||
-      pathname.startsWith("/dashboard/") ||
-      pathname === "/tasks" ||
-      pathname.startsWith("/tasks/") ||
-      pathname === "/settings" ||
-      pathname === "/budget" ||
-      pathname.startsWith("/budget/") ||
-      pathname === "/learning" ||
-      pathname.startsWith("/learning/") ||
-      pathname === "/strategy" ||
-      pathname.startsWith("/strategy/") ||
-      pathname === "/report" ||
-      pathname === "/xp" ||
-      pathname === "/assistant" ||
-      pathname.startsWith("/analytics");
-
-    event.respondWith(
-      (event.preloadResponse || Promise.resolve(null))
-        .then(function (preloadedResponse) {
-          if (preloadedResponse) {
-            if (!isAppRoute && event.request.method === "GET") {
-              const clone = preloadedResponse.clone();
-              caches.open(DYNAMIC_CACHE).then(function (cache) {
-                cache.put(event.request, clone);
-              });
-            }
-            return preloadedResponse;
-          }
-          const navigationRequest = new Request(event.request.url, {
-            headers: event.request.headers,
-            method: "GET",
-            redirect: "follow",
-          });
-          return fetch(navigationRequest).then(function (response) {
-            if (response.ok && !isAppRoute) {
-              const clone = response.clone();
-              caches.open(DYNAMIC_CACHE).then(function (cache) {
-                cache.put(navigationRequest, clone);
-              });
             }
             return response;
           });
-        })
-        .catch(function () {
-          if (isAppRoute) {
-            return caches.match(OFFLINE_PAGE).then(function (offline) {
-              return offline || new Response("Offline", { status: 503 });
-            });
+          if (cached) {
+            fetchPromise.catch(function () {});
+            return cached;
           }
-          return caches.match(event.request).then(function (cached) {
-            if (cached) return cached;
-            return caches.match(OFFLINE_PAGE).then(function (offline) {
-              return offline || new Response("Offline", { status: 503 });
+          return fetchPromise.catch(function () {
+            return cache.match(event.request).then(function (c) {
+              return (
+                c ||
+                new Response(JSON.stringify({ error: "Offline" }), {
+                  status: 503,
+                  headers: { "Content-Type": "application/json" },
+                })
+              );
             });
           });
-        })
+        });
+      })
     );
     return;
   }
 
-  // Default: Network First with cache fallback (Cache API only supports GET – skip caching POST/PUT etc.)
-  event.respondWith(
-    fetch(event.request)
-      .then(function (response) {
-        if (response.ok && event.request.method === "GET") {
-          const clone = response.clone();
-          caches.open(DYNAMIC_CACHE).then(function (cache) {
-            cache.put(event.request, clone);
+  // HTML pages: cache-first for today – every page/tab stays cached for the day; reopen PWA shows cached page then revalidates
+  if (event.request.headers.get("accept")?.includes("text/html")) {
+    var navRequest = new Request(event.request.url, {
+      headers: event.request.headers,
+      method: "GET",
+      redirect: "follow",
+    });
+
+    event.respondWith(
+      caches.open(getDynamicCacheName()).then(function (cache) {
+        return cache.match(event.request).then(function (cached) {
+          var fetchPromise = (event.preloadResponse || Promise.resolve(null)).then(function (preloadedResponse) {
+            if (preloadedResponse) {
+              if (event.request.method === "GET") {
+                var c = preloadedResponse.clone();
+                cache.put(event.request, c);
+              }
+              return preloadedResponse;
+            }
+            return fetch(navRequest).then(function (response) {
+              if (response.ok && event.request.method === "GET") {
+                var c = response.clone();
+                cache.put(event.request, c);
+              }
+              return response;
+            });
           });
-        }
-        return response;
-      })
-      .catch(function () {
-        return caches.match(event.request).then(function (cached) {
-          return cached || new Response("Offline", { status: 503 });
+          if (cached) {
+            fetchPromise.catch(function () {});
+            return cached;
+          }
+          return fetchPromise.catch(function () {
+            return cache.match(event.request).then(function (c) {
+              if (c) return c;
+              return caches.match(OFFLINE_PAGE).then(function (offline) {
+                return offline || new Response("Offline", { status: 503 });
+              });
+            });
+          });
         });
       })
+    );
+    return;
+  }
+
+  // Default: cache-first for today, then network (other GETs – data, etc.)
+  event.respondWith(
+    caches.open(getDynamicCacheName()).then(function (cache) {
+      return cache.match(event.request).then(function (cached) {
+        if (cached) {
+          fetch(event.request).then(function (response) {
+            if (response.ok && event.request.method === "GET") {
+              var c = response.clone();
+              cache.put(event.request, c);
+            }
+          }).catch(function () {});
+          return cached;
+        }
+        return fetch(event.request).then(function (response) {
+          if (response.ok && event.request.method === "GET") {
+            var c = response.clone();
+            cache.put(event.request, c);
+          }
+          return response;
+        }).catch(function () {
+          return cache.match(event.request).then(function (c) {
+            return c || new Response("Offline", { status: 503 });
+          });
+        });
+      });
+    })
   );
 });
 
