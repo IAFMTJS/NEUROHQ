@@ -1,9 +1,9 @@
 // NEUROHQ Service Worker – offline-first PWA (hele site)
 // Wat blijft staan op het apparaat (zodat minder opnieuw geladen hoeft):
-// - STATIC_CACHE (install): /, /offline, manifest, app-icon (geen /dashboard: vereist cookies)
-// - DYNAMIC_CACHE: alle pagina’s/tabs (dashboard, tasks, budget, learning, analytics, settings, …), JS/CSS, openbare routes geprefetcht; auth-routes bij navigatie
+// - STATIC_CACHE (install): /offline, manifest, app-icon (geen / of /dashboard: voorkomt lege/verkeerde HTML na login)
+// - DYNAMIC_CACHE: openbare routes, JS/CSS; app-routes (dashboard, tasks, …) worden NIET gecached zodat na login altijd verse HTML
 // - IndexedDB (neurohq-offline): offline mutaties (POST/PUT etc.) → gesynchroniseerd zodra er weer netwerk is
-const CACHE_VERSION = "v7";
+const CACHE_VERSION = "v8";
 const STATIC_CACHE = `neurohq-static-${CACHE_VERSION}`;
 const DYNAMIC_CACHE = `neurohq-dynamic-${CACHE_VERSION}`;
 const OFFLINE_PAGE = "/offline";
@@ -138,7 +138,6 @@ self.addEventListener("sync", function (event) {
 
 // Alleen assets/routes die geen login nodig hebben – anders cachen we de “niet-ingelogde” HTML en zie je die bij reopen
 const STATIC_ASSETS = [
-  "/",
   "/offline",
   "/manifest.json",
   "/manifest.webmanifest",
@@ -396,16 +395,36 @@ self.addEventListener("fetch", function (event) {
     return;
   }
 
-  // HTML pages: Network-first so we always show the actual app when online (avoid stale cached HTML)
+  // HTML pages: network-first; app-routes (dashboard, tasks, …) nooit cachen zodat na login geen oude/lege HTML uit cache
   if (event.request.headers.get("accept")?.includes("text/html")) {
+    const pathname = url.pathname.replace(/\/$/, "") || "/";
+    const isAppRoute =
+      pathname === "/dashboard" ||
+      pathname.startsWith("/dashboard/") ||
+      pathname === "/tasks" ||
+      pathname.startsWith("/tasks/") ||
+      pathname === "/settings" ||
+      pathname === "/budget" ||
+      pathname.startsWith("/budget/") ||
+      pathname === "/learning" ||
+      pathname.startsWith("/learning/") ||
+      pathname === "/strategy" ||
+      pathname.startsWith("/strategy/") ||
+      pathname === "/report" ||
+      pathname === "/xp" ||
+      pathname === "/assistant" ||
+      pathname.startsWith("/analytics");
+
     event.respondWith(
       (event.preloadResponse || Promise.resolve(null))
         .then(function (preloadedResponse) {
           if (preloadedResponse) {
-            const clone = preloadedResponse.clone();
-            caches.open(DYNAMIC_CACHE).then(function (cache) {
-              cache.put(event.request, clone);
-            });
+            if (!isAppRoute) {
+              const clone = preloadedResponse.clone();
+              caches.open(DYNAMIC_CACHE).then(function (cache) {
+                cache.put(event.request, clone);
+              });
+            }
             return preloadedResponse;
           }
           const navigationRequest = new Request(event.request.url, {
@@ -414,7 +433,7 @@ self.addEventListener("fetch", function (event) {
             redirect: "follow",
           });
           return fetch(navigationRequest).then(function (response) {
-            if (response.ok) {
+            if (response.ok && !isAppRoute) {
               const clone = response.clone();
               caches.open(DYNAMIC_CACHE).then(function (cache) {
                 cache.put(event.request, clone);
@@ -424,6 +443,11 @@ self.addEventListener("fetch", function (event) {
           });
         })
         .catch(function () {
+          if (isAppRoute) {
+            return caches.match(OFFLINE_PAGE).then(function (offline) {
+              return offline || new Response("Offline", { status: 503 });
+            });
+          }
           return caches.match(event.request).then(function (cached) {
             if (cached) return cached;
             return caches.match(OFFLINE_PAGE).then(function (offline) {

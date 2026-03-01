@@ -36,8 +36,8 @@ function LoginForm() {
         return;
       }
       await ensureUserProfileForSession();
-      // Full page nav to / so proxy sees cookies on GET /; root then redirects to /dashboard
-      window.location.href = "/";
+      // Full page nav so cookies are sent; go straight to dashboard (page is dynamic and checks auth)
+      window.location.href = "/dashboard";
     } catch (err) {
       setError(err instanceof Error ? err.message : "Sign in failed");
       setLoading(false);

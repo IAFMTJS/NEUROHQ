@@ -24,6 +24,7 @@ const SettingsCompactUi = dynamic(() => import("@/components/settings/SettingsCo
 const SettingsReducedMotion = dynamic(() => import("@/components/settings/SettingsReducedMotion").then((m) => ({ default: m.SettingsReducedMotion })), { loading: () => null });
 const SettingsQuickLinks = dynamic(() => import("@/components/settings/SettingsQuickLinks").then((m) => ({ default: m.SettingsQuickLinks })), { loading: () => <div className="min-h-[60px] animate-pulse rounded-lg bg-white/5" aria-hidden /> });
 const SettingsWhereToConfigure = dynamic(() => import("@/components/settings/SettingsWhereToConfigure").then((m) => ({ default: m.SettingsWhereToConfigure })), { loading: () => null });
+const SettingsClearCache = dynamic(() => import("@/components/settings/SettingsClearCache").then((m) => ({ default: m.SettingsClearCache })), { loading: () => null });
 const BehaviorProfileSettings = dynamic(() => import("@/components/settings/BehaviorProfileSettings").then((m) => ({ default: m.BehaviorProfileSettings })), { loading: () => null });
 
 export default async function SettingsPage() {
@@ -119,6 +120,7 @@ export default async function SettingsPage() {
       <section className="space-y-3">
         <h2 className="text-xs font-semibold uppercase tracking-wide text-[var(--text-muted)]">Over & hulp</h2>
         <SettingsWhereToConfigure />
+        <SettingsClearCache />
         <SettingsAbout appVersion={appVersion} />
       </section>
     </div>
