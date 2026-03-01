@@ -426,17 +426,29 @@ export async function completeTask(id: string): Promise<CompleteTaskResult> {
   const { updateStreakOnTaskComplete } = await import("./streak");
   const xpResult = await awardXPForTaskComplete(t?.domain ?? null, id, t?.base_xp ?? undefined, completionDate, performanceRank ?? undefined);
   const xpAwarded = xpResult.xpAwarded;
-  const chainResult = await checkChainCompletionOnTaskComplete(id);
+
+  const [chainResult] = await Promise.all([
+    checkChainCompletionOnTaskComplete(id),
+    updateStreakOnTaskComplete(completionDate),
+  ]);
   await awardEconomyForTaskComplete({ chainCompleted: chainResult.chainCompleted });
-  await updateStreakOnTaskComplete(completionDate);
+
+  const afterEconomy: Promise<unknown>[] = [];
   if (t?.due_date) {
-    await recordDailyXPAndMissions(t.due_date, xpAwarded);
-    await upsertDailyAnalytics(t.due_date);
+    afterEconomy.push(
+      recordDailyXPAndMissions(t.due_date, xpAwarded),
+      upsertDailyAnalytics(t.due_date)
+    );
   }
   const { applyRecoveryCompletionBonus } = await import("./recovery-engine");
-  if (t && isRecoveryTask(t)) await applyRecoveryCompletionBonus(completionDate);
+  if (t && isRecoveryTask(t)) afterEconomy.push(applyRecoveryCompletionBonus(completionDate));
+  if (t?.avoidance_tag === "household" || t?.avoidance_tag === "administration" || t?.avoidance_tag === "social") {
+    afterEconomy.push(recordAvoidanceCompletion(t.avoidance_tag));
+  }
+  await Promise.all(afterEconomy);
+
   const { logBehaviourEntry } = await import("./dcic/behaviour-log");
-  await logBehaviourEntry({
+  void logBehaviourEntry({
     date: completionDate,
     missionStartedAt: null,
     missionCompletedAt: new Date().toISOString(),
@@ -448,14 +460,11 @@ export async function completeTask(id: string): Promise<CompleteTaskResult> {
   }).catch((err) => {
     console.error("Behaviour log on task complete:", err);
   });
+
   const dateTag = t?.due_date ?? new Date().toISOString().slice(0, 10);
   revalidateTagMax(`tasks-${user.id}-${dateTag}`);
   revalidatePath("/dashboard");
   revalidatePath("/tasks");
-  if (t?.avoidance_tag === "household" || t?.avoidance_tag === "administration" || t?.avoidance_tag === "social") {
-    // Completion → reset skip counter and record completion for this category.
-    await recordAvoidanceCompletion(t.avoidance_tag);
-  }
 
   // Snapshot updated Identity Engine reputation for level-up modal.
   let reputation: ReputationScore | null = null;

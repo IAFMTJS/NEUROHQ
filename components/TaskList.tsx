@@ -130,26 +130,42 @@ export function TaskList({
     level: number;
     reputation?: { discipline: number; consistency: number; impact: number } | null;
   } | null>(null);
+  const [optimisticCompleteIds, setOptimisticCompleteIds] = useState<string[]>([]);
 
   const extendedTasks = initialTasks as ExtendedTask[];
+  const incompleteTasksForDisplay = useMemo(
+    () => extendedTasks.filter((t) => !t.completed && !optimisticCompleteIds.includes(t.id)),
+    [extendedTasks, optimisticCompleteIds]
+  );
+  const completedForDisplay = useMemo(
+    () =>
+      [
+        ...(completedToday as ExtendedTask[]),
+        ...extendedTasks
+          .filter((t) => optimisticCompleteIds.includes(t.id))
+          .map((t) => ({ ...t, completed: true, completed_at: new Date().toISOString() } as ExtendedTask)),
+      ] as ExtendedTask[],
+    [completedToday, extendedTasks, optimisticCompleteIds]
+  );
+
   const filteredTasks =
     filter === "all"
-      ? extendedTasks
+      ? incompleteTasksForDisplay
       : filter === "active"
-        ? extendedTasks.filter((t) => !t.completed)
+        ? incompleteTasksForDisplay
         : filter === "aanbevolen"
-          ? extendedTasks.filter((t) => recommendedTaskIds?.includes(t.id))
+          ? incompleteTasksForDisplay.filter((t) => recommendedTaskIds?.includes(t.id))
           : filter === "nieuw"
-            ? extendedTasks.filter((t) => {
+            ? incompleteTasksForDisplay.filter((t) => {
                 const c = (t as { created_at?: string }).created_at;
                 if (!c) return false;
                 return new Date(c) >= sevenDaysAgo;
               })
             : filter === "work"
-              ? extendedTasks.filter((t) => t.category === "work")
+              ? incompleteTasksForDisplay.filter((t) => t.category === "work")
               : filter === "personal"
-                ? extendedTasks.filter((t) => t.category === "personal")
-                : extendedTasks.filter((t) => !!t.recurrence_rule);
+                ? incompleteTasksForDisplay.filter((t) => t.category === "personal")
+                : incompleteTasksForDisplay.filter((t) => !!t.recurrence_rule);
   const { work, personal, other } = groupByCategory(filteredTasks);
   const sections = [
     { label: "Werk", tasks: work },
@@ -164,7 +180,7 @@ export function TaskList({
     }
   }
   const firstIncompleteId = flatIncompleteOrder[0] ?? null;
-  const activeCount = extendedTasks.length;
+  const activeCount = incompleteTasksForDisplay.length;
   const maxSlots = brainMode?.maxSlots ?? Infinity;
   const slotsFilled = Number.isFinite(maxSlots) ? activeCount >= maxSlots : false;
   const addBlocked = brainMode?.addBlocked ?? false;
@@ -195,7 +211,7 @@ export function TaskList({
     taskId: string,
     result?: { performanceRank?: "S" | "A" | "B" | "C" | null; performanceScore?: number | null; xpAwarded?: number } | null
   ) {
-    const rankLabel = result?.performanceRank ? ` · Rank ${result.performanceRank}` : "";
+    const rankLabel = result?.performanceRank ? ` · Prestatie ${result.performanceRank}` : "";
     const desc =
       result?.performanceScore != null
         ? `Score ${result.performanceScore}${result.xpAwarded != null ? ` · +${result.xpAwarded} XP` : ""}`
@@ -215,7 +231,8 @@ export function TaskList({
   }
 
   function handleComplete(id: string) {
-    const completedCountBefore = completedToday.length;
+    const completedCountBefore = completedForDisplay.length;
+    setOptimisticCompleteIds((prev) => (prev.includes(id) ? prev : [...prev, id]));
     startTransition(async () => {
       try {
         const result = await completeTaskOffline(id);
@@ -248,6 +265,8 @@ export function TaskList({
         router.refresh();
       } catch {
         appState?.triggerError();
+      } finally {
+        setOptimisticCompleteIds((prev) => prev.filter((x) => x !== id));
       }
     });
   }
@@ -605,13 +624,13 @@ export function TaskList({
               + Nieuwe missie (100 templates)
             </button>
             {mode === "stabilize" && <span className="rounded-full bg-amber-500/15 px-3 py-1 text-xs font-medium text-amber-200">Stabilize mode</span>}
-            {initialTasks.length + completedToday.length > 0 && (
+            {incompleteTasksForDisplay.length + completedForDisplay.length > 0 && (
               <button
                 type="button"
                 onClick={() => { setDetailsTask(null); setFocusTask(null); setShowAllTasksModal(true); }}
                 className="rounded-full border border-[var(--card-border)] px-3 py-1.5 text-xs font-medium text-[var(--text-muted)] hover:bg-[var(--bg-surface)] hover:text-[var(--text-primary)]"
               >
-                All tasks ({initialTasks.length + completedToday.length})
+                All tasks ({incompleteTasksForDisplay.length + completedForDisplay.length})
               </button>
             )}
           </div>
@@ -873,7 +892,7 @@ export function TaskList({
 
         <Modal open={showAllTasksModal} onClose={() => setShowAllTasksModal(false)} title="All today&apos;s tasks" size="lg">
           <ul className="max-h-[60vh] space-y-2 overflow-y-auto">
-            {([...extendedTasks, ...(completedToday as ExtendedTask[])] as ExtendedTask[]).filter((t, i, arr) => arr.findIndex((x) => x.id === t.id) === i).map((t) => (
+            {([...incompleteTasksForDisplay, ...completedForDisplay] as ExtendedTask[]).filter((t, i, arr) => arr.findIndex((x) => x.id === t.id) === i).map((t) => (
               <li key={t.id} className="flex items-center gap-2 rounded-lg border border-[var(--card-border)]/50 bg-[var(--bg-surface)]/30 px-3 py-2 text-sm">
                 <span className={t.completed ? "line-through text-[var(--text-muted)]" : "text-[var(--text-primary)]"}>{t.title}</span>
                 {t.completed && <span className="rounded bg-green-500/20 px-1.5 py-0.5 text-[10px] text-green-400">Done</span>}
@@ -905,11 +924,11 @@ export function TaskList({
           </p>
         </Modal>
 
-        {completedToday.length > 0 && (
+        {completedForDisplay.length > 0 && (
           <div className="mt-6 border-t border-[var(--card-border)] pt-4">
             <h3 className="mb-2 text-xs font-semibold uppercase tracking-wide text-[var(--text-muted)]">Done today</h3>
             <ul className="space-y-1">
-              {(completedToday as ExtendedTask[]).map((t) => (
+              {completedForDisplay.map((t) => (
                 <li key={t.id} className="flex items-center gap-2 rounded-lg border border-[var(--card-border)]/50 bg-[var(--bg-surface)]/30 px-3 py-2 text-sm text-[var(--text-muted)] line-through">
                   <button
                     type="button"
