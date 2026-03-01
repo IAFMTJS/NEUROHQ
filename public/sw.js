@@ -3,7 +3,7 @@
 // - STATIC_CACHE (install): /offline, manifest, app-icon (geen / of /dashboard: voorkomt lege/verkeerde HTML na login)
 // - DYNAMIC_CACHE: openbare routes, JS/CSS; app-routes (dashboard, tasks, …) worden NIET gecached zodat na login altijd verse HTML
 // - IndexedDB (neurohq-offline): offline mutaties (POST/PUT etc.) → gesynchroniseerd zodra er weer netwerk is
-const CACHE_VERSION = "v8";
+const CACHE_VERSION = "v9";
 const STATIC_CACHE = `neurohq-static-${CACHE_VERSION}`;
 const DYNAMIC_CACHE = `neurohq-dynamic-${CACHE_VERSION}`;
 const OFFLINE_PAGE = "/offline";
@@ -261,7 +261,7 @@ self.addEventListener("activate", function (event) {
   );
 });
 
-// Fetch: Cache-first for static assets, network-first (with offline queue for writes) for API, stale-while-revalidate for pages
+// Fetch: network-first for JS/CSS (voorkomt unstyled page op mobile door oude/corrupte cache), cache fallback alleen offline
 self.addEventListener("fetch", function (event) {
   const url = new URL(event.request.url);
 
@@ -270,31 +270,28 @@ self.addEventListener("fetch", function (event) {
     return;
   }
 
-  // JS/CSS: Stale-while-revalidate – direct uit cache als beschikbaar (snel bij herhaald gebruik/offline), op de achtergrond bijwerken
+  // JS/CSS: Network-first zodat mobile altijd verse styles krijgt; cache alleen als fallback bij offline
   if (url.pathname.startsWith("/_next/static/") && (url.pathname.endsWith(".js") || url.pathname.endsWith(".css"))) {
     event.respondWith(
-      caches.match(event.request).then(function (cached) {
-        const revalidate = fetch(event.request).then(function (response) {
-          if (response.ok) {
+      fetch(event.request)
+        .then(function (response) {
+          if (response.ok && event.request.method === "GET") {
             const clone = response.clone();
             caches.open(DYNAMIC_CACHE).then(function (cache) {
               cache.put(event.request, clone);
             });
           }
           return response;
-        }).catch(function () { return null; });
-        if (cached) {
-          revalidate();
-          return cached;
-        }
-        return revalidate.then(function (response) {
-          return response || new Response("Offline", { status: 503 });
-        });
-      })
+        })
+        .catch(function () {
+          return caches.match(event.request).then(function (cached) {
+            return cached || new Response("Offline", { status: 503 });
+          });
+        })
     );
     return;
   }
-  // Other static assets: images, fonts, icons - Cache First
+  // Other static assets: images, fonts, icons - Cache First (Cache API only supports GET)
   if (
     url.pathname.match(/\.(png|jpg|jpeg|gif|svg|ico|woff|woff2|ttf|eot)$/) ||
     url.pathname.startsWith("/icons/") ||
@@ -304,7 +301,7 @@ self.addEventListener("fetch", function (event) {
       caches.match(event.request).then(function (cached) {
         if (cached) return cached;
         return fetch(event.request).then(function (response) {
-          if (response.ok) {
+          if (response.ok && event.request.method === "GET") {
             const clone = response.clone();
             caches.open(STATIC_CACHE).then(function (cache) {
               cache.put(event.request, clone);
@@ -368,11 +365,11 @@ self.addEventListener("fetch", function (event) {
       return;
     }
 
-    // GETs: network-first with cache + offline fallback
+    // GETs: network-first with cache + offline fallback (Cache API only supports GET)
     event.respondWith(
       fetch(event.request)
         .then(function (response) {
-          if (response.ok) {
+          if (response.ok && event.request.method === "GET") {
             const clone = response.clone();
             caches.open(DYNAMIC_CACHE).then(function (cache) {
               cache.put(event.request, clone);
@@ -419,7 +416,7 @@ self.addEventListener("fetch", function (event) {
       (event.preloadResponse || Promise.resolve(null))
         .then(function (preloadedResponse) {
           if (preloadedResponse) {
-            if (!isAppRoute) {
+            if (!isAppRoute && event.request.method === "GET") {
               const clone = preloadedResponse.clone();
               caches.open(DYNAMIC_CACHE).then(function (cache) {
                 cache.put(event.request, clone);
@@ -436,7 +433,7 @@ self.addEventListener("fetch", function (event) {
             if (response.ok && !isAppRoute) {
               const clone = response.clone();
               caches.open(DYNAMIC_CACHE).then(function (cache) {
-                cache.put(event.request, clone);
+                cache.put(navigationRequest, clone);
               });
             }
             return response;
@@ -459,11 +456,11 @@ self.addEventListener("fetch", function (event) {
     return;
   }
 
-  // Default: Network First with cache fallback
+  // Default: Network First with cache fallback (Cache API only supports GET – skip caching POST/PUT etc.)
   event.respondWith(
     fetch(event.request)
       .then(function (response) {
-        if (response.ok) {
+        if (response.ok && event.request.method === "GET") {
           const clone = response.clone();
           caches.open(DYNAMIC_CACHE).then(function (cache) {
             cache.put(event.request, clone);
