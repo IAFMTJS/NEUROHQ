@@ -162,25 +162,35 @@ export function getLargestCategory(financeState: FinanceState): {
 // ============================================================================
 
 /**
- * Calculates burn rate (average daily spending)
+ * Calculates burn rate (average daily spending in cents per day).
+ * Uses calendar days from cycle start to today so cross-month is correct.
  */
 export function calculateBurnRate(financeState: FinanceState): number {
   const today = new Date();
-  const day = today.getDate();
+  today.setHours(12, 0, 0, 0);
 
-  // Get expenses for current cycle (since cycle start)
-  const cycleStart = new Date(today.getFullYear(), today.getMonth(), financeState.cycle.startDay);
-  if (day < financeState.cycle.startDay) {
-    cycleStart.setMonth(cycleStart.getMonth() - 1);
+  let cycleStart: Date;
+  if (financeState.cycle.startDate && /^\d{4}-\d{2}-\d{2}$/.test(financeState.cycle.startDate)) {
+    cycleStart = new Date(financeState.cycle.startDate + "T12:00:00Z");
+  } else {
+    const day = today.getDate();
+    cycleStart = new Date(today.getFullYear(), today.getMonth(), financeState.cycle.startDay);
+    if (day < financeState.cycle.startDay) {
+      cycleStart.setMonth(cycleStart.getMonth() - 1);
+    }
   }
 
   const cycleExpenses = financeState.expenses.filter((e) => {
-    const expenseDate = new Date(e.date);
+    const expenseDate = new Date(e.date + "T12:00:00Z");
     return expenseDate >= cycleStart;
   });
 
   const totalSpent = cycleExpenses.reduce((sum, e) => sum + Math.abs(e.amount), 0);
-  const daysSinceStart = Math.max(1, day - financeState.cycle.startDay + 1);
+  const startStr = financeState.cycle.startDate ?? cycleStart.toISOString().slice(0, 10);
+  const todayStr = today.toISOString().slice(0, 10);
+  const startMs = new Date(startStr + "T12:00:00Z").getTime();
+  const todayMs = new Date(todayStr + "T12:00:00Z").getTime();
+  const daysSinceStart = Math.max(1, Math.floor((todayMs - startMs) / (24 * 60 * 60 * 1000)) + 1);
 
   return totalSpent / daysSinceStart;
 }

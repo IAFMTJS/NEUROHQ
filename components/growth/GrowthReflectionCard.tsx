@@ -11,11 +11,11 @@ type Props = {
 };
 
 export const GrowthReflectionCard: FC<Props> = ({ reflection, today }) => {
-  const [understood, setUnderstood] = useState("");
-  const [difficult, setDifficult] = useState("");
-  const [adjust, setAdjust] = useState("");
+  const [understood, setUnderstood] = useState(reflection.lastUnderstood ?? "");
+  const [difficult, setDifficult] = useState(reflection.lastDifficult ?? "");
+  const [adjust, setAdjust] = useState(reflection.lastAdjust ?? "");
   const [pending, startTransition] = useTransition();
-  const [submitted, setSubmitted] = useState(false);
+  const [submitted, setSubmitted] = useState(!!reflection.lastEntryDate && !reflection.reflectionRequired);
 
   const highlight = reflection.reflectionRequired && !submitted;
 

@@ -1,41 +1,56 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { IDENTITY_DRIFT_LABELS } from "@/lib/identity-drift";
 import { WEEKLY_MODE_LABELS } from "@/lib/weekly-tactical-mode";
-import {
-  getDangerousModulesContext,
-  type DangerousModulesContext,
-} from "@/app/actions/dangerous-modules-context";
-import { setWeeklyTacticalModeOverride } from "@/app/actions/weekly-tactical-mode-action";
+import type { DangerousModulesContext } from "@/app/actions/dangerous-modules-context";
 import type { WeeklyTacticalMode } from "@/lib/weekly-tactical-mode";
+
+type Props = {
+  /** When true, render without outer card/section and h2 (e.g. inside Systeem modus card). */
+  embedded?: boolean;
+};
 
 const today = () => new Date().toISOString().slice(0, 10);
 
-export function DangerousModulesCard() {
+function fetchContext(dateStr: string): Promise<DangerousModulesContext | null> {
+  return fetch(`/api/dashboard/dangerous-modules?date=${encodeURIComponent(dateStr)}`, { credentials: "include" })
+    .then((res) => (res.ok ? res.json() : null))
+    .catch(() => null);
+}
+
+export function DangerousModulesCard({ embedded }: Props) {
   const [ctx, setCtx] = useState<DangerousModulesContext | null>(null);
   const [overrideLoading, setOverrideLoading] = useState(false);
 
-  useEffect(() => {
-    getDangerousModulesContext(today()).then(setCtx);
+  const loadContext = useCallback(() => {
+    fetchContext(today()).then(setCtx);
   }, []);
+
+  useEffect(() => {
+    loadContext();
+  }, [loadContext]);
 
   const handleModeOverride = async (mode: WeeklyTacticalMode) => {
     setOverrideLoading(true);
-    const result = await setWeeklyTacticalModeOverride(today(), mode);
-    setOverrideLoading(false);
-    if (result.ok) getDangerousModulesContext(today()).then(setCtx);
+    try {
+      const res = await fetch("/api/dashboard/dangerous-modules", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ date: today(), mode }),
+        credentials: "include",
+      });
+      const result = await res.json();
+      if (result?.ok) loadContext();
+    } finally {
+      setOverrideLoading(false);
+    }
   };
 
   if (!ctx) return null;
 
-  return (
-    <section
-      className="card-simple hq-card-enter rounded-[var(--hq-card-radius-sharp)] p-5"
-      aria-label="Systeemmodus"
-    >
-      <h2 className="hq-h2 mb-4">Systeemmodus</h2>
-      <div className="space-y-4">
+  const content = (
+    <div className="space-y-4">
         {ctx.identityDrift && (
           <div className="rounded-lg border border-[var(--card-border)] bg-[var(--bg-surface)]/50 px-3 py-2">
             <p className="text-xs font-medium text-[var(--text-muted)]">Identiteit (data-driven)</p>
@@ -90,6 +105,16 @@ export function DangerousModulesCard() {
           </div>
         )}
       </div>
+  );
+
+  if (embedded) return content;
+  return (
+    <section
+      className="card-simple hq-card-enter rounded-[var(--hq-card-radius-sharp)] p-5"
+      aria-label="Systeemmodus"
+    >
+      <h2 className="hq-h2 mb-4">Systeemmodus</h2>
+      {content}
     </section>
   );
 }

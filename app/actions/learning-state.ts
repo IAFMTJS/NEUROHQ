@@ -50,6 +50,10 @@ export type LearningConsistency = {
 export type LearningReflectionState = {
   lastEntryDate: string | null;
   reflectionRequired: boolean;
+  /** Last saved text for prefill (e.g. for today or this week). */
+  lastUnderstood?: string | null;
+  lastDifficult?: string | null;
+  lastAdjust?: string | null;
 };
 
 export type LearningState = {
@@ -216,20 +220,25 @@ async function getReflectionState(weekStart: string, todayStr: string): Promise<
     // eslint-disable-next-line @typescript-eslint/no-explicit-any -- table may be missing from generated types
     const { data, error } = await (supabase as any)
       .from("learning_reflections")
-      .select("date")
+      .select("date, understood, difficult, adjust")
       .order("date", { ascending: false })
       .limit(1);
 
     if (error) {
-      // Table may not exist yet; fail silently for now.
       return { lastEntryDate: null, reflectionRequired: todayStr >= weekStart };
     }
 
-    const lastDate = (data?.[0] as { date?: string } | undefined)?.date ?? null;
+    const row = data?.[0] as { date?: string; understood?: string | null; difficult?: string | null; adjust?: string | null } | undefined;
+    const lastDate = row?.date ?? null;
     const reflectionRequired = !lastDate || lastDate < weekStart;
-    return { lastEntryDate: lastDate, reflectionRequired };
+    return {
+      lastEntryDate: lastDate,
+      reflectionRequired,
+      lastUnderstood: row?.understood ?? null,
+      lastDifficult: row?.difficult ?? null,
+      lastAdjust: row?.adjust ?? null,
+    };
   } catch {
-    // Safety net; keep UI working even if schema is missing.
     return { lastEntryDate: null, reflectionRequired: todayStr >= weekStart };
   }
 }
@@ -252,16 +261,20 @@ export async function submitLearningReflection(params: {
     };
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any -- table may be missing from generated types
-    const { error } = await (supabase as any).from("learning_reflections").insert({
-      user_id: user.id,
-      date: params.date,
-      understood: trimmed.understood || null,
-      difficult: trimmed.difficult || null,
-      adjust: trimmed.adjust || null,
-    });
+    const { error } = await (supabase as any)
+      .from("learning_reflections")
+      .upsert(
+        {
+          user_id: user.id,
+          date: params.date,
+          understood: trimmed.understood || null,
+          difficult: trimmed.difficult || null,
+          adjust: trimmed.adjust || null,
+        },
+        { onConflict: "user_id,date" }
+      );
 
     if (error) {
-      // If table doesn't exist or other error, don't crash Growth page.
       console.error("submitLearningReflection error", error.message);
       return false;
     }

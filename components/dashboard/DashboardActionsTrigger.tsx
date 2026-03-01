@@ -18,10 +18,10 @@ export function DashboardActionsTrigger({ count, children }: Props) {
     <>
       <OutlineButton
         onClick={() => setOpen(true)}
-        className="dashboard-hud-trigger relative h-[30px] rounded-[10px] px-2.5 text-[9px] tracking-[0.06em]"
+        className="dashboard-hud-trigger relative rounded-[10px] px-2.5 text-[9px] tracking-[0.06em]"
+        style={{ height: "26px", minHeight: "26px", paddingTop: 0, paddingBottom: 0 }}
         aria-label={count > 0 ? `${count} acties` : "Acties"}
       >
-        <span className="text-[10px]" aria-hidden>🔔</span>
         <span>Acties</span>
         {count > 0 && (
           <span

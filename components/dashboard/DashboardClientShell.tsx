@@ -8,10 +8,12 @@ import { EconomyBadge } from "@/components/EconomyBadge";
 import { CommanderHomeHero } from "@/components/commander";
 import { ModeBanner, ModeExplanationModal } from "@/components/dashboard/DashboardClientOnly";
 import { XPBadge } from "@/components/XPBadge";
-import { DashboardGroeiCard } from "@/components/dashboard/DashboardGroeiCard";
 import { DashboardContextCard } from "@/components/dashboard/DashboardContextCard";
 import { DashboardUpdatesCard } from "@/components/dashboard/DashboardUpdatesCard";
 import { BudgetBadge } from "@/components/dashboard/BudgetBadge";
+import { DashboardActionsTrigger } from "@/components/dashboard/DashboardActionsTrigger";
+import { CollapsibleDashboardCard } from "@/components/dashboard/CollapsibleDashboardCard";
+import { DashboardQuickBudgetLog } from "@/components/dashboard/DashboardQuickBudgetLog";
 import { SciFiPanel } from "@/components/hud-test/SciFiPanel";
 import { Divider1px } from "@/components/hud-test/Divider1px";
 import { CornerNode } from "@/components/hud-test/CornerNode";
@@ -226,24 +228,23 @@ export function DashboardClientShell() {
         {!isMinimalUI && (
           <div className="space-y-3">
             <OnboardingBanner />
-            <div className="dashboard-top-strip">
+              <div className="dashboard-top-strip">
               <div className="dashboard-top-strip-track">
                 <XPBadge totalXp={xp.total_xp} level={xp.level} compact href="/xp" />
                 {budgetRemainingCents != null && <BudgetBadge budgetRemainingCents={budgetRemainingCents} currency={currency} />}
                 <EconomyBadge disciplinePoints={economy.discipline_points} focusCredits={economy.focus_credits} momentumBoosters={economy.momentum_boosters} compact />
-                <div className="dashboard-mini-strip" role="status" aria-label="Actie samenvatting">
-                  <span className="dashboard-mini-strip-label">Acties</span>
-                  {actionsCount > 0 && <span className="dashboard-mini-count" aria-label={`${actionsCount} acties`}>{actionsCount}</span>}
+                <DashboardActionsTrigger count={actionsCount}>
                   {topQuickActions.length === 0 ? (
-                    <span className="dashboard-mini-empty">Geen open acties</span>
+                    <p className="text-sm text-[var(--text-muted)]">Geen open acties. Check je missies of strategy.</p>
                   ) : (
-                    topQuickActions.map((action, index) => (
-                      <Link key={action.key} href={action.href} className={`dashboard-mini-btn ${index === 0 ? "dashboard-mini-btn-primary" : "dashboard-mini-btn-secondary"}`}>
+                    topQuickActions.map((action) => (
+                      <Link key={action.key} href={action.href} className="block rounded-lg border border-[var(--card-border)] bg-[var(--bg-surface)]/50 px-3 py-2 text-sm font-medium text-[var(--text-primary)] hover:bg-[var(--bg-surface)]" onClick={() => { /* sheet closes via default link nav */ }}>
                         {action.label}
                       </Link>
                     ))
                   )}
-                </div>
+                </DashboardActionsTrigger>
+                <DashboardQuickBudgetLog />
               </div>
             </div>
             <Divider1px />
@@ -334,61 +335,73 @@ export function DashboardClientShell() {
             <CornerNode corner="top-left" />
             <CornerNode corner="top-right" />
             <div className="dashboard-bento grid grid-cols-1 gap-4 lg:grid-cols-2 lg:gap-6">
-              <section className="glass-card glass-card-3d rounded-2xl border border-[var(--card-border)] p-0 lg:col-span-2 overflow-hidden">
-                <div className="grid gap-0 md:grid-cols-2">
-                  {identity && identityEngine ? (
-                    <>
-                      <IdentityBlock
-                        level={(identity as { level: number }).level}
-                        rank={(identity as { rank: string }).rank}
-                        streak={(identity as { streak: { current: number } }).streak?.current ?? 0}
-                        xpToNextLevel={(identity as { xp_to_next_level: number }).xp_to_next_level}
-                        nextUnlock={((identity as { next_unlock?: { level: number; rank: string; xpNeeded: number } | null }).next_unlock) ?? { level: 0, rank: "-", xpNeeded: 0 }}
-                        archetype={(identityEngine as { archetype: Archetype }).archetype}
-                        evolutionPhase={(identityEngine as { evolutionPhase: EvolutionPhase }).evolutionPhase}
-                        reputation={(identityEngine as { reputation: ReputationScore }).reputation}
-                        embedded
-                      />
-                      <MomentumScore
-                        score={((insightState as { momentum?: { score: number } })?.momentum?.score ?? (momentum as { score: number })?.score) ?? 0}
-                        band={(((insightState as { momentum?: { band: string } })?.momentum?.band ?? (momentum as { band: string })?.band) ?? "medium") as MomentumBand}
-                        embedded
-                        className="border-t border-[var(--card-border)] md:border-t-0 md:border-l"
-                      />
-                    </>
-                  ) : (
-                    <>
-                      <div className="glass-card min-h-[140px] animate-pulse rounded-[22px]" aria-hidden />
-                      <div className="glass-card min-h-[100px] animate-pulse rounded-[22px] border-t border-[var(--card-border)] md:border-t-0 md:border-l" aria-hidden />
-                    </>
-                  )}
+              <CollapsibleDashboardCard title="Level & voortgang" storageKey="level" defaultExpanded={true} className="lg:col-span-2">
+                <section className="glass-card glass-card-3d rounded-none border-0 p-0">
+                  <div className="grid gap-0 md:grid-cols-2">
+                    {identity && identityEngine ? (
+                      <>
+                        <IdentityBlock
+                          level={(identity as { level: number }).level}
+                          rank={(identity as { rank: string }).rank}
+                          streak={(identity as { streak: { current: number } }).streak?.current ?? 0}
+                          xpToNextLevel={(identity as { xp_to_next_level: number }).xp_to_next_level}
+                          nextUnlock={((identity as { next_unlock?: { level: number; rank: string; xpNeeded: number } | null }).next_unlock) ?? { level: 0, rank: "-", xpNeeded: 0 }}
+                          archetype={(identityEngine as { archetype: Archetype }).archetype}
+                          evolutionPhase={(identityEngine as { evolutionPhase: EvolutionPhase }).evolutionPhase}
+                          reputation={(identityEngine as { reputation: ReputationScore }).reputation}
+                          embedded
+                        />
+                        <MomentumScore
+                          score={((insightState as { momentum?: { score: number } })?.momentum?.score ?? (momentum as { score: number })?.score) ?? 0}
+                          band={(((insightState as { momentum?: { band: string } })?.momentum?.band ?? (momentum as { band: string })?.band) ?? "medium") as MomentumBand}
+                          embedded
+                          className="border-t border-[var(--card-border)] md:border-t-0 md:border-l"
+                        />
+                      </>
+                    ) : (
+                      <>
+                        <div className="glass-card min-h-[140px] animate-pulse rounded-[22px]" aria-hidden />
+                        <div className="glass-card min-h-[100px] animate-pulse rounded-[22px] border-t border-[var(--card-border)] md:border-t-0 md:border-l" aria-hidden />
+                      </>
+                    )}
+                  </div>
+                </section>
+              </CollapsibleDashboardCard>
+              <CollapsibleDashboardCard title="Active missions" storageKey="active-missions" defaultExpanded={true} className="lg:col-span-2">
+                <div className="dashboard-mission-hero p-4 md:p-6">
+                  <ActiveMissionCard tasks={todaysTasks} emptyMessage={emptyMissionMessage} emptyHref={emptyMissionHref} timeWindow={timeWindow} isTimeWindowActive={isTimeWindowActive} />
                 </div>
-              </section>
-              <div className="lg:col-span-2 dashboard-mission-hero">
-                <ActiveMissionCard tasks={todaysTasks} emptyMessage={emptyMissionMessage} emptyHref={emptyMissionHref} timeWindow={timeWindow} isTimeWindowActive={isTimeWindowActive} />
-              </div>
+              </CollapsibleDashboardCard>
               <div className="flex flex-col gap-4">
-                {todayEngine != null && xpForecast !== undefined ? (
-                  <TodayEngineCard
-                    bucketed={(todayEngine as { bucketed: BucketedToday }).bucketed}
-                    streakAtRisk={(todayEngine as { streakAtRisk: boolean }).streakAtRisk}
-                    date={(todayEngine as { date: string }).date}
-                    forecasts={xpForecast as XPForecastItem[]}
-                  />
-                ) : (
-                  <div className="glass-card min-h-[160px] animate-pulse rounded-[22px]" aria-hidden />
-                )}
-                <DangerousModulesCard />
+                <CollapsibleDashboardCard title="Vandaag door de app bepaald" storageKey="today-engine" defaultExpanded={true}>
+                  {todayEngine != null && xpForecast !== undefined ? (
+                    <div className="p-4 md:p-6">
+                      <TodayEngineCard
+                        bucketed={(todayEngine as { bucketed: BucketedToday }).bucketed}
+                        streakAtRisk={(todayEngine as { streakAtRisk: boolean }).streakAtRisk}
+                        date={(todayEngine as { date: string }).date}
+                        forecasts={xpForecast as XPForecastItem[]}
+                      />
+                    </div>
+                  ) : (
+                    <div className="glass-card min-h-[160px] animate-pulse rounded-[22px] m-4" aria-hidden />
+                  )}
+                </CollapsibleDashboardCard>
               </div>
               <div className="flex flex-col gap-4">
                 <DashboardUpdatesCard />
-                <BrainStatusCard
+                <CollapsibleDashboardCard title="Systeem modus" subtitle="Brain status & hoe voel je je vandaag" storageKey="systeem-modus" defaultExpanded={true}>
+                  <div className="p-4 md:p-6 space-y-6">
+                    <BrainStatusCard
                   date={dateStr}
                   initial={{ energy: secState?.energy ?? null, focus: secState?.focus ?? null, sensory_load: secState?.sensory_load ?? null, sleep_hours: secState?.sleep_hours ?? null, social_load: secState?.social_load ?? null, mental_battery: (secState as { mental_battery?: number | null })?.mental_battery ?? null }}
                   yesterday={{ energy: secYesterdayState?.energy ?? null, focus: secYesterdayState?.focus ?? null, sensory_load: secYesterdayState?.sensory_load ?? null, sleep_hours: secYesterdayState?.sleep_hours ?? null, social_load: secYesterdayState?.social_load ?? null, mental_battery: (secYesterdayState as { mental_battery?: number | null })?.mental_battery ?? null }}
                   brainMode={secEnergyBudget.brainMode as BrainMode}
                   suggestedTaskCount={(secEnergyBudget.suggestedTaskCount as number) ?? 3}
                 />
+                    <DangerousModulesCard embedded />
+                  </div>
+                </CollapsibleDashboardCard>
                 {(!isMinimalUI || (secEnergyBudget.remaining as number) < 20) && (
                   <EnergyBudgetBar
                     remaining={secEnergyBudget.remaining as number}
@@ -424,27 +437,6 @@ export function DashboardClientShell() {
                 />
                 <ModeExplanationModal mode={mode} />
                 {mode === "driven" && <FocusBlock />}
-                <DashboardGroeiCard
-                  summaryLabel={weekSummary ? `${(weekSummary as { totalTasksCompleted: number }).totalTasksCompleted}/${(weekSummary as { totalTasksPlanned: number }).totalTasksPlanned} taken · ${(weekSummary as { totalLearningMinutes: number }).totalLearningMinutes}/${(weekSummary as { learningTargetMinutes: number }).learningTargetMinutes} min leren` : undefined}
-                  summaryStat={learningStreak >= 1 ? `${learningStreak} week${learningStreak !== 1 ? "s" : ""} streak` : undefined}
-                >
-                  {heatmapDays ? <WeeklyHeatmap days={heatmapDays} /> : <div className="glass-card min-h-[80px] animate-pulse rounded-[22px]" aria-hidden />}
-                  <AnalyticsWeekWidget summary={weekSummary ?? null} />
-                  <HQChart title="Mission Growth" variant="area" />
-                  {learningStreak >= 1 && (
-                    <div className="glass-card flex items-center gap-3 p-4">
-                      <span className="text-2xl" aria-hidden>🔥</span>
-                      <div>
-                        <p className="text-sm font-medium text-[var(--text-primary)]">Learning streak</p>
-                        <p className="text-xs text-[var(--text-muted)]">{learningStreak} week{learningStreak !== 1 ? "s" : ""} in a row (≥{weeklyLearningTarget} min)</p>
-                      </div>
-                      <Link href="/learning" className="ml-auto text-sm font-medium text-[var(--accent-focus)] hover:underline">Growth →</Link>
-                    </div>
-                  )}
-                  <OnTrackCard learningMinutes={weeklyLearningMinutes} learningTarget={weeklyLearningTarget} strategySet={!!((strategy as { identity_statement?: string; primary_theme?: string } | null)?.identity_statement || (strategy as { primary_theme?: string })?.primary_theme)} />
-                  {lastWeekReport && <RealityReportBlock report={lastWeekReport} />}
-                  {insight != null && <PatternInsightCard insight={insight} suggestion={patternSuggestion ?? null} detailsHref="/report" />}
-                </DashboardGroeiCard>
               </div>
             </div>
           </SciFiPanel>

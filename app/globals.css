@@ -104,6 +104,14 @@
   /* Center spotlight – focus hierarchy */
   --spotlight: radial-gradient(circle at 50% 25%, rgba(37,99,235,0.15), transparent 60%);
 
+  /* Layout spacing – native-app feel, consistent rhythm */
+  --page-padding-x: clamp(1rem, 4vw, 1.5rem);
+  --page-padding-y: clamp(1rem, 3vw, 1.5rem);
+  --section-gap: 1.5rem;
+  --card-gap: 1rem;
+  --card-padding: 1.25rem;
+  --content-max-width: 72rem;
+
   /* ========== CINEMATIC NEON (full design) ========== */
   --cinematic-navy: #040712;
   --cinematic-navy-mid: #080d1c;

@@ -8,6 +8,8 @@ type Props = {
   id: string;
   title: string;
   subtitle?: string;
+  /** Template/mission description (e.g. from mission_templates). */
+  description?: string | null;
   state: MissionState;
   progressPct?: number;
   href?: string;
@@ -17,6 +19,7 @@ export function CommanderMissionCard({
   id,
   title,
   subtitle,
+  description,
   state,
   progressPct,
   href,
@@ -25,6 +28,7 @@ export function CommanderMissionCard({
     <>
       <h3>{title}</h3>
       {subtitle && <p className="text-soft">{subtitle}</p>}
+      {description && <p className="mt-1 text-xs text-[var(--text-muted)] line-clamp-2">{description}</p>}
       {state === "active" && progressPct != null && (
         <div className="progress">
           <div

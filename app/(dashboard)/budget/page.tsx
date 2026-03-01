@@ -37,8 +37,8 @@ import { getSafeDaysThisWeek, getBudgetLoadTrend } from "@/lib/dcic/finance-engi
 import { DisciplineIndexCard } from "@/components/budget/DisciplineIndexCard";
 import { BudgetRiskInsightCard } from "@/components/budget/BudgetRiskInsightCard";
 import { WeeklyPerformanceCard } from "@/components/budget/WeeklyPerformanceCard";
-import { DailyControlMissionsCard } from "@/components/budget/DailyControlMissionsCard";
 import { BudgetQuickLogCard } from "@/components/budget/BudgetQuickLogCard";
+import { BudgetDailyControlToast } from "@/components/budget/BudgetDailyControlToast";
 import { BudgetPerformanceSummaryCard } from "@/components/budget/BudgetPerformanceSummaryCard";
 import { BudgetPatternDetectionCard } from "@/components/budget/BudgetPatternDetectionCard";
 import { RemainingBudgetHero } from "@/components/budget/RemainingBudgetHero";
@@ -203,6 +203,7 @@ export default async function BudgetPage({ searchParams }: Props) {
 
   const overviewSection = (
     <div className="space-y-4">
+      {!historyMode && <BudgetDailyControlToast />}
       {!historyMode && (
         <>
           <RemainingBudgetHero
@@ -270,7 +271,6 @@ export default async function BudgetPage({ searchParams }: Props) {
 
   const tacticalSection = (
     <div className="space-y-4">
-      <DailyControlMissionsCard initialCompletedToday={disciplineCompletedToday} />
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         <WeeklyTacticalCard financeState={financeState} />
         <PaydayCard
@@ -284,7 +284,6 @@ export default async function BudgetPage({ searchParams }: Props) {
         />
         <FrozenPurchaseCard activeFrozen={activeFrozen} readyForAction={readyForAction} currency={currency} goals={goals} />
       </div>
-      <CategorySpendingCard categoryTotals={categoryTotals} targets={budgetTargets} currency={currency} />
       <BudgetQuickLogCard date={today} currency={currency} />
     </div>
   );

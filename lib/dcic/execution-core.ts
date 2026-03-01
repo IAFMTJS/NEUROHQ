@@ -118,9 +118,10 @@ export function executeCompleteMission(
     updatedState.stats.energy - mission.energyCost
   );
 
-  // Fase 3: derive performance rank from consequence (missions have no full score formula)
+  // Fase 3: derive performance rank from consequence (missions have no full score formula).
+  // Avoid defaulting to S so auto/template missions are not over-ranked; use A for "good" runs.
   let performanceRank: "S" | "A" | "B" | "C" = "A";
-  let performanceScore: number = 85;
+  let performanceScore: number = 82;
   if (consequence?.loadFailure) {
     performanceRank = "C";
     performanceScore = 52;
@@ -128,8 +129,8 @@ export function executeCompleteMission(
     performanceRank = "B";
     performanceScore = 72;
   } else if (!consequence?.loadFailure && !consequence?.recoveryPenalty && (consequence?.energyMultiplier ?? 1) >= 1) {
-    performanceRank = "S";
-    performanceScore = 92;
+    performanceRank = "A";
+    performanceScore = 82;
   }
 
   // Create log entry

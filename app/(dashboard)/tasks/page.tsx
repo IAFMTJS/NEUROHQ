@@ -43,7 +43,6 @@ const MetaInsights30Banner = nextDynamic(() => import("@/components/missions/Met
 const EmotionalStateCorrelationBanner = nextDynamic(() => import("@/components/missions/EmotionalStateCorrelationBanner").then((m) => ({ default: m.EmotionalStateCorrelationBanner })), { loading: () => null });
 const ThirtyDayMirrorBanner = nextDynamic(() => import("@/components/missions/ThirtyDayMirrorBanner").then((m) => ({ default: m.ThirtyDayMirrorBanner })), { loading: () => null });
 const ConsequenceBanner = nextDynamic(() => import("@/components/ConsequenceBanner").then((m) => ({ default: m.ConsequenceBanner })), { loading: () => null });
-const ResetAutoMissionsButton = nextDynamic(() => import("@/components/missions/ResetAutoMissionsButton").then((m) => ({ default: m.ResetAutoMissionsButton })), { loading: () => null });
 
 type Props = {
   searchParams: Promise<{ tab?: string; add?: string; month?: string; day?: string; calView?: string }>;
@@ -156,6 +155,7 @@ export default async function TasksPage({ searchParams }: Props) {
     id: t.id,
     title: t.title ?? "Task",
     subtitle: i === 0 ? "Aanbevolen" : `UMS ${Math.round(t.umsBreakdown.ums * 100)}%`,
+    description: (t as { notes?: string | null }).notes ?? null,
     state: (i === 0 ? "active" : "locked") as "active" | "locked",
     progressPct: 0,
     href: "/tasks",
@@ -193,6 +193,7 @@ export default async function TasksPage({ searchParams }: Props) {
           id: (t as { id: string }).id,
           title: (t as { title: string }).title ?? "Task",
           subtitle: i === 0 ? "Active" : undefined,
+          description: (t as { notes?: string | null }).notes ?? null,
           state: (i === 0 ? "active" : "locked") as "active" | "locked",
           progressPct: 0,
           href: "/tasks",
@@ -282,14 +283,13 @@ export default async function TasksPage({ searchParams }: Props) {
       </section>
       <div className="mascot-follow-row flex flex-wrap items-center justify-end gap-2">
         <YesterdayTasksSection yesterdayTasks={yesterdayTasks} todayStr={dateStr} />
-        <ResetAutoMissionsButton dateStr={dateStr} />
         <XPBadge totalXp={xp.total_xp} level={xp.level} compact href="/xp" />
-        <div className="glow-pill inline-flex items-center gap-2 rounded-full bg-[var(--dc-bg-elevated)] px-4 py-2 text-sm font-medium text-[var(--dc-text-main)]">
+        <div className="glow-pill inline-flex min-w-0 shrink-0 items-center gap-2 rounded-full bg-[var(--dc-bg-elevated)] px-4 py-2 text-sm font-medium text-[var(--dc-text-main)]" title="Vandaag" aria-label="Vandaag">
           <span
-            className="h-2 w-2 rounded-full bg-[var(--dc-accent-primary)] shadow-[0_0_8px_rgba(37,99,235,0.6)]"
+            className="h-2 w-2 shrink-0 rounded-full bg-[var(--dc-accent-primary)] shadow-[0_0_8px_rgba(37,99,235,0.6)]"
             aria-hidden
           />
-          Today
+          <span className="truncate">Today</span>
         </div>
       </div>
       <Divider1px />
@@ -347,7 +347,7 @@ export default async function TasksPage({ searchParams }: Props) {
         {smartSuggestion.text && !decisionBlocks.topRecommendation ? (
           <SmartSuggestionBanner text={smartSuggestion.text} type={smartSuggestion.type} />
         ) : null}
-        {missionCards.length > 0 && (
+        {missionCards.length > 0 && tasks.length === 0 && (
           <section className="mission-grid">
             {missionCards.map((m) => (
               <CommanderMissionCard
@@ -355,6 +355,7 @@ export default async function TasksPage({ searchParams }: Props) {
                 id={m.id}
                 title={m.title}
                 subtitle={m.subtitle}
+                description={"description" in m ? (m as { description?: string | null }).description : null}
                 state={m.state}
                 progressPct={m.progressPct}
                 href={m.href}
