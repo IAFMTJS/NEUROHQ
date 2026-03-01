@@ -164,13 +164,15 @@ export async function awardXPForTaskComplete(
     ? (await import("@/lib/performance-rank")).getXpMultiplierForRank(performanceRank)
     : 1;
 
-  const [alignMult, antiGrindMult, adaptiveMod, primeMult, progressionMult] = await Promise.all([
+  const [alignMult, antiGrindMult, adaptiveMod, primeMult, progressionMult, dangerousCtx] = await Promise.all([
     getAlignmentPenaltyMultiplier(),
     getAntiGrindMultiplier(taskDomain ?? null),
     import("./weekly-performance").then((m) => m.getAdaptiveModifiersForUser()),
     import("./prime-window").then((m) => m.isInsidePrimeWindow(completionDate ? new Date(completionDate) : undefined).then((inside) => (inside ? 1.1 : 1))),
     import("./progression-rank").then((m) => m.getProgressionRankState()).then((s) => (s ? s.xpMultiplier : 1)),
+    completionDate ? import("./dangerous-modules-context").then((m) => m.getDangerousModulesContext(completionDate)) : Promise.resolve(null),
   ]);
+  const dangerousMult = dangerousCtx ? dangerousCtx.xpMultiplier * dangerousCtx.regretXpModifier : 1;
   let energyMult = 1;
   let lowSynergy = false;
   let loadFailureMult = 1;
@@ -212,7 +214,7 @@ export async function awardXPForTaskComplete(
 
   const mult =
     alignMult * antiGrindMult * energyMult * loadFailureMult * recoveryPenaltyMult * rankMult
-    * adaptiveMod.rewardMultiplier * primeMult * progressionMult;
+    * adaptiveMod.rewardMultiplier * primeMult * progressionMult * dangerousMult;
   const base = baseXp != null && baseXp > 0 ? baseXp : XP_TASK_COMPLETE;
   const points = Math.max(1, Math.floor(base * mult));
   const levelResult = await addXP(points, { source_type: "task_complete", task_id: taskId ?? null });

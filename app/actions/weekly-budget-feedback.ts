@@ -101,6 +101,7 @@ export async function computeAndStoreWeeklyBudgetAdjustment(
 
   const sRankCount = await countSRankCompletionsInWeek(supabase, userId, weekStart, weekEnd);
   const recoveryAvailable = behaviorIndex < LOW_INDEX_THRESHOLD && sRankCount < 3;
+  const growthUnlockEligible = behaviorIndex >= HIGH_INDEX_THRESHOLD;
 
   const service = createServiceRoleClient();
   if (service) {
@@ -113,6 +114,7 @@ export async function computeAndStoreWeeklyBudgetAdjustment(
         discretionary_change_cents: discretionaryChangeCents,
         savings_transfer_cents: savingsTransferCents,
         recovery_available: recoveryAvailable,
+        growth_unlock_eligible: growthUnlockEligible,
       },
       { onConflict: "user_id,week_start" }
     );

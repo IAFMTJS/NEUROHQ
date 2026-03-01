@@ -54,6 +54,8 @@ export async function getGameState(): Promise<GameState | null> {
     skillLink: m.skill_link as Mission["skillLink"],
     recurrenceType: m.recurrence_type as Mission["recurrenceType"],
     streakEligible: m.streak_eligible as boolean | undefined,
+    missionIntent: (m.mission_intent as Mission["missionIntent"]) ?? "normal",
+    expiresAt: m.expires_at as string | null ?? null,
   }));
 
   // Get streak from user_streak table

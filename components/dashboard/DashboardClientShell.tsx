@@ -54,6 +54,7 @@ const WeeklyMirrorBanner = dynamic(() => import("@/components/dashboard/WeeklyMi
 const BehaviorSuggestionsBanner = dynamic(() => import("@/components/dashboard/BehaviorSuggestionsBanner").then((m) => ({ default: m.BehaviorSuggestionsBanner })), { loading: () => null });
 const MinimalIntegrityBanner = dynamic(() => import("@/components/dashboard/MinimalIntegrityBanner").then((m) => ({ default: m.MinimalIntegrityBanner })), { loading: () => null });
 const ProgressionPrimeBudgetCard = dynamic(() => import("@/components/dashboard/ProgressionPrimeBudgetCard").then((m) => ({ default: m.ProgressionPrimeBudgetCard })), { loading: () => null });
+const DangerousModulesCard = dynamic(() => import("@/components/dashboard/DangerousModulesCard").then((m) => ({ default: m.DangerousModulesCard })), { loading: () => <div className="min-h-[120px] animate-pulse rounded-xl bg-white/5" aria-hidden /> });
 
 type CriticalData = Awaited<ReturnType<typeof fetchCritical>>;
 type SecondaryData = Awaited<ReturnType<typeof fetchSecondary>>;
@@ -377,6 +378,7 @@ export function DashboardClientShell() {
                 ) : (
                   <div className="glass-card min-h-[160px] animate-pulse rounded-[22px]" aria-hidden />
                 )}
+                <DangerousModulesCard />
               </div>
               <div className="flex flex-col gap-4">
                 <DashboardUpdatesCard />

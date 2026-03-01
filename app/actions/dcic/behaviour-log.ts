@@ -31,6 +31,7 @@ export async function logBehaviourEntry(entry: BehaviourLogEntry & { missionId?:
       xp_gained: entry.xpGained || null,
       performance_score: entry.performanceScore ?? null,
       performance_rank: entry.performanceRank ?? null,
+      mission_intent: (entry as { missionIntent?: string | null }).missionIntent ?? null,
     });
 
     return true;

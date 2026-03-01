@@ -54,10 +54,10 @@ export async function getSmartSuggestion(dateStr: string): Promise<SmartSuggesti
   return { text: "", type: null };
 }
 
-/** Fase 4: 1–3 concrete suggestions for "Wat nu?" based on capacity + day + history. */
+/** Fase 4 + dangerous modules: 1–3 concrete suggestions for "Wat nu?" based on capacity + day + history. */
 export type AutoSuggestionItem = {
   text: string;
-  type: "streak" | "capacity" | "first_task" | "daily_obligation" | "recovery" | "pattern";
+  type: "streak" | "capacity" | "first_task" | "daily_obligation" | "recovery" | "pattern" | "overload" | "social_cap" | "missed_type";
 };
 
 const DAY_NAMES = ["zondag", "maandag", "dinsdag", "woensdag", "donderdag", "vrijdag", "zaterdag"];
@@ -67,7 +67,7 @@ export async function getAutoSuggestions(dateStr: string): Promise<AutoSuggestio
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return [];
 
-  const [engine, consequence, dailyRow] = await Promise.all([
+  const [engine, consequence, dailyRow, dangerousCtx] = await Promise.all([
     getTodayEngine(dateStr),
     import("@/app/actions/consequence-engine").then((m) => m.getConsequenceState(dateStr)),
     supabase
@@ -76,6 +76,7 @@ export async function getAutoSuggestions(dateStr: string): Promise<AutoSuggestio
       .eq("user_id", user.id)
       .eq("date", dateStr)
       .maybeSingle(),
+    import("@/app/actions/dangerous-modules-context").then((m) => m.getDangerousModulesContext(dateStr)),
   ]);
 
   const suggestions: AutoSuggestionItem[] = [];
@@ -103,6 +104,25 @@ export async function getAutoSuggestions(dateStr: string): Promise<AutoSuggestio
     suggestions.push({
       text: "Alleen recovery-missies beschikbaar. Kies iets lichts om weer op te laden.",
       type: "recovery",
+    });
+  }
+
+  if (dangerousCtx.recoveryWeekMessage && suggestions.every((s) => s.type !== "overload")) {
+    suggestions.push({
+      text: dangerousCtx.recoveryWeekMessage,
+      type: "overload",
+    });
+  }
+  if (dangerousCtx.socialCap && suggestions.every((s) => s.type !== "social_cap")) {
+    suggestions.push({
+      text: "Sociale missies vandaag beperkt — focus op solo of recovery.",
+      type: "social_cap",
+    });
+  }
+  if (dangerousCtx.suggestMissedType && suggestions.length < 3) {
+    suggestions.push({
+      text: `Dit type ("${dangerousCtx.suggestMissedType}") kwam minder aan bod. Eén voltooiing helpt je ritme.`,
+      type: "missed_type",
     });
   }
 

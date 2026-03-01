@@ -29,6 +29,9 @@ export interface Mission {
   skillLink?: string | null;
   recurrenceType?: "daily" | "weekly" | "monthly" | null;
   streakEligible?: boolean;
+  /** normal | recovery | push | chaos | scarcity (gevaarlijke modules). */
+  missionIntent?: "normal" | "recovery" | "push" | "chaos" | "scarcity" | null;
+  expiresAt?: string | null;
 }
 
 // ============================================================================
@@ -193,6 +196,8 @@ export interface BehaviourLogEntry {
   performanceScore?: number | null;
   /** Fase 3: S/A/B/C */
   performanceRank?: "S" | "A" | "B" | "C" | null;
+  /** normal | recovery | push | chaos | scarcity (gevaarlijke modules). */
+  missionIntent?: "normal" | "recovery" | "push" | "chaos" | "scarcity" | null;
 }
 
 // ============================================================================

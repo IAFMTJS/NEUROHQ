@@ -20,6 +20,8 @@ export type ConsequenceState = {
   lastCompletionDate: string | null;
   /** Fase 6.2.2: Burnout detected → recovery-first, limit social. */
   burnout: boolean;
+  /** Gevaarlijke modules: Cognitive Load Forecast >60% → difficulty -10%. */
+  difficultyModifier: number;
 };
 
 /** Default when not signed in. */
@@ -32,6 +34,7 @@ const DEFAULT_CONSEQUENCE_STATE: ConsequenceState = {
   nextMissionCostMultiplier: 1,
   lastCompletionDate: null,
   burnout: false,
+  difficultyModifier: 0,
 };
 
 /**
@@ -94,6 +97,10 @@ export async function getConsequenceState(dateStr: string): Promise<ConsequenceS
   const burnoutState = await getBurnoutState(dateStr);
   const burnout = burnoutState.burnout;
 
+  const { getLoadForecast } = await import("./cognitive-load-forecast");
+  const loadForecast = await getLoadForecast(dateStr);
+  const difficultyModifier = loadForecast?.difficultyModifier ?? 0;
+
   return {
     energyDepleted,
     loadOver80,
@@ -103,5 +110,6 @@ export async function getConsequenceState(dateStr: string): Promise<ConsequenceS
     nextMissionCostMultiplier,
     lastCompletionDate: lastCompletion ?? null,
     burnout,
+    difficultyModifier,
   };
 }

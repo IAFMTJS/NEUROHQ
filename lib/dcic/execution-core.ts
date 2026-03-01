@@ -144,6 +144,7 @@ export function executeCompleteMission(
     xpGained: xpGain,
     performanceScore,
     performanceRank,
+    missionIntent: mission.missionIntent ?? "normal",
   };
 
   // Note: Logging happens in server action, not here

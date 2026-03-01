@@ -288,6 +288,70 @@ export type Database = {
           },
         ]
       }
+      autopilot_day: {
+        Row: {
+          created_at: string
+          date: string
+          forced: boolean
+          id: string
+          plan_json: unknown
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          date: string
+          forced?: boolean
+          id?: string
+          plan_json?: unknown
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          date?: string
+          forced?: boolean
+          id?: string
+          plan_json?: unknown
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "autopilot_day_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      autopilot_refusal: {
+        Row: {
+          created_at: string
+          id: string
+          suggested_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          suggested_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          suggested_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "autopilot_refusal_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       avoidance_tracker: {
         Row: {
           completed: number
@@ -427,6 +491,7 @@ export type Database = {
           id: string
           mission_completed_at: string | null
           mission_id: string | null
+          mission_intent: string | null
           mission_started_at: string | null
           performance_rank: string | null
           performance_score: number | null
@@ -443,6 +508,7 @@ export type Database = {
           id?: string
           mission_completed_at?: string | null
           mission_id?: string | null
+          mission_intent?: string | null
           mission_started_at?: string | null
           performance_rank?: string | null
           performance_score?: number | null
@@ -459,6 +525,7 @@ export type Database = {
           id?: string
           mission_completed_at?: string | null
           mission_id?: string | null
+          mission_intent?: string | null
           mission_started_at?: string | null
           performance_rank?: string | null
           performance_score?: number | null
@@ -735,7 +802,9 @@ export type Database = {
           energy: number | null
           focus: number | null
           focus_consumed: number | null
+          focus_invested_today: number | null
           id: string
+          invested_mission_id: string | null
           is_rest_day: boolean | null
           load: number | null
           mental_battery: number | null
@@ -754,7 +823,9 @@ export type Database = {
           energy?: number | null
           focus?: number | null
           focus_consumed?: number | null
+          focus_invested_today?: number | null
           id?: string
+          invested_mission_id?: string | null
           is_rest_day?: boolean | null
           load?: number | null
           mental_battery?: number | null
@@ -773,7 +844,9 @@ export type Database = {
           energy?: number | null
           focus?: number | null
           focus_consumed?: number | null
+          focus_invested_today?: number | null
           id?: string
+          invested_mission_id?: string | null
           is_rest_day?: boolean | null
           load?: number | null
           mental_battery?: number | null
@@ -998,6 +1071,53 @@ export type Database = {
           },
           {
             foreignKeyName: "friction_events_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      identity_drift_snapshot: {
+        Row: {
+          avoidance_index: number
+          created_at: string
+          derived_type: string
+          discipline_index: number
+          id: string
+          period_end: string
+          recovery_dependency_index: number
+          social_intensity_index: number
+          user_id: string
+          volatility_index: number
+        }
+        Insert: {
+          avoidance_index: number
+          created_at?: string
+          derived_type: string
+          discipline_index: number
+          id?: string
+          period_end: string
+          recovery_dependency_index: number
+          social_intensity_index: number
+          user_id: string
+          volatility_index: number
+        }
+        Update: {
+          avoidance_index?: number
+          created_at?: string
+          derived_type?: string
+          discipline_index?: number
+          id?: string
+          period_end?: string
+          recovery_dependency_index?: number
+          social_intensity_index?: number
+          user_id?: string
+          volatility_index?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "identity_drift_snapshot_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "users"
@@ -1267,6 +1387,44 @@ export type Database = {
           },
         ]
       }
+      missed_opportunity_index: {
+        Row: {
+          completions_same_type: number
+          id: string
+          last_missed_at: string | null
+          missed_count: number
+          mission_type: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          completions_same_type?: number
+          id?: string
+          last_missed_at?: string | null
+          missed_count?: number
+          mission_type: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          completions_same_type?: number
+          id?: string
+          last_missed_at?: string | null
+          missed_count?: number
+          mission_type?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "missed_opportunity_index_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       mission_state: {
         Row: {
           active_mission_id: string | null
@@ -1310,8 +1468,10 @@ export type Database = {
           difficulty_level: number
           domain: string | null
           energy_cost: number
+          expires_at: string | null
           focus_requirement: number | null
           id: string
+          mission_intent: string | null
           mission_type: string
           name: string
           recurrence_type: string | null
@@ -1332,8 +1492,10 @@ export type Database = {
           difficulty_level?: number
           domain?: string | null
           energy_cost?: number
+          expires_at?: string | null
           focus_requirement?: number | null
           id?: string
+          mission_intent?: string | null
           mission_type?: string
           name: string
           recurrence_type?: string | null
@@ -1354,8 +1516,10 @@ export type Database = {
           difficulty_level?: number
           domain?: string | null
           energy_cost?: number
+          expires_at?: string | null
           focus_requirement?: number | null
           id?: string
+          mission_intent?: string | null
           mission_type?: string
           name?: string
           recurrence_type?: string | null
@@ -2690,7 +2854,9 @@ export type Database = {
           behavior_index: number
           budget_discipline_met: boolean
           created_at: string
+          discretionary_cap_cents: number | null
           discretionary_change_cents: number
+          growth_unlock_eligible: boolean
           id: string
           recovery_available: boolean
           savings_transfer_cents: number
@@ -2701,7 +2867,9 @@ export type Database = {
           behavior_index: number
           budget_discipline_met?: boolean
           created_at?: string
+          discretionary_cap_cents?: number | null
           discretionary_change_cents?: number
+          growth_unlock_eligible?: boolean
           id?: string
           recovery_available?: boolean
           savings_transfer_cents?: number
@@ -2712,7 +2880,9 @@ export type Database = {
           behavior_index?: number
           budget_discipline_met?: boolean
           created_at?: string
+          discretionary_cap_cents?: number | null
           discretionary_change_cents?: number
+          growth_unlock_eligible?: boolean
           id?: string
           recovery_available?: boolean
           savings_transfer_cents?: number
@@ -2775,6 +2945,44 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "weekly_reports_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      weekly_tactical_mode: {
+        Row: {
+          created_at: string
+          id: string
+          mode: string
+          updated_at: string
+          user_id: string
+          user_override_used: boolean
+          week_start: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          mode: string
+          updated_at?: string
+          user_id: string
+          user_override_used?: boolean
+          week_start: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          mode?: string
+          updated_at?: string
+          user_id?: string
+          user_override_used?: boolean
+          week_start?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "weekly_tactical_mode_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "users"

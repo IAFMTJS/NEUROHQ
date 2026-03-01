@@ -72,5 +72,7 @@ VALUES
   ('062_fase8_progression_rank_ladder', '062_fase8_progression_rank_ladder', '{}'),
   ('063_fase9_prime_window', '063_fase9_prime_window', '{}'),
   ('064_fase10_weekly_behavior_index_budget', '064_fase10_weekly_behavior_index_budget', '{}'),
-  ('065_pending_xp_notifications', '065_pending_xp_notifications', '{}')
+  ('065_pending_xp_notifications', '065_pending_xp_notifications', '{}'),
+  ('066_auto_missions_unique_title_per_day', '066_auto_missions_unique_title_per_day', '{}'),
+  ('067_gevaarlijke_modules', '067_gevaarlijke_modules', '{}')
 ON CONFLICT (version) DO NOTHING;
