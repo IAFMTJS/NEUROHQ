@@ -18,12 +18,16 @@ export async function ensureUserProfile(userId: string, email: string | undefine
   });
 }
 
-/** Call after login so dashboard layout does not block on profile creation. */
-export async function ensureUserProfileForSession() {
+/** Call after login so dashboard layout does not block on profile creation. Pass user when already available to avoid extra getUser(). */
+export async function ensureUserProfileForSession(user?: { id: string; email?: string | null } | null) {
+  if (user) {
+    await ensureUserProfile(user.id, user.email ?? undefined);
+    return;
+  }
   const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return;
-  await ensureUserProfile(user.id, user.email ?? undefined);
+  const { data: { user: u } } = await supabase.auth.getUser();
+  if (!u) return;
+  await ensureUserProfile(u.id, u.email ?? undefined);
 }
 
 export async function getUserTimezone(): Promise<string | null> {

@@ -1,22 +1,23 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
-import { getXP } from "@/app/actions/xp";
-import { getDailyState } from "@/app/actions/daily-state";
 import { getUserPreferencesOrDefaults } from "@/app/actions/preferences";
 import { PREFERENCES_DEFAULTS } from "@/types/preferences.types";
-import { getUserEconomy } from "@/app/actions/economy";
+import type { getDailyState } from "@/app/actions/daily-state";
 
 export type AppBootstrap = {
   user: { id: string; email: string | null } | null;
+  /** Defaults; dashboard page loads XP from GET /api/dashboard/data. */
   xp: { total_xp: number; level: number };
+  /** Defaults; dashboard page loads economy from dashboard API. */
   economy: { discipline_points: number; focus_credits: number; momentum_boosters: number };
   preferences: Awaited<ReturnType<typeof getUserPreferencesOrDefaults>>;
   todayStr: string;
+  /** Null; dashboard page loads daily state from dashboard API to avoid duplicate fetch. */
   dailyState: Awaited<ReturnType<typeof getDailyState>>;
 };
 
-/** Single bootstrap call for app-wide client state. Use in BootstrapProvider. */
+/** Minimal bootstrap for layout (user + preferences only). XP, economy, daily state come from dashboard API on the dashboard page. */
 export async function getAppBootstrap(): Promise<AppBootstrap> {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
@@ -30,18 +31,13 @@ export async function getAppBootstrap(): Promise<AppBootstrap> {
     dailyState: null,
   };
   if (!user) return defaultBootstrap;
-  const [xp, economy, preferences, dailyState] = await Promise.all([
-    getXP(),
-    getUserEconomy(),
-    getUserPreferencesOrDefaults(),
-    getDailyState(todayStr),
-  ]);
+  const preferences = await getUserPreferencesOrDefaults();
   return {
     user: { id: user.id, email: user.email ?? null },
-    xp,
-    economy,
+    xp: defaultBootstrap.xp,
+    economy: defaultBootstrap.economy,
     preferences,
     todayStr,
-    dailyState,
+    dailyState: null,
   };
 }

@@ -1,8 +1,9 @@
 "use server";
 
+import type { AppMode } from "@/lib/app-mode";
+import { getMode } from "@/app/actions/mode";
 import { createClient } from "@/lib/supabase/server";
 import { getTodaysTasks, type TaskListMode } from "@/app/actions/tasks";
-import { getMode } from "@/app/actions/mode";
 import { getXP } from "@/app/actions/xp";
 import { getBehaviorProfile } from "@/app/actions/behavior-profile";
 import {
@@ -44,8 +45,17 @@ export interface TodayEngineResult {
   date: string;
 }
 
-/** Get today's tasks bucketed into Critical / High Impact / Growth Boost. */
-export async function getTodayEngine(dateStr: string): Promise<TodayEngineResult> {
+export type TodayEnginePrefetched = {
+  tasks: Awaited<ReturnType<typeof getTodaysTasks>>["tasks"];
+  carryOverCount: number;
+  mode: AppMode;
+};
+
+/** Get today's tasks bucketed into Critical / High Impact / Growth Boost. Pass preFetched to avoid duplicate getMode/getTodaysTasks. */
+export async function getTodayEngine(
+  dateStr: string,
+  preFetched?: TodayEnginePrefetched | null
+): Promise<TodayEngineResult> {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) {
@@ -54,10 +64,19 @@ export async function getTodayEngine(dateStr: string): Promise<TodayEngineResult
 
   const behaviorProfile = await getBehaviorProfile();
 
-  const mode = await getMode(dateStr);
-  const taskMode: TaskListMode =
-    mode === "stabilize" ? "stabilize" : mode === "low_energy" ? "low_energy" : mode === "driven" ? "driven" : "normal";
-  const { tasks } = await getTodaysTasks(dateStr, taskMode);
+  let mode: AppMode;
+  let tasks: Awaited<ReturnType<typeof getTodaysTasks>>["tasks"];
+
+  if (preFetched?.tasks != null && preFetched.mode != null) {
+    mode = preFetched.mode;
+    tasks = preFetched.tasks ?? [];
+  } else {
+    mode = await getMode(dateStr);
+    const taskMode: TaskListMode =
+      mode === "stabilize" ? "stabilize" : mode === "low_energy" ? "low_energy" : mode === "driven" ? "driven" : "normal";
+    const result = await getTodaysTasks(dateStr, taskMode);
+    tasks = result.tasks ?? [];
+  }
 
   const yesterdayStr = yesterdayDate(dateStr);
   const { data: streakRow } = await supabase

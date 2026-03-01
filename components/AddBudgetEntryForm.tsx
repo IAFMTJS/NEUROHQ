@@ -10,7 +10,15 @@ const CATEGORY_PRESETS = ["Eten", "Vervoer", "Abonnementen", "Boodschappen", "Ui
 
 const QUICK_ADD_AMOUNTS = [5, 10, 20, 50];
 
-export function AddBudgetEntryForm({ date: initialDate, currency = "EUR" }: { date: string; currency?: string }) {
+export function AddBudgetEntryForm({
+  date: initialDate,
+  currency = "EUR",
+  onSuccess,
+}: {
+  date: string;
+  currency?: string;
+  onSuccess?: () => void;
+}) {
   const router = useRouter();
   const formOpenedAt = useRef(Date.now());
   const [date, setDate] = useState(initialDate);
@@ -46,6 +54,9 @@ export function AddBudgetEntryForm({ date: initialDate, currency = "EUR" }: { da
           addedWithinMinutes,
         });
         if (isPossibleImpulse) setImpulseModal({ entryId: result.id, amountCents: amount_cents });
+        else onSuccess?.();
+      } else {
+        onSuccess?.();
       }
     });
   }
@@ -56,6 +67,7 @@ export function AddBudgetEntryForm({ date: initialDate, currency = "EUR" }: { da
       if (action === "freeze") await freezePurchase(impulseModal.entryId);
       if (action === "planned") await updateBudgetEntry(impulseModal.entryId, { is_planned: true });
       setImpulseModal(null);
+      onSuccess?.();
     });
   }
 

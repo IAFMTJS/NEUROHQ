@@ -19,12 +19,12 @@ import { Divider1px } from "@/components/hud-test/Divider1px";
 import { CornerNode } from "@/components/hud-test/CornerNode";
 import hudStyles from "@/components/hud-test/hud.module.css";
 import { DashboardSkeleton } from "@/components/Skeleton";
-import { useDashboardData } from "@/components/providers/DashboardDataProvider";
+import { useDashboardData, fetchAll, type DashboardCritical, type DashboardSecondary } from "@/components/providers/DashboardDataProvider";
 import type { CopyVariant } from "@/app/actions/adaptive";
 import type { BrainMode } from "@/lib/brain-mode";
 import type { ConfrontationSummary } from "@/app/actions/confrontation-summary";
 import type { PoolBudget } from "@/app/actions/energy";
-import type { AppMode } from "@/app/actions/mode";
+import type { AppMode } from "@/lib/app-mode";
 import type { Archetype, EvolutionPhase, ReputationScore } from "@/lib/identity-engine";
 import type { MomentumBand } from "@/lib/momentum";
 import type { BucketedToday } from "@/lib/today-engine";
@@ -58,33 +58,10 @@ const MinimalIntegrityBanner = dynamic(() => import("@/components/dashboard/Mini
 const ProgressionPrimeBudgetCard = dynamic(() => import("@/components/dashboard/ProgressionPrimeBudgetCard").then((m) => ({ default: m.ProgressionPrimeBudgetCard })), { loading: () => null });
 const DangerousModulesCard = dynamic(() => import("@/components/dashboard/DangerousModulesCard").then((m) => ({ default: m.DangerousModulesCard })), { loading: () => <div className="min-h-[120px] animate-pulse rounded-xl bg-white/5" aria-hidden /> });
 
-type CriticalData = Awaited<ReturnType<typeof fetchCritical>>;
-type SecondaryData = Awaited<ReturnType<typeof fetchSecondary>>;
-
-async function fetchCritical(): Promise<Record<string, unknown>> {
-  const res = await fetch("/api/dashboard/data?part=critical", { credentials: "include" });
-  if (!res.ok) {
-    const body = await res.json().catch(() => ({}));
-    const msg = (body && typeof body.error === "string") ? body.error : `Failed to load dashboard (${res.status})`;
-    throw new Error(res.status === 401 ? "Unauthorized" : msg);
-  }
-  return res.json();
-}
-
-async function fetchSecondary(): Promise<Record<string, unknown>> {
-  const res = await fetch("/api/dashboard/data?part=secondary", { credentials: "include" });
-  if (!res.ok) {
-    const body = await res.json().catch(() => ({}));
-    const msg = (body && typeof body.error === "string") ? body.error : `Failed to load dashboard secondary (${res.status})`;
-    throw new Error(msg);
-  }
-  return res.json();
-}
-
 export function DashboardClientShell() {
   const cache = useDashboardData();
-  const [critical, setCritical] = useState<CriticalData | null>(() => cache?.critical ?? null);
-  const [secondary, setSecondary] = useState<SecondaryData | null>(() => cache?.secondary ?? null);
+  const [critical, setCritical] = useState<DashboardCritical | null>(() => cache?.critical ?? null);
+  const [secondary, setSecondary] = useState<DashboardSecondary | null>(() => cache?.secondary ?? null);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -94,33 +71,36 @@ export function DashboardClientShell() {
       if (cache?.secondary) setSecondary(cache.secondary);
       return;
     }
+    // Don't double-fetch: if provider is already loading, show skeleton and wait for its result
+    if (cache?.loadingCritical) return;
+
+    // Use provider's preload so there is only one in-flight request; provider updates cache and we sync via effect below
+    if (cache?.preloadDashboard) {
+      cache.preloadDashboard().catch((e: unknown) => {
+        setError(e instanceof Error ? e.message : "Load failed");
+      });
+      return;
+    }
+
     let cancelled = false;
-    fetchCritical()
-      .then((data) => {
+    fetchAll()
+      .then(({ critical: c, secondary: s }) => {
         if (!cancelled) {
-          setCritical(data);
-          cache?.setDashboardData({ critical: data });
-        }
-        return fetchSecondary();
-      })
-      .then((data) => {
-        if (!cancelled) {
-          setSecondary(data);
-          cache?.setDashboardData({ secondary: data });
+          setCritical(c);
+          setSecondary(s);
+          cache?.setDashboardData({ critical: c, secondary: s });
         }
       })
       .catch((e) => {
         if (!cancelled) setError(e instanceof Error ? e.message : "Load failed");
       });
     return () => { cancelled = true; };
-  }, []);
+  }, [cache?.critical, cache?.loadingCritical, cache?.secondary, cache?.preloadDashboard]);
 
   useEffect(() => {
-    if (!cache || !critical) return;
-    if (cache.critical && cache.secondary) {
-      setCritical(cache.critical);
-      setSecondary(cache.secondary);
-    }
+    if (!cache) return;
+    if (cache.critical) setCritical(cache.critical);
+    if (cache.secondary) setSecondary(cache.secondary);
   }, [cache?.critical, cache?.secondary]);
 
   useEffect(() => {
@@ -146,37 +126,38 @@ export function DashboardClientShell() {
     );
   }
 
-  const dateStr = critical.dateStr as string;
-  const isMinimalUI = critical.isMinimalUI as boolean;
-  const energyPct = critical.energyPct as number;
-  const focusPct = critical.focusPct as number;
-  const loadPct = critical.loadPct as number;
-  const budgetRemainingCents = critical.budgetRemainingCents as number | null;
-  const currency = critical.currency as string;
-  const xp = critical.xp as { total_xp: number; level: number };
-  const economy = critical.economy as { discipline_points: number; focus_credits: number; momentum_boosters: number };
-  const actionsCount = critical.actionsCount as number;
-  const topQuickActions = critical.topQuickActions as { key: string; label: string; href: string }[];
-  const missionLabel = critical.missionLabel as string;
-  const singleGoalLabel = critical.singleGoalLabel as string | null;
-  const missionSubtext = critical.missionSubtext as string;
-  const autoSuggestions = (critical.autoSuggestions ?? []) as { text: string; type: string }[];
-  const emptyMissionMessage = critical.emptyMissionMessage as string;
-  const emptyMissionHref = critical.emptyMissionHref as string;
-  const dailyQuoteText = critical.dailyQuoteText as string | null;
-  const dailyQuoteAuthor = critical.dailyQuoteAuthor as string | null;
-  const streakAtRisk = critical.streakAtRisk as boolean;
-  const todaysTasks = critical.todaysTasks as { id: string; title: string; carryOverCount: number }[];
-  const timeWindow = critical.timeWindow as string;
-  const isTimeWindowActive = critical.isTimeWindowActive as boolean;
-  const energyBudget = critical.energyBudget as Record<string, unknown>;
-  const state = critical.state as { energy?: number; focus?: number; sensory_load?: number; sleep_hours?: number; social_load?: number } | null;
-  const yesterdayState = critical.yesterdayState as { energy?: number; focus?: number; sensory_load?: number; sleep_hours?: number; social_load?: number } | null;
-  const mode = critical.mode as AppMode;
-  const carryOverCount = critical.carryOverCount as number;
-  const copyVariant = critical.copyVariant as CopyVariant | undefined;
-
-  const accountabilitySettings = critical.accountabilitySettings as { enabled: boolean; streakFreezeTokens: number } | undefined;
+  const {
+    dateStr,
+    isMinimalUI,
+    energyPct,
+    focusPct,
+    loadPct,
+    budgetRemainingCents,
+    currency,
+    xp,
+    economy,
+    actionsCount,
+    topQuickActions,
+    missionLabel,
+    singleGoalLabel,
+    missionSubtext,
+    autoSuggestions = [],
+    emptyMissionMessage,
+    emptyMissionHref,
+    dailyQuoteText,
+    dailyQuoteAuthor,
+    streakAtRisk,
+    todaysTasks,
+    timeWindow,
+    isTimeWindowActive,
+    energyBudget,
+    state,
+    yesterdayState,
+    mode,
+    carryOverCount,
+    copyVariant,
+    accountabilitySettings,
+  } = critical;
   const confrontationSummary = secondary?.confrontationSummary;
   const identity = secondary?.identity;
   const identityEngine = secondary?.identityEngine;
@@ -190,7 +171,7 @@ export function DashboardClientShell() {
   const strategy = secondary?.strategy;
   const quotesResult = secondary?.quotesResult as (Quote | null)[] | undefined;
   const quoteDay = (secondary?.quoteDay ?? 1) as number;
-  const learningStreak = (secondary?.learningStreak ?? critical.learningStreak) as number;
+  const learningStreak = (secondary?.learningStreak ?? critical.learningStreak) ?? 0;
   const weeklyLearningMinutes = (secondary?.weeklyLearningMinutes ?? 0) as number;
   const weeklyLearningTarget = (secondary?.weeklyLearningTarget ?? 60) as number;
   const insight = secondary?.insight as string | undefined;
@@ -289,7 +270,7 @@ export function DashboardClientShell() {
               energyDepleted={(energyBudget.consequence as { energyDepleted?: boolean } | undefined)?.energyDepleted}
               recoveryOnly={(energyBudget.consequence as { recoveryOnly?: boolean } | undefined)?.recoveryOnly}
               zeroCompletionPenalty={(state as { zero_completion_penalty_applied?: boolean } | null)?.zero_completion_penalty_applied}
-              burnout={critical.burnout as boolean | undefined}
+              burnout={critical.burnout}
             />
             {(energyBudget.activeStartedCount as number) != null && (energyBudget.maxSlots as number) != null && (energyBudget.activeStartedCount as number) > (energyBudget.maxSlots as number) && (
               <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm text-amber-200/95">
@@ -422,15 +403,15 @@ export function DashboardClientShell() {
                 <DashboardContextCard
                   prev={{
                     quote: secondary && quotesResult ? quotesResult[0] : null,
-                    day: secondary ? Math.max(1, quoteDay - 1) : Math.max(1, Math.min(365, (typeof critical.dateStr === "string" ? getDayOfYearFromDateString(critical.dateStr) : 1) - 1)),
+                    day: secondary ? Math.max(1, quoteDay - 1) : Math.max(1, Math.min(365, getDayOfYearFromDateString(dateStr) - 1)),
                   }}
                   current={{
-                    quote: (secondary && quotesResult ? quotesResult[1] : null) ?? (critical.dailyQuoteText ? { id: 0, quote_text: critical.dailyQuoteText as string, author_name: (critical.dailyQuoteAuthor as string) ?? "", era: "", topic: null, created_at: "" } : null),
-                    day: secondary ? quoteDay : (typeof critical.dateStr === "string" ? getDayOfYearFromDateString(critical.dateStr) : 1),
+                    quote: (secondary && quotesResult ? quotesResult[1] : null) ?? (dailyQuoteText ? { id: 0, quote_text: dailyQuoteText, author_name: dailyQuoteAuthor ?? "", era: "", topic: null, created_at: "" } : null),
+                    day: secondary ? quoteDay : getDayOfYearFromDateString(dateStr),
                   }}
                   next={{
                     quote: secondary && quotesResult ? quotesResult[2] : null,
-                    day: secondary ? Math.min(365, quoteDay + 1) : Math.min(365, (typeof critical.dateStr === "string" ? getDayOfYearFromDateString(critical.dateStr) : 1) + 1),
+                    day: secondary ? Math.min(365, quoteDay + 1) : Math.min(365, getDayOfYearFromDateString(dateStr) + 1),
                   }}
                   mode={mode}
                   identityStatement={(strategy as { identity_statement?: string } | null)?.identity_statement ?? null}

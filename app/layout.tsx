@@ -1,12 +1,17 @@
 import type { Metadata } from "next";
-import "@fontsource/plus-jakarta-sans/latin.css";
+import { Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
 import "./design-system.css";
 import { ThemeProvider } from "@/components/providers/ThemeProvider";
+
+const plusJakarta = Plus_Jakarta_Sans({
+  subsets: ["latin"],
+  display: "swap",
+  variable: "--font-sans",
+});
 import { ServiceWorkerRegistration } from "@/components/ServiceWorkerRegistration";
 import { Toaster } from "sonner";
-import { StoragePersistenceManager } from "@/components/StoragePersistenceManager";
-import { PwaInstallPrompt } from "@/components/PwaInstallPrompt";
+import { DeferredRootComponents } from "@/components/DeferredRootComponents";
 
 export const metadata: Metadata = {
   title: "NEUROHQ",
@@ -15,6 +20,12 @@ export const metadata: Metadata = {
   icons: {
     icon: "/app-icon.png",
     apple: "/app-icon.png",
+  },
+  // iOS/macOS “Add to Home Screen”: status bar blends with app, no browser chrome
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "black-translucent",
+    title: "NEUROHQ",
   },
 };
 
@@ -43,10 +54,9 @@ export default function RootLayout({
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
       </head>
-      <body className="min-h-screen font-sans antialiased">
+      <body className={`min-h-screen antialiased ${plusJakarta.variable} font-sans`}>
         <ServiceWorkerRegistration />
-        <StoragePersistenceManager />
-        <PwaInstallPrompt />
+        <DeferredRootComponents />
         <ThemeProvider>{children}</ThemeProvider>
         <Toaster richColors position="bottom-center" closeButton />
       </body>

@@ -141,18 +141,23 @@ export async function updateEvolutionPhase(phase: EvolutionPhase): Promise<boole
   return !error;
 }
 
-/** Ensure identity_engine and reputation rows exist for user (call on first load). */
-export async function ensureIdentityEngineRows(): Promise<void> {
+/** Ensure identity_engine and reputation rows exist for user (call on first load). Pass userId when already available to avoid extra getUser(). */
+export async function ensureIdentityEngineRows(userId?: string | null): Promise<void> {
   try {
+    let uid = userId;
+    if (uid == null) {
+      const supabase = await createClient();
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+      uid = user.id;
+    }
     const supabase = await createClient();
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return;
     await supabase.from("user_identity_engine").upsert(
-      { user_id: user.id, updated_at: new Date().toISOString() },
+      { user_id: uid, updated_at: new Date().toISOString() },
       { onConflict: "user_id" }
     );
     await supabase.from("user_reputation").upsert(
-      { user_id: user.id, updated_at: new Date().toISOString() },
+      { user_id: uid, updated_at: new Date().toISOString() },
       { onConflict: "user_id" }
     );
   } catch {

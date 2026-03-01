@@ -1,6 +1,6 @@
 "use client";
 
-import type { AppMode } from "@/app/actions/mode";
+import type { AppMode } from "@/lib/app-mode";
 
 export { ModeBanner } from "@/components/ModeBanner";
 export { AddCalendarEventForm } from "@/components/AddCalendarEventForm";

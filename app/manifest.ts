@@ -14,6 +14,7 @@ export default function manifest(): MetadataRoute.Manifest {
     start_url: baseUrl ? `${baseUrl}/dashboard` : "/dashboard",
     scope: "/",
     display: "standalone",
+    orientation: "any",
     background_color: "#050810",
     theme_color: "#050810",
     icons: [

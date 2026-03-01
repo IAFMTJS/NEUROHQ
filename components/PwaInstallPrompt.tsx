@@ -56,7 +56,10 @@ export function PwaInstallPrompt() {
   };
 
   return (
-    <div className="fixed bottom-4 left-4 right-4 z-[190] flex items-center justify-between gap-3 rounded-xl border border-[var(--accent-focus)]/30 bg-[var(--bg-surface)]/95 px-4 py-3 shadow-lg backdrop-blur">
+    <div
+      className="fixed left-4 right-4 z-[190] flex items-center justify-between gap-3 rounded-xl border border-[var(--accent-focus)]/30 bg-[var(--bg-surface)]/95 px-4 py-3 shadow-lg backdrop-blur"
+      style={{ bottom: "max(1rem, env(safe-area-inset-bottom))" }}
+    >
       <span className="text-sm font-medium text-[var(--text-primary)]">Install NEUROHQ on this device?</span>
       <div className="flex items-center gap-2">
         <button

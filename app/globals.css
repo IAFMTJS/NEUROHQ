@@ -5,7 +5,7 @@
 /* ========== DARK COMMANDER DESIGN SYSTEM v1.0 (New UI Display Idea – Stap 1) ========== */
 /* 2. DESIGN TOKENS */
 :root {
-  /* Brand font: Plus Jakarta Sans (self-hosted via @fontsource) */
+  /* Brand font: Plus Jakarta Sans (loaded via next/font in root layout; fallback for SSR) */
   --font-sans: "Plus Jakarta Sans", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   /* ========== HUD FOUNDATION TOKENS v1.0 (Fase 2) ========== */
   /* Context lock:
@@ -191,11 +191,10 @@
 .container {
   position: relative;
   z-index: 1;
-  /* Gebruik de breedte van het toestel; padding voor leesbaarheid aan de randen. */
   max-width: 100%;
   width: 100%;
-  margin: 0 auto;
-  padding: calc(24px + env(safe-area-inset-top)) 24px 100px 24px;
+  margin: 0;
+  padding: 0;
   display: flex;
   flex-direction: column;
   gap: 24px;
@@ -204,7 +203,6 @@
 
 @media (max-width: 640px) {
   .container {
-    padding: calc(16px + env(safe-area-inset-top)) 16px 88px 16px;
     gap: 16px;
   }
 }
@@ -846,16 +844,17 @@
   justify-content: space-between;
 }
 
-/* ========== CINEMATIC NEON – Mascot ~3× bigger, pushed up close to card above ========== */
+/* ========== CINEMATIC NEON – Mascot big, tight between page name and first content ========== */
 .mascot-hero {
   position: relative;
   display: flex;
   justify-content: center;
   align-items: flex-start;
-  margin-top: -36px;
-  margin-bottom: -56px;
+  margin-top: -28px;
+  margin-bottom: -52px;
   height: auto;
   min-height: 0;
+  overflow: visible;
 }
 .mascot-hero::before {
   content: "";
@@ -888,36 +887,85 @@
   filter: blur(20px);
   pointer-events: none;
 }
-/* Wrapper for HeroMascotImage (other pages) – explicit size so fill Image displays like dashboard */
+/* Small layout box (minimal square); big PNG overflows via .mascot-hero-img-wrap */
 .mascot-hero-inner {
   position: relative;
   z-index: 1;
   width: 100%;
-  max-width: min(280px, 85vw);
-  height: 320px;
-  min-height: 200px;
+  height: 0;
+  min-height: 0;
+  overflow: visible;
   display: flex;
   align-items: flex-start;
   justify-content: center;
-  filter:
-    drop-shadow(0 0 32px rgba(147, 197, 253, 0.4))
-    drop-shadow(0 0 20px rgba(59, 130, 246, 0.35))
-    drop-shadow(0 0 12px rgba(139, 92, 246, 0.3));
 }
-/* Mascot image – true size, no forced min height; cap max so it doesn’t overflow */
+/* Wrapper for heroLarge image: big PNG, centered, overflow so “square” is minimal */
+.mascot-hero-img-wrap {
+  position: absolute;
+  left: 50%;
+  top: 0;
+  transform: translateX(-50%);
+  width: min(260px, 72vw);
+  height: 300px;
+  overflow: visible;
+  display: block;
+}
+.mascot-hero-img-wrap .mascot-img {
+  position: absolute !important;
+  left: 50% !important;
+  top: 50% !important;
+  transform: translate(-50%, -50%) !important;
+  width: min(320px, 88vw) !important;
+  height: 380px !important;
+  max-width: none !important;
+  max-height: none !important;
+  object-fit: contain;
+  object-position: center center;
+  filter:
+    drop-shadow(0 0 80px rgba(147, 197, 253, 0.22))
+    drop-shadow(0 0 48px rgba(59, 130, 246, 0.28))
+    drop-shadow(0 0 28px rgba(147, 197, 253, 0.35))
+    drop-shadow(0 0 16px rgba(59, 130, 246, 0.3))
+    drop-shadow(0 0 10px rgba(139, 92, 246, 0.25));
+}
+/* Section reserves space for mascot + glow so the halo can overflow and nothing clips */
+.mascot-hero:has(.mascot-hero-img-wrap) {
+  min-height: 380px;
+  padding: 80px 0;
+  overflow: visible;
+}
+/* When no heroLarge (e.g. budget): inner has size so fill works; glow can overflow */
+.mascot-hero-inner:not(:has(.mascot-hero-img-wrap)) {
+  height: 260px;
+  min-height: 200px;
+  max-width: min(240px, 80vw);
+  overflow: visible;
+}
+.mascot-hero-inner .mascot-img {
+  object-fit: contain;
+  object-position: center top;
+}
+.mascot-hero-inner:not(:has(.mascot-hero-img-wrap)) .mascot-img {
+  filter:
+    drop-shadow(0 0 80px rgba(147, 197, 253, 0.22))
+    drop-shadow(0 0 48px rgba(59, 130, 246, 0.28))
+    drop-shadow(0 0 28px rgba(147, 197, 253, 0.35))
+    drop-shadow(0 0 16px rgba(59, 130, 246, 0.3))
+    drop-shadow(0 0 10px rgba(139, 92, 246, 0.25));
+}
 .mascot-img {
   width: auto !important;
   height: auto !important;
-  max-width: min(280px, 85vw) !important;
-  max-height: 320px !important;
+  max-width: min(320px, 88vw) !important;
+  max-height: 360px !important;
   object-fit: contain;
   object-position: center 0%;
 }
 .mascot-hero > img.mascot-img {
   width: auto !important;
-  max-width: min(280px, 85vw) !important;
+  max-width: min(320px, 88vw) !important;
   height: auto !important;
-  max-height: 320px !important;
+  max-height: 360px !important;
   object-fit: contain;
   object-position: center 0%;
   filter:
@@ -931,10 +979,10 @@
   display: none;
 }
 
-/* Mascot at top of page – little space before mascot, rest of page pulled close below */
+/* Mascot at top of page – almost no space between page name and mascot, and mascot and content */
 .mascot-hero-top {
-  margin-top: -16px;
-  margin-bottom: -44px;
+  margin-top: -20px;
+  margin-bottom: -48px;
 }
 
 /* XP-page: dedicated hero container met vaste aspect-ratio en strakkere crop */
@@ -985,13 +1033,13 @@
   max-height: 260px !important;
 }
 
-/* Mission page: onderkant mascot net boven Gisteren-knop, kleine tussenruimte */
+/* Mission page: mascot tight under header, small gap before follow row */
 .mascot-hero-mission {
-  margin-top: -32px;
-  margin-bottom: -24px;
+  margin-top: -24px;
+  margin-bottom: -32px;
 }
 .mascot-hero-mission + .mascot-follow-row {
-  margin-top: 0.75rem;
+  margin-top: 0.5rem;
 }
 .mascot-follow-row {
   position: relative;
@@ -1005,10 +1053,10 @@
   margin-bottom: -40px;
 }
 
-/* Header (page name) – tight so mascot sits just under it; pull block up */
+/* Header (page name) – almost no space so mascot sits right under it */
 header:has(+ .mascot-hero) {
   margin-bottom: 0;
-  margin-top: -8px;
+  margin-top: -12px;
   padding-bottom: 0;
 }
 .mascot-hero + .stats {
@@ -1034,6 +1082,8 @@ html {
   min-width: 100%;
   width: 100%;
   overflow-x: hidden;
+  /* Prevent rubber-band overscroll on iOS so PWA doesn’t show white behind the app */
+  overscroll-behavior: none;
   /* Prevent horizontal pan on mobile so the app feels fixed to the screen */
   touch-action: pan-y pinch-zoom;
   -webkit-touch-callout: none;
@@ -1063,6 +1113,7 @@ body {
   min-width: 100%;
   width: 100%;
   overflow-x: hidden;
+  overscroll-behavior: none;
   color: var(--text-main);
   font-family: var(--font-sans), Inter, system-ui, sans-serif;
   background-color: var(--cinematic-navy);
@@ -1991,8 +2042,10 @@ header h1 { margin: 0; }
 
   --space-section: 32px;
   --space-card: 16px;
-  --hq-padding-x: 24px;
+  --hq-padding-x: 0;
   --footer-height: 60px;
+  --main-padding-top: 0;
+  --main-padding-bottom: 0;
   --hq-card-gap: 16px;
   --hq-card-radius: 18px;
   --hq-card-radius-sharp: 18px;
@@ -2016,6 +2069,23 @@ header h1 { margin: 0; }
   --neuro-muted: var(--text-muted);
   --neuro-accent: var(--accent-primary);
   --glass-border-soft: var(--border-soft);
+}
+
+/* Mobile & PWA: full bleed (no extra padding) */
+@media (max-width: 768px) {
+  :root {
+    --hq-padding-x: 0;
+    --main-padding-top: 0;
+    --main-padding-bottom: 0;
+  }
+}
+
+@media (display-mode: standalone) {
+  :root {
+    --hq-padding-x: 0;
+    --main-padding-top: 0;
+    --main-padding-bottom: 0;
+  }
 }
 
 [data-theme="normal"][data-color-mode="dark"] {

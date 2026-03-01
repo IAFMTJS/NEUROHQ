@@ -5,16 +5,19 @@ import {
   useCallback,
   useContext,
   useEffect,
+  useRef,
   useState,
   type ReactNode,
 } from "react";
+import type { DashboardCritical, DashboardSecondary } from "@/types/dashboard-data.types";
 
-export type DashboardCritical = Record<string, unknown>;
-export type DashboardSecondary = Record<string, unknown>;
+export type { DashboardCritical, DashboardSecondary };
 
 type DashboardDataState = {
   critical: DashboardCritical | null;
   secondary: DashboardSecondary | null;
+  loadingCritical: boolean;
+  loadingSecondary: boolean;
 };
 
 type DashboardDataContextValue = DashboardDataState & {
@@ -24,17 +27,30 @@ type DashboardDataContextValue = DashboardDataState & {
 
 const DashboardDataContext = createContext<DashboardDataContextValue | null>(null);
 
-async function fetchCritical(): Promise<DashboardCritical> {
+/** Single request returning both critical and secondary; no duplicate work on server. */
+export async function fetchAll(): Promise<{ critical: DashboardCritical; secondary: DashboardSecondary }> {
+  const res = await fetch("/api/dashboard/data?part=all", { credentials: "include" });
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}));
+    const msg = typeof (body && body.error) === "string" ? body.error : `Dashboard ${res.status}`;
+    throw new Error(res.status === 401 ? "Unauthorized" : msg);
+  }
+  const data = (await res.json()) as { critical: DashboardCritical; secondary: DashboardSecondary };
+  if (!data.critical || !data.secondary) throw new Error("Invalid dashboard response");
+  return data;
+}
+
+export async function fetchCritical(): Promise<DashboardCritical> {
   const res = await fetch("/api/dashboard/data?part=critical", { credentials: "include" });
   if (!res.ok) {
     const body = await res.json().catch(() => ({}));
     const msg = typeof (body && body.error) === "string" ? body.error : `Dashboard critical ${res.status}`;
     throw new Error(res.status === 401 ? "Unauthorized" : msg);
   }
-  return res.json();
+  return res.json() as Promise<DashboardCritical>;
 }
 
-async function fetchSecondary(): Promise<DashboardSecondary> {
+export async function fetchSecondary(): Promise<DashboardSecondary> {
   const res = await fetch("/api/dashboard/data?part=secondary", { credentials: "include" });
   if (!res.ok) {
     const body = await res.json().catch(() => ({}));
@@ -48,11 +64,15 @@ export function DashboardDataProvider({ children }: { children: ReactNode }) {
   const [state, setState] = useState<DashboardDataState>({
     critical: null,
     secondary: null,
+    loadingCritical: false,
+    loadingSecondary: false,
   });
+  const preloadStartedRef = useRef(false);
 
   const setDashboardData = useCallback(
     (data: { critical?: DashboardCritical | null; secondary?: DashboardSecondary | null }) => {
       setState((prev) => ({
+        ...prev,
         critical: data.critical !== undefined ? data.critical : prev.critical,
         secondary: data.secondary !== undefined ? data.secondary : prev.secondary,
       }));
@@ -61,27 +81,29 @@ export function DashboardDataProvider({ children }: { children: ReactNode }) {
   );
 
   const preloadDashboard = useCallback(async () => {
+    if (preloadStartedRef.current) return;
+    preloadStartedRef.current = true;
+    setState((prev) => ({ ...prev, loadingCritical: true, loadingSecondary: true }));
     try {
-      const critical = await fetchCritical();
-      setState((prev) => ({ ...prev, critical }));
-      const secondary = await fetchSecondary();
-      setState((prev) => ({ ...prev, secondary }));
-    } catch {
-      // Silently fail; dashboard page will fetch on demand
+      const { critical, secondary } = await fetchAll();
+      setState((prev) => ({
+        ...prev,
+        critical,
+        secondary,
+        loadingCritical: false,
+        loadingSecondary: false,
+      }));
+    } catch (err) {
+      setState((prev) => ({ ...prev, loadingCritical: false, loadingSecondary: false }));
+      preloadStartedRef.current = false; // Allow retry
+      throw err; // So shell can show error when it called preloadDashboard()
     }
   }, []);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
-    const run = () => {
-      preloadDashboard();
-    };
-    if ("requestIdleCallback" in window) {
-      const id = requestIdleCallback(run, { timeout: 1500 });
-      return () => cancelIdleCallback(id);
-    }
-    const t = setTimeout(run, 1000);
-    return () => clearTimeout(t);
+    // Start preload immediately so data is in state before user navigates; ref avoids double start if shell already called preloadDashboard()
+    if (!preloadStartedRef.current) preloadDashboard().catch(() => {});
   }, [preloadDashboard]);
 
   const value: DashboardDataContextValue = {

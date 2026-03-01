@@ -211,7 +211,7 @@ export default function AssistantPage() {
       />
       <section className="mascot-hero mascot-hero-top mascot-hero-sharp" data-mascot-page="assistant" aria-hidden>
         <div className="mascot-hero-inner mx-auto">
-          <HeroMascotImage page="assistant" className="mascot-img" />
+          <HeroMascotImage page="assistant" className="mascot-img" heroLarge />
         </div>
       </section>
       <div

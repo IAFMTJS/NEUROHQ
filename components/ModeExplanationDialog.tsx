@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import type { AppMode } from "@/app/actions/mode";
+import type { AppMode } from "@/lib/app-mode";
 import { HudButton } from "@/components/hud-test/HudButton";
 
 const STORAGE_KEY = "neurohq-mode-explained";

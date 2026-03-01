@@ -110,7 +110,7 @@ export default async function ReportPage({ searchParams }: Props) {
       </p>
       <section className="mascot-hero mascot-hero-top mascot-hero-sharp" data-mascot-page="report" aria-hidden>
         <div className="mascot-hero-inner mx-auto">
-          <HeroMascotImage page="report" className="mascot-img" />
+          <HeroMascotImage page="report" className="mascot-img" heroLarge />
         </div>
       </section>
 

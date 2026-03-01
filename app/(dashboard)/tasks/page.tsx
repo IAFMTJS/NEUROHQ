@@ -278,7 +278,7 @@ export default async function TasksPage({ searchParams }: Props) {
       {/* Mascot outside panel so no glass/gradient overlay lies on top */}
       <section className="mascot-hero mascot-hero-top mascot-hero-mission mascot-hero-sharp" data-mascot-page="tasks" aria-hidden>
         <div className="mascot-hero-inner mx-auto">
-          <HeroMascotImage page="tasks" className="mascot-img" />
+          <HeroMascotImage page="tasks" className="mascot-img" heroLarge />
         </div>
       </section>
       <div className="mascot-follow-row flex flex-wrap items-center justify-end gap-2">

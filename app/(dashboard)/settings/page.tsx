@@ -52,7 +52,7 @@ export default async function SettingsPage() {
       />
       <section className="mascot-hero mascot-hero-top mascot-hero-sharp" data-mascot-page="settings" aria-hidden>
         <div className="mascot-hero-inner mx-auto">
-          <HeroMascotImage page="settings" className="mascot-img" />
+          <HeroMascotImage page="settings" className="mascot-img" heroLarge />
         </div>
       </section>
 

@@ -107,7 +107,7 @@ export default async function StrategyPage() {
         />
         <section className="mascot-hero mascot-hero-top mascot-hero-sharp" data-mascot-page="strategy" aria-hidden>
           <div className="mascot-hero-inner mx-auto">
-            <HeroMascotImage page="strategy" className="mascot-img" />
+            <HeroMascotImage page="strategy" className="mascot-img" heroLarge />
           </div>
         </section>
         <div className="flex flex-wrap items-center justify-end gap-3">
@@ -184,7 +184,7 @@ export default async function StrategyPage() {
       />
       <section className="mascot-hero mascot-hero-top mascot-hero-sharp" data-mascot-page="strategy" aria-hidden>
         <div className="mascot-hero-inner mx-auto">
-          <HeroMascotImage page="strategy" className="mascot-img" />
+          <HeroMascotImage page="strategy" className="mascot-img" heroLarge />
         </div>
       </section>
       {reviewStatus.reviewDue && (

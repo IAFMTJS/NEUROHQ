@@ -151,7 +151,6 @@ const PUBLIC_ROUTES_TO_PREFETCH = [
   "/login",
   "/signup",
   "/forgot-password",
-  "/test",
 ];
 
 function warmupBackgroundCaches() {

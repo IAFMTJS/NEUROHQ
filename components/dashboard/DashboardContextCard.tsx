@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import type { Quote } from "@/types/database.types";
-import type { AppMode } from "@/app/actions/mode";
+import type { AppMode } from "@/lib/app-mode";
 import { SciFiPanel } from "@/components/hud-test/SciFiPanel";
 
 type QuoteWithDay = { quote: Quote | null; day: number };

@@ -66,7 +66,7 @@ export default async function AnalyticsPage() {
       </div>
       <section className="mascot-hero mascot-hero-top mascot-hero-sharp" data-mascot-page="analytics" aria-hidden>
         <div className="mascot-hero-inner mx-auto">
-          <HeroMascotImage page="analytics" className="mascot-img" />
+          <HeroMascotImage page="analytics" className="mascot-img" heroLarge />
         </div>
       </section>
       {summary && (
