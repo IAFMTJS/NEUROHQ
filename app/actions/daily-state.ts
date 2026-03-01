@@ -1,6 +1,7 @@
 "use server";
 
-import { unstable_cache, revalidateTag, revalidatePath } from "next/cache";
+import { unstable_cache, revalidatePath } from "next/cache";
+import { revalidateTagMax } from "@/lib/revalidate";
 import { createClient } from "@supabase/supabase-js";
 import { createClient as createServerClient } from "@/lib/supabase/server";
 import { todayDateString } from "@/lib/utils/timezone";
@@ -84,7 +85,7 @@ export async function saveDailyState(input: DailyStateInput): Promise<SaveDailyS
           : "Kon dagstatus niet opslaan. Probeer het opnieuw.";
       return { ok: false, error: msg };
     }
-    revalidateTag(`daily-${user.id}-${serverToday}`, "max");
+    revalidateTagMax(`daily-${user.id}-${serverToday}`);
     revalidatePath("/dashboard");
     revalidatePath("/report");
     revalidatePath("/tasks");
@@ -133,7 +134,7 @@ export async function setEmotionalStatePreStart(date: string, state: EmotionalSt
       });
       if (error) return { ok: false, error: error.message };
     }
-    revalidateTag(`daily-${user.id}-${date}`, "max");
+    revalidateTagMax(`daily-${user.id}-${date}`);
     return { ok: true };
   } catch (e) {
     return { ok: false, error: e instanceof Error ? e.message : "Kon emotional state niet opslaan." };

@@ -1,7 +1,7 @@
 "use server";
 // All exports must be async (Server Actions).
 
-import { revalidateTag } from "next/cache";
+import { revalidateTagMax } from "@/lib/revalidate";
 import { createClient } from "@/lib/supabase/server";
 
 const RECOVERY_LOAD_BONUS = 20;
@@ -46,8 +46,8 @@ export async function applyRecoveryCompletionBonus(completionDateStr: string): P
     });
   }
 
-  revalidateTag(`daily-${user.id}-${nextStr}`, "max");
-  revalidateTag(`energy-${user.id}-${nextStr}`, "max");
+  revalidateTagMax(`daily-${user.id}-${nextStr}`);
+  revalidateTagMax(`energy-${user.id}-${nextStr}`);
   return true;
 }
 
@@ -69,7 +69,7 @@ export async function setRestDay(dateStr: string, isRestDay: boolean): Promise<b
   } else {
     await supabase.from("daily_state").insert({ user_id: user.id, date: dateStr, is_rest_day: isRestDay });
   }
-  revalidateTag(`daily-${user.id}-${dateStr}`, "max");
+  revalidateTagMax(`daily-${user.id}-${dateStr}`);
   return true;
 }
 

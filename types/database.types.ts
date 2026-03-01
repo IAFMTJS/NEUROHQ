@@ -1433,6 +1433,41 @@ export type Database = {
           },
         ]
       }
+      pending_xp_notifications: {
+        Row: {
+          id: string
+          user_id: string
+          total_xp: number
+          sources: Json
+          for_date: string
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          total_xp?: number
+          sources?: Json
+          for_date: string
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          total_xp?: number
+          sources?: Json
+          for_date?: string
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pending_xp_notifications_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       quarterly_strategy: {
         Row: {
           anti_goals: string | null

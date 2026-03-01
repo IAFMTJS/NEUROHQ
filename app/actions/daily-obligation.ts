@@ -1,6 +1,6 @@
 "use server";
 
-import { revalidateTag } from "next/cache";
+import { revalidateTagMax } from "@/lib/revalidate";
 import { createClient } from "@/lib/supabase/server";
 import { yesterdayDate } from "@/lib/utils/timezone";
 
@@ -124,8 +124,8 @@ export async function applyZeroCompletionRollover(todayStr: string): Promise<{
       .eq("user_id", user.id);
   }
 
-  revalidateTag(`daily-${user.id}-${todayStr}`, "max");
-  revalidateTag(`energy-${user.id}-${todayStr}`, "max");
+  revalidateTagMax(`daily-${user.id}-${todayStr}`);
+  revalidateTagMax(`energy-${user.id}-${todayStr}`);
 
   return { applied: true, loadBump: 10, energyPenalty: newEnergy };
 }

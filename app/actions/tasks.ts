@@ -5,7 +5,8 @@ import type { Task, TablesInsert } from "@/types/database.types";
 import type { ReputationScore } from "@/lib/identity-engine";
 import { isRecoveryTask } from "@/lib/recovery-task";
 import { incrementAvoidanceSkip, recordAvoidanceCompletion } from "@/app/actions/avoidance-tracker";
-import { revalidatePath, revalidateTag, unstable_cache } from "next/cache";
+import { revalidatePath, unstable_cache } from "next/cache";
+import { revalidateTagMax } from "@/lib/revalidate";
 
 export type TaskListMode = "normal" | "low_energy" | "stabilize" | "driven";
 
@@ -448,7 +449,7 @@ export async function completeTask(id: string): Promise<CompleteTaskResult> {
     console.error("Behaviour log on task complete:", err);
   });
   const dateTag = t?.due_date ?? new Date().toISOString().slice(0, 10);
-  revalidateTag(`tasks-${user.id}-${dateTag}`, "max");
+  revalidateTagMax(`tasks-${user.id}-${dateTag}`);
   revalidatePath("/dashboard");
   revalidatePath("/tasks");
   if (t?.avoidance_tag === "household" || t?.avoidance_tag === "administration" || t?.avoidance_tag === "social") {
@@ -492,7 +493,7 @@ export async function uncompleteTask(id: string) {
     .eq("user_id", user.id);
   if (error) throw new Error(error.message);
   const dateTag = (task as { due_date?: string } | null)?.due_date ?? new Date().toISOString().slice(0, 10);
-  revalidateTag(`tasks-${user.id}-${dateTag}`, "max");
+  revalidateTagMax(`tasks-${user.id}-${dateTag}`);
   revalidatePath("/dashboard");
   revalidatePath("/tasks");
 }

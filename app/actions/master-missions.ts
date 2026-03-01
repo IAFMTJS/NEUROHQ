@@ -1,6 +1,7 @@
 "use server";
 
-import { revalidatePath, revalidateTag } from "next/cache";
+import { revalidatePath } from "next/cache";
+import { revalidateTagMax } from "@/lib/revalidate";
 import { createClient } from "@/lib/supabase/server";
 import { getBehaviorProfile } from "@/app/actions/behavior-profile";
 import { getAvoidanceTracker } from "@/app/actions/avoidance-tracker";
@@ -271,7 +272,7 @@ export async function resetAutoMissionsForToday(): Promise<{ deleted: number; er
   const { error } = await supabase.from("tasks").delete().in("id", ids);
   if (error) return { deleted: 0, error: error.message };
 
-  revalidateTag(`tasks-${user.id}-${today}`, "max");
+  revalidateTagMax(`tasks-${user.id}-${today}`);
   revalidatePath("/tasks");
   revalidatePath("/dashboard");
   return { deleted: ids.length };

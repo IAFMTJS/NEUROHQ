@@ -1,6 +1,7 @@
 "use server";
 
-import { revalidateTag, revalidatePath } from "next/cache";
+import { revalidatePath } from "next/cache";
+import { revalidateTagMax } from "@/lib/revalidate";
 import { createClient } from "@/lib/supabase/server";
 import { isHeavyTask } from "@/lib/brain-mode";
 import { logTaskEvent } from "./tasks";
@@ -53,8 +54,8 @@ export async function applyAbandonCost(taskId: string, dateStr: string): Promise
     });
   }
 
-  revalidateTag(`daily-${user.id}-${dateStr}`, "max");
-  revalidateTag(`energy-${user.id}-${dateStr}`, "max");
+  revalidateTagMax(`daily-${user.id}-${dateStr}`);
+  revalidateTagMax(`energy-${user.id}-${dateStr}`);
   revalidatePath("/dashboard");
   revalidatePath("/tasks");
   revalidatePath("/xp");
@@ -89,8 +90,8 @@ export async function applyHeavyStartFocusCost(dateStr: string): Promise<boolean
     });
   }
 
-  revalidateTag(`daily-${user.id}-${dateStr}`, "max");
-  revalidateTag(`energy-${user.id}-${dateStr}`, "max");
+  revalidateTagMax(`daily-${user.id}-${dateStr}`);
+  revalidateTagMax(`energy-${user.id}-${dateStr}`);
   return true;
 }
 
