@@ -1,4 +1,5 @@
 import type { AppMode } from "@/lib/app-mode";
+import type { CopyVariant } from "@/app/actions/adaptive";
 
 /** Shape of GET /api/dashboard/data?part=critical — single source for today's mode, tasks, state, etc. */
 export interface DashboardCritical {
@@ -29,7 +30,7 @@ export interface DashboardCritical {
   yesterdayState: { energy?: number; focus?: number; sensory_load?: number; sleep_hours?: number; social_load?: number } | null;
   mode: AppMode;
   carryOverCount: number;
-  copyVariant?: string;
+  copyVariant?: CopyVariant;
   accountabilitySettings?: { enabled: boolean; streakFreezeTokens: number };
   learningStreak?: number;
   autoSuggestions?: { text: string; type: string }[];
