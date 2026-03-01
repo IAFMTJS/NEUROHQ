@@ -10,6 +10,11 @@ import {
   type ReactNode,
 } from "react";
 import type { DashboardCritical, DashboardSecondary } from "@/types/dashboard-data.types";
+import {
+  getDashboardCache,
+  setDashboardCache,
+  getTodayDateStr,
+} from "@/lib/dashboard-cache";
 
 export type { DashboardCritical, DashboardSecondary };
 
@@ -83,7 +88,26 @@ export function DashboardDataProvider({ children }: { children: ReactNode }) {
   const preloadDashboard = useCallback(async () => {
     if (preloadStartedRef.current) return;
     preloadStartedRef.current = true;
-    setState((prev) => ({ ...prev, loadingCritical: true, loadingSecondary: true }));
+
+    const dateStr = getTodayDateStr();
+    // Restore from cache first so reopening the PWA same day shows last-known data immediately (no "loses memory" on iOS)
+    try {
+      const cached = await getDashboardCache(dateStr);
+      if (cached?.critical && cached?.secondary) {
+        setState((prev) => ({
+          ...prev,
+          critical: cached.critical,
+          secondary: cached.secondary,
+          loadingCritical: false,
+          loadingSecondary: false,
+        }));
+      } else {
+        setState((prev) => ({ ...prev, loadingCritical: true, loadingSecondary: true }));
+      }
+    } catch {
+      setState((prev) => ({ ...prev, loadingCritical: true, loadingSecondary: true }));
+    }
+
     try {
       const { critical, secondary } = await fetchAll();
       setState((prev) => ({
@@ -93,6 +117,7 @@ export function DashboardDataProvider({ children }: { children: ReactNode }) {
         loadingCritical: false,
         loadingSecondary: false,
       }));
+      await setDashboardCache(dateStr, critical, secondary);
     } catch (err) {
       setState((prev) => ({ ...prev, loadingCritical: false, loadingSecondary: false }));
       preloadStartedRef.current = false; // Allow retry
