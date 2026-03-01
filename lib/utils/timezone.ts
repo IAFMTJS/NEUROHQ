@@ -1,3 +1,8 @@
+/** Single source of truth for "today" (YYYY-MM-DD) on the server. Use everywhere: brain status, missions, dashboard. */
+export function todayDateString(): string {
+  return new Date().toISOString().slice(0, 10);
+}
+
 /**
  * Get current date (YYYY-MM-DD) and hour (0-23) in a given IANA timezone.
  */

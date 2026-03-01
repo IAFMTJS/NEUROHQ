@@ -27,6 +27,7 @@ type ExtendedTask = {
   impact?: number | null;
   validation_type?: string | null;
   base_xp?: number | null;
+  psychology_label?: string | null;
 };
 
 /** Strategic impact preview (Performance Engine): XP, discipline, ROI, pressure, alignment. */
@@ -41,6 +42,8 @@ export type StrategicPreview = {
   psychologyLabel?: string | null;
   /** 0–1 energy match between user energy and task energy_required. */
   energyMatch?: number;
+  /** Difficulty rank S/A/B/C/D from UMS. */
+  difficultyRank?: "S" | "A" | "B" | "C" | "D";
 };
 
 type Props = {
@@ -242,6 +245,11 @@ export function TaskDetailsModal({
       <div className="space-y-5">
         <div className="flex flex-wrap items-center gap-2">
           {task.category && <span className="rounded-lg bg-[var(--accent-neutral)] px-2.5 py-1 text-xs font-medium text-[var(--text-secondary)]">{task.category}</span>}
+          {strategicPreview?.difficultyRank && (
+            <span className="rounded-lg border px-2.5 py-1 text-xs font-bold" title="Moeilijkheidsrank (S = hoogste impact, D = licht)">
+              Rank {strategicPreview.difficultyRank}
+            </span>
+          )}
           {(strategicPreview?.domain ?? task.domain) && (
             <span className="rounded-lg bg-[var(--accent-focus)]/15 px-2.5 py-1 text-xs font-medium text-[var(--accent-focus)]" title="Strategy domain">
               🎯 {strategicPreview?.domain ?? task.domain}
@@ -317,7 +325,9 @@ export function TaskDetailsModal({
         )}
         {task.notes?.trim() && (
           <section>
-            <h3 className="text-xs font-semibold uppercase tracking-wider text-[var(--text-muted)]">Notes</h3>
+            <h3 className="text-xs font-semibold uppercase tracking-wider text-[var(--text-muted)]">
+              {task.psychology_label === "MasterPoolAuto" ? "Uitleg" : "Notes"}
+            </h3>
             <p className="mt-1.5 whitespace-pre-wrap text-[15px] leading-relaxed text-[var(--text-primary)]">{task.notes}</p>
           </section>
         )}

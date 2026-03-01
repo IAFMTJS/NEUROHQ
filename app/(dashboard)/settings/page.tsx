@@ -1,6 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
-import { MascotImg } from "@/components/MascotImg";
+import { HeroMascotImage } from "@/components/HeroMascotImage";
 import { HQPageHeader } from "@/components/hq";
 import { hasGoogleCalendarToken } from "@/app/actions/calendar";
 import { getUserTimezone, getPushQuoteTime, getPushQuietHours } from "@/app/actions/auth";
@@ -20,7 +20,6 @@ const SettingsTimezone = dynamic(() => import("@/components/SettingsTimezone").t
 const SettingsBudget = dynamic(() => import("@/components/SettingsBudget").then((m) => ({ default: m.SettingsBudget })), { loading: () => null });
 const SettingsAbout = dynamic(() => import("@/components/SettingsAbout").then((m) => ({ default: m.SettingsAbout })), { loading: () => null });
 const ThemePicker = dynamic(() => import("@/components/settings/ThemePicker").then((m) => ({ default: m.ThemePicker })), { loading: () => null });
-const EmotionPicker = dynamic(() => import("@/components/settings/EmotionPicker").then((m) => ({ default: m.EmotionPicker })), { loading: () => null });
 const SettingsCompactUi = dynamic(() => import("@/components/settings/SettingsCompactUi").then((m) => ({ default: m.SettingsCompactUi })), { loading: () => null });
 const SettingsReducedMotion = dynamic(() => import("@/components/settings/SettingsReducedMotion").then((m) => ({ default: m.SettingsReducedMotion })), { loading: () => null });
 const SettingsQuickLinks = dynamic(() => import("@/components/settings/SettingsQuickLinks").then((m) => ({ default: m.SettingsQuickLinks })), { loading: () => <div className="min-h-[60px] animate-pulse rounded-lg bg-white/5" aria-hidden /> });
@@ -50,8 +49,10 @@ export default async function SettingsPage() {
         subtitle="Account, weergave, tijdzone, notificaties, budget, agenda, brain status (dashboard), Behavior Profile (identity, weekthema, avoidance), export en privacy."
         backHref="/dashboard"
       />
-      <section className="mascot-hero mascot-hero-top" data-mascot-page="settings" aria-hidden>
-        <MascotImg page="settings" className="mascot-img" />
+      <section className="mascot-hero mascot-hero-top mascot-hero-sharp" data-mascot-page="settings" aria-hidden>
+        <div className="mascot-hero-inner mx-auto">
+          <HeroMascotImage page="settings" className="mascot-img" />
+        </div>
       </section>
 
       <section className="space-y-3">
@@ -74,7 +75,6 @@ export default async function SettingsPage() {
           <ThemePicker />
           <SettingsCompactUi initialCompactUi={prefs.compact_ui} />
           <SettingsReducedMotion initialReducedMotion={prefs.reduced_motion} />
-          <EmotionPicker />
           <XPBadge totalXp={xp.total_xp} level={xp.level} href="/settings" />
         </div>
       </section>

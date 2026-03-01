@@ -244,6 +244,22 @@ export async function getDecisionBlocks(dateStr: string): Promise<DecisionBlocks
     tasks.map((t) => t.id)
   );
 
+  // Diversity: penalize tasks completed in last 3 days so same missions don't appear on top for days in a row
+  const threeDaysAgo = new Date(dateStr);
+  threeDaysAgo.setDate(threeDaysAgo.getDate() - 3);
+  const since = threeDaysAgo.toISOString().slice(0, 10);
+  const { data: recentCompletes } = await supabase
+    .from("task_events")
+    .select("task_id")
+    .eq("user_id", user.id)
+    .eq("event_type", "complete")
+    .gte("occurred_at", since + "T00:00:00Z")
+    .lt("occurred_at", dateStr + "T23:59:59Z");
+  const recentlyCompletedIds = new Set(
+    (recentCompletes ?? []).map((r) => (r as { task_id: string }).task_id)
+  );
+  const DIVERSITY_PENALTY = 0.2;
+
   const withUMS: TaskWithUMS[] = tasks.map((t) => {
     const breakdown = computeUMS(t, {
       strategyPrimary,
@@ -252,7 +268,14 @@ export async function getDecisionBlocks(dateStr: string): Promise<DecisionBlocks
       userEnergy,
       pressureZone,
     });
-    return { ...t, umsBreakdown: breakdown };
+    let ums = breakdown.ums;
+    if (recentlyCompletedIds.has(t.id)) {
+      ums = Math.max(0.1, ums - DIVERSITY_PENALTY);
+    }
+    return {
+      ...t,
+      umsBreakdown: { ...breakdown, ums },
+    };
   });
 
   withUMS.sort((a, b) => b.umsBreakdown.ums - a.umsBreakdown.ums);
@@ -657,19 +680,89 @@ async function getBudgetXpMultiplier(): Promise<number> {
   }
 }
 
+/** Validates budget discipline mission against real data before awarding XP. */
+async function validateBudgetDisciplineMission(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  userId: string,
+  mission: "safe_spend" | "log_all" | "no_impulse",
+  today: string
+): Promise<{ ok: boolean; reason?: string }> {
+  if (mission === "log_all") {
+    // Honor system: we cannot verify "all expenses logged" without ground truth.
+    return { ok: true };
+  }
+
+  const { data: todayEntries } = await supabase
+    .from("budget_entries")
+    .select("amount_cents, note, is_planned")
+    .eq("user_id", userId)
+    .eq("date", today);
+  const entries = (todayEntries ?? []) as { amount_cents: number; note?: string | null; is_planned?: boolean | null }[];
+  const todayExpenses = entries.filter((e) => e.amount_cents < 0);
+  const todaySpentCents = todayExpenses.reduce((s, e) => s + Math.abs(e.amount_cents), 0);
+
+  if (mission === "safe_spend") {
+    const { getFinanceState } = await import("@/app/actions/dcic/finance-state");
+    const { calculateSafeDailySpend } = await import("@/lib/dcic/finance-engine");
+    const financeState = await getFinanceState();
+    if (!financeState) return { ok: false, reason: "Budgetgegevens niet beschikbaar." };
+    const safeDailyCents = calculateSafeDailySpend(financeState);
+    if (todaySpentCents > safeDailyCents) {
+      return {
+        ok: false,
+        reason: `Vandaag €${(todaySpentCents / 100).toFixed(2)} uitgegeven; safe spend is €${(safeDailyCents / 100).toFixed(2)}.`,
+      };
+    }
+    return { ok: true };
+  }
+
+  if (mission === "no_impulse") {
+    const hasImpulse = todayExpenses.some((e) => (e.note ?? "").toLowerCase().includes("impulse"));
+    if (hasImpulse) {
+      return { ok: false, reason: "Er staat vandaag een uitgave als impulse geregistreerd." };
+    }
+    return { ok: true };
+  }
+
+  return { ok: true };
+}
+
 /** Hook for budget discipline missions (safe spend, logging, impulse control).
- *  Awards XP and updates the global streak so budget behavior feeds into progression.
+ *  Validates where possible (safe_spend, no_impulse) before awarding XP.
+ *  One XP award per mission per day (checked via xp_events source_type budget_discipline:mission).
  */
 export async function recordBudgetDisciplineMission(params: {
   mission: "safe_spend" | "log_all" | "no_impulse";
-}): Promise<{ ok: boolean }> {
+}): Promise<{ ok: boolean; reason?: string }> {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { ok: false, reason: "Niet ingelogd." };
+
   const today = new Date().toISOString().slice(0, 10);
+  const sourceType = `budget_discipline:${params.mission}`;
+
+  const { data: existing } = await supabase
+    .from("xp_events")
+    .select("id")
+    .eq("user_id", user.id)
+    .eq("source_type", sourceType)
+    .gte("created_at", today + "T00:00:00Z")
+    .lt("created_at", today + "T23:59:59.999Z")
+    .limit(1)
+    .maybeSingle();
+  if (existing) {
+    return { ok: false, reason: "Deze mission is vandaag al geregistreerd." };
+  }
+
+  const validation = await validateBudgetDisciplineMission(supabase, user.id, params.mission, today);
+  if (!validation.ok) return validation;
+
   const baseXp = BUDGET_MISSION_XP[params.mission] ?? 10;
   const mult = await getBudgetXpMultiplier();
   const xp = Math.round(baseXp * mult);
 
   await Promise.all([
-    addXP(xp, { source_type: "budget_discipline" }),
+    addXP(xp, { source_type: sourceType }),
     updateStreakOnTaskComplete(today),
   ]);
 

@@ -1,6 +1,6 @@
 import dynamic from "next/dynamic";
 import Link from "next/link";
-import { MascotImg } from "@/components/MascotImg";
+import { HeroMascotImage } from "@/components/HeroMascotImage";
 import { getXP } from "@/app/actions/xp";
 import { HQPageHeader } from "@/components/hq";
 import { XPBadge } from "@/components/XPBadge";
@@ -105,8 +105,10 @@ export default async function StrategyPage() {
           subtitle="4 lagen: Direction → Allocation → Accountability → Pressure & Adaptation. Geen thesis = geen actieve strategie."
           backHref="/dashboard"
         />
-        <section className="mascot-hero mascot-hero-top" data-mascot-page="strategy" aria-hidden>
-          <MascotImg page="strategy" className="mascot-img" />
+        <section className="mascot-hero mascot-hero-top mascot-hero-sharp" data-mascot-page="strategy" aria-hidden>
+          <div className="mascot-hero-inner mx-auto">
+            <HeroMascotImage page="strategy" className="mascot-img" />
+          </div>
         </section>
         <div className="flex flex-wrap items-center justify-end gap-3">
           <XPBadge totalXp={xp.total_xp} level={xp.level} compact href="/xp" />
@@ -180,8 +182,10 @@ export default async function StrategyPage() {
         subtitle="4 lagen: Direction → Allocation → Accountability → Pressure & Adaptation"
         backHref="/dashboard"
       />
-      <section className="mascot-hero mascot-hero-top" data-mascot-page="strategy" aria-hidden>
-        <MascotImg page="strategy" className="mascot-img" />
+      <section className="mascot-hero mascot-hero-top mascot-hero-sharp" data-mascot-page="strategy" aria-hidden>
+        <div className="mascot-hero-inner mx-auto">
+          <HeroMascotImage page="strategy" className="mascot-img" />
+        </div>
       </section>
       {reviewStatus.reviewDue && (
         <div className="rounded-xl border border-amber-500/40 bg-amber-500/10 px-4 py-3 text-sm text-amber-200">

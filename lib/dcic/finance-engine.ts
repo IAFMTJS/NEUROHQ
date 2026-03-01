@@ -280,12 +280,19 @@ export function generateInsights(financeState: FinanceState): Insight[] {
     }
   }
 
-  // Check forecast
+  // Check forecast: add when (by next payday) and how (burn rate)
   const forecast = forecastEndOfCycle(financeState);
   if (forecast.overspend > 0) {
+    const daysLeft = getDaysUntilNextIncome(financeState);
+    const burnRate = calculateBurnRate(financeState);
+    const nextPayday = getNextPaydayDate(financeState);
+    const whenHow =
+      daysLeft > 0 && nextPayday
+        ? ` Tegen ${nextPayday}. Gebaseerd op je huidige uitgavenpatroon (€${(burnRate / 100).toFixed(2)}/dag) en ${daysLeft} dagen tot volgende loon.`
+        : " Tegen einde van de periode.";
     insights.push({
       type: "critical",
-      message: `If current pace continues, overspend by €${(forecast.overspend / 100).toFixed(2)}.`,
+      message: `If current pace continues, overspend by €${(forecast.overspend / 100).toFixed(2)}.${whenHow}`,
       actionable: true,
     });
   }
@@ -337,7 +344,9 @@ export function simulateGoalAcceleration(
 // ============================================================================
 
 /**
- * Calculates weekly allowance
+ * Weekly tactical: allowance per calendar week (Sun–Sat) until next payday.
+ * weekAllowance = remaining balance / number of full weeks until payday (min 1).
+ * remainingThisWeek = that allowance minus what you've already spent this week.
  */
 export function calculateWeeklyAllowance(financeState: FinanceState): {
   weekAllowance: number;
@@ -345,15 +354,14 @@ export function calculateWeeklyAllowance(financeState: FinanceState): {
   daysInWeek: number;
 } {
   const daysLeft = getDaysUntilNextIncome(financeState);
-  const remainingWeeks = Math.ceil(daysLeft / 7);
+  const remainingWeeks = Math.max(1, Math.ceil(daysLeft / 7));
   const remainingBalance = getRemainingBalance(financeState);
 
   const weekAllowance = Math.floor(remainingBalance / remainingWeeks);
 
-  // Calculate remaining this week
   const today = new Date();
   const dayOfWeek = today.getDay(); // 0 = Sunday
-  const daysInWeek = 7 - dayOfWeek;
+  const daysInWeek = 7 - dayOfWeek; // days left in current week (Sun–Sat)
   const spentThisWeek = getWeeklySpending(financeState);
   const remainingThisWeek = weekAllowance - spentThisWeek;
 

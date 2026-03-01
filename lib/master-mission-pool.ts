@@ -9,11 +9,20 @@ export type PickedMissionTemplate = MasterMissionTemplate & {
   reason: string;
 };
 
-type PickContext = {
+export type PickContext = {
   profile: BehaviorProfile;
   weekTheme: WeekTheme;
   avoidanceTracker: AvoidanceTracker;
   allowHeavyNow: boolean;
+  /** Titles of auto-missions used in the last N days (excluding today). Used to prefer variety. */
+  recentlyUsedTitles?: Set<string>;
+  /** Date string (YYYY-MM-DD) for deterministic daily rotation so the same brain state gives different missions each day. */
+  dateStr?: string;
+  /** Brain circles: 1–10. Low energy → prefer energy_recovery; low focus → prefer focus_*; high sensory → prefer calm/recovery; high social → prefer solo focus. */
+  energy1To10?: number | null;
+  focus1To10?: number | null;
+  sensoryLoad1To10?: number | null;
+  socialLoad1To10?: number | null;
 };
 
 function isHeavy(t: MasterMissionTemplate): boolean {
@@ -21,7 +30,7 @@ function isHeavy(t: MasterMissionTemplate): boolean {
 }
 
 function pickStructureEnergyFocus(context: PickContext, max: number): PickedMissionTemplate[] {
-  const { weekTheme, allowHeavyNow } = context;
+  const { weekTheme, allowHeavyNow, recentlyUsedTitles, dateStr, energy1To10, focus1To10, sensoryLoad1To10, socialLoad1To10 } = context;
 
   const base = MASTER_MISSION_POOL.filter((t) =>
     t.subcategory?.startsWith("structure_") ||
@@ -39,11 +48,48 @@ function pickStructureEnergyFocus(context: PickContext, max: number): PickedMiss
     if (weekTheme === "courage" && t.tags?.includes("courage")) score += 2;
     // Prefer lower energy for low‑energy contexts (handled via allowHeavyNow)
     score -= Math.max(0, (t.energy ?? 0) - 3) * 0.2;
+    // Brain circles: low energy → prefer energy_recovery / energy_nervous_system
+    if (energy1To10 != null && energy1To10 < 5 && (t.subcategory?.startsWith("energy_") ?? false)) score += 2;
+    if (energy1To10 != null && energy1To10 < 4 && t.tags?.includes("recovery")) score += 1;
+    // Brain circles: low focus → prefer focus_attention / focus_reflection
+    if (focus1To10 != null && focus1To10 < 5 && (t.subcategory?.startsWith("focus_") ?? false)) score += 2;
+    // Brain circles: high sensory load → prefer calm, recovery, nervous system (low-stimulus)
+    if (sensoryLoad1To10 != null && sensoryLoad1To10 >= 6 && (t.subcategory?.startsWith("energy_") ?? false)) score += 1.5;
+    if (sensoryLoad1To10 != null && sensoryLoad1To10 >= 6 && t.tags?.includes("recovery")) score += 1;
+    // Brain circles: high social load → prefer solo, focus, structure (less social)
+    if (socialLoad1To10 != null && socialLoad1To10 >= 6 && (t.subcategory?.startsWith("focus_") ?? false)) score += 1;
+    if (socialLoad1To10 != null && socialLoad1To10 >= 6 && (t.subcategory?.startsWith("structure_") ?? false)) score += 0.5;
     return score;
   };
 
   const sorted = [...base].sort((a, b) => themedScore(b) - themedScore(a));
-  return sorted.slice(0, max).map((t) => ({
+
+  // Prefer missions not used recently; then apply date-based rotation so we don’t always get the same top 2.
+  const notRecent = recentlyUsedTitles?.size
+    ? sorted.filter((t) => t.title && !recentlyUsedTitles.has(t.title))
+    : sorted;
+  const pool = notRecent.length >= max ? notRecent : sorted;
+  const topN = Math.min(8, pool.length);
+  const takeFrom = pool.slice(0, topN);
+
+  let chosen: MasterMissionTemplate[];
+  if (dateStr && takeFrom.length > max) {
+    const daySeed = dateStr.split("-").map(Number).reduce((a, b) => a + b, 0);
+    const start = daySeed % takeFrom.length;
+    chosen = [];
+    const seen = new Set<string>();
+    for (let i = 0; chosen.length < max && i < takeFrom.length; i++) {
+      const t = takeFrom[(start + i) % takeFrom.length];
+      if (t.title && !seen.has(t.title)) {
+        seen.add(t.title);
+        chosen.push(t);
+      }
+    }
+  } else {
+    chosen = takeFrom.slice(0, max);
+  }
+
+  return chosen.map((t) => ({
     ...t,
     slot: "structure_energy_focus" as const,
     reason:
@@ -150,11 +196,22 @@ function pickIdentityCourageHobby(context: PickContext): PickedMissionTemplate[]
   return picks;
 }
 
+/** Return array with unique titles only (first occurrence wins). */
+function uniqueByTitle<T extends { title?: string | null }>(arr: T[]): T[] {
+  const seen = new Set<string>();
+  return arr.filter((p) => {
+    const t = p.title?.trim();
+    if (!t || seen.has(t)) return false;
+    seen.add(t);
+    return true;
+  });
+}
+
 /**
  * Selectielaag boven de Master Mission Pool.
  *
  * Doel:
- * - 1–2 Structure/Energy/Focus‑missies (altijd).
+ * - 1–2 Structure/Energy/Focus‑missies (altijd), geen dubbele titels.
  * - 1 Procrastination Attack (indien avoidance hoog genoeg).
  * - 1 Identity/Courage/Hobby‑missie (op basis van BehaviorProfile).
  */
@@ -163,6 +220,6 @@ export function pickMissionsForDay(context: PickContext): PickedMissionTemplate[
   const procrastination = pickProcrastinationAttack(context);
   const identityCourageHobby = pickIdentityCourageHobby(context);
 
-  return [...structureEnergy, ...procrastination, ...identityCourageHobby];
+  return uniqueByTitle([...structureEnergy, ...procrastination, ...identityCourageHobby]);
 }
 

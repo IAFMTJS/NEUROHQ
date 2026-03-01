@@ -3,6 +3,7 @@
 import { unstable_cache, revalidateTag, revalidatePath } from "next/cache";
 import { createClient } from "@supabase/supabase-js";
 import { createClient as createServerClient } from "@/lib/supabase/server";
+import { todayDateString } from "@/lib/utils/timezone";
 
 export type DailyStateInput = {
   date: string;
@@ -58,9 +59,11 @@ export async function saveDailyState(input: DailyStateInput): Promise<SaveDailyS
     const supabase = await createServerClient();
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return { ok: false, error: "Not signed in." };
+    // Always persist for server "today" so missions page and dashboard use the same date.
+    const serverToday = todayDateString();
     const row = {
       user_id: user.id,
-      date: input.date,
+      date: serverToday,
       energy: input.energy ?? null,
       focus: input.focus ?? null,
       sensory_load: input.sensory_load ?? null,
@@ -81,13 +84,20 @@ export async function saveDailyState(input: DailyStateInput): Promise<SaveDailyS
           : "Kon dagstatus niet opslaan. Probeer het opnieuw.";
       return { ok: false, error: msg };
     }
-    revalidateTag(`daily-${user.id}-${input.date}`, "max");
+    revalidateTag(`daily-${user.id}-${serverToday}`);
     revalidatePath("/dashboard");
     revalidatePath("/report");
-    const { awardXPForBrainStatus } = await import("./xp");
-    const { upsertDailyAnalytics } = await import("./analytics");
-    await awardXPForBrainStatus();
-    await upsertDailyAnalytics(input.date);
+    revalidatePath("/tasks");
+    void (async () => {
+      try {
+        const { awardXPForBrainStatus } = await import("./xp");
+        const { upsertDailyAnalytics } = await import("./analytics");
+        await awardXPForBrainStatus();
+        await upsertDailyAnalytics(serverToday);
+      } catch {
+        // non-blocking
+      }
+    })();
     return { ok: true };
   } catch (e) {
     return { ok: false, error: e instanceof Error ? e.message : "Kon dagstatus niet opslaan. Probeer het opnieuw." };

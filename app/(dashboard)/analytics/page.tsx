@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { MascotImg } from "@/components/MascotImg";
+import { HeroMascotImage } from "@/components/HeroMascotImage";
 import { HQPageHeader } from "@/components/hq";
 import { getWeekBounds } from "@/lib/utils/learning";
 import { getWeekSummary, getAnalyticsRange } from "@/app/actions/analytics";
@@ -64,8 +64,10 @@ export default async function AnalyticsPage() {
           </Link>
         )}
       </div>
-      <section className="mascot-hero mascot-hero-top" data-mascot-page="analytics" aria-hidden>
-        <MascotImg page="analytics" className="mascot-img" />
+      <section className="mascot-hero mascot-hero-top mascot-hero-sharp" data-mascot-page="analytics" aria-hidden>
+        <div className="mascot-hero-inner mx-auto">
+          <HeroMascotImage page="analytics" className="mascot-img" />
+        </div>
       </section>
       {summary && (
         <section className="glass-card overflow-hidden p-0">

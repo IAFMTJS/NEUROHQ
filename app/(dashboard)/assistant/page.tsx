@@ -3,7 +3,7 @@
 import dynamic from "next/dynamic";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
-import { MascotImg } from "@/components/MascotImg";
+import { HeroMascotImage } from "@/components/HeroMascotImage";
 import { HQPageHeader } from "@/components/hq";
 import { createTask } from "@/app/actions/tasks";
 import { addManualEvent } from "@/app/actions/calendar";
@@ -209,8 +209,10 @@ export default function AssistantPage() {
         subtitle="Gedragsarchitectuur – evidence-based"
         backHref="/dashboard"
       />
-      <section className="mascot-hero mascot-hero-top" data-mascot-page="assistant" aria-hidden>
-        <MascotImg page="assistant" className="mascot-img" />
+      <section className="mascot-hero mascot-hero-top mascot-hero-sharp" data-mascot-page="assistant" aria-hidden>
+        <div className="mascot-hero-inner mx-auto">
+          <HeroMascotImage page="assistant" className="mascot-img" />
+        </div>
       </section>
       <div
         ref={listRef}

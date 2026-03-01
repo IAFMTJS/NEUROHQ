@@ -28,7 +28,7 @@ import { getFinanceState, getFinancialInsightsSafe, getBudgetTargets } from "@/a
 import { getIncomeSources } from "@/app/actions/dcic/income-sources";
 import { getAlternatives } from "@/app/actions/alternatives";
 import { getBudgetWeeklyReviewStatus } from "@/app/actions/budget-weekly-review";
-import { getBudgetDisciplineXpThisWeek } from "@/app/actions/budget-discipline";
+import { getBudgetDisciplineXpThisWeek, getBudgetDisciplineCompletedToday } from "@/app/actions/budget-discipline";
 import { getImpulseTimeWindow } from "@/app/actions/budget-impulse-pattern";
 import { formatMonthYearShort } from "@/lib/utils/date-locale";
 import { formatCents } from "@/lib/utils/currency";
@@ -94,12 +94,16 @@ export default async function BudgetPage({ searchParams }: Props) {
   const periodBounds = await getBudgetPeriodBounds();
   const { periodStart, periodEnd, isPaydayCycle } = periodBounds;
   const { nextMonthStart, nextMonthEnd, prevMonthStart, prevMonthEnd } = getBudgetAdjacentMonths();
+  const paydayDayOfMonth = await getPaydayDayOfMonth();
+  const prevPeriodRange = isPaydayCycle
+    ? getPreviousPeriodBounds(periodStart, paydayDayOfMonth ?? 25)
+    : { prevStart: prevMonthStart, prevEnd: prevMonthEnd };
   try { await copyOldBudgetEntriesToArchive(periodStart); } catch { /* archive table may not exist yet */ }
-  const [goals, entries, nextMonthEntries, prevMonthEntries, alternatives, budgetSettings, currentMonthExpenses, currentMonthIncome, currentWeekExpenses, currentWeekIncome, activeFrozen, readyForAction, unplannedSummary, contributions, recurringTemplates, financeState, financialInsights, incomeSources, budgetTargets, paydayDayOfMonth, weeklyReviewStatus, disciplineXpThisWeek, impulseWindow] = await Promise.all([
+  const [goals, entries, nextMonthEntries, prevMonthEntries, alternatives, budgetSettings, currentMonthExpenses, currentMonthIncome, currentWeekExpenses, currentWeekIncome, activeFrozen, readyForAction, unplannedSummary, contributions, recurringTemplates, financeState, financialInsights, incomeSources, budgetTargets, _paydayDayOfMonth, weeklyReviewStatus, disciplineXpThisWeek, disciplineCompletedToday, impulseWindow] = await Promise.all([
     getSavingsGoals(),
     getBudgetEntries(periodStart, periodEnd),
     getBudgetEntries(nextMonthStart, nextMonthEnd),
-    getBudgetEntries(prevMonthStart, prevMonthEnd),
+    getBudgetEntries(prevPeriodRange.prevStart, prevPeriodRange.prevEnd),
     getAlternatives(),
     getBudgetSettings(),
     getCurrentMonthExpensesCents(),
@@ -115,9 +119,10 @@ export default async function BudgetPage({ searchParams }: Props) {
     getFinancialInsightsSafe(),
     getIncomeSources(),
     getBudgetTargets(),
-    getPaydayDayOfMonth(),
+    Promise.resolve(paydayDayOfMonth),
     getBudgetWeeklyReviewStatus(),
     getBudgetDisciplineXpThisWeek(),
+    getBudgetDisciplineCompletedToday(),
     getImpulseTimeWindow(),
   ]);
   type EntryRow = { date: string; amount_cents: number; category: string | null };
@@ -265,7 +270,7 @@ export default async function BudgetPage({ searchParams }: Props) {
 
   const tacticalSection = (
     <div className="space-y-4">
-      <DailyControlMissionsCard />
+      <DailyControlMissionsCard initialCompletedToday={disciplineCompletedToday} />
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         <WeeklyTacticalCard financeState={financeState} />
         <PaydayCard
@@ -327,9 +332,13 @@ export default async function BudgetPage({ searchParams }: Props) {
         <>
           <section className="card-simple overflow-hidden p-0 border-[var(--card-border)]">
             <div className="border-b border-[var(--card-border)] px-4 py-3">
-              <h2 className="text-base font-semibold text-[var(--text-primary)]">Uitgaven vorige maand</h2>
+              <h2 className="text-base font-semibold text-[var(--text-primary)]">
+                {isPaydayCycle ? "Uitgaven vorige periode" : "Uitgaven vorige maand"}
+              </h2>
               <p className="mt-0.5 text-xs text-[var(--text-muted)]">
-                Overzicht van boekingen van de vorige maand (archief).
+                {isPaydayCycle
+                  ? "Overzicht van boekingen van de vorige budgetperiode (van loon tot loon)."
+                  : "Overzicht van boekingen van de vorige maand (archief)."}
               </p>
             </div>
             <div className="p-4">

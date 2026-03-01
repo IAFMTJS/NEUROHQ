@@ -18,8 +18,7 @@ import { shouldShowStrategyCheckInReminder } from "@/app/actions/strategy";
 import { getFrictionSignals } from "@/app/actions/friction";
 import { getAdaptiveSuggestions } from "@/app/actions/adaptive";
 import { ensureIdentityEngineRows } from "@/app/actions/identity-engine";
-import { ensureMasterMissionsForToday } from "@/app/actions/master-missions";
-import { yesterdayDate, getDayOfYearFromDateString } from "@/lib/utils/timezone";
+import { yesterdayDate, getDayOfYearFromDateString, todayDateString } from "@/lib/utils/timezone";
 import {
   scale1To10ToPct,
   defaultTimeWindow,
@@ -55,13 +54,13 @@ export async function GET(request: NextRequest) {
 }
 
 async function criticalResponse() {
+  const dateStr = todayDateString();
   const today = new Date();
-  const dateStr = today.toISOString().slice(0, 10);
   const quoteDay = Math.max(1, Math.min(365, getDayOfYearFromDateString(dateStr)));
   const yesterdayStr = yesterdayDate(dateStr);
 
   await ensureIdentityEngineRows();
-  await ensureMasterMissionsForToday(dateStr);
+  // Auto-missions only created on /tasks to avoid duplicate runs (dashboard + tasks both loading).
 
   const { applyZeroCompletionRollover } = await import("@/app/actions/daily-obligation");
   await applyZeroCompletionRollover(dateStr);
@@ -245,7 +244,7 @@ function serializeEnergyBudget(b: Awaited<ReturnType<typeof getEnergyBudget>>) {
 
 async function secondaryResponse() {
   const today = new Date();
-  const dateStr = today.toISOString().slice(0, 10);
+  const dateStr = todayDateString();
   const quoteDay = Math.max(1, Math.min(365, getDayOfYearFromDateString(dateStr)));
   const yesterdayStr = yesterdayDate(dateStr);
   const lastWeekDate = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000);

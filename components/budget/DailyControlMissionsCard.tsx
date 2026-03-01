@@ -3,8 +3,9 @@
 import { useState, useTransition } from "react";
 import { toast } from "sonner";
 import { recordBudgetDisciplineMission } from "@/app/actions/missions-performance";
+import type { BudgetDisciplineMissionKey } from "@/app/actions/budget-discipline";
 
-type MissionKey = "safe_spend" | "log_all" | "no_impulse";
+type MissionKey = BudgetDisciplineMissionKey;
 
 const MISSIONS: { key: MissionKey; label: string; rewardXp: number }[] = [
   { key: "safe_spend", label: "Stay under safe spend", rewardXp: 20 },
@@ -12,9 +13,16 @@ const MISSIONS: { key: MissionKey; label: string; rewardXp: number }[] = [
   { key: "no_impulse", label: "No impulse purchases", rewardXp: 15 },
 ];
 
-export function DailyControlMissionsCard() {
+type Props = {
+  /** Server-loaded: missions already completed today (so checkboxes stay checked after refresh). */
+  initialCompletedToday?: MissionKey[];
+};
+
+export function DailyControlMissionsCard({ initialCompletedToday = [] }: Props) {
   const [pendingKey, setPendingKey] = useState<MissionKey | null>(null);
-  const [completedToday, setCompletedToday] = useState<Set<MissionKey>>(new Set());
+  const [completedToday, setCompletedToday] = useState<Set<MissionKey>>(
+    () => new Set(initialCompletedToday)
+  );
   const [isPending, startTransition] = useTransition();
 
   function handleToggle(key: MissionKey) {
@@ -22,7 +30,11 @@ export function DailyControlMissionsCard() {
     setPendingKey(key);
     startTransition(async () => {
       try {
-        await recordBudgetDisciplineMission({ mission: key });
+        const result = await recordBudgetDisciplineMission({ mission: key });
+        if (!result.ok) {
+          toast.error(result.reason ?? "Niet voldaan: mission niet gehaald.");
+          return;
+        }
         setCompletedToday((prev) => new Set(prev).add(key));
         toast.success("Mission recorded");
       } catch (e) {

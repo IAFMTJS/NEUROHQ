@@ -2,6 +2,7 @@
 
 import type { TaskWithUMS } from "@/app/actions/missions-performance";
 import { domainLabel } from "@/lib/strategyDomains";
+import { getMissionDifficultyRank, getMissionRankStyle } from "@/lib/mission-difficulty-rank";
 
 type Props = {
   /** Top UMS task: "Wat moet ik NU doen?" */
@@ -16,6 +17,7 @@ export function SmartRecommendationHero({ recommendation, showUMSBreakdown = fal
   const { umsBreakdown, title, domain } = recommendation;
   const umsPct = Math.round(umsBreakdown.ums * 100);
   const domainStr = domain ? domainLabel(domain) : null;
+  const rank = getMissionDifficultyRank(umsBreakdown.ums);
 
   return (
     <section
@@ -25,9 +27,14 @@ export function SmartRecommendationHero({ recommendation, showUMSBreakdown = fal
       <p className="text-xs font-medium uppercase tracking-wider text-[var(--accent-focus)]/80">
         🔥 Wat moet ik NU doen?
       </p>
-      <h2 className="mt-1 text-lg font-semibold text-[var(--text-primary)]">
-        {title ?? "Mission"}
-      </h2>
+      <div className="mt-1 flex items-center gap-2 flex-wrap">
+        <h2 className="text-lg font-semibold text-[var(--text-primary)]">
+          {title ?? "Mission"}
+        </h2>
+        <span className={`inline-flex items-center rounded px-1.5 py-0.5 text-[10px] font-bold border ${getMissionRankStyle(rank)}`} title="Moeilijkheidsrank">
+          {rank}
+        </span>
+      </div>
       {domainStr && (
         <p className="mt-0.5 text-sm text-[var(--text-muted)]">
           Domein: {domainStr} · UMS {umsPct}%

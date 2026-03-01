@@ -1,5 +1,5 @@
 import dynamic from "next/dynamic";
-import { MascotImg } from "@/components/MascotImg";
+import { HeroMascotImage } from "@/components/HeroMascotImage";
 import { getXPFullContext } from "@/app/actions/xp-context";
 import { HQPageHeader } from "@/components/hq";
 import { XPBadge } from "@/components/XPBadge";
@@ -108,8 +108,10 @@ export default async function ReportPage({ searchParams }: Props) {
       <p className="text-sm text-[var(--text-muted)]">
         Momentum, trend, gedragspatronen, voorspellingen en aanbevelingen. Alles wat we tracken: 7d / 30d, bronnen, wekelijkse vergelijking.
       </p>
-      <section className="mascot-hero mascot-hero-top" data-mascot-page="report" aria-hidden>
-        <MascotImg page="report" className="mascot-img" />
+      <section className="mascot-hero mascot-hero-top mascot-hero-sharp" data-mascot-page="report" aria-hidden>
+        <div className="mascot-hero-inner mx-auto">
+          <HeroMascotImage page="report" className="mascot-img" />
+        </div>
       </section>
 
       {/* Key numbers: past & present */}

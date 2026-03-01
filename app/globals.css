@@ -917,6 +917,12 @@
     drop-shadow(0 0 20px rgba(59, 130, 246, 0.35))
     drop-shadow(0 0 12px rgba(139, 92, 246, 0.3));
 }
+/* Sharp mascot (no grain/overlay) – same look as budget page */
+.mascot-hero-sharp::before,
+.mascot-hero-sharp::after {
+  display: none;
+}
+
 /* Mascot at top of page – little space before mascot, rest of page pulled close below */
 .mascot-hero-top {
   margin-top: -16px;

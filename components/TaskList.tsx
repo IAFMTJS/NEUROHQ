@@ -500,6 +500,11 @@ export function TaskList({
               <span className={`text-sm text-[var(--text-primary)] ${task.completed ? "line-through text-[var(--text-muted)]" : ""}`}>{task.title}</span>
             </div>
             {recurrenceLabel(task) && <p className="mt-0.5 text-xs text-[var(--text-muted)]">{recurrenceLabel(task)}</p>}
+            {task.notes?.trim() && (
+              <p className="mt-0.5 line-clamp-2 text-xs text-[var(--text-muted)]" title={task.notes}>
+                {task.notes}
+              </p>
+            )}
             {preview && <p className="mt-0.5 text-[10px] text-[var(--text-muted)]">{preview}</p>}
           </div>
           {isFirstIncomplete && !task.completed && (

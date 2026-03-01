@@ -1,5 +1,8 @@
-import dynamic from "next/dynamic";
+import nextDynamic from "next/dynamic";
 import { getTodaysTasks, getTasksForDate, getTasksForDateRange, getSubtasksForTaskIds, getBacklogTasks, getFutureTasks, getCompletedTodayTasks, type TaskListMode } from "@/app/actions/tasks";
+
+/** Tasks page must always run on the server so auto-missions see latest daily_state after brain status save. */
+export const dynamic = "force-dynamic";
 import { getMode } from "@/app/actions/mode";
 import { getUpcomingCalendarEvents, hasGoogleCalendarToken } from "@/app/actions/calendar";
 import { getDecisionBlocks, getResistanceIndex, getMetaInsights30, getRecoveryCampaignNeeded, getEmotionalStateCorrelations } from "@/app/actions/missions-performance";
@@ -8,7 +11,7 @@ import { getSmartSuggestion } from "@/app/actions/dcic/smart-suggestion";
 import { getEnergyCapToday } from "@/app/actions/dcic/energy-cap";
 import { getEnergyBudget } from "@/app/actions/energy";
 import { yesterdayDate } from "@/lib/utils/timezone";
-import { MascotImg } from "@/components/MascotImg";
+import { HeroMascotImage } from "@/components/HeroMascotImage";
 import { getXP, getXPIdentity } from "@/app/actions/xp";
 import { getIdentityEngine } from "@/app/actions/identity-engine";
 import { ensureMasterMissionsForToday } from "@/app/actions/master-missions";
@@ -19,26 +22,28 @@ import { CornerNode } from "@/components/hud-test/CornerNode";
 import { Divider1px } from "@/components/hud-test/Divider1px";
 import hudStyles from "@/components/hud-test/hud.module.css";
 import { TasksTabsShell, TasksCalendarSection } from "@/components/missions";
+import { RefreshPageButton } from "@/components/missions/RefreshPageButton";
 
-const ModeBanner = dynamic(() => import("@/components/ModeBanner").then((m) => ({ default: m.ModeBanner })), { loading: () => <div className="min-h-[44px]" aria-hidden /> });
-const EnergyCapBar = dynamic(() => import("@/components/missions/EnergyCapBar").then((m) => ({ default: m.EnergyCapBar })), { loading: () => <div className="h-10 animate-pulse rounded-lg bg-white/5" aria-hidden /> });
-const SmartRecommendationHero = dynamic(() => import("@/components/missions/SmartRecommendationHero").then((m) => ({ default: m.SmartRecommendationHero })), { loading: () => null });
-const DecisionBlocksRow = dynamic(() => import("@/components/missions/DecisionBlocksRow").then((m) => ({ default: m.DecisionBlocksRow })), { loading: () => null });
-const SmartSuggestionBanner = dynamic(() => import("@/components/missions/SmartSuggestionBanner").then((m) => ({ default: m.SmartSuggestionBanner })), { loading: () => null });
-const YesterdayTasksSection = dynamic(() => import("@/components/YesterdayTasksSection").then((m) => ({ default: m.YesterdayTasksSection })), { loading: () => null });
-const CommanderMissionCard = dynamic(() => import("@/components/commander").then((m) => ({ default: m.CommanderMissionCard })), { loading: () => <div className="min-h-[72px] animate-pulse rounded-xl bg-white/5" aria-hidden /> });
-const TaskList = dynamic(() => import("@/components/TaskList").then((m) => ({ default: m.TaskList })), { loading: () => <div className="card-simple min-h-[200px] animate-pulse rounded-xl bg-white/5 p-4" aria-hidden /> });
-const BacklogAndToekomstTriggers = dynamic(() => import("@/components/missions/BacklogAndToekomstTriggers").then((m) => ({ default: m.BacklogAndToekomstTriggers })), { loading: () => null });
-const AddCalendarEventForm = dynamic(() => import("@/components/AddCalendarEventForm").then((m) => ({ default: m.AddCalendarEventForm })), { loading: () => <div className="min-h-[120px] animate-pulse rounded-lg bg-white/5" aria-hidden /> });
-const AgendaOnlyList = dynamic(() => import("@/components/AgendaOnlyList").then((m) => ({ default: m.AgendaOnlyList })), { loading: () => <div className="min-h-[80px] animate-pulse rounded-lg bg-white/5" aria-hidden /> });
-const CalendarModal3Trigger = dynamic(() => import("@/components/missions").then((m) => ({ default: m.CalendarModal3Trigger })), { loading: () => null });
-const ResistanceIndexBanner = dynamic(() => import("@/components/missions/ResistanceIndexBanner").then((m) => ({ default: m.ResistanceIndexBanner })), { loading: () => null });
-const RecoveryCampaignBanner = dynamic(() => import("@/components/missions/RecoveryCampaignBanner").then((m) => ({ default: m.RecoveryCampaignBanner })), { loading: () => null });
-const HighROISection = dynamic(() => import("@/components/missions/HighROISection").then((m) => ({ default: m.HighROISection })), { loading: () => null });
-const MetaInsights30Banner = dynamic(() => import("@/components/missions/MetaInsights30Banner").then((m) => ({ default: m.MetaInsights30Banner })), { loading: () => null });
-const EmotionalStateCorrelationBanner = dynamic(() => import("@/components/missions/EmotionalStateCorrelationBanner").then((m) => ({ default: m.EmotionalStateCorrelationBanner })), { loading: () => null });
-const ThirtyDayMirrorBanner = dynamic(() => import("@/components/missions/ThirtyDayMirrorBanner").then((m) => ({ default: m.ThirtyDayMirrorBanner })), { loading: () => null });
-const ConsequenceBanner = dynamic(() => import("@/components/ConsequenceBanner").then((m) => ({ default: m.ConsequenceBanner })), { loading: () => null });
+const ModeBanner = nextDynamic(() => import("@/components/ModeBanner").then((m) => ({ default: m.ModeBanner })), { loading: () => <div className="min-h-[44px]" aria-hidden /> });
+const EnergyCapBar = nextDynamic(() => import("@/components/missions/EnergyCapBar").then((m) => ({ default: m.EnergyCapBar })), { loading: () => <div className="h-10 animate-pulse rounded-lg bg-white/5" aria-hidden /> });
+const SmartRecommendationHero = nextDynamic(() => import("@/components/missions/SmartRecommendationHero").then((m) => ({ default: m.SmartRecommendationHero })), { loading: () => null });
+const DecisionBlocksRow = nextDynamic(() => import("@/components/missions/DecisionBlocksRow").then((m) => ({ default: m.DecisionBlocksRow })), { loading: () => null });
+const SmartSuggestionBanner = nextDynamic(() => import("@/components/missions/SmartSuggestionBanner").then((m) => ({ default: m.SmartSuggestionBanner })), { loading: () => null });
+const YesterdayTasksSection = nextDynamic(() => import("@/components/YesterdayTasksSection").then((m) => ({ default: m.YesterdayTasksSection })), { loading: () => null });
+const CommanderMissionCard = nextDynamic(() => import("@/components/commander").then((m) => ({ default: m.CommanderMissionCard })), { loading: () => <div className="min-h-[72px] animate-pulse rounded-xl bg-white/5" aria-hidden /> });
+const TaskList = nextDynamic(() => import("@/components/TaskList").then((m) => ({ default: m.TaskList })), { loading: () => <div className="card-simple min-h-[200px] animate-pulse rounded-xl bg-white/5 p-4" aria-hidden /> });
+const BacklogAndToekomstTriggers = nextDynamic(() => import("@/components/missions/BacklogAndToekomstTriggers").then((m) => ({ default: m.BacklogAndToekomstTriggers })), { loading: () => null });
+const AddCalendarEventForm = nextDynamic(() => import("@/components/AddCalendarEventForm").then((m) => ({ default: m.AddCalendarEventForm })), { loading: () => <div className="min-h-[120px] animate-pulse rounded-lg bg-white/5" aria-hidden /> });
+const AgendaOnlyList = nextDynamic(() => import("@/components/AgendaOnlyList").then((m) => ({ default: m.AgendaOnlyList })), { loading: () => <div className="min-h-[80px] animate-pulse rounded-lg bg-white/5" aria-hidden /> });
+const CalendarModal3Trigger = nextDynamic(() => import("@/components/missions").then((m) => ({ default: m.CalendarModal3Trigger })), { loading: () => null });
+const ResistanceIndexBanner = nextDynamic(() => import("@/components/missions/ResistanceIndexBanner").then((m) => ({ default: m.ResistanceIndexBanner })), { loading: () => null });
+const RecoveryCampaignBanner = nextDynamic(() => import("@/components/missions/RecoveryCampaignBanner").then((m) => ({ default: m.RecoveryCampaignBanner })), { loading: () => null });
+const HighROISection = nextDynamic(() => import("@/components/missions/HighROISection").then((m) => ({ default: m.HighROISection })), { loading: () => null });
+const MetaInsights30Banner = nextDynamic(() => import("@/components/missions/MetaInsights30Banner").then((m) => ({ default: m.MetaInsights30Banner })), { loading: () => null });
+const EmotionalStateCorrelationBanner = nextDynamic(() => import("@/components/missions/EmotionalStateCorrelationBanner").then((m) => ({ default: m.EmotionalStateCorrelationBanner })), { loading: () => null });
+const ThirtyDayMirrorBanner = nextDynamic(() => import("@/components/missions/ThirtyDayMirrorBanner").then((m) => ({ default: m.ThirtyDayMirrorBanner })), { loading: () => null });
+const ConsequenceBanner = nextDynamic(() => import("@/components/ConsequenceBanner").then((m) => ({ default: m.ConsequenceBanner })), { loading: () => null });
+const ResetAutoMissionsButton = nextDynamic(() => import("@/components/missions/ResetAutoMissionsButton").then((m) => ({ default: m.ResetAutoMissionsButton })), { loading: () => null });
 
 type Props = {
   searchParams: Promise<{ tab?: string; add?: string; month?: string; day?: string; calView?: string }>;
@@ -103,7 +108,7 @@ export default async function TasksPage({ searchParams }: Props) {
   const calendarRangeStart = toDateKeyUTC(prevGridStart);
   const calendarRangeEnd = toDateKeyUTC(nextGridEnd);
 
-  const masterMissionsResult = await ensureMasterMissionsForToday(dateStr);
+  const masterMissionsResult = await ensureMasterMissionsForToday();
   const [mode, upcomingCalendarEvents, hasGoogle, backlog, futureTasks, completedToday, yesterdayTasksRaw, smartSuggestion, energyCap, energyBudget, decisionBlocks, resistanceIndex, meta30, recoveryCampaign, emotionalCorrelations, xp, identity, mirror30, identityEngine, tasksByDate] = await Promise.all([
     getMode(dateStr),
     getUpcomingCalendarEvents(dateStr, 180),
@@ -163,7 +168,8 @@ export default async function TasksPage({ searchParams }: Props) {
     progressPct: 100,
     href: undefined as string | undefined,
   }));
-  const strategicByTaskId: Record<string, { domain?: string | null; alignmentImpactPct?: number; expectedXP?: number; disciplineImpact?: number; roi?: number; pressureEffect?: string; strategicValue?: number; psychologyLabel?: string | null; energyMatch?: number }> = {};
+  const { getMissionDifficultyRank } = await import("@/lib/mission-difficulty-rank");
+  const strategicByTaskId: Record<string, { domain?: string | null; alignmentImpactPct?: number; expectedXP?: number; disciplineImpact?: number; roi?: number; pressureEffect?: string; strategicValue?: number; psychologyLabel?: string | null; energyMatch?: number; difficultyRank?: "S" | "A" | "B" | "C" | "D" }> = {};
   for (const t of decisionBlocks.tasksSortedByUMS) {
     const impact = (t as { impact?: number | null }).impact ?? 2;
     strategicByTaskId[t.id] = {
@@ -176,6 +182,7 @@ export default async function TasksPage({ searchParams }: Props) {
       strategicValue: t.strategic_value ?? t.umsBreakdown.strategyAlignment,
       psychologyLabel: t.psychology_label ?? null,
       energyMatch: t.umsBreakdown.energyMatch,
+      difficultyRank: getMissionDifficultyRank(t.umsBreakdown.ums),
     };
   }
 
@@ -265,22 +272,26 @@ export default async function TasksPage({ searchParams }: Props) {
             }
             backHref="/dashboard"
           />
-          <section className="mascot-hero mascot-hero-top mascot-hero-mission" data-mascot-page="tasks" aria-hidden>
-            <MascotImg page="tasks" className="mascot-img" />
-          </section>
-          <div className="mascot-follow-row flex flex-wrap items-center justify-end gap-2">
-            <YesterdayTasksSection yesterdayTasks={yesterdayTasks} todayStr={dateStr} />
-            <XPBadge totalXp={xp.total_xp} level={xp.level} compact href="/xp" />
-            <div className="glow-pill inline-flex items-center gap-2 rounded-full bg-[var(--dc-bg-elevated)] px-4 py-2 text-sm font-medium text-[var(--dc-text-main)]">
-              <span
-                className="h-2 w-2 rounded-full bg-[var(--dc-accent-primary)] shadow-[0_0_8px_rgba(37,99,235,0.6)]"
-                aria-hidden
-              />
-              Today
-            </div>
-          </div>
         </div>
       </SciFiPanel>
+      {/* Mascot outside panel so no glass/gradient overlay lies on top */}
+      <section className="mascot-hero mascot-hero-top mascot-hero-mission mascot-hero-sharp" data-mascot-page="tasks" aria-hidden>
+        <div className="mascot-hero-inner mx-auto">
+          <HeroMascotImage page="tasks" className="mascot-img" />
+        </div>
+      </section>
+      <div className="mascot-follow-row flex flex-wrap items-center justify-end gap-2">
+        <YesterdayTasksSection yesterdayTasks={yesterdayTasks} todayStr={dateStr} />
+        <ResetAutoMissionsButton dateStr={dateStr} />
+        <XPBadge totalXp={xp.total_xp} level={xp.level} compact href="/xp" />
+        <div className="glow-pill inline-flex items-center gap-2 rounded-full bg-[var(--dc-bg-elevated)] px-4 py-2 text-sm font-medium text-[var(--dc-text-main)]">
+          <span
+            className="h-2 w-2 rounded-full bg-[var(--dc-accent-primary)] shadow-[0_0_8px_rgba(37,99,235,0.6)]"
+            aria-hidden
+          />
+          Today
+        </div>
+      </div>
       <Divider1px />
     </>
   );
@@ -296,6 +307,12 @@ export default async function TasksPage({ searchParams }: Props) {
           Auto-missies: geen toegevoegd (reden: <code>{masterMissionsResult.debug}</code>)
           {masterMissionsResult.createError && <> — {masterMissionsResult.createError}</>}.
           {masterMissionsResult.debug === "auto_off" && " Zet in Instellingen “Auto-missies” aan."}
+          {masterMissionsResult.debug === "no_brain_status" && (
+            <>
+              {" Zet eerst je brain status op het dashboard (Hoe voel je je vandaag?) om auto-missies te krijgen. Als je die net hebt gezet, "}
+              <RefreshPageButton /> om de pagina te verversen.
+            </>
+          )}
           {(masterMissionsResult.debug === "create_failed" || masterMissionsResult.debug === "no_picks" || masterMissionsResult.debug === "to_create_empty") && " Vernieuw de pagina of probeer later opnieuw."}
         </div>
       )}

@@ -11,6 +11,7 @@ import { ActiveTimeTracker } from "@/components/ActiveTimeTracker";
 import { NewDayRefresh } from "@/components/NewDayRefresh";
 import { RoutePrefetcher } from "@/components/RoutePrefetcher";
 import { OfflineQueueSync } from "@/components/OfflineQueueSync";
+import { PendingXpToast } from "@/components/PendingXpToast";
 import { DashboardDataProvider } from "@/components/providers/DashboardDataProvider";
 import { updateLastActiveDate } from "@/app/actions/behavior";
 
@@ -34,6 +35,7 @@ export default function DashboardLayout({
         <DashboardDataProvider>
         <>
           <OfflineQueueSync />
+          <PendingXpToast />
           <div className="relative flex min-h-screen max-h-[100dvh] w-full max-w-[100vw] flex-col overflow-x-hidden bg-transparent" data-ui="dark-commander">
             <ThemeHydrate />
             <ActiveTimeTracker />

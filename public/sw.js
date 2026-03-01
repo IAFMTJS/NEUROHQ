@@ -3,7 +3,7 @@
 // - STATIC_CACHE (install): /, /offline, manifest, app-icon (geen /dashboard: vereist cookies)
 // - DYNAMIC_CACHE: alle pagina’s/tabs (dashboard, tasks, budget, learning, analytics, settings, …), JS/CSS, openbare routes geprefetcht; auth-routes bij navigatie
 // - IndexedDB (neurohq-offline): offline mutaties (POST/PUT etc.) → gesynchroniseerd zodra er weer netwerk is
-const CACHE_VERSION = "v6";
+const CACHE_VERSION = "v7";
 const STATIC_CACHE = `neurohq-static-${CACHE_VERSION}`;
 const DYNAMIC_CACHE = `neurohq-dynamic-${CACHE_VERSION}`;
 const OFFLINE_PAGE = "/offline";
@@ -396,44 +396,41 @@ self.addEventListener("fetch", function (event) {
     return;
   }
 
-  // HTML pages: Stale-While-Revalidate with navigation preload when available
+  // HTML pages: Network-first so we always show the actual app when online (avoid stale cached HTML)
   if (event.request.headers.get("accept")?.includes("text/html")) {
     event.respondWith(
-      caches.match(event.request).then(function (cached) {
-        const networkPromise = (event.preloadResponse || Promise.resolve(null))
-          .then(function (preloadedResponse) {
-            if (preloadedResponse) {
-              const clone = preloadedResponse.clone();
+      (event.preloadResponse || Promise.resolve(null))
+        .then(function (preloadedResponse) {
+          if (preloadedResponse) {
+            const clone = preloadedResponse.clone();
+            caches.open(DYNAMIC_CACHE).then(function (cache) {
+              cache.put(event.request, clone);
+            });
+            return preloadedResponse;
+          }
+          const navigationRequest = new Request(event.request.url, {
+            headers: event.request.headers,
+            method: "GET",
+            redirect: "follow",
+          });
+          return fetch(navigationRequest).then(function (response) {
+            if (response.ok) {
+              const clone = response.clone();
               caches.open(DYNAMIC_CACHE).then(function (cache) {
                 cache.put(event.request, clone);
               });
-              return preloadedResponse;
             }
-            // For navigations, make sure we follow redirects before responding,
-            // otherwise Chrome will complain that the SW served a redirected response.
-            const navigationRequest = new Request(event.request.url, {
-              headers: event.request.headers,
-              method: "GET",
-              redirect: "follow",
-            });
-            return fetch(navigationRequest).then(function (response) {
-              if (response.ok) {
-                const clone = response.clone();
-                caches.open(DYNAMIC_CACHE).then(function (cache) {
-                  cache.put(event.request, clone);
-                });
-              }
-              return response;
-            });
-          })
-          .catch(function () {
+            return response;
+          });
+        })
+        .catch(function () {
+          return caches.match(event.request).then(function (cached) {
             if (cached) return cached;
             return caches.match(OFFLINE_PAGE).then(function (offline) {
               return offline || new Response("Offline", { status: 503 });
             });
           });
-        return cached || networkPromise;
-      })
+        })
     );
     return;
   }

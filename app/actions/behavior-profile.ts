@@ -1,6 +1,7 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
+import { revalidatePath } from "next/cache";
 import {
   DEFAULT_BEHAVIOR_PROFILE,
   type BehaviorProfile,
@@ -113,5 +114,7 @@ export async function updateBehaviorProfile(profile: BehaviorProfile): Promise<v
     .from("behavior_profile")
     .upsert(payload, { onConflict: "user_id" });
   if (error) throw new Error(error.message);
+
+  revalidatePath("/settings");
 }
 
