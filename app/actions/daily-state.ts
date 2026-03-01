@@ -84,7 +84,7 @@ export async function saveDailyState(input: DailyStateInput): Promise<SaveDailyS
           : "Kon dagstatus niet opslaan. Probeer het opnieuw.";
       return { ok: false, error: msg };
     }
-    revalidateTag(`daily-${user.id}-${serverToday}`);
+    revalidateTag(`daily-${user.id}-${serverToday}`, "max");
     revalidatePath("/dashboard");
     revalidatePath("/report");
     revalidatePath("/tasks");

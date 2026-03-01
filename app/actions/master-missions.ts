@@ -271,7 +271,7 @@ export async function resetAutoMissionsForToday(): Promise<{ deleted: number; er
   const { error } = await supabase.from("tasks").delete().in("id", ids);
   if (error) return { deleted: 0, error: error.message };
 
-  revalidateTag(`tasks-${user.id}-${today}`);
+  revalidateTag(`tasks-${user.id}-${today}`, "max");
   revalidatePath("/tasks");
   revalidatePath("/dashboard");
   return { deleted: ids.length };
