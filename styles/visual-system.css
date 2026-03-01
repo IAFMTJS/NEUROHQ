@@ -1,0 +1,443 @@
+/**
+ * COMMANDER UI — Dominant Game UI (reference: BACKGROUND.PNG + glow stacking)
+ * Fullscreen dark canvas, galaxy texture, radial glow, vignette. Single source for body.
+ */
+
+/* Reference: bottom nav shape/size – compact bar, symmetric spacing */
+:root {
+  --footer-height: 72px;
+  --canvas-bg-image: url("/BACKGROUND.PNG");
+  /* Deep navy galaxy base (#050816, #0A0F25, #0C1024) */
+  --canvas-navy-overlay: linear-gradient(180deg, #050816 0%, #0A0F25 40%, #0C1024 70%, #050816 100%);
+  --canvas-vignette: radial-gradient(ellipse 85% 85% at 50% 50%, transparent 40%, rgba(5, 8, 22, 0.5) 80%, rgba(5, 8, 22, 0.75) 100%);
+}
+
+/* Starfield: very low opacity (atmospheric, not dominant) */
+:root {
+  --starfield: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400'%3E%3Cg fill='%23fff' fill-opacity='0.08'%3E%3Ccircle cx='20' cy='30' r='0.5'/%3E%3Ccircle cx='80' cy='120' r='0.6'/%3E%3Ccircle cx='150' cy='40' r='0.4'/%3E%3Ccircle cx='220' cy='180' r='0.5'/%3E%3Ccircle cx='280' cy='90' r='0.7'/%3E%3Ccircle cx='350' cy='200' r='0.4'/%3E%3Ccircle cx='60' cy='250' r='0.5'/%3E%3Ccircle cx='180' cy='300' r='0.6'/%3E%3Ccircle cx='300' cy='350' r='0.4'/%3E%3Ccircle cx='40' cy='380' r='0.5'/%3E%3Ccircle cx='250' cy='50' r='0.4'/%3E%3Ccircle cx='120' cy='160' r='0.6'/%3E%3Ccircle cx='380' cy='280' r='0.5'/%3E%3C/g%3E%3C/svg%3E");
+}
+
+/* ----------------------------------------
+   GLOBAL BACKGROUND – Dominant (BACKGROUND.PNG + navy + radial glow + vignette)
+   ---------------------------------------- */
+
+body {
+  background:
+    var(--canvas-vignette),
+    var(--cinematic-nebula),
+    var(--cinematic-radial-top),
+    var(--cinematic-radial-mid),
+    var(--cinematic-radial-bottom),
+    radial-gradient(circle at 50% 35%, var(--cinematic-glow-cyan), transparent 50%),
+    var(--canvas-navy-overlay),
+    var(--starfield),
+    var(--canvas-bg-image),
+    var(--cinematic-navy)
+    !important;
+  background-attachment: fixed !important;
+  background-size: 100% 100%, 100% 100%, 100% 100%, 100% 100%, 100% 100%, 100% 100%, 100% 100%, 100% 100%, 400px 400px, cover, 100% 100% !important;
+  background-repeat: no-repeat, no-repeat, no-repeat, no-repeat, no-repeat, no-repeat, no-repeat, no-repeat, repeat, no-repeat, no-repeat !important;
+  background-position: 0 0, 0 0, 0 0, 0 0, 0 0, 50% 35%, 0 0, 0 0, 0 0, center center, 0 0 !important;
+  min-height: 100vh;
+  color: #FFFFFF;
+}
+
+/* ----------------------------------------
+   GLASS CARD (glassmorphism + gradient border + depth)
+   ---------------------------------------- */
+
+/* Glassmorphism: semi-transparent dark blue, blur(20px), 1px white 8%, multi-layer glow, inner bloom */
+.glass-card {
+  background: rgba(15, 25, 55, 0.5);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid var(--glass-border-soft, rgba(255, 255, 255, 0.08));
+  border-radius: 22px;
+  position: relative;
+  overflow: hidden;
+  box-shadow:
+    var(--glow-depth),
+    0 0 8px rgba(0, 229, 255, 0.12),
+    0 0 24px rgba(0, 229, 255, 0.08),
+    0 0 40px rgba(0, 229, 255, 0.04),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06),
+    inset 0 0 60px rgba(0, 229, 255, 0.03);
+}
+
+.glass-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1px;
+  background: linear-gradient(135deg, rgba(0, 229, 255, 0.2), rgba(138, 92, 255, 0.15));
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+}
+
+.glass-card::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: radial-gradient(ellipse 80% 50% at 50% 0%, rgba(255, 255, 255, 0.08), transparent 55%);
+  pointer-events: none;
+}
+
+/* Card glow variants – stacked glow (tight + medium + bloom) */
+.glass-card-glow-blue { box-shadow: var(--glow-depth), var(--glow-stack-cyan); }
+.glass-card-glow-teal { box-shadow: var(--glow-depth), var(--glow-stack-green); }
+.glass-card-glow-green { box-shadow: var(--glow-depth), var(--glow-stack-green); }
+.glass-card-glow-orange { box-shadow: var(--glow-depth), 0 0 8px rgba(255, 169, 58, 0.4), 0 0 24px rgba(255, 138, 0, 0.2), 0 0 40px rgba(255, 138, 0, 0.08); }
+.glass-card-glow-purple { box-shadow: var(--glow-depth), var(--glow-stack-purple); }
+
+/* Cinematic card: floating holographic panel – glass + stacked glow + inner ambient */
+.cinematic-card {
+  position: relative;
+  border-radius: 18px;
+  overflow: hidden;
+  background: rgba(15, 25, 55, 0.5);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow:
+    var(--glow-depth),
+    0 0 8px rgba(0, 229, 255, 0.1),
+    0 0 24px rgba(0, 229, 255, 0.06),
+    0 0 40px rgba(0, 229, 255, 0.03),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06),
+    inset 0 0 48px rgba(0, 229, 255, 0.02);
+  transition: box-shadow 0.2s ease, transform 0.2s ease;
+}
+.cinematic-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1px;
+  background: linear-gradient(135deg, rgba(0, 229, 255, 0.25), rgba(138, 92, 255, 0.2));
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+}
+.cinematic-card::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: radial-gradient(ellipse 80% 50% at 50% 0%, rgba(255, 255, 255, 0.08), transparent 55%);
+  pointer-events: none;
+}
+.cinematic-card:hover {
+  box-shadow:
+    var(--glow-depth),
+    0 0 8px rgba(0, 229, 255, 0.2),
+    0 0 24px rgba(0, 229, 255, 0.12),
+    0 0 48px rgba(0, 229, 255, 0.06),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08),
+    inset 0 0 60px rgba(0, 229, 255, 0.04);
+}
+.cinematic-card-glow-cyan { box-shadow: var(--glow-depth), var(--glow-stack-cyan); }
+.cinematic-card-glow-teal { box-shadow: var(--glow-depth), var(--glow-stack-green); }
+.cinematic-card-glow-purple { box-shadow: var(--glow-depth), var(--glow-stack-purple); }
+.cinematic-card-glow-green { box-shadow: var(--glow-depth), var(--glow-stack-green); }
+.cinematic-card-glow-blue { box-shadow: var(--glow-depth), var(--glow-stack-cyan); }
+
+/* ----------------------------------------
+   GROWTH CARD (card buttons: radial glow, star texture, corner accent, hover lift)
+   ---------------------------------------- */
+
+.growth-card {
+  position: relative;
+  padding: var(--primitive-spacing-3);
+  border-radius: var(--primitive-radius-xl);
+  overflow: hidden;
+  background:
+    radial-gradient(120% 100% at 50% 0%, rgba(90, 160, 255, 0.25) 0%, rgba(10, 20, 40, 0.9) 50%),
+    linear-gradient(180deg, rgba(20, 40, 80, 0.9) 0%, rgba(5, 10, 25, 0.95) 100%);
+  border: 1px solid rgba(150, 200, 255, 0.15);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  box-shadow:
+    inset 0 0 60px rgba(80, 180, 255, 0.15),
+    0 10px 40px rgba(0, 0, 0, 0.6);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.growth-card:hover {
+  transform: translateY(-6px);
+  box-shadow:
+    inset 0 0 80px rgba(120, 200, 255, 0.2),
+    0 25px 60px rgba(0, 0, 0, 0.7);
+}
+
+/* Subtle star texture */
+.growth-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background-image:
+    radial-gradient(circle at 25% 35%, rgba(255, 255, 255, 0.12) 1px, transparent 2px),
+    radial-gradient(circle at 70% 60%, rgba(255, 255, 255, 0.08) 1px, transparent 2px),
+    radial-gradient(circle at 50% 80%, rgba(255, 255, 255, 0.06) 1px, transparent 2px);
+  background-size: 220px 220px;
+  opacity: 0.15;
+  pointer-events: none;
+}
+
+/* Corner accent (top-left) */
+.growth-card-corner {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 90px;
+  height: 90px;
+  border-top-left-radius: var(--primitive-radius-xl);
+  border-top: 3px solid rgba(120, 220, 255, 0.4);
+  border-left: 3px solid rgba(120, 220, 255, 0.4);
+  opacity: 0.7;
+  pointer-events: none;
+}
+
+/* Growth card content – ensure above pseudo-elements */
+.growth-card-content {
+  position: relative;
+  z-index: 2;
+}
+
+/* ----------------------------------------
+   NEON PRIMARY BUTTON (pink/purple → blue/teal + layered shadow)
+   ---------------------------------------- */
+
+/* Rounded 18px, multi-stop gradient, 4-layer glow, inner light sweep, depth shadow */
+.neon-button {
+  background: var(--neon-btn-gradient);
+  color: #FFFFFF;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  border: none;
+  border-radius: 18px;
+  position: relative;
+  box-shadow:
+    0 0 8px rgba(0, 229, 255, 0.5),
+    0 0 24px rgba(124, 92, 255, 0.35),
+    0 0 48px rgba(0, 229, 255, 0.2),
+    0 8px 32px rgba(0, 0, 0, 0.45),
+    inset 0 1px 0 rgba(255, 255, 255, 0.15);
+  transform: scale(1);
+  min-height: 44px;
+  transition: transform 120ms ease-out, box-shadow 120ms ease-out;
+}
+
+.neon-button::before {
+  content: "";
+  position: absolute;
+  inset: -4px;
+  border-radius: 22px;
+  background: linear-gradient(90deg, #8A5CFF, #00BFFF, #00E5FF);
+  opacity: 0.35;
+  filter: blur(20px);
+  z-index: -1;
+  pointer-events: none;
+}
+
+.neon-button:hover:not(:disabled) {
+  box-shadow:
+    0 0 12px rgba(0, 229, 255, 0.6),
+    0 0 32px rgba(124, 92, 255, 0.45),
+    0 0 56px rgba(0, 229, 255, 0.3),
+    0 0 80px rgba(0, 229, 255, 0.1),
+    0 10px 40px rgba(0, 0, 0, 0.5),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+}
+
+.neon-button:active:not(:disabled) {
+  transform: scale(0.97);
+  box-shadow:
+    0 0 8px rgba(0, 229, 255, 0.4),
+    0 0 24px rgba(124, 92, 255, 0.25),
+    0 6px 28px rgba(0, 0, 0, 0.5),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+.neon-button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+}
+
+.neon-btn-subtitle {
+  display: block;
+  font-size: 11px;
+  font-weight: 500;
+  opacity: 0.9;
+  margin-top: 4px;
+}
+
+/* ----------------------------------------
+   NEON SHIFT ANIMATION (gradient border / bloom)
+   ---------------------------------------- */
+
+@keyframes neonShift {
+  0% { background-position: 0% 50%; }
+  100% { background-position: 200% 50%; }
+}
+
+.neon-animate {
+  background-size: 200% 200%;
+  animation: neonShift 6s linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .neon-animate {
+    animation: none;
+  }
+}
+
+/* ----------------------------------------
+   BOTTOM NAV – reference: dark pill-shaped bar, 3D bevel, cyan top glow, cinematic
+   ---------------------------------------- */
+
+/* Floating nav: depth shadow underneath + stacked glow (cinematic) */
+.bottom-nav {
+  height: var(--footer-height);
+  min-height: var(--footer-height);
+  margin-bottom: 8px;
+  width: calc(100% - 24px);
+  max-width: calc(420px - 24px);
+  margin-left: 12px;
+  margin-right: 12px;
+  border-radius: 999px;
+  background: rgba(15, 25, 55, 0.6);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow:
+    0 8px 32px rgba(0, 0, 0, 0.45),
+    0 12px 48px rgba(0, 0, 0, 0.25),
+    0 0 8px rgba(0, 229, 255, 0.1),
+    0 0 24px rgba(0, 229, 255, 0.06),
+    0 -2px 0 0 rgba(255, 255, 255, 0.06),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06),
+    inset 0 -2px 12px rgba(0, 0, 0, 0.4);
+}
+
+/* Inactive: 50% opacity (reference); active: cyan glow + underline */
+.bottom-nav a {
+  color: rgba(255, 255, 255, 0.5);
+  opacity: 1;
+  transition: color 120ms ease-out, opacity 120ms ease-out;
+}
+
+.bottom-nav a:not(.nav-item-active) {
+  opacity: 0.5;
+}
+
+.bottom-nav a:hover {
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.bottom-nav .nav-item-active {
+  opacity: 1;
+}
+
+/* Active: bright neon blue/teal RECTANGLE wrapping icon + text */
+.bottom-nav .nav-item-active {
+  color: #00E5FF;
+}
+
+.bottom-nav .nav-item-active .nav-item-inner {
+  background: rgba(0, 229, 255, 0.16);
+  border: 1px solid rgba(0, 229, 255, 0.4);
+  border-radius: 14px;
+  box-shadow: var(--nav-active-glow);
+  padding: 6px 10px 8px;
+  margin: -6px -10px -8px;
+}
+
+.bottom-nav .nav-item-active .nav-icon-wrap {
+  background: transparent;
+  border-radius: 0;
+  box-shadow: none;
+  border: none;
+}
+
+/* Reference: outline icons, neon active state */
+.bottom-nav .nav-item-active .nav-item-inner .nav-icon-wrap {
+  filter: drop-shadow(0 0 6px rgba(0, 229, 255, 0.5));
+}
+.bottom-nav .nav-item-active .nav-item-inner .nav-icon-wrap svg {
+  stroke: #00E5FF;
+  filter: drop-shadow(0 0 4px rgba(0, 229, 255, 0.8));
+}
+/* Card icons: neon outline + subtle glow (reference: icon stijl in glass squares) */
+.icon-neon-wrap {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(0, 229, 255, 0.15);
+  box-shadow: 0 0 12px rgba(0, 229, 255, 0.1);
+}
+.icon-neon-wrap svg {
+  filter: drop-shadow(0 0 3px rgba(0, 229, 255, 0.3));
+}
+
+/* Reference: active tab – cyan glow + small underline (cinematic) */
+.bottom-nav .nav-item-active .nav-item-inner {
+  position: relative;
+  box-shadow: 0 0 20px rgba(0, 229, 255, 0.5), 0 0 40px rgba(0, 229, 255, 0.2);
+}
+.bottom-nav .nav-item-active .nav-item-inner::after {
+  content: "";
+  position: absolute;
+  bottom: -2px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 20px;
+  height: 2px;
+  border-radius: 1px;
+  background: #00E5FF;
+  box-shadow: 0 0 10px rgba(0, 229, 255, 0.8);
+}
+
+/* ========== Commander HQ UI Kit (loads last in this file so these win) ========== */
+.hq-background {
+  background:
+    radial-gradient(
+      circle at 30% 40%,
+      rgba(0, 242, 255, 0.15),
+      transparent 40%
+    ),
+    radial-gradient(
+      circle at 60% 50%,
+      rgba(122, 92, 255, 0.15),
+      transparent 45%
+    ),
+    radial-gradient(
+      circle at 75% 65%,
+      rgba(0, 255, 163, 0.15),
+      transparent 40%
+    ),
+    linear-gradient(
+      180deg,
+      var(--hq-bg-1),
+      var(--hq-bg-2),
+      var(--hq-bg-3)
+    );
+}
+
+.hq-glass {
+  backdrop-filter: blur(var(--hq-blur-md)) !important;
+  -webkit-backdrop-filter: blur(var(--hq-blur-md)) !important;
+  background: var(--hq-glass-bg) !important;
+  border: 1px solid var(--hq-glass-border) !important;
+  border-radius: var(--hq-radius-lg) !important;
+}

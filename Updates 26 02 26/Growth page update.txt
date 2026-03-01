@@ -1,0 +1,407 @@
+
+
+🧠 GROWTH MODULE – MASTER ARCHITECTURE (B + C)
+
+Doel:
+Growth = Learning Command Board
+Niet XP. Niet skill tree. Niet settings.
+
+Psychologische kern:
+	•	Intentie (richting)
+	•	Discipline (consistentie)
+	•	Reflectie (betekenis)
+
+⸻
+
+FASE 1 — FUNDAMENT DEFINIËREN
+
+Stap 1: Modulegrens vastleggen
+
+Growth bevat alleen:
+	1.	Learning Focus (strategisch)
+	2.	Consistency Engine
+	3.	Active Learning Streams
+	4.	Reflection Engine
+
+Wat er NIET in zit:
+	•	XP level system
+	•	Skill unlocks
+	•	Global progression
+	•	Energy stats
+	•	Mission system
+	•	Settings forms
+
+Die scheiding is heilig.
+
+⸻
+
+Stap 2: Data Model ontwerpen
+
+We bouwen eerst de state logisch correct.
+
+learningState
+
+learningState = {
+  focus: {
+    primary: {
+      id: "japanese",
+      name: "Japanese",
+      why: "Build language fluency",
+      category: "Language"
+    },
+    secondary: {
+      id: "strategy",
+      name: "Strategic Thinking"
+    }
+  },
+
+  streams: [
+    {
+      id: "japanese",
+      type: "skill",
+      totalSessions: 34,
+      sessionsThisWeek: 4,
+      lastActive: "2026-02-24",
+      momentumScore: 0.82
+    },
+    {
+      id: "book_1",
+      type: "book",
+      title: "Tell-Tale Heart",
+      pagesTotal: 64,
+      pagesRead: 10,
+      lastActive: "2026-02-22"
+    }
+  ],
+
+  consistency: {
+    currentStreak: 6,
+    longestStreak: 14,
+    sessionsThisWeek: 5,
+    weeklyTargetSessions: 6,
+    completionRatio: 0.83
+  },
+
+  reflection: {
+    lastEntryDate: "2026-02-23",
+    entries: []
+  }
+}
+
+Belangrijk:
+	•	Geen minuten.
+	•	Alles in sessies.
+	•	Alles consistentie-gedreven.
+
+⸻
+
+FASE 2 — STRUCTURELE OPBOUW PAGINA
+
+We volgen je design tokens strikt.
+
+Structuur:
+
+Header
+↓
+Intent Card
+↓
+Consistency Card
+↓
+Learning Streams List
+↓
+Reflection Card
+↓
+Bottom Nav
+
+Spacing:
+	•	Section to section: 24px
+	•	Cards intern: 20px
+
+Geen afwijkingen.
+
+⸻
+
+FASE 3 — INTENTIE BLOK (B-COMPONENT)
+
+Doel
+
+Geeft richting.
+Verhindert cognitieve drift.
+
+⸻
+
+Stap 3.1 – Intent Card UI
+
+Card bevat:
+	•	Primary Focus
+	•	Secondary Focus
+	•	Current Book
+	•	Why statement
+	•	Edit knop (rechtsboven, klein)
+
+Geen invoervelden zichtbaar.
+Alleen display state.
+
+⸻
+
+Stap 3.2 – Intent Drift Logic
+
+Wanneer:
+	•	Primary sessionsThisWeek = 0
+	•	Secondary sessionsThisWeek > 0
+
+Toon subtiele waarschuwing:
+
+“Primary focus neglected.”
+
+Niet rood.
+Accent-amber border.
+
+Geen drama.
+Wel correctie.
+
+⸻
+
+Stap 3.3 – Mode koppeling (optioneel later)
+
+In toekomst kan Intent invloed hebben op:
+	•	XP multiplier
+	•	Focus suggestions
+	•	Notification priority
+
+Maar nu nog niet in UI tonen.
+
+⸻
+
+FASE 4 — CONSISTENCY ENGINE (C-COMPONENT)
+
+Dit is het hart.
+
+⸻
+
+Stap 4.1 – Consistency Score berekenen
+
+completionRatio = sessionsThisWeek / weeklyTargetSessions
+
+Status:
+	•	= 1 → Excellent Momentum
+	•	0.75 - 0.99 → On Track
+	•	0.4 - 0.74 → Behind
+	•	< 0.4 → Critical Drift
+
+Geen rode kleuren.
+Alleen tekst en subtiele border variant.
+
+⸻
+
+Stap 4.2 – Momentum Feedback
+
+Als completionRatio < 0.5 op woensdag:
+
+Toon:
+
+“Consistency dropping. Adjust target?”
+
+Dit opent modal.
+Geen directe schuld.
+
+⸻
+
+Stap 4.3 – Streak Logica
+
+Streak verhoogt alleen als:
+
+sessionsThisWeek >= weeklyTargetSessions
+
+Niet per dag.
+Per week.
+
+Dit voorkomt obsessief micromanagen.
+
+⸻
+
+FASE 5 — LEARNING STREAMS
+
+Dit is je uitvoeringslaag.
+
+⸻
+
+Stap 5.1 – Stream Card structuur
+
+Per stream:
+	•	Titel
+	•	Last active
+	•	Sessions this week
+	•	Progress indicator (sessions of target OR pages of total)
+	•	Start Session knop
+
+Geen XP hier.
+Geen level.
+
+⸻
+
+Stap 5.2 – Automatische Logging
+
+Start Session →
+
+Timer →
+Stop →
+Auto save:
+	•	duration
+	•	date
+	•	streamId
+
+Geen handmatige minuten.
+
+⸻
+
+Stap 5.3 – Momentum Score
+
+Bereken:
+
+momentumScore =
+  (sessionsThisWeek / weeklyTarget) * 0.6 +
+  (recentActivityWeight) * 0.4
+
+Gebruik dit later voor:
+	•	Stream sortering
+	•	Highlighting
+
+Niet visueel tonen.
+Alleen intern gebruiken.
+
+⸻
+
+FASE 6 — REFLECTION ENGINE
+
+Hier wordt het volwassen.
+
+⸻
+
+Stap 6.1 – Weekly Prompt Logica
+
+Elke zondag:
+
+Activeer reflectionRequired = true
+
+Toon subtiele highlight rond Reflection card.
+
+Geen agressieve popup.
+
+⸻
+
+Stap 6.2 – Prompt Structuur
+
+Max 3 vragen:
+	•	Wat heb je begrepen?
+	•	Wat was moeilijk?
+	•	Wat pas je aan?
+
+Max 500 tekens.
+Geen lange essays.
+
+⸻
+
+Stap 6.3 – Reflectie Score (intern)
+
+Je kan in toekomst sentiment analyseren.
+
+Niet nu tonen.
+Maar het maakt systeem slimmer.
+
+⸻
+
+FASE 7 — VISUELE DISCIPLINE
+
+Omdat dit learning is:
+	•	Geen neon text
+	•	Geen unlockPulse
+	•	Geen cyan energy glow
+	•	Geen XP progress dominant
+
+Enkel:
+	•	Card elevation 1
+	•	Border-soft
+	•	Subtiele accent-primary voor actieve stream
+
+Effect library respecteren.
+Geen overdrijving.
+
+⸻
+
+FASE 8 — OVERWHELM SHIELD (optioneel maar slim)
+
+Als:
+
+streams.length > 5
+
+Collapse UI:
+
+Toon alleen:
+	•	Primary stream
+	•	Secondary stream
+	•	“Show all”
+
+Neuro-bescherming.
+
+⸻
+
+FASE 9 — EDGE CASES
+
+Geen streams
+
+Toon minimal empty card:
+
+“Define your primary learning focus.”
+
+Geen illustraties.
+Geen icon spam.
+
+⸻
+
+Streak broken
+
+Geen dramatische animatie.
+Toon:
+
+“Consistency reset. Rebuild momentum.”
+
+Dat is het.
+
+⸻
+
+FASE 10 — FUTURE EXPANSION
+
+Zonder UI te vervuilen kun je later toevoegen:
+	•	Quarterly review screen
+	•	Trend analytics
+	•	Learning velocity graph
+	•	Knowledge density metric
+
+Maar NIET in hoofd Growth scherm.
+
+⸻
+
+PSYCHOLOGISCH RESULTAAT
+
+Gebruiker opent Growth en voelt:
+	•	Ik weet waar ik naartoe ga.
+	•	Ik zie of ik consistent ben.
+	•	Ik kan direct starten.
+	•	Ik reflecteer bewust.
+
+Niet:
+	•	Ik moet data invullen.
+	•	Ik moet settings aanpassen.
+	•	Ik word overweldigd.
+
+⸻
+
+EINDCONCLUSIE
+
+Je hebt nu:
+	•	XP pagina = Dopamine / progression
+	•	Growth pagina = Discipline + betekenis
+	•	Execution pagina = Actie
+	•	Strategy pagina = Richting
+

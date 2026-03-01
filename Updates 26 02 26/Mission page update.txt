@@ -1,0 +1,390 @@
+
+We bouwen dit in 6 grote fases:
+	1.	Architectuur herstructureren
+	2.	Data model uitbreiden
+	3.	UI-lagen structureren
+	4.	Feature engines implementeren
+	5.	Progressie en gedragsdata integreren
+	6.	Hardening & UX discipline
+
+Dit wordt groot. Pak koffie.
+
+⸻
+
+FASE 1 — SYSTEEMARCHITECTUUR HERDEFINIËREN
+
+Stap 1.1 – Definieer 5 Engines
+
+We splitsen alles in engines. Geen losse features meer.
+
+1️⃣ Execution Engine
+	•	Active mission
+	•	Focus mode
+	•	Completion logic
+	•	XP gain
+	•	Energy drain
+
+2️⃣ Planning Engine
+	•	Today
+	•	Upcoming
+	•	Scheduled
+	•	Overdue
+	•	Routines
+
+Backlog verdwijnt als aparte entiteit.
+
+3️⃣ Capacity Engine
+	•	Energy
+	•	Load types
+	•	Social multiplier
+	•	Overload detection
+	•	Forecasting
+
+4️⃣ Progression Engine
+	•	XP
+	•	Level
+	•	Rank
+	•	Skill tree
+	•	Unlock logic
+
+5️⃣ Insight Engine
+	•	Friction score
+	•	Completion rate
+	•	Energy patterns
+	•	Avoidance patterns
+	•	Streak
+
+Elke feature moet onder 1 van deze engines vallen.
+
+Zo niet → schrappen.
+
+⸻
+
+FASE 2 — DATA MODEL UPGRADE
+
+Je huidige gameState is te simpel.
+
+We breiden uit.
+
+⸻
+
+Stap 2.1 – Mission Model uitbreiden
+
+Van:
+
+{
+  id,
+  name,
+  xpReward,
+  completed,
+  active
+}
+
+Naar:
+
+{
+  id,
+  title,
+  description,
+  type, // deep, admin, social, physical, strategic
+  cognitiveLoad,
+  socialLoad,
+  physicalLoad,
+  emotionalLoad,
+  energyCost,
+  xpReward,
+  scheduledDate,
+  deadline,
+  createdAt,
+  activatedAt,
+  completedAt,
+  completionCount,
+  postponeCount,
+  frictionScore,
+  status // draft, scheduled, active, completed, overdue
+}
+
+Dat maakt je systeem volwassen.
+
+⸻
+
+Stap 2.2 – Capacity State uitbreiden
+
+capacity: {
+  energyCurrent: 72,
+  energyMax: 100,
+  projectedLoadToday: 110,
+  overloadRisk: true,
+  socialMultiplier: 1.5,
+  recoveryTrend: "stable"
+}
+
+Niet enkel energy.
+
+Maar projectie.
+
+⸻
+
+Stap 2.3 – Insight State
+
+insights: {
+  mostAvoidedType: "social",
+  highestCompletionTime: "morning",
+  frictionMissions: [id1, id2],
+  burnoutRiskScore: 64
+}
+
+Nu wordt het intelligent.
+
+⸻
+
+FASE 3 — UI LAGEN HERSTRUCTUREREN
+
+We ontwerpen 4 hoofdschermen.
+
+Niet alles op één.
+
+⸻
+
+SCHERM 1 – Missions (Execution Layer)
+
+Bovenaan:
+	•	Rank badge
+	•	XP progress bar
+	•	Streak indicator
+
+Dan:
+
+Sectie 1 – Active Mission (dominant)
+	•	Elevation 2
+	•	Glow primary
+	•	Countdown / timer
+	•	XP zichtbaar
+
+Sectie 2 – Next Up (2 kolommen)
+	•	Scheduled today
+	•	Subtiele kaarten
+
+Sectie 3 – Quick Add
+
+1 knop.
+Formulier in modal.
+
+GEEN permanent formulier.
+
+⸻
+
+SCHERM 2 – Planning Hub
+
+Tabs bovenaan:
+	•	Today
+	•	Upcoming
+	•	Scheduled
+	•	Overdue
+	•	Routines
+
+Geen losse backlog kaart meer.
+
+Planning kaarten:
+	•	Platte stijl
+	•	Minder glow
+	•	Meer structuur
+
+Missies visueel onderscheiden van events.
+
+⸻
+
+SCHERM 3 – Capacity Dashboard
+
+Bovenaan:
+Energy ring
+
+Daaronder:
+Capacity forecast bar
+
+Dan:
+Load breakdown:
+	•	Cognitive %
+	•	Social %
+	•	Physical %
+	•	Emotional %
+
+Dan:
+Overload indicator (amber glow als nodig)
+
+⸻
+
+SCHERM 4 – Progression
+
+XP card
+Level
+Rank
+Skill tree
+Achievements
+
+Niet verspreid over app.
+
+⸻
+
+FASE 4 — FEATURE IMPLEMENTATIE
+
+Hier wordt het serieus.
+
+⸻
+
+Stap 4.1 – Focus Mode
+
+Wanneer missie actief:
+
+UI verandert naar minimal mode:
+	•	Alleen missie
+	•	Timer
+	•	Abort knop
+	•	Complete knop
+
+Geen navigatie chaos.
+
+Dit verhoogt executie.
+
+⸻
+
+Stap 4.2 – Capacity Forecast
+
+Berekening:
+
+totalLoadToday = sum(mission.energyCost)
+capacityPercentage = totalLoadToday / energyCurrent
+
+Als > 1.0 → overload
+
+Visueel:
+Progress bar met amber als >100%
+
+⸻
+
+Stap 4.3 – Friction Score
+
+frictionScore = (postponeCount * 2) + (activationWithoutCompletion * 3)
+
+Als > threshold:
+Markeer missie subtiel.
+
+Geen dramatische effecten.
+
+⸻
+
+Stap 4.4 – Smart Suggestions
+
+Logica:
+
+Als energy laag:
+→ toon low-load taken
+
+Als ochtend:
+→ toon deep work
+
+Als friction hoog:
+→ stel splitsing voor
+
+Dit is geen AI hype.
+Dit is logica.
+
+⸻
+
+FASE 5 — PROGRESSIE DIE ECHT VOELT
+
+Nu maken we het verslavend maar netjes.
+
+⸻
+
+Stap 5.1 – Level Up Moment
+
+Flow:
+
+Mission Complete
+	•	XP toast
+Check level
+Als level up:
+
+	•	Neon pulse 0.8s max
+	•	Rank update
+	•	Skill unlock modal
+
+No infinite glow.
+
+⸻
+
+Stap 5.2 – Rank zichtbaar maken
+
+Rank bovenaan missions scherm.
+
+Niet verstopt.
+
+⸻
+
+Stap 5.3 – Skill Unlock betekenisvol maken
+
+Skills moeten functioneel zijn.
+
+Bijvoorbeeld:
+
+Focus I
+→ +5% XP op deep work
+
+Social Adapt
+→ Social multiplier -10%
+
+Recovery Boost
+→ +10 energy reset
+
+Geen cosmetische unlocks.
+
+⸻
+
+FASE 6 — UX HARDENING
+
+Nu gaan we snijden.
+
+⸻
+
+Regel 1
+
+Nooit meer dan 1 primary CTA per scherm.
+
+⸻
+
+Regel 2
+
+Nooit meer dan 1 sterke glow tegelijk.
+
+⸻
+
+Regel 3
+
+Geen dubbele functionaliteit zichtbaar.
+
+⸻
+
+Regel 4
+
+Alles collapsible behalve active context.
+
+⸻
+
+Regel 5
+
+Formulieren in modal.
+
+⸻
+
+Eindresultaat
+
+Je krijgt:
+	•	Complex systeem
+	•	Strakke hiërarchie
+	•	Adaptieve intelligentie
+	•	Duidelijke lagen
+	•	Gamified progressie
+	•	Capaciteitsbewust plannen
+	•	Gedragsdata feedback
+

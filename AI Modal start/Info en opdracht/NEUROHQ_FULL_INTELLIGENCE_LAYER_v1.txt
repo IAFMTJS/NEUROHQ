@@ -1,0 +1,238 @@
+NEUROHQ – FULL INTELLIGENCE LAYER MASTER FILE Version 1.0 – Production
+Architecture
+
+====================================================================
+SECTION 1 – OVERVIEW
+====================================================================
+
+This document contains the complete AI intelligence layer:
+
+1.  Interpretation Engine
+2.  Intent Classification
+3.  Signal Extraction
+4.  Deterministic State Updating
+5.  Escalation Integration
+6.  Crisis Detection Engine
+7.  Pattern Memory Engine (30-day summarisation logic)
+
+The AI NEVER decides logic. All escalation, scoring and behavioral
+interpretation is deterministic.
+
+The AI only formats output.
+
+====================================================================
+SECTION 2 – INTERPRETATION ENGINE
+====================================================================
+
+interpretation.engine.ts
+
+------------------------------------------------------------------------
+
+export function interpretUserMessage(message, currentState) {
+
+const intent = classifyIntent(message);
+
+const signals = extractSignals(message);
+
+const crisisAssessment = evaluateCrisis(message, signals);
+
+const updatedState = updateStateFromSignals(currentState, signals,
+crisisAssessment);
+
+const escalationDecision = evaluateEscalation(updatedState);
+
+const conversationMode = determineConversationMode( updatedState,
+escalationDecision, crisisAssessment );
+
+return { intent, signals, crisisAssessment, updatedState,
+escalationDecision, conversationMode }; }
+
+------------------------------------------------------------------------
+
+function determineConversationMode(state, escalation, crisisAssessment)
+{
+
+if (crisisAssessment.active) return “stabilisation”;
+
+if (state.energy <= 3) return “stabilisation”;
+
+if (escalation.tier === 3) return “pressure”;
+
+if (escalation.tier === 2) { if (state.identityAlignmentScore < 50)
+return “reflective”; return “diagnostic”; }
+
+if (state.energy >= 6) return “strategic”;
+
+return “diagnostic”; }
+
+====================================================================
+SECTION 3 – INTENT CLASSIFIER
+====================================================================
+
+intent.classifier.ts
+
+------------------------------------------------------------------------
+
+export function classifyIntent(message) {
+
+const lower = message.toLowerCase();
+
+if (containsAny(lower, [ “ik trek het niet”, “ik ben kapot”,
+“overweldigd”, “alles is te veel” ])) return “crisis”;
+
+if (containsAny(lower, [ “weinig energie”, “geen tijd”, “te druk”,
+“verkeerde mindset” ])) return “rationalisation”;
+
+if (containsAny(lower, [ “ik twijfel”, “ik weet dat ik mezelf”,
+“misschien moet ik”, “richting klopt niet” ])) return “reflection”;
+
+if (containsAny(lower, [ “ik heb gedaan”, “afgewerkt”, “klaar” ]))
+return “execution_update”;
+
+return “status_update”; }
+
+function containsAny(text, phrases) { return phrases.some(p =>
+text.includes(p)); }
+
+====================================================================
+SECTION 4 – SIGNAL EXTRACTOR
+====================================================================
+
+signal.extractor.ts
+
+------------------------------------------------------------------------
+
+export function extractSignals(message) {
+
+const lower = message.toLowerCase();
+
+return { reportedEnergy: detectEnergy(lower), taskCompleted:
+detectCompletion(lower), externalBlame: detectExternalBlame(lower),
+avoidanceAdmitted: detectAvoidance(lower), identityDoubt:
+detectIdentityDoubt(lower) }; }
+
+function detectEnergy(text) { if (text.includes(“weinig energie”))
+return 3; if (text.includes(“veel energie”)) return 8; return null; }
+
+function detectCompletion(text) { return text.includes(“ik heb gedaan”)
+|| text.includes(“klaar”); }
+
+function detectExternalBlame(text) { return text.includes(“te druk”) ||
+text.includes(“anderen”) || text.includes(“geen tijd”); }
+
+function detectAvoidance(text) { return text.includes(“uitgesteld”) ||
+text.includes(“vermeden”) || text.includes(“niet gedaan”); }
+
+function detectIdentityDoubt(text) { return text.includes(“twijfel”) ||
+text.includes(“richting klopt niet”); }
+
+====================================================================
+SECTION 5 – STATE UPDATER
+====================================================================
+
+state.updater.ts
+
+------------------------------------------------------------------------
+
+export function updateStateFromSignals(state, signals, crisisAssessment)
+{
+
+const newState = { …state };
+
+if (signals.externalBlame) newState.stabilityIndex -= 2;
+
+if (signals.avoidanceAdmitted) newState.avoidanceTrend += 0.1;
+
+if (signals.taskCompleted) { newState.progress += 5;
+newState.avoidanceTrend = Math.max(0, newState.avoidanceTrend - 0.1); }
+
+if (signals.identityDoubt) newState.identityAlignmentScore -= 5;
+
+if (crisisAssessment.active) newState.intensityTier = 1;
+
+newState.stabilityIndex = clamp(newState.stabilityIndex, 0, 100);
+newState.avoidanceTrend = clamp(newState.avoidanceTrend, 0, 1);
+newState.identityAlignmentScore = clamp(newState.identityAlignmentScore,
+0, 100);
+
+return newState; }
+
+function clamp(value, min, max) { return Math.max(min, Math.min(max,
+value)); }
+
+====================================================================
+SECTION 6 – CRISIS DETECTION ENGINE
+====================================================================
+
+crisis.engine.ts
+
+------------------------------------------------------------------------
+
+export function evaluateCrisis(message, signals) {
+
+const lower = message.toLowerCase();
+
+let severity = 0;
+
+if (containsAny(lower, [ “ik trek het niet”, “alles is te veel”, “ik ben
+kapot” ])) severity += 2;
+
+if (signals.reportedEnergy !== null && signals.reportedEnergy <= 2)
+severity += 1;
+
+const active = severity >= 2;
+
+return { active, severity }; }
+
+====================================================================
+SECTION 7 – PATTERN MEMORY ENGINE (30-DAY SUMMARY)
+====================================================================
+
+pattern.memory.ts
+
+------------------------------------------------------------------------
+
+export function generate30DaySummary(checkins, tasks, escalationLogs) {
+
+const avoidanceTrend = calculateAvoidanceTrend(tasks);
+
+const energyStability = calculateEnergyVariance(checkins);
+
+const identityDrift = calculateIdentityDrift(tasks);
+
+const escalationFrequency = escalationLogs.length;
+
+return { avoidanceTrend, energyStability, identityDrift,
+escalationFrequency }; }
+
+function calculateAvoidanceTrend(tasks) { const incompleteCore =
+tasks.filter(t => t.isCoreTask && !t.completed).length; return
+incompleteCore / Math.max(tasks.length, 1); }
+
+function calculateEnergyVariance(checkins) { const energies =
+checkins.map(c => c.energy); const avg = energies.reduce((a,b)=>a+b,0) /
+Math.max(energies.length,1); const variance =
+energies.reduce((a,b)=>a+Math.pow(b-avg,2),0) /
+Math.max(energies.length,1); return variance; }
+
+function calculateIdentityDrift(tasks) { const nonCore = tasks.filter(t
+=> !t.isCoreTask).length; return nonCore / Math.max(tasks.length,1); }
+
+====================================================================
+SECTION 8 – SYSTEM FLOW SUMMARY
+====================================================================
+
+1.  User sends message
+2.  classifyIntent()
+3.  extractSignals()
+4.  evaluateCrisis()
+5.  updateStateFromSignals()
+6.  evaluateEscalation()
+7.  determineConversationMode()
+8.  AI formats response
+9.  Escalation logged if applicable
+10. Pattern memory updated
+
+==================================================================== END
+OF FULL INTELLIGENCE LAYER
+====================================================================

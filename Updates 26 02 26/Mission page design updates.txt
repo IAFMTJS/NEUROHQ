@@ -1,0 +1,251 @@
+
+We gaan elk nieuw element checken tegen:
+	•	Design System v1.0
+	•	Layout Lock Spec
+	•	Effect Library
+	•	Visual Completion Layer
+
+Geen nieuwe stijltjes. Geen creatieve afwijkingen. Alles binnen je bestaande tokens.
+
+⸻
+
+1. NEW MISSION MODAL — VOLLEDIGE DESIGN DEFINITIE
+
+Structuur (conform modal system)
+
+<div class="overlay">
+  <div class="modal">
+    ...
+  </div>
+</div>
+
+Overlay
+	•	background: rgba(0,0,0,0.6)
+	•	geen blur (verboden volgens modal system)
+
+Modal
+	•	max-width: 380px
+	•	border-radius: 18px
+	•	padding: 24px
+	•	box-shadow: elevation 3
+
+Geen glass. Geen extra glow.
+
+⸻
+
+Modal Content Layout
+
+Volg spacing hierarchy:
+	•	Section to section → 24px
+	•	Component to component → 20px
+	•	Micro spacing → 8px / 12px
+
+Inhoud
+	1.	H3: “New Mission”
+	2.	Input field (card-styled, bg-card)
+	3.	Energy selector (button group)
+	4.	Category chips
+	5.	Primary button (full width)
+
+Energy selector styling
+
+Gebruik bestaande button token:
+	•	border-radius: 10px (small elements)
+	•	background: var(–bg-elevated)
+	•	active state:
+border: 1px solid var(–accent-primary)
+box-shadow: 0 0 20px var(–glow-primary)
+
+Geen nieuwe chip-stijl.
+
+⸻
+
+2. FOCUS MODE SCREEN — DESIGN SPEC
+
+Dit is geen nieuw visueel systeem.
+Dit is gewoon een minimal variant van Missions.
+
+Layout
+
+.container
+padding 24px
+min-height 100vh
+
+Structuur:
+
+Header minimal
+Active mission card (elevation 2)
+Timer
+Complete button
+
+Alles gecentreerd.
+
+⸻
+
+Active Mission Card
+
+Zelfde card token:
+
+.card {
+  background: var(--bg-card);
+  border-radius: 18px;
+  padding: 20px;
+  border: 1px solid var(--accent-primary);
+  box-shadow: 0 0 20px var(--glow-primary);
+}
+
+Geen nieuwe variant.
+
+⸻
+
+Timer styling
+
+Gebruik typography scale:
+	•	H1 → 28px
+	•	Body → 16px
+
+Geen neon tenzij completion.
+
+⸻
+
+3. CAPACITY DASHBOARD — DESIGN HARDENING
+
+Dit is géén nieuwe visuele taal.
+We hergebruiken:
+	•	Stat rings
+	•	Progress bar
+	•	Card
+
+Energy Ring
+
+Gebruik exact stat-ring token.
+
+Geen custom gradient.
+
+⸻
+
+Capacity Forecast Bar
+
+Gebruik bestaande progress component:
+
+.progress {
+  height: 6px;
+}
+.progress-fill {
+  background: var(--accent-primary);
+}
+
+Als overload:
+
+.progress-fill {
+  background: var(--accent-amber);
+}
+
+Geen rode kleuren.
+
+⸻
+
+Load Breakdown Cards
+
+Gewone .card elevation 1.
+
+Geen glow tenzij overload warning.
+
+⸻
+
+4. PLANNING HUB — DESIGN AANPASSING
+
+Planning moet platter voelen.
+
+Dus:
+	•	elevation 1 only
+	•	geen glow
+	•	geen accent borders
+	•	minder visuele drama
+
+Active tab:
+
+border-bottom: 2px solid var(--accent-primary);
+
+Conform nav animation spec.
+
+⸻
+
+5. PROGRESSION PAGE — XP CARD
+
+XP card gebruikt exact wat al in skill tree spec staat.
+
+<section class="card">
+  <h3>Level 6</h3>
+  <div class="progress">
+    <div class="progress-fill"></div>
+  </div>
+  <p class="text-soft">720 / 1000 XP</p>
+</section>
+
+Skill nodes:
+120px
+border 1px soft
+unlock glow = primary glow
+
+Geen nieuwe node variant.
+
+⸻
+
+6. FRICTION INDICATOR — SUBTIEL
+
+Geen icon spam.
+
+Optie 1:
+Subtiele border-left 2px accent-amber
+
+Optie 2:
+Mini badge (10px radius, bg-elevated)
+
+Geen glow.
+Geen rood.
+
+⸻
+
+7. SMART SUGGESTION PANEL
+
+Wordt gewoon:
+
+<div class="card">
+  <h3>Suggested</h3>
+  ...
+</div>
+
+Geen speciale stijl.
+
+En volgens effect rule:
+Slechts één glow per screen.
+
+Dus als Active Mission al glow heeft:
+Suggestions mogen géén glow hebben.
+
+⸻
+
+8. HIËRARCHIE CONTROLE
+
+Per scherm:
+
+Element	Elevation
+Background	0
+Cards	1
+Active Mission	2
+Modal	3
+Overlay	4
+
+Geen afwijkingen.
+
+⸻
+
+9. WAT NIET TOEGEVOEGD WORDT
+	•	Geen gradient borders
+	•	Geen extra glass
+	•	Geen extra glow types
+	•	Geen custom shadows
+	•	Geen blur in normale cards
+	•	Geen animatie > 0.3s
+

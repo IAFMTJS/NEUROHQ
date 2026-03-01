@@ -1,0 +1,13 @@
+diff --git a/node_modules/next/dist/lib/typescript/runTypeCheck.js b/node_modules/next/dist/lib/typescript/runTypeCheck.js
+index ff91b4f..097172f 100644
+--- a/node_modules/next/dist/lib/typescript/runTypeCheck.js
++++ b/node_modules/next/dist/lib/typescript/runTypeCheck.js
+@@ -106,7 +106,7 @@ async function runTypeCheck(typescript, baseDir, distDir, tsConfigPath, cacheDir
+                 ...options,
+                 composite: false,
+                 incremental: true,
+-                tsBuildInfoFile: _path.default.join(cacheDir, '.tsbuildinfo')
++                tsBuildInfoFile: _path.default.join(cacheDir, '.tsbuildinfo').replace(/\\/g, '/')
+             }
+         });
+     } else {

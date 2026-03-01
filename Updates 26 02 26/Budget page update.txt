@@ -1,0 +1,415 @@
+
+🧠 DOEL
+
+De Budget Page wordt geen losse adminpagina meer.
+
+Ze wordt een Performance Support Module binnen het Dark Commander ecosysteem.
+
+Architectuurdoel:
+	•	Rustig
+	•	Modulair
+	•	Game-overlay geïntegreerd
+	•	Geen visuele chaos
+	•	Alles gekoppeld aan core state
+
+⸻
+
+🏗 OVERZICHT NIEUWE STRUCTUUR
+
+Budget krijgt 4 interne tabs (geen aparte screens in nav):
+	1.	Overview (Commander View)
+	2.	Tactical Control
+	3.	Analysis
+	4.	Goals & Recurring
+
+Dit zijn géén nieuwe designcomponenten.
+Alles gebruikt:
+	•	.container
+	•	.card
+	•	.progress
+	•	.primary-btn
+	•	elevation system
+	•	token colors
+
+Geen nieuwe stijl.
+
+⸻
+
+🔹 TAB 1 — OVERVIEW (DEFAULT)
+
+Doel: 80% use case. Calm. Overzicht.
+
+Layout Volgorde (strict spacing rules)
+
+.container
+header
+card: Financial Snapshot
+card: Discipline Index
+card: Risk Insight
+card: Weekly Performance
+primary button
+
+⸻
+
+1️⃣ Financial Snapshot Card
+
+Inhoud:
+	•	Remaining this month
+	•	Safe daily spend
+	•	Days until income
+
+Gebruik:
+.card
+H3 title
+2–3 stat rows
+Subtle border-soft
+Geen glow tenzij critical
+
+State logic:
+
+If remaining < 0:
+	•	border accent-amber
+	•	discipline -5
+	•	optional toast warning
+
+⸻
+
+2️⃣ Discipline Index Card
+
+Dit wordt echte metric.
+
+Formule voorbeeld:
+
+Base 100
+	•	overspend penalty
+	•	impulse penalty
+	•	missed log penalty
+
+	•	safe day bonus
+	•	weekly review bonus
+
+Weergave:
+
+H3: Discipline Index
+Progress bar (0–100)
+Caption small text:
+“Stable” / “Declining” / “Critical”
+
+Geen neon.
+Geen bounce.
+Alleen progress-fill.
+
+⸻
+
+3️⃣ Risk Insight Card
+
+Slechts 1 insight tegelijk.
+Volgens effect priority rule.
+
+State levels:
+
+Normal → soft border
+Warning → amber border
+Critical → amber glow (max 1 strong glow per screen)
+
+Content voorbeeld:
+
+“Spending velocity exceeds weekly buffer.”
+
+Geen alarmerende rood.
+Geen paniek.
+
+⸻
+
+4️⃣ Weekly Performance Card
+
+Inhoud:
+	•	Days under budget
+	•	XP earned from discipline
+	•	Small line chart (accent-primary only)
+
+Charts moeten volgen:
+	•	accent-primary
+	•	grid rgba(255,255,255,0.05)
+	•	radius 10px
+
+Geen multi-color.
+
+⸻
+
+5️⃣ Primary Action
+
+Button:
+ADD EXPENSE
+
+Full width.
+Gradient volgens design system.
+Geen extra glow.
+
+⸻
+
+🔹 TAB 2 — TACTICAL CONTROL
+
+Dit is gedragslaag.
+
+Layout:
+	•	Card: Daily Control Missions
+	•	Card: Category Spending
+	•	Card: Entry Quick Log
+
+⸻
+
+1️⃣ Daily Control Missions
+
+Budget wordt mission type.
+
+Voorbeeld:
+
+☐ Stay under safe spend (+20 XP)
+☐ Log all expenses (+10 XP)
+☐ No impulse purchases (+15 XP)
+
+Complete → completeMission()
+→ addXP()
+→ updateStreak()
+→ checkAchievements()
+
+Hier koppel je budget aan core engine (Step 6 & 7).
+
+⸻
+
+2️⃣ Category Spending
+
+Donut chart.
+Max 4 categorieën zichtbaar.
+Rest collapsed.
+
+Gebruik alleen:
+accent-primary
+accent-cyan
+accent-amber
+soft grey
+
+Onder chart:
+progress bars per category
+Budget vs Spent
+
+No rainbow.
+
+⸻
+
+3️⃣ Quick Log
+
+Datum
+Amount
+Category
+Tag: Planned / Impulse / Necessary
+
+Primary button:
+Log Expense
+
+If impulse:
+Load +5
+Discipline -3
+
+⸻
+
+🔹 TAB 3 — ANALYSIS
+
+Dit is deep dive.
+
+Layout:
+	•	Performance Summary
+	•	Cognitive Load Trend
+	•	Spending Pattern Detection
+
+⸻
+
+1️⃣ Performance Summary
+
+Stats:
+	•	Budget accuracy %
+	•	Mission completion %
+	•	Discipline trend
+
+Line chart accent-primary.
+
+⸻
+
+2️⃣ Cognitive Load Trend
+
+Load is gevoed door:
+	•	Overspend
+	•	Active missions
+	•	Impulse tags
+	•	Missed logs
+
+Chart:
+Single accent line.
+No fill glow.
+
+⸻
+
+3️⃣ Pattern Detection
+
+Auto-generated insight:
+
+“Impulse spending highest between 19:00–22:00”
+
+Dit is waarde.
+Niet gewoon cijfers.
+
+⸻
+
+🔹 TAB 4 — GOALS & RECURRING
+
+Splits van main scroll.
+
+Layout:
+
+Card: Active Goals
+Card: Recurring Templates
+Card: Achievements related to finance
+
+⸻
+
+Goals
+
+Goal progress bar.
+Deadline.
+Projected completion.
+
+If on track:
+small cyan accent
+
+If behind:
+amber border
+
+⸻
+
+Recurring
+
+Template system:
+
+Rent
+Subscriptions
+Insurance
+
+Auto-create entries.
+Auto-check monthly variance.
+
+⸻
+
+🧠 INTEGRATIE MET CORE SYSTEM
+
+Nu wordt het krachtig.
+
+⸻
+
+1️⃣ Budget beïnvloedt Stats
+
+If overspend:
+drainEnergy(5)
+
+If 3 safe days:
++5 energy
+
+If weekly review done:
++20 XP
+
+⸻
+
+2️⃣ Skill Tree Integration
+
+Finance Control I:
+Reduce overspend energy penalty by 20%
+
+Impulse Shield:
+Extend freeze 24h → 48h
+
+Budget Mastery:
++5% XP from discipline missions
+
+Skills moeten effect hebben.
+Niet decoratief zijn.
+
+⸻
+
+🎯 DISCIPLINE INDEX DEFINITIE
+
+Nieuwe structuur:
+
+Discipline = weighted score:
+
+40% budget adherence
+20% impulse control
+20% logging consistency
+20% weekly review
+
+Geen random getal meer.
+
+⸻
+
+🧩 VISUAL CONSISTENCY CHECK
+
+Wat mag NIET veranderen:
+	•	–bg-main
+	•	–bg-card
+	•	accent-primary #2563EB
+	•	accent-cyan #22D3EE
+	•	accent-amber #F59E0B
+	•	border-soft
+	•	shadow-card
+
+Geen nieuwe gradients.
+Geen extra blur.
+Geen neon permanent.
+
+Effect caps respecteren.
+
+⸻
+
+🚨 WAT VERDWIJNT
+	•	Overvolle lange scroll
+	•	Discipline score zonder logica
+	•	Te veel insight boxes
+	•	Mascot op budget screen dominant
+
+Mascot mag klein icon.
+Niet hero.
+
+⸻
+
+🧠 PSYCHOLOGISCHE FLOW
+
+Gebruiker komt binnen:
+
+Overview → ziet status
+↓
+Ziet risico
+↓
+Gaat naar Tactical
+↓
+Voert actie uit
+↓
+Krijgt XP
+↓
+Ziet progressie
+
+Dat is loop.
+
+Nu is het:
+Scroll → scroll → scroll → cijfers → exit.
+
+⸻
+
+🏁 RESULTAAT
+
+Je krijgt:
+	•	Minder visuele ruis
+	•	Meer systeemcoherentie
+	•	Budget als gedragsengine
+	•	Game-mechanics logisch geïntegreerd
+	•	Professionele tool uitstraling
+	•	Geen ADHD gimmick vibe
+

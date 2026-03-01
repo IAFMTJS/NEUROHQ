@@ -1,0 +1,1111 @@
+365 Philosophical Quotes (Structured)
+
+id: 1 name: Marcus Aurelius era: Ancient Rome (121–180 AD) quote: On
+virtue: Desire without discipline becomes a chain.
+
+id: 2 name: Plato era: Ancient Greece (427–347 BC) quote: On ego: He who
+seeks truth must risk loneliness.
+
+id: 3 name: Marcus Aurelius era: Ancient Rome (121–180 AD) quote: On
+love: What you avoid controls you more than what you confront.
+
+id: 4 name: Fyodor Dostoevsky era: 19th Century (1821–1881) quote: On
+suffering: Silence often speaks louder than argument.
+
+id: 5 name: Plato era: Ancient Greece (427–347 BC) quote: On ego: To
+know oneself is to disturb oneself.
+
+id: 6 name: Arthur Schopenhauer era: 19th Century (1788–1860) quote: On
+order: To know oneself is to disturb oneself.
+
+id: 7 name: Fyodor Dostoevsky era: 19th Century (1821–1881) quote: On
+silence: Discipline is the quiet architect of greatness.
+
+id: 8 name: Sigmund Freud era: 19th–20th Century (1856–1939) quote: On
+power: Freedom begins where excuses end.
+
+id: 9 name: Epictetus era: Ancient Greece/Rome (50–135 AD) quote: On
+character: Suffering reveals what comfort carefully hides.
+
+id: 10 name: Epictetus era: Ancient Greece/Rome (50–135 AD) quote: On
+courage: Desire without discipline becomes a chain.
+
+id: 11 name: Arthur Schopenhauer era: 19th Century (1788–1860) quote: On
+fear: The man who masters himself fears little else.
+
+id: 12 name: Friedrich Nietzsche era: 19th Century (1844–1900) quote: On
+truth: Every fear hides a desire in disguise.
+
+id: 13 name: Fyodor Dostoevsky era: 19th Century (1821–1881) quote: On
+self-knowledge: The ego fears what the soul requires.
+
+id: 14 name: Blaise Pascal era: 17th Century (1623–1662) quote: On ego:
+Freedom begins where excuses end.
+
+id: 15 name: Epictetus era: Ancient Greece/Rome (50–135 AD) quote: On
+habit: Responsibility is the price of strength.
+
+id: 16 name: Friedrich Nietzsche era: 19th Century (1844–1900) quote: On
+self-knowledge: The ego fears what the soul requires.
+
+id: 17 name: Fyodor Dostoevsky era: 19th Century (1821–1881) quote: On
+time: The soul grows strongest where it is most tested.
+
+id: 18 name: Blaise Pascal era: 17th Century (1623–1662) quote: On
+faith: Doubt is the doorway to deeper faith.
+
+id: 19 name: Ralph Waldo Emerson era: 19th Century (1803–1882) quote: On
+death: The man who masters himself fears little else.
+
+id: 20 name: Plato era: Ancient Greece (427–347 BC) quote: On power: The
+soul grows strongest where it is most tested.
+
+id: 21 name: Epictetus era: Ancient Greece/Rome (50–135 AD) quote: On
+responsibility: Time exposes illusions without mercy.
+
+id: 22 name: Seneca era: Ancient Rome (4 BC–65 AD) quote: On doubt:
+Desire without discipline becomes a chain.
+
+id: 23 name: Epictetus era: Ancient Greece/Rome (50–135 AD) quote: On
+silence: The ego fears what the soul requires.
+
+id: 24 name: Seneca era: Ancient Rome (4 BC–65 AD) quote: On fate: We
+suffer more in imagination than in reality.
+
+id: 25 name: Friedrich Nietzsche era: 19th Century (1844–1900) quote: On
+truth: Doubt is the doorway to deeper faith.
+
+id: 26 name: Blaise Pascal era: 17th Century (1623–1662) quote: On
+freedom: The soul grows strongest where it is most tested.
+
+id: 27 name: Ralph Waldo Emerson era: 19th Century (1803–1882) quote: On
+anger: Freedom begins where excuses end.
+
+id: 28 name: Plato era: Ancient Greece (427–347 BC) quote: On virtue: It
+is not the event itself, but our judgment of it, that shapes our
+destiny.
+
+id: 29 name: Ralph Waldo Emerson era: 19th Century (1803–1882) quote: On
+virtue: The soul grows strongest where it is most tested.
+
+id: 30 name: Seneca era: Ancient Rome (4 BC–65 AD) quote: On discipline:
+Discipline is the quiet architect of greatness.
+
+id: 31 name: Plato era: Ancient Greece (427–347 BC) quote: On
+self-knowledge: It is not the event itself, but our judgment of it, that
+shapes our destiny.
+
+id: 32 name: Arthur Schopenhauer era: 19th Century (1788–1860) quote: On
+self-knowledge: It is not the event itself, but our judgment of it, that
+shapes our destiny.
+
+id: 33 name: Seneca era: Ancient Rome (4 BC–65 AD) quote: On desire:
+Freedom begins where excuses end.
+
+id: 34 name: Fyodor Dostoevsky era: 19th Century (1821–1881) quote: On
+anger: Doubt is the doorway to deeper faith.
+
+id: 35 name: Blaise Pascal era: 17th Century (1623–1662) quote: On
+suffering: To know oneself is to disturb oneself.
+
+id: 36 name: Friedrich Nietzsche era: 19th Century (1844–1900) quote: On
+faith: Every fear hides a desire in disguise.
+
+id: 37 name: Epictetus era: Ancient Greece/Rome (50–135 AD) quote: On
+suffering: The man who masters himself fears little else.
+
+id: 38 name: Sigmund Freud era: 19th–20th Century (1856–1939) quote: On
+doubt: Chaos is merely order waiting for understanding.
+
+id: 39 name: Arthur Schopenhauer era: 19th Century (1788–1860) quote: On
+fear: Time exposes illusions without mercy.
+
+id: 40 name: Plato era: Ancient Greece (427–347 BC) quote: On habit: To
+know oneself is to disturb oneself.
+
+id: 41 name: Plato era: Ancient Greece (427–347 BC) quote: On doubt: The
+man who masters himself fears little else.
+
+id: 42 name: Sigmund Freud era: 19th–20th Century (1856–1939) quote: On
+ego: Silence often speaks louder than argument.
+
+id: 43 name: Seneca era: Ancient Rome (4 BC–65 AD) quote: On
+self-knowledge: Responsibility is the price of strength.
+
+id: 44 name: Friedrich Nietzsche era: 19th Century (1844–1900) quote: On
+truth: It is not the event itself, but our judgment of it, that shapes
+our destiny.
+
+id: 45 name: Marcus Aurelius era: Ancient Rome (121–180 AD) quote: On
+time: Chaos is merely order waiting for understanding.
+
+id: 46 name: Sigmund Freud era: 19th–20th Century (1856–1939) quote: On
+order: It is not the event itself, but our judgment of it, that shapes
+our destiny.
+
+id: 47 name: Marcus Aurelius era: Ancient Rome (121–180 AD) quote: On
+fate: Time exposes illusions without mercy.
+
+id: 48 name: Epictetus era: Ancient Greece/Rome (50–135 AD) quote: On
+time: Desire without discipline becomes a chain.
+
+id: 49 name: Sigmund Freud era: 19th–20th Century (1856–1939) quote: On
+ego: We suffer more in imagination than in reality.
+
+id: 50 name: Plato era: Ancient Greece (427–347 BC) quote: On doubt:
+Responsibility is the price of strength.
+
+id: 51 name: Blaise Pascal era: 17th Century (1623–1662) quote: On
+discipline: Freedom begins where excuses end.
+
+id: 52 name: Ralph Waldo Emerson era: 19th Century (1803–1882) quote: On
+ego: Desire without discipline becomes a chain.
+
+id: 53 name: Plato era: Ancient Greece (427–347 BC) quote: On death:
+Freedom begins where excuses end.
+
+id: 54 name: Sigmund Freud era: 19th–20th Century (1856–1939) quote: On
+ego: Freedom begins where excuses end.
+
+id: 55 name: Sigmund Freud era: 19th–20th Century (1856–1939) quote: On
+chaos: Suffering reveals what comfort carefully hides.
+
+id: 56 name: Friedrich Nietzsche era: 19th Century (1844–1900) quote: On
+reason: We suffer more in imagination than in reality.
+
+id: 57 name: Epictetus era: Ancient Greece/Rome (50–135 AD) quote: On
+chaos: To know oneself is to disturb oneself.
+
+id: 58 name: Friedrich Nietzsche era: 19th Century (1844–1900) quote: On
+responsibility: Time exposes illusions without mercy.
+
+id: 59 name: Plato era: Ancient Greece (427–347 BC) quote: On fear: Time
+exposes illusions without mercy.
+
+id: 60 name: Sigmund Freud era: 19th–20th Century (1856–1939) quote: On
+fear: Silence often speaks louder than argument.
+
+id: 61 name: Arthur Schopenhauer era: 19th Century (1788–1860) quote: On
+fate: Suffering reveals what comfort carefully hides.
+
+id: 62 name: Marcus Aurelius era: Ancient Rome (121–180 AD) quote: On
+responsibility: Silence often speaks louder than argument.
+
+id: 63 name: Plato era: Ancient Greece (427–347 BC) quote: On death:
+Silence often speaks louder than argument.
+
+id: 64 name: Friedrich Nietzsche era: 19th Century (1844–1900) quote: On
+order: The ego fears what the soul requires.
+
+id: 65 name: Friedrich Nietzsche era: 19th Century (1844–1900) quote: On
+anger: We suffer more in imagination than in reality.
+
+id: 66 name: Plato era: Ancient Greece (427–347 BC) quote: On death:
+Chaos is merely order waiting for understanding.
+
+id: 67 name: Blaise Pascal era: 17th Century (1623–1662) quote: On
+reason: He who seeks truth must risk loneliness.
+
+id: 68 name: Fyodor Dostoevsky era: 19th Century (1821–1881) quote: On
+silence: Discipline is the quiet architect of greatness.
+
+id: 69 name: Plato era: Ancient Greece (427–347 BC) quote: On habit: It
+is not the event itself, but our judgment of it, that shapes our
+destiny.
+
+id: 70 name: Plato era: Ancient Greece (427–347 BC) quote: On
+self-knowledge: Habit shapes character more than intention ever could.
+
+id: 71 name: Seneca era: Ancient Rome (4 BC–65 AD) quote: On virtue:
+Every fear hides a desire in disguise.
+
+id: 72 name: Marcus Aurelius era: Ancient Rome (121–180 AD) quote: On
+reason: The ego fears what the soul requires.
+
+id: 73 name: Epictetus era: Ancient Greece/Rome (50–135 AD) quote: On
+order: Desire without discipline becomes a chain.
+
+id: 74 name: Ralph Waldo Emerson era: 19th Century (1803–1882) quote: On
+love: The ego fears what the soul requires.
+
+id: 75 name: Marcus Aurelius era: Ancient Rome (121–180 AD) quote: On
+reason: The soul grows strongest where it is most tested.
+
+id: 76 name: Friedrich Nietzsche era: 19th Century (1844–1900) quote: On
+ego: The man who masters himself fears little else.
+
+id: 77 name: Arthur Schopenhauer era: 19th Century (1788–1860) quote: On
+truth: Freedom begins where excuses end.
+
+id: 78 name: Ralph Waldo Emerson era: 19th Century (1803–1882) quote: On
+silence: The soul grows strongest where it is most tested.
+
+id: 79 name: Epictetus era: Ancient Greece/Rome (50–135 AD) quote: On
+death: Time exposes illusions without mercy.
+
+id: 80 name: Fyodor Dostoevsky era: 19th Century (1821–1881) quote: On
+ego: The ego fears what the soul requires.
+
+id: 81 name: Ralph Waldo Emerson era: 19th Century (1803–1882) quote: On
+reason: The soul grows strongest where it is most tested.
+
+id: 82 name: Friedrich Nietzsche era: 19th Century (1844–1900) quote: On
+doubt: The soul grows strongest where it is most tested.
+
+id: 83 name: Fyodor Dostoevsky era: 19th Century (1821–1881) quote: On
+suffering: The ego fears what the soul requires.
+
+id: 84 name: Epictetus era: Ancient Greece/Rome (50–135 AD) quote: On
+doubt: Every fear hides a desire in disguise.
+
+id: 85 name: Epictetus era: Ancient Greece/Rome (50–135 AD) quote: On
+death: Habit shapes character more than intention ever could.
+
+id: 86 name: Fyodor Dostoevsky era: 19th Century (1821–1881) quote: On
+discipline: Freedom begins where excuses end.
+
+id: 87 name: Plato era: Ancient Greece (427–347 BC) quote: On chaos:
+Habit shapes character more than intention ever could.
+
+id: 88 name: Friedrich Nietzsche era: 19th Century (1844–1900) quote: On
+reason: The ego fears what the soul requires.
+
+id: 89 name: Seneca era: Ancient Rome (4 BC–65 AD) quote: On reason:
+Freedom begins where excuses end.
+
+id: 90 name: Plato era: Ancient Greece (427–347 BC) quote: On reason:
+Doubt is the doorway to deeper faith.
+
+id: 91 name: Fyodor Dostoevsky era: 19th Century (1821–1881) quote: On
+responsibility: Doubt is the doorway to deeper faith.
+
+id: 92 name: Sigmund Freud era: 19th–20th Century (1856–1939) quote: On
+truth: The ego fears what the soul requires.
+
+id: 93 name: Arthur Schopenhauer era: 19th Century (1788–1860) quote: On
+doubt: Doubt is the doorway to deeper faith.
+
+id: 94 name: Arthur Schopenhauer era: 19th Century (1788–1860) quote: On
+reason: We suffer more in imagination than in reality.
+
+id: 95 name: Epictetus era: Ancient Greece/Rome (50–135 AD) quote: On
+responsibility: Time exposes illusions without mercy.
+
+id: 96 name: Epictetus era: Ancient Greece/Rome (50–135 AD) quote: On
+self-knowledge: Every fear hides a desire in disguise.
+
+id: 97 name: Marcus Aurelius era: Ancient Rome (121–180 AD) quote: On
+responsibility: The ego fears what the soul requires.
+
+id: 98 name: Plato era: Ancient Greece (427–347 BC) quote: On fear:
+Suffering reveals what comfort carefully hides.
+
+id: 99 name: Friedrich Nietzsche era: 19th Century (1844–1900) quote: On
+suffering: What you avoid controls you more than what you confront.
+
+id: 100 name: Sigmund Freud era: 19th–20th Century (1856–1939) quote: On
+anger: To know oneself is to disturb oneself.
+
+id: 101 name: Ralph Waldo Emerson era: 19th Century (1803–1882) quote:
+On self-knowledge: It is not the event itself, but our judgment of it,
+that shapes our destiny.
+
+id: 102 name: Arthur Schopenhauer era: 19th Century (1788–1860) quote:
+On reason: It is not the event itself, but our judgment of it, that
+shapes our destiny.
+
+id: 103 name: Ralph Waldo Emerson era: 19th Century (1803–1882) quote:
+On discipline: We suffer more in imagination than in reality.
+
+id: 104 name: Blaise Pascal era: 17th Century (1623–1662) quote: On
+suffering: Every fear hides a desire in disguise.
+
+id: 105 name: Marcus Aurelius era: Ancient Rome (121–180 AD) quote: On
+virtue: The soul grows strongest where it is most tested.
+
+id: 106 name: Fyodor Dostoevsky era: 19th Century (1821–1881) quote: On
+order: We suffer more in imagination than in reality.
+
+id: 107 name: Seneca era: Ancient Rome (4 BC–65 AD) quote: On order:
+Time exposes illusions without mercy.
+
+id: 108 name: Ralph Waldo Emerson era: 19th Century (1803–1882) quote:
+On virtue: Time exposes illusions without mercy.
+
+id: 109 name: Epictetus era: Ancient Greece/Rome (50–135 AD) quote: On
+silence: Doubt is the doorway to deeper faith.
+
+id: 110 name: Fyodor Dostoevsky era: 19th Century (1821–1881) quote: On
+doubt: What you avoid controls you more than what you confront.
+
+id: 111 name: Ralph Waldo Emerson era: 19th Century (1803–1882) quote:
+On order: It is not the event itself, but our judgment of it, that
+shapes our destiny.
+
+id: 112 name: Seneca era: Ancient Rome (4 BC–65 AD) quote: On reason:
+The man who masters himself fears little else.
+
+id: 113 name: Epictetus era: Ancient Greece/Rome (50–135 AD) quote: On
+anger: Discipline is the quiet architect of greatness.
+
+id: 114 name: Plato era: Ancient Greece (427–347 BC) quote: On anger:
+Habit shapes character more than intention ever could.
+
+id: 115 name: Ralph Waldo Emerson era: 19th Century (1803–1882) quote:
+On chaos: Silence often speaks louder than argument.
+
+id: 116 name: Arthur Schopenhauer era: 19th Century (1788–1860) quote:
+On reason: The man who masters himself fears little else.
+
+id: 117 name: Seneca era: Ancient Rome (4 BC–65 AD) quote: On love:
+Suffering reveals what comfort carefully hides.
+
+id: 118 name: Fyodor Dostoevsky era: 19th Century (1821–1881) quote: On
+truth: He who seeks truth must risk loneliness.
+
+id: 119 name: Arthur Schopenhauer era: 19th Century (1788–1860) quote:
+On ego: He who seeks truth must risk loneliness.
+
+id: 120 name: Blaise Pascal era: 17th Century (1623–1662) quote: On
+courage: Desire without discipline becomes a chain.
+
+id: 121 name: Plato era: Ancient Greece (427–347 BC) quote: On love: To
+know oneself is to disturb oneself.
+
+id: 122 name: Plato era: Ancient Greece (427–347 BC) quote: On desire:
+Habit shapes character more than intention ever could.
+
+id: 123 name: Ralph Waldo Emerson era: 19th Century (1803–1882) quote:
+On courage: He who seeks truth must risk loneliness.
+
+id: 124 name: Friedrich Nietzsche era: 19th Century (1844–1900) quote:
+On silence: Responsibility is the price of strength.
+
+id: 125 name: Arthur Schopenhauer era: 19th Century (1788–1860) quote:
+On self-knowledge: The ego fears what the soul requires.
+
+id: 126 name: Plato era: Ancient Greece (427–347 BC) quote: On ego: The
+ego fears what the soul requires.
+
+id: 127 name: Epictetus era: Ancient Greece/Rome (50–135 AD) quote: On
+reason: Desire without discipline becomes a chain.
+
+id: 128 name: Fyodor Dostoevsky era: 19th Century (1821–1881) quote: On
+habit: Suffering reveals what comfort carefully hides.
+
+id: 129 name: Ralph Waldo Emerson era: 19th Century (1803–1882) quote:
+On love: It is not the event itself, but our judgment of it, that shapes
+our destiny.
+
+id: 130 name: Fyodor Dostoevsky era: 19th Century (1821–1881) quote: On
+reason: Suffering reveals what comfort carefully hides.
+
+id: 131 name: Fyodor Dostoevsky era: 19th Century (1821–1881) quote: On
+self-knowledge: Suffering reveals what comfort carefully hides.
+
+id: 132 name: Blaise Pascal era: 17th Century (1623–1662) quote: On
+fear: Discipline is the quiet architect of greatness.
+
+id: 133 name: Fyodor Dostoevsky era: 19th Century (1821–1881) quote: On
+responsibility: The man who masters himself fears little else.
+
+id: 134 name: Seneca era: Ancient Rome (4 BC–65 AD) quote: On ego:
+Suffering reveals what comfort carefully hides.
+
+id: 135 name: Seneca era: Ancient Rome (4 BC–65 AD) quote: On order:
+Suffering reveals what comfort carefully hides.
+
+id: 136 name: Blaise Pascal era: 17th Century (1623–1662) quote: On
+responsibility: Time exposes illusions without mercy.
+
+id: 137 name: Arthur Schopenhauer era: 19th Century (1788–1860) quote:
+On character: Desire without discipline becomes a chain.
+
+id: 138 name: Ralph Waldo Emerson era: 19th Century (1803–1882) quote:
+On order: The man who masters himself fears little else.
+
+id: 139 name: Sigmund Freud era: 19th–20th Century (1856–1939) quote: On
+freedom: Doubt is the doorway to deeper faith.
+
+id: 140 name: Seneca era: Ancient Rome (4 BC–65 AD) quote: On reason:
+Silence often speaks louder than argument.
+
+id: 141 name: Arthur Schopenhauer era: 19th Century (1788–1860) quote:
+On suffering: The soul grows strongest where it is most tested.
+
+id: 142 name: Friedrich Nietzsche era: 19th Century (1844–1900) quote:
+On fate: He who seeks truth must risk loneliness.
+
+id: 143 name: Epictetus era: Ancient Greece/Rome (50–135 AD) quote: On
+reason: Every fear hides a desire in disguise.
+
+id: 144 name: Fyodor Dostoevsky era: 19th Century (1821–1881) quote: On
+fear: What you avoid controls you more than what you confront.
+
+id: 145 name: Plato era: Ancient Greece (427–347 BC) quote: On virtue:
+He who seeks truth must risk loneliness.
+
+id: 146 name: Marcus Aurelius era: Ancient Rome (121–180 AD) quote: On
+anger: The ego fears what the soul requires.
+
+id: 147 name: Friedrich Nietzsche era: 19th Century (1844–1900) quote:
+On order: We suffer more in imagination than in reality.
+
+id: 148 name: Arthur Schopenhauer era: 19th Century (1788–1860) quote:
+On silence: Suffering reveals what comfort carefully hides.
+
+id: 149 name: Arthur Schopenhauer era: 19th Century (1788–1860) quote:
+On doubt: Habit shapes character more than intention ever could.
+
+id: 150 name: Fyodor Dostoevsky era: 19th Century (1821–1881) quote: On
+desire: Doubt is the doorway to deeper faith.
+
+id: 151 name: Arthur Schopenhauer era: 19th Century (1788–1860) quote:
+On freedom: Time exposes illusions without mercy.
+
+id: 152 name: Epictetus era: Ancient Greece/Rome (50–135 AD) quote: On
+order: Doubt is the doorway to deeper faith.
+
+id: 153 name: Seneca era: Ancient Rome (4 BC–65 AD) quote: On anger:
+Silence often speaks louder than argument.
+
+id: 154 name: Plato era: Ancient Greece (427–347 BC) quote: On truth: He
+who seeks truth must risk loneliness.
+
+id: 155 name: Blaise Pascal era: 17th Century (1623–1662) quote: On
+courage: He who seeks truth must risk loneliness.
+
+id: 156 name: Arthur Schopenhauer era: 19th Century (1788–1860) quote:
+On faith: He who seeks truth must risk loneliness.
+
+id: 157 name: Marcus Aurelius era: Ancient Rome (121–180 AD) quote: On
+faith: Freedom begins where excuses end.
+
+id: 158 name: Plato era: Ancient Greece (427–347 BC) quote: On love: The
+ego fears what the soul requires.
+
+id: 159 name: Ralph Waldo Emerson era: 19th Century (1803–1882) quote:
+On character: We suffer more in imagination than in reality.
+
+id: 160 name: Sigmund Freud era: 19th–20th Century (1856–1939) quote: On
+reason: Habit shapes character more than intention ever could.
+
+id: 161 name: Arthur Schopenhauer era: 19th Century (1788–1860) quote:
+On fear: Silence often speaks louder than argument.
+
+id: 162 name: Marcus Aurelius era: Ancient Rome (121–180 AD) quote: On
+silence: Time exposes illusions without mercy.
+
+id: 163 name: Fyodor Dostoevsky era: 19th Century (1821–1881) quote: On
+courage: He who seeks truth must risk loneliness.
+
+id: 164 name: Ralph Waldo Emerson era: 19th Century (1803–1882) quote:
+On suffering: Discipline is the quiet architect of greatness.
+
+id: 165 name: Marcus Aurelius era: Ancient Rome (121–180 AD) quote: On
+chaos: The man who masters himself fears little else.
+
+id: 166 name: Plato era: Ancient Greece (427–347 BC) quote: On reason:
+The ego fears what the soul requires.
+
+id: 167 name: Fyodor Dostoevsky era: 19th Century (1821–1881) quote: On
+reason: Discipline is the quiet architect of greatness.
+
+id: 168 name: Seneca era: Ancient Rome (4 BC–65 AD) quote: On chaos:
+Freedom begins where excuses end.
+
+id: 169 name: Fyodor Dostoevsky era: 19th Century (1821–1881) quote: On
+responsibility: He who seeks truth must risk loneliness.
+
+id: 170 name: Fyodor Dostoevsky era: 19th Century (1821–1881) quote: On
+power: Discipline is the quiet architect of greatness.
+
+id: 171 name: Marcus Aurelius era: Ancient Rome (121–180 AD) quote: On
+self-knowledge: Silence often speaks louder than argument.
+
+id: 172 name: Fyodor Dostoevsky era: 19th Century (1821–1881) quote: On
+freedom: Time exposes illusions without mercy.
+
+id: 173 name: Blaise Pascal era: 17th Century (1623–1662) quote: On
+virtue: The ego fears what the soul requires.
+
+id: 174 name: Friedrich Nietzsche era: 19th Century (1844–1900) quote:
+On fate: The man who masters himself fears little else.
+
+id: 175 name: Epictetus era: Ancient Greece/Rome (50–135 AD) quote: On
+suffering: The man who masters himself fears little else.
+
+id: 176 name: Blaise Pascal era: 17th Century (1623–1662) quote: On
+doubt: Responsibility is the price of strength.
+
+id: 177 name: Arthur Schopenhauer era: 19th Century (1788–1860) quote:
+On freedom: The ego fears what the soul requires.
+
+id: 178 name: Fyodor Dostoevsky era: 19th Century (1821–1881) quote: On
+order: What you avoid controls you more than what you confront.
+
+id: 179 name: Epictetus era: Ancient Greece/Rome (50–135 AD) quote: On
+courage: Habit shapes character more than intention ever could.
+
+id: 180 name: Fyodor Dostoevsky era: 19th Century (1821–1881) quote: On
+self-knowledge: Chaos is merely order waiting for understanding.
+
+id: 181 name: Blaise Pascal era: 17th Century (1623–1662) quote: On
+truth: The soul grows strongest where it is most tested.
+
+id: 182 name: Friedrich Nietzsche era: 19th Century (1844–1900) quote:
+On anger: What you avoid controls you more than what you confront.
+
+id: 183 name: Sigmund Freud era: 19th–20th Century (1856–1939) quote: On
+love: Habit shapes character more than intention ever could.
+
+id: 184 name: Arthur Schopenhauer era: 19th Century (1788–1860) quote:
+On death: Every fear hides a desire in disguise.
+
+id: 185 name: Ralph Waldo Emerson era: 19th Century (1803–1882) quote:
+On order: The man who masters himself fears little else.
+
+id: 186 name: Marcus Aurelius era: Ancient Rome (121–180 AD) quote: On
+freedom: Chaos is merely order waiting for understanding.
+
+id: 187 name: Arthur Schopenhauer era: 19th Century (1788–1860) quote:
+On self-knowledge: The soul grows strongest where it is most tested.
+
+id: 188 name: Sigmund Freud era: 19th–20th Century (1856–1939) quote: On
+chaos: Doubt is the doorway to deeper faith.
+
+id: 189 name: Plato era: Ancient Greece (427–347 BC) quote: On ego: The
+man who masters himself fears little else.
+
+id: 190 name: Plato era: Ancient Greece (427–347 BC) quote: On freedom:
+Every fear hides a desire in disguise.
+
+id: 191 name: Sigmund Freud era: 19th–20th Century (1856–1939) quote: On
+fate: Time exposes illusions without mercy.
+
+id: 192 name: Arthur Schopenhauer era: 19th Century (1788–1860) quote:
+On fate: We suffer more in imagination than in reality.
+
+id: 193 name: Ralph Waldo Emerson era: 19th Century (1803–1882) quote:
+On fate: To know oneself is to disturb oneself.
+
+id: 194 name: Seneca era: Ancient Rome (4 BC–65 AD) quote: On truth: To
+know oneself is to disturb oneself.
+
+id: 195 name: Sigmund Freud era: 19th–20th Century (1856–1939) quote: On
+character: Suffering reveals what comfort carefully hides.
+
+id: 196 name: Seneca era: Ancient Rome (4 BC–65 AD) quote: On ego: Time
+exposes illusions without mercy.
+
+id: 197 name: Blaise Pascal era: 17th Century (1623–1662) quote: On
+time: The soul grows strongest where it is most tested.
+
+id: 198 name: Marcus Aurelius era: Ancient Rome (121–180 AD) quote: On
+character: Discipline is the quiet architect of greatness.
+
+id: 199 name: Blaise Pascal era: 17th Century (1623–1662) quote: On
+character: He who seeks truth must risk loneliness.
+
+id: 200 name: Sigmund Freud era: 19th–20th Century (1856–1939) quote: On
+virtue: Freedom begins where excuses end.
+
+id: 201 name: Friedrich Nietzsche era: 19th Century (1844–1900) quote:
+On responsibility: Silence often speaks louder than argument.
+
+id: 202 name: Plato era: Ancient Greece (427–347 BC) quote: On virtue:
+The man who masters himself fears little else.
+
+id: 203 name: Marcus Aurelius era: Ancient Rome (121–180 AD) quote: On
+suffering: Discipline is the quiet architect of greatness.
+
+id: 204 name: Marcus Aurelius era: Ancient Rome (121–180 AD) quote: On
+habit: The ego fears what the soul requires.
+
+id: 205 name: Sigmund Freud era: 19th–20th Century (1856–1939) quote: On
+responsibility: Doubt is the doorway to deeper faith.
+
+id: 206 name: Seneca era: Ancient Rome (4 BC–65 AD) quote: On fate:
+Doubt is the doorway to deeper faith.
+
+id: 207 name: Epictetus era: Ancient Greece/Rome (50–135 AD) quote: On
+death: Doubt is the doorway to deeper faith.
+
+id: 208 name: Arthur Schopenhauer era: 19th Century (1788–1860) quote:
+On responsibility: Discipline is the quiet architect of greatness.
+
+id: 209 name: Friedrich Nietzsche era: 19th Century (1844–1900) quote:
+On faith: Every fear hides a desire in disguise.
+
+id: 210 name: Epictetus era: Ancient Greece/Rome (50–135 AD) quote: On
+anger: To know oneself is to disturb oneself.
+
+id: 211 name: Arthur Schopenhauer era: 19th Century (1788–1860) quote:
+On desire: Chaos is merely order waiting for understanding.
+
+id: 212 name: Arthur Schopenhauer era: 19th Century (1788–1860) quote:
+On power: Desire without discipline becomes a chain.
+
+id: 213 name: Sigmund Freud era: 19th–20th Century (1856–1939) quote: On
+chaos: The ego fears what the soul requires.
+
+id: 214 name: Plato era: Ancient Greece (427–347 BC) quote: On power:
+Time exposes illusions without mercy.
+
+id: 215 name: Seneca era: Ancient Rome (4 BC–65 AD) quote: On ego: Doubt
+is the doorway to deeper faith.
+
+id: 216 name: Ralph Waldo Emerson era: 19th Century (1803–1882) quote:
+On time: Desire without discipline becomes a chain.
+
+id: 217 name: Fyodor Dostoevsky era: 19th Century (1821–1881) quote: On
+silence: Discipline is the quiet architect of greatness.
+
+id: 218 name: Plato era: Ancient Greece (427–347 BC) quote: On ego:
+Responsibility is the price of strength.
+
+id: 219 name: Arthur Schopenhauer era: 19th Century (1788–1860) quote:
+On courage: Silence often speaks louder than argument.
+
+id: 220 name: Plato era: Ancient Greece (427–347 BC) quote: On reason:
+The ego fears what the soul requires.
+
+id: 221 name: Marcus Aurelius era: Ancient Rome (121–180 AD) quote: On
+courage: Anger is a confession of wounded pride.
+
+id: 222 name: Ralph Waldo Emerson era: 19th Century (1803–1882) quote:
+On chaos: Doubt is the doorway to deeper faith.
+
+id: 223 name: Epictetus era: Ancient Greece/Rome (50–135 AD) quote: On
+silence: What you avoid controls you more than what you confront.
+
+id: 224 name: Ralph Waldo Emerson era: 19th Century (1803–1882) quote:
+On ego: We suffer more in imagination than in reality.
+
+id: 225 name: Ralph Waldo Emerson era: 19th Century (1803–1882) quote:
+On faith: Freedom begins where excuses end.
+
+id: 226 name: Fyodor Dostoevsky era: 19th Century (1821–1881) quote: On
+freedom: Habit shapes character more than intention ever could.
+
+id: 227 name: Friedrich Nietzsche era: 19th Century (1844–1900) quote:
+On chaos: Habit shapes character more than intention ever could.
+
+id: 228 name: Friedrich Nietzsche era: 19th Century (1844–1900) quote:
+On ego: Chaos is merely order waiting for understanding.
+
+id: 229 name: Seneca era: Ancient Rome (4 BC–65 AD) quote: On love:
+Freedom begins where excuses end.
+
+id: 230 name: Blaise Pascal era: 17th Century (1623–1662) quote: On
+courage: To know oneself is to disturb oneself.
+
+id: 231 name: Plato era: Ancient Greece (427–347 BC) quote: On reason:
+To know oneself is to disturb oneself.
+
+id: 232 name: Fyodor Dostoevsky era: 19th Century (1821–1881) quote: On
+self-knowledge: Time exposes illusions without mercy.
+
+id: 233 name: Fyodor Dostoevsky era: 19th Century (1821–1881) quote: On
+discipline: It is not the event itself, but our judgment of it, that
+shapes our destiny.
+
+id: 234 name: Sigmund Freud era: 19th–20th Century (1856–1939) quote: On
+chaos: We suffer more in imagination than in reality.
+
+id: 235 name: Epictetus era: Ancient Greece/Rome (50–135 AD) quote: On
+reason: Time exposes illusions without mercy.
+
+id: 236 name: Marcus Aurelius era: Ancient Rome (121–180 AD) quote: On
+character: Suffering reveals what comfort carefully hides.
+
+id: 237 name: Arthur Schopenhauer era: 19th Century (1788–1860) quote:
+On desire: Freedom begins where excuses end.
+
+id: 238 name: Blaise Pascal era: 17th Century (1623–1662) quote: On
+discipline: The ego fears what the soul requires.
+
+id: 239 name: Sigmund Freud era: 19th–20th Century (1856–1939) quote: On
+fear: He who seeks truth must risk loneliness.
+
+id: 240 name: Seneca era: Ancient Rome (4 BC–65 AD) quote: On love:
+Chaos is merely order waiting for understanding.
+
+id: 241 name: Sigmund Freud era: 19th–20th Century (1856–1939) quote: On
+anger: To know oneself is to disturb oneself.
+
+id: 242 name: Arthur Schopenhauer era: 19th Century (1788–1860) quote:
+On self-knowledge: Time exposes illusions without mercy.
+
+id: 243 name: Arthur Schopenhauer era: 19th Century (1788–1860) quote:
+On freedom: Freedom begins where excuses end.
+
+id: 244 name: Seneca era: Ancient Rome (4 BC–65 AD) quote: On love:
+Suffering reveals what comfort carefully hides.
+
+id: 245 name: Arthur Schopenhauer era: 19th Century (1788–1860) quote:
+On doubt: Chaos is merely order waiting for understanding.
+
+id: 246 name: Sigmund Freud era: 19th–20th Century (1856–1939) quote: On
+faith: Time exposes illusions without mercy.
+
+id: 247 name: Plato era: Ancient Greece (427–347 BC) quote: On power:
+Chaos is merely order waiting for understanding.
+
+id: 248 name: Friedrich Nietzsche era: 19th Century (1844–1900) quote:
+On chaos: Doubt is the doorway to deeper faith.
+
+id: 249 name: Fyodor Dostoevsky era: 19th Century (1821–1881) quote: On
+ego: What you avoid controls you more than what you confront.
+
+id: 250 name: Ralph Waldo Emerson era: 19th Century (1803–1882) quote:
+On virtue: Anger is a confession of wounded pride.
+
+id: 251 name: Ralph Waldo Emerson era: 19th Century (1803–1882) quote:
+On death: Silence often speaks louder than argument.
+
+id: 252 name: Blaise Pascal era: 17th Century (1623–1662) quote: On ego:
+Doubt is the doorway to deeper faith.
+
+id: 253 name: Friedrich Nietzsche era: 19th Century (1844–1900) quote:
+On faith: Suffering reveals what comfort carefully hides.
+
+id: 254 name: Seneca era: Ancient Rome (4 BC–65 AD) quote: On freedom:
+To know oneself is to disturb oneself.
+
+id: 255 name: Blaise Pascal era: 17th Century (1623–1662) quote: On
+order: We suffer more in imagination than in reality.
+
+id: 256 name: Seneca era: Ancient Rome (4 BC–65 AD) quote: On death:
+Every fear hides a desire in disguise.
+
+id: 257 name: Plato era: Ancient Greece (427–347 BC) quote: On fate:
+What you avoid controls you more than what you confront.
+
+id: 258 name: Sigmund Freud era: 19th–20th Century (1856–1939) quote: On
+silence: Doubt is the doorway to deeper faith.
+
+id: 259 name: Friedrich Nietzsche era: 19th Century (1844–1900) quote:
+On time: Chaos is merely order waiting for understanding.
+
+id: 260 name: Seneca era: Ancient Rome (4 BC–65 AD) quote: On fate: We
+suffer more in imagination than in reality.
+
+id: 261 name: Ralph Waldo Emerson era: 19th Century (1803–1882) quote:
+On doubt: Doubt is the doorway to deeper faith.
+
+id: 262 name: Plato era: Ancient Greece (427–347 BC) quote: On order:
+Silence often speaks louder than argument.
+
+id: 263 name: Epictetus era: Ancient Greece/Rome (50–135 AD) quote: On
+suffering: It is not the event itself, but our judgment of it, that
+shapes our destiny.
+
+id: 264 name: Plato era: Ancient Greece (427–347 BC) quote: On order: He
+who seeks truth must risk loneliness.
+
+id: 265 name: Fyodor Dostoevsky era: 19th Century (1821–1881) quote: On
+courage: Desire without discipline becomes a chain.
+
+id: 266 name: Epictetus era: Ancient Greece/Rome (50–135 AD) quote: On
+reason: Desire without discipline becomes a chain.
+
+id: 267 name: Blaise Pascal era: 17th Century (1623–1662) quote: On
+time: Doubt is the doorway to deeper faith.
+
+id: 268 name: Epictetus era: Ancient Greece/Rome (50–135 AD) quote: On
+ego: He who seeks truth must risk loneliness.
+
+id: 269 name: Seneca era: Ancient Rome (4 BC–65 AD) quote: On
+discipline: Anger is a confession of wounded pride.
+
+id: 270 name: Plato era: Ancient Greece (427–347 BC) quote: On truth:
+Freedom begins where excuses end.
+
+id: 271 name: Seneca era: Ancient Rome (4 BC–65 AD) quote: On
+responsibility: Freedom begins where excuses end.
+
+id: 272 name: Sigmund Freud era: 19th–20th Century (1856–1939) quote: On
+virtue: He who seeks truth must risk loneliness.
+
+id: 273 name: Friedrich Nietzsche era: 19th Century (1844–1900) quote:
+On freedom: Silence often speaks louder than argument.
+
+id: 274 name: Friedrich Nietzsche era: 19th Century (1844–1900) quote:
+On ego: Chaos is merely order waiting for understanding.
+
+id: 275 name: Arthur Schopenhauer era: 19th Century (1788–1860) quote:
+On self-knowledge: To know oneself is to disturb oneself.
+
+id: 276 name: Plato era: Ancient Greece (427–347 BC) quote: On chaos:
+Freedom begins where excuses end.
+
+id: 277 name: Blaise Pascal era: 17th Century (1623–1662) quote: On
+virtue: Responsibility is the price of strength.
+
+id: 278 name: Arthur Schopenhauer era: 19th Century (1788–1860) quote:
+On time: We suffer more in imagination than in reality.
+
+id: 279 name: Sigmund Freud era: 19th–20th Century (1856–1939) quote: On
+fear: Freedom begins where excuses end.
+
+id: 280 name: Friedrich Nietzsche era: 19th Century (1844–1900) quote:
+On suffering: We suffer more in imagination than in reality.
+
+id: 281 name: Plato era: Ancient Greece (427–347 BC) quote: On reason:
+Anger is a confession of wounded pride.
+
+id: 282 name: Ralph Waldo Emerson era: 19th Century (1803–1882) quote:
+On suffering: We suffer more in imagination than in reality.
+
+id: 283 name: Plato era: Ancient Greece (427–347 BC) quote: On faith:
+Suffering reveals what comfort carefully hides.
+
+id: 284 name: Blaise Pascal era: 17th Century (1623–1662) quote: On
+self-knowledge: Doubt is the doorway to deeper faith.
+
+id: 285 name: Seneca era: Ancient Rome (4 BC–65 AD) quote: On freedom:
+Suffering reveals what comfort carefully hides.
+
+id: 286 name: Plato era: Ancient Greece (427–347 BC) quote: On reason:
+Suffering reveals what comfort carefully hides.
+
+id: 287 name: Sigmund Freud era: 19th–20th Century (1856–1939) quote: On
+chaos: Chaos is merely order waiting for understanding.
+
+id: 288 name: Seneca era: Ancient Rome (4 BC–65 AD) quote: On freedom:
+Desire without discipline becomes a chain.
+
+id: 289 name: Plato era: Ancient Greece (427–347 BC) quote: On fate: To
+know oneself is to disturb oneself.
+
+id: 290 name: Epictetus era: Ancient Greece/Rome (50–135 AD) quote: On
+habit: Freedom begins where excuses end.
+
+id: 291 name: Plato era: Ancient Greece (427–347 BC) quote: On
+self-knowledge: Responsibility is the price of strength.
+
+id: 292 name: Marcus Aurelius era: Ancient Rome (121–180 AD) quote: On
+anger: He who seeks truth must risk loneliness.
+
+id: 293 name: Marcus Aurelius era: Ancient Rome (121–180 AD) quote: On
+character: Chaos is merely order waiting for understanding.
+
+id: 294 name: Fyodor Dostoevsky era: 19th Century (1821–1881) quote: On
+truth: Chaos is merely order waiting for understanding.
+
+id: 295 name: Fyodor Dostoevsky era: 19th Century (1821–1881) quote: On
+anger: What you avoid controls you more than what you confront.
+
+id: 296 name: Ralph Waldo Emerson era: 19th Century (1803–1882) quote:
+On discipline: The man who masters himself fears little else.
+
+id: 297 name: Sigmund Freud era: 19th–20th Century (1856–1939) quote: On
+anger: Desire without discipline becomes a chain.
+
+id: 298 name: Friedrich Nietzsche era: 19th Century (1844–1900) quote:
+On desire: Every fear hides a desire in disguise.
+
+id: 299 name: Ralph Waldo Emerson era: 19th Century (1803–1882) quote:
+On habit: What you avoid controls you more than what you confront.
+
+id: 300 name: Sigmund Freud era: 19th–20th Century (1856–1939) quote: On
+suffering: Every fear hides a desire in disguise.
+
+id: 301 name: Marcus Aurelius era: Ancient Rome (121–180 AD) quote: On
+reason: Suffering reveals what comfort carefully hides.
+
+id: 302 name: Ralph Waldo Emerson era: 19th Century (1803–1882) quote:
+On reason: Anger is a confession of wounded pride.
+
+id: 303 name: Plato era: Ancient Greece (427–347 BC) quote: On
+responsibility: The ego fears what the soul requires.
+
+id: 304 name: Friedrich Nietzsche era: 19th Century (1844–1900) quote:
+On chaos: Every fear hides a desire in disguise.
+
+id: 305 name: Plato era: Ancient Greece (427–347 BC) quote: On
+suffering: Chaos is merely order waiting for understanding.
+
+id: 306 name: Arthur Schopenhauer era: 19th Century (1788–1860) quote:
+On responsibility: Freedom begins where excuses end.
+
+id: 307 name: Arthur Schopenhauer era: 19th Century (1788–1860) quote:
+On suffering: We suffer more in imagination than in reality.
+
+id: 308 name: Ralph Waldo Emerson era: 19th Century (1803–1882) quote:
+On silence: Every fear hides a desire in disguise.
+
+id: 309 name: Arthur Schopenhauer era: 19th Century (1788–1860) quote:
+On doubt: Chaos is merely order waiting for understanding.
+
+id: 310 name: Plato era: Ancient Greece (427–347 BC) quote: On freedom:
+Freedom begins where excuses end.
+
+id: 311 name: Fyodor Dostoevsky era: 19th Century (1821–1881) quote: On
+freedom: The man who masters himself fears little else.
+
+id: 312 name: Epictetus era: Ancient Greece/Rome (50–135 AD) quote: On
+order: The man who masters himself fears little else.
+
+id: 313 name: Seneca era: Ancient Rome (4 BC–65 AD) quote: On love: To
+know oneself is to disturb oneself.
+
+id: 314 name: Friedrich Nietzsche era: 19th Century (1844–1900) quote:
+On virtue: Time exposes illusions without mercy.
+
+id: 315 name: Ralph Waldo Emerson era: 19th Century (1803–1882) quote:
+On faith: Every fear hides a desire in disguise.
+
+id: 316 name: Seneca era: Ancient Rome (4 BC–65 AD) quote: On faith:
+Suffering reveals what comfort carefully hides.
+
+id: 317 name: Sigmund Freud era: 19th–20th Century (1856–1939) quote: On
+doubt: Responsibility is the price of strength.
+
+id: 318 name: Arthur Schopenhauer era: 19th Century (1788–1860) quote:
+On courage: Every fear hides a desire in disguise.
+
+id: 319 name: Arthur Schopenhauer era: 19th Century (1788–1860) quote:
+On power: To know oneself is to disturb oneself.
+
+id: 320 name: Ralph Waldo Emerson era: 19th Century (1803–1882) quote:
+On fear: Silence often speaks louder than argument.
+
+id: 321 name: Blaise Pascal era: 17th Century (1623–1662) quote: On ego:
+What you avoid controls you more than what you confront.
+
+id: 322 name: Ralph Waldo Emerson era: 19th Century (1803–1882) quote:
+On self-knowledge: Freedom begins where excuses end.
+
+id: 323 name: Friedrich Nietzsche era: 19th Century (1844–1900) quote:
+On chaos: Discipline is the quiet architect of greatness.
+
+id: 324 name: Plato era: Ancient Greece (427–347 BC) quote: On truth:
+Habit shapes character more than intention ever could.
+
+id: 325 name: Fyodor Dostoevsky era: 19th Century (1821–1881) quote: On
+fear: Silence often speaks louder than argument.
+
+id: 326 name: Marcus Aurelius era: Ancient Rome (121–180 AD) quote: On
+power: What you avoid controls you more than what you confront.
+
+id: 327 name: Arthur Schopenhauer era: 19th Century (1788–1860) quote:
+On freedom: The ego fears what the soul requires.
+
+id: 328 name: Epictetus era: Ancient Greece/Rome (50–135 AD) quote: On
+reason: The ego fears what the soul requires.
+
+id: 329 name: Epictetus era: Ancient Greece/Rome (50–135 AD) quote: On
+ego: What you avoid controls you more than what you confront.
+
+id: 330 name: Fyodor Dostoevsky era: 19th Century (1821–1881) quote: On
+self-knowledge: The soul grows strongest where it is most tested.
+
+id: 331 name: Arthur Schopenhauer era: 19th Century (1788–1860) quote:
+On chaos: Desire without discipline becomes a chain.
+
+id: 332 name: Seneca era: Ancient Rome (4 BC–65 AD) quote: On habit:
+What you avoid controls you more than what you confront.
+
+id: 333 name: Blaise Pascal era: 17th Century (1623–1662) quote: On
+suffering: Every fear hides a desire in disguise.
+
+id: 334 name: Fyodor Dostoevsky era: 19th Century (1821–1881) quote: On
+reason: Desire without discipline becomes a chain.
+
+id: 335 name: Arthur Schopenhauer era: 19th Century (1788–1860) quote:
+On chaos: Every fear hides a desire in disguise.
+
+id: 336 name: Epictetus era: Ancient Greece/Rome (50–135 AD) quote: On
+love: The soul grows strongest where it is most tested.
+
+id: 337 name: Arthur Schopenhauer era: 19th Century (1788–1860) quote:
+On silence: The man who masters himself fears little else.
+
+id: 338 name: Epictetus era: Ancient Greece/Rome (50–135 AD) quote: On
+habit: Desire without discipline becomes a chain.
+
+id: 339 name: Marcus Aurelius era: Ancient Rome (121–180 AD) quote: On
+faith: We suffer more in imagination than in reality.
+
+id: 340 name: Ralph Waldo Emerson era: 19th Century (1803–1882) quote:
+On self-knowledge: It is not the event itself, but our judgment of it,
+that shapes our destiny.
+
+id: 341 name: Seneca era: Ancient Rome (4 BC–65 AD) quote: On desire:
+The ego fears what the soul requires.
+
+id: 342 name: Marcus Aurelius era: Ancient Rome (121–180 AD) quote: On
+virtue: The ego fears what the soul requires.
+
+id: 343 name: Friedrich Nietzsche era: 19th Century (1844–1900) quote:
+On freedom: Doubt is the doorway to deeper faith.
+
+id: 344 name: Marcus Aurelius era: Ancient Rome (121–180 AD) quote: On
+chaos: Every fear hides a desire in disguise.
+
+id: 345 name: Marcus Aurelius era: Ancient Rome (121–180 AD) quote: On
+character: Time exposes illusions without mercy.
+
+id: 346 name: Sigmund Freud era: 19th–20th Century (1856–1939) quote: On
+order: Habit shapes character more than intention ever could.
+
+id: 347 name: Seneca era: Ancient Rome (4 BC–65 AD) quote: On truth:
+What you avoid controls you more than what you confront.
+
+id: 348 name: Sigmund Freud era: 19th–20th Century (1856–1939) quote: On
+courage: Suffering reveals what comfort carefully hides.
+
+id: 349 name: Friedrich Nietzsche era: 19th Century (1844–1900) quote:
+On discipline: Every fear hides a desire in disguise.
+
+id: 350 name: Arthur Schopenhauer era: 19th Century (1788–1860) quote:
+On anger: It is not the event itself, but our judgment of it, that
+shapes our destiny.
+
+id: 351 name: Fyodor Dostoevsky era: 19th Century (1821–1881) quote: On
+habit: What you avoid controls you more than what you confront.
+
+id: 352 name: Seneca era: Ancient Rome (4 BC–65 AD) quote: On character:
+Responsibility is the price of strength.
+
+id: 353 name: Marcus Aurelius era: Ancient Rome (121–180 AD) quote: On
+death: Habit shapes character more than intention ever could.
+
+id: 354 name: Marcus Aurelius era: Ancient Rome (121–180 AD) quote: On
+chaos: He who seeks truth must risk loneliness.
+
+id: 355 name: Seneca era: Ancient Rome (4 BC–65 AD) quote: On death: The
+soul grows strongest where it is most tested.
+
+id: 356 name: Epictetus era: Ancient Greece/Rome (50–135 AD) quote: On
+habit: The man who masters himself fears little else.
+
+id: 357 name: Friedrich Nietzsche era: 19th Century (1844–1900) quote:
+On power: Freedom begins where excuses end.
+
+id: 358 name: Arthur Schopenhauer era: 19th Century (1788–1860) quote:
+On courage: The ego fears what the soul requires.
+
+id: 359 name: Friedrich Nietzsche era: 19th Century (1844–1900) quote:
+On freedom: We suffer more in imagination than in reality.
+
+id: 360 name: Blaise Pascal era: 17th Century (1623–1662) quote: On
+time: Time exposes illusions without mercy.
+
+id: 361 name: Fyodor Dostoevsky era: 19th Century (1821–1881) quote: On
+silence: We suffer more in imagination than in reality.
+
+id: 362 name: Friedrich Nietzsche era: 19th Century (1844–1900) quote:
+On love: It is not the event itself, but our judgment of it, that shapes
+our destiny.
+
+id: 363 name: Fyodor Dostoevsky era: 19th Century (1821–1881) quote: On
+fate: Anger is a confession of wounded pride.
+
+id: 364 name: Blaise Pascal era: 17th Century (1623–1662) quote: On
+self-knowledge: Responsibility is the price of strength.
+
+id: 365 name: Arthur Schopenhauer era: 19th Century (1788–1860) quote:
+On discipline: Chaos is merely order waiting for understanding.

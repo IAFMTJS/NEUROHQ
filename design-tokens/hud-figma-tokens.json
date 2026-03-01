@@ -1,0 +1,56 @@
+{
+  "color": {
+    "dark": {
+      "1": { "value": "#060E1A", "type": "color" },
+      "2": { "value": "#0A1626", "type": "color" },
+      "3": { "value": "#0F2236", "type": "color" },
+      "4": { "value": "#122B44", "type": "color" }
+    },
+    "accent": {
+      "primaryCyan": { "value": "#00E5FF", "type": "color" },
+      "cyanMid": { "value": "#00B8E6", "type": "color" },
+      "cyanSoft": { "value": "rgba(0,200,255,0.35)", "type": "color" },
+      "alertOrange": { "value": "#FF9A3C", "type": "color" },
+      "peakWhite": { "value": "#EAF6FF", "type": "color" }
+    }
+  },
+  "radius": {
+    "panel": { "value": "28px", "type": "borderRadius" },
+    "glass": { "value": "18px", "type": "borderRadius" },
+    "pill": { "value": "999px", "type": "borderRadius" }
+  },
+  "elevation": {
+    "level1": {
+      "value": "0 8px 24px rgba(0,0,0,0.45)",
+      "type": "boxShadow"
+    },
+    "level2": {
+      "value": "0 16px 36px rgba(0,0,0,0.58)",
+      "type": "boxShadow"
+    },
+    "level3": {
+      "value": "0 26px 60px rgba(0,0,0,0.76)",
+      "type": "boxShadow"
+    }
+  },
+  "glow": {
+    "haloSoft": {
+      "value": "0 0 24px rgba(0,229,255,0.25)",
+      "type": "boxShadow"
+    },
+    "haloStrong": {
+      "value": "0 0 36px rgba(0,229,255,0.45)",
+      "type": "boxShadow"
+    },
+    "ringHalo": {
+      "value": "0 0 28px rgba(0,229,255,0.36)",
+      "type": "boxShadow"
+    }
+  },
+  "motion": {
+    "easingStandard": { "value": "cubic-bezier(0.4,0,0.2,1)", "type": "cubicBezier" },
+    "durationFast": { "value": "120ms", "type": "duration" },
+    "durationStandard": { "value": "180ms", "type": "duration" }
+  }
+}
+

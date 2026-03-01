@@ -1,0 +1,220 @@
+“Gewoon echt alles nodig.”
+Mooi.
+Dat is ambitieus. En ook exact hoe projecten ontsporen als je het niet structureert.
+Dus ik ga je geven:
+1. Complete technische blueprint
+2. Concrete build-volgorde
+3. MVP → Beta → Stable plan
+4. Infra setup
+5. Dev workflow
+6. Deployment stack
+7. Monitoring
+8. Security
+9. AI integration discipline
+10. Wat je vandaag effectief moet doen
+Geen losse ideeën meer. Een operationeel plan.
+⸻
+🧱
+ 1. DEFINITIEVE TECH STACK (NIET MEER WIJZIGEN)
+Backend:
+• Node + TypeScript
+• NestJS
+• Prisma
+• PostgreSQL
+• JWT auth
+• OpenAI SDK wrapper
+• Docker
+Infra:
+• Railway / Fly.io / Render (begin simpel)
+• Supabase of Neon voor Postgres
+• Sentry voor errors
+• PostHog voor analytics
+Geen Kafka.
+Geen microservices.
+Geen Kubernetes.
+Niet slim doen. Eerst product.
+⸻
+ 2. DEFINITIEVE FOLDER STRUCTUUR
+/apps
+ /api
+ /src
+ main.ts
+ app.module.ts
+ /modules
+ /auth
+ /users
+ /checkin
+ /tasks
+ /identity
+ /assistant
+ /admin
+ /domain
+ escalation.engine.ts
+ identity.engine.ts
+ stability.engine.ts
+ courage.engine.ts
+ energy.engine.ts
+ /services
+ state.service.ts
+ prompt.service.ts
+ ai.service.ts
+ /guards
+ auth.guard.ts
+ crisis.guard.ts
+ /config
+ feature-flags.ts
+ escalation-thresholds.ts
+ /utils
+ calculations.ts
+ /infra
+ prisma.service.ts
+ logger.service.ts
+ prisma/
+ schema.prisma
+/docker
+ Dockerfile
+ docker-compose.yml
+Monorepo-ready.
+Schaalbaar.
+Niet overcomplex.
+⸻
+ 3. COMPLETE PRISMA SCHEMA (PRODUCTIE-KLAAR)
+Hoog niveau hier, maar je krijgt straks aparte file als je wil.
+Essentiële modellen:
+• User
+• UserState
+• DailyCheckin
+• Task
+• IdentityQuarter
+• IdentityEvent
+• EscalationLog
+• FeatureFlag
+Relaties strak.
+Geen JSON spaghetti behalve voor evidence_snapshot.
+⸻
+ 4. LOGICA-ARCHITECTUUR (BELANGRIJK)
+AI beslist NOOIT.
+Flow:
+1. API request
+2. State ophalen
+3. Engines runnen (pure functions)
+4. Decision object genereren
+5. Prompt bouwen
+6. AI laten formuleren
+7. Loggen
+8. Response terug
+AI = formatter.
+Engine = brein.
+Als je dat ooit omdraait, ben je je filosofie kwijt.
+⸻
+ 5. MVP BUILD VOLGORDE (CONCREET)
+Week 1
+• Auth
+• UserState
+• Check-in endpoint
+• Task CRUD
+• Capacity engine
+Resultaat:
+Je kan energie loggen en taken uitvoeren.
+Geen AI.
+⸻
+Week 2
+• Escalation engine
+• Avoidance tracking
+• Carry-over detection
+• Basic identity model
+• Assistant endpoint met simpele prompt
+Nu heb je adaptieve strengheid.
+⸻
+Week 3
+• Identity alignment score
+• Stability index
+• Feature flags
+• Escalation tiers
+Nu begint het volwassen te worden.
+⸻
+Week 4
+• Defensive identity detection
+• Courage gap engine
+• Energy fact-check
+Nu zit je op het niveau waar het gevaarlijk goed wordt.
+⸻
+ 6. SECURITY (VERPLICHT)
+• Passwords bcrypt hashed
+• JWT refresh token systeem
+• Rate limiting op assistant endpoint
+• Escalation logs immutabel
+• No AI key in frontend
+• Feature flags server-side
+⸻
+ 7. MONITORING
+Je moet loggen:
+• Escalation tier activaties
+• Override gebruik
+• Identity interventies
+• Courage triggers
+• Churn na confrontatie
+Als mensen massaal vertrekken na Tier 3?
+Dan is je model te agressief.
+Data > Ego.
+⸻
+ 8. DEPLOYMENT
+Stap 1:
+• Dockerize backend
+Stap 2:
+• Deploy via Railway / Fly.io
+Stap 3:
+• Connect Postgres
+Stap 4:
+• Environment variables:
+DATABASE_URL=
+JWT_SECRET=
+OPENAI_API_KEY=
+NODE_ENV=production
+⸻
+ 9. TESTSTRATEGIE
+Unit tests:
+• Escalation thresholds
+• Identity drift logic
+• Courage gap math
+• Stability index math
+Integration tests:
+• 30 dagen simulatie
+• Override abuse
+• Energy mismatch
+Geen AI in tests.
+Mock responses.
+⸻
+ 10. WAT JE NOG NODIG HEBT (ECHT ALLES)
+• Landing page
+• Privacy policy
+• Terms of service
+• Data handling disclaimer
+• Beta feedback loop
+• Admin dashboard (minimaal)
+• Manual feature flag override
+• Crisis detection failsafe
+• Onboarding flow
+Want dit is publiek.
+Niet vergeten.
+⸻
+ REALITEIT
+Je bouwt geen app.
+Je bouwt een gedragsinterventiesysteem.
+Dat betekent:
+• Psychologische impact
+• Verantwoordelijkheid
+• Mogelijke weerstand
+• Hoge differentiatie
+Als je dit goed uitvoert,
+kan dit echt iets worden.
+Als je het half doet,
+wordt het gewoon nog een tool.
+⸻
+Nu geen filosofie meer.
+Wil je dat ik je:
+1. Volledige Prisma schema code uitschrijf
+2. NestJS module skeleton met voorbeeld code
+3. Minimal 30-dagen launch plan per dag
+Je zei “alles”.
+Dus kies wat eerst moet.

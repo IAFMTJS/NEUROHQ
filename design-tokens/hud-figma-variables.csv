@@ -1,0 +1,23 @@
+collection,group,name,type,value
+HUD,color.dark,dark-1,color,#060E1A
+HUD,color.dark,dark-2,color,#0A1626
+HUD,color.dark,dark-3,color,#0F2236
+HUD,color.dark,dark-4,color,#122B44
+HUD,color.accent,primary-cyan,color,#00E5FF
+HUD,color.accent,cyan-mid,color,#00B8E6
+HUD,color.accent,cyan-soft,color,rgba(0,200,255,0.35)
+HUD,color.accent,alert-orange,color,#FF9A3C
+HUD,color.accent,peak-white,color,#EAF6FF
+HUD,radius,panel,borderRadius,28px
+HUD,radius,glass,borderRadius,18px
+HUD,radius,pill,borderRadius,999px
+HUD,elevation,level-1,boxShadow,"0 8px 24px rgba(0,0,0,0.45)"
+HUD,elevation,level-2,boxShadow,"0 16px 36px rgba(0,0,0,0.58)"
+HUD,elevation,level-3,boxShadow,"0 26px 60px rgba(0,0,0,0.76)"
+HUD,glow,halo-soft,boxShadow,"0 0 24px rgba(0,229,255,0.25)"
+HUD,glow,halo-strong,boxShadow,"0 0 36px rgba(0,229,255,0.45)"
+HUD,glow,ring-halo,boxShadow,"0 0 28px rgba(0,229,255,0.36)"
+HUD,motion,easing-standard,cubicBezier,"cubic-bezier(0.4,0,0.2,1)"
+HUD,motion,duration-fast,duration,120ms
+HUD,motion,duration-standard,duration,180ms
+
