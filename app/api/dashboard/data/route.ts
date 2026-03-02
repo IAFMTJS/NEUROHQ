@@ -56,6 +56,25 @@ type TodayContext = {
   todayEngine: TodayEngineResult;
 };
 
+/** Simple in-process cache for full dashboard payloads (per user + date). */
+const DASHBOARD_CACHE_TTL_MS = 60_000; // can be increased (e.g. per day) if you accept more staleness
+const dashboardAllCache = new Map<
+  string,
+  { payload: { critical: unknown; secondary: unknown }; createdAt: number }
+>();
+
+async function timeSection<T>(label: string, fn: () => Promise<T>): Promise<T> {
+  const start = Date.now();
+  try {
+    return await fn();
+  } finally {
+    if (process.env.NODE_ENV !== "production") {
+      // eslint-disable-next-line no-console
+      console.log("[dashboard] %s %dms", label, Date.now() - start);
+    }
+  }
+}
+
 /** GET /api/dashboard/data?part=critical|secondary|all — dashboard data for client shell. Use part=all for one round-trip and no duplicate work. */
 export async function GET(request: NextRequest) {
   try {
@@ -70,12 +89,26 @@ export async function GET(request: NextRequest) {
 
     const part = request.nextUrl.searchParams.get("part");
     if (part === "all") {
-      const ctx = await buildTodayContext();
-      const [criticalPayload, secondaryPayload] = await Promise.all([
-        buildCriticalPayload(ctx),
-        buildSecondaryPayload(ctx),
-      ]);
-      return NextResponse.json({ critical: criticalPayload, secondary: secondaryPayload });
+      const dateStr = todayDateString();
+      const cacheKey = `${user.id}:${dateStr}:all`;
+      const cached = dashboardAllCache.get(cacheKey);
+      if (cached && Date.now() - cached.createdAt < DASHBOARD_CACHE_TTL_MS) {
+        if (process.env.NODE_ENV !== "production") {
+          // eslint-disable-next-line no-console
+          console.log("[dashboard] cache hit for %s", cacheKey);
+        }
+        return NextResponse.json(cached.payload);
+      }
+
+      const ctx = await timeSection("buildTodayContext", () => buildTodayContext());
+      const [criticalPayload, secondaryPayload] = await timeSection("buildCritical+Secondary", () =>
+        Promise.all([buildCriticalPayload(ctx), buildSecondaryPayload(ctx)])
+      );
+
+      const payload = { critical: criticalPayload, secondary: secondaryPayload };
+      dashboardAllCache.set(cacheKey, { payload, createdAt: Date.now() });
+
+      return NextResponse.json(payload);
     }
     if (part === "critical") {
       return await criticalResponse();
@@ -208,7 +241,8 @@ async function buildCriticalPayload(ctx: TodayContext) {
     : "Add a task on Missions or head to Growth.";
   const emptyMissionHref = learningNeeded ? "/learning" : "/tasks";
   const { window: timeWindow, isActive: isTimeWindowActive } = defaultTimeWindow();
-  const isMinimalUI = mode === "high_sensory";
+  // Show full dashboard UI for all modes; minimal UI is temporarily disabled.
+  const isMinimalUI = false;
   const showLateDayNoTask = new Date().getHours() >= 20 && energyBudget.completedTaskCount === 0;
   const actionsCount =
     (energyBudget.remaining < 0 ? 1 : 0) +

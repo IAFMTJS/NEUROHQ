@@ -1,9 +1,9 @@
 // NEUROHQ Service Worker – offline-first PWA (hele site)
 // Wat blijft staan op het apparaat (zodat minder opnieuw geladen hoeft):
-// - STATIC_CACHE (install): /offline, manifest, app-icon
+// - STATIC_CACHE (install): /offline, manifest, app-icon, core HUD visuals
 // - DYNAMIC_CACHE (per dag): alle HTML, JS, CSS, API GETs – cache-first voor dezelfde dag zodat reopen PWA direct uit cache laadt
 // - IndexedDB (neurohq-offline): offline mutaties (POST/PUT etc.) → gesynchroniseerd zodra er weer netwerk is
-const CACHE_VERSION = "v11";
+const CACHE_VERSION = "v12";
 const STATIC_CACHE = `neurohq-static-${CACHE_VERSION}`;
 const OFFLINE_PAGE = "/offline";
 
@@ -153,6 +153,15 @@ const STATIC_ASSETS = [
   "/manifest.json",
   "/manifest.webmanifest",
   "/app-icon.png",
+  // Core branding & HUD visuals – pre-cached so first PWA open has them locally
+  "/logo-naam.png",
+  "/mascots/commander.png",
+  "/mascots/commander-login.png",
+  "/icons/hq-tab-dashboard.png",
+  "/icons/hq-tab-tasks.png",
+  "/icons/hq-tab-budget.png",
+  "/icons/hq-tab-report.png",
+  "/icons/hq-tab-settings.png",
 ];
 
 // Alleen openbare routes prefetchen (zonder cookies). Dashboard/tasks/budget etc. worden gecached bij echte navigatie (met cookies) = juiste HTML
@@ -187,13 +196,14 @@ function warmupBackgroundCaches() {
   });
 }
 
-// Install: Cache static assets (do not skipWaiting here so app can show "Nieuwe versie beschikbaar" toast)
+// Install: Cache static assets. Call skipWaiting so new versions activate immediately and avoid stale 404 HTML.
 self.addEventListener("install", function (event) {
   event.waitUntil(
     caches.open(STATIC_CACHE).then(function (cache) {
       return cache.addAll(STATIC_ASSETS);
     })
   );
+  self.skipWaiting();
 });
 
 // When app requests it (toast "Vernieuwen" clicked), activate new SW

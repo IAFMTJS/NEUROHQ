@@ -59,9 +59,17 @@ type Props = {
     sleep_hours: number | null;
     social_load: number | null;
   };
+  onSaved?: (next: {
+    energy: number;
+    focus: number;
+    sensory_load: number;
+    sleep_hours: number | null;
+    social_load: number;
+    mental_battery: number;
+  }) => void;
 };
 
-export function BrainStatusModal({ open, onClose, date, initial, yesterday }: Props) {
+export function BrainStatusModal({ open, onClose, date, initial, yesterday, onSaved }: Props) {
   const router = useRouter();
   const appState = useAppState();
   const [pending, startTransition] = useTransition();
@@ -108,16 +116,35 @@ export function BrainStatusModal({ open, onClose, date, initial, yesterday }: Pr
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
+    const nextState = {
+      energy,
+      focus,
+      sensory_load: load,
+      sleep_hours: sleep ? parseFloat(sleep) : null,
+      social_load: social,
+      mental_battery: mentalBattery,
+    };
+
+    // Optimistic UI: update parent + local storage immediately so rings update without waiting for Supabase.
+    try {
+      if (typeof window !== "undefined") {
+        window.localStorage.setItem(`hq-daily-state-${date}`, JSON.stringify(nextState));
+      }
+    } catch {
+      // Non‑critical; ignore storage errors.
+    }
+    onSaved?.(nextState);
+
     startTransition(async () => {
       try {
         const result = await saveDailyState({
           date,
-          energy,
-          focus,
-          sensory_load: load,
-          sleep_hours: sleep ? parseFloat(sleep) : null,
-          social_load: social,
-          mental_battery: mentalBattery,
+          energy: nextState.energy,
+          focus: nextState.focus,
+          sensory_load: nextState.sensory_load,
+          sleep_hours: nextState.sleep_hours,
+          social_load: nextState.social_load,
+          mental_battery: nextState.mental_battery,
         });
         if (result.ok) {
           setSaved(true);

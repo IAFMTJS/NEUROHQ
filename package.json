@@ -50,6 +50,7 @@
     "autoprefixer": "^10.4.20",
     "eslint": "^9.0.0",
     "eslint-config-next": "^16.1.6",
+    "knip": "^5.85.0",
     "patch-package": "^8.0.1",
     "pixelmatch": "^7.1.0",
     "pngjs": "^7.0.0",

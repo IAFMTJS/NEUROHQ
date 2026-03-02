@@ -43,6 +43,11 @@ type Props = {
 
 export const BrainStatusCard = memo(function BrainStatusCard({ date, initial, yesterday, brainMode, suggestedTaskCount }: Props) {
   const [modalOpen, setModalOpen] = useState(false);
+  const [currentInitial, setCurrentInitial] = useState(initial);
+
+  useEffect(() => {
+    setCurrentInitial(initial);
+  }, [initial]);
 
   useEffect(() => {
     const openIfHash = () => {
@@ -56,9 +61,9 @@ export const BrainStatusCard = memo(function BrainStatusCard({ date, initial, ye
     return () => window.removeEventListener("hashchange", openIfHash);
   }, []);
 
-  const energyPct = scale1To10ToPct(initial.energy);
-  const focusPct = scale1To10ToPct(initial.focus);
-  const loadPct = scale1To10ToPct(initial.sensory_load);
+  const energyPct = scale1To10ToPct(currentInitial.energy);
+  const focusPct = scale1To10ToPct(currentInitial.focus);
+  const loadPct = scale1To10ToPct(currentInitial.sensory_load);
 
   let xpEnergyLabel: string | null = null;
   if (energyPct > 75) {
@@ -161,8 +166,14 @@ export const BrainStatusCard = memo(function BrainStatusCard({ date, initial, ye
         open={modalOpen}
         onClose={() => setModalOpen(false)}
         date={date}
-        initial={initial}
+        initial={currentInitial}
         yesterday={yesterday}
+        onSaved={(next) => {
+          setCurrentInitial((prev) => ({
+            ...prev,
+            ...next,
+          }));
+        }}
       />
     </>
   );

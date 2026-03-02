@@ -36,8 +36,8 @@ function LoginForm() {
         return;
       }
       await ensureUserProfileForSession();
-      // Full page nav so cookies are sent; go straight to dashboard (page is dynamic and checks auth)
-      window.location.href = "/dashboard";
+      // Full page nav so proxy sees cookies; home will redirect to dashboard when authenticated
+      window.location.href = "/";
     } catch (err) {
       setError(err instanceof Error ? err.message : "Sign in failed");
       setLoading(false);
@@ -102,22 +102,46 @@ function LoginForm() {
 /** Client-side signIn then redirect to / so proxy sees cookies (same flow as when deploy worked). */
 export default function LoginPage() {
   return (
-    <main className="w-full max-w-[420px] hq-card-enter space-y-6" style={{ animationDelay: "50ms" }} data-ui="dark-commander">
-      <section className="login-mascot relative flex justify-center mb-2" aria-hidden>
-        <MascotImg page="login" className="mascot-img max-h-[120px] w-auto object-contain" />
-      </section>
-
-      <div className="flex flex-col items-center gap-3">
-        <div className="flex items-center justify-center gap-3">
-          <Image src="/app-icon.png" alt="" width={72} height={72} className="h-16 w-16 sm:h-20 sm:w-20 rounded-2xl object-contain shrink-0" priority />
-          <Image src="/logo-naam.png" alt="NEUROHQ" width={280} height={74} className="h-10 w-auto max-w-[240px] sm:h-12 sm:max-w-[280px] object-contain" priority />
+    <main
+      className="w-full max-w-[420px] hq-card-enter space-y-6"
+      style={{ animationDelay: "50ms" }}
+      data-ui="dark-commander"
+    >
+      <div className="flex flex-col items-center gap-4">
+        <div className="flex flex-col items-center gap-2">
+          <Image
+            src="/logo-naam.png"
+            alt="NEUROHQ"
+            width={280}
+            height={74}
+            className="h-10 w-auto max-w-[260px] sm:h-12 sm:max-w-[300px] object-contain drop-shadow-[0_0_18px_rgba(56,189,248,0.55)]"
+            priority
+          />
+          <p className="text-xs font-medium text-[var(--text-muted)] uppercase tracking-wider">
+            Nervous-system-aware HQ
+          </p>
         </div>
-        <p className="text-xs font-medium text-[var(--text-muted)] uppercase tracking-wider">Nervous-system-aware HQ</p>
-      </div>
 
-      <Suspense fallback={<GlassCard className="glass-card glass-card-3d p-6 sm:p-8 rounded-2xl border border-[var(--card-border)] animate-pulse min-h-[280px]" />}>
-        <LoginForm />
-      </Suspense>
+        <div className="relative w-full pt-4">
+          <Suspense
+            fallback={
+              <GlassCard className="glass-card glass-card-3d p-6 sm:p-8 rounded-2xl border border-[var(--card-border)] animate-pulse min-h-[280px]" />
+            }
+          >
+            <LoginForm />
+          </Suspense>
+
+          <section
+            className="login-mascot pointer-events-none absolute left-1/2 top-0 flex -translate-x-1/2 translate-y-[35%] justify-center"
+            aria-hidden
+          >
+            <MascotImg
+              page="login"
+              className="mascot-img max-h-[140px] w-auto object-contain drop-shadow-[0_18px_45px_rgba(15,23,42,0.85)]"
+            />
+          </section>
+        </div>
+      </div>
     </main>
   );
 }

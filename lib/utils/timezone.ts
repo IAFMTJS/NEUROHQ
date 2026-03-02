@@ -1,6 +1,12 @@
 /** Single source of truth for "today" (YYYY-MM-DD) on the server. Use everywhere: brain status, missions, dashboard. */
 export function todayDateString(): string {
-  return new Date().toISOString().slice(0, 10);
+  // Use server local time so "today" rolls over at local midnight instead of UTC,
+  // better matching the user's device/PWA experience.
+  const d = new Date();
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
 }
 
 /**
