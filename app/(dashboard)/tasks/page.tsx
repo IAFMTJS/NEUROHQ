@@ -1,11 +1,18 @@
 import nextDynamic from "next/dynamic";
+import { Suspense } from "react";
 import { getTodaysTasks, getTasksForDate, getTasksForDateRange, getSubtasksForTaskIds, getBacklogTasks, getFutureTasks, getCompletedTodayTasks, type TaskListMode } from "@/app/actions/tasks";
 
 /** Tasks page must always run on the server so auto-missions see latest daily_state after brain status save. */
 export const dynamic = "force-dynamic";
 import { getMode } from "@/app/actions/mode";
 import { getUpcomingCalendarEvents, hasGoogleCalendarToken } from "@/app/actions/calendar";
-import { getDecisionBlocks, getResistanceIndex, getMetaInsights30, getRecoveryCampaignNeeded, getEmotionalStateCorrelations } from "@/app/actions/missions-performance";
+import {
+  getDecisionBlocks,
+  getResistanceIndex,
+  getMetaInsights30,
+  getRecoveryCampaignNeeded,
+  getEmotionalStateCorrelations,
+} from "@/app/actions/missions-performance";
 import { getThirtyDayMirror } from "@/app/actions/thirty-day-mirror";
 import { getSmartSuggestion } from "@/app/actions/dcic/smart-suggestion";
 import { getEnergyCapToday } from "@/app/actions/dcic/energy-cap";
@@ -36,13 +43,43 @@ const BacklogAndToekomstTriggers = nextDynamic(() => import("@/components/missio
 const AddCalendarEventForm = nextDynamic(() => import("@/components/AddCalendarEventForm").then((m) => ({ default: m.AddCalendarEventForm })), { loading: () => <div className="min-h-[120px] animate-pulse rounded-lg bg-white/5" aria-hidden /> });
 const AgendaOnlyList = nextDynamic(() => import("@/components/AgendaOnlyList").then((m) => ({ default: m.AgendaOnlyList })), { loading: () => <div className="min-h-[80px] animate-pulse rounded-lg bg-white/5" aria-hidden /> });
 const CalendarModal3Trigger = nextDynamic(() => import("@/components/missions").then((m) => ({ default: m.CalendarModal3Trigger })), { loading: () => null });
-const ResistanceIndexBanner = nextDynamic(() => import("@/components/missions/ResistanceIndexBanner").then((m) => ({ default: m.ResistanceIndexBanner })), { loading: () => null });
-const RecoveryCampaignBanner = nextDynamic(() => import("@/components/missions/RecoveryCampaignBanner").then((m) => ({ default: m.RecoveryCampaignBanner })), { loading: () => null });
 const HighROISection = nextDynamic(() => import("@/components/missions/HighROISection").then((m) => ({ default: m.HighROISection })), { loading: () => null });
-const MetaInsights30Banner = nextDynamic(() => import("@/components/missions/MetaInsights30Banner").then((m) => ({ default: m.MetaInsights30Banner })), { loading: () => null });
-const EmotionalStateCorrelationBanner = nextDynamic(() => import("@/components/missions/EmotionalStateCorrelationBanner").then((m) => ({ default: m.EmotionalStateCorrelationBanner })), { loading: () => null });
-const ThirtyDayMirrorBanner = nextDynamic(() => import("@/components/missions/ThirtyDayMirrorBanner").then((m) => ({ default: m.ThirtyDayMirrorBanner })), { loading: () => null });
 const ConsequenceBanner = nextDynamic(() => import("@/components/ConsequenceBanner").then((m) => ({ default: m.ConsequenceBanner })), { loading: () => null });
+
+/** Lazy-loaded analytics banners (stream in after critical content). */
+async function ResistanceIndexBannerAsync() {
+  const data = await getResistanceIndex();
+  const ResistanceIndexBanner = (await import("@/components/missions/ResistanceIndexBanner")).ResistanceIndexBanner;
+  return <ResistanceIndexBanner message={data.message} />;
+}
+async function RecoveryCampaignBannerAsync() {
+  const data = await getRecoveryCampaignNeeded();
+  if (!data.needed) return null;
+  const RecoveryCampaignBanner = (await import("@/components/missions/RecoveryCampaignBanner")).RecoveryCampaignBanner;
+  return <RecoveryCampaignBanner daysInactive={data.daysInactive} lastCompletionDate={data.lastCompletionDate} />;
+}
+async function EmotionalStateCorrelationBannerAsync() {
+  const data = await getEmotionalStateCorrelations();
+  const EmotionalStateCorrelationBanner = (await import("@/components/missions/EmotionalStateCorrelationBanner")).EmotionalStateCorrelationBanner;
+  return <EmotionalStateCorrelationBanner message={data.message} />;
+}
+async function MetaInsights30BannerAsync() {
+  const data = await getMetaInsights30();
+  const MetaInsights30Banner = (await import("@/components/missions/MetaInsights30Banner")).MetaInsights30Banner;
+  return (
+    <MetaInsights30Banner
+      biggestSabotagePattern={data.biggestSabotagePattern}
+      mostEffectiveType={data.mostEffectiveType}
+      comfortzoneScore={data.comfortzoneScore}
+      growthPerDomain={data.growthPerDomain}
+    />
+  );
+}
+async function ThirtyDayMirrorBannerAsync() {
+  const mirror = await getThirtyDayMirror();
+  const ThirtyDayMirrorBanner = (await import("@/components/missions/ThirtyDayMirrorBanner")).ThirtyDayMirrorBanner;
+  return <ThirtyDayMirrorBanner mirror={mirror} />;
+}
 
 type Props = {
   searchParams: Promise<{ tab?: string; add?: string; month?: string; day?: string; calView?: string }>;
@@ -108,7 +145,8 @@ export default async function TasksPage({ searchParams }: Props) {
   const calendarRangeEnd = toDateKeyUTC(nextGridEnd);
 
   const masterMissionsResult = await ensureMasterMissionsForToday();
-  const [mode, upcomingCalendarEvents, hasGoogle, backlog, futureTasks, completedToday, yesterdayTasksRaw, smartSuggestion, energyCap, energyBudget, decisionBlocks, resistanceIndex, meta30, recoveryCampaign, emotionalCorrelations, xp, identity, mirror30, identityEngine, tasksByDate] = await Promise.all([
+  // Critical path only: mission list, hero, calendar. Analytics banners load lazily via Suspense below.
+  const [mode, upcomingCalendarEvents, hasGoogle, backlog, futureTasks, completedToday, yesterdayTasksRaw, smartSuggestion, energyCap, energyBudget, decisionBlocks, xp, identity, identityEngine, tasksByDate] = await Promise.all([
     getMode(dateStr),
     getUpcomingCalendarEvents(dateStr, 180),
     hasGoogleCalendarToken(),
@@ -120,13 +158,8 @@ export default async function TasksPage({ searchParams }: Props) {
     getEnergyCapToday(dateStr),
     getEnergyBudget(dateStr),
     getDecisionBlocks(dateStr),
-    getResistanceIndex(),
-    getMetaInsights30(),
-    getRecoveryCampaignNeeded(),
-    getEmotionalStateCorrelations(),
     getXP(),
     getXPIdentity(),
-    getThirtyDayMirror(),
     getIdentityEngine(),
     getTasksForDateRange(calendarRangeStart, calendarRangeEnd),
   ]);
@@ -335,15 +368,16 @@ export default async function TasksPage({ searchParams }: Props) {
           recovery={decisionBlocks.recovery}
           alignmentFix={decisionBlocks.alignmentFix}
         />
-        <ResistanceIndexBanner message={resistanceIndex.message} />
-        {recoveryCampaign.needed && (
-          <RecoveryCampaignBanner
-            daysInactive={recoveryCampaign.daysInactive}
-            lastCompletionDate={recoveryCampaign.lastCompletionDate}
-          />
-        )}
+        <Suspense fallback={null}>
+                    <ResistanceIndexBannerAsync />
+                  </Suspense>
+<Suspense fallback={null}>
+                    <RecoveryCampaignBannerAsync />
+                  </Suspense>
         <HighROISection tasks={decisionBlocks.tasksSortedByUMS} maxItems={3} />
-        <EmotionalStateCorrelationBanner message={emotionalCorrelations.message} />
+        <Suspense fallback={null}>
+                    <EmotionalStateCorrelationBannerAsync />
+                  </Suspense>
         {smartSuggestion.text && !decisionBlocks.topRecommendation ? (
           <SmartSuggestionBanner text={smartSuggestion.text} type={smartSuggestion.type} />
         ) : null}
@@ -381,13 +415,12 @@ export default async function TasksPage({ searchParams }: Props) {
           identityLevel={identity.level}
           identityReputation={identityEngine.reputation ?? null}
         />
-        <MetaInsights30Banner
-          biggestSabotagePattern={meta30.biggestSabotagePattern}
-          mostEffectiveType={meta30.mostEffectiveType}
-          comfortzoneScore={meta30.comfortzoneScore}
-          growthPerDomain={meta30.growthPerDomain}
-        />
-        <ThirtyDayMirrorBanner mirror={mirror30} />
+<Suspense fallback={null}>
+                    <MetaInsights30BannerAsync />
+                  </Suspense>
+        <Suspense fallback={null}>
+                    <ThirtyDayMirrorBannerAsync />
+                  </Suspense>
         <BacklogAndToekomstTriggers backlog={backlog} futureTasks={futureTasks} todayDate={dateStr} />
       </SciFiPanel>
     </>

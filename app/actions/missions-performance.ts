@@ -1,5 +1,6 @@
 "use server";
 
+import { unstable_cache } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { getTodaysTasks, type TaskListMode } from "@/app/actions/tasks";
 import { getMode } from "@/app/actions/mode";
@@ -61,6 +62,19 @@ export type DecisionBlocksResult = {
   /** 5+ days no completions; show recovery protocol message. */
   recoveryProtocol?: boolean;
   daysSinceLastCompletion?: number;
+};
+
+const EMPTY_DECISION_BLOCKS: DecisionBlocksResult = {
+  streakCritical: [],
+  highPressure: [],
+  recovery: [],
+  alignmentFix: [],
+  topRecommendation: null,
+  tasksSortedByUMS: [],
+  streakAtRisk: false,
+  pressureZone: "comfort",
+  alignmentScore: 1,
+  strategyMapping: null,
 };
 
 function strategyAlignmentForTask(
@@ -190,22 +204,11 @@ async function getTaskCompletionRates(
 }
 
 /** Decision Engine: UMS-scored tasks + decision blocks (streak critical, high pressure, recovery, alignment fix). */
-export async function getDecisionBlocks(dateStr: string): Promise<DecisionBlocksResult> {
+async function getDecisionBlocksUncached(dateStr: string): Promise<DecisionBlocksResult> {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) {
-    return {
-      streakCritical: [],
-      highPressure: [],
-      recovery: [],
-      alignmentFix: [],
-      topRecommendation: null,
-      tasksSortedByUMS: [],
-      streakAtRisk: false,
-      pressureZone: "comfort",
-      alignmentScore: 1,
-      strategyMapping: null,
-    };
+    return EMPTY_DECISION_BLOCKS;
   }
 
   const { getConsequenceState } = await import("./consequence-engine");
@@ -311,6 +314,22 @@ export async function getDecisionBlocks(dateStr: string): Promise<DecisionBlocks
   };
 }
 
+const decisionBlocksCache = unstable_cache(
+  async (userId: string, dateStr: string) => {
+    // userId is part of the cache key; the inner function reads auth from cookies.
+    return getDecisionBlocksUncached(dateStr);
+  },
+  ["decision-blocks"],
+  { revalidate: 60 }
+);
+
+export async function getDecisionBlocks(dateStr: string): Promise<DecisionBlocksResult> {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return EMPTY_DECISION_BLOCKS;
+  return decisionBlocksCache(user.id, dateStr);
+}
+
 /** Week data for Calendar Modal 3.0: time budget, strategy allocation, pressure. */
 export async function getCalendarWeekData(weekStartStr: string): Promise<{
   days: (import("@/app/actions/tasks").DayPlannedLoad & { distributionWarning?: boolean })[];
@@ -388,7 +407,7 @@ export async function getSimilarTasksCompletionRate(params: {
 }
 
 /** Resistance Index: hesitation time, abandon rate, comfort bias → message e.g. "Je vermijdt hoge cognitieve missies." */
-export async function getResistanceIndex(): Promise<{
+async function getResistanceIndexUncached(): Promise<{
   message: string | null;
   hesitationAvgSeconds: number | null;
   abandonRate: number;
@@ -428,8 +447,29 @@ export async function getResistanceIndex(): Promise<{
   return { message, hesitationAvgSeconds, abandonRate, highCognitiveAvoidance };
 }
 
+const resistanceIndexCache = unstable_cache(
+  async (userId: string) => {
+    // userId is part of the cache key; the inner function reads auth from cookies.
+    return getResistanceIndexUncached();
+  },
+  ["resistance-index"],
+  { revalidate: 300 }
+);
+
+export async function getResistanceIndex(): Promise<{
+  message: string | null;
+  hesitationAvgSeconds: number | null;
+  abandonRate: number;
+  highCognitiveAvoidance: boolean;
+}> {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { message: null, hesitationAvgSeconds: null, abandonRate: 0, highCognitiveAvoidance: false };
+  return resistanceIndexCache(user.id);
+}
+
 /** Meta 30 days: biggest sabotage pattern, most effective type, comfortzone score, growth per domain. */
-export async function getMetaInsights30(): Promise<{
+async function getMetaInsights30Uncached(): Promise<{
   biggestSabotagePattern: string | null;
   mostEffectiveType: string | null;
   comfortzoneScore: number;
@@ -480,8 +520,29 @@ export async function getMetaInsights30(): Promise<{
   return { biggestSabotagePattern, mostEffectiveType, comfortzoneScore, growthPerDomain };
 }
 
+const metaInsights30Cache = unstable_cache(
+  async (userId: string) => {
+    // userId is part of the cache key; the inner function reads auth from cookies.
+    return getMetaInsights30Uncached();
+  },
+  ["meta-insights-30"],
+  { revalidate: 300 }
+);
+
+export async function getMetaInsights30(): Promise<{
+  biggestSabotagePattern: string | null;
+  mostEffectiveType: string | null;
+  comfortzoneScore: number;
+  growthPerDomain: Record<string, number>;
+}> {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { biggestSabotagePattern: null, mostEffectiveType: null, comfortzoneScore: 0.5, growthPerDomain: {} };
+  return metaInsights30Cache(user.id);
+}
+
 /** 7 days inactive → Recovery Campaign: suggest 3 micro missions, momentum rebuild, low pressure. */
-export async function getRecoveryCampaignNeeded(): Promise<{
+async function getRecoveryCampaignNeededUncached(): Promise<{
   needed: boolean;
   lastCompletionDate: string | null;
   daysInactive: number;
@@ -516,6 +577,26 @@ export async function getRecoveryCampaignNeeded(): Promise<{
   const today = new Date(todayStr + "T12:00:00Z");
   const daysInactive = Math.max(0, Math.floor((today.getTime() - last.getTime()) / 86400000));
   return { needed: daysInactive >= 7, lastCompletionDate: lastCompletion, daysInactive };
+}
+
+const recoveryCampaignCache = unstable_cache(
+  async (userId: string) => {
+    // userId is part of the cache key; the inner function reads auth from cookies.
+    return getRecoveryCampaignNeededUncached();
+  },
+  ["recovery-campaign-needed"],
+  { revalidate: 120 }
+);
+
+export async function getRecoveryCampaignNeeded(): Promise<{
+  needed: boolean;
+  lastCompletionDate: string | null;
+  daysInactive: number;
+}> {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { needed: false, lastCompletionDate: null, daysInactive: 0 };
+  return recoveryCampaignCache(user.id);
 }
 
 /** Auto-Scheduler: suggest task moves to balance energy across the week. */
@@ -562,7 +643,7 @@ export async function getAutoScheduleSuggestions(weekStartStr: string): Promise<
 }
 
 /** Emotional state correlations: completion rate per state, e.g. "Je completion rate blijft 72% zelfs als je moe bent". */
-export async function getEmotionalStateCorrelations(): Promise<{
+async function getEmotionalStateCorrelationsUncached(): Promise<{
   message: string | null;
   byState: Record<string, { completed: number; total: number; rate: number }>;
 }> {
@@ -616,6 +697,26 @@ export async function getEmotionalStateCorrelations(): Promise<{
   const label = labels[worst[0]] ?? worst[0];
   const message = `Je completion rate blijft ${pct}% zelfs als je ${label} bent.`;
   return { message, byState: byStateRates };
+}
+
+const emotionalStateCorrelationsCache = unstable_cache(
+  async (userId: string) => {
+    // userId is part of the cache key; the inner function reads auth from cookies.
+    return getEmotionalStateCorrelationsUncached();
+  },
+  ["emotional-state-correlations"],
+  { revalidate: 300 }
+);
+
+export async function getEmotionalStateCorrelations(): Promise<{
+  message: string | null;
+  byState: Record<string, { completed: number; total: number; rate: number }>;
+}> {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  const empty = { message: null, byState: {} };
+  if (!user) return empty;
+  return emotionalStateCorrelationsCache(user.id);
 }
 
 /** Get today's tasks sorted by UMS (for mission grid). */
