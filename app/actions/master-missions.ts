@@ -247,11 +247,13 @@ export async function ensureMasterMissionsForToday(): Promise<EnsureMasterMissio
       if (!firstError) firstError = msg;
     }
   }
-  // Mark that auto-missions have been generated for today so we never auto-add more until tomorrow.
+  // Mark that auto-missions have been generated for today so we never auto-add
+  // more until tomorrow. Cast payload to any to avoid drift with generated
+  // Supabase types while the SQL migration adds this column.
   try {
     await supabase
       .from("daily_state")
-      .update({ auto_master_missions_generated: true })
+      .update({ auto_master_missions_generated: true } as any)
       .eq("user_id", user.id)
       .eq("date", dateStr);
   } catch {
@@ -398,7 +400,7 @@ export async function resetAutoMissionsForToday(): Promise<{ deleted: number; er
     // Also reset the generated flag so next run can create fresh ones.
     await supabase
       .from("daily_state")
-      .update({ auto_master_missions_generated: false })
+      .update({ auto_master_missions_generated: false } as any)
       .eq("user_id", user.id)
       .eq("date", today);
     revalidatePath("/tasks");
@@ -411,7 +413,7 @@ export async function resetAutoMissionsForToday(): Promise<{ deleted: number; er
 
   await supabase
     .from("daily_state")
-    .update({ auto_master_missions_generated: false })
+    .update({ auto_master_missions_generated: false } as any)
     .eq("user_id", user.id)
     .eq("date", today);
 
