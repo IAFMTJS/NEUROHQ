@@ -23,6 +23,8 @@ export type PickContext = {
   focus1To10?: number | null;
   sensoryLoad1To10?: number | null;
   socialLoad1To10?: number | null;
+  /** Day type for scheduling bias (work vs typical days off). */
+  dayType?: "work" | "off_soft" | "off_hard";
 };
 
 function isHeavy(t: MasterMissionTemplate): boolean {
@@ -30,7 +32,17 @@ function isHeavy(t: MasterMissionTemplate): boolean {
 }
 
 function pickStructureEnergyFocus(context: PickContext, max: number): PickedMissionTemplate[] {
-  const { weekTheme, allowHeavyNow, recentlyUsedTitles, dateStr, energy1To10, focus1To10, sensoryLoad1To10, socialLoad1To10 } = context;
+  const {
+    weekTheme,
+    allowHeavyNow,
+    recentlyUsedTitles,
+    dateStr,
+    energy1To10,
+    focus1To10,
+    sensoryLoad1To10,
+    socialLoad1To10,
+    dayType,
+  } = context;
 
   const base = MASTER_MISSION_POOL.filter((t) =>
     t.subcategory?.startsWith("structure_") ||
@@ -59,6 +71,12 @@ function pickStructureEnergyFocus(context: PickContext, max: number): PickedMiss
     // Brain circles: high social load → prefer solo, focus, structure (less social)
     if (socialLoad1To10 != null && socialLoad1To10 >= 6 && (t.subcategory?.startsWith("focus_") ?? false)) score += 1;
     if (socialLoad1To10 != null && socialLoad1To10 >= 6 && (t.subcategory?.startsWith("structure_") ?? false)) score += 0.5;
+    // Day-off bias: op vrije dagen meer recovery/omgeving/huishouden, minder zware "push".
+    if (dayType === "off_soft" || dayType === "off_hard") {
+      if (t.tags?.includes("recovery") || t.subcategory?.startsWith("energy_")) score += 1.5;
+      if (t.subcategory?.startsWith("structure_")) score += 0.5;
+      if (dayType === "off_hard" && t.tags?.includes("push")) score -= 2;
+    }
     return score;
   };
 

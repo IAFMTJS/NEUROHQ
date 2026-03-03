@@ -4,6 +4,8 @@ import { GrowthIntentCard } from "@/components/growth/GrowthIntentCard";
 import { GrowthConsistencyCard } from "@/components/growth/GrowthConsistencyCard";
 import { GrowthStreamsList } from "@/components/growth/GrowthStreamsList";
 import { GrowthReflectionCard } from "@/components/growth/GrowthReflectionCard";
+import { MonthlyBookCard } from "@/components/growth/MonthlyBookCard";
+import { AddLearningStreamCard } from "@/components/growth/AddLearningStreamCard";
 
 type Props = { searchParams: Promise<{ toward?: string }> };
 
@@ -38,6 +40,11 @@ export default async function LearningPage({ searchParams }: Props) {
           focus={learningState.focus}
           currentBookTitle={currentBook?.title ?? null}
         />
+        <MonthlyBookCard
+          currentBookTitle={currentBook?.title ?? null}
+          totalPages={currentBook?.pagesTotal ?? null}
+        />
+        <AddLearningStreamCard />
         <GrowthConsistencyCard
           consistency={learningState.consistency}
           today={todayStr}

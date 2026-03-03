@@ -26,6 +26,7 @@ const SettingsQuickLinks = dynamic(() => import("@/components/settings/SettingsQ
 const SettingsWhereToConfigure = dynamic(() => import("@/components/settings/SettingsWhereToConfigure").then((m) => ({ default: m.SettingsWhereToConfigure })), { loading: () => null });
 const SettingsClearCache = dynamic(() => import("@/components/settings/SettingsClearCache").then((m) => ({ default: m.SettingsClearCache })), { loading: () => null });
 const BehaviorProfileSettings = dynamic(() => import("@/components/settings/BehaviorProfileSettings").then((m) => ({ default: m.BehaviorProfileSettings })), { loading: () => null });
+const SettingsDaysOff = dynamic(() => import("@/components/settings/SettingsDaysOff").then((m) => ({ default: m.SettingsDaysOff })), { loading: () => null });
 
 export default async function SettingsPage() {
   const supabase = await createClient();
@@ -81,6 +82,7 @@ export default async function SettingsPage() {
       </section>
 
       <BehaviorProfileSettings initial={behaviorProfile} initialAutoMasterMissions={prefs.auto_master_missions} />
+      <SettingsDaysOff initialDaysOff={prefs.usual_days_off ?? null} initialMode={prefs.day_off_mode ?? "soft"} />
 
       <section id="tijd-notificaties" className="space-y-3">
         <h2 className="text-xs font-semibold uppercase tracking-wide text-[var(--text-muted)]">Tijd & notificaties</h2>

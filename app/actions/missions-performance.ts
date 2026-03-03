@@ -690,7 +690,11 @@ async function getEmotionalStateCorrelationsUncached(): Promise<{
     if (v.total < 3) continue;
     byStateRates[state] = { ...v, rate: v.total > 0 ? v.completed / v.total : 0 };
   }
-  const entries = Object.entries(byStateRates).filter(([, v]) => v.total >= 3);
+  // Only generate a message when we have at least two emotional states with enough
+  // data, and ignore the synthetic "unknown" bucket for the headline message.
+  const entries = Object.entries(byStateRates).filter(
+    ([state, v]) => v.total >= 3 && state !== "unknown",
+  );
   if (entries.length < 2) return { message: null, byState: byStateRates };
   const worst = entries.reduce((a, b) => (a[1].rate <= b[1].rate ? a : b));
   const pct = Math.round(worst[1].rate * 100);

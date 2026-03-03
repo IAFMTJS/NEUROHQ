@@ -19,6 +19,7 @@ type DailyStateRow = {
   sensory_load?: number | null;
   social_load?: number | null;
   sleep_hours?: number | null;
+  auto_master_missions_generated?: boolean | null;
 };
 
 export type EnsureMasterMissionsResult = { created: number; debug?: string; createError?: string };
@@ -36,7 +37,13 @@ export async function ensureMasterMissionsForToday(): Promise<EnsureMasterMissio
     return { created: 0, debug: "auto_off" };
   }
 
+  const usualDaysOff = prefs.usual_days_off ?? null;
+  const dayOffMode = prefs.day_off_mode ?? "soft";
+
   const dateStr = todayDateString();
+  const today = new Date(dateStr + "T12:00:00Z");
+  const isoWeekday = ((today.getUTCDay() || 7) as 1 | 2 | 3 | 4 | 5 | 6 | 7);
+  const isUsualDayOff = usualDaysOff?.includes(isoWeekday) ?? false;
 
   // Alle auto-missies van vandaag (ook voltooid/verwijderd) — zo komen ze niet opnieuw terug na afronden of verwijderen.
   const { data: allAutoToday } = await supabase
@@ -64,6 +71,10 @@ export async function ensureMasterMissionsForToday(): Promise<EnsureMasterMissio
   const dailyRow = dailyRowRaw as DailyStateRow | null;
   if (!dailyRow) {
     return { created: 0, debug: "no_brain_status" };
+  }
+
+  if (dailyRow.auto_master_missions_generated) {
+    return { created: 0, debug: "already_generated" };
   }
 
   const energy = dailyRow?.energy ?? null;
@@ -97,7 +108,7 @@ export async function ensureMasterMissionsForToday(): Promise<EnsureMasterMissio
   });
 
   const avoidanceTracker = await getAvoidanceTracker();
-  const allowHeavyNow = brainMode.mode !== "LowEnergy";
+  const allowHeavyNow = brainMode.mode !== "LowEnergy" && (!isUsualDayOff || dayOffMode === "soft");
 
   // Recently used auto-mission titles (last 5 days, excluding today) so we avoid repeating the same tasks.
   const fiveDaysAgo = new Date(dateStr);
@@ -126,6 +137,7 @@ export async function ensureMasterMissionsForToday(): Promise<EnsureMasterMissio
     focus1To10: focus ?? null,
     sensoryLoad1To10: sensory_load ?? null,
     socialLoad1To10: social_load ?? null,
+    dayType: isUsualDayOff ? (dayOffMode === "hard" ? "off_hard" : "off_soft") : "work",
   });
 
   if (picks.length === 0) return { created: 0, debug: "no_picks" };
@@ -235,11 +247,130 @@ export async function ensureMasterMissionsForToday(): Promise<EnsureMasterMissio
       if (!firstError) firstError = msg;
     }
   }
+  // Mark that auto-missions have been generated for today so we never auto-add more until tomorrow.
+  try {
+    await supabase
+      .from("daily_state")
+      .update({ auto_master_missions_generated: true })
+      .eq("user_id", user.id)
+      .eq("date", dateStr);
+  } catch {
+    // best-effort; if this fails we still created tasks.
+  }
+
   // Do not call revalidatePath/revalidateTag here: this runs during /tasks page render.
   // Next.js forbids revalidation during render. Same request already sees new tasks.
   return {
     created,
     debug: created === 0 ? "create_failed" : undefined,
+    createError: created === 0 ? firstError : undefined,
+  };
+}
+
+/** Optional: add 1–2 bonus auto-missions for today after baseline is done. */
+export async function addBonusAutoMissionsForToday(): Promise<EnsureMasterMissionsResult> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { created: 0, debug: "no_user" };
+
+  const dateStr = todayDateString();
+
+  const { data: dailyRowRaw } = await supabase
+    .from("daily_state")
+    .select("energy, focus, sensory_load, social_load, sleep_hours")
+    .eq("user_id", user.id)
+    .eq("date", dateStr)
+    .maybeSingle();
+  const dailyRow = dailyRowRaw as DailyStateRow | null;
+  if (!dailyRow) return { created: 0, debug: "no_brain_status" };
+
+  const energy = dailyRow.energy ?? null;
+  const focus = dailyRow.focus ?? null;
+  const sensory_load = dailyRow.sensory_load ?? null;
+  const social_load = dailyRow.social_load ?? null;
+
+  const profile = await getBehaviorProfile();
+  const avoidanceTracker = await getAvoidanceTracker();
+
+  const headroom = 15;
+  const brainMode = computeBrainMode({
+    energy,
+    focus,
+    sensory_load,
+    headroom,
+  });
+
+  const allowHeavyNow = brainMode.mode !== "LowEnergy";
+
+  const fiveDaysAgo = new Date(dateStr);
+  fiveDaysAgo.setDate(fiveDaysAgo.getDate() - 5);
+  const fiveDaysAgoStr = fiveDaysAgo.toISOString().slice(0, 10);
+  const { data: recentAuto } = await supabase
+    .from("tasks")
+    .select("title")
+    .eq("user_id", user.id)
+    .in("psychology_label", ["MasterPoolAuto", "MasterPoolBonus"])
+    .gte("due_date", fiveDaysAgoStr)
+    .lte("due_date", dateStr)
+    .is("parent_task_id", null);
+  const recentlyUsedTitles = new Set(
+    (recentAuto ?? []).map((r) => (r as { title?: string | null }).title ?? "").filter(Boolean)
+  );
+
+  const picks = pickMissionsForDay({
+    profile,
+    weekTheme: profile.weekTheme,
+    avoidanceTracker,
+    allowHeavyNow,
+    recentlyUsedTitles,
+    dateStr,
+    energy1To10: energy ?? null,
+    focus1To10: focus ?? null,
+    sensoryLoad1To10: sensory_load ?? null,
+    socialLoad1To10: social_load ?? null,
+  });
+  if (picks.length === 0) return { created: 0, debug: "no_picks" };
+
+  const toCreate = picks.slice(0, 2);
+  let created = 0;
+  let firstError: string | undefined;
+
+  for (const tpl of toCreate) {
+    const title = tpl.title?.trim();
+    if (!title) continue;
+
+    try {
+      const impactRaw = tpl.baseXP ? Math.round((tpl.baseXP / 10) * 1.5) : 2;
+      const impact = Math.min(3, Math.max(1, impactRaw));
+      await createTask({
+        title,
+        due_date: dateStr,
+        energy_required: tpl.energy ?? 2,
+        category: tpl.category ?? null,
+        impact,
+        domain: tpl.domain,
+        base_xp: tpl.baseXP ?? 40,
+        psychology_label: "MasterPoolBonus",
+        avoidance_tag: tpl.avoidance_tag ?? null,
+        hobby_tag: tpl.hobby_tag ?? null,
+        notes: (tpl as { description?: string }).description?.trim() || "Bonus-missie uit de pool.",
+        mission_intent:
+          tpl.tags?.includes("recovery") || brainMode.mode === "LowEnergy"
+            ? "recovery"
+            : "discipline",
+      });
+      created++;
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : String(e);
+      if (!firstError) firstError = msg;
+    }
+  }
+
+  return {
+    created,
+    debug: created === 0 ? "bonus_failed" : "bonus_ok",
     createError: created === 0 ? firstError : undefined,
   };
 }
@@ -264,6 +395,12 @@ export async function resetAutoMissionsForToday(): Promise<{ deleted: number; er
 
   const ids = (tasks ?? []).map((t) => (t as { id: string }).id);
   if (ids.length === 0) {
+    // Also reset the generated flag so next run can create fresh ones.
+    await supabase
+      .from("daily_state")
+      .update({ auto_master_missions_generated: false })
+      .eq("user_id", user.id)
+      .eq("date", today);
     revalidatePath("/tasks");
     revalidatePath("/dashboard");
     return { deleted: 0 };
@@ -271,6 +408,12 @@ export async function resetAutoMissionsForToday(): Promise<{ deleted: number; er
 
   const { error } = await supabase.from("tasks").delete().in("id", ids);
   if (error) return { deleted: 0, error: error.message };
+
+  await supabase
+    .from("daily_state")
+    .update({ auto_master_missions_generated: false })
+    .eq("user_id", user.id)
+    .eq("date", today);
 
   revalidateTagMax(`tasks-${user.id}-${today}`);
   revalidatePath("/tasks");

@@ -101,8 +101,6 @@ export async function getFinanceState(): Promise<FinanceState | null> {
     .filter((e) => e.amount_cents < 0)
     .reduce((sum, e) => sum + Math.abs(e.amount_cents), 0);
 
-  const currentBalance = totalIncome - totalExpenses;
-
   // Budget targets: from budget_targets table, or defaults from monthly_budget_cents
   const { data: budgetSettings } = await supabase
     .from("users")
@@ -111,6 +109,14 @@ export async function getFinanceState(): Promise<FinanceState | null> {
     .single();
   const monthlyBudget = budgetSettings?.monthly_budget_cents ?? 0;
   const monthlySavings = budgetSettings?.monthly_savings_cents ?? 0;
+
+  // When no income entries are logged for this cycle, fall back to the planned
+  // budget so projections and safe daily spend are based on your actual pot
+  // instead of treating income as €0.
+  let currentBalance = totalIncome - totalExpenses;
+  if (totalIncome <= 0 && monthlyBudget > 0) {
+    currentBalance = monthlyBudget - totalExpenses;
+  }
 
   const { data: targetRows } = await supabase
     .from("budget_targets")

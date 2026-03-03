@@ -25,6 +25,10 @@ export interface UserPreferences {
   reduced_motion: boolean;
   /** Auto-missies uit Master Pool (standaard aan). Wanneer false, geen auto-missies genereren. */
   auto_master_missions: boolean;
+   /** Typische vrije dagen (1=Mon..7=Sun) voor zachte planning-bias. */
+  usual_days_off?: number[] | null;
+  /** 'soft' = bias; 'hard' = vermijd werk-missies tenzij expliciet toegevoegd. */
+  day_off_mode?: "soft" | "hard" | null;
   updated_at: string;
 }
 
@@ -36,5 +40,7 @@ export const PREFERENCES_DEFAULTS: UserPreferences = {
   compact_ui: false,
   reduced_motion: false,
   auto_master_missions: true, // standaard aan
+  usual_days_off: null,
+  day_off_mode: "soft",
   updated_at: new Date().toISOString(),
 };

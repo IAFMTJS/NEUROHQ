@@ -22,6 +22,7 @@ import { toast } from "sonner";
 import { Modal } from "@/components/Modal";
 import { ErrorWithNextStep } from "@/components/ui/ErrorWithNextStep";
 import { useAppState } from "@/components/providers/AppStateProvider";
+import { addBonusAutoMissionsForToday } from "@/app/actions/master-missions";
 
 const WEEKDAY_LABELS: Record<number, string> = { 1: "Mon", 2: "Tue", 3: "Wed", 4: "Thu", 5: "Fri", 6: "Sat", 7: "Sun" };
 
@@ -256,7 +257,7 @@ export function TaskList({
           );
         }
         appState?.triggerReward();
-        if ((completedCountBefore + 1) >= suggestedTaskCount) {
+        if (completedCountBefore + 1 >= suggestedTaskCount) {
           setDetailsTask(null);
           setFocusTask(null);
           setEditTask(null);
@@ -883,10 +884,29 @@ export function TaskList({
         />
 
         <Modal open={showDoAnotherModal} onClose={() => setShowDoAnotherModal(false)} title="Nice work!" size="sm">
-          <p className="text-sm text-[var(--text-muted)]">You&apos;ve hit your suggested minimum for today. Want to do one more?</p>
+          <p className="text-sm text-[var(--text-muted)]">
+            Je hebt je minimale missie-doel voor vandaag geraakt. Wil je 2 bonusmissies uit de pool toevoegen?
+          </p>
           <div className="mt-4 flex gap-2">
             <button type="button" onClick={() => setShowDoAnotherModal(false)} className="flex-1 rounded-lg border border-[var(--card-border)] px-3 py-2 text-sm font-medium text-[var(--text-primary)] hover:bg-[var(--bg-surface)]">Maybe later</button>
-            <button type="button" onClick={() => { setShowDoAnotherModal(false); }} className="flex-1 rounded-lg bg-[var(--accent-focus)] px-3 py-2 text-sm font-medium text-white hover:opacity-90">Keep going</button>
+            <button
+              type="button"
+              onClick={() => {
+                setShowDoAnotherModal(false);
+                startTransition(async () => {
+                  try {
+                    await addBonusAutoMissionsForToday();
+                    toast.success("2 bonusmissies toegevoegd.");
+                    router.refresh();
+                  } catch {
+                    toast.error("Bonusmissies toevoegen is niet gelukt. Probeer later opnieuw.");
+                  }
+                });
+              }}
+              className="flex-1 rounded-lg bg-[var(--accent-focus)] px-3 py-2 text-sm font-medium text-white hover:opacity-90"
+            >
+              Voeg 2 bonusmissies toe
+            </button>
           </div>
         </Modal>
 

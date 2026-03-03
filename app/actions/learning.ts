@@ -474,10 +474,14 @@ export async function setMonthlyBookPagesRead(bookId: string, pagesRead: number 
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) throw new Error("Not authenticated");
+  const safePages =
+    pagesRead != null && Number.isFinite(pagesRead) && pagesRead >= 0
+      ? Math.min(32767, Math.round(pagesRead))
+      : null;
   const { error } = await supabase
     .from("monthly_books")
     .update({
-      pages_read: pagesRead ?? null,
+      pages_read: safePages,
       pages_updated_at: new Date().toISOString(),
     })
     .eq("id", bookId)

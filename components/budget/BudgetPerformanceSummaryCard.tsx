@@ -44,6 +44,9 @@ export const BudgetPerformanceSummaryCard: FC<Props> = ({
     forecast.overspend > 0 ? Math.min(100, (forecast.overspend / overspendBase) * 100) : 0;
   const budgetAccuracy = Math.max(0, Math.min(100, Math.round(100 - overspendPct)));
 
+  const driftPerDayCents = burnRate - safeDaily;
+  const driftPerDayAbs = Math.abs(driftPerDayCents);
+
   let loadLabel: "Stable" | "Tight" | "Critical" = "Stable";
   if (burnRate > safeDaily * 1.15) loadLabel = "Critical";
   else if (burnRate > safeDaily * 0.9) loadLabel = "Tight";
@@ -64,7 +67,10 @@ export const BudgetPerformanceSummaryCard: FC<Props> = ({
           </p>
         </div>
         <p className="text-xs text-[var(--text-muted)]">
-          Approximate alignment between your current burn and the end-of-cycle forecast.
+          Je geeft nu ongeveer €
+          {(driftPerDayAbs / 100).toFixed(2)} per dag{" "}
+          {driftPerDayCents > 0 ? "meer uit dan veilig is" : "minder uit dan je veilige tempo"} richting
+          het einde van deze cyclus.
         </p>
 
         <div className="grid gap-2 sm:grid-cols-2">

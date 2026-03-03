@@ -290,19 +290,30 @@ export function generateInsights(financeState: FinanceState): Insight[] {
     }
   }
 
-  // Check forecast: add when (by next payday) and how (burn rate)
+  // Check forecast: behavioral lens op flexibele pot i.p.v. alleen 'overspend'.
   const forecast = forecastEndOfCycle(financeState);
   if (forecast.overspend > 0) {
     const daysLeft = getDaysUntilNextIncome(financeState);
     const burnRate = calculateBurnRate(financeState);
     const nextPayday = getNextPaydayDate(financeState);
+    const pattern = proposeWeeklyPattern(financeState);
     const whenHow =
       daysLeft > 0 && nextPayday
         ? ` Tegen ${nextPayday}. Gebaseerd op je huidige uitgavenpatroon (€${(burnRate / 100).toFixed(2)}/dag) en ${daysLeft} dagen tot volgende loon.`
         : " Tegen einde van de periode.";
+
+    const extraLowText =
+      pattern.recommendedExtraLowDays > 0
+        ? ` Plan minstens ${pattern.recommendedExtraLowDays} extra low-spend dag${
+            pattern.recommendedExtraLowDays > 1 ? "en" : ""
+          } deze week om je flexibele pot te beschermen.`
+        : "";
+
     insights.push({
       type: "critical",
-      message: `If current pace continues, overspend by €${(forecast.overspend / 100).toFixed(2)}.${whenHow}`,
+      message: `Op dit tempo verbruik je je flexibele pot met ongeveer €${(
+        forecast.overspend / 100
+      ).toFixed(2)} te veel.${whenHow}${extraLowText}`,
       actionable: true,
     });
   }
@@ -580,6 +591,81 @@ export function checkEmergencyMode(financeState: FinanceState): {
   return {
     active: reasons.length > 0,
     reason: reasons,
+  };
+}
+
+// ============================================================================
+// FLEXIBLE POT & WEEKLY PATTERN (behavioral budget lens)
+// ============================================================================
+
+/** Remaining flexible pot after fixed costs, for the rest of the cycle. */
+export function getFlexiblePot(financeState: FinanceState): number {
+  return getRemainingBalance(financeState);
+}
+
+export type WeeklyPatternSummary = {
+  flexiblePotCents: number;
+  daysUntilNextIncome: number;
+  avgFlexPerDayCents: number;
+  lowDays: number;
+  normalDays: number;
+  treatDays: number;
+  /** How many extra "low-spend" days this week are recommended to get back on track. */
+  recommendedExtraLowDays: number;
+  /** Count of days this week where spending stayed at or below safeDailySpend. */
+  safeDaysThisWeek: number;
+};
+
+/**
+ * Proposes a human pattern (low / normal / treat days) from the flexible pot,
+ * and compares it to this week's "safe days" proxy.
+ */
+export function proposeWeeklyPattern(financeState: FinanceState): WeeklyPatternSummary {
+  const daysLeft = Math.max(1, getDaysUntilNextIncome(financeState));
+  const flexiblePotCents = getFlexiblePot(financeState);
+  const avgFlexPerDayCents = flexiblePotCents / daysLeft;
+
+  let lowDays = 3;
+  let normalDays = 3;
+  let treatDays = 1;
+
+  if (flexiblePotCents <= 0) {
+    lowDays = 7;
+    normalDays = 0;
+    treatDays = 0;
+  } else {
+    const avg = avgFlexPerDayCents;
+    if (avg <= 500) {
+      // Bijna niets extra: vooral low-spend.
+      lowDays = 5;
+      normalDays = 2;
+      treatDays = 0;
+    } else if (avg <= 1500) {
+      // Krap maar werkbaar: 3 low, 3 normaal, 1 treat.
+      lowDays = 3;
+      normalDays = 3;
+      treatDays = 1;
+    } else {
+      // Ruimer: 2 low, 3 normaal, 2 treat.
+      lowDays = 2;
+      normalDays = 3;
+      treatDays = 2;
+    }
+  }
+
+  const safeDaysThisWeek = getSafeDaysThisWeek(financeState);
+  const targetLowDaysThisWeek = lowDays;
+  const recommendedExtraLowDays = Math.max(0, targetLowDaysThisWeek - safeDaysThisWeek);
+
+  return {
+    flexiblePotCents,
+    daysUntilNextIncome: daysLeft,
+    avgFlexPerDayCents: avgFlexPerDayCents,
+    lowDays,
+    normalDays,
+    treatDays,
+    recommendedExtraLowDays,
+    safeDaysThisWeek,
   };
 }
 

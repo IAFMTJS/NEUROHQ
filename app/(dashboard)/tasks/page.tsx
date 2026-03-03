@@ -22,6 +22,7 @@ import { HeroMascotImage } from "@/components/HeroMascotImage";
 import { getXP, getXPIdentity } from "@/app/actions/xp";
 import { getIdentityEngine } from "@/app/actions/identity-engine";
 import { ensureMasterMissionsForToday } from "@/app/actions/master-missions";
+import { ensureReadingMissionForToday } from "@/app/actions/reading-missions";
 import { HQPageHeader } from "@/components/hq";
 import { XPBadge } from "@/components/XPBadge";
 import { SciFiPanel } from "@/components/hud-test/SciFiPanel";
@@ -144,7 +145,10 @@ export default async function TasksPage({ searchParams }: Props) {
   const calendarRangeStart = toDateKeyUTC(prevGridStart);
   const calendarRangeEnd = toDateKeyUTC(nextGridEnd);
 
-  const masterMissionsResult = await ensureMasterMissionsForToday();
+  const [masterMissionsResult] = await Promise.all([
+    ensureMasterMissionsForToday(),
+    ensureReadingMissionForToday().catch(() => ({ created: false, debug: "error" })),
+  ]);
   // Critical path only: mission list, hero, calendar. Analytics banners load lazily via Suspense below.
   const [mode, upcomingCalendarEvents, hasGoogle, backlog, futureTasks, completedToday, yesterdayTasksRaw, smartSuggestion, energyCap, energyBudget, decisionBlocks, xp, identity, identityEngine, tasksByDate] = await Promise.all([
     getMode(dateStr),

@@ -12,16 +12,33 @@ export function ThirtyDayMirrorBanner({ mirror }: Props) {
   const { fitnessDone, fitnessTotal, focusRate, adminAvoidRate } = mirror;
   const lines: string[] = [];
 
-  if (fitnessTotal >= 4) {
-    lines.push(
-      `Je zegt dat fitness belangrijk is, maar je deed ${fitnessDone}/${fitnessTotal} health/focus missies in de voorbije 30 dagen.`
-    );
+  // Fitness: spiegel gedrag t.o.v. wat je belangrijk noemt.
+  if (fitnessTotal >= 1) {
+    const fitnessRate = fitnessDone / Math.max(1, fitnessTotal);
+    const pct = Math.round(fitnessRate * 100);
+
+    if (fitnessRate >= 0.7) {
+      lines.push(
+        `Je zegt dat fitness belangrijk is — en je gedrag bevestigt dat. Je voltooide ${fitnessDone}/${fitnessTotal} health missies in de voorbije 30 dagen (${pct}%).`
+      );
+    } else if (fitnessRate >= 0.3) {
+      lines.push(
+        `Je zegt dat fitness belangrijk is, maar je gedrag is wisselend. Je voltooide ${fitnessDone}/${fitnessTotal} health missies in de voorbije 30 dagen (${pct}%).`
+      );
+    } else {
+      lines.push(
+        `Je zegt dat fitness belangrijk is, maar in de praktijk gebeurt er bijna niets. Je voltooide slechts ${fitnessDone}/${fitnessTotal} health missies in de voorbije 30 dagen (${pct}%).`
+      );
+    }
   }
 
+  // Discipline / focus-missies
   if (focusRate != null && !Number.isNaN(focusRate) && focusRate > 0) {
-    lines.push(`Je voltooit ongeveer ${Math.round(focusRate * 100)}% van je discipline/focus missies.`);
+    const pct = Math.round(focusRate * 100);
+    lines.push(`Je voltooit ongeveer ${pct}% van je discipline/focus missies.`);
   }
 
+  // Administratie-avoidance
   if (adminAvoidRate != null && !Number.isNaN(adminAvoidRate) && adminAvoidRate >= 0.4) {
     lines.push(
       `Je vermijdt administratie ongeveer ${Math.round(adminAvoidRate * 100)}% van de tijd wanneer ze op je lijst staat.`
@@ -41,8 +58,8 @@ export function ThirtyDayMirrorBanner({ mirror }: Props) {
         ))}
       </ul>
       <p className="mt-2 text-[11px] text-[var(--text-muted)]">
-        Dit is geen oordeel over jou als persoon — alleen over je gedragspatroon. Vraag je af: wil ik deze cijfers zo
-        laten, of wil ik dat mijn gedrag eerlijker wordt tegenover wat ik belangrijk noem?
+        Dit is geen oordeel over jou als persoon — alleen over je gedragspatroon. Vraag je af: wil je dat deze cijfers zo
+        blijven, of wil je dat je gedrag eerlijker wordt tegenover wat je belangrijk noemt?
       </p>
     </section>
   );

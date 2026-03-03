@@ -3,18 +3,15 @@
 import type { FC } from "react";
 import { useState, useTransition } from "react";
 import type { LearningStream } from "@/app/actions/learning-state";
-import { addLearningSession } from "@/app/actions/learning";
+import { addLearningSession, setMonthlyBookPagesRead } from "@/app/actions/learning";
 
 type Props = {
   streams: LearningStream[];
 };
 
 export const GrowthStreamsList: FC<Props> = ({ streams }) => {
-  const [showAll, setShowAll] = useState(false);
   const [pendingId, startTransition] = useTransition();
-
-  const hasOverwhelm = streams.length > 5;
-  const visibleStreams = hasOverwhelm && !showAll ? streams.slice(0, 2) : streams;
+  const [pagesInput, setPagesInput] = useState<Record<string, string>>({});
 
   async function handleStartSession(stream: LearningStream) {
     const today = new Date().toISOString().slice(0, 10);
@@ -62,7 +59,7 @@ export const GrowthStreamsList: FC<Props> = ({ streams }) => {
         </div>
       </div>
       <div className="space-y-3">
-        {visibleStreams.map((stream) => {
+        {streams.map((stream) => {
           const progressLabel =
             stream.type === "book" && stream.pagesTotal
               ? `${stream.pagesRead ?? 0}/${stream.pagesTotal} pages`
@@ -72,15 +69,9 @@ export const GrowthStreamsList: FC<Props> = ({ streams }) => {
             stream.type === "book" && stream.pagesTotal
               ? Math.max(
                   0,
-                  Math.min(
-                    1,
-                    (stream.pagesRead ?? 0) / (stream.pagesTotal || 1),
-                  ),
+                  Math.min(1, (stream.pagesRead ?? 0) / (stream.pagesTotal || 1)),
                 )
-              : Math.max(
-                  0,
-                  Math.min(1, stream.sessionsThisWeek > 0 ? 1 : 0),
-                );
+              : Math.max(0, Math.min(1, stream.sessionsThisWeek > 0 ? 1 : 0));
 
           return (
             <div
@@ -103,6 +94,41 @@ export const GrowthStreamsList: FC<Props> = ({ streams }) => {
                     style={{ width: `${progressRatio * 100}%` }}
                   />
                 </div>
+                {stream.type === "book" && stream.pagesTotal != null && (
+                  <div className="mt-2 flex flex-wrap items-center gap-2 text-[11px] text-[var(--text-muted)]">
+                    <label className="flex items-center gap-1">
+                      <span>Pages read so far</span>
+                      <input
+                        type="number"
+                        min={0}
+                        max={stream.pagesTotal ?? undefined}
+                        value={pagesInput[stream.id] ?? (stream.pagesRead ?? 0).toString()}
+                        onChange={(e) =>
+                          setPagesInput((prev) => ({ ...prev, [stream.id]: e.target.value }))
+                        }
+                        onBlur={() => {
+                          const raw = pagesInput[stream.id];
+                          const parsed = raw != null ? parseInt(raw, 10) : stream.pagesRead ?? 0;
+                          const clamped =
+                            parsed != null && Number.isFinite(parsed) && parsed >= 0
+                              ? parsed
+                              : stream.pagesRead ?? 0;
+                          startTransition(async () => {
+                            try {
+                              await setMonthlyBookPagesRead(stream.id, clamped);
+                            } catch {
+                              // ignore; error surface via toast elsewhere if needed
+                            }
+                          });
+                        }}
+                        className="w-16 rounded border border-[var(--card-border)] bg-[var(--bg-primary)] px-1 py-0.5 text-[11px] text-[var(--text-primary)]"
+                      />
+                    </label>
+                    <span>
+                      / {stream.pagesTotal} pages
+                    </span>
+                  </div>
+                )}
               </div>
               <button
                 type="button"
@@ -116,16 +142,6 @@ export const GrowthStreamsList: FC<Props> = ({ streams }) => {
           );
         })}
       </div>
-
-      {hasOverwhelm && !showAll && (
-        <button
-          type="button"
-          onClick={() => setShowAll(true)}
-          className="mt-3 text-xs font-medium text-[var(--accent-focus)] hover:underline"
-        >
-          Show all {streams.length} streams
-        </button>
-      )}
     </section>
   );
 };
