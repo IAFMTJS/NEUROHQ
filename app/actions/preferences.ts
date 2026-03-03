@@ -55,17 +55,29 @@ export async function getUserPreferences(): Promise<UserPreferences | null> {
     throw new Error(error.message);
   }
   if (!data) return null;
+  // Cast to a loose row type so TS doesn't treat it as a SelectQueryError when
+  // Supabase schema types lag behind new columns (usual_days_off, day_off_mode).
+  const row = data as {
+    theme?: UserPreferences["theme"] | null;
+    color_mode?: UserPreferences["color_mode"] | null;
+    selected_emotion?: UserPreferences["selected_emotion"] | null;
+    compact_ui?: boolean | null;
+    reduced_motion?: boolean | null;
+    auto_master_missions?: boolean | null;
+    usual_days_off?: number[] | null;
+    day_off_mode?: UserPreferences["day_off_mode"] | null;
+    updated_at?: string | null;
+  };
   return {
-    theme: (data.theme as UserPreferences["theme"]) ?? DEFAULTS.theme,
-    color_mode: (data.color_mode as UserPreferences["color_mode"]) ?? DEFAULTS.color_mode,
-    selected_emotion: (data.selected_emotion as UserPreferences["selected_emotion"]) ?? null,
-    compact_ui: data.compact_ui ?? DEFAULTS.compact_ui,
-    reduced_motion: data.reduced_motion ?? DEFAULTS.reduced_motion,
-    auto_master_missions: data.auto_master_missions ?? DEFAULTS.auto_master_missions,
-    usual_days_off: (data.usual_days_off as number[] | null) ?? DEFAULTS.usual_days_off ?? null,
-    day_off_mode:
-      (data.day_off_mode as UserPreferences["day_off_mode"]) ?? DEFAULTS.day_off_mode ?? "soft",
-    updated_at: data.updated_at ?? DEFAULTS.updated_at,
+    theme: row.theme ?? DEFAULTS.theme,
+    color_mode: row.color_mode ?? DEFAULTS.color_mode,
+    selected_emotion: row.selected_emotion ?? null,
+    compact_ui: row.compact_ui ?? DEFAULTS.compact_ui,
+    reduced_motion: row.reduced_motion ?? DEFAULTS.reduced_motion,
+    auto_master_missions: row.auto_master_missions ?? DEFAULTS.auto_master_missions,
+    usual_days_off: row.usual_days_off ?? DEFAULTS.usual_days_off ?? null,
+    day_off_mode: row.day_off_mode ?? DEFAULTS.day_off_mode ?? "soft",
+    updated_at: row.updated_at ?? DEFAULTS.updated_at,
   };
 }
 
