@@ -71,7 +71,7 @@ export type AddXPResult = { levelUp: boolean; newLevel: number } | undefined;
 
 export async function addXP(
   points: number,
-  options?: { source_type: string; task_id?: string | null }
+  options?: { source_type?: string; task_id?: string | null; skipRevalidate?: boolean }
 ): Promise<AddXPResult> {
   if (points <= 0) return undefined;
   const supabase = await createClient();
@@ -103,7 +103,7 @@ export async function addXP(
       task_id: options.task_id ?? null,
     });
   }
-  if (!error) {
+  if (!error && !options?.skipRevalidate) {
     revalidatePath("/dashboard");
     revalidatePath("/settings");
     revalidatePath("/tasks");

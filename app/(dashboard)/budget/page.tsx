@@ -29,6 +29,7 @@ import { getIncomeSources } from "@/app/actions/dcic/income-sources";
 import { getAlternatives } from "@/app/actions/alternatives";
 import { getBudgetWeeklyReviewStatus } from "@/app/actions/budget-weekly-review";
 import { getBudgetDisciplineXpThisWeek, getBudgetDisciplineCompletedToday } from "@/app/actions/budget-discipline";
+import { syncBudgetDisciplineFromDataForToday } from "@/app/actions/missions-performance";
 import { getImpulseTimeWindow } from "@/app/actions/budget-impulse-pattern";
 import { formatMonthYearShort } from "@/lib/utils/date-locale";
 import { formatCents } from "@/lib/utils/currency";
@@ -91,6 +92,7 @@ export default async function BudgetPage({ searchParams }: Props) {
   const [year, month] = isHistoryView ? monthParam!.split("-").map(Number) : [0, 0];
 
   try { await generateRecurringEntries(); } catch { /* table may not exist yet */ }
+  await syncBudgetDisciplineFromDataForToday();
   const periodBounds = await getBudgetPeriodBounds();
   const { periodStart, periodEnd, isPaydayCycle } = periodBounds;
   const { nextMonthStart, nextMonthEnd, prevMonthStart, prevMonthEnd } = getBudgetAdjacentMonths();

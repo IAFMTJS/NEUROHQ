@@ -873,3 +873,45 @@ export async function recordBudgetDisciplineMission(params: {
 
   return { ok: true };
 }
+
+/** Auto-award budget discipline XP when real data shows safe_spend or no_impulse for today.
+ *  Call once per page load (e.g. budget page); idempotent — only awards if not already given.
+ *  Does not auto-award log_all (honor system only).
+ */
+export async function syncBudgetDisciplineFromDataForToday(): Promise<{ awarded: ("safe_spend" | "no_impulse")[] }> {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { awarded: [] };
+
+  const today = new Date().toISOString().slice(0, 10);
+  const toCheck: ("safe_spend" | "no_impulse")[] = ["safe_spend", "no_impulse"];
+  const awarded: ("safe_spend" | "no_impulse")[] = [];
+
+  for (const mission of toCheck) {
+    const sourceType = `budget_discipline:${mission}`;
+    const { data: existing } = await supabase
+      .from("xp_events")
+      .select("id")
+      .eq("user_id", user.id)
+      .eq("source_type", sourceType)
+      .gte("created_at", today + "T00:00:00Z")
+      .lt("created_at", today + "T23:59:59.999Z")
+      .limit(1)
+      .maybeSingle();
+    if (existing) continue;
+
+    const validation = await validateBudgetDisciplineMission(supabase, user.id, mission, today);
+    if (!validation.ok) continue;
+
+    const baseXp = BUDGET_MISSION_XP[mission] ?? 10;
+    const mult = await getBudgetXpMultiplier();
+    const xp = Math.round(baseXp * mult);
+    await Promise.all([
+      addXP(xp, { source_type: sourceType, skipRevalidate: true }),
+      updateStreakOnTaskComplete(today),
+    ]);
+    awarded.push(mission);
+  }
+
+  return { awarded };
+}

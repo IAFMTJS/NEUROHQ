@@ -44,11 +44,24 @@ function pickStructureEnergyFocus(context: PickContext, max: number): PickedMiss
     dayType,
   } = context;
 
-  const base = MASTER_MISSION_POOL.filter((t) =>
+  let base = MASTER_MISSION_POOL.filter((t) =>
     t.subcategory?.startsWith("structure_") ||
     t.subcategory?.startsWith("energy_") ||
     t.subcategory?.startsWith("focus_")
   );
+  // Recovery mode on day off: only structure + energy, no pressure. off_hard = strict (no focus, energy ≤ 3, no push).
+  if (dayType === "off_hard") {
+    base = base.filter(
+      (t) =>
+        (t.subcategory?.startsWith("structure_") || t.subcategory?.startsWith("energy_")) &&
+        (t.energy ?? 0) <= 3 &&
+        !t.tags?.includes("push")
+    );
+  } else if (dayType === "off_soft") {
+    base = base.filter(
+      (t) => (t.subcategory?.startsWith("structure_") || t.subcategory?.startsWith("energy_")) && !t.tags?.includes("push")
+    );
+  }
 
   const themedScore = (t: MasterMissionTemplate): number => {
     let score = 0;
@@ -232,12 +245,18 @@ function uniqueByTitle<T extends { title?: string | null }>(arr: T[]): T[] {
  * - 1–2 Structure/Energy/Focus‑missies (altijd), geen dubbele titels.
  * - 1 Procrastination Attack (indien avoidance hoog genoeg).
  * - 1 Identity/Courage/Hobby‑missie (op basis van BehaviorProfile).
+ *
+ * On usual days off (off_soft / off_hard): recovery mode — only structure + energy picks,
+ * no procrastination or identity/courage/hobby; 2–3 slots from structure/energy pool.
  */
 export function pickMissionsForDay(context: PickContext): PickedMissionTemplate[] {
-  const structureEnergy = pickStructureEnergyFocus(context, 2);
+  const isRecoveryDay = context.dayType === "off_soft" || context.dayType === "off_hard";
+  const structureEnergy = pickStructureEnergyFocus(context, isRecoveryDay ? 3 : 2);
+  if (isRecoveryDay) {
+    return uniqueByTitle(structureEnergy);
+  }
   const procrastination = pickProcrastinationAttack(context);
   const identityCourageHobby = pickIdentityCourageHobby(context);
-
   return uniqueByTitle([...structureEnergy, ...procrastination, ...identityCourageHobby]);
 }
 

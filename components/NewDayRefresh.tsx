@@ -24,7 +24,13 @@ export function NewDayRefresh() {
       const now = getLocalDateStr();
       if (lastDateRef.current !== now) {
         lastDateRef.current = now;
-        router.refresh();
+        // Force a full reload so all server data, caches and client state
+        // are reset for the new day. This behaves like "empty cache" for the PWA.
+        if (typeof window !== "undefined") {
+          window.location.reload();
+        } else {
+          router.refresh();
+        }
       }
     }
 

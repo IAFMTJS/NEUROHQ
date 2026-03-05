@@ -69,7 +69,18 @@ export async function ensureMasterMissionsForToday(): Promise<EnsureMasterMissio
     .maybeSingle();
 
   const dailyRow = dailyRowRaw as DailyStateRow | null;
-  if (!dailyRow) {
+  // Require a full brain‑status check‑in (all core sliders filled) before
+  // generating auto‑missions. Rows created indirectly (e.g. recovery bonus)
+  // only set a subset of fields and should not trigger missions.
+  const hasBrainStatus =
+    !!dailyRow &&
+    dailyRow.energy != null &&
+    dailyRow.focus != null &&
+    dailyRow.sensory_load != null &&
+    dailyRow.social_load != null &&
+    dailyRow.sleep_hours != null;
+
+  if (!hasBrainStatus) {
     return { created: 0, debug: "no_brain_status" };
   }
 

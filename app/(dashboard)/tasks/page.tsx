@@ -17,7 +17,7 @@ import { getThirtyDayMirror } from "@/app/actions/thirty-day-mirror";
 import { getSmartSuggestion } from "@/app/actions/dcic/smart-suggestion";
 import { getEnergyCapToday } from "@/app/actions/dcic/energy-cap";
 import { getEnergyBudget } from "@/app/actions/energy";
-import { yesterdayDate } from "@/lib/utils/timezone";
+import { todayDateString, yesterdayDate } from "@/lib/utils/timezone";
 import { HeroMascotImage } from "@/components/HeroMascotImage";
 import { getXP, getXPIdentity } from "@/app/actions/xp";
 import { getIdentityEngine } from "@/app/actions/identity-engine";
@@ -109,8 +109,10 @@ function isValidCalendarView(value: string | undefined): value is CalendarView {
 }
 
 export default async function TasksPage({ searchParams }: Props) {
-  const today = new Date();
-  const dateStr = today.toISOString().slice(0, 10);
+  // Use the shared timezone‑aware helper so "today" is consistent across
+  // dashboard, missions and auto‑mission generation.
+  const dateStr = todayDateString();
+  const today = new Date(dateStr + "T12:00:00Z");
   const yesterdayStr = yesterdayDate(dateStr);
   const params = await searchParams;
   const tabParam = params.tab;

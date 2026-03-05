@@ -177,9 +177,28 @@ export async function getEnergyBudget(date: string): Promise<EnergyBudget> {
         { data: incompleteTasks },
         { data: events },
       ] = await Promise.all([
-        client.from("daily_state").select("energy, focus, sensory_load, sleep_hours, social_load, mental_battery, load, focus_consumed").eq("user_id", userId).eq("date", dateKey).single(),
-        client.from("tasks").select("energy_required").eq("user_id", userId).eq("due_date", dateKey).eq("completed", true),
-        client.from("tasks").select("energy_required").eq("user_id", userId).eq("due_date", dateKey).eq("completed", false),
+        client
+          .from("daily_state")
+          .select("energy, focus, sensory_load, sleep_hours, social_load, mental_battery, load, focus_consumed")
+          .eq("user_id", userId)
+          .eq("date", dateKey)
+          .single(),
+        // Count tasks actually completed on this date (based on completed_at),
+        // regardless of their original due_date. This matches the user's
+        // experience of "I did a task today" and drives the late‑day banner.
+        client
+          .from("tasks")
+          .select("energy_required")
+          .eq("user_id", userId)
+          .eq("completed", true)
+          .gte("completed_at", `${dateKey}T00:00:00Z`)
+          .lt("completed_at", `${dateKey}T23:59:59.999Z`),
+        client
+          .from("tasks")
+          .select("energy_required")
+          .eq("user_id", userId)
+          .eq("due_date", dateKey)
+          .eq("completed", false),
         client
           .from("calendar_events")
           .select("start_at, end_at, duration_hours, is_social, source")

@@ -572,6 +572,19 @@ export const MASTER_MISSION_POOL: MasterMissionTemplate[] = [
     tags: ["identity"],
     identity_tag: "financial_control",
   },
+  {
+    id: "minimal-integrity-3",
+    title: "Minimal Integrity: 2–3 min micro‑missie",
+    domain: "discipline",
+    energy: 1,
+    category: "personal",
+    baseXP: 25,
+    xpLevel: "low",
+    description:
+      "Kies de kleinste mogelijke actie (2–3 minuten) rond een taak die je ontwijkt. Geen perfectionisme, alleen een minimale beweging vooruit.",
+    subcategory: "identity",
+    tags: ["identity", "minimal_integrity"],
+  },
 
   // Courage (social / exposure)
   {
