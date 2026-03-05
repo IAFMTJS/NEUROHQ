@@ -19,7 +19,7 @@ import {
   auditSubscriptions,
   checkEmergencyMode,
 } from "@/lib/dcic/finance-engine";
-import { getBudgetToday, getPreviousPaydayDateFromDay } from "@/lib/utils/budget-date";
+import { getBudgetToday, getPreviousPaydayDateFromDay, getNextPaydayDateFromDay, getNextPaydayDateNextMonth } from "@/lib/utils/budget-date";
 
 /**
  * Gets financeState from database
@@ -87,11 +87,25 @@ export async function getFinanceState(): Promise<FinanceState | null> {
 
   const cycleStartDateStr = cycleStart.toISOString().slice(0, 10);
 
-  const { data: entries } = await supabase
+  let cycleNextPaydayDate: string | undefined;
+  let cycleDaysUntilNextIncome: number | undefined;
+  if (lastPaydayDateStr && /^\d{4}-\d{2}-\d{2}$/.test(lastPaydayDateStr)) {
+    // Next payday = day-of-month in the *next* month (~30 days), not the next calendar occurrence.
+    cycleNextPaydayDate = getNextPaydayDateNextMonth(lastPaydayDateStr, paydayDay);
+    const todayMs = new Date(todayStr + "T12:00:00Z").getTime();
+    const nextMs = new Date(cycleNextPaydayDate + "T12:00:00Z").getTime();
+    cycleDaysUntilNextIncome = Math.max(0, Math.ceil((nextMs - todayMs) / (24 * 60 * 60 * 1000)));
+  }
+
+  let entriesQuery = supabase
     .from("budget_entries")
     .select("*")
     .eq("user_id", user.id)
-    .gte("date", cycleStart.toISOString().split("T")[0]);
+    .gte("date", cycleStartDateStr);
+  if (lastPaydayDateStr && cycleStartDateStr) {
+    entriesQuery = entriesQuery.lte("date", todayStr);
+  }
+  const { data: entries } = await entriesQuery;
 
   const totalIncome = (entries || [])
     .filter((e) => e.amount_cents > 0)
@@ -198,6 +212,8 @@ export async function getFinanceState(): Promise<FinanceState | null> {
     cycle: {
       startDay: extractDayOfMonth(incomeSources[0]?.dayOfMonth || 25),
       startDate: cycleStartDateStr,
+      nextPaydayDate: cycleNextPaydayDate,
+      daysUntilNextIncome: cycleDaysUntilNextIncome,
     },
     balance: {
       current: currentBalance,

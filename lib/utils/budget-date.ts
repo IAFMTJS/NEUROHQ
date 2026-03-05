@@ -1,14 +1,12 @@
 /**
- * Budget dates in a fixed timezone (Europe/Amsterdam) so "today" and "current month"
- * match what the user sees, regardless of server (e.g. UTC) time.
- * Fixes entries being saved but not shown because server month != user month.
+ * Budget dates: "today" and month bounds in a fixed timezone so they match
+ * what the user sees. Uses the same "today" as the rest of the app (see timezone.ts).
  */
-const BUDGET_TIMEZONE = "Europe/Amsterdam";
+import { todayDateString } from "@/lib/utils/timezone";
 
-/** Today as YYYY-MM-DD in budget timezone */
+/** Today as YYYY-MM-DD (same as app: Europe/Amsterdam). */
 export function getBudgetToday(): string {
-  return new Date()
-    .toLocaleDateString("en-CA", { timeZone: BUDGET_TIMEZONE });
+  return todayDateString();
 }
 
 /** Current month start and end (YYYY-MM-DD) in budget timezone */
@@ -43,8 +41,8 @@ export function getBudgetAdjacentMonths(): {
 }
 
 /**
- * Next payday date (YYYY-MM-DD) from a given today and day-of-month (1–31).
- * Used for payday-based budget cycle: period runs last_payday_date → day before next payday.
+ * Next payday date (YYYY-MM-DD): next calendar occurrence of day-of-month (e.g. next 8th).
+ * Used when inferring from "today" (no last_payday_date set).
  */
 export function getNextPaydayDateFromDay(todayStr: string, dayOfMonth: number): string {
   const d = Math.max(1, Math.min(31, dayOfMonth));
@@ -60,6 +58,22 @@ export function getNextPaydayDateFromDay(todayStr: string, dayOfMonth: number): 
   const nextY = nextMonth.getUTCFullYear();
   const nextM = nextMonth.getUTCMonth() + 1;
   const lastDayNext = new Date(Date.UTC(nextY, nextM, 0)).getUTCDate();
+  const payday = Math.min(d, lastDayNext);
+  return `${nextY}-${String(nextM).padStart(2, "0")}-${String(payday).padStart(2, "0")}`;
+}
+
+/**
+ * Next payday as the given day-of-month in the month *after* the reference date.
+ * Used when last_payday_date is set: period is "from last payday until ~1 month later" (e.g. 5 Mar → 8 Apr), not "until next calendar 8th" (5 Mar → 8 Mar).
+ */
+export function getNextPaydayDateNextMonth(referenceDateStr: string, dayOfMonth: number): string {
+  const d = Math.max(1, Math.min(31, dayOfMonth));
+  const [y, m] = referenceDateStr.split("-").map(Number);
+  const month0 = m - 1;
+  const nextMonth0 = (month0 + 1) % 12;
+  const nextY = month0 === 11 ? y + 1 : y;
+  const nextM = nextMonth0 + 1; // 1-based for output
+  const lastDayNext = new Date(Date.UTC(nextY, nextMonth0 + 1, 0)).getUTCDate();
   const payday = Math.min(d, lastDayNext);
   return `${nextY}-${String(nextM).padStart(2, "0")}-${String(payday).padStart(2, "0")}`;
 }
@@ -89,29 +103,20 @@ export function getPreviousPaydayDateFromDay(todayStr: string, dayOfMonth: numbe
 /**
  * Budget cycle bounds when user uses payday-based period (last_payday_date set).
  * periodStart = last payday date, periodEnd = day before next payday (inclusive).
- * If today is past periodEnd, returns the *next* period (roll-forward) so the current period is always correct.
+ * Next payday is the 8th (etc.) of the *next* month (~30 days), not the next calendar 8th.
+ * We do not roll forward: the period end stays fixed until the user pushes "Vandaag loon gehad".
  */
 export function getBudgetCycleBounds(
-  todayStr: string,
+  _todayStr: string,
   lastPaydayDateStr: string,
   paydayDayOfMonth: number
 ): { periodStart: string; periodEnd: string } {
   const day = Math.max(1, Math.min(31, paydayDayOfMonth));
-  let periodStart = lastPaydayDateStr;
-  let nextPayday = getNextPaydayDateFromDay(periodStart, day);
-  let next = new Date(nextPayday + "T12:00:00Z");
+  const periodStart = lastPaydayDateStr;
+  const nextPayday = getNextPaydayDateNextMonth(periodStart, day);
+  const next = new Date(nextPayday + "T12:00:00Z");
   next.setUTCDate(next.getUTCDate() - 1);
-  let periodEnd = next.toISOString().slice(0, 10);
-  const todayDate = new Date(todayStr + "T12:00:00Z");
-  const periodEndDate = new Date(periodEnd + "T12:00:00Z");
-  while (todayDate.getTime() > periodEndDate.getTime()) {
-    periodStart = nextPayday;
-    nextPayday = getNextPaydayDateFromDay(periodStart, day);
-    next = new Date(nextPayday + "T12:00:00Z");
-    next.setUTCDate(next.getUTCDate() - 1);
-    periodEnd = next.toISOString().slice(0, 10);
-    periodEndDate.setTime(new Date(periodEnd + "T12:00:00Z").getTime());
-  }
+  const periodEnd = next.toISOString().slice(0, 10);
   return { periodStart, periodEnd };
 }
 

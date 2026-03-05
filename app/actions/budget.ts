@@ -91,6 +91,7 @@ export async function updateBudgetSettings(params: {
   if (error) throw new Error(error.message);
   revalidatePath("/budget");
   revalidatePath("/settings");
+  if (params.last_payday_date !== undefined) revalidatePath("/dashboard");
 }
 
 /** Set "vandaag loon gehad": start budgetperiode vandaag tot volgende verwachte loondag. */
@@ -102,7 +103,7 @@ export async function setPaydayReceivedToday(): Promise<void> {
 /**
  * Current budget period bounds: payday cycle when user has set last_payday_date or payday day,
  * otherwise calendar month (1st–last day).
- * - With last_payday_date: period = that date until day before next payday (rolls forward after next payday).
+ * - With last_payday_date: period = that date until day before next payday; end stays fixed until user pushes "Vandaag loon gehad".
  * - With only payday_day_of_month (or income_sources): period = last passed payday until day before next payday.
  */
 export async function getBudgetPeriodBounds(): Promise<{
