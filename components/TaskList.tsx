@@ -123,6 +123,10 @@ export function TaskList({
   const [quickAddOpen, setQuickAddOpen] = useState(false);
 
   useEffect(() => {
+    setAddDueDate(date);
+  }, [date]);
+
+  useEffect(() => {
     if (addParam && (/^\d{4}-\d{2}-\d{2}$/.test(addParam) || addParam === "today")) setQuickAddOpen(true);
   }, [addParam]);
   const [showDoAnotherModal, setShowDoAnotherModal] = useState(false);
@@ -132,8 +136,15 @@ export function TaskList({
     reputation?: { discipline: number; consistency: number; impact: number } | null;
   } | null>(null);
   const [optimisticCompleteIds, setOptimisticCompleteIds] = useState<string[]>([]);
+  /** Tasks added this session (modal/simple form) so they show without reload; only for due_date === date */
+  const [localTasksAdded, setLocalTasksAdded] = useState<ExtendedTask[]>([]);
 
-  const extendedTasks = initialTasks as ExtendedTask[];
+  const extendedTasks = useMemo(() => {
+    const fromServer = initialTasks as ExtendedTask[];
+    const ids = new Set(fromServer.map((t) => t.id));
+    const added = localTasksAdded.filter((t) => t.due_date === date && !ids.has(t.id));
+    return [...fromServer, ...added];
+  }, [initialTasks, localTasksAdded, date]);
   const incompleteTasksForDisplay = useMemo(
     () => extendedTasks.filter((t) => !t.completed && !optimisticCompleteIds.includes(t.id)),
     [extendedTasks, optimisticCompleteIds]
@@ -188,9 +199,9 @@ export function TaskList({
   const canAdd = !addBlocked && !slotsFilled;
   const limitMessage =
     addBlocked
-      ? "Mentale belasting te hoog. Vandaag geen nieuwe missies toevoegen; afronden of uit je agenda halen."
+      ? "Let op: hoge mentale belasting vandaag — je kunt nog steeds missies toevoegen (bijv. lichte of voor een andere dag)."
       : slotsFilled
-        ? "Je hebt je focus slots gevuld. Kies één missie om eerst af te maken of te verplaatsen; dan mag er weer één bij."
+        ? "Let op: je focus slots zijn vol. Je kunt nog steeds toevoegen; overweeg eerst iets af te ronden of te verplaatsen."
         : null;
 
   useEffect(() => {
@@ -354,13 +365,9 @@ export function TaskList({
     const priority = priorityRaw ? parseInt(priorityRaw, 10) : null;
     const recurrence_weekdays = recurrence === "weekly" && weekdays.length > 0 ? weekdays.sort((a, b) => a - b).join(",") : null;
     if (!title) return;
-    if (!canAdd && limitMessage) {
-      setAddError(limitMessage);
-      return;
-    }
     startTransition(async () => {
       try {
-        await createTask({
+        const result = await createTask({
           title,
           due_date: dueDate,
           category: category === "work" ? "work" : category === "personal" ? "personal" : null,
@@ -374,11 +381,13 @@ export function TaskList({
           social_load: socialLoad && socialLoad >= 1 && socialLoad <= 10 ? socialLoad : null,
           priority: priority && priority >= 1 && priority <= 5 ? priority : null,
         });
+        if (result?.task && result.task.due_date === date) {
+          setLocalTasksAdded((prev) => [...prev, result.task as ExtendedTask]);
+        }
         form.reset();
         setAddDueDate(date);
         setWeekdays([]);
         setShowRoutine(false);
-        router.refresh();
       } catch (err) {
         setAddError(err instanceof Error ? err.message : "Failed to add task");
       }
@@ -596,12 +605,11 @@ export function TaskList({
           </ul>
         )}
         {subtaskError && <p className="ml-9 mt-1 text-xs text-red-400" role="alert">{subtaskError}</p>}
-        {canAdd && (
-          <form onSubmit={(e) => handleAddSubtask(task.id, e)} className="ml-9 flex gap-2">
-            <input name="subtask-title" type="text" placeholder="Add subtask…" className="flex-1 rounded-lg border border-white/10 bg-[var(--bg-primary)] px-2 py-1 text-xs text-white placeholder-neutral-500" />
-            <button type="submit" disabled={pending} className="rounded-lg px-2 py-1 text-xs text-[var(--accent-focus)]">Add</button>
-          </form>
-        )}
+        {!canAdd && limitMessage && <p className="ml-9 mb-1 text-xs text-[var(--text-muted)]">{limitMessage}</p>}
+        <form onSubmit={(e) => handleAddSubtask(task.id, e)} className="ml-9 flex gap-2">
+          <input name="subtask-title" type="text" placeholder="Add subtask…" className="flex-1 rounded-lg border border-white/10 bg-[var(--bg-primary)] px-2 py-1 text-xs text-white placeholder-neutral-500" />
+          <button type="submit" disabled={pending} className="rounded-lg px-2 py-1 text-xs text-[var(--accent-focus)]">Add</button>
+        </form>
       </li>
     );
   }
@@ -703,9 +711,9 @@ export function TaskList({
           </div>
         )}
 
-        {canAdd && (
-          <div className="mt-4 rounded-xl border border-[var(--card-border)] bg-[var(--bg-surface)]/30 p-4">
-            <button type="button" onClick={() => setShowRoutine((v) => !v)} className="mb-2 text-xs font-medium text-[var(--text-muted)] hover:text-[var(--text-primary)]">
+        <div className="mt-4 rounded-xl border border-[var(--card-border)] bg-[var(--bg-surface)]/30 p-4">
+          {limitMessage && <p className="mb-3 text-xs text-[var(--text-muted)]">{limitMessage}</p>}
+          <button type="button" onClick={() => setShowRoutine((v) => !v)} className="mb-2 text-xs font-medium text-[var(--text-muted)] hover:text-[var(--text-primary)]">
               {showRoutine ? "− Simple form" : "+ Routine & options (category, weekly days, impact)"}
             </button>
             <form onSubmit={handleAdd} className="space-y-3">
@@ -817,20 +825,12 @@ export function TaskList({
               )}
             </form>
           </div>
-        )}
-        {!canAdd && limitMessage && (
-          <p className="mt-2 text-xs text-[var(--text-muted)]">
-            {limitMessage}
-          </p>
-        )}
 
-        {canAdd && (
-          <div className="mt-3 flex justify-end">
-            <button type="button" onClick={() => { setDetailsTask(null); setFocusTask(null); setQuickAddOpen(true); }} className="rounded-full border border-[var(--accent-focus)]/50 bg-[var(--accent-focus)]/10 px-4 py-2 text-sm font-medium text-[var(--accent-focus)] hover:bg-[var(--accent-focus)]/20">
-              + Nog een missie (templates)
-            </button>
-          </div>
-        )}
+        <div className="mt-3 flex justify-end">
+          <button type="button" onClick={() => { setDetailsTask(null); setFocusTask(null); setQuickAddOpen(true); }} className="rounded-full border border-[var(--accent-focus)]/50 bg-[var(--accent-focus)]/10 px-4 py-2 text-sm font-medium text-[var(--accent-focus)] hover:bg-[var(--accent-focus)]/20">
+            + Nog een missie (templates)
+          </button>
+        </div>
 
         {detailsTask && (
           <TaskDetailsModal
@@ -876,7 +876,11 @@ export function TaskList({
           onClose={() => { setQuickAddOpen(false); if (addParam) router.replace(pathname); }}
           date={addParam === "today" || !addParam ? date : addParam && /^\d{4}-\d{2}-\d{2}$/.test(addParam) ? addParam : date}
           strategyMapping={strategyMapping}
-          onAdded={() => { setQuickAddOpen(false); if (addParam) router.replace(pathname); }}
+          onAdded={(task) => {
+            if (task && task.due_date === date) setLocalTasksAdded((prev) => [...prev, task as ExtendedTask]);
+            setQuickAddOpen(false);
+            if (addParam) router.replace(pathname);
+          }}
           headroomTierToday={brainMode?.tier}
           activeCountToday={activeCount}
           maxSlotsToday={maxSlots === Infinity ? undefined : maxSlots}

@@ -10,9 +10,10 @@ import type { FinanceState, IncomeSource, Expense, BudgetTarget } from "./types"
 // ============================================================================
 
 /**
- * Returns the next payday date (YYYY-MM-DD) from income sources.
+ * Returns the next payday date (YYYY-MM-DD). Uses cycle.nextPaydayDate when set (e.g. after "Vandaag loon gehad").
  */
 export function getNextPaydayDate(financeState: FinanceState): string {
+  if (financeState.cycle.nextPaydayDate) return financeState.cycle.nextPaydayDate;
   const today = new Date();
   const day = today.getDate();
   const y = today.getFullYear();
@@ -37,9 +38,10 @@ export function getNextPaydayDate(financeState: FinanceState): string {
 }
 
 /**
- * Calculates days until next income
+ * Calculates days until next income. Uses cycle.daysUntilNextIncome when set (e.g. after "Vandaag loon gehad").
  */
 export function getDaysUntilNextIncome(financeState: FinanceState): number {
+  if (typeof financeState.cycle.daysUntilNextIncome === "number") return financeState.cycle.daysUntilNextIncome;
   const today = new Date();
   const day = today.getDate();
 

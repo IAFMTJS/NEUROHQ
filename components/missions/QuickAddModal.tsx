@@ -12,7 +12,7 @@ type Props = {
   open: boolean;
   onClose: () => void;
   date: string;
-  onAdded?: () => void;
+  onAdded?: (task?: import("@/types/database.types").Task) => void;
   headroomTierToday?: HeadroomTier;
   activeCountToday?: number;
   maxSlotsToday?: number;
@@ -52,19 +52,17 @@ export function QuickAddModal({ open, onClose, date, onAdded, activeCountToday, 
         : false;
     const limitMessage =
       addBlockedToday && effectiveDate === date
-        ? "Mentale belasting te hoog. Vandaag geen nieuwe missies toevoegen; afronden of uit je agenda halen."
+        ? "Let op: hoge mentale belasting vandaag — overweeg een lichte missie of plan voor een andere dag."
         : slotsFilled && effectiveDate === date
-          ? "Je hebt je focus slots gevuld. Kies één missie om eerst af te maken of te verplaatsen; dan mag er weer één bij."
+          ? "Let op: je focus slots zijn vol. Je kunt nog steeds toevoegen; overweeg eerst iets af te ronden of te verplaatsen."
           : null;
-    if (limitMessage) {
-      setError(limitMessage);
-      return;
-    }
+    if (limitMessage) setError(limitMessage);
     startTransition(async () => {
       try {
-        await createTask({
+        const effectiveDueDate = (dueDate || date)?.trim() || date;
+        const result = await createTask({
           title: title.trim(),
-          due_date: dueDate || date,
+          due_date: effectiveDueDate,
           category: category === "work" ? "work" : category === "personal" ? "personal" : null,
           recurrence_rule: recurrence === "daily" ? "daily" : recurrence === "weekly" ? "weekly" : recurrence === "monthly" ? "monthly" : null,
           recurrence_weekdays: recurrence_weekdays ?? null,
@@ -76,20 +74,7 @@ export function QuickAddModal({ open, onClose, date, onAdded, activeCountToday, 
           social_load: socialLoad ? (parseInt(socialLoad, 10) >= 1 && parseInt(socialLoad, 10) <= 10 ? parseInt(socialLoad, 10) : null) : null,
           priority: priority ? (parseInt(priority, 10) >= 1 && parseInt(priority, 10) <= 5 ? parseInt(priority, 10) : null) : null,
         });
-        setTitle("");
-        setDueDate(date);
-        setCategory("");
-        setRecurrence("");
-        setWeekdays([]);
-        setImpact("");
-        setUrgency("");
-        setEnergy("");
-        setFocusRequired("");
-        setMentalLoad("");
-        setSocialLoad("");
-        setPriority("");
-        onAdded?.();
-        router.refresh();
+        onAdded?.(result?.task);
         onClose();
       } catch (err) {
         setError(err instanceof Error ? err.message : "Failed to add");

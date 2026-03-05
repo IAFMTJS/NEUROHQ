@@ -225,20 +225,29 @@ export default async function TasksPage({ searchParams }: Props) {
     };
   }
 
-  const missionCards = missionCardsFromUMS.length > 0
-    ? [...missionCardsFromUMS, ...missionCardsCompleted]
-    : [
-        ...tasks.slice(0, 8).map((t, i) => ({
-          id: (t as { id: string }).id,
-          title: (t as { title: string }).title ?? "Task",
-          subtitle: i === 0 ? "Active" : undefined,
-          description: (t as { notes?: string | null }).notes ?? null,
-          state: (i === 0 ? "active" : "locked") as "active" | "locked",
-          progressPct: 0,
-          href: "/tasks",
-        })),
-        ...missionCardsCompleted,
-      ];
+  const missionCardsBase =
+    missionCardsFromUMS.length > 0
+      ? [...missionCardsFromUMS, ...missionCardsCompleted]
+      : [
+          ...tasks.slice(0, 8).map((t, i) => ({
+            id: (t as { id: string }).id,
+            title: (t as { title: string }).title ?? "Task",
+            subtitle: i === 0 ? "Active" : undefined,
+            description: (t as { notes?: string | null }).notes ?? null,
+            state: (i === 0 ? "active" : "locked") as "active" | "locked",
+            progressPct: 0,
+            href: "/tasks",
+          })),
+          ...missionCardsCompleted,
+        ];
+
+  // Ensure unique ids so CommanderMissionCard keys are unique.
+  const seenMissionIds = new Set<string>();
+  const missionCards = missionCardsBase.filter((card) => {
+    if (!card.id || seenMissionIds.has(card.id)) return false;
+    seenMissionIds.add(card.id);
+    return true;
+  });
 
   const makeTasksHref = (overrides: { tab?: "missions" | "calendar"; day?: string; month?: string; calView?: CalendarView }) => {
     const search = new URLSearchParams();

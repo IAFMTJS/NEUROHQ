@@ -1,6 +1,6 @@
 "use server";
 
-import { createClient, createClientWithToken } from "@/lib/supabase/server";
+import { createClient } from "@/lib/supabase/server";
 import type { Task, TablesInsert } from "@/types/database.types";
 import type { ReputationScore } from "@/lib/identity-engine";
 import { isRecoveryTask } from "@/lib/recovery-task";
@@ -14,52 +14,43 @@ export async function getTodaysTasks(date: string, mode: TaskListMode): Promise<
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return { tasks: [], carryOverCount: 0 };
-  const { data: { session } } = await supabase.auth.getSession();
-  const accessToken = session?.access_token ?? "";
 
-  return unstable_cache(
-    async (userId: string, dateKey: string, modeKey: TaskListMode, token: string) => {
-      const client = createClientWithToken(token);
-      const nowIso = new Date().toISOString();
-      let query = client
-        .from("tasks")
-        .select("*")
-        .eq("user_id", userId)
-        .eq("due_date", dateKey)
-        .eq("completed", false)
-        .is("parent_task_id", null)
-        .is("deleted_at", null)
-        .or(`snooze_until.is.null,snooze_until.lt.${nowIso}`);
+  const nowIso = new Date().toISOString();
+  let query = supabase
+    .from("tasks")
+    .select("*")
+    .eq("user_id", user.id)
+    .eq("due_date", date)
+    .eq("completed", false)
+    .is("parent_task_id", null)
+    .is("deleted_at", null)
+    .or(`snooze_until.is.null,snooze_until.lt.${nowIso}`);
 
-      if (modeKey === "low_energy") {
-        query = query.or("energy_required.is.null,energy_required.lt.4");
-      }
+  if (mode === "low_energy") {
+    query = query.or("energy_required.is.null,energy_required.lt.4");
+  }
 
-      query = query.order("created_at", { ascending: true });
-      const { data: tasks } = await query;
-      let ordered = tasks ?? [];
-      const categoryOrder = (c: string | null) => (c === "work" ? 0 : c === "personal" ? 1 : 2);
-      ordered = [...ordered].sort((a, b) => {
-        const catA = categoryOrder((a as { category?: string | null }).category ?? null);
-        const catB = categoryOrder((b as { category?: string | null }).category ?? null);
-        if (catA !== catB) return catA - catB;
-        if (modeKey === "driven") {
-          const ia = (a as { impact?: number | null }).impact ?? 0;
-          const ib = (b as { impact?: number | null }).impact ?? 0;
-          if (ib !== ia) return ib - ia;
-          const pa = (a as { priority?: number | null }).priority ?? 0;
-          const pb = (b as { priority?: number | null }).priority ?? 0;
-          if (pb !== pa) return pb - pa;
-        }
-        return new Date((a as { created_at?: string }).created_at ?? 0).getTime() - new Date((b as { created_at?: string }).created_at ?? 0).getTime();
-      });
+  query = query.order("created_at", { ascending: true });
+  const { data: tasks } = await query;
+  let ordered = tasks ?? [];
+  const categoryOrder = (c: string | null) => (c === "work" ? 0 : c === "personal" ? 1 : 2);
+  ordered = [...ordered].sort((a, b) => {
+    const catA = categoryOrder((a as { category?: string | null }).category ?? null);
+    const catB = categoryOrder((b as { category?: string | null }).category ?? null);
+    if (catA !== catB) return catA - catB;
+    if (mode === "driven") {
+      const ia = (a as { impact?: number | null }).impact ?? 0;
+      const ib = (b as { impact?: number | null }).impact ?? 0;
+      if (ib !== ia) return ib - ia;
+      const pa = (a as { priority?: number | null }).priority ?? 0;
+      const pb = (b as { priority?: number | null }).priority ?? 0;
+      if (pb !== pa) return pb - pa;
+    }
+    return new Date((a as { created_at?: string }).created_at ?? 0).getTime() - new Date((b as { created_at?: string }).created_at ?? 0).getTime();
+  });
 
-      const maxCarryOver = Math.max(0, ...(tasks ?? []).map((t) => (t as { carry_over_count?: number }).carry_over_count ?? 0));
-      return { tasks: ordered as Task[], carryOverCount: maxCarryOver };
-    },
-    ["tasks", user.id, date, mode],
-    { tags: [`tasks-${user.id}-${date}`], revalidate: 60 }
-  )(user.id, date, mode, accessToken);
+  const maxCarryOver = Math.max(0, ...(tasks ?? []).map((t) => (t as { carry_over_count?: number }).carry_over_count ?? 0));
+  return { tasks: ordered as Task[], carryOverCount: maxCarryOver };
 }
 
 export async function getTasksForDate(date: string) {
@@ -193,25 +184,7 @@ export async function createTask(params: {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) throw new Error("Je bent niet ingelogd. Log opnieuw in.");
 
-  // Brainstatus rule: very high mental load blocks new missions for that day.
-  // sensory_load is 1–10; >80% ~= 9–10. Auto-missies (MasterPoolAuto) worden niet geblokkeerd.
-  const isAutoMission = params.psychology_label === "MasterPoolAuto";
-  if (!isAutoMission) {
-    try {
-      const { data: state } = await supabase
-        .from("daily_state")
-        .select("sensory_load")
-        .eq("user_id", user.id)
-        .eq("date", params.due_date)
-        .single();
-      const sensory = (state as { sensory_load?: number | null } | null)?.sensory_load ?? null;
-      if (sensory != null && sensory >= 9) {
-        throw new Error("Te hoge mentale belasting voor die dag. Voeg geen nieuwe missies toe — kies light of plan voor later.");
-      }
-    } catch (e) {
-      if (e instanceof Error && e.message.startsWith("Te hoge mentale belasting")) throw e;
-    }
-  }
+  // High mental load is advisory only: user can always add missions; system may show warnings/locks in the UI.
 
   const row: Record<string, unknown> = {
     user_id: user.id,
@@ -246,7 +219,7 @@ export async function createTask(params: {
   const { data, error } = await supabase
     .from("tasks")
     .insert(row as TablesInsert<"tasks">)
-    .select("id")
+    .select("*")
     .single();
   if (error) {
     const msg = error.code === "PGRST301" || error.message?.toLowerCase().includes("auth") || error.message?.toLowerCase().includes("jwt")
@@ -256,9 +229,11 @@ export async function createTask(params: {
         : "De taak kon niet worden toegevoegd. Controleer of je nog bent ingelogd en probeer het opnieuw.";
     throw new Error(msg);
   }
+  revalidateTagMax(`tasks-${user.id}-${params.due_date}`);
   revalidatePath("/dashboard");
   revalidatePath("/tasks");
-  return { ok: true as const, id: data?.id };
+  const task = data as Task;
+  return { ok: true as const, id: task?.id, task };
 }
 
 /** ISO weekday 1=Mon .. 7=Sun. JS getDay() 0=Sun..6=Sat so ISO = getDay() || 7 */
@@ -417,6 +392,7 @@ export async function completeTask(id: string): Promise<CompleteTaskResult> {
         base_xp: t.base_xp ?? null,
         hobby_tag: t.hobby_tag ?? null,
       } as TablesInsert<"tasks">);
+      revalidateTagMax(`tasks-${user.id}-${nextStr}`);
     }
   }
   const { awardXPForTaskComplete } = await import("./xp");
@@ -655,7 +631,7 @@ export async function getBacklogTasks(todayDate: string): Promise<Task[]> {
   return (data ?? []) as Task[];
 }
 
-/** Toekomst: onafgevinkte taken met due_date >= vandaag. */
+/** Toekomst: onafgevinkte taken met due_date na vandaag (niet vandaag). */
 export async function getFutureTasks(todayDate: string): Promise<Task[]> {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
@@ -667,7 +643,7 @@ export async function getFutureTasks(todayDate: string): Promise<Task[]> {
     .eq("completed", false)
     .is("parent_task_id", null)
     .is("deleted_at", null)
-    .gte("due_date", todayDate)
+    .gt("due_date", todayDate)
     .order("due_date", { ascending: true })
     .order("created_at", { ascending: true })
     .limit(100);
@@ -696,12 +672,32 @@ export async function rescheduleTask(id: string, due_date: string) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) throw new Error("Not authenticated");
+
+  // Capture previous due_date so we can invalidate both old and new task caches.
+  let oldDueDate: string | null = null;
+  const { data: existing } = await supabase
+    .from("tasks")
+    .select("due_date")
+    .eq("id", id)
+    .eq("user_id", user.id)
+    .single();
+  if (existing) {
+    oldDueDate = (existing as { due_date?: string | null }).due_date ?? null;
+  }
+
   const { error } = await supabase
     .from("tasks")
     .update({ due_date })
     .eq("id", id)
     .eq("user_id", user.id);
   if (error) throw new Error(error.message);
+
+  // Invalidate cache for the new date (and old date if different).
+  revalidateTagMax(`tasks-${user.id}-${due_date}`);
+  if (oldDueDate && oldDueDate !== due_date) {
+    revalidateTagMax(`tasks-${user.id}-${oldDueDate}`);
+  }
+
   revalidatePath("/dashboard");
   revalidatePath("/tasks");
 }
@@ -742,8 +738,17 @@ export async function updateTask(
   if (params.social_load !== undefined) payload.social_load = params.social_load;
   if (params.priority !== undefined) payload.priority = params.priority;
   if (params.notes !== undefined) payload.notes = params.notes;
+  let oldDueDate: string | null = null;
+  if (params.due_date !== undefined) {
+    const { data: existing } = await supabase.from("tasks").select("due_date").eq("id", id).eq("user_id", user.id).single();
+    oldDueDate = (existing as { due_date?: string } | null)?.due_date ?? null;
+  }
   const { error } = await supabase.from("tasks").update(payload).eq("id", id).eq("user_id", user.id);
   if (error) throw new Error(error.message);
+  if (params.due_date !== undefined) {
+    revalidateTagMax(`tasks-${user.id}-${params.due_date}`);
+    if (oldDueDate && oldDueDate !== params.due_date) revalidateTagMax(`tasks-${user.id}-${oldDueDate}`);
+  }
   revalidatePath("/dashboard");
   revalidatePath("/tasks");
 }
@@ -779,6 +784,7 @@ export async function duplicateTask(id: string, due_date: string) {
     base_xp: t.base_xp ?? null,
   } as TablesInsert<"tasks">);
   if (error) throw new Error(error.message);
+  revalidateTagMax(`tasks-${user.id}-${due_date}`);
   revalidatePath("/dashboard");
   revalidatePath("/tasks");
 }

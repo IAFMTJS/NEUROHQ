@@ -1,12 +1,12 @@
-/** Single source of truth for "today" (YYYY-MM-DD) on the server. Use everywhere: brain status, missions, dashboard. */
+/**
+ * Single source of truth for "today" (YYYY-MM-DD) on the server.
+ * Use everywhere: brain status, missions, dashboard, tasks.
+ * Uses Europe/Amsterdam so "today" matches budget and Dutch users regardless of server timezone.
+ */
+const APP_TIMEZONE = "Europe/Amsterdam";
+
 export function todayDateString(): string {
-  // Use server local time so "today" rolls over at local midnight instead of UTC,
-  // better matching the user's device/PWA experience.
-  const d = new Date();
-  const y = d.getFullYear();
-  const m = String(d.getMonth() + 1).padStart(2, "0");
-  const day = String(d.getDate()).padStart(2, "0");
-  return `${y}-${m}-${day}`;
+  return new Date().toLocaleDateString("en-CA", { timeZone: APP_TIMEZONE });
 }
 
 /**

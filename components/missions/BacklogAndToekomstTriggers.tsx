@@ -122,6 +122,7 @@ export function BacklogAndToekomstTriggers({ backlog, futureTasks, todayDate }: 
           open
           onClose={() => setScheduleTask(null)}
           initialDate={scheduleTask.due_date ?? todayDate}
+          todayDate={todayDate}
           taskTitle={scheduleTask.title ?? undefined}
           onSchedule={handleSchedule}
           loading={pending}

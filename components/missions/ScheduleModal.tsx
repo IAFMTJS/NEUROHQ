@@ -1,12 +1,14 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Modal } from "@/components/Modal";
 
 type Props = {
   open: boolean;
   onClose: () => void;
   initialDate: string;
+  /** Actual "today" (YYYY-MM-DD) for the Today shortcut. When opening from backlog/Toekomst, initialDate may be a future date. */
+  todayDate?: string;
   taskTitle?: string;
   onSchedule: (due_date: string) => void | Promise<void>;
   loading?: boolean;
@@ -30,11 +32,16 @@ export function ScheduleModal({
   open,
   onClose,
   initialDate,
+  todayDate,
   taskTitle,
   onSchedule,
   loading = false,
 }: Props) {
   const [date, setDate] = useState(initialDate);
+
+  useEffect(() => {
+    if (open) setDate(initialDate);
+  }, [open, initialDate]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -42,11 +49,12 @@ export function ScheduleModal({
     onClose();
   }
 
+  const baseDate = todayDate ?? initialDate;
   const shortcuts = [
-    { label: "Today", date: initialDate },
-    { label: "Tomorrow", date: addDays(initialDate, 1) },
-    { label: "Next Monday", date: nextMonday(initialDate) },
-    { label: "Next week", date: addDays(initialDate, 7) },
+    { label: "Today", date: baseDate },
+    { label: "Tomorrow", date: addDays(baseDate, 1) },
+    { label: "Next Monday", date: nextMonday(baseDate) },
+    { label: "Next week", date: addDays(baseDate, 7) },
   ];
 
   return (

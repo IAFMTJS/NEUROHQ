@@ -1,6 +1,8 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
+import { revalidatePath } from "next/cache";
+import { revalidateTagMax } from "@/lib/revalidate";
 import { todayDateString } from "@/lib/utils/timezone";
 import { getMonthlyBookForCurrentMonth } from "@/app/actions/learning";
 
@@ -61,6 +63,9 @@ export async function ensureReadingMissionForToday(): Promise<EnsureReadingMissi
     return { created: false, debug: error.message };
   }
 
+  revalidateTagMax(`tasks-${user.id}-${today}`);
+  revalidatePath("/tasks");
+  revalidatePath("/dashboard");
   return { created: true };
 }
 

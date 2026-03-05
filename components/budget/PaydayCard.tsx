@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
 import { updateBudgetSettings, setPaydayReceivedToday } from "@/app/actions/budget";
 import { addIncomeSource, deleteIncomeSource } from "@/app/actions/dcic/income-sources";
 import type { IncomeSource } from "@/lib/dcic/types";
@@ -21,6 +22,7 @@ type Props = {
 };
 
 export function PaydayCard({ daysUntilNextIncome, nextPaydayLabel, incomeSources, paydayDayOfMonth, currency = "EUR", cycleStartDate, nextPaydayDate }: Props) {
+  const router = useRouter();
   const [showModal, setShowModal] = useState(false);
   const [pending, startTransition] = useTransition();
   const [paydayDay, setPaydayDay] = useState(String(paydayDayOfMonth ?? 25));
@@ -34,6 +36,7 @@ export function PaydayCard({ daysUntilNextIncome, nextPaydayLabel, incomeSources
       try {
         await setPaydayReceivedToday();
         setShowModal(false);
+        router.push("/budget");
       } catch (e) {
         console.error(e);
       }
@@ -47,6 +50,7 @@ export function PaydayCard({ daysUntilNextIncome, nextPaydayLabel, incomeSources
       try {
         await updateBudgetSettings({ payday_day_of_month: d });
         setShowModal(false);
+        router.push("/budget");
       } catch (e) {
         console.error(e);
       }

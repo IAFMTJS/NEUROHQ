@@ -68,7 +68,8 @@ type Props = {
   date: string;
   /** For Step 2: Primary (+30%), Secondary (+10%), Outside (-20%) with confirmation. */
   strategyMapping?: StrategyMapping;
-  onAdded?: () => void;
+  /** Called after task is created; receives the new task so the list can add it without reload. */
+  onAdded?: (task?: import("@/types/database.types").Task) => void;
   /** Optional brain-mode tier for today to cap intensity. */
   headroomTierToday?: HeadroomTier;
   /** Active missions today (top-level, incomplete) to enforce focus slots. */
@@ -135,6 +136,10 @@ export function AddMissionModal3({
     getChainsForUser().then(setChains);
   }, [open, step, campaignMode]);
 
+  useEffect(() => {
+    if (open && date) setDueDate(date);
+  }, [open, date]);
+
   const estimatedXP = Math.max(10, Math.min(100, Math.round((cognitiveLoad + 0.5) * 50)));
   const alignmentImpact =
     domainType === "primary" ? 30 : domainType === "secondary" ? 10 : domainType === "outside" ? -20 : domain ? 30 : 0;
@@ -181,14 +186,11 @@ export function AddMissionModal3({
         : false;
     const limitMessage =
       addBlockedToday && effectiveDate === date
-        ? "Mentale belasting te hoog. Vandaag geen nieuwe missies toevoegen; afronden of uit je agenda halen."
+        ? "Let op: hoge mentale belasting vandaag — overweeg een lichte missie of plan voor een andere dag."
         : slotsFilled && effectiveDate === date
-          ? "Je hebt je focus slots gevuld. Kies één missie om eerst af te maken of te verplaatsen; dan mag er weer één bij."
+          ? "Let op: je focus slots zijn vol. Je kunt nog steeds toevoegen; overweeg eerst iets af te ronden of te verplaatsen."
           : null;
-    if (limitMessage) {
-      setError(limitMessage);
-      return;
-    }
+    if (limitMessage) setFrictionAlert(limitMessage);
     startTransition(async () => {
       try {
         let chainId: string | null = null;
@@ -197,9 +199,14 @@ export function AddMissionModal3({
           const id = await createChain(newChainName.trim(), 10);
           if (id) chainId = id;
         }
+        const effectiveDueDate = dueDate?.trim() || date;
+        if (!effectiveDueDate) {
+          setError("Selecteer een datum.");
+          return;
+        }
         const result = await createTask({
           title: title.trim(),
-          due_date: dueDate || date,
+          due_date: effectiveDueDate,
           energy_required: energyCost,
           domain: domain || undefined,
           cognitive_load: cognitiveLoad,
@@ -215,21 +222,8 @@ export function AddMissionModal3({
           avoidance_tag: avoidanceTag || null,
         });
         if (chainId && result?.id) await addStepToChain(chainId, result.id);
-        onAdded?.();
-        router.refresh();
+        onAdded?.(result?.task);
         onClose();
-        setStep(1);
-        setTitle("");
-        setIntent("");
-        setDomain("");
-        setDomainType("");
-        setOutsideConfirmed(false);
-        setCommitmentPct(80);
-        setPsychologyLabel("");
-        setSelectedChainId(null);
-        setNewChainName("");
-        setValidationType("binary");
-        setAvoidanceTag("");
       } catch (err) {
         setError(err instanceof Error ? err.message : "Failed to add");
       }

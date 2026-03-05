@@ -79,6 +79,9 @@ export interface FinanceState {
     startDay: number; // Budget cycle start = salary day (1-31) when no startDate
     /** When set, budget period runs from this date until next expected payday. */
     startDate?: string; // YYYY-MM-DD
+    /** When set (e.g. after "Vandaag loon gehad"), use for days until next income and labels. */
+    nextPaydayDate?: string; // YYYY-MM-DD
+    daysUntilNextIncome?: number;
   };
   balance: {
     current: number; // in cents
