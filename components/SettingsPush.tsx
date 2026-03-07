@@ -45,7 +45,7 @@ export function SettingsPush({ initialPushQuoteTime = null, initialQuietHours = 
         return;
       }
       const reg = await navigator.serviceWorker.register("/sw.js", { scope: "/" });
-      await reg.update();
+      await reg.update().catch(() => {}); // Ignore if update fails (e.g. no network or registration not yet active)
       const sub = await reg.pushManager.subscribe({
         userVisibleOnly: true,
         applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC) as BufferSource,

@@ -72,7 +72,12 @@ export function ServiceWorkerRegistration() {
           setWaitingWorker(registration.waiting);
           setUpdateAvailable(true);
         }
-        intervalId = setInterval(() => registration.update(), 60 * 60 * 1000);
+        intervalId = setInterval(() => {
+          registration.update().catch(() => {
+            // Registration may have been unregistered (e.g. user cleared site data). Stop polling.
+            if (intervalId !== undefined) clearInterval(intervalId);
+          });
+        }, 60 * 60 * 1000);
       })
       .catch((err) => console.error("Service Worker registration failed:", err));
     return () => {
