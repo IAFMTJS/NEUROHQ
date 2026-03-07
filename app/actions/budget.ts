@@ -382,7 +382,7 @@ export async function addBudgetEntry(params: {
       store_name: params.store_name ?? null,
       subscription_name: params.subscription_name ?? null,
       detail_name: params.detail_name ?? null,
-    } as Record<string, unknown>)
+    })
     .select("id")
     .single();
   if (error) throw new Error(error.message);

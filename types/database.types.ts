@@ -556,6 +556,7 @@ export type Database = {
           category: string | null
           created_at: string
           date: string
+          detail_name: string | null
           freeze_reminder_sent: boolean
           freeze_until: string | null
           id: string
@@ -572,6 +573,7 @@ export type Database = {
           category?: string | null
           created_at?: string
           date: string
+          detail_name?: string | null
           freeze_reminder_sent?: boolean
           freeze_until?: string | null
           id?: string
@@ -588,6 +590,7 @@ export type Database = {
           category?: string | null
           created_at?: string
           date?: string
+          detail_name?: string | null
           freeze_reminder_sent?: boolean
           freeze_until?: string | null
           id?: string
