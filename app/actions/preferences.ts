@@ -14,7 +14,7 @@ export async function getUserPreferences(): Promise<UserPreferences | null> {
   const { data, error } = await supabase
     .from("user_preferences")
     .select(
-      "theme, color_mode, selected_emotion, compact_ui, reduced_motion, auto_master_missions, usual_days_off, day_off_mode, updated_at",
+      "theme, color_mode, selected_emotion, compact_ui, reduced_motion, light_ui, auto_master_missions, usual_days_off, day_off_mode, updated_at",
     )
     .eq("user_id", user.id)
     .single();
@@ -46,6 +46,7 @@ export async function getUserPreferences(): Promise<UserPreferences | null> {
         selected_emotion: (legacyData.selected_emotion as UserPreferences["selected_emotion"]) ?? null,
         compact_ui: legacyData.compact_ui ?? DEFAULTS.compact_ui,
         reduced_motion: legacyData.reduced_motion ?? DEFAULTS.reduced_motion,
+        light_ui: (legacyData as { light_ui?: boolean | null }).light_ui ?? DEFAULTS.light_ui,
         auto_master_missions: legacyData.auto_master_missions ?? DEFAULTS.auto_master_missions,
         usual_days_off: DEFAULTS.usual_days_off ?? null,
         day_off_mode: DEFAULTS.day_off_mode ?? "soft",
@@ -63,6 +64,7 @@ export async function getUserPreferences(): Promise<UserPreferences | null> {
     selected_emotion?: UserPreferences["selected_emotion"] | null;
     compact_ui?: boolean | null;
     reduced_motion?: boolean | null;
+    light_ui?: boolean | null;
     auto_master_missions?: boolean | null;
     usual_days_off?: number[] | null;
     day_off_mode?: UserPreferences["day_off_mode"] | null;
@@ -74,6 +76,7 @@ export async function getUserPreferences(): Promise<UserPreferences | null> {
     selected_emotion: row.selected_emotion ?? null,
     compact_ui: row.compact_ui ?? DEFAULTS.compact_ui,
     reduced_motion: row.reduced_motion ?? DEFAULTS.reduced_motion,
+    light_ui: row.light_ui ?? DEFAULTS.light_ui,
     auto_master_missions: row.auto_master_missions ?? DEFAULTS.auto_master_missions,
     usual_days_off: row.usual_days_off ?? DEFAULTS.usual_days_off ?? null,
     day_off_mode: row.day_off_mode ?? DEFAULTS.day_off_mode ?? "soft",
@@ -90,7 +93,7 @@ export async function getUserPreferencesOrDefaults(): Promise<UserPreferences> {
 type UpdatePayload = Partial<
   Pick<
     UserPreferences,
-    "theme" | "color_mode" | "selected_emotion" | "compact_ui" | "reduced_motion" | "auto_master_missions" | "usual_days_off" | "day_off_mode"
+    "theme" | "color_mode" | "selected_emotion" | "compact_ui" | "reduced_motion" | "light_ui" | "auto_master_missions" | "usual_days_off" | "day_off_mode"
   >
 >;
 
@@ -107,6 +110,7 @@ export async function updateUserPreferences(payload: UpdatePayload) {
     selected_emotion: payload.selected_emotion !== undefined ? payload.selected_emotion : current.selected_emotion,
     compact_ui: payload.compact_ui ?? current.compact_ui,
     reduced_motion: payload.reduced_motion ?? current.reduced_motion,
+    light_ui: payload.light_ui ?? current.light_ui,
     auto_master_missions: payload.auto_master_missions ?? current.auto_master_missions,
     usual_days_off: payload.usual_days_off ?? current.usual_days_off ?? null,
     day_off_mode: payload.day_off_mode ?? current.day_off_mode ?? "soft",
@@ -138,6 +142,7 @@ export async function updateUserPreferences(payload: UpdatePayload) {
       finalError.code === "42703" ||
       msg.includes("usual_days_off") ||
       msg.includes("day_off_mode") ||
+      msg.includes("light_ui") ||
       msg.toLowerCase().includes("schema cache")
     ) {
       const legacy = await supabase

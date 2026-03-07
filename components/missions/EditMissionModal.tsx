@@ -1,9 +1,10 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState, useTransition, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Modal } from "@/components/Modal";
-import { updateTask } from "@/app/actions/tasks";
+import { updateTask, createTask } from "@/app/actions/tasks";
+import type { Task } from "@/types/database.types";
 
 const WEEKDAY_LABELS: Record<number, string> = { 1: "Mon", 2: "Tue", 3: "Wed", 4: "Thu", 5: "Fri", 6: "Sat", 7: "Sun" };
 
@@ -27,58 +28,118 @@ type ExtendedTask = {
 type Props = {
   open: boolean;
   onClose: () => void;
-  task: ExtendedTask;
+  /** When null, modal is in create mode (same form, submit creates a new task). */
+  task: ExtendedTask | null;
+  /** Default due date when in create mode. */
+  defaultDate?: string;
   onSaved?: () => void;
+  /** Called after creating a task (create mode); receives the new task. */
+  onAdded?: (task: Task) => void;
 };
 
-export function EditMissionModal({ open, onClose, task, onSaved }: Props) {
+export function EditMissionModal({ open, onClose, task, defaultDate, onSaved, onAdded }: Props) {
+  const isCreate = task == null;
   const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
-  const [title, setTitle] = useState(task.title ?? "");
-  const [dueDate, setDueDate] = useState(task.due_date ?? "");
-  const [category, setCategory] = useState<string>(task.category ?? "");
-  const [recurrence, setRecurrence] = useState<string>(task.recurrence_rule ?? "");
+  const [title, setTitle] = useState(task?.title ?? "");
+  const [dueDate, setDueDate] = useState(task?.due_date ?? defaultDate ?? new Date().toISOString().slice(0, 10));
+  const [category, setCategory] = useState<string>(task?.category ?? "");
+  const [recurrence, setRecurrence] = useState<string>(task?.recurrence_rule ?? "");
   const [weekdays, setWeekdays] = useState<number[]>(
-    task.recurrence_weekdays?.trim() ? task.recurrence_weekdays.split(",").map((s) => parseInt(s.trim(), 10)).filter((n) => n >= 1 && n <= 7) : []
+    task?.recurrence_weekdays?.trim() ? task.recurrence_weekdays.split(",").map((s) => parseInt(s.trim(), 10)).filter((n) => n >= 1 && n <= 7) : []
   );
-  const [impact, setImpact] = useState<string>(task.impact != null ? String(task.impact) : "");
-  const [urgency, setUrgency] = useState<string>(task.urgency != null ? String(task.urgency) : "");
-  const [energy, setEnergy] = useState<string>(task.energy_required != null ? String(task.energy_required) : "");
-  const [focusRequired, setFocusRequired] = useState<string>(task.focus_required != null ? String(task.focus_required) : "");
-  const [mentalLoad, setMentalLoad] = useState<string>(task.mental_load != null ? String(task.mental_load) : "");
-  const [socialLoad, setSocialLoad] = useState<string>(task.social_load != null ? String(task.social_load) : "");
-  const [priority, setPriority] = useState<string>(task.priority != null ? String(task.priority) : "");
-  const [notes, setNotes] = useState(task.notes ?? "");
+  const [impact, setImpact] = useState<string>(task?.impact != null ? String(task.impact) : "2");
+  const [urgency, setUrgency] = useState<string>(task?.urgency != null ? String(task.urgency) : "");
+  const [energy, setEnergy] = useState<string>(task?.energy_required != null ? String(task.energy_required) : "");
+  const [focusRequired, setFocusRequired] = useState<string>(task?.focus_required != null ? String(task.focus_required) : "");
+  const [mentalLoad, setMentalLoad] = useState<string>(task?.mental_load != null ? String(task.mental_load) : "");
+  const [socialLoad, setSocialLoad] = useState<string>(task?.social_load != null ? String(task.social_load) : "");
+  const [priority, setPriority] = useState<string>(task?.priority != null ? String(task.priority) : "");
+  const [notes, setNotes] = useState(task?.notes ?? "");
+
+  useEffect(() => {
+    if (open) {
+      setTitle(task?.title ?? "");
+      setDueDate(task?.due_date ?? defaultDate ?? new Date().toISOString().slice(0, 10));
+      setCategory(task?.category ?? "");
+      setRecurrence(task?.recurrence_rule ?? "");
+      setWeekdays(task?.recurrence_weekdays?.trim() ? task.recurrence_weekdays!.split(",").map((s) => parseInt(s.trim(), 10)).filter((n) => n >= 1 && n <= 7) : []);
+      setImpact(task?.impact != null ? String(task.impact) : "2");
+      setUrgency(task?.urgency != null ? String(task.urgency) : "");
+      setEnergy(task?.energy_required != null ? String(task.energy_required) : "");
+      setFocusRequired(task?.focus_required != null ? String(task.focus_required) : "");
+      setMentalLoad(task?.mental_load != null ? String(task.mental_load) : "");
+      setSocialLoad(task?.social_load != null ? String(task.social_load) : "");
+      setPriority(task?.priority != null ? String(task.priority) : "");
+      setNotes(task?.notes ?? "");
+    }
+  }, [open, task, defaultDate]);
 
   function toggleWeekday(d: number) {
     setWeekdays((prev) => (prev.includes(d) ? prev.filter((x) => x !== d) : [...prev, d].sort((a, b) => a - b)));
   }
 
+  const payload = {
+    title: title.trim() || undefined,
+    due_date: dueDate || undefined,
+    category: category === "work" ? "work" : category === "personal" ? "personal" : null,
+    recurrence_rule: recurrence === "daily" ? "daily" : recurrence === "weekly" ? "weekly" : recurrence === "monthly" ? "monthly" : null,
+    recurrence_weekdays: recurrence === "weekly" && weekdays.length > 0 ? weekdays.sort((a, b) => a - b).join(",") : null,
+    impact: impact ? (parseInt(impact, 10) >= 1 && parseInt(impact, 10) <= 3 ? parseInt(impact, 10) : null) : null,
+    urgency: urgency ? (parseInt(urgency, 10) >= 1 && parseInt(urgency, 10) <= 3 ? parseInt(urgency, 10) : null) : null,
+    energy_required: energy ? (parseInt(energy, 10) >= 1 && parseInt(energy, 10) <= 10 ? parseInt(energy, 10) : null) : null,
+    focus_required: focusRequired ? (parseInt(focusRequired, 10) >= 1 && parseInt(focusRequired, 10) <= 10 ? parseInt(focusRequired, 10) : null) : null,
+    mental_load: mentalLoad ? (parseInt(mentalLoad, 10) >= 1 && parseInt(mentalLoad, 10) <= 10 ? parseInt(mentalLoad, 10) : null) : null,
+    social_load: socialLoad ? (parseInt(socialLoad, 10) >= 1 && parseInt(socialLoad, 10) <= 10 ? parseInt(socialLoad, 10) : null) : null,
+    priority: priority ? (parseInt(priority, 10) >= 1 && parseInt(priority, 10) <= 5 ? parseInt(priority, 10) : null) : null,
+    notes: notes.trim() || null,
+  };
+
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
-    const recurrence_weekdays = recurrence === "weekly" && weekdays.length > 0 ? weekdays.sort((a, b) => a - b).join(",") : null;
     startTransition(async () => {
       try {
-        await updateTask(task.id, {
-          title: title.trim() || undefined,
-          due_date: dueDate || undefined,
-          category: category === "work" ? "work" : category === "personal" ? "personal" : null,
-          recurrence_rule: recurrence === "daily" ? "daily" : recurrence === "weekly" ? "weekly" : recurrence === "monthly" ? "monthly" : null,
-          recurrence_weekdays: recurrence_weekdays ?? null,
-          impact: impact ? (parseInt(impact, 10) >= 1 && parseInt(impact, 10) <= 3 ? parseInt(impact, 10) : null) : null,
-          urgency: urgency ? (parseInt(urgency, 10) >= 1 && parseInt(urgency, 10) <= 3 ? parseInt(urgency, 10) : null) : null,
-          energy_required: energy ? (parseInt(energy, 10) >= 1 && parseInt(energy, 10) <= 10 ? parseInt(energy, 10) : null) : null,
-          focus_required: focusRequired ? (parseInt(focusRequired, 10) >= 1 && parseInt(focusRequired, 10) <= 10 ? parseInt(focusRequired, 10) : null) : null,
-          mental_load: mentalLoad ? (parseInt(mentalLoad, 10) >= 1 && parseInt(mentalLoad, 10) <= 10 ? parseInt(mentalLoad, 10) : null) : null,
-          social_load: socialLoad ? (parseInt(socialLoad, 10) >= 1 && parseInt(socialLoad, 10) <= 10 ? parseInt(socialLoad, 10) : null) : null,
-          priority: priority ? (parseInt(priority, 10) >= 1 && parseInt(priority, 10) <= 5 ? parseInt(priority, 10) : null) : null,
-          notes: notes.trim() || null,
-        });
-        onSaved?.();
-        router.refresh();
-        onClose();
+        if (isCreate) {
+          const result = await createTask({
+            title: payload.title!,
+            due_date: payload.due_date!,
+            category: payload.category ?? null,
+            recurrence_rule: payload.recurrence_rule ?? null,
+            recurrence_weekdays: payload.recurrence_weekdays ?? null,
+            impact: payload.impact ?? null,
+            urgency: payload.urgency ?? null,
+            energy_required: payload.energy_required ?? null,
+            focus_required: payload.focus_required ?? null,
+            mental_load: payload.mental_load ?? null,
+            social_load: payload.social_load ?? null,
+            priority: payload.priority ?? null,
+            notes: payload.notes ?? null,
+          });
+          if (result.task) onAdded?.(result.task as Task);
+          router.refresh();
+          onClose();
+        } else {
+          await updateTask(task!.id, {
+            title: payload.title,
+            due_date: payload.due_date,
+            category: payload.category,
+            recurrence_rule: payload.recurrence_rule,
+            recurrence_weekdays: payload.recurrence_weekdays ?? null,
+            impact: payload.impact,
+            urgency: payload.urgency,
+            energy_required: payload.energy_required,
+            focus_required: payload.focus_required,
+            mental_load: payload.mental_load,
+            social_load: payload.social_load,
+            priority: payload.priority,
+            notes: payload.notes,
+          });
+          onSaved?.();
+          router.refresh();
+          onClose();
+        }
       } catch (err) {
         setError(err instanceof Error ? err.message : "Failed to save");
       }
@@ -86,7 +147,7 @@ export function EditMissionModal({ open, onClose, task, onSaved }: Props) {
   }
 
   return (
-    <Modal open={open} onClose={onClose} title="Edit mission" showBranding={false}>
+    <Modal open={open} onClose={onClose} title={isCreate ? "Add mission" : "Edit mission"} showBranding={false}>
       <form onSubmit={handleSubmit} className="space-y-4">
         {error && <p className="text-sm text-red-400" role="alert">{error}</p>}
         <div>

@@ -8,6 +8,12 @@ import { getCurrencySymbol } from "@/lib/utils/currency";
 
 const CATEGORY_PRESETS = ["Eten", "Vervoer", "Abonnementen", "Boodschappen", "Uit eten", "Gezondheid", "Overig"];
 
+const STORE_OPTIONS = ["Albert Heijn", "Jumbo", "Lidl", "Aldi", "Plus", "Dirk", "Overig"];
+
+const EATEN_OPTIONS = ["Thuis", "Delivery", "Kantine", "Meal prep", "Overig"];
+const TRANSPORT_OPTIONS = ["NS", "OV-chip", "Uber / taxi", "Tankstation", "Fiets/onderhoud", "Overig"];
+const HEALTH_OPTIONS = ["Apotheek", "Huisarts", "Tandarts", "Ziekenhuis", "Overig"];
+
 const QUICK_ADD_AMOUNTS = [5, 10, 20, 50];
 
 export function AddBudgetEntryForm({
@@ -26,6 +32,9 @@ export function AddBudgetEntryForm({
   const [category, setCategory] = useState("");
   const [categoryOther, setCategoryOther] = useState("");
   const [note, setNote] = useState("");
+  const [storeName, setStoreName] = useState("");
+  const [subscriptionName, setSubscriptionName] = useState("");
+  const [detailName, setDetailName] = useState("");
   const [isExpense, setIsExpense] = useState(true);
   const [pending, startTransition] = useTransition();
   const [impulseModal, setImpulseModal] = useState<{ entryId: string; amountCents: number } | null>(null);
@@ -38,15 +47,25 @@ export function AddBudgetEntryForm({
     if (isNaN(cents) || cents === 0) return;
     const amount_cents = isExpense ? -cents : cents;
     const addedWithinMinutes = Math.floor((Date.now() - formOpenedAt.current) / 60000);
+    const detailForCategory =
+      category === "Eten" || category === "Vervoer" || category === "Uit eten" || category === "Gezondheid" || category === "Overig"
+        ? (detailName || null)
+        : null;
     startTransition(async () => {
       const result = await addBudgetEntry({
         amount_cents,
         date,
         category: resolvedCategory || undefined,
         note: note || undefined,
+        store_name: category === "Boodschappen" && storeName ? storeName : null,
+        subscription_name: category === "Abonnementen" && subscriptionName ? subscriptionName : null,
+        detail_name: detailForCategory,
       });
       setAmount("");
       setNote("");
+      setStoreName("");
+      setSubscriptionName("");
+      setDetailName("");
       router.refresh();
       if (result?.id && isExpense && amount_cents < 0) {
         const { isPossibleImpulse } = await checkImpulseSignal(amount_cents, {
@@ -170,6 +189,102 @@ export function AddBudgetEntryForm({
               placeholder="Category name"
               className="mt-1 w-full rounded-lg border border-[var(--card-border)] bg-[var(--bg-primary)] px-3 py-2 text-sm text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:border-[var(--accent-focus)] focus:outline-none focus:ring-2 focus:ring-[var(--accent-focus)]/30"
             />
+          )}
+          {category === "Boodschappen" && (
+            <div className="mt-1">
+              <span className="text-xs text-[var(--text-muted)]">Supermarkt</span>
+              <select
+                value={storeName}
+                onChange={(e) => setStoreName(e.target.value)}
+                className="mt-0.5 w-full rounded-lg border border-[var(--card-border)] bg-[var(--bg-primary)] px-3 py-2 text-sm text-[var(--text-primary)] focus:border-[var(--accent-focus)] focus:outline-none focus:ring-2 focus:ring-[var(--accent-focus)]/30"
+              >
+                <option value="">— Kies (optioneel)</option>
+                {STORE_OPTIONS.map((s) => (
+                  <option key={s} value={s}>{s}</option>
+                ))}
+              </select>
+            </div>
+          )}
+          {category === "Abonnementen" && (
+            <div className="mt-1">
+              <span className="text-xs text-[var(--text-muted)]">Welk abonnement?</span>
+              <input
+                type="text"
+                value={subscriptionName}
+                onChange={(e) => setSubscriptionName(e.target.value)}
+                placeholder="Bijv. Netflix, Spotify"
+                className="mt-0.5 w-full rounded-lg border border-[var(--card-border)] bg-[var(--bg-primary)] px-3 py-2 text-sm text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:border-[var(--accent-focus)] focus:outline-none focus:ring-2 focus:ring-[var(--accent-focus)]/30"
+              />
+            </div>
+          )}
+          {category === "Eten" && (
+            <div className="mt-1">
+              <span className="text-xs text-[var(--text-muted)]">Waar/type</span>
+              <select
+                value={detailName || ""}
+                onChange={(e) => setDetailName(e.target.value)}
+                className="mt-0.5 w-full rounded-lg border border-[var(--card-border)] bg-[var(--bg-primary)] px-3 py-2 text-sm text-[var(--text-primary)] focus:border-[var(--accent-focus)] focus:outline-none focus:ring-2 focus:ring-[var(--accent-focus)]/30"
+              >
+                <option value="">— Kies (optioneel)</option>
+                {EATEN_OPTIONS.map((o) => (
+                  <option key={o} value={o}>{o}</option>
+                ))}
+              </select>
+            </div>
+          )}
+          {category === "Vervoer" && (
+            <div className="mt-1">
+              <span className="text-xs text-[var(--text-muted)]">Vervoerder/type</span>
+              <select
+                value={detailName || ""}
+                onChange={(e) => setDetailName(e.target.value)}
+                className="mt-0.5 w-full rounded-lg border border-[var(--card-border)] bg-[var(--bg-primary)] px-3 py-2 text-sm text-[var(--text-primary)] focus:border-[var(--accent-focus)] focus:outline-none focus:ring-2 focus:ring-[var(--accent-focus)]/30"
+              >
+                <option value="">— Kies (optioneel)</option>
+                {TRANSPORT_OPTIONS.map((o) => (
+                  <option key={o} value={o}>{o}</option>
+                ))}
+              </select>
+            </div>
+          )}
+          {category === "Uit eten" && (
+            <div className="mt-1">
+              <span className="text-xs text-[var(--text-muted)]">Restaurant/plek</span>
+              <input
+                type="text"
+                value={detailName}
+                onChange={(e) => setDetailName(e.target.value)}
+                placeholder="Bijv. restaurantnaam, café"
+                className="mt-0.5 w-full rounded-lg border border-[var(--card-border)] bg-[var(--bg-primary)] px-3 py-2 text-sm text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:border-[var(--accent-focus)] focus:outline-none focus:ring-2 focus:ring-[var(--accent-focus)]/30"
+              />
+            </div>
+          )}
+          {category === "Gezondheid" && (
+            <div className="mt-1">
+              <span className="text-xs text-[var(--text-muted)]">Waar/type</span>
+              <select
+                value={detailName || ""}
+                onChange={(e) => setDetailName(e.target.value)}
+                className="mt-0.5 w-full rounded-lg border border-[var(--card-border)] bg-[var(--bg-primary)] px-3 py-2 text-sm text-[var(--text-primary)] focus:border-[var(--accent-focus)] focus:outline-none focus:ring-2 focus:ring-[var(--accent-focus)]/30"
+              >
+                <option value="">— Kies (optioneel)</option>
+                {HEALTH_OPTIONS.map((o) => (
+                  <option key={o} value={o}>{o}</option>
+                ))}
+              </select>
+            </div>
+          )}
+          {category === "Overig" && (
+            <div className="mt-1">
+              <span className="text-xs text-[var(--text-muted)]">Detail (optioneel)</span>
+              <input
+                type="text"
+                value={detailName}
+                onChange={(e) => setDetailName(e.target.value)}
+                placeholder="Bijv. wat of waar"
+                className="mt-0.5 w-full rounded-lg border border-[var(--card-border)] bg-[var(--bg-primary)] px-3 py-2 text-sm text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:border-[var(--accent-focus)] focus:outline-none focus:ring-2 focus:ring-[var(--accent-focus)]/30"
+              />
+            </div>
           )}
         </label>
         <label className="flex flex-col gap-1.5">

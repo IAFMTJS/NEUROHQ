@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { Modal } from "@/components/Modal";
+import { getCompletedTodayCount } from "@/app/actions/tasks";
 
 const STORAGE_KEY = "neurohq-late-day-no-task-banner";
 const HOUR_THRESHOLD = 20;
@@ -17,20 +18,39 @@ export function LateDayNoTaskBanner({
 }) {
   const [visible, setVisible] = useState(false);
   const [isLate, setIsLate] = useState(false);
+  const [checked, setChecked] = useState(false);
 
   useEffect(() => {
     const now = new Date();
     const hour = now.getHours();
     const isLateDay = hour >= HOUR_THRESHOLD;
     setIsLate(isLateDay);
-    if (!isLateDay || completedTodayCount > 0) return;
-    try {
-      const key = `${STORAGE_KEY}-${dateStr}`;
-      if (typeof sessionStorage !== "undefined" && sessionStorage.getItem(key) === "1") return;
-      setVisible(true);
-    } catch {
-      setVisible(true);
+    if (!isLateDay) return;
+    if (completedTodayCount > 0) {
+      setVisible(false);
+      setChecked(true);
+      return;
     }
+    const key = `${STORAGE_KEY}-${dateStr}`;
+    try {
+      if (typeof sessionStorage !== "undefined" && sessionStorage.getItem(key) === "1") return;
+    } catch {
+      // ignore
+    }
+    // Double-check with server so we don't show when dashboard cache is stale (e.g. user just completed a task).
+    getCompletedTodayCount(dateStr).then((count) => {
+      setChecked(true);
+      if (count > 0) {
+        try {
+          sessionStorage.setItem(key, "1");
+        } catch {
+          // ignore
+        }
+        setVisible(false);
+      } else {
+        setVisible(true);
+      }
+    });
   }, [completedTodayCount, dateStr]);
 
   function dismiss() {
@@ -42,7 +62,7 @@ export function LateDayNoTaskBanner({
     setVisible(false);
   }
 
-  const showModal = visible && isLate && completedTodayCount === 0;
+  const showModal = visible && isLate && checked;
 
   return (
     <Modal

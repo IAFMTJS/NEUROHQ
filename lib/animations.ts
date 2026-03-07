@@ -11,6 +11,10 @@ export const DURATION_FAST_MS = 150;
 export const DURATION_NORMAL_MS = 300;
 export const DURATION_SLOW_MS = 500;
 
+/** Light UI: short durations for fast, low-cinematic feel */
+export const DURATION_FAST_LIGHT_MS = 80;
+export const DURATION_NORMAL_LIGHT_MS = 120;
+
 /** Mascot event names for trigger('reward'), trigger('error'), etc. */
 export const MASCOT_EVENTS = {
   IDLE: "idle",

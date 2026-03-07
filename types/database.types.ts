@@ -562,6 +562,8 @@ export type Database = {
           is_planned: boolean
           note: string | null
           recurring: boolean
+          store_name: string | null
+          subscription_name: string | null
           updated_at: string
           user_id: string
         }
@@ -576,6 +578,8 @@ export type Database = {
           is_planned?: boolean
           note?: string | null
           recurring?: boolean
+          store_name?: string | null
+          subscription_name?: string | null
           updated_at?: string
           user_id: string
         }
@@ -590,6 +594,8 @@ export type Database = {
           is_planned?: boolean
           note?: string | null
           recurring?: boolean
+          store_name?: string | null
+          subscription_name?: string | null
           updated_at?: string
           user_id?: string
         }

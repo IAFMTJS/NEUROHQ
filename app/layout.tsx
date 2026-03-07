@@ -36,11 +36,17 @@ export const viewport = {
   viewportFit: "cover" as const,
 };
 
-/** Commander v2 is de enige visuele stijl – altijd normal + dark. */
+/** Commander v2 is de enige visuele stijl – altijd normal + dark. Light UI / reduced motion from localStorage before first paint to avoid flash. */
 const themeScript = `
 (function(){
   document.documentElement.setAttribute('data-theme','normal');
   document.documentElement.setAttribute('data-color-mode','dark');
+  try {
+    var lightUi = localStorage.getItem('neurohq-light-ui');
+    if (lightUi !== null) document.documentElement.setAttribute('data-light-ui', lightUi);
+    var reducedMotion = localStorage.getItem('neurohq-reduced-motion');
+    if (reducedMotion !== null) document.documentElement.setAttribute('data-reduced-motion', reducedMotion);
+  } catch (e) {}
 })();
 `;
 

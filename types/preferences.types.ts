@@ -23,6 +23,8 @@ export interface UserPreferences {
   selected_emotion: EmotionKey | null;
   compact_ui: boolean;
   reduced_motion: boolean;
+  /** Light version: same visuals, minimal animations, fast UI. */
+  light_ui: boolean;
   /** Auto-missies uit Master Pool (standaard aan). Wanneer false, geen auto-missies genereren. */
   auto_master_missions: boolean;
    /** Typische vrije dagen (1=Mon..7=Sun) voor zachte planning-bias. */
@@ -39,6 +41,7 @@ export const PREFERENCES_DEFAULTS: UserPreferences = {
   selected_emotion: null,
   compact_ui: false,
   reduced_motion: false,
+  light_ui: false,
   auto_master_missions: true, // standaard aan
   usual_days_off: null,
   day_off_mode: "soft",

@@ -363,6 +363,9 @@ export async function addBudgetEntry(params: {
   category?: string;
   note?: string;
   is_planned?: boolean;
+  store_name?: string | null;
+  subscription_name?: string | null;
+  detail_name?: string | null;
 }): Promise<{ id: string } | null> {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
@@ -376,7 +379,10 @@ export async function addBudgetEntry(params: {
       category: params.category ?? null,
       note: params.note ?? null,
       is_planned: params.is_planned ?? false,
-    })
+      store_name: params.store_name ?? null,
+      subscription_name: params.subscription_name ?? null,
+      detail_name: params.detail_name ?? null,
+    } as Record<string, unknown>)
     .select("id")
     .single();
   if (error) throw new Error(error.message);
@@ -391,6 +397,9 @@ export async function updateBudgetEntry(id: string, params: {
   category?: string | null;
   note?: string | null;
   is_planned?: boolean;
+  store_name?: string | null;
+  subscription_name?: string | null;
+  detail_name?: string | null;
 }) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();

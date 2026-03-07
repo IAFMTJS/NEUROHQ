@@ -53,6 +53,20 @@ export async function getDailyState(date: string) {
   )(user.id, date, accessToken);
 }
 
+/** Uncached daily state — use when you need the latest value (e.g. ensureMasterMissionsForToday) so cache doesn't hide a just-saved brain status. */
+export async function getDailyStateUncached(date: string) {
+  const supabase = await createServerClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return null;
+  const { data } = await supabase
+    .from("daily_state")
+    .select("energy, focus, sensory_load, social_load, sleep_hours, auto_master_missions_generated")
+    .eq("user_id", user.id)
+    .eq("date", date)
+    .maybeSingle();
+  return data;
+}
+
 export type SaveDailyStateResult = { ok: true } | { ok: false; error: string };
 
 export async function saveDailyState(input: DailyStateInput): Promise<SaveDailyStateResult> {

@@ -357,8 +357,8 @@ export default async function TasksPage({ searchParams }: Props) {
           {masterMissionsResult.debug === "auto_off" && " Zet in Instellingen “Auto-missies” aan."}
           {masterMissionsResult.debug === "no_brain_status" && (
             <>
-              {" Zet eerst je brain status op het dashboard (Hoe voel je je vandaag?) om auto-missies te krijgen. Als je die net hebt gezet, "}
-              <RefreshPageButton /> om de pagina te verversen.
+              {" Zet eerst je brain status op het dashboard (Hoe voel je je vandaag?) om auto-missies te krijgen. Als je die net hebt gezet, klik "}
+              <RefreshPageButton className="font-semibold" /> om de pagina te verversen (geen volledige herlaad).
             </>
           )}
           {(masterMissionsResult.debug === "create_failed" || masterMissionsResult.debug === "no_picks" || masterMissionsResult.debug === "to_create_empty") && " Vernieuw de pagina of probeer later opnieuw."}

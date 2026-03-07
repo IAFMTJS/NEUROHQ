@@ -3,6 +3,7 @@
 import { useState, useTransition, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { saveDailyState } from "@/app/actions/daily-state";
+import { setPendingDailyState, markDailyStateSynced } from "@/lib/client-pending-writes";
 import { getSuggestedTaskCount } from "@/lib/utils/energy";
 import { EnergyRing, type EnergyRingMode } from "@/components/hud-test/EnergyRing";
 import { useAppState } from "@/components/providers/AppStateProvider";
@@ -125,14 +126,8 @@ export function BrainStatusModal({ open, onClose, date, initial, yesterday, onSa
       mental_battery: mentalBattery,
     };
 
-    // Optimistic UI: update parent + local storage immediately so rings update without waiting for Supabase.
-    try {
-      if (typeof window !== "undefined") {
-        window.localStorage.setItem(`hq-daily-state-${date}`, JSON.stringify(nextState));
-      }
-    } catch {
-      // Non‑critical; ignore storage errors.
-    }
+    // Optimistic UI: update parent + local storage immediately; 5s debounced sync will push to Supabase.
+    setPendingDailyState(date, nextState);
     onSaved?.(nextState);
 
     startTransition(async () => {
@@ -147,6 +142,7 @@ export function BrainStatusModal({ open, onClose, date, initial, yesterday, onSa
           mental_battery: nextState.mental_battery,
         });
         if (result.ok) {
+          markDailyStateSynced(date);
           setSaved(true);
           appState?.triggerReward();
           router.refresh();

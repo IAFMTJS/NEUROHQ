@@ -16,7 +16,6 @@ import {
   TaskDetailsModal,
   type StrategicPreview,
   FocusModal,
-  AddMissionModal3,
 } from "@/components/missions";
 import { toast } from "sonner";
 import { Modal } from "@/components/Modal";
@@ -109,11 +108,8 @@ export function TaskList({
   const appState = useAppState();
   const completeTaskOffline = useOfflineCompleteTask();
   const [pending, startTransition] = useTransition();
-  const [addDueDate, setAddDueDate] = useState(date);
   const [addError, setAddError] = useState<string | null>(null);
   const [subtaskError, setSubtaskError] = useState<string | null>(null);
-  const [showRoutine, setShowRoutine] = useState(false);
-  const [weekdays, setWeekdays] = useState<number[]>([]);
   const [filter, setFilter] = useState<"all" | "active" | "aanbevolen" | "nieuw" | "work" | "personal" | "recurring">("all");
   const [detailsTask, setDetailsTask] = useState<ExtendedTask | null>(null);
   const [editTask, setEditTask] = useState<ExtendedTask | null>(null);
@@ -121,13 +117,10 @@ export function TaskList({
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
   const addParam = searchParams.get("add");
   const [quickAddOpen, setQuickAddOpen] = useState(false);
+  const [addFullOpen, setAddFullOpen] = useState(false);
 
   useEffect(() => {
-    setAddDueDate(date);
-  }, [date]);
-
-  useEffect(() => {
-    if (addParam && (/^\d{4}-\d{2}-\d{2}$/.test(addParam) || addParam === "today")) setQuickAddOpen(true);
+    if (addParam && (/^\d{4}-\d{2}-\d{2}$/.test(addParam) || addParam === "today")) setAddFullOpen(true);
   }, [addParam]);
   const [showDoAnotherModal, setShowDoAnotherModal] = useState(false);
   const [showAllTasksModal, setShowAllTasksModal] = useState(false);
@@ -340,60 +333,6 @@ export function TaskList({
     });
   }
 
-  function handleAdd(e: React.FormEvent<HTMLFormElement>) {
-    e.preventDefault();
-    setAddError(null);
-    const form = e.currentTarget;
-    const title = (form.elements.namedItem("title") as HTMLInputElement)?.value?.trim();
-    const category = (form.elements.namedItem("category") as HTMLSelectElement)?.value as "" | "work" | "personal";
-    const recurrence = (form.elements.namedItem("recurrence") as HTMLSelectElement)?.value as "" | "daily" | "weekly" | "monthly";
-    const dueDateInput = (form.elements.namedItem("due_date") as HTMLInputElement)?.value;
-    const dueDate = dueDateInput?.trim() || date;
-    const impactRaw = (form.elements.namedItem("impact") as HTMLSelectElement)?.value;
-    const urgencyRaw = (form.elements.namedItem("urgency") as HTMLSelectElement)?.value;
-    const energyRaw = (form.elements.namedItem("energy") as HTMLSelectElement)?.value;
-    const focusRaw = (form.elements.namedItem("focus_required") as HTMLSelectElement)?.value;
-    const mentalLoadRaw = (form.elements.namedItem("mental_load") as HTMLSelectElement)?.value;
-    const socialLoadRaw = (form.elements.namedItem("social_load") as HTMLSelectElement)?.value;
-    const priorityRaw = (form.elements.namedItem("priority") as HTMLSelectElement)?.value;
-    const impact = impactRaw ? parseInt(impactRaw, 10) : null;
-    const urgency = urgencyRaw ? parseInt(urgencyRaw, 10) : null;
-    const energy = energyRaw ? parseInt(energyRaw, 10) : null;
-    const focusRequired = focusRaw ? parseInt(focusRaw, 10) : null;
-    const mentalLoad = mentalLoadRaw ? parseInt(mentalLoadRaw, 10) : null;
-    const socialLoad = socialLoadRaw ? parseInt(socialLoadRaw, 10) : null;
-    const priority = priorityRaw ? parseInt(priorityRaw, 10) : null;
-    const recurrence_weekdays = recurrence === "weekly" && weekdays.length > 0 ? weekdays.sort((a, b) => a - b).join(",") : null;
-    if (!title) return;
-    startTransition(async () => {
-      try {
-        const result = await createTask({
-          title,
-          due_date: dueDate,
-          category: category === "work" ? "work" : category === "personal" ? "personal" : null,
-          recurrence_rule: recurrence === "daily" ? "daily" : recurrence === "weekly" ? "weekly" : recurrence === "monthly" ? "monthly" : null,
-          recurrence_weekdays: recurrence_weekdays ?? null,
-          impact: impact && impact >= 1 && impact <= 3 ? impact : null,
-          urgency: urgency && urgency >= 1 && urgency <= 3 ? urgency : null,
-          energy_required: energy && energy >= 1 && energy <= 10 ? energy : null,
-          focus_required: focusRequired && focusRequired >= 1 && focusRequired <= 10 ? focusRequired : null,
-          mental_load: mentalLoad && mentalLoad >= 1 && mentalLoad <= 10 ? mentalLoad : null,
-          social_load: socialLoad && socialLoad >= 1 && socialLoad <= 10 ? socialLoad : null,
-          priority: priority && priority >= 1 && priority <= 5 ? priority : null,
-        });
-        if (result?.task && result.task.due_date === date) {
-          setLocalTasksAdded((prev) => [...prev, result.task as ExtendedTask]);
-        }
-        form.reset();
-        setAddDueDate(date);
-        setWeekdays([]);
-        setShowRoutine(false);
-      } catch (err) {
-        setAddError(err instanceof Error ? err.message : "Failed to add task");
-      }
-    });
-  }
-
   const showLevelModal = !!levelUpInfo;
 
   function LevelReputationBars() {
@@ -463,9 +402,6 @@ export function TaskList({
     });
   }
 
-  function toggleWeekday(d: number) {
-    setWeekdays((prev) => (prev.includes(d) ? prev.filter((x) => x !== d) : [...prev, d].sort((a, b) => a - b)));
-  }
   const showAvoidance = carryOverCount >= 3 && carryOverCount < 5;
 
   function recurrencePreview(task: ExtendedTask): string {
@@ -622,15 +558,15 @@ export function TaskList({
             <h2 className="text-base font-semibold text-[var(--text-primary)]">
               Today&apos;s missions <span className="font-medium text-[var(--accent-focus)]">· Commander</span>
             </h2>
-            <p className="mt-0.5 text-xs text-[var(--text-muted)]">100 templates · XP per missie · One focus at a time</p>
+            <p className="mt-0.5 text-xs text-[var(--text-muted)]">Volledige taakformulier · XP per missie</p>
           </div>
           <div className="flex flex-wrap items-center gap-2">
             <button
               type="button"
-              onClick={() => { setDetailsTask(null); setFocusTask(null); setQuickAddOpen(true); }}
+              onClick={() => { setDetailsTask(null); setFocusTask(null); setAddFullOpen(true); }}
               className="rounded-full bg-[var(--accent-focus)] px-4 py-2.5 text-sm font-semibold text-white shadow-[0_0_12px_rgba(37,99,235,0.4)] hover:opacity-95 hover:shadow-[0_0_16px_rgba(37,99,235,0.5)]"
             >
-              + Nieuwe missie (100 templates)
+              + Taak toevoegen
             </button>
             {mode === "stabilize" && <span className="rounded-full bg-amber-500/15 px-3 py-1 text-xs font-medium text-amber-200">Stabilize mode</span>}
             {incompleteTasksForDisplay.length + completedForDisplay.length > 0 && (
@@ -711,124 +647,13 @@ export function TaskList({
           </div>
         )}
 
-        <div className="mt-4 rounded-xl border border-[var(--card-border)] bg-[var(--bg-surface)]/30 p-4">
-          {limitMessage && <p className="mb-3 text-xs text-[var(--text-muted)]">{limitMessage}</p>}
-          <button type="button" onClick={() => setShowRoutine((v) => !v)} className="mb-2 text-xs font-medium text-[var(--text-muted)] hover:text-[var(--text-primary)]">
-              {showRoutine ? "− Simple form" : "+ Routine & options (category, weekly days, impact)"}
-            </button>
-            <form onSubmit={handleAdd} className="space-y-3">
-              <div className="flex flex-wrap items-end gap-2">
-                <input name="title" type="text" placeholder="Add a mission…" className="flex-1 min-w-[140px] rounded-lg border border-[var(--card-border)] bg-[var(--bg-primary)] px-3 py-2.5 text-sm text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:border-[var(--accent-focus)] focus:outline-none focus:ring-2 focus:ring-[var(--accent-focus)]/30" required />
-                <label className="flex flex-col gap-1">
-                  <span className="text-xs font-medium text-[var(--text-muted)]">Due</span>
-                  <input name="due_date" type="date" value={addDueDate} onChange={(e) => setAddDueDate(e.target.value)} className="rounded-lg border border-[var(--card-border)] bg-[var(--bg-primary)] px-2.5 py-2 text-sm text-[var(--text-primary)]" aria-label="Due date" />
-                </label>
-                <select name="category" className="rounded-lg border border-[var(--card-border)] bg-[var(--bg-primary)] px-2 py-2.5 text-sm text-[var(--text-primary)]" aria-label="Category">
-                  <option value="">Category</option>
-                  <option value="work">Work</option>
-                  <option value="personal">Personal</option>
-                </select>
-                <select name="recurrence" className="rounded-lg border border-[var(--card-border)] bg-[var(--bg-primary)] px-2 py-2.5 text-sm text-[var(--text-primary)]" aria-label="Recurrence">
-                  <option value="">Once</option>
-                  <option value="daily">Daily</option>
-                  <option value="weekly">Weekly</option>
-                  <option value="monthly">Monthly</option>
-                </select>
-                <label className="flex flex-col gap-1">
-                  <span className="text-xs font-medium text-[var(--text-muted)]">Energy</span>
-                  <select name="energy" className="rounded-lg border border-[var(--card-border)] bg-[var(--bg-primary)] px-2 py-2.5 text-sm text-[var(--text-primary)]" aria-label="Energy (1-10)">
-                    <option value="">—</option>
-                    {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((n) => (
-                      <option key={n} value={n}>{n}</option>
-                    ))}
-                  </select>
-                </label>
-                <button type="submit" disabled={pending} className="btn-primary rounded-lg px-4 py-2.5 text-sm font-medium disabled:opacity-50">Add</button>
-              </div>
-              {showRoutine && (
-                <div className="grid grid-cols-2 gap-3 rounded-lg border border-[var(--card-border)]/50 bg-[var(--bg-primary)]/50 p-3 sm:grid-cols-4">
-                  <div>
-                    <label className="block text-xs font-medium text-[var(--text-muted)]">Repeat on (weekly)</label>
-                    <div className="mt-1 flex flex-wrap gap-1">
-                      {[1, 2, 3, 4, 5, 6, 7].map((d) => (
-                        <button key={d} type="button" onClick={() => toggleWeekday(d)} className={`rounded px-2 py-1 text-xs ${weekdays.includes(d) ? "bg-[var(--accent-focus)]/20 text-[var(--accent-focus)]" : "bg-[var(--bg-surface)] text-[var(--text-muted)] hover:text-[var(--text-primary)]"}`}>
-                          {WEEKDAY_LABELS[d]}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                  <label className="flex flex-col gap-1">
-                    <span className="text-xs font-medium text-[var(--text-muted)]">Impact (1–3)</span>
-                    <select name="impact" className="rounded border border-[var(--card-border)] bg-[var(--bg-primary)] px-2 py-1.5 text-sm text-[var(--text-primary)]">
-                      <option value="">—</option>
-                      <option value="1">1 Low</option>
-                      <option value="2">2 Medium</option>
-                      <option value="3">3 High</option>
-                    </select>
-                  </label>
-                  <label className="flex flex-col gap-1">
-                    <span className="text-xs font-medium text-[var(--text-muted)]">Importance</span>
-                    <select name="urgency" className="rounded border border-[var(--card-border)] bg-[var(--bg-primary)] px-2 py-1.5 text-sm text-[var(--text-primary)]" title="Urgent = must do; Low = ok to skip">
-                      <option value="">—</option>
-                      <option value="1">Low</option>
-                      <option value="2">Medium</option>
-                      <option value="3">Urgent</option>
-                    </select>
-                  </label>
-                  <div className="col-span-2 flex flex-wrap gap-2 text-[10px] text-[var(--text-muted)]">Brain: Energy, Focus, Mentale belasting</div>
-                  <label className="flex flex-1 min-w-[80px] flex-col gap-1">
-                    <span className="text-xs font-medium text-[var(--text-muted)]">Energy (1–10)</span>
-                      <select name="energy" className="rounded border border-[var(--card-border)] bg-[var(--bg-primary)] px-2 py-1.5 text-sm text-[var(--text-primary)]">
-                        <option value="">—</option>
-                        {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((n) => (
-                          <option key={n} value={n}>{n}</option>
-                        ))}
-                      </select>
-                    </label>
-                    <label className="flex flex-1 min-w-[80px] flex-col gap-1">
-                      <span className="text-xs font-medium text-[var(--text-muted)]">Focus (1–10)</span>
-                      <select name="focus_required" className="rounded border border-[var(--card-border)] bg-[var(--bg-primary)] px-2 py-1.5 text-sm text-[var(--text-primary)]">
-                        <option value="">—</option>
-                        {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((n) => (
-                          <option key={n} value={n}>{n}</option>
-                        ))}
-                      </select>
-                    </label>
-                    <label className="flex flex-1 min-w-[80px] flex-col gap-1">
-                      <span className="text-xs font-medium text-[var(--text-muted)]">Mentale belasting (1–10)</span>
-                      <select name="mental_load" className="rounded border border-[var(--card-border)] bg-[var(--bg-primary)] px-2 py-1.5 text-sm text-[var(--text-primary)]">
-                        <option value="">—</option>
-                        {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((n) => (
-                          <option key={n} value={n}>{n}</option>
-                        ))}
-                      </select>
-                    </label>
-                    <label className="flex flex-1 min-w-[80px] flex-col gap-1">
-                      <span className="text-xs font-medium text-[var(--text-muted)]">Social (1–10)</span>
-                      <select name="social_load" className="rounded border border-[var(--card-border)] bg-[var(--bg-primary)] px-2 py-1.5 text-sm text-[var(--text-primary)]">
-                        <option value="">—</option>
-                        {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((n) => (
-                          <option key={n} value={n}>{n}</option>
-                        ))}
-                      </select>
-                    </label>
-                    <label className="flex flex-1 min-w-[80px] flex-col gap-1">
-                      <span className="text-xs font-medium text-[var(--text-muted)]">Priority (1–5)</span>
-                      <select name="priority" className="rounded border border-[var(--card-border)] bg-[var(--bg-primary)] px-2 py-1.5 text-sm text-[var(--text-primary)]">
-                        <option value="">—</option>
-                        {[1, 2, 3, 4, 5].map((n) => (
-                          <option key={n} value={n}>{n}</option>
-                        ))}
-                      </select>
-                    </label>
-                </div>
-              )}
-            </form>
-          </div>
-
-        <div className="mt-3 flex justify-end">
-          <button type="button" onClick={() => { setDetailsTask(null); setFocusTask(null); setQuickAddOpen(true); }} className="rounded-full border border-[var(--accent-focus)]/50 bg-[var(--accent-focus)]/10 px-4 py-2 text-sm font-medium text-[var(--accent-focus)] hover:bg-[var(--accent-focus)]/20">
-            + Nog een missie (templates)
+        <div className="mt-4 flex justify-end">
+          <button
+            type="button"
+            onClick={() => { setDetailsTask(null); setFocusTask(null); setAddFullOpen(true); }}
+            className="rounded-full border border-[var(--accent-focus)]/50 bg-[var(--accent-focus)]/10 px-4 py-2 text-sm font-medium text-[var(--accent-focus)] hover:bg-[var(--accent-focus)]/20"
+          >
+            + Taak toevoegen
           </button>
         </div>
 
@@ -845,9 +670,20 @@ export function TaskList({
             onDelete={() => { setDetailsTask(null); setConfirmDeleteId(detailsTask.id); }}
           />
         )}
-        {editTask && (
-          <EditMissionModal open={!!editTask} onClose={() => setEditTask(null)} task={editTask} onSaved={() => setEditTask(null)} />
-        )}
+        <EditMissionModal
+          open={!!editTask || addFullOpen || quickAddOpen}
+          onClose={() => { setEditTask(null); setAddFullOpen(false); setQuickAddOpen(false); if (addParam) router.replace(pathname); }}
+          task={editTask ?? null}
+          defaultDate={addParam && /^\d{4}-\d{2}-\d{2}$/.test(addParam) ? addParam : date}
+          onSaved={() => setEditTask(null)}
+          onAdded={(task) => {
+            if (task && (task as ExtendedTask).due_date === date) setLocalTasksAdded((prev) => [...prev, task as ExtendedTask]);
+            setAddFullOpen(false);
+            setQuickAddOpen(false);
+            if (addParam) router.replace(pathname);
+            router.refresh();
+          }}
+        />
         {focusTask && (
           <FocusModal
             open={!!focusTask}
@@ -871,22 +707,6 @@ export function TaskList({
           danger
           onConfirm={handleConfirmDelete}
         />
-        <AddMissionModal3
-          open={quickAddOpen}
-          onClose={() => { setQuickAddOpen(false); if (addParam) router.replace(pathname); }}
-          date={addParam === "today" || !addParam ? date : addParam && /^\d{4}-\d{2}-\d{2}$/.test(addParam) ? addParam : date}
-          strategyMapping={strategyMapping}
-          onAdded={(task) => {
-            if (task && task.due_date === date) setLocalTasksAdded((prev) => [...prev, task as ExtendedTask]);
-            setQuickAddOpen(false);
-            if (addParam) router.replace(pathname);
-          }}
-          headroomTierToday={brainMode?.tier}
-          activeCountToday={activeCount}
-          maxSlotsToday={maxSlots === Infinity ? undefined : maxSlots}
-          addBlockedToday={addBlocked}
-        />
-
         <Modal open={showDoAnotherModal} onClose={() => setShowDoAnotherModal(false)} title="Nice work!" size="sm">
           <p className="text-sm text-[var(--text-muted)]">
             Je hebt je minimale missie-doel voor vandaag geraakt. Wil je 2 bonusmissies uit de pool toevoegen?

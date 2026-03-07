@@ -3,6 +3,7 @@
 import { useState, memo, useEffect } from "react";
 import type { BrainMode } from "@/lib/brain-mode";
 import { maxAllowedIntensityForTier } from "@/lib/brain-mode";
+import { getPendingDailyState } from "@/lib/client-pending-writes";
 import { BrainStatusModal } from "./BrainStatusModal";
 import { EnergyRing, type EnergyRingMode } from "@/components/hud-test/EnergyRing";
 
@@ -45,9 +46,22 @@ export const BrainStatusCard = memo(function BrainStatusCard({ date, initial, ye
   const [modalOpen, setModalOpen] = useState(false);
   const [currentInitial, setCurrentInitial] = useState(initial);
 
+  // Local-first: show pending daily state from localStorage if set, else server initial.
   useEffect(() => {
-    setCurrentInitial(initial);
-  }, [initial]);
+    const pending = getPendingDailyState(date);
+    setCurrentInitial(
+      pending
+        ? {
+            energy: pending.energy,
+            focus: pending.focus,
+            sensory_load: pending.sensory_load,
+            sleep_hours: pending.sleep_hours,
+            social_load: pending.social_load,
+            mental_battery: pending.mental_battery,
+          }
+        : initial
+    );
+  }, [date, initial]);
 
   useEffect(() => {
     const openIfHash = () => {

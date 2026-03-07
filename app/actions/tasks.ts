@@ -53,6 +53,21 @@ export async function getTodaysTasks(date: string, mode: TaskListMode): Promise<
   return { tasks: ordered as Task[], carryOverCount: maxCarryOver };
 }
 
+/** Count of tasks completed today (for late-day banner: avoid showing when dashboard cache is stale). */
+export async function getCompletedTodayCount(date: string): Promise<number> {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return 0;
+  const { count } = await supabase
+    .from("tasks")
+    .select("id", { count: "exact", head: true })
+    .eq("user_id", user.id)
+    .eq("due_date", date)
+    .eq("completed", true)
+    .is("deleted_at", null);
+  return count ?? 0;
+}
+
 export async function getTasksForDate(date: string) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
@@ -424,6 +439,9 @@ export async function completeTask(id: string): Promise<CompleteTaskResult> {
   await Promise.all(afterEconomy);
 
   const { logBehaviourEntry } = await import("./dcic/behaviour-log");
+  // Map task impact (1–3) to difficulty_level so identity engine impact reputation updates (needs >= 0.7 or xp >= 80).
+  const impactToDifficulty = (i: number | null | undefined): number =>
+    i === 3 ? 0.9 : i === 2 ? 0.65 : i === 1 ? 0.4 : 0.5;
   void logBehaviourEntry({
     date: completionDate,
     missionStartedAt: null,
@@ -431,7 +449,7 @@ export async function completeTask(id: string): Promise<CompleteTaskResult> {
     energyBefore: 0,
     energyAfter: 0,
     resistedBeforeStart: false,
-    difficultyLevel: 0.5,
+    difficultyLevel: impactToDifficulty(t?.impact),
     xpGained: xpAwarded,
   }).catch((err) => {
     console.error("Behaviour log on task complete:", err);

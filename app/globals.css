@@ -567,6 +567,53 @@
 [data-reduced-motion="true"] .glow-pulse { animation: none; }
 [data-reduced-motion="true"] .skill-node.unlocked { animation: none; }
 
+/* Light UI: same visuals, minimal animations, fast interactions, no delay so page loads without flash */
+[data-light-ui="true"] {
+  --hq-duration-fast: 80ms;
+  --hq-duration-normal: 120ms;
+  /* No glowing shadows in light UI */
+  --shadow-button: 0 2px 8px rgba(0, 0, 0, 0.2);
+  --neon-btn-shadow: 0 2px 8px rgba(0, 0, 0, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.15);
+}
+[data-light-ui="true"] *,
+[data-light-ui="true"] *::before,
+[data-light-ui="true"] *::after {
+  animation-duration: 0.06s !important;
+  animation-delay: 0 !important;
+  transition-duration: 0.06s !important;
+  transition-delay: 0 !important;
+}
+[data-light-ui="true"] .glow-pulse,
+[data-light-ui="true"] .cta-streak-pulse { animation: none !important; }
+/* Light UI: disable all glow/flicker on buttons and cards */
+[data-light-ui="true"] .btn-primary,
+[data-light-ui="true"] .btn-hq-primary,
+[data-light-ui="true"] .btn-hq-secondary,
+[data-light-ui="true"] .dashboard-mini-btn-primary {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.08) !important;
+}
+[data-light-ui="true"] .card-simple-accent,
+[data-light-ui="true"] .mission-card.active,
+[data-light-ui="true"] .mission-card.completed,
+[data-light-ui="true"] .glow-pill,
+[data-light-ui="true"] .skill-node.unlocked,
+[data-light-ui="true"] .progress-fill-glow,
+[data-light-ui="true"] .link-glow-hover:hover {
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.15), 0 0 0 1px rgba(255, 255, 255, 0.06) !important;
+}
+[data-light-ui="true"] .card-simple-accent { border-color: rgba(255, 255, 255, 0.12) !important; }
+[data-light-ui="true"] .card-simple-accent::before { display: none !important; }
+[data-light-ui="true"] .mission-card.active,
+[data-light-ui="true"] .mission-card.completed { border-color: rgba(255, 255, 255, 0.1) !important; }
+[data-light-ui="true"] .mission-card.active::before,
+[data-light-ui="true"] .mission-card.completed::after { display: none !important; }
+[data-light-ui="true"] .page-title-glow,
+[data-light-ui="true"] .text-glow-accent { text-shadow: none !important; }
+/* Disable glow keyframe animations in light UI */
+[data-light-ui="true"] .stat-ring.energy,
+[data-light-ui="true"] .stat-ring.focus,
+[data-light-ui="true"] .stat-ring.load { animation: none !important; box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2) !important; }
+
 /* Card-simple-accent: neon rand + zachte glow (zoals actieve rings) */
 .card-simple-accent {
   background: linear-gradient(165deg, rgba(18, 28, 55, 0.55) 0%, rgba(12, 20, 42, 0.65) 100%);

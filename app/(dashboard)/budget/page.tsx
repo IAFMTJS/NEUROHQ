@@ -193,7 +193,7 @@ export default async function BudgetPage({ searchParams }: Props) {
   }
 
   const daysUnderBudgetThisWeek =
-    !historyMode && isWeekly && financeState ? getSafeDaysThisWeek(financeState) : null;
+    !historyMode && financeState ? getSafeDaysThisWeek(financeState) : null;
   const loadTrend = !historyMode && financeState ? getBudgetLoadTrend(financeState) : [];
 
   const headerRight = (

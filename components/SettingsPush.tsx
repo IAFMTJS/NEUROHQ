@@ -41,7 +41,7 @@ export function SettingsPush({ initialPushQuoteTime = null, initialQuietHours = 
       }
       if (!VAPID_PUBLIC) {
         setStatus("error");
-        setMessage("Push not configured (missing VAPID key).");
+        setMessage("Push notifications are optional. Add VAPID keys to enable them (see instructions below).");
         return;
       }
       await navigator.serviceWorker.register("/sw.js", { scope: "/" });
@@ -148,11 +148,14 @@ export function SettingsPush({ initialPushQuoteTime = null, initialQuietHours = 
         <span className="text-xs text-[var(--text-muted)]">No notifications in this window (your local time).</span>
       </div>
       {!VAPID_PUBLIC && (
-        <div className="mt-2 space-y-2 rounded-lg border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-xs text-amber-200">
-          <p className="font-medium">Push not configured (missing VAPID key).</p>
-          <p>1. In your project root run: <code className="rounded bg-[var(--bg-primary)] px-1 py-0.5">npm run generate-vapid</code></p>
-          <p>2. Copy the two printed lines into <code className="rounded bg-[var(--bg-primary)] px-1 py-0.5">.env.local</code> (create it from <code className="rounded bg-[var(--bg-primary)] px-1 py-0.5">.env.example</code> if needed).</p>
-          <p>3. Restart the dev server so the new env vars are picked up.</p>
+        <div className="mt-2 space-y-2 rounded-lg border border-[var(--card-border)] bg-[var(--bg-surface)] px-3 py-2 text-xs text-[var(--text-muted)]">
+          <p className="font-medium text-[var(--text-secondary)]">Push notifications (optional)</p>
+          <p>To enable push, add VAPID keys:</p>
+          <ol className="list-decimal list-inside space-y-1">
+            <li>Run <code className="rounded bg-[var(--bg-primary)] px-1 py-0.5">npm run generate-vapid</code> in the project root.</li>
+            <li>Copy the two printed lines into <code className="rounded bg-[var(--bg-primary)] px-1 py-0.5">.env.local</code> (see <code className="rounded bg-[var(--bg-primary)] px-1 py-0.5">.env.example</code> for names).</li>
+            <li>Restart the dev server.</li>
+          </ol>
         </div>
       )}
       {message && (

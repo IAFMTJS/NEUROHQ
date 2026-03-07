@@ -12,6 +12,7 @@ import { pickMissionsForDay, type PickedMissionTemplate } from "@/lib/master-mis
 import { MASTER_MISSION_POOL } from "@/lib/mission-templates";
 import { getUserPreferencesOrDefaults } from "@/app/actions/preferences";
 import { todayDateString } from "@/lib/utils/timezone";
+import { getDailyStateUncached } from "@/app/actions/daily-state";
 
 type DailyStateRow = {
   energy?: number | null;
@@ -61,13 +62,8 @@ export async function ensureMasterMissionsForToday(): Promise<EnsureMasterMissio
   );
 
   // Only distribute auto-missions when user has set brain status (daily_state) for today.
-  const { data: dailyRowRaw } = await supabase
-    .from("daily_state")
-    .select("energy, focus, sensory_load, social_load, sleep_hours")
-    .eq("user_id", user.id)
-    .eq("date", dateStr)
-    .maybeSingle();
-
+  // Use uncached read so a just-saved brain status is seen immediately after "Vernieuw pagina".
+  const dailyRowRaw = await getDailyStateUncached(dateStr);
   const dailyRow = dailyRowRaw as DailyStateRow | null;
   // Require a full brain‑status check‑in (all core sliders filled) before
   // generating auto‑missions. Rows created indirectly (e.g. recovery bonus)

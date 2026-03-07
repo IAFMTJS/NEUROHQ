@@ -45,6 +45,7 @@ const PatternInsightCard = dynamic(() => import("@/components/hq/PatternInsightC
 const EnergyBudgetBar = dynamic(() => import("@/components/EnergyBudgetBar").then((m) => ({ default: m.EnergyBudgetBar })), { loading: () => <div className="h-3 w-full animate-pulse rounded-full bg-white/10" aria-hidden /> });
 const EnergyOverBudgetBanner = dynamic(() => import("@/components/dashboard/EnergyOverBudgetBanner").then((m) => ({ default: m.EnergyOverBudgetBanner })), { loading: () => null });
 const LateDayNoTaskBanner = dynamic(() => import("@/components/dashboard/LateDayNoTaskBanner").then((m) => ({ default: m.LateDayNoTaskBanner })), { loading: () => null });
+const EveningNoTaskModal = dynamic(() => import("@/components/dashboard/EveningNoTaskModal").then((m) => ({ default: m.EveningNoTaskModal })), { loading: () => null });
 const ConsequenceBanner = dynamic(() => import("@/components/ConsequenceBanner").then((m) => ({ default: m.ConsequenceBanner })), { loading: () => null });
 const AvoidanceNotice = dynamic(() => import("@/components/AvoidanceNotice").then((m) => ({ default: m.AvoidanceNotice })), { loading: () => null });
 const FocusBlock = dynamic(() => import("@/components/FocusBlock").then((m) => ({ default: m.FocusBlock })), { loading: () => <div className="min-h-[80px] animate-pulse rounded-xl bg-white/5" aria-hidden /> });
@@ -204,6 +205,7 @@ export function DashboardClientShell() {
           <>
             <EnergyOverBudgetBanner remaining={(energyBudget.remaining as number) ?? 0} dateStr={dateStr} />
             <LateDayNoTaskBanner completedTodayCount={(energyBudget.completedTaskCount as number) ?? 0} dateStr={dateStr} />
+            <EveningNoTaskModal dateStr={dateStr} />
           </>
         )}
         {!isMinimalUI && (
