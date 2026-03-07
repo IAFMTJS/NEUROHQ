@@ -44,8 +44,8 @@ export function SettingsPush({ initialPushQuoteTime = null, initialQuietHours = 
         setMessage("Push not configured (missing VAPID key).");
         return;
       }
-      const reg = await navigator.serviceWorker.register("/sw.js", { scope: "/" });
-      await reg.update().catch(() => {}); // Ignore if update fails (e.g. no network or registration not yet active)
+      await navigator.serviceWorker.register("/sw.js", { scope: "/" });
+      const reg = await navigator.serviceWorker.ready; // Wait for active SW; subscribe requires it
       const sub = await reg.pushManager.subscribe({
         userVisibleOnly: true,
         applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC) as BufferSource,
