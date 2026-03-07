@@ -45,7 +45,13 @@ export function SettingsPush({ initialPushQuoteTime = null, initialQuietHours = 
         return;
       }
       await navigator.serviceWorker.register("/sw.js", { scope: "/" });
-      const reg = await navigator.serviceWorker.ready; // Wait for active SW; subscribe requires it
+      // Wait for active SW (required for subscribe), with timeout so we don't hang forever
+      const reg = await Promise.race([
+        navigator.serviceWorker.ready,
+        new Promise<never>((_, reject) =>
+          setTimeout(() => reject(new Error("Service worker did not activate in time. Refresh the page and try again.")), 15000)
+        ),
+      ]);
       const sub = await reg.pushManager.subscribe({
         userVisibleOnly: true,
         applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC) as BufferSource,

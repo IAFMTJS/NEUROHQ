@@ -197,10 +197,13 @@ function warmupBackgroundCaches() {
 }
 
 // Install: Cache static assets. Call skipWaiting so new versions activate immediately and avoid stale 404 HTML.
+// Use addAll with catch so one missing asset (e.g. 404 in dev) does not block SW activation and push subscribe.
 self.addEventListener("install", function (event) {
   event.waitUntil(
     caches.open(STATIC_CACHE).then(function (cache) {
-      return cache.addAll(STATIC_ASSETS);
+      return cache.addAll(STATIC_ASSETS).catch(function () {
+        // Continue activation even if some assets failed (e.g. /offline 404 in dev).
+      });
     })
   );
   self.skipWaiting();
