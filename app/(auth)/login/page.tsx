@@ -35,8 +35,8 @@ function LoginForm() {
         return;
       }
       await ensureUserProfileForSession();
-      // Brief delay so the browser commits the session cookie before the next request (avoids redirect loop back to login)
-      await new Promise((r) => setTimeout(r, 150));
+      // Delay so the session cookie is committed before the next request (reduces "client-side exception" after redirect on slow networks)
+      await new Promise((r) => setTimeout(r, 400));
       window.location.replace("/dashboard");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Sign in failed");

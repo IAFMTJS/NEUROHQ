@@ -1,6 +1,5 @@
 "use server";
 
-import { revalidateTagMax } from "@/lib/revalidate";
 import { createClient } from "@/lib/supabase/server";
 import { yesterdayDate } from "@/lib/utils/timezone";
 
@@ -124,8 +123,8 @@ export async function applyZeroCompletionRollover(todayStr: string): Promise<{
       .eq("user_id", user.id);
   }
 
-  revalidateTagMax(`daily-${user.id}-${todayStr}`);
-  revalidateTagMax(`energy-${user.id}-${todayStr}`);
+  // Do not call revalidateTag here: this runs during dashboard payload build (render). Next forbids
+  // revalidateTag during render. DB is updated; next request will read fresh data.
 
   return { applied: true, loadBump: 10, energyPenalty: newEnergy };
 }

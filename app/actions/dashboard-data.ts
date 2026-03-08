@@ -1,6 +1,5 @@
 "use server";
 
-import { unstable_cache } from "next/cache";
 import { revalidateTagMax } from "@/lib/revalidate";
 import { createClient } from "@/lib/supabase/server";
 import { ensureUserProfileForSession } from "@/app/actions/auth";
@@ -364,26 +363,28 @@ export async function getDashboardPayload(): Promise<{
   critical: DashboardCritical;
   secondary: DashboardSecondary;
 } | null> {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return null;
+  try {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return null;
 
-  await ensureUserProfileForSession(user);
+    await ensureUserProfileForSession(user);
 
-  const cacheTag = `dashboard-${user.id}`;
-  const cached = await unstable_cache(
-    async () => {
-      const ctx = await buildTodayContext();
-      const [critical, secondary] = await Promise.all([
-        buildCriticalPayload(ctx),
-        buildSecondaryPayload(ctx),
-      ]);
-      return { critical, secondary };
-    },
-    [`dashboard-payload-${user.id}`],
-    { revalidate: 60, tags: [cacheTag] }
-  )();
-  return cached;
+    // Do not use unstable_cache here: the callback would call createClient()/cookies() and revalidateTag
+    // (via getDailyState, applyZeroCompletionRollover, etc.), which Next forbids inside cached functions.
+    const ctx = await buildTodayContext();
+    const [critical, secondary] = await Promise.all([
+      buildCriticalPayload(ctx),
+      buildSecondaryPayload(ctx),
+    ]);
+    return { critical, secondary };
+  } catch (err) {
+    // Log full error in Vercel/server logs so the real cause is visible (production omits it from client).
+    console.error("[getDashboardPayload]", err);
+    throw new Error(
+      "Dashboard kon niet laden. Probeer de pagina te vernieuwen of log opnieuw in. Staat het probleem er nog? Bekijk dan in Vercel → Logs de foutmelding bij [getDashboardPayload]."
+    );
+  }
 }
 
 /** Invalidate dashboard cache when today's tasks or identity change (e.g. complete/delete task). Call from task actions. */

@@ -21,19 +21,26 @@ async function DashboardPayloadAndShell() {
 }
 
 export default async function DashboardPage() {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) redirect("/login");
+  try {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) redirect("/login");
 
-  return (
-    <Suspense
-      fallback={
-        <main className="container page page-wide dashboard-page relative z-10 pb-10">
-          <DashboardSkeleton />
-        </main>
-      }
-    >
-      <DashboardPayloadAndShell />
-    </Suspense>
-  );
+    return (
+      <Suspense
+        fallback={
+          <main className="container page page-wide dashboard-page relative z-10 pb-10">
+            <DashboardSkeleton />
+          </main>
+        }
+      >
+        <DashboardPayloadAndShell />
+      </Suspense>
+    );
+  } catch (err) {
+    console.error("[DashboardPage]", err);
+    throw new Error(
+      "Dashboard kon niet laden. Vernieuw de pagina of log opnieuw in. Zie Vercel Logs voor [DashboardPage] of [getDashboardPayload]."
+    );
+  }
 }
