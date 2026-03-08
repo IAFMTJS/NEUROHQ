@@ -877,6 +877,41 @@ export type Database = {
           },
         ]
       }
+      daily_explanations: {
+        Row: {
+          id: string
+          user_id: string
+          date: string
+          reason_type: string | null
+          explanation_text: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          date: string
+          reason_type?: string | null
+          explanation_text?: string | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          date?: string
+          reason_type?: string | null
+          explanation_text?: string | null
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "daily_explanations_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       education_options: {
         Row: {
           archived_at: string | null

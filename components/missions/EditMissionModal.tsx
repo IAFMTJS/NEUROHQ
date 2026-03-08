@@ -96,46 +96,56 @@ export function EditMissionModal({ open, onClose, task, defaultDate, onSaved, on
     notes: notes.trim() || null,
   };
 
+  /** Narrow form payload to createTask param types (category + recurrence_rule are string unions). */
+  function toCreateParams(p: typeof payload): Parameters<typeof createTask>[0] {
+    return {
+      title: p.title!,
+      due_date: p.due_date!,
+      category: p.category === "work" || p.category === "personal" ? p.category : null,
+      recurrence_rule: p.recurrence_rule === "daily" || p.recurrence_rule === "weekly" || p.recurrence_rule === "monthly" ? p.recurrence_rule : null,
+      recurrence_weekdays: p.recurrence_weekdays ?? null,
+      impact: p.impact ?? null,
+      urgency: p.urgency ?? null,
+      energy_required: p.energy_required ?? null,
+      focus_required: p.focus_required ?? null,
+      mental_load: p.mental_load ?? null,
+      social_load: p.social_load ?? null,
+      priority: p.priority ?? null,
+      notes: p.notes ?? null,
+    };
+  }
+
+  /** Narrow form payload to updateTask param types. */
+  function toUpdateParams(p: typeof payload): Parameters<typeof updateTask>[1] {
+    return {
+      title: p.title,
+      due_date: p.due_date,
+      category: p.category === "work" || p.category === "personal" ? p.category : null,
+      recurrence_rule: p.recurrence_rule === "daily" || p.recurrence_rule === "weekly" || p.recurrence_rule === "monthly" ? p.recurrence_rule : null,
+      recurrence_weekdays: p.recurrence_weekdays ?? null,
+      impact: p.impact ?? null,
+      urgency: p.urgency ?? null,
+      energy_required: p.energy_required ?? null,
+      focus_required: p.focus_required ?? null,
+      mental_load: p.mental_load ?? null,
+      social_load: p.social_load ?? null,
+      priority: p.priority ?? null,
+      notes: p.notes ?? null,
+    };
+  }
+
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
     startTransition(async () => {
       try {
         if (isCreate) {
-          const result = await createTask({
-            title: payload.title!,
-            due_date: payload.due_date!,
-            category: payload.category ?? null,
-            recurrence_rule: payload.recurrence_rule ?? null,
-            recurrence_weekdays: payload.recurrence_weekdays ?? null,
-            impact: payload.impact ?? null,
-            urgency: payload.urgency ?? null,
-            energy_required: payload.energy_required ?? null,
-            focus_required: payload.focus_required ?? null,
-            mental_load: payload.mental_load ?? null,
-            social_load: payload.social_load ?? null,
-            priority: payload.priority ?? null,
-            notes: payload.notes ?? null,
-          });
+          const result = await createTask(toCreateParams(payload));
           if (result.task) onAdded?.(result.task as Task);
           router.refresh();
           onClose();
         } else {
-          await updateTask(task!.id, {
-            title: payload.title,
-            due_date: payload.due_date,
-            category: payload.category,
-            recurrence_rule: payload.recurrence_rule,
-            recurrence_weekdays: payload.recurrence_weekdays ?? null,
-            impact: payload.impact,
-            urgency: payload.urgency,
-            energy_required: payload.energy_required,
-            focus_required: payload.focus_required,
-            mental_load: payload.mental_load,
-            social_load: payload.social_load,
-            priority: payload.priority,
-            notes: payload.notes,
-          });
+          await updateTask(task!.id, toUpdateParams(payload));
           onSaved?.();
           router.refresh();
           onClose();

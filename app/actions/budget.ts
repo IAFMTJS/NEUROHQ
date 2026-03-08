@@ -17,6 +17,7 @@ type BudgetSettingsRow = {
 };
 
 type BudgetEntryRow = Database["public"]["Tables"]["budget_entries"]["Row"];
+type BudgetEntryInsert = Database["public"]["Tables"]["budget_entries"]["Insert"];
 
 /** Get user's budget settings from users table */
 export async function getBudgetSettings(): Promise<{
@@ -370,19 +371,20 @@ export async function addBudgetEntry(params: {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) throw new Error("Not authenticated");
+  const row: BudgetEntryInsert = {
+    user_id: user.id,
+    amount_cents: params.amount_cents,
+    date: params.date,
+    category: params.category ?? null,
+    note: params.note ?? null,
+    is_planned: params.is_planned ?? false,
+    store_name: params.store_name ?? null,
+    subscription_name: params.subscription_name ?? null,
+    detail_name: params.detail_name ?? null,
+  };
   const { data, error } = await supabase
     .from("budget_entries")
-    .insert({
-      user_id: user.id,
-      amount_cents: params.amount_cents,
-      date: params.date,
-      category: params.category ?? null,
-      note: params.note ?? null,
-      is_planned: params.is_planned ?? false,
-      store_name: params.store_name ?? null,
-      subscription_name: params.subscription_name ?? null,
-      detail_name: params.detail_name ?? null,
-    })
+    .insert(row)
     .select("id")
     .single();
   if (error) throw new Error(error.message);

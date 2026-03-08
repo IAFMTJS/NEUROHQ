@@ -6,7 +6,7 @@
     "dev": "node -e \"console.log('\\n=== NEUROHQ dev server – watch THIS terminal for compilation (✓ Compiled) and errors (⨯ Error) ===\\n')\" && next dev -p 3000",
     "dev:clean": "node -e \"require('fs').rmSync('.next', { recursive: true, force: true }); console.log('Cleared .next cache. Starting dev...');\" && next dev -p 3000",
     "start": "next dev -p 3000",
-    "build": "next build",
+    "build": "node scripts/clear-next-lock.js && next build",
     "type-check": "tsc --noEmit",
     "deploy:check": "npm run type-check && next build",
     "serve": "next start -p 3000",
