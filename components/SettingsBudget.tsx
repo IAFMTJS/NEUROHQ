@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
 import { updateBudgetSettings } from "@/app/actions/budget";
 import { getCurrencySymbol } from "@/lib/utils/currency";
 
@@ -26,6 +27,7 @@ export function SettingsBudget({
   const [budgetPeriod, setBudgetPeriod] = useState<"monthly" | "weekly">(initialBudgetPeriod ?? "monthly");
   const [quickAddMins, setQuickAddMins] = useState(initialImpulseQuickAddMinutes != null ? String(initialImpulseQuickAddMinutes) : "");
   const [riskCategories, setRiskCategories] = useState(initialImpulseRiskCategories?.length ? initialImpulseRiskCategories.join(", ") : "");
+  const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
@@ -55,6 +57,7 @@ export function SettingsBudget({
         });
         setSaved(true);
         setTimeout(() => setSaved(false), 2000);
+        router.refresh();
       } catch (e) {
         setError(e instanceof Error ? e.message : "Failed to save.");
       }

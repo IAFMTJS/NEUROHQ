@@ -3,6 +3,7 @@
  * Previews consequences before execution
  */
 
+import { rankFromLevel } from "@/lib/rank-ladder";
 import type { GameState, Mission, SimulationResult } from "./types";
 
 /**
@@ -25,7 +26,7 @@ export function simulateCompleteMission(
   // Calculate projected XP and level
   const projectedXP = gameState.currentXP + xpGain;
   const newLevel = calculateLevel(projectedXP, gameState.level);
-  const newRank = calculateRank(newLevel);
+  const newRank = rankFromLevel(newLevel);
 
   // Calculate energy after mission
   const energyAfter = Math.max(0, gameState.stats.energy - mission.energyCost);

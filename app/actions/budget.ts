@@ -92,7 +92,7 @@ export async function updateBudgetSettings(params: {
   if (error) throw new Error(error.message);
   revalidatePath("/budget");
   revalidatePath("/settings");
-  if (params.last_payday_date !== undefined) revalidatePath("/dashboard");
+  revalidatePath("/dashboard");
 }
 
 /** Set "vandaag loon gehad": start budgetperiode vandaag tot volgende verwachte loondag. */

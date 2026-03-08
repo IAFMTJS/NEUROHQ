@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { SpeedInsights } from "@vercel/speed-insights/next";
 import { Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
 import "./design-system.css";
@@ -65,6 +66,7 @@ export default function RootLayout({
         <DeferredRootComponents />
         <ThemeProvider>{children}</ThemeProvider>
         <DeferredToaster />
+        <SpeedInsights />
       </body>
     </html>
   );

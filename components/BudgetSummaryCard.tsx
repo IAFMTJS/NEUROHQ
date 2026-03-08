@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
 import { updateBudgetSettings } from "@/app/actions/budget";
 import { Modal } from "@/components/Modal";
 import { formatCents, getCurrencySymbol } from "@/lib/utils/currency";
@@ -38,6 +39,7 @@ export function BudgetSummaryCard({
   );
   const [period, setPeriod] = useState<"monthly" | "weekly">(budgetPeriod);
   const [error, setError] = useState<string | null>(null);
+  const router = useRouter();
 
   const budgetCents = monthlyBudgetCents ?? 0;
   const savingsCents = monthlySavingsCents ?? 0;
@@ -70,6 +72,7 @@ export function BudgetSummaryCard({
           budget_period: period,
         });
         setShowModal(false);
+        router.refresh();
       } catch (e) {
         setError(e instanceof Error ? e.message : "Failed to save.");
       }
