@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import Link from "next/link";
 import dynamic from "next/dynamic";
+import { getPendingDailyState } from "@/lib/client-pending-writes";
 import { HQHeader, BrainStatusCard, ActiveMissionCard } from "@/components/hq";
 import { EconomyBadge } from "@/components/EconomyBadge";
 import { CommanderHomeHero } from "@/components/commander";
@@ -35,21 +36,22 @@ import type { WeekSummary } from "@/app/actions/analytics";
 import type { RealityReport } from "@/app/actions/report";
 import { getDayOfYearFromDateString } from "@/lib/utils/timezone";
 
-const IdentityBlock = dynamic(() => import("@/components/dashboard/IdentityBlock").then((m) => ({ default: m.IdentityBlock })), { loading: () => <div className="glass-card min-h-[140px] animate-pulse rounded-[22px]" aria-hidden /> });
-const MomentumScore = dynamic(() => import("@/components/dashboard/MomentumScore").then((m) => ({ default: m.MomentumScore })), { loading: () => <div className="glass-card min-h-[100px] animate-pulse rounded-[22px]" aria-hidden /> });
-const TodayEngineCard = dynamic(() => import("@/components/dashboard/TodayEngineCard").then((m) => ({ default: m.TodayEngineCard })), { loading: () => <div className="glass-card min-h-[160px] animate-pulse rounded-[22px]" aria-hidden /> });
-const WeeklyHeatmap = dynamic(() => import("@/components/dashboard/WeeklyHeatmap").then((m) => ({ default: m.WeeklyHeatmap })), { loading: () => <div className="glass-card min-h-[80px] animate-pulse rounded-[22px]" aria-hidden /> });
-const HQChart = dynamic(() => import("@/components/hq").then((m) => ({ default: m.HQChart })), { loading: () => <div className="glass-card min-h-[180px] animate-pulse rounded-[22px]" aria-hidden /> });
-const RealityReportBlock = dynamic(() => import("@/components/RealityReportBlock").then((m) => ({ default: m.RealityReportBlock })), { loading: () => <div className="glass-card min-h-[100px] animate-pulse rounded-[22px]" aria-hidden /> });
-const PatternInsightCard = dynamic(() => import("@/components/hq/PatternInsightCard").then((m) => ({ default: m.PatternInsightCard })), { loading: () => <div className="glass-card min-h-[80px] animate-pulse rounded-[22px]" aria-hidden /> });
+/* Below-fold: ssr: false = load after hydration for faster first paint */
+const IdentityBlock = dynamic(() => import("@/components/dashboard/IdentityBlock").then((m) => ({ default: m.IdentityBlock })), { ssr: false, loading: () => <div className="glass-card min-h-[140px] animate-pulse rounded-[22px]" aria-hidden /> });
+const MomentumScore = dynamic(() => import("@/components/dashboard/MomentumScore").then((m) => ({ default: m.MomentumScore })), { ssr: false, loading: () => <div className="glass-card min-h-[100px] animate-pulse rounded-[22px]" aria-hidden /> });
+const TodayEngineCard = dynamic(() => import("@/components/dashboard/TodayEngineCard").then((m) => ({ default: m.TodayEngineCard })), { ssr: false, loading: () => <div className="glass-card min-h-[160px] animate-pulse rounded-[22px]" aria-hidden /> });
+const WeeklyHeatmap = dynamic(() => import("@/components/dashboard/WeeklyHeatmap").then((m) => ({ default: m.WeeklyHeatmap })), { ssr: false, loading: () => <div className="glass-card min-h-[80px] animate-pulse rounded-[22px]" aria-hidden /> });
+const HQChart = dynamic(() => import("@/components/hq").then((m) => ({ default: m.HQChart })), { ssr: false, loading: () => <div className="glass-card min-h-[180px] animate-pulse rounded-[22px]" aria-hidden /> });
+const RealityReportBlock = dynamic(() => import("@/components/RealityReportBlock").then((m) => ({ default: m.RealityReportBlock })), { ssr: false, loading: () => <div className="glass-card min-h-[100px] animate-pulse rounded-[22px]" aria-hidden /> });
+const PatternInsightCard = dynamic(() => import("@/components/hq/PatternInsightCard").then((m) => ({ default: m.PatternInsightCard })), { ssr: false, loading: () => <div className="glass-card min-h-[80px] animate-pulse rounded-[22px]" aria-hidden /> });
 const EnergyBudgetBar = dynamic(() => import("@/components/EnergyBudgetBar").then((m) => ({ default: m.EnergyBudgetBar })), { loading: () => <div className="h-3 w-full animate-pulse rounded-full bg-white/10" aria-hidden /> });
 const EnergyOverBudgetBanner = dynamic(() => import("@/components/dashboard/EnergyOverBudgetBanner").then((m) => ({ default: m.EnergyOverBudgetBanner })), { loading: () => null });
 const LateDayNoTaskBanner = dynamic(() => import("@/components/dashboard/LateDayNoTaskBanner").then((m) => ({ default: m.LateDayNoTaskBanner })), { loading: () => null });
 const EveningNoTaskModal = dynamic(() => import("@/components/dashboard/EveningNoTaskModal").then((m) => ({ default: m.EveningNoTaskModal })), { loading: () => null });
 const ConsequenceBanner = dynamic(() => import("@/components/ConsequenceBanner").then((m) => ({ default: m.ConsequenceBanner })), { loading: () => null });
 const AvoidanceNotice = dynamic(() => import("@/components/AvoidanceNotice").then((m) => ({ default: m.AvoidanceNotice })), { loading: () => null });
-const FocusBlock = dynamic(() => import("@/components/FocusBlock").then((m) => ({ default: m.FocusBlock })), { loading: () => <div className="min-h-[80px] animate-pulse rounded-xl bg-white/5" aria-hidden /> });
-const OnTrackCard = dynamic(() => import("@/components/OnTrackCard").then((m) => ({ default: m.OnTrackCard })), { loading: () => <div className="glass-card min-h-[60px] animate-pulse rounded-[22px]" aria-hidden /> });
+const FocusBlock = dynamic(() => import("@/components/FocusBlock").then((m) => ({ default: m.FocusBlock })), { ssr: false, loading: () => <div className="min-h-[80px] animate-pulse rounded-xl bg-white/5" aria-hidden /> });
+const OnTrackCard = dynamic(() => import("@/components/OnTrackCard").then((m) => ({ default: m.OnTrackCard })), { ssr: false, loading: () => <div className="glass-card min-h-[60px] animate-pulse rounded-[22px]" aria-hidden /> });
 const OnboardingBanner = dynamic(() => import("@/components/OnboardingBanner").then((m) => ({ default: m.OnboardingBanner })), { loading: () => null });
 const AnalyticsWeekWidget = dynamic(() => import("@/components/AnalyticsWeekWidget").then((m) => ({ default: m.AnalyticsWeekWidget })), { loading: () => <div className="glass-card min-h-[100px] animate-pulse rounded-[22px]" aria-hidden /> });
 const ConfrontationBanner = dynamic(() => import("@/components/dashboard/ConfrontationBanner").then((m) => ({ default: m.ConfrontationBanner })), { loading: () => null });
@@ -57,7 +59,7 @@ const WeeklyMirrorBanner = dynamic(() => import("@/components/dashboard/WeeklyMi
 const BehaviorSuggestionsBanner = dynamic(() => import("@/components/dashboard/BehaviorSuggestionsBanner").then((m) => ({ default: m.BehaviorSuggestionsBanner })), { loading: () => null });
 const MinimalIntegrityBanner = dynamic(() => import("@/components/dashboard/MinimalIntegrityBanner").then((m) => ({ default: m.MinimalIntegrityBanner })), { loading: () => null });
 const ProgressionPrimeBudgetCard = dynamic(() => import("@/components/dashboard/ProgressionPrimeBudgetCard").then((m) => ({ default: m.ProgressionPrimeBudgetCard })), { loading: () => null });
-const DangerousModulesCard = dynamic(() => import("@/components/dashboard/DangerousModulesCard").then((m) => ({ default: m.DangerousModulesCard })), { loading: () => <div className="min-h-[120px] animate-pulse rounded-xl bg-white/5" aria-hidden /> });
+const DangerousModulesCard = dynamic(() => import("@/components/dashboard/DangerousModulesCard").then((m) => ({ default: m.DangerousModulesCard })), { ssr: false, loading: () => <div className="min-h-[120px] animate-pulse rounded-xl bg-white/5" aria-hidden /> });
 
 export function DashboardClientShell() {
   const cache = useDashboardData();
@@ -185,12 +187,37 @@ export function DashboardClientShell() {
   const primeWindow = secondary?.primeWindow as { start: string; end: string; active: boolean } | null | undefined;
   const weeklyBudgetOutcome = secondary?.weeklyBudgetOutcome as { message: string; recoveryAvailable: boolean } | null | undefined;
 
+  const [pendingDailyForHero, setPendingDailyForHero] = useState<ReturnType<typeof getPendingDailyState>>(null);
+  useEffect(() => {
+    setPendingDailyForHero(getPendingDailyState(dateStr));
+    const onSaved = () => setPendingDailyForHero(getPendingDailyState(dateStr));
+    window.addEventListener("neurohq-daily-state-saved", onSaved);
+    return () => window.removeEventListener("neurohq-daily-state-saved", onSaved);
+  }, [dateStr]);
+
+  const heroState = useMemo(() => {
+    if (pendingDailyForHero) {
+      return {
+        energy: pendingDailyForHero.energy,
+        focus: pendingDailyForHero.focus,
+        sensory_load: pendingDailyForHero.sensory_load,
+      };
+    }
+    return null;
+  }, [pendingDailyForHero]);
+
+  const heroEnergyPct = heroState ? Math.round((heroState.energy / 10) * 100) : energyPct;
+  const heroFocusPct = heroState ? Math.round((heroState.focus / 10) * 100) : focusPct;
+  const heroLoadPct = heroState ? Math.round((heroState.sensory_load / 10) * 100) : loadPct;
+
+  const skipCinematicLayers = isMinimalUI || (critical?.lightUi === true);
+
   return (
     <main
-      className={`relative min-h-screen overflow-hidden ${!isMinimalUI ? hudStyles.cinematicBackdrop : ""} ${isMinimalUI ? "minimal-ui" : ""}`}
+      className={`relative min-h-screen overflow-hidden ${!skipCinematicLayers ? hudStyles.cinematicBackdrop : ""} ${isMinimalUI ? "minimal-ui" : ""}`}
       data-minimal={isMinimalUI ? "true" : undefined}
     >
-      {!isMinimalUI && (
+      {!skipCinematicLayers && (
         <>
           <div className={hudStyles.spaceMist} aria-hidden />
           <div className={hudStyles.starLayerFar} aria-hidden />
@@ -236,9 +263,9 @@ export function DashboardClientShell() {
               <CornerNode corner="top-right" />
               <span className="dashboard-bridge-label" aria-hidden>Command</span>
               <CommanderHomeHero
-                energyPct={energyPct}
-                focusPct={focusPct}
-                loadPct={loadPct}
+                energyPct={heroEnergyPct}
+                focusPct={heroFocusPct}
+                loadPct={heroLoadPct}
                 missionHref={todaysTasks.length > 0 ? "/tasks" : "/assistant"}
                 missionLabel={missionLabel}
                 singleGoalLabel={singleGoalLabel}
@@ -317,7 +344,7 @@ export function DashboardClientShell() {
           <SciFiPanel variant="glass" className={hudStyles.focusSecondary} bodyClassName="p-4 md:p-6">
             <CornerNode corner="top-left" />
             <CornerNode corner="top-right" />
-            <div className="dashboard-bento grid grid-cols-1 gap-4 lg:grid-cols-2 lg:gap-6">
+            <div className={`dashboard-bento grid grid-cols-1 gap-4 lg:grid-cols-2 lg:gap-6 ${skipCinematicLayers ? "light-ui-defer-paint" : ""}`}>
               <CollapsibleDashboardCard title="Level & voortgang" storageKey="level" defaultExpanded={true} className="lg:col-span-2">
                 <section className="glass-card glass-card-3d rounded-none border-0 p-0">
                   <div className="grid gap-0 md:grid-cols-2">
@@ -329,9 +356,9 @@ export function DashboardClientShell() {
                           streak={(identity as { streak: { current: number } }).streak?.current ?? 0}
                           xpToNextLevel={(identity as { xp_to_next_level: number }).xp_to_next_level}
                           nextUnlock={((identity as { next_unlock?: { level: number; rank: string; xpNeeded: number } | null }).next_unlock) ?? { level: 0, rank: "-", xpNeeded: 0 }}
-                          archetype={(identityEngine as { archetype: Archetype }).archetype}
-                          evolutionPhase={(identityEngine as { evolutionPhase: EvolutionPhase }).evolutionPhase}
-                          reputation={(identityEngine as { reputation: ReputationScore }).reputation}
+                          archetype={(identityEngine as { archetype: Archetype })?.archetype ?? "operator"}
+                          evolutionPhase={(identityEngine as { evolutionPhase: EvolutionPhase })?.evolutionPhase ?? "initiate"}
+                          reputation={(identityEngine as { reputation?: ReputationScore })?.reputation ?? { discipline: 0, consistency: 0, impact: 0 }}
                           embedded
                         />
                         <MomentumScore

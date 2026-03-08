@@ -3,7 +3,7 @@ import { redirect } from "next/navigation";
 import { HeroMascotImage } from "@/components/HeroMascotImage";
 import { HQPageHeader } from "@/components/hq";
 import { hasGoogleCalendarToken } from "@/app/actions/calendar";
-import { getUserTimezone, getPushQuoteTime, getPushQuietHours } from "@/app/actions/auth";
+import { getUserTimezone, getPushQuoteTime, getPushQuietHours, getPushSubscriptionEnabled } from "@/app/actions/auth";
 import { getBudgetSettings } from "@/app/actions/budget";
 import { getXP } from "@/app/actions/xp";
 import { getUserPreferencesOrDefaults } from "@/app/actions/preferences";
@@ -33,13 +33,14 @@ export default async function SettingsPage() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/login");
-  const [hasGoogle, userTimezone, budgetSettings, xp, pushQuoteTime, pushQuietHours, prefs, behaviorProfile] = await Promise.all([
+  const [hasGoogle, userTimezone, budgetSettings, xp, pushQuoteTime, pushQuietHours, pushEnabled, prefs, behaviorProfile] = await Promise.all([
     hasGoogleCalendarToken(),
     getUserTimezone(),
     getBudgetSettings(),
     getXP(),
     getPushQuoteTime(),
     getPushQuietHours(),
+    getPushSubscriptionEnabled(),
     getUserPreferencesOrDefaults(),
     getBehaviorProfile(),
   ]);
@@ -90,7 +91,7 @@ export default async function SettingsPage() {
         <h2 className="text-xs font-semibold uppercase tracking-wide text-[var(--text-muted)]">Tijd & notificaties</h2>
         <div className="space-y-4">
           <SettingsTimezone initialTimezone={userTimezone} />
-          <SettingsPush initialPushQuoteTime={pushQuoteTime} initialQuietHours={pushQuietHours} />
+          <SettingsPush initialPushQuoteTime={pushQuoteTime} initialQuietHours={pushQuietHours} initialPushEnabled={pushEnabled} />
         </div>
       </section>
 

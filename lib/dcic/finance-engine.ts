@@ -452,7 +452,8 @@ export function getSafeDaysThisWeek(financeState: FinanceState): number {
     const spentThatDay = financeState.expenses
       .filter((e) => (e.date ?? "").slice(0, 10) === dayStr)
       .reduce((sum, e) => sum + Math.abs(e.amount), 0);
-    if (spentThatDay <= safeDaily) safeDays++;
+    // Only count days where user actually spent and stayed at or under safe daily (ignore zero-spend days)
+    if (spentThatDay > 0 && spentThatDay <= safeDaily) safeDays++;
   }
   return safeDays;
 }

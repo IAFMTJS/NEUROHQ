@@ -6,12 +6,12 @@ import { ThemeProvider } from "@/components/providers/ThemeProvider";
 
 const plusJakarta = Plus_Jakarta_Sans({
   subsets: ["latin"],
-  display: "swap",
+  display: "optional",
   variable: "--font-sans",
 });
 import { ServiceWorkerRegistration } from "@/components/ServiceWorkerRegistration";
-import { Toaster } from "sonner";
 import { DeferredRootComponents } from "@/components/DeferredRootComponents";
+import { DeferredToaster } from "@/components/DeferredToaster";
 
 export const metadata: Metadata = {
   title: "NEUROHQ",
@@ -36,14 +36,14 @@ export const viewport = {
   viewportFit: "cover" as const,
 };
 
-/** Commander v2 is de enige visuele stijl – altijd normal + dark. Light UI / reduced motion from localStorage before first paint to avoid flash. */
+/** Commander v2 – normal + dark. Light UI default ON for fast load; from localStorage before first paint to avoid flash. */
 const themeScript = `
 (function(){
   document.documentElement.setAttribute('data-theme','normal');
   document.documentElement.setAttribute('data-color-mode','dark');
   try {
     var lightUi = localStorage.getItem('neurohq-light-ui');
-    if (lightUi !== null) document.documentElement.setAttribute('data-light-ui', lightUi);
+    document.documentElement.setAttribute('data-light-ui', lightUi !== null ? lightUi : 'true');
     var reducedMotion = localStorage.getItem('neurohq-reduced-motion');
     if (reducedMotion !== null) document.documentElement.setAttribute('data-reduced-motion', reducedMotion);
   } catch (e) {}
@@ -64,7 +64,7 @@ export default function RootLayout({
         <ServiceWorkerRegistration />
         <DeferredRootComponents />
         <ThemeProvider>{children}</ThemeProvider>
-        <Toaster richColors position="bottom-center" closeButton />
+        <DeferredToaster />
       </body>
     </html>
   );

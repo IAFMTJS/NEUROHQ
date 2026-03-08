@@ -1,5 +1,6 @@
 "use server";
 
+import { cache } from "react";
 import { createClient, createClientWithToken } from "@/lib/supabase/server";
 import { unstable_cache } from "next/cache";
 import { splitTaskCost, taskCost, getSuggestedTaskCount } from "@/lib/utils/energy";
@@ -143,7 +144,8 @@ export type EnergyBudget = {
   maxSlots?: number;
 };
 
-export async function getEnergyBudget(date: string): Promise<EnergyBudget> {
+/** Request-scoped cache: duplicate getEnergyBudget(date) in the same request return the same result. */
+export const getEnergyBudget = cache(async (date: string): Promise<EnergyBudget> => {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) {
@@ -366,5 +368,5 @@ export async function getEnergyBudget(date: string): Promise<EnergyBudget> {
     ["energy-budget", user.id, date],
     { tags: [`energy-${user.id}-${date}`], revalidate: 60 }
   )(user.id, date, accessToken);
-}
+});
 

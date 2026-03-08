@@ -1,12 +1,14 @@
 "use server";
 
+import { cache } from "react";
 import { createClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
 import { PREFERENCES_DEFAULTS, type UserPreferences } from "@/types/preferences.types";
 
 const DEFAULTS = PREFERENCES_DEFAULTS;
 
-export async function getUserPreferences(): Promise<UserPreferences | null> {
+/** Cached per request so dashboard API and multiple callers don't repeat the same Supabase read. */
+export const getUserPreferences = cache(async (): Promise<UserPreferences | null> => {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return null;
@@ -82,9 +84,9 @@ export async function getUserPreferences(): Promise<UserPreferences | null> {
     day_off_mode: row.day_off_mode ?? DEFAULTS.day_off_mode ?? "soft",
     updated_at: row.updated_at ?? DEFAULTS.updated_at,
   };
-}
+});
 
-/** Returns preferences or defaults; never null for authenticated user. */
+/** Returns preferences or defaults; never null for authenticated user. Deduplicated per request via getUserPreferences cache. */
 export async function getUserPreferencesOrDefaults(): Promise<UserPreferences> {
   const prefs = await getUserPreferences();
   return prefs ?? DEFAULTS;

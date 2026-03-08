@@ -220,3 +220,50 @@
   font-size: 14px;
   letter-spacing: 0.06em;
 }
+
+/* ========== LIGHT UI: no animations, no decorative pseudo-elements, less paint ========== */
+[data-light-ui="true"] .btn-primary,
+[data-light-ui="true"] .btn-hq-primary,
+[data-light-ui="true"] .primary-btn,
+[data-light-ui="true"] .neon-button {
+  animation: none !important;
+  transition: none !important;
+  text-shadow: none !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.1) !important;
+}
+[data-light-ui="true"] .btn-primary::before,
+[data-light-ui="true"] .btn-primary::after,
+[data-light-ui="true"] .btn-hq-primary::before,
+[data-light-ui="true"] .btn-hq-primary::after,
+[data-light-ui="true"] .primary-btn::before,
+[data-light-ui="true"] .primary-btn::after,
+[data-light-ui="true"] .neon-button::before,
+[data-light-ui="true"] .neon-button::after {
+  display: none !important;
+}
+[data-light-ui="true"] .btn-primary:hover,
+[data-light-ui="true"] .btn-hq-primary:hover,
+[data-light-ui="true"] .primary-btn:hover,
+[data-light-ui="true"] .neon-button:hover {
+  animation: none !important;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.12) !important;
+}
+[data-light-ui="true"] .btn-secondary,
+[data-light-ui="true"] .btn-hq-secondary {
+  transition: none !important;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2) !important;
+}
+[data-light-ui="true"] .btn-secondary:active,
+[data-light-ui="true"] .btn-hq-secondary:active {
+  transform: none !important;
+}
+[data-light-ui="true"] .card:not(.glass-card-3d)::before,
+[data-light-ui="true"] .glass-card:not(.glass-card-3d)::before,
+[data-light-ui="true"] .hq-card:not(.glass-card-3d)::before,
+[data-light-ui="true"] .glass-panel:not(.glass-card-3d)::before {
+  display: none !important;
+}
+[data-light-ui="true"] .modal-overlay {
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}

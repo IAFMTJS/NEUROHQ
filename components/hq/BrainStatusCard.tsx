@@ -6,11 +6,7 @@ import { maxAllowedIntensityForTier } from "@/lib/brain-mode";
 import { getPendingDailyState } from "@/lib/client-pending-writes";
 import { BrainStatusModal } from "./BrainStatusModal";
 import { EnergyRing, type EnergyRingMode } from "@/components/hud-test/EnergyRing";
-
-function scale1To10ToPct(value: number | null): number {
-  if (value == null) return 50;
-  return Math.round((value / 10) * 100);
-}
+import { scale1To10ToPct } from "@/lib/dashboard-utils";
 
 function getRingMode(value: number): EnergyRingMode {
   if (value <= 20) return "high-alert";

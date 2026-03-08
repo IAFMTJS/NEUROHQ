@@ -14,10 +14,12 @@ function urlBase64ToUint8Array(base64: string): Uint8Array {
   return out;
 }
 
-type Props = { initialPushQuoteTime?: string | null; initialQuietHours?: QuietHours };
+type Props = { initialPushQuoteTime?: string | null; initialQuietHours?: QuietHours; initialPushEnabled?: boolean };
 
-export function SettingsPush({ initialPushQuoteTime = null, initialQuietHours = { start: null, end: null } }: Props) {
-  const [status, setStatus] = useState<"idle" | "loading" | "enabled" | "unsupported" | "denied" | "error">("idle");
+export function SettingsPush({ initialPushQuoteTime = null, initialQuietHours = { start: null, end: null }, initialPushEnabled = false }: Props) {
+  const [status, setStatus] = useState<"idle" | "loading" | "enabled" | "unsupported" | "denied" | "error">(
+    initialPushEnabled ? "enabled" : "idle"
+  );
   const [message, setMessage] = useState<string | null>(null);
   const [pushQuoteTime, setPushQuoteTime] = useState(initialPushQuoteTime ?? "");
   const [quoteTimePending, setQuoteTimePending] = useState(false);

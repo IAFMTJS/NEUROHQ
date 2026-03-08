@@ -65,14 +65,22 @@ export async function fetchSecondary(): Promise<DashboardSecondary> {
   return res.json();
 }
 
-export function DashboardDataProvider({ children }: { children: ReactNode }) {
+type DashboardDataProviderProps = {
+  children: ReactNode;
+  /** When provided (e.g. from dashboard page server fetch), first paint has data and we skip client fetch. */
+  initialCritical?: DashboardCritical | null;
+  initialSecondary?: DashboardSecondary | null;
+};
+
+export function DashboardDataProvider({ children, initialCritical, initialSecondary }: DashboardDataProviderProps) {
   const [state, setState] = useState<DashboardDataState>({
-    critical: null,
-    secondary: null,
+    critical: initialCritical ?? null,
+    secondary: initialSecondary ?? null,
     loadingCritical: false,
     loadingSecondary: false,
   });
   const preloadStartedRef = useRef(false);
+  const hasInitialData = Boolean(initialCritical && initialSecondary);
 
   const setDashboardData = useCallback(
     (data: { critical?: DashboardCritical | null; secondary?: DashboardSecondary | null }) => {
@@ -127,9 +135,9 @@ export function DashboardDataProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     if (typeof window === "undefined") return;
-    // Start preload immediately so data is in state before user navigates; ref avoids double start if shell already called preloadDashboard()
+    if (hasInitialData) return; // Server already sent data; no client fetch
     if (!preloadStartedRef.current) preloadDashboard().catch(() => {});
-  }, [preloadDashboard]);
+  }, [preloadDashboard, hasInitialData]);
 
   const value: DashboardDataContextValue = {
     ...state,

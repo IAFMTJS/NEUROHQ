@@ -567,20 +567,19 @@
 [data-reduced-motion="true"] .glow-pulse { animation: none; }
 [data-reduced-motion="true"] .skill-node.unlocked { animation: none; }
 
-/* Light UI: same visuals, minimal animations, fast interactions, no delay so page loads without flash */
+/* Light UI: lightning fast – no animations, instant transitions, no flicker */
 [data-light-ui="true"] {
-  --hq-duration-fast: 80ms;
-  --hq-duration-normal: 120ms;
-  /* No glowing shadows in light UI */
+  --hq-duration-fast: 0ms;
+  --hq-duration-normal: 0ms;
   --shadow-button: 0 2px 8px rgba(0, 0, 0, 0.2);
   --neon-btn-shadow: 0 2px 8px rgba(0, 0, 0, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.15);
 }
 [data-light-ui="true"] *,
 [data-light-ui="true"] *::before,
 [data-light-ui="true"] *::after {
-  animation-duration: 0.06s !important;
+  animation-duration: 0.01ms !important;
   animation-delay: 0 !important;
-  transition-duration: 0.06s !important;
+  transition-duration: 0ms !important;
   transition-delay: 0 !important;
 }
 [data-light-ui="true"] .glow-pulse,
@@ -613,6 +612,167 @@
 [data-light-ui="true"] .stat-ring.energy,
 [data-light-ui="true"] .stat-ring.focus,
 [data-light-ui="true"] .stat-ring.load { animation: none !important; box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2) !important; }
+
+/* Light UI: flat background – no starfield, nebula, grain or fixed attachment for fast paint */
+[data-light-ui="true"] html,
+[data-light-ui="true"] body {
+  background-image: linear-gradient(180deg, var(--cinematic-navy) 0%, var(--cinematic-navy-mid) 50%, var(--cinematic-navy-bottom) 100%) !important;
+  background-size: 100% 100% !important;
+  background-attachment: scroll !important;
+}
+[data-light-ui="true"] body::after,
+[data-light-ui="true"] body::before { display: none !important; }
+
+/* Light UI: dashboard – no tiles, mist, atmosphere, noise or animations (fast load) */
+[data-light-ui="true"] .dashboard-cinematic-bg,
+[data-light-ui="true"] .dashboard-bg-tiles,
+[data-light-ui="true"] .dashboard-bg-tiles-offset,
+[data-light-ui="true"] .dashboard-bg-mist,
+[data-light-ui="true"] .dashboard-bg-atmosphere,
+[data-light-ui="true"] .dashboard-bg-blend,
+[data-light-ui="true"] .dashboard-bg-noise { display: none !important; }
+[data-light-ui="true"] .dashboard-page::before,
+[data-light-ui="true"] .dashboard-page::after { display: none !important; }
+[data-light-ui="true"] .dashboard-cinematic { background-image: none !important; }
+
+/* Light UI: no backdrop-filter or filter:blur – huge GPU/perf win, use solid backgrounds */
+[data-light-ui="true"] .card,
+[data-light-ui="true"] .card-simple,
+[data-light-ui="true"] .card-simple-accent,
+[data-light-ui="true"] .glass-card,
+[data-light-ui="true"] .glass-panel,
+[data-light-ui="true"] .hq-card,
+[data-light-ui="true"] .dashboard-bridge,
+[data-light-ui="true"] .dashboard-bridge-frame,
+[data-light-ui="true"] .dashboard-cinematic .glass-card,
+[data-light-ui="true"] .dashboard-cinematic .card-simple,
+[data-light-ui="true"] .dashboard-cinematic .card-simple-accent,
+[data-light-ui="true"] .dashboard-hud-sheet.modal-card,
+[data-light-ui="true"] .glass-card-3d,
+[data-light-ui="true"] .modal-card,
+[data-light-ui="true"] .bottom-nav,
+[data-light-ui="true"] .modal-overlay {
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  background: linear-gradient(165deg, rgba(14, 24, 42, 0.97) 0%, rgba(10, 18, 32, 0.98) 100%) !important;
+}
+[data-light-ui="true"] .modal-overlay { background: rgba(0, 0, 0, 0.7) !important; }
+[data-light-ui="true"] .dashboard-bridge-body {
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  background: linear-gradient(180deg, rgba(12, 22, 38, 0.98) 0%, rgba(10, 18, 30, 0.99) 100%) !important;
+}
+[data-light-ui="true"] .panelBody,
+[data-light-ui="true"] [class*="panelBody"] {
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+[data-light-ui="true"] .mascot-img,
+[data-light-ui="true"] .mascot-hero-img-wrap .mascot-img,
+[data-light-ui="true"] .mascot-hero-inner .mascot-img { filter: none !important; }
+
+/* Light UI: instant page show, no enter animation */
+[data-light-ui="true"] .page { animation: none !important; }
+
+/* Light UI: avoid extra compositor layers */
+[data-light-ui="true"] * { will-change: auto !important; }
+
+/* Light UI: no skeleton pulse – static placeholders only (faster paint) */
+[data-light-ui="true"] .animate-pulse { animation: none !important; opacity: 0.7; }
+
+/* Light UI: below-fold sections – browser can skip painting until near viewport */
+[data-light-ui="true"] .light-ui-defer-paint {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 200px;
+}
+
+/* Light UI: mission pill – no WebGL canvas layer, simple gradient button only */
+[data-light-ui="true"] .mission-hdr-canvas { display: none !important; }
+[data-light-ui="true"] .mission-hdr-wrap {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.12) !important;
+  filter: none !important;
+  transform: none !important;
+}
+[data-light-ui="true"] .mission-hdr-wrap:hover {
+  filter: none !important;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.15) !important;
+}
+[data-light-ui="true"] .mission-hdr-wrap:active {
+  transform: none !important;
+  box-shadow: 0 1px 6px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.1) !important;
+}
+
+/* Light UI: neon-button – flat look, no glow line or heavy shadow */
+[data-light-ui="true"] .neon-button {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.12) !important;
+  filter: none !important;
+}
+[data-light-ui="true"] .neon-button::before {
+  display: none !important;
+}
+[data-light-ui="true"] .neon-button:hover:not(:disabled) {
+  filter: none !important;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.15) !important;
+}
+[data-light-ui="true"] .neon-button:active:not(:disabled) {
+  transform: none !important;
+}
+
+/* Light UI: glass/card decorative pseudo-elements – remove gradient borders and top highlight */
+[data-light-ui="true"] .glass-panel::before,
+[data-light-ui="true"] .glass-card::before,
+[data-light-ui="true"] .hq-card::before,
+[data-light-ui="true"] .glass-panel::after,
+[data-light-ui="true"] .glass-card::after,
+[data-light-ui="true"] .hq-card::after {
+  display: none !important;
+}
+
+/* Light UI: progress bars – simple fill, no glow animation */
+[data-light-ui="true"] .progress-fill,
+[data-light-ui="true"] .progress-fill-glow {
+  box-shadow: none !important;
+}
+[data-light-ui="true"] .progress:hover .progress-fill {
+  box-shadow: none !important;
+}
+
+/* Light UI: dashboard mini strip buttons – lighter hover */
+[data-light-ui="true"] .dashboard-mini-btn,
+[data-light-ui="true"] .dashboard-cinematic .dashboard-mini-btn {
+  filter: none !important;
+}
+[data-light-ui="true"] .dashboard-mini-btn:hover,
+[data-light-ui="true"] .dashboard-cinematic .dashboard-mini-btn:hover {
+  filter: none !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2) !important;
+}
+
+/* Light UI: dashboard mission hero card – flat shadow only */
+[data-light-ui="true"] .dashboard-mission-hero > *:first-child {
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35), 0 0 0 1px rgba(255, 255, 255, 0.06) !important;
+}
+
+/* Light UI: cinematic glass cards and primary buttons – solid bg already applied; simplify shadow */
+[data-light-ui="true"] .dashboard-cinematic .glass-card,
+[data-light-ui="true"] .dashboard-cinematic .card-simple,
+[data-light-ui="true"] .dashboard-cinematic .card-simple-accent {
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.35), 0 0 0 1px rgba(255, 255, 255, 0.06) !important;
+}
+[data-light-ui="true"] .dashboard-cinematic .primary-btn,
+[data-light-ui="true"] .dashboard-cinematic .btn-primary,
+[data-light-ui="true"] .dashboard-cinematic .mission-hdr-wrap {
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.1) !important;
+}
+
+/* Light UI: HUD chips and mini strip – no glow shadow */
+[data-light-ui="true"] .dashboard-cinematic .dashboard-hud-chip,
+[data-light-ui="true"] .dashboard-cinematic .dashboard-hud-trigger {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25), 0 0 0 1px rgba(255, 255, 255, 0.06) !important;
+}
+[data-light-ui="true"] .dashboard-cinematic .dashboard-mini-strip {
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2) !important;
+}
 
 /* Card-simple-accent: neon rand + zachte glow (zoals actieve rings) */
 .card-simple-accent {

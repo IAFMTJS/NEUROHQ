@@ -52,6 +52,16 @@ export async function updateUserTimezone(timezone: string) {
   revalidatePath("/settings");
 }
 
+/** Whether the user has an active push subscription (persisted in DB; survives cache clear / navigation). */
+export async function getPushSubscriptionEnabled(): Promise<boolean> {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return false;
+  const { data } = await supabase.from("users").select("push_subscription_json").eq("id", user.id).single();
+  const json = (data as { push_subscription_json?: unknown } | null)?.push_subscription_json;
+  return json != null && typeof json === "object";
+}
+
 /** Push quote time (e.g. "08:00"); null = use default in cron. */
 export async function getPushQuoteTime(): Promise<string | null> {
   const supabase = await createClient();

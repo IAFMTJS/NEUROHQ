@@ -369,6 +369,39 @@
   }
 }
 
+/* Light UI: panels – no backdrop blur for speed */
+:global([data-light-ui="true"]) .panelBody {
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  background: linear-gradient(180deg, rgba(14, 28, 46, 0.98) 0%, rgba(11, 22, 36, 0.99) 100%) !important;
+}
+
+/* Light UI: flat backdrop, no image/blur/animations – fast load */
+:global([data-light-ui="true"]) .cinematicBackdrop {
+  background-image: none !important;
+  background-color: #050c18 !important;
+  background-attachment: scroll !important;
+}
+:global([data-light-ui="true"]) .cinematicBackdrop::before { display: none !important; }
+:global([data-light-ui="true"]) .spaceMist,
+:global([data-light-ui="true"]) .starLayerFar,
+:global([data-light-ui="true"]) .starLayerNear,
+:global([data-light-ui="true"]) .backgroundAtmosphere,
+:global([data-light-ui="true"]) .colorBlend,
+:global([data-light-ui="true"]) .spaceNoise {
+  display: none !important;
+  animation: none !important;
+}
+
+/* Light UI: panel frame – solid bg, no glow shadow */
+:global([data-light-ui="true"]) .panelFrame {
+  background: linear-gradient(180deg, rgba(14, 28, 46, 0.98) 0%, rgba(11, 22, 36, 0.99) 100%) !important;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.25) !important;
+}
+:global([data-light-ui="true"]) .panelWorldGlow {
+  display: none !important;
+}
+
 .panelFrame {
   position: relative;
   border-radius: var(--panel-radius);

@@ -8,6 +8,7 @@ import {
   type Fase7PatternType,
 } from "@/lib/weekly-performance";
 import type { PerformanceRank } from "@/lib/performance-rank";
+import { getWeekBounds as getWeekBoundsFromLearning } from "@/lib/utils/learning";
 
 export interface WeeklyPerformanceSnapshot {
   performanceIndex: number;
@@ -22,19 +23,10 @@ export interface WeeklyPerformanceSnapshot {
   weekEnd: string;
 }
 
-/** Get week boundaries (Monday = start). */
+/** Week boundaries (Monday = start); uses shared util. */
 function getWeekBounds(date: Date): { weekStart: string; weekEnd: string } {
-  const d = new Date(date);
-  const day = d.getDay();
-  const diff = d.getDate() - day + (day === 0 ? -6 : 1);
-  const monday = new Date(d);
-  monday.setDate(diff);
-  const sunday = new Date(monday);
-  sunday.setDate(monday.getDate() + 6);
-  return {
-    weekStart: monday.toISOString().slice(0, 10),
-    weekEnd: sunday.toISOString().slice(0, 10),
-  };
+  const { start, end } = getWeekBoundsFromLearning(date);
+  return { weekStart: start, weekEnd: end };
 }
 
 /** Last 7 days: completion rate, avg rank (S=4..C=1), consistency (days with >=1 completion). */

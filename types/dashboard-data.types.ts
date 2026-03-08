@@ -5,6 +5,8 @@ import type { CopyVariant } from "@/app/actions/adaptive";
 export interface DashboardCritical {
   dateStr: string;
   isMinimalUI: boolean;
+  /** Light version: skip heavy cinematic layers for fast load. */
+  lightUi?: boolean;
   energyPct: number;
   focusPct: number;
   loadPct: number;

@@ -41,7 +41,7 @@ export const PREFERENCES_DEFAULTS: UserPreferences = {
   selected_emotion: null,
   compact_ui: false,
   reduced_motion: false,
-  light_ui: false,
+  light_ui: true,
   auto_master_missions: true, // standaard aan
   usual_days_off: null,
   day_off_mode: "soft",

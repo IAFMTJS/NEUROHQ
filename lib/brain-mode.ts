@@ -1,13 +1,10 @@
+import { scale1To10ToPct } from "@/lib/dashboard-utils";
+
 export type HeadroomTier = "High" | "Medium" | "Low";
 export type BrainRisk = "Low" | "Medium" | "High";
 export type BrainModeLabel = "Stable" | "Driven" | "Cautious" | "LowEnergy";
 
 export type TaskIntensity = "light" | "medium" | "heavy";
-
-function scale1To10ToPct(value: number | null | undefined): number {
-  if (value == null) return 50;
-  return Math.round((value / 10) * 100);
-}
 
 /** Focus slots = how many active missions you may carry at once. */
 export function getFocusSlots(focus1to10: number | null | undefined): number {

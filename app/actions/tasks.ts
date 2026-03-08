@@ -1,5 +1,6 @@
 "use server";
 
+import { cache } from "react";
 import { createClient } from "@/lib/supabase/server";
 import type { Task, TablesInsert } from "@/types/database.types";
 import type { ReputationScore } from "@/lib/identity-engine";
@@ -10,7 +11,8 @@ import { revalidateTagMax } from "@/lib/revalidate";
 
 export type TaskListMode = "normal" | "low_energy" | "stabilize" | "driven";
 
-export async function getTodaysTasks(date: string, mode: TaskListMode): Promise<{ tasks: Task[]; carryOverCount: number }> {
+/** Request-scoped cache: duplicate getTodaysTasks(date, mode) in the same request return the same result (e.g. dashboard + tasks page). */
+export const getTodaysTasks = cache(async (date: string, mode: TaskListMode): Promise<{ tasks: Task[]; carryOverCount: number }> => {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return { tasks: [], carryOverCount: 0 };
@@ -51,7 +53,7 @@ export async function getTodaysTasks(date: string, mode: TaskListMode): Promise<
 
   const maxCarryOver = Math.max(0, ...(tasks ?? []).map((t) => (t as { carry_over_count?: number }).carry_over_count ?? 0));
   return { tasks: ordered as Task[], carryOverCount: maxCarryOver };
-}
+});
 
 /** Count of tasks completed today (for late-day banner: avoid showing when dashboard cache is stale). */
 export async function getCompletedTodayCount(date: string): Promise<number> {
@@ -247,6 +249,7 @@ export async function createTask(params: {
   revalidateTagMax(`tasks-${user.id}-${params.due_date}`);
   revalidatePath("/dashboard");
   revalidatePath("/tasks");
+  revalidatePath("/xp");
   const task = data as Task;
   return { ok: true as const, id: task?.id, task };
 }
@@ -459,6 +462,7 @@ export async function completeTask(id: string): Promise<CompleteTaskResult> {
   revalidateTagMax(`tasks-${user.id}-${dateTag}`);
   revalidatePath("/dashboard");
   revalidatePath("/tasks");
+  revalidatePath("/xp");
 
   // Snapshot updated Identity Engine reputation for level-up modal.
   let reputation: ReputationScore | null = null;
@@ -499,6 +503,7 @@ export async function uncompleteTask(id: string) {
   revalidateTagMax(`tasks-${user.id}-${dateTag}`);
   revalidatePath("/dashboard");
   revalidatePath("/tasks");
+  revalidatePath("/xp");
 }
 
 export async function deleteTask(id: string) {
@@ -513,6 +518,7 @@ export async function deleteTask(id: string) {
   if (error) throw new Error(error.message);
   revalidatePath("/dashboard");
   revalidatePath("/tasks");
+  revalidatePath("/xp");
 }
 
 /** Restore a soft-deleted task (undo delete). */
@@ -528,6 +534,7 @@ export async function restoreTask(id: string) {
   if (error) throw new Error(error.message);
   revalidatePath("/dashboard");
   revalidatePath("/tasks");
+  revalidatePath("/xp");
 }
 
 export async function getCarryOverCountForDate(date: string) {
@@ -572,6 +579,7 @@ export async function snoozeTask(id: string) {
   }
   revalidatePath("/dashboard");
   revalidatePath("/tasks");
+  revalidatePath("/xp");
 }
 
 export async function skipNextOccurrence(id: string) {
@@ -599,6 +607,7 @@ export async function skipNextOccurrence(id: string) {
 
   revalidatePath("/dashboard");
   revalidatePath("/tasks");
+  revalidatePath("/xp");
 }
 
 export async function getSubtasks(parentTaskId: string) {
@@ -718,6 +727,7 @@ export async function rescheduleTask(id: string, due_date: string) {
 
   revalidatePath("/dashboard");
   revalidatePath("/tasks");
+  revalidatePath("/xp");
 }
 
 /** Update a task (edit modal). */
@@ -769,6 +779,7 @@ export async function updateTask(
   }
   revalidatePath("/dashboard");
   revalidatePath("/tasks");
+  revalidatePath("/xp");
 }
 
 /** Duplicate a task to a given due date (same fields, new id). */
@@ -805,4 +816,5 @@ export async function duplicateTask(id: string, due_date: string) {
   revalidateTagMax(`tasks-${user.id}-${due_date}`);
   revalidatePath("/dashboard");
   revalidatePath("/tasks");
+  revalidatePath("/xp");
 }
