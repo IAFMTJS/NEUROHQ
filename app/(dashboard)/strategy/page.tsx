@@ -1,4 +1,4 @@
-import dynamic from "next/dynamic";
+import nextDynamic from "next/dynamic";
 import Link from "next/link";
 import { HeroMascotImage } from "@/components/HeroMascotImage";
 import { getXP } from "@/app/actions/xp";
@@ -20,46 +20,49 @@ import { StrategyFocusMultipliers } from "@/components/strategy/StrategyFocusMul
 import { StrategyPhaseIndicator } from "@/components/strategy/StrategyPhaseIndicator";
 import { StrategyArchiveHistory } from "@/components/strategy/StrategyArchiveHistory";
 
-const StrategyThesisForm = dynamic(
+/** Force dynamic: strategy uses cookies (auth) and live data. */
+export const dynamic = "force-dynamic";
+
+const StrategyThesisForm = nextDynamic(
   () => import("@/components/strategy/StrategyThesisForm").then((m) => ({ default: m.StrategyThesisForm })),
   { loading: () => <div className="min-h-[320px] animate-pulse rounded-xl bg-white/5" aria-hidden /> }
 );
-const StrategyAllocationSliders = dynamic(
+const StrategyAllocationSliders = nextDynamic(
   () =>
     import("@/components/strategy/StrategyAllocationSliders").then((m) => ({
       default: m.StrategyAllocationSliders,
     })),
   { loading: () => <div className="min-h-[180px] animate-pulse rounded-xl bg-white/5" aria-hidden /> }
 );
-const StrategyAlignmentGraph = dynamic(
+const StrategyAlignmentGraph = nextDynamic(
   () =>
     import("@/components/strategy/StrategyAlignmentGraph").then((m) => ({
       default: m.StrategyAlignmentGraph,
     })),
   { loading: () => <div className="min-h-[280px] animate-pulse rounded-xl bg-white/5" aria-hidden /> }
 );
-const StrategyMomentumPerDomain = dynamic(
+const StrategyMomentumPerDomain = nextDynamic(
   () =>
     import("@/components/strategy/StrategyMomentumPerDomain").then((m) => ({
       default: m.StrategyMomentumPerDomain,
     })),
   { loading: () => <div className="min-h-[200px] animate-pulse rounded-xl bg-white/5" aria-hidden /> }
 );
-const StrategyDriftAlertBlock = dynamic(
+const StrategyDriftAlertBlock = nextDynamic(
   () =>
     import("@/components/strategy/StrategyDriftAlertBlock").then((m) => ({
       default: m.StrategyDriftAlertBlock,
     })),
   { loading: () => null }
 );
-const StrategyWeeklyReviewCTA = dynamic(
+const StrategyWeeklyReviewCTA = nextDynamic(
   () =>
     import("@/components/strategy/StrategyWeeklyReviewCTA").then((m) => ({
       default: m.StrategyWeeklyReviewCTA,
     })),
   { loading: () => <div className="min-h-[120px] animate-pulse rounded-xl bg-white/5" aria-hidden /> }
 );
-const StrategyArchiveCTA = dynamic(
+const StrategyArchiveCTA = nextDynamic(
   () =>
     import("@/components/strategy/StrategyArchiveCTA").then((m) => ({
       default: m.StrategyArchiveCTA,

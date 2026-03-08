@@ -6,6 +6,8 @@ import { DashboardDataProvider } from "@/components/providers/DashboardDataProvi
 import { getDashboardPayload } from "@/app/actions/dashboard-data";
 import { DashboardSkeleton } from "@/components/Skeleton";
 
+/** Force dynamic: dashboard uses cookies (auth) and live data. */
+export const dynamic = "force-dynamic";
 /** Stream dashboard: show shell immediately after auth, then stream content when payload is ready. */
 async function DashboardPayloadAndShell() {
   const payload = await getDashboardPayload();

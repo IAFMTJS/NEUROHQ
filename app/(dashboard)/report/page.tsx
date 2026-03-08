@@ -1,4 +1,4 @@
-import dynamic from "next/dynamic";
+import nextDynamic from "next/dynamic";
 import { HeroMascotImage } from "@/components/HeroMascotImage";
 import { getXPFullContext } from "@/app/actions/xp-context";
 import { HQPageHeader } from "@/components/hq";
@@ -45,19 +45,22 @@ import {
 } from "@/components/insights";
 import { DataUnavailable } from "@/components/DataUnavailable";
 
-const ReportWeekSelector = dynamic(() => import("@/components/ReportWeekSelector").then((m) => ({ default: m.ReportWeekSelector })), { loading: () => <div className="min-h-[48px] animate-pulse rounded-lg bg-white/5" aria-hidden /> });
-const ReportAnalysis = dynamic(() => import("@/components/ReportAnalysis").then((m) => ({ default: m.ReportAnalysis })), { loading: () => <div className="min-h-[120px] animate-pulse rounded-xl bg-white/5" aria-hidden /> });
-const RealityReportCard = dynamic(() => import("@/components/RealityReportCard").then((m) => ({ default: m.RealityReportCard })), { loading: () => <div className="glass-card min-h-[180px] animate-pulse rounded-[22px]" aria-hidden /> });
-const InsightsGraphBlockClient = dynamic(
+const ReportWeekSelector = nextDynamic(() => import("@/components/ReportWeekSelector").then((m) => ({ default: m.ReportWeekSelector })), { loading: () => <div className="min-h-[48px] animate-pulse rounded-lg bg-white/5" aria-hidden /> });
+const ReportAnalysis = nextDynamic(() => import("@/components/ReportAnalysis").then((m) => ({ default: m.ReportAnalysis })), { loading: () => <div className="min-h-[120px] animate-pulse rounded-xl bg-white/5" aria-hidden /> });
+const RealityReportCard = nextDynamic(() => import("@/components/RealityReportCard").then((m) => ({ default: m.RealityReportCard })), { loading: () => <div className="glass-card min-h-[180px] animate-pulse rounded-[22px]" aria-hidden /> });
+const InsightsGraphBlockClient = nextDynamic(
   () => import("@/components/insights/InsightsGraphBlock").then((m) => ({ default: m.InsightsGraphBlock })),
   { loading: () => <div className="min-h-[320px] animate-pulse rounded-[var(--hq-card-radius-sharp)] bg-white/5" aria-hidden /> }
 );
-const WeeklyHeatmap = dynamic(
+const WeeklyHeatmap = nextDynamic(
   () => import("@/components/dashboard/WeeklyHeatmap").then((m) => ({ default: m.WeeklyHeatmap })),
   { loading: () => <div className="min-h-[80px] animate-pulse rounded-xl bg-white/5" aria-hidden /> }
 );
 
 type Props = { searchParams: Promise<{ weekStart?: string }> };
+
+/** Force dynamic: report uses searchParams (weekStart) and auth/data. */
+export const dynamic = "force-dynamic";
 
 export default async function ReportPage({ searchParams }: Props) {
   try {
