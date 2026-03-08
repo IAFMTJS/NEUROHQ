@@ -1,5 +1,7 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // Production build uses --webpack (see package.json "build") so package subpath exports
+  // (e.g. @vercel/analytics/next) resolve correctly; Turbopack has known issues with these.
   // Temporary: allows build to complete when types/database.types.ts is out of sync with Supabase.
   // Fix properly: set SUPABASE_PROJECT_REF and run `npm run db:types`, then remove this.
   typescript: {
