@@ -1,26 +1,4 @@
-:global(:root) {
-  --dark-1: #060e1a;
-  --dark-2: #0a1626;
-  --dark-3: #0f2236;
-  --dark-4: #122b44;
-
-  --primary-cyan: #00e5ff;
-  --cyan-mid: #00b8e6;
-  --cyan-soft: rgba(0, 200, 255, 0.35);
-  --alert-orange: #ff9a3c;
-  --peak-white: #eaf6ff;
-
-  --panel-radius: 28px;
-  --button-radius-pill: 999px;
-  --transition-ease: cubic-bezier(0.4, 0, 0.2, 1);
-  --transition-120: 120ms var(--transition-ease);
-  --transition-180: 180ms var(--transition-ease);
-  --hud-intensity-primary: 1;
-  --hud-intensity-secondary: 0.55;
-  --hud-intensity-card: 0.3;
-  --hud-intensity-border: 0.15;
-  --hud-intensity-bg: 0.05;
-}
+/* :root vars for HUD (dark-1, panel-radius, etc.) live in app/globals.css to satisfy CSS Modules pure-selector rule. */
 
 @keyframes energyPulse {
   0% {
