@@ -805,7 +805,8 @@ export type Database = {
       }
       daily_state: {
         Row: {
-          created_at: string
+          auto_master_missions_generated: boolean | null;
+          created_at: string;
           date: string
           emotional_state: string | null
           energy: number | null
@@ -826,8 +827,9 @@ export type Database = {
           zero_completion_penalty_applied: boolean | null
         }
         Insert: {
-          created_at?: string
-          date: string
+          auto_master_missions_generated?: boolean | null;
+          created_at?: string;
+          date: string;
           emotional_state?: string | null
           energy?: number | null
           focus?: number | null
@@ -847,8 +849,9 @@ export type Database = {
           zero_completion_penalty_applied?: boolean | null
         }
         Update: {
-          created_at?: string
-          date?: string
+          auto_master_missions_generated?: boolean | null;
+          created_at?: string;
+          date?: string;
           emotional_state?: string | null
           energy?: number | null
           focus?: number | null

@@ -1,11 +1,16 @@
 "use client";
 
 import Link from "next/link";
-import * as THREE from "three";
-import { useEffect, useRef } from "react";
-import { EffectComposer } from "three/examples/jsm/postprocessing/EffectComposer.js";
-import { RenderPass } from "three/examples/jsm/postprocessing/RenderPass.js";
-import { UnrealBloomPass } from "three/examples/jsm/postprocessing/UnrealBloomPass.js";
+import { useEffect, useRef, useState } from "react";
+
+/** Light UI: skip WebGL/Three.js for faster load and less GPU use */
+function useIsLightUI(): boolean {
+  const [isLight, setIsLight] = useState(true);
+  useEffect(() => {
+    setIsLight(document.documentElement.getAttribute("data-light-ui") === "true");
+  }, []);
+  return isLight;
+}
 
 type MissionButtonProps = {
   href?: string;
@@ -32,33 +37,49 @@ function ShaderCanvas({
     const mount = mountRef.current;
     if (!mount) return;
 
-    const scene = new THREE.Scene();
-    const camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
-    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-    renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    renderer.toneMappingExposure = ultra ? 1.0 : 0.92;
-    renderer.outputColorSpace = THREE.SRGBColorSpace;
-    mount.appendChild(renderer.domElement);
+    let cancelled = false;
+    const cleanupFns: (() => void)[] = [];
 
-    const composer = new EffectComposer(renderer);
-    composer.addPass(new RenderPass(scene, camera));
-    const bloom = new UnrealBloomPass(
-      new THREE.Vector2(1, 1),
-      ultra ? 1.25 : 1.05,
-      ultra ? 0.24 : 0.2,
-      ultra ? 0.66 : 0.72,
-    );
-    composer.addPass(bloom);
+    Promise.all([
+      import("three"),
+      import("three/examples/jsm/postprocessing/EffectComposer.js"),
+      import("three/examples/jsm/postprocessing/RenderPass.js"),
+      import("three/examples/jsm/postprocessing/UnrealBloomPass.js"),
+    ])
+      .then(([threeModule, composerModule, renderPassModule, bloomModule]) => {
+        if (cancelled) return;
+        const THREE = threeModule as unknown as typeof import("three");
+        const { EffectComposer } = composerModule;
+        const { RenderPass } = renderPassModule;
+        const { UnrealBloomPass } = bloomModule;
 
-    const uniforms = {
-      uTime: { value: 0 },
-      uResolution: { value: new THREE.Vector2(1, 1) },
-      uHover: { value: 0 },
-    };
-    hoverUniformRef.current = uniforms.uHover;
+        const scene = new THREE.Scene();
+        const camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
+        const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+        renderer.toneMapping = THREE.ACESFilmicToneMapping;
+        renderer.toneMappingExposure = ultra ? 1.0 : 0.92;
+        renderer.outputColorSpace = THREE.SRGBColorSpace;
+        mount.appendChild(renderer.domElement);
 
-    const material = new THREE.ShaderMaterial({
+        const composer = new EffectComposer(renderer);
+        composer.addPass(new RenderPass(scene, camera));
+        const bloom = new UnrealBloomPass(
+          new THREE.Vector2(1, 1),
+          ultra ? 1.25 : 1.05,
+          ultra ? 0.24 : 0.2,
+          ultra ? 0.66 : 0.72,
+        );
+        composer.addPass(bloom);
+
+        const uniforms = {
+          uTime: { value: 0 },
+          uResolution: { value: new THREE.Vector2(1, 1) },
+          uHover: { value: 0 },
+        };
+        hoverUniformRef.current = uniforms.uHover;
+
+        const material = new THREE.ShaderMaterial({
       transparent: true,
       uniforms,
       vertexShader: `
@@ -120,41 +141,51 @@ function ShaderCanvas({
           gl_FragColor = vec4(color, outerMask);
         }
       `,
-    });
+        });
 
-    const geometry = new THREE.PlaneGeometry(2, 2);
-    const mesh = new THREE.Mesh(geometry, material);
-    scene.add(mesh);
+        const geometry = new THREE.PlaneGeometry(2, 2);
+        const mesh = new THREE.Mesh(geometry, material);
+        scene.add(mesh);
 
-    const resize = () => {
-      const rect = mount.getBoundingClientRect();
-      if (!rect.width || !rect.height) return;
-      renderer.setSize(rect.width, rect.height, false);
-      composer.setSize(rect.width, rect.height);
-      bloom.setSize(rect.width, rect.height);
-      uniforms.uResolution.value.set(rect.width, rect.height);
-    };
+        const resize = () => {
+          const rect = mount.getBoundingClientRect();
+          if (!rect.width || !rect.height) return;
+          renderer.setSize(rect.width, rect.height, false);
+          composer.setSize(rect.width, rect.height);
+          bloom.setSize(rect.width, rect.height);
+          uniforms.uResolution.value.set(rect.width, rect.height);
+        };
 
-    resize();
-    const resizeObserver = new ResizeObserver(resize);
-    resizeObserver.observe(mount);
+        resize();
+        const resizeObserver = new ResizeObserver(resize);
+        resizeObserver.observe(mount);
 
-    const animate = (t: number) => {
-      uniforms.uTime.value = t * 0.001;
-      composer.render();
-      rafRef.current = window.requestAnimationFrame(animate);
-    };
-    rafRef.current = window.requestAnimationFrame(animate);
+        const animate = (t: number) => {
+          if (cancelled) return;
+          uniforms.uTime.value = t * 0.001;
+          composer.render();
+          rafRef.current = window.requestAnimationFrame(animate);
+        };
+        rafRef.current = window.requestAnimationFrame(animate);
+
+        cleanupFns.push(() => {
+          if (rafRef.current) window.cancelAnimationFrame(rafRef.current);
+          resizeObserver.disconnect();
+          hoverUniformRef.current = null;
+          geometry.dispose();
+          material.dispose();
+          if (typeof composer.dispose === "function") composer.dispose();
+          renderer.dispose();
+          if (renderer.domElement.parentNode === mount) mount.removeChild(renderer.domElement);
+        });
+      })
+      .catch(() => {
+        // Chunk load failed or Three.js error; leave canvas empty (pill still shows label)
+      });
 
     return () => {
-      if (rafRef.current) window.cancelAnimationFrame(rafRef.current);
-      resizeObserver.disconnect();
-      hoverUniformRef.current = null;
-      geometry.dispose();
-      material.dispose();
-      if (typeof composer.dispose === "function") composer.dispose();
-      renderer.dispose();
-      if (renderer.domElement.parentNode === mount) mount.removeChild(renderer.domElement);
+      cancelled = true;
+      cleanupFns.forEach((fn) => fn());
     };
   }, [ultra, hoverUniformRef]);
 
@@ -172,6 +203,7 @@ export function MissionButton({
 }: MissionButtonProps) {
   const usePill = variant === "pill" || variant === "ultra";
   const isUltra = variant === "ultra";
+  const isLightUI = useIsLightUI();
   const hoverUniformRef = useRef<{ value: number } | null>(null);
 
   const setHover = (hovered: boolean) => {
@@ -187,6 +219,8 @@ export function MissionButton({
     .filter(Boolean)
     .join(" ");
 
+  const showShader = usePill && !isLightUI;
+
   const inner = href ? (
     <Link
       href={href}
@@ -197,7 +231,7 @@ export function MissionButton({
       onPointerLeave={usePill ? () => setHover(false) : undefined}
       {...(rest as React.AnchorHTMLAttributes<HTMLAnchorElement>)}
     >
-      {usePill && <ShaderCanvas ultra={isUltra} hoverUniformRef={hoverUniformRef} />}
+      {showShader && <ShaderCanvas ultra={isUltra} hoverUniformRef={hoverUniformRef} />}
       <span className={usePill ? "mission-hdr-label" : ""}>{children}</span>
     </Link>
   ) : (
@@ -210,7 +244,7 @@ export function MissionButton({
       onPointerLeave={usePill ? () => setHover(false) : undefined}
       {...(rest as React.ButtonHTMLAttributes<HTMLButtonElement>)}
     >
-      {usePill && <ShaderCanvas ultra={isUltra} hoverUniformRef={hoverUniformRef} />}
+      {showShader && <ShaderCanvas ultra={isUltra} hoverUniformRef={hoverUniformRef} />}
       <span className={usePill ? "mission-hdr-label" : ""}>{children}</span>
     </button>
   );

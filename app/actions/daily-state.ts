@@ -67,7 +67,9 @@ export async function getDailyStateUncached(date: string) {
   return data;
 }
 
-export type SaveDailyStateResult = { ok: true } | { ok: false; error: string };
+export type SaveDailyStateResult =
+  | { ok: true; autoMissionsCreated?: number; autoMissionsDebug?: string }
+  | { ok: false; error: string };
 
 export async function saveDailyState(input: DailyStateInput): Promise<SaveDailyStateResult> {
   try {
@@ -87,6 +89,8 @@ export async function saveDailyState(input: DailyStateInput): Promise<SaveDailyS
       mental_battery: input.mental_battery ?? null,
       load: input.load ?? null,
       is_rest_day: input.is_rest_day ?? null,
+      // Clear so the auto-mission engine runs on every update (direct line: dashboard → allocator).
+      auto_master_missions_generated: false,
     };
     const { error } = await supabase.from("daily_state").upsert(row, {
       onConflict: "user_id,date",
@@ -103,6 +107,25 @@ export async function saveDailyState(input: DailyStateInput): Promise<SaveDailyS
     revalidatePath("/dashboard");
     revalidatePath("/report");
     revalidatePath("/tasks");
+    // Direct line: pass the row we just wrote so the allocator never misses it (avoids read-after-write visibility).
+    let autoMissionsCreated: number | undefined;
+    let autoMissionsDebug: string | undefined;
+    try {
+      const { ensureMasterMissionsForToday } = await import("./master-missions");
+      const result = await ensureMasterMissionsForToday({
+        energy: row.energy,
+        focus: row.focus,
+        sensory_load: row.sensory_load,
+        social_load: row.social_load,
+        sleep_hours: row.sleep_hours,
+        auto_master_missions_generated: false,
+      });
+      autoMissionsCreated = result.created;
+      autoMissionsDebug = result.debug;
+      revalidateTagMax("decision-blocks");
+    } catch (e) {
+      autoMissionsDebug = e instanceof Error ? e.message : "error";
+    }
     void (async () => {
       try {
         const { awardXPForBrainStatus } = await import("./xp");
@@ -113,7 +136,7 @@ export async function saveDailyState(input: DailyStateInput): Promise<SaveDailyS
         // non-blocking
       }
     })();
-    return { ok: true };
+    return { ok: true, autoMissionsCreated, autoMissionsDebug };
   } catch (e) {
     return { ok: false, error: e instanceof Error ? e.message : "Kon dagstatus niet opslaan. Probeer het opnieuw." };
   }

@@ -1,11 +1,10 @@
 import nextDynamic from "next/dynamic";
 import { Suspense } from "react";
-import { getTodaysTasks, getTasksForDate, getTasksForDateRange, getSubtasksForTaskIds, getBacklogTasks, getFutureTasks, getCompletedTodayTasks, type TaskListMode } from "@/app/actions/tasks";
+import { getTodaysTasks, getTasksForDate, getSubtasksForTaskIds, getBacklogTasks, getFutureTasks, getCompletedTodayTasks, type TaskListMode } from "@/app/actions/tasks";
 
 /** Tasks page must always run on the server so auto-missions see latest daily_state after brain status save. */
 export const dynamic = "force-dynamic";
 import { getMode } from "@/app/actions/mode";
-import { getUpcomingCalendarEvents, hasGoogleCalendarToken } from "@/app/actions/calendar";
 import {
   getDecisionBlocks,
   getResistanceIndex,
@@ -21,15 +20,17 @@ import { todayDateString, yesterdayDate } from "@/lib/utils/timezone";
 import { HeroMascotImage } from "@/components/HeroMascotImage";
 import { getXP, getXPIdentity } from "@/app/actions/xp";
 import { getIdentityEngine } from "@/app/actions/identity-engine";
-import { ensureMasterMissionsForToday } from "@/app/actions/master-missions";
+import { ensureMasterMissionsForToday, getDailyStateForAllocator } from "@/app/actions/master-missions";
 import { ensureReadingMissionForToday } from "@/app/actions/reading-missions";
-import { HQPageHeader } from "@/components/hq";
+import { getUserPreferencesOrDefaults } from "@/app/actions/preferences";
+import { HQPageHeader } from "@/components/hq/HQPageHeader";
 import { XPBadge } from "@/components/XPBadge";
 import { SciFiPanel } from "@/components/hud-test/SciFiPanel";
 import { CornerNode } from "@/components/hud-test/CornerNode";
 import { Divider1px } from "@/components/hud-test/Divider1px";
 import hudStyles from "@/components/hud-test/hud.module.css";
-import { TasksTabsShell, TasksCalendarSection } from "@/components/missions";
+import { TasksTabsShell } from "@/components/missions";
+import { TasksCalendarAsync } from "./TasksCalendarAsync";
 import { RefreshPageButton } from "@/components/missions/RefreshPageButton";
 
 const ModeBanner = nextDynamic(() => import("@/components/ModeBanner").then((m) => ({ default: m.ModeBanner })), { loading: () => <div className="min-h-[44px]" aria-hidden /> });
@@ -88,14 +89,6 @@ type Props = {
 
 type CalendarView = "today" | "calendar" | "routines" | "overdue";
 
-function toDateKeyUTC(d: Date): string {
-  return d.toISOString().slice(0, 10);
-}
-
-function toMonthKeyUTC(d: Date): string {
-  return d.toISOString().slice(0, 7);
-}
-
 function isValidDayKey(value: string | undefined): value is string {
   return !!value && /^\d{4}-\d{2}-\d{2}$/.test(value);
 }
@@ -120,42 +113,16 @@ export default async function TasksPage({ searchParams }: Props) {
   const monthParam = isValidMonthKey(params.month) ? params.month : dateStr.slice(0, 7);
   const dayParam = isValidDayKey(params.day) ? params.day : null;
   const selectedCalendarDay = dayParam ?? dateStr;
-  const [monthYear, monthNumber] = monthParam.split("-").map((part) => parseInt(part, 10));
-  const monthStart = new Date(Date.UTC(monthYear, monthNumber - 1, 1, 12));
-  const monthEnd = new Date(Date.UTC(monthYear, monthNumber, 0, 12));
-  const prevMonthDate = new Date(Date.UTC(monthYear, monthNumber - 2, 1, 12));
-  const nextMonthDate = new Date(Date.UTC(monthYear, monthNumber, 1, 12));
-  const monthLabel = monthStart.toLocaleDateString("nl-NL", { month: "long", year: "numeric", timeZone: "UTC" });
-
-  const weekStartOffset = monthStart.getUTCDay();
-  const weekEndOffset = 6 - monthEnd.getUTCDay();
-  const gridStart = new Date(monthStart);
-  gridStart.setUTCDate(monthStart.getUTCDate() - weekStartOffset);
-  const gridEnd = new Date(monthEnd);
-  gridEnd.setUTCDate(monthEnd.getUTCDate() + weekEndOffset);
-
-  // Prefetch tasks for prev + current + next month so calendar month/day change doesn't trigger full page load
-  const prevMonthStart = new Date(Date.UTC(monthYear, monthNumber - 2, 1, 12));
-  const prevMonthEnd = new Date(Date.UTC(monthYear, monthNumber - 1, 0, 12));
-  const prevWeekStart = prevMonthStart.getUTCDay();
-  const prevGridStart = new Date(prevMonthStart);
-  prevGridStart.setUTCDate(prevMonthStart.getUTCDate() - prevWeekStart);
-  const nextMonthEnd = new Date(Date.UTC(monthYear, monthNumber + 1, 0, 12));
-  const nextWeekEnd = 6 - nextMonthEnd.getUTCDay();
-  const nextGridEnd = new Date(nextMonthEnd);
-  nextGridEnd.setUTCDate(nextMonthEnd.getUTCDate() + nextWeekEnd);
-  const calendarRangeStart = toDateKeyUTC(prevGridStart);
-  const calendarRangeEnd = toDateKeyUTC(nextGridEnd);
-
+  // Fetch daily_state with service-role so we always see the row if it exists, then pass it in so the allocator doesn't rely on a second read.
+  const dailyStateForAllocator = await getDailyStateForAllocator();
   const [masterMissionsResult] = await Promise.all([
-    ensureMasterMissionsForToday(),
+    ensureMasterMissionsForToday(dailyStateForAllocator ?? undefined),
     ensureReadingMissionForToday().catch(() => ({ created: false, debug: "error" })),
   ]);
-  // Critical path only: mission list, hero, calendar. Analytics banners load lazily via Suspense below.
-  const [mode, upcomingCalendarEvents, hasGoogle, backlog, futureTasks, completedToday, yesterdayTasksRaw, smartSuggestion, energyCap, energyBudget, decisionBlocks, xp, identity, identityEngine, tasksByDate] = await Promise.all([
+  // Critical path: mission list + hero. Calendar data (3‑month tasks, 180‑day events) streams in via Suspense so page doesn't wait.
+  const [mode, prefs, backlog, futureTasks, completedToday, yesterdayTasksRaw, smartSuggestion, energyCap, energyBudget, decisionBlocks, xp, identity, identityEngine] = await Promise.all([
     getMode(dateStr),
-    getUpcomingCalendarEvents(dateStr, 180),
-    hasGoogleCalendarToken(),
+    getUserPreferencesOrDefaults(),
     getBacklogTasks(dateStr),
     getFutureTasks(dateStr),
     getCompletedTodayTasks(dateStr),
@@ -167,7 +134,6 @@ export default async function TasksPage({ searchParams }: Props) {
     getXP(),
     getXPIdentity(),
     getIdentityEngine(),
-    getTasksForDateRange(calendarRangeStart, calendarRangeEnd),
   ]);
   const taskMode: TaskListMode = mode === "stabilize" ? "stabilize" : mode === "low_energy" ? "low_energy" : mode === "driven" ? "driven" : "normal";
   const { tasks, carryOverCount } = await getTodaysTasks(dateStr, taskMode);
@@ -265,46 +231,6 @@ export default async function TasksPage({ searchParams }: Props) {
   };
   const activeTab: "missions" | "calendar" = tabParam === "calendar" ? "calendar" : "missions";
 
-  const eventCountByDay = new Map<string, number>();
-  for (const e of upcomingCalendarEvents as { start_at: string }[]) {
-    const key = e.start_at.slice(0, 10);
-    eventCountByDay.set(key, (eventCountByDay.get(key) ?? 0) + 1);
-  }
-
-  const calendarDays: { dateKey: string; inCurrentMonth: boolean; isToday: boolean; isSelected: boolean; eventCount: number }[] = [];
-  for (const cursor = new Date(gridStart); cursor <= gridEnd; cursor.setUTCDate(cursor.getUTCDate() + 1)) {
-    const dateKey = toDateKeyUTC(cursor);
-    calendarDays.push({
-      dateKey,
-      inCurrentMonth: toMonthKeyUTC(cursor) === monthParam,
-      isToday: dateKey === dateStr,
-      isSelected: dateKey === selectedCalendarDay,
-      eventCount: eventCountByDay.get(dateKey) ?? 0,
-    });
-  }
-  const selectedDayEvents = (upcomingCalendarEvents as {
-    id: string;
-    title: string | null;
-    start_at: string;
-    end_at: string;
-    is_social: boolean;
-    source: string | null;
-  }[]).filter((event) => event.start_at.slice(0, 10) === selectedCalendarDay);
-  const selectedDayTasks = ((tasksByDate ?? {}) as Record<string, unknown[]>)[selectedCalendarDay] ?? [];
-  const selectedDayRoutines = selectedDayTasks.filter(
-    (task) => !!(task as { recurrence_rule?: string | null }).recurrence_rule
-  );
-  const overdueTasks = (backlog as { id: string; title: string | null; due_date: string | null }[])
-    .slice()
-    .sort((a, b) => (a.due_date ?? "").localeCompare(b.due_date ?? ""));
-  const selectedDayLabel = new Date(`${selectedCalendarDay}T12:00:00Z`).toLocaleDateString("nl-NL", {
-    weekday: "long",
-    day: "numeric",
-    month: "long",
-    year: "numeric",
-    timeZone: "UTC",
-  });
-
   const headerSection = (
     <>
       <SciFiPanel variant="glass" className={hudStyles.focusSecondary} bodyClassName="p-4 md:p-5">
@@ -358,7 +284,9 @@ export default async function TasksPage({ searchParams }: Props) {
           {masterMissionsResult.debug === "no_brain_status" && (
             <>
               {" Zet eerst je brain status op het dashboard (Hoe voel je je vandaag?) om auto-missies te krijgen. Als je die net hebt gezet, klik "}
-              <RefreshPageButton className="font-semibold" /> om de pagina te verversen (geen volledige herlaad).
+              <RefreshPageButton className="font-semibold" /> om de pagina te verversen.
+              {masterMissionsResult.serviceRoleAvailable === false && " Zet SUPABASE_SERVICE_ROLE_KEY in je omgeving (Vercel/lokaal) zodat de server daily_state kan lezen."}
+              {masterMissionsResult.serviceRoleAvailable === true && " De key staat; als je net brain status hebt gezet, wacht even en vernieuw de pagina (server tijdzone: Europe/Amsterdam)."}
             </>
           )}
           {(masterMissionsResult.debug === "create_failed" || masterMissionsResult.debug === "no_picks" || masterMissionsResult.debug === "to_create_empty") && " Vernieuw de pagina of probeer later opnieuw."}
@@ -441,35 +369,32 @@ export default async function TasksPage({ searchParams }: Props) {
     </>
   );
 
-  const overdueTasksForCalendar = (backlog as { id: string; title: string | null; due_date: string | null }[])
-    .slice()
-    .sort((a, b) => (a.due_date ?? "").localeCompare(b.due_date ?? ""));
-
   const calendarSection = (
-    <SciFiPanel variant="glass" className={hudStyles.focusSecondary} bodyClassName="p-0">
-      <CornerNode corner="top-left" />
-      <CornerNode corner="top-right" />
-      <TasksCalendarSection
-        initialMonth={monthParam}
-        initialDay={selectedCalendarDay}
+    <Suspense fallback={<div className="min-h-[320px] animate-pulse rounded-xl bg-white/5" aria-hidden />}>
+      <TasksCalendarAsync
         dateStr={dateStr}
-        tasksByDate={(tasksByDate ?? {}) as Record<string, unknown[]>}
-        upcomingCalendarEvents={upcomingCalendarEvents as { id: string; title: string | null; start_at: string; end_at: string; is_social: boolean; source: string | null }[]}
-        hasGoogle={hasGoogle}
-        initialCalView={calendarView}
-        overdueTasks={overdueTasksForCalendar}
+        monthParam={monthParam}
+        selectedCalendarDay={selectedCalendarDay}
+        calendarView={calendarView}
+        backlog={(backlog ?? []) as { id: string; title: string | null; due_date: string | null }[]}
       />
-    </SciFiPanel>
+    </Suspense>
   );
 
+  const skipCinematicLayers = prefs.light_ui === true;
+
   return (
-    <main className={`relative min-h-screen overflow-hidden ${hudStyles.cinematicBackdrop}`}>
-      <div className={hudStyles.spaceMist} aria-hidden />
-      <div className={hudStyles.starLayerFar} aria-hidden />
-      <div className={hudStyles.starLayerNear} aria-hidden />
-      <div className={hudStyles.backgroundAtmosphere} aria-hidden />
-      <div className={hudStyles.colorBlend} aria-hidden />
-      <div className={hudStyles.spaceNoise} aria-hidden />
+    <main className={`relative min-h-screen overflow-hidden ${!skipCinematicLayers ? hudStyles.cinematicBackdrop : ""}`}>
+      {!skipCinematicLayers && (
+        <>
+          <div className={hudStyles.spaceMist} aria-hidden />
+          <div className={hudStyles.starLayerFar} aria-hidden />
+          <div className={hudStyles.starLayerNear} aria-hidden />
+          <div className={hudStyles.backgroundAtmosphere} aria-hidden />
+          <div className={hudStyles.colorBlend} aria-hidden />
+          <div className={hudStyles.spaceNoise} aria-hidden />
+        </>
+      )}
       <div className="container page page-wide dashboard-cinematic relative z-10">
         <TasksTabsShell initialTab={activeTab} header={headerSection} missions={missionsSection} calendar={calendarSection} />
       </div>

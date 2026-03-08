@@ -8,11 +8,7 @@ import { getSuggestedTaskCount } from "@/lib/utils/energy";
 import { EnergyRing, type EnergyRingMode } from "@/components/hud-test/EnergyRing";
 import { useAppState } from "@/components/providers/AppStateProvider";
 import { Modal } from "@/components/Modal";
-
-function scale1To10ToPct(value: number | null): number {
-  if (value == null) return 50;
-  return Math.round((value / 10) * 100);
-}
+import { scale1To10ToPct } from "@/lib/dashboard-utils";
 
 /** Short micro-descriptions to match reference image */
 function description(value: number, type: "energy" | "focus" | "load"): string {
@@ -145,6 +141,20 @@ export function BrainStatusModal({ open, onClose, date, initial, yesterday, onSa
           markDailyStateSynced(date);
           setSaved(true);
           appState?.triggerReward();
+          if (result.autoMissionsCreated != null && result.autoMissionsCreated > 0) {
+            try {
+              const { toast } = await import("sonner");
+              toast.success(`${result.autoMissionsCreated} auto-missie${result.autoMissionsCreated === 1 ? "" : "s"} toegevoegd aan Missions.`);
+            } catch (_) {}
+          } else if (result.autoMissionsDebug && result.autoMissionsDebug !== "already_enough") {
+            try {
+              const { toast } = await import("sonner");
+              toast.info(`Auto-missies: ${result.autoMissionsDebug}`, { duration: 5000 });
+            } catch (_) {}
+          }
+          try {
+            window.dispatchEvent(new CustomEvent("neurohq-daily-state-saved", { detail: { date } }));
+          } catch (_) {}
           router.refresh();
           setTimeout(() => {
             setSaved(false);

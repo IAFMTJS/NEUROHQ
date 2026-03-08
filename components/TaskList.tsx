@@ -35,6 +35,7 @@ type ExtendedTask = Task & {
   social_load?: number | null;
   notes?: string | null;
   validation_type?: string | null;
+  psychology_label?: string | null;
 };
 
 type Props = {
@@ -171,12 +172,20 @@ export function TaskList({
               : filter === "personal"
                 ? incompleteTasksForDisplay.filter((t) => t.category === "personal")
                 : incompleteTasksForDisplay.filter((t) => !!t.recurrence_rule);
-  const { work, personal, other } = groupByCategory(filteredTasks);
-  const sections = [
+  const activeCount = incompleteTasksForDisplay.length;
+  const overCapacity = Number.isFinite(suggestedTaskCount) && activeCount >= suggestedTaskCount;
+  const isAutoMission = (t: ExtendedTask) => (t as { psychology_label?: string | null }).psychology_label === "MasterPoolAuto";
+  const primaryTasks = overCapacity ? filteredTasks.filter((t) => !isAutoMission(t as ExtendedTask)) : filteredTasks;
+  const optionalAutoTasks = overCapacity ? filteredTasks.filter((t) => isAutoMission(t as ExtendedTask)) : [];
+  const { work, personal, other } = groupByCategory(primaryTasks as ExtendedTask[]);
+  const sections: { label: string; tasks: ExtendedTask[] }[] = [
     { label: "Werk", tasks: work },
     { label: "Persoonlijk", tasks: personal },
     { label: "Overig", tasks: other },
   ];
+  if (optionalAutoTasks.length > 0) {
+    sections.push({ label: "Bij capaciteit · optioneel", tasks: optionalAutoTasks as ExtendedTask[] });
+  }
   const sectionsToShow = sections.some((s) => s.tasks.length > 0) ? sections : [{ label: "Vandaag", tasks: extendedTasks }];
   const flatIncompleteOrder: string[] = [];
   for (const s of sectionsToShow) {
@@ -185,7 +194,6 @@ export function TaskList({
     }
   }
   const firstIncompleteId = flatIncompleteOrder[0] ?? null;
-  const activeCount = incompleteTasksForDisplay.length;
   const maxSlots = brainMode?.maxSlots ?? Infinity;
   const slotsFilled = Number.isFinite(maxSlots) ? activeCount >= maxSlots : false;
   const addBlocked = brainMode?.addBlocked ?? false;
@@ -619,7 +627,11 @@ export function TaskList({
         ) : (
           sectionsToShow.map((section) => (
             <div key={section.label} className={section.label !== "Vandaag" ? "mb-4" : ""}>
-              {section.label !== "Vandaag" && <h3 className="mb-2 text-xs font-semibold uppercase tracking-wide text-[var(--text-muted)]">{section.label}</h3>}
+              {section.label !== "Vandaag" && (
+                <h3 className={`mb-2 text-xs font-semibold uppercase tracking-wide ${section.label.startsWith("Bij capaciteit") ? "text-[var(--text-muted)]/80 italic" : "text-[var(--text-muted)]"}`}>
+                  {section.label}
+                </h3>
+              )}
               {section.tasks.length === 0 ? (
                 <p className="rounded-lg border border-dashed border-[var(--card-border)]/50 bg-[var(--bg-surface)]/30 px-3 py-4 text-center text-xs text-[var(--text-muted)]">
                   Geen {section.label === "Vandaag" ? "missies vandaag" : `${section.label.toLowerCase()} missies`}. Voeg er één toe of verplaats uit backlog.

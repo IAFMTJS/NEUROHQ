@@ -320,7 +320,7 @@ const decisionBlocksCache = unstable_cache(
     return getDecisionBlocksUncached(dateStr);
   },
   ["decision-blocks"],
-  { revalidate: 60 }
+  { revalidate: 60, tags: ["decision-blocks"] }
 );
 
 export async function getDecisionBlocks(dateStr: string): Promise<DecisionBlocksResult> {
