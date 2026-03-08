@@ -12,6 +12,7 @@ import { NewDayRefresh } from "@/components/NewDayRefresh";
 import { RoutePrefetcher } from "@/components/RoutePrefetcher";
 import { OfflineQueueSync } from "@/components/OfflineQueueSync";
 import { PendingXpToast } from "@/components/PendingXpToast";
+import { HelpFloatingIcon } from "@/components/HelpFloatingIcon";
 import { DashboardDataProvider } from "@/components/providers/DashboardDataProvider";
 import { updateLastActiveDate } from "@/app/actions/behavior";
 
@@ -45,6 +46,7 @@ export default function DashboardLayout({
               Skip to main content
             </a>
             <KeyboardShortcuts />
+            <HelpFloatingIcon />
             <div className="relative z-10 mx-auto flex min-h-0 max-h-[100dvh] w-full max-w-[100vw] flex-1 flex-col overflow-hidden bg-transparent md:min-h-[640px]">
               <main
                 id="main-content"

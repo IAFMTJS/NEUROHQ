@@ -808,6 +808,156 @@
   text-shadow: var(--text-glow-cyan), 0 1px 2px rgba(0, 0, 0, 0.3);
 }
 
+/* ========== Help Center – manual-style visuals ========== */
+.help-page {
+  background: radial-gradient(ellipse 100% 60% at 50% -10%, rgba(37, 99, 235, 0.08), transparent 45%),
+    radial-gradient(ellipse 80% 40% at 80% 50%, rgba(34, 211, 238, 0.04), transparent 40%);
+  min-height: 100vh;
+}
+.help-page header {
+  position: relative;
+}
+.help-page header::after {
+  content: "";
+  position: absolute;
+  bottom: -1rem;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(34, 211, 238, 0.2), transparent);
+  opacity: 0.6;
+}
+.help-page .help-quick-start {
+  border: 1px solid rgba(34, 211, 238, 0.2);
+  background: linear-gradient(165deg, rgba(34, 211, 238, 0.08) 0%, rgba(37, 99, 235, 0.05) 40%, transparent 100%);
+  box-shadow: 0 0 24px rgba(34, 211, 238, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.04);
+}
+.help-page .help-quick-start .help-step-num {
+  background: linear-gradient(145deg, rgba(34, 211, 238, 0.25), rgba(37, 99, 235, 0.2));
+  border: 1px solid rgba(34, 211, 238, 0.35);
+  box-shadow: 0 0 12px rgba(34, 211, 238, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  color: #a5f3fc;
+}
+.help-page #help-toc {
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: linear-gradient(180deg, rgba(13, 19, 32, 0.9) 0%, rgba(11, 21, 34, 0.85) 100%);
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.03);
+}
+.help-page #help-toc .help-toc-group-label {
+  color: rgba(34, 211, 238, 0.9);
+  text-shadow: 0 0 12px rgba(34, 211, 238, 0.25);
+}
+.help-page #help-toc .help-toc-link {
+  color: rgba(34, 211, 238, 0.92);
+  border-radius: 8px;
+  transition: background 0.2s, box-shadow 0.2s, color 0.2s;
+}
+.help-page #help-toc .help-toc-link:hover {
+  background: rgba(34, 211, 238, 0.08);
+  box-shadow: 0 0 16px rgba(34, 211, 238, 0.12);
+  color: #67e8f9;
+}
+.help-page #help-toc .help-toc-num {
+  background: rgba(34, 211, 238, 0.15);
+  border: 1px solid rgba(34, 211, 238, 0.25);
+  color: #67e8f9;
+}
+.help-page .help-section {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  transition: background 0.15s;
+}
+.help-page .help-section-heading {
+  transition: background 0.2s, box-shadow 0.2s;
+}
+.help-page .help-section-heading:hover {
+  background: rgba(255, 255, 255, 0.04);
+}
+.help-page .help-section[data-open="true"] .help-section-heading {
+  background: rgba(34, 211, 238, 0.06);
+  box-shadow: inset 3px 0 0 rgba(34, 211, 238, 0.5);
+}
+.help-page .help-section-body {
+  padding-left: 2px;
+  line-height: 1.6;
+}
+.help-page .help-section-body p {
+  max-width: 65ch;
+}
+.help-page .help-flow .rounded-lg {
+  white-space: nowrap;
+}
+.help-page .help-section-num {
+  background: linear-gradient(145deg, rgba(34, 211, 238, 0.2), rgba(37, 99, 235, 0.15));
+  border: 1px solid rgba(34, 211, 238, 0.3);
+  box-shadow: 0 0 10px rgba(34, 211, 238, 0.15);
+  color: #a5f3fc;
+}
+.help-page .help-example {
+  border: 1px solid rgba(34, 211, 238, 0.2);
+  background: linear-gradient(90deg, rgba(34, 211, 238, 0.06) 0%, transparent 100%);
+  box-shadow: 0 0 20px rgba(34, 211, 238, 0.06), inset 0 0 0 1px rgba(255, 255, 255, 0.03);
+  border-left: 3px solid rgba(34, 211, 238, 0.6);
+}
+.help-page .help-tip {
+  border: 1px solid rgba(245, 158, 11, 0.25);
+  background: linear-gradient(90deg, rgba(245, 158, 11, 0.08) 0%, transparent 100%);
+  box-shadow: 0 0 16px rgba(245, 158, 11, 0.06);
+  border-left: 3px solid rgba(245, 158, 11, 0.7);
+}
+.help-page .help-remember {
+  border: 1px solid rgba(245, 158, 11, 0.2);
+  background: linear-gradient(90deg, rgba(245, 158, 11, 0.06) 0%, transparent 100%);
+  box-shadow: 0 0 12px rgba(245, 158, 11, 0.05);
+  border-left: 3px solid rgba(245, 158, 11, 0.6);
+}
+.help-page .help-table-wrap {
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 2px 16px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.03);
+}
+.help-page .help-table-wrap thead tr {
+  background: linear-gradient(180deg, rgba(34, 211, 238, 0.12) 0%, rgba(34, 211, 238, 0.05) 100%);
+  border-bottom: 1px solid rgba(34, 211, 238, 0.2);
+}
+.help-page .help-table-wrap th {
+  color: rgba(224, 242, 254, 0.95);
+  text-shadow: 0 0 8px rgba(34, 211, 238, 0.2);
+}
+.help-page .help-table-wrap tbody tr:hover {
+  background: rgba(34, 211, 238, 0.04);
+}
+.help-page .help-related {
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  background: rgba(13, 19, 32, 0.6);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03);
+}
+.help-page .help-related a {
+  transition: background 0.2s, box-shadow 0.2s;
+}
+.help-page .help-related a:hover {
+  background: rgba(34, 211, 238, 0.12);
+  box-shadow: 0 0 12px rgba(34, 211, 238, 0.15);
+  border-radius: 6px;
+}
+.help-page .help-back-btn {
+  background: linear-gradient(180deg, rgba(13, 19, 32, 0.98) 0%, rgba(11, 21, 34, 0.95) 100%);
+  border: 1px solid rgba(34, 211, 238, 0.25);
+  box-shadow: 0 0 20px rgba(34, 211, 238, 0.15), 0 4px 20px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+.help-page .help-back-btn:hover {
+  box-shadow: 0 0 24px rgba(34, 211, 238, 0.25), 0 4px 24px rgba(0, 0, 0, 0.25);
+  border-color: rgba(34, 211, 238, 0.4);
+}
+.help-page .help-key-terms {
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(13, 19, 32, 0.7);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.02);
+}
+.help-page .help-key-terms button:hover {
+  background: rgba(34, 211, 238, 0.06);
+}
+
 /* Mission cards – actief = cyan ring-glow, completed = groene glow */
 .mission-card.active {
   border-color: rgba(0, 212, 255, 0.4);
