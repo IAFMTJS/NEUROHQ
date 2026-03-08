@@ -501,10 +501,10 @@ export default function HelpPage() {
 
         <AccordionSection id="level-system" title="12. Your Level and Progress Bar" sectionNum={12}>
           <p>
-            Your <strong>level</strong> goes from 1 to 10 (and beyond). It’s based on your <strong>total XP</strong>: the more you earn, the higher your level. The progress bar on HQ and the XP page shows how far you are through your current level and how much XP you need for the next one.
+            Your <strong>level</strong> goes from 1 to 100. It’s based on your <strong>total XP</strong>: the more you earn, the higher your level. The progress bar on HQ and the XP page shows how far you are through your current level and how much XP you need for the next one. Your <strong>level</strong> is shown prominently (e.g. in accent color); your <strong>total XP</strong> is shown as secondary.
           </p>
           <h3>How much XP for each level?</h3>
-          <HelpTable headers={["Level", "Total XP you need", "XP needed to reach next level"]} rows={[["1", "0 – 99", "100"], ["2", "100 – 249", "150"], ["3", "250 – 499", "250"], ["4", "500 – 849", "350"], ["5", "850 – 1,299", "450"], ["6", "1,300 – 1,899", "600"], ["7", "1,900 – 2,649", "750"], ["8", "2,650 – 3,599", "950"], ["9", "3,600 – 4,799", "1,200"], ["10", "4,800+", "You’re at max! (for now)"]]} />
+          <HelpTable headers={["Level", "Total XP you need", "XP needed to reach next level"]} rows={[["1", "0 – 99", "100"], ["2", "100 – 249", "150"], ["3", "250 – 499", "250"], ["4", "500 – 849", "350"], ["5", "850 – 1,299", "450"], ["6", "1,300 – 1,899", "600"], ["7", "1,900 – 2,649", "750"], ["8", "2,650 – 3,599", "950"], ["9", "3,600 – 4,799", "1,200"], ["10", "4,800 – 6,000", "~1,200"], ["…", "…", "…"], ["100", "Max", "—"]]} />
           <HelpExample title="Example">
             <p>You have 420 total XP. You’re in <strong>level 4</strong> (level 5 starts at 500). You need <strong>80 more XP</strong> to reach level 5. The progress bar might show about 68% full—that’s how far you are through level 4.</p>
           </HelpExample>

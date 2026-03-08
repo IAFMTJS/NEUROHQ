@@ -19,8 +19,8 @@ export function XPBadge({ totalXp, level, compact = false, href }: Props) {
         aria-label={`Level ${level}, ${totalXp} XP`}
       >
         <span aria-hidden>⭐</span>
-        <span>Lv.{level}</span>
-        <span className="text-[var(--text-muted)]">{totalXp} XP</span>
+        <span className="font-bold text-[var(--accent-focus)]">Lv.{level}</span>
+        <span className="text-[var(--text-muted)] font-normal">{totalXp} XP</span>
       </HudLinkButton>
     );
   }
@@ -31,7 +31,7 @@ export function XPBadge({ totalXp, level, compact = false, href }: Props) {
     >
       <span className="text-2xl" aria-hidden>⭐</span>
       <div>
-        <p className="text-sm font-medium text-[var(--text-primary)]">Level {level}</p>
+        <p className="text-sm font-bold text-[var(--accent-focus)]">Level {level}</p>
         <p className="text-xs text-[var(--text-muted)]">{totalXp} XP total</p>
       </div>
       <span className="ml-auto text-sm text-[var(--accent-focus)]">View in Settings →</span>

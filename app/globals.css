@@ -2644,9 +2644,15 @@ header h1 { margin: 0; }
   top: 12px;
 }
 
-/* Modal: overlay scrollable; card body scrolls so content is always accessible */
+/* Modal: overlay scrollable; card body scrolls so content is always accessible.
+   Fix tap/click offset: modal card gets its own layer (translateZ(0)) and isolation
+   so hit-testing matches visual position on mobile (no coordinate drift). */
 .modal-overlay {
   background: var(--modal-backdrop);
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
 }
 .modal-card {
   background: var(--modal-bg);
@@ -2655,11 +2661,17 @@ header h1 { margin: 0; }
   box-shadow: 0 24px 48px rgba(0, 0, 0, 0.5);
   max-height: min(80dvh, calc(100dvh - 3rem));
 }
+.modal-card-interactive {
+  isolation: isolate;
+  transform: translateZ(0);
+  backface-visibility: hidden;
+}
 .modal-card-body {
   -webkit-overflow-scrolling: touch;
   min-height: 0;
   overflow-y: auto;
   overflow-x: hidden;
+  touch-action: pan-y;
 }
 .modal-card-header {
   border-bottom: 1px solid var(--modal-border);

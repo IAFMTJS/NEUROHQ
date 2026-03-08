@@ -25,16 +25,18 @@ export interface UserPreferences {
   reduced_motion: boolean;
   /** Light version: same visuals, minimal animations, fast UI. */
   light_ui: boolean;
-  /** Auto-missies uit Master Pool (standaard aan). Wanneer false, geen auto-missies genereren. */
+  /** Auto-missies uit Master Pool. Default false; user enables in settings. */
   auto_master_missions: boolean;
    /** Typische vrije dagen (1=Mon..7=Sun) voor zachte planning-bias. */
   usual_days_off?: number[] | null;
   /** 'soft' = bias; 'hard' = vermijd werk-missies tenzij expliciet toegevoegd. */
   day_off_mode?: "soft" | "hard" | null;
+  /** When true, receive app reminder emails (morning/evening digest, weekly learning). Default on. */
+  email_reminders_enabled?: boolean;
   updated_at: string;
 }
 
-/** Default preferences (no "use server" – safe to import from server actions). */
+/** Default preferences for new users: minimal, nothing preset. Set on first use (e.g. settings, first daily state). */
 export const PREFERENCES_DEFAULTS: UserPreferences = {
   theme: "normal",
   color_mode: "dark",
@@ -42,8 +44,9 @@ export const PREFERENCES_DEFAULTS: UserPreferences = {
   compact_ui: false,
   reduced_motion: false,
   light_ui: true,
-  auto_master_missions: true, // standaard aan
+  auto_master_missions: false,
   usual_days_off: null,
-  day_off_mode: "soft",
+  day_off_mode: null,
+  email_reminders_enabled: true,
   updated_at: new Date().toISOString(),
 };

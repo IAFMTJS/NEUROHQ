@@ -23,7 +23,7 @@ If the build fails locally, it will fail on Vercel. Fix any TypeScript or compil
 | **Cron schedule (Hobby)** | Vercel Hobby allows only one run per day per cron. Remove or comment out any cron with a schedule that runs more than once per day (e.g. hourly `0 * * * *`) from `vercel.json`. |
 | **Middleware deprecation** | Next.js 16 warns that `middleware` is deprecated in favor of `proxy`. The app still builds; to remove the warning later, migrate to `proxy.ts` and the `proxy()` export when ready. |
 
-Run **`npm run deploy:check`** before pushing (runs `next build` only). On Windows with the project on a non-C: drive, `next lint` can fail with “Invalid project directory provided”; `deploy:check` skips lint so the build still runs. To lint locally, use **`npx eslint .`** or run the project from C: or WSL.
+Run **`npm run deploy:check`** before pushing (runs `next build` only). On Windows with the project on a non-C: drive, `next lint` can fail with “Invalid project directory provided”; use **`npx eslint .`** if `next lint` fails. **Build fails with TypeScript errors:** regenerate `types/database.types.ts` — run `npm run db:types` (see [docs/BUILD_FIX_ANALYSIS.md](docs/BUILD_FIX_ANALYSIS.md)). Until then, `typescript.ignoreBuildErrors` in `next.config.mjs` lets the build complete.
 
 ---
 

@@ -38,6 +38,7 @@ export function BottomSheet({ open, onClose, title, subtitle, children, sheetCla
     <div
       ref={overlayRef}
       className="fixed inset-0 z-[100] flex flex-col justify-end modal-overlay"
+      style={{ minHeight: "100dvh" }}
       role="dialog"
       aria-modal="true"
       aria-labelledby="sheet-title"
@@ -48,7 +49,7 @@ export function BottomSheet({ open, onClose, title, subtitle, children, sheetCla
         onClick={onClose}
       />
       <div
-        className={`modal-card relative flex w-full max-h-[85dvh] flex-col rounded-t-[22px] rounded-b-none border-b-0 ${sheetClassName ?? ""}`}
+        className={`modal-card modal-card-interactive relative flex w-full max-h-[85dvh] flex-col rounded-t-[22px] rounded-b-none border-b-0 ${sheetClassName ?? ""}`}
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex shrink-0 items-center justify-center pt-3 pb-1" aria-hidden>

@@ -5,6 +5,11 @@ import { getWeekBounds } from "@/lib/utils/learning";
 import { sendPushToUser } from "@/lib/push";
 import { getLocalDateHour } from "@/lib/utils/timezone";
 import { isHighSensoryDayForUser } from "@/lib/mode-admin";
+import {
+  isAppEmailConfigured,
+  sendReminderToUser,
+  wrapReminderHtml,
+} from "@/lib/email";
 
 /**
  * Vercel Cron: runs weekly (e.g. Monday 09:00 UTC).
@@ -29,6 +34,13 @@ export async function GET(request: Request) {
     return NextResponse.json({ ok: true, job: "weekly", reports: 0, learningReminderSent: 0 });
   }
 
+  let emailReminderUserIds = new Set<string>();
+  const { data: prefs, error: prefsError } = await supabase
+    .from("user_preferences")
+    .select("user_id")
+    .eq("email_reminders_enabled", true);
+  if (!prefsError && prefs?.length) emailReminderUserIds = new Set(prefs.map((p) => p.user_id));
+
   const in7Days = new Date(today);
   in7Days.setUTCDate(in7Days.getUTCDate() + 7);
   const in7Str = in7Days.toISOString().slice(0, 10);
@@ -36,6 +48,7 @@ export async function GET(request: Request) {
 
   let stored = 0;
   let learningReminderSent = 0;
+  let learningReminderEmailSent = 0;
   let savingsAlertSent = 0;
   for (const { id: userId, timezone } of users) {
     try {
@@ -67,6 +80,18 @@ export async function GET(request: Request) {
             if (ok) learningReminderSent++;
           } catch {
             // skip
+          }
+          if (emailReminderUserIds.has(userId) && isAppEmailConfigured()) {
+            try {
+              const body = `Last week you logged <strong>${payload.learningMinutes} min</strong> (target 60). Log some learning this week to stay on track.`;
+              const sent = await sendReminderToUser(supabase, userId, {
+                subject: "NEUROHQ — Learning reminder",
+                html: wrapReminderHtml(body, "Learning reminder"),
+              });
+              if (sent) learningReminderEmailSent++;
+            } catch {
+              // skip
+            }
           }
         }
       }
@@ -119,6 +144,7 @@ export async function GET(request: Request) {
     reports: stored,
     users: users.length,
     learningReminderSent,
+    learningReminderEmailSent,
     savingsAlertSent,
   });
 }

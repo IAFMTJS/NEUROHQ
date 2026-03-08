@@ -76,6 +76,7 @@ export function Modal({
     <div
       ref={overlayRef}
       className="fixed inset-0 z-[100] flex items-start justify-center overflow-y-auto overflow-x-hidden p-4 pt-[min(2rem,env(safe-area-inset-top))] pb-[calc(env(safe-area-inset-bottom)+2rem)] modal-overlay"
+      style={{ minHeight: "100dvh" }}
       role="dialog"
       aria-modal="true"
       aria-labelledby="modal-title"
@@ -87,7 +88,7 @@ export function Modal({
         onClick={onClose}
       />
       <div
-        className={`modal-card relative flex w-full max-h-[min(88dvh,calc(100dvh-2rem))] flex-col ${sizeClasses[size]} my-4`}
+        className={`modal-card relative flex w-full max-h-[min(88dvh,calc(100dvh-2rem))] flex-col ${sizeClasses[size]} my-4 modal-card-interactive`}
         onClick={(e) => e.stopPropagation()}
       >
         <header className="modal-card-header shrink-0">

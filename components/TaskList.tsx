@@ -128,6 +128,9 @@ export function TaskList({
   const [levelUpInfo, setLevelUpInfo] = useState<{
     level: number;
     reputation?: { discipline: number; consistency: number; impact: number } | null;
+    rankPromotion?: boolean;
+    newRank?: string;
+    previousRank?: string;
   } | null>(null);
   const [optimisticCompleteIds, setOptimisticCompleteIds] = useState<string[]>([]);
   /** Tasks added this session (modal/simple form) so they show without reload; only for due_date === date */
@@ -252,14 +255,25 @@ export function TaskList({
         trackEvent("mission_completed", { taskId: id });
         showCompleteToast(id, result ?? undefined);
         if (result?.levelUp && result.newLevel) {
-          toast.success(`Level up · Level ${result.newLevel}`, {
-            description:
-              "Je performance-profiel is geüpdatet. Bekijk de details in de level-modal of op de XP-pagina.",
-          });
+          const rankPromotion = (result as { rankPromotion?: boolean; newRank?: string; previousRank?: string }).rankPromotion;
+          const newRank = (result as { newRank?: string }).newRank;
+          const previousRank = (result as { previousRank?: string }).previousRank;
+          toast.success(
+            rankPromotion && newRank
+              ? `Rank promotion · ${newRank}`
+              : `Level up · Level ${result.newLevel}`,
+            {
+              description:
+                rankPromotion && newRank
+                  ? `Van ${previousRank ?? "?"} naar ${newRank}. Bekijk je nieuwe perks in de level-modal.`
+                  : "Je performance-profiel is geüpdatet. Bekijk de details in de level-modal of op de XP-pagina.",
+            }
+          );
           setLevelUpInfo({
             level: result.newLevel,
             reputation: (result as { reputation?: { discipline: number; consistency: number; impact: number } | null })
               .reputation ?? identityReputation ?? undefined,
+            ...(rankPromotion ? { rankPromotion: true, newRank, previousRank } : {}),
           });
         }
         if (result?.lowSynergy) {
@@ -761,16 +775,32 @@ export function TaskList({
         <Modal
           open={showLevelModal}
           onClose={() => setLevelUpInfo(null)}
-          title={levelUpInfo ? `Level up · Level ${levelUpInfo.level}` : "Level up"}
+          title={
+            levelUpInfo?.rankPromotion && levelUpInfo.newRank
+              ? `Rank promotion · ${levelUpInfo.newRank}`
+              : levelUpInfo
+                ? `Level up · Level ${levelUpInfo.level}`
+                : "Level up"
+          }
           subtitle={
-            identityLevel != null && levelUpInfo
-              ? `Je bent van level ${identityLevel} naar level ${levelUpInfo.level} gegaan.`
-              : "Je performance-profiel is geüpdatet."
+            levelUpInfo?.rankPromotion && levelUpInfo.previousRank && levelUpInfo.newRank
+              ? `Van ${levelUpInfo.previousRank} naar ${levelUpInfo.newRank}.`
+              : identityLevel != null && levelUpInfo
+                ? `Je bent van level ${identityLevel} naar level ${levelUpInfo.level} gegaan.`
+                : "Je performance-profiel is geüpdatet."
           }
           footer={levelModalFooter}
           size="md"
           showBranding
         >
+          {levelUpInfo?.rankPromotion && levelUpInfo.newRank && (
+            <div className="mb-4 rounded-lg border border-amber-500/40 bg-amber-500/10 px-4 py-3 shadow-[0_0_20px_rgba(245,158,11,0.15)]">
+              <p className="text-sm font-medium text-amber-200">Rank promotion</p>
+              <p className="mt-1 text-xs text-[var(--text-secondary)]">
+                Je bent nu <strong className="text-amber-400">{levelUpInfo.newRank}</strong>. Nieuwe perks zijn beschikbaar in je profiel.
+              </p>
+            </div>
+          )}
           <p className="text-sm text-[var(--text-secondary)]">
             Je discipline-, consistentie- en impact-scores zijn vernieuwd. Hieronder zie je je huidige reputatiebalken.
           </p>

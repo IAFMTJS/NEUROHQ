@@ -28,13 +28,14 @@ export function HQModal({
   return (
     <div
       className="fixed inset-0 z-[100] flex items-center justify-center p-4 modal-overlay"
+      style={{ minHeight: "100dvh" }}
       role="dialog"
       aria-modal="true"
       onClick={onClose ? (e) => e.target === e.currentTarget && onClose() : undefined}
     >
       <div className="modal-backdrop absolute inset-0" aria-hidden onClick={onClose} />
       <div
-        className={`glass-panel p-8 relative ${className}`}
+        className={`glass-panel modal-card-interactive p-8 relative ${className}`}
         style={{ width: w, maxWidth: "calc(100vw - 2rem)" }}
         onClick={(e) => e.stopPropagation()}
       >

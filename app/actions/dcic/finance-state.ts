@@ -19,7 +19,7 @@ import {
   auditSubscriptions,
   checkEmergencyMode,
 } from "@/lib/dcic/finance-engine";
-import { getBudgetToday, getPreviousPaydayDateFromDay, getNextPaydayDateFromDay, getNextPaydayDateNextMonth } from "@/lib/utils/budget-date";
+import { getBudgetToday, getPreviousPaydayDateFromDay, getNextPaydayDateFromDay, getNextPaydayDateNextMonth, getBudgetMonthBounds } from "@/lib/utils/budget-date";
 
 /**
  * Gets financeState from database
@@ -51,15 +51,43 @@ export async function getFinanceState(): Promise<FinanceState | null> {
   } catch {
     // Table may not exist yet
   }
-  // 2) Fallback: payday_day_of_month on users (single “salary day”)
+  // New users: no default income or payday (single “salary day”)
   if (incomeSources.length === 0) {
-    try {
-      const { data: userRow } = await supabase.from("users").select("payday_day_of_month").eq("id", user.id).single();
-      const paydayDay = extractDayOfMonth((userRow as { payday_day_of_month?: number | null } | null)?.payday_day_of_month ?? 25);
-      incomeSources = [{ id: "default-payday", name: "Salaris", amount: 0, dayOfMonth: paydayDay, type: "monthly" }];
-    } catch {
-      incomeSources = [{ id: "default-payday", name: "Salaris", amount: 0, dayOfMonth: 25, type: "monthly" }];
-    }
+    const { monthStart, monthEnd } = getBudgetMonthBounds();
+    const { data: entries } = await supabase
+      .from("budget_entries")
+      .select("*")
+      .eq("user_id", user.id)
+      .gte("date", monthStart)
+      .lte("date", monthEnd);
+    const { data: goalsData } = await supabase.from("savings_goals").select("*").eq("user_id", user.id);
+    const goals: SavingsGoal[] = (goalsData || []).map((g) => ({
+      id: g.id,
+      name: g.name,
+      target: g.target_cents,
+      current: g.current_cents,
+      deadline: g.deadline,
+    }));
+    const expenses: Expense[] = (entries || [])
+      .filter((e) => e.amount_cents < 0)
+      .map((e) => ({
+        id: e.id,
+        amount: e.amount_cents,
+        date: e.date,
+        category: e.category,
+        note: e.note,
+        recurring: false,
+        isPlanned: e.is_planned || false,
+      }));
+    return {
+      income: { sources: [] },
+      cycle: { startDay: 1, startDate: monthStart },
+      balance: { current: 0 },
+      budgetTargets: [],
+      expenses,
+      goals,
+      disciplineScore: 0,
+    };
   }
 
   // Get budget settings and optional last_payday_date for period "van loon tot volgend loon"

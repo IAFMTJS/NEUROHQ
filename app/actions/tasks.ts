@@ -304,6 +304,12 @@ export type CompleteTaskResult = {
   performanceRank?: "S" | "A" | "B" | "C" | null;
   performanceScore?: number | null;
   xpAwarded?: number;
+  /** Rank ladder (1–100): true when level-up also changed display rank. */
+  rankPromotion?: boolean;
+  /** New rank title after level-up (e.g. Commander, Dark Commander). */
+  newRank?: string;
+  /** Previous rank before level-up (for promotion toast). */
+  previousRank?: string;
 };
 
 function computeNextRecurrenceDate(dueDate: string, recurrenceRule: string | null | undefined, recurrenceWeekdays: string | null | undefined): string | null {
@@ -413,13 +419,19 @@ export async function completeTask(id: string): Promise<CompleteTaskResult> {
       revalidateTagMax(`tasks-${user.id}-${nextStr}`);
     }
   }
-  const { awardXPForTaskComplete } = await import("./xp");
+  const { awardXPForTaskComplete, getXP } = await import("./xp");
   const { awardEconomyForTaskComplete } = await import("./economy");
   const { checkChainCompletionOnTaskComplete } = await import("./mission-chains");
   const { recordDailyXPAndMissions, upsertDailyAnalytics } = await import("./analytics");
   const { updateStreakOnTaskComplete } = await import("./streak");
+  const { rankFromLevel } = await import("@/lib/rank-ladder");
+  const levelBefore = (await getXP()).level;
   const xpResult = await awardXPForTaskComplete(t?.domain ?? null, id, t?.base_xp ?? undefined, completionDate, performanceRank ?? undefined);
   const xpAwarded = xpResult.xpAwarded;
+  const newLevel = xpResult.newLevel ?? levelBefore;
+  const previousRank = rankFromLevel(levelBefore);
+  const newRank = rankFromLevel(newLevel);
+  const rankPromotion = previousRank !== newRank;
 
   const [chainResult] = await Promise.all([
     checkChainCompletionOnTaskComplete(id),
@@ -457,9 +469,12 @@ export async function completeTask(id: string): Promise<CompleteTaskResult> {
   }).catch((err) => {
     console.error("Behaviour log on task complete:", err);
   });
+  void import("./identity-engine").then(({ refreshUserReputation }) => refreshUserReputation(user.id));
 
   const dateTag = t?.due_date ?? new Date().toISOString().slice(0, 10);
   revalidateTagMax(`tasks-${user.id}-${dateTag}`);
+  const { revalidateDashboardCache } = await import("./dashboard-data");
+  revalidateDashboardCache(user.id);
   revalidatePath("/dashboard");
   revalidatePath("/tasks");
   revalidatePath("/xp");
@@ -484,6 +499,7 @@ export async function completeTask(id: string): Promise<CompleteTaskResult> {
     xpAwarded,
     ...(xpResult.lowSynergy ? { lowSynergy: true } : {}),
     ...(reputation ? { reputation } : {}),
+    ...(rankPromotion ? { rankPromotion: true, newRank, previousRank } : {}),
   };
 }
 
@@ -501,6 +517,8 @@ export async function uncompleteTask(id: string) {
   if (error) throw new Error(error.message);
   const dateTag = (task as { due_date?: string } | null)?.due_date ?? new Date().toISOString().slice(0, 10);
   revalidateTagMax(`tasks-${user.id}-${dateTag}`);
+  const { revalidateDashboardCache } = await import("./dashboard-data");
+  revalidateDashboardCache(user.id);
   revalidatePath("/dashboard");
   revalidatePath("/tasks");
   revalidatePath("/xp");
@@ -516,6 +534,8 @@ export async function deleteTask(id: string) {
     .eq("id", id)
     .eq("user_id", user.id);
   if (error) throw new Error(error.message);
+  const { revalidateDashboardCache } = await import("./dashboard-data");
+  revalidateDashboardCache(user.id);
   revalidatePath("/dashboard");
   revalidatePath("/tasks");
   revalidatePath("/xp");

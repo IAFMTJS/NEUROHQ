@@ -8,6 +8,8 @@
 import { createClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
 import type { GameState, Mission } from "@/lib/dcic/types";
+import { updateDifficulty, generateDailyMissions } from "@/lib/dcic/difficulty-engine";
+import { rankFromLevel } from "@/lib/rank-ladder";
 
 /**
  * Gets current gameState from database
@@ -106,6 +108,7 @@ export async function getGameState(): Promise<GameState | null> {
   const { getFinanceState } = await import("./finance-state");
   const financeState = await getFinanceState();
 
+  const rank = rankFromLevel(level);
   const gameState: GameState = {
     level,
     currentXP: totalXP,
@@ -118,12 +121,23 @@ export async function getGameState(): Promise<GameState | null> {
     missions,
     skills,
     streak,
-    rank: calculateRank(level),
+    rank,
     achievements,
     finance: financeState || undefined,
+    difficultyEngine: updateDifficulty(level, rank),
   };
 
   return gameState;
+}
+
+/**
+ * Returns generated daily missions for the current user based on difficulty engine.
+ * Use for daily reset or mission assignment; integrates with level/rank.
+ */
+export async function getGeneratedDailyMissions() {
+  const state = await getGameState();
+  if (!state) return [];
+  return generateDailyMissions(state.difficultyEngine);
 }
 
 /**
@@ -218,15 +232,3 @@ function calculateXPForLevel(level: number): number {
   return Math.floor(1000 * Math.pow(1.15, level - 4));
 }
 
-/**
- * Calculates rank based on level
- */
-function calculateRank(level: number): string {
-  if (level < 5) return "Recruit";
-  if (level < 10) return "Operator";
-  if (level < 15) return "Specialist";
-  if (level < 20) return "Veteran";
-  if (level < 25) return "Elite";
-  if (level < 30) return "Master";
-  return "Legend";
-}

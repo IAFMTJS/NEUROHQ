@@ -11,6 +11,7 @@ import type {
   BehaviourLogEntry,
 } from "./types";
 import { calculateLevel, calculateRank } from "./simulation";
+import { updateDifficulty } from "./difficulty-engine";
 
 /**
  * Helper to get mission name for logging
@@ -106,8 +107,9 @@ export function executeCompleteMission(
   // Update streak
   updateStreak(updatedState);
 
-  // Update rank
+  // Update rank and difficulty engine
   updatedState.rank = calculateRank(updatedState.level);
+  updatedState.difficultyEngine = updateDifficulty(updatedState.level, updatedState.rank);
 
   // Check achievements (will be saved via server action)
   checkAchievements(updatedState, mission);

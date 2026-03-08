@@ -11,7 +11,7 @@
     "deploy:check": "npm run type-check && next build",
     "serve": "next start -p 3000",
     "serve:prod": "next start -p 3001",
-    "lint": "next lint .",
+    "lint": "next lint",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:visual:capture": "playwright test tests/visual/hud.spec.ts",
@@ -36,6 +36,7 @@
     "react": "^19.2.4",
     "react-dom": "^19.2.4",
     "recharts": "^3.7.0",
+    "resend": "^6.9.3",
     "sonner": "^2.0.7",
     "three": "^0.182.0",
     "web-push": "^3.6.7"

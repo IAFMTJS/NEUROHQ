@@ -95,6 +95,27 @@ export interface FinanceState {
   weeksConsideredForReviews?: number;
 }
 
+// ============================================================================
+// DIFFICULTY ENGINE (Behavioural scaling 1–100)
+// ============================================================================
+
+export interface DifficultyEngine {
+  dailyMissions: number;
+  missionDurationMin: number;
+  missionDurationMax: number;
+  cognitiveTier: number;
+  discomfortTier: number;
+  autopilotLevel: number;
+}
+
+/** Generated daily mission spec (before persistence). */
+export interface GeneratedMission {
+  name: string;
+  xpReward: number;
+  difficultyTier: number;
+  estimatedDuration: number;
+}
+
 export interface GameState {
   level: number;
   currentXP: number;
@@ -114,6 +135,7 @@ export interface GameState {
   rank: string;
   achievements: Record<string, boolean>;
   finance?: FinanceState; // Integrated finance state
+  difficultyEngine: DifficultyEngine;
 }
 
 // ============================================================================

@@ -9,6 +9,7 @@ import {
   useState,
   type ReactNode,
 } from "react";
+import { usePathname } from "next/navigation";
 import type { DashboardCritical, DashboardSecondary } from "@/types/dashboard-data.types";
 import {
   getDashboardCache,
@@ -73,6 +74,7 @@ type DashboardDataProviderProps = {
 };
 
 export function DashboardDataProvider({ children, initialCritical, initialSecondary }: DashboardDataProviderProps) {
+  const pathname = usePathname();
   const [state, setState] = useState<DashboardDataState>({
     critical: initialCritical ?? null,
     secondary: initialSecondary ?? null,
@@ -81,6 +83,8 @@ export function DashboardDataProvider({ children, initialCritical, initialSecond
   });
   const preloadStartedRef = useRef(false);
   const hasInitialData = Boolean(initialCritical && initialSecondary);
+  // Skip client preload on /dashboard: the page is a server component that fetches and passes initial data via a nested provider. Preloading here would duplicate the full getDashboardPayload() call.
+  const skipPreloadForRoute = pathname === "/dashboard";
 
   const setDashboardData = useCallback(
     (data: { critical?: DashboardCritical | null; secondary?: DashboardSecondary | null }) => {
@@ -136,8 +140,9 @@ export function DashboardDataProvider({ children, initialCritical, initialSecond
   useEffect(() => {
     if (typeof window === "undefined") return;
     if (hasInitialData) return; // Server already sent data; no client fetch
+    if (skipPreloadForRoute) return; // /dashboard page provides data via nested provider; avoid double fetch
     if (!preloadStartedRef.current) preloadDashboard().catch(() => {});
-  }, [preloadDashboard, hasInitialData]);
+  }, [preloadDashboard, hasInitialData, skipPreloadForRoute]);
 
   const value: DashboardDataContextValue = {
     ...state,

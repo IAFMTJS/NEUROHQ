@@ -108,18 +108,8 @@ function calculateXPForLevel(level: number): number {
   return Math.floor(1000 * Math.pow(1.15, level - 4));
 }
 
-/**
- * Calculates rank based on level
- */
-export function calculateRank(level: number): string {
-  if (level < 5) return "Recruit";
-  if (level < 10) return "Operator";
-  if (level < 15) return "Specialist";
-  if (level < 20) return "Veteran";
-  if (level < 25) return "Elite";
-  if (level < 30) return "Master";
-  return "Legend";
-}
+/** Rank from level (1–100 ladder). */
+export { rankFromLevel as calculateRank } from "@/lib/rank-ladder";
 
 /**
  * Checks for projected achievements

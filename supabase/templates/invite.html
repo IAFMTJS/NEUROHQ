@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>You're invited to NEUROHQ</title>
+  <!--[if mso]>
+  <noscript>
+    <xml>
+      <o:OfficeDocumentSettings>
+        <o:PixelsPerInch>96</o:PixelsPerInch>
+      </o:OfficeDocumentSettings>
+    </xml>
+  </noscript>
+  <![endif]-->
+</head>
+<body style="margin:0; padding:0; background-color:#0b1522; font-family: 'Segoe UI', system-ui, -apple-system, BlinkMacSystemFont, sans-serif; -webkit-font-smoothing: antialiased;">
+  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color:#0b1522; min-height:100vh;">
+    <tr>
+      <td align="center" style="padding:40px 20px;">
+        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width:420px;">
+          <tr>
+            <td align="center" style="padding-bottom:24px;">
+              <table role="presentation" cellspacing="0" cellpadding="0" align="center">
+                <tr>
+                  <td style="font-size:28px; font-weight:700; color:#00c3ff; letter-spacing:-0.02em;">NEUROHQ</td>
+                </tr>
+                <tr>
+                  <td style="font-size:11px; font-weight:600; color:rgba(255,255,255,0.5); letter-spacing:0.15em; padding-top:4px;">YOUR DAILY HQ</td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+          <tr>
+            <td style="background:linear-gradient(180deg, #0e1928 0%, #0b1522 100%); border:1px solid rgba(0,195,255,0.2); border-radius:20px; padding:32px 28px; box-shadow:0 10px 24px rgba(0,0,0,0.4);">
+              <h1 style="margin:0 0 8px 0; font-size:20px; font-weight:600; color:#e6fdff;">You're invited to NEUROHQ</h1>
+              <p style="margin:0 0 24px 0; font-size:14px; line-height:1.55; color:rgba(230,253,255,0.75);">
+                Someone invited you to create an account on NEUROHQ — your daily HQ for tasks, energy, budget, and growth. Click below to accept the invite and set up your account.
+              </p>
+              <table role="presentation" cellspacing="0" cellpadding="0" width="100%">
+                <tr>
+                  <td align="center" style="padding:8px 0 24px 0;">
+                    <a href="{{ .ConfirmationURL }}" target="_blank" rel="noopener" style="display:inline-block; background:#00c3ff; color:#050a12; font-size:14px; font-weight:600; text-decoration:none; padding:14px 28px; border-radius:12px; box-shadow:0 0 18px rgba(0,195,255,0.35);">
+                      Accept invite
+                    </a>
+                  </td>
+                </tr>
+              </table>
+              <p style="margin:0; font-size:12px; line-height:1.5; color:rgba(230,253,255,0.5);">
+                If the button doesn't work, copy and paste this link into your browser:<br>
+                <a href="{{ .ConfirmationURL }}" style="color:#00c3ff; word-break:break-all;">{{ .ConfirmationURL }}</a>
+              </p>
+            </td>
+          </tr>
+          <tr>
+            <td align="center" style="padding-top:28px;">
+              <p style="margin:0; font-size:12px; color:rgba(255,255,255,0.4);">This invite was sent for {{ .Email }}. If you didn't expect it, you can ignore this email.</p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>

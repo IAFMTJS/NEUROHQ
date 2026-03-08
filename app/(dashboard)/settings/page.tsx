@@ -28,6 +28,7 @@ const SettingsWhereToConfigure = dynamic(() => import("@/components/settings/Set
 const SettingsClearCache = dynamic(() => import("@/components/settings/SettingsClearCache").then((m) => ({ default: m.SettingsClearCache })), { loading: () => null });
 const BehaviorProfileSettings = dynamic(() => import("@/components/settings/BehaviorProfileSettings").then((m) => ({ default: m.BehaviorProfileSettings })), { loading: () => null });
 const SettingsDaysOff = dynamic(() => import("@/components/settings/SettingsDaysOff").then((m) => ({ default: m.SettingsDaysOff })), { loading: () => null });
+const SettingsEmailReminders = dynamic(() => import("@/components/settings/SettingsEmailReminders").then((m) => ({ default: m.SettingsEmailReminders })), { loading: () => <div className="min-h-[80px] animate-pulse rounded-xl bg-white/5" aria-hidden /> });
 
 export default async function SettingsPage() {
   const supabase = await createClient();
@@ -92,6 +93,7 @@ export default async function SettingsPage() {
         <div className="space-y-4">
           <SettingsTimezone initialTimezone={userTimezone} />
           <SettingsPush initialPushQuoteTime={pushQuoteTime} initialQuietHours={pushQuietHours} initialPushEnabled={pushEnabled} />
+          <SettingsEmailReminders initialEnabled={prefs.email_reminders_enabled ?? true} />
         </div>
       </section>
 

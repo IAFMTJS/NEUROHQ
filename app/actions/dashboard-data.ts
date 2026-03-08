@@ -1,9 +1,9 @@
 "use server";
 
 import { unstable_cache } from "next/cache";
+import { revalidateTagMax } from "@/lib/revalidate";
 import { createClient } from "@/lib/supabase/server";
 import { ensureUserProfileForSession } from "@/app/actions/auth";
-import { ensureIdentityEngineRows } from "@/app/actions/identity-engine";
 import { getDailyState } from "@/app/actions/daily-state";
 import { getTodaysTasks, type TaskListMode } from "@/app/actions/tasks";
 import { getModeFromState } from "@/lib/app-mode";
@@ -84,12 +84,12 @@ async function buildTodayContext(): Promise<TodayContext> {
   const dateStr = todayDateString();
   const yesterdayStr = yesterdayDate(dateStr);
 
-  await applyZeroCompletionRollover(dateStr);
-
-  const [state, yesterdayState] = await Promise.all([
-    getDailyState(dateStr),
+  // Run rollover and yesterday state in parallel; then today state (after rollover so today is up to date)
+  const [, yesterdayState] = await Promise.all([
+    applyZeroCompletionRollover(dateStr),
     getDailyState(yesterdayStr),
   ]);
+  const state = await getDailyState(dateStr);
 
   const { tasks: initialTasks, carryOverCount } = await getTodaysTasks(dateStr, "normal");
   const mode = getModeFromState(state as { energy?: number | null; focus?: number | null; sensory_load?: number | null } | null, carryOverCount);
@@ -97,15 +97,18 @@ async function buildTodayContext(): Promise<TodayContext> {
     mode === "stabilize" ? "stabilize" : mode === "low_energy" ? "low_energy" : mode === "driven" ? "driven" : "normal";
 
   const tasks = taskMode === "normal" ? initialTasks : (await getTodaysTasks(dateStr, taskMode)).tasks;
-  const energyBudget = await getEnergyBudget(dateStr);
-  const todayEngine = await getTodayEngine(dateStr, { tasks: tasks ?? [], carryOverCount, mode });
+  const finalTasks = tasks ?? initialTasks ?? [];
+  const [energyBudget, todayEngine] = await Promise.all([
+    getEnergyBudget(dateStr),
+    getTodayEngine(dateStr, { tasks: finalTasks, carryOverCount, mode }),
+  ]);
 
   return {
     dateStr,
     yesterdayStr,
     state,
     yesterdayState,
-    tasks: tasks ?? initialTasks ?? [],
+    tasks: finalTasks,
     carryOverCount,
     mode,
     energyBudget,
@@ -366,8 +369,8 @@ export async function getDashboardPayload(): Promise<{
   if (!user) return null;
 
   await ensureUserProfileForSession(user);
-  void ensureIdentityEngineRows(user.id);
 
+  const cacheTag = `dashboard-${user.id}`;
   const cached = await unstable_cache(
     async () => {
       const ctx = await buildTodayContext();
@@ -378,7 +381,12 @@ export async function getDashboardPayload(): Promise<{
       return { critical, secondary };
     },
     [`dashboard-payload-${user.id}`],
-    { revalidate: 20 }
+    { revalidate: 60, tags: [cacheTag] }
   )();
   return cached;
+}
+
+/** Invalidate dashboard cache when today's tasks or identity change (e.g. complete/delete task). Call from task actions. */
+export async function revalidateDashboardCache(userId: string): Promise<void> {
+  revalidateTagMax(`dashboard-${userId}`);
 }

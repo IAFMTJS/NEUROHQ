@@ -111,6 +111,21 @@ async function computeAndUpsertReputation(
   return reputation;
 }
 
+/** Recompute and upsert reputation (e.g. after task completion so Impact updates). Call from task-complete flow. */
+export async function refreshUserReputation(userId: string): Promise<void> {
+  try {
+    const supabase = await createClient();
+    const { data: streakRow } = await supabase
+      .from("user_streak")
+      .select("current_streak, longest_streak")
+      .eq("user_id", userId)
+      .single();
+    await computeAndUpsertReputation(supabase, userId, streakRow ?? null);
+  } catch {
+    // Non-fatal: reputation will refresh on next getIdentityEngine
+  }
+}
+
 /** Update user archetype. */
 export async function updateArchetype(archetype: Archetype): Promise<boolean> {
   const supabase = await createClient();

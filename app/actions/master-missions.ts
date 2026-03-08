@@ -131,6 +131,11 @@ export async function ensureMasterMissionsForToday(dailyStateFromSave?: DailySta
   }
 
   const stateRow = dailyRow as DailyStateRow;
+  // Do not allocate auto missions while brain status still has default/unset values (user must set energy & focus first).
+  if (stateRow.energy == null || stateRow.focus == null) {
+    if (process.env.NODE_ENV === "development") console.log("[auto-missions] exit: brain_status_default", { dateStr });
+    return { created: 0, debug: "no_brain_status", serviceRoleAvailable: !!serviceSupabase };
+  }
 
   // Count existing auto-missions first so we can self-heal when flag is set but no tasks exist.
   const { data: allAutoToday } = await db
@@ -410,6 +415,7 @@ export async function addBonusAutoMissionsForToday(): Promise<EnsureMasterMissio
     .maybeSingle();
   const dailyRow = dailyRowRaw as DailyStateRow | null;
   if (!dailyRow) return { created: 0, debug: "no_brain_status" };
+  if (dailyRow.energy == null || dailyRow.focus == null) return { created: 0, debug: "no_brain_status" };
 
   const energy = dailyRow.energy ?? null;
   const focus = dailyRow.focus ?? null;

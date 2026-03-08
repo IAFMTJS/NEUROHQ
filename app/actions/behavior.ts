@@ -60,10 +60,9 @@ export async function getBehaviorState(): Promise<BehaviorState> {
     };
   }
 
-  // Initialize if doesn't exist
-  const today = new Date().toISOString().slice(0, 10);
-  const initialState: BehaviorState = {
-    lastActiveDate: today,
+  // No row yet: return fresh state. Row is created on first use (e.g. updateLastActiveDate, updateLastStudyDate).
+  return {
+    lastActiveDate: null,
     lastStudyDate: null,
     inactiveDays: 0,
     noBookSelected: true,
@@ -71,15 +70,6 @@ export async function getBehaviorState(): Promise<BehaviorState> {
     missedReason: null,
     missedReasonCount: 0,
   };
-
-  await supabase.from("user_behavior").upsert({
-    user_id: user.id,
-    ...initialState,
-    last_active_date: initialState.lastActiveDate,
-    last_study_date: initialState.lastStudyDate,
-  });
-
-  return initialState;
 }
 
 /** Update last active date (called on app start) */

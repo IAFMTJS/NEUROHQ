@@ -51,7 +51,7 @@ export function IdentityBlock({
   const content = (
     <>
       <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
-        <span className="text-2xl font-bold text-[var(--text-primary)] tabular-nums">Level {level}</span>
+        <span className="text-2xl font-bold tabular-nums text-[var(--accent-focus)]">Level {level}</span>
         <span className="text-sm font-medium text-[var(--text-muted)] uppercase tracking-wider">{rank}</span>
         {streak > 0 && (
           <span className="inline-flex items-center gap-1 rounded-full bg-amber-500/20 px-2 py-0.5 text-xs font-medium text-amber-300">

@@ -115,28 +115,36 @@ export default async function TasksPage({ searchParams }: Props) {
   const selectedCalendarDay = dayParam ?? dateStr;
   // Fetch daily_state with service-role so we always see the row if it exists, then pass it in so the allocator doesn't rely on a second read.
   const dailyStateForAllocator = await getDailyStateForAllocator();
-  const [masterMissionsResult] = await Promise.all([
-    ensureMasterMissionsForToday(dailyStateForAllocator ?? undefined),
-    ensureReadingMissionForToday().catch(() => ({ created: false, debug: "error" })),
-  ]);
-  // Critical path: mission list + hero. Calendar data (3‑month tasks, 180‑day events) streams in via Suspense so page doesn't wait.
-  const [mode, prefs, backlog, futureTasks, completedToday, yesterdayTasksRaw, smartSuggestion, energyCap, energyBudget, decisionBlocks, xp, identity, identityEngine] = await Promise.all([
-    getMode(dateStr),
-    getUserPreferencesOrDefaults(),
-    getBacklogTasks(dateStr),
-    getFutureTasks(dateStr),
-    getCompletedTodayTasks(dateStr),
-    getTasksForDate(yesterdayStr),
-    getSmartSuggestion(dateStr),
-    getEnergyCapToday(dateStr),
-    getEnergyBudget(dateStr),
-    getDecisionBlocks(dateStr),
-    getXP(),
-    getXPIdentity(),
-    getIdentityEngine(),
+  // Run auto-missions + reading in parallel with all other data so the page doesn't wait for both in sequence.
+  // Also fetch today's tasks in "normal" mode in parallel; use it when mode is normal to avoid an extra sequential round-trip.
+  const [
+    [masterMissionsResult],
+    [mode, prefs, backlog, futureTasks, completedToday, yesterdayTasksRaw, smartSuggestion, energyCap, energyBudget, decisionBlocks, xp, identity, identityEngine, tasksNormalResult],
+  ] = await Promise.all([
+    Promise.all([
+      ensureMasterMissionsForToday(dailyStateForAllocator ?? undefined),
+      ensureReadingMissionForToday().catch(() => ({ created: false, debug: "error" })),
+    ]),
+    Promise.all([
+      getMode(dateStr),
+      getUserPreferencesOrDefaults(),
+      getBacklogTasks(dateStr),
+      getFutureTasks(dateStr),
+      getCompletedTodayTasks(dateStr),
+      getTasksForDate(yesterdayStr),
+      getSmartSuggestion(dateStr),
+      getEnergyCapToday(dateStr),
+      getEnergyBudget(dateStr),
+      getDecisionBlocks(dateStr),
+      getXP(),
+      getXPIdentity(),
+      getIdentityEngine(),
+      getTodaysTasks(dateStr, "normal"),
+    ]),
   ]);
   const taskMode: TaskListMode = mode === "stabilize" ? "stabilize" : mode === "low_energy" ? "low_energy" : mode === "driven" ? "driven" : "normal";
-  const { tasks, carryOverCount } = await getTodaysTasks(dateStr, taskMode);
+  const { tasks, carryOverCount } =
+    taskMode === "normal" ? tasksNormalResult : await getTodaysTasks(dateStr, taskMode);
   const subtaskRows = await getSubtasksForTaskIds(tasks.map((t) => t.id));
   const subtasksByParent: Record<string, typeof subtaskRows> = {};
   for (const s of subtaskRows) {
