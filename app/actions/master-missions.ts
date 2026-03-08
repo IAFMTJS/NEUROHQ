@@ -124,6 +124,7 @@ export async function ensureMasterMissionsForToday(dailyStateFromSave?: DailySta
     if (process.env.NODE_ENV === "development") console.log("[auto-missions] daily_state read", { dateStr, hasRow: !!dailyRow, hasServiceRole: !!serviceSupabase });
   }
 
+  // First-time users: only allocate auto missions once brain state exists and is set (energy & focus).
   const hasBrainStatus = !!dailyRow;
   if (!hasBrainStatus) {
     if (process.env.NODE_ENV === "development") console.log("[auto-missions] exit: no_brain_status", { dateStr });
@@ -131,7 +132,6 @@ export async function ensureMasterMissionsForToday(dailyStateFromSave?: DailySta
   }
 
   const stateRow = dailyRow as DailyStateRow;
-  // Do not allocate auto missions while brain status still has default/unset values (user must set energy & focus first).
   if (stateRow.energy == null || stateRow.focus == null) {
     if (process.env.NODE_ENV === "development") console.log("[auto-missions] exit: brain_status_default", { dateStr });
     return { created: 0, debug: "no_brain_status", serviceRoleAvailable: !!serviceSupabase };

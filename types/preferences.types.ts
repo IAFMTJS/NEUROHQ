@@ -25,7 +25,7 @@ export interface UserPreferences {
   reduced_motion: boolean;
   /** Light version: same visuals, minimal animations, fast UI. */
   light_ui: boolean;
-  /** Auto-missies uit Master Pool. Default false; user enables in settings. */
+  /** Auto-missies uit Master Pool. Default on; user can disable in settings. First-time users only get auto missions after brain state is set. */
   auto_master_missions: boolean;
    /** Typische vrije dagen (1=Mon..7=Sun) voor zachte planning-bias. */
   usual_days_off?: number[] | null;
@@ -44,7 +44,7 @@ export const PREFERENCES_DEFAULTS: UserPreferences = {
   compact_ui: false,
   reduced_motion: false,
   light_ui: true,
-  auto_master_missions: false,
+  auto_master_missions: true,
   usual_days_off: null,
   day_off_mode: null,
   email_reminders_enabled: true,

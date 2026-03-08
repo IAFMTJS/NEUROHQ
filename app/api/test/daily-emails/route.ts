@@ -97,7 +97,7 @@ async function runTest(request: Request) {
     return NextResponse.json(
       {
         error: "Email not configured",
-        hint: "Use Brevo: BREVO_API_KEY + EMAIL_FROM (sender must be verified in Brevo). Or Resend: RESEND_API_KEY (in dev that is enough). Or use ?preview=1 to view without sending.",
+        hint: "Add RESEND_API_KEY to .env.local (in dev that is enough). Or use ?preview=1 to view without sending.",
       },
       { status: 503 }
     );

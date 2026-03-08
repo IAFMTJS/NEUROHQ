@@ -20,7 +20,17 @@ export default function SignupPage() {
     setLoading(true);
     try {
       const supabase = createClient();
-      const { error: err } = await supabase.auth.signUp({ email, password });
+      const redirectTo =
+        typeof window !== "undefined"
+          ? `${window.location.origin}/login`
+          : process.env.NEXT_PUBLIC_APP_URL
+            ? `${process.env.NEXT_PUBLIC_APP_URL.replace(/\/$/, "")}/login`
+            : undefined;
+      const { error: err } = await supabase.auth.signUp({
+        email,
+        password,
+        options: redirectTo ? { emailRedirectTo: redirectTo } : undefined,
+      });
       if (err) {
         setError(err.message);
         setLoading(false);

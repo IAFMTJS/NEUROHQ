@@ -11,7 +11,18 @@ Supabase sends auth emails (signup, magic link, password reset, etc.). By defaul
 3. For each template below, select it, set **Subject** and paste the **Body** from the corresponding file in `supabase/templates/`.
 4. Click **Save** after each.
 
-Optional: under **Authentication** → **URL Configuration**, set **Site URL** to your app (e.g. `https://neurohq.app`).
+### Auth links point to localhost?
+
+If the “Confirm your email” or “Reset password” link in the email goes to `http://localhost:3000` instead of your live site, fix it in Supabase:
+
+1. **Authentication** → **URL Configuration**.
+2. Set **Site URL** to your real app URL (e.g. `https://neurohq.app` or `https://your-app.vercel.app`). This is the base URL Supabase uses when building links in auth emails.
+3. Under **Redirect URLs**, add your production URL so redirects are allowed, e.g.:
+   - `https://neurohq.app/**`
+   - `https://your-app.vercel.app/**`  
+   Keep `http://localhost:3000/**` if you test auth locally.
+
+Save. New signup and reset emails will use the correct link. The app also sends `emailRedirectTo` / `redirectTo` from the current page when you sign up or request a reset, so if users are on the live site, the link should match; Site URL is the fallback and must be correct for invites and other server-generated links.
 
 ### Template list
 
@@ -92,7 +103,7 @@ Without custom SMTP, Supabase sends auth emails from its own mailer: limited rat
 
 - **When you get a domain**, add custom SMTP (same docs below). No code changes—just configure SMTP in the Dashboard. A cheap domain (e.g. for your app or just for email like `no-reply@yourapp.com`) is enough; many registrars (Porkbun, Namecheap, Cloudflare, etc.) offer low-cost options.
 
-- **SMTP providers (Resend, Brevo, etc.) require a verified domain** for production sending—they don’t let you send from *their* domain to arbitrary users. So for real signups and password resets to any email, you’ll need a domain at some point.
+- **SMTP providers (Resend, SendGrid, etc.) require a verified domain** for production sending—they don’t let you send from *their* domain to arbitrary users. So for real signups and password resets to any email, you’ll need a domain at some point.
 
 ### 1. Where to configure
 
@@ -119,21 +130,13 @@ Save the form. Supabase will send all auth emails (confirm signup, magic link, r
 Use any SMTP-compatible provider. Common options:
 
 - **[Resend](https://resend.com)** — [Send with Supabase (SMTP)](https://resend.com/docs/send-with-supabase-smtp): free tier, simple setup, good for apps.
-- **[Brevo](https://www.brevo.com)** — [Brevo SMTP](https://help.brevo.com/hc/en-us/articles/7924908994450-Send-transactional-emails-using-Brevo-SMTP).
 - **[SendGrid](https://sendgrid.com)** — [SendGrid SMTP](https://www.twilio.com/docs/sendgrid/for-developers/sending-email/getting-started-smtp).
 - **[Postmark](https://postmarkapp.com)** — [Postmark SMTP](https://postmarkapp.com/developer/user-guide/send-email-with-smtp).
 - **[AWS SES](https://aws.amazon.com/ses/)** — [SES SMTP](https://docs.aws.amazon.com/ses/latest/dg/send-email-smtp.html).
 
 Create an account, add/verify your sending domain, then get the **SMTP host, port, username, and password** (or API key) from the provider’s dashboard.
 
-### 4. Example: Brevo
-
-1. Sign up at [brevo.com](https://www.brevo.com). Go to **SMTP & API** → **API Keys** and create an API key (for app emails). For **SMTP** (Supabase auth), use **SMTP key** from the same page (or [this guide](https://help.brevo.com/hc/en-us/articles/360000944599)).
-2. **Senders**: add and verify a sender (name + email). For production, add your domain in **Senders & IP** and verify it.
-3. **Supabase** → Auth → SMTP: Sender name `NEUROHQ`, Sender email = your verified sender; Host `smtp-relay.brevo.com`, Port `587`; Username = your **Brevo account email**; Password = your **SMTP key** (not the API key).
-4. **App emails** (morning/evening): in `.env` set `BREVO_API_KEY=xkeysib-...` and `EMAIL_FROM=NEUROHQ <your-verified-sender@...>`. The app uses the Brevo REST API for these; no SMTP needed in code.
-
-### 5. Example: Resend
+### 4. Example: Resend
 
 1. Sign up at [resend.com](https://resend.com) and add your domain (e.g. `yourdomain.com`).
 2. In Resend: **Domains** → your domain → **SMTP** (or **API Keys** → create key for SMTP).
@@ -148,7 +151,7 @@ Create an account, add/verify your sending domain, then get the **SMTP host, por
 
 4. Save. Send a test (e.g. sign up or “forgot password”) and check inbox/spam.
 
-### 6. After enabling SMTP
+### 5. After enabling SMTP
 
 - **Rate limits:** Supabase may apply a default auth email rate limit (e.g. 30/hour). To change it: **Authentication** → **Rate Limits** → adjust email limits.
 - **Deliverability:** Configure **SPF**, **DKIM**, and optionally **DMARC** for your sending domain in your DNS (provider docs explain how). That helps inbox placement and avoids “via …” or spam.

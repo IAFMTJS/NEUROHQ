@@ -11,7 +11,7 @@ You can still do this **without a domain**:
 | What | No domain | With domain |
 |------|-----------|-------------|
 | **See how emails look** | Open `/api/test/daily-emails?preview=1` while logged in. No Resend, no config. | Same. |
-| **Send app emails (dev only)** | **Resend:** API key only. **Brevo:** API key + **verified sender** in Brevo (e.g. your email); set `BREVO_API_KEY` + `EMAIL_FROM`. | Set `EMAIL_FROM` and either `RESEND_API_KEY` or `BREVO_API_KEY`. |
+| **Send app emails (dev only)** | Resend account + **API key only**. Add `RESEND_API_KEY` to `.env.local`. Don’t set `EMAIL_FROM`. | Set `RESEND_API_KEY` and `EMAIL_FROM=NEUROHQ <no-reply@yourdomain.com>`. |
 | **Auth emails (signup, reset)** | Use Supabase’s built-in mailer. Only **team members** receive auth emails until you add custom SMTP. Add test users in [Organization → Team](https://supabase.com/dashboard/org/_/team). | Add custom SMTP in Supabase (step 5) with your domain so **any** user gets auth emails. |
 
 **When you get a domain:** buy one (e.g. Porkbun, Namecheap), then verify it in Resend, set `EMAIL_FROM`, and configure Supabase SMTP (steps 1, 2, 5). No code changes.
@@ -27,20 +27,7 @@ For **production** and so **any user** (not just team members) gets auth emails,
 
 ---
 
-## 2. Sign up with an email provider (Resend or Brevo)
-
-Use **one** of these for app emails (and optionally for Supabase auth SMTP).
-
-### Option A: Brevo
-
-- Go to [brevo.com](https://www.brevo.com) and create an account.
-- **SMTP & API** → **API Keys** → **Generate a new API key** → copy the key (starts with `xkeysib-`).
-- **Senders** (or **Settings** → **Senders**): add and **verify** a sender (name + email). You can use your own email for testing; for production use an address on your domain (e.g. `no-reply@yourdomain.com`) and verify the domain in Brevo.
-- In the app you’ll set `BREVO_API_KEY` and `EMAIL_FROM=NEUROHQ <your-verified-sender@...>`.
-
-**Supabase auth (step 5):** Use Brevo’s SMTP: host `smtp-relay.brevo.com`, port `587`, username = your Brevo login email, password = [SMTP key from Brevo](https://help.brevo.com/hc/en-us/articles/360000944599).
-
-### Option B: Resend
+## 2. Sign up with Resend (no domain needed for dev)
 
 - Go to [resend.com](https://resend.com) and create an account.
 - **API Keys** → **Create API Key** → copy the key (starts with `re_`).
@@ -53,23 +40,7 @@ Use **one** of these for app emails (and optionally for Supabase auth SMTP).
 
 ## 3. App env vars (morning/evening and weekly emails)
 
-**Brevo:**
-
-```env
-BREVO_API_KEY=xkeysib-xxxxxxxxxxxxxxxxxx
-EMAIL_FROM=NEUROHQ <no-reply@yourdomain.com>
-```
-
-The sender in `EMAIL_FROM` must be a [verified sender in Brevo](https://help.brevo.com/hc/en-us/articles/208836149).
-
-**Resend (with domain or production):**
-
-```env
-RESEND_API_KEY=re_xxxxxxxxxxxxxxxxxx
-EMAIL_FROM=NEUROHQ <no-reply@yourdomain.com>
-```
-
-**Resend (dev only, no domain):**
+**Local / dev (no domain):**
 
 ```env
 RESEND_API_KEY=re_xxxxxxxxxxxxxxxxxx
@@ -77,7 +48,14 @@ RESEND_API_KEY=re_xxxxxxxxxxxxxxxxxx
 
 Don’t set `EMAIL_FROM`; the app uses Resend’s test sender in development.
 
-Use **either** Brevo or Resend (if both keys are set, Brevo is used). Set these in **`.env.local`** (dev) and in your **deployment** (Vercel, etc.).
+**Production or when you have a domain:**
+
+```env
+RESEND_API_KEY=re_xxxxxxxxxxxxxxxxxx
+EMAIL_FROM=NEUROHQ <no-reply@yourdomain.com>
+```
+
+Set these in **`.env.local`** (dev) and in your **deployment** (Vercel, etc.).
 
 Optional:
 
@@ -106,17 +84,13 @@ Without custom SMTP, Supabase sends auth emails from its own mailer **only to ad
 
 **If you don’t have a domain yet:** skip this step. Add your own email (and test users) in [Supabase → Organization → Team](https://supabase.com/dashboard/org/_/team) so they receive signup/reset emails. When you have a domain, come back here.
 
-**If you have a domain (or verified sender in Brevo):**
+**If you have a domain verified in Resend:**
 
 1. Open [Supabase Dashboard](https://supabase.com/dashboard) → your project.
 2. **Authentication** → **SMTP Settings**.
-3. Enable **Custom SMTP** and fill in:
+3. Enable **Custom SMTP** and fill in: Sender name `NEUROHQ`, Sender email `no-reply@yourdomain.com`; Host `smtp.resend.com`, Port `587`; Username `resend`; Password = your Resend API key.
 
-**Brevo:** Sender name `NEUROHQ`, Sender email = your verified sender; Host `smtp-relay.brevo.com`, Port `587`; Username = your Brevo account email; Password = your [Brevo SMTP key](https://help.brevo.com/hc/en-us/articles/360000944599) (not the API key).
-
-**Resend:** Sender name `NEUROHQ`, Sender email `no-reply@yourdomain.com`; Host `smtp.resend.com`, Port `587`; Username `resend`; Password = your Resend API key.
-
-Save. Auth emails will then go through your provider to any user.
+Save. Auth emails will then go through Resend to any user.
 
 ---
 
@@ -171,9 +145,9 @@ No extra step needed if that section is already on the settings page.
 
 | Step | No domain | With domain |
 |------|------------|-------------|
-| 1 | Skip (or plan to buy one) | Get domain, verify in Brevo/Resend |
-| 2 | **Brevo:** account + API key + verified sender. **Resend:** account + API key only | Brevo/Resend + verify domain |
-| 3 | **Brevo:** `BREVO_API_KEY` + `EMAIL_FROM`. **Resend:** `RESEND_API_KEY` only | `EMAIL_FROM` + provider API key |
+| 1 | Skip (or plan to buy one) | Get domain, verify in Resend |
+| 2 | Resend account + API key only | Resend account + verify domain + API key |
+| 3 | `RESEND_API_KEY` only in .env.local | `RESEND_API_KEY` + `EMAIL_FROM` in env |
 | 4 | Migration 073 | Same |
 | 5 | Skip (auth only to team members) | Custom SMTP in Supabase |
 | 6 | Auth templates (optional) | Same |

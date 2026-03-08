@@ -1,6 +1,6 @@
 /**
  * App reminder emails (distinct from Supabase auth emails).
- * Supports Resend (RESEND_API_KEY) or Brevo (BREVO_API_KEY). User email from Supabase Auth admin API.
+ * Uses Resend when RESEND_API_KEY is set. User email from Supabase Auth admin API.
  */
 
 import type { SupabaseClient } from "@supabase/supabase-js";
@@ -20,24 +20,15 @@ export async function getEmailForUser(
   return email && typeof email === "string" ? email : null;
 }
 
-/** Which provider is configured (Brevo takes precedence if both keys set). */
-function getEmailProvider(): "brevo" | "resend" | null {
-  if (process.env.BREVO_API_KEY) return "brevo";
-  if (process.env.RESEND_API_KEY) return "resend";
-  return null;
-}
-
-/** Check if app email sending is configured. Brevo needs EMAIL_FROM; Resend in dev can work without it. */
+/** Check if app email sending is configured. In development, RESEND_API_KEY alone is enough. */
 export function isAppEmailConfigured(): boolean {
-  const provider = getEmailProvider();
-  if (!provider) return false;
-  if (provider === "brevo") return !!process.env.EMAIL_FROM;
+  if (!process.env.RESEND_API_KEY) return false;
   if (process.env.EMAIL_FROM) return true;
   if (process.env.NODE_ENV === "development") return true;
   return !!FROM_DEFAULT;
 }
 
-/** From address when sending. In dev with Resend only, uses Resend test sender. */
+/** From address when sending. In dev without EMAIL_FROM, uses Resend test sender. */
 function getFromAddress(): string {
   if (process.env.EMAIL_FROM) {
     const from = process.env.EMAIL_FROM;
@@ -45,13 +36,6 @@ function getFromAddress(): string {
   }
   if (process.env.NODE_ENV === "development") return FROM_DEV_TEST;
   return FROM_DEFAULT;
-}
-
-/** Parse "Name <email>" or "email" into { name, email }. */
-function parseFrom(from: string): { name: string; email: string } {
-  const match = from.match(/^(.+?)\s*<([^>]+)>$/);
-  if (match) return { name: match[1].trim(), email: match[2].trim() };
-  return { name: "NEUROHQ", email: from.trim() };
 }
 
 export type AppEmailOptions = {
@@ -62,40 +46,9 @@ export type AppEmailOptions = {
 };
 
 /**
- * Send one app email via Brevo or Resend (whichever is configured). Returns true if sent.
+ * Send one app email via Resend. Returns true if sent.
  */
 export async function sendAppEmail(options: AppEmailOptions): Promise<boolean> {
-  const provider = getEmailProvider();
-  if (!provider) return false;
-
-  if (provider === "brevo") {
-    const apiKey = process.env.BREVO_API_KEY;
-    if (!apiKey || !process.env.EMAIL_FROM) return false;
-    const from = parseFrom(process.env.EMAIL_FROM);
-    try {
-      const res = await fetch("https://api.brevo.com/v3/smtp/email", {
-        method: "POST",
-        headers: {
-          accept: "application/json",
-          "content-type": "application/json",
-          "api-key": apiKey,
-        },
-        body: JSON.stringify({
-          sender: { name: from.name, email: from.email },
-          to: [{ email: options.to }],
-          subject: options.subject,
-          htmlContent: options.html,
-          ...(options.text && { textContent: options.text }),
-        }),
-      });
-      if (!res.ok) return false;
-      const data = (await res.json()) as { messageId?: string };
-      return !!data?.messageId;
-    } catch {
-      return false;
-    }
-  }
-
   const apiKey = process.env.RESEND_API_KEY;
   if (!apiKey) return false;
   const from = getFromAddress();
