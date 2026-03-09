@@ -110,7 +110,8 @@ export async function getFinanceState(): Promise<FinanceState | null> {
   const todayStr = getBudgetToday();
   const today = new Date(todayStr + "T12:00:00Z");
   const paydayDayFromUser = (userRow as { payday_day_of_month?: number | null } | null)?.payday_day_of_month ?? null;
-  const paydayDay = incomeSources[0]?.dayOfMonth ?? paydayDayFromUser ?? 25;
+  // User-specific payday day wins over income_sources (so Settings/PaydayCard is authoritative).
+  const paydayDay = paydayDayFromUser ?? incomeSources[0]?.dayOfMonth ?? 25;
 
   let cycleStart: Date;
   if (lastPaydayDateStr && /^\d{4}-\d{2}-\d{2}$/.test(lastPaydayDateStr)) {

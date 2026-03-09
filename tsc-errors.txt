@@ -1,0 +1,1 @@
+﻿lib/dcic/simulation.ts(28,19): error TS2304: Cannot find name 'calculateRank'.

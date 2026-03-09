@@ -475,12 +475,6 @@ export default async function BudgetPage({ searchParams }: Props) {
         backHref="/dashboard"
       />
 
-      {!isHistoryView && (
-        <section className="mascot-hero-inner mx-auto">
-          <HeroMascotImage page="budget" className="mascot-img" />
-        </section>
-      )}
-
       <BudgetTabsShell
         initialTab={activeTab}
         isHistoryView={isHistoryView}
@@ -491,6 +485,12 @@ export default async function BudgetPage({ searchParams }: Props) {
         analysis={analysisSection}
         goals={goalsSection}
       />
+
+      {!isHistoryView && (
+        <section className="mascot-hero-inner mx-auto" aria-hidden>
+          <HeroMascotImage page="budget" className="mascot-img" />
+        </section>
+      )}
     </div>
   );
 }

@@ -5,6 +5,10 @@ import { updatePushQuoteTime, updatePushQuietHours, type QuietHours } from "@/ap
 import { updateUserPreferences } from "@/app/actions/preferences";
 import { ensurePushSubscription, isPushConfigured, removePushSubscription, supportsPush } from "@/lib/push-client";
 
+// Persist last-saved values so remounts (e.g. React Strict Mode) don't revert to stale server props.
+let lastSavedQuoteTime: string | null = null;
+let lastSavedQuietHours: QuietHours = { start: null, end: null };
+
 type Props = {
   initialPushQuoteTime?: string | null;
   initialQuietHours?: QuietHours;
@@ -29,10 +33,10 @@ export function SettingsPush({
   );
   const [message, setMessage] = useState<string | null>(null);
   const [subscribed, setSubscribed] = useState(initialPushSubscribed);
-  const [pushQuoteTime, setPushQuoteTime] = useState(initialPushQuoteTime ?? "");
+  const [pushQuoteTime, setPushQuoteTime] = useState(() => (lastSavedQuoteTime ?? initialPushQuoteTime ?? "") as string);
   const [quoteTimePending, setQuoteTimePending] = useState(false);
-  const [quietStart, setQuietStart] = useState(initialQuietHours.start ?? "");
-  const [quietEnd, setQuietEnd] = useState(initialQuietHours.end ?? "");
+  const [quietStart, setQuietStart] = useState(() => (lastSavedQuietHours.start ?? initialQuietHours.start ?? "") as string);
+  const [quietEnd, setQuietEnd] = useState(() => (lastSavedQuietHours.end ?? initialQuietHours.end ?? "") as string);
   const [quietPending, setQuietPending] = useState(false);
   const [prefsPending, startPrefsTransition] = useTransition();
   const [pushRemindersEnabled, setPushRemindersEnabled] = useState(initialPushRemindersEnabled);
@@ -179,10 +183,13 @@ export function SettingsPush({
             onChange={(e) => setPushQuoteTime(e.target.value)}
             onBlur={async () => {
               const val = pushQuoteTime.trim() || null;
-              if (val === (initialPushQuoteTime ?? "")) return;
               setQuoteTimePending(true);
               try {
-                await updatePushQuoteTime(val);
+                const saved = await updatePushQuoteTime(val);
+                lastSavedQuoteTime = saved;
+                setPushQuoteTime(saved ?? "");
+              } catch (e) {
+                setMessage(e instanceof Error ? e.message : "Kon quote-tijd niet opslaan.");
               } finally {
                 setQuoteTimePending(false);
               }
@@ -202,10 +209,14 @@ export function SettingsPush({
             onBlur={async () => {
               const s = quietStart.trim() || null;
               const e = quietEnd.trim() || null;
-              if (s === (initialQuietHours.start ?? "") && e === (initialQuietHours.end ?? "")) return;
               setQuietPending(true);
               try {
-                await updatePushQuietHours(s, e);
+                const saved = await updatePushQuietHours(s, e);
+                lastSavedQuietHours = saved;
+                setQuietStart(saved.start ?? "");
+                setQuietEnd(saved.end ?? "");
+              } catch (err) {
+                setMessage(err instanceof Error ? err.message : "Kon stille uren niet opslaan.");
               } finally {
                 setQuietPending(false);
               }
@@ -220,10 +231,14 @@ export function SettingsPush({
             onBlur={async () => {
               const s = quietStart.trim() || null;
               const e = quietEnd.trim() || null;
-              if (s === (initialQuietHours.start ?? "") && e === (initialQuietHours.end ?? "")) return;
               setQuietPending(true);
               try {
-                await updatePushQuietHours(s, e);
+                const saved = await updatePushQuietHours(s, e);
+                lastSavedQuietHours = saved;
+                setQuietStart(saved.start ?? "");
+                setQuietEnd(saved.end ?? "");
+              } catch (err) {
+                setMessage(err instanceof Error ? err.message : "Kon stille uren niet opslaan.");
               } finally {
                 setQuietPending(false);
               }

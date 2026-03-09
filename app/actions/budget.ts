@@ -119,30 +119,33 @@ export async function getBudgetPeriodBounds(): Promise<{
     const { monthStart, monthEnd } = getBudgetMonthBounds();
     return { periodStart: monthStart, periodEnd: monthEnd, isPaydayCycle: false };
   }
-  let paydayDay: number | null = null;
-  try {
-    const { data: incomeRows } = await supabase
-      .from("income_sources")
-      .select("day_of_month")
-      .eq("user_id", user.id)
-      .order("day_of_month", { ascending: true })
-      .limit(1);
-    if (incomeRows?.[0]?.day_of_month != null) {
-      const d = Number(incomeRows[0].day_of_month);
-      if (d >= 1 && d <= 31) paydayDay = d;
-    }
-  } catch {
-    /* table may not exist */
-  }
   const { data: userRow } = await supabase
     .from("users")
     .select("last_payday_date, payday_day_of_month")
     .eq("id", user.id)
     .single();
   const lastPayday = (userRow as { last_payday_date?: string | null } | null)?.last_payday_date ?? null;
+  // User-configured payday day (via Settings/Budget or Payday card) is authoritative.
+  let paydayDay: number | null =
+    ((userRow as { payday_day_of_month?: number | null } | null)?.payday_day_of_month ?? null) ?? null;
   if (paydayDay == null) {
-    const u = (userRow as { payday_day_of_month?: number | null } | null)?.payday_day_of_month ?? null;
-    paydayDay = u != null && u >= 1 && u <= 31 ? u : 25;
+    try {
+      const { data: incomeRows } = await supabase
+        .from("income_sources")
+        .select("day_of_month")
+        .eq("user_id", user.id)
+        .order("day_of_month", { ascending: true })
+        .limit(1);
+      if (incomeRows?.[0]?.day_of_month != null) {
+        const d = Number(incomeRows[0].day_of_month);
+        if (d >= 1 && d <= 31) paydayDay = d;
+      }
+    } catch {
+      /* table may not exist */
+    }
+  }
+  if (paydayDay == null) {
+    paydayDay = 25;
   }
   const day = Math.max(1, Math.min(31, paydayDay));
 

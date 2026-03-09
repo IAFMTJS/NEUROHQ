@@ -73,14 +73,28 @@ export async function getPushQuoteTime(): Promise<string | null> {
   return t.slice(0, 5);
 }
 
-export async function updatePushQuoteTime(time: string | null) {
+function normalizeTimeInput(time: string | null): string | null {
+  if (!time) return null;
+  const trimmed = time.trim();
+  const match = trimmed.match(/^(\d{1,2}):(\d{2})(?::\d{2})?$/);
+  if (!match) return null;
+  const hour = Math.min(23, Math.max(0, Number(match[1])));
+  const minute = Math.min(59, Math.max(0, Number(match[2])));
+  const hh = hour.toString().padStart(2, "0");
+  const mm = minute.toString().padStart(2, "0");
+  return `${hh}:${mm}`;
+}
+
+/** Returns the normalized time actually written (HH:MM or null). */
+export async function updatePushQuoteTime(time: string | null): Promise<string | null> {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) throw new Error("Niet ingelogd.");
-  const value = time && /^\d{1,2}:\d{2}$/.test(time) ? time : null;
+  const value = normalizeTimeInput(time);
   const { error } = await supabase.from("users").update({ push_quote_time: value }).eq("id", user.id);
   if (error) throw new Error(error.message);
   revalidatePath("/settings");
+  return value;
 }
 
 export type QuietHours = { start: string | null; end: string | null };
@@ -97,16 +111,18 @@ export async function getPushQuietHours(): Promise<QuietHours> {
   };
 }
 
-export async function updatePushQuietHours(start: string | null, end: string | null) {
+/** Returns the normalized quiet hours actually written. */
+export async function updatePushQuietHours(start: string | null, end: string | null): Promise<QuietHours> {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) throw new Error("Niet ingelogd.");
-  const startVal = start && /^\d{1,2}:\d{2}$/.test(start) ? start : null;
-  const endVal = end && /^\d{1,2}:\d{2}$/.test(end) ? end : null;
+  const startVal = normalizeTimeInput(start);
+  const endVal = normalizeTimeInput(end);
   const { error } = await supabase.from("users").update({
     push_quiet_hours_start: startVal,
     push_quiet_hours_end: endVal,
   }).eq("id", user.id);
   if (error) throw new Error(error.message);
   revalidatePath("/settings");
+  return { start: startVal, end: endVal };
 }

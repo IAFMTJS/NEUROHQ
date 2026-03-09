@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, useTransition } from "react";
+import { useEffect, useMemo, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { updateBudgetSettings, setPaydayReceivedToday } from "@/app/actions/budget";
 import { addIncomeSource, deleteIncomeSource } from "@/app/actions/dcic/income-sources";
@@ -19,6 +19,11 @@ import {
   type PendingBudgetIncomeSource,
   usePendingBudgetSnapshot,
 } from "@/lib/client-pending-budget";
+import {
+  derivePaydayDisplay,
+  setPersistedPayday,
+  usePersistedPayday,
+} from "@/lib/client-persisted-payday";
 
 type Props = {
   daysUntilNextIncome: number;
@@ -33,10 +38,13 @@ type Props = {
 
 export function PaydayCard({ daysUntilNextIncome, nextPaydayLabel, incomeSources, paydayDayOfMonth, currency = "EUR", cycleStartDate, nextPaydayDate }: Props) {
   const router = useRouter();
+  const persistedPayday = usePersistedPayday();
   const pendingBudget = usePendingBudgetSnapshot();
   const [showModal, setShowModal] = useState(false);
   const [pending, startTransition] = useTransition();
-  const [paydayDay, setPaydayDay] = useState(String(paydayDayOfMonth ?? 25));
+  const [saveError, setSaveError] = useState<string | null>(null);
+  const serverPaydayDay = paydayDayOfMonth ?? 25;
+  const [paydayDay, setPaydayDay] = useState(String(persistedPayday?.paydayDayOfMonth ?? serverPaydayDay));
   const [newName, setNewName] = useState("Salaris");
   const [newAmount, setNewAmount] = useState("");
   const [newDay, setNewDay] = useState("25");
@@ -54,19 +62,43 @@ export function PaydayCard({ daysUntilNextIncome, nextPaydayLabel, incomeSources
   );
   const effectivePaydayDay = getPrimaryPaydayDay(
     effectiveIncomeSources,
-    pendingBudget?.paydayDayOfMonth ?? paydayDayOfMonth
+    persistedPayday?.paydayDayOfMonth ?? pendingBudget?.paydayDayOfMonth ?? paydayDayOfMonth
   );
-  const effectiveDaysUntilNextIncome = pendingBudget?.daysUntilNextIncome ?? daysUntilNextIncome;
-  const effectiveCycleStartDate = pendingBudget?.cycleStartDate ?? cycleStartDate;
-  const effectiveNextPaydayDate = pendingBudget?.nextPaydayDate ?? nextPaydayDate;
+  const effectiveLastPaydayDate = persistedPayday?.lastPaydayDate ?? pendingBudget?.lastPaydayDate ?? null;
+  const displayFromPersisted = (persistedPayday?.lastPaydayDate != null || persistedPayday?.paydayDayOfMonth != null) || (pendingBudget?.lastPaydayDate != null || pendingBudget?.paydayDayOfMonth != null);
+  const derived = useMemo(() => derivePaydayDisplay(effectiveLastPaydayDate, effectivePaydayDay), [effectiveLastPaydayDate, effectivePaydayDay]);
+  const effectiveDaysUntilNextIncome = displayFromPersisted ? derived.daysUntilNextIncome : (pendingBudget?.daysUntilNextIncome ?? daysUntilNextIncome);
+  const effectiveCycleStartDate = displayFromPersisted ? derived.cycleStartDate : (pendingBudget?.cycleStartDate ?? cycleStartDate);
+  const effectiveNextPaydayDate = displayFromPersisted ? derived.nextPaydayDate : (pendingBudget?.nextPaydayDate ?? nextPaydayDate ?? null);
   const effectiveNextPaydayLabel =
     effectiveNextPaydayDate != null
       ? `Volgende loondag: ${format(new Date(effectiveNextPaydayDate + "T12:00:00Z"), "d MMMM", { locale: nl })}`
       : nextPaydayLabel;
   const symbol = getCurrencySymbol(pendingBudget?.currency ?? currency);
+  const hasSyncedPersistedRef = useRef(false);
+
+  useEffect(() => {
+    if (hasSyncedPersistedRef.current || !persistedPayday) return;
+    const { lastPaydayDate, paydayDayOfMonth } = persistedPayday;
+    if (lastPaydayDate == null && paydayDayOfMonth == null) return;
+    hasSyncedPersistedRef.current = true;
+    (async () => {
+      try {
+        await updateBudgetSettings({
+          ...(lastPaydayDate != null && { last_payday_date: lastPaydayDate }),
+          ...(paydayDayOfMonth != null && { payday_day_of_month: paydayDayOfMonth }),
+        });
+        router.refresh();
+      } catch {
+        hasSyncedPersistedRef.current = false;
+      }
+    })();
+  }, [persistedPayday, router]);
 
   function handleVandaagLoonGehad() {
+    setSaveError(null);
     const today = getBudgetToday();
+    setPersistedPayday({ lastPaydayDate: today, paydayDayOfMonth: effectivePaydayDay });
     setPendingBudgetSnapshot({
       paydayDayOfMonth: effectivePaydayDay,
       lastPaydayDate: today,
@@ -81,8 +113,8 @@ export function PaydayCard({ daysUntilNextIncome, nextPaydayLabel, incomeSources
         router.refresh();
         window.setTimeout(() => clearPendingBudgetSnapshot(), 1500);
       } catch (e) {
-        clearPendingBudgetSnapshot();
         console.error(e);
+        setSaveError(e instanceof Error ? e.message : "Kon niet opslaan. Probeer opnieuw.");
       }
     });
   }
@@ -90,10 +122,12 @@ export function PaydayCard({ daysUntilNextIncome, nextPaydayLabel, incomeSources
   function handleSavePaydayDay() {
     const d = parseInt(paydayDay, 10);
     if (isNaN(d) || d < 1 || d > 31) return;
+    setSaveError(null);
+    setPersistedPayday({ paydayDayOfMonth: d });
     setPendingBudgetSnapshot({
       paydayDayOfMonth: d,
       incomeSources: effectiveIncomeSources,
-      ...derivePendingPayday(d, pendingBudget?.lastPaydayDate),
+      ...derivePendingPayday(d, persistedPayday?.lastPaydayDate ?? pendingBudget?.lastPaydayDate),
     });
     setShowModal(false);
     startTransition(async () => {
@@ -103,8 +137,8 @@ export function PaydayCard({ daysUntilNextIncome, nextPaydayLabel, incomeSources
         router.refresh();
         window.setTimeout(() => clearPendingBudgetSnapshot(), 1500);
       } catch (e) {
-        clearPendingBudgetSnapshot();
         console.error(e);
+        setSaveError(e instanceof Error ? e.message : "Kon niet opslaan. Probeer opnieuw.");
       }
     });
   }
@@ -138,6 +172,7 @@ export function PaydayCard({ daysUntilNextIncome, nextPaydayLabel, incomeSources
       } catch (e) {
         clearPendingBudgetSnapshot();
         console.error(e);
+        setSaveError(e instanceof Error ? e.message : "Kon niet opslaan. Probeer opnieuw.");
       }
     });
   }
@@ -159,6 +194,7 @@ export function PaydayCard({ daysUntilNextIncome, nextPaydayLabel, incomeSources
       } catch (e) {
         clearPendingBudgetSnapshot();
         console.error(e);
+        setSaveError(e instanceof Error ? e.message : "Kon niet opslaan. Probeer opnieuw.");
       }
     });
   }
@@ -171,6 +207,7 @@ export function PaydayCard({ daysUntilNextIncome, nextPaydayLabel, incomeSources
           <button
             type="button"
             onClick={() => {
+              setSaveError(null);
               setPaydayDay(String(effectivePaydayDay));
               setShowModal(true);
             }}
@@ -190,6 +227,11 @@ export function PaydayCard({ daysUntilNextIncome, nextPaydayLabel, incomeSources
             <span className="text-xl font-bold tabular-nums text-[var(--accent-focus)]">{effectiveDaysUntilNextIncome} dagen</span>
           </div>
           <p className="text-xs text-[var(--text-muted)]">{effectiveNextPaydayLabel}</p>
+          {saveError && (
+            <p className="text-sm text-red-400" role="alert">
+              {saveError}
+            </p>
+          )}
           <button
             type="button"
             onClick={handleVandaagLoonGehad}

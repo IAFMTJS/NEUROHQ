@@ -143,7 +143,10 @@ export function getPrimaryPaydayDay(
   incomeSources: PendingBudgetIncomeSource[] | undefined,
   fallbackDay: number | null | undefined
 ): number {
-  return incomeSources?.[0]?.dayOfMonth ?? fallbackDay ?? 25;
+  // User-configured payday (fallbackDay) is authoritative; income sources only
+  // provide a hint when the user never set a day explicitly.
+  if (fallbackDay != null) return fallbackDay;
+  return incomeSources?.[0]?.dayOfMonth ?? 25;
 }
 
 export function derivePendingPayday(
