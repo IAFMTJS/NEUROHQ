@@ -16,6 +16,8 @@ import { HelpFloatingIcon } from "@/components/HelpFloatingIcon";
 import { DashboardDataProvider } from "@/components/providers/DashboardDataProvider";
 import { updateLastActiveDate } from "@/app/actions/behavior";
 
+const LAST_ACTIVE_STORAGE_KEY = "neurohq-last-active-date";
+
 /** Auth enforced by proxy. Cinematic UI: main, BottomNavigation (no system status bar). */
 export default function DashboardLayout({
   children,
@@ -23,10 +25,23 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }) {
   useEffect(() => {
-    // Update last active date on app start (behavior tracking)
+    const today = new Date().toISOString().slice(0, 10);
+    try {
+      if (window.localStorage.getItem(LAST_ACTIVE_STORAGE_KEY) === today) return;
+      window.localStorage.setItem(LAST_ACTIVE_STORAGE_KEY, today);
+    } catch {
+      // Ignore storage failures and still try the server update once.
+    }
+
+    // Update last active date on app start (behavior tracking).
+    // This is throttled per device/day to avoid repeated background POSTs.
     updateLastActiveDate().catch((err) => {
       console.error("Failed to update last active date:", err);
-      // Silently fail - this is not critical
+      try {
+        window.localStorage.removeItem(LAST_ACTIVE_STORAGE_KEY);
+      } catch {
+        // Ignore storage cleanup failures.
+      }
     });
   }, []);
 

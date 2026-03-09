@@ -1,8 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { memo, useState } from "react";
+import { usePathname, useRouter } from "next/navigation";
+import { memo, useCallback, useRef, useState } from "react";
 import {
   IconHQ,
   IconAssistant,
@@ -46,6 +46,15 @@ function NavIcon({ src, Icon, active }: { src: string; Icon: React.ComponentType
 
 export default memo(function BottomNavigation() {
   const pathname = usePathname();
+  const router = useRouter();
+  const prefetchedRoutesRef = useRef<Set<string>>(new Set());
+
+  const prefetchOnIntent = useCallback((href: string) => {
+    if (href === pathname) return;
+    if (prefetchedRoutesRef.current.has(href)) return;
+    prefetchedRoutesRef.current.add(href);
+    router.prefetch(href);
+  }, [pathname, router]);
 
   return (
     <nav
@@ -60,7 +69,10 @@ export default memo(function BottomNavigation() {
             key={link.href}
             href={link.href}
             className={`nav-item ${active ? "active" : ""}`}
-            prefetch={link.href !== "/report"}
+            prefetch={false}
+            onMouseEnter={() => prefetchOnIntent(link.href)}
+            onFocus={() => prefetchOnIntent(link.href)}
+            onTouchStart={() => prefetchOnIntent(link.href)}
           >
             <span className="nav-item-icon flex items-center justify-center [&_svg]:w-[18px] [&_svg]:h-[18px]">
               <NavIcon
