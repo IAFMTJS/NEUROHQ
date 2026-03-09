@@ -13,6 +13,7 @@ import { RoutePrefetcher } from "@/components/RoutePrefetcher";
 import { OfflineQueueSync } from "@/components/OfflineQueueSync";
 import { PendingXpToast } from "@/components/PendingXpToast";
 import { HelpFloatingIcon } from "@/components/HelpFloatingIcon";
+import { PushAutoPrompt } from "@/components/notifications/PushAutoPrompt";
 import { DashboardDataProvider } from "@/components/providers/DashboardDataProvider";
 import { updateLastActiveDate } from "@/app/actions/behavior";
 
@@ -52,6 +53,7 @@ export default function DashboardLayout({
         <>
           <OfflineQueueSync />
           <PendingXpToast />
+          <PushAutoPrompt />
           <div className="relative flex min-h-screen max-h-[100dvh] w-full max-w-[100vw] flex-col overflow-x-hidden bg-transparent" data-ui="dark-commander">
             <ThemeHydrate />
             <ActiveTimeTracker />

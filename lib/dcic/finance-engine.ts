@@ -4,6 +4,7 @@
  */
 
 import type { FinanceState, IncomeSource, Expense, BudgetTarget } from "./types";
+import { getBudgetToday, getBudgetWeekBounds } from "@/lib/utils/budget-date";
 
 // ============================================================================
 // PAYDAY-BASED CYCLE ENGINE
@@ -83,7 +84,7 @@ function getUpcomingFixedCosts(financeState: FinanceState): number {
  * Kan negatief zijn (over budget) → dan is het bedrag dat je per dag "te veel" uitgeeft.
  */
 export function calculateSafeDailySpend(financeState: FinanceState): number {
-  const days = getDaysUntilNextIncome(financeState);
+  const days = getPlanningWindowDays(financeState) ?? getDaysUntilNextIncome(financeState);
   if (days <= 0) return 0;
 
   const remaining = getRemainingBalance(financeState);
@@ -94,8 +95,27 @@ export function calculateSafeDailySpend(financeState: FinanceState): number {
  * Gets remaining balance after fixed costs
  */
 export function getRemainingBalance(financeState: FinanceState): number {
+  if (typeof financeState.planning?.plannedRemainingCents === "number") {
+    return financeState.planning.plannedRemainingCents;
+  }
   const fixedUpcoming = getUpcomingFixedCosts(financeState);
   return financeState.balance.current - fixedUpcoming;
+}
+
+function getDaysUntilDate(targetDate: string): number {
+  const todayStr = getBudgetToday();
+  const todayMs = new Date(todayStr + "T12:00:00Z").getTime();
+  const targetMs = new Date(targetDate + "T12:00:00Z").getTime();
+  return Math.max(1, Math.ceil((targetMs - todayMs) / (24 * 60 * 60 * 1000)) + 1);
+}
+
+function getPlanningWindowDays(financeState: FinanceState): number | null {
+  if (!financeState.planning) return null;
+  const endDate =
+    financeState.planning.budgetPeriod === "weekly"
+      ? financeState.planning.weekEnd
+      : financeState.planning.periodEnd;
+  return getDaysUntilDate(endDate);
 }
 
 // ============================================================================
@@ -172,7 +192,10 @@ export function calculateBurnRate(financeState: FinanceState): number {
   today.setHours(12, 0, 0, 0);
 
   let cycleStart: Date;
-  if (financeState.cycle.startDate && /^\d{4}-\d{2}-\d{2}$/.test(financeState.cycle.startDate)) {
+  const planningStart = financeState.planning?.periodStart;
+  if (planningStart && /^\d{4}-\d{2}-\d{2}$/.test(planningStart)) {
+    cycleStart = new Date(planningStart + "T12:00:00Z");
+  } else if (financeState.cycle.startDate && /^\d{4}-\d{2}-\d{2}$/.test(financeState.cycle.startDate)) {
     cycleStart = new Date(financeState.cycle.startDate + "T12:00:00Z");
   } else {
     const day = today.getDate();
@@ -188,7 +211,7 @@ export function calculateBurnRate(financeState: FinanceState): number {
   });
 
   const totalSpent = cycleExpenses.reduce((sum, e) => sum + Math.abs(e.amount), 0);
-  const startStr = financeState.cycle.startDate ?? cycleStart.toISOString().slice(0, 10);
+  const startStr = planningStart ?? financeState.cycle.startDate ?? cycleStart.toISOString().slice(0, 10);
   const todayStr = today.toISOString().slice(0, 10);
   const startMs = new Date(startStr + "T12:00:00Z").getTime();
   const todayMs = new Date(todayStr + "T12:00:00Z").getTime();
@@ -206,9 +229,9 @@ export function forecastEndOfCycle(financeState: FinanceState): {
   overspend: number;
 } {
   const burnRate = calculateBurnRate(financeState);
-  const daysLeft = getDaysUntilNextIncome(financeState);
+  const daysLeft = getPlanningWindowDays(financeState) ?? getDaysUntilNextIncome(financeState);
   const projectedSpend = Math.floor(burnRate * daysLeft);
-  const projectedBalance = financeState.balance.current - projectedSpend;
+  const projectedBalance = getRemainingBalance(financeState) - projectedSpend;
   const overspend = projectedBalance < 0 ? Math.abs(projectedBalance) : 0;
 
   return {
@@ -367,7 +390,7 @@ export function simulateGoalAcceleration(
 // ============================================================================
 
 /**
- * Weekly tactical: allowance per calendar week (Sun–Sat) until next payday.
+ * Weekly tactical: allowance per calendar week (Mon–Sun) until next payday.
  * weekAllowance = remaining balance / number of full weeks until payday (min 1).
  * remainingThisWeek = that allowance minus what you've already spent this week.
  */
@@ -376,15 +399,22 @@ export function calculateWeeklyAllowance(financeState: FinanceState): {
   remainingThisWeek: number;
   daysInWeek: number;
 } {
+  if (financeState.planning?.budgetPeriod === "weekly") {
+    return {
+      weekAllowance: financeState.planning.plannedSpendableCents,
+      remainingThisWeek: financeState.planning.plannedRemainingCents,
+      daysInWeek: getDaysUntilDate(financeState.planning.weekEnd),
+    };
+  }
+
   const daysLeft = getDaysUntilNextIncome(financeState);
   const remainingWeeks = Math.max(1, Math.ceil(daysLeft / 7));
   const remainingBalance = getRemainingBalance(financeState);
 
   const weekAllowance = Math.floor(remainingBalance / remainingWeeks);
-
-  const today = new Date();
-  const dayOfWeek = today.getDay(); // 0 = Sunday
-  const daysInWeek = 7 - dayOfWeek; // days left in current week (Sun–Sat)
+  const daysInWeek = financeState.planning?.weekEnd
+    ? getDaysUntilDate(financeState.planning.weekEnd)
+    : getDaysUntilDate(getBudgetWeekBounds().end);
   const spentThisWeek = getWeeklySpending(financeState);
   const remainingThisWeek = weekAllowance - spentThisWeek;
 
@@ -420,13 +450,14 @@ export function getExtremeSavingsTips(remainingThisWeekCents: number): string[] 
  * Gets spending for current week
  */
 function getWeeklySpending(financeState: FinanceState): number {
-  const today = new Date();
-  const weekStart = new Date(today);
-  weekStart.setDate(today.getDate() - today.getDay()); // Start of week (Sunday)
+  if (typeof financeState.planning?.weekSpentCents === "number") {
+    return financeState.planning.weekSpentCents;
+  }
 
+  const weekBounds = getBudgetWeekBounds();
   const weekExpenses = financeState.expenses.filter((e) => {
-    const expenseDate = new Date(e.date);
-    return expenseDate >= weekStart;
+    const dayStr = (e.date ?? "").slice(0, 10);
+    return dayStr >= weekBounds.start && dayStr <= weekBounds.end;
   });
 
   return weekExpenses.reduce((sum, e) => sum + Math.abs(e.amount), 0);
@@ -440,20 +471,25 @@ export function getSafeDaysThisWeek(financeState: FinanceState): number {
   const safeDaily = calculateSafeDailySpend(financeState);
   if (safeDaily <= 0) return 0;
 
-  const today = new Date();
-  const weekStart = new Date(today);
-  weekStart.setDate(today.getDate() - today.getDay()); // Sunday as start of week
+  const todayStr = getBudgetToday();
+  const weekBounds = financeState.planning
+    ? { start: financeState.planning.weekStart, end: financeState.planning.weekEnd }
+    : getBudgetWeekBounds(todayStr);
 
   let safeDays = 0;
-  for (let i = 0; i <= today.getDay(); i++) {
-    const d = new Date(weekStart);
-    d.setDate(weekStart.getDate() + i);
-    const dayStr = d.toISOString().slice(0, 10);
+  let cursor = new Date(weekBounds.start + "T12:00:00Z");
+  const endDate = new Date(Math.min(
+    new Date(weekBounds.end + "T12:00:00Z").getTime(),
+    new Date(todayStr + "T12:00:00Z").getTime()
+  ));
+  while (cursor.getTime() <= endDate.getTime()) {
+    const dayStr = cursor.toISOString().slice(0, 10);
     const spentThatDay = financeState.expenses
       .filter((e) => (e.date ?? "").slice(0, 10) === dayStr)
       .reduce((sum, e) => sum + Math.abs(e.amount), 0);
     // Only count days where user actually spent and stayed at or under safe daily (ignore zero-spend days)
     if (spentThatDay > 0 && spentThatDay <= safeDaily) safeDays++;
+    cursor.setUTCDate(cursor.getUTCDate() + 1);
   }
   return safeDays;
 }

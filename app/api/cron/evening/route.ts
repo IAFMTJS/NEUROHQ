@@ -48,6 +48,7 @@ export async function GET(request: Request) {
           body: "Time to wind down. Rest well.",
           tag: "shutdown-reminder",
           url: "/dashboard",
+          priority: "high",
         });
         if (ok) sent++;
       } catch {

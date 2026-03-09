@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { getDayOfYear } from "date-fns";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { sendPushToUser } from "@/lib/push";
-import { isInQuietHours } from "@/lib/utils/timezone";
+import { getLocalDateHour, isInQuietHours } from "@/lib/utils/timezone";
 import { isHighSensoryDayForUser } from "@/lib/mode-admin";
 import { xpToNextLevel } from "@/lib/xp";
 import {
@@ -56,8 +56,24 @@ export async function GET(request: Request) {
     }
   }
 
-  const { data: usersAll } = await supabase.from("users").select("id");
+  const { data: usersAll } = await supabase
+    .from("users")
+    .select("id, timezone, push_quiet_hours_start, push_quiet_hours_end");
   const users = usersAll ?? [];
+  const userMetaById = new Map(
+    users.map((user) => [
+      user.id,
+      {
+        timezone: (user as { timezone?: string | null }).timezone ?? null,
+        quietStart: (user as { push_quiet_hours_start?: string | null }).push_quiet_hours_start
+          ? String((user as { push_quiet_hours_start?: string | null }).push_quiet_hours_start).slice(0, 5)
+          : null,
+        quietEnd: (user as { push_quiet_hours_end?: string | null }).push_quiet_hours_end
+          ? String((user as { push_quiet_hours_end?: string | null }).push_quiet_hours_end).slice(0, 5)
+          : null,
+      },
+    ])
+  );
   const nowIso = today.toISOString();
   let pushSent = 0;
   let freezeReminderSent = 0;
@@ -91,6 +107,7 @@ export async function GET(request: Request) {
           body: quoteText.length > 120 ? quoteText.slice(0, 117) + "…" : quoteText,
           tag: "daily-quote",
           url: "/dashboard",
+          priority: "low",
         });
         if (ok) pushSent++;
       } catch {
@@ -112,6 +129,9 @@ export async function GET(request: Request) {
       byUser.set(e.user_id, list);
     }
     for (const [userId, entries] of byUser) {
+      const meta = userMetaById.get(userId);
+      const local = meta?.timezone ? getLocalDateHour(meta.timezone) : { date: todayStr, hour: utcHour };
+      if (isInQuietHours(local.hour, meta?.quietStart ?? null, meta?.quietEnd ?? null)) continue;
       try {
         const ok = await sendPushToUser(supabase, userId, {
           title: "NEUROHQ — Frozen purchase",
@@ -120,6 +140,7 @@ export async function GET(request: Request) {
             : `${entries.length} frozen purchase(s) ready to confirm or cancel.`,
           tag: "freeze-reminder",
           url: "/budget",
+          priority: "high",
         });
         if (ok) {
           freezeReminderSent++;
@@ -134,6 +155,9 @@ export async function GET(request: Request) {
 
     // Avoidance alert: users with carry_over >= 3 on today's incomplete tasks
     for (const { id: uid } of users) {
+      const meta = userMetaById.get(uid);
+      const local = meta?.timezone ? getLocalDateHour(meta.timezone) : { date: todayStr, hour: utcHour };
+      if (isInQuietHours(local.hour, meta?.quietStart ?? null, meta?.quietEnd ?? null)) continue;
       const { data: todaysIncomplete } = await supabase
         .from("tasks")
         .select("carry_over_count")
@@ -148,6 +172,7 @@ export async function GET(request: Request) {
             body: `${maxCarry} task(s) carried over. Pick one to focus on.`,
             tag: "avoidance-alert",
             url: "/dashboard",
+            priority: "high",
           });
           if (ok) avoidanceSent++;
         } catch {
@@ -193,6 +218,9 @@ export async function GET(request: Request) {
     for (const row of streakRows ?? []) {
       const userId = (row as { user_id: string }).user_id;
       if (!pushSet.has(userId)) continue;
+      const meta = userMetaById.get(userId);
+      const local = meta?.timezone ? getLocalDateHour(meta.timezone) : { date: todayStr, hour: utcHour };
+      if (isInQuietHours(local.hour, meta?.quietStart ?? null, meta?.quietEnd ?? null)) continue;
 
       const last = (row as { last_completion_date?: string | null }).last_completion_date;
       if (!last) continue;
@@ -221,7 +249,7 @@ export async function GET(request: Request) {
           xpToNextLevel: xpGap,
           currentStreak,
         });
-        const ok = await sendPushToUser(supabase, userId, payload);
+        const ok = await sendPushToUser(supabase, userId, { ...payload, priority: "high" });
         if (ok) reEngagementSent++;
       } catch {
         // skip

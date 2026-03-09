@@ -3,19 +3,18 @@ import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import { DashboardClientShell } from "@/components/dashboard/DashboardClientShell";
 import { DashboardDataProvider } from "@/components/providers/DashboardDataProvider";
-import { getDashboardPayload } from "@/app/actions/dashboard-data";
-import { DashboardSkeleton } from "@/components/Skeleton";
+import { getDashboardCriticalPayload } from "@/app/actions/dashboard-data";
+import { DashboardShellSkeleton } from "@/components/Skeleton";
 
 /** Force dynamic: dashboard uses cookies (auth) and live data. */
 export const dynamic = "force-dynamic";
-/** Stream dashboard: show shell immediately after auth, then stream content when payload is ready. */
-async function DashboardPayloadAndShell() {
-  const payload = await getDashboardPayload();
-  if (!payload) redirect("/login");
+/** Stream dashboard: mount the real shell with critical data, then hydrate secondary data on the client. */
+async function DashboardCriticalAndShell() {
+  const critical = await getDashboardCriticalPayload();
+  if (!critical) redirect("/login");
   return (
     <DashboardDataProvider
-      initialCritical={payload.critical}
-      initialSecondary={payload.secondary}
+      initialCritical={critical}
     >
       <DashboardClientShell />
     </DashboardDataProvider>
@@ -32,11 +31,11 @@ export default async function DashboardPage() {
       <Suspense
         fallback={
           <main className="container page page-wide dashboard-page relative z-10 pb-10">
-            <DashboardSkeleton />
+            <DashboardShellSkeleton />
           </main>
         }
       >
-        <DashboardPayloadAndShell />
+        <DashboardCriticalAndShell />
       </Suspense>
     );
   } catch (err) {

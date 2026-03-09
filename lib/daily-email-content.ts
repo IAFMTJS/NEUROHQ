@@ -39,6 +39,14 @@ export type EveningEmailData = {
   brainStatusDone: boolean;
 };
 
+export type ReminderPushPayload = {
+  title: string;
+  body: string;
+  url: string;
+  tag: string;
+  priority: "normal";
+};
+
 /** Fetch data needed for the morning email (quote, brain state, tasks, calendar for today). All data scoped to userId only. */
 export async function getMorningEmailData(
   supabase: SupabaseClient,
@@ -119,6 +127,19 @@ export function buildMorningEmailHtml(data: MorningEmailData): string {
   return wrapReminderHtml(parts.join(""), "Good morning");
 }
 
+export function buildMorningPushPayload(data: MorningEmailData): ReminderPushPayload {
+  const body = data.taskTitles.length > 0
+    ? `Good morning. ${data.taskTitles.length} mission(s) ready today.${data.brainStatusDone ? "" : " Set your brain status first."}`
+    : `Good morning. No missions scheduled yet.${data.brainStatusDone ? "" : " Set your brain status first."}`;
+  return {
+    title: "NEUROHQ — Morning",
+    body,
+    url: "/tasks",
+    tag: "morning-reminder",
+    priority: "normal",
+  };
+}
+
 /** Fetch data needed for the evening email (tasks completed, expenses, brain state). All data scoped to userId only. */
 export async function getEveningEmailData(
   supabase: SupabaseClient,
@@ -192,4 +213,28 @@ export function buildEveningEmailHtml(data: EveningEmailData): string {
   parts.push("</ul><p style=\"margin:0; color:rgba(230,253,255,0.7);\">Catch up in NEUROHQ so tomorrow’s view stays accurate.</p>");
 
   return wrapReminderHtml(parts.join(""), "Evening check-in");
+}
+
+export function buildEveningPushPayload(data: EveningEmailData): ReminderPushPayload {
+  const body =
+    data.tasksPlanned > 0
+      ? `Evening check-in: ${data.tasksCompleted}/${data.tasksPlanned} missions done today, ${data.expensesLogged} expense log(s).`
+      : `Evening check-in: ${data.expensesLogged} expense log(s) today.${data.brainStatusDone ? "" : " Brain status still missing."}`;
+  return {
+    title: "NEUROHQ — Evening",
+    body,
+    url: "/dashboard",
+    tag: "evening-reminder",
+    priority: "normal",
+  };
+}
+
+export function buildWeeklyLearningPushPayload(learningMinutes: number, learningTarget: number): ReminderPushPayload {
+  return {
+    title: "NEUROHQ — Learning",
+    body: `Last week: ${learningMinutes} min logged (target ${learningTarget}). Plan a learning block this week.`,
+    url: "/learning",
+    tag: "learning-reminder",
+    priority: "normal",
+  };
 }

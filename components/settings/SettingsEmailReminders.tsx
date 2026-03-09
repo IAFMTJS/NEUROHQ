@@ -22,7 +22,7 @@ export function SettingsEmailReminders({ initialEnabled }: Props) {
       <div className="border-b border-[var(--card-border)] px-4 py-3">
         <h2 className="text-base font-semibold text-[var(--text-primary)]">Email reminders</h2>
         <p className="mt-0.5 text-xs text-[var(--text-muted)]">
-          Morning email (~9h) with quote, brain status reminder and today’s missions; evening email (~20h) with a short check-in. You can turn this off anytime.
+          Morning email (~9h), evening check-in (~20h), and the weekly learning reminder. You can turn this off anytime.
         </p>
       </div>
       <div className="flex items-center justify-between p-4">

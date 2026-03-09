@@ -364,15 +364,8 @@ export async function getDashboardPayload(): Promise<{
   secondary: DashboardSecondary;
 } | null> {
   try {
-    const supabase = await createClient();
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return null;
-
-    await ensureUserProfileForSession(user);
-
-    // Do not use unstable_cache here: the callback would call createClient()/cookies() and revalidateTag
-    // (via getDailyState, applyZeroCompletionRollover, etc.), which Next forbids inside cached functions.
-    const ctx = await buildTodayContext();
+    const ctx = await getDashboardContextForCurrentUser();
+    if (!ctx) return null;
     const [critical, secondary] = await Promise.all([
       buildCriticalPayload(ctx),
       buildSecondaryPayload(ctx),
@@ -385,6 +378,44 @@ export async function getDashboardPayload(): Promise<{
       "Dashboard kon niet laden. Probeer de pagina te vernieuwen of log opnieuw in. Staat het probleem er nog? Bekijk dan in Vercel → Logs de foutmelding bij [getDashboardPayload]."
     );
   }
+}
+
+export async function getDashboardCriticalPayload(): Promise<DashboardCritical | null> {
+  try {
+    const ctx = await getDashboardContextForCurrentUser();
+    if (!ctx) return null;
+    return await buildCriticalPayload(ctx);
+  } catch (err) {
+    console.error("[getDashboardCriticalPayload]", err);
+    throw new Error(
+      "Dashboard kon niet laden. Probeer de pagina te vernieuwen of log opnieuw in. Staat het probleem er nog? Bekijk dan in Vercel → Logs de foutmelding bij [getDashboardCriticalPayload]."
+    );
+  }
+}
+
+export async function getDashboardSecondaryPayload(): Promise<DashboardSecondary | null> {
+  try {
+    const ctx = await getDashboardContextForCurrentUser();
+    if (!ctx) return null;
+    return await buildSecondaryPayload(ctx);
+  } catch (err) {
+    console.error("[getDashboardSecondaryPayload]", err);
+    throw new Error(
+      "Dashboard kon niet laden. Probeer de pagina te vernieuwen of log opnieuw in. Staat het probleem er nog? Bekijk dan in Vercel → Logs de foutmelding bij [getDashboardSecondaryPayload]."
+    );
+  }
+}
+
+async function getDashboardContextForCurrentUser(): Promise<TodayContext | null> {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return null;
+
+  await ensureUserProfileForSession(user);
+
+  // Do not use unstable_cache here: the callback would call createClient()/cookies() and revalidateTag
+  // (via getDailyState, applyZeroCompletionRollover, etc.), which Next forbids inside cached functions.
+  return buildTodayContext();
 }
 
 /** Invalidate dashboard cache when today's tasks or identity change (e.g. complete/delete task). Call from task actions. */

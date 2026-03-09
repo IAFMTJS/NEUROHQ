@@ -86,6 +86,19 @@ export interface FinanceState {
   balance: {
     current: number; // in cents
   };
+  planning?: {
+    plannedBudgetCents: number;
+    plannedSavingsCents: number;
+    plannedSpendableCents: number;
+    plannedRemainingCents: number;
+    periodSpentCents: number;
+    budgetPeriod: "monthly" | "weekly";
+    periodStart: string;
+    periodEnd: string;
+    weekStart: string;
+    weekEnd: string;
+    weekSpentCents: number;
+  };
   budgetTargets: BudgetTarget[];
   expenses: Expense[];
   goals: SavingsGoal[];

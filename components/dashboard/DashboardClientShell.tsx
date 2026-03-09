@@ -4,6 +4,7 @@ import { useEffect, useState, useMemo } from "react";
 import Link from "next/link";
 import dynamic from "next/dynamic";
 import { getPendingDailyState } from "@/lib/client-pending-writes";
+import { usePendingBudgetSnapshot } from "@/lib/client-pending-budget";
 import { HQHeader, BrainStatusCard, ActiveMissionCard } from "@/components/hq";
 import { EconomyBadge } from "@/components/EconomyBadge";
 import { CommanderHomeHero } from "@/components/commander";
@@ -19,7 +20,7 @@ import { SciFiPanel } from "@/components/hud-test/SciFiPanel";
 import { Divider1px } from "@/components/hud-test/Divider1px";
 import { CornerNode } from "@/components/hud-test/CornerNode";
 import hudStyles from "@/components/hud-test/hud.module.css";
-import { DashboardSkeleton } from "@/components/Skeleton";
+import { DashboardShellSkeleton, DashboardSkeleton } from "@/components/Skeleton";
 import { useDashboardData, fetchAll, type DashboardCritical, type DashboardSecondary } from "@/components/providers/DashboardDataProvider";
 import type { CopyVariant } from "@/app/actions/adaptive";
 import type { BrainMode } from "@/lib/brain-mode";
@@ -63,6 +64,7 @@ const DangerousModulesCard = dynamic(() => import("@/components/dashboard/Danger
 
 export function DashboardClientShell() {
   const cache = useDashboardData();
+  const pendingBudget = usePendingBudgetSnapshot();
   const [critical, setCritical] = useState<DashboardCritical | null>(() => cache?.critical ?? null);
   const [secondary, setSecondary] = useState<DashboardSecondary | null>(() => cache?.secondary ?? null);
   const [error, setError] = useState<string | null>(null);
@@ -124,7 +126,7 @@ export function DashboardClientShell() {
   if (!critical) {
     return (
       <main className="container page page-wide dashboard-page relative z-10 pb-10">
-        <DashboardSkeleton />
+        <DashboardShellSkeleton />
       </main>
     );
   }
@@ -211,6 +213,8 @@ export function DashboardClientShell() {
   const heroLoadPct = heroState ? Math.round((heroState.sensory_load / 10) * 100) : loadPct;
 
   const skipCinematicLayers = isMinimalUI || (critical?.lightUi === true);
+  const badgeBudgetRemainingCents = pendingBudget?.budgetRemainingCents ?? budgetRemainingCents;
+  const badgeCurrency = pendingBudget?.currency ?? currency;
 
   return (
     <main
@@ -241,7 +245,7 @@ export function DashboardClientShell() {
               <div className="dashboard-top-strip">
               <div className="dashboard-top-strip-track">
                 <XPBadge totalXp={xp.total_xp} level={xp.level} compact href="/xp" />
-                {budgetRemainingCents != null && <BudgetBadge budgetRemainingCents={budgetRemainingCents} currency={currency} />}
+                {badgeBudgetRemainingCents != null && <BudgetBadge budgetRemainingCents={badgeBudgetRemainingCents} currency={badgeCurrency} />}
                 <EconomyBadge disciplinePoints={economy.discipline_points} focusCredits={economy.focus_credits} momentumBoosters={economy.momentum_boosters} compact />
                 <DashboardActionsTrigger count={actionsCount}>
                   {topQuickActions.length === 0 ? (

@@ -1,9 +1,9 @@
 // NEUROHQ Service Worker – offline-first PWA (hele site)
 // Wat blijft staan op het apparaat (zodat minder opnieuw geladen hoeft):
 // - STATIC_CACHE (install): /offline, manifest, app-icon, core HUD visuals
-// - DYNAMIC_CACHE (per dag): alle HTML, JS, CSS, API GETs – cache-first voor dezelfde dag zodat reopen PWA direct uit cache laadt
+// - DYNAMIC_CACHE (per dag): HTML/API vallen terug op cache als offline; assets kunnen direct uit cache laden
 // - IndexedDB (neurohq-offline): offline mutaties (POST/PUT etc.) → gesynchroniseerd zodra er weer netwerk is
-const CACHE_VERSION = "v12";
+const CACHE_VERSION = "v13";
 const STATIC_CACHE = `neurohq-static-${CACHE_VERSION}`;
 const OFFLINE_PAGE = "/offline";
 
@@ -394,22 +394,18 @@ self.addEventListener("fetch", function (event) {
       return;
     }
 
-    // GETs: cache-first for today – serve cached API response on reopen, then revalidate in background
+    // GETs: network-first so fresh server state wins; fall back to cache when offline
     event.respondWith(
       caches.open(getDynamicCacheName()).then(function (cache) {
-        return cache.match(event.request).then(function (cached) {
-          var fetchPromise = fetch(event.request).then(function (response) {
+        return fetch(event.request)
+          .then(function (response) {
             if (response.ok && event.request.method === "GET") {
               var clone = response.clone();
               cache.put(event.request, clone);
             }
             return response;
-          });
-          if (cached) {
-            fetchPromise.catch(function () {});
-            return cached;
-          }
-          return fetchPromise.catch(function () {
+          })
+          .catch(function () {
             return cache.match(event.request).then(function (c) {
               return (
                 c ||
@@ -420,13 +416,12 @@ self.addEventListener("fetch", function (event) {
               );
             });
           });
-        });
       })
     );
     return;
   }
 
-  // HTML pages: cache-first for today – every page/tab stays cached for the day; reopen PWA shows cached page then revalidates
+  // HTML pages: network-first so refresh/navigation reflects server changes immediately
   if (event.request.headers.get("accept")?.includes("text/html")) {
     var navRequest = new Request(event.request.url, {
       headers: event.request.headers,
@@ -436,8 +431,8 @@ self.addEventListener("fetch", function (event) {
 
     event.respondWith(
       caches.open(getDynamicCacheName()).then(function (cache) {
-        return cache.match(event.request).then(function (cached) {
-          var fetchPromise = (event.preloadResponse || Promise.resolve(null)).then(function (preloadedResponse) {
+        return (event.preloadResponse || Promise.resolve(null))
+          .then(function (preloadedResponse) {
             if (preloadedResponse) {
               if (event.request.method === "GET") {
                 var c = preloadedResponse.clone();
@@ -452,12 +447,8 @@ self.addEventListener("fetch", function (event) {
               }
               return response;
             });
-          });
-          if (cached) {
-            fetchPromise.catch(function () {});
-            return cached;
-          }
-          return fetchPromise.catch(function () {
+          })
+          .catch(function () {
             return cache.match(event.request).then(function (c) {
               if (c) return c;
               return caches.match(OFFLINE_PAGE).then(function (offline) {
@@ -465,7 +456,6 @@ self.addEventListener("fetch", function (event) {
               });
             });
           });
-        });
       })
     );
     return;

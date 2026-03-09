@@ -3,6 +3,10 @@
 import { useState } from "react";
 import { HQModal, RadialMeter } from "@/components/hq";
 import { formatCents, getCurrencySymbol } from "@/lib/utils/currency";
+import {
+  derivePendingBudgetRemaining,
+  usePendingBudgetSnapshot,
+} from "@/lib/client-pending-budget";
 
 type Props = {
   /** Total budget for the current cycle (month/week) in cents. */
@@ -24,11 +28,19 @@ export function RemainingBudgetHero({
   periodLabel,
   budgetPeriod,
 }: Props) {
+  const pendingBudget = usePendingBudgetSnapshot();
   const [showDetails, setShowDetails] = useState(false);
 
-  const symbol = getCurrencySymbol(currency);
-  const spendableCents = Math.max(0, budgetCents - savingsCents);
-  const remainingCents = spendableCents - expensesCents;
+  const effectiveBudgetCents =
+    pendingBudget?.monthlyBudgetCents !== undefined ? pendingBudget.monthlyBudgetCents ?? 0 : budgetCents;
+  const effectiveSavingsCents =
+    pendingBudget?.monthlySavingsCents !== undefined ? pendingBudget.monthlySavingsCents ?? 0 : savingsCents;
+  const effectiveCurrency = pendingBudget?.currency ?? currency;
+  const effectiveBudgetPeriod = pendingBudget?.budgetPeriod ?? budgetPeriod;
+  const symbol = getCurrencySymbol(effectiveCurrency);
+  const spendableCents = Math.max(0, effectiveBudgetCents - effectiveSavingsCents);
+  const remainingCents =
+    pendingBudget?.budgetRemainingCents ?? derivePendingBudgetRemaining(effectiveBudgetCents, effectiveSavingsCents, expensesCents);
   const isOverBudget = remainingCents < 0;
 
   let remainingRatio: number;
@@ -53,7 +65,7 @@ export function RemainingBudgetHero({
 
   const variant = isOverBudget ? "warning" : "focus";
 
-  const hasSettings = budgetCents > 0 || savingsCents > 0;
+  const hasSettings = effectiveBudgetCents > 0 || effectiveSavingsCents > 0;
 
   return (
     <>
@@ -78,7 +90,7 @@ export function RemainingBudgetHero({
               label={spendableCents > 0 ? "Remaining budget" : "No budget set"}
               description={
                 spendableCents > 0
-                  ? budgetPeriod === "weekly"
+                  ? effectiveBudgetPeriod === "weekly"
                     ? "Of your spendable budget for this week."
                     : "Of your spendable budget for this month."
                   : undefined
@@ -99,11 +111,11 @@ export function RemainingBudgetHero({
                         "0 0 16px rgba(0,229,255,0.55), 0 0 4px rgba(148,163,184,0.45), 0 1px 2px rgba(0,0,0,0.8)",
                     }}
                   >
-                    {formatCents(remainingCents, currency)}
+                    {formatCents(remainingCents, effectiveCurrency)}
                   </p>
                   <p className="text-xs text-[var(--text-secondary)] sm:text-sm">
-                    {formatCents(spendableCents, currency)} spendable •{" "}
-                    {formatCents(expensesCents, currency)} spent •{" "}
+                    {formatCents(spendableCents, effectiveCurrency)} spendable •{" "}
+                    {formatCents(expensesCents, effectiveCurrency)} spent •{" "}
                     <span className="text-[var(--accent-focus)]">
                       {remainingPctDisplay}%
                     </span>{" "}
@@ -112,7 +124,7 @@ export function RemainingBudgetHero({
                 </>
               ) : (
                 <p className="max-w-xs text-sm text-[var(--text-muted)]">
-                  Set your {budgetPeriod === "weekly" ? "weekly" : "monthly"} budget and savings to
+                  Set your {effectiveBudgetPeriod === "weekly" ? "weekly" : "monthly"} budget and savings to
                   see remaining amount and burn rate.
                 </p>
               )}
@@ -153,13 +165,13 @@ export function RemainingBudgetHero({
             <div className="rounded-2xl border border-[var(--card-border)]/80 bg-[var(--bg-surface)]/70 px-4 py-3">
               <p className="text-xs font-medium text-[var(--text-muted)]">Budget (total)</p>
               <p className="mt-0.5 text-lg font-semibold tabular-nums text-[var(--text-primary)]">
-                {formatCents(budgetCents, currency)}
+                {formatCents(effectiveBudgetCents, effectiveCurrency)}
               </p>
             </div>
             <div className="rounded-2xl border border-[var(--card-border)]/80 bg-[var(--bg-surface)]/70 px-4 py-3">
               <p className="text-xs font-medium text-[var(--text-muted)]">Savings reserved</p>
               <p className="mt-0.5 text-lg font-semibold tabular-nums text-[var(--accent-focus)]">
-                {formatCents(savingsCents, currency)}
+                {formatCents(effectiveSavingsCents, effectiveCurrency)}
               </p>
             </div>
             <div className="rounded-2xl border border-[var(--card-border)]/80 bg-[var(--bg-surface)]/70 px-4 py-3">
@@ -167,7 +179,7 @@ export function RemainingBudgetHero({
                 Spent {periodLabel}
               </p>
               <p className="mt-0.5 text-lg font-semibold tabular-nums text-[var(--text-primary)]">
-                {formatCents(expensesCents, currency)}
+                {formatCents(expensesCents, effectiveCurrency)}
               </p>
             </div>
             <div className="rounded-2xl border border-[var(--card-border)]/80 bg-[var(--bg-surface)]/90 px-4 py-3">
@@ -177,7 +189,7 @@ export function RemainingBudgetHero({
                   isOverBudget ? "text-amber-300" : "text-emerald-300"
                 }`}
               >
-                {formatCents(remainingCents, currency)}
+                {formatCents(remainingCents, effectiveCurrency)}
               </p>
               {spendableCents > 0 && (
                 <p className="mt-1 text-[11px] text-[var(--text-muted)]">
@@ -190,7 +202,7 @@ export function RemainingBudgetHero({
 
           <p className="text-xs text-[var(--text-muted)]">
             Tip: keep remaining above zero before the end of{" "}
-            {budgetPeriod === "weekly" ? "the week" : "the month"} to stay in the safe zone.
+            {effectiveBudgetPeriod === "weekly" ? "the week" : "the month"} to stay in the safe zone.
           </p>
         </div>
       </HQModal>

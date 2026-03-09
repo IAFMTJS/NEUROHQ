@@ -169,9 +169,10 @@ export default async function BudgetPage({ searchParams }: Props) {
   }
   const remainingToSpendCents =
     !historyMode
-      ? (budgetSettings.monthly_budget_cents ?? 0) -
-        (budgetSettings.monthly_savings_cents ?? 0) -
-        expensesCents
+      ? financeState?.planning?.plannedRemainingCents ??
+        (budgetSettings.monthly_budget_cents ?? 0) -
+          (budgetSettings.monthly_savings_cents ?? 0) -
+          expensesCents
       : null;
 
   let previousPeriodRemaining: { prevStart: string; prevEnd: string; remainingCents: number; label: string } | null = null;

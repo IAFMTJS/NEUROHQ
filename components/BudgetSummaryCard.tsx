@@ -1,10 +1,17 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { updateBudgetSettings } from "@/app/actions/budget";
 import { Modal } from "@/components/Modal";
 import { formatCents, getCurrencySymbol } from "@/lib/utils/currency";
+import {
+  clearPendingBudgetSnapshot,
+  derivePendingBudgetRemaining,
+  markPendingBudgetSynced,
+  setPendingBudgetSnapshot,
+  usePendingBudgetSnapshot,
+} from "@/lib/client-pending-budget";
 
 type Props = {
   monthlyBudgetCents: number | null;
@@ -29,6 +36,7 @@ export function BudgetSummaryCard({
   budgetPeriod = "monthly",
   historyMode = false,
 }: Props) {
+  const pendingBudget = usePendingBudgetSnapshot();
   const [pending, startTransition] = useTransition();
   const [showModal, setShowModal] = useState(false);
   const [budget, setBudget] = useState(
@@ -41,12 +49,26 @@ export function BudgetSummaryCard({
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
 
-  const budgetCents = monthlyBudgetCents ?? 0;
-  const savingsCents = monthlySavingsCents ?? 0;
+  const effectiveBudgetSetting =
+    pendingBudget?.monthlyBudgetCents !== undefined ? pendingBudget.monthlyBudgetCents : monthlyBudgetCents;
+  const effectiveSavingsSetting =
+    pendingBudget?.monthlySavingsCents !== undefined ? pendingBudget.monthlySavingsCents : monthlySavingsCents;
+  const effectiveCurrency = pendingBudget?.currency ?? currency;
+  const effectiveBudgetPeriod = pendingBudget?.budgetPeriod ?? budgetPeriod;
+  const budgetCents = effectiveBudgetSetting ?? 0;
+  const savingsCents = effectiveSavingsSetting ?? 0;
   const spendableCents = Math.max(0, budgetCents - savingsCents);
-  const remainingCents = spendableCents - expensesCents;
+  const remainingCents =
+    pendingBudget?.budgetRemainingCents ?? derivePendingBudgetRemaining(effectiveBudgetSetting, effectiveSavingsSetting, expensesCents);
   const isOverBudget = remainingCents < 0;
-  const symbol = getCurrencySymbol(currency);
+  const symbol = getCurrencySymbol(effectiveCurrency);
+
+  useEffect(() => {
+    if (!showModal) return;
+    setBudget(effectiveBudgetSetting != null ? String(effectiveBudgetSetting / 100) : "");
+    setSavings(effectiveSavingsSetting != null ? String(effectiveSavingsSetting / 100) : "");
+    setPeriod(effectiveBudgetPeriod);
+  }, [effectiveBudgetPeriod, effectiveBudgetSetting, effectiveSavingsSetting, showModal]);
 
   function handleSaveSettings() {
     setError(null);
@@ -64,6 +86,15 @@ export function BudgetSummaryCard({
       setError("Savings cannot exceed budget.");
       return;
     }
+    const nextRemainingCents = derivePendingBudgetRemaining(b, s, expensesCents);
+    setPendingBudgetSnapshot({
+      monthlyBudgetCents: b ?? null,
+      monthlySavingsCents: s ?? null,
+      budgetPeriod: period,
+      currency: effectiveCurrency,
+      budgetRemainingCents: historyMode ? null : nextRemainingCents,
+    });
+    setShowModal(false);
     startTransition(async () => {
       try {
         await updateBudgetSettings({
@@ -71,15 +102,17 @@ export function BudgetSummaryCard({
           monthly_savings_cents: s ?? null,
           budget_period: period,
         });
-        setShowModal(false);
+        markPendingBudgetSynced();
         router.refresh();
+        window.setTimeout(() => clearPendingBudgetSnapshot(), 1500);
       } catch (e) {
+        clearPendingBudgetSnapshot();
         setError(e instanceof Error ? e.message : "Failed to save.");
       }
     });
   }
 
-  const hasSettings = monthlyBudgetCents != null || monthlySavingsCents != null;
+  const hasSettings = effectiveBudgetSetting != null || effectiveSavingsSetting != null;
   const spentPct = spendableCents > 0 ? Math.min(100, (expensesCents / spendableCents) * 100) : 0;
 
   return (
@@ -91,9 +124,9 @@ export function BudgetSummaryCard({
             <button
               type="button"
               onClick={() => {
-                setBudget(monthlyBudgetCents != null ? String(monthlyBudgetCents / 100) : "");
-                setSavings(monthlySavingsCents != null ? String(monthlySavingsCents / 100) : "");
-                setPeriod(budgetPeriod);
+                setBudget(effectiveBudgetSetting != null ? String(effectiveBudgetSetting / 100) : "");
+                setSavings(effectiveSavingsSetting != null ? String(effectiveSavingsSetting / 100) : "");
+                setPeriod(effectiveBudgetPeriod);
                 setError(null);
                 setShowModal(true);
               }}
@@ -110,7 +143,7 @@ export function BudgetSummaryCard({
         <div className="p-5">
           {!hasSettings ? (
             <p className="text-sm text-[var(--text-muted)]">
-              Set your total {budgetPeriod === "weekly" ? "weekly" : "monthly"} amount and how much you want to save. Expenses below will reduce your remaining spendable amount.
+              Set your total {effectiveBudgetPeriod === "weekly" ? "weekly" : "monthly"} amount and how much you want to save. Expenses below will reduce your remaining spendable amount.
             </p>
           ) : (
             <>
@@ -131,7 +164,7 @@ export function BudgetSummaryCard({
                   <div>
                     <p className="text-xs font-medium text-[var(--text-muted)]">Income {periodLabel}</p>
                     <p className="text-xl font-bold tabular-nums text-green-400">
-                      {formatCents(incomeCents, currency)}
+                      {formatCents(incomeCents, effectiveCurrency)}
                     </p>
                   </div>
                 )}

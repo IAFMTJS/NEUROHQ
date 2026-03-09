@@ -1,16 +1,21 @@
 import nextDynamic from "next/dynamic";
 import { Suspense } from "react";
-import { getTodaysTasks, getTasksForDate, getSubtasksForTaskIds, getBacklogTasks, getFutureTasks, getCompletedTodayTasks, type TaskListMode } from "@/app/actions/tasks";
-
-/** Tasks page must always run on the server so auto-missions see latest daily_state after brain status save. */
-export const dynamic = "force-dynamic";
+import {
+  getBacklogTasks,
+  getCompletedTodayTasks,
+  getFutureTasks,
+  getSubtasksForTaskIds,
+  getTasksForDate,
+  getTodaysTasks,
+  type TaskListMode,
+} from "@/app/actions/tasks";
 import { getMode } from "@/app/actions/mode";
 import {
   getDecisionBlocks,
-  getResistanceIndex,
+  getEmotionalStateCorrelations,
   getMetaInsights30,
   getRecoveryCampaignNeeded,
-  getEmotionalStateCorrelations,
+  getResistanceIndex,
 } from "@/app/actions/missions-performance";
 import { getThirtyDayMirror } from "@/app/actions/thirty-day-mirror";
 import { getSmartSuggestion } from "@/app/actions/dcic/smart-suggestion";
@@ -20,8 +25,6 @@ import { todayDateString, yesterdayDate } from "@/lib/utils/timezone";
 import { HeroMascotImage } from "@/components/HeroMascotImage";
 import { getXP, getXPIdentity } from "@/app/actions/xp";
 import { getIdentityEngine } from "@/app/actions/identity-engine";
-import { ensureMasterMissionsForToday, getDailyStateForAllocator } from "@/app/actions/master-missions";
-import { ensureReadingMissionForToday } from "@/app/actions/reading-missions";
 import { getUserPreferencesOrDefaults } from "@/app/actions/preferences";
 import { HQPageHeader } from "@/components/hq/HQPageHeader";
 import { XPBadge } from "@/components/XPBadge";
@@ -30,41 +33,76 @@ import { CornerNode } from "@/components/hud-test/CornerNode";
 import { Divider1px } from "@/components/hud-test/Divider1px";
 import hudStyles from "@/components/hud-test/hud.module.css";
 import { TasksTabsShell } from "@/components/missions";
+import { TasksDailyBootstrap } from "@/components/missions/TasksDailyBootstrap";
 import { TasksCalendarAsync } from "./TasksCalendarAsync";
-import { RefreshPageButton } from "@/components/missions/RefreshPageButton";
 
-const ModeBanner = nextDynamic(() => import("@/components/ModeBanner").then((m) => ({ default: m.ModeBanner })), { loading: () => <div className="min-h-[44px]" aria-hidden /> });
-const EnergyCapBar = nextDynamic(() => import("@/components/missions/EnergyCapBar").then((m) => ({ default: m.EnergyCapBar })), { loading: () => <div className="h-10 animate-pulse rounded-lg bg-white/5" aria-hidden /> });
-const SmartRecommendationHero = nextDynamic(() => import("@/components/missions/SmartRecommendationHero").then((m) => ({ default: m.SmartRecommendationHero })), { loading: () => null });
-const DecisionBlocksRow = nextDynamic(() => import("@/components/missions/DecisionBlocksRow").then((m) => ({ default: m.DecisionBlocksRow })), { loading: () => null });
-const SmartSuggestionBanner = nextDynamic(() => import("@/components/missions/SmartSuggestionBanner").then((m) => ({ default: m.SmartSuggestionBanner })), { loading: () => null });
-const YesterdayTasksSection = nextDynamic(() => import("@/components/YesterdayTasksSection").then((m) => ({ default: m.YesterdayTasksSection })), { loading: () => null });
-const CommanderMissionCard = nextDynamic(() => import("@/components/commander").then((m) => ({ default: m.CommanderMissionCard })), { loading: () => <div className="min-h-[72px] animate-pulse rounded-xl bg-white/5" aria-hidden /> });
-const TaskList = nextDynamic(() => import("@/components/TaskList").then((m) => ({ default: m.TaskList })), { loading: () => <div className="card-simple min-h-[200px] animate-pulse rounded-xl bg-white/5 p-4" aria-hidden /> });
-const BacklogAndToekomstTriggers = nextDynamic(() => import("@/components/missions/BacklogAndToekomstTriggers").then((m) => ({ default: m.BacklogAndToekomstTriggers })), { loading: () => null });
-const AddCalendarEventForm = nextDynamic(() => import("@/components/AddCalendarEventForm").then((m) => ({ default: m.AddCalendarEventForm })), { loading: () => <div className="min-h-[120px] animate-pulse rounded-lg bg-white/5" aria-hidden /> });
-const AgendaOnlyList = nextDynamic(() => import("@/components/AgendaOnlyList").then((m) => ({ default: m.AgendaOnlyList })), { loading: () => <div className="min-h-[80px] animate-pulse rounded-lg bg-white/5" aria-hidden /> });
-const CalendarModal3Trigger = nextDynamic(() => import("@/components/missions").then((m) => ({ default: m.CalendarModal3Trigger })), { loading: () => null });
-const HighROISection = nextDynamic(() => import("@/components/missions/HighROISection").then((m) => ({ default: m.HighROISection })), { loading: () => null });
-const ConsequenceBanner = nextDynamic(() => import("@/components/ConsequenceBanner").then((m) => ({ default: m.ConsequenceBanner })), { loading: () => null });
+/** Tasks page must always run on the server so latest data is rendered after refresh. */
+export const dynamic = "force-dynamic";
 
-/** Lazy-loaded analytics banners (stream in after critical content). */
+const ModeBanner = nextDynamic(
+  () => import("@/components/ModeBanner").then((m) => ({ default: m.ModeBanner })),
+  { loading: () => <div className="min-h-[44px]" aria-hidden /> }
+);
+const EnergyCapBar = nextDynamic(
+  () => import("@/components/missions/EnergyCapBar").then((m) => ({ default: m.EnergyCapBar })),
+  { loading: () => <div className="h-10 animate-pulse rounded-lg bg-white/5" aria-hidden /> }
+);
+const SmartRecommendationHero = nextDynamic(
+  () => import("@/components/missions/SmartRecommendationHero").then((m) => ({ default: m.SmartRecommendationHero })),
+  { loading: () => null }
+);
+const DecisionBlocksRow = nextDynamic(
+  () => import("@/components/missions/DecisionBlocksRow").then((m) => ({ default: m.DecisionBlocksRow })),
+  { loading: () => null }
+);
+const SmartSuggestionBanner = nextDynamic(
+  () => import("@/components/missions/SmartSuggestionBanner").then((m) => ({ default: m.SmartSuggestionBanner })),
+  { loading: () => null }
+);
+const YesterdayTasksSection = nextDynamic(
+  () => import("@/components/YesterdayTasksSection").then((m) => ({ default: m.YesterdayTasksSection })),
+  { loading: () => <div className="min-h-[40px] min-w-[160px] animate-pulse rounded-full bg-white/5" aria-hidden /> }
+);
+const CommanderMissionCard = nextDynamic(
+  () => import("@/components/commander").then((m) => ({ default: m.CommanderMissionCard })),
+  { loading: () => <div className="min-h-[72px] animate-pulse rounded-xl bg-white/5" aria-hidden /> }
+);
+const TaskList = nextDynamic(
+  () => import("@/components/TaskList").then((m) => ({ default: m.TaskList })),
+  { loading: () => <div className="card-simple min-h-[200px] animate-pulse rounded-xl bg-white/5 p-4" aria-hidden /> }
+);
+const BacklogAndToekomstTriggers = nextDynamic(
+  () => import("@/components/missions/BacklogAndToekomstTriggers").then((m) => ({ default: m.BacklogAndToekomstTriggers })),
+  { loading: () => null }
+);
+const HighROISection = nextDynamic(
+  () => import("@/components/missions/HighROISection").then((m) => ({ default: m.HighROISection })),
+  { loading: () => null }
+);
+const ConsequenceBanner = nextDynamic(
+  () => import("@/components/ConsequenceBanner").then((m) => ({ default: m.ConsequenceBanner })),
+  { loading: () => null }
+);
+
 async function ResistanceIndexBannerAsync() {
   const data = await getResistanceIndex();
   const ResistanceIndexBanner = (await import("@/components/missions/ResistanceIndexBanner")).ResistanceIndexBanner;
   return <ResistanceIndexBanner message={data.message} />;
 }
+
 async function RecoveryCampaignBannerAsync() {
   const data = await getRecoveryCampaignNeeded();
   if (!data.needed) return null;
   const RecoveryCampaignBanner = (await import("@/components/missions/RecoveryCampaignBanner")).RecoveryCampaignBanner;
   return <RecoveryCampaignBanner daysInactive={data.daysInactive} lastCompletionDate={data.lastCompletionDate} />;
 }
+
 async function EmotionalStateCorrelationBannerAsync() {
   const data = await getEmotionalStateCorrelations();
   const EmotionalStateCorrelationBanner = (await import("@/components/missions/EmotionalStateCorrelationBanner")).EmotionalStateCorrelationBanner;
   return <EmotionalStateCorrelationBanner message={data.message} />;
 }
+
 async function MetaInsights30BannerAsync() {
   const data = await getMetaInsights30();
   const MetaInsights30Banner = (await import("@/components/missions/MetaInsights30Banner")).MetaInsights30Banner;
@@ -77,6 +115,7 @@ async function MetaInsights30BannerAsync() {
     />
   );
 }
+
 async function ThirtyDayMirrorBannerAsync() {
   const mirror = await getThirtyDayMirror();
   const ThirtyDayMirrorBanner = (await import("@/components/missions/ThirtyDayMirrorBanner")).ThirtyDayMirrorBanner;
@@ -101,50 +140,105 @@ function isValidCalendarView(value: string | undefined): value is CalendarView {
   return value === "today" || value === "calendar" || value === "routines" || value === "overdue";
 }
 
-export default async function TasksPage({ searchParams }: Props) {
-  // Use the shared timezone‑aware helper so "today" is consistent across
-  // dashboard, missions and auto‑mission generation.
-  const dateStr = todayDateString();
-  const today = new Date(dateStr + "T12:00:00Z");
-  const yesterdayStr = yesterdayDate(dateStr);
-  const params = await searchParams;
-  const tabParam = params.tab;
-  const calendarView: CalendarView = isValidCalendarView(params.calView) ? params.calView : "calendar";
-  const monthParam = isValidMonthKey(params.month) ? params.month : dateStr.slice(0, 7);
-  const dayParam = isValidDayKey(params.day) ? params.day : null;
-  const selectedCalendarDay = dayParam ?? dateStr;
-  // Fetch daily_state with service-role so we always see the row if it exists, then pass it in so the allocator doesn't rely on a second read.
-  const dailyStateForAllocator = await getDailyStateForAllocator();
-  // Run auto-missions + reading in parallel with all other data so the page doesn't wait for both in sequence.
-  // Also fetch today's tasks in "normal" mode in parallel; use it when mode is normal to avoid an extra sequential round-trip.
-  const [
-    [masterMissionsResult],
-    [mode, prefs, backlog, futureTasks, completedToday, yesterdayTasksRaw, smartSuggestion, energyCap, energyBudget, decisionBlocks, xp, identity, identityEngine, tasksNormalResult],
-  ] = await Promise.all([
-    Promise.all([
-      ensureMasterMissionsForToday(dailyStateForAllocator ?? undefined),
-      ensureReadingMissionForToday().catch(() => ({ created: false, debug: "error" })),
-    ]),
-    Promise.all([
+function makeTasksHref(
+  params: { add?: string; month?: string; day?: string | null; calView?: CalendarView },
+  activeTab: "missions" | "calendar",
+  overrides: { tab?: "missions" | "calendar"; day?: string | null; month?: string; calView?: CalendarView }
+) {
+  const search = new URLSearchParams();
+  const nextTab = overrides.tab ?? activeTab;
+  const nextMonth = overrides.month ?? params.month;
+  const nextDay = overrides.day ?? params.day ?? undefined;
+  const nextCalView = overrides.calView ?? params.calView ?? "calendar";
+  search.set("tab", nextTab);
+  if (params.add) search.set("add", params.add);
+  if (nextMonth) search.set("month", nextMonth);
+  if (nextDay) search.set("day", nextDay);
+  search.set("calView", nextCalView);
+  const query = search.toString();
+  return query ? `/tasks?${query}` : "/tasks";
+}
+
+function HeaderMetaFallback() {
+  return (
+    <div className="mascot-follow-row flex flex-wrap items-center justify-end gap-2">
+      <div className="min-h-[40px] min-w-[160px] animate-pulse rounded-full bg-white/5" aria-hidden />
+      <div className="h-10 w-24 animate-pulse rounded-full bg-white/5" aria-hidden />
+      <div className="h-10 w-28 animate-pulse rounded-full bg-white/5" aria-hidden />
+    </div>
+  );
+}
+
+function MissionsSectionFallback() {
+  return (
+    <SciFiPanel variant="glass" className={hudStyles.focusSecondary} bodyClassName="p-4 md:p-5">
+      <CornerNode corner="top-left" />
+      <CornerNode corner="top-right" />
+      <div className="space-y-4">
+        <div className="min-h-[44px] animate-pulse rounded-lg bg-white/5" aria-hidden />
+        <div className="h-10 animate-pulse rounded-lg bg-white/5" aria-hidden />
+        <div className="min-h-[96px] animate-pulse rounded-xl bg-white/5" aria-hidden />
+        <div className="grid gap-3 md:grid-cols-2">
+          <div className="min-h-[88px] animate-pulse rounded-xl bg-white/5" aria-hidden />
+          <div className="min-h-[88px] animate-pulse rounded-xl bg-white/5" aria-hidden />
+        </div>
+        <div className="min-h-[240px] animate-pulse rounded-xl bg-white/5" aria-hidden />
+      </div>
+    </SciFiPanel>
+  );
+}
+
+function CalendarSectionFallback() {
+  return <div className="min-h-[320px] animate-pulse rounded-xl bg-white/5" aria-hidden />;
+}
+
+async function TasksHeaderMetaAsync({ dateStr, yesterdayStr }: { dateStr: string; yesterdayStr: string }) {
+  const [xp, yesterdayTasksRaw] = await Promise.all([
+    getXP(),
+    getTasksForDate(yesterdayStr),
+  ]);
+  const yesterdayTasks = (yesterdayTasksRaw ?? []).map((t) => ({
+    id: (t as { id: string }).id,
+    title: (t as { title: string | null }).title ?? null,
+    completed: !!(t as { completed?: boolean }).completed,
+  }));
+
+  return (
+    <div className="mascot-follow-row flex flex-wrap items-center justify-end gap-2">
+      <YesterdayTasksSection yesterdayTasks={yesterdayTasks} todayStr={dateStr} />
+      <XPBadge totalXp={xp.total_xp} level={xp.level} compact href="/xp" />
+      <div className="glow-pill inline-flex min-w-0 shrink-0 items-center gap-2 rounded-full bg-[var(--dc-bg-elevated)] px-4 py-2 text-sm font-medium text-[var(--dc-text-main)]" title="Vandaag" aria-label="Vandaag">
+        <span
+          className="h-2 w-2 shrink-0 rounded-full bg-[var(--dc-accent-primary)] shadow-[0_0_8px_rgba(37,99,235,0.6)]"
+          aria-hidden
+        />
+        <span className="truncate">Today</span>
+      </div>
+    </div>
+  );
+}
+
+async function MissionsSectionAsync({ dateStr }: { dateStr: string }) {
+  const [mode, backlog, futureTasks, completedToday, smartSuggestion, energyCap, energyBudget, decisionBlocks, identity, identityEngine, tasksNormalResult] =
+    await Promise.all([
       getMode(dateStr),
-      getUserPreferencesOrDefaults(),
       getBacklogTasks(dateStr),
       getFutureTasks(dateStr),
       getCompletedTodayTasks(dateStr),
-      getTasksForDate(yesterdayStr),
       getSmartSuggestion(dateStr),
       getEnergyCapToday(dateStr),
       getEnergyBudget(dateStr),
       getDecisionBlocks(dateStr),
-      getXP(),
       getXPIdentity(),
       getIdentityEngine(),
       getTodaysTasks(dateStr, "normal"),
-    ]),
-  ]);
-  const taskMode: TaskListMode = mode === "stabilize" ? "stabilize" : mode === "low_energy" ? "low_energy" : mode === "driven" ? "driven" : "normal";
+    ]);
+
+  const taskMode: TaskListMode =
+    mode === "stabilize" ? "stabilize" : mode === "low_energy" ? "low_energy" : mode === "driven" ? "driven" : "normal";
   const { tasks, carryOverCount } =
     taskMode === "normal" ? tasksNormalResult : await getTodaysTasks(dateStr, taskMode);
+
   const subtaskRows = await getSubtasksForTaskIds(tasks.map((t) => t.id));
   const subtasksByParent: Record<string, typeof subtaskRows> = {};
   for (const s of subtaskRows) {
@@ -152,17 +246,6 @@ export default async function TasksPage({ searchParams }: Props) {
     if (!subtasksByParent[pid]) subtasksByParent[pid] = [];
     subtasksByParent[pid].push(s);
   }
-  const yesterdayTasks = (yesterdayTasksRaw ?? []).map((t) => ({
-    id: (t as { id: string }).id,
-    title: (t as { title: string | null }).title ?? null,
-    completed: !!(t as { completed?: boolean }).completed,
-  }));
-
-  const modeHint = taskMode === "stabilize"
-    ? "Showing top 2 — complete or reschedule to add more."
-    : taskMode === "driven"
-      ? "Sorted by impact and priority."
-      : null;
 
   const missionCardsFromUMS = decisionBlocks.tasksSortedByUMS.slice(0, 8).map((t, i) => ({
     id: t.id,
@@ -182,7 +265,21 @@ export default async function TasksPage({ searchParams }: Props) {
     href: undefined as string | undefined,
   }));
   const { getMissionDifficultyRank } = await import("@/lib/mission-difficulty-rank");
-  const strategicByTaskId: Record<string, { domain?: string | null; alignmentImpactPct?: number; expectedXP?: number; disciplineImpact?: number; roi?: number; pressureEffect?: string; strategicValue?: number; psychologyLabel?: string | null; energyMatch?: number; difficultyRank?: "S" | "A" | "B" | "C" | "D" }> = {};
+  const strategicByTaskId: Record<
+    string,
+    {
+      domain?: string | null;
+      alignmentImpactPct?: number;
+      expectedXP?: number;
+      disciplineImpact?: number;
+      roi?: number;
+      pressureEffect?: string;
+      strategicValue?: number;
+      psychologyLabel?: string | null;
+      energyMatch?: number;
+      difficultyRank?: "S" | "A" | "B" | "C" | "D";
+    }
+  > = {};
   for (const t of decisionBlocks.tasksSortedByUMS) {
     const impact = (t as { impact?: number | null }).impact ?? 2;
     strategicByTaskId[t.id] = {
@@ -215,7 +312,6 @@ export default async function TasksPage({ searchParams }: Props) {
           ...missionCardsCompleted,
         ];
 
-  // Ensure unique ids so CommanderMissionCard keys are unique.
   const seenMissionIds = new Set<string>();
   const missionCards = missionCardsBase.filter((card) => {
     if (!card.id || seenMissionIds.has(card.id)) return false;
@@ -223,21 +319,130 @@ export default async function TasksPage({ searchParams }: Props) {
     return true;
   });
 
-  const makeTasksHref = (overrides: { tab?: "missions" | "calendar"; day?: string; month?: string; calView?: CalendarView }) => {
-    const search = new URLSearchParams();
-    const nextTab = overrides.tab ?? activeTab;
-    const nextMonth = overrides.month ?? monthParam;
-    const nextDay = overrides.day ?? dayParam ?? undefined;
-    const nextCalView = overrides.calView ?? calendarView;
-    search.set("tab", nextTab);
-    if (params.add) search.set("add", params.add);
-    if (nextMonth) search.set("month", nextMonth);
-    if (nextDay) search.set("day", nextDay);
-    search.set("calView", nextCalView);
-    const query = search.toString();
-    return query ? `/tasks?${query}` : "/tasks";
-  };
+  return (
+    <SciFiPanel variant="glass" className={hudStyles.focusSecondary} bodyClassName="p-4 md:p-5">
+      <CornerNode corner="top-left" />
+      <CornerNode corner="top-right" />
+      <ModeBanner mode={mode} />
+      <EnergyCapBar used={energyCap.used} cap={energyCap.cap} remaining={energyCap.remaining} planned={energyCap.planned} />
+      <ConsequenceBanner
+        energyDepleted={(energyBudget as { consequence?: { energyDepleted?: boolean } }).consequence?.energyDepleted}
+        recoveryOnly={decisionBlocks.recoveryOnly}
+        recoveryProtocol={decisionBlocks.recoveryProtocol}
+        daysSinceLastCompletion={decisionBlocks.daysSinceLastCompletion}
+      />
+      <SmartRecommendationHero recommendation={decisionBlocks.topRecommendation} showUMSBreakdown />
+      <DecisionBlocksRow
+        streakCritical={decisionBlocks.streakCritical}
+        highPressure={decisionBlocks.highPressure}
+        recovery={decisionBlocks.recovery}
+        alignmentFix={decisionBlocks.alignmentFix}
+      />
+      <Suspense fallback={null}>
+        <ResistanceIndexBannerAsync />
+      </Suspense>
+      <Suspense fallback={null}>
+        <RecoveryCampaignBannerAsync />
+      </Suspense>
+      <HighROISection tasks={decisionBlocks.tasksSortedByUMS} maxItems={3} />
+      <Suspense fallback={null}>
+        <EmotionalStateCorrelationBannerAsync />
+      </Suspense>
+      {smartSuggestion.text && !decisionBlocks.topRecommendation ? (
+        <SmartSuggestionBanner text={smartSuggestion.text} type={smartSuggestion.type} />
+      ) : null}
+      {missionCards.length > 0 && tasks.length === 0 && (
+        <section className="mission-grid">
+          {missionCards.map((m) => (
+            <CommanderMissionCard
+              key={m.id}
+              id={m.id}
+              title={m.title}
+              subtitle={m.subtitle}
+              description={"description" in m ? (m as { description?: string | null }).description : null}
+              state={m.state}
+              progressPct={m.progressPct}
+              href={m.href}
+            />
+          ))}
+        </section>
+      )}
+      <TaskList
+        date={dateStr}
+        tasks={tasks as import("@/types/database.types").Task[]}
+        completedToday={completedToday as import("@/types/database.types").Task[]}
+        mode={taskMode}
+        carryOverCount={carryOverCount}
+        subtasksByParent={subtasksByParent}
+        suggestedTaskCount={energyBudget.suggestedTaskCount}
+        brainMode={energyBudget.brainMode}
+        strategicByTaskId={strategicByTaskId}
+        strategyMapping={decisionBlocks.strategyMapping}
+        recommendedTaskIds={[
+          ...(decisionBlocks.topRecommendation?.id ? [decisionBlocks.topRecommendation.id] : []),
+          ...(decisionBlocks.alignmentFix?.map((t) => t.id) ?? []),
+        ]}
+        identityLevel={identity.level}
+        identityReputation={identityEngine.reputation ?? null}
+      />
+      <Suspense fallback={null}>
+        <MetaInsights30BannerAsync />
+      </Suspense>
+      <Suspense fallback={null}>
+        <ThirtyDayMirrorBannerAsync />
+      </Suspense>
+      <BacklogAndToekomstTriggers backlog={backlog} futureTasks={futureTasks} todayDate={dateStr} />
+    </SciFiPanel>
+  );
+}
+
+async function CalendarSectionAsync({
+  dateStr,
+  monthParam,
+  selectedCalendarDay,
+  calendarView,
+}: {
+  dateStr: string;
+  monthParam: string;
+  selectedCalendarDay: string;
+  calendarView: CalendarView;
+}) {
+  const backlog = await getBacklogTasks(dateStr);
+
+  return (
+    <TasksCalendarAsync
+      dateStr={dateStr}
+      monthParam={monthParam}
+      selectedCalendarDay={selectedCalendarDay}
+      calendarView={calendarView}
+      backlog={(backlog ?? []) as { id: string; title: string | null; due_date: string | null }[]}
+    />
+  );
+}
+
+export default async function TasksPage({ searchParams }: Props) {
+  const dateStr = todayDateString();
+  const yesterdayStr = yesterdayDate(dateStr);
+  const params = await searchParams;
+  const tabParam = params.tab;
   const activeTab: "missions" | "calendar" = tabParam === "calendar" ? "calendar" : "missions";
+  const calendarView: CalendarView = isValidCalendarView(params.calView) ? params.calView : "calendar";
+  const monthParam = isValidMonthKey(params.month) ? params.month : dateStr.slice(0, 7);
+  const dayParam = isValidDayKey(params.day) ? params.day : null;
+  const selectedCalendarDay = dayParam ?? dateStr;
+  const prefs = await getUserPreferencesOrDefaults();
+
+  const missionsHref = makeTasksHref(
+    { add: params.add, month: monthParam, day: dayParam, calView: calendarView },
+    activeTab,
+    { tab: "missions" }
+  );
+  const calendarHref = makeTasksHref(
+    { add: params.add, month: monthParam, day: dayParam, calView: calendarView },
+    activeTab,
+    { tab: "calendar" }
+  );
+  const skipCinematicLayers = prefs.light_ui === true;
 
   const headerSection = (
     <>
@@ -250,146 +455,23 @@ export default async function TasksPage({ searchParams }: Props) {
             subtitle={
               <>
                 XP-missies · {dateStr} · Performance engine · One focus at a time
-                {modeHint && <span className="block mt-1 text-xs">{modeHint}</span>}
               </>
             }
             backHref="/dashboard"
           />
         </div>
       </SciFiPanel>
-      {/* Mascot outside panel so no glass/gradient overlay lies on top */}
       <section className="mascot-hero mascot-hero-top mascot-hero-mission mascot-hero-sharp" data-mascot-page="tasks" aria-hidden>
         <div className="mascot-hero-inner mx-auto">
           <HeroMascotImage page="tasks" className="mascot-img" heroLarge />
         </div>
       </section>
-      <div className="mascot-follow-row flex flex-wrap items-center justify-end gap-2">
-        <YesterdayTasksSection yesterdayTasks={yesterdayTasks} todayStr={dateStr} />
-        <XPBadge totalXp={xp.total_xp} level={xp.level} compact href="/xp" />
-        <div className="glow-pill inline-flex min-w-0 shrink-0 items-center gap-2 rounded-full bg-[var(--dc-bg-elevated)] px-4 py-2 text-sm font-medium text-[var(--dc-text-main)]" title="Vandaag" aria-label="Vandaag">
-          <span
-            className="h-2 w-2 shrink-0 rounded-full bg-[var(--dc-accent-primary)] shadow-[0_0_8px_rgba(37,99,235,0.6)]"
-            aria-hidden
-          />
-          <span className="truncate">Today</span>
-        </div>
-      </div>
+      <Suspense fallback={<HeaderMetaFallback />}>
+        <TasksHeaderMetaAsync dateStr={dateStr} yesterdayStr={yesterdayStr} />
+      </Suspense>
       <Divider1px />
     </>
   );
-
-  const missionsSection = (
-    <>
-      <SciFiPanel variant="glass" className={hudStyles.focusSecondary} bodyClassName="p-4 md:p-5">
-        <CornerNode corner="top-left" />
-        <CornerNode corner="top-right" />
-        <ModeBanner mode={mode} />
-      {masterMissionsResult.created === 0 && masterMissionsResult.debug && masterMissionsResult.debug !== "already_enough" && (
-        <div className="rounded-lg border border-amber-500/40 bg-amber-500/10 px-4 py-2 text-sm text-amber-200">
-          Auto-missies: geen toegevoegd (reden: <code>{masterMissionsResult.debug}</code>)
-          {masterMissionsResult.createError && <> — {masterMissionsResult.createError}</>}.
-          {masterMissionsResult.debug === "auto_off" && " Zet in Instellingen “Auto-missies” aan."}
-          {masterMissionsResult.debug === "no_brain_status" && (
-            <>
-              {" Zet eerst je brain status op het dashboard (Hoe voel je je vandaag?) om auto-missies te krijgen. Als je die net hebt gezet, klik "}
-              <RefreshPageButton className="font-semibold" /> om de pagina te verversen.
-              {masterMissionsResult.serviceRoleAvailable === false && " Zet SUPABASE_SERVICE_ROLE_KEY in je omgeving (Vercel/lokaal) zodat de server daily_state kan lezen."}
-              {masterMissionsResult.serviceRoleAvailable === true && " De key staat; als je net brain status hebt gezet, wacht even en vernieuw de pagina (server tijdzone: Europe/Amsterdam)."}
-            </>
-          )}
-          {(masterMissionsResult.debug === "create_failed" || masterMissionsResult.debug === "no_picks" || masterMissionsResult.debug === "to_create_empty") && " Vernieuw de pagina of probeer later opnieuw."}
-        </div>
-      )}
-      {masterMissionsResult.created > 0 && (
-        <div className="rounded-lg border border-emerald-500/40 bg-emerald-500/10 px-4 py-2 text-sm text-emerald-200">
-          {masterMissionsResult.created} auto-missie{masterMissionsResult.created === 1 ? "" : "s"} toegevoegd.
-        </div>
-      )}
-        <EnergyCapBar used={energyCap.used} cap={energyCap.cap} remaining={energyCap.remaining} planned={energyCap.planned} />
-        <ConsequenceBanner
-          energyDepleted={(energyBudget as { consequence?: { energyDepleted?: boolean } }).consequence?.energyDepleted}
-          recoveryOnly={decisionBlocks.recoveryOnly}
-          recoveryProtocol={decisionBlocks.recoveryProtocol}
-          daysSinceLastCompletion={decisionBlocks.daysSinceLastCompletion}
-        />
-        <SmartRecommendationHero recommendation={decisionBlocks.topRecommendation} showUMSBreakdown />
-        <DecisionBlocksRow
-          streakCritical={decisionBlocks.streakCritical}
-          highPressure={decisionBlocks.highPressure}
-          recovery={decisionBlocks.recovery}
-          alignmentFix={decisionBlocks.alignmentFix}
-        />
-        <Suspense fallback={null}>
-                    <ResistanceIndexBannerAsync />
-                  </Suspense>
-<Suspense fallback={null}>
-                    <RecoveryCampaignBannerAsync />
-                  </Suspense>
-        <HighROISection tasks={decisionBlocks.tasksSortedByUMS} maxItems={3} />
-        <Suspense fallback={null}>
-                    <EmotionalStateCorrelationBannerAsync />
-                  </Suspense>
-        {smartSuggestion.text && !decisionBlocks.topRecommendation ? (
-          <SmartSuggestionBanner text={smartSuggestion.text} type={smartSuggestion.type} />
-        ) : null}
-        {missionCards.length > 0 && tasks.length === 0 && (
-          <section className="mission-grid">
-            {missionCards.map((m) => (
-              <CommanderMissionCard
-                key={m.id}
-                id={m.id}
-                title={m.title}
-                subtitle={m.subtitle}
-                description={"description" in m ? (m as { description?: string | null }).description : null}
-                state={m.state}
-                progressPct={m.progressPct}
-                href={m.href}
-              />
-            ))}
-          </section>
-        )}
-        <TaskList
-          date={dateStr}
-          tasks={tasks as import("@/types/database.types").Task[]}
-          completedToday={completedToday as import("@/types/database.types").Task[]}
-          mode={taskMode}
-          carryOverCount={carryOverCount}
-          subtasksByParent={subtasksByParent}
-          suggestedTaskCount={energyBudget.suggestedTaskCount}
-          brainMode={energyBudget.brainMode}
-          strategicByTaskId={strategicByTaskId}
-          strategyMapping={decisionBlocks.strategyMapping}
-          recommendedTaskIds={[
-            ...(decisionBlocks.topRecommendation?.id ? [decisionBlocks.topRecommendation.id] : []),
-            ...(decisionBlocks.alignmentFix?.map((t) => t.id) ?? []),
-          ]}
-          identityLevel={identity.level}
-          identityReputation={identityEngine.reputation ?? null}
-        />
-<Suspense fallback={null}>
-                    <MetaInsights30BannerAsync />
-                  </Suspense>
-        <Suspense fallback={null}>
-                    <ThirtyDayMirrorBannerAsync />
-                  </Suspense>
-        <BacklogAndToekomstTriggers backlog={backlog} futureTasks={futureTasks} todayDate={dateStr} />
-      </SciFiPanel>
-    </>
-  );
-
-  const calendarSection = (
-    <Suspense fallback={<div className="min-h-[320px] animate-pulse rounded-xl bg-white/5" aria-hidden />}>
-      <TasksCalendarAsync
-        dateStr={dateStr}
-        monthParam={monthParam}
-        selectedCalendarDay={selectedCalendarDay}
-        calendarView={calendarView}
-        backlog={(backlog ?? []) as { id: string; title: string | null; due_date: string | null }[]}
-      />
-    </Suspense>
-  );
-
-  const skipCinematicLayers = prefs.light_ui === true;
 
   return (
     <main className={`relative min-h-screen overflow-hidden ${!skipCinematicLayers ? hudStyles.cinematicBackdrop : ""}`}>
@@ -403,8 +485,24 @@ export default async function TasksPage({ searchParams }: Props) {
           <div className={hudStyles.spaceNoise} aria-hidden />
         </>
       )}
+      <TasksDailyBootstrap dateStr={dateStr} enabled={activeTab === "missions"} />
       <div className="container page page-wide dashboard-cinematic relative z-10">
-        <TasksTabsShell initialTab={activeTab} header={headerSection} missions={missionsSection} calendar={calendarSection} />
+        <TasksTabsShell initialTab={activeTab} missionsHref={missionsHref} calendarHref={calendarHref} header={headerSection}>
+          {activeTab === "missions" ? (
+            <Suspense fallback={<MissionsSectionFallback />}>
+              <MissionsSectionAsync dateStr={dateStr} />
+            </Suspense>
+          ) : (
+            <Suspense fallback={<CalendarSectionFallback />}>
+              <CalendarSectionAsync
+                dateStr={dateStr}
+                monthParam={monthParam}
+                selectedCalendarDay={selectedCalendarDay}
+                calendarView={calendarView}
+              />
+            </Suspense>
+          )}
+        </TasksTabsShell>
       </div>
     </main>
   );

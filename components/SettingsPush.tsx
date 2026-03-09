@@ -1,178 +1,278 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useTransition } from "react";
 import { updatePushQuoteTime, updatePushQuietHours, type QuietHours } from "@/app/actions/auth";
+import { updateUserPreferences } from "@/app/actions/preferences";
+import { ensurePushSubscription, isPushConfigured, removePushSubscription, supportsPush } from "@/lib/push-client";
 
-const VAPID_PUBLIC = typeof process !== "undefined" ? process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY : undefined;
+type Props = {
+  initialPushQuoteTime?: string | null;
+  initialQuietHours?: QuietHours;
+  initialPushSubscribed?: boolean;
+  initialPushRemindersEnabled?: boolean;
+  initialPushMorningEnabled?: boolean;
+  initialPushEveningEnabled?: boolean;
+  initialPushWeeklyLearningEnabled?: boolean;
+};
 
-function urlBase64ToUint8Array(base64: string): Uint8Array {
-  const padding = "=".repeat((4 - (base64.length % 4)) % 4);
-  const b64 = (base64 + padding).replace(/-/g, "+").replace(/_/g, "/");
-  const raw = atob(b64);
-  const out = new Uint8Array(raw.length);
-  for (let i = 0; i < raw.length; i++) out[i] = raw.charCodeAt(i);
-  return out;
-}
-
-type Props = { initialPushQuoteTime?: string | null; initialQuietHours?: QuietHours; initialPushEnabled?: boolean };
-
-export function SettingsPush({ initialPushQuoteTime = null, initialQuietHours = { start: null, end: null }, initialPushEnabled = false }: Props) {
+export function SettingsPush({
+  initialPushQuoteTime = null,
+  initialQuietHours = { start: null, end: null },
+  initialPushSubscribed = false,
+  initialPushRemindersEnabled = true,
+  initialPushMorningEnabled = true,
+  initialPushEveningEnabled = true,
+  initialPushWeeklyLearningEnabled = true,
+}: Props) {
   const [status, setStatus] = useState<"idle" | "loading" | "enabled" | "unsupported" | "denied" | "error">(
-    initialPushEnabled ? "enabled" : "idle"
+    initialPushSubscribed ? "enabled" : "idle"
   );
   const [message, setMessage] = useState<string | null>(null);
+  const [subscribed, setSubscribed] = useState(initialPushSubscribed);
   const [pushQuoteTime, setPushQuoteTime] = useState(initialPushQuoteTime ?? "");
   const [quoteTimePending, setQuoteTimePending] = useState(false);
   const [quietStart, setQuietStart] = useState(initialQuietHours.start ?? "");
   const [quietEnd, setQuietEnd] = useState(initialQuietHours.end ?? "");
   const [quietPending, setQuietPending] = useState(false);
+  const [prefsPending, startPrefsTransition] = useTransition();
+  const [pushRemindersEnabled, setPushRemindersEnabled] = useState(initialPushRemindersEnabled);
+  const [pushMorningEnabled, setPushMorningEnabled] = useState(initialPushMorningEnabled);
+  const [pushEveningEnabled, setPushEveningEnabled] = useState(initialPushEveningEnabled);
+  const [pushWeeklyLearningEnabled, setPushWeeklyLearningEnabled] = useState(initialPushWeeklyLearningEnabled);
 
-  const enable = useCallback(async () => {
-    if (!("Notification" in window) || !("serviceWorker" in navigator)) {
+  const savePrefs = (next: {
+    push_reminders_enabled?: boolean;
+    push_morning_enabled?: boolean;
+    push_evening_enabled?: boolean;
+    push_weekly_learning_enabled?: boolean;
+  }) => {
+    startPrefsTransition(async () => {
+      try {
+        await updateUserPreferences(next);
+      } catch (e) {
+        setMessage(e instanceof Error ? e.message : "Could not save push reminder settings.");
+      }
+    });
+  };
+
+  const enable = async () => {
+    if (!supportsPush()) {
       setStatus("unsupported");
       return;
     }
     setStatus("loading");
     setMessage(null);
     try {
-      const permission = await Notification.requestPermission();
-      if (permission !== "granted") {
+      const result = await ensurePushSubscription();
+      if (!result.subscribed) {
         setStatus("denied");
-        setMessage("Permission denied.");
+        setMessage("Browser permission not granted.");
         return;
       }
-      if (!VAPID_PUBLIC) {
-        setStatus("error");
-        setMessage("Push notifications are optional. Add VAPID keys to enable them (see instructions below).");
-        return;
-      }
-      await navigator.serviceWorker.register("/sw.js", { scope: "/" });
-      // Wait for active SW (required for subscribe), with timeout so we don't hang forever
-      const reg = await Promise.race([
-        navigator.serviceWorker.ready,
-        new Promise<never>((_, reject) =>
-          setTimeout(() => reject(new Error("Service worker did not activate in time. Refresh the page and try again.")), 15000)
-        ),
-      ]);
-      const sub = await reg.pushManager.subscribe({
-        userVisibleOnly: true,
-        applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC) as BufferSource,
-      });
-      const res = await fetch("/api/push/subscribe", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify({ subscription: sub.toJSON() }),
-      });
-      if (!res.ok) {
-        const err = await res.json().catch(() => ({}));
-        throw new Error(err.error ?? "Failed to save subscription");
-      }
+      setSubscribed(true);
       setStatus("enabled");
-      setMessage("Notifications enabled. You’ll get daily quote and reminders (max 3/day).");
+      setMessage("Push is connected. Morning, evening, and weekly reminders follow your settings below.");
     } catch (e) {
       setStatus("error");
       setMessage(e instanceof Error ? e.message : "Something went wrong.");
     }
-  }, []);
+  };
+
+  const disconnect = async () => {
+    setStatus("loading");
+    setMessage(null);
+    try {
+      await removePushSubscription();
+      setSubscribed(false);
+      setStatus("idle");
+      setMessage("Browser push disconnected. Your reminder preferences stay saved.");
+    } catch (e) {
+      setStatus("error");
+      setMessage(e instanceof Error ? e.message : "Could not disconnect push.");
+    }
+  };
 
   return (
     <div className="card-simple overflow-hidden p-0">
       <div className="border-b border-[var(--card-border)] px-4 py-3">
-        <h2 className="text-base font-semibold text-[var(--text-primary)]">Notifications</h2>
-      </div>
-      <div className="p-4">
-      <p className="text-sm text-[var(--text-muted)]">
-        Enable daily quote and reminders (max 3 per day). Requires a supported browser.
-      </p>
-      <div className="mt-3 flex flex-wrap items-center gap-2">
-        <label htmlFor="push-quote-time" className="text-sm font-medium text-[var(--text-primary)]">
-          Quote time (optional)
-        </label>
-        <input
-          id="push-quote-time"
-          type="time"
-          value={pushQuoteTime}
-          onChange={(e) => setPushQuoteTime(e.target.value)}
-          onBlur={async () => {
-            const val = pushQuoteTime.trim() || null;
-            if (val === (initialPushQuoteTime ?? "")) return;
-            setQuoteTimePending(true);
-            try {
-              await updatePushQuoteTime(val);
-            } finally {
-              setQuoteTimePending(false);
-            }
-          }}
-          className="rounded-lg border border-[var(--card-border)] bg-[var(--bg-primary)] px-3 py-2 text-sm text-[var(--text-primary)]"
-        />
-        {quoteTimePending && <span className="text-xs text-[var(--text-muted)]">Saving…</span>}
-        <span className="text-xs text-[var(--text-muted)]">When to send the daily quote. Leave empty for default.</span>
-      </div>
-      <div className="mt-3 flex flex-wrap items-center gap-2">
-        <span className="text-sm font-medium text-[var(--text-primary)]">Quiet hours (no push)</span>
-        <input
-          type="time"
-          value={quietStart}
-          onChange={(e) => setQuietStart(e.target.value)}
-          onBlur={async () => {
-            const s = quietStart.trim() || null;
-            const e = quietEnd.trim() || null;
-            if (s === (initialQuietHours.start ?? "") && e === (initialQuietHours.end ?? "")) return;
-            setQuietPending(true);
-            try {
-              await updatePushQuietHours(s, e);
-            } finally {
-              setQuietPending(false);
-            }
-          }}
-          className="rounded-lg border border-[var(--card-border)] bg-[var(--bg-primary)] px-3 py-2 text-sm text-[var(--text-primary)]"
-        />
-        <span className="text-[var(--text-muted)]">–</span>
-        <input
-          type="time"
-          value={quietEnd}
-          onChange={(e) => setQuietEnd(e.target.value)}
-          onBlur={async () => {
-            const s = quietStart.trim() || null;
-            const e = quietEnd.trim() || null;
-            if (s === (initialQuietHours.start ?? "") && e === (initialQuietHours.end ?? "")) return;
-            setQuietPending(true);
-            try {
-              await updatePushQuietHours(s, e);
-            } finally {
-              setQuietPending(false);
-            }
-          }}
-          className="rounded-lg border border-[var(--card-border)] bg-[var(--bg-primary)] px-3 py-2 text-sm text-[var(--text-primary)]"
-        />
-        {quietPending && <span className="text-xs text-[var(--text-muted)]">Saving…</span>}
-        <span className="text-xs text-[var(--text-muted)]">No notifications in this window (your local time).</span>
-      </div>
-      {!VAPID_PUBLIC && (
-        <div className="mt-2 space-y-2 rounded-lg border border-[var(--card-border)] bg-[var(--bg-surface)] px-3 py-2 text-xs text-[var(--text-muted)]">
-          <p className="font-medium text-[var(--text-secondary)]">Push notifications (optional)</p>
-          <p>To enable push, add VAPID keys:</p>
-          <ol className="list-decimal list-inside space-y-1">
-            <li>Run <code className="rounded bg-[var(--bg-primary)] px-1 py-0.5">npm run generate-vapid</code> in the project root.</li>
-            <li>Copy the two printed lines into <code className="rounded bg-[var(--bg-primary)] px-1 py-0.5">.env.local</code> (see <code className="rounded bg-[var(--bg-primary)] px-1 py-0.5">.env.example</code> for names).</li>
-            <li>Restart the dev server.</li>
-          </ol>
-        </div>
-      )}
-      {message && (
-        <p className={`mt-2 text-sm ${status === "error" ? "text-red-400" : "text-[var(--text-primary)]"}`} role="status">
-          {message}
+        <h2 className="text-base font-semibold text-[var(--text-primary)]">Push reminders</h2>
+        <p className="mt-0.5 text-xs text-[var(--text-muted)]">
+          Scheduled push reminders default to on. The app can ask for browser permission and then send morning, evening, and weekly reminders plus existing push alerts.
         </p>
-      )}
-      <button
-        type="button"
-        onClick={enable}
-        disabled={status === "loading" || status === "enabled"}
-        className="btn-primary mt-3 rounded-lg px-4 py-2.5 text-sm font-medium disabled:opacity-50"
-      >
-        {status === "loading" ? "Enabling…" : status === "enabled" ? "Enabled" : "Enable notifications"}
-      </button>
+      </div>
+      <div className="space-y-4 p-4">
+        <div className="flex items-center justify-between gap-4">
+          <div>
+            <p className="text-sm font-medium text-[var(--text-primary)]">Scheduled push reminders</p>
+            <p className="text-xs text-[var(--text-muted)]">Master switch for morning, evening, and weekly learning reminders.</p>
+          </div>
+          <button
+            type="button"
+            role="switch"
+            aria-checked={pushRemindersEnabled}
+            disabled={prefsPending}
+            onClick={() => {
+              const next = !pushRemindersEnabled;
+              setPushRemindersEnabled(next);
+              savePrefs({ push_reminders_enabled: next });
+            }}
+            className="relative h-7 w-12 shrink-0 rounded-full bg-[var(--input-bg)] transition-colors focus:outline-none focus:ring-2 focus:ring-[var(--focus-ring)] disabled:opacity-60"
+            data-state={pushRemindersEnabled ? "on" : "off"}
+          >
+            <span
+              className="absolute left-0.5 top-0.5 h-6 w-6 rounded-full bg-white shadow transition-transform"
+              style={{ transform: pushRemindersEnabled ? "translateX(20px)" : "translateX(2px)" }}
+            />
+          </button>
+        </div>
+
+        <div className="grid gap-3 sm:grid-cols-3">
+          {[
+            {
+              label: "Morning push",
+              checked: pushMorningEnabled,
+              setter: setPushMorningEnabled,
+              key: "push_morning_enabled" as const,
+            },
+            {
+              label: "Evening push",
+              checked: pushEveningEnabled,
+              setter: setPushEveningEnabled,
+              key: "push_evening_enabled" as const,
+            },
+            {
+              label: "Weekly learning push",
+              checked: pushWeeklyLearningEnabled,
+              setter: setPushWeeklyLearningEnabled,
+              key: "push_weekly_learning_enabled" as const,
+            },
+          ].map((item) => (
+            <button
+              key={item.key}
+              type="button"
+              disabled={prefsPending || !pushRemindersEnabled}
+              onClick={() => {
+                const next = !item.checked;
+                item.setter(next);
+                savePrefs({ [item.key]: next });
+              }}
+              className={`rounded-xl border px-3 py-3 text-left text-sm transition ${
+                item.checked && pushRemindersEnabled
+                  ? "border-[var(--accent-focus)]/60 bg-[var(--accent-focus)]/10 text-[var(--text-primary)]"
+                  : "border-[var(--card-border)] bg-[var(--bg-primary)] text-[var(--text-muted)]"
+              } disabled:opacity-50`}
+            >
+              <span className="block font-medium">{item.label}</span>
+              <span className="mt-1 block text-xs">{item.checked && pushRemindersEnabled ? "On" : "Off"}</span>
+            </button>
+          ))}
+        </div>
+
+        <div className="flex flex-wrap items-center gap-2">
+          <label htmlFor="push-quote-time" className="text-sm font-medium text-[var(--text-primary)]">
+            Quote time (optional)
+          </label>
+          <input
+            id="push-quote-time"
+            type="time"
+            value={pushQuoteTime}
+            onChange={(e) => setPushQuoteTime(e.target.value)}
+            onBlur={async () => {
+              const val = pushQuoteTime.trim() || null;
+              if (val === (initialPushQuoteTime ?? "")) return;
+              setQuoteTimePending(true);
+              try {
+                await updatePushQuoteTime(val);
+              } finally {
+                setQuoteTimePending(false);
+              }
+            }}
+            className="rounded-lg border border-[var(--card-border)] bg-[var(--bg-primary)] px-3 py-2 text-sm text-[var(--text-primary)]"
+          />
+          {quoteTimePending && <span className="text-xs text-[var(--text-muted)]">Saving…</span>}
+          <span className="text-xs text-[var(--text-muted)]">Stored separately for quote pushes.</span>
+        </div>
+
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="text-sm font-medium text-[var(--text-primary)]">Quiet hours (no push)</span>
+          <input
+            type="time"
+            value={quietStart}
+            onChange={(e) => setQuietStart(e.target.value)}
+            onBlur={async () => {
+              const s = quietStart.trim() || null;
+              const e = quietEnd.trim() || null;
+              if (s === (initialQuietHours.start ?? "") && e === (initialQuietHours.end ?? "")) return;
+              setQuietPending(true);
+              try {
+                await updatePushQuietHours(s, e);
+              } finally {
+                setQuietPending(false);
+              }
+            }}
+            className="rounded-lg border border-[var(--card-border)] bg-[var(--bg-primary)] px-3 py-2 text-sm text-[var(--text-primary)]"
+          />
+          <span className="text-[var(--text-muted)]">–</span>
+          <input
+            type="time"
+            value={quietEnd}
+            onChange={(e) => setQuietEnd(e.target.value)}
+            onBlur={async () => {
+              const s = quietStart.trim() || null;
+              const e = quietEnd.trim() || null;
+              if (s === (initialQuietHours.start ?? "") && e === (initialQuietHours.end ?? "")) return;
+              setQuietPending(true);
+              try {
+                await updatePushQuietHours(s, e);
+              } finally {
+                setQuietPending(false);
+              }
+            }}
+            className="rounded-lg border border-[var(--card-border)] bg-[var(--bg-primary)] px-3 py-2 text-sm text-[var(--text-primary)]"
+          />
+          {quietPending && <span className="text-xs text-[var(--text-muted)]">Saving…</span>}
+          <span className="text-xs text-[var(--text-muted)]">Applied to scheduled reminders and the existing push alerts.</span>
+        </div>
+
+        {!isPushConfigured() && (
+          <div className="space-y-2 rounded-lg border border-[var(--card-border)] bg-[var(--bg-surface)] px-3 py-2 text-xs text-[var(--text-muted)]">
+            <p className="font-medium text-[var(--text-secondary)]">Push notifications (optional)</p>
+            <p>To enable push in this environment, add VAPID keys:</p>
+            <ol className="list-decimal list-inside space-y-1">
+              <li>Run <code className="rounded bg-[var(--bg-primary)] px-1 py-0.5">npm run generate-vapid</code>.</li>
+              <li>Copy the printed values into <code className="rounded bg-[var(--bg-primary)] px-1 py-0.5">.env.local</code>.</li>
+              <li>Restart the dev server.</li>
+            </ol>
+          </div>
+        )}
+
+        <div className="flex flex-wrap items-center gap-3">
+          <button
+            type="button"
+            onClick={enable}
+            disabled={status === "loading" || subscribed}
+            className="btn-primary rounded-lg px-4 py-2.5 text-sm font-medium disabled:opacity-50"
+          >
+            {status === "loading" ? "Working…" : subscribed ? "Push connected" : "Enable browser push"}
+          </button>
+          <button
+            type="button"
+            onClick={disconnect}
+            disabled={status === "loading" || !subscribed}
+            className="rounded-lg border border-[var(--card-border)] px-4 py-2.5 text-sm font-medium text-[var(--text-primary)] disabled:opacity-50"
+          >
+            Disconnect
+          </button>
+          <span className="text-xs text-[var(--text-muted)]">
+            {subscribed ? "Browser subscription active." : "No browser subscription yet."}
+          </span>
+        </div>
+
+        {message && (
+          <p className={`text-sm ${status === "error" ? "text-red-400" : "text-[var(--text-primary)]"}`} role="status">
+            {message}
+          </p>
+        )}
       </div>
     </div>
   );

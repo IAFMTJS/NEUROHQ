@@ -1,22 +1,19 @@
-"use client";
-
-import { useState } from "react";
+import Link from "next/link";
 
 type TabId = "missions" | "calendar";
 
 type Props = {
   initialTab: TabId;
+  missionsHref: string;
+  calendarHref: string;
   header: React.ReactNode;
-  missions: React.ReactNode;
-  calendar: React.ReactNode;
+  children: React.ReactNode;
 };
 
-export function TasksTabsShell({ initialTab, header, missions, calendar }: Props) {
-  const [activeTab, setActiveTab] = useState<TabId>(initialTab);
-
+export function TasksTabsShell({ initialTab, missionsHref, calendarHref, header, children }: Props) {
   const tabClass = (tab: TabId) =>
     `dashboard-mini-btn ${
-      activeTab === tab ? "dashboard-mini-btn-primary" : "dashboard-mini-btn-secondary"
+      initialTab === tab ? "dashboard-mini-btn-primary" : "dashboard-mini-btn-secondary"
     }`;
 
   return (
@@ -24,28 +21,25 @@ export function TasksTabsShell({ initialTab, header, missions, calendar }: Props
       {header}
       <div className="dashboard-top-strip mt-0">
         <div className="dashboard-top-strip-track">
-          <button
-            type="button"
+          <Link
+            href={missionsHref}
             className={tabClass("missions")}
-            aria-current={activeTab === "missions" ? "page" : undefined}
-            onClick={() => setActiveTab("missions")}
+            aria-current={initialTab === "missions" ? "page" : undefined}
           >
             Missions
-          </button>
-          <button
-            type="button"
+          </Link>
+          <Link
+            href={calendarHref}
             className={tabClass("calendar")}
-            aria-current={activeTab === "calendar" ? "page" : undefined}
-            onClick={() => setActiveTab("calendar")}
+            aria-current={initialTab === "calendar" ? "page" : undefined}
           >
             Calendar
-          </button>
+          </Link>
           <span className="dashboard-mini-strip-label">View</span>
         </div>
       </div>
       <div className="mt-6 space-y-6">
-        {activeTab === "missions" && missions}
-        {activeTab === "calendar" && calendar}
+        {children}
       </div>
     </>
   );

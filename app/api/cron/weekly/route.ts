@@ -3,13 +3,14 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { getRealityReportForUser } from "@/lib/report";
 import { getWeekBounds } from "@/lib/utils/learning";
 import { sendPushToUser } from "@/lib/push";
-import { getLocalDateHour } from "@/lib/utils/timezone";
+import { getLocalDateHour, isInQuietHours } from "@/lib/utils/timezone";
 import { isHighSensoryDayForUser } from "@/lib/mode-admin";
 import {
   isAppEmailConfigured,
   sendReminderToUser,
   wrapReminderHtml,
 } from "@/lib/email";
+import { buildWeeklyLearningPushPayload } from "@/lib/daily-email-content";
 
 /**
  * Vercel Cron: runs weekly (e.g. Monday 09:00 UTC).
@@ -29,17 +30,33 @@ export async function GET(request: Request) {
   lastWeek.setUTCDate(lastWeek.getUTCDate() - 7);
   const { start: weekStart, end: weekEnd } = getWeekBounds(lastWeek);
 
-  const { data: users } = await supabase.from("users").select("id, timezone");
+  const { data: users } = await supabase
+    .from("users")
+    .select("id, timezone, push_quiet_hours_start, push_quiet_hours_end");
   if (!users?.length) {
     return NextResponse.json({ ok: true, job: "weekly", reports: 0, learningReminderSent: 0 });
   }
 
-  let emailReminderUserIds = new Set<string>();
+  const prefsByUser = new Map<
+    string,
+    {
+      emailRemindersEnabled: boolean;
+      pushRemindersEnabled: boolean;
+      pushWeeklyLearningEnabled: boolean;
+    }
+  >();
   const { data: prefs, error: prefsError } = await supabase
     .from("user_preferences")
-    .select("user_id")
-    .eq("email_reminders_enabled", true);
-  if (!prefsError && prefs?.length) emailReminderUserIds = new Set(prefs.map((p) => p.user_id));
+    .select("user_id, email_reminders_enabled, push_reminders_enabled, push_weekly_learning_enabled");
+  if (!prefsError && prefs?.length) {
+    for (const pref of prefs) {
+      prefsByUser.set(pref.user_id, {
+        emailRemindersEnabled: pref.email_reminders_enabled ?? true,
+        pushRemindersEnabled: pref.push_reminders_enabled ?? true,
+        pushWeeklyLearningEnabled: pref.push_weekly_learning_enabled ?? true,
+      });
+    }
+  }
 
   const in7Days = new Date(today);
   in7Days.setUTCDate(in7Days.getUTCDate() + 7);
@@ -50,7 +67,12 @@ export async function GET(request: Request) {
   let learningReminderSent = 0;
   let learningReminderEmailSent = 0;
   let savingsAlertSent = 0;
-  for (const { id: userId, timezone } of users) {
+  for (const { id: userId, timezone, push_quiet_hours_start, push_quiet_hours_end } of users) {
+    const userPrefs = prefsByUser.get(userId) ?? {
+      emailRemindersEnabled: true,
+      pushRemindersEnabled: true,
+      pushWeeklyLearningEnabled: true,
+    };
     try {
       const payload = await getRealityReportForUser(supabase, userId, weekStart, weekEnd);
       const { error } = await supabase.from("reality_reports").upsert(
@@ -62,26 +84,30 @@ export async function GET(request: Request) {
       if (
         process.env.VAPID_PRIVATE_KEY &&
         process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY &&
-        payload.learningMinutes < payload.learningTarget
+        payload.learningMinutes < payload.learningTarget &&
+        userPrefs.pushRemindersEnabled &&
+        userPrefs.pushWeeklyLearningEnabled
       ) {
         // HIGH_SENSORY: skip non-critical weekly learning push on high sensory days
-        const localDate = timezone
-          ? getLocalDateHour(timezone as string).date
-          : todayStr;
+        const local = timezone
+          ? getLocalDateHour(timezone as string)
+          : { date: todayStr, hour: today.getUTCHours() };
+        const localDate = local.date;
+        const quietStart = push_quiet_hours_start ? String(push_quiet_hours_start).slice(0, 5) : null;
+        const quietEnd = push_quiet_hours_end ? String(push_quiet_hours_end).slice(0, 5) : null;
         const highSensory = await isHighSensoryDayForUser(supabase, userId, localDate);
-        if (!highSensory) {
+        if (!highSensory && !isInQuietHours(local.hour, quietStart, quietEnd)) {
           try {
-            const ok = await sendPushToUser(supabase, userId, {
-              title: "NEUROHQ — Learning",
-              body: `Last week: ${payload.learningMinutes} min (target 60). Log some learning this week.`,
-              tag: "learning-reminder",
-              url: "/learning",
-            });
+            const ok = await sendPushToUser(
+              supabase,
+              userId,
+              buildWeeklyLearningPushPayload(payload.learningMinutes, payload.learningTarget)
+            );
             if (ok) learningReminderSent++;
           } catch {
             // skip
           }
-          if (emailReminderUserIds.has(userId) && isAppEmailConfigured()) {
+          if (userPrefs.emailRemindersEnabled && isAppEmailConfigured()) {
             try {
               const body = `Last week you logged <strong>${payload.learningMinutes} min</strong> (target 60). Log some learning this week to stay on track.`;
               const sent = await sendReminderToUser(supabase, userId, {
@@ -110,11 +136,14 @@ export async function GET(request: Request) {
         process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY
       ) {
         // HIGH_SENSORY: skip non-critical savings alert on high sensory days
-        const localDate = timezone
-          ? getLocalDateHour(timezone as string).date
-          : todayStr;
+        const local = timezone
+          ? getLocalDateHour(timezone as string)
+          : { date: todayStr, hour: today.getUTCHours() };
+        const localDate = local.date;
+        const quietStart = push_quiet_hours_start ? String(push_quiet_hours_start).slice(0, 5) : null;
+        const quietEnd = push_quiet_hours_end ? String(push_quiet_hours_end).slice(0, 5) : null;
         const highSensory = await isHighSensoryDayForUser(supabase, userId, localDate);
-        if (!highSensory) {
+        if (!highSensory && !isInQuietHours(local.hour, quietStart, quietEnd)) {
           const g = dueSoon[0];
           const pct = Math.round(((g.current_cents ?? 0) / (g.target_cents || 1)) * 100);
           const daysLeft = g.deadline ? Math.ceil((new Date(g.deadline).getTime() - today.getTime()) / 86400000) : 0;
@@ -124,6 +153,7 @@ export async function GET(request: Request) {
               body: `"${g.name}" due in ${daysLeft} day(s). You're at ${pct}%.`,
               tag: "savings-alert",
               url: "/budget",
+              priority: "high",
             });
             if (ok) savingsAlertSent++;
           } catch {

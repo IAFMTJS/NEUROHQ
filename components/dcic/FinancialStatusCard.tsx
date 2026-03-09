@@ -11,6 +11,7 @@ import {
   getDaysUntilNextIncome,
   getRemainingBalance,
 } from "@/lib/dcic/finance-engine";
+import { usePendingBudgetSnapshot } from "@/lib/client-pending-budget";
 
 interface FinancialStatusCardProps {
   financeState: FinanceState | null;
@@ -19,6 +20,7 @@ interface FinancialStatusCardProps {
 }
 
 export function FinancialStatusCard({ financeState, remainingToSpendCents }: FinancialStatusCardProps) {
+  const pendingBudget = usePendingBudgetSnapshot();
   if (!financeState) {
     return (
       <div className="rounded-lg border border-[var(--card-border)] bg-[var(--bg-primary)] p-4">
@@ -27,13 +29,15 @@ export function FinancialStatusCard({ financeState, remainingToSpendCents }: Fin
     );
   }
 
-  const daysUntilIncome = getDaysUntilNextIncome(financeState);
+  const daysUntilIncome = pendingBudget?.daysUntilNextIncome ?? getDaysUntilNextIncome(financeState);
   const useBudgetRemaining =
-    remainingToSpendCents != null &&
-    (Number.isFinite(remainingToSpendCents) || remainingToSpendCents === 0);
+    (pendingBudget?.budgetRemainingCents != null &&
+      (Number.isFinite(pendingBudget.budgetRemainingCents) || pendingBudget.budgetRemainingCents === 0)) ||
+    (remainingToSpendCents != null &&
+      (Number.isFinite(remainingToSpendCents) || remainingToSpendCents === 0));
 
   const remainingBalance = useBudgetRemaining
-    ? remainingToSpendCents!
+    ? (pendingBudget?.budgetRemainingCents ?? remainingToSpendCents)!
     : getRemainingBalance(financeState);
   const safeDailySpend =
     daysUntilIncome > 0 ? Math.floor(remainingBalance / daysUntilIncome) : 0;

@@ -3,14 +3,31 @@ import { Skeleton } from "@/components/Skeleton";
 export default function TasksLoading() {
   return (
     <div className="space-y-6">
-      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <Skeleton className="h-8 w-24" />
-          <Skeleton className="mt-1 h-4 w-32" />
+      <div className="rounded-[24px] border border-[var(--card-border)] bg-[var(--bg-surface)]/40 p-4 md:p-5">
+        <Skeleton className="h-8 w-28" />
+        <Skeleton className="mt-2 h-4 w-72 max-w-full" />
+      </div>
+      <Skeleton className="h-44 w-full rounded-[24px]" />
+      <div className="flex flex-wrap justify-end gap-2">
+        <Skeleton className="h-10 w-44 rounded-full" />
+        <Skeleton className="h-10 w-24 rounded-full" />
+        <Skeleton className="h-10 w-28 rounded-full" />
+      </div>
+      <div className="dashboard-top-strip mt-0">
+        <div className="dashboard-top-strip-track">
+          <Skeleton className="h-10 w-24 rounded-full" />
+          <Skeleton className="h-10 w-24 rounded-full" />
         </div>
       </div>
-      <Skeleton className="h-14 w-full" />
-      <Skeleton className="h-48 w-full" />
+      <div className="rounded-[24px] border border-[var(--card-border)] bg-[var(--bg-surface)]/40 p-4 md:p-5">
+        <Skeleton className="h-10 w-full" />
+        <Skeleton className="mt-4 h-24 w-full rounded-xl" />
+        <div className="mt-4 grid gap-3 md:grid-cols-2">
+          <Skeleton className="h-24 w-full rounded-xl" />
+          <Skeleton className="h-24 w-full rounded-xl" />
+        </div>
+        <Skeleton className="mt-4 h-64 w-full rounded-xl" />
+      </div>
     </div>
   );
 }

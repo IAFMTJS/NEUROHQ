@@ -92,7 +92,15 @@ export default async function SettingsPage() {
         <h2 className="text-xs font-semibold uppercase tracking-wide text-[var(--text-muted)]">Tijd & notificaties</h2>
         <div className="space-y-4">
           <SettingsTimezone initialTimezone={userTimezone} />
-          <SettingsPush initialPushQuoteTime={pushQuoteTime} initialQuietHours={pushQuietHours} initialPushEnabled={pushEnabled} />
+          <SettingsPush
+            initialPushQuoteTime={pushQuoteTime}
+            initialQuietHours={pushQuietHours}
+            initialPushSubscribed={pushEnabled}
+            initialPushRemindersEnabled={prefs.push_reminders_enabled ?? true}
+            initialPushMorningEnabled={prefs.push_morning_enabled ?? true}
+            initialPushEveningEnabled={prefs.push_evening_enabled ?? true}
+            initialPushWeeklyLearningEnabled={prefs.push_weekly_learning_enabled ?? true}
+          />
           <SettingsEmailReminders initialEnabled={prefs.email_reminders_enabled ?? true} />
         </div>
       </section>

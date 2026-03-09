@@ -2,8 +2,15 @@ import webpush from "web-push";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 const MAX_PUSH_PER_DAY = 3;
+const MAX_PUSH_BEFORE_LOW_PRIORITY_BLOCK = 2;
 
-export type PushPayload = { title: string; body?: string; tag?: string; url?: string };
+export type PushPayload = {
+  title: string;
+  body?: string;
+  tag?: string;
+  url?: string;
+  priority?: "low" | "normal" | "high";
+};
 
 let vapidConfigured = false;
 
@@ -42,6 +49,7 @@ export async function sendPushToUser(
   if (lastDate !== today) {
     count = 0;
   }
+  if ((payload.priority ?? "normal") === "low" && count >= MAX_PUSH_BEFORE_LOW_PRIORITY_BLOCK) return false;
   if (count >= MAX_PUSH_PER_DAY) return false;
 
   try {

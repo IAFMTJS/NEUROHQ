@@ -33,6 +33,14 @@ export interface UserPreferences {
   day_off_mode?: "soft" | "hard" | null;
   /** When true, receive app reminder emails (morning/evening digest, weekly learning). Default on. */
   email_reminders_enabled?: boolean;
+  /** Master toggle for scheduled push reminders. Browser permission/subscription still required. */
+  push_reminders_enabled?: boolean;
+  /** Morning push reminder around local 09:00. */
+  push_morning_enabled?: boolean;
+  /** Evening push reminder around local 20:00. */
+  push_evening_enabled?: boolean;
+  /** Weekly learning push reminder. */
+  push_weekly_learning_enabled?: boolean;
   updated_at: string;
 }
 
@@ -48,5 +56,9 @@ export const PREFERENCES_DEFAULTS: UserPreferences = {
   usual_days_off: null,
   day_off_mode: null,
   email_reminders_enabled: true,
+  push_reminders_enabled: true,
+  push_morning_enabled: true,
+  push_evening_enabled: true,
+  push_weekly_learning_enabled: true,
   updated_at: new Date().toISOString(),
 };

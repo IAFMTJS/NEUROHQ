@@ -16,7 +16,7 @@ export const getUserPreferences = cache(async (): Promise<UserPreferences | null
   const { data, error } = await supabase
     .from("user_preferences")
     .select(
-      "theme, color_mode, selected_emotion, compact_ui, reduced_motion, light_ui, auto_master_missions, usual_days_off, day_off_mode, email_reminders_enabled, updated_at",
+      "theme, color_mode, selected_emotion, compact_ui, reduced_motion, light_ui, auto_master_missions, usual_days_off, day_off_mode, email_reminders_enabled, push_reminders_enabled, push_morning_enabled, push_evening_enabled, push_weekly_learning_enabled, updated_at",
     )
     .eq("user_id", user.id)
     .single();
@@ -31,6 +31,10 @@ export const getUserPreferences = cache(async (): Promise<UserPreferences | null
       msg.includes("usual_days_off") ||
       msg.includes("day_off_mode") ||
       msg.includes("email_reminders_enabled") ||
+      msg.includes("push_reminders_enabled") ||
+      msg.includes("push_morning_enabled") ||
+      msg.includes("push_evening_enabled") ||
+      msg.includes("push_weekly_learning_enabled") ||
       msg.toLowerCase().includes("schema cache")
     ) {
       const { data: legacyData, error: legacyError } = await supabase
@@ -54,6 +58,10 @@ export const getUserPreferences = cache(async (): Promise<UserPreferences | null
         usual_days_off: DEFAULTS.usual_days_off ?? null,
         day_off_mode: DEFAULTS.day_off_mode ?? null,
         email_reminders_enabled: DEFAULTS.email_reminders_enabled ?? true,
+        push_reminders_enabled: DEFAULTS.push_reminders_enabled ?? true,
+        push_morning_enabled: DEFAULTS.push_morning_enabled ?? true,
+        push_evening_enabled: DEFAULTS.push_evening_enabled ?? true,
+        push_weekly_learning_enabled: DEFAULTS.push_weekly_learning_enabled ?? true,
         updated_at: legacyData.updated_at ?? DEFAULTS.updated_at,
       };
     }
@@ -73,6 +81,10 @@ export const getUserPreferences = cache(async (): Promise<UserPreferences | null
     usual_days_off?: number[] | null;
     day_off_mode?: UserPreferences["day_off_mode"] | null;
     email_reminders_enabled?: boolean | null;
+    push_reminders_enabled?: boolean | null;
+    push_morning_enabled?: boolean | null;
+    push_evening_enabled?: boolean | null;
+    push_weekly_learning_enabled?: boolean | null;
     updated_at?: string | null;
   };
   return {
@@ -86,6 +98,10 @@ export const getUserPreferences = cache(async (): Promise<UserPreferences | null
     usual_days_off: row.usual_days_off ?? DEFAULTS.usual_days_off ?? null,
     day_off_mode: row.day_off_mode ?? DEFAULTS.day_off_mode ?? null,
     email_reminders_enabled: row.email_reminders_enabled ?? DEFAULTS.email_reminders_enabled ?? true,
+    push_reminders_enabled: row.push_reminders_enabled ?? DEFAULTS.push_reminders_enabled ?? true,
+    push_morning_enabled: row.push_morning_enabled ?? DEFAULTS.push_morning_enabled ?? true,
+    push_evening_enabled: row.push_evening_enabled ?? DEFAULTS.push_evening_enabled ?? true,
+    push_weekly_learning_enabled: row.push_weekly_learning_enabled ?? DEFAULTS.push_weekly_learning_enabled ?? true,
     updated_at: row.updated_at ?? DEFAULTS.updated_at,
   };
 });
@@ -99,7 +115,7 @@ export async function getUserPreferencesOrDefaults(): Promise<UserPreferences> {
 type UpdatePayload = Partial<
   Pick<
     UserPreferences,
-    "theme" | "color_mode" | "selected_emotion" | "compact_ui" | "reduced_motion" | "light_ui" | "auto_master_missions" | "usual_days_off" | "day_off_mode" | "email_reminders_enabled"
+    "theme" | "color_mode" | "selected_emotion" | "compact_ui" | "reduced_motion" | "light_ui" | "auto_master_missions" | "usual_days_off" | "day_off_mode" | "email_reminders_enabled" | "push_reminders_enabled" | "push_morning_enabled" | "push_evening_enabled" | "push_weekly_learning_enabled"
   >
 >;
 
@@ -121,6 +137,10 @@ export async function updateUserPreferences(payload: UpdatePayload) {
     usual_days_off: payload.usual_days_off ?? current.usual_days_off ?? null,
     day_off_mode: payload.day_off_mode ?? current.day_off_mode ?? null,
     email_reminders_enabled: payload.email_reminders_enabled ?? current.email_reminders_enabled ?? true,
+    push_reminders_enabled: payload.push_reminders_enabled ?? current.push_reminders_enabled ?? true,
+    push_morning_enabled: payload.push_morning_enabled ?? current.push_morning_enabled ?? true,
+    push_evening_enabled: payload.push_evening_enabled ?? current.push_evening_enabled ?? true,
+    push_weekly_learning_enabled: payload.push_weekly_learning_enabled ?? current.push_weekly_learning_enabled ?? true,
     updated_at: new Date().toISOString(),
   };
   const legacyRow = {
@@ -151,6 +171,10 @@ export async function updateUserPreferences(payload: UpdatePayload) {
       msg.includes("day_off_mode") ||
       msg.includes("light_ui") ||
       msg.includes("email_reminders_enabled") ||
+      msg.includes("push_reminders_enabled") ||
+      msg.includes("push_morning_enabled") ||
+      msg.includes("push_evening_enabled") ||
+      msg.includes("push_weekly_learning_enabled") ||
       msg.toLowerCase().includes("schema cache")
     ) {
       const legacy = await supabase

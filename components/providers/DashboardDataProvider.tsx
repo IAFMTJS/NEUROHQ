@@ -35,7 +35,10 @@ const DashboardDataContext = createContext<DashboardDataContextValue | null>(nul
 
 /** Single request returning both critical and secondary; no duplicate work on server. */
 export async function fetchAll(): Promise<{ critical: DashboardCritical; secondary: DashboardSecondary }> {
-  const res = await fetch("/api/dashboard/data?part=all", { credentials: "include" });
+  const res = await fetch(`/api/dashboard/data?part=all&ts=${Date.now()}`, {
+    credentials: "include",
+    cache: "no-store",
+  });
   if (!res.ok) {
     const body = await res.json().catch(() => ({}));
     const msg = typeof (body && body.error) === "string" ? body.error : `Dashboard ${res.status}`;
@@ -47,7 +50,10 @@ export async function fetchAll(): Promise<{ critical: DashboardCritical; seconda
 }
 
 export async function fetchCritical(): Promise<DashboardCritical> {
-  const res = await fetch("/api/dashboard/data?part=critical", { credentials: "include" });
+  const res = await fetch(`/api/dashboard/data?part=critical&ts=${Date.now()}`, {
+    credentials: "include",
+    cache: "no-store",
+  });
   if (!res.ok) {
     const body = await res.json().catch(() => ({}));
     const msg = typeof (body && body.error) === "string" ? body.error : `Dashboard critical ${res.status}`;
@@ -57,7 +63,10 @@ export async function fetchCritical(): Promise<DashboardCritical> {
 }
 
 export async function fetchSecondary(): Promise<DashboardSecondary> {
-  const res = await fetch("/api/dashboard/data?part=secondary", { credentials: "include" });
+  const res = await fetch(`/api/dashboard/data?part=secondary&ts=${Date.now()}`, {
+    credentials: "include",
+    cache: "no-store",
+  });
   if (!res.ok) {
     const body = await res.json().catch(() => ({}));
     const msg = typeof (body && body.error) === "string" ? body.error : `Dashboard secondary ${res.status}`;
@@ -74,17 +83,20 @@ type DashboardDataProviderProps = {
 };
 
 export function DashboardDataProvider({ children, initialCritical, initialSecondary }: DashboardDataProviderProps) {
-  const pathname = usePathname();
   const [state, setState] = useState<DashboardDataState>({
     critical: initialCritical ?? null,
     secondary: initialSecondary ?? null,
     loadingCritical: false,
-    loadingSecondary: false,
+    loadingSecondary: Boolean(initialCritical && !initialSecondary),
   });
   const preloadStartedRef = useRef(false);
-  const hasInitialData = Boolean(initialCritical && initialSecondary);
-  // Skip client preload on /dashboard: the page is a server component that fetches and passes initial data via a nested provider. Preloading here would duplicate the full getDashboardPayload() call.
-  const skipPreloadForRoute = pathname === "/dashboard";
+  const stateRef = useRef(state);
+  const pathname = usePathname();
+  const hasInitialData = Boolean(initialCritical || initialSecondary);
+
+  useEffect(() => {
+    stateRef.current = state;
+  }, [state]);
 
   const setDashboardData = useCallback(
     (data: { critical?: DashboardCritical | null; secondary?: DashboardSecondary | null }) => {
@@ -102,34 +114,69 @@ export function DashboardDataProvider({ children, initialCritical, initialSecond
     preloadStartedRef.current = true;
 
     const dateStr = getTodayDateStr();
+    let cachedCritical: DashboardCritical | null = null;
+    let cachedSecondary: DashboardSecondary | null = null;
     // Restore from cache first so reopening the PWA same day shows last-known data immediately (no "loses memory" on iOS)
     try {
       const cached = await getDashboardCache(dateStr);
-      if (cached?.critical && cached?.secondary) {
-        setState((prev) => ({
-          ...prev,
-          critical: cached.critical,
-          secondary: cached.secondary,
-          loadingCritical: false,
-          loadingSecondary: false,
-        }));
-      } else {
-        setState((prev) => ({ ...prev, loadingCritical: true, loadingSecondary: true }));
+      cachedCritical = cached?.critical ?? null;
+      cachedSecondary = cached?.secondary ?? null;
+      if (cachedCritical || cachedSecondary) {
+        setState((prev) => {
+          const nextCritical = prev.critical ?? cachedCritical;
+          const nextSecondary = prev.secondary ?? cachedSecondary;
+          return {
+            critical: nextCritical,
+            secondary: nextSecondary,
+            loadingCritical: prev.critical ? prev.loadingCritical : !nextCritical,
+            loadingSecondary: prev.secondary ? prev.loadingSecondary : !nextSecondary,
+          };
+        });
       }
     } catch {
-      setState((prev) => ({ ...prev, loadingCritical: true, loadingSecondary: true }));
+      cachedCritical = null;
+      cachedSecondary = null;
     }
 
+    const currentState = stateRef.current;
+    const needCritical = !(currentState.critical ?? cachedCritical);
+    const needSecondary = !(currentState.secondary ?? cachedSecondary);
+    if (!needCritical && !needSecondary) {
+      preloadStartedRef.current = false;
+      setState((prev) => ({ ...prev, loadingCritical: false, loadingSecondary: false }));
+      return;
+    }
+
+    setState((prev) => ({
+      ...prev,
+      loadingCritical: needCritical,
+      loadingSecondary: needSecondary,
+    }));
+
     try {
-      const { critical, secondary } = await fetchAll();
+      let critical = currentState.critical ?? cachedCritical;
+      let secondary = currentState.secondary ?? cachedSecondary;
+
+      if (needCritical && needSecondary) {
+        const all = await fetchAll();
+        critical = all.critical;
+        secondary = all.secondary;
+      } else if (needCritical) {
+        critical = await fetchCritical();
+      } else if (needSecondary) {
+        secondary = await fetchSecondary();
+      }
+
       setState((prev) => ({
         ...prev,
-        critical,
-        secondary,
+        critical: critical ?? prev.critical,
+        secondary: secondary ?? prev.secondary,
         loadingCritical: false,
         loadingSecondary: false,
       }));
-      await setDashboardCache(dateStr, critical, secondary);
+      if (critical && secondary) {
+        await setDashboardCache(dateStr, critical, secondary);
+      }
     } catch (err) {
       setState((prev) => ({ ...prev, loadingCritical: false, loadingSecondary: false }));
       preloadStartedRef.current = false; // Allow retry
@@ -139,10 +186,9 @@ export function DashboardDataProvider({ children, initialCritical, initialSecond
 
   useEffect(() => {
     if (typeof window === "undefined") return;
-    if (hasInitialData) return; // Server already sent data; no client fetch
-    if (skipPreloadForRoute) return; // /dashboard page provides data via nested provider; avoid double fetch
+    if (pathname !== "/dashboard" && hasInitialData) return; // Other routes get a full nested provider already.
     if (!preloadStartedRef.current) preloadDashboard().catch(() => {});
-  }, [preloadDashboard, hasInitialData, skipPreloadForRoute]);
+  }, [preloadDashboard, hasInitialData, pathname]);
 
   const value: DashboardDataContextValue = {
     ...state,

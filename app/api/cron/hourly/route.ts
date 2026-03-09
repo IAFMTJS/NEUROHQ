@@ -8,8 +8,10 @@ import { isAppEmailConfigured, sendReminderToUser } from "@/lib/email";
 import {
   getMorningEmailData,
   buildMorningEmailHtml,
+  buildMorningPushPayload,
   getEveningEmailData,
   buildEveningEmailHtml,
+  buildEveningPushPayload,
 } from "@/lib/daily-email-content";
 
 /**
@@ -33,22 +35,48 @@ export async function GET(request: Request) {
     .select("id, timezone, last_rollover_date, push_quiet_hours_start, push_quiet_hours_end")
     .not("timezone", "is", null);
 
-  let emailReminderUserIds = new Set<string>();
+  const prefsByUser = new Map<
+    string,
+    {
+      emailRemindersEnabled: boolean;
+      pushRemindersEnabled: boolean;
+      pushMorningEnabled: boolean;
+      pushEveningEnabled: boolean;
+    }
+  >();
   const { data: prefs, error: prefsError } = await supabase
     .from("user_preferences")
-    .select("user_id")
-    .eq("email_reminders_enabled", true);
-  if (!prefsError && prefs?.length) emailReminderUserIds = new Set(prefs.map((p) => p.user_id));
+    .select("user_id, email_reminders_enabled, push_reminders_enabled, push_morning_enabled, push_evening_enabled");
+  if (!prefsError && prefs?.length) {
+    for (const pref of prefs) {
+      prefsByUser.set(pref.user_id, {
+        emailRemindersEnabled: pref.email_reminders_enabled ?? true,
+        pushRemindersEnabled: pref.push_reminders_enabled ?? true,
+        pushMorningEnabled: pref.push_morning_enabled ?? true,
+        pushEveningEnabled: pref.push_evening_enabled ?? true,
+      });
+    }
+  }
 
   let rolled = 0;
   let quoteSent = 0;
   let morningEmailSent = 0;
   let eveningEmailSent = 0;
+  let morningPushSent = 0;
+  let eveningPushSent = 0;
 
   for (const u of users ?? []) {
     const tz = u.timezone as string;
     if (!tz) continue;
     const { date: todayStr, hour } = getLocalDateHour(tz);
+    const userPrefs = prefsByUser.get(u.id) ?? {
+      emailRemindersEnabled: true,
+      pushRemindersEnabled: true,
+      pushMorningEnabled: true,
+      pushEveningEnabled: true,
+    };
+    const quietStart = u.push_quiet_hours_start ? String(u.push_quiet_hours_start).slice(0, 5) : null;
+    const quietEnd = u.push_quiet_hours_end ? String(u.push_quiet_hours_end).slice(0, 5) : null;
 
     if (hour === 0 && u.last_rollover_date !== todayStr) {
       const yesterdayStr = yesterdayDate(todayStr);
@@ -75,10 +103,8 @@ export async function GET(request: Request) {
         .update({ last_rollover_date: todayStr })
         .eq("id", u.id);
 
-      if (process.env.VAPID_PRIVATE_KEY && process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY) {
-        const quietStart = u.push_quiet_hours_start ? String(u.push_quiet_hours_start).slice(0, 5) : null;
-        const quietEnd = u.push_quiet_hours_end ? String(u.push_quiet_hours_end).slice(0, 5) : null;
-        if (!isInQuietHours(0, quietStart, quietEnd)) {
+      if (process.env.VAPID_PRIVATE_KEY && process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY && userPrefs.pushRemindersEnabled) {
+        if (!isInQuietHours(hour, quietStart, quietEnd)) {
           const highSensory = await isHighSensoryDayForUser(supabase, u.id, todayStr);
           if (!highSensory) {
             const dayOfYear = Math.max(1, Math.min(365, getDayOfYearFromDateString(todayStr)));
@@ -90,6 +116,7 @@ export async function GET(request: Request) {
                 body: quoteText.length > 120 ? quoteText.slice(0, 117) + "…" : quoteText,
                 tag: "daily-quote",
                 url: "/dashboard",
+                priority: "low",
               });
               if (ok) quoteSent++;
             } catch {
@@ -100,7 +127,7 @@ export async function GET(request: Request) {
       }
     }
 
-    if (hour === 9 && emailReminderUserIds.has(u.id) && isAppEmailConfigured()) {
+    if (hour === 9 && userPrefs.emailRemindersEnabled && isAppEmailConfigured()) {
       const highSensory = await isHighSensoryDayForUser(supabase, u.id, todayStr);
       if (!highSensory) {
         try {
@@ -117,7 +144,26 @@ export async function GET(request: Request) {
         }
       }
     }
-    if (hour === 20 && emailReminderUserIds.has(u.id) && isAppEmailConfigured()) {
+    if (
+      hour === 9 &&
+      userPrefs.pushRemindersEnabled &&
+      userPrefs.pushMorningEnabled &&
+      process.env.VAPID_PRIVATE_KEY &&
+      process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY &&
+      !isInQuietHours(hour, quietStart, quietEnd)
+    ) {
+      const highSensory = await isHighSensoryDayForUser(supabase, u.id, todayStr);
+      if (!highSensory) {
+        try {
+          const data = await getMorningEmailData(supabase, u.id, todayStr);
+          const sent = await sendPushToUser(supabase, u.id, buildMorningPushPayload(data));
+          if (sent) morningPushSent++;
+        } catch {
+          // skip
+        }
+      }
+    }
+    if (hour === 20 && userPrefs.emailRemindersEnabled && isAppEmailConfigured()) {
       const highSensory = await isHighSensoryDayForUser(supabase, u.id, todayStr);
       if (!highSensory) {
         try {
@@ -134,6 +180,25 @@ export async function GET(request: Request) {
         }
       }
     }
+    if (
+      hour === 20 &&
+      userPrefs.pushRemindersEnabled &&
+      userPrefs.pushEveningEnabled &&
+      process.env.VAPID_PRIVATE_KEY &&
+      process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY &&
+      !isInQuietHours(hour, quietStart, quietEnd)
+    ) {
+      const highSensory = await isHighSensoryDayForUser(supabase, u.id, todayStr);
+      if (!highSensory) {
+        try {
+          const data = await getEveningEmailData(supabase, u.id, todayStr);
+          const sent = await sendPushToUser(supabase, u.id, buildEveningPushPayload(data));
+          if (sent) eveningPushSent++;
+        } catch {
+          // skip
+        }
+      }
+    }
   }
 
   return NextResponse.json({
@@ -143,6 +208,8 @@ export async function GET(request: Request) {
     quoteSent,
     morningEmailSent,
     eveningEmailSent,
+    morningPushSent,
+    eveningPushSent,
     usersChecked: users?.length ?? 0,
   });
 }
