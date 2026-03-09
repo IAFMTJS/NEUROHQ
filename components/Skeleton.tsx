@@ -1,7 +1,7 @@
 export function Skeleton({ className = "" }: { className?: string }) {
   return (
     <div
-      className={`animate-pulse rounded bg-neutral-700/60 ${className}`}
+      className={`animate-pulse rounded bg-[var(--bg-surface)]/60 border border-[var(--card-border)]/40 ${className}`}
       aria-hidden
     />
   );
@@ -51,17 +51,47 @@ export function DashboardShellSkeleton() {
         </div>
       </div>
       <Skeleton className="h-px w-full rounded-none" />
-      <div className="rounded-[28px] border border-[var(--card-border)] bg-[var(--bg-surface)]/40 p-6">
-        <Skeleton className="h-4 w-20" />
-        <Skeleton className="mt-4 h-10 w-56" />
-        <Skeleton className="mt-3 h-4 w-72 max-w-full" />
-        <Skeleton className="mt-6 h-14 w-44 rounded-2xl" />
+      <div className="rounded-[28px] border border-[var(--glass-border-soft)] bg-[radial-gradient(circle_at_top,_rgba(15,23,42,0.95)_0%,_rgba(3,7,18,0.98)_55%,_rgba(3,7,18,1)_100%)] p-6">
+        <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[var(--text-muted)]">
+          Command Center
+        </p>
+        <p className="mt-2 text-2xl font-bold text-[var(--text-primary)]">
+          Loading your day…
+        </p>
+        <p className="mt-1 text-sm text-[var(--text-secondary)] max-w-xl">
+          Energy, focus, missions and budget will appear in a moment. You can already orient yourself in the bridge.
+        </p>
+        <div className="mt-4 flex flex-wrap gap-3">
+          <Skeleton className="h-8 w-32 rounded-full" />
+          <Skeleton className="h-8 w-24 rounded-full" />
+          <Skeleton className="h-8 w-28 rounded-full" />
+        </div>
       </div>
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2 lg:gap-6">
-        <Skeleton className="min-h-[180px] rounded-[22px]" />
-        <Skeleton className="min-h-[180px] rounded-[22px]" />
-        <Skeleton className="min-h-[220px] rounded-[22px]" />
-        <Skeleton className="min-h-[220px] rounded-[22px]" />
+        <div className="rounded-[22px] border border-[var(--card-border)] bg-[var(--bg-surface)]/70 p-4">
+          <Skeleton className="mb-3 h-4 w-28" />
+          <Skeleton className="mb-2 h-5 w-40" />
+          <Skeleton className="mb-1 h-3 w-full" />
+          <Skeleton className="h-3 w-3/4" />
+        </div>
+        <div className="rounded-[22px] border border-[var(--card-border)] bg-[var(--bg-surface)]/70 p-4">
+          <Skeleton className="mb-3 h-4 w-32" />
+          <Skeleton className="mb-2 h-5 w-36" />
+          <Skeleton className="mb-1 h-3 w-full" />
+          <Skeleton className="h-3 w-2/3" />
+        </div>
+        <div className="rounded-[22px] border border-[var(--card-border)] bg-[var(--bg-surface)]/70 p-4">
+          <Skeleton className="mb-3 h-4 w-24" />
+          <Skeleton className="mb-2 h-5 w-32" />
+          <Skeleton className="mb-1 h-3 w-full" />
+          <Skeleton className="h-3 w-4/5" />
+        </div>
+        <div className="rounded-[22px] border border-[var(--card-border)] bg-[var(--bg-surface)]/70 p-4">
+          <Skeleton className="mb-3 h-4 w-28" />
+          <Skeleton className="mb-2 h-5 w-40" />
+          <Skeleton className="mb-1 h-3 w-full" />
+          <Skeleton className="h-3 w-3/5" />
+        </div>
       </div>
     </div>
   );

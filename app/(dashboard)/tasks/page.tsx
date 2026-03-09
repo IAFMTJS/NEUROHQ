@@ -35,6 +35,7 @@ import hudStyles from "@/components/hud-test/hud.module.css";
 import { TasksTabsShell } from "@/components/missions";
 import { TasksDailyBootstrap } from "@/components/missions/TasksDailyBootstrap";
 import { TasksCalendarAsync } from "./TasksCalendarAsync";
+import { Skeleton } from "@/components/Skeleton";
 
 /** Tasks page must always run on the server so latest data is rendered after refresh. */
 export const dynamic = "force-dynamic";
@@ -162,9 +163,9 @@ function makeTasksHref(
 function HeaderMetaFallback() {
   return (
     <div className="mascot-follow-row flex flex-wrap items-center justify-end gap-2">
-      <div className="min-h-[40px] min-w-[160px] animate-pulse rounded-full bg-white/5" aria-hidden />
-      <div className="h-10 w-24 animate-pulse rounded-full bg-white/5" aria-hidden />
-      <div className="h-10 w-28 animate-pulse rounded-full bg-white/5" aria-hidden />
+      <Skeleton className="min-h-[40px] min-w-[160px] rounded-full" />
+      <Skeleton className="h-10 w-24 rounded-full" />
+      <Skeleton className="h-10 w-28 rounded-full" />
     </div>
   );
 }
@@ -175,21 +176,59 @@ function MissionsSectionFallback() {
       <CornerNode corner="top-left" />
       <CornerNode corner="top-right" />
       <div className="space-y-4">
-        <div className="min-h-[44px] animate-pulse rounded-lg bg-white/5" aria-hidden />
-        <div className="h-10 animate-pulse rounded-lg bg-white/5" aria-hidden />
-        <div className="min-h-[96px] animate-pulse rounded-xl bg-white/5" aria-hidden />
-        <div className="grid gap-3 md:grid-cols-2">
-          <div className="min-h-[88px] animate-pulse rounded-xl bg-white/5" aria-hidden />
-          <div className="min-h-[88px] animate-pulse rounded-xl bg-white/5" aria-hidden />
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <h2 className="text-base font-semibold text-[var(--text-primary)]">
+              Today&apos;s missions
+            </h2>
+            <p className="mt-0.5 text-xs text-[var(--text-muted)]">
+              Building your Commander view for today…
+            </p>
+          </div>
+          <Skeleton className="h-9 w-32 rounded-full" />
         </div>
-        <div className="min-h-[240px] animate-pulse rounded-xl bg-white/5" aria-hidden />
+        <div className="rounded-2xl border border-[var(--card-border)] bg-[var(--bg-surface)]/60 p-4">
+          <Skeleton className="mb-3 h-4 w-40" />
+          <ul className="space-y-2">
+            <li className="flex items-center gap-3">
+              <Skeleton className="h-5 w-5 rounded-lg" />
+              <Skeleton className="h-4 flex-1" />
+            </li>
+            <li className="flex items-center gap-3">
+              <Skeleton className="h-5 w-5 rounded-lg" />
+              <Skeleton className="h-4 flex-1" />
+            </li>
+            <li className="flex items-center gap-3">
+              <Skeleton className="h-5 w-5 rounded-lg" />
+              <Skeleton className="h-4 flex-1" />
+            </li>
+          </ul>
+        </div>
+        <div className="grid gap-3 md:grid-cols-2">
+          <div className="rounded-2xl border border-[var(--card-border)] bg-[var(--bg-surface)]/60 p-4">
+            <Skeleton className="mb-2 h-4 w-28" />
+            <Skeleton className="mb-1 h-3 w-full" />
+            <Skeleton className="h-3 w-3/4" />
+          </div>
+          <div className="rounded-2xl border border-[var(--card-border)] bg-[var(--bg-surface)]/60 p-4">
+            <Skeleton className="mb-2 h-4 w-32" />
+            <Skeleton className="mb-1 h-3 w-full" />
+            <Skeleton className="h-3 w-2/3" />
+          </div>
+        </div>
       </div>
     </SciFiPanel>
   );
 }
 
 function CalendarSectionFallback() {
-  return <div className="min-h-[320px] animate-pulse rounded-xl bg-white/5" aria-hidden />;
+  return (
+    <div className="min-h-[320px] rounded-2xl border border-[var(--card-border)] bg-[var(--bg-surface)]/60 p-4" aria-hidden>
+      <Skeleton className="mb-3 h-4 w-32" />
+      <Skeleton className="mb-2 h-5 w-40" />
+      <Skeleton className="h-64 w-full rounded-xl" />
+    </div>
+  );
 }
 
 async function TasksHeaderMetaAsync({ dateStr, yesterdayStr }: { dateStr: string; yesterdayStr: string }) {

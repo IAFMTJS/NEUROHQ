@@ -68,6 +68,7 @@ export function DashboardClientShell() {
   const [critical, setCritical] = useState<DashboardCritical | null>(() => cache?.critical ?? null);
   const [secondary, setSecondary] = useState<DashboardSecondary | null>(() => cache?.secondary ?? null);
   const [error, setError] = useState<string | null>(null);
+  const [pendingDailyForHero, setPendingDailyForHero] = useState<ReturnType<typeof getPendingDailyState>>(null);
 
   useEffect(() => {
     const fromCache = cache?.critical ?? null;
@@ -113,6 +114,26 @@ export function DashboardClientShell() {
     const t = setTimeout(() => cache.preloadDashboard().catch(() => {}), 2000);
     return () => clearTimeout(t);
   }, [!!critical]);
+
+  useEffect(() => {
+    const d = critical?.dateStr;
+    if (!d) return;
+    setPendingDailyForHero(getPendingDailyState(d));
+    const onSaved = () => setPendingDailyForHero(getPendingDailyState(d));
+    window.addEventListener("neurohq-daily-state-saved", onSaved);
+    return () => window.removeEventListener("neurohq-daily-state-saved", onSaved);
+  }, [critical?.dateStr]);
+
+  const heroState = useMemo(() => {
+    if (pendingDailyForHero) {
+      return {
+        energy: pendingDailyForHero.energy,
+        focus: pendingDailyForHero.focus,
+        sensory_load: pendingDailyForHero.sensory_load,
+      };
+    }
+    return null;
+  }, [pendingDailyForHero]);
 
   if (error) {
     return (
@@ -188,25 +209,6 @@ export function DashboardClientShell() {
   const progressionRank = secondary?.progressionRank as Record<string, unknown> | null | undefined;
   const primeWindow = secondary?.primeWindow as { start: string; end: string; active: boolean } | null | undefined;
   const weeklyBudgetOutcome = secondary?.weeklyBudgetOutcome as { message: string; recoveryAvailable: boolean } | null | undefined;
-
-  const [pendingDailyForHero, setPendingDailyForHero] = useState<ReturnType<typeof getPendingDailyState>>(null);
-  useEffect(() => {
-    setPendingDailyForHero(getPendingDailyState(dateStr));
-    const onSaved = () => setPendingDailyForHero(getPendingDailyState(dateStr));
-    window.addEventListener("neurohq-daily-state-saved", onSaved);
-    return () => window.removeEventListener("neurohq-daily-state-saved", onSaved);
-  }, [dateStr]);
-
-  const heroState = useMemo(() => {
-    if (pendingDailyForHero) {
-      return {
-        energy: pendingDailyForHero.energy,
-        focus: pendingDailyForHero.focus,
-        sensory_load: pendingDailyForHero.sensory_load,
-      };
-    }
-    return null;
-  }, [pendingDailyForHero]);
 
   const heroEnergyPct = heroState ? Math.round((heroState.energy / 10) * 100) : energyPct;
   const heroFocusPct = heroState ? Math.round((heroState.focus / 10) * 100) : focusPct;
