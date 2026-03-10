@@ -7,7 +7,35 @@
 
 import { useState } from "react";
 import type { SimulationResult } from "@/lib/dcic/types";
-import { confirmCompleteMission, confirmStartMission } from "@/app/actions/dcic/missions";
+
+// API wrapper: use /api/dcic/* so Service Worker can queue writes offline
+async function apiConfirmStartMission(missionId: string) {
+  const res = await fetch("/api/dcic/confirm-start", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    credentials: "include",
+    body: JSON.stringify({ missionId }),
+  });
+  const data = (await res.json().catch(() => ({}))) as { success?: boolean; error?: string };
+  if (!res.ok || !data.success) {
+    return { success: false, error: data.error ?? `HTTP ${res.status}` };
+  }
+  return data;
+}
+
+async function apiConfirmCompleteMission(missionId: string) {
+  const res = await fetch("/api/dcic/confirm-complete", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    credentials: "include",
+    body: JSON.stringify({ missionId }),
+  });
+  const data = (await res.json().catch(() => ({}))) as { success?: boolean; error?: string };
+  if (!res.ok || !data.success) {
+    return { success: false, error: data.error ?? `HTTP ${res.status}` };
+  }
+  return data;
+}
 
 interface MissionConfirmationModalProps {
   open: boolean;
@@ -38,8 +66,8 @@ export function MissionConfirmationModal({
     try {
       const result =
         actionType === "start"
-          ? await confirmStartMission(missionId)
-          : await confirmCompleteMission(missionId);
+          ? await apiConfirmStartMission(missionId)
+          : await apiConfirmCompleteMission(missionId);
 
       if (!result.success) {
         setError(result.error || "Failed to execute mission");

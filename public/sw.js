@@ -347,6 +347,27 @@ self.addEventListener("fetch", function (event) {
   if (url.pathname.startsWith("/api/")) {
     const method = event.request.method.toUpperCase();
 
+    // Push / auth / security-sensitive endpoints: NEVER cache or queue, always network-only
+    if (
+      url.pathname.startsWith("/api/push") ||
+      url.pathname.startsWith("/api/auth") ||
+      url.pathname.startsWith("/api/stripe") ||
+      url.pathname.startsWith("/api/billing")
+    ) {
+      event.respondWith(
+        fetch(event.request).catch(function () {
+          return new Response(
+            JSON.stringify({ error: "Offline", offline: true }),
+            {
+              status: 503,
+              headers: { "Content-Type": "application/json" },
+            }
+          );
+        })
+      );
+      return;
+    }
+
     // Writes: POST/PUT/PATCH/DELETE -> queue on network failure
     if (method === "POST" || method === "PUT" || method === "PATCH" || method === "DELETE") {
       const networkRequest = event.request.clone();

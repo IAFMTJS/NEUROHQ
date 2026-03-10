@@ -36,6 +36,8 @@ import type { HeatmapDay } from "@/app/actions/dcic/heatmap";
 import type { WeekSummary } from "@/app/actions/analytics";
 import type { RealityReport } from "@/app/actions/report";
 import { getDayOfYearFromDateString } from "@/lib/utils/timezone";
+import { useDCICGameState } from "@/lib/dcic/game-state-client";
+import { DCICStatusCard } from "@/components/dcic/DCICStatusCard";
 
 /* Below-fold: ssr: false = load after hydration for faster first paint */
 const IdentityBlock = dynamic(() => import("@/components/dashboard/IdentityBlock").then((m) => ({ default: m.IdentityBlock })), { ssr: false, loading: () => <div className="glass-card min-h-[140px] animate-pulse rounded-[22px]" aria-hidden /> });
@@ -69,6 +71,7 @@ export function DashboardClientShell() {
   const [secondary, setSecondary] = useState<DashboardSecondary | null>(() => cache?.secondary ?? null);
   const [error, setError] = useState<string | null>(null);
   const [pendingDailyForHero, setPendingDailyForHero] = useState<ReturnType<typeof getPendingDailyState>>(null);
+  const { gameState, status: dcicStatus } = useDCICGameState();
 
   useEffect(() => {
     const fromCache = cache?.critical ?? null;
@@ -184,6 +187,8 @@ export function DashboardClientShell() {
     copyVariant,
     accountabilitySettings,
   } = critical;
+
+  const dcicLevel = gameState?.level ?? xp.level;
   const confrontationSummary = secondary?.confrontationSummary;
   const identity = secondary?.identity;
   const identityEngine = secondary?.identityEngine;
@@ -246,7 +251,7 @@ export function DashboardClientShell() {
             <OnboardingBanner />
               <div className="dashboard-top-strip">
               <div className="dashboard-top-strip-track">
-                <XPBadge totalXp={xp.total_xp} level={xp.level} compact href="/xp" />
+                <XPBadge totalXp={xp.total_xp} level={dcicLevel} compact href="/xp" />
                 {badgeBudgetRemainingCents != null && <BudgetBadge budgetRemainingCents={badgeBudgetRemainingCents} currency={badgeCurrency} />}
                 <EconomyBadge disciplinePoints={economy.discipline_points} focusCredits={economy.focus_credits} momentumBoosters={economy.momentum_boosters} compact />
                 <DashboardActionsTrigger count={actionsCount}>
@@ -389,6 +394,11 @@ export function DashboardClientShell() {
                 </div>
               </CollapsibleDashboardCard>
               <div className="flex flex-col gap-4">
+                <CollapsibleDashboardCard title="Commander status (DCIC)" storageKey="dcic-status" defaultExpanded={true}>
+                  <div className="p-4 md:p-6">
+                    <DCICStatusCard />
+                  </div>
+                </CollapsibleDashboardCard>
                 <CollapsibleDashboardCard title="Vandaag door de app bepaald" storageKey="today-engine" defaultExpanded={true}>
                   {todayEngine != null && xpForecast !== undefined ? (
                     <div className="p-4 md:p-6">
