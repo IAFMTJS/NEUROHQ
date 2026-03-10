@@ -37,7 +37,7 @@ Run **`npm run deploy:check`** before pushing (runs `next build` only). On Windo
 
 ### 1.2 Get credentials
 
-In Project Settings → API:
+In Project Settings → API (see also [docs/SUPABASE_SLOW_QUERIES.md](docs/SUPABASE_SLOW_QUERIES.md) if slow queries appear in Reports):
 
 - **Project URL** → `NEXT_PUBLIC_SUPABASE_URL`
 - **anon public** key → `NEXT_PUBLIC_SUPABASE_ANON_KEY`

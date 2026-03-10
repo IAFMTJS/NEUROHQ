@@ -1,7 +1,10 @@
+import { LoadingScene } from "@/components/LoadingScene";
+
 export default function AssistantLoading() {
   return (
-    <div className="flex min-h-[50vh] items-center justify-center">
-      <p className="text-sm text-[var(--text-muted)]">Laden…</p>
-    </div>
+    <LoadingScene
+      title="Assistant console is loading"
+      subtitle="Syncing conversations, context and brain maps. The console wakes up instantly; history fills in right after."
+    />
   );
 }
