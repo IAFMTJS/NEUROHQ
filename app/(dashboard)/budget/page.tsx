@@ -10,7 +10,6 @@ import {
   getBudgetEntries,
   getBudgetSettings,
   getBudgetPeriodBounds,
-  copyOldBudgetEntriesToArchive,
   getCurrentMonthExpensesCents,
   getCurrentMonthIncomeCents,
   getCurrentWeekExpensesCents,
@@ -90,11 +89,15 @@ export default async function BudgetPage({ searchParams }: Props) {
   const today = getBudgetToday();
   const params = await searchParams;
   const monthParam = params.month;
-   const tabParam = params.tab;
+  const tabParam = params.tab;
   const isHistoryView = !!monthParam && /^\d{4}-\d{2}$/.test(monthParam);
   const [year, month] = isHistoryView ? monthParam!.split("-").map(Number) : [0, 0];
 
-  try { await generateRecurringEntries(); } catch { /* table may not exist yet */ }
+  try {
+    await generateRecurringEntries();
+  } catch {
+    /* table may not exist yet */
+  }
   await syncBudgetDisciplineFromDataForToday();
   const periodBounds = await getBudgetPeriodBounds();
   const { periodStart, periodEnd, isPaydayCycle } = periodBounds;
@@ -103,7 +106,6 @@ export default async function BudgetPage({ searchParams }: Props) {
   const prevPeriodRange = isPaydayCycle
     ? getPreviousPeriodBounds(periodStart, paydayDayOfMonth ?? 25)
     : { prevStart: prevMonthStart, prevEnd: prevMonthEnd };
-  try { await copyOldBudgetEntriesToArchive(periodStart); } catch { /* archive table may not exist yet */ }
   const [goals, entries, nextMonthEntries, prevMonthEntries, alternatives, budgetSettings, currentMonthExpenses, currentMonthIncome, currentWeekExpenses, currentWeekIncome, activeFrozen, readyForAction, unplannedSummary, contributions, recurringTemplates, financeState, financialInsights, incomeSources, budgetTargets, _paydayDayOfMonth, weeklyReviewStatus, disciplineXpThisWeek, disciplineCompletedToday, impulseWindow] = await Promise.all([
     getSavingsGoals(),
     getBudgetEntries(periodStart, periodEnd),
@@ -179,8 +181,10 @@ export default async function BudgetPage({ searchParams }: Props) {
   if (!historyMode && isPaydayCycle && periodStart) {
     const paydayDay = paydayDayOfMonth ?? 25;
     const prev = getPreviousPeriodBounds(periodStart, paydayDay);
-    const prevEntries = await getBudgetEntries(prev.prevStart, prev.prevEnd) as EntryRow[];
-    const prevExpensesCents = prevEntries
+    const prevEntriesForCalc = (prevMonthEntries as EntryRow[]).filter(
+      (e) => e.date >= prev.prevStart && e.date <= prev.prevEnd,
+    );
+    const prevExpensesCents = prevEntriesForCalc
       .filter((e) => (e.amount_cents ?? 0) < 0)
       .reduce((sum, e) => sum + Math.abs(e.amount_cents ?? 0), 0);
     const spendable = Math.max(0, (budgetSettings.monthly_budget_cents ?? 0) - (budgetSettings.monthly_savings_cents ?? 0));

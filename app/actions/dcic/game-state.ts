@@ -21,23 +21,39 @@ export async function getGameState(): Promise<GameState | null> {
   } = await supabase.auth.getUser();
   if (!user) return null;
 
-  // Get XP and level from existing user_xp table
-  const { data: xpData } = await supabase
-    .from("user_xp")
-    .select("total_xp")
-    .eq("user_id", user.id)
-    .single();
+  // Fetch all core game data in parallel to avoid a slow waterfall.
+  const today = new Date().toISOString().split("T")[0];
+
+  const [
+    { data: xpData },
+    { data: missionsData },
+    { data: streakData },
+    { data: achievementsData },
+    { data: skillsData },
+    { data: dailyState },
+    { getFinanceState },
+  ] = await Promise.all([
+    supabase.from("user_xp").select("total_xp").eq("user_id", user.id).single(),
+    supabase
+      .from("missions")
+      .select("*")
+      .eq("user_id", user.id)
+      .order("created_at", { ascending: false })
+      .limit(20),
+    supabase.from("user_streak").select("*").eq("user_id", user.id).single(),
+    supabase.from("achievements").select("achievement_key").eq("user_id", user.id),
+    supabase.from("user_skills").select("skill_key").eq("user_id", user.id),
+    supabase
+      .from("daily_state")
+      .select("energy, focus, sensory_load")
+      .eq("user_id", user.id)
+      .eq("date", today)
+      .single(),
+    import("./finance-state"),
+  ]);
 
   const totalXP = (xpData?.total_xp as number) ?? 0;
   const level = calculateLevelFromXP(totalXP);
-
-  // Get missions from missions table
-  const { data: missionsData } = await supabase
-    .from("missions")
-    .select("*")
-    .eq("user_id", user.id)
-    .order("created_at", { ascending: false })
-    .limit(20);
 
   const missions: Mission[] = (missionsData || []).map((m: Record<string, unknown>) => ({
     id: m.id as string,
@@ -60,52 +76,22 @@ export async function getGameState(): Promise<GameState | null> {
     expiresAt: m.expires_at as string | null ?? null,
   }));
 
-  // Get streak from user_streak table
-  const { data: streakData } = await supabase
-    .from("user_streak")
-    .select("*")
-    .eq("user_id", user.id)
-    .single();
-
   const streak = {
     current: streakData?.current_streak ?? 0,
     longest: streakData?.longest_streak ?? 0,
     lastCompletionDate: streakData?.last_completion_date ?? null,
   };
 
-  // Get achievements
-  const { data: achievementsData } = await supabase
-    .from("achievements")
-    .select("achievement_key")
-    .eq("user_id", user.id);
-
   const achievements: Record<string, boolean> = {};
   (achievementsData || []).forEach((a) => {
     achievements[a.achievement_key] = true;
   });
-
-  // Get skills
-  const { data: skillsData } = await supabase
-    .from("user_skills")
-    .select("skill_key")
-    .eq("user_id", user.id);
 
   const skills: Record<string, boolean> = {};
   (skillsData || []).forEach((s) => {
     skills[s.skill_key] = true;
   });
 
-  // Get daily state for stats
-  const today = new Date().toISOString().split("T")[0];
-  const { data: dailyState } = await supabase
-    .from("daily_state")
-    .select("energy, focus, sensory_load")
-    .eq("user_id", user.id)
-    .eq("date", today)
-    .single();
-
-  // Get finance state
-  const { getFinanceState } = await import("./finance-state");
   const financeState = await getFinanceState();
 
   const rank = rankFromLevel(level);

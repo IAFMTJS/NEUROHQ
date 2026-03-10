@@ -396,7 +396,7 @@ export function DashboardClientShell() {
               <div className="flex flex-col gap-4">
                 <CollapsibleDashboardCard title="Commander status (DCIC)" storageKey="dcic-status" defaultExpanded={true}>
                   <div className="p-4 md:p-6">
-                    <DCICStatusCard />
+                    <DCICStatusCard gameState={gameState} status={dcicStatus} />
                   </div>
                 </CollapsibleDashboardCard>
                 <CollapsibleDashboardCard title="Vandaag door de app bepaald" storageKey="today-engine" defaultExpanded={true}>

@@ -1,10 +1,15 @@
 "use client";
 
-import { useDCICGameState } from "@/lib/dcic/game-state-client";
+import type { GameState } from "@/lib/dcic/types";
 
-export function DCICStatusCard() {
-  const { gameState, status } = useDCICGameState();
+type Status = "idle" | "loading" | "ready" | "error";
 
+type Props = {
+  gameState: GameState | null;
+  status: Status;
+};
+
+export function DCICStatusCard({ gameState, status }: Props) {
   const loading = status === "loading" && !gameState;
 
   if (status === "error" && !gameState) {

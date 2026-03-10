@@ -153,47 +153,70 @@ export async function getFinanceState(): Promise<FinanceState | null> {
     .filter((e) => e.amount_cents < 0)
     .reduce((sum, e) => sum + Math.abs(e.amount_cents), 0);
 
-  // Budget targets: from budget_targets table, or defaults from monthly_budget_cents
-  const { data: budgetSettings } = await supabase
-    .from("users")
-    .select("monthly_budget_cents, monthly_savings_cents, budget_period")
-    .eq("id", user.id)
-    .single();
+  // Budget settings + planning windows + targets/goals can be fetched in parallel
+  const [
+    { data: budgetSettings },
+    { data: planningEntries },
+    { data: currentWeekEntries },
+    { data: targetRows },
+    { data: goalsData },
+  ] = await Promise.all([
+    supabase
+      .from("users")
+      .select("monthly_budget_cents, monthly_savings_cents, budget_period")
+      .eq("id", user.id)
+      .single(),
+    (async () => {
+      // planningEntries depends on planningPeriodStart/End, which we compute below.
+      // We keep this in a closure so it can still participate in Promise.all.
+      let planningPeriodStart: string;
+      let planningPeriodEnd: string;
+      const todayStrInner = todayStr;
+
+      if ((budgetSettings as { budget_period?: string } | null)?.budget_period === "weekly") {
+        const weekBounds = getBudgetWeekBounds(todayStrInner);
+        planningPeriodStart = weekBounds.start;
+        planningPeriodEnd = weekBounds.end;
+      } else if (lastPaydayDateStr && /^\d{4}-\d{2}-\d{2}$/.test(lastPaydayDateStr)) {
+        const cycleBounds = getBudgetCycleBounds(todayStrInner, lastPaydayDateStr, paydayDay);
+        planningPeriodStart = cycleBounds.periodStart;
+        planningPeriodEnd = cycleBounds.periodEnd;
+      } else {
+        const prevPayday = getPreviousPaydayDateFromDay(todayStrInner, paydayDay);
+        const nextPayday = getNextPaydayDateFromDay(todayStrInner, paydayDay);
+        const periodEndDate = new Date(nextPayday + "T12:00:00Z");
+        periodEndDate.setUTCDate(periodEndDate.getUTCDate() - 1);
+        planningPeriodStart = prevPayday;
+        planningPeriodEnd = periodEndDate.toISOString().slice(0, 10);
+      }
+
+      return supabase
+        .from("budget_entries")
+        .select("amount_cents, date")
+        .eq("user_id", user.id)
+        .gte("date", planningPeriodStart)
+        .lte("date", planningPeriodEnd);
+    })(),
+    (async () => {
+      const weekBounds = getBudgetWeekBounds(todayStr);
+      return supabase
+        .from("budget_entries")
+        .select("amount_cents, date")
+        .eq("user_id", user.id)
+        .gte("date", weekBounds.start)
+        .lte("date", weekBounds.end);
+    })(),
+    supabase
+      .from("budget_targets")
+      .select("category, target_cents, priority, flexible")
+      .eq("user_id", user.id),
+    supabase.from("savings_goals").select("*").eq("user_id", user.id),
+  ]);
+
   const monthlyBudget = budgetSettings?.monthly_budget_cents ?? 0;
   const monthlySavings = budgetSettings?.monthly_savings_cents ?? 0;
   const budgetPeriod = budgetSettings?.budget_period === "weekly" ? "weekly" : "monthly";
 
-  let planningPeriodStart: string;
-  let planningPeriodEnd: string;
-  if (budgetPeriod === "weekly") {
-    const weekBounds = getBudgetWeekBounds(todayStr);
-    planningPeriodStart = weekBounds.start;
-    planningPeriodEnd = weekBounds.end;
-  } else if (lastPaydayDateStr && /^\d{4}-\d{2}-\d{2}$/.test(lastPaydayDateStr)) {
-    const cycleBounds = getBudgetCycleBounds(todayStr, lastPaydayDateStr, paydayDay);
-    planningPeriodStart = cycleBounds.periodStart;
-    planningPeriodEnd = cycleBounds.periodEnd;
-  } else {
-    const prevPayday = getPreviousPaydayDateFromDay(todayStr, paydayDay);
-    const nextPayday = getNextPaydayDateFromDay(todayStr, paydayDay);
-    const periodEndDate = new Date(nextPayday + "T12:00:00Z");
-    periodEndDate.setUTCDate(periodEndDate.getUTCDate() - 1);
-    planningPeriodStart = prevPayday;
-    planningPeriodEnd = periodEndDate.toISOString().slice(0, 10);
-  }
-  const weekBounds = getBudgetWeekBounds(todayStr);
-  const { data: planningEntries } = await supabase
-    .from("budget_entries")
-    .select("amount_cents, date")
-    .eq("user_id", user.id)
-    .gte("date", planningPeriodStart)
-    .lte("date", planningPeriodEnd);
-  const { data: currentWeekEntries } = await supabase
-    .from("budget_entries")
-    .select("amount_cents, date")
-    .eq("user_id", user.id)
-    .gte("date", weekBounds.start)
-    .lte("date", weekBounds.end);
   const periodSpentCents = (planningEntries ?? [])
     .filter((entry) => (entry.amount_cents ?? 0) < 0)
     .reduce((sum, entry) => sum + Math.abs(entry.amount_cents ?? 0), 0);
@@ -211,10 +234,6 @@ export async function getFinanceState(): Promise<FinanceState | null> {
     currentBalance = monthlyBudget - totalExpenses;
   }
 
-  const { data: targetRows } = await supabase
-    .from("budget_targets")
-    .select("category, target_cents, priority, flexible")
-    .eq("user_id", user.id);
   let budgetTargets: BudgetTarget[];
   if (targetRows?.length) {
     budgetTargets = targetRows.map((r: { category: string; target_cents: number; priority: number; flexible: boolean }) => ({
@@ -246,12 +265,6 @@ export async function getFinanceState(): Promise<FinanceState | null> {
       recurring: false, // TODO: Check recurring templates
       isPlanned: e.is_planned || false,
     }));
-
-  // Get savings goals
-  const { data: goalsData } = await supabase
-    .from("savings_goals")
-    .select("*")
-    .eq("user_id", user.id);
 
   const goals: SavingsGoal[] = (goalsData || []).map((g) => ({
     id: g.id,

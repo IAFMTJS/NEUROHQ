@@ -257,11 +257,10 @@ async function TasksHeaderMetaAsync({ dateStr, yesterdayStr }: { dateStr: string
   );
 }
 
-async function MissionsSectionAsync({ dateStr }: { dateStr: string }) {
-  const [mode, backlog, futureTasks, completedToday, smartSuggestion, energyCap, energyBudget, decisionBlocks, identity, identityEngine, tasksNormalResult] =
+async function MissionsSectionAsync({ dateStr, backlog }: { dateStr: string; backlog: Awaited<ReturnType<typeof getBacklogTasks>> }) {
+  const [mode, futureTasks, completedToday, smartSuggestion, energyCap, energyBudget, decisionBlocks, identity, identityEngine, tasksNormalResult] =
     await Promise.all([
       getMode(dateStr),
-      getBacklogTasks(dateStr),
       getFutureTasks(dateStr),
       getCompletedTodayTasks(dateStr),
       getSmartSuggestion(dateStr),
@@ -440,14 +439,14 @@ async function CalendarSectionAsync({
   monthParam,
   selectedCalendarDay,
   calendarView,
+  backlog,
 }: {
   dateStr: string;
   monthParam: string;
   selectedCalendarDay: string;
   calendarView: CalendarView;
+  backlog: Awaited<ReturnType<typeof getBacklogTasks>>;
 }) {
-  const backlog = await getBacklogTasks(dateStr);
-
   return (
     <TasksCalendarAsync
       dateStr={dateStr}
@@ -469,7 +468,10 @@ export default async function TasksPage({ searchParams }: Props) {
   const monthParam = isValidMonthKey(params.month) ? params.month : dateStr.slice(0, 7);
   const dayParam = isValidDayKey(params.day) ? params.day : null;
   const selectedCalendarDay = dayParam ?? dateStr;
-  const prefs = await getUserPreferencesOrDefaults();
+  const [prefs, backlog] = await Promise.all([
+    getUserPreferencesOrDefaults(),
+    getBacklogTasks(dateStr),
+  ]);
 
   const missionsHref = makeTasksHref(
     { add: params.add, month: monthParam, day: dayParam, calView: calendarView },
@@ -529,7 +531,7 @@ export default async function TasksPage({ searchParams }: Props) {
         <TasksTabsShell initialTab={activeTab} missionsHref={missionsHref} calendarHref={calendarHref} header={headerSection}>
           {activeTab === "missions" ? (
             <Suspense fallback={<MissionsSectionFallback />}>
-              <MissionsSectionAsync dateStr={dateStr} />
+              <MissionsSectionAsync dateStr={dateStr} backlog={backlog} />
             </Suspense>
           ) : (
             <Suspense fallback={<CalendarSectionFallback />}>
@@ -538,6 +540,7 @@ export default async function TasksPage({ searchParams }: Props) {
                 monthParam={monthParam}
                 selectedCalendarDay={selectedCalendarDay}
                 calendarView={calendarView}
+                backlog={backlog}
               />
             </Suspense>
           )}
