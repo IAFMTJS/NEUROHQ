@@ -10,7 +10,7 @@ import { getEnergyBudget } from "@/app/actions/energy";
 import { getBudgetSettings, getCurrentMonthExpensesCents } from "@/app/actions/budget";
 import { getWeeklyMinutes, getWeeklyLearningTarget, getLearningStreak } from "@/app/actions/learning";
 import { getLearningState } from "@/app/actions/learning-state";
-import type { LearningSnapshot } from "@/lib/hq-store";
+import type { LearningSnapshot } from "@/types/hq-store.types";
 
 export async function GET() {
   try {

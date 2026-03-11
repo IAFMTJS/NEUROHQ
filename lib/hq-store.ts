@@ -3,17 +3,9 @@ import { persist } from "zustand/middleware";
 import type { GameState } from "@/lib/dcic/types";
 import type { DashboardCritical, DashboardSecondary } from "@/types/dashboard-data.types";
 import type { Task } from "@/types/database.types";
-import type { LearningState } from "@/app/actions/learning-state";
+import type { LearningSnapshot } from "@/types/hq-store.types";
 
-export type LearningSnapshot = {
-  weeklyMinutes: number;
-  weeklyLearningTarget: number;
-  learningStreak: number;
-  focus: LearningState["focus"] | null;
-  streams: LearningState["streams"];
-  consistency: LearningState["consistency"];
-  reflection: Pick<LearningState["reflection"], "lastEntryDate" | "reflectionRequired">;
-};
+export type { LearningSnapshot };
 
 type DCICSlice = {
   gameState: GameState | null;
