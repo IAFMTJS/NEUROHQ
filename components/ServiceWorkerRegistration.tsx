@@ -8,33 +8,6 @@ export function ServiceWorkerRegistration() {
 
   useEffect(() => {
     if (typeof window === "undefined" || !("serviceWorker" in navigator)) return;
-    const isProduction = process.env.NODE_ENV === "production";
-
-    // In dev, a previously installed SW can serve stale HTML and cause hydration mismatches.
-    // Force cleanup so `next dev` always reflects current server/client bundles.
-    if (!isProduction) {
-      navigator.serviceWorker
-        .getRegistrations()
-        .then((registrations) => Promise.all(registrations.map((registration) => registration.unregister())))
-        .catch(() => {
-          // Ignore cleanup errors in development.
-        });
-      if ("caches" in window) {
-        caches
-          .keys()
-          .then((keys) =>
-            Promise.all(
-              keys
-                .filter((key) => key.startsWith("neurohq-"))
-                .map((key) => caches.delete(key))
-            )
-          )
-          .catch(() => {
-            // Ignore cleanup errors in development.
-          });
-      }
-      return;
-    }
 
     const onControllerChange = () => window.location.reload();
     navigator.serviceWorker.addEventListener("controllerchange", onControllerChange);

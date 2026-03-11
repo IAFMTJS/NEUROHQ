@@ -24,7 +24,7 @@ export async function startMission(missionId: string): Promise<{
   simulation?: unknown;
   error?: string;
 }> {
-  const gameState = await getGameState();
+  const gameState = await getGameState({ includeFinance: false });
   if (!gameState) {
     return { success: false, error: "Game state not found" };
   }
@@ -52,7 +52,7 @@ export async function confirmStartMission(missionId: string): Promise<{
   success: boolean;
   error?: string;
 }> {
-  const gameState = await getGameState();
+  const gameState = await getGameState({ includeFinance: false });
   if (!gameState) {
     return { success: false, error: "Game state not found" };
   }
@@ -96,7 +96,7 @@ export async function completeMission(missionId: string): Promise<{
   simulation?: unknown;
   error?: string;
 }> {
-  const gameState = await getGameState();
+  const gameState = await getGameState({ includeFinance: false });
   if (!gameState) {
     return { success: false, error: "Game state not found" };
   }
@@ -124,7 +124,7 @@ export async function confirmCompleteMission(missionId: string): Promise<{
   success: boolean;
   error?: string;
 }> {
-  const gameState = await getGameState();
+  const gameState = await getGameState({ includeFinance: false });
   if (!gameState) {
     return { success: false, error: "Game state not found" };
   }

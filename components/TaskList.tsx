@@ -1,10 +1,11 @@
 "use client";
 
-import { useState, useTransition, useEffect, useMemo } from "react";
+import { useState, useTransition, useEffect, useMemo, useCallback } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { createTask, deleteTask, duplicateTask, restoreTask, snoozeTask, uncompleteTask, skipNextOccurrence } from "@/app/actions/tasks";
 import { trackEvent } from "@/app/actions/analytics-events";
 import { useOfflineCompleteTask } from "@/app/hooks/useOfflineCompleteTask";
+import { addToQueue } from "@/lib/offline-queue";
 import type { Task } from "@/types/database.types";
 import type { SubtaskRow } from "@/app/actions/tasks";
 import { nextRecurrenceDates, formatShortDate } from "@/lib/utils/recurrence";
@@ -22,6 +23,8 @@ import { Modal } from "@/components/Modal";
 import { ErrorWithNextStep } from "@/components/ui/ErrorWithNextStep";
 import { useAppState } from "@/components/providers/AppStateProvider";
 import { addBonusAutoMissionsForToday } from "@/app/actions/master-missions";
+import { useHQStore } from "@/lib/hq-store";
+import { useTasksBootstrap } from "@/lib/tasks-bootstrap";
 
 const WEEKDAY_LABELS: Record<number, string> = { 1: "Mon", 2: "Tue", 3: "Wed", 4: "Thu", 5: "Fri", 6: "Sat", 7: "Sun" };
 
@@ -37,6 +40,8 @@ type ExtendedTask = Task & {
   validation_type?: string | null;
   psychology_label?: string | null;
 };
+
+const EMPTY_TASKS: ExtendedTask[] = [];
 
 type Props = {
   date: string;
@@ -108,6 +113,15 @@ export function TaskList({
   const searchParams = useSearchParams();
   const appState = useAppState();
   const completeTaskOffline = useOfflineCompleteTask();
+  const selectStoredTasks = useCallback((s: any) => s.tasksByDate[date] ?? EMPTY_TASKS, [date]);
+  const selectSetTasksForDate = useCallback((s: any) => s.setTasksForDate, []);
+  const selectUpsertTask = useCallback((s: any) => s.upsertTask, []);
+  const selectRemoveTask = useCallback((s: any) => s.removeTask, []);
+  const storedTasks = useHQStore(selectStoredTasks);
+  const setTasksForDate = useHQStore(selectSetTasksForDate);
+  const upsertTask = useHQStore(selectUpsertTask);
+  const removeTask = useHQStore(selectRemoveTask);
+  useTasksBootstrap(date);
   const [pending, startTransition] = useTransition();
   const [addError, setAddError] = useState<string | null>(null);
   const [subtaskError, setSubtaskError] = useState<string | null>(null);
@@ -135,13 +149,25 @@ export function TaskList({
   const [optimisticCompleteIds, setOptimisticCompleteIds] = useState<string[]>([]);
   /** Tasks added this session (modal/simple form) so they show without reload; only for due_date === date */
   const [localTasksAdded, setLocalTasksAdded] = useState<ExtendedTask[]>([]);
+  /** Local copy of subtasks so device store mutations + server calls don't require a full refresh. */
+  const [localSubtasksByParent, setLocalSubtasksByParent] = useState<Record<string, SubtaskRow[]>>(subtasksByParent);
+
+  useEffect(() => {
+    setLocalSubtasksByParent(subtasksByParent);
+  }, [subtasksByParent]);
+
+  useEffect(() => {
+    if (storedTasks.length === 0 && initialTasks.length > 0) {
+      setTasksForDate(date, initialTasks);
+    }
+  }, [date, initialTasks, setTasksForDate, storedTasks.length]);
 
   const extendedTasks = useMemo(() => {
-    const fromServer = initialTasks as ExtendedTask[];
+    const fromServer = (storedTasks.length > 0 ? storedTasks : initialTasks) as ExtendedTask[];
     const ids = new Set(fromServer.map((t) => t.id));
     const added = localTasksAdded.filter((t) => t.due_date === date && !ids.has(t.id));
     return [...fromServer, ...added];
-  }, [initialTasks, localTasksAdded, date]);
+  }, [storedTasks, initialTasks, localTasksAdded, date]);
   const incompleteTasksForDisplay = useMemo(
     () => extendedTasks.filter((t) => !t.completed && !optimisticCompleteIds.includes(t.id)),
     [extendedTasks, optimisticCompleteIds]
@@ -151,7 +177,7 @@ export function TaskList({
       [
         ...(completedToday as ExtendedTask[]),
         ...extendedTasks
-          .filter((t) => optimisticCompleteIds.includes(t.id))
+          .filter((t) => t.completed || optimisticCompleteIds.includes(t.id))
           .map((t) => ({ ...t, completed: true, completed_at: new Date().toISOString() } as ExtendedTask)),
       ] as ExtendedTask[],
     [completedToday, extendedTasks, optimisticCompleteIds]
@@ -248,6 +274,14 @@ export function TaskList({
 
   function handleComplete(id: string) {
     const completedCountBefore = completedForDisplay.length;
+    const task = extendedTasks.find((t) => t.id === id);
+    if (task) {
+      upsertTask({
+        ...task,
+        completed: true,
+        completed_at: new Date().toISOString(),
+      } as Task);
+    }
     setOptimisticCompleteIds((prev) => (prev.includes(id) ? prev : [...prev, id]));
     startTransition(async () => {
       try {
@@ -291,9 +325,14 @@ export function TaskList({
         }
         router.refresh();
       } catch {
+        if (task) {
+          upsertTask(task as Task);
+        }
         appState?.triggerError();
       } finally {
-        setOptimisticCompleteIds((prev) => prev.filter((x) => x !== id));
+        if (typeof navigator !== "undefined" && navigator.onLine) {
+          setOptimisticCompleteIds((prev) => prev.filter((x) => x !== id));
+        }
       }
     });
   }
@@ -321,7 +360,12 @@ export function TaskList({
   async function handleConfirmDelete() {
     if (!confirmDeleteId) return;
     const id = confirmDeleteId;
-    await deleteTask(id);
+    removeTask(id, date);
+    if (typeof navigator !== "undefined" && !navigator.onLine) {
+      await addToQueue("deleteTask", { id });
+    } else {
+      await deleteTask(id);
+    }
     setConfirmDeleteId(null);
     showDeleteToast(id);
     router.refresh();
@@ -329,6 +373,10 @@ export function TaskList({
 
   function handleDuplicate(task: ExtendedTask) {
     startTransition(async () => {
+      if (typeof navigator !== "undefined" && !navigator.onLine) {
+        await addToQueue("duplicateTask", { id: task.id, due_date: date });
+        return;
+      }
       await duplicateTask(task.id, date);
       router.refresh();
     });
@@ -336,6 +384,12 @@ export function TaskList({
 
   function handleSnooze(id: string) {
     startTransition(async () => {
+      // Remove from today in the device store so UI updates immediately; it will reappear on the new date via bootstrap.
+      removeTask(id, date);
+      if (typeof navigator !== "undefined" && !navigator.onLine) {
+        await addToQueue("snoozeTask", { id });
+        return;
+      }
       await snoozeTask(id);
       router.refresh();
     });
@@ -343,6 +397,12 @@ export function TaskList({
 
   function handleSkipNext(id: string) {
     startTransition(async () => {
+      // Skip next removes the task from today and moves it to a future date; mirror that in the local store.
+      removeTask(id, date);
+      if (typeof navigator !== "undefined" && !navigator.onLine) {
+        await addToQueue("skipNextOccurrence", { id });
+        return;
+      }
       await skipNextOccurrence(id);
       router.refresh();
     });
@@ -350,7 +410,19 @@ export function TaskList({
 
   function handleUncomplete(id: string) {
     startTransition(async () => {
-      await uncompleteTask(id);
+      const task = completedForDisplay.find((t) => t.id === id);
+      if (task) {
+        upsertTask({
+          ...task,
+          completed: false,
+          completed_at: null,
+        } as Task);
+      }
+      if (typeof navigator !== "undefined" && !navigator.onLine) {
+        await addToQueue("uncompleteTask", { id });
+      } else {
+        await uncompleteTask(id);
+      }
       router.refresh();
     });
   }
@@ -415,9 +487,26 @@ export function TaskList({
     if (!title) return;
     startTransition(async () => {
       try {
-        await createTask({ title, due_date: date, parent_task_id: parentId });
+        const result = await createTask({ title, due_date: date, parent_task_id: parentId });
+        if (result?.task) {
+          const task = result.task as Task;
+          // Keep tasksByDate in sync with subtasks so device snapshot stays accurate.
+          upsertTask(task);
+          // Also mirror into local subtasks map so the new subtask appears without a full refresh.
+          const asSubtask: SubtaskRow = {
+            id: task.id,
+            title: task.title ?? "",
+            completed: task.completed ?? false,
+            created_at: (task as { created_at?: string }).created_at ?? new Date().toISOString(),
+            parent_task_id: (task as { parent_task_id?: string | null }).parent_task_id ?? parentId,
+            due_date: (task as { due_date?: string | null }).due_date ?? date,
+          };
+          setLocalSubtasksByParent((prev) => {
+            const current = prev[parentId] ?? [];
+            return { ...prev, [parentId]: [...current, asSubtask] };
+          });
+        }
         form.reset();
-        router.refresh();
       } catch (err) {
         setSubtaskError(err instanceof Error ? err.message : "Failed to add subtask");
       }
@@ -434,7 +523,7 @@ export function TaskList({
   }
 
   function renderTask(task: ExtendedTask, isFirstIncomplete: boolean) {
-    const subtasks = subtasksByParent[task.id] ?? [];
+    const subtasks = localSubtasksByParent[task.id] ?? [];
     const preview = recurrencePreview(task);
     return (
       <li key={task.id} className="space-y-1">
@@ -545,12 +634,29 @@ export function TaskList({
               <li key={s.id} className="flex items-center gap-2 text-sm">
                 <button
                   type="button"
-                  onClick={() =>
-                    !s.completed &&
+                  onClick={() => {
+                    if (s.completed) return;
+                    // Optimistically mark subtask as completed in local state.
+                    setLocalSubtasksByParent((prev) => {
+                      const current = prev[task.id] ?? [];
+                      const next = current.map((row) =>
+                        row.id === s.id ? { ...row, completed: true } : row
+                      );
+                      return { ...prev, [task.id]: next };
+                    });
+                    // Also patch tasksByDate so other views relying on the store stay in sync.
+                    const existing = extendedTasks.find((t) => t.id === s.id);
+                    if (existing) {
+                      upsertTask({
+                        ...(existing as Task),
+                        completed: true,
+                        completed_at: new Date().toISOString(),
+                      } as Task);
+                    }
                     startTransition(() => {
                       void completeTaskOffline(s.id);
-                    })
-                  }
+                    });
+                  }}
                   disabled={pending || s.completed}
                   className="h-4 w-4 shrink-0 rounded border border-neutral-500"
                   aria-label={s.completed ? "Completed" : "Complete subtask"}
@@ -703,6 +809,7 @@ export function TaskList({
           defaultDate={addParam && /^\d{4}-\d{2}-\d{2}$/.test(addParam) ? addParam : date}
           onSaved={() => setEditTask(null)}
           onAdded={(task) => {
+            if (task) upsertTask(task as Task);
             if (task && (task as ExtendedTask).due_date === date) setLocalTasksAdded((prev) => [...prev, task as ExtendedTask]);
             setAddFullOpen(false);
             setQuickAddOpen(false);

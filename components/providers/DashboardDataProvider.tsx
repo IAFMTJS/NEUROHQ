@@ -1,14 +1,6 @@
 "use client";
 
-import {
-  createContext,
-  useCallback,
-  useContext,
-  useEffect,
-  useRef,
-  useState,
-  type ReactNode,
-} from "react";
+import { createContext, useCallback, useContext, useEffect, useRef, useState, type ReactNode } from "react";
 import { usePathname } from "next/navigation";
 import type { DashboardCritical, DashboardSecondary } from "@/types/dashboard-data.types";
 import {
@@ -16,6 +8,7 @@ import {
   setDashboardCache,
   getTodayDateStr,
 } from "@/lib/dashboard-cache";
+import { useHQStore, getPersistedDashboardSync } from "@/lib/hq-store";
 
 export type { DashboardCritical, DashboardSecondary };
 
@@ -83,11 +76,17 @@ type DashboardDataProviderProps = {
 };
 
 export function DashboardDataProvider({ children, initialCritical, initialSecondary }: DashboardDataProviderProps) {
-  const [state, setState] = useState<DashboardDataState>({
-    critical: initialCritical ?? null,
-    secondary: initialSecondary ?? null,
-    loadingCritical: false,
-    loadingSecondary: Boolean(initialCritical && !initialSecondary),
+  const globalCritical = useHQStore((s) => s.dashboardCritical);
+  const globalSecondary = useHQStore((s) => s.dashboardSecondary);
+  const setDashboardSnapshot = useHQStore((s) => s.setDashboardSnapshot);
+  const [state, setState] = useState<DashboardDataState>(() => {
+    const stored = getPersistedDashboardSync();
+    return {
+      critical: initialCritical ?? stored.critical ?? globalCritical ?? null,
+      secondary: initialSecondary ?? stored.secondary ?? globalSecondary ?? null,
+      loadingCritical: false,
+      loadingSecondary: Boolean(initialCritical && !initialSecondary),
+    };
   });
   const preloadStartedRef = useRef(false);
   const stateRef = useRef(state);
@@ -105,8 +104,9 @@ export function DashboardDataProvider({ children, initialCritical, initialSecond
         critical: data.critical !== undefined ? data.critical : prev.critical,
         secondary: data.secondary !== undefined ? data.secondary : prev.secondary,
       }));
+      setDashboardSnapshot(data);
     },
-    []
+    [setDashboardSnapshot]
   );
 
   const preloadDashboard = useCallback(async () => {
@@ -122,20 +122,40 @@ export function DashboardDataProvider({ children, initialCritical, initialSecond
       cachedCritical = cached?.critical ?? null;
       cachedSecondary = cached?.secondary ?? null;
       if (cachedCritical || cachedSecondary) {
-        setState((prev) => {
-          const nextCritical = prev.critical ?? cachedCritical;
-          const nextSecondary = prev.secondary ?? cachedSecondary;
-          return {
-            critical: nextCritical,
-            secondary: nextSecondary,
-            loadingCritical: prev.critical ? prev.loadingCritical : !nextCritical,
-            loadingSecondary: prev.secondary ? prev.loadingSecondary : !nextSecondary,
-          };
-        });
+        const current = stateRef.current;
+        const nextCritical = current.critical ?? cachedCritical;
+        const nextSecondary = current.secondary ?? cachedSecondary;
+
+        setState((prev) => ({
+          critical: nextCritical,
+          secondary: nextSecondary,
+          loadingCritical: prev.critical ? prev.loadingCritical : !nextCritical,
+          loadingSecondary: prev.secondary ? prev.loadingSecondary : !nextSecondary,
+        }));
+
+        setDashboardSnapshot({ critical: nextCritical, secondary: nextSecondary });
       }
     } catch {
       cachedCritical = null;
       cachedSecondary = null;
+    }
+
+    // If we have a complete cached snapshot (critical + secondary), use it without hitting the network.
+    // Mutations already keep cache fresh; this keeps reopen/resume truly instant.
+    if (cachedCritical && cachedSecondary) {
+      preloadStartedRef.current = false;
+      setState((prev) => ({
+        ...prev,
+        critical: prev.critical ?? cachedCritical,
+        secondary: prev.secondary ?? cachedSecondary,
+        loadingCritical: false,
+        loadingSecondary: false,
+      }));
+      setDashboardSnapshot({
+        critical: cachedCritical,
+        secondary: cachedSecondary,
+      });
+      return;
     }
 
     const currentState = stateRef.current;
@@ -176,6 +196,7 @@ export function DashboardDataProvider({ children, initialCritical, initialSecond
       }));
       if (critical && secondary) {
         await setDashboardCache(dateStr, critical, secondary);
+        setDashboardSnapshot({ critical, secondary });
       }
     } catch (err) {
       setState((prev) => ({ ...prev, loadingCritical: false, loadingSecondary: false }));

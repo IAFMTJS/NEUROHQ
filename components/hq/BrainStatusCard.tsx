@@ -4,6 +4,7 @@ import { useState, memo, useEffect } from "react";
 import type { BrainMode } from "@/lib/brain-mode";
 import { maxAllowedIntensityForTier } from "@/lib/brain-mode";
 import { getPendingDailyState } from "@/lib/client-pending-writes";
+import { useHQStore } from "@/lib/hq-store";
 import { BrainStatusModal } from "./BrainStatusModal";
 import { EnergyRing, type EnergyRingMode } from "@/components/hud-test/EnergyRing";
 import { scale1To10ToPct } from "@/lib/dashboard-utils";
@@ -41,23 +42,46 @@ type Props = {
 export const BrainStatusCard = memo(function BrainStatusCard({ date, initial, yesterday, brainMode, suggestedTaskCount }: Props) {
   const [modalOpen, setModalOpen] = useState(false);
   const [currentInitial, setCurrentInitial] = useState(initial);
+  const todayDailyState = useHQStore((s) => s.todayDailyState);
 
-  // Local-first: show pending daily state from localStorage if set, else server initial.
   useEffect(() => {
     const pending = getPendingDailyState(date);
-    setCurrentInitial(
-      pending
-        ? {
-            energy: pending.energy,
-            focus: pending.focus,
-            sensory_load: pending.sensory_load,
-            sleep_hours: pending.sleep_hours,
-            social_load: pending.social_load,
-            mental_battery: pending.mental_battery,
-          }
-        : initial
-    );
-  }, [date, initial]);
+    if (pending) {
+      setCurrentInitial({
+        energy: pending.energy,
+        focus: pending.focus,
+        sensory_load: pending.sensory_load,
+        sleep_hours: pending.sleep_hours,
+        social_load: pending.social_load,
+        mental_battery: pending.mental_battery,
+      });
+      return;
+    }
+
+    if (todayDailyState) {
+      const state = todayDailyState as {
+        energy?: number | null;
+        focus?: number | null;
+        sensory_load?: number | null;
+        sleep_hours?: number | null;
+        social_load?: number | null;
+        mental_battery?: number | null;
+      } | null;
+      if (state) {
+        setCurrentInitial({
+          energy: state.energy ?? initial.energy,
+          focus: state.focus ?? initial.focus,
+          sensory_load: state.sensory_load ?? initial.sensory_load,
+          sleep_hours: state.sleep_hours ?? initial.sleep_hours,
+          social_load: state.social_load ?? initial.social_load,
+          mental_battery: state.mental_battery ?? initial.mental_battery,
+        });
+        return;
+      }
+    }
+
+    setCurrentInitial(initial);
+  }, [date, initial, todayDailyState]);
 
   useEffect(() => {
     const openIfHash = () => {

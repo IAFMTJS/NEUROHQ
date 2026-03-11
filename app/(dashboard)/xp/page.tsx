@@ -1,4 +1,5 @@
 import dynamic from "next/dynamic";
+import { Suspense } from "react";
 import { getXPMascotState } from "@/lib/mascots";
 import { MascotImg } from "@/components/MascotImg";
 import { HQPageHeader } from "@/components/hq";
@@ -18,23 +19,36 @@ const XPPageContent = dynamic(
   () => import("@/components/xp/XPPageContent"),
   { loading: () => <div className="min-h-[200px] animate-pulse rounded-xl bg-white/5" aria-hidden /> }
 );
-const XPForecastWidget = dynamic(
-  () => import("@/components/dashboard/XPForecastWidget").then((m) => ({ default: m.XPForecastWidget })),
-  { loading: () => <div className="glass-card min-h-[120px] animate-pulse rounded-[22px]" aria-hidden /> }
-);
-const WeeklyHeatmap = dynamic(
-  () => import("@/components/dashboard/WeeklyHeatmap").then((m) => ({ default: m.WeeklyHeatmap })),
-  { loading: () => <div className="glass-card min-h-[80px] animate-pulse rounded-[22px]" aria-hidden /> }
-);
-const HQChart = dynamic(
-  () => import("@/components/hq/HQChart").then((m) => ({ default: m.HQChart })),
-  { loading: () => <div className="hq-glass min-h-[200px] animate-pulse rounded-xl" aria-hidden /> }
-);
 
-export default async function XPPage() {
+function XPShell() {
+  return (
+    <>
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <HQPageHeader
+          title="XP Command Center"
+          subtitle="Energie-economie · Gedragsanalyse · Strategische optimalisatie"
+          backHref="/dashboard"
+        />
+        <div className="h-9 w-24 animate-pulse rounded-lg bg-white/10" aria-hidden />
+      </div>
+      <p className="text-sm text-[var(--text-muted)]">
+        Alles draait rond één event-systeem: XP Core Engine, Mission Library, Completion & Validation, Analytics & Quality.
+      </p>
+      <div className="xp-mascot-hero min-h-[120px]" data-mascot-page="xp" aria-hidden />
+    </>
+  );
+}
+
+function XPContentSkeleton() {
+  return (
+    <div className="space-y-4">
+      <div className="min-h-[200px] animate-pulse rounded-xl bg-white/5" aria-hidden />
+    </div>
+  );
+}
+
+async function XPContent() {
   const today = new Date().toISOString().slice(0, 10);
-
-  // First server-side fetch for initial render (also used to seed client cache)
   const [xpContext, heatmapDays, xpBySource, behaviorProfile, energyBudget, todaysTasks] =
     await Promise.all([
       getXPFullContext(today),
@@ -51,8 +65,7 @@ export default async function XPPage() {
     insightState?.graphData.map((d) => {
       const base = d.xp;
       const hasStreak = d.streakActive ?? (d.streak ?? 0) > 0;
-      const overlay =
-        hasStreak && base > 0 ? Math.max(5, Math.round(base * 0.25)) : 0;
+      const overlay = hasStreak && base > 0 ? Math.max(5, Math.round(base * 0.25)) : 0;
       return {
         name: d.name,
         value: base,
@@ -95,19 +108,10 @@ export default async function XPPage() {
 
   return (
     <XPDataProvider initialDateStr={today} initialData={initialPayload}>
-      <div className="container page page-wide space-y-6">
-        <div className="flex flex-wrap items-center justify-between gap-2">
-          <HQPageHeader
-            title="XP Command Center"
-            subtitle="Energie-economie · Gedragsanalyse · Strategische optimalisatie"
-            backHref="/dashboard"
-          />
+      <div className="space-y-6">
+        <div className="flex flex-wrap items-center justify-end gap-2">
           <XPBadge totalXp={xp.total_xp} level={xp.level} compact href="/xp" />
         </div>
-        <p className="text-sm text-[var(--text-muted)]">
-          Alles draait rond één event-systeem: XP Core Engine, Mission Library, Completion & Validation, Analytics & Quality.
-        </p>
-
         <section className="xp-mascot-hero" data-mascot-page="xp" aria-hidden>
           <div className="xp-mascot-frame">
             <MascotImg
@@ -117,7 +121,6 @@ export default async function XPPage() {
             />
           </div>
         </section>
-
         <XPPageContent
           identity={identity}
           forecast={forecast}
@@ -138,5 +141,16 @@ export default async function XPPage() {
         />
       </div>
     </XPDataProvider>
+  );
+}
+
+export default function XPPage() {
+  return (
+    <div className="container page page-wide space-y-6">
+      <XPShell />
+      <Suspense fallback={<XPContentSkeleton />}>
+        <XPContent />
+      </Suspense>
+    </div>
   );
 }

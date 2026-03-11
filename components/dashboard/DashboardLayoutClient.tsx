@@ -10,16 +10,20 @@ import { ActiveTimeTracker } from "@/components/ActiveTimeTracker";
 import { NewDayRefresh } from "@/components/NewDayRefresh";
 import { RoutePrefetcher } from "@/components/RoutePrefetcher";
 import { OfflineQueueSync } from "@/components/OfflineQueueSync";
+import { HQStorePersistOnHide } from "@/components/HQStorePersistOnHide";
 import { PendingXpToast } from "@/components/PendingXpToast";
 import { HelpFloatingIcon } from "@/components/HelpFloatingIcon";
 import { PushAutoPrompt } from "@/components/notifications/PushAutoPrompt";
 import { DashboardDataProvider } from "@/components/providers/DashboardDataProvider";
 import { updateLastActiveDate } from "@/app/actions/behavior";
+import { useDailyBootstrap } from "@/lib/daily-bootstrap";
 
 const LAST_ACTIVE_STORAGE_KEY = "neurohq-last-active-date";
 
 /** Wraps server-rendered <main> with providers and shell. Children = the <main> element from the server layout. */
 export function DashboardLayoutClient({ children }: { children: React.ReactNode }) {
+  // Ensure today's snapshot is loaded into the global device store once per day.
+  useDailyBootstrap();
   useEffect(() => {
     const today = new Date().toISOString().slice(0, 10);
     try {
@@ -46,6 +50,7 @@ export function DashboardLayoutClient({ children }: { children: React.ReactNode 
       <BootstrapProvider>
         <DashboardDataProvider>
           <>
+            <HQStorePersistOnHide />
             <OfflineQueueSync />
             <PendingXpToast />
             <PushAutoPrompt />

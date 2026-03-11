@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { Suspense } from "react";
 import { createClient } from "@/lib/supabase/server";
 import { HeroMascotImage } from "@/components/HeroMascotImage";
 import { HQPageHeader } from "@/components/hq";
@@ -15,7 +16,34 @@ function formatMinutes(m: number): string {
   return min ? `${h}h ${min}m` : `${h}h`;
 }
 
-export default async function AnalyticsPage() {
+function AnalyticsShell() {
+  return (
+    <>
+      <div className="flex items-center justify-between gap-3">
+        <HQPageHeader
+          title="Analytics"
+          subtitle="Time used, consistency, and mood over time."
+          backHref="/dashboard"
+        />
+      </div>
+      <section className="mascot-hero mascot-hero-top mascot-hero-sharp" data-mascot-page="analytics" aria-hidden>
+        <div className="mascot-hero-inner mx-auto">
+          <HeroMascotImage page="analytics" className="mascot-img" heroLarge />
+        </div>
+      </section>
+    </>
+  );
+}
+
+function AnalyticsContentSkeleton() {
+  return (
+    <div className="space-y-4">
+      <div className="min-h-[120px] animate-pulse rounded-xl bg-white/5" aria-hidden />
+    </div>
+  );
+}
+
+async function AnalyticsContent() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/login");
@@ -48,27 +76,17 @@ export default async function AnalyticsPage() {
   const learningHit = summary ? summary.totalLearningMinutes >= summary.learningTargetMinutes : false;
 
   return (
-    <div className="container page page-wide space-y-6">
-      <div className="flex items-center justify-between gap-3">
-        <HQPageHeader
-          title="Analytics"
-          subtitle="Time used, consistency, and mood over time."
-          backHref="/dashboard"
-        />
-        {isAdmin && (
+    <>
+      {isAdmin && (
+        <div className="flex justify-end">
           <Link
             href="/analytics/maker"
             className="text-[11px] font-semibold text-[var(--accent-focus)] underline-offset-2 hover:underline"
           >
             Maker dashboard
           </Link>
-        )}
-      </div>
-      <section className="mascot-hero mascot-hero-top mascot-hero-sharp" data-mascot-page="analytics" aria-hidden>
-        <div className="mascot-hero-inner mx-auto">
-          <HeroMascotImage page="analytics" className="mascot-img" heroLarge />
         </div>
-      </section>
+      )}
       {summary && (
         <section className="glass-card overflow-hidden p-0">
           <div className="border-b border-[var(--card-border)] px-4 py-3">
@@ -300,6 +318,17 @@ export default async function AnalyticsPage() {
           </section>
         </>
       )}
+    </>
+  );
+}
+
+export default function AnalyticsPage() {
+  return (
+    <div className="container page page-wide space-y-6">
+      <AnalyticsShell />
+      <Suspense fallback={<AnalyticsContentSkeleton />}>
+        <AnalyticsContent />
+      </Suspense>
     </div>
   );
 }

@@ -11,10 +11,18 @@ import type { GameState, Mission } from "@/lib/dcic/types";
 import { updateDifficulty, generateDailyMissions } from "@/lib/dcic/difficulty-engine";
 import { rankFromLevel } from "@/lib/rank-ladder";
 
+type GetGameStateOptions = {
+  includeFinance?: boolean;
+};
+
 /**
- * Gets current gameState from database
+ * Gets current gameState from database.
+ * By default includes finance state; pass includeFinance: false for lean reads.
  */
-export async function getGameState(): Promise<GameState | null> {
+export async function getGameState(
+  options: GetGameStateOptions = {}
+): Promise<GameState | null> {
+  const { includeFinance = true } = options;
   const supabase = await createClient();
   const {
     data: { user },
@@ -31,7 +39,6 @@ export async function getGameState(): Promise<GameState | null> {
     { data: achievementsData },
     { data: skillsData },
     { data: dailyState },
-    { getFinanceState },
   ] = await Promise.all([
     supabase.from("user_xp").select("total_xp").eq("user_id", user.id).single(),
     supabase
@@ -49,7 +56,6 @@ export async function getGameState(): Promise<GameState | null> {
       .eq("user_id", user.id)
       .eq("date", today)
       .single(),
-    import("./finance-state"),
   ]);
 
   const totalXP = (xpData?.total_xp as number) ?? 0;
@@ -92,7 +98,11 @@ export async function getGameState(): Promise<GameState | null> {
     skills[s.skill_key] = true;
   });
 
-  const financeState = await getFinanceState();
+  let financeState: GameState["finance"] = undefined;
+  if (includeFinance) {
+    const { getFinanceState } = await import("./finance-state");
+    financeState = (await getFinanceState()) || undefined;
+  }
 
   const rank = rankFromLevel(level);
   const gameState: GameState = {
@@ -109,7 +119,7 @@ export async function getGameState(): Promise<GameState | null> {
     streak,
     rank,
     achievements,
-    finance: financeState || undefined,
+    finance: financeState,
     difficultyEngine: updateDifficulty(level, rank),
   };
 

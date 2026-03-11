@@ -37,7 +37,7 @@ export function LoadingScene({ title, subtitle, children }: LoadingSceneProps) {
               </h1>
               <p className="max-w-xl text-sm text-[var(--text-muted)]">
                 {subtitle ??
-                  "Booting XP engine, missions and analytics. Visual shell is ready; data syncs in the background."}
+                  "Command shell is already on your device. Numbers and history may catch up a moment later, but you can orient immediately."}
               </p>
             </div>
 
@@ -47,7 +47,7 @@ export function LoadingScene({ title, subtitle, children }: LoadingSceneProps) {
                 <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-cyan-400/70" />
                 <span className="relative inline-flex h-2 w-2 rounded-full bg-cyan-300" />
               </span>
-              <span>Synchronizing neuro-state</span>
+              <span>Shell ready on device</span>
             </div>
           </div>
 

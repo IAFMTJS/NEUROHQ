@@ -1,7 +1,11 @@
+"use client";
+
 import Link from "next/link";
 import { getMascotSrcForPage } from "@/lib/mascots";
 import { CommanderStatRing } from "./CommanderStatRing";
 import { ClientCTALink } from "./ClientCTALink";
+import { useHQStore } from "@/lib/hq-store";
+import { scale1To10ToPct } from "@/lib/dashboard-utils";
 
 type Props = {
   energyPct: number;
@@ -38,8 +42,18 @@ export function CommanderHomeHero({
   dailyQuoteAuthor,
   autoSuggestions = [],
 }: Props) {
-  const energyLow = energyPct < 20;
-  const focusLow = focusPct < 20;
+  const todayDailyState = useHQStore((s) => s.todayDailyState);
+  const effectiveEnergyPct =
+    typeof todayDailyState?.energy === "number" ? scale1To10ToPct(todayDailyState.energy as number) : energyPct;
+  const effectiveFocusPct =
+    typeof todayDailyState?.focus === "number" ? scale1To10ToPct(todayDailyState.focus as number) : focusPct;
+  const effectiveLoadPct =
+    typeof todayDailyState?.sensory_load === "number"
+      ? scale1To10ToPct(todayDailyState.sensory_load as number)
+      : loadPct;
+
+  const energyLow = effectiveEnergyPct < 20;
+  const focusLow = effectiveFocusPct < 20;
   const statusBadge =
     energyLow ? "Slaap of rust eerst" : focusLow ? "Neem een korte pauze" : streakAtRisk ? "Streak in gevaar" : null;
 
@@ -83,9 +97,9 @@ export function CommanderHomeHero({
       )}
 
       <section className="stats">
-        <CommanderStatRing value={energyPct} variant="energy" />
-        <CommanderStatRing value={focusPct} variant="focus" />
-        <CommanderStatRing value={loadPct} variant="load" />
+        <CommanderStatRing value={effectiveEnergyPct} variant="energy" />
+        <CommanderStatRing value={effectiveFocusPct} variant="focus" />
+        <CommanderStatRing value={effectiveLoadPct} variant="load" />
       </section>
       {dailyQuoteText && (
         <div className="mx-auto w-full max-w-[520px] rounded-xl border border-cyan-400/35 bg-[linear-gradient(180deg,rgba(11,33,52,0.9),rgba(8,20,33,0.9))] px-3 py-2.5 text-center shadow-[0_0_14px_rgba(0,229,255,0.16)]">

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import type { Quote } from "@/types/database.types";
 import type { AppMode } from "@/lib/app-mode";
 import { SciFiPanel } from "@/components/hud-test/SciFiPanel";
@@ -32,7 +32,10 @@ export function DashboardContextCard({
   identityStatement,
 }: Props) {
   const [view, setView] = useState<"prev" | "current" | "next">("current");
+  const [mounted, setMounted] = useState(false);
   const active = view === "prev" ? prev : view === "next" ? next : current;
+
+  useEffect(() => setMounted(true), []);
 
   return (
     <SciFiPanel className="overflow-hidden" bodyClassName="p-0">
@@ -41,7 +44,7 @@ export function DashboardContextCard({
         <div className="flex items-center justify-between gap-2">
           <div className="min-w-0 flex-1">
             <p className="text-xs font-medium text-[var(--text-muted)]">
-              Quote · Dag {active.day} van 365
+              Quote · Dag {mounted ? active.day : "…"} van 365
             </p>
             {active.quote ? (
               <>

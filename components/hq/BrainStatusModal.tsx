@@ -9,6 +9,7 @@ import { EnergyRing, type EnergyRingMode } from "@/components/hud-test/EnergyRin
 import { useAppState } from "@/components/providers/AppStateProvider";
 import { Modal } from "@/components/Modal";
 import { scale1To10ToPct } from "@/lib/dashboard-utils";
+import { useHQStore } from "@/lib/hq-store";
 
 /** Short micro-descriptions to match reference image */
 function description(value: number, type: "energy" | "focus" | "load"): string {
@@ -69,6 +70,7 @@ type Props = {
 export function BrainStatusModal({ open, onClose, date, initial, yesterday, onSaved }: Props) {
   const router = useRouter();
   const appState = useAppState();
+  const setTodayDailyState = useHQStore((s) => s.setTodayDailyState);
   const [pending, startTransition] = useTransition();
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -122,7 +124,8 @@ export function BrainStatusModal({ open, onClose, date, initial, yesterday, onSa
       mental_battery: mentalBattery,
     };
 
-    // Optimistic UI: update parent + local storage immediately; 5s debounced sync will push to Supabase.
+    // Optimistic UI: update store, parent, and local storage immediately; background sync will push to Supabase.
+    setTodayDailyState(nextState);
     setPendingDailyState(date, nextState);
     onSaved?.(nextState);
 

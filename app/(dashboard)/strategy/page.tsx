@@ -1,5 +1,6 @@
 import nextDynamic from "next/dynamic";
 import Link from "next/link";
+import { Suspense } from "react";
 import { HeroMascotImage } from "@/components/HeroMascotImage";
 import { getXP } from "@/app/actions/xp";
 import { HQPageHeader } from "@/components/hq";
@@ -22,6 +23,31 @@ import { StrategyArchiveHistory } from "@/components/strategy/StrategyArchiveHis
 
 /** Force dynamic: strategy uses cookies (auth) and live data. */
 export const dynamic = "force-dynamic";
+
+function StrategyShell() {
+  return (
+    <>
+      <HQPageHeader
+        title="🧠 Strategy"
+        subtitle="4 lagen: Direction → Allocation → Accountability → Pressure & Adaptation"
+        backHref="/dashboard"
+      />
+      <section className="mascot-hero mascot-hero-top mascot-hero-sharp" data-mascot-page="strategy" aria-hidden>
+        <div className="mascot-hero-inner mx-auto">
+          <HeroMascotImage page="strategy" className="mascot-img" heroLarge />
+        </div>
+      </section>
+    </>
+  );
+}
+
+function StrategyContentSkeleton() {
+  return (
+    <div className="space-y-4">
+      <div className="min-h-[200px] animate-pulse rounded-xl bg-white/5" aria-hidden />
+    </div>
+  );
+}
 
 const StrategyThesisForm = nextDynamic(
   () => import("@/components/strategy/StrategyThesisForm").then((m) => ({ default: m.StrategyThesisForm })),
@@ -70,7 +96,7 @@ const StrategyArchiveCTA = nextDynamic(
   { loading: () => null }
 );
 
-export default async function StrategyPage() {
+async function StrategyContent() {
   let strategy: Awaited<ReturnType<typeof getActiveStrategyFocus>> = null;
   let past: Awaited<ReturnType<typeof getPastStrategyFocus>> = [];
   let xp: Awaited<ReturnType<typeof getXP>> = { total_xp: 0, level: 1 };
@@ -87,7 +113,7 @@ export default async function StrategyPage() {
   } catch (e) {
     console.error("Strategy page data load failed (check Supabase env and migrations):", e);
     return (
-      <div className="container page space-y-6">
+      <>
         <HQPageHeader title="🧠 Strategy" subtitle="Kon strategie niet laden." backHref="/dashboard" />
         <div className="rounded-xl border border-amber-500/40 bg-amber-500/10 px-4 py-3 text-sm text-[var(--text-primary)]">
           <p className="font-medium">Er is iets misgegaan</p>
@@ -96,47 +122,28 @@ export default async function StrategyPage() {
           </p>
         </div>
         <StrategyThesisForm />
-      </div>
+      </>
     );
   }
 
   if (!strategy) {
     return (
-      <div className="container page space-y-6">
-        <HQPageHeader
-          title="🧠 Strategy"
-          subtitle="4 lagen: Direction → Allocation → Accountability → Pressure & Adaptation. Geen thesis = geen actieve strategie."
-          backHref="/dashboard"
-        />
-        <section className="mascot-hero mascot-hero-top mascot-hero-sharp" data-mascot-page="strategy" aria-hidden>
-          <div className="mascot-hero-inner mx-auto">
-            <HeroMascotImage page="strategy" className="mascot-img" heroLarge />
-          </div>
-        </section>
+      <>
         <div className="flex flex-wrap items-center justify-end gap-3">
           <XPBadge totalXp={xp.total_xp} level={xp.level} compact href="/xp" />
-          <Link
-            href="/report"
-            className="link-glow-hover inline-flex items-center rounded-lg border border-[var(--card-border)] bg-[var(--bg-elevated)] px-4 py-2 text-sm font-medium text-[var(--text-primary)] transition-all duration-200 hover:border-[var(--accent-focus)] hover:text-[var(--accent-focus)]"
-          >
+          <Link href="/report" className="link-glow-hover inline-flex items-center rounded-lg border border-[var(--card-border)] bg-[var(--bg-elevated)] px-4 py-2 text-sm font-medium text-[var(--text-primary)] transition-all duration-200 hover:border-[var(--accent-focus)] hover:text-[var(--accent-focus)]">
             Reality report →
           </Link>
-          <Link
-            href="/budget"
-            className="link-glow-hover inline-flex items-center rounded-lg border border-[var(--card-border)] bg-[var(--bg-elevated)] px-4 py-2 text-sm font-medium text-[var(--text-primary)] transition-all duration-200 hover:border-[var(--accent-focus)] hover:text-[var(--accent-focus)]"
-          >
+          <Link href="/budget" className="link-glow-hover inline-flex items-center rounded-lg border border-[var(--card-border)] bg-[var(--bg-elevated)] px-4 py-2 text-sm font-medium text-[var(--text-primary)] transition-all duration-200 hover:border-[var(--accent-focus)] hover:text-[var(--accent-focus)]">
             Budget & goals →
           </Link>
-          <Link
-            href="/learning"
-            className="link-glow-hover inline-flex items-center rounded-lg border border-[var(--card-border)] bg-[var(--bg-elevated)] px-4 py-2 text-sm font-medium text-[var(--text-primary)] transition-all duration-200 hover:border-[var(--accent-focus)] hover:text-[var(--accent-focus)]"
-          >
+          <Link href="/learning" className="link-glow-hover inline-flex items-center rounded-lg border border-[var(--card-border)] bg-[var(--bg-elevated)] px-4 py-2 text-sm font-medium text-[var(--text-primary)] transition-all duration-200 hover:border-[var(--accent-focus)] hover:text-[var(--accent-focus)]">
             Growth →
           </Link>
         </div>
         <StrategyThesisForm />
         <StrategyArchiveHistory past={past} />
-      </div>
+      </>
     );
   }
 
@@ -179,17 +186,7 @@ export default async function StrategyPage() {
   }));
 
   return (
-    <div className="container page space-y-6">
-      <HQPageHeader
-        title="🧠 Strategy"
-        subtitle="4 lagen: Direction → Allocation → Accountability → Pressure & Adaptation"
-        backHref="/dashboard"
-      />
-      <section className="mascot-hero mascot-hero-top mascot-hero-sharp" data-mascot-page="strategy" aria-hidden>
-        <div className="mascot-hero-inner mx-auto">
-          <HeroMascotImage page="strategy" className="mascot-img" heroLarge />
-        </div>
-      </section>
+    <>
       {reviewStatus.reviewDue && (
         <div className="rounded-xl border border-amber-500/40 bg-amber-500/10 px-4 py-3 text-sm text-amber-200">
           <strong>Zonder review: nieuwe week inactive.</strong> Voltooi je wekelijkse review hieronder om de strategie actief te houden.
@@ -261,6 +258,17 @@ export default async function StrategyPage() {
       <StrategyArchiveCTA strategyId={strategy.id} />
 
       <StrategyArchiveHistory past={past} />
+    </>
+  );
+}
+
+export default function StrategyPage() {
+  return (
+    <div className="container page space-y-6">
+      <StrategyShell />
+      <Suspense fallback={<StrategyContentSkeleton />}>
+        <StrategyContent />
+      </Suspense>
     </div>
   );
 }

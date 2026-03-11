@@ -6,30 +6,32 @@
  * - Fetches fresh gameState from API and updates cache (stale-while-revalidate).
  */
 
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import type { GameState } from "./types";
 import { getCachedGameState, setCachedGameState } from "./game-state-cache";
-
-type Status = "idle" | "loading" | "ready" | "error";
+import { useHQStore } from "@/lib/hq-store";
 
 export function useDCICGameState() {
-  const [state, setState] = useState<GameState | null>(null);
-  const [status, setStatus] = useState<Status>("idle");
-  const [error, setError] = useState<string | null>(null);
+  const gameState = useHQStore((s) => s.gameState);
+  const status = useHQStore((s) => s.gameStateStatus);
+  const error = useHQStore((s) => s.gameStateError);
+  const setGameState = useHQStore((s) => s.setGameState);
+  const setGameStateStatus = useHQStore((s) => s.setGameStateStatus);
+  const setGameStateError = useHQStore((s) => s.setGameStateError);
 
   useEffect(() => {
     let cancelled = false;
 
     const load = async () => {
-      setStatus("loading");
-      setError(null);
+      setGameStateStatus("loading");
+      setGameStateError(null);
 
       // 1. Try local cache first for instant UI
       try {
         const cached = await getCachedGameState();
         if (!cancelled && cached) {
-          setState(cached);
-          setStatus("ready");
+          setGameState(cached);
+          setGameStateStatus("ready");
         }
       } catch {
         // Ignore cache errors; we'll still try network
@@ -57,15 +59,15 @@ export function useDCICGameState() {
         }
         const fresh = (await res.json()) as GameState;
         if (!cancelled && fresh) {
-          setState(fresh);
-          setStatus("ready");
+          setGameState(fresh);
+          setGameStateStatus("ready");
         }
         // 3. Update cache in background
         setCachedGameState(fresh).catch(() => {});
       } catch (err) {
-        if (!cancelled && !state) {
-          setStatus("error");
-          setError(
+        if (!cancelled && !gameState) {
+          setGameStateStatus("error");
+          setGameStateError(
             err instanceof Error ? err.message : "Failed to load game state"
           );
         }
@@ -80,6 +82,6 @@ export function useDCICGameState() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  return { gameState: state, status, error };
+  return { gameState, status, error };
 }
 

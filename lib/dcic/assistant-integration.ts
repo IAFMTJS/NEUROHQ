@@ -33,8 +33,8 @@ export async function processDCICMessage(
     return null; // Not a DCIC action
   }
 
-  // Get game state
-  const gameState = await getGameState();
+  // Get game state (missions + XP; finance not needed here)
+  const gameState = await getGameState({ includeFinance: false });
   if (!gameState) {
     return {
       isDCICAction: true,

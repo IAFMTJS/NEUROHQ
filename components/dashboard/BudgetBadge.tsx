@@ -2,6 +2,7 @@
 
 import { getCurrencySymbol } from "@/lib/utils/currency";
 import { HudLinkButton } from "@/components/hud-test/HudLinkButton";
+import { useHQStore } from "@/lib/hq-store";
 
 type Props = {
   /** Remaining budget in cents (can be negative). */
@@ -11,9 +12,21 @@ type Props = {
 
 /** Compact badge for header: "€X rest" with link to /budget. */
 export function BudgetBadge({ budgetRemainingCents, currency }: Props) {
-  const symbol = getCurrencySymbol(currency);
-  const amount = Math.abs(budgetRemainingCents) / 100;
-  const isNegative = budgetRemainingCents < 0;
+  const budgetSnapshot = useHQStore((s) => s.budgetSnapshot);
+  const effectiveBudgetRemainingCents =
+    typeof budgetSnapshot?.budgetRemainingCents === "number"
+      ? (budgetSnapshot.budgetRemainingCents as number)
+      : budgetRemainingCents;
+  const effectiveCurrency =
+    typeof budgetSnapshot?.settings === "object" &&
+    budgetSnapshot?.settings &&
+    typeof (budgetSnapshot.settings as { currency?: unknown }).currency === "string"
+      ? ((budgetSnapshot.settings as { currency: string }).currency)
+      : currency;
+
+  const symbol = getCurrencySymbol(effectiveCurrency);
+  const amount = Math.abs(effectiveBudgetRemainingCents) / 100;
+  const isNegative = effectiveBudgetRemainingCents < 0;
 
   return (
     <HudLinkButton

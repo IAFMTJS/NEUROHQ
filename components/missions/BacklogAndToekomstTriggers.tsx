@@ -3,6 +3,9 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { rescheduleTask, deleteTask } from "@/app/actions/tasks";
+import type { Task } from "@/types/database.types";
+import { useHQStore } from "@/lib/hq-store";
+import { addToQueue } from "@/lib/offline-queue";
 import { BacklogModal } from "./BacklogModal";
 import { ToekomstModal } from "./ToekomstModal";
 import { ScheduleModal, EditMissionModal } from "@/components/missions";
@@ -29,20 +32,48 @@ export function BacklogAndToekomstTriggers({ backlog, futureTasks, todayDate }: 
   const [scheduleTask, setScheduleTask] = useState<TaskRow | null>(null);
   const [editTask, setEditTask] = useState<TaskRow | null>(null);
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
+  const upsertTask = useHQStore((s) => s.upsertTask);
+  const removeTask = useHQStore((s) => s.removeTask);
 
   function handleSchedule(date: string) {
     if (!scheduleTask) return;
     startTransition(async () => {
-      await rescheduleTask(scheduleTask.id, date);
+      // Optimistically move in device store so tasks for affected days stay aligned with Backlog/Toekomst changes.
+      const previousDate = scheduleTask.due_date;
+      if (previousDate) {
+        removeTask(scheduleTask.id, previousDate);
+      }
+      upsertTask({
+        id: scheduleTask.id,
+        title: (scheduleTask.title ?? "") as string,
+        due_date: date,
+      } as Task);
+
+      if (typeof navigator !== "undefined" && !navigator.onLine) {
+        await addToQueue("rescheduleTask", { id: scheduleTask.id, due_date: date });
+      } else {
+        await rescheduleTask(scheduleTask.id, date);
+        router.refresh();
+      }
       setScheduleTask(null);
-      router.refresh();
     });
   }
   function handleDelete(id: string) {
     startTransition(async () => {
-      await deleteTask(id);
+      // Remove from any known date bucket in the device store so UI stays in sync.
+      const all = [...backlog, ...futureTasks];
+      const row = all.find((t) => t.id === id);
+      if (row?.due_date) {
+        removeTask(id, row.due_date);
+      }
+
+      if (typeof navigator !== "undefined" && !navigator.onLine) {
+        await addToQueue("deleteTask", { id });
+      } else {
+        await deleteTask(id);
+        router.refresh();
+      }
       setDeleteConfirmId(null);
-      router.refresh();
     });
   }
 

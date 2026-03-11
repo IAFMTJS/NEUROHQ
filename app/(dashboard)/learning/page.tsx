@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import { HQPageHeader } from "@/components/hq";
 import { getLearningState } from "@/app/actions/learning-state";
 import { GrowthIntentCard } from "@/components/growth/GrowthIntentCard";
@@ -9,16 +10,9 @@ import { AddLearningStreamCard } from "@/components/growth/AddLearningStreamCard
 
 type Props = { searchParams: Promise<{ toward?: string }> };
 
-export default async function LearningPage({ searchParams }: Props) {
-  const params = await searchParams;
-  const today = new Date();
-  void params; // keep Next.js signature stable if query params are used elsewhere
-  const todayStr = today.toISOString().slice(0, 10);
-  const learningState = await getLearningState();
-  const currentBook = learningState.streams.find((s) => s.type === "book") ?? null;
-
+function LearningShell() {
   return (
-    <div className="container page space-y-6">
+    <>
       <HQPageHeader
         title="Growth"
         subtitle="Learning Command Board — intent, consistency, streams, and reflection."
@@ -35,26 +29,56 @@ export default async function LearningPage({ searchParams }: Props) {
           Open analytics
         </a>
       </div>
-      <div className="space-y-6">
-        <GrowthIntentCard
-          focus={learningState.focus}
-          currentBookTitle={currentBook?.title ?? null}
-        />
-        <MonthlyBookCard
-          currentBookTitle={currentBook?.title ?? null}
-          totalPages={currentBook?.pagesTotal ?? null}
-        />
-        <AddLearningStreamCard />
-        <GrowthConsistencyCard
-          consistency={learningState.consistency}
-          today={todayStr}
-        />
-        <GrowthStreamsList streams={learningState.streams} />
-        <GrowthReflectionCard
-          reflection={learningState.reflection}
-          today={todayStr}
-        />
-      </div>
+    </>
+  );
+}
+
+function LearningContentSkeleton() {
+  return (
+    <div className="space-y-4">
+      <div className="min-h-[140px] animate-pulse rounded-xl bg-white/5" aria-hidden />
+    </div>
+  );
+}
+
+async function LearningContent() {
+  const today = new Date();
+  const todayStr = today.toISOString().slice(0, 10);
+  const learningState = await getLearningState();
+  const currentBook = learningState.streams.find((s) => s.type === "book") ?? null;
+
+  return (
+    <div className="space-y-6">
+      <GrowthIntentCard
+        focus={learningState.focus}
+        currentBookTitle={currentBook?.title ?? null}
+      />
+      <MonthlyBookCard
+        currentBookTitle={currentBook?.title ?? null}
+        totalPages={currentBook?.pagesTotal ?? null}
+      />
+      <AddLearningStreamCard />
+      <GrowthConsistencyCard
+        consistency={learningState.consistency}
+        today={todayStr}
+      />
+      <GrowthStreamsList streams={learningState.streams} />
+      <GrowthReflectionCard
+        reflection={learningState.reflection}
+        today={todayStr}
+      />
+    </div>
+  );
+}
+
+export default function LearningPage({ searchParams }: Props) {
+  void searchParams;
+  return (
+    <div className="container page space-y-6">
+      <LearningShell />
+      <Suspense fallback={<LearningContentSkeleton />}>
+        <LearningContent />
+      </Suspense>
     </div>
   );
 }

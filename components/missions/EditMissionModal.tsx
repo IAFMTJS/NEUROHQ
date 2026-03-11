@@ -4,6 +4,8 @@ import { useState, useTransition, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Modal } from "@/components/Modal";
 import { updateTask, createTask } from "@/app/actions/tasks";
+import { useHQStore } from "@/lib/hq-store";
+import { addToQueue } from "@/lib/offline-queue";
 import type { Task } from "@/types/database.types";
 
 const WEEKDAY_LABELS: Record<number, string> = { 1: "Mon", 2: "Tue", 3: "Wed", 4: "Thu", 5: "Fri", 6: "Sat", 7: "Sun" };
@@ -57,6 +59,7 @@ export function EditMissionModal({ open, onClose, task, defaultDate, onSaved, on
   const [socialLoad, setSocialLoad] = useState<string>(task?.social_load != null ? String(task.social_load) : "");
   const [priority, setPriority] = useState<string>(task?.priority != null ? String(task.priority) : "");
   const [notes, setNotes] = useState(task?.notes ?? "");
+  const upsertTask = useHQStore((s) => s.upsertTask);
 
   useEffect(() => {
     if (open) {
@@ -141,13 +144,27 @@ export function EditMissionModal({ open, onClose, task, defaultDate, onSaved, on
       try {
         if (isCreate) {
           const result = await createTask(toCreateParams(payload));
-          if (result.task) onAdded?.(result.task as Task);
+          if (result.task) {
+            const created = result.task as Task;
+            upsertTask(created);
+            onAdded?.(created);
+          }
           router.refresh();
           onClose();
         } else {
-          await updateTask(task!.id, toUpdateParams(payload));
+          const params = toUpdateParams(payload);
+          // Optimistically patch device store so tasks list reflects edits immediately.
+          upsertTask({
+            ...(task as Task),
+            ...params,
+          } as Task);
+          if (typeof navigator !== "undefined" && !navigator.onLine) {
+            await addToQueue("updateTask", { id: task!.id, params });
+          } else {
+            await updateTask(task!.id, params);
+            router.refresh();
+          }
           onSaved?.();
-          router.refresh();
           onClose();
         }
       } catch (err) {

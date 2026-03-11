@@ -643,7 +643,14 @@ export async function getSubtasks(parentTaskId: string) {
   return data ?? [];
 }
 
-export type SubtaskRow = { id: string; title: string; completed: boolean; created_at: string; parent_task_id: string };
+export type SubtaskRow = {
+  id: string;
+  title: string;
+  completed: boolean;
+  created_at: string;
+  parent_task_id: string;
+  due_date: string | null;
+};
 
 export async function getSubtasksForTaskIds(parentIds: string[]): Promise<SubtaskRow[]> {
   if (parentIds.length === 0) return [];
@@ -652,7 +659,7 @@ export async function getSubtasksForTaskIds(parentIds: string[]): Promise<Subtas
   if (!user) return [];
   const { data } = await supabase
     .from("tasks")
-    .select("id, title, completed, created_at, parent_task_id")
+    .select("id, title, completed, created_at, parent_task_id, due_date")
     .eq("user_id", user.id)
     .in("parent_task_id", parentIds)
     .order("created_at", { ascending: true });

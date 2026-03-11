@@ -3,7 +3,7 @@ import { getGameState } from "@/app/actions/dcic/game-state";
 
 export async function GET() {
   try {
-    const state = await getGameState();
+    const state = await getGameState({ includeFinance: false });
     if (!state) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }

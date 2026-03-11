@@ -5,6 +5,7 @@ import Link from "next/link";
 import dynamic from "next/dynamic";
 import { getPendingDailyState } from "@/lib/client-pending-writes";
 import { usePendingBudgetSnapshot } from "@/lib/client-pending-budget";
+import { useHQStore } from "@/lib/hq-store";
 import { HQHeader, BrainStatusCard, ActiveMissionCard } from "@/components/hq";
 import { EconomyBadge } from "@/components/EconomyBadge";
 import { CommanderHomeHero } from "@/components/commander";
@@ -67,6 +68,14 @@ const DangerousModulesCard = dynamic(() => import("@/components/dashboard/Danger
 export function DashboardClientShell() {
   const cache = useDashboardData();
   const pendingBudget = usePendingBudgetSnapshot();
+  const todayDailyState = useHQStore((s) => s.todayDailyState);
+  const todayEnergyBudget = useHQStore((s) => s.todayEnergyBudget);
+  const budgetSnapshot = useHQStore((s) => s.budgetSnapshot);
+  const learningSnapshot = useHQStore((s) => s.learningSnapshot);
+  const setTodayDate = useHQStore((s) => s.setTodayDate);
+  const setTodayDailyState = useHQStore((s) => s.setTodayDailyState);
+  const setTodayMode = useHQStore((s) => s.setTodayMode);
+  const setTodayEnergyBudget = useHQStore((s) => s.setTodayEnergyBudget);
   const [critical, setCritical] = useState<DashboardCritical | null>(() => cache?.critical ?? null);
   const [secondary, setSecondary] = useState<DashboardSecondary | null>(() => cache?.secondary ?? null);
   const [error, setError] = useState<string | null>(null);
@@ -127,6 +136,18 @@ export function DashboardClientShell() {
     return () => window.removeEventListener("neurohq-daily-state-saved", onSaved);
   }, [critical?.dateStr]);
 
+  useEffect(() => {
+    if (!critical) return;
+    setTodayDate(critical.dateStr);
+    setTodayMode(critical.mode);
+    if (critical.state) {
+      setTodayDailyState(critical.state as Record<string, unknown>);
+    }
+    if (critical.energyBudget) {
+      setTodayEnergyBudget(critical.energyBudget as Record<string, unknown>);
+    }
+  }, [critical, setTodayDailyState, setTodayDate, setTodayEnergyBudget, setTodayMode]);
+
   const heroState = useMemo(() => {
     if (pendingDailyForHero) {
       return {
@@ -135,8 +156,22 @@ export function DashboardClientShell() {
         sensory_load: pendingDailyForHero.sensory_load,
       };
     }
+    if (todayDailyState) {
+      const state = todayDailyState as {
+        energy?: number | null;
+        focus?: number | null;
+        sensory_load?: number | null;
+      } | null;
+      if (state && state.energy != null && state.focus != null && state.sensory_load != null) {
+        return {
+          energy: state.energy,
+          focus: state.focus,
+          sensory_load: state.sensory_load,
+        };
+      }
+    }
     return null;
-  }, [pendingDailyForHero]);
+  }, [pendingDailyForHero, todayDailyState]);
 
   if (error) {
     return (
@@ -147,13 +182,49 @@ export function DashboardClientShell() {
     );
   }
 
-  if (!critical) {
-    return (
-      <main className="container page page-wide dashboard-page relative z-10 pb-10">
-        <DashboardShellSkeleton />
-      </main>
-    );
-  }
+  const isCriticalLoading = !critical && !error;
+
+  const fallbackDateStr = (() => {
+    const stored = useHQStore.getState().todayDate;
+    if (typeof stored === "string" && /^\d{4}-\d{2}-\d{2}$/.test(stored)) return stored;
+    return "1970-01-01";
+  })();
+
+  const effectiveCritical: DashboardCritical = critical ?? {
+    dateStr: fallbackDateStr,
+    isMinimalUI: false,
+    lightUi: false,
+    energyPct: 0,
+    focusPct: 0,
+    loadPct: 0,
+    budgetRemainingCents: null,
+    currency: "€",
+    xp: { total_xp: 0, level: 1 },
+    economy: { discipline_points: 0, focus_credits: 0, momentum_boosters: 0 },
+    actionsCount: 0,
+    topQuickActions: [],
+    missionLabel: "Klaar om te starten",
+    singleGoalLabel: null,
+    missionSubtext: "",
+    emptyMissionMessage: "Geen taken geladen.",
+    emptyMissionHref: "/tasks",
+    dailyQuoteText: null,
+    dailyQuoteAuthor: null,
+    streakAtRisk: false,
+    todaysTasks: [],
+    timeWindow: "",
+    isTimeWindowActive: false,
+    energyBudget: {},
+    state: null,
+    yesterdayState: null,
+    mode: "normal" as AppMode,
+    carryOverCount: 0,
+    copyVariant: undefined,
+    accountabilitySettings: undefined,
+    learningStreak: 0,
+    autoSuggestions: [],
+    burnout: false,
+  };
 
   const {
     dateStr,
@@ -186,7 +257,8 @@ export function DashboardClientShell() {
     carryOverCount,
     copyVariant,
     accountabilitySettings,
-  } = critical;
+    burnout = false,
+  } = effectiveCritical;
 
   const dcicLevel = gameState?.level ?? xp.level;
   const confrontationSummary = secondary?.confrontationSummary;
@@ -202,15 +274,26 @@ export function DashboardClientShell() {
   const strategy = secondary?.strategy;
   const quotesResult = secondary?.quotesResult as (Quote | null)[] | undefined;
   const quoteDay = (secondary?.quoteDay ?? 1) as number;
-  const learningStreak = (secondary?.learningStreak ?? critical.learningStreak) ?? 0;
-  const weeklyLearningMinutes = (secondary?.weeklyLearningMinutes ?? 0) as number;
-  const weeklyLearningTarget = (secondary?.weeklyLearningTarget ?? 60) as number;
+  const learningStreak =
+    (typeof learningSnapshot?.learningStreak === "number"
+      ? (learningSnapshot.learningStreak as number)
+      : (secondary?.learningStreak ?? effectiveCritical?.learningStreak)) ?? 0;
+  const weeklyLearningMinutes =
+    (typeof learningSnapshot?.weeklyMinutes === "number"
+      ? (learningSnapshot.weeklyMinutes as number)
+      : (secondary?.weeklyLearningMinutes ?? 0)) as number;
+  const weeklyLearningTarget =
+    (typeof learningSnapshot?.weeklyLearningTarget === "number"
+      ? (learningSnapshot.weeklyLearningTarget as number)
+      : (secondary?.weeklyLearningTarget ?? 60)) as number;
   const insight = secondary?.insight as string | undefined;
   const patternSuggestion = secondary?.patternSuggestion as string | null | undefined;
 
+  const effectiveEnergyBudget = (todayEnergyBudget ?? energyBudget) as Record<string, unknown>;
+
   const secState = (secondary?.state ?? state) as typeof state;
   const secYesterdayState = (secondary?.yesterdayState ?? yesterdayState) as typeof yesterdayState;
-  const secEnergyBudget = (secondary?.energyBudget ?? energyBudget) as Record<string, unknown>;
+  const secEnergyBudget = (secondary?.energyBudget ?? effectiveEnergyBudget) as Record<string, unknown>;
   const progressionRank = secondary?.progressionRank as Record<string, unknown> | null | undefined;
   const primeWindow = secondary?.primeWindow as { start: string; end: string; active: boolean } | null | undefined;
   const weeklyBudgetOutcome = secondary?.weeklyBudgetOutcome as { message: string; recoveryAvailable: boolean } | null | undefined;
@@ -220,8 +303,19 @@ export function DashboardClientShell() {
   const heroLoadPct = heroState ? Math.round((heroState.sensory_load / 10) * 100) : loadPct;
 
   const skipCinematicLayers = isMinimalUI || (critical?.lightUi === true);
-  const badgeBudgetRemainingCents = pendingBudget?.budgetRemainingCents ?? budgetRemainingCents;
-  const badgeCurrency = pendingBudget?.currency ?? currency;
+  const snapshotBudgetRemainingCents =
+    typeof budgetSnapshot?.budgetRemainingCents === "number"
+      ? (budgetSnapshot.budgetRemainingCents as number)
+      : null;
+  const snapshotCurrency =
+    typeof budgetSnapshot?.settings === "object" &&
+    budgetSnapshot?.settings &&
+    typeof (budgetSnapshot.settings as { currency?: unknown }).currency === "string"
+      ? ((budgetSnapshot.settings as { currency: string }).currency)
+      : null;
+  const badgeBudgetRemainingCents =
+    pendingBudget?.budgetRemainingCents ?? snapshotBudgetRemainingCents ?? budgetRemainingCents;
+  const badgeCurrency = pendingBudget?.currency ?? snapshotCurrency ?? currency;
 
   return (
     <main
@@ -241,8 +335,14 @@ export function DashboardClientShell() {
       <div className={`${!isMinimalUI ? "container page page-wide dashboard-page dashboard-cinematic relative z-10 pb-10" : ""}`}>
         {!isMinimalUI && (
           <>
-            <EnergyOverBudgetBanner remaining={(energyBudget.remaining as number) ?? 0} dateStr={dateStr} />
-            <LateDayNoTaskBanner completedTodayCount={(energyBudget.completedTaskCount as number) ?? 0} dateStr={dateStr} />
+            <EnergyOverBudgetBanner remaining={(effectiveEnergyBudget.remaining as number) ?? 0} dateStr={dateStr} />
+            <LateDayNoTaskBanner
+              completedTodayCount={
+                ((todayEnergyBudget as { completedTaskCount?: number } | null)?.completedTaskCount ??
+                  (energyBudget.completedTaskCount as number)) ?? 0
+              }
+              dateStr={dateStr}
+            />
             <EveningNoTaskModal dateStr={dateStr} />
           </>
         )}
@@ -302,19 +402,19 @@ export function DashboardClientShell() {
               date={dateStr}
               initial={{ energy: state?.energy ?? null, focus: state?.focus ?? null, sensory_load: state?.sensory_load ?? null, sleep_hours: state?.sleep_hours ?? null, social_load: state?.social_load ?? null, mental_battery: (state as { mental_battery?: number | null })?.mental_battery ?? null, is_rest_day: (state as { is_rest_day?: boolean | null })?.is_rest_day ?? null }}
               yesterday={{ energy: yesterdayState?.energy ?? null, focus: yesterdayState?.focus ?? null, sensory_load: yesterdayState?.sensory_load ?? null, sleep_hours: yesterdayState?.sleep_hours ?? null, social_load: yesterdayState?.social_load ?? null, mental_battery: (yesterdayState as { mental_battery?: number | null })?.mental_battery ?? null }}
-              brainMode={energyBudget.brainMode as BrainMode}
-              suggestedTaskCount={(energyBudget.suggestedTaskCount as number) ?? 3}
+              brainMode={effectiveEnergyBudget.brainMode as BrainMode}
+              suggestedTaskCount={(effectiveEnergyBudget.suggestedTaskCount as number) ?? 3}
             />
             <ConfrontationBanner />
             <ConsequenceBanner
-              energyDepleted={(energyBudget.consequence as { energyDepleted?: boolean } | undefined)?.energyDepleted}
-              recoveryOnly={(energyBudget.consequence as { recoveryOnly?: boolean } | undefined)?.recoveryOnly}
+              energyDepleted={(effectiveEnergyBudget.consequence as { energyDepleted?: boolean } | undefined)?.energyDepleted}
+              recoveryOnly={(effectiveEnergyBudget.consequence as { recoveryOnly?: boolean } | undefined)?.recoveryOnly}
               zeroCompletionPenalty={(state as { zero_completion_penalty_applied?: boolean } | null)?.zero_completion_penalty_applied}
-              burnout={critical.burnout}
+              burnout={burnout}
             />
-            {(energyBudget.activeStartedCount as number) != null && (energyBudget.maxSlots as number) != null && (energyBudget.activeStartedCount as number) > (energyBudget.maxSlots as number) && (
+            {(effectiveEnergyBudget.activeStartedCount as number) != null && (effectiveEnergyBudget.maxSlots as number) != null && (effectiveEnergyBudget.activeStartedCount as number) > (effectiveEnergyBudget.maxSlots as number) && (
               <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm text-amber-200/95">
-                Je hebt meer missies gestart dan je focus-slots ({Number(energyBudget.activeStartedCount)} &gt; {Number(energyBudget.maxSlots)}). Druk loopt op — voltooi of sluit er een.
+                Je hebt meer missies gestart dan je focus-slots ({Number(effectiveEnergyBudget.activeStartedCount)} &gt; {Number(effectiveEnergyBudget.maxSlots)}). Druk loopt op — voltooi of sluit er een.
               </div>
             )}
             {secondary && <WeeklyMirrorBanner summary={(confrontationSummary ?? null) as ConfrontationSummary | null} />}

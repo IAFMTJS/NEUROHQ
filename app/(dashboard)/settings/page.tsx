@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
+import { Suspense } from "react";
 import { HeroMascotImage } from "@/components/HeroMascotImage";
 import { HQPageHeader } from "@/components/hq";
 import { hasGoogleCalendarToken } from "@/app/actions/calendar";
@@ -30,7 +31,32 @@ const BehaviorProfileSettings = dynamic(() => import("@/components/settings/Beha
 const SettingsDaysOff = dynamic(() => import("@/components/settings/SettingsDaysOff").then((m) => ({ default: m.SettingsDaysOff })), { loading: () => null });
 const SettingsEmailReminders = dynamic(() => import("@/components/settings/SettingsEmailReminders").then((m) => ({ default: m.SettingsEmailReminders })), { loading: () => <div className="min-h-[80px] animate-pulse rounded-xl bg-white/5" aria-hidden /> });
 
-export default async function SettingsPage() {
+function SettingsShell() {
+  return (
+    <>
+      <HQPageHeader
+        title="Settings"
+        subtitle="Account, weergave, tijdzone, notificaties, budget, agenda, brain status (dashboard), Behavior Profile (identity, weekthema, avoidance), export en privacy."
+        backHref="/dashboard"
+      />
+      <section className="mascot-hero mascot-hero-top mascot-hero-sharp" data-mascot-page="settings" aria-hidden>
+        <div className="mascot-hero-inner mx-auto">
+          <HeroMascotImage page="settings" className="mascot-img" heroLarge />
+        </div>
+      </section>
+    </>
+  );
+}
+
+function SettingsContentSkeleton() {
+  return (
+    <div className="space-y-4">
+      <div className="min-h-[120px] animate-pulse rounded-xl bg-white/5" aria-hidden />
+    </div>
+  );
+}
+
+async function SettingsContent() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/login");
@@ -48,18 +74,7 @@ export default async function SettingsPage() {
   const appVersion = process.env.NEXT_PUBLIC_APP_VERSION ?? "1.0.0";
 
   return (
-    <div className="container page settings-page space-y-6">
-      <HQPageHeader
-        title="Settings"
-        subtitle="Account, weergave, tijdzone, notificaties, budget, agenda, brain status (dashboard), Behavior Profile (identity, weekthema, avoidance), export en privacy."
-        backHref="/dashboard"
-      />
-      <section className="mascot-hero mascot-hero-top mascot-hero-sharp" data-mascot-page="settings" aria-hidden>
-        <div className="mascot-hero-inner mx-auto">
-          <HeroMascotImage page="settings" className="mascot-img" heroLarge />
-        </div>
-      </section>
-
+    <>
       <section className="space-y-3">
         <h2 className="text-xs font-semibold uppercase tracking-wide text-[var(--text-muted)]">Account</h2>
         <div className="card-simple overflow-hidden p-0">
@@ -138,6 +153,17 @@ export default async function SettingsPage() {
         <SettingsClearCache />
         <SettingsAbout appVersion={appVersion} />
       </section>
+    </>
+  );
+}
+
+export default function SettingsPage() {
+  return (
+    <div className="container page settings-page space-y-6">
+      <SettingsShell />
+      <Suspense fallback={<SettingsContentSkeleton />}>
+        <SettingsContent />
+      </Suspense>
     </div>
   );
 }

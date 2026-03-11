@@ -5,6 +5,13 @@
  */
 const APP_TIMEZONE = "Europe/Amsterdam";
 
+// Re-export canonical week bounds helper so older imports keep working.
+import { getWeekBounds as getWeekBoundsFromLearning } from "@/lib/utils/learning";
+
+export function getWeekBounds(date: Date): { start: string; end: string } {
+  return getWeekBoundsFromLearning(date);
+}
+
 export function todayDateString(): string {
   return new Date().toLocaleDateString("en-CA", { timeZone: APP_TIMEZONE });
 }
