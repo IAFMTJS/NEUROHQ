@@ -6,6 +6,7 @@ import { snoozeTask } from "@/app/actions/tasks";
 import { startTaskWithHeavyCost } from "@/app/actions/decision-cost";
 import { useOfflineCompleteTask } from "@/app/hooks/useOfflineCompleteTask";
 import { getDailyState, setEmotionalStatePreStart, type EmotionalStatePreStart } from "@/app/actions/daily-state";
+import { useHQStore } from "@/lib/hq-store";
 
 const DEFAULT_MINUTES = 25;
 
@@ -51,6 +52,8 @@ export function FocusModal({ open, onClose, taskId, taskTitle, date: dateProp, t
   const completeTaskOffline = useOfflineCompleteTask();
   const today = new Date().toISOString().slice(0, 10);
   const date = dateProp ?? today;
+  const upsertTask = useHQStore((s) => s.upsertTask);
+  const removeTask = useHQStore((s) => s.removeTask);
   const [pending, setPending] = useState(false);
   const [minutes, setMinutes] = useState(DEFAULT_MINUTES);
   const [secondsLeft, setSecondsLeft] = useState(minutes * 60);
@@ -87,21 +90,32 @@ export function FocusModal({ open, onClose, taskId, taskTitle, date: dateProp, t
 
   const handleComplete = useCallback(() => {
     setPending(true);
+    const state = useHQStore.getState();
+    const existingForDate =
+      state.tasksByDate[date]?.find((t) => t.id === taskId) ?? null;
+    if (existingForDate) {
+      upsertTask({
+        ...existingForDate,
+        completed: true,
+        completed_at: new Date().toISOString(),
+      } as any);
+    }
     completeTaskOffline(taskId).then((result) => {
       onComplete?.(result ?? undefined);
       router.refresh();
       onClose();
     }).finally(() => setPending(false));
-  }, [taskId, completeTaskOffline, onComplete, router, onClose]);
+  }, [date, taskId, completeTaskOffline, onComplete, router, onClose, upsertTask]);
 
   const handleSnooze = useCallback(() => {
     setPending(true);
     snoozeTask(taskId).then(() => {
       onSnooze?.();
+      removeTask(taskId, date);
       router.refresh();
       onClose();
     }).finally(() => setPending(false));
-  }, [taskId, onSnooze, router, onClose]);
+  }, [taskId, date, onSnooze, router, onClose, removeTask]);
 
   if (!open) return null;
 

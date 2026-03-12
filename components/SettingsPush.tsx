@@ -44,6 +44,7 @@ export function SettingsPush({
   const [pushEveningEnabled, setPushEveningEnabled] = useState(initialPushEveningEnabled);
   const [pushWeeklyLearningEnabled, setPushWeeklyLearningEnabled] = useState(initialPushWeeklyLearningEnabled);
   const [testPending, setTestPending] = useState(false);
+  const [serverTestPending, setServerTestPending] = useState(false);
 
   const savePrefs = (next: {
     push_reminders_enabled?: boolean;
@@ -144,6 +145,33 @@ export function SettingsPush({
       setMessage(e instanceof Error ? e.message : "Could not schedule test notification.");
     } finally {
       setTestPending(false);
+    }
+  };
+
+  const sendServerPushTest = async () => {
+    setServerTestPending(true);
+    setMessage(null);
+    try {
+      const res = await fetch("/api/push/test", {
+        method: "POST",
+        credentials: "include",
+      });
+      const body = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        const errMsg =
+          typeof body.error === "string"
+            ? body.error
+            : res.status === 401
+              ? "Not logged in on this device."
+              : "Server push test failed.";
+        setMessage(errMsg);
+        return;
+      }
+      setMessage("Server push test sent. If push is configured, it should appear even when the PWA is closed.");
+    } catch (e) {
+      setMessage(e instanceof Error ? e.message : "Could not send server push test.");
+    } finally {
+      setServerTestPending(false);
     }
   };
 
@@ -345,6 +373,20 @@ export function SettingsPush({
           </button>
           <span className="text-xs text-[var(--text-muted)]">
             Schedules a one-off local notification ≈30 seconden later to preview how push looks, even when the PWA is in the background.
+          </span>
+        </div>
+
+        <div className="flex flex-wrap items-center gap-3">
+          <button
+            type="button"
+            onClick={sendServerPushTest}
+            disabled={serverTestPending || status === "loading"}
+            className="rounded-lg border border-[var(--card-border)] px-4 py-2.5 text-sm font-medium text-[var(--text-primary)] disabled:opacity-50"
+          >
+            {serverTestPending ? "Sending…" : "Server push test"}
+          </button>
+          <span className="text-xs text-[var(--text-muted)]">
+            Sends a real push from the server via APNs. It should arrive even when the PWA is fully closed.
           </span>
         </div>
 

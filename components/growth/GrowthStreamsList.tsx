@@ -2,6 +2,7 @@
 
 import type { FC } from "react";
 import { useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
 import type { LearningStream } from "@/app/actions/learning-state";
 import { addLearningSession, setMonthlyBookPagesRead } from "@/app/actions/learning";
 
@@ -10,6 +11,7 @@ type Props = {
 };
 
 export const GrowthStreamsList: FC<Props> = ({ streams }) => {
+  const router = useRouter();
   const [pendingId, startTransition] = useTransition();
   const [pagesInput, setPagesInput] = useState<Record<string, string>>({});
 
@@ -34,6 +36,7 @@ export const GrowthStreamsList: FC<Props> = ({ streams }) => {
           learning_type: "course",
         } as any);
       }
+      router.refresh();
     });
   }
 
@@ -116,6 +119,7 @@ export const GrowthStreamsList: FC<Props> = ({ streams }) => {
                           startTransition(async () => {
                             try {
                               await setMonthlyBookPagesRead(stream.id, clamped);
+                              router.refresh();
                             } catch {
                               // ignore; error surface via toast elsewhere if needed
                             }

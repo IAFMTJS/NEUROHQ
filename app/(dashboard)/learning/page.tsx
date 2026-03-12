@@ -8,6 +8,8 @@ import { GrowthReflectionCard } from "@/components/growth/GrowthReflectionCard";
 import { MonthlyBookCard } from "@/components/growth/MonthlyBookCard";
 import { AddLearningStreamCard } from "@/components/growth/AddLearningStreamCard";
 
+export const dynamic = "force-dynamic";
+
 type Props = { searchParams: Promise<{ toward?: string }> };
 
 function LearningShell() {

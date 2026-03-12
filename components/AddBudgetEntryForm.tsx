@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { addBudgetEntry, checkImpulseSignal, freezePurchase, updateBudgetEntry } from "@/app/actions/budget";
 import { Modal } from "@/components/Modal";
 import { getCurrencySymbol } from "@/lib/utils/currency";
+import { getPendingBudgetSnapshot, setPendingBudgetSnapshot } from "@/lib/client-pending-budget";
 
 const CATEGORY_PRESETS = ["Eten", "Vervoer", "Abonnementen", "Boodschappen", "Uit eten", "Gezondheid", "Overig"];
 
@@ -61,6 +62,17 @@ export function AddBudgetEntryForm({
         subscription_name: category === "Abonnementen" && subscriptionName ? subscriptionName : null,
         detail_name: detailForCategory,
       });
+      // Local-first: adjust pending budget snapshot so Dashboard/Budget badges update immediately.
+      try {
+        const snapshot = getPendingBudgetSnapshot();
+        if (snapshot && typeof snapshot.budgetRemainingCents === "number" && Number.isFinite(snapshot.budgetRemainingCents)) {
+          setPendingBudgetSnapshot({
+            budgetRemainingCents: snapshot.budgetRemainingCents + amount_cents,
+          });
+        }
+      } catch {
+        // ignore local snapshot errors
+      }
       setAmount("");
       setNote("");
       setStoreName("");

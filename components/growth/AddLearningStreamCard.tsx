@@ -2,9 +2,11 @@
 
 import type { FC } from "react";
 import { useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
 import { createEducationOption } from "@/app/actions/learning";
 
 export const AddLearningStreamCard: FC = () => {
+  const router = useRouter();
   const [title, setTitle] = useState("");
   const [category, setCategory] = useState("");
   const [pending, startTransition] = useTransition();
@@ -22,6 +24,7 @@ export const AddLearningStreamCard: FC = () => {
         });
         setTitle("");
         // Keep category so you can add multiple in same area.
+        router.refresh();
       } catch {
         // Errors are surfaced via toasts/logs elsewhere; keep this calm.
       }

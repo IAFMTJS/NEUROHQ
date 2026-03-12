@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { addBudgetEntry } from "@/app/actions/budget";
 import { deductXP } from "@/app/actions/xp";
 import { getCurrencySymbol } from "@/lib/utils/currency";
+import { getPendingBudgetSnapshot, setPendingBudgetSnapshot } from "@/lib/client-pending-budget";
 
 type Props = {
   date: string;
@@ -38,13 +39,25 @@ export function BudgetQuickLogCard({ date, currency = "EUR" }: Props) {
     const isPlanned = tag === "planned";
     startTransition(async () => {
       try {
+        const amount_cents = -value;
         await addBudgetEntry({
-          amount_cents: -value,
+          amount_cents,
           date,
           category: category.trim() || undefined,
           note: note.trim() || (isImpulse ? "Impulse" : undefined),
           is_planned: isPlanned,
         });
+        // Local-first: adjust pending budget snapshot so badges/cards update immediately.
+        try {
+          const snapshot = getPendingBudgetSnapshot();
+          if (snapshot && typeof snapshot.budgetRemainingCents === "number" && Number.isFinite(snapshot.budgetRemainingCents)) {
+            setPendingBudgetSnapshot({
+              budgetRemainingCents: snapshot.budgetRemainingCents + amount_cents,
+            });
+          }
+        } catch {
+          // ignore local snapshot errors
+        }
         if (isImpulse) {
           // Light discipline penalty for impulse spending.
           await deductXP(3);

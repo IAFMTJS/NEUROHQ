@@ -8,6 +8,7 @@ import { abandonTaskWithCost } from "@/app/actions/decision-cost";
 import { useOfflineCompleteTask } from "@/app/hooks/useOfflineCompleteTask";
 import type { SubtaskRow } from "@/app/actions/tasks";
 import { baseXpToLevelLabel } from "@/lib/mission-templates";
+import { useHQStore } from "@/lib/hq-store";
 
 const WEEKDAY_LABELS: Record<number, string> = { 1: "Mon", 2: "Tue", 3: "Wed", 4: "Thu", 5: "Fri", 6: "Sat", 7: "Sun" };
 
@@ -107,6 +108,8 @@ export function TaskDetailsModal({
   const viewLoggedRef = useRef<string | null>(null);
   const energyMatchCategory = classifyEnergyMatch(strategicPreview?.energyMatch);
   const isLowSynergy = energyMatchCategory === "low";
+  const upsertTask = useHQStore((s) => s.upsertTask);
+  const removeTask = useHQStore((s) => s.removeTask);
 
   useEffect(() => {
     if (open && task.id && viewLoggedRef.current !== task.id) {
@@ -119,6 +122,16 @@ export function TaskDetailsModal({
   const completeTaskOffline = useOfflineCompleteTask();
   function handleComplete() {
     startTransition(async () => {
+      const date = task.due_date ?? new Date().toISOString().slice(0, 10);
+      const existingForDate =
+        useHQStore.getState().tasksByDate[date]?.find((t) => t.id === task.id) ?? null;
+      if (existingForDate) {
+        upsertTask({
+          ...existingForDate,
+          completed: true,
+          completed_at: new Date().toISOString(),
+        } as any);
+      }
       const result = await completeTaskOffline(task.id);
       onComplete?.(result ?? undefined);
       router.refresh();
@@ -130,6 +143,8 @@ export function TaskDetailsModal({
     startTransition(async () => {
       await snoozeTask(task.id);
       onSnooze?.();
+      const date = task.due_date ?? new Date().toISOString().slice(0, 10);
+      removeTask(task.id, date);
       router.refresh();
       onClose();
     });
@@ -142,6 +157,8 @@ export function TaskDetailsModal({
         onClose();
       } else if (confirm("Delete this mission?")) {
         startTransition(async () => {
+          const date = task.due_date ?? new Date().toISOString().slice(0, 10);
+          removeTask(task.id, date);
           await deleteTask(task.id);
           router.refresh();
           onClose();
@@ -311,6 +328,7 @@ export function TaskDetailsModal({
                         const tomorrowStr = d.toISOString().slice(0, 10);
                         await snoozeTask(task.id);
                         onSnooze?.();
+                        removeTask(task.id, task.due_date ?? tomorrowStr);
                         router.refresh();
                         onClose();
                       });
