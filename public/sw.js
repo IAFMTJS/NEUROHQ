@@ -234,6 +234,35 @@ self.addEventListener("message", function (event) {
     } else {
       processOfflineQueue();
     }
+    return;
+  }
+  // Local test notification: schedule a one-off notification ~30s later so the user can see how push looks/behaves.
+  if (event.data.type === "TEST_PUSH_IN_30S") {
+    if ("waitUntil" in event) {
+      event.waitUntil(
+        new Promise(function (resolve) {
+          setTimeout(function () {
+            self.registration
+              .showNotification("NEUROHQ test notification", {
+                body: "This is a delayed test notification (≈30s).",
+                icon: "/app-icon.png",
+                badge: "/app-icon.png",
+                tag: "neurohq-test",
+              })
+              .finally(resolve);
+          }, 30000);
+        })
+      );
+    } else {
+      setTimeout(function () {
+        self.registration.showNotification("NEUROHQ test notification", {
+          body: "This is a delayed test notification (≈30s).",
+          icon: "/app-icon.png",
+          badge: "/app-icon.png",
+          tag: "neurohq-test",
+        });
+      }, 30000);
+    }
   }
 });
 

@@ -42,10 +42,10 @@ export default function DashboardError({
             Opnieuw proberen
           </PrimaryButton>
           <Link
-            href="/login"
+            href="/dashboard"
             className="inline-flex justify-center rounded-lg border border-[var(--card-border)] px-4 py-2.5 text-sm font-medium text-[var(--text-primary)] hover:bg-[var(--bg-elevated)]"
           >
-            Naar login
+            Naar dashboard
           </Link>
         </div>
       </GlassCard>

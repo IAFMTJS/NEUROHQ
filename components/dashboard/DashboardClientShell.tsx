@@ -247,7 +247,7 @@ export function DashboardClientShell() {
     dailyQuoteText,
     dailyQuoteAuthor,
     streakAtRisk,
-    todaysTasks,
+    todaysTasks: todaysTasksFromSnapshot,
     timeWindow,
     isTimeWindowActive,
     energyBudget,
@@ -259,6 +259,21 @@ export function DashboardClientShell() {
     accountabilitySettings,
     burnout = false,
   } = effectiveCritical;
+
+  // Keep dashboard "Active missions" in sync with the same source as the Missions page:
+  // if the HQ store has tasks for today (from bootstrap or local mutations), prefer that
+  // over the morning dashboard snapshot so new missions appear without a full refresh.
+  const todaysTasksFromStore = useHQStore(
+    (s) => (dateStr && s.tasksByDate?.[dateStr]) || []
+  ) as { id: string; title: string | null; carry_over_count?: number }[];
+  const todaysTasks =
+    todaysTasksFromStore && todaysTasksFromStore.length > 0
+      ? todaysTasksFromStore.map((t) => ({
+          id: t.id,
+          title: t.title ?? "Task",
+          carryOverCount: (t as { carry_over_count?: number }).carry_over_count ?? 0,
+        }))
+      : (todaysTasksFromSnapshot ?? []);
 
   const dcicLevel = gameState?.level ?? xp.level;
   const confrontationSummary = secondary?.confrontationSummary;

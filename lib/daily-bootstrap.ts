@@ -4,6 +4,101 @@ import { useEffect, useRef } from "react";
 import { useHQStore } from "@/lib/hq-store";
 
 const LAST_BOOTSTRAP_KEY = "neurohq-last-bootstrap-date";
+const BOOTSTRAP_CACHE_KEY = "neurohq-daily-bootstrap-cache";
+
+type BootstrapTodayPayload = {
+  date: string;
+  dashboard?: {
+    critical?: unknown;
+    secondary?: unknown;
+  };
+  dcicGameState?: unknown;
+  dailyState?: Record<string, unknown> | null;
+  energyBudget?: Record<string, unknown> | null;
+  budget?: Record<string, unknown> | null;
+  learning?: unknown;
+  tasks?: Record<string, unknown>;
+};
+
+type DailyMemoryCache = {
+  date: string | null;
+  data: BootstrapTodayPayload | null;
+};
+
+const dailyMemoryCache: DailyMemoryCache = {
+  date: null,
+  data: null,
+};
+
+function getTodayDateStr(): string {
+  const d = new Date();
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
+}
+
+async function loadBootstrapToday(): Promise<BootstrapTodayPayload | null> {
+  const today = getTodayDateStr();
+
+  // 1. MEMORY CACHE (fastest)
+  if (dailyMemoryCache.date === today && dailyMemoryCache.data) {
+    return dailyMemoryCache.data;
+  }
+
+  // 2. LOCAL STORAGE (survives refresh / app reopen)
+  try {
+    if (typeof window !== "undefined" && window.localStorage) {
+      const raw = window.localStorage.getItem(BOOTSTRAP_CACHE_KEY);
+      if (raw) {
+        const parsed = JSON.parse(raw) as { date?: string; data?: BootstrapTodayPayload };
+        if (parsed && parsed.date === today && parsed.data) {
+          dailyMemoryCache.date = today;
+          dailyMemoryCache.data = parsed.data;
+          return parsed.data;
+        }
+      }
+    }
+  } catch {
+    // Ignore cache read errors and fall back to network.
+  }
+
+  // 3. NETWORK (Supabase via /api/bootstrap/today) – once per day
+  const res = await fetch("/api/bootstrap/today", {
+    credentials: "include",
+    cache: "no-store",
+  });
+  if (!res.ok) {
+    return null;
+  }
+  const data = (await res.json()) as BootstrapTodayPayload;
+  const date = data.date ?? today;
+
+  const payload: BootstrapTodayPayload = {
+    ...data,
+    date,
+  };
+
+  dailyMemoryCache.date = date;
+  dailyMemoryCache.data = payload;
+
+  try {
+    if (typeof window !== "undefined" && window.localStorage) {
+      window.localStorage.setItem(
+        BOOTSTRAP_CACHE_KEY,
+        JSON.stringify({
+          date,
+          data: payload,
+        })
+      );
+      window.localStorage.setItem(LAST_BOOTSTRAP_KEY, date);
+    }
+  } catch {
+    // Ignore quota or security errors.
+  }
+
+  return payload;
+}
 
 type Status = "idle" | "loading" | "ready" | "error";
 
@@ -16,6 +111,7 @@ export function useDailyBootstrap() {
   const setTodayEnergyBudget = useHQStore((s) => s.setTodayEnergyBudget);
   const setBudgetSnapshot = useHQStore((s) => s.setBudgetSnapshot);
   const setLearningSnapshot = useHQStore((s) => s.setLearningSnapshot);
+  const setTasksForDate = useHQStore((s) => s.setTasksForDate);
 
   const statusRef = useRef<Status>("idle");
 
@@ -23,20 +119,14 @@ export function useDailyBootstrap() {
     if (typeof window === "undefined") return;
     if (statusRef.current === "loading" || statusRef.current === "ready") return;
 
-    const lastBootstrap = window.localStorage.getItem(LAST_BOOTSTRAP_KEY);
-
     const run = async () => {
       statusRef.current = "loading";
       try {
-        const res = await fetch("/api/bootstrap/today", {
-          credentials: "include",
-          cache: "no-store",
-        });
-        if (!res.ok) {
+        const data = await loadBootstrapToday();
+        if (!data) {
           statusRef.current = "error";
           return;
         }
-        const data = await res.json();
 
         const date: string = data.date;
         setTodayDate(date);
@@ -62,11 +152,11 @@ export function useDailyBootstrap() {
         if (data.learning) {
           setLearningSnapshot(data.learning);
         }
-
-        try {
-          window.localStorage.setItem(LAST_BOOTSTRAP_KEY, date);
-        } catch {
-          // ignore
+        if (data.tasks && typeof data.tasks === "object") {
+          const tasksForToday = (data.tasks as Record<string, unknown[]>)[date];
+          if (Array.isArray(tasksForToday)) {
+            setTasksForDate(date, tasksForToday as unknown as Parameters<typeof setTasksForDate>[1]);
+          }
         }
 
         statusRef.current = "ready";
@@ -76,14 +166,8 @@ export function useDailyBootstrap() {
       }
     };
 
-    // If we already bootstrapped today, skip network and rely on persisted store.
-    if (lastBootstrap && todayDate && lastBootstrap === todayDate) {
-      statusRef.current = "ready";
-      return;
-    }
-
     void run();
-  }, [setBudgetSnapshot, setDashboardSnapshot, setGameState, setLearningSnapshot, setTodayDate, setTodayDailyState, setTodayEnergyBudget, todayDate]);
+  }, [setBudgetSnapshot, setDashboardSnapshot, setGameState, setLearningSnapshot, setTasksForDate, setTodayDate, setTodayDailyState, setTodayEnergyBudget, todayDate]);
 }
 
 /**

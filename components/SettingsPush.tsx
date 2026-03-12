@@ -43,6 +43,7 @@ export function SettingsPush({
   const [pushMorningEnabled, setPushMorningEnabled] = useState(initialPushMorningEnabled);
   const [pushEveningEnabled, setPushEveningEnabled] = useState(initialPushEveningEnabled);
   const [pushWeeklyLearningEnabled, setPushWeeklyLearningEnabled] = useState(initialPushWeeklyLearningEnabled);
+  const [testPending, setTestPending] = useState(false);
 
   const savePrefs = (next: {
     push_reminders_enabled?: boolean;
@@ -93,6 +94,35 @@ export function SettingsPush({
     } catch (e) {
       setStatus("error");
       setMessage(e instanceof Error ? e.message : "Could not disconnect push.");
+    }
+  };
+
+  const scheduleTestNotification = async () => {
+    if (!supportsPush()) {
+      setMessage("This browser does not support push notifications.");
+      return;
+    }
+    setTestPending(true);
+    setMessage(null);
+    try {
+      // Ensure a service worker registration exists so we can send it a message.
+      if (!("serviceWorker" in navigator)) {
+        throw new Error("Service worker not available.");
+      }
+      let reg = await navigator.serviceWorker.getRegistration();
+      if (!reg) {
+        reg = await navigator.serviceWorker.register("/sw.js", { scope: "/" });
+      }
+      const sw = reg.active || reg.waiting || reg.installing;
+      if (!sw) {
+        throw new Error("Service worker did not activate. Refresh the page and try again.");
+      }
+      sw.postMessage({ type: "TEST_PUSH_IN_30S" });
+      setMessage("Test notification scheduled. It should appear in about 30 seconds.");
+    } catch (e) {
+      setMessage(e instanceof Error ? e.message : "Could not schedule test notification.");
+    } finally {
+      setTestPending(false);
     }
   };
 
@@ -280,6 +310,20 @@ export function SettingsPush({
           </button>
           <span className="text-xs text-[var(--text-muted)]">
             {subscribed ? "Browser subscription active." : "No browser subscription yet."}
+          </span>
+        </div>
+
+        <div className="mt-1 flex flex-wrap items-center gap-3">
+          <button
+            type="button"
+            onClick={scheduleTestNotification}
+            disabled={testPending || status === "loading"}
+            className="rounded-lg border border-[var(--card-border)] px-4 py-2.5 text-sm font-medium text-[var(--text-primary)] disabled:opacity-50"
+          >
+            {testPending ? "Scheduling…" : "Test notification in 30s"}
+          </button>
+          <span className="text-xs text-[var(--text-muted)]">
+            Schedules a one-off local notification ≈30 seconden later to preview how push looks, even when the PWA is in the background.
           </span>
         </div>
 
