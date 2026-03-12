@@ -19,6 +19,14 @@ type BudgetSettingsRow = {
 type BudgetEntryRow = Database["public"]["Tables"]["budget_entries"]["Row"];
 type BudgetEntryInsert = Database["public"]["Tables"]["budget_entries"]["Insert"];
 
+/** Explicit column list for budget_entries reads (per SUPABASE_PERFORMANCE_GUIDELINES). */
+const BUDGET_ENTRY_SELECT =
+  "id, user_id, amount_cents, date, category, note, is_planned, freeze_until, freeze_reminder_sent, recurring, store_name, subscription_name, detail_name, created_at, updated_at";
+
+/** Explicit columns for recurring_budget_templates reads. */
+const RECURRING_TEMPLATE_SELECT =
+  "id, user_id, amount_cents, category, note, recurrence_rule, day_of_week, day_of_month, next_generate_date, created_at, updated_at";
+
 /** Get user's budget settings from users table */
 export async function getBudgetSettings(): Promise<{
   monthly_budget_cents: number | null;
@@ -321,7 +329,7 @@ export async function getBudgetEntries(fromDate?: string, toDate?: string): Prom
   if (!user) return [];
   let query = supabase
     .from("budget_entries")
-    .select("*")
+    .select(BUDGET_ENTRY_SELECT)
     .eq("user_id", user.id)
     .order("date", { ascending: false });
   if (fromDate) query = query.gte("date", fromDate);
@@ -337,7 +345,7 @@ export async function copyOldBudgetEntriesToArchive(olderThanDate: string) {
   if (!user) return;
   const { data: rows } = await supabase
     .from("budget_entries")
-    .select("*")
+    .select(BUDGET_ENTRY_SELECT)
     .eq("user_id", user.id)
     .lt("date", olderThanDate);
   if (!rows?.length) return;
@@ -524,7 +532,7 @@ export async function getFrozenEntries(): Promise<BudgetEntryRow[]> {
   if (!user) return [];
   const { data } = await supabase
     .from("budget_entries")
-    .select("*")
+    .select(BUDGET_ENTRY_SELECT)
     .eq("user_id", user.id)
     .not("freeze_until", "is", null)
     .gt("freeze_until", new Date().toISOString());
@@ -537,7 +545,7 @@ export async function getEntriesReadyForFreezeReminder(): Promise<BudgetEntryRow
   if (!user) return [];
   const { data } = await supabase
     .from("budget_entries")
-    .select("*")
+    .select(BUDGET_ENTRY_SELECT)
     .eq("user_id", user.id)
     .not("freeze_until", "is", null)
     .lte("freeze_until", new Date().toISOString())
@@ -552,7 +560,7 @@ export async function getFrozenEntriesReadyForAction(): Promise<BudgetEntryRow[]
   if (!user) return [];
   const { data } = await supabase
     .from("budget_entries")
-    .select("*")
+    .select(BUDGET_ENTRY_SELECT)
     .eq("user_id", user.id)
     .not("freeze_until", "is", null)
     .lte("freeze_until", new Date().toISOString())
@@ -662,7 +670,7 @@ export async function getRecurringTemplates(): Promise<RecurringTemplateRow[]> {
     if (!user) return [];
     const { data, error } = await supabase
       .from("recurring_budget_templates")
-      .select("*")
+      .select(RECURRING_TEMPLATE_SELECT)
       .eq("user_id", user.id)
       .order("next_generate_date", { ascending: true });
     if (error) return [];
@@ -715,7 +723,7 @@ export async function generateRecurringEntries() {
   const today = getBudgetToday();
   const { data: templates } = await supabase
     .from("recurring_budget_templates")
-    .select("*")
+    .select(RECURRING_TEMPLATE_SELECT)
     .eq("user_id", user.id)
     .lte("next_generate_date", today);
   if (!templates?.length) return;

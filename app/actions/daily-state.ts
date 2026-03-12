@@ -37,12 +37,14 @@ export async function getDailyState(date: string) {
   if (!user) return null;
   const { data: { session } } = await supabase.auth.getSession();
   const accessToken = session?.access_token ?? "";
+  const DAILY_STATE_SELECT =
+    "id, user_id, date, energy, focus, sensory_load, sleep_hours, social_load, mental_battery, load, is_rest_day, auto_master_missions_generated, focus_consumed, focus_invested_today, invested_mission_id, emotional_state, mood_note, zero_completion_penalty_applied, created_at, updated_at";
   return unstable_cache(
     async (userId: string, dateKey: string, token: string) => {
       const client = createClientWithToken(token);
       const { data } = await client
         .from("daily_state")
-        .select("*")
+        .select(DAILY_STATE_SELECT)
         .eq("user_id", userId)
         .eq("date", dateKey)
         .single();

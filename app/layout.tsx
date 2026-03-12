@@ -5,6 +5,7 @@ import { Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
 import "./design-system.css";
 import { ThemeProvider } from "@/components/providers/ThemeProvider";
+import { ReactQueryProvider } from "@/components/providers/ReactQueryProvider";
 
 const plusJakarta = Plus_Jakarta_Sans({
   subsets: ["latin"],
@@ -64,9 +65,11 @@ export default function RootLayout({
       </head>
       <body className={`min-h-screen antialiased ${plusJakarta.variable} font-sans`}>
         <ServiceWorkerRegistration />
-        <DeferredRootComponents />
-        <ThemeProvider>{children}</ThemeProvider>
-        <DeferredToaster />
+        <ReactQueryProvider>
+          <DeferredRootComponents />
+          <ThemeProvider>{children}</ThemeProvider>
+          <DeferredToaster />
+        </ReactQueryProvider>
         <Analytics />
         <SpeedInsights />
       </body>

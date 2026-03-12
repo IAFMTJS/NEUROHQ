@@ -35,11 +35,13 @@ type Props = {
   /** Default due date when in create mode. */
   defaultDate?: string;
   onSaved?: () => void;
-  /** Called after creating a task (create mode); receives the new task. */
-  onAdded?: (task: Task) => void;
+  /** Called after creating a task (create mode); receives the new task and optional temp id to replace. On error, called with (undefined, tempId) to remove placeholder. */
+  onAdded?: (task: Task | undefined, tempId?: string) => void;
+  /** Called before create (optimistic). Returns temp id; list shows placeholder until onAdded(created, tempId). */
+  onAddOptimistic?: (payload: { title: string; due_date: string }) => string | undefined;
 };
 
-export function EditMissionModal({ open, onClose, task, defaultDate, onSaved, onAdded }: Props) {
+export function EditMissionModal({ open, onClose, task, defaultDate, onSaved, onAdded, onAddOptimistic }: Props) {
   const isCreate = task == null;
   const router = useRouter();
   const [pending, startTransition] = useTransition();
@@ -140,33 +142,43 @@ export function EditMissionModal({ open, onClose, task, defaultDate, onSaved, on
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
-    startTransition(async () => {
-      try {
-        if (isCreate) {
+    if (isCreate) {
+      const tempId = onAddOptimistic?.({
+        title: payload.title ?? "",
+        due_date: payload.due_date ?? defaultDate ?? new Date().toISOString().slice(0, 10),
+      });
+      startTransition(async () => {
+        try {
           const result = await createTask(toCreateParams(payload));
           if (result.task) {
             const created = result.task as Task;
             upsertTask(created);
-            onAdded?.(created);
+            onAdded?.(created, tempId);
           }
           router.refresh();
           onClose();
-        } else {
-          const params = toUpdateParams(payload);
-          // Optimistically patch device store so tasks list reflects edits immediately.
-          upsertTask({
-            ...(task as Task),
-            ...params,
-          } as Task);
-          if (typeof navigator !== "undefined" && !navigator.onLine) {
-            await addToQueue("updateTask", { id: task!.id, params });
-          } else {
-            await updateTask(task!.id, params);
-            router.refresh();
-          }
-          onSaved?.();
-          onClose();
+        } catch (err) {
+          setError(err instanceof Error ? err.message : "Failed to save");
+          if (tempId) onAdded?.(undefined, tempId);
         }
+      });
+      return;
+    }
+    startTransition(async () => {
+      try {
+        const params = toUpdateParams(payload);
+        upsertTask({
+          ...(task as Task),
+          ...params,
+        } as Task);
+        if (typeof navigator !== "undefined" && !navigator.onLine) {
+          await addToQueue("updateTask", { id: task!.id, params });
+        } else {
+          await updateTask(task!.id, params);
+          router.refresh();
+        }
+        onSaved?.();
+        onClose();
       } catch (err) {
         setError(err instanceof Error ? err.message : "Failed to save");
       }

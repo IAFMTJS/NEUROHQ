@@ -180,6 +180,40 @@
 .modal-backdrop {
   background: transparent;
 }
+/* Stronger blur for slide-up confirm (e.g. delete modal) */
+.modal-overlay-blur {
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+.modal-backdrop-blur {
+  background: rgba(0, 0, 0, 0.25);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+@keyframes slide-up-sheet {
+  from {
+    opacity: 0;
+    transform: translateY(100%);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.animate-slide-up-sheet {
+  animation: slide-up-sheet 0.25s ease-out forwards;
+}
+@keyframes task-row-remove {
+  to {
+    opacity: 0;
+    transform: translateX(-12px);
+  }
+}
+.task-row-removing {
+  animation: task-row-remove 0.28s ease-out forwards;
+  pointer-events: none;
+}
 .modal-card {
   background: rgba(4, 10, 22, 0.98);
   border: 2px solid rgba(0, 212, 255, 0.4);

@@ -548,10 +548,40 @@
   background: var(--accent-primary);
   box-shadow: 0 0 10px rgba(37, 99, 235, 0.5), 0 0 20px rgba(37, 99, 235, 0.2);
   border-radius: 10px;
-  transition: box-shadow 0.2s ease;
+  transition: width 0.35s ease-out, box-shadow 0.2s ease;
 }
 .progress:hover .progress-fill {
   box-shadow: 0 0 12px rgba(37, 99, 235, 0.55), 0 0 24px rgba(37, 99, 235, 0.25);
+}
+
+/* Staggered loading: dashboard bento cards fade in one after another (psychological UX). */
+@keyframes dashboard-card-fade-in {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.dashboard-bento > * {
+  animation: dashboard-card-fade-in 0.3s ease-out forwards;
+  opacity: 0;
+}
+.dashboard-bento > *:nth-child(1) { animation-delay: 0ms; }
+.dashboard-bento > *:nth-child(2) { animation-delay: 50ms; }
+.dashboard-bento > *:nth-child(3) { animation-delay: 100ms; }
+.dashboard-bento > *:nth-child(4) { animation-delay: 150ms; }
+.dashboard-bento > *:nth-child(5) { animation-delay: 200ms; }
+.dashboard-bento > *:nth-child(6) { animation-delay: 250ms; }
+.dashboard-bento > *:nth-child(7) { animation-delay: 300ms; }
+.dashboard-bento > *:nth-child(8) { animation-delay: 350ms; }
+.dashboard-bento > *:nth-child(9) { animation-delay: 400ms; }
+.dashboard-bento > *:nth-child(10) { animation-delay: 450ms; }
+.dashboard-bento > *:nth-child(n+11) { animation-delay: 500ms; }
+
+/* Subtle idle motion: gentle opacity pulse so the screen doesn’t feel static (respects reduced-motion). */
+@keyframes idle-breathing {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.97; }
+}
+.idle-breathing {
+  animation: idle-breathing 5s ease-in-out infinite;
 }
 
 /* ========== RING-STYLE GLOWS – alle pagina’s (zelfde familie als brain status rings) ========== */

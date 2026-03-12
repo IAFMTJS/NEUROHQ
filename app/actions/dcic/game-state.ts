@@ -32,6 +32,8 @@ export async function getGameState(
   // Fetch all core game data in parallel to avoid a slow waterfall.
   const today = new Date().toISOString().split("T")[0];
 
+  const MISSIONS_SELECT =
+    "id, name, xp_reward, energy_cost, completed, active, started_at, completed_at, difficulty_level, focus_requirement, social_intensity, mission_type, category, skill_link, recurrence_type, streak_eligible, mission_intent, expires_at, created_at";
   const [
     { data: xpData },
     { data: missionsData },
@@ -43,11 +45,15 @@ export async function getGameState(
     supabase.from("user_xp").select("total_xp").eq("user_id", user.id).single(),
     supabase
       .from("missions")
-      .select("*")
+      .select(MISSIONS_SELECT)
       .eq("user_id", user.id)
       .order("created_at", { ascending: false })
       .limit(20),
-    supabase.from("user_streak").select("*").eq("user_id", user.id).single(),
+    supabase
+      .from("user_streak")
+      .select("current_streak, longest_streak, last_completion_date")
+      .eq("user_id", user.id)
+      .single(),
     supabase.from("achievements").select("achievement_key").eq("user_id", user.id),
     supabase.from("user_skills").select("skill_key").eq("user_id", user.id),
     supabase

@@ -34,6 +34,7 @@ import { Divider1px } from "@/components/hud-test/Divider1px";
 import hudStyles from "@/components/hud-test/hud.module.css";
 import { TasksTabsShell } from "@/components/missions";
 import { TasksDailyBootstrap } from "@/components/missions/TasksDailyBootstrap";
+import { MissionsSectionFallback } from "@/components/missions/MissionsSectionFallback";
 import { TasksCalendarAsync } from "./TasksCalendarAsync";
 import { Skeleton } from "@/components/Skeleton";
 
@@ -68,10 +69,8 @@ const CommanderMissionCard = nextDynamic(
   () => import("@/components/commander").then((m) => ({ default: m.CommanderMissionCard })),
   { loading: () => <div className="min-h-[72px] animate-pulse rounded-xl bg-white/5" aria-hidden /> }
 );
-const TaskList = nextDynamic(
-  () => import("@/components/TaskList").then((m) => ({ default: m.TaskList })),
-  { loading: () => <div className="card-simple min-h-[200px] animate-pulse rounded-xl bg-white/5 p-4" aria-hidden /> }
-);
+/** Imported directly (not dynamic) to avoid HMR breaking server-action refs (Turbopack "module factory not available"). */
+import { TaskList } from "@/components/TaskList";
 const BacklogAndToekomstTriggers = nextDynamic(
   () => import("@/components/missions/BacklogAndToekomstTriggers").then((m) => ({ default: m.BacklogAndToekomstTriggers })),
   { loading: () => null }
@@ -167,57 +166,6 @@ function HeaderMetaFallback() {
       <Skeleton className="h-10 w-24 rounded-full" />
       <Skeleton className="h-10 w-28 rounded-full" />
     </div>
-  );
-}
-
-function MissionsSectionFallback() {
-  return (
-    <SciFiPanel variant="glass" className={hudStyles.focusSecondary} bodyClassName="p-4 md:p-5">
-      <CornerNode corner="top-left" />
-      <CornerNode corner="top-right" />
-      <div className="space-y-4">
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <div>
-            <h2 className="text-base font-semibold text-[var(--text-primary)]">
-              Today&apos;s missions
-            </h2>
-            <p className="mt-0.5 text-xs text-[var(--text-muted)]">
-              Building your Commander view for today…
-            </p>
-          </div>
-          <Skeleton className="h-9 w-32 rounded-full" />
-        </div>
-        <div className="rounded-2xl border border-[var(--card-border)] bg-[var(--bg-surface)]/60 p-4">
-          <Skeleton className="mb-3 h-4 w-40" />
-          <ul className="space-y-2">
-            <li className="flex items-center gap-3">
-              <Skeleton className="h-5 w-5 rounded-lg" />
-              <Skeleton className="h-4 flex-1" />
-            </li>
-            <li className="flex items-center gap-3">
-              <Skeleton className="h-5 w-5 rounded-lg" />
-              <Skeleton className="h-4 flex-1" />
-            </li>
-            <li className="flex items-center gap-3">
-              <Skeleton className="h-5 w-5 rounded-lg" />
-              <Skeleton className="h-4 flex-1" />
-            </li>
-          </ul>
-        </div>
-        <div className="grid gap-3 md:grid-cols-2">
-          <div className="rounded-2xl border border-[var(--card-border)] bg-[var(--bg-surface)]/60 p-4">
-            <Skeleton className="mb-2 h-4 w-28" />
-            <Skeleton className="mb-1 h-3 w-full" />
-            <Skeleton className="h-3 w-3/4" />
-          </div>
-          <div className="rounded-2xl border border-[var(--card-border)] bg-[var(--bg-surface)]/60 p-4">
-            <Skeleton className="mb-2 h-4 w-32" />
-            <Skeleton className="mb-1 h-3 w-full" />
-            <Skeleton className="h-3 w-2/3" />
-          </div>
-        </div>
-      </div>
-    </SciFiPanel>
   );
 }
 
@@ -530,7 +478,7 @@ export default async function TasksPage({ searchParams }: Props) {
       <div className="container page page-wide dashboard-cinematic relative z-10">
         <TasksTabsShell initialTab={activeTab} missionsHref={missionsHref} calendarHref={calendarHref} header={headerSection}>
           {activeTab === "missions" ? (
-            <Suspense fallback={<MissionsSectionFallback />}>
+            <Suspense fallback={<MissionsSectionFallback dateStr={dateStr} />}>
               <MissionsSectionAsync dateStr={dateStr} backlog={backlog} />
             </Suspense>
           ) : (

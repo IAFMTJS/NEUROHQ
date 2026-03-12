@@ -96,3 +96,54 @@ export function DashboardShellSkeleton() {
     </div>
   );
 }
+
+/** Skeleton for tasks page during route transition — avoids blank screen. */
+export function TasksPageSkeleton() {
+  return (
+    <div className="space-y-6">
+      <div className="dashboard-top-strip">
+        <div className="dashboard-top-strip-track">
+          <Skeleton className="h-10 w-24 rounded-full" />
+          <Skeleton className="h-10 w-24 rounded-full" />
+        </div>
+      </div>
+      <div className="rounded-[22px] border border-[var(--card-border)] bg-[var(--bg-surface)]/70 p-4 space-y-3">
+        <Skeleton className="h-5 w-48" />
+        <Skeleton className="h-4 w-full" />
+        <Skeleton className="h-4 w-4/5" />
+        <div className="flex gap-2 pt-2">
+          <Skeleton className="h-10 w-28 rounded-lg" />
+          <Skeleton className="h-10 w-24 rounded-lg" />
+        </div>
+      </div>
+      <ul className="space-y-2">
+        {[1, 2, 3, 4].map((i) => (
+          <li key={i}>
+            <div className="flex items-center gap-3 rounded-lg border border-[var(--card-border)] bg-[var(--bg-surface)]/50 px-3 py-2.5">
+              <Skeleton className="h-6 w-6 shrink-0 rounded-lg" />
+              <Skeleton className="h-4 flex-1 max-w-[60%]" />
+            </div>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
+/** Generic page skeleton for dashboard routes (budget, xp, learning, etc.) — avoids blank screen on transition. */
+export function DashboardPageSkeleton() {
+  return (
+    <div className="space-y-6">
+      <div>
+        <Skeleton className="h-8 w-40" />
+        <Skeleton className="mt-1 h-4 w-48" />
+      </div>
+      <Skeleton className="h-32 w-full rounded-xl" />
+      <div className="space-y-2">
+        <Skeleton className="h-4 w-28" />
+        <Skeleton className="h-24 w-full rounded-lg" />
+      </div>
+      <Skeleton className="h-48 w-full rounded-xl" />
+    </div>
+  );
+}

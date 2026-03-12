@@ -64,11 +64,14 @@ export async function getFinanceState(): Promise<FinanceState | null> {
     const { monthStart, monthEnd } = getBudgetMonthBounds();
     const { data: entries } = await supabase
       .from("budget_entries")
-      .select("*")
+      .select("id, amount_cents, date, category, note, is_planned")
       .eq("user_id", user.id)
       .gte("date", monthStart)
       .lte("date", monthEnd);
-    const { data: goalsData } = await supabase.from("savings_goals").select("*").eq("user_id", user.id);
+    const { data: goalsData } = await supabase
+      .from("savings_goals")
+      .select("id, name, target_cents, current_cents, deadline")
+      .eq("user_id", user.id);
     const goals: SavingsGoal[] = (goalsData || []).map((g) => ({
       id: g.id,
       name: g.name,
@@ -137,7 +140,7 @@ export async function getFinanceState(): Promise<FinanceState | null> {
 
   let entriesQuery = supabase
     .from("budget_entries")
-    .select("*")
+    .select("id, amount_cents, date, category, note, is_planned")
     .eq("user_id", user.id)
     .gte("date", cycleStartDateStr);
   if (lastPaydayDateStr && cycleStartDateStr) {
@@ -210,7 +213,10 @@ export async function getFinanceState(): Promise<FinanceState | null> {
       .from("budget_targets")
       .select("category, target_cents, priority, flexible")
       .eq("user_id", user.id),
-    supabase.from("savings_goals").select("*").eq("user_id", user.id),
+    supabase
+      .from("savings_goals")
+      .select("id, name, target_cents, current_cents, deadline")
+      .eq("user_id", user.id),
   ]);
 
   const monthlyBudget = budgetSettings?.monthly_budget_cents ?? 0;

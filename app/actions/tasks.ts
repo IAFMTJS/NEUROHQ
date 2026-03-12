@@ -9,6 +9,10 @@ import { incrementAvoidanceSkip, recordAvoidanceCompletion } from "@/app/actions
 import { revalidatePath, unstable_cache } from "next/cache";
 import { revalidateTagMax } from "@/lib/revalidate";
 
+/** Explicit column list for task reads (avoids select * per SUPABASE_PERFORMANCE_GUIDELINES). */
+const TASK_SELECT_COLUMNS =
+  "id, user_id, title, due_date, completed, completed_at, carry_over_count, energy_required, priority, notes, created_at, updated_at, parent_task_id, deleted_at, snooze_until, category, impact, domain, cognitive_load, emotional_resistance, mental_load, social_load, focus_required, recurrence_rule, recurrence_weekdays, difficulty, discipline_weight, strategic_value, psychology_label, mission_intent, mission_chain_id, validation_type, base_xp, avoidance_tag, hobby_tag, fatigue_impact, strategy_key_result_id, urgency";
+
 export type TaskListMode = "normal" | "low_energy" | "stabilize" | "driven";
 
 /** Request-scoped cache: duplicate getTodaysTasks(date, mode) in the same request return the same result (e.g. dashboard + tasks page). */
@@ -20,7 +24,7 @@ export const getTodaysTasks = cache(async (date: string, mode: TaskListMode): Pr
   const nowIso = new Date().toISOString();
   let query = supabase
     .from("tasks")
-    .select("*")
+    .select(TASK_SELECT_COLUMNS)
     .eq("user_id", user.id)
     .eq("due_date", date)
     .eq("completed", false)
@@ -77,7 +81,7 @@ export async function getTasksForDate(date: string) {
   const nowIso = new Date().toISOString();
   const { data } = await supabase
     .from("tasks")
-    .select("*")
+    .select(TASK_SELECT_COLUMNS)
     .eq("user_id", user.id)
     .eq("due_date", date)
     .is("parent_task_id", null)
@@ -96,7 +100,7 @@ export async function getTasksForDateRange(startDate: string, endDate: string): 
   const nowIso = new Date().toISOString();
   const { data } = await supabase
     .from("tasks")
-    .select("*")
+    .select(TASK_SELECT_COLUMNS)
     .eq("user_id", user.id)
     .gte("due_date", startDate)
     .lte("due_date", endDate)
@@ -236,7 +240,7 @@ export async function createTask(params: {
   const { data, error } = await supabase
     .from("tasks")
     .insert(row as TablesInsert<"tasks">)
-    .select("*")
+    .select(TASK_SELECT_COLUMNS)
     .single();
   if (error) {
     const msg = error.code === "PGRST301" || error.message?.toLowerCase().includes("auth") || error.message?.toLowerCase().includes("jwt")
@@ -636,7 +640,7 @@ export async function getSubtasks(parentTaskId: string) {
   if (!user) return [];
   const { data } = await supabase
     .from("tasks")
-    .select("*")
+    .select(TASK_SELECT_COLUMNS)
     .eq("user_id", user.id)
     .eq("parent_task_id", parentTaskId)
     .order("created_at", { ascending: true });
@@ -673,7 +677,7 @@ export async function getBacklogTasks(todayDate: string): Promise<Task[]> {
   if (!user) return [];
   const { data } = await supabase
     .from("tasks")
-    .select("*")
+    .select(TASK_SELECT_COLUMNS)
     .eq("user_id", user.id)
     .eq("completed", false)
     .is("parent_task_id", null)
@@ -692,7 +696,7 @@ export async function getFutureTasks(todayDate: string): Promise<Task[]> {
   if (!user) return [];
   const { data } = await supabase
     .from("tasks")
-    .select("*")
+    .select(TASK_SELECT_COLUMNS)
     .eq("user_id", user.id)
     .eq("completed", false)
     .is("parent_task_id", null)
@@ -711,7 +715,7 @@ export async function getCompletedTodayTasks(date: string) {
   if (!user) return [];
   const { data } = await supabase
     .from("tasks")
-    .select("*")
+    .select(TASK_SELECT_COLUMNS)
     .eq("user_id", user.id)
     .eq("due_date", date)
     .eq("completed", true)

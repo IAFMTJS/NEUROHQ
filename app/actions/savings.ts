@@ -12,7 +12,7 @@ export async function getSavingsGoals(includeArchived = false): Promise<SavingsG
   if (!user) return [];
   const { data } = await supabase
     .from("savings_goals")
-    .select("*")
+    .select("id, user_id, name, target_cents, current_cents, deadline, status, created_at, updated_at")
     .eq("user_id", user.id)
     .order("created_at", { ascending: false });
   const list = (data ?? []) as SavingsGoalRow[];

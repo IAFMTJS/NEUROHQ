@@ -22,6 +22,7 @@ import { Divider1px } from "@/components/hud-test/Divider1px";
 import { CornerNode } from "@/components/hud-test/CornerNode";
 import hudStyles from "@/components/hud-test/hud.module.css";
 import { DashboardShellSkeleton, DashboardSkeleton } from "@/components/Skeleton";
+import { DelayedFallback } from "@/components/ui/DelayedFallback";
 import { useDashboardData, fetchAll, type DashboardCritical, type DashboardSecondary } from "@/components/providers/DashboardDataProvider";
 import type { CopyVariant } from "@/app/actions/adaptive";
 import type { BrainMode } from "@/lib/brain-mode";
@@ -40,30 +41,35 @@ import { getDayOfYearFromDateString } from "@/lib/utils/timezone";
 import { useDCICGameState } from "@/lib/dcic/game-state-client";
 import { DCICStatusCard } from "@/components/dcic/DCICStatusCard";
 
-/* Below-fold: ssr: false = load after hydration for faster first paint */
-const IdentityBlock = dynamic(() => import("@/components/dashboard/IdentityBlock").then((m) => ({ default: m.IdentityBlock })), { ssr: false, loading: () => <div className="glass-card min-h-[140px] animate-pulse rounded-[22px]" aria-hidden /> });
-const MomentumScore = dynamic(() => import("@/components/dashboard/MomentumScore").then((m) => ({ default: m.MomentumScore })), { ssr: false, loading: () => <div className="glass-card min-h-[100px] animate-pulse rounded-[22px]" aria-hidden /> });
-const TodayEngineCard = dynamic(() => import("@/components/dashboard/TodayEngineCard").then((m) => ({ default: m.TodayEngineCard })), { ssr: false, loading: () => <div className="glass-card min-h-[160px] animate-pulse rounded-[22px]" aria-hidden /> });
-const WeeklyHeatmap = dynamic(() => import("@/components/dashboard/WeeklyHeatmap").then((m) => ({ default: m.WeeklyHeatmap })), { ssr: false, loading: () => <div className="glass-card min-h-[80px] animate-pulse rounded-[22px]" aria-hidden /> });
-const HQChart = dynamic(() => import("@/components/hq").then((m) => ({ default: m.HQChart })), { ssr: false, loading: () => <div className="glass-card min-h-[180px] animate-pulse rounded-[22px]" aria-hidden /> });
-const RealityReportBlock = dynamic(() => import("@/components/RealityReportBlock").then((m) => ({ default: m.RealityReportBlock })), { ssr: false, loading: () => <div className="glass-card min-h-[100px] animate-pulse rounded-[22px]" aria-hidden /> });
-const PatternInsightCard = dynamic(() => import("@/components/hq/PatternInsightCard").then((m) => ({ default: m.PatternInsightCard })), { ssr: false, loading: () => <div className="glass-card min-h-[80px] animate-pulse rounded-[22px]" aria-hidden /> });
-const EnergyBudgetBar = dynamic(() => import("@/components/EnergyBudgetBar").then((m) => ({ default: m.EnergyBudgetBar })), { loading: () => <div className="h-3 w-full animate-pulse rounded-full bg-white/10" aria-hidden /> });
+/* Below-fold: ssr: false = load after hydration. DelayedFallback = show spinner only after ~250ms (psychological UX). */
+const cardPlaceholder = (className: string) => (
+  <DelayedFallback>
+    <div className={className} aria-hidden />
+  </DelayedFallback>
+);
+const IdentityBlock = dynamic(() => import("@/components/dashboard/IdentityBlock").then((m) => ({ default: m.IdentityBlock })), { ssr: false, loading: () => cardPlaceholder("glass-card min-h-[140px] animate-pulse rounded-[22px]") });
+const MomentumScore = dynamic(() => import("@/components/dashboard/MomentumScore").then((m) => ({ default: m.MomentumScore })), { ssr: false, loading: () => cardPlaceholder("glass-card min-h-[100px] animate-pulse rounded-[22px]") });
+const TodayEngineCard = dynamic(() => import("@/components/dashboard/TodayEngineCard").then((m) => ({ default: m.TodayEngineCard })), { ssr: false, loading: () => cardPlaceholder("glass-card min-h-[160px] animate-pulse rounded-[22px]") });
+const WeeklyHeatmap = dynamic(() => import("@/components/dashboard/WeeklyHeatmap").then((m) => ({ default: m.WeeklyHeatmap })), { ssr: false, loading: () => cardPlaceholder("glass-card min-h-[80px] animate-pulse rounded-[22px]") });
+const HQChart = dynamic(() => import("@/components/hq").then((m) => ({ default: m.HQChart })), { ssr: false, loading: () => cardPlaceholder("glass-card min-h-[180px] animate-pulse rounded-[22px]") });
+const RealityReportBlock = dynamic(() => import("@/components/RealityReportBlock").then((m) => ({ default: m.RealityReportBlock })), { ssr: false, loading: () => cardPlaceholder("glass-card min-h-[100px] animate-pulse rounded-[22px]") });
+const PatternInsightCard = dynamic(() => import("@/components/hq/PatternInsightCard").then((m) => ({ default: m.PatternInsightCard })), { ssr: false, loading: () => cardPlaceholder("glass-card min-h-[80px] animate-pulse rounded-[22px]") });
+const EnergyBudgetBar = dynamic(() => import("@/components/EnergyBudgetBar").then((m) => ({ default: m.EnergyBudgetBar })), { loading: () => cardPlaceholder("h-3 w-full animate-pulse rounded-full bg-white/10") });
 const EnergyOverBudgetBanner = dynamic(() => import("@/components/dashboard/EnergyOverBudgetBanner").then((m) => ({ default: m.EnergyOverBudgetBanner })), { loading: () => null });
 const LateDayNoTaskBanner = dynamic(() => import("@/components/dashboard/LateDayNoTaskBanner").then((m) => ({ default: m.LateDayNoTaskBanner })), { loading: () => null });
 const EveningNoTaskModal = dynamic(() => import("@/components/dashboard/EveningNoTaskModal").then((m) => ({ default: m.EveningNoTaskModal })), { loading: () => null });
 const ConsequenceBanner = dynamic(() => import("@/components/ConsequenceBanner").then((m) => ({ default: m.ConsequenceBanner })), { loading: () => null });
 const AvoidanceNotice = dynamic(() => import("@/components/AvoidanceNotice").then((m) => ({ default: m.AvoidanceNotice })), { loading: () => null });
-const FocusBlock = dynamic(() => import("@/components/FocusBlock").then((m) => ({ default: m.FocusBlock })), { ssr: false, loading: () => <div className="min-h-[80px] animate-pulse rounded-xl bg-white/5" aria-hidden /> });
-const OnTrackCard = dynamic(() => import("@/components/OnTrackCard").then((m) => ({ default: m.OnTrackCard })), { ssr: false, loading: () => <div className="glass-card min-h-[60px] animate-pulse rounded-[22px]" aria-hidden /> });
+const FocusBlock = dynamic(() => import("@/components/FocusBlock").then((m) => ({ default: m.FocusBlock })), { ssr: false, loading: () => cardPlaceholder("min-h-[80px] animate-pulse rounded-xl bg-white/5") });
+const OnTrackCard = dynamic(() => import("@/components/OnTrackCard").then((m) => ({ default: m.OnTrackCard })), { ssr: false, loading: () => cardPlaceholder("glass-card min-h-[60px] animate-pulse rounded-[22px]") });
 const OnboardingBanner = dynamic(() => import("@/components/OnboardingBanner").then((m) => ({ default: m.OnboardingBanner })), { loading: () => null });
-const AnalyticsWeekWidget = dynamic(() => import("@/components/AnalyticsWeekWidget").then((m) => ({ default: m.AnalyticsWeekWidget })), { loading: () => <div className="glass-card min-h-[100px] animate-pulse rounded-[22px]" aria-hidden /> });
+const AnalyticsWeekWidget = dynamic(() => import("@/components/AnalyticsWeekWidget").then((m) => ({ default: m.AnalyticsWeekWidget })), { loading: () => cardPlaceholder("glass-card min-h-[100px] animate-pulse rounded-[22px]") });
 const ConfrontationBanner = dynamic(() => import("@/components/dashboard/ConfrontationBanner").then((m) => ({ default: m.ConfrontationBanner })), { loading: () => null });
 const WeeklyMirrorBanner = dynamic(() => import("@/components/dashboard/WeeklyMirrorBanner").then((m) => ({ default: m.WeeklyMirrorBanner })), { loading: () => null });
 const BehaviorSuggestionsBanner = dynamic(() => import("@/components/dashboard/BehaviorSuggestionsBanner").then((m) => ({ default: m.BehaviorSuggestionsBanner })), { loading: () => null });
 const MinimalIntegrityBanner = dynamic(() => import("@/components/dashboard/MinimalIntegrityBanner").then((m) => ({ default: m.MinimalIntegrityBanner })), { loading: () => null });
 const ProgressionPrimeBudgetCard = dynamic(() => import("@/components/dashboard/ProgressionPrimeBudgetCard").then((m) => ({ default: m.ProgressionPrimeBudgetCard })), { loading: () => null });
-const DangerousModulesCard = dynamic(() => import("@/components/dashboard/DangerousModulesCard").then((m) => ({ default: m.DangerousModulesCard })), { ssr: false, loading: () => <div className="min-h-[120px] animate-pulse rounded-xl bg-white/5" aria-hidden /> });
+const DangerousModulesCard = dynamic(() => import("@/components/dashboard/DangerousModulesCard").then((m) => ({ default: m.DangerousModulesCard })), { ssr: false, loading: () => cardPlaceholder("min-h-[120px] animate-pulse rounded-xl bg-white/5") });
 
 export function DashboardClientShell() {
   const cache = useDashboardData();
@@ -385,7 +391,7 @@ export function DashboardClientShell() {
               </div>
             </div>
             <Divider1px />
-            <SciFiPanel className={`dashboard-bridge-frame ${hudStyles.focusPrimary}`} bodyClassName="dashboard-bridge-body" variant="command">
+            <SciFiPanel className={`dashboard-bridge-frame idle-breathing ${hudStyles.focusPrimary}`} bodyClassName="dashboard-bridge-body" variant="command">
               <CornerNode corner="top-left" />
               <CornerNode corner="top-right" />
               <span className="dashboard-bridge-label" aria-hidden>Command</span>

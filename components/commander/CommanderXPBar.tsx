@@ -1,6 +1,7 @@
 "use client";
 
 import { xpRangeForNextLevel, levelFromTotalXP } from "@/lib/xp";
+import { AnimatedNumber } from "@/components/ui/AnimatedNumber";
 
 type Props = {
   totalXP: number;
@@ -26,7 +27,7 @@ export function CommanderXPBar({ totalXP }: Props) {
         />
       </div>
       <p className="text-soft">
-        {current} / {needed} XP
+        <AnimatedNumber value={current} /> / <AnimatedNumber value={needed} /> XP
       </p>
     </section>
   );

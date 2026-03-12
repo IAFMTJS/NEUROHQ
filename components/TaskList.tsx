@@ -25,6 +25,7 @@ import { useAppState } from "@/components/providers/AppStateProvider";
 import { addBonusAutoMissionsForToday } from "@/app/actions/master-missions";
 import { useHQStore } from "@/lib/hq-store";
 import { useTasksBootstrap } from "@/lib/tasks-bootstrap";
+import { saveDailySnapshot } from "@/lib/client-cache";
 
 const WEEKDAY_LABELS: Record<number, string> = { 1: "Mon", 2: "Tue", 3: "Wed", 4: "Thu", 5: "Fri", 6: "Sat", 7: "Sun" };
 
@@ -130,6 +131,8 @@ export function TaskList({
   const [editTask, setEditTask] = useState<ExtendedTask | null>(null);
   const [focusTask, setFocusTask] = useState<ExtendedTask | null>(null);
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
+  /** ID of task just removed; animate it out then clear (no re-render flash). */
+  const [removingId, setRemovingId] = useState<string | null>(null);
   const addParam = searchParams.get("add");
   const [quickAddOpen, setQuickAddOpen] = useState(false);
   const [addFullOpen, setAddFullOpen] = useState(false);
@@ -147,6 +150,13 @@ export function TaskList({
     previousRank?: string;
   } | null>(null);
   const [optimisticCompleteIds, setOptimisticCompleteIds] = useState<string[]>([]);
+  /** IDs currently syncing complete to server — only those buttons show disabled (per-action feedback). */
+  const [completingIds, setCompletingIds] = useState<Set<string>>(new Set());
+  /** Per-action pending: only the affected row is disabled. */
+  const [snoozingIds, setSnoozingIds] = useState<Set<string>>(new Set());
+  const [skipNextIds, setSkipNextIds] = useState<Set<string>>(new Set());
+  /** Parent task id when adding a subtask — only that form shows disabled. */
+  const [addingSubtaskParentId, setAddingSubtaskParentId] = useState<string | null>(null);
   /** Tasks added this session (modal/simple form) so they show without reload; only for due_date === date */
   const [localTasksAdded, setLocalTasksAdded] = useState<ExtendedTask[]>([]);
   /** Local copy of subtasks so device store mutations + server calls don't require a full refresh. */
@@ -161,6 +171,25 @@ export function TaskList({
       setTasksForDate(date, initialTasks);
     }
   }, [date, initialTasks, setTasksForDate, storedTasks.length]);
+
+  // Persist minimal snapshot so missions fallback can render from cache on next load (instant layout, then refresh).
+  useEffect(() => {
+    if (!date || (initialTasks.length === 0 && (completedToday?.length ?? 0) === 0)) return;
+    const minimal = {
+      dateKey: date,
+      tasks: (initialTasks as { id: string; title?: string | null; completed?: boolean }[]).map((t) => ({
+        id: t.id,
+        title: t.title ?? null,
+        completed: t.completed ?? false,
+      })),
+      completedToday: (completedToday as { id: string; title?: string | null; completed?: boolean }[]).map((t) => ({
+        id: t.id,
+        title: t.title ?? null,
+        completed: true,
+      })),
+    };
+    saveDailySnapshot("missions", minimal);
+  }, [date, initialTasks, completedToday]);
 
   const extendedTasks = useMemo(() => {
     const fromServer = (storedTasks.length > 0 ? storedTasks : initialTasks) as ExtendedTask[];
@@ -283,6 +312,7 @@ export function TaskList({
       } as Task);
     }
     setOptimisticCompleteIds((prev) => (prev.includes(id) ? prev : [...prev, id]));
+    setCompletingIds((prev) => new Set(prev).add(id));
     startTransition(async () => {
       try {
         const result = await completeTaskOffline(id);
@@ -330,6 +360,11 @@ export function TaskList({
         }
         appState?.triggerError();
       } finally {
+        setCompletingIds((prev) => {
+          const next = new Set(prev);
+          next.delete(id);
+          return next;
+        });
         if (typeof navigator !== "undefined" && navigator.onLine) {
           setOptimisticCompleteIds((prev) => prev.filter((x) => x !== id));
         }
@@ -360,15 +395,19 @@ export function TaskList({
   async function handleConfirmDelete() {
     if (!confirmDeleteId) return;
     const id = confirmDeleteId;
-    removeTask(id, date);
-    if (typeof navigator !== "undefined" && !navigator.onLine) {
-      await addToQueue("deleteTask", { id });
-    } else {
-      await deleteTask(id);
-    }
     setConfirmDeleteId(null);
-    showDeleteToast(id);
-    router.refresh();
+    setRemovingId(id);
+    window.setTimeout(() => {
+      removeTask(id, date);
+      setRemovingId(null);
+      if (typeof navigator !== "undefined" && !navigator.onLine) {
+        addToQueue("deleteTask", { id });
+      } else {
+        deleteTask(id);
+      }
+      showDeleteToast(id);
+    }, 320);
+    // No router.refresh() — UI already updated from store; undo toast will refresh if needed.
   }
 
   function handleDuplicate(task: ExtendedTask) {
@@ -383,28 +422,36 @@ export function TaskList({
   }
 
   function handleSnooze(id: string) {
+    setSnoozingIds((prev) => new Set(prev).add(id));
+    removeTask(id, date);
     startTransition(async () => {
-      // Remove from today in the device store so UI updates immediately; it will reappear on the new date via bootstrap.
-      removeTask(id, date);
-      if (typeof navigator !== "undefined" && !navigator.onLine) {
-        await addToQueue("snoozeTask", { id });
-        return;
+      try {
+        if (typeof navigator !== "undefined" && !navigator.onLine) {
+          await addToQueue("snoozeTask", { id });
+        } else {
+          await snoozeTask(id);
+          router.refresh();
+        }
+      } finally {
+        setSnoozingIds((prev) => { const n = new Set(prev); n.delete(id); return n; });
       }
-      await snoozeTask(id);
-      router.refresh();
     });
   }
 
   function handleSkipNext(id: string) {
+    setSkipNextIds((prev) => new Set(prev).add(id));
+    removeTask(id, date);
     startTransition(async () => {
-      // Skip next removes the task from today and moves it to a future date; mirror that in the local store.
-      removeTask(id, date);
-      if (typeof navigator !== "undefined" && !navigator.onLine) {
-        await addToQueue("skipNextOccurrence", { id });
-        return;
+      try {
+        if (typeof navigator !== "undefined" && !navigator.onLine) {
+          await addToQueue("skipNextOccurrence", { id });
+        } else {
+          await skipNextOccurrence(id);
+          router.refresh();
+        }
+      } finally {
+        setSkipNextIds((prev) => { const n = new Set(prev); n.delete(id); return n; });
       }
-      await skipNextOccurrence(id);
-      router.refresh();
     });
   }
 
@@ -423,7 +470,7 @@ export function TaskList({
       } else {
         await uncompleteTask(id);
       }
-      router.refresh();
+      // No router.refresh() — list already updated from upsertTask.
     });
   }
 
@@ -485,14 +532,13 @@ export function TaskList({
     const form = e.currentTarget;
     const title = (form.elements.namedItem("subtask-title") as HTMLInputElement)?.value?.trim();
     if (!title) return;
+    setAddingSubtaskParentId(parentId);
     startTransition(async () => {
       try {
         const result = await createTask({ title, due_date: date, parent_task_id: parentId });
         if (result?.task) {
           const task = result.task as Task;
-          // Keep tasksByDate in sync with subtasks so device snapshot stays accurate.
           upsertTask(task);
-          // Also mirror into local subtasks map so the new subtask appears without a full refresh.
           const asSubtask: SubtaskRow = {
             id: task.id,
             title: task.title ?? "",
@@ -509,6 +555,8 @@ export function TaskList({
         form.reset();
       } catch (err) {
         setSubtaskError(err instanceof Error ? err.message : "Failed to add subtask");
+      } finally {
+        setAddingSubtaskParentId(null);
       }
     });
   }
@@ -525,8 +573,12 @@ export function TaskList({
   function renderTask(task: ExtendedTask, isFirstIncomplete: boolean) {
     const subtasks = localSubtasksByParent[task.id] ?? [];
     const preview = recurrencePreview(task);
+    const isRemoving = task.id === removingId;
     return (
-      <li key={task.id} className="space-y-1">
+      <li
+        key={task.id}
+        className={`space-y-1 transition-all duration-300 ease-out ${isRemoving ? "task-row-removing" : ""}`}
+      >
         <div
           role="button"
           tabIndex={0}
@@ -545,11 +597,11 @@ export function TaskList({
           <button
             type="button"
             onClick={(e) => { e.stopPropagation(); if (!task.completed) handleComplete(task.id); }}
-            disabled={pending || task.completed}
+            disabled={task.completed || completingIds.has(task.id)}
             className={`h-6 w-6 shrink-0 rounded-lg border-2 flex items-center justify-center ${
               task.completed ? "border-green-500 bg-green-500/20 text-green-400" : "border-neutral-500 bg-transparent hover:border-[var(--accent-focus)] hover:bg-[var(--accent-focus)]/20 text-transparent"
             } disabled:opacity-50`}
-            aria-label={task.completed ? "Completed" : "Complete task"}
+            aria-label={task.completed ? "Completed" : completingIds.has(task.id) ? "Saving…" : "Complete task"}
           >
             {task.completed && <span className="text-sm">✓</span>}
           </button>
@@ -601,20 +653,20 @@ export function TaskList({
               <button
                 type="button"
                 onClick={(e) => { e.stopPropagation(); handleSnooze(task.id); }}
-                disabled={pending}
+                disabled={snoozingIds.has(task.id)}
                 className="rounded-lg px-2 py-1 text-xs text-[var(--text-muted)] hover:bg-[var(--accent-focus)]/10 hover:text-[var(--accent-focus)]"
               >
-                Snooze
+                {snoozingIds.has(task.id) ? "…" : "Snooze"}
               </button>
               {task.recurrence_rule && (
                 <button
                   type="button"
                   onClick={(e) => { e.stopPropagation(); handleSkipNext(task.id); }}
-                  disabled={pending}
+                  disabled={skipNextIds.has(task.id)}
                   className="rounded-lg px-2 py-1 text-xs text-[var(--text-muted)] hover:bg-[var(--accent-focus)]/10 hover:text-[var(--accent-focus)]"
                   title="Skip next occurrence (move to the following date)"
                 >
-                  Skip next
+                  {skipNextIds.has(task.id) ? "…" : "Skip next"}
                 </button>
               )}
             </>
@@ -622,7 +674,7 @@ export function TaskList({
           <button
             type="button"
             onClick={(e) => { e.stopPropagation(); handleDelete(task.id); }}
-            disabled={pending}
+            disabled={!!confirmDeleteId}
             className="rounded-lg px-2 py-1 text-xs text-neutral-500 hover:bg-red-500/10 hover:text-red-400"
           >
             Delete
@@ -636,7 +688,6 @@ export function TaskList({
                   type="button"
                   onClick={() => {
                     if (s.completed) return;
-                    // Optimistically mark subtask as completed in local state.
                     setLocalSubtasksByParent((prev) => {
                       const current = prev[task.id] ?? [];
                       const next = current.map((row) =>
@@ -644,7 +695,6 @@ export function TaskList({
                       );
                       return { ...prev, [task.id]: next };
                     });
-                    // Also patch tasksByDate so other views relying on the store stay in sync.
                     const existing = extendedTasks.find((t) => t.id === s.id);
                     if (existing) {
                       upsertTask({
@@ -657,7 +707,7 @@ export function TaskList({
                       void completeTaskOffline(s.id);
                     });
                   }}
-                  disabled={pending || s.completed}
+                  disabled={s.completed}
                   className="h-4 w-4 shrink-0 rounded border border-neutral-500"
                   aria-label={s.completed ? "Completed" : "Complete subtask"}
                 >
@@ -672,7 +722,7 @@ export function TaskList({
         {!canAdd && limitMessage && <p className="ml-9 mb-1 text-xs text-[var(--text-muted)]">{limitMessage}</p>}
         <form onSubmit={(e) => handleAddSubtask(task.id, e)} className="ml-9 flex gap-2">
           <input name="subtask-title" type="text" placeholder="Add subtask…" className="flex-1 rounded-lg border border-white/10 bg-[var(--bg-primary)] px-2 py-1 text-xs text-white placeholder-neutral-500" />
-          <button type="submit" disabled={pending} className="rounded-lg px-2 py-1 text-xs text-[var(--accent-focus)]">Add</button>
+          <button type="submit" disabled={addingSubtaskParentId === task.id} className="rounded-lg px-2 py-1 text-xs text-[var(--accent-focus)]">{addingSubtaskParentId === task.id ? "…" : "Add"}</button>
         </form>
       </li>
     );
@@ -808,9 +858,25 @@ export function TaskList({
           task={editTask ?? null}
           defaultDate={addParam && /^\d{4}-\d{2}-\d{2}$/.test(addParam) ? addParam : date}
           onSaved={() => setEditTask(null)}
-          onAdded={(task) => {
-            if (task) upsertTask(task as Task);
-            if (task && (task as ExtendedTask).due_date === date) setLocalTasksAdded((prev) => [...prev, task as ExtendedTask]);
+          onAddOptimistic={({ title: t, due_date: d }) => {
+            if (d !== date) return undefined;
+            const tempId = `temp-${Date.now()}`;
+            const placeholder: ExtendedTask = {
+              id: tempId,
+              title: t || "…",
+              due_date: d,
+              completed: false,
+              created_at: new Date().toISOString(),
+            } as ExtendedTask;
+            setLocalTasksAdded((prev) => [...prev, placeholder]);
+            return tempId;
+          }}
+          onAdded={(task, tempId) => {
+            setLocalTasksAdded((prev) => prev.filter((t) => t.id !== tempId));
+            if (task) {
+              upsertTask(task as Task);
+              if ((task as ExtendedTask).due_date === date) setLocalTasksAdded((prev) => [...prev, task as ExtendedTask]);
+            }
             setAddFullOpen(false);
             setQuickAddOpen(false);
             if (addParam) router.replace(pathname);
@@ -838,6 +904,7 @@ export function TaskList({
           message="This cannot be undone."
           confirmLabel="Delete"
           danger
+          slideFromBottom
           onConfirm={handleConfirmDelete}
         />
         <Modal open={showDoAnotherModal} onClose={() => setShowDoAnotherModal(false)} title="Nice work!" size="sm">

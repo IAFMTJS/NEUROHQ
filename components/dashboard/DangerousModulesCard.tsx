@@ -1,10 +1,12 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { IDENTITY_DRIFT_LABELS } from "@/lib/identity-drift";
 import { WEEKLY_MODE_LABELS } from "@/lib/weekly-tactical-mode";
 import type { DangerousModulesContext } from "@/app/actions/dangerous-modules-context";
 import type { WeeklyTacticalMode } from "@/lib/weekly-tactical-mode";
+import { enqueueMutation, flushMutationQueue, loadDailySnapshot, saveDailySnapshot } from "@/lib/client-cache";
 
 type Props = {
   /** When true, render without outer card/section and h2 (e.g. inside Systeem modus card). */
@@ -12,24 +14,57 @@ type Props = {
 };
 
 const today = () => new Date().toISOString().slice(0, 10);
+const SNAPSHOT_KEY = "dangerous-modules";
+const MUTATION_TYPE_OVERRIDE = "dangerous-modules:mode-override";
 
-function fetchContext(dateStr: string): Promise<DangerousModulesContext | null> {
-  return fetch(`/api/dashboard/dangerous-modules?date=${encodeURIComponent(dateStr)}`, { credentials: "include" })
-    .then((res) => (res.ok ? res.json() : null))
-    .catch(() => null);
+async function fetchContext(dateStr: string): Promise<DangerousModulesContext | null> {
+  const res = await fetch(`/api/dashboard/dangerous-modules?date=${encodeURIComponent(dateStr)}`, {
+    credentials: "include",
+    cache: "no-store",
+  });
+  if (!res.ok) return null;
+  const json = (await res.json()) as DangerousModulesContext;
+  saveDailySnapshot<DangerousModulesContext>(SNAPSHOT_KEY, json);
+  return json;
 }
 
 export function DangerousModulesCard({ embedded }: Props) {
-  const [ctx, setCtx] = useState<DangerousModulesContext | null>(null);
+  const [ctxOverride, setCtxOverride] = useState<DangerousModulesContext | null>(null);
   const [overrideLoading, setOverrideLoading] = useState(false);
+  const [queueFlushed, setQueueFlushed] = useState(false);
+  const todayStr = today();
 
-  const loadContext = useCallback(() => {
-    fetchContext(today()).then(setCtx);
-  }, []);
+  const snapshot = loadDailySnapshot<DangerousModulesContext | null>(SNAPSHOT_KEY);
+
+  const { data: ctxBase } = useQuery({
+    queryKey: ["dangerous-modules", todayStr],
+    queryFn: () => fetchContext(todayStr),
+    staleTime: 24 * 60 * 60 * 1000,
+    initialData: snapshot?.data ?? null,
+  });
 
   useEffect(() => {
-    loadContext();
-  }, [loadContext]);
+    if (queueFlushed) return;
+    if (typeof window === "undefined") return;
+    if (!navigator.onLine) return;
+
+    flushMutationQueue(async (mutation) => {
+      if (mutation.type !== MUTATION_TYPE_OVERRIDE) return;
+      const { mode, date } = (mutation.payload ?? {}) as { mode?: WeeklyTacticalMode; date?: string };
+      if (!mode || !date) return;
+      await fetch("/api/dashboard/dangerous-modules", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ date, mode }),
+        credentials: "include",
+      });
+    }).finally(() => {
+      setQueueFlushed(true);
+    });
+  }, [queueFlushed]);
+
+  // Conflict resolution: when merging server data, prefer local if isLocalSnapshotNewerThan(snapshot, serverUpdatedAt).
+  const ctx = ctxOverride ?? ctxBase;
 
   const handleModeOverride = async (mode: WeeklyTacticalMode) => {
     setOverrideLoading(true);
@@ -37,11 +72,35 @@ export function DangerousModulesCard({ embedded }: Props) {
       const res = await fetch("/api/dashboard/dangerous-modules", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ date: today(), mode }),
+        body: JSON.stringify({ date: todayStr, mode }),
         credentials: "include",
       });
-      const result = await res.json();
-      if (result?.ok) loadContext();
+      if (!res.ok) {
+        enqueueMutation(MUTATION_TYPE_OVERRIDE, { mode, date: todayStr });
+      }
+      const updated = (await fetchContext(todayStr)) ?? ctxBase ?? null;
+      setCtxOverride(updated);
+      if (updated) {
+        saveDailySnapshot<DangerousModulesContext>(SNAPSHOT_KEY, updated, {
+          lastMutationAt: new Date().toISOString(),
+        });
+      }
+    } catch {
+      enqueueMutation(MUTATION_TYPE_OVERRIDE, { mode, date: todayStr });
+      const optimistic =
+        ctxBase ?? snapshot?.data ?? ctxOverride;
+      if (optimistic) {
+        const next: DangerousModulesContext = {
+          ...optimistic,
+          weeklyMode: optimistic.weeklyMode
+            ? { ...optimistic.weeklyMode, mode, userOverrideUsed: true }
+            : { mode, userOverrideUsed: true },
+        };
+        setCtxOverride(next);
+        saveDailySnapshot<DangerousModulesContext>(SNAPSHOT_KEY, next, {
+          lastMutationAt: new Date().toISOString(),
+        });
+      }
     } finally {
       setOverrideLoading(false);
     }
