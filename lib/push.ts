@@ -1,8 +1,11 @@
 import webpush from "web-push";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
-const MAX_PUSH_PER_DAY = 3;
-const MAX_PUSH_BEFORE_LOW_PRIORITY_BLOCK = 2;
+// Daily limits to avoid overwhelming users while allowing richer scenarios.
+// High-priority pushes (e.g. critical reminders) are capped by MAX_PUSH_PER_DAY.
+// Low-priority pushes stop earlier so they don't crowd out important ones.
+const MAX_PUSH_PER_DAY = 12;
+const MAX_PUSH_BEFORE_LOW_PRIORITY_BLOCK = 8;
 
 export type PushPayload = {
   title: string;
