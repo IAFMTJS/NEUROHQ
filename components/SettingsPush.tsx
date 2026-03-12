@@ -105,6 +105,27 @@ export function SettingsPush({
     setTestPending(true);
     setMessage(null);
     try {
+      // On platforms like iOS, make sure we explicitly ask for notification permission
+      // before trying to show a local notification from the service worker.
+      if (typeof Notification !== "undefined") {
+        const current = Notification.permission;
+        if (current === "default") {
+          const permission = await Notification.requestPermission();
+          if (permission !== "granted") {
+            setMessage(
+              permission === "denied"
+                ? "Notifications are blocked for this app. Enable them in your device settings to see push alerts."
+                : "Browser permission not granted."
+            );
+            setTestPending(false);
+            return;
+          }
+        } else if (current === "denied") {
+          setMessage("Notifications are blocked for this app. Enable them in your device settings to see push alerts.");
+          setTestPending(false);
+          return;
+        }
+      }
       // Ensure a service worker registration exists so we can send it a message.
       if (!("serviceWorker" in navigator)) {
         throw new Error("Service worker not available.");
