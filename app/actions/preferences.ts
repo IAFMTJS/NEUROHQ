@@ -16,7 +16,7 @@ export const getUserPreferences = cache(async (): Promise<UserPreferences | null
   const { data, error } = await supabase
     .from("user_preferences")
     .select(
-      "theme, color_mode, selected_emotion, compact_ui, reduced_motion, light_ui, auto_master_missions, usual_days_off, day_off_mode, email_reminders_enabled, push_reminders_enabled, push_morning_enabled, push_evening_enabled, push_weekly_learning_enabled, updated_at",
+      "theme, color_mode, selected_emotion, compact_ui, reduced_motion, light_ui, auto_master_missions, usual_days_off, day_off_mode, email_reminders_enabled, push_reminders_enabled, push_morning_enabled, push_evening_enabled, push_weekly_learning_enabled, push_personality_mode, updated_at",
     )
     .eq("user_id", user.id)
     .single();
@@ -85,6 +85,7 @@ export const getUserPreferences = cache(async (): Promise<UserPreferences | null
     push_morning_enabled?: boolean | null;
     push_evening_enabled?: boolean | null;
     push_weekly_learning_enabled?: boolean | null;
+    push_personality_mode?: UserPreferences["push_personality_mode"] | null;
     updated_at?: string | null;
   };
   return {
@@ -102,6 +103,7 @@ export const getUserPreferences = cache(async (): Promise<UserPreferences | null
     push_morning_enabled: row.push_morning_enabled ?? DEFAULTS.push_morning_enabled ?? true,
     push_evening_enabled: row.push_evening_enabled ?? DEFAULTS.push_evening_enabled ?? true,
     push_weekly_learning_enabled: row.push_weekly_learning_enabled ?? DEFAULTS.push_weekly_learning_enabled ?? true,
+    push_personality_mode: row.push_personality_mode ?? DEFAULTS.push_personality_mode ?? "auto",
     updated_at: row.updated_at ?? DEFAULTS.updated_at,
   };
 });
@@ -115,7 +117,7 @@ export async function getUserPreferencesOrDefaults(): Promise<UserPreferences> {
 type UpdatePayload = Partial<
   Pick<
     UserPreferences,
-    "theme" | "color_mode" | "selected_emotion" | "compact_ui" | "reduced_motion" | "light_ui" | "auto_master_missions" | "usual_days_off" | "day_off_mode" | "email_reminders_enabled" | "push_reminders_enabled" | "push_morning_enabled" | "push_evening_enabled" | "push_weekly_learning_enabled"
+    "theme" | "color_mode" | "selected_emotion" | "compact_ui" | "reduced_motion" | "light_ui" | "auto_master_missions" | "usual_days_off" | "day_off_mode" | "email_reminders_enabled" | "push_reminders_enabled" | "push_morning_enabled" | "push_evening_enabled" | "push_weekly_learning_enabled" | "push_personality_mode"
   >
 >;
 
@@ -141,6 +143,7 @@ export async function updateUserPreferences(payload: UpdatePayload) {
     push_morning_enabled: payload.push_morning_enabled ?? current.push_morning_enabled ?? true,
     push_evening_enabled: payload.push_evening_enabled ?? current.push_evening_enabled ?? true,
     push_weekly_learning_enabled: payload.push_weekly_learning_enabled ?? current.push_weekly_learning_enabled ?? true,
+    push_personality_mode: payload.push_personality_mode ?? current.push_personality_mode ?? "auto",
     updated_at: new Date().toISOString(),
   };
   const legacyRow = {

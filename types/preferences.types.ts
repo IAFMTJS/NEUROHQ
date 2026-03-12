@@ -17,6 +17,8 @@ export type EmotionKey =
   | "hyped"
   | "evil";
 
+export type PushPersonalityMode = "auto" | "stoic" | "friendly" | "coach" | "drill" | "chaos";
+
 export interface UserPreferences {
   theme: ThemeId;
   color_mode: ColorMode;
@@ -41,6 +43,8 @@ export interface UserPreferences {
   push_evening_enabled?: boolean;
   /** Weekly learning push reminder. */
   push_weekly_learning_enabled?: boolean;
+  /** Personality / tone mode for behavioural push notifications. */
+  push_personality_mode?: PushPersonalityMode | null;
   updated_at: string;
 }
 
@@ -60,5 +64,6 @@ export const PREFERENCES_DEFAULTS: UserPreferences = {
   push_morning_enabled: true,
   push_evening_enabled: true,
   push_weekly_learning_enabled: true,
+  push_personality_mode: "auto",
   updated_at: new Date().toISOString(),
 };

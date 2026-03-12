@@ -13,6 +13,8 @@ import {
   buildEveningEmailHtml,
   buildEveningPushPayload,
 } from "@/lib/daily-email-content";
+import { buildBehavioralNotificationForContext } from "@/lib/behavioral-notifications";
+import { loadUserNotificationContextForUser } from "@/lib/behavioral-notification-server";
 
 /**
  * Vercel Cron: runs every hour.
@@ -64,6 +66,7 @@ export async function GET(request: Request) {
   let eveningEmailSent = 0;
   let morningPushSent = 0;
   let eveningPushSent = 0;
+  let brainStatusRemindersSent = 0;
 
   for (const u of users ?? []) {
     const tz = u.timezone as string;
@@ -144,6 +147,41 @@ export async function GET(request: Request) {
         }
       }
     }
+    // Brain status reminder: if brain status not set by ~11:00 local time.
+    if (
+      hour === 11 &&
+      userPrefs.pushRemindersEnabled &&
+      process.env.VAPID_PRIVATE_KEY &&
+      process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY &&
+      !isInQuietHours(hour, quietStart, quietEnd)
+    ) {
+      const highSensory = await isHighSensoryDayForUser(supabase, u.id as string, todayStr);
+      if (!highSensory) {
+        try {
+          const { data: dailyState } = await supabase
+            .from("daily_state")
+            .select("energy, focus")
+            .eq("user_id", u.id as string)
+            .eq("date", todayStr)
+            .maybeSingle();
+          const brainStatusDone = !!(
+            dailyState && (dailyState.energy != null || dailyState.focus != null)
+          );
+          if (!brainStatusDone) {
+            const ctx = await loadUserNotificationContextForUser(supabase, u.id as string);
+            const result = buildBehavioralNotificationForContext(ctx, {
+              type: "brain_status_missing",
+            });
+            if (result) {
+              const ok = await sendPushToUser(supabase, u.id as string, result.payload);
+              if (ok) brainStatusRemindersSent++;
+            }
+          }
+        } catch {
+          // skip
+        }
+      }
+    }
     if (
       hour === 9 &&
       userPrefs.pushRemindersEnabled &&
@@ -210,6 +248,7 @@ export async function GET(request: Request) {
     eveningEmailSent,
     morningPushSent,
     eveningPushSent,
+    brainStatusRemindersSent,
     usersChecked: users?.length ?? 0,
   });
 }

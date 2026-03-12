@@ -17,6 +17,7 @@ type Props = {
   initialPushMorningEnabled?: boolean;
   initialPushEveningEnabled?: boolean;
   initialPushWeeklyLearningEnabled?: boolean;
+  initialPushPersonalityMode?: "auto" | "stoic" | "friendly" | "coach" | "drill" | "chaos";
 };
 
 export function SettingsPush({
@@ -27,6 +28,7 @@ export function SettingsPush({
   initialPushMorningEnabled = true,
   initialPushEveningEnabled = true,
   initialPushWeeklyLearningEnabled = true,
+  initialPushPersonalityMode = "auto",
 }: Props) {
   const [status, setStatus] = useState<"idle" | "loading" | "enabled" | "unsupported" | "denied" | "error">(
     initialPushSubscribed ? "enabled" : "idle"
@@ -43,6 +45,9 @@ export function SettingsPush({
   const [pushMorningEnabled, setPushMorningEnabled] = useState(initialPushMorningEnabled);
   const [pushEveningEnabled, setPushEveningEnabled] = useState(initialPushEveningEnabled);
   const [pushWeeklyLearningEnabled, setPushWeeklyLearningEnabled] = useState(initialPushWeeklyLearningEnabled);
+  const [pushPersonalityMode, setPushPersonalityMode] = useState<
+    "auto" | "stoic" | "friendly" | "coach" | "drill" | "chaos"
+  >(initialPushPersonalityMode);
   const [testPending, setTestPending] = useState(false);
   const [serverTestPending, setServerTestPending] = useState(false);
 
@@ -51,6 +56,7 @@ export function SettingsPush({
     push_morning_enabled?: boolean;
     push_evening_enabled?: boolean;
     push_weekly_learning_enabled?: boolean;
+    push_personality_mode?: "auto" | "stoic" | "friendly" | "coach" | "drill" | "chaos";
   }) => {
     startPrefsTransition(async () => {
       try {
@@ -249,6 +255,44 @@ export function SettingsPush({
               <span className="mt-1 block text-xs">{item.checked && pushRemindersEnabled ? "On" : "Off"}</span>
             </button>
           ))}
+        </div>
+
+        <div className="space-y-2">
+          <p className="text-sm font-medium text-[var(--text-primary)]">Notification personality</p>
+          <p className="text-xs text-[var(--text-muted)]">
+            Choose how the system talks to you in behaviour-based push notifications.
+          </p>
+          <div className="mt-1 flex flex-wrap gap-2">
+            {[
+              { key: "auto", label: "Adaptive" },
+              { key: "friendly", label: "Friendly" },
+              { key: "coach", label: "Coach" },
+              { key: "stoic", label: "Stoic" },
+              { key: "drill", label: "Drill sergeant" },
+              { key: "chaos", label: "Chaos" },
+            ].map((mode) => {
+              const active = pushPersonalityMode === mode.key;
+              return (
+                <button
+                  key={mode.key}
+                  type="button"
+                  disabled={prefsPending}
+                  onClick={() => {
+                    const next = mode.key as typeof pushPersonalityMode;
+                    setPushPersonalityMode(next);
+                    savePrefs({ push_personality_mode: next });
+                  }}
+                  className={`rounded-full border px-3 py-1.5 text-xs font-medium transition ${
+                    active
+                      ? "border-[var(--accent-focus)]/70 bg-[var(--accent-focus)]/10 text-[var(--text-primary)]"
+                      : "border-[var(--card-border)] bg-[var(--bg-primary)] text-[var(--text-muted)]"
+                  } disabled:opacity-50`}
+                >
+                  {mode.label}
+                </button>
+              );
+            })}
+          </div>
         </div>
 
         <div className="flex flex-wrap items-center gap-2">

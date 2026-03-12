@@ -5,11 +5,12 @@ import { sendPushToUser } from "@/lib/push";
 import { getLocalDateHour, isInQuietHours } from "@/lib/utils/timezone";
 import { isHighSensoryDayForUser } from "@/lib/mode-admin";
 import { xpToNextLevel } from "@/lib/xp";
+import { buildBehavioralNotificationForContext } from "@/lib/behavioral-notifications";
 import {
-  getReEngagementPushPayload,
-  pickReEngagementScenario,
-  getReEngagementPushPayloadForScenario,
-} from "@/lib/re-engagement-copy";
+  loadUserNotificationContextForUser,
+  canSendBehavioralNotification,
+  markBehavioralNotificationSent,
+} from "@/lib/behavioral-notification-server";
 import { runDailyHobbyCommitmentDecay } from "@/app/actions/hobby-commitment-decay";
 import { getQuoteByDayNumber } from "@/lib/quotes";
 
@@ -79,6 +80,9 @@ export async function GET(request: Request) {
   let freezeReminderSent = 0;
   let avoidanceSent = 0;
   let reEngagementSent = 0;
+  let streakGrowthSent = 0;
+  let streakProtectionSent = 0;
+  let highMomentumSent = 0;
   let hobbyDecayUsers = 0;
   if (process.env.VAPID_PRIVATE_KEY && process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY) {
     const dayOfYear = Math.max(1, Math.min(365, getDayOfYear(today)));
@@ -181,10 +185,10 @@ export async function GET(request: Request) {
       }
     }
 
-    // Re-engagement: gedrag-gestuurd (Minimal Integrity / Recovery / dichtbij level‑up)
+    // Re-engagement / inactivity recovery: gedrag-gestuurd (Minimal Integrity / Recovery / dichtbij level‑up)
     const { data: streakRows } = await supabase
       .from("user_streak")
-      .select("user_id, current_streak, last_completion_date");
+      .select("user_id, current_streak, longest_streak, last_completion_date");
 
     const { data: pushUserRows } = await supabase
       .from("users")
@@ -215,6 +219,18 @@ export async function GET(request: Request) {
       }
     }
 
+    // Momentum / high productivity: missions_completed yesterday per user.
+    const missionsByUser = new Map<string, number>();
+    const { data: analyticsRows } = await supabase
+      .from("user_analytics_daily")
+      .select("user_id, missions_completed")
+      .eq("date", yesterdayStr);
+    for (const row of analyticsRows ?? []) {
+      const uid = (row as { user_id: string }).user_id;
+      const missions = (row as { missions_completed?: number | null }).missions_completed ?? 0;
+      if (missions > 0) missionsByUser.set(uid, missions);
+    }
+
     for (const row of streakRows ?? []) {
       const userId = (row as { user_id: string }).user_id;
       if (!pushSet.has(userId)) continue;
@@ -233,24 +249,123 @@ export async function GET(request: Request) {
       const totalXp = xpByUser.get(userId) ?? 0;
       const xpGap = xpToNextLevel(totalXp);
       const currentStreak =
-        (row as { current_streak?: number | null }).current_streak ?? null;
-
-      const scenario = pickReEngagementScenario({
-        daysInactive,
-        xpToNextLevel: xpGap,
-        currentStreak,
-      });
-
-      if (!scenario) continue;
+        (row as { current_streak?: number | null }).current_streak ?? 0;
+      const longestStreak =
+        (row as { longest_streak?: number | null }).longest_streak ?? 0;
 
       try {
-        const payload = getReEngagementPushPayloadForScenario(scenario, {
-          daysInactive,
-          xpToNextLevel: xpGap,
-          currentStreak,
-        });
-        const ok = await sendPushToUser(supabase, userId, { ...payload, priority: "high" });
-        if (ok) reEngagementSent++;
+        const ctx = await loadUserNotificationContextForUser(supabase, userId);
+
+        // 1) Inactivity / recovery window (re-engagement)
+        if (daysInactive >= 1) {
+          const triggerKey: "inactivity_24h" | "inactivity_3d" | "inactivity_7d" | "inactivity_14d" =
+            daysInactive >= 14
+              ? "inactivity_14d"
+              : daysInactive >= 7
+                ? "inactivity_7d"
+                : daysInactive >= 3
+                  ? "inactivity_3d"
+                  : "inactivity_24h";
+
+          const { canSend } = await canSendBehavioralNotification(
+            supabase,
+            userId,
+            triggerKey,
+            today
+          );
+          if (canSend) {
+            const reengage = buildBehavioralNotificationForContext(ctx, {
+              type: "inactivity_window",
+              daysInactive,
+            });
+            if (reengage) {
+              const ok = await sendPushToUser(supabase, userId, reengage.payload);
+              if (ok) {
+                await markBehavioralNotificationSent(supabase, userId, triggerKey);
+                reEngagementSent++;
+              }
+            }
+          }
+        }
+
+        // 2) Streak growth celebration (when current_streak reaches longest_streak)
+        if (currentStreak > 0 && currentStreak >= longestStreak) {
+          const { canSend } = await canSendBehavioralNotification(
+            supabase,
+            userId,
+            "streak_growth",
+            today
+          );
+          if (canSend) {
+            const streakGrowth = buildBehavioralNotificationForContext(ctx, {
+              type: "streak_growth",
+              newStreak: currentStreak,
+            });
+            if (streakGrowth) {
+              const ok = await sendPushToUser(supabase, userId, streakGrowth.payload);
+              if (ok) {
+                await markBehavioralNotificationSent(supabase, userId, "streak_growth");
+                streakGrowthSent++;
+              }
+            }
+          }
+        }
+
+        // 3) Streak protection: active streak + early inactivity window.
+        if (currentStreak > 0 && daysInactive >= 1 && daysInactive <= 2) {
+          const { canSend } = await canSendBehavioralNotification(
+            supabase,
+            userId,
+            "streak_protection",
+            today
+          );
+          if (canSend) {
+            const protection = buildBehavioralNotificationForContext(ctx, {
+              type: "streak_risk",
+              currentStreak,
+            });
+            if (protection) {
+              const ok = await sendPushToUser(supabase, userId, protection.payload);
+              if (ok) {
+                await markBehavioralNotificationSent(supabase, userId, "streak_protection");
+                streakProtectionSent++;
+              }
+            }
+          }
+        }
+
+        // 4) Momentum / high productivity: multiple missions completed yesterday.
+        const missionsYesterday = missionsByUser.get(userId) ?? 0;
+        if (missionsYesterday >= 3) {
+          const { canSend } = await canSendBehavioralNotification(
+            supabase,
+            userId,
+            "high_productivity",
+            today
+          );
+          if (canSend) {
+            const momentumEvent =
+              missionsYesterday >= 5
+                ? ({
+                    type: "productivity_session",
+                    actionsInWindow: missionsYesterday,
+                    windowMinutes: 30,
+                  } as const)
+                : ({
+                    type: "mission_completed",
+                    missionsInWindow: missionsYesterday,
+                    windowMinutes: 45,
+                  } as const);
+            const momentumResult = buildBehavioralNotificationForContext(ctx, momentumEvent);
+            if (momentumResult) {
+              const ok = await sendPushToUser(supabase, userId, momentumResult.payload);
+              if (ok) {
+                await markBehavioralNotificationSent(supabase, userId, "high_productivity");
+                highMomentumSent++;
+              }
+            }
+          }
+        }
       } catch {
         // skip
       }
@@ -274,6 +389,9 @@ export async function GET(request: Request) {
     freezeReminderSent,
     avoidanceSent,
     reEngagementSent,
+    streakGrowthSent,
+    streakProtectionSent,
+    highMomentumSent,
     hobbyDecayUsers,
     from: yesterdayStr,
     to: todayStr,
