@@ -35,6 +35,23 @@ export const EnergyBudgetBar = memo(function EnergyBudgetBar({
   brainMode,
   segments,
 }: Props) {
+  // Defensive guard for SSR / partial data: if brainMode is missing, render a lightweight placeholder instead of throwing.
+  if (!brainMode) {
+    return (
+      <div className="card-simple-accent overflow-hidden p-0">
+        <div className="border-b border-[var(--card-border)]/80 px-4 py-3">
+          <div className="flex items-start justify-between gap-3">
+            <div>
+              <h2 className="text-base font-semibold text-[var(--text-primary)]">Energy budget</h2>
+            </div>
+          </div>
+        </div>
+        <div className="p-5">
+          <div className="h-3 w-full animate-pulse rounded-full bg-white/10" />
+        </div>
+      </div>
+    );
+  }
   const totalConsumed = taskUsed + taskPlanned + Math.round(calendarCost);
   const barTotal = Math.max(capacity, totalConsumed, 1);
 
@@ -82,11 +99,13 @@ export const EnergyBudgetBar = memo(function EnergyBudgetBar({
         <div className="flex items-start justify-between gap-3">
           <div>
             <h2 className="text-base font-semibold text-[var(--text-primary)]">Energy budget</h2>
-            <p className="mt-0.5 text-xs text-[var(--text-muted)]">
-              Mode: <strong className="text-[var(--text-secondary)]">{brainMode.mode}</strong> · Slots:{" "}
-              <strong className="text-[var(--text-secondary)]">{brainMode.maxSlots}</strong> · Tier:{" "}
-              <strong className="text-[var(--text-secondary)]">{brainMode.tier}</strong>
-            </p>
+            {brainMode && (
+              <p className="mt-0.5 text-xs text-[var(--text-muted)]">
+                Mode: <strong className="text-[var(--text-secondary)]">{brainMode.mode}</strong> · Slots:{" "}
+                <strong className="text-[var(--text-secondary)]">{brainMode.maxSlots}</strong> · Tier:{" "}
+                <strong className="text-[var(--text-secondary)]">{brainMode.tier}</strong>
+              </p>
+            )}
           </div>
           <button
             type="button"

@@ -4,12 +4,13 @@ import GlassCard from "@/components/ui/GlassCard";
 import { LoginForm } from "@/components/auth/LoginForm";
 
 type Props = {
-  searchParams?: { error?: string };
+  searchParams: Promise<{ error?: string }>;
 };
 
 /** Login: same layout as home (one card, logo, one primary CTA). Redirect goes to /dashboard after a short delay so session is recognized. */
-export default function LoginPage({ searchParams }: Props) {
-  const errorParam = searchParams?.error;
+export default async function LoginPage({ searchParams }: Props) {
+  const resolved = await searchParams;
+  const errorParam = resolved?.error;
   const initialError =
     typeof errorParam === "string" && errorParam.length > 0
       ? decodeURIComponent(errorParam)

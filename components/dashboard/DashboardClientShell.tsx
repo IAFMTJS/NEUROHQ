@@ -263,9 +263,10 @@ export function DashboardClientShell() {
   // Keep dashboard "Active missions" in sync with the same source as the Missions page:
   // if the HQ store has tasks for today (from bootstrap or local mutations), prefer that
   // over the morning dashboard snapshot so new missions appear without a full refresh.
+  const EMPTY_TASKS: { id: string; title: string | null; carry_over_count?: number }[] = [];
   const todaysTasksFromStore = useHQStore(
-    (s) => (dateStr && s.tasksByDate?.[dateStr]) || []
-  ) as { id: string; title: string | null; carry_over_count?: number }[];
+    (s) => (dateStr && (s.tasksByDate?.[dateStr] as typeof EMPTY_TASKS)) || EMPTY_TASKS
+  );
   const todaysTasks =
     todaysTasksFromStore && todaysTasksFromStore.length > 0
       ? todaysTasksFromStore.map((t) => ({

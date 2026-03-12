@@ -80,10 +80,12 @@ export function DashboardDataProvider({ children, initialCritical, initialSecond
   const globalSecondary = useHQStore((s) => s.dashboardSecondary);
   const setDashboardSnapshot = useHQStore((s) => s.setDashboardSnapshot);
   const [state, setState] = useState<DashboardDataState>(() => {
-    const stored = getPersistedDashboardSync();
+    // Important for hydration: initial client render must match server HTML.
+    // Server render never sees persisted/localStorage state, so the first client
+    // render also only uses server-provided (initial*) and in-memory global state.
     return {
-      critical: initialCritical ?? stored.critical ?? globalCritical ?? null,
-      secondary: initialSecondary ?? stored.secondary ?? globalSecondary ?? null,
+      critical: initialCritical ?? globalCritical ?? null,
+      secondary: initialSecondary ?? globalSecondary ?? null,
       loadingCritical: false,
       loadingSecondary: Boolean(initialCritical && !initialSecondary),
     };
