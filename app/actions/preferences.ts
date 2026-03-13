@@ -35,6 +35,7 @@ export const getUserPreferences = cache(async (): Promise<UserPreferences | null
       msg.includes("push_morning_enabled") ||
       msg.includes("push_evening_enabled") ||
       msg.includes("push_weekly_learning_enabled") ||
+      msg.includes("push_personality_mode") ||
       msg.toLowerCase().includes("schema cache")
     ) {
       const { data: legacyData, error: legacyError } = await supabase
@@ -62,6 +63,7 @@ export const getUserPreferences = cache(async (): Promise<UserPreferences | null
         push_morning_enabled: DEFAULTS.push_morning_enabled ?? true,
         push_evening_enabled: DEFAULTS.push_evening_enabled ?? true,
         push_weekly_learning_enabled: DEFAULTS.push_weekly_learning_enabled ?? true,
+        push_personality_mode: DEFAULTS.push_personality_mode ?? "auto",
         updated_at: legacyData.updated_at ?? DEFAULTS.updated_at,
       };
     }
@@ -178,6 +180,7 @@ export async function updateUserPreferences(payload: UpdatePayload) {
       msg.includes("push_morning_enabled") ||
       msg.includes("push_evening_enabled") ||
       msg.includes("push_weekly_learning_enabled") ||
+      msg.includes("push_personality_mode") ||
       msg.toLowerCase().includes("schema cache")
     ) {
       const legacy = await supabase
@@ -191,5 +194,7 @@ export async function updateUserPreferences(payload: UpdatePayload) {
 
   if (finalError) throw new Error(finalError.message);
   revalidatePath("/dashboard");
-  revalidatePath("/settings");
+  // Do not revalidate /settings here: it causes the settings page to re-render and
+  // remount dynamic components (SettingsDaysOff, SettingsPush), which use loading: null
+  // and thus disappear briefly. Client state is already optimistic; fresh data loads on next visit.
 }
