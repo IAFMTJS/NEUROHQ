@@ -1,9 +1,9 @@
 # Run hourly cron (morning/evening pushes, rollover, brain status) via GitHub Actions.
 # Vercel Hobby allows only 1 run/day per cron, so we trigger /api/cron/hourly from here.
 #
-# Required repo secrets (Settings → Secrets and variables → Actions):
-#   CRON_SECRET   – same value as Vercel CRON_SECRET (used in Authorization header)
-#   PRODUCTION_URL – base URL of the app, e.g. https://neurohq.vercel.app (no trailing slash)
+# Required: Repository secrets OR variables (Settings → Secrets and variables → Actions):
+#   CRON_SECRET   – same value as Vercel CRON_SECRET
+#   PRODUCTION_URL – e.g. https://your-app.vercel.app (no trailing slash)
 
 name: Cron hourly
 
@@ -17,17 +17,25 @@ jobs:
   trigger-hourly:
     runs-on: ubuntu-latest
     steps:
-      - name: Call /api/cron/hourly
+      - name: Check secrets
         env:
-          CRON_SECRET: ${{ secrets.CRON_SECRET }}
-          PRODUCTION_URL: ${{ secrets.PRODUCTION_URL }}
+          CRON_SECRET: ${{ secrets.CRON_SECRET || vars.CRON_SECRET }}
+          PRODUCTION_URL: ${{ secrets.PRODUCTION_URL || vars.PRODUCTION_URL }}
         run: |
+          echo "CRON_SECRET is set: $([ -n \"$CRON_SECRET\" ] && echo 'yes' || echo 'no')"
+          echo "PRODUCTION_URL is set: $([ -n \"$PRODUCTION_URL\" ] && echo 'yes' || echo 'no')"
           if [ -z "$CRON_SECRET" ] || [ -z "$PRODUCTION_URL" ]; then
-            echo "Missing secrets. In repo Settings → Secrets and variables → Actions add Repository secrets:"
-            echo "  CRON_SECRET   (same value as in Vercel)"
-            echo "  PRODUCTION_URL (e.g. https://your-app.vercel.app, no trailing slash)"
+            echo ""
+            echo "Add under Settings → Secrets and variables → Actions:"
+            echo "  Repository secrets (or Variables): CRON_SECRET, PRODUCTION_URL (exact names)"
+            echo "  If this repo is a fork, add them in the fork; parent secrets are not used."
             exit 1
           fi
+      - name: Call /api/cron/hourly
+        env:
+          CRON_SECRET: ${{ secrets.CRON_SECRET || vars.CRON_SECRET }}
+          PRODUCTION_URL: ${{ secrets.PRODUCTION_URL || vars.PRODUCTION_URL }}
+        run: |
           resp=$(curl -s -w "\n%{http_code}" -X GET \
             -H "Authorization: Bearer $CRON_SECRET" \
             "$PRODUCTION_URL/api/cron/hourly")
