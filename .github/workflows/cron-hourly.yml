@@ -18,14 +18,19 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Call /api/cron/hourly
+        env:
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+          PRODUCTION_URL: ${{ secrets.PRODUCTION_URL }}
         run: |
-          if [ -z "${{ secrets.CRON_SECRET }}" ] || [ -z "${{ secrets.PRODUCTION_URL }}" ]; then
-            echo "Missing CRON_SECRET or PRODUCTION_URL. Add them in repo Settings → Secrets and variables → Actions."
+          if [ -z "$CRON_SECRET" ] || [ -z "$PRODUCTION_URL" ]; then
+            echo "Missing secrets. In repo Settings → Secrets and variables → Actions add Repository secrets:"
+            echo "  CRON_SECRET   (same value as in Vercel)"
+            echo "  PRODUCTION_URL (e.g. https://your-app.vercel.app, no trailing slash)"
             exit 1
           fi
           resp=$(curl -s -w "\n%{http_code}" -X GET \
-            -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
-            "${{ secrets.PRODUCTION_URL }}/api/cron/hourly")
+            -H "Authorization: Bearer $CRON_SECRET" \
+            "$PRODUCTION_URL/api/cron/hourly")
           code=$(echo "$resp" | tail -n1)
           body=$(echo "$resp" | sed '$d')
           echo "Response ($code): $body"
