@@ -38,6 +38,9 @@ export async function proxy(request: NextRequest) {
   const base = baseUrl(request);
   const response = NextResponse.next({ request });
 
+  // Cron routes use CRON_SECRET in the handler; never redirect them to login
+  if (pathname.startsWith("/api/cron")) return response;
+
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
   if (!supabaseUrl || !supabaseAnonKey) {
