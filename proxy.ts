@@ -99,5 +99,8 @@ export const config = {
   matcher: [
     // Exclude API routes so login/callback responses are never touched by the proxy
     "/((?!_next/static|_next/image|favicon.ico|api/|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
+    // Explicitly include /api/cron so proxy runs and we can skip auth (early return above)
+    "/api/cron",
+    "/api/cron/:path*",
   ],
 };
