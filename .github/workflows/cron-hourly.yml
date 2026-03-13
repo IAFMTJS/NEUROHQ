@@ -1,0 +1,34 @@
+# Run hourly cron (morning/evening pushes, rollover, brain status) via GitHub Actions.
+# Vercel Hobby allows only 1 run/day per cron, so we trigger /api/cron/hourly from here.
+#
+# Required repo secrets (Settings → Secrets and variables → Actions):
+#   CRON_SECRET   – same value as Vercel CRON_SECRET (used in Authorization header)
+#   PRODUCTION_URL – base URL of the app, e.g. https://neurohq.vercel.app (no trailing slash)
+
+name: Cron hourly
+
+on:
+  schedule:
+    # Every hour at minute 0 (UTC)
+    - cron: "0 * * * *"
+  workflow_dispatch: # Allow manual run from Actions tab
+
+jobs:
+  trigger-hourly:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Call /api/cron/hourly
+        run: |
+          if [ -z "${{ secrets.CRON_SECRET }}" ] || [ -z "${{ secrets.PRODUCTION_URL }}" ]; then
+            echo "Missing CRON_SECRET or PRODUCTION_URL. Add them in repo Settings → Secrets and variables → Actions."
+            exit 1
+          fi
+          resp=$(curl -s -w "\n%{http_code}" -X GET \
+            -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
+            "${{ secrets.PRODUCTION_URL }}/api/cron/hourly")
+          code=$(echo "$resp" | tail -n1)
+          body=$(echo "$resp" | sed '$d')
+          echo "Response ($code): $body"
+          if [ "$code" -lt 200 ] || [ "$code" -ge 300 ]; then
+            exit 1
+          fi
