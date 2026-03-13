@@ -36,6 +36,7 @@ export type EveningEmailData = {
   tasksPlanned: number;
   tasksCompleted: number;
   expensesLogged: number;
+  learningMinutesToday: number;
   brainStatusDone: boolean;
 };
 
@@ -150,7 +151,7 @@ export async function getEveningEmailData(
   const dayStart = `${todayStr}T00:00:00.000Z`;
   const dayEnd = `${todayStr}T23:59:59.999Z`;
 
-  const [dailyState, tasksPlanned, tasksCompleted, budgetCount] = await Promise.all([
+  const [dailyState, tasksPlanned, tasksCompleted, budgetCount, analyticsToday] = await Promise.all([
     supabase
       .from("daily_state")
       .select("energy, focus")
@@ -175,15 +176,23 @@ export async function getEveningEmailData(
       .select("id", { count: "exact", head: true })
       .eq("user_id", userId)
       .eq("date", todayStr),
+    supabase
+      .from("user_analytics_daily")
+      .select("learning_minutes")
+      .eq("user_id", userId)
+      .eq("date", todayStr)
+      .maybeSingle(),
   ]);
 
   const ds = dailyState.data;
   const brainStatusDone = !!(ds && (ds.energy != null || ds.focus != null));
+  const learningMinutesToday = (analyticsToday.data as { learning_minutes?: number } | null)?.learning_minutes ?? 0;
 
   return {
     tasksPlanned: tasksPlanned.count ?? 0,
     tasksCompleted: tasksCompleted.count ?? 0,
     expensesLogged: budgetCount.count ?? 0,
+    learningMinutesToday,
     brainStatusDone,
   };
 }
@@ -203,6 +212,7 @@ export function buildEveningEmailHtml(data: EveningEmailData): string {
   }
 
   parts.push(`<li>Expenses logged today: ${data.expensesLogged}</li>`);
+  parts.push(`<li>Learning today: ${data.learningMinutesToday} min</li>`);
 
   if (!data.brainStatusDone) {
     parts.push("<li><strong style=\"color:#00c3ff;\">Brain status</strong> not set yet — you can still log it for today</li>");
@@ -216,10 +226,28 @@ export function buildEveningEmailHtml(data: EveningEmailData): string {
 }
 
 export function buildEveningPushPayload(data: EveningEmailData): ReminderPushPayload {
-  const body =
-    data.tasksPlanned > 0
-      ? `Evening check-in: ${data.tasksCompleted}/${data.tasksPlanned} missions done today, ${data.expensesLogged} expense log(s).`
-      : `Evening check-in: ${data.expensesLogged} expense log(s) today.${data.brainStatusDone ? "" : " Brain status still missing."}`;
+  const { tasksPlanned, tasksCompleted, expensesLogged, learningMinutesToday, brainStatusDone } = data;
+  const nothingLogged = expensesLogged === 0 && learningMinutesToday === 0;
+  const lightDay = tasksCompleted <= 1 && (expensesLogged === 0 || learningMinutesToday === 0);
+
+  let body: string;
+  if (nothingLogged && tasksCompleted === 0) {
+    body = "Nothing logged today. Quick check-in before bed?";
+  } else if (lightDay || nothingLogged) {
+    const taskBit = tasksPlanned > 0 ? `${tasksCompleted}/${tasksPlanned} missions. ` : "";
+    const nudge =
+      expensesLogged === 0 && learningMinutesToday === 0
+        ? "No budget or learning logged — quick log?"
+        : expensesLogged === 0
+          ? "No expenses logged today — add a quick log?"
+          : "No learning logged today — add a quick log?";
+    body = `Evening check-in: ${taskBit}${nudge}`;
+  } else if (tasksPlanned > 0) {
+    body = `Evening check-in: ${tasksCompleted}/${tasksPlanned} missions done, ${expensesLogged} expense(s), ${learningMinutesToday} min learning.${!brainStatusDone ? " Brain status still missing." : ""}`;
+  } else {
+    body = `Evening check-in: ${expensesLogged} expense(s), ${learningMinutesToday} min learning today.${!brainStatusDone ? " Brain status still missing." : ""}`;
+  }
+
   return {
     title: "NEUROHQ — Evening",
     body,
