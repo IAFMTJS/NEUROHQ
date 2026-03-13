@@ -22,13 +22,23 @@ jobs:
           CRON_SECRET: ${{ secrets.CRON_SECRET || vars.CRON_SECRET }}
           PRODUCTION_URL: ${{ secrets.PRODUCTION_URL || vars.PRODUCTION_URL }}
         run: |
-          echo "CRON_SECRET is set: $([ -n \"$CRON_SECRET\" ] && echo 'yes' || echo 'no')"
-          echo "PRODUCTION_URL is set: $([ -n \"$PRODUCTION_URL\" ] && echo 'yes' || echo 'no')"
-          if [ -z "$CRON_SECRET" ] || [ -z "$PRODUCTION_URL" ]; then
+          # Trim whitespace; treat empty or whitespace-only as unset
+          CRON_SECRET="${CRON_SECRET#"${CRON_SECRET%%[![:space:]]*}"}"
+          CRON_SECRET="${CRON_SECRET%"${CRON_SECRET##*[![:space:]]}"}"
+          PRODUCTION_URL="${PRODUCTION_URL#"${PRODUCTION_URL%%[![:space:]]*}"}"
+          PRODUCTION_URL="${PRODUCTION_URL%"${PRODUCTION_URL##*[![:space:]]}"}"
+          echo "CRON_SECRET is set: $([ -n \"$CRON_SECRET\" ] && echo 'yes' || echo 'no') (length: ${#CRON_SECRET})"
+          echo "PRODUCTION_URL is set: $([ -n \"$PRODUCTION_URL\" ] && echo 'yes' || echo 'no') (length: ${#PRODUCTION_URL})"
+          missing=""
+          [ -z "$CRON_SECRET" ] && missing="CRON_SECRET"
+          [ -z "$PRODUCTION_URL" ] && missing="${missing:+$missing, }PRODUCTION_URL"
+          if [ -n "$missing" ]; then
             echo ""
+            echo "Missing or empty: $missing"
             echo "Add under Settings → Secrets and variables → Actions:"
-            echo "  Repository secrets (or Variables): CRON_SECRET, PRODUCTION_URL (exact names)"
+            echo "  Repository secrets (or Variables): CRON_SECRET, PRODUCTION_URL (exact names, case-sensitive)"
             echo "  If this repo is a fork, add them in the fork; parent secrets are not used."
+            echo "  Scheduled runs use this repo's secrets; ensure they are set in this repository."
             exit 1
           fi
       - name: Call /api/cron/hourly
@@ -43,5 +53,11 @@ jobs:
           body=$(echo "$resp" | sed '$d')
           echo "Response ($code): $body"
           if [ "$code" -lt 200 ] || [ "$code" -ge 300 ]; then
+            echo ""
+            if [ "$code" = "401" ]; then
+              echo "401 Unauthorized: CRON_SECRET in GitHub must match CRON_SECRET in Vercel (same value)."
+            elif [ "$code" = "404" ]; then
+              echo "404: PRODUCTION_URL may be wrong or /api/cron/hourly is not deployed."
+            fi
             exit 1
           fi
