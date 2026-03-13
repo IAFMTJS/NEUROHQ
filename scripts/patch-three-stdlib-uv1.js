@@ -126,21 +126,22 @@ export { ExternalTexture };
 `;
 repairIfCorrupted(externalTexturePath, externalTextureContent);
 
-// Any .d.ts with null bytes anywhere under node_modules: overwrite with minimal valid stub so TS parse succeeds (known npm/cache corruption)
-function walkRecursive(dir, relRoot) {
+// Only scan packages we care about (avoids slow full node_modules walk on CI/Vercel)
+function repairNullBytesInDir(dir) {
   if (!fs.existsSync(dir)) return;
   const entries = fs.readdirSync(dir, { withFileTypes: true });
   for (const ent of entries) {
     const full = path.join(dir, ent.name);
-    if (ent.name === "node_modules" && relRoot) continue; // don't recurse into nested node_modules
-    if (ent.isDirectory()) walkRecursive(full, relRoot || dir);
+    if (ent.isDirectory()) repairNullBytesInDir(full);
     else if (ent.isFile() && ent.name.endsWith(".d.ts")) {
       const buf = fs.readFileSync(full);
       if (buf.some((b) => b === 0)) {
         fs.writeFileSync(full, "export {};\n", "utf8");
-        console.log("patched (null bytes): " + path.relative(path.join(root, "node_modules"), full));
+        console.log("patched (null bytes): " + path.relative(root, full));
       }
     }
   }
 }
-walkRecursive(path.join(root, "node_modules"), null);
+const nm = path.join(root, "node_modules");
+repairNullBytesInDir(path.join(nm, "@types", "three"));
+repairNullBytesInDir(path.join(nm, "three-stdlib"));
