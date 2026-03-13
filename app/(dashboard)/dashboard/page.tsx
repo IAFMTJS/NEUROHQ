@@ -1,7 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import { DashboardClientShell } from "@/components/dashboard/DashboardClientShell";
-import { DashboardDataProvider } from "@/components/providers/DashboardDataProvider";
 
 /** Force dynamic: dashboard uses cookies (auth) and live data. */
 export const dynamic = "force-dynamic";
@@ -13,14 +12,11 @@ export default async function DashboardPage() {
   } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
-  // Render the full visual shell immediately. DashboardDataProvider + client shell
-  // will hydrate from IndexedDB (last-known snapshot) and then fetch fresh data
-  // from /api/dashboard/data in the background.
+  // Use layout's DashboardDataProvider (initial from daily snapshot). No duplicate
+  // provider so first paint uses snapshot and stays instant for the whole day.
   return (
     <main className="container page page-wide dashboard-page relative z-10 pb-10">
-      <DashboardDataProvider>
-        <DashboardClientShell />
-      </DashboardDataProvider>
+      <DashboardClientShell />
     </main>
   );
 }

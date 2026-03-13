@@ -113,11 +113,8 @@ export function XPDataProvider({ children, initialDateStr, initialData }: XPData
   }, [initialDateStr]);
 
   useEffect(() => {
-    if (state.data) {
-      // Already have initial data (SSR or cache), just ensure background refresh
-      preloadXP().catch(() => {});
-      return;
-    }
+    // When we already have data (e.g. from daily snapshot), use it for the whole day — no refetch on every visit.
+    if (state.data) return;
     preloadXP().catch(() => {});
   }, [preloadXP, state.data]);
 

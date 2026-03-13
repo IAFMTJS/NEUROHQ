@@ -52,7 +52,8 @@ jobs:
           echo "VERCEL_AUTOMATION_BYPASS_SECRET is set: $([ -n \"$VERCEL_AUTOMATION_BYPASS_SECRET\" ] && echo 'yes' || echo 'no')"
           CRON_URL="$PRODUCTION_URL/api/cron/hourly"
           if [ -n "$VERCEL_AUTOMATION_BYPASS_SECRET" ]; then
-            CRON_URL="$CRON_URL?x-vercel-protection-bypass=$(printf '%s' "$VERCEL_AUTOMATION_BYPASS_SECRET" | jq -sRr @uri)"
+            # Send bypass as raw query param (Vercel expects exact match; encoding can break it)
+            CRON_URL="$CRON_URL?x-vercel-protection-bypass=$VERCEL_AUTOMATION_BYPASS_SECRET"
           fi
           CURL_HEADERS=(-H "Authorization: Bearer $CRON_SECRET")
           [ -n "$VERCEL_AUTOMATION_BYPASS_SECRET" ] && CURL_HEADERS+=(-H "x-vercel-protection-bypass: $VERCEL_AUTOMATION_BYPASS_SECRET")
@@ -62,16 +63,17 @@ jobs:
           echo "Response ($code): $body"
           if [ "$code" -lt 200 ] || [ "$code" -ge 300 ]; then
             echo ""
-            if [ "$code" = "401" ]; then
+            if [ "$code" = "302" ]; then
+              echo "302 Redirect: showing response headers to see redirect target:"
+              curl -sI -X GET "${CURL_HEADERS[@]}" "$CRON_URL" | sed 's/^/  /'
+              echo ""
+              echo "  → If Location is a login/challenge page, the bypass secret may not match Vercel."
+              echo "  → In Vercel: Deployment Protection → Protection Bypass for Automation: regenerate the secret, copy it, then in GitHub set VERCEL_AUTOMATION_BYPASS_SECRET to that exact value (no spaces)."
+              echo "  → Or disable Deployment Protection for Production (Settings → Deployment Protection) if bypass is not available on your plan."
+            elif [ "$code" = "401" ]; then
               echo "401 Unauthorized: CRON_SECRET in GitHub must match CRON_SECRET in Vercel (same value)."
             elif [ "$code" = "404" ]; then
               echo "404: PRODUCTION_URL may be wrong or /api/cron/hourly is not deployed."
-            elif [ "$code" = "302" ]; then
-              echo "302 Redirect: Request is being redirected before hitting the cron API."
-              echo "  → Usually caused by Vercel Deployment Protection."
-              echo "  → Fix: Enable Protection Bypass for Automation in Vercel, then add secret here:"
-              echo "  → Vercel: Settings → Deployment Protection → Protection Bypass for Automation (copy secret)"
-              echo "  → GitHub: Settings → Secrets → VERCEL_AUTOMATION_BYPASS_SECRET (paste same value)"
             fi
             exit 1
           fi

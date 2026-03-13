@@ -13,6 +13,7 @@ import {
   isCurrentSnapshot,
 } from "@/lib/daily-snapshot-storage";
 import { BootstrapLoader } from "@/components/bootstrap/BootstrapLoader";
+import { StoreHydrator } from "@/components/bootstrap/StoreHydrator";
 import type { InitializeResult } from "@/lib/daily-initialize";
 
 type Props = {
@@ -26,8 +27,10 @@ export function useDailySnapshot(): DailySnapshot | null {
 }
 
 /**
- * Simple gate that ensures a DailySnapshot exists before rendering the dashboard shell.
- * It also exposes the snapshot via context so nested providers can consume it.
+ * Gate that ensures a DailySnapshot exists before rendering the dashboard shell.
+ * Same-day snapshot from storage is used for the entire day (no refetch). New day
+ * triggers full preload via BootstrapLoader. Exposes snapshot via context so
+ * nested providers and StoreHydrator can consume it.
  */
 export function BootstrapGate({ children }: Props) {
   const [ready, setReady] = useState(false);
@@ -41,7 +44,9 @@ export function BootstrapGate({ children }: Props) {
       if (existing && isCurrentSnapshot(existing)) {
         setSnapshot(existing);
         setReady(true);
+        return;
       }
+      // No valid same-day snapshot: loader will run and call onReady when done.
     };
     void run();
     return () => {
@@ -60,7 +65,7 @@ export function BootstrapGate({ children }: Props) {
 
   return (
     <DailySnapshotContext.Provider value={snapshot}>
-      {children}
+      <StoreHydrator snapshot={snapshot}>{children}</StoreHydrator>
     </DailySnapshotContext.Provider>
   );
 }
