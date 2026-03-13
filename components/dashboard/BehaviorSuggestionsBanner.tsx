@@ -10,7 +10,7 @@ export function BehaviorSuggestionsBanner() {
   const [pending, startTransition] = useTransition();
   const router = useRouter();
 
-  if (isLoading || error || !result) return null;
+  if (error || !result) return null;
 
   const { identity, pet, hobby } = result.behaviorSuggestions ?? {};
   const hasAny = identity || pet || hobby;

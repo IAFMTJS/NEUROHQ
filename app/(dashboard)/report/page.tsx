@@ -46,16 +46,25 @@ import {
 } from "@/components/insights";
 import { DataUnavailable } from "@/components/DataUnavailable";
 
-const ReportWeekSelector = nextDynamic(() => import("@/components/ReportWeekSelector").then((m) => ({ default: m.ReportWeekSelector })), { loading: () => <div className="min-h-[48px] animate-pulse rounded-lg bg-white/5" aria-hidden /> });
-const ReportAnalysis = nextDynamic(() => import("@/components/ReportAnalysis").then((m) => ({ default: m.ReportAnalysis })), { loading: () => <div className="min-h-[120px] animate-pulse rounded-xl bg-white/5" aria-hidden /> });
-const RealityReportCard = nextDynamic(() => import("@/components/RealityReportCard").then((m) => ({ default: m.RealityReportCard })), { loading: () => <div className="glass-card min-h-[180px] animate-pulse rounded-[22px]" aria-hidden /> });
+const ReportWeekSelector = nextDynamic(
+  () => import("@/components/ReportWeekSelector").then((m) => ({ default: m.ReportWeekSelector })),
+  { loading: () => null }
+);
+const ReportAnalysis = nextDynamic(
+  () => import("@/components/ReportAnalysis").then((m) => ({ default: m.ReportAnalysis })),
+  { loading: () => null }
+);
+const RealityReportCard = nextDynamic(
+  () => import("@/components/RealityReportCard").then((m) => ({ default: m.RealityReportCard })),
+  { loading: () => null }
+);
 const InsightsGraphBlockClient = nextDynamic(
   () => import("@/components/insights/InsightsGraphBlock").then((m) => ({ default: m.InsightsGraphBlock })),
-  { loading: () => <div className="min-h-[320px] animate-pulse rounded-[var(--hq-card-radius-sharp)] bg-white/5" aria-hidden /> }
+  { loading: () => null }
 );
 const WeeklyHeatmap = nextDynamic(
   () => import("@/components/dashboard/WeeklyHeatmap").then((m) => ({ default: m.WeeklyHeatmap })),
-  { loading: () => <div className="min-h-[80px] animate-pulse rounded-xl bg-white/5" aria-hidden /> }
+  { loading: () => null }
 );
 
 type Props = { searchParams: Promise<{ weekStart?: string }> };
@@ -83,19 +92,6 @@ function ReportShell() {
         </div>
       </section>
     </>
-  );
-}
-
-function ReportContentSkeleton() {
-  return (
-    <div className="space-y-4">
-      <div className="flex gap-4">
-        <div className="h-16 flex-1 animate-pulse rounded-xl bg-white/5" aria-hidden />
-        <div className="h-16 flex-1 animate-pulse rounded-xl bg-white/5" aria-hidden />
-      </div>
-      <div className="min-h-[320px] animate-pulse rounded-xl bg-white/5" aria-hidden />
-      <div className="min-h-[120px] animate-pulse rounded-xl bg-white/5" aria-hidden />
-    </div>
   );
 }
 
@@ -304,7 +300,7 @@ export default function ReportPage({ searchParams }: Props) {
   return (
     <div className="container page page-wide space-y-6">
       <ReportShell />
-      <Suspense fallback={<ReportContentSkeleton />}>
+      <Suspense fallback={null}>
         <ReportContent searchParams={searchParams} />
       </Suspense>
     </div>

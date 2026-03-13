@@ -43,6 +43,7 @@ import { BudgetPerformanceSummaryCard } from "@/components/budget/BudgetPerforma
 import { BudgetPatternDetectionCard } from "@/components/budget/BudgetPatternDetectionCard";
 import { RemainingBudgetHero } from "@/components/budget/RemainingBudgetHero";
 import { BudgetTabsShell } from "@/components/budget/BudgetTabsShell";
+import { BudgetSnapshotProvider } from "@/components/budget/BudgetSnapshotProvider";
 
 const BudgetHistorySelector = nextDynamic(() => import("@/components/BudgetHistorySelector").then((m) => ({ default: m.BudgetHistorySelector })), { loading: () => null });
 const ExportBudgetCsvButton = nextDynamic(() => import("@/components/ExportBudgetCsvButton").then((m) => ({ default: m.ExportBudgetCsvButton })), { loading: () => null });
@@ -472,29 +473,31 @@ export default async function BudgetPage({ searchParams }: Props) {
   );
 
   return (
-    <div className="space-y-6">
-      <HQPageHeader
-        title="Budget"
-        subtitle="Financial command center for your month."
-        backHref="/dashboard"
-      />
+    <BudgetSnapshotProvider>
+      <div className="space-y-6">
+        <HQPageHeader
+          title="Budget"
+          subtitle="Financial command center for your month."
+          backHref="/dashboard"
+        />
 
-      <BudgetTabsShell
-        initialTab={activeTab}
-        isHistoryView={isHistoryView}
-        historyMode={historyMode}
-        headerRight={headerRight}
-        overview={overviewSection}
-        tactical={tacticalSection}
-        analysis={analysisSection}
-        goals={goalsSection}
-      />
+        <BudgetTabsShell
+          initialTab={activeTab}
+          isHistoryView={isHistoryView}
+          historyMode={historyMode}
+          headerRight={headerRight}
+          overview={overviewSection}
+          tactical={tacticalSection}
+          analysis={analysisSection}
+          goals={goalsSection}
+        />
 
-      {!isHistoryView && (
-        <section className="mascot-hero-inner mx-auto" aria-hidden>
-          <HeroMascotImage page="budget" className="mascot-img" />
-        </section>
-      )}
-    </div>
+        {!isHistoryView && (
+          <section className="mascot-hero-inner mx-auto" aria-hidden>
+            <HeroMascotImage page="budget" className="mascot-img" />
+          </section>
+        )}
+      </div>
+    </BudgetSnapshotProvider>
   );
 }

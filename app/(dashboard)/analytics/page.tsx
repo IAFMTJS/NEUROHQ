@@ -35,14 +35,6 @@ function AnalyticsShell() {
   );
 }
 
-function AnalyticsContentSkeleton() {
-  return (
-    <div className="space-y-4">
-      <div className="min-h-[120px] animate-pulse rounded-xl bg-white/5" aria-hidden />
-    </div>
-  );
-}
-
 async function AnalyticsContent() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
@@ -326,7 +318,7 @@ export default function AnalyticsPage() {
   return (
     <div className="container page page-wide space-y-6">
       <AnalyticsShell />
-      <Suspense fallback={<AnalyticsContentSkeleton />}>
+      <Suspense fallback={null}>
         <AnalyticsContent />
       </Suspense>
     </div>

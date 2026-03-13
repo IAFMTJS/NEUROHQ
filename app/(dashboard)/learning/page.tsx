@@ -1,12 +1,6 @@
-import { Suspense } from "react";
 import { HQPageHeader } from "@/components/hq";
 import { getLearningState } from "@/app/actions/learning-state";
-import { GrowthIntentCard } from "@/components/growth/GrowthIntentCard";
-import { GrowthConsistencyCard } from "@/components/growth/GrowthConsistencyCard";
-import { GrowthStreamsList } from "@/components/growth/GrowthStreamsList";
-import { GrowthReflectionCard } from "@/components/growth/GrowthReflectionCard";
-import { MonthlyBookCard } from "@/components/growth/MonthlyBookCard";
-import { AddLearningStreamCard } from "@/components/growth/AddLearningStreamCard";
+import { LearningContentClient } from "@/components/growth/LearningContentClient";
 
 export const dynamic = "force-dynamic";
 
@@ -35,52 +29,16 @@ function LearningShell() {
   );
 }
 
-function LearningContentSkeleton() {
-  return (
-    <div className="space-y-4">
-      <div className="min-h-[140px] animate-pulse rounded-xl bg-white/5" aria-hidden />
-    </div>
-  );
-}
-
-async function LearningContent() {
+export default async function LearningPage({ searchParams }: Props) {
+  void searchParams;
   const today = new Date();
   const todayStr = today.toISOString().slice(0, 10);
   const learningState = await getLearningState();
-  const currentBook = learningState.streams.find((s) => s.type === "book") ?? null;
 
-  return (
-    <div className="space-y-6">
-      <GrowthIntentCard
-        focus={learningState.focus}
-        currentBookTitle={currentBook?.title ?? null}
-      />
-      <MonthlyBookCard
-        currentBookTitle={currentBook?.title ?? null}
-        totalPages={currentBook?.pagesTotal ?? null}
-      />
-      <AddLearningStreamCard />
-      <GrowthConsistencyCard
-        consistency={learningState.consistency}
-        today={todayStr}
-      />
-      <GrowthStreamsList streams={learningState.streams} />
-      <GrowthReflectionCard
-        reflection={learningState.reflection}
-        today={todayStr}
-      />
-    </div>
-  );
-}
-
-export default function LearningPage({ searchParams }: Props) {
-  void searchParams;
   return (
     <div className="container page space-y-6">
       <LearningShell />
-      <Suspense fallback={<LearningContentSkeleton />}>
-        <LearningContent />
-      </Suspense>
+      <LearningContentClient todayStr={todayStr} fallback={learningState} />
     </div>
   );
 }

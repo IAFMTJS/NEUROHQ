@@ -15,15 +15,33 @@ import { PendingXpToast } from "@/components/PendingXpToast";
 import { HelpFloatingIcon } from "@/components/HelpFloatingIcon";
 import { PushAutoPrompt } from "@/components/notifications/PushAutoPrompt";
 import { DashboardDataProvider } from "@/components/providers/DashboardDataProvider";
+import { useDailySnapshot } from "@/components/bootstrap/BootstrapGate";
+import type { DashboardSnapshot } from "@/types/daily-snapshot";
 import { updateLastActiveDate } from "@/app/actions/behavior";
-import { useDailyBootstrap } from "@/lib/daily-bootstrap";
+import { useHQStore } from "@/lib/hq-store";
 
 const LAST_ACTIVE_STORAGE_KEY = "neurohq-last-active-date";
 
+type Props = {
+  children: React.ReactNode;
+  initialDashboardSnapshot?: DashboardSnapshot | null;
+};
+
 /** Wraps server-rendered <main> with providers and shell. Children = the <main> element from the server layout. */
-export function DashboardLayoutClient({ children }: { children: React.ReactNode }) {
-  // Ensure today's snapshot is loaded into the global device store once per day.
-  useDailyBootstrap();
+export function DashboardLayoutClient({
+  children,
+  initialDashboardSnapshot: initialDashboardSnapshotProp,
+}: Props) {
+  const dailySnapshot = useDailySnapshot();
+  const setTodayDate = useHQStore((s) => s.setTodayDate);
+
+  // Hydrate HQ store from DailySnapshot (single source of truth); no duplicate /api/bootstrap/today fetch.
+  useEffect(() => {
+    if (dailySnapshot?.date) {
+      setTodayDate(dailySnapshot.date);
+    }
+  }, [dailySnapshot?.date, setTodayDate]);
+
   useEffect(() => {
     const today = new Date().toISOString().slice(0, 10);
     try {
@@ -45,10 +63,16 @@ export function DashboardLayoutClient({ children }: { children: React.ReactNode 
     });
   }, []);
 
+  const initialDashboardSnapshot =
+    initialDashboardSnapshotProp ?? dailySnapshot?.dashboard ?? null;
+
   return (
     <AppStateProvider>
       <BootstrapProvider>
-        <DashboardDataProvider>
+        <DashboardDataProvider
+          initialCritical={initialDashboardSnapshot?.critical}
+          initialSecondary={initialDashboardSnapshot?.secondary}
+        >
           <>
             <HQStorePersistOnHide />
             <OfflineQueueSync />

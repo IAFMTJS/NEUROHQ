@@ -41,38 +41,30 @@ function StrategyShell() {
   );
 }
 
-function StrategyContentSkeleton() {
-  return (
-    <div className="space-y-4">
-      <div className="min-h-[200px] animate-pulse rounded-xl bg-white/5" aria-hidden />
-    </div>
-  );
-}
-
 const StrategyThesisForm = nextDynamic(
   () => import("@/components/strategy/StrategyThesisForm").then((m) => ({ default: m.StrategyThesisForm })),
-  { loading: () => <div className="min-h-[320px] animate-pulse rounded-xl bg-white/5" aria-hidden /> }
+  { loading: () => null }
 );
 const StrategyAllocationSliders = nextDynamic(
   () =>
     import("@/components/strategy/StrategyAllocationSliders").then((m) => ({
       default: m.StrategyAllocationSliders,
     })),
-  { loading: () => <div className="min-h-[180px] animate-pulse rounded-xl bg-white/5" aria-hidden /> }
+  { loading: () => null }
 );
 const StrategyAlignmentGraph = nextDynamic(
   () =>
     import("@/components/strategy/StrategyAlignmentGraph").then((m) => ({
       default: m.StrategyAlignmentGraph,
     })),
-  { loading: () => <div className="min-h-[280px] animate-pulse rounded-xl bg-white/5" aria-hidden /> }
+  { loading: () => null }
 );
 const StrategyMomentumPerDomain = nextDynamic(
   () =>
     import("@/components/strategy/StrategyMomentumPerDomain").then((m) => ({
       default: m.StrategyMomentumPerDomain,
     })),
-  { loading: () => <div className="min-h-[200px] animate-pulse rounded-xl bg-white/5" aria-hidden /> }
+  { loading: () => null }
 );
 const StrategyDriftAlertBlock = nextDynamic(
   () =>
@@ -86,7 +78,7 @@ const StrategyWeeklyReviewCTA = nextDynamic(
     import("@/components/strategy/StrategyWeeklyReviewCTA").then((m) => ({
       default: m.StrategyWeeklyReviewCTA,
     })),
-  { loading: () => <div className="min-h-[120px] animate-pulse rounded-xl bg-white/5" aria-hidden /> }
+  { loading: () => null }
 );
 const StrategyArchiveCTA = nextDynamic(
   () =>
@@ -266,7 +258,7 @@ export default function StrategyPage() {
   return (
     <div className="container page space-y-6">
       <StrategyShell />
-      <Suspense fallback={<StrategyContentSkeleton />}>
+      <Suspense fallback={null}>
         <StrategyContent />
       </Suspense>
     </div>

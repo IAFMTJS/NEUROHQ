@@ -48,14 +48,6 @@ function SettingsShell() {
   );
 }
 
-function SettingsContentSkeleton() {
-  return (
-    <div className="space-y-4">
-      <div className="min-h-[120px] animate-pulse rounded-xl bg-white/5" aria-hidden />
-    </div>
-  );
-}
-
 async function SettingsContent() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
@@ -115,6 +107,7 @@ async function SettingsContent() {
             initialPushMorningEnabled={prefs.push_morning_enabled ?? true}
             initialPushEveningEnabled={prefs.push_evening_enabled ?? true}
             initialPushWeeklyLearningEnabled={prefs.push_weekly_learning_enabled ?? true}
+            initialPushPersonalityMode={prefs.push_personality_mode ?? "auto"}
           />
           <SettingsEmailReminders initialEnabled={prefs.email_reminders_enabled ?? true} />
         </div>
@@ -161,7 +154,7 @@ export default function SettingsPage() {
   return (
     <div className="container page settings-page space-y-6">
       <SettingsShell />
-      <Suspense fallback={<SettingsContentSkeleton />}>
+      <Suspense fallback={null}>
         <SettingsContent />
       </Suspense>
     </div>

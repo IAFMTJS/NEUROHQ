@@ -2,7 +2,6 @@ import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import { DashboardClientShell } from "@/components/dashboard/DashboardClientShell";
 import { DashboardDataProvider } from "@/components/providers/DashboardDataProvider";
-import { DashboardShellSkeleton } from "@/components/Skeleton";
 
 /** Force dynamic: dashboard uses cookies (auth) and live data. */
 export const dynamic = "force-dynamic";

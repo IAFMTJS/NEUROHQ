@@ -1,20 +1,9 @@
-// Lightweight client-side cache helpers for daily snapshots, mutation queues,
-// and UI preferences. All keys are scoped by user + date to avoid collisions
-// between users on shared devices.
-//
-// Conflict resolution: when merging server data with a local snapshot, prefer
-// the local piece if the user last mutated it after the server's update. Use
-// isLocalSnapshotNewerThan(snapshot, serverUpdatedAt) to decide.
+// Lightweight client-side cache helpers for mutation queues and UI preferences.
+// Daily data snapshots are now handled by the centralized DailySnapshot system
+// (see lib/daily-snapshot-storage.ts). Per-suffix daily snapshots in this file
+// are kept only for backwards compatibility and should be considered deprecated.
 
 const STORAGE_PREFIX = "neurohq";
-
-type DailySnapshot<T> = {
-  data: T;
-  /** ISO string when the snapshot was last updated due to a user-facing mutation. */
-  lastMutationAt?: string;
-  /** ISO date key (YYYY-MM-DD) for sanity checks. */
-  dateKey: string;
-};
 
 type QueuedMutation = {
   id: string;
@@ -30,10 +19,6 @@ function safeGetLocalStorage(): Storage | null {
   } catch {
     return null;
   }
-}
-
-function getTodayKey(): string {
-  return new Date().toISOString().slice(0, 10);
 }
 
 /**
@@ -52,65 +37,6 @@ function getClientUserId(): string {
     // ignore
   }
   return "anon";
-}
-
-function buildDailyKey(suffix: string, dateOverride?: string): string {
-  const userId = getClientUserId();
-  const dateKey = dateOverride ?? getTodayKey();
-  return `${STORAGE_PREFIX}:daily:${userId}:${dateKey}:${suffix}`;
-}
-
-export function loadDailySnapshot<T>(suffix: string): DailySnapshot<T> | null {
-  const ls = safeGetLocalStorage();
-  if (!ls) return null;
-  const dateKey = getTodayKey();
-  const key = buildDailyKey(suffix, dateKey);
-  try {
-    const raw = ls.getItem(key);
-    if (!raw) return null;
-    const parsed = JSON.parse(raw) as DailySnapshot<T>;
-    if (!parsed || parsed.dateKey !== dateKey || typeof parsed.data === "undefined") {
-      return null;
-    }
-    return parsed;
-  } catch {
-    return null;
-  }
-}
-
-export function saveDailySnapshot<T>(
-  suffix: string,
-  data: T,
-  opts?: { lastMutationAt?: string }
-): void {
-  const ls = safeGetLocalStorage();
-  if (!ls) return;
-  const dateKey = getTodayKey();
-  const key = buildDailyKey(suffix, dateKey);
-  const snapshot: DailySnapshot<T> = {
-    data,
-    dateKey,
-    ...(opts?.lastMutationAt ? { lastMutationAt: opts.lastMutationAt } : {}),
-  };
-  try {
-    ls.setItem(key, JSON.stringify(snapshot));
-  } catch {
-    // Best-effort only; ignore quota or serialization errors.
-  }
-}
-
-/**
- * Conflict resolution: when merging server data with a local snapshot, prefer the local
- * piece if the user last mutated it after the server's update.
- * Returns true when the snapshot has lastMutationAt and it is after serverUpdatedAt (ISO strings).
- */
-export function isLocalSnapshotNewerThan(
-  snapshot: { lastMutationAt?: string } | null,
-  serverUpdatedAt: string
-): boolean {
-  const local = snapshot?.lastMutationAt;
-  if (!local) return false;
-  return local > serverUpdatedAt;
 }
 
 function buildMutationQueueKey(): string {

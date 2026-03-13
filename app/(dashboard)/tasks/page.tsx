@@ -32,11 +32,9 @@ import { SciFiPanel } from "@/components/hud-test/SciFiPanel";
 import { CornerNode } from "@/components/hud-test/CornerNode";
 import { Divider1px } from "@/components/hud-test/Divider1px";
 import hudStyles from "@/components/hud-test/hud.module.css";
-import { TasksTabsShell } from "@/components/missions";
+import { MissionsProvider, TasksTabsShell } from "@/components/missions";
 import { TasksDailyBootstrap } from "@/components/missions/TasksDailyBootstrap";
-import { MissionsSectionFallback } from "@/components/missions/MissionsSectionFallback";
 import { TasksCalendarAsync } from "./TasksCalendarAsync";
-import { Skeleton } from "@/components/Skeleton";
 
 /** Tasks page must always run on the server so latest data is rendered after refresh. */
 export const dynamic = "force-dynamic";
@@ -157,26 +155,6 @@ function makeTasksHref(
   search.set("calView", nextCalView);
   const query = search.toString();
   return query ? `/tasks?${query}` : "/tasks";
-}
-
-function HeaderMetaFallback() {
-  return (
-    <div className="mascot-follow-row flex flex-wrap items-center justify-end gap-2">
-      <Skeleton className="min-h-[40px] min-w-[160px] rounded-full" />
-      <Skeleton className="h-10 w-24 rounded-full" />
-      <Skeleton className="h-10 w-28 rounded-full" />
-    </div>
-  );
-}
-
-function CalendarSectionFallback() {
-  return (
-    <div className="min-h-[320px] rounded-2xl border border-[var(--card-border)] bg-[var(--bg-surface)]/60 p-4" aria-hidden>
-      <Skeleton className="mb-3 h-4 w-32" />
-      <Skeleton className="mb-2 h-5 w-40" />
-      <Skeleton className="h-64 w-full rounded-xl" />
-    </div>
-  );
 }
 
 async function TasksHeaderMetaAsync({ dateStr, yesterdayStr }: { dateStr: string; yesterdayStr: string }) {
@@ -455,7 +433,7 @@ export default async function TasksPage({ searchParams }: Props) {
           <HeroMascotImage page="tasks" className="mascot-img" heroLarge />
         </div>
       </section>
-      <Suspense fallback={<HeaderMetaFallback />}>
+      <Suspense fallback={null}>
         <TasksHeaderMetaAsync dateStr={dateStr} yesterdayStr={yesterdayStr} />
       </Suspense>
       <Divider1px />
@@ -474,26 +452,28 @@ export default async function TasksPage({ searchParams }: Props) {
           <div className={hudStyles.spaceNoise} aria-hidden />
         </>
       )}
-      <TasksDailyBootstrap dateStr={dateStr} enabled={activeTab === "missions"} />
-      <div className="container page page-wide dashboard-cinematic relative z-10">
-        <TasksTabsShell initialTab={activeTab} missionsHref={missionsHref} calendarHref={calendarHref} header={headerSection}>
-          {activeTab === "missions" ? (
-            <Suspense fallback={<MissionsSectionFallback dateStr={dateStr} />}>
-              <MissionsSectionAsync dateStr={dateStr} backlog={backlog} />
-            </Suspense>
-          ) : (
-            <Suspense fallback={<CalendarSectionFallback />}>
-              <CalendarSectionAsync
-                dateStr={dateStr}
-                monthParam={monthParam}
-                selectedCalendarDay={selectedCalendarDay}
-                calendarView={calendarView}
-                backlog={backlog}
-              />
-            </Suspense>
-          )}
-        </TasksTabsShell>
-      </div>
+      <MissionsProvider dateStr={dateStr}>
+        <TasksDailyBootstrap dateStr={dateStr} enabled={activeTab === "missions"} />
+        <div className="container page page-wide dashboard-cinematic relative z-10">
+          <TasksTabsShell initialTab={activeTab} missionsHref={missionsHref} calendarHref={calendarHref} header={headerSection}>
+            {activeTab === "missions" ? (
+              <Suspense fallback={null}>
+                <MissionsSectionAsync dateStr={dateStr} backlog={backlog} />
+              </Suspense>
+            ) : (
+              <Suspense fallback={null}>
+                <CalendarSectionAsync
+                  dateStr={dateStr}
+                  monthParam={monthParam}
+                  selectedCalendarDay={selectedCalendarDay}
+                  calendarView={calendarView}
+                  backlog={backlog}
+                />
+              </Suspense>
+            )}
+          </TasksTabsShell>
+        </div>
+      </MissionsProvider>
     </main>
   );
 }

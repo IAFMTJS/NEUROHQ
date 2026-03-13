@@ -5,7 +5,6 @@ import { CalendarViewShell } from "@/components/missions/CalendarViewShell";
 import { AddCalendarEventForm } from "@/components/AddCalendarEventForm";
 import { AgendaOnlyList } from "@/components/AgendaOnlyList";
 import { CalendarModal3Trigger } from "@/components/missions";
-import { loadDailySnapshot, saveDailySnapshot } from "@/lib/client-cache";
 
 function toDateKeyUTC(d: Date): string {
   return d.toISOString().slice(0, 10);
@@ -34,16 +33,6 @@ type Props = {
   overdueTasks: { id: string; title: string | null; due_date: string | null }[];
 };
 
-type CalendarSnapshot = {
-  month: string;
-  selectedDay: string;
-  tasksByDate: Record<string, unknown[]>;
-  upcomingCalendarEvents: CalendarEvent[];
-  overdueTasks: { id: string; title: string | null; due_date: string | null }[];
-};
-
-const SNAPSHOT_KEY = "tasks-calendar";
-
 export function TasksCalendarSection({
   initialMonth,
   initialDay,
@@ -54,31 +43,8 @@ export function TasksCalendarSection({
   initialCalView,
   overdueTasks,
 }: Props) {
-  const snapshot = loadDailySnapshot<CalendarSnapshot | null>(SNAPSHOT_KEY);
-
-  const [monthParam, setMonthParam] = useState(() => snapshot?.data?.month ?? initialMonth);
-  const [selectedCalendarDay, setSelectedCalendarDay] = useState(
-    () => snapshot?.data?.selectedDay ?? initialDay
-  );
-  /** Set only on user interaction (month/day change) so we can prefer local over server when merging. */
-  const [lastMutationAt, setLastMutationAt] = useState<string | null>(
-    () => snapshot?.lastMutationAt ?? null
-  );
-
-  useEffect(() => {
-    // Persist latest calendar view + data for this day so re‑opening the PWA loads instantly,
-    // even if the network is slow or temporarily unavailable.
-    const payload: CalendarSnapshot = {
-      month: monthParam,
-      selectedDay: selectedCalendarDay,
-      tasksByDate,
-      upcomingCalendarEvents,
-      overdueTasks,
-    };
-    saveDailySnapshot<CalendarSnapshot>(SNAPSHOT_KEY, payload, {
-      lastMutationAt: lastMutationAt ?? undefined,
-    });
-  }, [monthParam, selectedCalendarDay, lastMutationAt, tasksByDate, upcomingCalendarEvents, overdueTasks]);
+  const [monthParam, setMonthParam] = useState(() => initialMonth);
+  const [selectedCalendarDay, setSelectedCalendarDay] = useState(() => initialDay);
 
   const [monthYear, monthNumber] = monthParam.split("-").map((p) => parseInt(p, 10));
   const monthStart = new Date(Date.UTC(monthYear, monthNumber - 1, 1, 12));
@@ -158,7 +124,6 @@ export function TasksCalendarSection({
               type="button"
               onClick={() => {
                 setMonthParam(toMonthKeyUTC(prevMonthDate));
-                setLastMutationAt(new Date().toISOString());
               }}
               className="rounded-full border border-cyan-400/25 bg-[rgba(6,18,31,0.7)] px-2.5 py-1 text-xs text-cyan-100/80 hover:text-cyan-100"
             >
@@ -169,7 +134,6 @@ export function TasksCalendarSection({
               type="button"
               onClick={() => {
                 setMonthParam(toMonthKeyUTC(nextMonthDate));
-                setLastMutationAt(new Date().toISOString());
               }}
               className="rounded-full border border-cyan-400/25 bg-[rgba(6,18,31,0.7)] px-2.5 py-1 text-xs text-cyan-100/80 hover:text-cyan-100"
             >
@@ -188,7 +152,6 @@ export function TasksCalendarSection({
                 type="button"
                 onClick={() => {
                   setSelectedCalendarDay(day.dateKey);
-                  setLastMutationAt(new Date().toISOString());
                 }}
                 className={`relative min-h-[52px] rounded-md border px-1.5 py-1 text-left text-xs transition ${
                   day.isSelected

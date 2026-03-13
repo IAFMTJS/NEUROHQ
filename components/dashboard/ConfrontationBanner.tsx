@@ -18,7 +18,7 @@ function levelLabel(level: 1 | 2 | 3): string {
 export function ConfrontationBanner() {
   const { result, isLoading, error } = useTodayEngine();
 
-  if (isLoading || error || !result?.forcedConfrontation) return null;
+  if (error || !result?.forcedConfrontation) return null;
 
   const c = result.forcedConfrontation;
 

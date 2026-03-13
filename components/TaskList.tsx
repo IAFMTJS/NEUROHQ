@@ -25,7 +25,6 @@ import { useAppState } from "@/components/providers/AppStateProvider";
 import { addBonusAutoMissionsForToday } from "@/app/actions/master-missions";
 import { useHQStore } from "@/lib/hq-store";
 import { useTasksBootstrap } from "@/lib/tasks-bootstrap";
-import { saveDailySnapshot } from "@/lib/client-cache";
 
 const WEEKDAY_LABELS: Record<number, string> = { 1: "Mon", 2: "Tue", 3: "Wed", 4: "Thu", 5: "Fri", 6: "Sat", 7: "Sun" };
 
@@ -172,24 +171,7 @@ export function TaskList({
     }
   }, [date, initialTasks, setTasksForDate, storedTasks.length]);
 
-  // Persist minimal snapshot so missions fallback can render from cache on next load (instant layout, then refresh).
-  useEffect(() => {
-    if (!date || (initialTasks.length === 0 && (completedToday?.length ?? 0) === 0)) return;
-    const minimal = {
-      dateKey: date,
-      tasks: (initialTasks as { id: string; title?: string | null; completed?: boolean }[]).map((t) => ({
-        id: t.id,
-        title: t.title ?? null,
-        completed: t.completed ?? false,
-      })),
-      completedToday: (completedToday as { id: string; title?: string | null; completed?: boolean }[]).map((t) => ({
-        id: t.id,
-        title: t.title ?? null,
-        completed: true,
-      })),
-    };
-    saveDailySnapshot("missions", minimal);
-  }, [date, initialTasks, completedToday]);
+  // DailySnapshot + MissionsProvider already handle first-paint missions data; no extra per-suffix cache needed here.
 
   const extendedTasks = useMemo(() => {
     const fromServer = (storedTasks.length > 0 ? storedTasks : initialTasks) as ExtendedTask[];

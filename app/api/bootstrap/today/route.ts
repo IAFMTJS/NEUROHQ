@@ -7,9 +7,18 @@ import { getWeekBounds } from "@/lib/utils/learning";
 import { getTodaysTasks, getCompletedTodayTasks } from "@/app/actions/tasks";
 import { getDailyState } from "@/app/actions/daily-state";
 import { getEnergyBudget } from "@/app/actions/energy";
-import { getBudgetSettings, getCurrentMonthExpensesCents } from "@/app/actions/budget";
+import {
+  getBudgetSettings,
+  getCurrentMonthExpensesCents,
+  getCurrentMonthIncomeCents,
+  getCurrentWeekExpensesCents,
+  getCurrentWeekIncomeCents,
+} from "@/app/actions/budget";
 import { getWeeklyMinutes, getWeeklyLearningTarget, getLearningStreak } from "@/app/actions/learning";
 import { getLearningState } from "@/app/actions/learning-state";
+import { getBudgetDisciplineXpThisWeek, getBudgetDisciplineCompletedToday } from "@/app/actions/budget-discipline";
+import { getFinanceState, getFinancialInsightsSafe } from "@/app/actions/dcic/finance-state";
+import { getUnplannedWeeklySummary } from "@/app/actions/budget";
 import type { LearningSnapshot } from "@/types/hq-store.types";
 
 export async function GET() {
@@ -33,9 +42,17 @@ export async function GET() {
       energyBudget,
       budgetSettings,
       currentMonthExpenses,
+      currentMonthIncome,
+      currentWeekExpenses,
+      currentWeekIncome,
       weeklyMinutes,
       weeklyLearningTarget,
       learningStreak,
+      financeState,
+      financialInsights,
+      disciplineXpThisWeek,
+      disciplineCompletedToday,
+      unplannedSummary,
     ] = await Promise.all([
       getDashboardPayload(),
       getGameState({ includeFinance: false }),
@@ -45,6 +62,9 @@ export async function GET() {
       getEnergyBudget(dateStr),
       getBudgetSettings(),
       getCurrentMonthExpensesCents(),
+      getCurrentMonthIncomeCents(),
+      getCurrentWeekExpensesCents(),
+      getCurrentWeekIncomeCents(),
       // learning minutes over this week (not just today)
       (async () => {
         const today = new Date(dateStr + "T12:00:00Z");
@@ -53,6 +73,11 @@ export async function GET() {
       })(),
       getWeeklyLearningTarget(),
       getLearningStreak(),
+      getFinanceState(),
+      getFinancialInsightsSafe(),
+      getBudgetDisciplineXpThisWeek(),
+      getBudgetDisciplineCompletedToday(),
+      getUnplannedWeeklySummary(),
     ]);
 
     if (!dashboard) {
@@ -65,6 +90,8 @@ export async function GET() {
     );
     const budgetRemainingCents =
       budgetSettings.monthly_budget_cents != null ? spendableCents - currentMonthExpenses : null;
+    const currency = budgetSettings.currency ?? "EUR";
+    const isWeekly = budgetSettings.budget_period === "weekly";
 
     const learningState = await getLearningState();
     const learning: LearningSnapshot = {
@@ -110,7 +137,17 @@ export async function GET() {
       budget: {
         settings: budgetSettings,
         currentMonthExpenses,
+        currentMonthIncome,
+        currentWeekExpenses,
+        currentWeekIncome,
         budgetRemainingCents,
+        currency,
+        isWeekly,
+        financeState,
+        financialInsights,
+        disciplineXpThisWeek,
+        disciplineCompletedToday,
+        unplannedSummary,
       },
       learning,
     };

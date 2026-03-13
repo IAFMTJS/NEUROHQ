@@ -14,3 +14,4 @@ export { MetaInsights30Banner } from "./MetaInsights30Banner";
 export { TasksTabsShell } from "./TasksTabsShell";
 export { CalendarViewShell } from "./CalendarViewShell";
 export { TasksCalendarSection } from "./TasksCalendarSection";
+export { MissionsProvider, useMissionsSnapshot } from "./MissionsProvider";

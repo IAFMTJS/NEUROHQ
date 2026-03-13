@@ -21,7 +21,6 @@ import { SciFiPanel } from "@/components/hud-test/SciFiPanel";
 import { Divider1px } from "@/components/hud-test/Divider1px";
 import { CornerNode } from "@/components/hud-test/CornerNode";
 import hudStyles from "@/components/hud-test/hud.module.css";
-import { DashboardShellSkeleton, DashboardSkeleton } from "@/components/Skeleton";
 import { DelayedFallback } from "@/components/ui/DelayedFallback";
 import { useDashboardData, fetchAll, type DashboardCritical, type DashboardSecondary } from "@/components/providers/DashboardDataProvider";
 import type { CopyVariant } from "@/app/actions/adaptive";
@@ -41,12 +40,8 @@ import { getDayOfYearFromDateString } from "@/lib/utils/timezone";
 import { useDCICGameState } from "@/lib/dcic/game-state-client";
 import { DCICStatusCard } from "@/components/dcic/DCICStatusCard";
 
-/* Below-fold: ssr: false = load after hydration. DelayedFallback = show spinner only after ~250ms (psychological UX). */
-const cardPlaceholder = (className: string) => (
-  <DelayedFallback>
-    <div className={className} aria-hidden />
-  </DelayedFallback>
-);
+/* Below-fold: ssr: false = load after hydration. */
+const cardPlaceholder = (_className: string) => null;
 const IdentityBlock = dynamic(() => import("@/components/dashboard/IdentityBlock").then((m) => ({ default: m.IdentityBlock })), { ssr: false, loading: () => cardPlaceholder("glass-card min-h-[140px] animate-pulse rounded-[22px]") });
 const MomentumScore = dynamic(() => import("@/components/dashboard/MomentumScore").then((m) => ({ default: m.MomentumScore })), { ssr: false, loading: () => cardPlaceholder("glass-card min-h-[100px] animate-pulse rounded-[22px]") });
 const TodayEngineCard = dynamic(() => import("@/components/dashboard/TodayEngineCard").then((m) => ({ default: m.TodayEngineCard })), { ssr: false, loading: () => cardPlaceholder("glass-card min-h-[160px] animate-pulse rounded-[22px]") });
