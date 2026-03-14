@@ -64,12 +64,21 @@ jobs:
           if [ "$code" -lt 200 ] || [ "$code" -ge 300 ]; then
             echo ""
             if [ "$code" = "302" ]; then
-              echo "302 Redirect: showing response headers to see redirect target:"
+              echo "302 Redirect: response headers:"
               curl -sI -X GET "${CURL_HEADERS[@]}" "$CRON_URL" | sed 's/^/  /'
               echo ""
-              echo "  → If Location is a login/challenge page, the bypass secret may not match Vercel."
-              echo "  → In Vercel: Deployment Protection → Protection Bypass for Automation: regenerate the secret, copy it, then in GitHub set VERCEL_AUTOMATION_BYPASS_SECRET to that exact value (no spaces)."
-              echo "  → Or disable Deployment Protection for Production (Settings → Deployment Protection) if bypass is not available on your plan."
+              echo "--- 302 = Vercel Deployment Protection (not the app) ---"
+              echo "The app does NOT redirect /api/cron; the proxy is excluded for /api/*."
+              echo "So 302 to /login is from Vercel blocking the request before it reaches the app."
+              echo ""
+              echo "Fix (choose one):"
+              echo "  1. Disable Deployment Protection for Production:"
+              echo "     Vercel → Project → Settings → Deployment Protection"
+              echo "     Set Production to 'None' or 'Only Preview Deployments'."
+              echo "  2. Or use Protection Bypass for Automation:"
+              echo "     Vercel → Deployment Protection → Protection Bypass for Automation: create/regenerate secret."
+              echo "     GitHub → Settings → Secrets → VERCEL_AUTOMATION_BYPASS_SECRET = that exact value."
+              echo "     (Bypass can require a paid plan; if 302 persists after setting it, use option 1.)"
             elif [ "$code" = "401" ]; then
               echo "401 Unauthorized: CRON_SECRET in GitHub must match CRON_SECRET in Vercel (same value)."
             elif [ "$code" = "404" ]; then

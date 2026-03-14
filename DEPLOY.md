@@ -130,7 +130,7 @@ Push to the connected branch or click Deploy. Wait for build to succeed.
 
 ### 3.4 Cron jobs (Vercel)
 
-Crons are defined in `vercel.json`. **Hobby plan:** Vercel allows only one run per day per cron; the hourly job is not in `vercel.json` so the project deploys. Timezone-aware rollover (hourly) can be triggered manually or use Pro/external cron. **Pro plan:** you can add the hourly cron back (`"schedule": "0 * * * *"` for `/api/cron/hourly`). To authorize cron invocations, set **CRON_SECRET** and in Vercel Cron configuration (if available) set header: `Authorization: Bearer <CRON_SECRET>`.
+Crons are defined in `vercel.json`. **Hobby plan:** Vercel allows only one run per day per cron; the hourly job is not in `vercel.json` so the project deploys. Timezone-aware rollover (hourly) can be triggered manually or use Pro/external cron (e.g. GitHub Actions workflow `.github/workflows/cron-hourly.yml`). **Pro plan:** you can add the hourly cron back (`"schedule": "0 * * * *"` for `/api/cron/hourly`). To authorize cron invocations, set **CRON_SECRET** and in Vercel Cron configuration (if available) set header: `Authorization: Bearer <CRON_SECRET>`. **Deployment Protection:** If you use Vercel Authentication or Password Protection on Production, cron requests from outside (e.g. GitHub Actions) will get 302 to `/login` unless you disable protection for Production or use Protection Bypass for Automation (see Troubleshooting §5.1).
 
 ---
 
@@ -213,6 +213,7 @@ If pushing to Git does **not** create an automatic deployment on Vercel:
 - **RLS errors:** Ensure migrations 002 (RLS) and 003 ran; policies use `auth.uid() = user_id`.
 - **No quote on dashboard:** Ensure migration 005 (quotes seed) ran and `quotes` has rows for id 1–365.
 - **Cron 401:** Set `CRON_SECRET` in Vercel and send `Authorization: Bearer <CRON_SECRET>` in the request.
+- **Cron 302 to /login (e.g. from GitHub Actions):** The app does not redirect `/api/cron`; the proxy is excluded for `/api/*`. A 302 to `/login` means **Vercel Deployment Protection** is blocking the request before it reaches the app. Fix: **Vercel → Project → Settings → Deployment Protection** → set Production to **None** (or “Only Preview Deployments”) so the cron URL is reachable. Or use **Protection Bypass for Automation** (create secret in Vercel, add `VERCEL_AUTOMATION_BYPASS_SECRET` in GitHub Actions secrets); bypass can require a paid plan.
 - **Push not received:** Check VAPID keys; subscription saved in `users.push_subscription_json`; browser allows notifications; `sw.js` registered (e.g. from Settings push flow).
 
 ---

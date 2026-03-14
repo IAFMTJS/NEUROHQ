@@ -38,8 +38,9 @@ export async function proxy(request: NextRequest) {
   const base = baseUrl(request);
   const response = NextResponse.next({ request });
 
-  // Cron routes use CRON_SECRET in the handler; never redirect them to login
-  if (pathname.startsWith("/api/cron")) return response;
+  // Cron routes use CRON_SECRET in the handler; never redirect them to login.
+  // Match by pathname and URL so we never redirect even if path is normalized differently.
+  if (pathname.startsWith("/api/cron") || request.url.includes("/api/cron")) return response;
 
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
@@ -97,10 +98,8 @@ export async function proxy(request: NextRequest) {
 
 export const config = {
   matcher: [
-    // Exclude API routes so login/callback responses are never touched by the proxy
+    // Only run proxy for app/auth routes. Exclude api/ so /api/* (including /api/cron) never hits the proxy.
+    // Cron is then served directly by the route handler; 302 to /login can only come from Vercel Deployment Protection.
     "/((?!_next/static|_next/image|favicon.ico|api/|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
-    // Explicitly include /api/cron so proxy runs and we can skip auth (early return above)
-    "/api/cron",
-    "/api/cron/:path*",
   ],
 };
