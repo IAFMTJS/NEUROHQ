@@ -50,11 +50,9 @@ jobs:
           VERCEL_AUTOMATION_BYPASS_SECRET: ${{ secrets.VERCEL_AUTOMATION_BYPASS_SECRET || vars.VERCEL_AUTOMATION_BYPASS_SECRET }}
         run: |
           echo "VERCEL_AUTOMATION_BYPASS_SECRET is set: $([ -n \"$VERCEL_AUTOMATION_BYPASS_SECRET\" ] && echo 'yes' || echo 'no')"
+          # Use path only (no query) so routing always sees /api/cron/hourly; bypass sent via header only
           CRON_URL="$PRODUCTION_URL/api/cron/hourly"
-          if [ -n "$VERCEL_AUTOMATION_BYPASS_SECRET" ]; then
-            # Send bypass as raw query param (Vercel expects exact match; encoding can break it)
-            CRON_URL="$CRON_URL?x-vercel-protection-bypass=$VERCEL_AUTOMATION_BYPASS_SECRET"
-          fi
+          echo "Calling: $CRON_URL"
           CURL_HEADERS=(-H "Authorization: Bearer $CRON_SECRET")
           [ -n "$VERCEL_AUTOMATION_BYPASS_SECRET" ] && CURL_HEADERS+=(-H "x-vercel-protection-bypass: $VERCEL_AUTOMATION_BYPASS_SECRET")
           resp=$(curl -s -w "\n%{http_code}" -X GET "${CURL_HEADERS[@]}" "$CRON_URL")
@@ -82,7 +80,10 @@ jobs:
             elif [ "$code" = "401" ]; then
               echo "401 Unauthorized: CRON_SECRET in GitHub must match CRON_SECRET in Vercel (same value)."
             elif [ "$code" = "404" ]; then
-              echo "404: PRODUCTION_URL may be wrong or /api/cron/hourly is not deployed."
+              echo "404: Request reached the app but /api/cron/hourly was not found."
+              echo "  → PRODUCTION_URL must be the root URL with no path, e.g. https://your-app.vercel.app"
+              echo "  → Check: open PRODUCTION_URL/api/cron/hourly in a browser (no auth). You should get 401 Unauthorized, not 404."
+              echo "  → If 404 in browser too: ensure Production deployment on Vercel is from the latest main (with app/api/cron/hourly/route.ts)."
             fi
             exit 1
           fi
