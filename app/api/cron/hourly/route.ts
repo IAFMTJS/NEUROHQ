@@ -24,12 +24,21 @@ import { loadUserNotificationContextForUser } from "@/lib/behavioral-notificatio
  * - 20:00 local: evening email (check-in: tasks done, expenses logged, brain status) if email_reminders_enabled.
  * Users without timezone are handled by the daily cron (00:00 UTC).
  */
+const ALLOWED_FORCE_HOURS = [0, 9, 11, 20] as const;
+
 export async function GET(request: Request) {
   const authHeader = request.headers.get("authorization");
   const cronSecret = process.env.CRON_SECRET;
   if (cronSecret && authHeader !== `Bearer ${cronSecret}`) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
+
+  const url = new URL(request.url);
+  const forceHourParam = url.searchParams.get("forceHour");
+  const forceHour: number | undefined =
+    forceHourParam != null && ALLOWED_FORCE_HOURS.includes(Number(forceHourParam) as (typeof ALLOWED_FORCE_HOURS)[number])
+      ? Number(forceHourParam)
+      : undefined;
 
   const supabase = createAdminClient();
   const { data: users } = await supabase
@@ -71,7 +80,8 @@ export async function GET(request: Request) {
   for (const u of users ?? []) {
     const tz = u.timezone as string;
     if (!tz) continue;
-    const { date: todayStr, hour } = getLocalDateHour(tz);
+    const { date: todayStr, hour: realHour } = getLocalDateHour(tz);
+    const hour = forceHour !== undefined ? forceHour : realHour;
     const userPrefs = prefsByUser.get(u.id) ?? {
       emailRemindersEnabled: true,
       pushRemindersEnabled: true,
@@ -242,6 +252,7 @@ export async function GET(request: Request) {
   return NextResponse.json({
     ok: true,
     job: "hourly",
+    ...(forceHour !== undefined && { testRun: true, forceHour }),
     rolled,
     quoteSent,
     morningEmailSent,

@@ -216,6 +216,66 @@ If pushing to Git does **not** create an automatic deployment on Vercel:
 - **Cron 302 to /login (e.g. from GitHub Actions):** The app does not redirect `/api/cron`; the proxy is excluded for `/api/*`. A 302 to `/login` means **Vercel Deployment Protection** is blocking the request before it reaches the app. Fix: **Vercel → Project → Settings → Deployment Protection** → set Production to **None** (or “Only Preview Deployments”) so the cron URL is reachable. Or use **Protection Bypass for Automation** (create secret in Vercel, add `VERCEL_AUTOMATION_BYPASS_SECRET` in GitHub Actions secrets); bypass can require a paid plan.
 - **Push not received:** Check VAPID keys; subscription saved in `users.push_subscription_json`; browser allows notifications; `sw.js` registered (e.g. from Settings push flow).
 
+### 5.2 Hourly cron from GitHub Actions: do this once
+
+If the “Cron hourly” workflow keeps failing (302, 404, or 401), follow these steps **in order**. Use the same `CRON_SECRET` value everywhere.
+
+1. **Vercel – turn off Deployment Protection for Production**  
+   Vercel → your project → **Settings** → **Deployment Protection**.  
+   For **Production**, set to **None** (or “Only Preview Deployments”). Save.  
+   *(This removes 302 redirects so the cron URL is reachable.)*
+
+2. **Vercel – set CRON_SECRET**  
+   Same project → **Settings** → **Environment Variables**.  
+   Add (or edit): Name `CRON_SECRET`, Value = a random string (e.g. run `openssl rand -hex 24` and paste).  
+   Environment: **Production** (and Preview if you want). Save.
+
+3. **Vercel – redeploy Production with a clean build**  
+   **Deployments** → open the latest deployment from `main` → **⋯** → **Redeploy**.  
+   **Uncheck** “Use existing Build Cache”. Redeploy.  
+   When it finishes, that deployment must be **Production** (promote if needed).
+
+4. **GitHub – set secrets**  
+   Repo → **Settings** → **Secrets and variables** → **Actions**.  
+   Add or update:
+   - `PRODUCTION_URL` = `https://neurohq.vercel.app` (your real production URL, no path, no trailing slash).
+   - `CRON_SECRET` = **exactly** the same value as in Vercel (copy‑paste).
+
+5. **Test from your machine**  
+   Replace `YOUR_CRON_SECRET` with your real secret and your production URL if different.
+   - **Git Bash / WSL / Mac:**  
+     `curl -s -o /dev/null -w "%{http_code}" -H "Authorization: Bearer YOUR_CRON_SECRET" "https://neurohq.vercel.app/api/cron/hourly"`  
+     Output should be **200**.
+   - **PowerShell:**  
+     `(Invoke-WebRequest -Uri "https://neurohq.vercel.app/api/cron/hourly" -Headers @{ Authorization = "Bearer YOUR_CRON_SECRET" } -UseBasicParsing).StatusCode`  
+     Should print **200**.
+   - If you see **302** → step 1 not done. **401** → secret mismatch (steps 2 and 4). **404** → step 3 (redeploy) or wrong URL in step 4.
+
+6. **Run the workflow once**  
+   GitHub → **Actions** → “Cron hourly” → **Run workflow**. It should succeed with Response (200).
+
+### 5.3 Testing the hourly cron
+
+- **From the workflow:** After each run, the log line `Response (200): {...}` shows the JSON body. You should see something like:
+  ```json
+  {"ok":true,"job":"hourly","rolled":0,"quoteSent":0,"morningEmailSent":0,"eveningEmailSent":0,"morningPushSent":0,"eveningPushSent":0,"brainStatusRemindersSent":0,"usersChecked":N}
+  ```
+  `usersChecked` is how many users with a timezone were considered. The other fields are counts of actions taken in that run (rollovers, quote pushes, morning/evening emails and pushes, brain-status reminders). At most hours these will be 0; they increase when it’s e.g. 00:00, 09:00, or 20:00 in a user’s timezone.
+
+- **From your machine (full response):** To see the same JSON when testing locally, use:
+  ```bash
+  curl -s -H "Authorization: Bearer YOUR_CRON_SECRET" "https://neurohq.vercel.app/api/cron/hourly"
+  ```
+  You should get `{"ok":true,"job":"hourly",...}` with the counts.
+
+- **Trigger sends now (test run):** Call the cron with `?forceHour=9` or `?forceHour=20` (and your `Authorization: Bearer` header) to run as if it were 09:00 or 20:00 in each user’s timezone. That triggers morning or evening emails/pushes for users who have them enabled. Use `forceHour=0` for rollover + quote push, or `forceHour=11` for the brain-status reminder. Example:
+  ```bash
+  curl -s -H "Authorization: Bearer YOUR_CRON_SECRET" "https://neurohq.vercel.app/api/cron/hourly?forceHour=9"
+  ```
+  The response will include `"testRun":true,"forceHour":9` so you know it was a test.
+
+- **In Supabase (optional):** To confirm rollover ran for a user, check `users.last_rollover_date` for today’s date (in that user’s timezone) after 00:00 local. Incomplete tasks from the previous day will have moved to today and `carry_over_count` may have increased.
+
 ---
 
 ## 6. Lighthouse PWA check (manual)
