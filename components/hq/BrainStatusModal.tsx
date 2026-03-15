@@ -7,6 +7,7 @@ import { setPendingDailyState, markDailyStateSynced } from "@/lib/client-pending
 import { getSuggestedTaskCount } from "@/lib/utils/energy";
 import { EnergyRing, type EnergyRingMode } from "@/components/hud-test/EnergyRing";
 import { useAppState } from "@/components/providers/AppStateProvider";
+import { useOnboarding } from "@/components/onboarding/OnboardingProvider";
 import { Modal } from "@/components/Modal";
 import { scale1To10ToPct } from "@/lib/dashboard-utils";
 import { useHQStore } from "@/lib/hq-store";
@@ -70,6 +71,7 @@ type Props = {
 export function BrainStatusModal({ open, onClose, date, initial, yesterday, onSaved }: Props) {
   const router = useRouter();
   const appState = useAppState();
+  const onboarding = useOnboarding();
   const setTodayDailyState = useHQStore((s) => s.setTodayDailyState);
   const [pending, startTransition] = useTransition();
   const [saved, setSaved] = useState(false);
@@ -143,6 +145,7 @@ export function BrainStatusModal({ open, onClose, date, initial, yesterday, onSa
         if (result.ok) {
           markDailyStateSynced(date);
           setSaved(true);
+          onboarding?.reportTutorialAction("brain-status-save");
           appState?.triggerReward();
           if (result.autoMissionsCreated != null && result.autoMissionsCreated > 0) {
             try {

@@ -40,6 +40,9 @@ import type { RealityReport } from "@/app/actions/report";
 import { getDayOfYearFromDateString } from "@/lib/utils/timezone";
 import { useDCICGameState } from "@/lib/dcic/game-state-client";
 import { DCICStatusCard } from "@/components/dcic/DCICStatusCard";
+import { SetupReminderBanner } from "@/components/onboarding/SetupReminderBanner";
+import { ContextualTip } from "@/components/onboarding/ContextualTip";
+import { TIP_IDS } from "@/content/onboarding/tip-ids";
 
 /* Below-fold: ssr: false = load after hydration. */
 const cardPlaceholder = (_className: string) => null;
@@ -58,7 +61,6 @@ const ConsequenceBanner = dynamic(() => import("@/components/ConsequenceBanner")
 const AvoidanceNotice = dynamic(() => import("@/components/AvoidanceNotice").then((m) => ({ default: m.AvoidanceNotice })), { loading: () => null });
 const FocusBlock = dynamic(() => import("@/components/FocusBlock").then((m) => ({ default: m.FocusBlock })), { ssr: false, loading: () => cardPlaceholder("min-h-[80px] animate-pulse rounded-xl bg-white/5") });
 const OnTrackCard = dynamic(() => import("@/components/OnTrackCard").then((m) => ({ default: m.OnTrackCard })), { ssr: false, loading: () => cardPlaceholder("glass-card min-h-[60px] animate-pulse rounded-[22px]") });
-const OnboardingBanner = dynamic(() => import("@/components/OnboardingBanner").then((m) => ({ default: m.OnboardingBanner })), { loading: () => null });
 const AnalyticsWeekWidget = dynamic(() => import("@/components/AnalyticsWeekWidget").then((m) => ({ default: m.AnalyticsWeekWidget })), { loading: () => cardPlaceholder("glass-card min-h-[100px] animate-pulse rounded-[22px]") });
 const ConfrontationBanner = dynamic(() => import("@/components/dashboard/ConfrontationBanner").then((m) => ({ default: m.ConfrontationBanner })), { loading: () => null });
 const WeeklyMirrorBanner = dynamic(() => import("@/components/dashboard/WeeklyMirrorBanner").then((m) => ({ default: m.WeeklyMirrorBanner })), { loading: () => null });
@@ -351,6 +353,7 @@ export function DashboardClientShell() {
       <div className={`${!isMinimalUI ? "container page page-wide dashboard-page dashboard-cinematic relative z-10 pb-10" : ""}`}>
         {!isMinimalUI && (
           <>
+            <SetupReminderBanner />
             <EnergyOverBudgetBanner remaining={(effectiveEnergyBudget.remaining as number) ?? 0} dateStr={dateStr} />
             <LateDayNoTaskBanner
               completedTodayCount={
@@ -364,7 +367,10 @@ export function DashboardClientShell() {
         )}
         {!isMinimalUI && (
           <div className="space-y-3">
-            <OnboardingBanner />
+            <ContextualTip
+              tipId={TIP_IDS.BRAIN_STATUS}
+              message="You can update your Brain Status here to set energy, focus and load for the day."
+            />
               <div className="dashboard-top-strip">
               <div className="dashboard-top-strip-track">
                 <XPBadge totalXp={xp.total_xp} level={dcicLevel} compact href="/xp" />
@@ -505,7 +511,7 @@ export function DashboardClientShell() {
                 </section>
               </CollapsibleDashboardCard>
               <CollapsibleDashboardCard title="Active missions" storageKey="active-missions" defaultExpanded={true} className="lg:col-span-2">
-                <div className="dashboard-mission-hero p-4 md:p-6">
+                <div className="dashboard-mission-hero p-4 md:p-6" data-tutorial="dashboard-active-missions">
                   <ActiveMissionCard tasks={todaysTasks} emptyMessage={emptyMissionMessage} emptyHref={emptyMissionHref} timeWindow={timeWindow} isTimeWindowActive={isTimeWindowActive} />
                 </div>
               </CollapsibleDashboardCard>

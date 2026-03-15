@@ -375,7 +375,7 @@ async function BudgetContent({ searchParams }: Props) {
 
   const goalsSection = (
     <div className="space-y-4">
-      <section className="card-simple overflow-hidden p-0">
+      <section className="card-simple overflow-hidden p-0" data-tutorial="budget-goals">
         <div className="border-b border-[var(--card-border)] px-4 py-3">
           <h2 className="text-base font-semibold text-[var(--text-primary)]">Savings goals</h2>
           <p className="mt-0.5 text-xs text-[var(--text-muted)]">

@@ -41,7 +41,7 @@ function XPPageContentContainer() {
   if (!data) return null;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6" data-tutorial="xp-content">
       <div className="flex flex-wrap items-center justify-end gap-2">
         <XPBadge totalXp={data.identity.total_xp} level={data.identity.level} compact href="/xp" />
       </div>

@@ -317,6 +317,7 @@ async function MissionsSectionAsync({ dateStr, backlog }: { dateStr: string; bac
       {smartSuggestion.text && !decisionBlocks.topRecommendation ? (
         <SmartSuggestionBanner text={smartSuggestion.text} type={smartSuggestion.type} />
       ) : null}
+      <div data-tutorial="tasks-today">
       <TodayMissionsGridFromStore dateStr={dateStr}>
         {missionCards.length > 0 && tasks.length === 0 && (
           <section className="mission-grid">
@@ -335,6 +336,7 @@ async function MissionsSectionAsync({ dateStr, backlog }: { dateStr: string; bac
           </section>
         )}
       </TodayMissionsGridFromStore>
+      <div data-tutorial="tasks-list">
       <TaskList
         date={dateStr}
         tasks={tasks as import("@/types/database.types").Task[]}
@@ -353,6 +355,8 @@ async function MissionsSectionAsync({ dateStr, backlog }: { dateStr: string; bac
         identityLevel={identity.level}
         identityReputation={identityEngine.reputation ?? null}
       />
+      </div>
+      </div>
       <Suspense fallback={null}>
         <MetaInsights30BannerAsync />
       </Suspense>

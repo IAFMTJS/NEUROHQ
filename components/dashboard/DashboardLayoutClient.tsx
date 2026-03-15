@@ -15,6 +15,7 @@ import { PendingXpToast } from "@/components/PendingXpToast";
 import { HelpFloatingIcon } from "@/components/HelpFloatingIcon";
 import { PushAutoPrompt } from "@/components/notifications/PushAutoPrompt";
 import { PushClickTracker } from "@/components/notifications/PushClickTracker";
+import { OnboardingProvider } from "@/components/onboarding/OnboardingProvider";
 import { DashboardDataProvider } from "@/components/providers/DashboardDataProvider";
 import { useDailySnapshot } from "@/components/bootstrap/BootstrapGate";
 import type { DashboardSnapshot } from "@/types/daily-snapshot";
@@ -70,6 +71,7 @@ export function DashboardLayoutClient({
   return (
     <AppStateProvider>
       <BootstrapProvider>
+        <OnboardingProvider>
         <DashboardDataProvider
           initialCritical={initialDashboardSnapshot?.critical}
           initialSecondary={initialDashboardSnapshot?.secondary}
@@ -100,6 +102,7 @@ export function DashboardLayoutClient({
             </div>
           </>
         </DashboardDataProvider>
+        </OnboardingProvider>
       </BootstrapProvider>
     </AppStateProvider>
   );

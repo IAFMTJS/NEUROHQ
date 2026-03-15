@@ -115,6 +115,7 @@ export const BrainStatusCard = memo(function BrainStatusCard({ date, initial, ye
         id="brain-status-modal"
         className="card page glass-card-3d"
         aria-label="Brain Status"
+        data-tutorial="brain-status-card"
       >
         <h3>Brain Status</h3>
         <div className="progress" style={{ marginTop: "12px" }}>
@@ -173,15 +174,15 @@ export const BrainStatusCard = memo(function BrainStatusCard({ date, initial, ye
         {/* Compact radial meters preview */}
         <div className="rounded-2xl bg-[rgba(11,18,32,0.75)] backdrop-blur-xl border border-white/[0.08] border-t-[rgba(0,229,255,0.2)] shadow-[0_-2px_0_0_rgba(0,229,255,0.06)] p-5 mb-6">
           <div className="grid grid-cols-3 gap-4">
-            <div className="flex flex-col items-center gap-1">
+            <div className="flex flex-col items-center gap-1" data-tutorial="brain-status-energy">
               <EnergyRing progress={energyPct} size={84} label="" value={`${energyPct}%`} mode={getRingMode(energyPct)} softGlow />
               <span className="text-[10px] text-[var(--text-muted)]">Energy</span>
             </div>
-            <div className="flex flex-col items-center gap-1">
+            <div className="flex flex-col items-center gap-1" data-tutorial="brain-status-focus">
               <EnergyRing progress={focusPct} size={84} label="" value={`${focusPct}%`} mode={getRingMode(focusPct)} softGlow />
               <span className="text-[10px] text-[var(--text-muted)]">Focus</span>
             </div>
-            <div className="flex flex-col items-center gap-1">
+            <div className="flex flex-col items-center gap-1" data-tutorial="brain-status-load">
               <EnergyRing progress={loadPct} size={84} label="" value={`${loadPct}%`} mode={getRingMode(loadPct)} softGlow />
               <span className="text-[10px] text-[var(--text-muted)]">Mentale belasting</span>
             </div>

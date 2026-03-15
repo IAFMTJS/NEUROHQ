@@ -72,6 +72,7 @@ export function RemainingBudgetHero({
       <section
         className="relative overflow-hidden rounded-[28px] border border-[var(--glass-border-soft)] bg-[radial-gradient(circle_at_top,_rgba(15,23,42,0.95)_0%,_rgba(3,7,18,0.98)_55%,_rgba(3,7,18,1)_100%)] px-5 py-6 shadow-[0_0_40px_rgba(0,229,255,0.12)] sm:px-7 sm:py-7"
         aria-label="Remaining budget overview"
+        data-tutorial="budget-hero"
       >
         <div
           className="pointer-events-none absolute inset-0 opacity-70"

@@ -238,7 +238,8 @@ export function PaydayCard({ daysUntilNextIncome, nextPaydayLabel, incomeSources
 
   return (
     <>
-      <section className="card-simple overflow-hidden p-0">
+      <div data-tutorial="budget-payday">
+        <section className="card-simple overflow-hidden p-0">
         <div className="border-b border-[var(--card-border)] px-4 py-3 flex items-center justify-between">
           <h2 className="text-base font-semibold text-[var(--text-primary)]">Loon en dagen over</h2>
           <button
@@ -292,6 +293,7 @@ export function PaydayCard({ daysUntilNextIncome, nextPaydayLabel, incomeSources
           )}
         </div>
       </section>
+      </div>
 
       <Modal open={showModal} onClose={() => setShowModal(false)} title="Loon en loondag" showBranding>
         <p className="text-sm text-[var(--text-muted)] mb-4">Loon is afhankelijk van maand en verwerkingstijd. Druk op &quot;Vandaag loon gehad&quot; om de dienstperiode te starten; stel anders de verwachte loondag in.</p>

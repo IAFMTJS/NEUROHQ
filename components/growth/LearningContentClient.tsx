@@ -36,7 +36,7 @@ export function LearningContentClient({ todayStr, fallback }: Props) {
   const currentBook = learning.streams.find((s) => s.type === "book") ?? null;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6" data-tutorial="growth-content">
       <GrowthIntentCard
         focus={learning.focus}
         currentBookTitle={currentBook?.title ?? null}

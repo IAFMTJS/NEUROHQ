@@ -32,6 +32,7 @@ const SettingsRefreshSnapshot = dynamic(() => import("@/components/settings/Sett
 const BehaviorProfileSettings = dynamic(() => import("@/components/settings/BehaviorProfileSettings").then((m) => ({ default: m.BehaviorProfileSettings })), { loading: () => null });
 const SettingsDaysOff = dynamic(() => import("@/components/settings/SettingsDaysOff").then((m) => ({ default: m.SettingsDaysOff })), { loading: () => null });
 const SettingsEmailReminders = dynamic(() => import("@/components/settings/SettingsEmailReminders").then((m) => ({ default: m.SettingsEmailReminders })), { loading: () => <div className="min-h-[80px] animate-pulse rounded-xl bg-white/5" aria-hidden /> });
+const SettingsHelpOnboarding = dynamic(() => import("@/components/settings/SettingsHelpOnboarding").then((m) => ({ default: m.SettingsHelpOnboarding })), { loading: () => null });
 
 function SettingsShell() {
   return (
@@ -69,7 +70,7 @@ async function SettingsContent() {
 
   return (
     <>
-      <section className="space-y-3">
+      <section className="space-y-3" data-tutorial="settings-account">
         <h2 className="text-xs font-semibold uppercase tracking-wide text-[var(--text-muted)]">Account</h2>
         <div className="card-simple overflow-hidden p-0">
           <div className="p-4">
@@ -97,7 +98,7 @@ async function SettingsContent() {
       <BehaviorProfileSettings initial={behaviorProfile} initialAutoMasterMissions={prefs.auto_master_missions} />
       <SettingsDaysOff initialDaysOff={prefs.usual_days_off ?? null} initialMode={prefs.day_off_mode ?? "soft"} />
 
-      <section id="tijd-notificaties" className="space-y-3">
+      <section id="tijd-notificaties" className="space-y-3" data-tutorial="settings-push">
         <h2 className="text-xs font-semibold uppercase tracking-wide text-[var(--text-muted)]">Tijd & notificaties</h2>
         <div className="space-y-4">
           <SettingsTimezone initialTimezone={userTimezone} />
@@ -144,6 +145,7 @@ async function SettingsContent() {
 
       <section className="space-y-3">
         <h2 className="text-xs font-semibold uppercase tracking-wide text-[var(--text-muted)]">Over & hulp</h2>
+        <SettingsHelpOnboarding />
         <SettingsWhereToConfigure />
         <SettingsClearCache />
         <SettingsRefreshSnapshot />

@@ -123,7 +123,7 @@ export function BudgetEntryList({
 
   return (
     <>
-      <div className="space-y-4">
+      <div className="space-y-4" data-tutorial="budget-entries">
         {filtersActive && (
           <p className="text-xs text-[var(--text-muted)]">
             Filters actief: {rest.length} van {entries.length} boekingen zichtbaar. Leeg de filters om alles te zien.
