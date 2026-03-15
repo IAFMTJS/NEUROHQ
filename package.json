@@ -17,6 +17,7 @@
     "test:visual:capture": "playwright test tests/visual/hud.spec.ts",
     "test:visual:diff": "node scripts/pixelmatch-hud.mjs",
     "test:visual": "npm run test:visual:capture && npm run test:visual:diff",
+    "test:push": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/test-push-notifications.ps1",
     "run:all": "npm run build && npm run test",
     "seed:quotes": "node scripts/seed-quotes.js",
     "build:icons": "node scripts/generate-pwa-icons.js",

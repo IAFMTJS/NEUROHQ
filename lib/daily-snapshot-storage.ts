@@ -12,6 +12,8 @@ const STORAGE_KEY = "neurohq-daily-snapshot-v1";
 /**
  * Best-effort load of the persisted DailySnapshot.
  * Uses localStorage for now; can be migrated to IndexedDB while keeping the API stable.
+ * We never clear the snapshot on navigation; it is only replaced when we have a new
+ * same-day snapshot from bootstrap, or when the user clears storage.
  */
 export async function loadDailySnapshot(): Promise<DailySnapshot | null> {
   if (typeof window === "undefined") return null;

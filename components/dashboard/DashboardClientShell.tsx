@@ -261,16 +261,14 @@ export function DashboardClientShell() {
     burnout = false,
   } = effectiveCritical;
 
-  // Keep dashboard "Active missions" in sync with the same source as the Missions page:
-  // if the HQ store has tasks for today (from bootstrap or local mutations), prefer that
-  // over the morning dashboard snapshot so new missions appear without a full refresh.
+  // Prefer HQ store for today's tasks whenever the store has data for this date (from bootstrap
+  // or from add/move). This ensures added/moved missions show on all cards without full refresh.
   const EMPTY_TASKS: { id: string; title: string | null; carry_over_count?: number }[] = [];
-  const todaysTasksFromStore = useHQStore(
-    (s) => (dateStr && (s.tasksByDate?.[dateStr] as typeof EMPTY_TASKS)) || EMPTY_TASKS
-  );
+  const storeTasksForToday = useHQStore((s) => (dateStr ? (s.tasksByDate?.[dateStr] as typeof EMPTY_TASKS) : undefined));
+  const hasStoreDataForToday = storeTasksForToday !== undefined;
   const todaysTasks =
-    todaysTasksFromStore && todaysTasksFromStore.length > 0
-      ? todaysTasksFromStore.map((t) => ({
+    hasStoreDataForToday
+      ? (storeTasksForToday ?? EMPTY_TASKS).map((t) => ({
           id: t.id,
           title: t.title ?? "Task",
           carryOverCount: (t as { carry_over_count?: number }).carry_over_count ?? 0,

@@ -62,6 +62,7 @@ export function EditMissionModal({ open, onClose, task, defaultDate, onSaved, on
   const [priority, setPriority] = useState<string>(task?.priority != null ? String(task.priority) : "");
   const [notes, setNotes] = useState(task?.notes ?? "");
   const upsertTask = useHQStore((s) => s.upsertTask);
+  const removeTask = useHQStore((s) => s.removeTask);
 
   useEffect(() => {
     if (open) {
@@ -167,10 +168,13 @@ export function EditMissionModal({ open, onClose, task, defaultDate, onSaved, on
     startTransition(async () => {
       try {
         const params = toUpdateParams(payload);
-        upsertTask({
-          ...(task as Task),
-          ...params,
-        } as Task);
+        const updated = { ...(task as Task), ...params } as Task;
+        const oldDue = (task as Task).due_date ?? null;
+        const newDue = updated.due_date ?? null;
+        if (oldDue && newDue && oldDue !== newDue) {
+          removeTask(oldDue, task!.id);
+        }
+        upsertTask(updated);
         if (typeof navigator !== "undefined" && !navigator.onLine) {
           await addToQueue("updateTask", { id: task!.id, params });
         } else {

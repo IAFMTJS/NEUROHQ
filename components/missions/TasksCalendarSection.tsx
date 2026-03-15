@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { useHQStore } from "@/lib/hq-store";
 import { CalendarViewShell } from "@/components/missions/CalendarViewShell";
 import { AddCalendarEventForm } from "@/components/AddCalendarEventForm";
 import { AgendaOnlyList } from "@/components/AgendaOnlyList";
@@ -46,6 +47,17 @@ export function TasksCalendarSection({
   const [monthParam, setMonthParam] = useState(() => initialMonth);
   const [selectedCalendarDay, setSelectedCalendarDay] = useState(() => initialDay);
 
+  const storeTasksByDate = useHQStore((s) => s.tasksByDate);
+  const effectiveTasksByDate = useMemo(() => {
+    const merged = { ...tasksByDate } as Record<string, unknown[]>;
+    for (const [date, storeTasks] of Object.entries(storeTasksByDate)) {
+      if (storeTasks && storeTasks.length >= 0) {
+        merged[date] = storeTasks as unknown[];
+      }
+    }
+    return merged;
+  }, [tasksByDate, storeTasksByDate]);
+
   const [monthYear, monthNumber] = monthParam.split("-").map((p) => parseInt(p, 10));
   const monthStart = new Date(Date.UTC(monthYear, monthNumber - 1, 1, 12));
   const monthEnd = new Date(Date.UTC(monthYear, monthNumber, 0, 12));
@@ -87,7 +99,7 @@ export function TasksCalendarSection({
     return days;
   }, [gridStart, gridEnd, monthParam, selectedCalendarDay, dateStr, eventCountByDay]);
 
-  const selectedDayTasks = (tasksByDate[selectedCalendarDay] ?? []) as {
+  const selectedDayTasks = (effectiveTasksByDate[selectedCalendarDay] ?? []) as {
     id: string;
     title: string | null;
     completed?: boolean;

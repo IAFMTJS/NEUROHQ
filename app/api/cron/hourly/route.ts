@@ -19,12 +19,19 @@ import { loadUserNotificationContextForUser } from "@/lib/behavioral-notificatio
 /**
  * Vercel Cron: runs every hour.
  * For users with timezone set:
- * - 00:00 local: task rollover + daily quote push.
+ * - 00:00 local: task rollover only.
+ * - 08:00 local: daily quote push + morning calendar heads-up.
  * - 09:00 local: morning email (quote, brain state reminder, today’s tasks & calendar) if email_reminders_enabled.
  * - 20:00 local: evening email (check-in: tasks done, expenses logged, brain status) if email_reminders_enabled.
  * Users without timezone are handled by the daily cron (00:00 UTC).
  */
-const ALLOWED_FORCE_HOURS = [0, 9, 11, 20] as const;
+const ALLOWED_FORCE_HOURS = [0, 8, 9, 11, 20] as const;
+
+/** Default local hour for daily quote push (08:00). */
+const DEFAULT_QUOTE_HOUR = 8;
+
+/** Look for calendar events starting in the next 0–60 minutes so hourly cron can send one reminder per user. */
+const CALENDAR_REMINDER_WINDOW_MINUTES = 60;
 
 export async function GET(request: Request) {
   const authHeader = request.headers.get("authorization");
@@ -43,7 +50,7 @@ export async function GET(request: Request) {
   const supabase = createAdminClient();
   const { data: users } = await supabase
     .from("users")
-    .select("id, timezone, last_rollover_date, push_quiet_hours_start, push_quiet_hours_end")
+    .select("id, timezone, last_rollover_date, push_quiet_hours_start, push_quiet_hours_end, push_quote_enabled, push_quote_time, push_subscription_json")
     .not("timezone", "is", null);
 
   const prefsByUser = new Map<
@@ -76,6 +83,7 @@ export async function GET(request: Request) {
   let morningPushSent = 0;
   let eveningPushSent = 0;
   let brainStatusRemindersSent = 0;
+  let calendarReminderSent = 0;
 
   for (const u of users ?? []) {
     const tz = u.timezone as string;
@@ -115,28 +123,113 @@ export async function GET(request: Request) {
         .from("users")
         .update({ last_rollover_date: todayStr })
         .eq("id", u.id);
+    }
 
-      if (process.env.VAPID_PRIVATE_KEY && process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY && userPrefs.pushRemindersEnabled) {
-        if (!isInQuietHours(hour, quietStart, quietEnd)) {
-          const highSensory = await isHighSensoryDayForUser(supabase, u.id, todayStr);
-          if (!highSensory) {
-            const dayOfYear = Math.max(1, Math.min(365, getDayOfYearFromDateString(todayStr)));
-            const quoteRow = getQuoteByDayNumber(dayOfYear);
-            const quoteText = quoteRow?.quote_text ?? "Your daily focus.";
-            try {
-              const ok = await sendPushToUser(supabase, u.id, {
-                title: "NEUROHQ",
-                body: quoteText.length > 120 ? quoteText.slice(0, 117) + "…" : quoteText,
-                tag: "daily-quote",
-                url: "/dashboard",
-                priority: "low",
-              });
-              if (ok) quoteSent++;
-            } catch {
-              // skip
-            }
+    // Daily quote at 08:00 local (or user's push_quote_time hour if set)
+    const quoteTimeStr = (u as { push_quote_time?: string | null }).push_quote_time;
+    const quoteHour =
+      quoteTimeStr && /^\d{1,2}:\d{2}/.test(quoteTimeStr)
+        ? parseInt(quoteTimeStr.slice(0, quoteTimeStr.indexOf(":")), 10)
+        : DEFAULT_QUOTE_HOUR;
+    if (hour === quoteHour && process.env.VAPID_PRIVATE_KEY && process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY && userPrefs.pushRemindersEnabled) {
+      const pushQuoteEnabled = (u as { push_quote_enabled?: boolean | null }).push_quote_enabled !== false;
+      if (pushQuoteEnabled && !isInQuietHours(hour, quietStart, quietEnd)) {
+        const highSensory = await isHighSensoryDayForUser(supabase, u.id, todayStr);
+        if (!highSensory) {
+          const dayOfYear = Math.max(1, Math.min(365, getDayOfYearFromDateString(todayStr)));
+          const quoteRow = getQuoteByDayNumber(dayOfYear);
+          const quoteText = quoteRow?.quote_text ?? "Your daily focus.";
+          try {
+            const ok = await sendPushToUser(supabase, u.id, {
+              title: "NEUROHQ",
+              body: quoteText.length > 120 ? quoteText.slice(0, 117) + "…" : quoteText,
+              tag: "daily-quote",
+              url: "/dashboard",
+              priority: "low",
+            });
+            if (ok) quoteSent++;
+          } catch {
+            // skip
           }
         }
+      }
+    }
+
+    // Morning calendar heads-up at 08:00 local: today's events
+    if (
+      hour === DEFAULT_QUOTE_HOUR &&
+      process.env.VAPID_PRIVATE_KEY &&
+      process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY &&
+      userPrefs.pushRemindersEnabled &&
+      (u as { push_subscription_json?: unknown }).push_subscription_json &&
+      !isInQuietHours(hour, quietStart, quietEnd)
+    ) {
+      try {
+        const { data: todayEvents } = await supabase
+          .from("calendar_events")
+          .select("id, title, start_at")
+          .eq("user_id", u.id)
+          .gte("start_at", `${todayStr}T00:00:00`)
+          .lte("start_at", `${todayStr}T23:59:59`)
+          .order("start_at", { ascending: true })
+          .limit(5);
+        if ((todayEvents ?? []).length > 0) {
+          const titles = todayEvents!.map((e) => (e.title || "Event").trim()).filter(Boolean);
+          const body =
+            titles.length === 1
+              ? `Heads up: ${titles[0]} today`
+              : `Heads up: ${titles.length} events today — ${titles.slice(0, 2).join(", ")}${titles.length > 2 ? "…" : ""}`;
+          const ok = await sendPushToUser(supabase, u.id, {
+            title: "NEUROHQ — Today",
+            body,
+            tag: "calendar-morning",
+            url: "/tasks?tab=calendar",
+            priority: "normal",
+          });
+          if (ok) calendarReminderSent++;
+        }
+      } catch {
+        // skip
+      }
+    }
+
+    // Calendar reminder: events starting in the next CALENDAR_REMINDER_WINDOW_MINUTES
+    if (
+      process.env.VAPID_PRIVATE_KEY &&
+      process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY &&
+      userPrefs.pushRemindersEnabled &&
+      (u as { push_subscription_json?: unknown }).push_subscription_json &&
+      !isInQuietHours(hour, quietStart, quietEnd)
+    ) {
+      try {
+        const now = new Date();
+        const windowEnd = new Date(now.getTime() + CALENDAR_REMINDER_WINDOW_MINUTES * 60 * 1000);
+        const { data: events } = await supabase
+          .from("calendar_events")
+          .select("id, title, start_at")
+          .eq("user_id", u.id)
+          .gte("start_at", now.toISOString())
+          .lte("start_at", windowEnd.toISOString())
+          .order("start_at", { ascending: true })
+          .limit(3);
+        if ((events ?? []).length > 0) {
+          const first = events![0];
+          const title = (first.title || "Calendar event").trim();
+          const body =
+            events!.length === 1
+              ? `Starting soon: ${title}`
+              : `${events!.length} events in the next hour — ${title}`;
+          const ok = await sendPushToUser(supabase, u.id, {
+            title: "NEUROHQ — Calendar",
+            body,
+            tag: "calendar-reminder",
+            url: "/tasks?tab=calendar",
+            priority: "normal",
+          });
+          if (ok) calendarReminderSent++;
+        }
+      } catch {
+        // skip
       }
     }
 
@@ -260,6 +353,7 @@ export async function GET(request: Request) {
     morningPushSent,
     eveningPushSent,
     brainStatusRemindersSent,
+    calendarReminderSent,
     usersChecked: users?.length ?? 0,
   });
 }

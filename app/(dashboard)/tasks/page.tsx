@@ -32,7 +32,7 @@ import { SciFiPanel } from "@/components/hud-test/SciFiPanel";
 import { CornerNode } from "@/components/hud-test/CornerNode";
 import { Divider1px } from "@/components/hud-test/Divider1px";
 import hudStyles from "@/components/hud-test/hud.module.css";
-import { MissionsProvider, TasksTabsShell } from "@/components/missions";
+import { MissionsProvider, TasksTabsShell, TodayMissionsGridFromStore } from "@/components/missions";
 import { TasksDailyBootstrap } from "@/components/missions/TasksDailyBootstrap";
 import { TasksCalendarAsync } from "./TasksCalendarAsync";
 
@@ -315,22 +315,24 @@ async function MissionsSectionAsync({ dateStr, backlog }: { dateStr: string; bac
       {smartSuggestion.text && !decisionBlocks.topRecommendation ? (
         <SmartSuggestionBanner text={smartSuggestion.text} type={smartSuggestion.type} />
       ) : null}
-      {missionCards.length > 0 && tasks.length === 0 && (
-        <section className="mission-grid">
-          {missionCards.map((m) => (
-            <CommanderMissionCard
-              key={m.id}
-              id={m.id}
-              title={m.title}
-              subtitle={m.subtitle}
-              description={"description" in m ? (m as { description?: string | null }).description : null}
-              state={m.state}
-              progressPct={m.progressPct}
-              href={m.href}
-            />
-          ))}
-        </section>
-      )}
+      <TodayMissionsGridFromStore dateStr={dateStr}>
+        {missionCards.length > 0 && tasks.length === 0 && (
+          <section className="mission-grid">
+            {missionCards.map((m) => (
+              <CommanderMissionCard
+                key={m.id}
+                id={m.id}
+                title={m.title}
+                subtitle={m.subtitle}
+                description={"description" in m ? (m as { description?: string | null }).description : null}
+                state={m.state}
+                progressPct={m.progressPct}
+                href={m.href}
+              />
+            ))}
+          </section>
+        )}
+      </TodayMissionsGridFromStore>
       <TaskList
         date={dateStr}
         tasks={tasks as import("@/types/database.types").Task[]}

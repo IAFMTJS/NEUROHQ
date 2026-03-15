@@ -15,3 +15,4 @@ export { TasksTabsShell } from "./TasksTabsShell";
 export { CalendarViewShell } from "./CalendarViewShell";
 export { TasksCalendarSection } from "./TasksCalendarSection";
 export { MissionsProvider, useMissionsSnapshot } from "./MissionsProvider";
+export { TodayMissionsGridFromStore } from "./TodayMissionsGridFromStore";
