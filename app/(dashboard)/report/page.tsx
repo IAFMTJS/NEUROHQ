@@ -66,6 +66,10 @@ const WeeklyHeatmap = nextDynamic(
   () => import("@/components/dashboard/WeeklyHeatmap").then((m) => ({ default: m.WeeklyHeatmap })),
   { loading: () => null }
 );
+const ReportSnapshotFallback = nextDynamic(
+  () => import("@/components/report/ReportSnapshotFallback").then((m) => ({ default: m.ReportSnapshotFallback })),
+  { loading: () => null }
+);
 
 type Props = { searchParams: Promise<{ weekStart?: string }> };
 
@@ -300,7 +304,7 @@ export default function ReportPage({ searchParams }: Props) {
   return (
     <div className="container page page-wide space-y-6">
       <ReportShell />
-      <Suspense fallback={null}>
+      <Suspense fallback={<ReportSnapshotFallback />}>
         <ReportContent searchParams={searchParams} />
       </Suspense>
     </div>

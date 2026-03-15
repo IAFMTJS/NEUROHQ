@@ -21,7 +21,7 @@
 - [x] **11.1** Define gate: add `NEXT_PUBLIC_ASSISTANT_ENABLED` (env var; true only in dev/staging).
 - [x] **11.2** Nav: in `BottomNavigation.tsx`, filter out Assistant link when gate is false.
 - [x] **11.3** Use same gate in dashboard CTAs and keyboard shortcut “A” (if any).
-- [ ] **11.4** Route guard: in `app/(dashboard)/assistant/page.tsx` (or layout), redirect to dashboard when gate is false.
+- [x] **11.4** Route guard: in `app/(dashboard)/assistant/page.tsx` (or layout), redirect to dashboard when gate is false.
 - [x] **11.5** API guard: in `app/api/assistant/message/route.ts`, return 403/404 when feature disabled.
 - [x] **11.6** Document in README or env.example: when to set `NEXT_PUBLIC_ASSISTANT_ENABLED`.
 
@@ -65,6 +65,7 @@
 - [x] **5.4** Unify optimistic flow: on “Vandaag loon gehad” / payday change, update optimistic → call server → on success invalidate context and clear overlay.
 - [x] **5.5** RecurringBudgetCard and ProgressionPrimeBudgetCard use same period/currency from shared context.
 - [x] **5.6** Single fetch per page; no duplicate getFinanceState/getBudgetPeriodBounds.
+- *Note:* Budget page uses server-component single fetch + props to cards (not BudgetDashboardProvider); API/context exist for future use.
 
 ### §12 — Snapshot coverage: insights and settings
 
@@ -125,6 +126,7 @@
 - [x] **3.3** Render help page by iterating over structure (one entry per section).
 - [x] **3.4** Add “last updated” or version (per section or whole help).
 - [x] **3.5** In CONTRIBUTING or README: feature changes that affect user behaviour should include help update.
+- *Note:* Help page uses its own SECTIONS/TOC_GROUPS for rendering; content/help/sections.ts holds HELP_SECTIONS and HELP_LAST_UPDATED. When adding a section, update both (see sections.ts comment).
 
 ---
 

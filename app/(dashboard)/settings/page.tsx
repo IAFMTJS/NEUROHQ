@@ -30,6 +30,7 @@ const SettingsClearCache = dynamic(() => import("@/components/settings/SettingsC
 const SettingsRefreshSnapshot = dynamic(() => import("@/components/settings/SettingsRefreshSnapshot").then((m) => ({ default: m.SettingsRefreshSnapshot })), { loading: () => null });
 const BehaviorProfileSettings = dynamic(() => import("@/components/settings/BehaviorProfileSettings").then((m) => ({ default: m.BehaviorProfileSettings })), { loading: () => null });
 const SettingsDaysOff = dynamic(() => import("@/components/settings/SettingsDaysOff").then((m) => ({ default: m.SettingsDaysOff })), { loading: () => null });
+const SettingsSnapshotFallback = dynamic(() => import("@/components/settings/SettingsSnapshotFallback").then((m) => ({ default: m.SettingsSnapshotFallback })), { loading: () => null });
 const SettingsEmailReminders = dynamic(() => import("@/components/settings/SettingsEmailReminders").then((m) => ({ default: m.SettingsEmailReminders })), { loading: () => <div className="min-h-[80px] animate-pulse rounded-xl bg-white/5" aria-hidden /> });
 
 function SettingsShell() {
@@ -156,7 +157,7 @@ export default function SettingsPage() {
   return (
     <div className="container page settings-page space-y-6">
       <SettingsShell />
-      <Suspense fallback={null}>
+      <Suspense fallback={<SettingsSnapshotFallback />}>
         <SettingsContent />
       </Suspense>
     </div>

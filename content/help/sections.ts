@@ -1,6 +1,11 @@
 /**
  * Help content structure: sections keyed by topic for table-of-contents and "See also" links.
  * When adding or changing a feature, update the relevant section and bump lastUpdated.
+ *
+ * Dual source: The help page (app/(dashboard)/help/page.tsx) uses its own SECTIONS and TOC_GROUPS
+ * for the table of contents and accordion order. HELP_SECTIONS here is the canonical list for
+ * metadata and "See also" links. When adding a new section, add to both HELP_SECTIONS and the
+ * page's SECTIONS/TOC_GROUPS so the TOC and content stay in sync.
  */
 
 export const HELP_LAST_UPDATED = "2025-03-15";

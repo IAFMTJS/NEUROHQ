@@ -1,0 +1,49 @@
+"use client";
+
+import { useDailySnapshot } from "@/components/bootstrap/BootstrapGate";
+import { getTodayKey } from "@/lib/daily-date";
+
+/**
+ * First-paint content for the Settings page from DailySnapshot.settings.
+ * Used as Suspense fallback so users see settings-derived content immediately when opening from cache.
+ */
+export function SettingsSnapshotFallback() {
+  const snapshot = useDailySnapshot();
+  const settings = snapshot?.settings;
+  const todayKey = getTodayKey();
+
+  if (!settings || settings.today !== todayKey) {
+    return (
+      <div className="space-y-6">
+        <div className="h-10 w-32 animate-pulse rounded-lg bg-white/10" aria-hidden />
+        <p className="text-sm text-[var(--text-muted)]">Instellingen laden…</p>
+      </div>
+    );
+  }
+
+  const prefs = (settings.preferences ?? {}) as Record<string, unknown>;
+  const payday = settings.payday ?? { last_payday_date: null, payday_day_of_month: null };
+
+  return (
+    <div className="space-y-6">
+      <section className="space-y-3">
+        <h2 className="text-xs font-semibold uppercase tracking-wide text-[var(--text-muted)]">Instellingen (van cache)</h2>
+        <div className="card-simple overflow-hidden p-0">
+          <div className="p-4 space-y-2">
+            {prefs.compact_ui != null && (
+              <p className="text-sm text-[var(--text-secondary)]">
+                Compacte weergave: {prefs.compact_ui ? "Aan" : "Uit"}
+              </p>
+            )}
+            {payday.last_payday_date != null && (
+              <p className="text-sm text-[var(--text-secondary)]">
+                Laatste loondag: {String(payday.last_payday_date)}
+              </p>
+            )}
+            <p className="text-sm text-[var(--text-muted)]">Volledige instellingen laden…</p>
+          </div>
+        </div>
+      </section>
+    </div>
+  );
+}

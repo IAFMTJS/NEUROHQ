@@ -3,6 +3,7 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { updateBudgetSettings } from "@/app/actions/budget";
+import { useSettings } from "@/lib/settings-context";
 import { getCurrencySymbol } from "@/lib/utils/currency";
 
 const CURRENCIES = ["EUR", "USD", "GBP", "CHF", "JPY"];
@@ -28,6 +29,7 @@ export function SettingsBudget({
   const [quickAddMins, setQuickAddMins] = useState(initialImpulseQuickAddMinutes != null ? String(initialImpulseQuickAddMinutes) : "");
   const [riskCategories, setRiskCategories] = useState(initialImpulseRiskCategories?.length ? initialImpulseRiskCategories.join(", ") : "");
   const router = useRouter();
+  const { invalidate: invalidateSettings } = useSettings();
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
@@ -57,6 +59,7 @@ export function SettingsBudget({
         });
         setSaved(true);
         setTimeout(() => setSaved(false), 2000);
+        await invalidateSettings();
         router.refresh();
       } catch (e) {
         setError(e instanceof Error ? e.message : "Failed to save.");
