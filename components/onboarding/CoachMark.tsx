@@ -104,12 +104,26 @@ export function CoachMark({
   const isFirst = stepIndex === 0;
   const isLast = stepIndex === totalSteps - 1;
 
-  /* When next is disabled (required action), allow clicks through to the page so the user can tap e.g. "Update check-in". */
-  const allowClicksThrough = nextDisabled;
+  /* When we highlight a target, let clicks through so the user can interact with it (e.g. "Update check-in", open cards). */
+  const allowClicksThrough = !!targetSelector;
+
+  /* Place the explanation card so it never covers the target: target in upper half → card at bottom; target in lower half → card at top. */
+  const cardPosition =
+    rect != null
+      ? rect.top + rect.height / 2 < (typeof window !== "undefined" ? window.innerHeight / 2 : 400)
+        ? "end"
+        : "start"
+      : "center";
 
   const overlayContent = (
     <div
-      className={`fixed inset-0 z-[99] flex flex-col items-center justify-end sm:justify-center p-4 pb-[calc(env(safe-area-inset-bottom)+5rem)] ${allowClicksThrough ? "pointer-events-none" : ""}`}
+      className={`fixed inset-0 z-[99] flex flex-col items-center p-4 ${allowClicksThrough ? "pointer-events-none" : ""} ${
+        cardPosition === "start"
+          ? "justify-start pt-[calc(env(safe-area-inset-top)+1rem)]"
+          : cardPosition === "end"
+            ? "justify-end pb-[calc(env(safe-area-inset-bottom)+5rem)]"
+            : "justify-end sm:justify-center pb-[calc(env(safe-area-inset-bottom)+5rem)]"
+      }`}
       style={{ minHeight: "100dvh" }}
       role="dialog"
       aria-modal="true"
@@ -137,7 +151,7 @@ export function CoachMark({
         />
       )}
 
-      {/* Explanation card - must receive pointer events when overlay allows clicks through */}
+      {/* Explanation card - always clickable; when overlay is pointer-events-none we need explicit auto so Back/Next/Skip work */}
       <div
         className={`modal-card relative z-[101] w-full max-w-[min(400px,94vw)] rounded-xl border border-[var(--card-border)] bg-[var(--modal-bg)] p-4 shadow-[var(--hud-elevation-modal)] ${allowClicksThrough ? "pointer-events-auto" : ""}`}
         onClick={(e) => e.stopPropagation()}
