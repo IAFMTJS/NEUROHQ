@@ -13,8 +13,9 @@ import {
   buildEveningEmailHtml,
   buildEveningPushPayload,
 } from "@/lib/daily-email-content";
-import { buildBehavioralNotificationForContext } from "@/lib/behavioral-notifications";
+import { buildBehavioralNotificationForContext, type PersonalityMode } from "@/lib/behavioral-notifications";
 import { loadUserNotificationContextForUser } from "@/lib/behavioral-notification-server";
+import { applyPersonalityToPayload } from "@/lib/push-personality";
 
 /**
  * Vercel Cron: runs every hour.
@@ -60,18 +61,21 @@ export async function GET(request: Request) {
       pushRemindersEnabled: boolean;
       pushMorningEnabled: boolean;
       pushEveningEnabled: boolean;
+      personalityMode: PersonalityMode;
     }
   >();
   const { data: prefs, error: prefsError } = await supabase
     .from("user_preferences")
-    .select("user_id, email_reminders_enabled, push_reminders_enabled, push_morning_enabled, push_evening_enabled");
+    .select("user_id, email_reminders_enabled, push_reminders_enabled, push_morning_enabled, push_evening_enabled, push_personality_mode");
   if (!prefsError && prefs?.length) {
     for (const pref of prefs) {
+      const mode = (pref as { push_personality_mode?: PersonalityMode | null }).push_personality_mode ?? "auto";
       prefsByUser.set(pref.user_id, {
         emailRemindersEnabled: pref.email_reminders_enabled ?? true,
         pushRemindersEnabled: pref.push_reminders_enabled ?? true,
         pushMorningEnabled: pref.push_morning_enabled ?? true,
         pushEveningEnabled: pref.push_evening_enabled ?? true,
+        personalityMode: mode,
       });
     }
   }
@@ -95,6 +99,7 @@ export async function GET(request: Request) {
       pushRemindersEnabled: true,
       pushMorningEnabled: true,
       pushEveningEnabled: true,
+      personalityMode: "auto" as PersonalityMode,
     };
     const quietStart = u.push_quiet_hours_start ? String(u.push_quiet_hours_start).slice(0, 5) : null;
     const quietEnd = u.push_quiet_hours_end ? String(u.push_quiet_hours_end).slice(0, 5) : null;
@@ -139,14 +144,17 @@ export async function GET(request: Request) {
           const dayOfYear = Math.max(1, Math.min(365, getDayOfYearFromDateString(todayStr)));
           const quoteRow = getQuoteByDayNumber(dayOfYear);
           const quoteText = quoteRow?.quote_text ?? "Your daily focus.";
+          const quoteBody = quoteText.length > 120 ? quoteText.slice(0, 117) + "…" : quoteText;
           try {
-            const ok = await sendPushToUser(supabase, u.id, {
+            const basePayload = {
               title: "NEUROHQ",
-              body: quoteText.length > 120 ? quoteText.slice(0, 117) + "…" : quoteText,
+              body: quoteBody,
               tag: "daily-quote",
               url: "/dashboard",
-              priority: "low",
-            });
+              priority: "low" as const,
+            };
+            const payload = applyPersonalityToPayload(basePayload, userPrefs.personalityMode, "quote");
+            const ok = await sendPushToUser(supabase, u.id, payload);
             if (ok) quoteSent++;
           } catch {
             // skip
@@ -179,13 +187,15 @@ export async function GET(request: Request) {
             titles.length === 1
               ? `Heads up: ${titles[0]} today`
               : `Heads up: ${titles.length} events today — ${titles.slice(0, 2).join(", ")}${titles.length > 2 ? "…" : ""}`;
-          const ok = await sendPushToUser(supabase, u.id, {
+          const basePayload = {
             title: "NEUROHQ — Today",
             body,
             tag: "calendar-morning",
             url: "/tasks?tab=calendar",
-            priority: "normal",
-          });
+            priority: "normal" as const,
+          };
+          const payload = applyPersonalityToPayload(basePayload, userPrefs.personalityMode, "calendar_morning");
+          const ok = await sendPushToUser(supabase, u.id, payload);
           if (ok) calendarReminderSent++;
         }
       } catch {
@@ -214,18 +224,20 @@ export async function GET(request: Request) {
           .limit(3);
         if ((events ?? []).length > 0) {
           const first = events![0];
-          const title = (first.title || "Calendar event").trim();
+          const eventTitle = (first.title || "Calendar event").trim();
           const body =
             events!.length === 1
-              ? `Starting soon: ${title}`
-              : `${events!.length} events in the next hour — ${title}`;
-          const ok = await sendPushToUser(supabase, u.id, {
+              ? `Starting soon: ${eventTitle}`
+              : `${events!.length} events in the next hour — ${eventTitle}`;
+          const basePayload = {
             title: "NEUROHQ — Calendar",
             body,
             tag: "calendar-reminder",
             url: "/tasks?tab=calendar",
-            priority: "normal",
-          });
+            priority: "normal" as const,
+          };
+          const payload = applyPersonalityToPayload(basePayload, userPrefs.personalityMode, "calendar_reminder");
+          const ok = await sendPushToUser(supabase, u.id, payload);
           if (ok) calendarReminderSent++;
         }
       } catch {
@@ -297,7 +309,9 @@ export async function GET(request: Request) {
       if (!highSensory) {
         try {
           const data = await getMorningEmailData(supabase, u.id, todayStr);
-          const sent = await sendPushToUser(supabase, u.id, buildMorningPushPayload(data));
+          const basePayload = buildMorningPushPayload(data);
+          const payload = applyPersonalityToPayload(basePayload, userPrefs.personalityMode, "morning");
+          const sent = await sendPushToUser(supabase, u.id, payload);
           if (sent) morningPushSent++;
         } catch {
           // skip
@@ -333,7 +347,9 @@ export async function GET(request: Request) {
       if (!highSensory) {
         try {
           const data = await getEveningEmailData(supabase, u.id, todayStr);
-          const sent = await sendPushToUser(supabase, u.id, buildEveningPushPayload(data));
+          const basePayload = buildEveningPushPayload(data);
+          const payload = applyPersonalityToPayload(basePayload, userPrefs.personalityMode, "evening");
+          const sent = await sendPushToUser(supabase, u.id, payload);
           if (sent) eveningPushSent++;
         } catch {
           // skip

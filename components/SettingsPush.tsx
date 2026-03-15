@@ -260,16 +260,16 @@ export function SettingsPush({
         <div className="space-y-2">
           <p className="text-sm font-medium text-[var(--text-primary)]">Notification personality</p>
           <p className="text-xs text-[var(--text-muted)]">
-            Choose how the system talks to you in behaviour-based push notifications.
+            How the system talks to you in <strong>all</strong> push notifications: daily quote, calendar, morning/evening reminders, learning, and behaviour-based nudges.
           </p>
           <div className="mt-1 flex flex-wrap gap-2">
             {[
-              { key: "auto", label: "Adaptive" },
-              { key: "friendly", label: "Friendly" },
-              { key: "coach", label: "Coach" },
-              { key: "stoic", label: "Stoic" },
-              { key: "drill", label: "Drill sergeant" },
-              { key: "chaos", label: "Chaos" },
+              { key: "auto", label: "Adaptive", desc: "Adapts to your consistency and context." },
+              { key: "friendly", label: "Friendly", desc: "Warm, supportive, and encouraging." },
+              { key: "coach", label: "Coach", desc: "Direct, action-oriented, clear next steps." },
+              { key: "stoic", label: "Stoic", desc: "Short, wisdom-focused, minimal words." },
+              { key: "drill", label: "Drill sergeant", desc: "Sharp, no-nonsense, commanding." },
+              { key: "chaos", label: "Chaos", desc: "Unpredictable — sarcastic or overstimulating." },
             ].map((mode) => {
               const active = pushPersonalityMode === mode.key;
               return (
@@ -287,12 +287,16 @@ export function SettingsPush({
                       ? "border-[var(--accent-focus)]/70 bg-[var(--accent-focus)]/10 text-[var(--text-primary)]"
                       : "border-[var(--card-border)] bg-[var(--bg-primary)] text-[var(--text-muted)]"
                   } disabled:opacity-50`}
+                  title={mode.desc}
                 >
                   {mode.label}
                 </button>
               );
             })}
           </div>
+          <p className="mt-1 text-[11px] text-[var(--text-muted)]">
+            Adaptive = system chooses tone by context. Others = every push matches that style (Stoic = short; Friendly = warm; Coach = clear actions; Drill = commanding; Chaos = sarcastic or loud).
+          </p>
         </div>
 
         <div className="flex flex-wrap items-center gap-2">

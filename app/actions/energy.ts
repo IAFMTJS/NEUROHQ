@@ -178,6 +178,7 @@ export const getEnergyBudget = cache(async (date: string): Promise<EnergyBudget>
         { data: completedTasks },
         { data: incompleteTasks },
         { data: events },
+        { data: behaviorProfileRow },
       ] = await Promise.all([
         client
           .from("daily_state")
@@ -207,12 +208,47 @@ export const getEnergyBudget = cache(async (date: string): Promise<EnergyBudget>
           .eq("user_id", userId)
           .gte("start_at", `${dateKey}T00:00:00Z`)
           .lt("start_at", `${dateKey}T23:59:59Z`),
+        client.from("behavior_profile").select("discipline_level").eq("user_id", userId).maybeSingle(),
       ]);
 
   const base = capacityFromDailyState(dailyState as DailyStateRow);
-  const energy = { ...base.energy };
-  const focus = { ...base.focus };
-  const load = { ...base.load };
+  const disciplineLevel = (behaviorProfileRow as { discipline_level?: string | null } | null)?.discipline_level ?? "medium";
+  let suggestedTaskCount = base.suggestedTaskCount;
+  if (disciplineLevel === "low") suggestedTaskCount = Math.max(1, suggestedTaskCount - 1);
+  else if (disciplineLevel === "high") suggestedTaskCount = Math.min(8, suggestedTaskCount + 1);
+
+  const energy = {
+    capacity: Math.round(suggestedTaskCount * AVG_TASK_ENERGY * CAPACITY_BUFFER),
+    used: base.energy.used,
+    remaining: 0,
+    planned: base.energy.planned,
+  };
+  const focus = {
+    capacity: Math.round(suggestedTaskCount * AVG_TASK_FOCUS * CAPACITY_BUFFER),
+    used: base.focus.used,
+    remaining: 0,
+    planned: base.focus.planned,
+  };
+  const loadCapacity = Math.round(suggestedTaskCount * AVG_TASK_LOAD * CAPACITY_BUFFER);
+  const loadCapacityAdj = Math.max(loadCapacity, 25);
+  const load = {
+    capacity: loadCapacityAdj,
+    used: base.load.used,
+    remaining: 0,
+    planned: base.load.planned,
+  };
+  energy.remaining = energy.capacity - energy.used - energy.planned;
+  focus.remaining = focus.capacity - focus.used - focus.planned;
+  load.remaining = loadCapacityAdj - load.used - load.planned;
+  let insight = base.insight;
+  if (suggestedTaskCount <= 2) insight = "Low capacity day. One or two meaningful tasks is enough.";
+  else if (suggestedTaskCount <= 3) insight = "Steady day. Pace yourself with 2–3 priorities.";
+  else if (suggestedTaskCount >= 6) insight = "High capacity. You can tackle several tasks today.";
+  else {
+    const state = dailyState as DailyStateRow | null;
+    if (state?.sleep_hours != null && state.sleep_hours < 6) insight = "Sleep may limit you. Lighter tasks or earlier priorities.";
+    else if (state?.sensory_load != null && state.sensory_load >= 7) insight = "High load. Prioritize one deep task, keep the rest light.";
+  }
 
   const stateEnergy = (dailyState as DailyStateRow | null)?.energy;
   const energyDepleted = stateEnergy != null && stateEnergy <= 1;
@@ -346,7 +382,7 @@ export const getEnergyBudget = cache(async (date: string): Promise<EnergyBudget>
       return {
         remaining: Math.round(minRemaining),
         capacity: Math.round(totalCapacity),
-        suggestedTaskCount: base.suggestedTaskCount,
+        suggestedTaskCount,
         taskUsed: taskUsedTotal,
         completedTaskCount: (completedTasks ?? []).length,
         taskPlanned: taskPlannedTotal,
@@ -354,7 +390,7 @@ export const getEnergyBudget = cache(async (date: string): Promise<EnergyBudget>
         energy,
         focus,
         load,
-        insight: base.insight,
+        insight,
         brainMode,
         segments,
         hardLimit: {

@@ -3,6 +3,8 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { getRealityReportForUser } from "@/lib/report";
 import { getWeekBounds } from "@/lib/utils/learning";
 import { sendPushToUser } from "@/lib/push";
+import { applyPersonalityToPayload } from "@/lib/push-personality";
+import type { PersonalityMode } from "@/lib/behavioral-notifications";
 import { getLocalDateHour, isInQuietHours } from "@/lib/utils/timezone";
 import { isHighSensoryDayForUser } from "@/lib/mode-admin";
 import {
@@ -43,17 +45,20 @@ export async function GET(request: Request) {
       emailRemindersEnabled: boolean;
       pushRemindersEnabled: boolean;
       pushWeeklyLearningEnabled: boolean;
+      personalityMode: PersonalityMode;
     }
   >();
   const { data: prefs, error: prefsError } = await supabase
     .from("user_preferences")
-    .select("user_id, email_reminders_enabled, push_reminders_enabled, push_weekly_learning_enabled");
+    .select("user_id, email_reminders_enabled, push_reminders_enabled, push_weekly_learning_enabled, push_personality_mode");
   if (!prefsError && prefs?.length) {
     for (const pref of prefs) {
+      const mode = (pref as { push_personality_mode?: PersonalityMode | null }).push_personality_mode ?? "auto";
       prefsByUser.set(pref.user_id, {
         emailRemindersEnabled: pref.email_reminders_enabled ?? true,
         pushRemindersEnabled: pref.push_reminders_enabled ?? true,
         pushWeeklyLearningEnabled: pref.push_weekly_learning_enabled ?? true,
+        personalityMode: mode,
       });
     }
   }
@@ -72,6 +77,7 @@ export async function GET(request: Request) {
       emailRemindersEnabled: true,
       pushRemindersEnabled: true,
       pushWeeklyLearningEnabled: true,
+      personalityMode: "auto" as PersonalityMode,
     };
     try {
       const payload = await getRealityReportForUser(supabase, userId, weekStart, weekEnd);
@@ -98,11 +104,9 @@ export async function GET(request: Request) {
         const highSensory = await isHighSensoryDayForUser(supabase, userId, localDate);
         if (!highSensory && !isInQuietHours(local.hour, quietStart, quietEnd)) {
           try {
-            const ok = await sendPushToUser(
-              supabase,
-              userId,
-              buildWeeklyLearningPushPayload(payload.learningMinutes, payload.learningTarget)
-            );
+            const basePayload = buildWeeklyLearningPushPayload(payload.learningMinutes, payload.learningTarget);
+            const pushPayload = applyPersonalityToPayload(basePayload, userPrefs.personalityMode, "weekly_learning");
+            const ok = await sendPushToUser(supabase, userId, pushPayload);
             if (ok) learningReminderSent++;
           } catch {
             // skip
@@ -148,13 +152,15 @@ export async function GET(request: Request) {
           const pct = Math.round(((g.current_cents ?? 0) / (g.target_cents || 1)) * 100);
           const daysLeft = g.deadline ? Math.ceil((new Date(g.deadline).getTime() - today.getTime()) / 86400000) : 0;
           try {
-            const ok = await sendPushToUser(supabase, userId, {
+            const basePayload = {
               title: "NEUROHQ — Savings",
               body: `"${g.name}" due in ${daysLeft} day(s). You're at ${pct}%.`,
               tag: "savings-alert",
               url: "/budget",
-              priority: "high",
-            });
+              priority: "high" as const,
+            };
+            const pushPayload = applyPersonalityToPayload(basePayload, userPrefs.personalityMode, "savings_alert");
+            const ok = await sendPushToUser(supabase, userId, pushPayload);
             if (ok) savingsAlertSent++;
           } catch {
             // skip

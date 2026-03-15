@@ -12,6 +12,7 @@ import {
 } from "@/lib/daily-email-content";
 import { buildBehavioralNotificationForContext } from "@/lib/behavioral-notifications";
 import { loadUserNotificationContextForUser } from "@/lib/behavioral-notification-server";
+import { applyPersonalityToPayload } from "@/lib/push-personality";
 
 /**
  * Send a single push type to a test user (for manual/terminal testing).
@@ -114,69 +115,73 @@ export async function GET(request: Request) {
   const quoteText = quoteRow?.quote_text ?? "Your daily focus.";
 
   let ok = false;
+  const ctx = await loadUserNotificationContextForUser(supabase, userId);
   try {
     switch (typeParam) {
       case "daily-quote": {
-        ok = await sendPushToUser(supabase, userId, {
+        const base = {
           title: "NEUROHQ",
           body: quoteText.length > 120 ? quoteText.slice(0, 117) + "…" : quoteText,
           tag: "daily-quote",
           url: "/dashboard",
-          priority: "low",
-        });
+          priority: "low" as const,
+        };
+        ok = await sendPushToUser(supabase, userId, applyPersonalityToPayload(base, ctx.personalityMode, "quote"));
         break;
       }
       case "calendar-morning": {
-        ok = await sendPushToUser(supabase, userId, {
+        const base = {
           title: "NEUROHQ — Today",
           body: "Heads up: 2 events today — Team standup, Review",
           tag: "calendar-morning",
           url: "/tasks?tab=calendar",
-          priority: "normal",
-        });
+          priority: "normal" as const,
+        };
+        ok = await sendPushToUser(supabase, userId, applyPersonalityToPayload(base, ctx.personalityMode, "calendar_morning"));
         break;
       }
       case "calendar-reminder": {
-        ok = await sendPushToUser(supabase, userId, {
+        const base = {
           title: "NEUROHQ — Calendar",
           body: "Starting soon: Team standup",
           tag: "calendar-reminder",
           url: "/tasks?tab=calendar",
-          priority: "normal",
-        });
+          priority: "normal" as const,
+        };
+        ok = await sendPushToUser(supabase, userId, applyPersonalityToPayload(base, ctx.personalityMode, "calendar_reminder"));
         break;
       }
       case "morning-reminder": {
         const morningData = await getMorningEmailData(supabase, userId, todayStr);
-        const payload = buildMorningPushPayload(morningData);
-        ok = await sendPushToUser(supabase, userId, payload);
+        const base = buildMorningPushPayload(morningData);
+        ok = await sendPushToUser(supabase, userId, applyPersonalityToPayload(base, ctx.personalityMode, "morning"));
         break;
       }
       case "evening-reminder": {
         const eveningData = await getEveningEmailData(supabase, userId, todayStr);
-        const payload = buildEveningPushPayload(eveningData);
-        ok = await sendPushToUser(supabase, userId, payload);
+        const base = buildEveningPushPayload(eveningData);
+        ok = await sendPushToUser(supabase, userId, applyPersonalityToPayload(base, ctx.personalityMode, "evening"));
         break;
       }
       case "brain-status-reminder": {
-        const ctx = await loadUserNotificationContextForUser(supabase, userId);
         const result = buildBehavioralNotificationForContext(ctx, { type: "brain_status_missing" });
         if (result) ok = await sendPushToUser(supabase, userId, result.payload);
         break;
       }
       case "weekly-learning": {
-        const payload = buildWeeklyLearningPushPayload(35, 60);
-        ok = await sendPushToUser(supabase, userId, payload);
+        const base = buildWeeklyLearningPushPayload(35, 60);
+        ok = await sendPushToUser(supabase, userId, applyPersonalityToPayload(base, ctx.personalityMode, "weekly_learning"));
         break;
       }
       case "savings-alert": {
-        ok = await sendPushToUser(supabase, userId, {
+        const base = {
           title: "NEUROHQ — Savings",
           body: '"Emergency fund" due in 14 day(s). You\'re at 65%.',
           tag: "savings-alert",
           url: "/budget",
-          priority: "high",
-        });
+          priority: "high" as const,
+        };
+        ok = await sendPushToUser(supabase, userId, applyPersonalityToPayload(base, ctx.personalityMode, "savings_alert"));
         break;
       }
       case "shutdown-reminder": {
@@ -190,23 +195,25 @@ export async function GET(request: Request) {
         break;
       }
       case "freeze-reminder": {
-        ok = await sendPushToUser(supabase, userId, {
+        const baseFreeze = {
           title: "NEUROHQ — Frozen purchase",
           body: '"New headphones" is ready. Confirm or cancel in Budget.',
           tag: "freeze-reminder",
           url: "/budget",
-          priority: "high",
-        });
+          priority: "high" as const,
+        };
+        ok = await sendPushToUser(supabase, userId, applyPersonalityToPayload(baseFreeze, ctx.personalityMode, "freeze_reminder"));
         break;
       }
       case "avoidance-alert": {
-        ok = await sendPushToUser(supabase, userId, {
+        const baseAvoid = {
           title: "NEUROHQ",
           body: "3 task(s) carried over. Pick one to focus on.",
           tag: "avoidance-alert",
           url: "/dashboard",
-          priority: "high",
-        });
+          priority: "high" as const,
+        };
+        ok = await sendPushToUser(supabase, userId, applyPersonalityToPayload(baseAvoid, ctx.personalityMode, "avoidance_alert"));
         break;
       }
       case "reengage": {

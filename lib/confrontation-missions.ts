@@ -85,6 +85,24 @@ function pickMission(
             "Overwhelm bij huishouden is normaal. Kies het kleinste zichtbare rommel-plekje, zet een timer op 5 minuten en stop zodra de timer afgaat.",
         };
       }
+      if (emotion === "anxiety") {
+        return {
+          tag,
+          level,
+          title: "5 minuten: één kamer of één stap",
+          description:
+            "Angst voor het huishouden vermindert als je het klein houdt. Kies letterlijk één kamer of één soort klus (bijv. alleen afwassen). Timer 5 min, daarna stoppen. Geen grote opruim, wel beweging.",
+        };
+      }
+      if (emotion === "avoidance") {
+        return {
+          tag,
+          level,
+          title: "Doorbreek de uitstel: 5 minuten huishouden",
+          description:
+            "Je stelt huishouden uit. Vandaag: kies het eerste wat je ziet (een stapel, een aanrecht) en doe 5 minuten. Geen plan, geen perfectie — alleen het patroon doorbreken.",
+        };
+      }
       return {
         tag,
         level,
@@ -118,6 +136,24 @@ function pickMission(
           title: "Schrijf op wat je vreest (5 min)",
           description:
             "Anxiety bij administratie is voorspelbaar. Schrijf exact op wat je vreest, benoem het worst-case realistisch scenario en werk dan 5 minuten aan één kleine stap.",
+        };
+      }
+      if (emotion === "overwhelm") {
+        return {
+          tag,
+          level,
+          title: "Eén ding: open en benoem",
+          description:
+            "Overwhelm bij administratie: te veel tegelijk. Open vandaag één document of e-mail. Je hoeft niets op te lossen — alleen te benoemen wat erin staat of wat de volgende micro-stap is. 5 minuten max.",
+        };
+      }
+      if (emotion === "avoidance") {
+        return {
+          tag,
+          level,
+          title: "Stop met uitstellen: 1 brief of 1 e-mail",
+          description:
+            "Administratie blijft liggen. Vandaag: open één brief of één e-mail en lees hem volledig. Geen actie verplicht — alleen lezen en eventueel één zin noteren (wat moet er gebeuren?).",
         };
       }
       return {

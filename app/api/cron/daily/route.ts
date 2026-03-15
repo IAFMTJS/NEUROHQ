@@ -13,6 +13,7 @@ import {
 } from "@/lib/behavioral-notification-server";
 import { runDailyHobbyCommitmentDecay } from "@/app/actions/hobby-commitment-decay";
 import { getQuoteByDayNumber } from "@/lib/quotes";
+import { applyPersonalityToPayload } from "@/lib/push-personality";
 
 /**
  * Vercel Cron: runs daily at 00:00 UTC.
@@ -106,13 +107,17 @@ export async function GET(request: Request) {
       if (highSensory) continue;
 
       try {
-        const ok = await sendPushToUser(supabase, u.id, {
+        const ctx = await loadUserNotificationContextForUser(supabase, u.id);
+        const quoteBody = quoteText.length > 120 ? quoteText.slice(0, 117) + "…" : quoteText;
+        const basePayload = {
           title: "NEUROHQ",
-          body: quoteText.length > 120 ? quoteText.slice(0, 117) + "…" : quoteText,
+          body: quoteBody,
           tag: "daily-quote",
           url: "/dashboard",
-          priority: "low",
-        });
+          priority: "low" as const,
+        };
+        const payload = applyPersonalityToPayload(basePayload, ctx.personalityMode, "quote");
+        const ok = await sendPushToUser(supabase, u.id, payload);
         if (ok) pushSent++;
       } catch {
         // skip
@@ -137,15 +142,18 @@ export async function GET(request: Request) {
       const local = meta?.timezone ? getLocalDateHour(meta.timezone) : { date: todayStr, hour: utcHour };
       if (isInQuietHours(local.hour, meta?.quietStart ?? null, meta?.quietEnd ?? null)) continue;
       try {
-        const ok = await sendPushToUser(supabase, userId, {
+        const ctx = await loadUserNotificationContextForUser(supabase, userId);
+        const basePayload = {
           title: "NEUROHQ — Frozen purchase",
           body: entries.length === 1
             ? `"${entries[0].note || "Purchase"}" is ready. Confirm or cancel in Budget.`
             : `${entries.length} frozen purchase(s) ready to confirm or cancel.`,
           tag: "freeze-reminder",
           url: "/budget",
-          priority: "high",
-        });
+          priority: "high" as const,
+        };
+        const payload = applyPersonalityToPayload(basePayload, ctx.personalityMode, "freeze_reminder");
+        const ok = await sendPushToUser(supabase, userId, payload);
         if (ok) {
           freezeReminderSent++;
           for (const e of entries) {
@@ -171,13 +179,16 @@ export async function GET(request: Request) {
       const maxCarry = Math.max(0, ...(todaysIncomplete ?? []).map((t) => t.carry_over_count ?? 0));
       if (maxCarry >= 3) {
         try {
-          const ok = await sendPushToUser(supabase, uid, {
+          const ctx = await loadUserNotificationContextForUser(supabase, uid);
+          const basePayload = {
             title: "NEUROHQ",
             body: `${maxCarry} task(s) carried over. Pick one to focus on.`,
             tag: "avoidance-alert",
             url: "/dashboard",
-            priority: "high",
-          });
+            priority: "high" as const,
+          };
+          const payload = applyPersonalityToPayload(basePayload, ctx.personalityMode, "avoidance_alert");
+          const ok = await sendPushToUser(supabase, uid, payload);
           if (ok) avoidanceSent++;
         } catch {
           // skip
