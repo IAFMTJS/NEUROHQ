@@ -3,6 +3,9 @@
 import { useHQStore } from "@/lib/hq-store";
 import { useAppBadge } from "@/lib/use-app-badge";
 
+/** Stable empty array so getSnapshot doesn't change every render (avoids React #185 / useSyncExternalStore loop). */
+const EMPTY_TASKS: { completed?: boolean }[] = [];
+
 function getClientToday(): string {
   if (typeof window === "undefined") return "";
   const d = new Date();
@@ -14,7 +17,7 @@ function getClientToday(): string {
  */
 export function AppBadgeUpdater() {
   const today = getClientToday();
-  const tasks = useHQStore((s) => (today ? (s.tasksByDate[today] ?? []) : []));
+  const tasks = useHQStore((s) => (today ? (s.tasksByDate[today] ?? EMPTY_TASKS) : EMPTY_TASKS));
   const incompleteCount = tasks.filter((t) => !(t as { completed?: boolean }).completed).length;
   useAppBadge(incompleteCount);
   return null;

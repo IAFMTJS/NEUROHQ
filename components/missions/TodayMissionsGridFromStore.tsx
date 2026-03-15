@@ -4,6 +4,9 @@ import { useHQStore } from "@/lib/hq-store";
 import { CommanderMissionCard } from "@/components/commander";
 import type { Task } from "@/types/database.types";
 
+/** Stable empty array so getSnapshot doesn't change every render (avoids React #185 / useSyncExternalStore loop). */
+const EMPTY_TASKS: Task[] = [];
+
 type Props = {
   dateStr: string;
   /** Server-rendered mission cards when store is empty (e.g. recommended from UMS). */
@@ -17,7 +20,7 @@ type Props = {
  * When the store has no tasks for today, renders children (server-rendered cards).
  */
 export function TodayMissionsGridFromStore({ dateStr, children }: Props) {
-  const storeTasks = useHQStore((s) => (s.tasksByDate[dateStr] ?? []) as Task[]);
+  const storeTasks = useHQStore((s) => (s.tasksByDate[dateStr] ?? EMPTY_TASKS) as Task[]);
   const incomplete = storeTasks.filter((t) => !(t as { completed?: boolean }).completed);
 
   if (incomplete.length > 0) {
