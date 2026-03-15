@@ -21,6 +21,10 @@ type Props = {
   onBack: () => void;
   onNext: () => void;
   onSkip: () => void;
+  /** When true, Next is disabled until the user completes the required action. */
+  nextDisabled?: boolean;
+  /** Shown when nextDisabled is true (e.g. "Update your Brain Status above, then click Next."). */
+  requiredActionHint?: string;
 };
 
 export function CoachMark({
@@ -33,6 +37,8 @@ export function CoachMark({
   onBack,
   onNext,
   onSkip,
+  nextDisabled = false,
+  requiredActionHint,
 }: Props) {
   const [rect, setRect] = useState<DOMRect | null>(null);
   const rafRef = useRef<number | null>(null);
@@ -63,7 +69,12 @@ export function CoachMark({
     run();
     const resizeObs = new ResizeObserver(run);
     const el = targetSelector ? document.querySelector(targetSelector) : null;
-    if (el) resizeObs.observe(el);
+    if (el) {
+      resizeObs.observe(el);
+      if (el instanceof HTMLElement) {
+        el.scrollIntoView({ behavior: "smooth", block: "center" });
+      }
+    }
     window.addEventListener("scroll", run, true);
     window.addEventListener("resize", run);
 
@@ -134,6 +145,16 @@ export function CoachMark({
         <p id="coach-mark-body" className="mt-2 text-sm text-[var(--text-muted)]">
           {body}
         </p>
+        {targetSelector && rect == null && (
+          <p className="mt-2 text-xs text-[var(--text-muted)] italic">
+            Scroll the page to find this section if you don’t see a highlight.
+          </p>
+        )}
+        {nextDisabled && requiredActionHint && (
+          <p className="mt-2 rounded-lg border border-[var(--accent-focus)]/40 bg-[var(--accent-focus)]/10 px-3 py-2 text-xs text-[var(--accent-focus)]">
+            {requiredActionHint}
+          </p>
+        )}
         <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
           <div className="flex items-center gap-2">
             <button
@@ -150,10 +171,11 @@ export function CoachMark({
           </div>
           <div className="flex items-center gap-2">
             <button
-              ref={nextRef}
+              ref={!nextDisabled ? nextRef : undefined}
               type="button"
               onClick={onNext}
-              className="btn-primary rounded-lg px-4 py-2 text-sm font-semibold"
+              disabled={nextDisabled}
+              className="btn-primary rounded-lg px-4 py-2 text-sm font-semibold disabled:opacity-50 disabled:pointer-events-none"
             >
               {isLast ? "Finish" : "Next"}
             </button>

@@ -52,6 +52,7 @@ export function OnboardingProvider({ children }: { children: React.ReactNode }) 
   const [tourActive, setTourActive] = useState(false);
   const [mode, setMode] = useState<TutorialMode | null>(null);
   const [stepIndex, setStepIndex] = useState(0);
+  const [actionCompletedForCurrentStep, setActionCompletedForCurrentStep] = useState(false);
 
   const steps = useMemo(() => (mode ? STEPS_BY_MODE[mode] : []), [mode]);
   const totalSteps = steps.length;
@@ -148,13 +149,20 @@ export function OnboardingProvider({ children }: { children: React.ReactNode }) 
     setShowSetupReminderState(true);
   }, []);
 
+  useEffect(() => {
+    setActionCompletedForCurrentStep(false);
+  }, [stepIndex, currentStep?.id]);
+
   const reportTutorialAction = useCallback(
     (actionId: string) => {
-      if (tourActive && currentStep?.actionId === actionId) {
+      if (!tourActive || currentStep?.actionId !== actionId) return;
+      if (currentStep.requireAction) {
+        setActionCompletedForCurrentStep(true);
+      } else {
         goNext();
       }
     },
-    [tourActive, currentStep?.actionId, goNext]
+    [tourActive, currentStep?.actionId, currentStep?.requireAction, goNext]
   );
 
   const [tipsSeenState, setTipsSeenState] = useState<Record<string, boolean>>({});
@@ -222,6 +230,10 @@ export function OnboardingProvider({ children }: { children: React.ReactNode }) 
           onBack={goBack}
           onNext={goNext}
           onSkip={skipTour}
+          nextDisabled={
+            !!(currentStep.requireAction && currentStep.actionId && !actionCompletedForCurrentStep)
+          }
+          requiredActionHint={currentStep.actionHint}
         />
       )}
     </OnboardingContext.Provider>

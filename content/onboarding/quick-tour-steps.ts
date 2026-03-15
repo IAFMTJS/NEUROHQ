@@ -7,8 +7,10 @@ export const QUICK_TOUR_STEPS: TutorialStep[] = [
     route: "/dashboard",
     targetSelector: "[data-tutorial=\"brain-status-card\"]",
     actionId: "brain-status-save",
+    requireAction: true,
+    actionHint: "Tap \"Update check-in\" above, set your energy and focus, then save. After that you can continue.",
     title: "Brain Status",
-    body: "Update your energy, focus and mental load here every day. The app uses this to suggest how many missions you can handle.",
+    body: "Update your energy, focus and mental load here every day. The app uses this to suggest how many missions you can handle. Do it now to continue.",
   },
   {
     id: "quick-budget",

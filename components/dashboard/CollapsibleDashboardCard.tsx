@@ -11,6 +11,8 @@ type Props = {
   defaultExpanded?: boolean;
   children: React.ReactNode;
   className?: string;
+  /** Optional ID for onboarding coach marks (sets data-tutorial). */
+  dataTutorial?: string;
 };
 
 /** Reusable collapsible dashboard card; optional localStorage persistence. */
@@ -21,6 +23,7 @@ export function CollapsibleDashboardCard({
   defaultExpanded = true,
   children,
   className = "",
+  dataTutorial,
 }: Props) {
   const [isExpanded, setIsExpanded] = useState(defaultExpanded);
   const [mounted, setMounted] = useState(false);
@@ -53,7 +56,10 @@ export function CollapsibleDashboardCard({
   }
 
   return (
-    <div className={`overflow-hidden rounded-2xl border border-[var(--card-border)] bg-[var(--bg-surface)]/40 ${className}`}>
+    <div
+      className={`overflow-hidden rounded-2xl border border-[var(--card-border)] bg-[var(--bg-surface)]/40 ${className}`}
+      {...(dataTutorial ? { "data-tutorial": dataTutorial } : {})}
+    >
       <div className="flex items-start justify-between gap-3 border-b border-[var(--card-border)]/80 px-4 py-3">
         <div>
           <h2 className="text-base font-semibold text-[var(--text-primary)]">{title}</h2>

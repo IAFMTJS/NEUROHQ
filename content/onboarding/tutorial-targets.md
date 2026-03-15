@@ -3,11 +3,18 @@
 Used by the onboarding coach mark system. Selectors are `[data-tutorial="id"]`.
 
 ## Dashboard
-- `brain-status-card` — Brain Status card section (BrainStatusCard)
+- `dashboard-command-bridge` — Commander hero / command bridge (top panel)
+- `dashboard-level-progress` — Level & voortgang card (Identity + Momentum)
+- `dashboard-active-missions` — Active missions card content
+- `dashboard-dcic` — Commander status (DCIC) card
+- `dashboard-today-engine` — Vandaag door de app bepaald card
+- `dashboard-brain-status-section` — Systeem modus card (Brain Status + Dangerous Modules)
+- `brain-status-card` — Brain Status card section (BrainStatusCard, inside Systeem modus)
 - `brain-status-energy` — Energy ring in Brain Status
 - `brain-status-focus` — Focus ring in Brain Status
 - `brain-status-load` — Mental load ring in Brain Status
-- `dashboard-active-missions` — Active missions card content
+- `dashboard-energy-bar` — Energy budget bar
+- `dashboard-context-card` — Context / quote card
 
 ## Budget
 - `budget-hero` — Remaining budget hero (RemainingBudgetHero)

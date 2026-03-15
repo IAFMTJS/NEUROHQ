@@ -391,6 +391,7 @@ export function DashboardClientShell() {
               </div>
             </div>
             <Divider1px />
+            <div data-tutorial="dashboard-command-bridge">
             <SciFiPanel className={`dashboard-bridge-frame idle-breathing ${hudStyles.focusPrimary}`} bodyClassName="dashboard-bridge-body" variant="command">
               <CornerNode corner="top-left" />
               <CornerNode corner="top-right" />
@@ -410,6 +411,7 @@ export function DashboardClientShell() {
                 autoSuggestions={autoSuggestions}
               />
             </SciFiPanel>
+            </div>
           </div>
         )}
 
@@ -478,7 +480,7 @@ export function DashboardClientShell() {
             <CornerNode corner="top-left" />
             <CornerNode corner="top-right" />
             <div className={`dashboard-bento grid grid-cols-1 gap-4 lg:grid-cols-2 lg:gap-6 ${skipCinematicLayers ? "light-ui-defer-paint" : ""}`}>
-              <CollapsibleDashboardCard title="Level & voortgang" storageKey="level" defaultExpanded={true} className="lg:col-span-2">
+              <CollapsibleDashboardCard title="Level & voortgang" storageKey="level" defaultExpanded={true} className="lg:col-span-2" dataTutorial="dashboard-level-progress">
                 <section className="glass-card glass-card-3d rounded-none border-0 p-0">
                   <div className="grid gap-0 md:grid-cols-2">
                     {identity && identityEngine ? (
@@ -516,12 +518,12 @@ export function DashboardClientShell() {
                 </div>
               </CollapsibleDashboardCard>
               <div className="flex flex-col gap-4">
-                <CollapsibleDashboardCard title="Commander status (DCIC)" storageKey="dcic-status" defaultExpanded={true}>
+                <CollapsibleDashboardCard title="Commander status (DCIC)" storageKey="dcic-status" defaultExpanded={true} dataTutorial="dashboard-dcic">
                   <div className="p-4 md:p-6">
                     <DCICStatusCard gameState={gameState} status={dcicStatus} />
                   </div>
                 </CollapsibleDashboardCard>
-                <CollapsibleDashboardCard title="Vandaag door de app bepaald" storageKey="today-engine" defaultExpanded={true}>
+                <CollapsibleDashboardCard title="Vandaag door de app bepaald" storageKey="today-engine" defaultExpanded={true} dataTutorial="dashboard-today-engine">
                   {todayEngine != null && xpForecast !== undefined ? (
                     <div className="p-4 md:p-6">
                       <TodayEngineCard
@@ -538,7 +540,7 @@ export function DashboardClientShell() {
               </div>
               <div className="flex flex-col gap-4">
                 <DashboardUpdatesCard />
-                <CollapsibleDashboardCard title="Systeem modus" subtitle="Brain status & hoe voel je je vandaag" storageKey="systeem-modus" defaultExpanded={true}>
+                <CollapsibleDashboardCard title="Systeem modus" subtitle="Brain status & hoe voel je je vandaag" storageKey="systeem-modus" defaultExpanded={true} dataTutorial="dashboard-brain-status-section">
                   <div className="p-4 md:p-6 space-y-6">
                     <BrainStatusCard
                   date={dateStr}
@@ -551,6 +553,7 @@ export function DashboardClientShell() {
                   </div>
                 </CollapsibleDashboardCard>
                 {(!isMinimalUI || (secEnergyBudget.remaining as number) < 20) && (
+                  <div data-tutorial="dashboard-energy-bar">
                   <EnergyBudgetBar
                     remaining={secEnergyBudget.remaining as number}
                     capacity={secEnergyBudget.capacity as number}
@@ -566,7 +569,9 @@ export function DashboardClientShell() {
                     brainMode={secEnergyBudget.brainMode as BrainMode}
                     segments={secEnergyBudget.segments as { label: string; value: number; color: string }[]}
                   />
+                  </div>
                 )}
+                <div data-tutorial="dashboard-context-card">
                 <DashboardContextCard
                   prev={{
                     quote: secondary && quotesResult ? quotesResult[0] : null,
@@ -583,6 +588,7 @@ export function DashboardClientShell() {
                   mode={mode}
                   identityStatement={(strategy as { identity_statement?: string } | null)?.identity_statement ?? null}
                 />
+                </div>
                 <ModeExplanationModal mode={mode} />
                 {mode === "driven" && <FocusBlock />}
               </div>

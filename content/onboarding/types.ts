@@ -7,8 +7,12 @@ export type TutorialStep = {
   route?: string;
   /** Selector for the element to highlight; optional for transition-only steps. */
   targetSelector?: string;
-  /** If set, when the app reports this action (e.g. brain-status-save), the step auto-advances. */
+  /** When set, the user must perform this action before Next is enabled. reportTutorialAction(actionId) marks it done. */
   actionId?: string;
+  /** If true and actionId is set, Next stays disabled until the action is performed. Shown with actionHint. */
+  requireAction?: boolean;
+  /** Shown when requireAction is true and action not yet done (e.g. "Update your Brain Status above, then click Next."). */
+  actionHint?: string;
   title: string;
   body: string;
 };
