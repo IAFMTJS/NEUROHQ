@@ -278,6 +278,16 @@ If the “Cron hourly” workflow keeps failing (302, 404, or 401), follow these
 
 ---
 
+### 5.4 Testing a single push notification (production)
+
+To send one push type to your app's first push-enabled user, use **curl.exe** (on Windows, `curl` in PowerShell is an alias; `.exe` uses the real curl):
+
+```bash
+curl.exe -s -H "Authorization: Bearer YOUR_CRON_SECRET" "https://neurohq.vercel.app/api/push/test-all?type=shutdown-reminder"
+```
+
+Replace `YOUR_CRON_SECRET` with your Vercel env `CRON_SECRET`, and `https://neurohq.vercel.app` with your actual app URL if different. Replace `shutdown-reminder` with any type: `daily-quote`, `calendar-morning`, `calendar-reminder`, `morning-reminder`, `evening-reminder`, `brain-status-reminder`, `weekly-learning`, `savings-alert`, `freeze-reminder`, `avoidance-alert`, `reengage`, `streak-growth`, `streak-protection`, `momentum`. Optional: target a specific user with `&userId=USER_UUID`.
+
 ## 6. Lighthouse PWA check (manual)
 
 See [LIGHTHOUSE_PWA.md](./LIGHTHOUSE_PWA.md) for how to run Lighthouse and the PWA checklist. Aim for PWA score ≥ 90 and “Add to Home Screen” working.

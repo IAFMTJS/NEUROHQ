@@ -10,6 +10,7 @@ import {
   loadUserNotificationContextForUser,
   canSendBehavioralNotification,
   markBehavioralNotificationSent,
+  getReengagementSendsInLast7Days,
 } from "@/lib/behavioral-notification-server";
 import { runDailyHobbyCommitmentDecay } from "@/app/actions/hobby-commitment-decay";
 import { getQuoteByDayNumber } from "@/lib/quotes";
@@ -265,35 +266,40 @@ export async function GET(request: Request) {
         (row as { longest_streak?: number | null }).longest_streak ?? 0;
 
       try {
-        const ctx = await loadUserNotificationContextForUser(supabase, userId);
+        const ctx = await loadUserNotificationContextForUser(supabase, userId, { dateStr: todayStr });
 
-        // 1) Inactivity / recovery window (re-engagement)
+        // 1) Inactivity / recovery window (re-engagement) — max 2 per week (backoff).
         if (daysInactive >= 1) {
-          const triggerKey: "inactivity_24h" | "inactivity_3d" | "inactivity_7d" | "inactivity_14d" =
-            daysInactive >= 14
-              ? "inactivity_14d"
-              : daysInactive >= 7
-                ? "inactivity_7d"
-                : daysInactive >= 3
-                  ? "inactivity_3d"
-                  : "inactivity_24h";
+          const reengagementSendsLast7d = await getReengagementSendsInLast7Days(supabase, userId);
+          if (reengagementSendsLast7d >= 2) {
+            // Skip this user's re-engagement this run.
+          } else {
+            const triggerKey: "inactivity_24h" | "inactivity_3d" | "inactivity_7d" | "inactivity_14d" =
+              daysInactive >= 14
+                ? "inactivity_14d"
+                : daysInactive >= 7
+                  ? "inactivity_7d"
+                  : daysInactive >= 3
+                    ? "inactivity_3d"
+                    : "inactivity_24h";
 
-          const { canSend } = await canSendBehavioralNotification(
-            supabase,
-            userId,
-            triggerKey,
-            today
-          );
-          if (canSend) {
-            const reengage = buildBehavioralNotificationForContext(ctx, {
-              type: "inactivity_window",
-              daysInactive,
-            });
-            if (reengage) {
-              const ok = await sendPushToUser(supabase, userId, reengage.payload);
-              if (ok) {
-                await markBehavioralNotificationSent(supabase, userId, triggerKey);
-                reEngagementSent++;
+            const { canSend } = await canSendBehavioralNotification(
+              supabase,
+              userId,
+              triggerKey,
+              today
+            );
+            if (canSend) {
+              const reengage = buildBehavioralNotificationForContext(ctx, {
+                type: "inactivity_window",
+                daysInactive,
+              });
+              if (reengage) {
+                const ok = await sendPushToUser(supabase, userId, reengage.payload);
+                if (ok) {
+                  await markBehavioralNotificationSent(supabase, userId, triggerKey);
+                  reEngagementSent++;
+                }
               }
             }
           }

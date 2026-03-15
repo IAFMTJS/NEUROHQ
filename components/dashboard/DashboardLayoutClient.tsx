@@ -14,6 +14,7 @@ import { HQStorePersistOnHide } from "@/components/HQStorePersistOnHide";
 import { PendingXpToast } from "@/components/PendingXpToast";
 import { HelpFloatingIcon } from "@/components/HelpFloatingIcon";
 import { PushAutoPrompt } from "@/components/notifications/PushAutoPrompt";
+import { PushClickTracker } from "@/components/notifications/PushClickTracker";
 import { DashboardDataProvider } from "@/components/providers/DashboardDataProvider";
 import { useDailySnapshot } from "@/components/bootstrap/BootstrapGate";
 import type { DashboardSnapshot } from "@/types/daily-snapshot";
@@ -78,6 +79,7 @@ export function DashboardLayoutClient({
             <OfflineQueueSync />
             <PendingXpToast />
             <PushAutoPrompt />
+            <PushClickTracker />
             <div
               className="relative flex min-h-screen max-h-[100dvh] w-full max-w-[100vw] flex-col overflow-x-hidden bg-transparent"
               data-ui="dark-commander"

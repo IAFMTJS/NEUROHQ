@@ -69,11 +69,24 @@ export type MessageTemplate = {
   url?: string;
 };
 
+export type AppModeForPush = "normal" | "low_energy" | "high_sensory" | "driven" | "stabilize";
+
 export type UserNotificationContext = {
   /** 0–100: how consistent this user is (7–30d behaviour index). */
   consistencyScore: number;
   /** Selected personality mode; "auto" lets the engine adapt. */
   personalityMode: PersonalityMode;
+  /** Optional: derived from daily_state + carry_over for tone/light copy. */
+  mode?: AppModeForPush;
+  energy?: number | null;
+  focus?: number | null;
+  sensory_load?: number | null;
+  taskCountToday?: number;
+  calendarEventCountToday?: number;
+  /** Current streak for contextual copy. */
+  currentStreak?: number;
+  /** Missions completed this week (for evening / weekly copy). */
+  missionsCompletedThisWeek?: number;
 };
 
 // ---- Small helpers -----------------------------------------------------------
@@ -112,6 +125,14 @@ export function pickTone(baseCandidates: Tone[], ctx: UserNotificationContext): 
     case "auto":
     default:
       break;
+  }
+
+  // Richer context: low_energy → friendlier; high_sensory → calmer/shorter (neutral/stoic).
+  if (ctx.mode === "low_energy") {
+    return weightedRandom(["friendly", "neutral", "coach"], [0.5, 0.3, 0.2]);
+  }
+  if (ctx.mode === "high_sensory") {
+    return weightedRandom(["neutral", "stoic"], [0.6, 0.4]);
   }
 
   // Auto mode: adapt based on consistency.

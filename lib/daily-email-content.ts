@@ -8,7 +8,7 @@
 
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { getQuoteByDayNumber } from "@/lib/quotes";
-import { getDayOfYearFromDateString } from "@/lib/utils/timezone";
+import { getDayOfYearFromDateString, getWeekBounds } from "@/lib/utils/timezone";
 import { wrapReminderHtml } from "@/lib/email";
 
 function assertSingleUserId(userId: string): void {
@@ -30,6 +30,8 @@ export type MorningEmailData = {
   brainStatusDone: boolean;
   taskTitles: string[];
   calendarTitles: string[];
+  /** Optional: current streak for contextual copy. */
+  currentStreak?: number;
 };
 
 export type EveningEmailData = {
@@ -38,6 +40,8 @@ export type EveningEmailData = {
   expensesLogged: number;
   learningMinutesToday: number;
   brainStatusDone: boolean;
+  /** Optional: missions completed this week for contextual copy. */
+  missionsCompletedThisWeek?: number;
 };
 
 export type ReminderPushPayload = {
@@ -59,7 +63,7 @@ export async function getMorningEmailData(
   const quoteRow = getQuoteByDayNumber(dayOfYear);
   const quote = quoteRow?.quote_text ?? "Your daily focus.";
 
-  const [dailyState, tasks, calendar] = await Promise.all([
+  const [dailyState, tasks, calendar, streakRow] = await Promise.all([
     supabase
       .from("daily_state")
       .select("energy, focus")
@@ -82,14 +86,20 @@ export async function getMorningEmailData(
       .lte("start_at", `${todayStr}T23:59:59`)
       .order("start_at", { ascending: true })
       .limit(10),
+    supabase
+      .from("user_streak")
+      .select("current_streak")
+      .eq("user_id", userId)
+      .maybeSingle(),
   ]);
 
   const ds = dailyState.data;
   const brainStatusDone = !!(ds && (ds.energy != null || ds.focus != null));
   const taskTitles = (tasks.data ?? []).map((t) => (t.title ?? "Task").trim()).filter(Boolean);
   const calendarTitles = (calendar.data ?? []).map((e) => (e.title ?? "Event").trim()).filter(Boolean);
+  const currentStreak = (streakRow.data as { current_streak?: number | null } | null)?.current_streak ?? 0;
 
-  return { quote, brainStatusDone, taskTitles, calendarTitles };
+  return { quote, brainStatusDone, taskTitles, calendarTitles, currentStreak: currentStreak > 0 ? currentStreak : undefined };
 }
 
 /** Build morning email HTML (9 AM): quote, brain state reminder, tasks and calendar overview. */
@@ -128,10 +138,22 @@ export function buildMorningEmailHtml(data: MorningEmailData): string {
   return wrapReminderHtml(parts.join(""), "Good morning");
 }
 
+/** Heavy day threshold: use short "light" body to avoid overwhelm. */
+const HEAVY_DAY_TASKS = 5;
+const HEAVY_DAY_EVENTS = 5;
+
 export function buildMorningPushPayload(data: MorningEmailData): ReminderPushPayload {
-  const body = data.taskTitles.length > 0
-    ? `Good morning. ${data.taskTitles.length} mission(s) ready today.${data.brainStatusDone ? "" : " Set your brain status first."}`
-    : `Good morning. No missions scheduled yet.${data.brainStatusDone ? "" : " Set your brain status first."}`;
+  const heavyDay = data.taskTitles.length >= HEAVY_DAY_TASKS || data.calendarTitles.length >= HEAVY_DAY_EVENTS;
+  const streakLine = data.currentStreak ? `${data.currentStreak}-day streak. ` : "";
+  let body: string;
+  if (heavyDay) {
+    body = `${streakLine}Heavy day — ${data.taskTitles.length} tasks, ${data.calendarTitles.length} events. One focus at a time.${data.brainStatusDone ? "" : " Set brain status when you can."}`;
+  } else if (data.taskTitles.length > 0) {
+    body = `${streakLine}Good morning. ${data.taskTitles.length} mission(s) ready today.${data.brainStatusDone ? "" : " Set your brain status first."}`;
+  } else {
+    body = `${streakLine}Good morning. No missions scheduled yet.${data.brainStatusDone ? "" : " Set your brain status first."}`;
+  }
+  body = body.replace(/^\s+/, "").trim();
   return {
     title: "NEUROHQ — Morning",
     body,
@@ -151,7 +173,10 @@ export async function getEveningEmailData(
   const dayStart = `${todayStr}T00:00:00.000Z`;
   const dayEnd = `${todayStr}T23:59:59.999Z`;
 
-  const [dailyState, tasksPlanned, tasksCompleted, budgetCount, analyticsToday] = await Promise.all([
+  const now = new Date();
+  const { start: weekStart, end: weekEnd } = getWeekBounds(now);
+
+  const [dailyState, tasksPlanned, tasksCompleted, budgetCount, analyticsToday, weekMissions] = await Promise.all([
     supabase
       .from("daily_state")
       .select("energy, focus")
@@ -182,11 +207,21 @@ export async function getEveningEmailData(
       .eq("user_id", userId)
       .eq("date", todayStr)
       .maybeSingle(),
+    supabase
+      .from("user_analytics_daily")
+      .select("missions_completed")
+      .eq("user_id", userId)
+      .gte("date", weekStart)
+      .lte("date", weekEnd),
   ]);
 
   const ds = dailyState.data;
   const brainStatusDone = !!(ds && (ds.energy != null || ds.focus != null));
   const learningMinutesToday = (analyticsToday.data as { learning_minutes?: number } | null)?.learning_minutes ?? 0;
+  const missionsCompletedThisWeek = (weekMissions.data ?? []).reduce(
+    (acc, r) => acc + ((r as { missions_completed?: number }).missions_completed ?? 0),
+    0
+  );
 
   return {
     tasksPlanned: tasksPlanned.count ?? 0,
@@ -194,6 +229,7 @@ export async function getEveningEmailData(
     expensesLogged: budgetCount.count ?? 0,
     learningMinutesToday,
     brainStatusDone,
+    missionsCompletedThisWeek: missionsCompletedThisWeek > 0 ? missionsCompletedThisWeek : undefined,
   };
 }
 
@@ -225,10 +261,12 @@ export function buildEveningEmailHtml(data: EveningEmailData): string {
   return wrapReminderHtml(parts.join(""), "Evening check-in");
 }
 
-export function buildEveningPushPayload(data: EveningEmailData): ReminderPushPayload {
-  const { tasksPlanned, tasksCompleted, expensesLogged, learningMinutesToday, brainStatusDone } = data;
+  const { tasksPlanned, tasksCompleted, expensesLogged, learningMinutesToday, brainStatusDone, missionsCompletedThisWeek } = data;
   const nothingLogged = expensesLogged === 0 && learningMinutesToday === 0;
   const lightDay = tasksCompleted <= 1 && (expensesLogged === 0 || learningMinutesToday === 0);
+  const weekLine = missionsCompletedThisWeek != null && missionsCompletedThisWeek > 0
+    ? ` ${missionsCompletedThisWeek} mission(s) this week so far.`
+    : "";
 
   let body: string;
   if (nothingLogged && tasksCompleted === 0) {
@@ -241,11 +279,11 @@ export function buildEveningPushPayload(data: EveningEmailData): ReminderPushPay
         : expensesLogged === 0
           ? "No expenses logged today — add a quick log?"
           : "No learning logged today — add a quick log?";
-    body = `Evening check-in: ${taskBit}${nudge}`;
+    body = `Evening check-in: ${taskBit}${nudge}${weekLine}`.trim();
   } else if (tasksPlanned > 0) {
-    body = `Evening check-in: ${tasksCompleted}/${tasksPlanned} missions done, ${expensesLogged} expense(s), ${learningMinutesToday} min learning.${!brainStatusDone ? " Brain status still missing." : ""}`;
+    body = `Evening check-in: ${tasksCompleted}/${tasksPlanned} missions done, ${expensesLogged} expense(s), ${learningMinutesToday} min learning.${weekLine}${!brainStatusDone ? " Brain status still missing." : ""}`.trim();
   } else {
-    body = `Evening check-in: ${expensesLogged} expense(s), ${learningMinutesToday} min learning today.${!brainStatusDone ? " Brain status still missing." : ""}`;
+    body = `Evening check-in: ${expensesLogged} expense(s), ${learningMinutesToday} min learning today.${weekLine}${!brainStatusDone ? " Brain status still missing." : ""}`.trim();
   }
 
   return {

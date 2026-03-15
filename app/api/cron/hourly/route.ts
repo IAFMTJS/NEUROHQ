@@ -283,7 +283,7 @@ export async function GET(request: Request) {
             dailyState && (dailyState.energy != null || dailyState.focus != null)
           );
           if (!brainStatusDone) {
-            const ctx = await loadUserNotificationContextForUser(supabase, u.id as string);
+            const ctx = await loadUserNotificationContextForUser(supabase, u.id as string, { dateStr: todayStr });
             const result = buildBehavioralNotificationForContext(ctx, {
               type: "brain_status_missing",
             });

@@ -1,7 +1,17 @@
 # Test every push notification type by calling the test-all API.
-# Requires: dev server running, CRON_SECRET in env (or .env.local), and at least one user with push enabled.
+# Requires: dev server running (or use APP_URL for production), CRON_SECRET in env, and at least one user with push enabled.
 #
-# Usage:
+# --- Single-type test from terminal (production, real curl) ---
+# Use curl.exe (Windows has a curl alias in PowerShell; .exe forces the real curl). Replace YOUR_CRON_SECRET and APP_URL.
+#
+#   curl.exe -s -H "Authorization: Bearer YOUR_CRON_SECRET" "https://neurohq.vercel.app/api/push/test-all?type=shutdown-reminder"
+#
+# Or with a specific user:
+#   curl.exe -s -H "Authorization: Bearer YOUR_CRON_SECRET" "https://neurohq.vercel.app/api/push/test-all?type=daily-quote&userId=USER_UUID"
+#
+# Types: daily-quote, calendar-morning, calendar-reminder, morning-reminder, evening-reminder, brain-status-reminder, weekly-learning, savings-alert, shutdown-reminder, freeze-reminder, avoidance-alert, reengage, streak-growth, streak-protection, momentum
+#
+# --- Run all types (script) ---
 #   $env:CRON_SECRET = "your-cron-secret"
 #   .\scripts\test-push-notifications.ps1
 #
@@ -9,7 +19,7 @@
 #   .\scripts\test-push-notifications.ps1 -UserId "uuid-here"
 #
 # Optional: test only one type
-#   .\scripts\test-push-notifications.ps1 -Type "daily-quote"
+#   .\scripts\test-push-notifications.ps1 -Type "daily-quote" -BaseUrl "https://neurohq.vercel.app"
 
 param(
     [string]$BaseUrl = "http://localhost:3000",

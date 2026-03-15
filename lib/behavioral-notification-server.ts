@@ -1,6 +1,8 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
-import type { UserNotificationContext } from "@/lib/behavioral-notifications";
+import type { UserNotificationContext, AppModeForPush } from "@/lib/behavioral-notifications";
 import type { TriggerType } from "@/lib/behavioral-notifications";
+import { getModeFromState } from "@/lib/app-mode";
+import { getWeekBounds } from "@/lib/utils/timezone";
 
 type ConsistencyRow = {
   date: string;
@@ -35,10 +37,12 @@ async function computeConsistencyScore(
 
 /**
  * Server-side helper for cron/admin: load UserNotificationContext for a given user id.
+ * When options.dateStr is provided, also loads rich context (daily_state, task/calendar count, mode, streak, weekly missions).
  */
 export async function loadUserNotificationContextForUser(
   supabase: SupabaseClient,
-  userId: string
+  userId: string,
+  options?: { dateStr?: string }
 ): Promise<UserNotificationContext> {
   const { data: prefs } = await supabase
     .from("user_preferences")
@@ -52,9 +56,81 @@ export async function loadUserNotificationContextForUser(
 
   const consistencyScore = await computeConsistencyScore(supabase, userId);
 
-  return {
+  const base: UserNotificationContext = {
     consistencyScore,
     personalityMode: personality,
+  };
+
+  const dateStr = options?.dateStr;
+  if (!dateStr) return base;
+
+  const [dailyState, taskCount, calendarCount, streakRow, weekMissions] = await Promise.all([
+    supabase
+      .from("daily_state")
+      .select("energy, focus, sensory_load")
+      .eq("user_id", userId)
+      .eq("date", dateStr)
+      .maybeSingle(),
+    supabase
+      .from("tasks")
+      .select("id", { count: "exact", head: true })
+      .eq("user_id", userId)
+      .eq("due_date", dateStr)
+      .is("deleted_at", null),
+    supabase
+      .from("calendar_events")
+      .select("id", { count: "exact", head: true })
+      .eq("user_id", userId)
+      .gte("start_at", `${dateStr}T00:00:00`)
+      .lte("start_at", `${dateStr}T23:59:59`),
+    supabase
+      .from("user_streak")
+      .select("current_streak")
+      .eq("user_id", userId)
+      .maybeSingle(),
+    (async () => {
+      const now = new Date();
+      const { start, end } = getWeekBounds(now);
+      const { data: weekRows } = await supabase
+        .from("user_analytics_daily")
+        .select("missions_completed")
+        .eq("user_id", userId)
+        .gte("date", start)
+        .lte("date", end);
+      return (weekRows ?? []).reduce(
+        (acc, r) => acc + ((r as { missions_completed?: number }).missions_completed ?? 0),
+        0
+      );
+    })(),
+  ]);
+
+  const ds = dailyState.data as { energy?: number | null; focus?: number | null; sensory_load?: number | null } | null;
+  const carryOver = await (async () => {
+    const { data } = await supabase
+      .from("tasks")
+      .select("carry_over_count")
+      .eq("user_id", userId)
+      .eq("due_date", dateStr)
+      .eq("completed", false);
+    const max = Math.max(0, ...(data ?? []).map((r) => (r as { carry_over_count?: number }).carry_over_count ?? 0));
+    return max;
+  })();
+
+  const mode: AppModeForPush = getModeFromState(ds, carryOver);
+  const taskCountToday = taskCount.count ?? 0;
+  const calendarEventCountToday = calendarCount.count ?? 0;
+  const currentStreak = (streakRow.data as { current_streak?: number | null } | null)?.current_streak ?? 0;
+
+  return {
+    ...base,
+    mode,
+    energy: ds?.energy ?? null,
+    focus: ds?.focus ?? null,
+    sensory_load: ds?.sensory_load ?? null,
+    taskCountToday,
+    calendarEventCountToday,
+    currentStreak,
+    missionsCompletedThisWeek: weekMissions,
   };
 }
 
@@ -108,6 +184,28 @@ export async function canSendBehavioralNotification(
   }
 
   return { canSend: true, ignoredCount: row.ignored_count, logRow: row };
+}
+
+const REENGAGEMENT_TRIGGERS = [
+  "inactivity_24h",
+  "inactivity_3d",
+  "inactivity_7d",
+  "inactivity_14d",
+] as const;
+
+/** Count re-engagement (inactivity) pushes sent to this user in the last 7 days. Used for backoff (max 2/week). */
+export async function getReengagementSendsInLast7Days(
+  supabase: SupabaseClient,
+  userId: string
+): Promise<number> {
+  const since = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+  const { count } = await supabase
+    .from("push_sends_log")
+    .select("*", { count: "exact", head: true })
+    .eq("user_id", userId)
+    .in("trigger_type", [...REENGAGEMENT_TRIGGERS])
+    .gte("sent_at", since);
+  return count ?? 0;
 }
 
 /**
