@@ -159,8 +159,16 @@ export const MESSAGE_POOL: MessagePool = {
     stoic: [{ body: "Awareness precedes control. Log brain status." }],
     coach: [{ body: "Set your brain status so we can tailor today’s missions." }],
     aggressive: [{ body: "Brain status missing. Log it. Now." }],
-    sarcastic: [{ body: "Hard to optimize a brain we haven’t measured." }],
-    overstimulating: [{ body: "BRAIN STATUS MISSING ⚠️\nSYSTEM BLIND. LOG IT." }],
+    sarcastic: [
+      { body: "Hard to optimize a brain we haven’t measured." },
+      { body: "We’d love to help. If only we knew what state your brain is in. 🙃" },
+      { body: "Brain status: unknown. The system is literally blind. Your move." },
+    ],
+    overstimulating: [
+      { body: "BRAIN STATUS MISSING ⚠️\nSYSTEM BLIND. LOG IT. NOW." },
+      { body: "⚠️ NO BRAIN DATA ⚠️\nWE CAN'T HELP IF WE DON'T KNOW. LOG IT. 🔥" },
+      { body: "ALERT: BRAIN STATUS = ???\nFIX IT. 🔴" },
+    ],
   },
   brain_status_recheck: {
     neutral: [{ body: "Your brain status hasn’t changed today. Still accurate?" }],
@@ -274,7 +282,11 @@ export const MESSAGE_POOL: MessagePool = {
     friendly: [{ body: "Two weeks — we’re here when you’re ready. One small step." }],
     stoic: [{ body: "Fourteen days. Return. One action." }],
     coach: [{ body: "Two weeks inactive. Restart with one mission or a quick brain status." }],
-    sarcastic: [{ body: "Two weeks. The system is still here. Surprisingly." }],
+    sarcastic: [
+      { body: "Two weeks. The system is still here. Surprisingly." },
+      { body: "Fourteen days. We didn't forget you. (Did you forget us?) 😏" },
+    ],
+    overstimulating: [{ body: "TWO WEEKS. THE SYSTEM AWAITS. ONE MISSION. RETURN. ⚡" }],
   },
   positive_surprise: {
     neutral: [
@@ -286,7 +298,10 @@ export const MESSAGE_POOL: MessagePool = {
     friendly: [{ body: "Your consistency is showing — keep it up." }],
     stoic: [{ body: "Consistency noted." }],
     coach: [{ body: "Momentum building. Keep the standard." }],
-    sarcastic: [{ body: "You’re suspiciously productive today." }],
+    sarcastic: [
+      { body: "You're suspiciously productive today." },
+      { body: "Who are you and what have you done with the usual you? We approve." },
+    ],
   },
   behavioral_coaching_high_brain_idle: {
     neutral: [
@@ -296,7 +311,11 @@ export const MESSAGE_POOL: MessagePool = {
     friendly: [{ body: "You’ve got the energy — pick one mission and start." }],
     stoic: [{ body: "Energy high. Action zero. Choose one." }],
     coach: [{ body: "High energy, no missions. Prime time — pick one and start." }],
-    sarcastic: [{ body: "All that energy and still nothing?" }],
+    sarcastic: [
+      { body: "All that energy and still nothing?" },
+      { body: "Brain says you're ready. Missions completed: zero. Make it make sense. 🙃" },
+    ],
+    overstimulating: [{ body: "⚠️ HIGH ENERGY. ZERO MISSIONS. WASTE DETECTED. PICK ONE. 🔥" }],
   },
   behavioral_coaching_low_brain_active: {
     neutral: [
@@ -312,12 +331,18 @@ export const MESSAGE_POOL: MessagePool = {
     friendly: [{ body: "Lots of open missions — pick one to focus on." }],
     stoic: [{ body: "Too many open. Complete one." }],
     coach: [{ body: "Too many open. Close or complete one before adding more." }],
-    sarcastic: [{ body: "Congratulations on your mission hoarding." }],
+    sarcastic: [
+      { body: "Congratulations on your mission hoarding." },
+      { body: "You've got a lot of open missions. Completion rate: not great. Pick one. 🙃" },
+    ],
+    overstimulating: [{ body: "⚠️ TOO MANY OPEN. CLOSE ONE. COMPLETE ONE. FOCUS. 🔴" }],
   },
   escalation_no_missions_today: {
     neutral: [{ body: "Execution missing." }],
     coach: [{ body: "No missions completed today. Pick one. Do it." }],
     aggressive: [{ body: "Zero completed. One mission. Now." }],
+    sarcastic: [{ body: "Today's mission count: zero. We're just putting that out there. 😬" }],
+    overstimulating: [{ body: "⚠️ ZERO MISSIONS TODAY. ONE. DO IT. NOW. 🔥" }],
   },
 };
 

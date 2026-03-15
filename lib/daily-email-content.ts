@@ -261,6 +261,7 @@ export function buildEveningEmailHtml(data: EveningEmailData): string {
   return wrapReminderHtml(parts.join(""), "Evening check-in");
 }
 
+export function buildEveningPushPayload(data: EveningEmailData): ReminderPushPayload {
   const { tasksPlanned, tasksCompleted, expensesLogged, learningMinutesToday, brainStatusDone, missionsCompletedThisWeek } = data;
   const nothingLogged = expensesLogged === 0 && learningMinutesToday === 0;
   const lightDay = tasksCompleted <= 1 && (expensesLogged === 0 || learningMinutesToday === 0);
