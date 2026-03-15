@@ -72,6 +72,11 @@ See `.env.example`. Required:
 - `SUPABASE_SERVICE_ROLE_KEY` — For cron and server-side admin  
 - Optional: `CRON_SECRET` — Protects cron routes on Vercel  
 - Optional (push): `NEXT_PUBLIC_VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY` — from `npm run generate-vapid`  
+- Optional (Assistant): `NEXT_PUBLIC_ASSISTANT_ENABLED` — Set to `true` in development or staging to show the Assistant page and nav entry. Leave unset or `false` in production until the feature is GA.  
+
+## Contributing
+
+When you change user-facing behaviour (tasks, budget, assistant, settings, routine, etc.), update the Help page (`app/(dashboard)/help/page.tsx`) and/or `content/help/sections.ts` so the manual stays in sync. Bump `HELP_LAST_UPDATED` in `content/help/sections.ts` when you do.
 
 ## Database (Supabase)
 

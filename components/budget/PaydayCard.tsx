@@ -5,8 +5,10 @@ import { useRouter } from "next/navigation";
 import { updateBudgetSettings, setPaydayReceivedToday } from "@/app/actions/budget";
 import { addIncomeSource, deleteIncomeSource } from "@/app/actions/dcic/income-sources";
 import type { IncomeSource } from "@/lib/dcic/types";
+import { toast } from "sonner";
 import { Modal } from "@/components/Modal";
 import { getCurrencySymbol } from "@/lib/utils/currency";
+import { undoPaydayReceived } from "@/app/actions/budget";
 import { format } from "date-fns";
 import { nl } from "date-fns/locale";
 import { getBudgetToday } from "@/lib/utils/budget-date";
@@ -24,6 +26,10 @@ import {
   setPersistedPayday,
   usePersistedPayday,
 } from "@/lib/client-persisted-payday";
+import { useSettings } from "@/lib/settings-context";
+import { useUndoStore } from "@/lib/undo-registry";
+
+const UNDO_TOAST_DURATION_MS = 25_000;
 
 type Props = {
   daysUntilNextIncome: number;
@@ -38,6 +44,9 @@ type Props = {
 
 export function PaydayCard({ daysUntilNextIncome, nextPaydayLabel, incomeSources, paydayDayOfMonth, currency = "EUR", cycleStartDate, nextPaydayDate }: Props) {
   const router = useRouter();
+  const { invalidate: invalidateSettings } = useSettings();
+  const pushPaydayUndo = useUndoStore((s) => s.pushPaydayUndo);
+  const removeUndo = useUndoStore((s) => s.remove);
   const persistedPayday = usePersistedPayday();
   const pendingBudget = usePendingBudgetSnapshot();
   const [showModal, setShowModal] = useState(false);
@@ -89,14 +98,16 @@ export function PaydayCard({ daysUntilNextIncome, nextPaydayLabel, incomeSources
           ...(paydayDayOfMonth != null && { payday_day_of_month: paydayDayOfMonth }),
         });
         router.refresh();
+        await invalidateSettings();
       } catch {
         hasSyncedPersistedRef.current = false;
       }
     })();
-  }, [persistedPayday, router]);
+  }, [persistedPayday, router, invalidateSettings]);
 
   function handleVandaagLoonGehad() {
     setSaveError(null);
+    const previousLastPaydayDate = effectiveLastPaydayDate;
     const today = getBudgetToday();
     setPersistedPayday({ lastPaydayDate: today, paydayDayOfMonth: effectivePaydayDay });
     setPendingBudgetSnapshot({
@@ -110,7 +121,32 @@ export function PaydayCard({ daysUntilNextIncome, nextPaydayLabel, incomeSources
       try {
         await setPaydayReceivedToday();
         markPendingBudgetSynced();
+        const undoId = pushPaydayUndo(previousLastPaydayDate);
+        toast.success("Loon gehad geregistreerd.", {
+          duration: UNDO_TOAST_DURATION_MS,
+          action: {
+            label: "Ongedaan maken",
+            onClick: () => {
+              removeUndo(undoId);
+              startTransition(async () => {
+                try {
+                  await undoPaydayReceived(previousLastPaydayDate);
+                  setPersistedPayday({
+                    lastPaydayDate: previousLastPaydayDate,
+                    paydayDayOfMonth: effectivePaydayDay,
+                  });
+                  router.refresh();
+                  await invalidateSettings();
+                  clearPendingBudgetSnapshot();
+                } catch {
+                  toast.error("Ongedaan maken mislukt.");
+                }
+              });
+            },
+          },
+        });
         router.refresh();
+        await invalidateSettings();
         window.setTimeout(() => clearPendingBudgetSnapshot(), 1500);
       } catch (e) {
         console.error(e);
@@ -135,6 +171,7 @@ export function PaydayCard({ daysUntilNextIncome, nextPaydayLabel, incomeSources
         await updateBudgetSettings({ payday_day_of_month: d });
         markPendingBudgetSynced();
         router.refresh();
+        await invalidateSettings();
         window.setTimeout(() => clearPendingBudgetSnapshot(), 1500);
       } catch (e) {
         console.error(e);

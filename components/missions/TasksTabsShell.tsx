@@ -1,17 +1,18 @@
 import Link from "next/link";
 
-type TabId = "missions" | "calendar";
+export type TasksTabId = "missions" | "calendar" | "routine";
 
 type Props = {
-  initialTab: TabId;
+  initialTab: TasksTabId;
   missionsHref: string;
   calendarHref: string;
+  routineHref: string;
   header: React.ReactNode;
   children: React.ReactNode;
 };
 
-export function TasksTabsShell({ initialTab, missionsHref, calendarHref, header, children }: Props) {
-  const tabClass = (tab: TabId) =>
+export function TasksTabsShell({ initialTab, missionsHref, calendarHref, routineHref, header, children }: Props) {
+  const tabClass = (tab: TasksTabId) =>
     `dashboard-mini-btn ${
       initialTab === tab ? "dashboard-mini-btn-primary" : "dashboard-mini-btn-secondary"
     }`;
@@ -34,6 +35,13 @@ export function TasksTabsShell({ initialTab, missionsHref, calendarHref, header,
             aria-current={initialTab === "calendar" ? "page" : undefined}
           >
             Calendar
+          </Link>
+          <Link
+            href={routineHref}
+            className={tabClass("routine")}
+            aria-current={initialTab === "routine" ? "page" : undefined}
+          >
+            Routine
           </Link>
           <span className="dashboard-mini-strip-label">View</span>
         </div>

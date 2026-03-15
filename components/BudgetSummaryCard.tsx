@@ -12,6 +12,7 @@ import {
   setPendingBudgetSnapshot,
   usePendingBudgetSnapshot,
 } from "@/lib/client-pending-budget";
+import { useSettings } from "@/lib/settings-context";
 
 type Props = {
   monthlyBudgetCents: number | null;
@@ -48,6 +49,7 @@ export function BudgetSummaryCard({
   const [period, setPeriod] = useState<"monthly" | "weekly">(budgetPeriod);
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
+  const { invalidate: invalidateSettings } = useSettings();
 
   const effectiveBudgetSetting =
     pendingBudget?.monthlyBudgetCents !== undefined ? pendingBudget.monthlyBudgetCents : monthlyBudgetCents;
@@ -104,6 +106,7 @@ export function BudgetSummaryCard({
         });
         markPendingBudgetSynced();
         router.refresh();
+        await invalidateSettings();
         window.setTimeout(() => clearPendingBudgetSnapshot(), 1500);
       } catch (e) {
         clearPendingBudgetSnapshot();

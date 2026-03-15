@@ -4,6 +4,7 @@ import {
   getBacklogTasks,
   getCompletedTodayTasks,
   getFutureTasks,
+  getRoutineTasksWithSuggestions,
   getSubtasksForTaskIds,
   getTasksForDate,
   getTodaysTasks,
@@ -33,6 +34,7 @@ import { CornerNode } from "@/components/hud-test/CornerNode";
 import { Divider1px } from "@/components/hud-test/Divider1px";
 import hudStyles from "@/components/hud-test/hud.module.css";
 import { MissionsProvider, TasksTabsShell, TodayMissionsGridFromStore } from "@/components/missions";
+import type { TasksTabId } from "@/components/missions/TasksTabsShell";
 import { TasksDailyBootstrap } from "@/components/missions/TasksDailyBootstrap";
 import { TasksCalendarAsync } from "./TasksCalendarAsync";
 
@@ -140,8 +142,8 @@ function isValidCalendarView(value: string | undefined): value is CalendarView {
 
 function makeTasksHref(
   params: { add?: string; month?: string; day?: string | null; calView?: CalendarView },
-  activeTab: "missions" | "calendar",
-  overrides: { tab?: "missions" | "calendar"; day?: string | null; month?: string; calView?: CalendarView }
+  activeTab: TasksTabId,
+  overrides: { tab?: TasksTabId; day?: string | null; month?: string; calView?: CalendarView }
 ) {
   const search = new URLSearchParams();
   const nextTab = overrides.tab ?? activeTab;
@@ -386,12 +388,25 @@ async function CalendarSectionAsync({
   );
 }
 
+async function RoutineSectionAsync({ dateStr }: { dateStr: string }) {
+  const { routineTasks, suggestedDays } = await getRoutineTasksWithSuggestions(dateStr);
+  const RoutineTaskList = (await import("@/components/missions/RoutineTaskList")).RoutineTaskList;
+  return (
+    <RoutineTaskList
+      routineTasks={routineTasks}
+      suggestedDays={suggestedDays}
+      dateStr={dateStr}
+    />
+  );
+}
+
 export default async function TasksPage({ searchParams }: Props) {
   const dateStr = todayDateString();
   const yesterdayStr = yesterdayDate(dateStr);
   const params = await searchParams;
   const tabParam = params.tab;
-  const activeTab: "missions" | "calendar" = tabParam === "calendar" ? "calendar" : "missions";
+  const activeTab: TasksTabId =
+    tabParam === "routine" ? "routine" : tabParam === "calendar" ? "calendar" : "missions";
   const calendarView: CalendarView = isValidCalendarView(params.calView) ? params.calView : "calendar";
   const monthParam = isValidMonthKey(params.month) ? params.month : dateStr.slice(0, 7);
   const dayParam = isValidDayKey(params.day) ? params.day : null;
@@ -410,6 +425,11 @@ export default async function TasksPage({ searchParams }: Props) {
     { add: params.add, month: monthParam, day: dayParam, calView: calendarView },
     activeTab,
     { tab: "calendar" }
+  );
+  const routineHref = makeTasksHref(
+    { add: params.add, month: monthParam, day: dayParam, calView: calendarView },
+    activeTab,
+    { tab: "routine" }
   );
   const skipCinematicLayers = prefs.light_ui === true;
 
@@ -457,12 +477,12 @@ export default async function TasksPage({ searchParams }: Props) {
       <MissionsProvider dateStr={dateStr}>
         <TasksDailyBootstrap dateStr={dateStr} enabled={activeTab === "missions"} />
         <div className="container page page-wide dashboard-cinematic relative z-10">
-          <TasksTabsShell initialTab={activeTab} missionsHref={missionsHref} calendarHref={calendarHref} header={headerSection}>
+          <TasksTabsShell initialTab={activeTab} missionsHref={missionsHref} calendarHref={calendarHref} routineHref={routineHref} header={headerSection}>
             {activeTab === "missions" ? (
               <Suspense fallback={null}>
                 <MissionsSectionAsync dateStr={dateStr} backlog={backlog} />
               </Suspense>
-            ) : (
+            ) : activeTab === "calendar" ? (
               <Suspense fallback={null}>
                 <CalendarSectionAsync
                   dateStr={dateStr}
@@ -471,6 +491,10 @@ export default async function TasksPage({ searchParams }: Props) {
                   calendarView={calendarView}
                   backlog={backlog}
                 />
+              </Suspense>
+            ) : (
+              <Suspense fallback={null}>
+                <RoutineSectionAsync dateStr={dateStr} />
               </Suspense>
             )}
           </TasksTabsShell>

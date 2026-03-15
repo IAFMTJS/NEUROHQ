@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { StoragePersistenceManager } from "@/components/StoragePersistenceManager";
 import { PwaInstallPrompt } from "@/components/PwaInstallPrompt";
+import { AppBadgeUpdater } from "@/components/AppBadgeUpdater";
 
 /**
  * Renders PWA and storage components after first paint so they don't compete
@@ -24,6 +25,7 @@ export function DeferredRootComponents() {
     <>
       <StoragePersistenceManager />
       <PwaInstallPrompt />
+      <AppBadgeUpdater />
     </>
   );
 }

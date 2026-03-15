@@ -9,6 +9,7 @@ import {
 import type { Task } from "@/types/database.types";
 import type { MissionsSnapshot } from "@/types/daily-snapshot";
 import { useDailySnapshot } from "@/components/bootstrap/BootstrapGate";
+import { getTodayKey } from "@/lib/daily-date";
 import { useHQStore } from "@/lib/hq-store";
 
 type Props = {
@@ -42,6 +43,7 @@ export function MissionsProvider({ dateStr, children }: Props) {
 
   useEffect(() => {
     if (!missions) return;
+    const todayKey = getTodayKey();
     setTodayDate(dateStr);
     if (missions.dailyState) {
       setTodayDailyState(missions.dailyState);
@@ -50,6 +52,7 @@ export function MissionsProvider({ dateStr, children }: Props) {
       setTodayEnergyBudget(missions.energyBudget);
     }
     for (const [day, tasks] of Object.entries(missions.tasksByDate)) {
+      if (day === todayKey) continue;
       setTasksForDate(day, tasks as Task[]);
     }
     setTasksError(null);

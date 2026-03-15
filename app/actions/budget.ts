@@ -109,6 +109,24 @@ export async function setPaydayReceivedToday(): Promise<void> {
   await updateBudgetSettings({ last_payday_date: today });
 }
 
+/** Undo "vandaag loon gehad": restore previous last_payday_date. Call within short window after setPaydayReceivedToday. */
+export async function undoPaydayReceived(previousLastPaydayDate: string | null): Promise<void> {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error("Not authenticated");
+  if (previousLastPaydayDate != null && !/^\d{4}-\d{2}-\d{2}$/.test(previousLastPaydayDate)) {
+    throw new Error("Invalid date format");
+  }
+  const { error } = await supabase
+    .from("users")
+    .update({ last_payday_date: previousLastPaydayDate || null })
+    .eq("id", user.id);
+  if (error) throw new Error(error.message);
+  revalidatePath("/budget");
+  revalidatePath("/settings");
+  revalidatePath("/dashboard");
+}
+
 /**
  * Current budget period bounds: payday cycle when user has set last_payday_date or payday day,
  * otherwise calendar month (1st–last day).

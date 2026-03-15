@@ -1,6 +1,7 @@
 "use client";
 
 import { useLayoutEffect, type ReactNode } from "react";
+import { getTodayKey } from "@/lib/daily-date";
 import type { DailySnapshot } from "@/types/daily-snapshot";
 import type { Task } from "@/types/database.types";
 import { useHQStore } from "@/lib/hq-store";
@@ -49,10 +50,12 @@ export function StoreHydrator({ snapshot, children }: Props) {
 
     if (snapshot.missions) {
       const { dateStr, tasksByDate, dailyState, energyBudget } = snapshot.missions;
+      const todayKey = getTodayKey();
       setTodayDate(dateStr);
       if (dailyState) setTodayDailyState(dailyState);
       if (energyBudget) setTodayEnergyBudget(energyBudget);
       for (const [day, tasks] of Object.entries(tasksByDate)) {
+        if (day === todayKey) continue;
         setTasksForDate(day, (tasks ?? []) as Task[]);
       }
       setTasksError(null);

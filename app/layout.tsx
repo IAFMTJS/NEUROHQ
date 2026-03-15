@@ -6,6 +6,7 @@ import "./globals.css";
 import "./design-system.css";
 import { ThemeProvider } from "@/components/providers/ThemeProvider";
 import { ReactQueryProvider } from "@/components/providers/ReactQueryProvider";
+import { SettingsProvider } from "@/lib/settings-context";
 
 const plusJakarta = Plus_Jakarta_Sans({
   subsets: ["latin"],
@@ -67,7 +68,9 @@ export default function RootLayout({
         <ServiceWorkerRegistration />
         <ReactQueryProvider>
           <DeferredRootComponents />
+          <SettingsProvider>
           <ThemeProvider>{children}</ThemeProvider>
+        </SettingsProvider>
           <DeferredToaster />
         </ReactQueryProvider>
         <Analytics />

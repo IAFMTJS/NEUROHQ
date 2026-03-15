@@ -48,6 +48,10 @@ function rateLimit(userId: string): boolean {
 }
 
 export async function POST(request: Request) {
+  if (process.env.NEXT_PUBLIC_ASSISTANT_ENABLED !== "true") {
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  }
+
   try {
     const supabase = await createClient();
     const {

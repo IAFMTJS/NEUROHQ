@@ -17,6 +17,7 @@ export type PreloadStepId =
   | "fetchLearning"
   | "fetchBudget"
   | "fetchAnalytics"
+  | "fetchSettings"
   | "preloadPages"
   | "preloadAssets"
   | "prepareCache";
@@ -40,6 +41,7 @@ const ALL_STEPS: PreloadStepId[] = [
   "fetchLearning",
   "fetchBudget",
   "fetchAnalytics",
+  "fetchSettings",
   "preloadPages",
   "preloadAssets",
   "prepareCache",
@@ -88,6 +90,7 @@ export async function initializeDailySystem(
     learning: null,
     budget: null,
     analytics: null,
+    settings: null,
     ui: {
       pagesPrefetched: [],
       assetsPrefetched: false,
@@ -312,6 +315,27 @@ async function runStep(
         return snapshot;
       }
     }
+    case "fetchSettings": {
+      try {
+        const res = await fetch("/api/settings", {
+          credentials: "include",
+          cache: "no-store",
+        });
+        if (!res.ok) return snapshot;
+        const data = (await res.json()) as { preferences?: Record<string, unknown>; payday?: { last_payday_date: string | null; payday_day_of_month: number | null } };
+        const dateStr = snapshot.date || getTodayKey();
+        return {
+          ...snapshot,
+          settings: {
+            today: dateStr,
+            preferences: data.preferences ?? {},
+            payday: data.payday ?? { last_payday_date: null, payday_day_of_month: null },
+          },
+        };
+      } catch {
+        return snapshot;
+      }
+    }
     case "preloadPages": {
       try {
         const routes = [
@@ -323,6 +347,7 @@ async function runStep(
           "/learning",
           "/learning/analytics",
           "/budget",
+          "/settings",
           "/help",
           "/assistant",
         ];

@@ -22,6 +22,7 @@ import { Divider1px } from "@/components/hud-test/Divider1px";
 import { CornerNode } from "@/components/hud-test/CornerNode";
 import hudStyles from "@/components/hud-test/hud.module.css";
 import { DelayedFallback } from "@/components/ui/DelayedFallback";
+import { isAssistantEnabled } from "@/lib/feature-flags";
 import { useDashboardData, fetchAll, type DashboardCritical, type DashboardSecondary } from "@/components/providers/DashboardDataProvider";
 import type { CopyVariant } from "@/app/actions/adaptive";
 import type { BrainMode } from "@/lib/brain-mode";
@@ -392,7 +393,7 @@ export function DashboardClientShell() {
                 energyPct={heroEnergyPct}
                 focusPct={heroFocusPct}
                 loadPct={heroLoadPct}
-                missionHref={todaysTasks.length > 0 ? "/tasks" : "/assistant"}
+                missionHref={todaysTasks.length > 0 ? "/tasks" : (isAssistantEnabled() ? "/assistant" : "/tasks")}
                 missionLabel={missionLabel}
                 singleGoalLabel={singleGoalLabel}
                 missionSubtext={missionSubtext}

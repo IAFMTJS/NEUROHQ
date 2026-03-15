@@ -670,11 +670,19 @@ export async function getSubtasksForTaskIds(parentIds: string[]): Promise<Subtas
   return (data ?? []) as SubtaskRow[];
 }
 
-/** Backlog: onafgevinkte taken met due_date < vandaag of geen datum. */
+/** Max days back for backlog; tasks older than this are excluded. */
+const BACKLOG_HORIZON_DAYS = 30;
+
+/** Backlog: onafgevinkte taken met due_date < vandaag of geen datum, max BACKLOG_HORIZON_DAYS terug, nieuwste eerst. */
 export async function getBacklogTasks(todayDate: string): Promise<Task[]> {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return [];
+
+  const cutoffDate = new Date(todayDate + "T12:00:00Z");
+  cutoffDate.setUTCDate(cutoffDate.getUTCDate() - BACKLOG_HORIZON_DAYS);
+  const cutoffStr = cutoffDate.toISOString().slice(0, 10);
+
   const { data } = await supabase
     .from("tasks")
     .select(TASK_SELECT_COLUMNS)
@@ -683,10 +691,15 @@ export async function getBacklogTasks(todayDate: string): Promise<Task[]> {
     .is("parent_task_id", null)
     .is("deleted_at", null)
     .or(`due_date.is.null,due_date.lt.${todayDate}`)
-    .order("due_date", { ascending: true, nullsFirst: true })
-    .order("created_at", { ascending: true })
+    .order("due_date", { ascending: false, nullsFirst: false })
+    .order("created_at", { ascending: false })
     .limit(100);
-  return (data ?? []) as Task[];
+
+  const rows = (data ?? []) as Task[];
+  return rows.filter((t) => {
+    const due = (t as { due_date?: string | null }).due_date ?? null;
+    return due === null || due >= cutoffStr;
+  });
 }
 
 /** Toekomst: onafgevinkte taken met due_date na vandaag (niet vandaag). */
@@ -706,6 +719,45 @@ export async function getFutureTasks(todayDate: string): Promise<Task[]> {
     .order("created_at", { ascending: true })
     .limit(100);
   return (data ?? []) as Task[];
+}
+
+/** Routine tasks: incomplete, top-level, recurrence monthly or weekly (minstens 1x per periode). */
+export async function getRoutineTasks(): Promise<Task[]> {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return [];
+  const { data } = await supabase
+    .from("tasks")
+    .select(TASK_SELECT_COLUMNS)
+    .eq("user_id", user.id)
+    .eq("completed", false)
+    .is("parent_task_id", null)
+    .is("deleted_at", null)
+    .in("recurrence_rule", ["monthly", "weekly"])
+    .order("due_date", { ascending: true, nullsFirst: true })
+    .order("created_at", { ascending: true })
+    .limit(50);
+  return (data ?? []) as Task[];
+}
+
+/** Routine tasks plus suggested best days in the current week for each (for Routine tab). */
+export async function getRoutineTasksWithSuggestions(dateStr: string): Promise<{
+  routineTasks: Task[];
+  suggestedDays: Record<string, string[]>;
+}> {
+  const { getWeekBounds } = await import("@/lib/utils/learning");
+  const weekStart = getWeekBounds(new Date(dateStr + "T12:00:00Z")).start;
+  const [routineTasks, weekLoad] = await Promise.all([
+    getRoutineTasks(),
+    getWeekPlannedLoad(weekStart),
+  ]);
+  const { suggestBestDaysForRoutine } = await import("@/lib/routine-suggestions");
+  const bestDays = suggestBestDaysForRoutine(weekLoad);
+  const suggestedDays: Record<string, string[]> = {};
+  for (const t of routineTasks) {
+    suggestedDays[t.id] = bestDays;
+  }
+  return { routineTasks, suggestedDays };
 }
 
 /** Completed tasks for a given date (top-level only). */

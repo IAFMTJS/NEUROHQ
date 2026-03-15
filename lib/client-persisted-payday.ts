@@ -1,5 +1,9 @@
 "use client";
 
+/**
+ * Optimistic payday state only. Server (users.last_payday_date, users.payday_day_of_month) is the source of truth.
+ * Use this for immediate UI after "Vandaag loon gehad" or payday day change; after sync, rely on server state (router.refresh()).
+ */
 import { useEffect, useState } from "react";
 import { getBudgetToday, getNextPaydayDateFromDay, getNextPaydayDateNextMonth } from "@/lib/utils/budget-date";
 

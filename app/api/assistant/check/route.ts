@@ -28,6 +28,10 @@ const DUMMY_STATE = {
 };
 
 export async function GET() {
+  if (process.env.NEXT_PUBLIC_ASSISTANT_ENABLED !== "true") {
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  }
+
   try {
     const message = "Vandaag ging het wel oké, maar ik stel dingen uit.";
     const intent = classifyIntent(message);

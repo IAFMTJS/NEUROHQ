@@ -1,0 +1,20 @@
+---
+description: NeuroHQ improvement work follows the Execution Plan (plan mode)
+alwaysApply: true
+---
+
+# Plan mode — Execution Plan
+
+When implementing NeuroHQ improvements from the architecture plan:
+
+1. **Authority:** Follow **docs/EXECUTION_PLAN.md** as the checklist. It lists all steps from docs/ARCHITECTURE_IMPROVEMENT_PLAN.md in priority order (P0 → P1 → P2 → P3).
+
+2. **Order:** Work in priority order unless the user asks for a specific section:
+   - **P0:** §13 Task state after close, §11 Assistant hidden in prod
+   - **P1:** §9 Backlog (30 days, newest-first), §2 Settings user-specific
+   - **P2:** §4 Undo, §5 Budget cards, §12 Snapshot coverage
+   - **P3:** §8 Routine tab, §10 Rank, §7 Hobby, §6 PWA badges, §3 Help
+
+3. **Tracking:** When completing steps, mark them in EXECUTION_PLAN.md (change `- [ ]` to `- [x]`) and update the todo list for that workstream.
+
+4. **Scope:** For each step, implement only what that step describes; do not skip or merge steps unless the user asks. If a step is ambiguous, refer to the corresponding section in ARCHITECTURE_IMPROVEMENT_PLAN.md for the full design.

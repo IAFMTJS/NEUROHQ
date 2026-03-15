@@ -94,6 +94,15 @@ export interface AnalyticsSnapshot {
   payload: unknown;
 }
 
+/**
+ * Minimal settings for first-paint (theme, compact_ui, push_personality_mode, etc.). No secrets.
+ */
+export interface SettingsSnapshot {
+  today: string;
+  preferences: Record<string, unknown>;
+  payday: { last_payday_date: string | null; payday_day_of_month: number | null };
+}
+
 export interface DailySnapshotUIState {
   /**
    * Absolute routes that were prefetched during the preload step.
@@ -123,6 +132,8 @@ export interface DailySnapshot {
   learning: LearningSnapshot | null;
   budget: BudgetSnapshot | null;
   analytics: AnalyticsSnapshot | null;
+  /** Optional for backward compat with snapshots saved before this field existed. */
+  settings?: SettingsSnapshot | null;
 
   ui: DailySnapshotUIState;
 }

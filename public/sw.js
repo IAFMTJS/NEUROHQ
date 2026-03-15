@@ -551,17 +551,24 @@ self.addEventListener("push", function (event) {
     tag: data.tag ?? "neurohq",
     data: data.url ? { url: data.url } : {},
   };
-  event.waitUntil(self.registration.showNotification(title, options));
+  var p = self.registration.showNotification(title, options);
+  if (typeof self.setAppBadge === "function" && (data.badge === undefined || data.badge > 0)) {
+    var count = typeof data.badge === "number" ? Math.min(99, Math.max(1, data.badge)) : 1;
+    p = Promise.all([p, self.setAppBadge(count)]);
+  }
+  event.waitUntil(p);
 });
 
-// Notification click handler
+// Notification click handler: open app and clear badge
 self.addEventListener("notificationclick", function (event) {
   event.notification.close();
   const url = event.notification.data?.url ?? "/dashboard";
-  event.waitUntil(
-    clients.matchAll({ type: "window", includeUncontrolled: true }).then(function (clientList) {
-      if (clientList.length) clientList[0].focus();
-      if (clients.openWindow) return clients.openWindow(url);
-    })
-  );
+  var p = clients.matchAll({ type: "window", includeUncontrolled: true }).then(function (clientList) {
+    if (clientList.length) clientList[0].focus();
+    if (clients.openWindow) return clients.openWindow(url);
+  });
+  if (typeof self.clearAppBadge === "function") {
+    p = Promise.all([p, self.clearAppBadge()]);
+  }
+  event.waitUntil(p);
 });

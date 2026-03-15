@@ -14,6 +14,7 @@ import {
   IconInsights,
   IconSettings,
 } from "@/components/hq/NavIcons";
+import { isAssistantEnabled } from "@/lib/feature-flags";
 
 /** PNG filename in public/nav/ (exact name, case-sensitive on server). No value = use SVG only. Includes XP. */
 const navLinks = [
@@ -56,12 +57,14 @@ export default memo(function BottomNavigation() {
     router.prefetch(href);
   }, [pathname, router]);
 
+  const links = navLinks.filter((link) => link.href !== "/assistant" || isAssistantEnabled());
+
   return (
     <nav
       className="bottom-nav"
       aria-label="Main navigation"
     >
-      {navLinks.map((link) => {
+      {links.map((link) => {
         const active = pathname === link.href;
         const Icon = link.Icon;
         return (

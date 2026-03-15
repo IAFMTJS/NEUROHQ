@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef } from "react";
 import { usePathname, useRouter } from "next/navigation";
+import { isAssistantEnabled } from "@/lib/feature-flags";
 
 const NEXT_ROUTE_CANDIDATES: Record<string, string[]> = {
   "/dashboard": ["/tasks", "/assistant"],
@@ -33,10 +34,12 @@ export function RoutePrefetcher() {
   const router = useRouter();
   const pathname = usePathname();
   const prefetchedRoutesRef = useRef<Set<string>>(new Set());
-  const routesToPrefetch = useMemo(
-    () => (NEXT_ROUTE_CANDIDATES[pathname] ?? []).filter((route) => route !== pathname),
-    [pathname]
-  );
+  const routesToPrefetch = useMemo(() => {
+    const candidates = NEXT_ROUTE_CANDIDATES[pathname] ?? [];
+    return candidates.filter(
+      (route) => route !== pathname && (route !== "/assistant" || isAssistantEnabled())
+    );
+  }, [pathname]);
 
   useEffect(() => {
     if (typeof window === "undefined") return;

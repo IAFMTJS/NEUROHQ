@@ -3,6 +3,7 @@
 import { useState, useTransition } from "react";
 import { updatePushQuoteTime, updatePushQuietHours, type QuietHours } from "@/app/actions/auth";
 import { updateUserPreferences } from "@/app/actions/preferences";
+import { useSettings } from "@/lib/settings-context";
 import { ensurePushSubscription, isPushConfigured, removePushSubscription, supportsPush } from "@/lib/push-client";
 
 // Persist last-saved values so remounts (e.g. React Strict Mode) don't revert to stale server props.
@@ -50,6 +51,7 @@ export function SettingsPush({
   >(initialPushPersonalityMode);
   const [testPending, setTestPending] = useState(false);
   const [serverTestPending, setServerTestPending] = useState(false);
+  const { invalidate: invalidateSettings } = useSettings();
 
   const savePrefs = (next: {
     push_reminders_enabled?: boolean;
@@ -61,6 +63,7 @@ export function SettingsPush({
     startPrefsTransition(async () => {
       try {
         await updateUserPreferences(next);
+        await invalidateSettings();
       } catch (e) {
         setMessage(e instanceof Error ? e.message : "Could not save push reminder settings.");
       }

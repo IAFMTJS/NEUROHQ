@@ -3,10 +3,12 @@
 /**
  * NEUROHQ Help Center — Full system manual.
  * Standalone documentation page at /help. Does not import game engine or modify app state.
+ * Content structure: content/help/sections.ts. Bump HELP_LAST_UPDATED when updating sections.
  */
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
+import { HELP_LAST_UPDATED } from "@/content/help/sections";
 
 /* ----- Help page visual blocks ----- */
 function HelpExample({ title, children }: { title?: string; children: React.ReactNode }) {
@@ -695,6 +697,10 @@ export default function HelpPage() {
           </ul>
         </AccordionSection>
       </div>
+
+      <p className="mt-8 text-center text-[11px] text-[var(--text-muted)]" aria-label="Help last updated">
+        Help bijgewerkt: {HELP_LAST_UPDATED}
+      </p>
 
       {showBackToContents && (
         <button

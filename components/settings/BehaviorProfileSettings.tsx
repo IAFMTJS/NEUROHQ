@@ -246,39 +246,26 @@ export function BehaviorProfileSettings({ initial, initialAutoMasterMissions }: 
           <div>
             <p className="text-xs font-medium text-[var(--text-secondary)]">Hobby commitment</p>
             <p className="mt-0.5 text-[11px] text-[var(--text-muted)]">
-              0–1 schaal. We starten met fitness en muziek; later uitbreidbaar.
+              0–1 schaal. Bepaal hoe belangrijk elke hobby is voor je missies.
             </p>
             <div className="mt-2 space-y-2">
-              <div className="flex items-center gap-2">
-                <span className="w-16 text-[11px] text-[var(--text-muted)]">Fitness</span>
-                <input
-                  type="range"
-                  min={0}
-                  max={1}
-                  step={0.1}
-                  value={profile.hobbyCommitment.fitness ?? 0}
-                  onChange={(e) => setHobbyCommitment("fitness", Number(e.target.value))}
-                  className="flex-1"
-                />
-                <span className="w-8 text-right text-[11px] text-[var(--text-secondary)]">
-                  {(profile.hobbyCommitment.fitness ?? 0).toFixed(1)}
-                </span>
-              </div>
-              <div className="flex items-center gap-2">
-                <span className="w-16 text-[11px] text-[var(--text-muted)]">Music</span>
-                <input
-                  type="range"
-                  min={0}
-                  max={1}
-                  step={0.1}
-                  value={profile.hobbyCommitment.music ?? 0}
-                  onChange={(e) => setHobbyCommitment("music", Number(e.target.value))}
-                  className="flex-1"
-                />
-                <span className="w-8 text-right text-[11px] text-[var(--text-secondary)]">
-                  {(profile.hobbyCommitment.music ?? 0).toFixed(1)}
-                </span>
-              </div>
+              {(["fitness", "music", "language", "creative"] as const).map((key) => (
+                <div key={key} className="flex items-center gap-2">
+                  <span className="w-16 text-[11px] text-[var(--text-muted)] capitalize">{key}</span>
+                  <input
+                    type="range"
+                    min={0}
+                    max={1}
+                    step={0.1}
+                    value={profile.hobbyCommitment[key] ?? 0}
+                    onChange={(e) => setHobbyCommitment(key, Number(e.target.value))}
+                    className="flex-1"
+                  />
+                  <span className="w-8 text-right text-[11px] text-[var(--text-secondary)]">
+                    {(profile.hobbyCommitment[key] ?? 0).toFixed(1)}
+                  </span>
+                </div>
+              ))}
             </div>
           </div>
         </div>

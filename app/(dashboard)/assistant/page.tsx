@@ -1,11 +1,14 @@
 import { Suspense } from "react";
 import AssistantPageClient from "@/components/dashboard/AssistantPageClient";
+import { AssistantPageGate } from "@/components/dashboard/AssistantPageGate";
 
 export default function AssistantPage() {
   return (
-    <Suspense fallback={null}>
-      <AssistantPageClient />
-    </Suspense>
+    <AssistantPageGate>
+      <Suspense fallback={null}>
+        <AssistantPageClient />
+      </Suspense>
+    </AssistantPageGate>
   );
 }
 

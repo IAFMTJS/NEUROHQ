@@ -1,9 +1,18 @@
 /**
  * Difficulty rank for current missions (S = hardest/most impact, D = lightest).
- * Derived from UMS (Unified Mission Score 0–1).
+ * Derived from UMS (Unified Mission Score 0–1). Single pipeline for all rank display.
+ *
+ * Thresholds (configurable here):
+ * - S: UMS >= 0.85
+ * - A: UMS >= 0.7
+ * - B: UMS >= 0.5
+ * - C: UMS >= 0.3
+ * - D: below 0.3
  */
 
 export type MissionDifficultyRank = "S" | "A" | "B" | "C" | "D";
+
+const RANK_THRESHOLDS = { S: 0.85, A: 0.7, B: 0.5, C: 0.3 } as const;
 
 const RANK_COLORS: Record<MissionDifficultyRank, string> = {
   S: "text-amber-400 border-amber-500/50 bg-amber-500/10",
@@ -14,10 +23,10 @@ const RANK_COLORS: Record<MissionDifficultyRank, string> = {
 };
 
 export function getMissionDifficultyRank(ums: number): MissionDifficultyRank {
-  if (ums >= 0.85) return "S";
-  if (ums >= 0.7) return "A";
-  if (ums >= 0.5) return "B";
-  if (ums >= 0.3) return "C";
+  if (ums >= RANK_THRESHOLDS.S) return "S";
+  if (ums >= RANK_THRESHOLDS.A) return "A";
+  if (ums >= RANK_THRESHOLDS.B) return "B";
+  if (ums >= RANK_THRESHOLDS.C) return "C";
   return "D";
 }
 

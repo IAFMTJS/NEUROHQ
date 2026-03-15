@@ -2,6 +2,7 @@
 
 import { useEffect, useCallback } from "react";
 import { useRouter, usePathname } from "next/navigation";
+import { isAssistantEnabled } from "@/lib/feature-flags";
 
 /**
  * Global keyboard shortcuts: N = new task / quick-add, A = assistant, Esc = back or close.
@@ -25,7 +26,7 @@ export function KeyboardShortcuts() {
         } else {
           router.push("/tasks");
         }
-      } else if (key === "a") {
+      } else if (key === "a" && isAssistantEnabled()) {
         e.preventDefault();
         router.push("/assistant");
       } else if (key === "Escape") {
