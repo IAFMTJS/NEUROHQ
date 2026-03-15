@@ -31,6 +31,11 @@ export function useDailySnapshot(): DailySnapshot | null {
  * Same-day snapshot from storage is used for the entire day (no refetch). New day
  * triggers full preload via BootstrapLoader. Exposes snapshot via context so
  * nested providers and StoreHydrator can consume it.
+ *
+ * Not every route is included in the snapshot (only dashboard, tasks, xp, strategy,
+ * learning, budget, analytics). Other pages (e.g. report, assistant) load on demand
+ * without triggering a full bootstrap reload — we do not clear or invalidate the
+ * snapshot when navigating to those routes.
  */
 export function BootstrapGate({ children }: Props) {
   const [ready, setReady] = useState(false);
@@ -47,6 +52,7 @@ export function BootstrapGate({ children }: Props) {
         return;
       }
       // No valid same-day snapshot: loader will run and call onReady when done.
+      // Do not run full bootstrap when we have a valid same-day snapshot.
     };
     void run();
     return () => {
