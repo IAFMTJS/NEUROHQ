@@ -104,16 +104,19 @@ export function CoachMark({
   const isFirst = stepIndex === 0;
   const isLast = stepIndex === totalSteps - 1;
 
+  /* When next is disabled (required action), allow clicks through to the page so the user can tap e.g. "Update check-in". */
+  const allowClicksThrough = nextDisabled;
+
   const overlayContent = (
     <div
-      className="fixed inset-0 z-[99] flex flex-col items-center justify-end sm:justify-center p-4 pb-[calc(env(safe-area-inset-bottom)+5rem)]"
+      className={`fixed inset-0 z-[99] flex flex-col items-center justify-end sm:justify-center p-4 pb-[calc(env(safe-area-inset-bottom)+5rem)] ${allowClicksThrough ? "pointer-events-none" : ""}`}
       style={{ minHeight: "100dvh" }}
       role="dialog"
       aria-modal="true"
       aria-labelledby="coach-mark-title"
       aria-describedby="coach-mark-body"
     >
-      {/* Dimmed backdrop - click does not close to avoid accidents */}
+      {/* Dimmed backdrop - when allowClicksThrough, overlay doesn't block so user can reach the target button */}
       <div
         className="absolute inset-0 bg-black/60"
         style={{ backgroundColor: "var(--modal-backdrop, rgba(0,0,0,0.6))" }}
@@ -134,9 +137,9 @@ export function CoachMark({
         />
       )}
 
-      {/* Explanation card */}
+      {/* Explanation card - must receive pointer events when overlay allows clicks through */}
       <div
-        className="modal-card relative z-[101] w-full max-w-[min(400px,94vw)] rounded-xl border border-[var(--card-border)] bg-[var(--modal-bg)] p-4 shadow-[var(--hud-elevation-modal)]"
+        className={`modal-card relative z-[101] w-full max-w-[min(400px,94vw)] rounded-xl border border-[var(--card-border)] bg-[var(--modal-bg)] p-4 shadow-[var(--hud-elevation-modal)] ${allowClicksThrough ? "pointer-events-auto" : ""}`}
         onClick={(e) => e.stopPropagation()}
       >
         <h2 id="coach-mark-title" className="text-lg font-semibold text-[var(--text-primary)]">
