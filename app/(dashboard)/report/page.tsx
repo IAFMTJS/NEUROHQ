@@ -45,6 +45,7 @@ import {
   InsightsRecentRanksCard,
 } from "@/components/insights";
 import { DataUnavailable } from "@/components/DataUnavailable";
+import { ReportSnapshotFallback } from "@/components/report/ReportSnapshotFallback";
 
 const ReportWeekSelector = nextDynamic(
   () => import("@/components/ReportWeekSelector").then((m) => ({ default: m.ReportWeekSelector })),
@@ -64,10 +65,6 @@ const InsightsGraphBlockClient = nextDynamic(
 );
 const WeeklyHeatmap = nextDynamic(
   () => import("@/components/dashboard/WeeklyHeatmap").then((m) => ({ default: m.WeeklyHeatmap })),
-  { loading: () => null }
-);
-const ReportSnapshotFallback = nextDynamic(
-  () => import("@/components/report/ReportSnapshotFallback").then((m) => ({ default: m.ReportSnapshotFallback })),
   { loading: () => null }
 );
 

@@ -1,4 +1,5 @@
 import nextDynamic from "next/dynamic";
+import { Suspense } from "react";
 import Link from "next/link";
 import { addDays, format } from "date-fns";
 import { nl } from "date-fns/locale";
@@ -44,6 +45,7 @@ import { BudgetPatternDetectionCard } from "@/components/budget/BudgetPatternDet
 import { RemainingBudgetHero } from "@/components/budget/RemainingBudgetHero";
 import { BudgetTabsShell } from "@/components/budget/BudgetTabsShell";
 import { BudgetSnapshotProvider } from "@/components/budget/BudgetSnapshotProvider";
+import { BudgetSnapshotFallback } from "@/components/budget/BudgetSnapshotFallback";
 
 const BudgetHistorySelector = nextDynamic(() => import("@/components/BudgetHistorySelector").then((m) => ({ default: m.BudgetHistorySelector })), { loading: () => null });
 const ExportBudgetCsvButton = nextDynamic(() => import("@/components/ExportBudgetCsvButton").then((m) => ({ default: m.ExportBudgetCsvButton })), { loading: () => null });
@@ -86,7 +88,7 @@ type Props = { searchParams: Promise<{ month?: string; tab?: string }> };
 /** Always fetch fresh data so "Vandaag loon gehad" (new period) is reflected everywhere. */
 export const dynamic = "force-dynamic";
 
-export default async function BudgetPage({ searchParams }: Props) {
+async function BudgetContent({ searchParams }: Props) {
   const today = getBudgetToday();
   const params = await searchParams;
   const monthParam = params.month;
@@ -501,3 +503,13 @@ export default async function BudgetPage({ searchParams }: Props) {
     </BudgetSnapshotProvider>
   );
 }
+
+export default function BudgetPage(props: Props) {
+  return (
+    <Suspense fallback={<BudgetSnapshotFallback />}>
+      {/* @ts-expect-error Async Server Component */}
+      <BudgetContent {...props} />
+    </Suspense>
+  );
+}
+

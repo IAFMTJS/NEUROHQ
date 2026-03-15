@@ -11,6 +11,7 @@ import { getUserPreferencesOrDefaults } from "@/app/actions/preferences";
 import { getBehaviorProfile } from "@/app/actions/behavior-profile";
 import { XPBadge } from "@/components/XPBadge";
 import dynamic from "next/dynamic";
+import { SettingsSnapshotFallback } from "@/components/settings/SettingsSnapshotFallback";
 
 const SettingsExport = dynamic(() => import("@/components/SettingsExport").then((m) => ({ default: m.SettingsExport })), { loading: () => null });
 const SettingsPush = dynamic(() => import("@/components/SettingsPush").then((m) => ({ default: m.SettingsPush })), { loading: () => <div className="min-h-[120px] animate-pulse rounded-xl bg-white/5" aria-hidden /> });
@@ -30,7 +31,6 @@ const SettingsClearCache = dynamic(() => import("@/components/settings/SettingsC
 const SettingsRefreshSnapshot = dynamic(() => import("@/components/settings/SettingsRefreshSnapshot").then((m) => ({ default: m.SettingsRefreshSnapshot })), { loading: () => null });
 const BehaviorProfileSettings = dynamic(() => import("@/components/settings/BehaviorProfileSettings").then((m) => ({ default: m.BehaviorProfileSettings })), { loading: () => null });
 const SettingsDaysOff = dynamic(() => import("@/components/settings/SettingsDaysOff").then((m) => ({ default: m.SettingsDaysOff })), { loading: () => null });
-const SettingsSnapshotFallback = dynamic(() => import("@/components/settings/SettingsSnapshotFallback").then((m) => ({ default: m.SettingsSnapshotFallback })), { loading: () => null });
 const SettingsEmailReminders = dynamic(() => import("@/components/settings/SettingsEmailReminders").then((m) => ({ default: m.SettingsEmailReminders })), { loading: () => <div className="min-h-[80px] animate-pulse rounded-xl bg-white/5" aria-hidden /> });
 
 function SettingsShell() {
