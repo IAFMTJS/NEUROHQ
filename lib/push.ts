@@ -16,6 +16,8 @@ export type PushPayload = {
   tag?: string;
   url?: string;
   priority?: "low" | "normal" | "high";
+  /** App icon badge count (1–99). Sent with every push so iOS/PWA shows a badge until the user opens the app. Default 1. */
+  badge?: number;
 };
 
 let vapidConfigured = false;
@@ -84,9 +86,36 @@ export async function sendPushToUser(
   if ((payload.priority ?? "normal") === "low" && count >= MAX_PUSH_BEFORE_LOW_PRIORITY_BLOCK) return false;
   if (count >= effectiveMax) return false;
 
+  // Unread badge: number of pushes sent since user last opened from a push (clicked).
+  // So the icon shows e.g. 3 when they have 3 unread notifications.
+  let badgeCount = 1;
+  if (typeof payload.badge === "number" && payload.badge >= 1) {
+    badgeCount = Math.min(99, payload.badge);
+  } else {
+    const { data: lastClick } = await supabase
+      .from("push_engagement")
+      .select("created_at")
+      .eq("user_id", userId)
+      .eq("event_type", "clicked")
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    const lastClickedAt = (lastClick as { created_at?: string } | null)?.created_at ?? null;
+    // If user never clicked, only count sends in last 30 days so badge stays reasonable.
+    const since = lastClickedAt ?? new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
+    const { count: unreadCount } = await supabase
+      .from("push_sends_log")
+      .select("*", { count: "exact", head: true })
+      .eq("user_id", userId)
+      .gt("sent_at", since);
+    const unread = Math.max(0, unreadCount ?? 0);
+    badgeCount = Math.min(99, unread + 1);
+  }
+
   const payloadToSend = {
     ...payload,
     url: urlWithClickTracking(payload.url, payload.tag),
+    badge: badgeCount,
   };
 
   try {
