@@ -31,10 +31,18 @@ export async function loadDailySnapshot(): Promise<DailySnapshot | null> {
 export async function saveDailySnapshot(snapshot: DailySnapshot): Promise<void> {
   if (typeof window === "undefined") return;
   try {
+    const now = Date.now();
     const normalized: DailySnapshot = {
       ...snapshot,
       version: LATEST_SNAPSHOT_VERSION,
       date: snapshot.date || getTodayKey(),
+      ui: {
+        ...snapshot.ui,
+        savedAt:
+          typeof snapshot.ui?.savedAt === "number" && Number.isFinite(snapshot.ui.savedAt)
+            ? snapshot.ui.savedAt
+            : now,
+      },
     };
     window.localStorage.setItem(STORAGE_KEY, JSON.stringify(normalized));
   } catch {
@@ -56,6 +64,21 @@ export async function clearDailySnapshot(): Promise<void> {
  */
 export function isCurrentSnapshot(snapshot: DailySnapshot | null): boolean {
   if (!snapshot) return false;
-  return isSnapshotForToday(snapshot);
+  if (!isSnapshotForToday(snapshot)) return false;
+
+  // If we have a savedAt timestamp, treat very old same-day snapshots as stale so
+  // the bootstrap loader can rebuild a fresh snapshot (e.g. after many hours or
+  // significant server-side changes).
+  const maxAgeMs = 12 * 60 * 60 * 1000; // 12h safety window
+  const savedAt =
+    snapshot.ui && typeof snapshot.ui.savedAt === "number" && Number.isFinite(snapshot.ui.savedAt)
+      ? snapshot.ui.savedAt
+      : null;
+  if (savedAt != null && typeof window !== "undefined") {
+    const age = Date.now() - savedAt;
+    if (age > maxAgeMs) return false;
+  }
+
+  return true;
 }
 

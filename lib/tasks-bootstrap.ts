@@ -21,7 +21,15 @@ export function useTasksBootstrap(date: string) {
 
   useEffect(() => {
     const snapshotTasks = missionsSnapshot?.tasksByDate?.[date] as Task[] | undefined;
-    if (snapshotTasks && snapshotTasks.length > 0 && existingForDate.length === 0) {
+    // Only hydrate from snapshot for this date when the tasks system is still idle.
+    // This prevents deleted or heavily edited missions from reappearing from an
+    // older snapshot later in the session.
+    if (
+      snapshotTasks &&
+      snapshotTasks.length > 0 &&
+      existingForDate.length === 0 &&
+      status === "idle"
+    ) {
       setTasksForDate(date, snapshotTasks);
       setStatus("ready");
       setError(null);

@@ -414,3 +414,20 @@ export async function GET(request: Request) {
     to: todayStr,
   });
 }
+
+// Lightweight server-side log so we can debug daily quote and behavioral push
+// delivery without relying solely on client reports.
+console.info("[cron/daily] completed run", {
+  rolledTasks: typeof totalRolled === "number" ? totalRolled : undefined,
+  usersUtc: usersForRollover?.length ?? 0,
+  usersTotal: users?.length ?? 0,
+  pushSent,
+  freezeReminderSent,
+  avoidanceSent,
+  reEngagementSent,
+  streakGrowthSent,
+  streakProtectionSent,
+  highMomentumSent,
+  hobbyDecayUsers,
+  window: { from: yesterdayStr, to: todayStr },
+});

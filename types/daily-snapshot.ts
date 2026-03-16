@@ -116,6 +116,11 @@ export interface DailySnapshotUIState {
    * When true, we are running from a previous-day snapshot in offline/degraded mode.
    */
   offlineMode?: boolean;
+  /**
+   * Client-side timestamp (ms since epoch) when this snapshot was last saved.
+   * Used to detect stale same-day snapshots and trigger a fresh preload.
+   */
+  savedAt?: number;
 }
 
 export interface DailySnapshot {

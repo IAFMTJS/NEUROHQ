@@ -94,6 +94,7 @@ export async function initializeDailySystem(
     ui: {
       pagesPrefetched: [],
       assetsPrefetched: false,
+      savedAt: typeof performance !== "undefined" ? performance.now() : Date.now(),
     },
   };
 
