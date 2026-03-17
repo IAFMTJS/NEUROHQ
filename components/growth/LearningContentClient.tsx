@@ -1,7 +1,6 @@
 "use client";
 
 import type { LearningState } from "@/app/actions/learning-state";
-import { useDailySnapshot } from "@/components/bootstrap/BootstrapGate";
 import { GrowthIntentCard } from "@/components/growth/GrowthIntentCard";
 import { GrowthConsistencyCard } from "@/components/growth/GrowthConsistencyCard";
 import { GrowthStreamsList } from "@/components/growth/GrowthStreamsList";
@@ -15,23 +14,7 @@ type Props = {
 };
 
 export function LearningContentClient({ todayStr, fallback }: Props) {
-  const snapshot = useDailySnapshot();
-  const snap = snapshot?.learning && snapshot.learning.today === todayStr ? snapshot.learning : null;
-
-  const learning: LearningState = snap
-    ? {
-        focus: snap.focus as LearningState["focus"],
-        streams: snap.streams as LearningState["streams"],
-        consistency: snap.consistency as LearningState["consistency"],
-        reflection: {
-          lastEntryDate: snap.reflection.lastEntryDate,
-          reflectionRequired: snap.reflection.reflectionRequired,
-          lastUnderstood: fallback.reflection.lastUnderstood ?? null,
-          lastDifficult: fallback.reflection.lastDifficult ?? null,
-          lastAdjust: fallback.reflection.lastAdjust ?? null,
-        },
-      }
-    : fallback;
+  const learning: LearningState = fallback;
 
   const currentBook = learning.streams.find((s) => s.type === "book") ?? null;
 

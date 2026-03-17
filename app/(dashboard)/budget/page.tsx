@@ -507,7 +507,6 @@ async function BudgetContent({ searchParams }: Props) {
 export default function BudgetPage(props: Props) {
   return (
     <Suspense fallback={<BudgetSnapshotFallback />}>
-      {/* @ts-expect-error Async Server Component */}
       <BudgetContent {...props} />
     </Suspense>
   );

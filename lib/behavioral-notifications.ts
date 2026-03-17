@@ -37,6 +37,22 @@ export type TriggerType =
   | "inactivity_7d"
   | "inactivity_14d"
   | "positive_surprise"
+  | "daily_all_tasks_completed"
+  | "daily_minimum_completed"
+  | "daily_multi_missions_combo"
+  | "daily_high_productivity_session"
+  | "streak_growth_milestone"
+  | "brain_status_streak_7"
+  | "brain_status_streak_14"
+  | "brain_status_streak_30"
+  | "rank_progress_close"
+  | "under_budget_today"
+  | "under_budget_week_streak"
+  | "budget_discipline_day"
+  | "learning_session_logged"
+  | "learning_week_target_hit"
+  | "reflection_submitted"
+  | "recovery_task_completed"
   | "behavioral_coaching_high_brain_idle"
   | "behavioral_coaching_low_brain_active"
   | "too_many_open_missions"
@@ -49,12 +65,21 @@ export type BehaviorEvent =
   | { type: "brain_status_stale" }
   | { type: "app_open_no_action"; opens: number; minutesSinceFirstOpen: number }
   | { type: "page_switch_burst"; switches: number; durationMinutes: number }
+  | { type: "daily_all_tasks_completed" }
+  | { type: "daily_minimum_completed"; completedCount: number; suggestedCount?: number }
   | { type: "mission_completed"; missionsInWindow: number; windowMinutes: number }
   | { type: "productivity_session"; actionsInWindow: number; windowMinutes: number }
   | { type: "streak_risk"; currentStreak: number }
   | { type: "streak_growth"; newStreak: number }
+  | { type: "brain_status_streak"; days: number }
   | { type: "rank_progress"; xpToNextRank: number }
   | { type: "rank_achieved"; newRankName: string }
+  | { type: "under_budget"; daysUnderBudgetThisWeek?: number; period: "today" | "week" }
+  | { type: "budget_discipline_day" }
+  | { type: "learning_session_logged"; minutes?: number }
+  | { type: "learning_week_target_hit"; completionRatio: number }
+  | { type: "reflection_submitted" }
+  | { type: "recovery_task_completed" }
   | { type: "high_brain_no_action"; energy: number; focus: number }
   | { type: "low_brain_active"; energy: number; focus: number }
   | { type: "too_many_open_missions"; openMissions: number }
@@ -303,6 +328,102 @@ export const MESSAGE_POOL: MessagePool = {
       { body: "Who are you and what have you done with the usual you? We approve." },
     ],
   },
+  daily_all_tasks_completed: {
+    neutral: [{ body: "All missions for today are done." }],
+    friendly: [{ body: "You cleared today’s list. Nice work." }],
+    stoic: [{ body: "Today’s list: complete." }],
+    coach: [{ body: "All missions done today. That’s the standard." }],
+  },
+  daily_minimum_completed: {
+    neutral: [{ body: "You hit your minimum for today." }],
+    friendly: [{ body: "You hit today’s minimum. Momentum counts." }],
+    stoic: [{ body: "Minimum met. Continue if useful." }],
+    coach: [{ body: "Daily minimum reached. Good. Build from here." }],
+  },
+  daily_multi_missions_combo: {
+    neutral: [{ body: "Combo: several missions completed today." }],
+    friendly: [{ body: "That’s a strong combo. You’re moving." }],
+    stoic: [{ body: "Multiple missions. Solid rhythm." }],
+    coach: [{ body: "Combo active. Keep the line moving." }],
+  },
+  daily_high_productivity_session: {
+    neutral: [{ body: "Strong output today." }],
+    friendly: [{ body: "You had a strong session today. Keep that feeling." }],
+    stoic: [{ body: "Output noted." }],
+    coach: [{ body: "High-productivity session logged. Lock in what worked." }],
+  },
+  streak_growth_milestone: {
+    neutral: [{ body: "Streak milestone reached." }],
+    friendly: [{ body: "New streak milestone. Consistency is showing." }],
+    stoic: [{ body: "Milestone reached. Continue." }],
+    coach: [{ body: "Streak milestone hit. Protect it tomorrow." }],
+  },
+  brain_status_streak_7: {
+    neutral: [{ body: "Seven days of check-ins logged." }],
+    friendly: [{ body: "Seven days of brain status check-ins. Strong self-awareness." }],
+    stoic: [{ body: "Seven days observed. Useful." }],
+    coach: [{ body: "7-day brain-status streak. Keep the signal clean." }],
+  },
+  brain_status_streak_14: {
+    neutral: [{ body: "Fourteen days of check-ins logged." }],
+    friendly: [{ body: "Two weeks of brain-status check-ins. That’s real consistency." }],
+    stoic: [{ body: "Fourteen days observed." }],
+    coach: [{ body: "14-day check-in streak. Keep using the data." }],
+  },
+  brain_status_streak_30: {
+    neutral: [{ body: "Thirty days of check-ins logged." }],
+    friendly: [{ body: "A full month of brain-status check-ins. Excellent." }],
+    stoic: [{ body: "Thirty days observed. Strong discipline." }],
+    coach: [{ body: "30-day check-in streak. That’s how patterns become visible." }],
+  },
+  rank_progress_close: {
+    neutral: [{ body: "You’re close to the next rank." }],
+    friendly: [{ body: "You’re close to your next rank. One good push could do it." }],
+    stoic: [{ body: "Next rank is near." }],
+    coach: [{ body: "Rank is close. Finish strong." }],
+  },
+  under_budget_today: {
+    neutral: [{ body: "You stayed under budget today." }],
+    friendly: [{ body: "You stayed under budget today. Quiet win." }],
+    stoic: [{ body: "Budget held today." }],
+    coach: [{ body: "Under budget today. Keep the discipline simple." }],
+  },
+  under_budget_week_streak: {
+    neutral: [{ body: "Your budget streak is holding this week." }],
+    friendly: [{ body: "You’re stacking under-budget days this week." }],
+    stoic: [{ body: "Budget streak intact." }],
+    coach: [{ body: "Under-budget streak this week. Protect it." }],
+  },
+  budget_discipline_day: {
+    neutral: [{ body: "Budget discipline logged today." }],
+    friendly: [{ body: "Good budget discipline today. Small controls matter." }],
+    stoic: [{ body: "Discipline logged." }],
+    coach: [{ body: "Budget discipline day recorded. Repeat it tomorrow." }],
+  },
+  learning_session_logged: {
+    neutral: [{ body: "Learning session logged." }],
+    friendly: [{ body: "Learning logged today. Growth stays alive." }],
+    stoic: [{ body: "Learning recorded." }],
+    coach: [{ body: "Learning session done. Keep the cadence." }],
+  },
+  learning_week_target_hit: {
+    neutral: [{ body: "Your learning target for the week is hit." }],
+    friendly: [{ body: "Weekly learning target reached. Nice work." }],
+    stoic: [{ body: "Learning target reached." }],
+    coach: [{ body: "Weekly learning target hit. Bank the momentum." }],
+  },
+  reflection_submitted: {
+    neutral: [{ body: "Reflection saved." }],
+    friendly: [{ body: "Reflection saved. You’re learning on purpose." }],
+    stoic: [{ body: "Reflection recorded." }],
+    coach: [{ body: "Reflection submitted. Use it next session." }],
+  },
+  recovery_task_completed: {
+    neutral: [{ body: "Recovery task completed." }],
+    friendly: [{ body: "You chose recovery and still showed up. That counts." }],
+    stoic: [{ body: "Recovery completed. Stability preserved." }],
+    coach: [{ body: "Recovery task done. Protect the system, then build." }],
+  },
   behavioral_coaching_high_brain_idle: {
     neutral: [
       { body: "High energy detected but no missions started." },
@@ -359,6 +480,7 @@ export function decidePriority(trigger: TriggerType): PushPayload["priority"] {
   if (
     trigger === "streak_protection" ||
     trigger === "streak_growth" ||
+    trigger === "streak_growth_milestone" ||
     trigger === "rank_achieved" ||
     trigger === "inactivity_7d" ||
     trigger === "inactivity_14d" ||
@@ -366,7 +488,24 @@ export function decidePriority(trigger: TriggerType): PushPayload["priority"] {
   ) {
     return "high";
   }
-  if (trigger === "mission_completed" || trigger === "positive_surprise") {
+  if (
+    trigger === "mission_completed" ||
+    trigger === "positive_surprise" ||
+    trigger === "daily_minimum_completed" ||
+    trigger === "daily_all_tasks_completed" ||
+    trigger === "daily_multi_missions_combo" ||
+    trigger === "daily_high_productivity_session" ||
+    trigger === "brain_status_streak_7" ||
+    trigger === "brain_status_streak_14" ||
+    trigger === "brain_status_streak_30" ||
+    trigger === "under_budget_today" ||
+    trigger === "under_budget_week_streak" ||
+    trigger === "budget_discipline_day" ||
+    trigger === "learning_session_logged" ||
+    trigger === "learning_week_target_hit" ||
+    trigger === "reflection_submitted" ||
+    trigger === "recovery_task_completed"
+  ) {
     return "low";
   }
   return "normal";
@@ -400,6 +539,26 @@ export type EngineResult = {
   payload: PushPayload;
 };
 
+export const POSITIVE_ACHIEVEMENT_TRIGGERS: TriggerType[] = [
+  "daily_all_tasks_completed",
+  "daily_minimum_completed",
+  "daily_multi_missions_combo",
+  "daily_high_productivity_session",
+  "streak_growth_milestone",
+  "brain_status_streak_7",
+  "brain_status_streak_14",
+  "brain_status_streak_30",
+  "rank_achieved",
+  "rank_progress_close",
+  "under_budget_today",
+  "under_budget_week_streak",
+  "budget_discipline_day",
+  "learning_session_logged",
+  "learning_week_target_hit",
+  "reflection_submitted",
+  "recovery_task_completed",
+];
+
 /**
  * Pure notification engine: maps a high-level BehaviorEvent + user context
  * to a PushPayload, without touching DB, cron, or delivery.
@@ -422,6 +581,12 @@ export function buildBehavioralNotificationForContext(
     case "brain_status_stale":
       trigger = "brain_status_recheck";
       break;
+    case "daily_all_tasks_completed":
+      trigger = "daily_all_tasks_completed";
+      break;
+    case "daily_minimum_completed":
+      trigger = "daily_minimum_completed";
+      break;
     case "app_open_no_action":
       trigger = event.opens >= 3 ? "multi_opens_no_action" : "app_open_no_action";
       break;
@@ -433,12 +598,12 @@ export function buildBehavioralNotificationForContext(
     case "mission_completed":
       trigger =
         event.missionsInWindow >= 3 && event.windowMinutes <= 45
-          ? "multi_missions"
+          ? "daily_multi_missions_combo"
           : "mission_completed";
       break;
     case "productivity_session":
       if (event.actionsInWindow >= 5 && event.windowMinutes <= 30) {
-        trigger = "high_productivity";
+        trigger = "daily_high_productivity_session";
       }
       break;
     case "streak_risk":
@@ -447,15 +612,47 @@ export function buildBehavioralNotificationForContext(
       }
       break;
     case "streak_growth":
-      trigger = "streak_growth";
+      trigger = [3, 7, 14, 30].includes(event.newStreak)
+        ? "streak_growth_milestone"
+        : "streak_growth";
+      break;
+    case "brain_status_streak":
+      if (event.days >= 30) trigger = "brain_status_streak_30";
+      else if (event.days >= 14) trigger = "brain_status_streak_14";
+      else if (event.days >= 7) trigger = "brain_status_streak_7";
       break;
     case "rank_progress":
       if (event.xpToNextRank > 0 && event.xpToNextRank <= 150) {
-        trigger = "rank_progress";
+        trigger = "rank_progress_close";
       }
       break;
     case "rank_achieved":
       trigger = "rank_achieved";
+      break;
+    case "under_budget":
+      trigger =
+        event.period === "today"
+          ? "under_budget_today"
+          : (event.daysUnderBudgetThisWeek ?? 0) >= 2
+            ? "under_budget_week_streak"
+            : null;
+      break;
+    case "budget_discipline_day":
+      trigger = "budget_discipline_day";
+      break;
+    case "learning_session_logged":
+      trigger = "learning_session_logged";
+      break;
+    case "learning_week_target_hit":
+      if (event.completionRatio >= 1) {
+        trigger = "learning_week_target_hit";
+      }
+      break;
+    case "reflection_submitted":
+      trigger = "reflection_submitted";
+      break;
+    case "recovery_task_completed":
+      trigger = "recovery_task_completed";
       break;
     case "high_brain_no_action":
       if (event.energy >= 7 && event.focus >= 6) {

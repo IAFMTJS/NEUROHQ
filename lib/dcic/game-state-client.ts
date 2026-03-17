@@ -50,10 +50,8 @@ export function useDCICGameState() {
               typeof body?.error === "string"
                 ? body.error
                 : `Game state ${res.status}`;
-            setError(msg);
-            if (status === "idle" || status === "loading") {
-              setStatus("error");
-            }
+            setGameStateError(msg);
+            setGameStateStatus("error");
           }
           return;
         }

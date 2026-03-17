@@ -307,21 +307,21 @@ export async function GET(request: Request) {
 
         // 2) Streak growth celebration (when current_streak reaches longest_streak)
         if (currentStreak > 0 && currentStreak >= longestStreak) {
-          const { canSend } = await canSendBehavioralNotification(
-            supabase,
-            userId,
-            "streak_growth",
-            today
-          );
-          if (canSend) {
-            const streakGrowth = buildBehavioralNotificationForContext(ctx, {
-              type: "streak_growth",
-              newStreak: currentStreak,
-            });
-            if (streakGrowth) {
+          const streakGrowth = buildBehavioralNotificationForContext(ctx, {
+            type: "streak_growth",
+            newStreak: currentStreak,
+          });
+          if (streakGrowth) {
+            const { canSend } = await canSendBehavioralNotification(
+              supabase,
+              userId,
+              streakGrowth.trigger,
+              today
+            );
+            if (canSend) {
               const ok = await sendPushToUser(supabase, userId, streakGrowth.payload);
               if (ok) {
-                await markBehavioralNotificationSent(supabase, userId, "streak_growth");
+                await markBehavioralNotificationSent(supabase, userId, streakGrowth.trigger);
                 streakGrowthSent++;
               }
             }
@@ -354,30 +354,30 @@ export async function GET(request: Request) {
         // 4) Momentum / high productivity: multiple missions completed yesterday.
         const missionsYesterday = missionsByUser.get(userId) ?? 0;
         if (missionsYesterday >= 3) {
-          const { canSend } = await canSendBehavioralNotification(
-            supabase,
-            userId,
-            "high_productivity",
-            today
-          );
-          if (canSend) {
-            const momentumEvent =
-              missionsYesterday >= 5
-                ? ({
-                    type: "productivity_session",
-                    actionsInWindow: missionsYesterday,
-                    windowMinutes: 30,
-                  } as const)
-                : ({
-                    type: "mission_completed",
-                    missionsInWindow: missionsYesterday,
-                    windowMinutes: 45,
-                  } as const);
-            const momentumResult = buildBehavioralNotificationForContext(ctx, momentumEvent);
-            if (momentumResult) {
+          const momentumEvent =
+            missionsYesterday >= 5
+              ? ({
+                  type: "productivity_session",
+                  actionsInWindow: missionsYesterday,
+                  windowMinutes: 30,
+                } as const)
+              : ({
+                  type: "mission_completed",
+                  missionsInWindow: missionsYesterday,
+                  windowMinutes: 45,
+                } as const);
+          const momentumResult = buildBehavioralNotificationForContext(ctx, momentumEvent);
+          if (momentumResult) {
+            const { canSend } = await canSendBehavioralNotification(
+              supabase,
+              userId,
+              momentumResult.trigger,
+              today
+            );
+            if (canSend) {
               const ok = await sendPushToUser(supabase, userId, momentumResult.payload);
               if (ok) {
-                await markBehavioralNotificationSent(supabase, userId, "high_productivity");
+                await markBehavioralNotificationSent(supabase, userId, momentumResult.trigger);
                 highMomentumSent++;
               }
             }
@@ -414,20 +414,3 @@ export async function GET(request: Request) {
     to: todayStr,
   });
 }
-
-// Lightweight server-side log so we can debug daily quote and behavioral push
-// delivery without relying solely on client reports.
-console.info("[cron/daily] completed run", {
-  rolledTasks: typeof totalRolled === "number" ? totalRolled : undefined,
-  usersUtc: usersForRollover?.length ?? 0,
-  usersTotal: users?.length ?? 0,
-  pushSent,
-  freezeReminderSent,
-  avoidanceSent,
-  reEngagementSent,
-  streakGrowthSent,
-  streakProtectionSent,
-  highMomentumSent,
-  hobbyDecayUsers,
-  window: { from: yesterdayStr, to: todayStr },
-});

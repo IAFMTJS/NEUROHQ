@@ -67,7 +67,6 @@ async function main() {
 
   const regionResults = [];
   for (const file of files) {
-    // eslint-disable-next-line no-await-in-loop
     regionResults.push(await compareOne(file.name, file.maxDiffPct));
   }
 

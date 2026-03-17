@@ -1,7 +1,8 @@
 "use client";
 
 import type { FC } from "react";
-import { useState, useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
 import { addMonthlyBook, setMonthlyBook } from "@/app/actions/learning";
 
 type Props = {
@@ -10,9 +11,18 @@ type Props = {
 };
 
 export const MonthlyBookCard: FC<Props> = ({ currentBookTitle, totalPages }) => {
+  const router = useRouter();
   const [title, setTitle] = useState(currentBookTitle ?? "");
   const [pages, setPages] = useState(totalPages != null ? String(totalPages) : "");
   const [pending, startTransition] = useTransition();
+
+  useEffect(() => {
+    setTitle(currentBookTitle ?? "");
+  }, [currentBookTitle]);
+
+  useEffect(() => {
+    setPages(totalPages != null ? String(totalPages) : "");
+  }, [totalPages]);
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -28,6 +38,7 @@ export const MonthlyBookCard: FC<Props> = ({ currentBookTitle, totalPages }) => 
         } else {
           await addMonthlyBook(trimmedTitle, safePages);
         }
+        router.refresh();
       } catch {
         // Errors surface via toasts elsewhere; keep UI calm here.
       }

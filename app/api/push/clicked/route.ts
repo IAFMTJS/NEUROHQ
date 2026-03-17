@@ -23,7 +23,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Missing tag" }, { status: 400 });
     }
 
-    const { error } = await supabase.from("push_engagement").insert({
+    const { error } = await (supabase as any).from("push_engagement").insert({
       user_id: user.id,
       event_type: "clicked",
       tag,

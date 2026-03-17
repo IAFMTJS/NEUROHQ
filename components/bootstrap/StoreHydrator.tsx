@@ -43,8 +43,8 @@ export function StoreHydrator({ snapshot, children }: Props) {
 
     if (snapshot.dashboard) {
       setDashboardSnapshot({
-        critical: snapshot.dashboard.critical,
-        secondary: snapshot.dashboard.secondary,
+        critical: snapshot.dashboard.critical as any,
+        secondary: snapshot.dashboard.secondary as any,
       });
     }
 
@@ -89,10 +89,10 @@ export function StoreHydrator({ snapshot, children }: Props) {
         weeklyMinutes: l.weeklyMinutes,
         weeklyLearningTarget: l.weeklyLearningTarget,
         learningStreak: l.learningStreak,
-        focus: l.focus,
-        streams: l.streams,
-        consistency: l.consistency,
-        reflection: l.reflection,
+        focus: (l as any).focus,
+        streams: (l as any).streams,
+        consistency: (l as any).consistency,
+        reflection: l.reflection as any,
       });
       setLearningStatus("ready");
       setLearningError(null);

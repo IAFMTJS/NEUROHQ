@@ -16,7 +16,7 @@ export function ReactQueryProvider({ children }: ReactQueryProviderProps) {
             // Daily data is effectively static for a day; avoid refetch spam.
             staleTime: 24 * 60 * 60 * 1000,
             // Keep cached for the whole session; GC on tab close.
-            cacheTime: Infinity,
+            gcTime: Infinity,
             refetchOnWindowFocus: false,
             refetchOnReconnect: false,
           },

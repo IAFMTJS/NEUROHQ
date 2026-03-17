@@ -60,15 +60,15 @@ export function usePeriodicBootstrapRefresh(intervalMinutes = 45) {
         if (dateStr) setTodayDate(dateStr);
         if (data.dashboard) {
           setDashboardSnapshot({
-            critical: data.dashboard.critical,
-            secondary: data.dashboard.secondary,
+            critical: data.dashboard.critical as any,
+            secondary: data.dashboard.secondary as any,
           });
         }
-        if (data.dcicGameState) setGameState(data.dcicGameState);
+        if (data.dcicGameState) setGameState(data.dcicGameState as any);
         if (data.dailyState) setTodayDailyState(data.dailyState);
         if (data.energyBudget) setTodayEnergyBudget(data.energyBudget);
-        if (data.budget) setBudgetSnapshot(data.budget);
-        if (data.learning) setLearningSnapshot(data.learning);
+        if (data.budget) setBudgetSnapshot(data.budget as any);
+        if (data.learning) setLearningSnapshot(data.learning as any);
 
         // Best-effort: merge refreshed bootstrap payload back into the existing
         // same-day DailySnapshot so the next cold-start uses the latest data.

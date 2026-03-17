@@ -6,6 +6,7 @@ import { IDENTITY_DRIFT_LABELS } from "@/lib/identity-drift";
 import { WEEKLY_MODE_LABELS } from "@/lib/weekly-tactical-mode";
 import type { DangerousModulesContext } from "@/app/actions/dangerous-modules-context";
 import type { WeeklyTacticalMode } from "@/lib/weekly-tactical-mode";
+import { getWeeklyModeModifiers } from "@/lib/weekly-tactical-mode";
 import { enqueueMutation, flushMutationQueue } from "@/lib/client-cache";
 
 type Props = {
@@ -15,6 +16,15 @@ type Props = {
 
 const today = () => new Date().toISOString().slice(0, 10);
 const MUTATION_TYPE_OVERRIDE = "dangerous-modules:mode-override";
+
+function getWeekStart(dateStr: string): string {
+  const d = new Date(dateStr + "T12:00:00");
+  const day = d.getDay();
+  const diff = d.getDate() - day + (day === 0 ? -6 : 1);
+  const monday = new Date(d);
+  monday.setDate(diff);
+  return monday.toISOString().slice(0, 10);
+}
 
 async function fetchContext(dateStr: string): Promise<DangerousModulesContext | null> {
   const res = await fetch(`/api/dashboard/dangerous-modules?date=${encodeURIComponent(dateStr)}`, {
@@ -83,7 +93,12 @@ export function DangerousModulesCard({ embedded }: Props) {
           ...optimistic,
           weeklyMode: optimistic.weeklyMode
             ? { ...optimistic.weeklyMode, mode, userOverrideUsed: true }
-            : { mode, userOverrideUsed: true },
+            : {
+                weekStart: getWeekStart(todayStr),
+                mode,
+                modifiers: getWeeklyModeModifiers(mode),
+                userOverrideUsed: true,
+              },
         };
         setCtxOverride(next);
       }

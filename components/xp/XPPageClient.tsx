@@ -30,12 +30,12 @@ export function XPPageClient({ todayStr }: Props) {
 
   return (
     <XPDataProvider initialDateStr={todayStr} initialData={initialData}>
-      <XPPageContentContainer />
+      <XPPageContentContainer todayStr={todayStr} />
     </XPDataProvider>
   );
 }
 
-function XPPageContentContainer() {
+function XPPageContentContainer({ todayStr }: { todayStr: string }) {
   const ctx = useXPData();
   const data = ctx?.data ?? null;
   if (!data) return null;
@@ -66,7 +66,7 @@ function XPPageContentContainer() {
         xpLast7={data.xpLast7}
         xpPrevious7={data.xpPrevious7}
         xpBySource={data.xpBySource as any}
-        todayStr={data.todayStr}
+        todayStr={todayStr}
         missionTemplates={data.missionTemplates as any}
         behaviorProfile={data.behaviorProfile as any}
         brainModeToday={data.brainModeToday as any}

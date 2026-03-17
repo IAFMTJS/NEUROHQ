@@ -4,6 +4,8 @@ import { useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { rescheduleTask } from "@/app/actions/tasks";
 import { Modal } from "@/components/Modal";
+import { useHQStore } from "@/lib/hq-store";
+import type { Task } from "@/types/database.types";
 
 type BacklogTask = {
   id: string;
@@ -26,10 +28,19 @@ type Props = {
 export function BacklogModal({ open, onClose, backlog, todayDate, onScheduleClick, onEditClick, onDeleteClick }: Props) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
+  const upsertTask = useHQStore((s) => s.upsertTask);
+  const removeTask = useHQStore((s) => s.removeTask);
 
-  function handleMoveToToday(id: string) {
+  function handleMoveToToday(task: BacklogTask) {
     startTransition(async () => {
-      await rescheduleTask(id, todayDate);
+      if (task.due_date) {
+        removeTask(task.id, task.due_date);
+      }
+      upsertTask({
+        ...(task as Task),
+        due_date: todayDate,
+      });
+      await rescheduleTask(task.id, todayDate);
       router.refresh();
     });
   }
@@ -57,7 +68,7 @@ export function BacklogModal({ open, onClose, backlog, todayDate, onScheduleClic
               </div>
               <div className="flex flex-wrap items-center gap-1">
                 <button type="button" onClick={() => { onClose(); onEditClick(t); }} className="rounded-lg px-2 py-1 text-xs text-[var(--text-muted)] hover:bg-[var(--bg-surface)] hover:text-[var(--text-primary)]">Bewerken</button>
-                <button type="button" onClick={() => handleMoveToToday(t.id)} disabled={pending} className="rounded-lg px-2 py-1 text-xs font-medium text-[var(--accent-focus)] hover:bg-[var(--accent-focus)]/10 disabled:opacity-50">Naar vandaag</button>
+                <button type="button" onClick={() => handleMoveToToday(t)} disabled={pending} className="rounded-lg px-2 py-1 text-xs font-medium text-[var(--accent-focus)] hover:bg-[var(--accent-focus)]/10 disabled:opacity-50">Naar vandaag</button>
                 <button type="button" onClick={() => { onClose(); onScheduleClick(t); }} className="rounded-lg px-2 py-1 text-xs text-[var(--text-muted)] hover:bg-[var(--bg-surface)] hover:text-[var(--text-primary)]">Inplannen</button>
                 <button type="button" onClick={() => { onClose(); onDeleteClick(t.id); }} className="rounded-lg px-2 py-1 text-xs text-red-400 hover:bg-red-500/10">Verwijderen</button>
               </div>

@@ -74,7 +74,7 @@ export async function sendPushToUser(
   }
 
   const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
-  const { count: clicksLast7d } = await supabase
+  const { count: clicksLast7d } = await (supabase as any)
     .from("push_engagement")
     .select("*", { count: "exact", head: true })
     .eq("user_id", userId)
@@ -92,7 +92,7 @@ export async function sendPushToUser(
   if (typeof payload.badge === "number" && payload.badge >= 1) {
     badgeCount = Math.min(99, payload.badge);
   } else {
-    const { data: lastClick } = await supabase
+    const { data: lastClick } = await (supabase as any)
       .from("push_engagement")
       .select("created_at")
       .eq("user_id", userId)

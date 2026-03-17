@@ -13,8 +13,16 @@ import {
   buildEveningEmailHtml,
   buildEveningPushPayload,
 } from "@/lib/daily-email-content";
-import { buildBehavioralNotificationForContext, type PersonalityMode } from "@/lib/behavioral-notifications";
-import { loadUserNotificationContextForUser } from "@/lib/behavioral-notification-server";
+import {
+  POSITIVE_ACHIEVEMENT_TRIGGERS,
+  buildBehavioralNotificationForContext,
+  type PersonalityMode,
+} from "@/lib/behavioral-notifications";
+import {
+  canSendBehavioralNotification,
+  loadUserNotificationContextForUser,
+  markBehavioralNotificationSent,
+} from "@/lib/behavioral-notification-server";
 import { applyPersonalityToPayload } from "@/lib/push-personality";
 
 /**
@@ -33,6 +41,166 @@ const DEFAULT_QUOTE_HOUR = 8;
 
 /** Look for calendar events starting in the next 0–60 minutes so hourly cron can send one reminder per user. */
 const CALENDAR_REMINDER_WINDOW_MINUTES = 60;
+
+function getWeekStartUtc(dateStr: string): string {
+  const d = new Date(`${dateStr}T12:00:00Z`);
+  const weekday = d.getUTCDay() || 7;
+  d.setUTCDate(d.getUTCDate() - (weekday - 1));
+  return d.toISOString().slice(0, 10);
+}
+
+function getDaysInMonthUtc(dateStr: string): number {
+  const [year, month] = dateStr.split("-").map((part) => parseInt(part, 10));
+  return new Date(Date.UTC(year, month, 0)).getUTCDate();
+}
+
+function daysAgoUtc(dateStr: string, days: number): string {
+  const d = new Date(`${dateStr}T12:00:00Z`);
+  d.setUTCDate(d.getUTCDate() - days);
+  return d.toISOString().slice(0, 10);
+}
+
+async function hasSentAchievementPushToday(
+  supabase: ReturnType<typeof createAdminClient>,
+  userId: string,
+  timezone: string,
+  todayStr: string
+): Promise<boolean> {
+  const sinceIso = utcStartOfLocalDayIso(timezone, todayStr);
+  const { count } = await supabase
+    .from("push_sends_log")
+    .select("*", { count: "exact", head: true })
+    .eq("user_id", userId)
+    .in("trigger_type", POSITIVE_ACHIEVEMENT_TRIGGERS)
+    .gte("sent_at", sinceIso);
+  return (count ?? 0) > 0;
+}
+
+async function getBrainStatusStreakDays(
+  supabase: ReturnType<typeof createAdminClient>,
+  userId: string,
+  todayStr: string
+): Promise<number> {
+  const sinceStr = daysAgoUtc(todayStr, 29);
+  const { data } = await supabase
+    .from("user_analytics_daily")
+    .select("date, brain_status_logged")
+    .eq("user_id", userId)
+    .gte("date", sinceStr)
+    .lte("date", todayStr);
+  const rows = (data ?? []) as { date: string; brain_status_logged?: boolean | null }[];
+  const loggedDays = new Set(rows.filter((row) => row.brain_status_logged === true).map((row) => row.date));
+  let streak = 0;
+  for (let i = 0; i < 30; i++) {
+    const dateKey = daysAgoUtc(todayStr, i);
+    if (!loggedDays.has(dateKey)) break;
+    streak++;
+  }
+  return streak;
+}
+
+async function getBudgetAchievementStats(
+  supabase: ReturnType<typeof createAdminClient>,
+  userId: string,
+  todayStr: string
+): Promise<{ underBudgetToday: boolean; daysUnderBudgetThisWeek: number }> {
+  const weekStart = getWeekStartUtc(todayStr);
+  const [{ data: budgetUser }, { data: expenseRows }] = await Promise.all([
+    supabase
+      .from("users")
+      .select("monthly_budget_cents, monthly_savings_cents, budget_period")
+      .eq("id", userId)
+      .single(),
+    supabase
+      .from("budget_entries")
+      .select("date, amount_cents")
+      .eq("user_id", userId)
+      .lt("amount_cents", 0)
+      .gte("date", weekStart)
+      .lte("date", todayStr),
+  ]);
+
+  const row = (budgetUser ?? {}) as {
+    monthly_budget_cents?: number | null;
+    monthly_savings_cents?: number | null;
+    budget_period?: string | null;
+  };
+  const spendable =
+    Math.max(0, (row.monthly_budget_cents ?? 0) - (row.monthly_savings_cents ?? 0));
+  if (spendable <= 0) {
+    return { underBudgetToday: false, daysUnderBudgetThisWeek: 0 };
+  }
+
+  const dailyCap =
+    (row.budget_period === "weekly" ? spendable / 7 : spendable / Math.max(1, getDaysInMonthUtc(todayStr)));
+  const totalsByDate = new Map<string, number>();
+  for (const expense of (expenseRows ?? []) as { date: string; amount_cents: number }[]) {
+    totalsByDate.set(expense.date, (totalsByDate.get(expense.date) ?? 0) + Math.abs(expense.amount_cents ?? 0));
+  }
+
+  const todaySpend = totalsByDate.get(todayStr) ?? 0;
+  let daysUnderBudgetThisWeek = 0;
+  for (const total of totalsByDate.values()) {
+    if (total > 0 && total <= dailyCap) {
+      daysUnderBudgetThisWeek++;
+    }
+  }
+
+  return {
+    underBudgetToday: todaySpend > 0 && todaySpend <= dailyCap,
+    daysUnderBudgetThisWeek,
+  };
+}
+
+async function getLearningAchievementStats(
+  supabase: ReturnType<typeof createAdminClient>,
+  userId: string,
+  todayStr: string
+): Promise<{
+  todaySessionCount: number;
+  todayMinutes: number;
+  weekCompletionRatio: number;
+  reflectionSubmittedThisWeek: boolean;
+}> {
+  const weekStart = getWeekStartUtc(todayStr);
+  const [{ data: userRow }, { data: sessionRows }, { data: reflectionRow }] = await Promise.all([
+    supabase
+      .from("users")
+      .select("weekly_learning_target_minutes")
+      .eq("id", userId)
+      .single(),
+    supabase
+      .from("learning_sessions")
+      .select("date, minutes")
+      .eq("user_id", userId)
+      .gte("date", weekStart)
+      .lte("date", todayStr),
+    supabase
+      .from("learning_reflections")
+      .select("date")
+      .eq("user_id", userId)
+      .gte("date", weekStart)
+      .lte("date", todayStr)
+      .order("date", { ascending: false })
+      .limit(1)
+      .maybeSingle(),
+  ]);
+
+  const targetMinutes = Math.max(
+    1,
+    ((userRow as { weekly_learning_target_minutes?: number | null } | null)?.weekly_learning_target_minutes ?? 60)
+  );
+  const sessions = (sessionRows ?? []) as { date: string; minutes?: number | null }[];
+  const todaySessions = sessions.filter((row) => row.date === todayStr);
+  const weekMinutes = sessions.reduce((sum, row) => sum + (row.minutes ?? 0), 0);
+
+  return {
+    todaySessionCount: todaySessions.length,
+    todayMinutes: todaySessions.reduce((sum, row) => sum + (row.minutes ?? 0), 0),
+    weekCompletionRatio: weekMinutes / targetMinutes,
+    reflectionSubmittedThisWeek: !!(reflectionRow as { date?: string } | null)?.date,
+  };
+}
 
 export async function GET(request: Request) {
   const authHeader = request.headers.get("authorization");
@@ -88,6 +256,7 @@ export async function GET(request: Request) {
   let eveningPushSent = 0;
   let brainStatusRemindersSent = 0;
   let calendarReminderSent = 0;
+  let achievementPushSent = 0;
 
   for (const u of users ?? []) {
     const tz = u.timezone as string;
@@ -379,6 +548,153 @@ export async function GET(request: Request) {
         } catch {
           // skip
         }
+
+        try {
+          const alreadySentAchievement = await hasSentAchievementPushToday(
+            supabase,
+            u.id,
+            tz,
+            todayStr
+          );
+          if (!alreadySentAchievement) {
+            const ctx = await loadUserNotificationContextForUser(supabase, u.id, { dateStr: todayStr });
+            const [
+              totalTasks,
+              incompleteTasks,
+              completedTasks,
+              brainStatusStreakDays,
+              budgetStats,
+              learningStats,
+              budgetDisciplineRows,
+              recoveryTasks,
+            ] = await Promise.all([
+              supabase
+                .from("tasks")
+                .select("id", { count: "exact", head: true })
+                .eq("user_id", u.id)
+                .eq("due_date", todayStr)
+                .is("deleted_at", null),
+              supabase
+                .from("tasks")
+                .select("id", { count: "exact", head: true })
+                .eq("user_id", u.id)
+                .eq("due_date", todayStr)
+                .eq("completed", false)
+                .is("deleted_at", null),
+              supabase
+                .from("tasks")
+                .select("id", { count: "exact", head: true })
+                .eq("user_id", u.id)
+                .eq("due_date", todayStr)
+                .eq("completed", true)
+                .is("deleted_at", null),
+              getBrainStatusStreakDays(supabase, u.id, todayStr),
+              getBudgetAchievementStats(supabase, u.id, todayStr),
+              getLearningAchievementStats(supabase, u.id, todayStr),
+              supabase
+                .from("xp_events")
+                .select("source_type")
+                .eq("user_id", u.id)
+                .gte("created_at", `${todayStr}T00:00:00Z`)
+                .lt("created_at", `${todayStr}T23:59:59.999Z`),
+              supabase
+                .from("tasks")
+                .select("id", { count: "exact", head: true })
+                .eq("user_id", u.id)
+                .eq("due_date", todayStr)
+                .eq("completed", true)
+                .eq("mission_intent", "recovery")
+                .is("deleted_at", null),
+            ]);
+
+            const totalTasksCount = totalTasks.count ?? 0;
+            const incompleteTasksCount = incompleteTasks.count ?? 0;
+            const completedTasksCount = completedTasks.count ?? 0;
+            const budgetDisciplineCount = ((budgetDisciplineRows.data ?? []) as { source_type?: string | null }[])
+              .filter((row) => typeof row.source_type === "string" && row.source_type.startsWith("budget_discipline:"))
+              .length;
+
+            const candidateEvents = [
+              totalTasksCount > 0 && incompleteTasksCount === 0
+                ? { type: "daily_all_tasks_completed" as const }
+                : null,
+              budgetStats.underBudgetToday
+                ? {
+                    type: "under_budget" as const,
+                    period: "today" as const,
+                    daysUnderBudgetThisWeek: budgetStats.daysUnderBudgetThisWeek,
+                  }
+                : null,
+              [7, 14, 30].includes(brainStatusStreakDays)
+                ? { type: "brain_status_streak" as const, days: brainStatusStreakDays }
+                : null,
+              [3, 7, 14, 30].includes(ctx.currentStreak ?? 0)
+                ? { type: "streak_growth" as const, newStreak: ctx.currentStreak ?? 0 }
+                : null,
+              learningStats.weekCompletionRatio >= 1
+                ? { type: "learning_week_target_hit" as const, completionRatio: learningStats.weekCompletionRatio }
+                : null,
+              learningStats.reflectionSubmittedThisWeek
+                ? { type: "reflection_submitted" as const }
+                : null,
+              budgetDisciplineCount > 0
+                ? { type: "budget_discipline_day" as const }
+                : null,
+              (recoveryTasks.count ?? 0) > 0
+                ? { type: "recovery_task_completed" as const }
+                : null,
+              completedTasksCount >= 3
+                ? {
+                    type: "mission_completed" as const,
+                    missionsInWindow: completedTasksCount,
+                    windowMinutes: 45,
+                  }
+                : null,
+              completedTasksCount >= 1
+                ? {
+                    type: "daily_minimum_completed" as const,
+                    completedCount: completedTasksCount,
+                    suggestedCount: undefined,
+                  }
+                : null,
+              learningStats.todaySessionCount > 0
+                ? {
+                    type: "learning_session_logged" as const,
+                    minutes: learningStats.todayMinutes,
+                  }
+                : null,
+              !budgetStats.underBudgetToday && budgetStats.daysUnderBudgetThisWeek >= 2
+                ? {
+                    type: "under_budget" as const,
+                    period: "week" as const,
+                    daysUnderBudgetThisWeek: budgetStats.daysUnderBudgetThisWeek,
+                  }
+                : null,
+            ];
+
+            for (const event of candidateEvents) {
+              if (!event) continue;
+              const result = buildBehavioralNotificationForContext(ctx, event);
+              if (!result) continue;
+              const { canSend } = await canSendBehavioralNotification(
+                supabase,
+                u.id,
+                result.trigger,
+                new Date()
+              );
+              if (!canSend) continue;
+
+              const sent = await sendPushToUser(supabase, u.id, result.payload);
+              if (!sent) continue;
+
+              await markBehavioralNotificationSent(supabase, u.id, result.trigger);
+              achievementPushSent++;
+              break;
+            }
+          }
+        } catch {
+          // skip
+        }
       }
     }
   }
@@ -395,6 +711,7 @@ export async function GET(request: Request) {
     eveningPushSent,
     brainStatusRemindersSent,
     calendarReminderSent,
+    achievementPushSent,
     usersChecked: users?.length ?? 0,
   });
 }

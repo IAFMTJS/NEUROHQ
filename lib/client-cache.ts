@@ -121,3 +121,28 @@ export function loadUiPreference(key: string): string | null {
   }
 }
 
+/**
+ * Legacy per-suffix daily snapshot cache (deprecated).
+ *
+ * Some UI fallbacks (e.g. missions skeleton) still read a small cached payload
+ * synchronously from localStorage. New daily snapshot system lives in
+ * `lib/daily-snapshot-storage.ts`.
+ */
+export function loadDailySnapshot<T = unknown>(
+  suffix: string
+): { dateKey: string; data: T } | null {
+  const ls = safeGetLocalStorage();
+  if (!ls) return null;
+  try {
+    const raw = ls.getItem(`${STORAGE_PREFIX}:daily-snapshot:${suffix}`);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as { dateKey?: unknown; data?: unknown };
+    if (!parsed || typeof parsed !== "object") return null;
+    if (typeof parsed.dateKey !== "string") return null;
+    if (!("data" in parsed)) return null;
+    return { dateKey: parsed.dateKey, data: parsed.data as T };
+  } catch {
+    return null;
+  }
+}
+

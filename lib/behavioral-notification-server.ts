@@ -149,7 +149,23 @@ const TRIGGER_COOLDOWN_HOURS: Partial<Record<TriggerType, number>> = {
   inactivity_14d: 24,
   streak_protection: 12,
   streak_growth: 24,
+  streak_growth_milestone: 48,
   brain_status_reminder: 6,
+  brain_status_streak_7: 72,
+  brain_status_streak_14: 72,
+  brain_status_streak_30: 72,
+  daily_all_tasks_completed: 24,
+  daily_minimum_completed: 24,
+  daily_multi_missions_combo: 24,
+  daily_high_productivity_session: 24,
+  rank_progress_close: 24,
+  under_budget_today: 24,
+  under_budget_week_streak: 48,
+  budget_discipline_day: 24,
+  learning_session_logged: 24,
+  learning_week_target_hit: 48,
+  reflection_submitted: 48,
+  recovery_task_completed: 24,
 };
 
 /**

@@ -85,7 +85,11 @@ export function PwaInstallPrompt() {
     try {
       await deferredPrompt.prompt();
       const choice = await deferredPrompt.userChoice;
-      persistOutcome(choice.outcome);
+      if (choice?.outcome === "accepted" || choice?.outcome === "dismissed") {
+        persistOutcome(choice.outcome);
+      } else {
+        persistOutcome("dismissed");
+      }
     } catch {
       // Ignore install errors.
     } finally {

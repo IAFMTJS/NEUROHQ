@@ -172,7 +172,7 @@ export function EditMissionModal({ open, onClose, task, defaultDate, onSaved, on
         const oldDue = (task as Task).due_date ?? null;
         const newDue = updated.due_date ?? null;
         if (oldDue && newDue && oldDue !== newDue) {
-          removeTask(oldDue, task!.id);
+          removeTask(task!.id, oldDue);
         }
         upsertTask(updated);
         if (typeof navigator !== "undefined" && !navigator.onLine) {
