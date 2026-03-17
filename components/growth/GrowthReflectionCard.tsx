@@ -51,7 +51,7 @@ export const GrowthReflectionCard: FC<Props> = ({ reflection, today }) => {
       <form onSubmit={handleSubmit} className="p-4 space-y-3">
         <div>
           <label className="block text-xs font-medium text-[var(--text-muted)] mb-1">
-            What did you understand?
+            Where did you avoid effort?
           </label>
           <textarea
             value={understood}
@@ -59,13 +59,13 @@ export const GrowthReflectionCard: FC<Props> = ({ reflection, today }) => {
             maxLength={500}
             rows={2}
             className="w-full resize-none rounded-lg border border-[var(--card-border)] bg-[var(--bg-primary)] px-3 py-2 text-sm text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:border-[var(--accent-focus)] focus:outline-none focus:ring-2 focus:ring-[var(--accent-focus)]/30 disabled:opacity-60"
-            placeholder="Keep it short and concrete."
+            placeholder="Name the moments you sidestepped real work."
             disabled={disabled}
           />
         </div>
         <div>
           <label className="block text-xs font-medium text-[var(--text-muted)] mb-1">
-            What was difficult?
+            What did you half-ass?
           </label>
           <textarea
             value={difficult}
@@ -73,13 +73,13 @@ export const GrowthReflectionCard: FC<Props> = ({ reflection, today }) => {
             maxLength={500}
             rows={2}
             className="w-full resize-none rounded-lg border border-[var(--card-border)] bg-[var(--bg-primary)] px-3 py-2 text-sm text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:border-[var(--accent-focus)] focus:outline-none focus:ring-2 focus:ring-[var(--accent-focus)]/30 disabled:opacity-60"
-            placeholder="Name friction, not failure."
+            placeholder={'Be specific. No vague "busy" answers.'}
             disabled={disabled}
           />
         </div>
         <div>
           <label className="block text-xs font-medium text-[var(--text-muted)] mb-1">
-            What will you adjust?
+            What will you do differently tomorrow?
           </label>
           <textarea
             value={adjust}
@@ -87,7 +87,7 @@ export const GrowthReflectionCard: FC<Props> = ({ reflection, today }) => {
             maxLength={500}
             rows={2}
             className="w-full resize-none rounded-lg border border-[var(--card-border)] bg-[var(--bg-primary)] px-3 py-2 text-sm text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:border-[var(--accent-focus)] focus:outline-none focus:ring-2 focus:ring-[var(--accent-focus)]/30 disabled:opacity-60"
-            placeholder="One concrete tweak for next week."
+            placeholder="One concrete tweak you will apply within 24 hours."
             disabled={disabled}
           />
         </div>

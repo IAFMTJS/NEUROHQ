@@ -19,6 +19,22 @@ export const GrowthConsistencyCard: FC<Props> = ({ consistency, today }) => {
   const { sessionsThisWeek, weeklyTargetSessions, completionRatio, currentStreak } = consistency;
   const safeRatio = Math.max(0, Math.min(1, completionRatio));
 
+  const missingSessions =
+    weeklyTargetSessions > sessionsThisWeek
+      ? weeklyTargetSessions - sessionsThisWeek
+      : 0;
+
+  const hoursUntilWeekEnd = (() => {
+    const todayDate = new Date(today + "T00:00:00");
+    const day = todayDate.getDay();
+    const daysUntilSunday = (7 - day) % 7;
+    const end = new Date(todayDate);
+    end.setDate(end.getDate() + daysUntilSunday);
+    end.setHours(23, 59, 59, 999);
+    const diffMs = end.getTime() - Date.now();
+    return Math.max(0, Math.floor(diffMs / (60 * 60 * 1000)));
+  })();
+
   const date = new Date(today + "T00:00:00");
   const isWednesday = date.getDay() === 3;
   const showAdjustmentHint = isWednesday && safeRatio < 0.5 && weeklyTargetSessions > 0;
@@ -63,6 +79,20 @@ export const GrowthConsistencyCard: FC<Props> = ({ consistency, today }) => {
               {currentStreak} week{currentStreak === 1 ? "" : "s"} in a row
             </span>
           </p>
+          {missingSessions > 0 && (
+            <p className="text-xs text-[var(--text-muted)]">
+              You are{" "}
+              <span className="font-semibold text-[var(--text-secondary)]">
+                {missingSessions} session{missingSessions === 1 ? "" : "s"}
+              </span>{" "}
+              behind your weekly directive.
+            </p>
+          )}
+          {safeRatio < 0.4 && hoursUntilWeekEnd > 0 && (
+            <p className="text-[11px] text-[var(--text-muted)]">
+              Streak at risk in ~{hoursUntilWeekEnd}h if you stay idle.
+            </p>
+          )}
         </div>
 
         {showAdjustmentHint && (

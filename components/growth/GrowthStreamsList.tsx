@@ -138,9 +138,9 @@ export const GrowthStreamsList: FC<Props> = ({ streams }) => {
                 type="button"
                 onClick={() => handleStartSession(stream)}
                 disabled={!!pendingId}
-                className="shrink-0 rounded-lg border border-[var(--card-border)] bg-[var(--bg-primary)] px-3 py-1.5 text-xs font-medium text-[var(--text-primary)] hover:border-[var(--accent-focus)] hover:text-[var(--accent-focus)] disabled:opacity-50"
+                className="shrink-0 rounded-lg border border-[var(--card-border)] bg-[var(--bg-primary)] px-3 py-1.5 text-xs font-semibold text-[var(--text-primary)] hover:border-[var(--accent-focus)] hover:text-[var(--accent-focus)] disabled:opacity-50"
               >
-                {pendingId ? "Starting…" : "Start session"}
+                {pendingId ? "Deploying…" : "Engage session"}
               </button>
             </div>
           );

@@ -4,6 +4,8 @@
  */
 
 import type { ActionObject, GameState, ValidationResult } from "./types";
+import { canActivateMission, canStartMissionInCurrentMode, isModeLocked } from "./mode-engine";
+import { checkIdentityLocks } from "./identity-engine";
 
 /**
  * Validates an action before execution
@@ -75,6 +77,8 @@ function validateCompleteMission(
     };
   }
 
+  checkIdentityLocks(gameState);
+
   return { valid: true };
 }
 
@@ -82,12 +86,25 @@ function validateStartMission(
   action: ActionObject,
   gameState: GameState
 ): ValidationResult {
-  // Check if mission already active
-  const activeMission = gameState.missions.find((m) => m.active);
-  if (activeMission) {
+  if (gameState.identity.constraints.dailyWarRequired) {
+    const today = new Date().toISOString().split("T")[0];
+    const hasWarToday = gameState.authority.patterns.warSessionsThisWeek > 0;
+    if (!hasWarToday && gameState.mode.current !== "war") {
+      return {
+        valid: false,
+        reason: "Daily war session required before starting other missions",
+      };
+    }
+  }
+  // Global: mode lock may forbid starting new missions (e.g. locked war mode).
+  if (isModeLocked(gameState)) {
+    return { valid: false, reason: "Mode is locked; cannot start new missions" };
+  }
+
+  if (!canActivateMission(gameState)) {
     return {
       valid: false,
-      reason: `Mission "${activeMission.name}" is already active`,
+      reason: "Maximum active missions for current mode reached",
     };
   }
 
@@ -108,6 +125,12 @@ function validateStartMission(
     if (mission.completed) {
       return { valid: false, reason: "Mission already completed" };
     }
+     if (!canStartMissionInCurrentMode(gameState, mission)) {
+       return {
+         valid: false,
+         reason: "Mission not allowed in current mode",
+       };
+     }
   }
 
   return { valid: true };

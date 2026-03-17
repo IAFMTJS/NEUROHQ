@@ -127,6 +127,35 @@ export async function getGameState(
     achievements,
     finance: financeState,
     difficultyEngine: updateDifficulty(level, rank),
+    mode: {
+      current: "focus",
+      lockedUntil: null,
+      lastSwitch: null,
+      warStage: 1,
+      suggested: null,
+      nextWarBonus: null,
+    },
+    authority: {
+      overrideChance: 0.15,
+      lastOverrideDate: null,
+      lastSuggestedMode: null,
+      patterns: {
+        missionSpamCount: 0,
+        easyTaskAbuseCount: 0,
+        modeSwitchAbuseCount: 0,
+        lastAbuseDate: null,
+        warSessionsThisWeek: 0,
+        recoverySessionsThisWeek: 0,
+        idleDaysThisWeek: 0,
+      },
+    },
+    activeEvents: [],
+    identity: {
+      discipline: 0,
+      resilience: 0,
+      consistency: 0,
+      constraints: {},
+    },
   };
 
   return gameState;

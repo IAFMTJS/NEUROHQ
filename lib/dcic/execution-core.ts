@@ -12,6 +12,10 @@ import type {
 } from "./types";
 import { calculateLevel, calculateRank } from "./simulation";
 import { updateDifficulty } from "./difficulty-engine";
+import { getModeConfig } from "./mode-engine";
+import { applyActiveEvents } from "./event-engine";
+import { applyIdentityEffect } from "./identity-engine";
+import { evaluateAbuse, recordMissionCompletionPattern } from "./anti-cheat";
 
 /**
  * Helper to get mission name for logging
@@ -94,8 +98,17 @@ export function executeCompleteMission(
   const loadMult = consequence?.loadFailure ? 0.5 : 1;
   const recoveryMult = consequence?.recoveryPenalty ? 0.95 : 1;
 
-  const xpGain = Math.floor(
-    mission.xpReward * streakMultiplier * energyMult * loadMult * recoveryMult
+  const modeConfig = getModeConfig(updatedState);
+  const eventEffects = applyActiveEvents(updatedState);
+
+  let xpGain = Math.floor(
+    mission.xpReward *
+      streakMultiplier *
+      energyMult *
+      loadMult *
+      recoveryMult *
+      modeConfig.xpMultiplier *
+      eventEffects.xpMultiplier
   );
   updatedState.currentXP += xpGain;
 
@@ -113,11 +126,20 @@ export function executeCompleteMission(
 
   // Check achievements (will be saved via server action)
   checkAchievements(updatedState, mission);
+  applyIdentityEffect(updatedState, updatedState.mode.current);
 
-  // Deduct energy
+  // Apply focus impact from events
+  if (eventEffects.focusDelta !== 0) {
+    updatedState.stats.focus = Math.max(
+      0,
+      Math.min(100, updatedState.stats.focus + eventEffects.focusDelta)
+    );
+  }
+
+  // Deduct energy with mode multipliers applied
   updatedState.stats.energy = Math.max(
     0,
-    updatedState.stats.energy - mission.energyCost
+    updatedState.stats.energy - mission.energyCost * modeConfig.energyDrainMultiplier
   );
 
   // Fase 3: derive performance rank from consequence (missions have no full score formula).
@@ -149,6 +171,28 @@ export function executeCompleteMission(
     performanceRank,
     missionIntent: mission.missionIntent ?? "normal",
   };
+
+  recordMissionCompletionPattern(updatedState, updatedState.missions[missionIndex]);
+  const todayStr = new Date().toISOString().split("T")[0];
+  const abuse = evaluateAbuse(updatedState, todayStr);
+  if (abuse.level === "medium") {
+    xpGain = Math.floor(xpGain * 0.7);
+    updatedState.currentXP = Math.max(0, updatedState.currentXP - Math.floor(xpGain * 0.3));
+    updatedState.identity.discipline = Math.max(
+      0,
+      updatedState.identity.discipline - 0.3
+    );
+  } else if (abuse.level === "high") {
+    xpGain = Math.floor(xpGain * 0.5);
+    updatedState.currentXP = Math.max(0, updatedState.currentXP - Math.floor(xpGain * 0.5));
+    updatedState.identity.discipline = Math.max(
+      0,
+      updatedState.identity.discipline - 0.6
+    );
+    const now = new Date();
+    const lockUntil = new Date(now.getTime() + 60 * 60 * 1000);
+    updatedState.mode.lockedUntil = lockUntil.toISOString();
+  }
 
   // Note: Logging happens in server action, not here
 
@@ -204,6 +248,8 @@ export function executeStartMission(
   // Create deep copy to mutate
   const updatedState: GameState = JSON.parse(JSON.stringify(gameState));
 
+  const modeConfig = getModeConfig(updatedState);
+
   // Deactivate any currently active mission
   updatedState.missions.forEach((m) => {
     if (m.active) {
@@ -220,7 +266,7 @@ export function executeStartMission(
   const energyBefore = updatedState.stats.energy;
   updatedState.stats.energy = Math.max(
     0,
-    updatedState.stats.energy - mission.energyCost
+    updatedState.stats.energy - mission.energyCost * modeConfig.energyDrainMultiplier
   );
 
   // Create log entry

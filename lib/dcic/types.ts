@@ -31,7 +31,12 @@ export interface Mission {
   streakEligible?: boolean;
   /** normal | recovery | push | chaos | scarcity (gevaarlijke modules). */
   missionIntent?: "normal" | "recovery" | "push" | "chaos" | "scarcity" | null;
+  /** Time-bound missions that disappear or change after this moment. */
   expiresAt?: string | null;
+  /** How unstable this mission is; 0–1 determines chance of escalation/expiry. */
+  volatility?: number | null;
+  /** Risk profile used for penalties/rewards and anti-cheat analysis. */
+  riskLevel?: "low" | "medium" | "high" | null;
 }
 
 // ============================================================================
@@ -149,6 +154,69 @@ export interface GameState {
   achievements: Record<string, boolean>;
   finance?: FinanceState; // Integrated finance state
   difficultyEngine: DifficultyEngine;
+  /** Global mode system: wraps existing Focus behaviour and adds War/Recovery. */
+  mode: {
+    current: "focus" | "war" | "recovery";
+    /** ISO timestamp until which mode cannot be changed (war lock). */
+    lockedUntil: string | null;
+    /** Last time a mode switch occurred (ISO). */
+    lastSwitch: string | null;
+    /** Escalation stage for war mode (1–3). */
+    warStage: 1 | 2 | 3;
+    /** Optional suggestion from auto-mode/authority layer (not enforced). */
+    suggested?: "war" | "recovery" | null;
+    /** Optional bonus applied on next war session after good recovery. */
+    nextWarBonus?: number | null;
+  };
+  /** System authority and behavioural patterns used for overrides and anti-cheat. */
+  authority: {
+    /** Chance (0–1) that the system enforces a mode for today. */
+    overrideChance: number;
+    /** Last date (YYYY-MM-DD) an override happened to avoid spamming. */
+    lastOverrideDate: string | null;
+    /** Last mode the system suggested rather than enforced. */
+    lastSuggestedMode: "war" | "recovery" | null;
+    patterns: {
+      /** Rapidly starting/completing many trivial missions. */
+      missionSpamCount: number;
+      /** Overuse of very low-risk, low-XP missions. */
+      easyTaskAbuseCount: number;
+      /** Excessive switching between modes to evade constraints. */
+      modeSwitchAbuseCount: number;
+      /** Last date (YYYY-MM-DD) abuse was detected. */
+      lastAbuseDate: string | null;
+      /** How many war sessions have been run this week. */
+      warSessionsThisWeek: number;
+      /** How many recovery sessions have been run this week. */
+      recoverySessionsThisWeek: number;
+      /** Days without meaningful work this week. */
+      idleDaysThisWeek: number;
+    };
+  };
+  /** Short-lived global events that modify XP, stats, or mission dynamics. */
+  activeEvents: {
+    type: "boost" | "penalty" | "disruption";
+    /** Stable identifier to allow specific behaviour per event. */
+    code: string;
+    /** ISO timestamp when this event expires. */
+    expiresAt: string;
+  }[];
+  /**
+   * Identity traits and constraints derived from long-term behaviour.
+   * Acts as the bridge between modes and the user's self-image.
+   */
+  identity: {
+    discipline: number; // 0–10
+    resilience: number; // 0–10
+    consistency: number; // 0–10
+    constraints: {
+      /** Once active, skipping missions without penalty is disallowed. */
+      noExcusesConstraint?: boolean;
+      /** Once active, at least one war session per day is expected. */
+      dailyWarRequired?: boolean;
+      [key: string]: boolean | undefined;
+    };
+  };
 }
 
 // ============================================================================

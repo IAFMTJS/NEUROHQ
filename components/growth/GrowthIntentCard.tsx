@@ -23,9 +23,9 @@ export const GrowthIntentCard: FC<Props> = ({ focus, currentBookTitle }) => {
     <section className="card-simple overflow-hidden p-0">
       <div className="border-b border-[var(--card-border)] px-4 py-3 flex items-center justify-between gap-2">
         <div>
-          <h2 className="text-base font-semibold text-[var(--text-primary)]">Intent</h2>
+          <h2 className="text-base font-semibold text-[var(--text-primary)]">Primary directive</h2>
           <p className="mt-0.5 text-xs text-[var(--text-muted)]">
-            Clear learning focus to prevent drift.
+            Concrete orders for this week. No vague wishes.
           </p>
         </div>
         <Link
@@ -38,7 +38,7 @@ export const GrowthIntentCard: FC<Props> = ({ focus, currentBookTitle }) => {
       <div className="p-4 space-y-3">
         {(!primary && !secondary && !currentBookTitle) ? (
           <p className="text-sm text-[var(--text-muted)]">
-            Define your primary learning focus to anchor growth.
+            Define one directive for this week (not five ideas). This becomes the baseline the system defends.
           </p>
         ) : (
           <>
@@ -46,7 +46,7 @@ export const GrowthIntentCard: FC<Props> = ({ focus, currentBookTitle }) => {
               <div className="flex items-start justify-between gap-4">
                 <div>
                   <p className="text-[11px] font-medium uppercase tracking-wide text-[var(--text-muted)]">
-                    Primary focus
+                    PRIMARY DIRECTIVE
                   </p>
                   <p className="mt-0.5 text-sm font-semibold text-[var(--text-primary)]">
                     {primary.name}
@@ -57,9 +57,14 @@ export const GrowthIntentCard: FC<Props> = ({ focus, currentBookTitle }) => {
                     </p>
                   )}
                 </div>
-                <p className="shrink-0 text-xs text-[var(--text-muted)]">
-                  {primary.sessionsThisWeek} sessions this week
-                </p>
+                <div className="shrink-0 text-right">
+                  <p className="text-[11px] font-medium text-[var(--text-muted)]">
+                    This week
+                  </p>
+                  <p className="mt-0.5 text-xs font-semibold text-[var(--text-secondary)]">
+                    {primary.sessionsThisWeek} session{primary.sessionsThisWeek === 1 ? "" : "s"}
+                  </p>
+                </div>
               </div>
             )}
 
@@ -67,7 +72,7 @@ export const GrowthIntentCard: FC<Props> = ({ focus, currentBookTitle }) => {
               <div className="flex items-start justify-between gap-4">
                 <div>
                   <p className="text-[11px] font-medium uppercase tracking-wide text-[var(--text-muted)]">
-                    Secondary focus
+                    SECONDARY OBJECTIVE
                   </p>
                   <p className="mt-0.5 text-sm font-semibold text-[var(--text-primary)]">
                     {secondary.name}
@@ -94,7 +99,7 @@ export const GrowthIntentCard: FC<Props> = ({ focus, currentBookTitle }) => {
 
         {showDriftWarning && (
           <div className="mt-2 rounded-lg border border-amber-500/40 bg-amber-500/5 px-3 py-2 text-xs text-amber-100">
-            Primary focus neglected.
+            Primary directive is being ignored. Drift increasing.
           </div>
         )}
       </div>
