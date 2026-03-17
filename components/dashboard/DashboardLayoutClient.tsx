@@ -36,6 +36,7 @@ export function DashboardLayoutClient({
 }: Props) {
   const dailySnapshot = useDailySnapshot();
   const setTodayDate = useHQStore((s) => s.setTodayDate);
+  const mode = useHQStore((s) => s.gameState?.mode.current ?? "focus");
 
   // Hydrate HQ store from DailySnapshot (single source of truth); no duplicate /api/bootstrap/today fetch.
   useEffect(() => {
@@ -85,6 +86,7 @@ export function DashboardLayoutClient({
             <div
               className="relative flex min-h-screen max-h-[100dvh] w-full max-w-[100vw] flex-col overflow-x-hidden bg-transparent"
               data-ui="dark-commander"
+              data-mode={mode}
             >
               <ThemeHydrate />
               <ActiveTimeTracker />

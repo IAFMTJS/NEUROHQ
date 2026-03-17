@@ -186,6 +186,27 @@
   --hud-intensity-bg: 0.05;
 }
 
+/* Mode-specific accents (applied anywhere inside the dashboard shell via data-mode) */
+[data-mode="war"] {
+  --accent-primary: #dc2626;
+  --accent-primary-dark: #991b1b;
+  --accent-cyan: #f97373;
+  --accent-amber: #f97316;
+  --glow-primary: rgba(220, 38, 38, 0.45);
+  --glow-cyan: rgba(248, 113, 113, 0.4);
+  --spotlight: radial-gradient(circle at 50% 25%, rgba(220,38,38,0.32), transparent 60%);
+}
+
+[data-mode="recovery"] {
+  --accent-primary: #16a34a;
+  --accent-primary-dark: #166534;
+  --accent-cyan: #4ade80;
+  --accent-amber: #22c55e;
+  --glow-primary: rgba(34, 197, 94, 0.45);
+  --glow-cyan: rgba(74, 222, 128, 0.4);
+  --spotlight: radial-gradient(circle at 50% 25%, rgba(22,163,74,0.28), transparent 60%);
+}
+
 @keyframes hudEnergyPulse {
   0% { opacity: 0.7; }
   50% { opacity: 1; }
