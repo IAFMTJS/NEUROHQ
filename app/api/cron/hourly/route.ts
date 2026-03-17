@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { sendPushToUser } from "@/lib/push";
-import { getLocalDateHour, yesterdayDate, getDayOfYearFromDateString, isInQuietHours } from "@/lib/utils/timezone";
+import { getLocalDateHour, yesterdayDate, getDayOfYearFromDateString, isInQuietHours, utcStartOfLocalDayIso } from "@/lib/utils/timezone";
 import { isHighSensoryDayForUser } from "@/lib/mode-admin";
 import { getQuoteByDayNumber } from "@/lib/quotes";
 import { isAppEmailConfigured, sendReminderToUser } from "@/lib/email";
@@ -136,9 +136,34 @@ export async function GET(request: Request) {
       quoteTimeStr && /^\d{1,2}:\d{2}/.test(quoteTimeStr)
         ? parseInt(quoteTimeStr.slice(0, quoteTimeStr.indexOf(":")), 10)
         : DEFAULT_QUOTE_HOUR;
-    if (hour === quoteHour && process.env.VAPID_PRIVATE_KEY && process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY && userPrefs.pushRemindersEnabled) {
+
+    // Catch-up rule: if cron/app was down at the intended hour, still send later the same
+    // local day as soon as we notice (hour >= quoteHour), but never more than once per day.
+    if (
+      hour >= quoteHour &&
+      process.env.VAPID_PRIVATE_KEY &&
+      process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY &&
+      userPrefs.pushRemindersEnabled
+    ) {
       const pushQuoteEnabled = (u as { push_quote_enabled?: boolean | null }).push_quote_enabled !== false;
       if (pushQuoteEnabled && !isInQuietHours(hour, quietStart, quietEnd)) {
+        // Deduplicate: already sent a daily quote today (in user's local day)?
+        try {
+          const sinceIso = utcStartOfLocalDayIso(tz, todayStr);
+          const { count: alreadySentCount } = await supabase
+            .from("push_sends_log")
+            .select("*", { count: "exact", head: true })
+            .eq("user_id", u.id)
+            .eq("trigger_type", "daily-quote")
+            .gte("sent_at", sinceIso);
+          if ((alreadySentCount ?? 0) > 0) {
+            // Skip; today's quote already sent.
+            continue;
+          }
+        } catch {
+          // If log lookup fails, fall back to attempting send (sendPushToUser is still capped).
+        }
+
         const highSensory = await isHighSensoryDayForUser(supabase, u.id, todayStr);
         if (!highSensory) {
           const dayOfYear = Math.max(1, Math.min(365, getDayOfYearFromDateString(todayStr)));

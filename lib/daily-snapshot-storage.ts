@@ -32,16 +32,21 @@ export async function saveDailySnapshot(snapshot: DailySnapshot): Promise<void> 
   if (typeof window === "undefined") return;
   try {
     const now = Date.now();
+    const rawSavedAt =
+      snapshot.ui && typeof snapshot.ui.savedAt === "number" && Number.isFinite(snapshot.ui.savedAt)
+        ? snapshot.ui.savedAt
+        : null;
+    // `savedAt` must be epoch ms. Older code used `performance.now()` which is a small relative
+    // number; treat anything implausibly small as invalid and replace with now.
+    const normalizedSavedAt =
+      rawSavedAt != null && rawSavedAt > 1_000_000_000_000 ? rawSavedAt : now;
     const normalized: DailySnapshot = {
       ...snapshot,
       version: LATEST_SNAPSHOT_VERSION,
       date: snapshot.date || getTodayKey(),
       ui: {
         ...snapshot.ui,
-        savedAt:
-          typeof snapshot.ui?.savedAt === "number" && Number.isFinite(snapshot.ui.savedAt)
-            ? snapshot.ui.savedAt
-            : now,
+        savedAt: normalizedSavedAt,
       },
     };
     window.localStorage.setItem(STORAGE_KEY, JSON.stringify(normalized));
