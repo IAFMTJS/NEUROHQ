@@ -23,7 +23,10 @@ export async function loadDailySnapshot(): Promise<DailySnapshot | null> {
     const parsed = JSON.parse(raw) as unknown;
     if (!isCompatibleSnapshot(parsed)) return null;
     return parsed;
-  } catch {
+  } catch (err) {
+    // Best-effort only; when this fails we fall back to a fresh bootstrap.
+    // Logging helps diagnose “snapshot not persisted/used”.
+    console.warn("[daily-snapshot] loadDailySnapshot failed", err);
     return null;
   }
 }
@@ -50,7 +53,8 @@ export async function saveDailySnapshot(snapshot: DailySnapshot): Promise<void> 
       },
     };
     window.localStorage.setItem(STORAGE_KEY, JSON.stringify(normalized));
-  } catch {
+  } catch (err) {
+    console.warn("[daily-snapshot] saveDailySnapshot failed", err);
     // Best-effort only; ignore quota/serialization errors.
   }
 }
@@ -59,7 +63,8 @@ export async function clearDailySnapshot(): Promise<void> {
   if (typeof window === "undefined") return;
   try {
     window.localStorage.removeItem(STORAGE_KEY);
-  } catch {
+  } catch (err) {
+    console.warn("[daily-snapshot] clearDailySnapshot failed", err);
     // ignore
   }
 }

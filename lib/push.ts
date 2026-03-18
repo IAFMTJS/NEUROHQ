@@ -124,6 +124,20 @@ export async function sendPushToUser(
       JSON.stringify(payloadToSend)
     );
   } catch (err) {
+    const statusCode =
+      err && typeof err === "object" && "statusCode" in err
+        ? (err as { statusCode?: unknown }).statusCode
+        : undefined;
+    const message =
+      err && typeof err === "object" && "message" in err
+        ? (err as { message?: unknown }).message
+        : undefined;
+    console.warn("[push] sendPushToUser failed", {
+      userId,
+      tag: payload.tag ?? null,
+      statusCode,
+      message,
+    });
     if (err && typeof err === "object" && "statusCode" in err && (err.statusCode === 410 || err.statusCode === 404)) {
       await supabase.from("users").update({ push_subscription_json: null }).eq("id", userId);
     }

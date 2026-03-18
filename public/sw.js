@@ -542,20 +542,47 @@ self.addEventListener("fetch", function (event) {
 
 // Push notifications
 self.addEventListener("push", function (event) {
-  const data = event.data?.json() ?? {};
-  const title = data.title ?? "NEUROHQ";
-  const options = {
-    body: data.body ?? "",
-    icon: "/app-icon.png",
-    badge: "/app-icon.png",
-    tag: data.tag ?? "neurohq",
-    data: data.url ? { url: data.url } : {},
-  };
-  var p = self.registration.showNotification(title, options);
-  if (typeof self.setAppBadge === "function" && (data.badge === undefined || data.badge > 0)) {
-    var count = typeof data.badge === "number" ? Math.min(99, Math.max(1, data.badge)) : 1;
-    p = Promise.all([p, self.setAppBadge(count)]);
-  }
+  const p = (async function () {
+    let data = {};
+    try {
+      data = event.data ? await event.data.json() : {};
+    } catch (e) {
+      // Some platforms may deliver non-JSON payloads; try text+JSON fallback.
+      try {
+        const text = event.data ? await event.data.text() : "";
+        if (text) data = JSON.parse(text);
+      } catch {
+        // ignore; we will fall back to defaults below
+      }
+    }
+
+    const title = (data && typeof data === "object" && data.title) ? data.title : "NEUROHQ";
+    const options = {
+      body: (data && typeof data === "object" && data.body) ? data.body : "",
+      icon: "/app-icon.png",
+      badge: "/app-icon.png",
+      tag: (data && typeof data === "object" && data.tag) ? data.tag : "neurohq",
+      data:
+        data && typeof data === "object" && data.url
+          ? { url: data.url }
+          : {},
+    };
+
+    let show = self.registration.showNotification(title, options);
+    if (
+      typeof self.setAppBadge === "function" &&
+      (!data || typeof data !== "object" || data.badge === undefined || data.badge > 0)
+    ) {
+      const count =
+        data && typeof data === "object" && typeof data.badge === "number"
+          ? Math.min(99, Math.max(1, data.badge))
+          : 1;
+      show = Promise.all([show, self.setAppBadge(count)]);
+    }
+
+    return show;
+  })();
+
   event.waitUntil(p);
 });
 
