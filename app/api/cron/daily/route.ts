@@ -28,6 +28,10 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
+  const url = new URL(request.url);
+  const userIdParam = url.searchParams.get("userId");
+  const userIdFilter = userIdParam ? String(userIdParam) : null;
+
   const supabase = createAdminClient();
   const today = new Date();
   const yesterday = new Date(today);
@@ -35,7 +39,9 @@ export async function GET(request: Request) {
   const yesterdayStr = yesterday.toISOString().slice(0, 10);
   const todayStr = today.toISOString().slice(0, 10);
 
-  const { data: usersUtc } = await supabase.from("users").select("id").is("timezone", null);
+  let usersUtcQuery = supabase.from("users").select("id").is("timezone", null);
+  if (userIdFilter) usersUtcQuery = usersUtcQuery.eq("id", userIdFilter);
+  const { data: usersUtc } = await usersUtcQuery;
   const usersForRollover = usersUtc ?? [];
 
   let totalRolled = 0;
@@ -59,9 +65,11 @@ export async function GET(request: Request) {
     }
   }
 
-  const { data: usersAll } = await supabase
+  let usersAllQuery = supabase
     .from("users")
     .select("id, timezone, push_quiet_hours_start, push_quiet_hours_end");
+  if (userIdFilter) usersAllQuery = usersAllQuery.eq("id", userIdFilter);
+  const { data: usersAll } = await usersAllQuery;
   const users = usersAll ?? [];
   const userMetaById = new Map(
     users.map((user) => [
@@ -91,12 +99,14 @@ export async function GET(request: Request) {
     const quoteRow = getQuoteByDayNumber(dayOfYear);
     const quoteText = quoteRow?.quote_text ?? "Your daily focus.";
     const utcHour = today.getUTCHours();
-    const { data: pushUsers } = await supabase
+    let pushUsersQuery = supabase
       .from("users")
       .select("id, push_quiet_hours_start, push_quiet_hours_end")
       .is("timezone", null)
       .not("push_subscription_json", "is", null)
       .or("push_quote_enabled.is.null,push_quote_enabled.eq.true");
+    if (userIdFilter) pushUsersQuery = pushUsersQuery.eq("id", userIdFilter);
+    const { data: pushUsers } = await pushUsersQuery;
 
     for (const u of pushUsers ?? []) {
       const quietStart = u.push_quiet_hours_start ? String(u.push_quiet_hours_start).slice(0, 5) : null;
@@ -126,12 +136,14 @@ export async function GET(request: Request) {
     }
 
     // 24h freeze reminder: entries where freeze_until <= now and reminder not sent
-    const { data: readyEntries } = await supabase
+    let readyEntriesQuery = supabase
       .from("budget_entries")
       .select("id, user_id, amount_cents, note")
       .not("freeze_until", "is", null)
       .lte("freeze_until", nowIso)
       .eq("freeze_reminder_sent", false);
+    if (userIdFilter) readyEntriesQuery = readyEntriesQuery.eq("user_id", userIdFilter);
+    const { data: readyEntries } = await readyEntriesQuery;
     const byUser = new Map<string, { id: string; amount_cents: number; note: string | null }[]>();
     for (const e of readyEntries ?? []) {
       const list = byUser.get(e.user_id) ?? [];
@@ -202,10 +214,12 @@ export async function GET(request: Request) {
       .from("user_streak")
       .select("user_id, current_streak, longest_streak, last_completion_date");
 
-    const { data: pushUserRows } = await supabase
+    let pushUserRowsQuery = supabase
       .from("users")
       .select("id")
       .not("push_subscription_json", "is", null);
+    if (userIdFilter) pushUserRowsQuery = pushUserRowsQuery.eq("id", userIdFilter);
+    const { data: pushUserRows } = await pushUserRowsQuery;
 
     const pushSet = new Set((pushUserRows ?? []).map((r) => (r as { id: string }).id));
 
@@ -402,6 +416,7 @@ export async function GET(request: Request) {
     rolled: totalRolled,
     usersUtc: usersForRollover.length,
     users: users.length,
+    ...(userIdFilter && { userId: userIdFilter }),
     pushSent,
     freezeReminderSent,
     avoidanceSent,

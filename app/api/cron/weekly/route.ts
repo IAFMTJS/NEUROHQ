@@ -26,15 +26,21 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
+  const url = new URL(request.url);
+  const userIdParam = url.searchParams.get("userId");
+  const userIdFilter = userIdParam ? String(userIdParam) : null;
+
   const supabase = createAdminClient();
   const today = new Date();
   const lastWeek = new Date(today);
   lastWeek.setUTCDate(lastWeek.getUTCDate() - 7);
   const { start: weekStart, end: weekEnd } = getWeekBounds(lastWeek);
 
-  const { data: users } = await supabase
+  let usersQuery = supabase
     .from("users")
     .select("id, timezone, push_quiet_hours_start, push_quiet_hours_end");
+  if (userIdFilter) usersQuery = usersQuery.eq("id", userIdFilter);
+  const { data: users } = await usersQuery;
   if (!users?.length) {
     return NextResponse.json({ ok: true, job: "weekly", reports: 0, learningReminderSent: 0 });
   }
@@ -182,5 +188,6 @@ export async function GET(request: Request) {
     learningReminderSent,
     learningReminderEmailSent,
     savingsAlertSent,
+    ...(userIdFilter && { userId: userIdFilter }),
   });
 }

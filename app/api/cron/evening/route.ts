@@ -17,14 +17,20 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
+  const url = new URL(request.url);
+  const userIdParam = url.searchParams.get("userId");
+  const userIdFilter = userIdParam ? String(userIdParam) : null;
+
   const supabase = createAdminClient();
   const now = new Date();
   const utcHour = now.getUTCHours();
 
-  const { data: users } = await supabase
+  let usersQuery = supabase
     .from("users")
     .select("id, timezone, push_quiet_hours_start, push_quiet_hours_end")
     .not("push_subscription_json", "is", null);
+  if (userIdFilter) usersQuery = usersQuery.eq("id", userIdFilter);
+  const { data: users } = await usersQuery;
 
   let sent = 0;
   if (process.env.VAPID_PRIVATE_KEY && process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY) {
@@ -62,5 +68,6 @@ export async function GET(request: Request) {
     job: "evening",
     shutdownReminderSent: sent,
     users: users?.length ?? 0,
+    ...(userIdFilter && { userId: userIdFilter }),
   });
 }

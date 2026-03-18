@@ -211,16 +211,20 @@ export async function GET(request: Request) {
 
   const url = new URL(request.url);
   const forceHourParam = url.searchParams.get("forceHour");
+  const userIdParam = url.searchParams.get("userId");
+  const userIdFilter = userIdParam ? String(userIdParam) : null;
   const forceHour: number | undefined =
     forceHourParam != null && ALLOWED_FORCE_HOURS.includes(Number(forceHourParam) as (typeof ALLOWED_FORCE_HOURS)[number])
       ? Number(forceHourParam)
       : undefined;
 
   const supabase = createAdminClient();
-  const { data: users } = await supabase
+  let usersQuery = supabase
     .from("users")
     .select("id, timezone, last_rollover_date, push_quiet_hours_start, push_quiet_hours_end, push_quote_enabled, push_quote_time, push_subscription_json")
     .not("timezone", "is", null);
+  if (userIdFilter) usersQuery = usersQuery.eq("id", userIdFilter);
+  const { data: users } = await usersQuery;
 
   const prefsByUser = new Map<
     string,
@@ -703,6 +707,7 @@ export async function GET(request: Request) {
     ok: true,
     job: "hourly",
     ...(forceHour !== undefined && { testRun: true, forceHour }),
+    ...(userIdFilter && { userId: userIdFilter }),
     rolled,
     quoteSent,
     morningEmailSent,
