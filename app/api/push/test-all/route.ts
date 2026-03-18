@@ -3,6 +3,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { sendPushToUser } from "@/lib/push";
 import { getQuoteByDayNumber } from "@/lib/quotes";
 import { getDayOfYearFromDateString } from "@/lib/utils/timezone";
+import { getLocalDateHour } from "@/lib/utils/timezone";
 import {
   getMorningEmailData,
   getEveningEmailData,
@@ -43,6 +44,71 @@ function isPushTestType(s: string): s is PushTestType {
   return (PUSH_TYPES as readonly string[]).includes(s);
 }
 
+// Keep in sync with lib/push.ts (diagnostics only; sending still uses that source of truth).
+const MAX_PUSH_PER_DAY = 20;
+const MAX_PUSH_BEFORE_LOW_PRIORITY_BLOCK = 13;
+const MAX_PUSH_PER_DAY_LOW_ENGAGEMENT = 15;
+
+type PushLimitState = {
+  countAfterReset: number;
+  userToday: string;
+  effectiveMax: number;
+  blockedBy: "none" | "low_priority_fatigue" | "daily_cap";
+};
+
+async function getPushLimitState(
+  supabase: ReturnType<typeof createAdminClient>,
+  user: {
+    id: string;
+    push_sent_count: number | null;
+    push_sent_date: string | null;
+    timezone: string | null;
+  },
+  priority: "low" | "normal" | "high" | undefined
+): Promise<PushLimitState> {
+  const tz = user.timezone ?? null;
+  const userToday = tz ? getLocalDateHour(tz).date : new Date().toISOString().slice(0, 10);
+
+  let count = (user.push_sent_count ?? 0) as number;
+  if ((user.push_sent_date as string | null) !== userToday) {
+    count = 0;
+  }
+
+  const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+  const { count: clicksLast7d } = await (supabase as any)
+    .from("push_engagement")
+    .select("*", { count: "exact", head: true })
+    .eq("user_id", user.id)
+    .eq("event_type", "clicked")
+    .gte("created_at", sevenDaysAgo);
+
+  const effectiveMax = (clicksLast7d ?? 0) >= 1 ? MAX_PUSH_PER_DAY : MAX_PUSH_PER_DAY_LOW_ENGAGEMENT;
+
+  if ((priority ?? "normal") === "low" && count >= MAX_PUSH_BEFORE_LOW_PRIORITY_BLOCK) {
+    return {
+      countAfterReset: count,
+      userToday,
+      effectiveMax,
+      blockedBy: "low_priority_fatigue",
+    };
+  }
+  if (count >= effectiveMax) {
+    return {
+      countAfterReset: count,
+      userToday,
+      effectiveMax,
+      blockedBy: "daily_cap",
+    };
+  }
+
+  return {
+    countAfterReset: count,
+    userToday,
+    effectiveMax,
+    blockedBy: "none",
+  };
+}
+
 export async function GET(request: Request) {
   const authHeader = request.headers.get("authorization");
   const cronSecret = process.env.CRON_SECRET;
@@ -79,11 +145,17 @@ export async function GET(request: Request) {
 
   const supabase = createAdminClient();
   let userId: string;
+  let userRecord: {
+    id: string;
+    push_sent_count: number | null;
+    push_sent_date: string | null;
+    timezone: string | null;
+  } | null = null;
 
   if (userIdParam) {
     const { data: user } = await supabase
       .from("users")
-      .select("id, push_subscription_json")
+      .select("id, push_subscription_json, push_sent_count, push_sent_date, timezone")
       .eq("id", userIdParam)
       .single();
     if (!user?.push_subscription_json) {
@@ -93,10 +165,16 @@ export async function GET(request: Request) {
       );
     }
     userId = user.id;
+    userRecord = {
+      id: user.id,
+      push_sent_count: user.push_sent_count ?? null,
+      push_sent_date: user.push_sent_date ?? null,
+      timezone: user.timezone ?? null,
+    };
   } else {
     const { data: users } = await supabase
       .from("users")
-      .select("id")
+      .select("id, push_subscription_json, push_sent_count, push_sent_date, timezone")
       .not("push_subscription_json", "is", null)
       .limit(1);
     const first = users?.[0];
@@ -107,6 +185,12 @@ export async function GET(request: Request) {
       );
     }
     userId = first.id;
+    userRecord = {
+      id: first.id,
+      push_sent_count: (first as any).push_sent_count ?? null,
+      push_sent_date: (first as any).push_sent_date ?? null,
+      timezone: (first as any).timezone ?? null,
+    };
   }
 
   const todayStr = new Date().toISOString().slice(0, 10);
@@ -116,6 +200,9 @@ export async function GET(request: Request) {
 
   let ok = false;
   const ctx = await loadUserNotificationContextForUser(supabase, userId);
+  if (!userRecord) {
+    return NextResponse.json({ error: "Failed to load user push state." }, { status: 500 });
+  }
   try {
     switch (typeParam) {
       case "daily-quote": {
@@ -126,7 +213,19 @@ export async function GET(request: Request) {
           url: "/dashboard",
           priority: "low" as const,
         };
-        ok = await sendPushToUser(supabase, userId, applyPersonalityToPayload(base, ctx.personalityMode, "quote"));
+        const payload = applyPersonalityToPayload(base, ctx.personalityMode, "quote");
+        const limitState = await getPushLimitState(supabase, userRecord, payload.priority);
+        if (limitState.blockedBy !== "none") {
+          return NextResponse.json({
+            ok: false,
+            type: typeParam,
+            userId,
+            message: "Send blocked by push limits.",
+            reason: limitState.blockedBy,
+            limitState,
+          });
+        }
+        ok = await sendPushToUser(supabase, userId, payload);
         break;
       }
       case "calendar-morning": {
@@ -137,7 +236,19 @@ export async function GET(request: Request) {
           url: "/tasks?tab=calendar",
           priority: "normal" as const,
         };
-        ok = await sendPushToUser(supabase, userId, applyPersonalityToPayload(base, ctx.personalityMode, "calendar_morning"));
+        const payload = applyPersonalityToPayload(base, ctx.personalityMode, "calendar_morning");
+        const limitState = await getPushLimitState(supabase, userRecord, payload.priority);
+        if (limitState.blockedBy !== "none") {
+          return NextResponse.json({
+            ok: false,
+            type: typeParam,
+            userId,
+            message: "Send blocked by push limits.",
+            reason: limitState.blockedBy,
+            limitState,
+          });
+        }
+        ok = await sendPushToUser(supabase, userId, payload);
         break;
       }
       case "calendar-reminder": {
@@ -148,29 +259,90 @@ export async function GET(request: Request) {
           url: "/tasks?tab=calendar",
           priority: "normal" as const,
         };
-        ok = await sendPushToUser(supabase, userId, applyPersonalityToPayload(base, ctx.personalityMode, "calendar_reminder"));
+        const payload = applyPersonalityToPayload(base, ctx.personalityMode, "calendar_reminder");
+        const limitState = await getPushLimitState(supabase, userRecord, payload.priority);
+        if (limitState.blockedBy !== "none") {
+          return NextResponse.json({
+            ok: false,
+            type: typeParam,
+            userId,
+            message: "Send blocked by push limits.",
+            reason: limitState.blockedBy,
+            limitState,
+          });
+        }
+        ok = await sendPushToUser(supabase, userId, payload);
         break;
       }
       case "morning-reminder": {
         const morningData = await getMorningEmailData(supabase, userId, todayStr);
         const base = buildMorningPushPayload(morningData);
-        ok = await sendPushToUser(supabase, userId, applyPersonalityToPayload(base, ctx.personalityMode, "morning"));
+        const payload = applyPersonalityToPayload(base, ctx.personalityMode, "morning");
+        const limitState = await getPushLimitState(supabase, userRecord, payload.priority);
+        if (limitState.blockedBy !== "none") {
+          return NextResponse.json({
+            ok: false,
+            type: typeParam,
+            userId,
+            message: "Send blocked by push limits.",
+            reason: limitState.blockedBy,
+            limitState,
+          });
+        }
+        ok = await sendPushToUser(supabase, userId, payload);
         break;
       }
       case "evening-reminder": {
         const eveningData = await getEveningEmailData(supabase, userId, todayStr);
         const base = buildEveningPushPayload(eveningData);
-        ok = await sendPushToUser(supabase, userId, applyPersonalityToPayload(base, ctx.personalityMode, "evening"));
+        const payload = applyPersonalityToPayload(base, ctx.personalityMode, "evening");
+        const limitState = await getPushLimitState(supabase, userRecord, payload.priority);
+        if (limitState.blockedBy !== "none") {
+          return NextResponse.json({
+            ok: false,
+            type: typeParam,
+            userId,
+            message: "Send blocked by push limits.",
+            reason: limitState.blockedBy,
+            limitState,
+          });
+        }
+        ok = await sendPushToUser(supabase, userId, payload);
         break;
       }
       case "brain-status-reminder": {
         const result = buildBehavioralNotificationForContext(ctx, { type: "brain_status_missing" });
-        if (result) ok = await sendPushToUser(supabase, userId, result.payload);
+        if (result) {
+          const limitState = await getPushLimitState(supabase, userRecord, result.payload.priority);
+          if (limitState.blockedBy !== "none") {
+            return NextResponse.json({
+              ok: false,
+              type: typeParam,
+              userId,
+              message: "Send blocked by push limits.",
+              reason: limitState.blockedBy,
+              limitState,
+            });
+          }
+          ok = await sendPushToUser(supabase, userId, result.payload);
+        }
         break;
       }
       case "weekly-learning": {
         const base = buildWeeklyLearningPushPayload(35, 60);
-        ok = await sendPushToUser(supabase, userId, applyPersonalityToPayload(base, ctx.personalityMode, "weekly_learning"));
+        const payload = applyPersonalityToPayload(base, ctx.personalityMode, "weekly_learning");
+        const limitState = await getPushLimitState(supabase, userRecord, payload.priority);
+        if (limitState.blockedBy !== "none") {
+          return NextResponse.json({
+            ok: false,
+            type: typeParam,
+            userId,
+            message: "Send blocked by push limits.",
+            reason: limitState.blockedBy,
+            limitState,
+          });
+        }
+        ok = await sendPushToUser(supabase, userId, payload);
         break;
       }
       case "savings-alert": {
@@ -181,17 +353,41 @@ export async function GET(request: Request) {
           url: "/budget",
           priority: "high" as const,
         };
-        ok = await sendPushToUser(supabase, userId, applyPersonalityToPayload(base, ctx.personalityMode, "savings_alert"));
+        const payload = applyPersonalityToPayload(base, ctx.personalityMode, "savings_alert");
+        const limitState = await getPushLimitState(supabase, userRecord, payload.priority);
+        if (limitState.blockedBy !== "none") {
+          return NextResponse.json({
+            ok: false,
+            type: typeParam,
+            userId,
+            message: "Send blocked by push limits.",
+            reason: limitState.blockedBy,
+            limitState,
+          });
+        }
+        ok = await sendPushToUser(supabase, userId, payload);
         break;
       }
       case "shutdown-reminder": {
-        ok = await sendPushToUser(supabase, userId, {
+        const payload = {
           title: "NEUROHQ",
           body: "Time to wind down. Rest well.",
           tag: "shutdown-reminder",
           url: "/dashboard",
           priority: "high",
-        });
+        };
+        const limitState = await getPushLimitState(supabase, userRecord, payload.priority);
+        if (limitState.blockedBy !== "none") {
+          return NextResponse.json({
+            ok: false,
+            type: typeParam,
+            userId,
+            message: "Send blocked by push limits.",
+            reason: limitState.blockedBy,
+            limitState,
+          });
+        }
+        ok = await sendPushToUser(supabase, userId, payload);
         break;
       }
       case "freeze-reminder": {
@@ -202,7 +398,19 @@ export async function GET(request: Request) {
           url: "/budget",
           priority: "high" as const,
         };
-        ok = await sendPushToUser(supabase, userId, applyPersonalityToPayload(baseFreeze, ctx.personalityMode, "freeze_reminder"));
+        const payload = applyPersonalityToPayload(baseFreeze, ctx.personalityMode, "freeze_reminder");
+        const limitState = await getPushLimitState(supabase, userRecord, payload.priority);
+        if (limitState.blockedBy !== "none") {
+          return NextResponse.json({
+            ok: false,
+            type: typeParam,
+            userId,
+            message: "Send blocked by push limits.",
+            reason: limitState.blockedBy,
+            limitState,
+          });
+        }
+        ok = await sendPushToUser(supabase, userId, payload);
         break;
       }
       case "avoidance-alert": {
@@ -213,7 +421,19 @@ export async function GET(request: Request) {
           url: "/dashboard",
           priority: "high" as const,
         };
-        ok = await sendPushToUser(supabase, userId, applyPersonalityToPayload(baseAvoid, ctx.personalityMode, "avoidance_alert"));
+        const payload = applyPersonalityToPayload(baseAvoid, ctx.personalityMode, "avoidance_alert");
+        const limitState = await getPushLimitState(supabase, userRecord, payload.priority);
+        if (limitState.blockedBy !== "none") {
+          return NextResponse.json({
+            ok: false,
+            type: typeParam,
+            userId,
+            message: "Send blocked by push limits.",
+            reason: limitState.blockedBy,
+            limitState,
+          });
+        }
+        ok = await sendPushToUser(supabase, userId, payload);
         break;
       }
       case "reengage": {
@@ -222,7 +442,20 @@ export async function GET(request: Request) {
           type: "inactivity_window",
           daysInactive: 3,
         });
-        if (result) ok = await sendPushToUser(supabase, userId, result.payload);
+        if (result) {
+          const limitState = await getPushLimitState(supabase, userRecord, result.payload.priority);
+          if (limitState.blockedBy !== "none") {
+            return NextResponse.json({
+              ok: false,
+              type: typeParam,
+              userId,
+              message: "Send blocked by push limits.",
+              reason: limitState.blockedBy,
+              limitState,
+            });
+          }
+          ok = await sendPushToUser(supabase, userId, result.payload);
+        }
         break;
       }
       case "streak-growth": {
@@ -231,7 +464,20 @@ export async function GET(request: Request) {
           type: "streak_growth",
           newStreak: 5,
         });
-        if (result) ok = await sendPushToUser(supabase, userId, result.payload);
+        if (result) {
+          const limitState = await getPushLimitState(supabase, userRecord, result.payload.priority);
+          if (limitState.blockedBy !== "none") {
+            return NextResponse.json({
+              ok: false,
+              type: typeParam,
+              userId,
+              message: "Send blocked by push limits.",
+              reason: limitState.blockedBy,
+              limitState,
+            });
+          }
+          ok = await sendPushToUser(supabase, userId, result.payload);
+        }
         break;
       }
       case "streak-protection": {
@@ -240,7 +486,20 @@ export async function GET(request: Request) {
           type: "streak_risk",
           currentStreak: 3,
         });
-        if (result) ok = await sendPushToUser(supabase, userId, result.payload);
+        if (result) {
+          const limitState = await getPushLimitState(supabase, userRecord, result.payload.priority);
+          if (limitState.blockedBy !== "none") {
+            return NextResponse.json({
+              ok: false,
+              type: typeParam,
+              userId,
+              message: "Send blocked by push limits.",
+              reason: limitState.blockedBy,
+              limitState,
+            });
+          }
+          ok = await sendPushToUser(supabase, userId, result.payload);
+        }
         break;
       }
       case "momentum": {
@@ -250,7 +509,20 @@ export async function GET(request: Request) {
           missionsInWindow: 4,
           windowMinutes: 45,
         });
-        if (result) ok = await sendPushToUser(supabase, userId, result.payload);
+        if (result) {
+          const limitState = await getPushLimitState(supabase, userRecord, result.payload.priority);
+          if (limitState.blockedBy !== "none") {
+            return NextResponse.json({
+              ok: false,
+              type: typeParam,
+              userId,
+              message: "Send blocked by push limits.",
+              reason: limitState.blockedBy,
+              limitState,
+            });
+          }
+          ok = await sendPushToUser(supabase, userId, result.payload);
+        }
         break;
       }
     }
