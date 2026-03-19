@@ -14,6 +14,7 @@ type Props = {
 /** Renders mascot img with fallback to dashboard mascot when the page asset is missing (404). */
 export function MascotImg({ page, state, alt = "", className }: Props) {
   const fallbackSrc = getMascotSrcForPage(FALLBACK_PAGE);
+  const emergencyFallbackSrc = "/stars.png";
 
   return (
     <img
@@ -22,7 +23,16 @@ export function MascotImg({ page, state, alt = "", className }: Props) {
       className={className}
       onError={(e) => {
         const el = e.currentTarget;
-        if (el.src !== fallbackSrc) el.src = fallbackSrc;
+        const stage = el.dataset.fallbackStage ?? "0";
+        if (stage === "0") {
+          el.dataset.fallbackStage = "1";
+          el.src = fallbackSrc;
+          return;
+        }
+        if (stage === "1") {
+          el.dataset.fallbackStage = "2";
+          el.src = emergencyFallbackSrc;
+        }
       }}
     />
   );

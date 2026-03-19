@@ -66,6 +66,33 @@ type LearningSlice = {
 type HQStore = DCICSlice & DashboardSlice & TasksSlice & TodaySlice & BudgetSlice & LearningSlice;
 
 const HQ_PERSIST_KEY = "neurohq-hq-store";
+const HQ_PERSIST_VERSION = 1;
+
+function normalizePersistedState(persisted: unknown): unknown {
+  if (!persisted || typeof persisted !== "object") return persisted;
+  const state = persisted as Record<string, unknown>;
+  const gameStateRaw = state.gameState;
+  if (!gameStateRaw || typeof gameStateRaw !== "object") return persisted;
+
+  const gameState = gameStateRaw as Record<string, unknown>;
+  const modeRaw = gameState.mode;
+  if (modeRaw && typeof modeRaw === "object" && (modeRaw as Record<string, unknown>).current != null) {
+    return persisted;
+  }
+
+  return {
+    ...state,
+    gameState: {
+      ...gameState,
+      mode: {
+        current: "focus",
+        lockedUntil: null,
+        lastSwitch: null,
+        warStage: 1,
+      },
+    },
+  };
+}
 
 function partialize(state: HQStore) {
   return {
@@ -102,13 +129,25 @@ export function getPersistedDashboardSync(): {
     if (typeof window === "undefined" || !window.localStorage) return { critical: null, secondary: null };
     const raw = window.localStorage.getItem(HQ_PERSIST_KEY);
     if (!raw) return { critical: null, secondary: null };
-    const parsed = JSON.parse(raw) as {
-      dashboardCritical?: DashboardCritical | null;
-      dashboardSecondary?: DashboardSecondary | null;
-    };
+    const parsed = JSON.parse(raw) as
+      | {
+          dashboardCritical?: DashboardCritical | null;
+          dashboardSecondary?: DashboardSecondary | null;
+        }
+      | {
+          state?: {
+            dashboardCritical?: DashboardCritical | null;
+            dashboardSecondary?: DashboardSecondary | null;
+          };
+          version?: number;
+        };
+    const state =
+      parsed && typeof parsed === "object" && "state" in parsed
+        ? parsed.state ?? {}
+        : parsed;
     return {
-      critical: parsed.dashboardCritical ?? null,
-      secondary: parsed.dashboardSecondary ?? null,
+      critical: state?.dashboardCritical ?? null,
+      secondary: state?.dashboardSecondary ?? null,
     };
   } catch {
     return { critical: null, secondary: null };
@@ -123,7 +162,13 @@ export function flushHQStoreToStorage(): void {
   try {
     if (typeof window === "undefined" || !window.localStorage) return;
     const state = useHQStore.getState();
-    window.localStorage.setItem(HQ_PERSIST_KEY, JSON.stringify(partialize(state)));
+    window.localStorage.setItem(
+      HQ_PERSIST_KEY,
+      JSON.stringify({
+        state: partialize(state),
+        version: HQ_PERSIST_VERSION,
+      })
+    );
   } catch {
     // Ignore quota or security errors
   }
@@ -214,6 +259,8 @@ export const useHQStore = create<HQStore>()(
     {
       name: HQ_PERSIST_KEY,
       partialize,
+      version: HQ_PERSIST_VERSION,
+      migrate: (persistedState) => normalizePersistedState(persistedState),
     }
   )
 );

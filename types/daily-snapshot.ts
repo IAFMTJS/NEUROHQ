@@ -117,8 +117,7 @@ export interface DailySnapshotUIState {
    */
   offlineMode?: boolean;
   /**
-   * Client-side timestamp (ms since epoch) when this snapshot was last saved.
-   * Used to detect stale same-day snapshots and trigger a fresh preload.
+   * Client-side timestamp (ms since epoch) when this snapshot was last saved (metadata).
    */
   savedAt?: number;
 }

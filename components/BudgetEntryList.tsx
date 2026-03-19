@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import Link from "next/link";
 import { deleteBudgetEntry, freezePurchase, confirmFreeze, cancelFreeze, updateBudgetEntry } from "@/app/actions/budget";
 import { formatCents } from "@/lib/utils/currency";
 import { Modal } from "@/components/Modal";
@@ -26,10 +27,12 @@ export function BudgetEntryList({
   entries,
   currency = "EUR",
   goals = [],
+  readOnly = false,
 }: {
   entries: Entry[];
   currency?: string;
   goals?: Goal[];
+  readOnly?: boolean;
 }) {
   const [pending, startTransition] = useTransition();
   const [categoryFilter, setCategoryFilter] = useState<string>("");
@@ -46,15 +49,19 @@ export function BudgetEntryList({
   const [editNote, setEditNote] = useState("");
 
   function handleFreeze(id: string) {
+    if (readOnly) return;
     startTransition(() => freezePurchase(id));
   }
   function handleConfirm(id: string) {
+    if (readOnly) return;
     startTransition(() => confirmFreeze(id));
   }
   function handleCancel(id: string) {
+    if (readOnly) return;
     startTransition(() => cancelFreeze(id));
   }
   function handleDelete(id: string) {
+    if (readOnly) return;
     if (!confirm("Delete this entry?")) return;
     startTransition(() => deleteBudgetEntry(id));
   }
@@ -69,6 +76,7 @@ export function BudgetEntryList({
 
   function handleSaveEdit() {
     if (!editing) return;
+    if (readOnly) return;
     const amountCents = Math.round(parseFloat(editAmount) * 100);
     if (isNaN(amountCents) || amountCents < 0) return;
     const sign = editing.amount_cents >= 0 ? 1 : -1;
@@ -127,6 +135,11 @@ export function BudgetEntryList({
         {filtersActive && (
           <p className="text-xs text-[var(--text-muted)]">
             Filters actief: {rest.length} van {entries.length} boekingen zichtbaar. Leeg de filters om alles te zien.
+          </p>
+        )}
+        {readOnly && (
+          <p className="text-xs text-[var(--text-muted)]">
+            History mode: entries are read-only.
           </p>
         )}
         <div className="flex flex-wrap items-center gap-3">
@@ -209,27 +222,19 @@ export function BudgetEntryList({
         )}
 
         <ul className="space-y-2">
-          {frozen.map((e) => (
-            <li key={e.id} className="flex items-center justify-between rounded border border-amber-700/50 bg-amber-900/20 px-3 py-2">
-              <span className="text-sm text-[var(--text-primary)]">
-                {formatCents(e.amount_cents, currency)} · {e.date}
-                {e.note && ` · ${e.note}`}
-              </span>
-              <span className="text-xs text-amber-200">Frozen until {e.freeze_until ? new Date(e.freeze_until).toLocaleString() : ""}</span>
+          {(frozen.length > 0 || readyReminder.length > 0) && (
+            <li className="rounded border border-[var(--card-border)] bg-[var(--bg-primary)]/40 px-3 py-2">
+              <p className="text-sm text-[var(--text-primary)]">
+                Frozen queue: {frozen.length} active, {readyReminder.length} ready for action.
+              </p>
+              <p className="mt-0.5 text-xs text-[var(--text-muted)]">
+                Confirm/cancel frozen purchases in Tactical Control for one consistent freeze flow.
+              </p>
+              <Link href="/budget?tab=tactical" className="mt-1 inline-block text-xs font-medium text-[var(--accent-focus)] hover:underline">
+                Open Tactical Control →
+              </Link>
             </li>
-          ))}
-          {readyReminder.map((e) => (
-            <li key={e.id} className="flex items-center justify-between rounded border border-neutral-700 bg-[var(--bg-surface)] px-3 py-2">
-              <span className="text-sm text-[var(--text-primary)]">
-                {formatCents(e.amount_cents, currency)} · {e.date}
-                {e.note && ` · ${e.note}`}
-              </span>
-              <div className="flex gap-2">
-                <button type="button" onClick={() => handleConfirm(e.id)} disabled={pending} className="text-xs text-green-400 hover:underline">Confirm</button>
-                <button type="button" onClick={() => handleCancel(e.id)} disabled={pending} className="text-xs text-red-400 hover:underline">Cancel</button>
-              </div>
-            </li>
-          ))}
+          )}
           {visible.map((e) => (
             <li key={e.id} className="flex items-center justify-between rounded border border-neutral-700 bg-[var(--bg-surface)] px-3 py-2">
               <span className="text-sm text-[var(--text-primary)]">
@@ -237,13 +242,15 @@ export function BudgetEntryList({
                 {e.category && ` · ${e.category}`}
                 {e.note && ` · ${e.note}`}
               </span>
-              <div className="flex gap-2">
-                <button type="button" onClick={() => openEdit(e)} disabled={pending} className="text-xs text-[var(--accent-focus)] hover:underline">Edit</button>
-                {e.amount_cents < 0 && !e.freeze_until && (
-                  <button type="button" onClick={() => handleFreeze(e.id)} disabled={pending} className="text-xs text-[var(--accent-focus)] hover:underline">Freeze 24h</button>
-                )}
-                <button type="button" onClick={() => handleDelete(e.id)} disabled={pending} className="text-xs text-neutral-500 hover:text-red-400">Delete</button>
-              </div>
+              {!readOnly && (
+                <div className="flex gap-2">
+                  <button type="button" onClick={() => openEdit(e)} disabled={pending} className="text-xs text-[var(--accent-focus)] hover:underline">Edit</button>
+                  {e.amount_cents < 0 && !e.freeze_until && (
+                    <button type="button" onClick={() => handleFreeze(e.id)} disabled={pending} className="text-xs text-[var(--accent-focus)] hover:underline">Freeze 24h</button>
+                  )}
+                  <button type="button" onClick={() => handleDelete(e.id)} disabled={pending} className="text-xs text-neutral-500 hover:text-red-400">Delete</button>
+                </div>
+              )}
             </li>
           ))}
         </ul>
@@ -258,7 +265,7 @@ export function BudgetEntryList({
         )}
       </div>
 
-      <Modal open={!!editing} onClose={() => setEditing(null)} title="Edit entry" showBranding>
+      <Modal open={!!editing && !readOnly} onClose={() => setEditing(null)} title="Edit entry" showBranding>
         {editing && (
           <div className="space-y-4">
             <div>

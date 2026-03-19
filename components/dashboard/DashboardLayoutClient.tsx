@@ -21,6 +21,7 @@ import { useDailySnapshot } from "@/components/bootstrap/BootstrapGate";
 import type { DashboardSnapshot } from "@/types/daily-snapshot";
 import { updateLastActiveDate } from "@/app/actions/behavior";
 import { useHQStore } from "@/lib/hq-store";
+import { usePeriodicBootstrapRefresh } from "@/lib/daily-bootstrap";
 
 const LAST_ACTIVE_STORAGE_KEY = "neurohq-last-active-date";
 
@@ -36,7 +37,7 @@ export function DashboardLayoutClient({
 }: Props) {
   const dailySnapshot = useDailySnapshot();
   const setTodayDate = useHQStore((s) => s.setTodayDate);
-  const mode = useHQStore((s) => s.gameState?.mode.current ?? "focus");
+  const mode = useHQStore((s) => s.gameState?.mode?.current ?? "focus");
 
   // Hydrate HQ store from DailySnapshot (single source of truth); no duplicate /api/bootstrap/today fetch.
   useEffect(() => {
@@ -44,6 +45,9 @@ export function DashboardLayoutClient({
       setTodayDate(dailySnapshot.date);
     }
   }, [dailySnapshot?.date, setTodayDate]);
+
+  /** Keeps HQ store + persisted DailySnapshot aligned with `/api/bootstrap/today` between full preloads. */
+  usePeriodicBootstrapRefresh(30);
 
   useEffect(() => {
     const today = new Date().toISOString().slice(0, 10);

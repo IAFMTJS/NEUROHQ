@@ -11,19 +11,13 @@ function LearningShell() {
     <>
       <HQPageHeader
         title="Growth"
-        subtitle="Learning Command Board — intent, consistency, streams, and reflection."
+        subtitle="Mission control for deliberate learning: direction, rhythm, execution, and reflection."
         backHref="/dashboard"
       />
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+      <div className="flex flex-col gap-4">
         <p className="text-xs text-[var(--text-muted)]">
-          Focus on direction, discipline, and conscious reflection. Analytics live on a separate screen to keep this view calm.
+          Build momentum with one clear directive, a protected weekly rhythm, and short feedback loops.
         </p>
-        <a
-          href="/learning/analytics"
-          className="inline-flex items-center justify-center rounded-lg border border-[var(--card-border)] bg-[var(--bg-primary)] px-3 py-1.5 text-xs font-medium text-[var(--text-secondary)] hover:border-[var(--accent-focus)] hover:text-[var(--accent-focus)]"
-        >
-          Open analytics
-        </a>
       </div>
     </>
   );

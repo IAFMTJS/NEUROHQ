@@ -53,6 +53,11 @@ export async function saveDailySnapshot(snapshot: DailySnapshot): Promise<void> 
       },
     };
     window.localStorage.setItem(STORAGE_KEY, JSON.stringify(normalized));
+    try {
+      window.dispatchEvent(new CustomEvent("neurohq-daily-snapshot-updated"));
+    } catch {
+      // ignore
+    }
   } catch (err) {
     console.warn("[daily-snapshot] saveDailySnapshot failed", err);
     // Best-effort only; ignore quota/serialization errors.
@@ -70,25 +75,11 @@ export async function clearDailySnapshot(): Promise<void> {
 }
 
 /**
- * Convenience helper to check if a given snapshot is still valid for today.
+ * True when the snapshot matches the local device daily window (see
+ * `getSnapshotValidityDayKey` — full calendar day until 00:01 after midnight).
  */
 export function isCurrentSnapshot(snapshot: DailySnapshot | null): boolean {
   if (!snapshot) return false;
-  if (!isSnapshotForToday(snapshot)) return false;
-
-  // If we have a savedAt timestamp, treat very old same-day snapshots as stale so
-  // the bootstrap loader can rebuild a fresh snapshot (e.g. after many hours or
-  // significant server-side changes).
-  const maxAgeMs = 12 * 60 * 60 * 1000; // 12h safety window
-  const savedAt =
-    snapshot.ui && typeof snapshot.ui.savedAt === "number" && Number.isFinite(snapshot.ui.savedAt)
-      ? snapshot.ui.savedAt
-      : null;
-  if (savedAt != null && typeof window !== "undefined") {
-    const age = Date.now() - savedAt;
-    if (age > maxAgeMs) return false;
-  }
-
-  return true;
+  return isSnapshotForToday(snapshot);
 }
 

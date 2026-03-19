@@ -11,7 +11,7 @@ type Props = {
 };
 
 export function HQPageHeader({ title, subtitle, backHref }: Props) {
-  const mode = useHQStore((s) => s.gameState?.mode.current ?? "focus");
+  const mode = useHQStore((s) => s.gameState?.mode?.current ?? "focus");
   const showBackLink = backHref != null && backHref !== "";
   return (
     <header>

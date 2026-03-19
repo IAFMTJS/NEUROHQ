@@ -6,9 +6,10 @@ import { getLargestCategory, getTotalPotentialSavings } from "@/lib/dcic/finance
 
 type Props = {
   financeState: FinanceState | null;
+  compact?: boolean;
 };
 
-export const BudgetAchievementsCard: FC<Props> = ({ financeState }) => {
+export const BudgetAchievementsCard: FC<Props> = ({ financeState, compact = false }) => {
   if (!financeState) return null;
 
   const discipline = financeState.disciplineScore;
@@ -27,6 +28,21 @@ export const BudgetAchievementsCard: FC<Props> = ({ financeState }) => {
 
   if (badges.length === 0) {
     badges.push("Finance achievements will unlock as your discipline improves.");
+  }
+
+  if (compact) {
+    return (
+      <div className="mt-2 flex flex-wrap gap-2">
+        {badges.map((b) => (
+          <span
+            key={b}
+            className="rounded-full border border-[var(--card-border)] bg-[var(--bg-surface)]/70 px-3 py-1 text-xs font-medium text-[var(--text-secondary)]"
+          >
+            {b}
+          </span>
+        ))}
+      </div>
+    );
   }
 
   return (

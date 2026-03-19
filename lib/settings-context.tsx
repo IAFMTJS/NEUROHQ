@@ -36,20 +36,41 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
   const [settings, setSettings] = useState<SettingsPayload>(null);
 
   const invalidate = useCallback(async () => {
-    const next = await fetchSettings();
-    setSettings(next);
+    try {
+      const next = await fetchSettings();
+      setSettings(next);
+    } catch {
+      setSettings(null);
+    }
   }, []);
 
   useEffect(() => {
+    const controller = new AbortController();
     let cancelled = false;
-    fetchSettings().then((data) => {
-      if (!cancelled) setSettings(data);
-    });
-    return () => { cancelled = true; };
+    fetch("/api/settings", {
+      credentials: "include",
+      cache: "no-store",
+      signal: controller.signal,
+    })
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (!cancelled) setSettings((data ?? null) as SettingsPayload);
+      })
+      .catch(() => {
+        if (!cancelled) setSettings(null);
+      });
+    return () => {
+      cancelled = true;
+      controller.abort();
+    };
   }, []);
 
   useEffect(() => {
-    const onFocus = () => void fetchSettings().then((data) => setSettings(data));
+    const onFocus = () => {
+      void fetchSettings()
+        .then((data) => setSettings(data))
+        .catch(() => setSettings(null));
+    };
     window.addEventListener("focus", onFocus);
     return () => window.removeEventListener("focus", onFocus);
   }, []);

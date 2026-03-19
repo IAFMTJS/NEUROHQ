@@ -6,6 +6,7 @@ import {
   saveDailySnapshot,
   isCurrentSnapshot,
 } from "@/lib/daily-snapshot-storage";
+import { getMascotSrcForPage } from "@/lib/mascots";
 import type { DailySnapshot } from "@/types/daily-snapshot";
 import { LATEST_SNAPSHOT_VERSION } from "@/types/daily-snapshot";
 
@@ -32,6 +33,8 @@ export type InitializeResult = {
   kind: "fromCache" | "fresh";
   snapshot: DailySnapshot;
 };
+
+const PRELOAD_PAGE_TIMEOUT_MS = 2500;
 
 const ALL_STEPS: PreloadStepId[] = [
   "fetchDashboard",
@@ -353,14 +356,7 @@ async function runStep(
           "/help",
           "/assistant",
         ];
-        await Promise.allSettled(
-          routes.map((path) =>
-            fetch(path, {
-              credentials: "include",
-              cache: "force-cache",
-            }).catch(() => undefined)
-          )
-        );
+        await Promise.allSettled(routes.map((path) => prefetchPage(path)));
         return {
           ...snapshot,
           ui: {
@@ -375,10 +371,10 @@ async function runStep(
     case "preloadAssets": {
       try {
         const assets = [
-          "/mascots/dashboard.png",
-          "/mascots/tasks.png",
-          "/mascots/xp.png",
-          "/mascots/budget.png",
+          getMascotSrcForPage("dashboard"),
+          getMascotSrcForPage("tasks"),
+          getMascotSrcForPage("xp"),
+          getMascotSrcForPage("budget"),
         ];
         assets.forEach((src) => {
           try {
@@ -402,6 +398,22 @@ async function runStep(
     case "prepareCache":
     default:
       return snapshot;
+  }
+}
+
+async function prefetchPage(path: string): Promise<void> {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), PRELOAD_PAGE_TIMEOUT_MS);
+  try {
+    await fetch(path, {
+      credentials: "include",
+      cache: "force-cache",
+      signal: controller.signal,
+    });
+  } catch {
+    // ignore individual prefetch errors/timeouts
+  } finally {
+    clearTimeout(timeoutId);
   }
 }
 

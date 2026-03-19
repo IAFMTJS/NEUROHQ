@@ -37,16 +37,33 @@ export function BudgetDashboardProvider({ children }: { children: ReactNode }) {
   const [budget, setBudget] = useState<BudgetContextPayload>(null);
 
   const invalidate = useCallback(async () => {
-    const next = await fetchBudgetContext();
-    setBudget(next);
+    try {
+      const next = await fetchBudgetContext();
+      setBudget(next);
+    } catch {
+      setBudget(null);
+    }
   }, []);
 
   useEffect(() => {
+    const controller = new AbortController();
     let cancelled = false;
-    fetchBudgetContext().then((data) => {
-      if (!cancelled) setBudget(data);
-    });
-    return () => { cancelled = true; };
+    fetch("/api/budget/context", {
+      credentials: "include",
+      cache: "no-store",
+      signal: controller.signal,
+    })
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (!cancelled) setBudget((data ?? null) as BudgetContextPayload);
+      })
+      .catch(() => {
+        if (!cancelled) setBudget(null);
+      });
+    return () => {
+      cancelled = true;
+      controller.abort();
+    };
   }, []);
 
   return (

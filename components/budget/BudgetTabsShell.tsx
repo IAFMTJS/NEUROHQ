@@ -17,7 +17,7 @@ type Props = {
 
 export function BudgetTabsShell({
   initialTab,
-  isHistoryView,
+  isHistoryView: _isHistoryView,
   historyMode,
   headerRight,
   overview,
@@ -26,6 +26,12 @@ export function BudgetTabsShell({
   goals,
 }: Props) {
   const [activeTab, setActiveTab] = useState<TabId>(initialTab);
+  const tabs: Array<{ id: TabId; label: string; hidden?: boolean }> = [
+    { id: "overview", label: "Daily Command" },
+    { id: "tactical", label: "Planning & Execution", hidden: historyMode },
+    { id: "analysis", label: "Behavioral Intelligence" },
+    { id: "goals", label: "Goals & Ledger" },
+  ];
 
   const setTab = (tab: TabId) => {
     if (tab === "tactical" && historyMode) return;
@@ -33,67 +39,44 @@ export function BudgetTabsShell({
   };
 
   const tabClass = (tab: TabId) =>
-    `px-3 py-1.5 rounded-full transition-colors ${
+    `rounded-lg px-3 py-2 text-xs font-semibold transition-all ${
       activeTab === tab
-        ? "bg-[var(--accent-primary)]/20 text-[var(--text-primary)]"
-        : "hover:bg-[var(--bg-primary)]/60"
+        ? "border border-cyan-300/40 bg-[linear-gradient(180deg,rgba(11,63,111,0.85),rgba(11,94,150,0.55))] text-[#eaf8ff] shadow-[0_0_14px_rgba(0,212,255,0.24)]"
+        : "text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[rgba(11,30,46,0.55)]"
     }`;
 
   return (
     <>
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div
-          className="inline-flex rounded-full border border-[var(--card-border)] bg-[var(--bg-surface)]/80 p-1 text-xs font-medium text-[var(--text-muted)]"
+          className="inline-flex flex-wrap gap-1 rounded-xl border border-[rgba(0,200,255,0.24)] bg-[rgba(10,22,35,0.56)] p-1.5 backdrop-blur-sm"
           role="tablist"
           aria-label="Budget views"
         >
-          <button
-            type="button"
-            role="tab"
-            aria-selected={activeTab === "overview"}
-            className={tabClass("overview")}
-            onClick={() => setTab("overview")}
-          >
-            Overview
-          </button>
-          {!historyMode && (
-            <button
-              type="button"
-              role="tab"
-              aria-selected={activeTab === "tactical"}
-              className={tabClass("tactical")}
-              onClick={() => setTab("tactical")}
-            >
-              Tactical Control
-            </button>
+          {tabs.map((tab) =>
+            tab.hidden ? null : (
+              <button
+                key={tab.id}
+                type="button"
+                role="tab"
+                aria-selected={activeTab === tab.id}
+                className={tabClass(tab.id)}
+                onClick={() => setTab(tab.id)}
+              >
+                {tab.label}
+              </button>
+            ),
           )}
-          <button
-            type="button"
-            role="tab"
-            aria-selected={activeTab === "analysis"}
-            className={tabClass("analysis")}
-            onClick={() => setTab("analysis")}
-          >
-            Analysis
-          </button>
-          <button
-            type="button"
-            role="tab"
-            aria-selected={activeTab === "goals"}
-            className={tabClass("goals")}
-            onClick={() => setTab("goals")}
-          >
-            Goals &amp; Recurring
-          </button>
         </div>
         {headerRight}
       </div>
 
-      {activeTab === "overview" && overview}
-      {activeTab === "tactical" && !historyMode && tactical}
-      {activeTab === "analysis" && analysis}
-      {activeTab === "goals" && goals}
+      <div className="mt-4">
+        {activeTab === "overview" && <div key="panel-overview">{overview}</div>}
+        {activeTab === "tactical" && !historyMode && <div key="panel-tactical">{tactical}</div>}
+        {activeTab === "analysis" && <div key="panel-analysis">{analysis}</div>}
+        {activeTab === "goals" && <div key="panel-goals">{goals}</div>}
+      </div>
     </>
   );
 }
-

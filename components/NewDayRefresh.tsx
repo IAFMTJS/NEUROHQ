@@ -2,26 +2,20 @@
 
 import { useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
-
-function getLocalDateStr(): string {
-  const d = new Date();
-  const y = d.getFullYear();
-  const m = String(d.getMonth() + 1).padStart(2, "0");
-  const day = String(d.getDate()).padStart(2, "0");
-  return `${y}-${m}-${day}`;
-}
+import { getSnapshotValidityDayKey } from "@/lib/daily-date";
 
 /**
- * When the calendar day changes (e.g. 00:00), refresh so the app shows:
- * new quote, fresh brain status for the new date, and rolled-over tasks.
+ * When the local snapshot validity day rolls over (after 00:01 — see
+ * `getSnapshotValidityDayKey`), refresh so the app shows new quote, brain
+ * status, and rolled-over tasks in line with the daily snapshot boundary.
  */
 export function NewDayRefresh() {
   const router = useRouter();
-  const lastDateRef = useRef<string>(getLocalDateStr());
+  const lastDateRef = useRef<string>(getSnapshotValidityDayKey());
 
   useEffect(() => {
     function check() {
-      const now = getLocalDateStr();
+      const now = getSnapshotValidityDayKey();
       if (lastDateRef.current !== now) {
         lastDateRef.current = now;
         // Force a full reload so all server data, caches and client state

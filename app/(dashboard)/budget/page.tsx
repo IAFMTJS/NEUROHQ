@@ -35,9 +35,9 @@ import { formatMonthYearShort } from "@/lib/utils/date-locale";
 import { formatCents } from "@/lib/utils/currency";
 import { getBudgetToday, getBudgetAdjacentMonths, getPreviousPeriodBounds } from "@/lib/utils/budget-date";
 import { getSafeDaysThisWeek, getBudgetLoadTrend } from "@/lib/dcic/finance-engine";
+import type { Insight } from "@/lib/dcic/finance-engine";
+import { deriveCanonicalBudgetSignals } from "@/lib/budget/canonical";
 import { DisciplineIndexCard } from "@/components/budget/DisciplineIndexCard";
-import { BudgetRiskInsightCard } from "@/components/budget/BudgetRiskInsightCard";
-import { WeeklyPerformanceCard } from "@/components/budget/WeeklyPerformanceCard";
 import { BudgetQuickLogCard } from "@/components/budget/BudgetQuickLogCard";
 import { BudgetDailyControlToast } from "@/components/budget/BudgetDailyControlToast";
 import { BudgetPerformanceSummaryCard } from "@/components/budget/BudgetPerformanceSummaryCard";
@@ -46,6 +46,18 @@ import { RemainingBudgetHero } from "@/components/budget/RemainingBudgetHero";
 import { BudgetTabsShell } from "@/components/budget/BudgetTabsShell";
 import { BudgetSnapshotProvider } from "@/components/budget/BudgetSnapshotProvider";
 import { BudgetSnapshotFallback } from "@/components/budget/BudgetSnapshotFallback";
+import { BudgetStabilityRiskCard } from "@/components/budget/BudgetStabilityRiskCard";
+import { BudgetNextActionCard } from "@/components/budget/BudgetNextActionCard";
+import { BudgetForecastAndReviewCard } from "@/components/budget/BudgetForecastAndReviewCard";
+import { BudgetInsightsAndSpendingCard } from "@/components/budget/BudgetInsightsAndSpendingCard";
+import { BudgetRiskInsightCard } from "@/components/budget/BudgetRiskInsightCard";
+import { WeeklyPerformanceCard } from "@/components/budget/WeeklyPerformanceCard";
+import { BudgetCognitiveLoadTrendCard } from "@/components/budget/BudgetCognitiveLoadTrendCard";
+import { PaydayPlannerCard } from "@/components/budget/PaydayPlannerCard";
+import { GroceryMissionPlannerCard } from "@/components/budget/GroceryMissionPlannerCard";
+import { ArchetypeRiskLensCard } from "@/components/budget/ArchetypeRiskLensCard";
+import { ImpulseTriggerMapCard } from "@/components/budget/ImpulseTriggerMapCard";
+import { ReflectionEngineCard } from "@/components/budget/ReflectionEngineCard";
 
 const BudgetHistorySelector = nextDynamic(() => import("@/components/BudgetHistorySelector").then((m) => ({ default: m.BudgetHistorySelector })), { loading: () => null });
 const ExportBudgetCsvButton = nextDynamic(() => import("@/components/ExportBudgetCsvButton").then((m) => ({ default: m.ExportBudgetCsvButton })), { loading: () => null });
@@ -66,22 +78,18 @@ const BudgetEntryList = nextDynamic(() => import("@/components/BudgetEntryList")
 const NextMonthExpensesTrigger = nextDynamic(() => import("@/components/budget/NextMonthExpensesTrigger").then((m) => ({ default: m.NextMonthExpensesTrigger })), { loading: () => null });
 const LastMonthExpensesTrigger = nextDynamic(() => import("@/components/budget/LastMonthExpensesTrigger").then((m) => ({ default: m.LastMonthExpensesTrigger })), { loading: () => null });
 const AlternativesList = nextDynamic(() => import("@/components/AlternativesList").then((m) => ({ default: m.AlternativesList })), { loading: () => null });
-const BudgetWeeklyReviewCard = nextDynamic(
-  () => import("@/components/budget/BudgetWeeklyReviewCard").then((m) => ({ default: m.BudgetWeeklyReviewCard })),
-  { loading: () => null }
-);
-const CategorySpendingCard = nextDynamic(
-  () => import("@/components/budget/CategorySpendingCard").then((m) => ({ default: m.CategorySpendingCard })),
-  { loading: () => null }
-);
-const BudgetCognitiveLoadTrendCard = nextDynamic(
-  () => import("@/components/budget/BudgetCognitiveLoadTrendCard").then((m) => ({ default: m.BudgetCognitiveLoadTrendCard })),
-  { loading: () => null }
-);
 const BudgetAchievementsCard = nextDynamic(
   () => import("@/components/budget/BudgetAchievementsCard").then((m) => ({ default: m.BudgetAchievementsCard })),
   { loading: () => null }
 );
+const BudgetWeeklyReviewCard = nextDynamic(
+  () => import("@/components/budget/BudgetWeeklyReviewCard").then((m) => ({ default: m.BudgetWeeklyReviewCard })),
+  { loading: () => null }
+);
+
+// Temporary gate for UX reset rollout; keep experimental cards disabled by default.
+const ENABLE_BUDGET_UX_EXPERIMENTS = true;
+const ENABLE_BUDGET_BEHAVIOR_REIMAGINING = true;
 
 type Props = { searchParams: Promise<{ month?: string; tab?: string }> };
 
@@ -158,9 +166,10 @@ async function BudgetContent({ searchParams }: Props) {
       ? tabParam
       : "overview";
 
-  let expensesCents = currentMonthExpenses;
-  let incomeCents = currentMonthIncome;
-  let periodLabel = "this month";
+  // Canonical page-level sources used by all sections/cards in this view.
+  let expensesCents = currentMonthExpenses; // canonical spent value for active period
+  let incomeCents = currentMonthIncome; // canonical income value for active period
+  let periodLabel = "this month"; // canonical period label for active period
   let historyMode = false;
   if (isHistoryView) {
     expensesCents = await getMonthExpensesCents(year, month);
@@ -179,6 +188,12 @@ async function BudgetContent({ searchParams }: Props) {
           (budgetSettings.monthly_savings_cents ?? 0) -
           expensesCents
       : null;
+  const canonicalBudgetView = {
+    periodLabel,
+    remainingToSpendCents,
+    daysUntilNextIncome: financialInsights?.daysUntilNextIncome ?? 0,
+    disciplineScore: financeState?.disciplineScore ?? null,
+  } as const;
 
   let previousPeriodRemaining: { prevStart: string; prevEnd: string; remainingCents: number; label: string } | null = null;
   if (!historyMode && isPaydayCycle && periodStart) {
@@ -203,6 +218,54 @@ async function BudgetContent({ searchParams }: Props) {
   const daysUnderBudgetThisWeek =
     !historyMode && financeState ? getSafeDaysThisWeek(financeState) : null;
   const loadTrend = !historyMode && financeState ? getBudgetLoadTrend(financeState) : [];
+  const daysUntilNextIncome = financialInsights?.daysUntilNextIncome ?? 0;
+  const {
+    safeDailySpendCents: canonicalSafeDailySpendCents,
+    projectedOverspendCents: canonicalProjectedOverspendCents,
+    insightsSorted: canonicalInsightsSorted,
+    topInsight: canonicalTopInsight,
+  } = deriveCanonicalBudgetSignals({
+    remainingToSpendCents,
+    daysUntilNextIncome,
+    insights: financialInsights?.insights,
+  });
+  const topCategories = Object.entries(categoryTotals)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 3)
+    .map(([name]) => name);
+  const unplannedRate = entries.length > 0 ? (unplannedSummary.count / entries.length) * 100 : 0;
+  const archetype =
+    remainingToSpendCents != null && remainingToSpendCents < 0
+      ? "Reactive spender"
+      : unplannedRate > 40
+      ? "Comfort spender"
+      : disciplineXpThisWeek > 10
+      ? "Planner"
+      : "Adaptive spender";
+  const archetypeReason =
+    remainingToSpendCents != null && remainingToSpendCents < 0
+      ? "Recent tempo ligt boven je veilige pace en remaining staat onder druk."
+      : unplannedRate > 40
+      ? "Relatief veel ongeplande uitgaven in de huidige cyclus."
+      : disciplineXpThisWeek > 10
+      ? "Consistente discipline-signalen en stabiele weekperformance."
+      : "Gemengd patroon met wisselende planning vs uitvoering.";
+  const archetypeAction =
+    archetype === "Reactive spender"
+      ? "Zet 1 no-spend window in voor de komende 24 uur."
+      : archetype === "Comfort spender"
+      ? "Plan je volgende grote boodschappen vooraf met een harde cap."
+      : archetype === "Planner"
+      ? "Behoud je cap en sluit weekreview af op tijd."
+      : "Kies 1 categorie om 48 uur strak te begrenzen.";
+  const commandStatus =
+    remainingToSpendCents == null
+      ? { title: "History snapshot", tone: "text-slate-300", border: "border-slate-400/30 bg-slate-400/10" }
+      : remainingToSpendCents < 0
+      ? { title: "Critical", tone: "text-amber-200", border: "border-amber-400/30 bg-amber-400/10" }
+      : remainingToSpendCents < 5000
+      ? { title: "Guarded", tone: "text-cyan-200", border: "border-cyan-400/30 bg-cyan-400/10" }
+      : { title: "Stable", tone: "text-emerald-200", border: "border-emerald-400/30 bg-emerald-400/10" };
 
   const headerRight = (
     <div className="flex flex-wrap items-center gap-3">
@@ -219,6 +282,12 @@ async function BudgetContent({ searchParams }: Props) {
       {!historyMode && <BudgetDailyControlToast />}
       {!historyMode && (
         <>
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-cyan-200">1. Status</p>
+            <span className={`rounded-full border px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] ${commandStatus.border} ${commandStatus.tone}`}>
+              {commandStatus.title}
+            </span>
+          </div>
           <RemainingBudgetHero
             budgetCents={budgetSettings.monthly_budget_cents ?? 0}
             savingsCents={budgetSettings.monthly_savings_cents ?? 0}
@@ -226,6 +295,7 @@ async function BudgetContent({ searchParams }: Props) {
             currency={currency}
             periodLabel={periodLabel}
             budgetPeriod={budgetSettings.budget_period}
+            historyMode={historyMode}
           />
           {previousPeriodRemaining != null && (
             <p className="text-sm text-[var(--text-muted)]">
@@ -237,27 +307,80 @@ async function BudgetContent({ searchParams }: Props) {
           )}
         </>
       )}
-      <BudgetSummaryCard
-        monthlyBudgetCents={budgetSettings.monthly_budget_cents}
-        monthlySavingsCents={budgetSettings.monthly_savings_cents}
-        expensesCents={expensesCents}
-        incomeCents={incomeCents}
-        currency={currency}
-        periodLabel={periodLabel}
-        budgetPeriod={budgetSettings.budget_period}
-        historyMode={historyMode}
-      />
-
+      {!historyMode && ENABLE_BUDGET_UX_EXPERIMENTS && (
+        <section className="card-simple overflow-hidden p-0">
+          <div className="px-4 pb-1 pt-3">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-cyan-200">2. Decide & Execute</p>
+          </div>
+          <div className="grid gap-4 p-4 lg:grid-cols-2">
+            <BudgetNextActionCard
+              remainingToSpendCents={remainingToSpendCents}
+              readyForActionCount={readyForAction.length}
+              daysUntilNextIncome={canonicalBudgetView.daysUntilNextIncome}
+              insights={financialInsights?.insights}
+            />
+            <div id="budget-quick-log">
+              <BudgetQuickLogCard date={today} currency={currency} />
+            </div>
+          </div>
+        </section>
+      )}
+      {ENABLE_BUDGET_UX_EXPERIMENTS ? null : (
+        <BudgetSummaryCard
+          monthlyBudgetCents={budgetSettings.monthly_budget_cents}
+          monthlySavingsCents={budgetSettings.monthly_savings_cents}
+          expensesCents={expensesCents}
+          incomeCents={incomeCents}
+          currency={currency}
+          periodLabel={periodLabel}
+          budgetPeriod={budgetSettings.budget_period}
+          historyMode={historyMode}
+        />
+      )}
       {!historyMode && (
         <>
+          <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-cyan-200">3. Monitor</p>
           <DisciplineIndexCard value={financeState?.disciplineScore ?? null} />
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            <FinancialStatusCard financeState={financeState} remainingToSpendCents={remainingToSpendCents} />
-            <WeeklyPerformanceCard
-              daysUnderBudget={daysUnderBudgetThisWeek}
-              disciplineXp={disciplineXpThisWeek}
+            <FinancialStatusCard
+              financeState={financeState}
+              remainingToSpendCents={remainingToSpendCents}
+              daysUntilIncomeOverride={canonicalBudgetView.daysUntilNextIncome}
+              safeDailySpendOverrideCents={canonicalSafeDailySpendCents}
             />
-            <BudgetRiskInsightCard insights={financialInsights?.insights} />
+            {ENABLE_BUDGET_UX_EXPERIMENTS ? (
+              <BudgetStabilityRiskCard
+                daysUnderBudget={daysUnderBudgetThisWeek}
+                disciplineXp={disciplineXpThisWeek}
+                insights={canonicalInsightsSorted}
+                topInsightOverride={canonicalTopInsight}
+              />
+            ) : (
+              <WeeklyPerformanceCard
+                daysUnderBudget={daysUnderBudgetThisWeek}
+                disciplineXp={disciplineXpThisWeek}
+              />
+            )}
+            {ENABLE_BUDGET_UX_EXPERIMENTS ? (
+              <section className="card-simple overflow-hidden p-0">
+                <div className="border-b border-[var(--card-border)] px-4 py-3">
+                  <h2 className="text-base font-semibold text-[var(--text-primary)]">Execution focus</h2>
+                  <p className="mt-0.5 text-xs text-[var(--text-muted)]">
+                    Keep today inside your cycle envelope with one concrete action.
+                  </p>
+                </div>
+                <div className="space-y-2 p-4">
+                  <p className="text-xs text-[var(--text-muted)]">
+                    Use your safe daily spend as hard cap and process frozen purchases before new non-essential spend.
+                  </p>
+                  <Link href="/budget?tab=tactical" className="text-xs font-medium text-[var(--accent-focus)] hover:underline">
+                    Open execution queue →
+                  </Link>
+                </div>
+              </section>
+            ) : (
+              <BudgetRiskInsightCard insights={financialInsights?.insights} />
+            )}
           </div>
         </>
       )}
@@ -273,9 +396,9 @@ async function BudgetContent({ searchParams }: Props) {
         <div className="flex justify-end">
           <a
             href="#add-entry"
-            className="btn-primary inline-flex w-full items-center justify-center rounded-lg px-4 py-2.5 text-sm font-semibold sm:w-auto"
+            className="btn-primary inline-flex h-auto w-full items-center justify-center rounded-lg px-4 py-2.5 text-sm font-semibold sm:w-auto"
           >
-            ADD EXPENSE
+            UITGAVE TOEVOEGEN
           </a>
         </div>
       )}
@@ -283,50 +406,147 @@ async function BudgetContent({ searchParams }: Props) {
   );
 
   const tacticalSection = (
-    <div className="space-y-4">
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        <WeeklyTacticalCard financeState={financeState} />
-        <PaydayCard
-          daysUntilNextIncome={financialInsights?.daysUntilNextIncome ?? 0}
-          nextPaydayLabel={nextPaydayLabel}
-          incomeSources={incomeSources}
-          paydayDayOfMonth={paydayDayOfMonth}
-          currency={currency}
-          cycleStartDate={financialInsights?.cycleStartDate ?? null}
-          nextPaydayDate={financialInsights?.nextPaydayDate ?? null}
-        />
+    <section className="card-simple overflow-hidden p-0">
+      <div className="space-y-4 p-4">
+        <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-emerald-200">1. Cycle Status</p>
+        <div className="grid gap-4 lg:grid-cols-2">
+          <PaydayCard
+            daysUntilNextIncome={financialInsights?.daysUntilNextIncome ?? 0}
+            nextPaydayLabel={nextPaydayLabel}
+            incomeSources={incomeSources}
+            paydayDayOfMonth={paydayDayOfMonth}
+            currency={currency}
+            cycleStartDate={financialInsights?.cycleStartDate ?? null}
+            nextPaydayDate={financialInsights?.nextPaydayDate ?? null}
+          />
+          <WeeklyTacticalCard
+            financeState={financeState}
+            safeDailySpendCents={canonicalSafeDailySpendCents}
+            projectedOverspendCents={canonicalProjectedOverspendCents}
+            topInsight={canonicalTopInsight}
+          />
+        </div>
+
+        {ENABLE_BUDGET_BEHAVIOR_REIMAGINING && (
+          <>
+            <div className="border-t border-[var(--card-border)] pt-4">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-emerald-200">2. Allocation Plan</p>
+            </div>
+            <div className="grid gap-4 lg:grid-cols-2">
+              <PaydayPlannerCard
+                monthlyBudgetCents={budgetSettings.monthly_budget_cents ?? 0}
+                monthlySavingsCents={budgetSettings.monthly_savings_cents ?? 0}
+                currency={currency}
+              />
+              <GroceryMissionPlannerCard currency={currency} />
+            </div>
+            <BudgetPlanCard
+              targets={budgetTargets}
+              spentByCategory={categoryTotals}
+              currency={currency}
+            />
+          </>
+        )}
+
+        <div className="border-t border-[var(--card-border)] pt-4">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-emerald-200">3. Execution Queue</p>
+        </div>
         <FrozenPurchaseCard activeFrozen={activeFrozen} readyForAction={readyForAction} currency={currency} goals={goals} />
+        {!historyMode && !ENABLE_BUDGET_UX_EXPERIMENTS && <BudgetQuickLogCard date={today} currency={currency} />}
       </div>
-      <BudgetQuickLogCard date={today} currency={currency} />
-    </div>
+    </section>
   );
 
   const analysisSection = (
     <div className="space-y-4">
-      <BudgetPerformanceSummaryCard
-        financeState={financeState}
-        remainingToSpendCents={remainingToSpendCents}
-        periodLabel={periodLabel}
-      />
-      <BudgetWeeklyReviewCard completedThisWeek={weeklyReviewStatus.completed} />
-      <BudgetCognitiveLoadTrendCard points={loadTrend} />
-      <BudgetPatternDetectionCard categoryTotals={categoryTotals} impulseWindow={impulseWindow} />
-
-      {!historyMode && financialInsights && financialInsights.insights.length > 0 && (
-        <FinancialInsightsCard insights={financialInsights.insights} />
+      {!historyMode && (
+        <>
+          <section className="card-simple-accent overflow-hidden p-0">
+            <div className="border-b border-[var(--card-border)] px-4 py-3">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-fuchsia-200">1. Detect</p>
+              <p className="mt-1 text-xs text-[var(--text-muted)]">
+                Detect drift early: compare safe pace, burn rate, and current pattern signals.
+              </p>
+            </div>
+          </section>
+          {ENABLE_BUDGET_UX_EXPERIMENTS ? (
+            <>
+              <BudgetForecastAndReviewCard
+                financeState={financeState}
+                remainingToSpendCents={remainingToSpendCents}
+                periodLabel={canonicalBudgetView.periodLabel}
+                completedThisWeek={weeklyReviewStatus.completed}
+                daysUntilNextIncome={canonicalBudgetView.daysUntilNextIncome}
+                safeDailySpendCents={canonicalSafeDailySpendCents}
+              />
+              <BudgetInsightsAndSpendingCard
+                categoryTotals={categoryTotals}
+                impulseWindow={impulseWindow}
+                insights={canonicalInsightsSorted}
+                points={loadTrend}
+                currency={currency}
+              />
+            </>
+          ) : (
+            <>
+              <BudgetPerformanceSummaryCard
+                financeState={financeState}
+                remainingToSpendCents={remainingToSpendCents}
+                periodLabel={canonicalBudgetView.periodLabel}
+              />
+              <BudgetWeeklyReviewCard completedThisWeek={weeklyReviewStatus.completed} />
+              <BudgetCognitiveLoadTrendCard points={loadTrend} />
+              <BudgetPatternDetectionCard categoryTotals={categoryTotals} impulseWindow={impulseWindow} />
+            </>
+          )}
+          {!historyMode && financialInsights?.emergencyMode.active && (
+            <div className="rounded-lg border border-amber-500/50 bg-amber-500/10 px-4 py-3 text-sm text-amber-700 dark:text-amber-300">
+              <strong>Let op:</strong> {financialInsights.emergencyMode.reason.join(" ")}
+            </div>
+          )}
+        </>
       )}
-      {!historyMode && financialInsights?.emergencyMode.active && (
-        <div className="rounded-lg border border-amber-500/50 bg-amber-500/10 px-4 py-3 text-sm text-amber-700 dark:text-amber-300">
-          <strong>Let op:</strong> {financialInsights.emergencyMode.reason.join(" ")}
+      {!historyMode && ENABLE_BUDGET_BEHAVIOR_REIMAGINING && (
+        <>
+          <section className="card-simple-accent overflow-hidden p-0">
+            <div className="border-b border-[var(--card-border)] px-4 py-3">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-fuchsia-200">2. Interpret</p>
+              <p className="mt-1 text-xs text-[var(--text-muted)]">
+                Translate signals into behavioral context: archetype, triggers, and risk windows.
+              </p>
+            </div>
+          </section>
+          <ArchetypeRiskLensCard
+            archetype={archetype}
+            reason={archetypeReason}
+            action={archetypeAction}
+          />
+          <ImpulseTriggerMapCard impulseWindow={impulseWindow} topCategories={topCategories} />
+        </>
+      )}
+      {!historyMode && ENABLE_BUDGET_BEHAVIOR_REIMAGINING && (
+        <>
+          <section className="card-simple-accent overflow-hidden p-0">
+            <div className="border-b border-[var(--card-border)] px-4 py-3">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-fuchsia-200">3. Intervene & Reflect</p>
+              <p className="mt-1 text-xs text-[var(--text-muted)]">
+                Commit one action, then capture a brief reflection to improve the next cycle.
+              </p>
+            </div>
+          </section>
+          <ReflectionEngineCard />
+        </>
+      )}
+      {historyMode && (
+        <div className="rounded-lg border border-[var(--card-border)] bg-[var(--bg-primary)]/40 px-4 py-3 text-sm text-[var(--text-muted)]">
+          History mode is read-only. Forecast and live behavior cards are hidden for archived months.
         </div>
       )}
-      <ExpenseDistributionChart categoryTotals={categoryTotals} currency={currency} />
-      <BudgetPlanCard
-        targets={budgetTargets}
-        spentByCategory={categoryTotals}
-        currency={currency}
-      />
-      <SavingsTipsCard insights={financialInsights?.insights} />
+      {!historyMode && financialInsights && financialInsights.insights.length > 0 && !ENABLE_BUDGET_UX_EXPERIMENTS && (
+        <FinancialInsightsCard insights={financialInsights.insights} />
+      )}
+      {!ENABLE_BUDGET_UX_EXPERIMENTS && <ExpenseDistributionChart categoryTotals={categoryTotals} currency={currency} />}
+      {!ENABLE_BUDGET_UX_EXPERIMENTS && <SavingsTipsCard insights={financialInsights?.insights} />}
 
       {alternatives.length > 0 && (
         <section className="card-simple-accent overflow-hidden p-0">
@@ -341,9 +561,12 @@ async function BudgetContent({ searchParams }: Props) {
       )}
 
       {!historyMode && (
-        <>
-          <section className="card-simple overflow-hidden p-0 border-[var(--card-border)]">
-            <div className="border-b border-[var(--card-border)] px-4 py-3">
+        <details className="card-simple overflow-hidden p-0">
+          <summary className="cursor-pointer list-none px-4 py-3 text-sm font-semibold text-[var(--text-primary)]">
+            Archief & toekomstboekingen
+          </summary>
+          <div className="border-t border-[var(--card-border)] px-4 py-4 space-y-4">
+            <div>
               <h2 className="text-base font-semibold text-[var(--text-primary)]">
                 {isPaydayCycle ? "Uitgaven vorige periode" : "Uitgaven vorige maand"}
               </h2>
@@ -352,38 +575,39 @@ async function BudgetContent({ searchParams }: Props) {
                   ? "Overzicht van boekingen van de vorige budgetperiode (van loon tot loon)."
                   : "Overzicht van boekingen van de vorige maand (archief)."}
               </p>
+              <div className="mt-3">
+                <LastMonthExpensesTrigger prevMonthEntries={prevMonthEntries} currency={currency} goals={goals} />
+              </div>
             </div>
-            <div className="p-4">
-              <LastMonthExpensesTrigger prevMonthEntries={prevMonthEntries} currency={currency} goals={goals} />
-            </div>
-          </section>
-          <section className="card-simple overflow-hidden p-0 border-[var(--accent-neutral)]/60">
-            <div className="border-b border-[var(--card-border)] px-4 py-3">
+            <div className="border-t border-[var(--card-border)] pt-4">
               <h2 className="text-base font-semibold text-[var(--text-primary)]">Uitgaven volgende maand</h2>
               <p className="mt-0.5 text-xs text-[var(--text-muted)]">
                 Toekomst: boekingen met datum in de volgende maand. Niet meegenomen in het budget van nu.
               </p>
+              <div className="mt-3">
+                <NextMonthExpensesTrigger nextMonthEntries={nextMonthEntries} currency={currency} goals={goals} />
+              </div>
             </div>
-            <div className="p-4">
-              <NextMonthExpensesTrigger nextMonthEntries={nextMonthEntries} currency={currency} goals={goals} />
-            </div>
-          </section>
-        </>
+          </div>
+        </details>
       )}
     </div>
   );
 
   const goalsSection = (
-    <div className="space-y-4">
-      <section className="card-simple overflow-hidden p-0" data-tutorial="budget-goals">
+    <section className="card-simple overflow-hidden p-0">
+      <div className="space-y-4 p-4">
+        <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-amber-200">1. Define Goals</p>
+        <section className="card-simple overflow-hidden p-0" data-tutorial="budget-goals">
         <div className="border-b border-[var(--card-border)] px-4 py-3">
           <h2 className="text-base font-semibold text-[var(--text-primary)]">Savings goals</h2>
           <p className="mt-0.5 text-xs text-[var(--text-muted)]">
             Track progress toward your targets. Savings are reserved from your budget (pay savings first).
           </p>
+          <BudgetAchievementsCard financeState={financeState} compact />
         </div>
         <div className="p-4">
-          <AddSavingsGoalForm />
+          <AddSavingsGoalForm readOnly={historyMode} />
           <div className="mt-4 space-y-4">
             {goals.length === 0 ? (
               <div
@@ -409,34 +633,37 @@ async function BudgetContent({ searchParams }: Props) {
             )}
           </div>
         </div>
-      </section>
+        </section>
 
-      <BudgetAchievementsCard financeState={financeState} />
-
-      <RecurringBudgetCard templates={recurringTemplates} currency={currency} />
-
-      <section id="add-entry" className="card-simple overflow-hidden p-0">
-        <div className="border-b border-[var(--card-border)] px-4 py-3">
-          <h2 className="text-base font-semibold text-[var(--text-primary)]">Add entry</h2>
-          <p className="mt-0.5 text-xs text-[var(--text-muted)]">Log income or expenses.</p>
+        <div className="border-t border-[var(--card-border)] pt-4">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-amber-200">2. Automate Base Plan</p>
         </div>
-        <div className="p-4">
-          <AddBudgetEntryForm date={today} currency={currency} />
-        </div>
-      </section>
+        <RecurringBudgetCard templates={recurringTemplates} currency={currency} />
 
-      <section className="card-simple overflow-hidden p-0">
+        <div className="border-t border-[var(--card-border)] pt-4">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-amber-200">3. Ledger Execution</p>
+        </div>
+        <section id="add-entry" className="card-simple overflow-hidden p-0">
         <div className="border-b border-[var(--card-border)] px-4 py-3">
-          <h2 className="text-base font-semibold text-[var(--text-primary)]">Entries & frozen</h2>
+          <h2 className="text-base font-semibold text-[var(--text-primary)]">Ledger</h2>
           <p className="mt-0.5 text-xs text-[var(--text-muted)]">
-            {isPaydayCycle
-              ? `Boekingen van deze budgetperiode (${format(new Date(periodStart + "T12:00:00Z"), "d MMM", { locale: nl })} – ${format(new Date(periodEnd + "T12:00:00Z"), "d MMM yyyy", { locale: nl })}). Vorige periode hieronder.`
-              : "Deze maand en 24u-freezes. Oudere boekingen staan in het archief voor slim budgetbeheer."}
+            {historyMode
+              ? "History mode: alleen bekijken, geen mutaties."
+              : "Log inkomsten/uitgaven en beheer entries en freezes in één werkvlak."}
           </p>
         </div>
         <div className="p-4">
+          <AddBudgetEntryForm date={today} currency={currency} readOnly={historyMode} />
+          <div className="mt-4 border-t border-[var(--card-border)] pt-4">
+            <h3 className="text-sm font-semibold text-[var(--text-primary)]">Entries & frozen</h3>
+            <p className="mt-0.5 text-xs text-[var(--text-muted)]">
+              {isPaydayCycle
+                ? `Boekingen van deze budgetperiode (${format(new Date(periodStart + "T12:00:00Z"), "d MMM", { locale: nl })} – ${format(new Date(periodEnd + "T12:00:00Z"), "d MMM yyyy", { locale: nl })}). Vorige periode hieronder.`
+                : "Deze maand en 24u-freezes. Oudere boekingen staan in het archief voor slim budgetbeheer."}
+            </p>
+          </div>
           {entries.length === 0 ? (
-            <div className="rounded-xl border border-dashed border-[var(--card-border)] bg-[var(--bg-primary)]/40 px-4 py-6 text-center">
+            <div className="mt-3 rounded-xl border border-dashed border-[var(--card-border)] bg-[var(--bg-primary)]/40 px-4 py-6 text-center">
               <p className="text-sm text-[var(--text-muted)]">
                 {isPaydayCycle && prevMonthEntries.length > 0
                   ? "Nog geen boekingen in deze periode. Je boekingen van de vorige periode staan hieronder."
@@ -453,52 +680,66 @@ async function BudgetContent({ searchParams }: Props) {
               </a>
             </div>
           ) : (
-            <BudgetEntryList entries={entries} currency={currency} goals={goals} />
+            <div className="mt-3">
+              <BudgetEntryList entries={entries} currency={currency} goals={goals} readOnly={historyMode} />
+            </div>
           )}
         </div>
-      </section>
-
-      {!historyMode && isPaydayCycle && (
-        <section className="card-simple overflow-hidden p-0 border-[var(--card-border)]">
-          <div className="border-b border-[var(--card-border)] px-4 py-3">
-            <h2 className="text-base font-semibold text-[var(--text-primary)]">Vorige periode</h2>
-            <p className="mt-0.5 text-xs text-[var(--text-muted)]">
-              Boekingen van de periode vóór &quot;Vandaag loon gehad&quot; — van {format(new Date(prevPeriodRange.prevStart + "T12:00:00Z"), "d MMM", { locale: nl })} tot {format(new Date(prevPeriodRange.prevEnd + "T12:00:00Z"), "d MMM yyyy", { locale: nl })}.
-            </p>
-          </div>
-          <div className="p-4">
-            <LastMonthExpensesTrigger prevMonthEntries={prevMonthEntries} currency={currency} goals={goals} />
-          </div>
         </section>
-      )}
-    </div>
+
+        {!historyMode && isPaydayCycle && (
+          <details className="card-simple overflow-hidden p-0">
+            <summary className="cursor-pointer list-none px-4 py-3 text-sm font-semibold text-[var(--text-primary)]">
+              Toon vorige periode
+            </summary>
+            <div className="border-t border-[var(--card-border)] p-4">
+              <p className="text-xs text-[var(--text-muted)]">
+                Boekingen van de periode vóór &quot;Vandaag loon gehad&quot; — van {format(new Date(prevPeriodRange.prevStart + "T12:00:00Z"), "d MMM", { locale: nl })} tot {format(new Date(prevPeriodRange.prevEnd + "T12:00:00Z"), "d MMM yyyy", { locale: nl })}.
+              </p>
+              <div className="mt-3">
+                <LastMonthExpensesTrigger prevMonthEntries={prevMonthEntries} currency={currency} goals={goals} />
+              </div>
+            </div>
+          </details>
+        )}
+      </div>
+    </section>
   );
 
   return (
     <BudgetSnapshotProvider>
-      <div className="space-y-6">
-        <HQPageHeader
-          title="Budget"
-          subtitle="Financial command center for your month."
-          backHref="/dashboard"
-        />
+      <div className="container page page-wide dashboard-page dashboard-cinematic relative z-10 pb-10">
+        <div className="space-y-4">
+          <div className="dashboard-bridge-frame">
+            <span className="dashboard-bridge-label" aria-hidden>
+              Budget Command
+            </span>
+            <HQPageHeader
+              title="Budget"
+              subtitle="Behavioral command center: plan, decide, and stay within your cycle."
+              backHref="/dashboard"
+            />
+          </div>
 
-        <BudgetTabsShell
-          initialTab={activeTab}
-          isHistoryView={isHistoryView}
-          historyMode={historyMode}
-          headerRight={headerRight}
-          overview={overviewSection}
-          tactical={tacticalSection}
-          analysis={analysisSection}
-          goals={goalsSection}
-        />
+          <div className="dashboard-bento">
+            <BudgetTabsShell
+              initialTab={activeTab}
+              isHistoryView={isHistoryView}
+              historyMode={historyMode}
+              headerRight={headerRight}
+              overview={overviewSection}
+              tactical={tacticalSection}
+              analysis={analysisSection}
+              goals={goalsSection}
+            />
+          </div>
 
-        {!isHistoryView && (
-          <section className="mascot-hero-inner mx-auto" aria-hidden>
-            <HeroMascotImage page="budget" className="mascot-img" />
-          </section>
-        )}
+          {!isHistoryView && (
+            <section className="mascot-hero-inner mx-auto" aria-hidden>
+              <HeroMascotImage page="budget" className="mascot-img" />
+            </section>
+          )}
+        </div>
       </div>
     </BudgetSnapshotProvider>
   );

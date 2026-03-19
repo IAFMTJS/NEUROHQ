@@ -38,6 +38,7 @@ export function BudgetSummaryCard({
   historyMode = false,
 }: Props) {
   const pendingBudget = usePendingBudgetSnapshot();
+  const pendingActive = pendingBudget != null && pendingBudget.synced !== true;
   const [pending, startTransition] = useTransition();
   const [showModal, setShowModal] = useState(false);
   const [budget, setBudget] = useState(
@@ -52,16 +53,18 @@ export function BudgetSummaryCard({
   const { invalidate: invalidateSettings } = useSettings();
 
   const effectiveBudgetSetting =
-    pendingBudget?.monthlyBudgetCents !== undefined ? pendingBudget.monthlyBudgetCents : monthlyBudgetCents;
+    pendingActive && pendingBudget?.monthlyBudgetCents !== undefined ? pendingBudget.monthlyBudgetCents : monthlyBudgetCents;
   const effectiveSavingsSetting =
-    pendingBudget?.monthlySavingsCents !== undefined ? pendingBudget.monthlySavingsCents : monthlySavingsCents;
-  const effectiveCurrency = pendingBudget?.currency ?? currency;
-  const effectiveBudgetPeriod = pendingBudget?.budgetPeriod ?? budgetPeriod;
+    pendingActive && pendingBudget?.monthlySavingsCents !== undefined ? pendingBudget.monthlySavingsCents : monthlySavingsCents;
+  const effectiveCurrency = pendingActive ? pendingBudget?.currency ?? currency : currency;
+  const effectiveBudgetPeriod = pendingActive ? pendingBudget?.budgetPeriod ?? budgetPeriod : budgetPeriod;
   const budgetCents = effectiveBudgetSetting ?? 0;
   const savingsCents = effectiveSavingsSetting ?? 0;
   const spendableCents = Math.max(0, budgetCents - savingsCents);
   const remainingCents =
-    pendingBudget?.budgetRemainingCents ?? derivePendingBudgetRemaining(effectiveBudgetSetting, effectiveSavingsSetting, expensesCents);
+    pendingActive && pendingBudget?.budgetRemainingCents != null
+      ? pendingBudget.budgetRemainingCents
+      : derivePendingBudgetRemaining(effectiveBudgetSetting, effectiveSavingsSetting, expensesCents);
   const isOverBudget = remainingCents < 0;
   const symbol = getCurrencySymbol(effectiveCurrency);
 
@@ -142,6 +145,11 @@ export function BudgetSummaryCard({
           <p className="mt-0.5 text-xs text-[var(--text-muted)]" title={FORMULA_TOOLTIP}>
             Budget − savings − expenses = remaining to spend.
           </p>
+          {pendingActive && (
+            <p className="mt-1 text-xs text-[var(--accent-focus)]">
+              Bijwerken... tijdelijke waarden actief.
+            </p>
+          )}
         </div>
         <div className="p-5">
           {!hasSettings ? (

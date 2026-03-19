@@ -17,10 +17,20 @@ interface FinancialStatusCardProps {
   financeState: FinanceState | null;
   /** Budget-based: (monthly budget − savings − spent this month). When set, Safe Daily Spend = this / days, Remaining = this. */
   remainingToSpendCents?: number | null;
+  /** Canonical days to next income (page-level source of truth). */
+  daysUntilIncomeOverride?: number | null;
+  /** Canonical safe-daily value (page-level source of truth). */
+  safeDailySpendOverrideCents?: number | null;
 }
 
-export function FinancialStatusCard({ financeState, remainingToSpendCents }: FinancialStatusCardProps) {
+export function FinancialStatusCard({
+  financeState,
+  remainingToSpendCents,
+  daysUntilIncomeOverride,
+  safeDailySpendOverrideCents,
+}: FinancialStatusCardProps) {
   const pendingBudget = usePendingBudgetSnapshot();
+  const pendingActive = pendingBudget != null && pendingBudget.synced !== true;
   if (!financeState) {
     return (
       <div className="rounded-lg border border-[var(--card-border)] bg-[var(--bg-primary)] p-4">
@@ -29,18 +39,29 @@ export function FinancialStatusCard({ financeState, remainingToSpendCents }: Fin
     );
   }
 
-  const daysUntilIncome = pendingBudget?.daysUntilNextIncome ?? getDaysUntilNextIncome(financeState);
+  const engineDaysUntilIncome = pendingActive
+    ? (pendingBudget?.daysUntilNextIncome ?? getDaysUntilNextIncome(financeState))
+    : getDaysUntilNextIncome(financeState);
+  const daysUntilIncome =
+    daysUntilIncomeOverride != null && Number.isFinite(daysUntilIncomeOverride)
+      ? daysUntilIncomeOverride
+      : engineDaysUntilIncome;
   const useBudgetRemaining =
-    (pendingBudget?.budgetRemainingCents != null &&
+    (pendingActive &&
+      pendingBudget?.budgetRemainingCents != null &&
       (Number.isFinite(pendingBudget.budgetRemainingCents) || pendingBudget.budgetRemainingCents === 0)) ||
     (remainingToSpendCents != null &&
       (Number.isFinite(remainingToSpendCents) || remainingToSpendCents === 0));
 
   const remainingBalance = useBudgetRemaining
-    ? (pendingBudget?.budgetRemainingCents ?? remainingToSpendCents)!
+    ? (pendingActive ? pendingBudget?.budgetRemainingCents ?? remainingToSpendCents : remainingToSpendCents)!
     : getRemainingBalance(financeState);
   const safeDailySpend =
-    daysUntilIncome > 0 ? Math.floor(remainingBalance / daysUntilIncome) : 0;
+    safeDailySpendOverrideCents != null && Number.isFinite(safeDailySpendOverrideCents)
+      ? safeDailySpendOverrideCents
+      : daysUntilIncome > 0
+      ? Math.floor(remainingBalance / daysUntilIncome)
+      : 0;
   const isOverBudget = remainingBalance < 0;
 
   return (
@@ -48,6 +69,9 @@ export function FinancialStatusCard({ financeState, remainingToSpendCents }: Fin
       <h3 className="mb-3 text-sm font-semibold uppercase tracking-wide text-[var(--text-muted)]">
         Financial Status
       </h3>
+      {pendingActive && (
+        <p className="mb-3 text-xs text-[var(--accent-focus)]">Bijwerken... tijdelijke waarden actief.</p>
+      )}
       
       <div className="space-y-3">
         <div className="flex justify-between items-start">
@@ -80,16 +104,6 @@ export function FinancialStatusCard({ financeState, remainingToSpendCents }: Fin
           </span>
         </div>
         
-        <div className="flex justify-between">
-          <span className="text-sm text-[var(--text-muted)]">Discipline Score</span>
-          <span className={`text-sm font-semibold ${
-            financeState.disciplineScore >= 80 ? "text-green-500" :
-            financeState.disciplineScore >= 60 ? "text-yellow-500" :
-            "text-red-500"
-          }`}>
-            {financeState.disciplineScore}/100
-          </span>
-        </div>
       </div>
     </div>
   );

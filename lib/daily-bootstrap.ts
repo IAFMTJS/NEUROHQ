@@ -7,7 +7,7 @@ import {
   saveDailySnapshot,
   isCurrentSnapshot,
 } from "@/lib/daily-snapshot-storage";
-import type { DailySnapshot } from "@/types/daily-snapshot";
+import type { DailySnapshot, DashboardSnapshot } from "@/types/daily-snapshot";
 
 /**
  * Initial daily bootstrap is handled by the DailySnapshot system:
@@ -48,6 +48,8 @@ export function usePeriodicBootstrapRefresh(intervalMinutes = 45) {
           date?: string;
           dashboard?: { critical?: unknown; secondary?: unknown };
           dcicGameState?: unknown;
+          tasks?: Record<string, unknown[]>;
+          completedToday?: unknown[];
           dailyState?: Record<string, unknown> | null;
           energyBudget?: Record<string, unknown> | null;
           budget?: Record<string, unknown> | null;
@@ -71,33 +73,55 @@ export function usePeriodicBootstrapRefresh(intervalMinutes = 45) {
         if (data.learning) setLearningSnapshot(data.learning as any);
 
         // Best-effort: merge refreshed bootstrap payload back into the existing
-        // same-day DailySnapshot so the next cold-start uses the latest data.
+        // same-day DailySnapshot so cold start and `useDailySnapshot` stay aligned
+        // with tasks, dashboard, budget, and learning.
         try {
           const existing = await loadDailySnapshot();
           if (existing && isCurrentSnapshot(existing)) {
+            const effectiveDate = dateStr ?? existing.date;
+            const baseMissions = existing.missions ?? {
+              dateStr: effectiveDate,
+              tasksByDate: {},
+              completedToday: [],
+              energyBudget: null,
+              dailyState: null,
+            };
+            const tasksPatch = data.tasks;
+            const hasMissionPatch =
+              tasksPatch != null ||
+              data.completedToday != null ||
+              data.dailyState != null ||
+              data.energyBudget != null;
+
+            const missionsNext = hasMissionPatch
+              ? {
+                  ...baseMissions,
+                  dateStr: effectiveDate,
+                  tasksByDate: { ...baseMissions.tasksByDate, ...(tasksPatch ?? {}) },
+                  completedToday: data.completedToday ?? baseMissions.completedToday,
+                  energyBudget: (data.energyBudget as Record<string, unknown>) ?? baseMissions.energyBudget,
+                  dailyState: (data.dailyState as Record<string, unknown>) ?? baseMissions.dailyState,
+                }
+              : existing.missions;
+
+            const dashboardNext: DailySnapshot["dashboard"] =
+              data.dashboard?.critical != null && data.dashboard?.secondary != null
+                ? {
+                    critical: data.dashboard.critical as DashboardSnapshot["critical"],
+                    secondary: data.dashboard.secondary as DashboardSnapshot["secondary"],
+                  }
+                : existing.dashboard;
+
             const next: DailySnapshot = {
               ...existing,
-              date: dateStr ?? existing.date,
-              missions:
-                data.dailyState || data.energyBudget
-                  ? {
-                      ...(existing.missions ?? {
-                        dateStr: dateStr ?? existing.date,
-                        tasksByDate: {},
-                        completedToday: [],
-                        energyBudget: null,
-                        dailyState: null,
-                      }),
-                      dateStr: dateStr ?? existing.missions?.dateStr ?? existing.date,
-                      energyBudget: (data.energyBudget as Record<string, unknown>) ?? existing.missions?.energyBudget ?? null,
-                      dailyState: (data.dailyState as Record<string, unknown>) ?? existing.missions?.dailyState ?? null,
-                    }
-                  : existing.missions,
+              date: effectiveDate,
+              dashboard: dashboardNext,
+              missions: missionsNext,
               budget:
                 data.budget != null
                   ? (({
                       ...(existing.budget ?? {
-                        today: dateStr ?? existing.date,
+                        today: effectiveDate,
                         settings: {},
                         currentMonthExpenses: null,
                         currentMonthIncome: null,
@@ -116,15 +140,14 @@ export function usePeriodicBootstrapRefresh(intervalMinutes = 45) {
                       today:
                         (data as { budget?: { today?: string } }).budget?.["today"] ??
                         existing.budget?.today ??
-                        dateStr ??
-                        existing.date,
+                        effectiveDate,
                     }) as DailySnapshot["budget"])
                   : existing.budget,
               learning:
                 data.learning != null
                   ? (({
                       ...(existing.learning ?? {
-                        today: dateStr ?? existing.date,
+                        today: effectiveDate,
                         weeklyMinutes: 0,
                         weeklyLearningTarget: 0,
                         learningStreak: 0,
@@ -137,8 +160,7 @@ export function usePeriodicBootstrapRefresh(intervalMinutes = 45) {
                       today:
                         (data as { learning?: { today?: string } }).learning?.["today"] ??
                         existing.learning?.today ??
-                        dateStr ??
-                        existing.date,
+                        effectiveDate,
                     }) as DailySnapshot["learning"])
                   : existing.learning,
               ui: {

@@ -6,6 +6,7 @@
 "use client";
 
 import type { FinanceState } from "@/lib/dcic/types";
+import type { Insight } from "@/lib/dcic/finance-engine";
 import {
   calculateWeeklyAllowance,
   getExtremeSavingsTips,
@@ -14,9 +15,17 @@ import {
 
 interface WeeklyTacticalCardProps {
   financeState: FinanceState | null;
+  safeDailySpendCents?: number | null;
+  projectedOverspendCents?: number | null;
+  topInsight?: Insight | null;
 }
 
-export function WeeklyTacticalCard({ financeState }: WeeklyTacticalCardProps) {
+export function WeeklyTacticalCard({
+  financeState,
+  safeDailySpendCents,
+  projectedOverspendCents,
+  topInsight,
+}: WeeklyTacticalCardProps) {
   if (!financeState) return null;
 
   const weekly = calculateWeeklyAllowance(financeState);
@@ -42,7 +51,7 @@ export function WeeklyTacticalCard({ financeState }: WeeklyTacticalCardProps) {
               weekly.weekAllowance < 0 ? "text-red-500" : "text-[var(--accent-primary)]"
             }`}
           >
-            €{(safeSpendDisplay / 100).toFixed(2)}
+            €{((safeDailySpendCents != null ? Math.max(0, safeDailySpendCents) : safeSpendDisplay) / 100).toFixed(2)}
           </p>
           {weekly.weekAllowance < 0 && (
             <p className="mt-1 text-xs text-red-400">
@@ -72,6 +81,13 @@ export function WeeklyTacticalCard({ financeState }: WeeklyTacticalCardProps) {
           {weekly.daysInWeek} days remaining in week · patroon: {pattern.lowDays} low-spend,{" "}
           {pattern.normalDays} normaal, {pattern.treatDays} treat.
         </p>
+        {(projectedOverspendCents != null && projectedOverspendCents > 0) || topInsight ? (
+          <p className="text-xs text-amber-300">
+            Let op:{" "}
+            {topInsight?.message ??
+              `Projected overspend: €${((projectedOverspendCents ?? 0) / 100).toFixed(2)}`}
+          </p>
+        ) : null}
 
         {pattern.recommendedExtraLowDays > 0 && (
           <p className="text-xs text-amber-300">
