@@ -7,6 +7,12 @@ const CACHE_VERSION = "v13";
 const STATIC_CACHE = `neurohq-static-${CACHE_VERSION}`;
 const OFFLINE_PAGE = "/offline";
 
+function safeCachePut(cache, request, response) {
+  return cache.put(request, response).catch(function () {
+    // Ignore transient network/cache races during dev HMR or aborted nav preload responses.
+  });
+}
+
 function getTodayDateString() {
   var d = new Date();
   var y = d.getFullYear();
@@ -184,7 +190,7 @@ function warmupBackgroundCaches() {
           return fetch(request)
             .then(function (response) {
               if (response && response.ok) {
-                cache.put(request, response.clone());
+                safeCachePut(cache, request, response.clone());
               }
             })
             .catch(function () {
@@ -293,7 +299,7 @@ self.addEventListener("activate", function (event) {
                 return fetch(request)
                   .then(function (response) {
                     if (response && response.ok) {
-                      cache.put(request, response.clone());
+                      safeCachePut(cache, request, response.clone());
                     }
                   })
                   .catch(function () {
@@ -331,7 +337,7 @@ self.addEventListener("fetch", function (event) {
           var revalidate = fetch(event.request).then(function (response) {
             if (response.ok && event.request.method === "GET") {
               var clone = response.clone();
-              cache.put(event.request, clone);
+              safeCachePut(cache, event.request, clone);
             }
             return response;
           });
@@ -362,7 +368,7 @@ self.addEventListener("fetch", function (event) {
           if (response.ok && event.request.method === "GET") {
             const clone = response.clone();
             caches.open(STATIC_CACHE).then(function (cache) {
-              cache.put(event.request, clone);
+              safeCachePut(cache, event.request, clone);
             });
           }
           return response;
@@ -451,7 +457,7 @@ self.addEventListener("fetch", function (event) {
           .then(function (response) {
             if (response.ok && event.request.method === "GET") {
               var clone = response.clone();
-              cache.put(event.request, clone);
+              safeCachePut(cache, event.request, clone);
             }
             return response;
           })
@@ -486,14 +492,14 @@ self.addEventListener("fetch", function (event) {
             if (preloadedResponse) {
               if (event.request.method === "GET") {
                 var c = preloadedResponse.clone();
-                cache.put(event.request, c);
+                safeCachePut(cache, event.request, c);
               }
               return preloadedResponse;
             }
             return fetch(navRequest).then(function (response) {
               if (response.ok && event.request.method === "GET") {
                 var c = response.clone();
-                cache.put(event.request, c);
+                safeCachePut(cache, event.request, c);
               }
               return response;
             });
@@ -519,7 +525,7 @@ self.addEventListener("fetch", function (event) {
           fetch(event.request).then(function (response) {
             if (response.ok && event.request.method === "GET") {
               var c = response.clone();
-              cache.put(event.request, c);
+              safeCachePut(cache, event.request, c);
             }
           }).catch(function () {});
           return cached;
@@ -527,7 +533,7 @@ self.addEventListener("fetch", function (event) {
         return fetch(event.request).then(function (response) {
           if (response.ok && event.request.method === "GET") {
             var c = response.clone();
-            cache.put(event.request, c);
+            safeCachePut(cache, event.request, c);
           }
           return response;
         }).catch(function () {

@@ -8,8 +8,9 @@ async function processEntry(entry: QueuedEntry): Promise<boolean> {
   try {
     if (entry.action === "completeTask") {
       const id = (entry.payload as { id?: string })?.id;
+      const startedAt = (entry.payload as { startedAt?: string | null })?.startedAt ?? null;
       if (id) {
-        await completeTask(id);
+        await completeTask(id, { startedAt });
         await removeFromQueue(entry.id);
         return true;
       }

@@ -3,6 +3,7 @@
 import { useEffect, useState, useMemo, type CSSProperties } from "react";
 import Link from "next/link";
 import dynamic from "next/dynamic";
+import { trackEvent } from "@/app/actions/analytics-events";
 import { getPendingDailyState } from "@/lib/client-pending-writes";
 import { usePendingBudgetSnapshot } from "@/lib/client-pending-budget";
 import { useHQStore } from "@/lib/hq-store";
@@ -39,6 +40,7 @@ import type { WeekSummary } from "@/app/actions/analytics";
 import type { RealityReport } from "@/app/actions/report";
 import { getDayOfYearFromDateString } from "@/lib/utils/timezone";
 import { useDCICGameState } from "@/lib/dcic/game-state-client";
+import { deriveBrainUI } from "@/lib/brain-ui";
 import { DCICStatusCard } from "@/components/dcic/DCICStatusCard";
 import { SetupReminderBanner } from "@/components/onboarding/SetupReminderBanner";
 import { ContextualTip } from "@/components/onboarding/ContextualTip";
@@ -84,6 +86,7 @@ export function DashboardClientShell() {
   const [secondary, setSecondary] = useState<DashboardSecondary | null>(() => cache?.secondary ?? null);
   const [error, setError] = useState<string | null>(null);
   const [pendingDailyForHero, setPendingDailyForHero] = useState<ReturnType<typeof getPendingDailyState>>(null);
+  const [trackedNextActionShown, setTrackedNextActionShown] = useState(false);
   const { gameState, status: dcicStatus } = useDCICGameState();
   const dcicMode = gameState?.mode?.current ?? "focus";
   const dcicModeVars = useMemo<CSSProperties>(() => {
@@ -353,6 +356,60 @@ export function DashboardClientShell() {
   const badgeBudgetRemainingCents =
     pendingBudget?.budgetRemainingCents ?? snapshotBudgetRemainingCents ?? budgetRemainingCents;
   const badgeCurrency = pendingBudget?.currency ?? snapshotCurrency ?? currency;
+  const hasBrainCheckIn =
+    (state?.energy != null && state?.focus != null && state?.sensory_load != null) ||
+    (secState?.energy != null && secState?.focus != null && secState?.sensory_load != null);
+  const hasMissionsToday = (todaysTasks?.length ?? 0) > 0;
+  const brainUI = deriveBrainUI({
+    hasBrainCheckIn,
+    hasMissionsToday,
+    brainMode: (effectiveEnergyBudget.brainMode as BrainMode | undefined) ?? null,
+  });
+  const nextBestAction = critical?.unifiedDecision
+    ? {
+        title: critical.unifiedDecision.title,
+        description: critical.unifiedDecision.description,
+        href: critical.unifiedDecision.href,
+        cta: critical.unifiedDecision.cta,
+      }
+    : brainUI.nextAction;
+  const nextDecisionType = critical?.unifiedDecision?.decisionType ?? "legacy_next_action";
+  const nextDecisionId = critical?.unifiedDecision?.decisionId ?? `legacy-${dateStr}`;
+
+  useEffect(() => {
+    if (trackedNextActionShown) return;
+    if (!nextBestAction?.title) return;
+    setTrackedNextActionShown(true);
+    void trackEvent("CTA_shown", {
+      context: "dashboard_next_best_action",
+      title: nextBestAction.title,
+      href: nextBestAction.href,
+    });
+    void trackEvent("decision_exposed", {
+      decisionId: nextDecisionId,
+      decisionType: nextDecisionType,
+      surface: "dashboard",
+      href: nextBestAction.href,
+    });
+  }, [nextBestAction?.href, nextBestAction?.title, nextDecisionId, nextDecisionType, trackedNextActionShown]);
+
+  useEffect(() => {
+    if (!critical) return;
+    void trackEvent("card_viewed", {
+      context: "dashboard_brain_status",
+      date: critical.dateStr,
+      hasBrainState: critical.state != null,
+    });
+  }, [critical?.dateStr]);
+
+  useEffect(() => {
+    if (!secondary?.todayEngine) return;
+    void trackEvent("card_viewed", {
+      context: "dashboard_today_engine",
+      date: dateStr,
+      streakAtRisk: Boolean((secondary.todayEngine as { streakAtRisk?: boolean }).streakAtRisk),
+    });
+  }, [dateStr, secondary?.todayEngine]);
 
   return (
     <main
@@ -409,6 +466,35 @@ export function DashboardClientShell() {
                 <DashboardQuickBudgetLog />
               </div>
             </div>
+            <section className="card-simple cmd-stack-dense rounded-[var(--cmd-card-radius)] px-4 py-3" aria-label="Next best action">
+              <p className="text-[10px] font-semibold uppercase tracking-wider text-[var(--text-muted)]">Next best action</p>
+              <h3 className="mt-1 text-sm font-semibold text-[var(--text-primary)]">{nextBestAction.title}</h3>
+              <p className="mt-1 text-xs text-[var(--text-secondary)]">{nextBestAction.description}</p>
+              <div className="mt-3">
+                <Link
+                  href={nextBestAction.href}
+                  className="neon-button inline-flex min-h-[42px] items-center justify-center px-4 py-2 text-xs font-semibold"
+                  onClick={() =>
+                    void Promise.all([
+                      trackEvent("CTA_clicked", {
+                        context: "dashboard_next_best_action",
+                        title: nextBestAction.title,
+                        href: nextBestAction.href,
+                      }),
+                      trackEvent("decision_action", {
+                        decisionId: nextDecisionId,
+                        decisionType: nextDecisionType,
+                        surface: "dashboard",
+                        actionType: "cta_click",
+                        href: nextBestAction.href,
+                      }),
+                    ])
+                  }
+                >
+                  {nextBestAction.cta}
+                </Link>
+              </div>
+            </section>
             <Divider1px />
             <div data-tutorial="dashboard-command-bridge" style={dcicModeVars}>
             <SciFiPanel className={`dashboard-bridge-frame idle-breathing ${hudStyles.focusPrimary}`} bodyClassName="dashboard-bridge-body" variant="command">

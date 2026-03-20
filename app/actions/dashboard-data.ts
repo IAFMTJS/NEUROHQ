@@ -41,6 +41,7 @@ import { getWeeklyBudgetOutcome } from "@/app/actions/weekly-budget-feedback";
 import { getWeekSummary, upsertDailyAnalytics } from "@/app/actions/analytics";
 import { getConsequenceState } from "@/app/actions/consequence-engine";
 import { applyZeroCompletionRollover } from "@/app/actions/daily-obligation";
+import { deriveUnifiedDecision } from "@/lib/unified-decision-engine";
 import type { EnergyBudget } from "@/app/actions/energy";
 import type { TodayEngineResult } from "@/app/actions/dcic/today-engine";
 import type { DashboardCritical } from "@/types/dashboard-data.types";
@@ -216,6 +217,14 @@ async function buildCriticalPayload(ctx: TodayContext): Promise<DashboardCritica
   ]
     .filter((a) => a.show)
     .slice(0, 2);
+  const unifiedDecision = deriveUnifiedDecision({
+    dateStr: ctx.dateStr,
+    hasBrainCheckIn: state?.energy != null && state?.focus != null && state?.sensory_load != null,
+    tasksCount: todaysTasks.length,
+    budgetRemainingCents,
+    energyRemaining: energyBudget.remaining ?? null,
+    brainMode: energyBudget.brainMode ?? null,
+  });
 
   return {
     dateStr: ctx.dateStr,
@@ -255,6 +264,7 @@ async function buildCriticalPayload(ctx: TodayContext): Promise<DashboardCritica
     copyVariant: adaptiveSuggestions.copyVariant,
     autoSuggestions,
     burnout: (consequenceState as { burnout?: boolean })?.burnout ?? false,
+    unifiedDecision,
   };
 }
 

@@ -8,6 +8,7 @@ import { getWeekBounds } from "@/lib/utils/learning";
 import { getWeekSummary, getAnalyticsRange } from "@/app/actions/analytics";
 import { getAnalyticsFunnel } from "@/app/actions/analytics-funnel";
 import { getWeeklyLearningTarget } from "@/app/actions/learning";
+import { getTelemetryGovernanceSnapshot, getClosedLoopLearningSummary } from "@/app/actions/analytics-events";
 
 function formatMinutes(m: number): string {
   if (m < 60) return `${m} min`;
@@ -50,7 +51,7 @@ async function AnalyticsContent() {
   const today = new Date();
   const { start: weekStart, end: weekEnd } = getWeekBounds(today);
   const learningTarget = await getWeeklyLearningTarget();
-  const [summary, thisWeekDays, lastWeekSummary, funnel] = await Promise.all([
+  const [summary, thisWeekDays, lastWeekSummary, funnel, telemetryGovernance, closedLoop] = await Promise.all([
     getWeekSummary(weekStart, weekEnd, learningTarget),
     getAnalyticsRange(weekStart, weekEnd),
     (async () => {
@@ -60,6 +61,8 @@ async function AnalyticsContent() {
       return getWeekSummary(s, e, learningTarget);
     })(),
     getAnalyticsFunnel(8),
+    getTelemetryGovernanceSnapshot(14),
+    getClosedLoopLearningSummary(14),
   ]);
 
   const taskPct = summary && summary.totalTasksPlanned > 0
@@ -310,6 +313,58 @@ async function AnalyticsContent() {
           </section>
         </>
       )}
+
+      <section className="glass-card p-4">
+        <h2 className="text-base font-semibold text-[var(--text-primary)] mb-1">
+          Telemetry governance (14d)
+        </h2>
+        <p className="text-xs text-[var(--text-muted)]">
+          Datakwaliteit en schema-discipline voor events.
+        </p>
+        <div className="mt-3 grid grid-cols-2 gap-3 text-sm">
+          <div className="rounded-lg border border-[var(--card-border)]/60 bg-[var(--bg-surface)]/60 p-3">
+            <p className="text-xs text-[var(--text-muted)]">Total events</p>
+            <p className="text-lg font-semibold text-[var(--text-primary)]">{telemetryGovernance.totalEvents}</p>
+          </div>
+          <div className="rounded-lg border border-[var(--card-border)]/60 bg-[var(--bg-surface)]/60 p-3">
+            <p className="text-xs text-[var(--text-muted)]">Schema valid</p>
+            <p className="text-lg font-semibold text-[var(--text-primary)]">
+              {telemetryGovernance.schemaValidCount} / {telemetryGovernance.totalEvents}
+            </p>
+          </div>
+        </div>
+        {telemetryGovernance.unknownEventNames.length > 0 && (
+          <p className="mt-3 text-xs text-[var(--accent-warning)]">
+            Unknown event names: {telemetryGovernance.unknownEventNames.slice(0, 6).join(", ")}
+          </p>
+        )}
+      </section>
+
+      <section className="glass-card p-4">
+        <h2 className="text-base font-semibold text-[var(--text-primary)] mb-1">
+          Closed-loop learning (14d)
+        </h2>
+        <p className="text-xs text-[var(--text-muted)]">
+          Exposed decisions, user actions en uitkomsten per decision type.
+        </p>
+        {closedLoop.length === 0 ? (
+          <p className="mt-3 text-sm text-[var(--text-muted)]">Nog geen decision telemetry.</p>
+        ) : (
+          <ul className="mt-3 space-y-2">
+            {closedLoop.slice(0, 8).map((row) => (
+              <li
+                key={row.decisionType}
+                className="rounded-lg border border-[var(--card-border)]/60 bg-[var(--bg-surface)]/60 p-3 text-sm"
+              >
+                <p className="font-medium text-[var(--text-primary)]">{row.decisionType}</p>
+                <p className="text-xs text-[var(--text-muted)]">
+                  Exposed {row.exposed} · Acted {row.acted} ({Math.round(row.actionRate * 100)}%) · Outcomes {row.outcomes} ({Math.round(row.outcomeRate * 100)}%)
+                </p>
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
     </>
   );
 }

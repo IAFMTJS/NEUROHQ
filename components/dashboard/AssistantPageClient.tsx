@@ -1,7 +1,7 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { HeroMascotImage } from "@/components/HeroMascotImage";
 import { HQPageHeader } from "@/components/hq";
@@ -9,6 +9,7 @@ import { createTask } from "@/app/actions/tasks";
 import { addManualEvent } from "@/app/actions/calendar";
 import { addBudgetEntry } from "@/app/actions/budget";
 import { addLearningSession } from "@/app/actions/learning";
+import { trackEvent } from "@/app/actions/analytics-events";
 import type { Intent, SimulationResult } from "@/lib/dcic/types";
 
 const MissionConfirmationModal = dynamic(
@@ -54,6 +55,7 @@ type Message = {
   courageFlag?: boolean;
   suggestedActions?: SuggestedAction[];
   dcicAction?: DCICAction;
+  unifiedDecision?: { decisionId: string; decisionType: string };
 };
 
 export default function AssistantPageClient() {
@@ -69,6 +71,7 @@ export default function AssistantPageClient() {
     missionName: string;
     simulation: SimulationResult;
   } | null>(null);
+  const trackedExposedRef = useRef<Set<string>>(new Set());
   const listRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -141,6 +144,7 @@ export default function AssistantPageClient() {
         courageFlag: data.courageFlag,
         suggestedActions: data.suggestedActions ?? undefined,
         dcicAction: data.dcicAction ?? undefined,
+        unifiedDecision: data.unifiedDecision ?? undefined,
       };
       setMessages((prev) => [...prev, assistantMsg]);
 
@@ -163,6 +167,20 @@ export default function AssistantPageClient() {
     }
   }, [input, loading, scrollToBottom]);
 
+  useEffect(() => {
+    for (const msg of messages) {
+      if (msg.role !== "assistant" || !msg.suggestedActions?.length) continue;
+      const decisionId = msg.unifiedDecision?.decisionId ?? msg.id;
+      if (trackedExposedRef.current.has(decisionId)) continue;
+      trackedExposedRef.current.add(decisionId);
+      void trackEvent("decision_exposed", {
+        decisionId,
+        decisionType: msg.unifiedDecision?.decisionType ?? "assistant_suggested_actions",
+        surface: "assistant",
+      });
+    }
+  }, [messages]);
+
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
@@ -172,10 +190,28 @@ export default function AssistantPageClient() {
 
   const empty = messages.length === 0;
   const disabled = loading || rateLimited || !input.trim();
+  const latestAssistantActions = useMemo(() => {
+    for (let i = messages.length - 1; i >= 0; i--) {
+      const msg = messages[i];
+      if (msg.role === "assistant" && msg.suggestedActions && msg.suggestedActions.length > 0) {
+        return { id: msg.id, actions: msg.suggestedActions };
+      }
+    }
+    return null;
+  }, [messages]);
 
   const runSuggestedAction = useCallback(
     async (msgId: string, action: SuggestedAction) => {
+      const sourceMessage = messages.find((m) => m.id === msgId);
+      const decisionId = sourceMessage?.unifiedDecision?.decisionId ?? msgId;
+      const decisionType = sourceMessage?.unifiedDecision?.decisionType ?? "assistant_suggested_actions";
       try {
+        await trackEvent("decision_action", {
+          decisionId,
+          decisionType,
+          surface: "assistant",
+          actionType: action.type,
+        });
         if (action.type === "add_task") {
           await createTask({
             title: action.payload.title,
@@ -207,11 +243,25 @@ export default function AssistantPageClient() {
             m.id === msgId ? { ...m, suggestedActions: undefined } : m
           )
         );
+        await trackEvent("decision_outcome", {
+          decisionId,
+          decisionType,
+          surface: "assistant",
+          outcome: "success",
+          actionType: action.type,
+        });
       } catch {
+        await trackEvent("decision_outcome", {
+          decisionId,
+          decisionType,
+          surface: "assistant",
+          outcome: "failed",
+          actionType: action.type,
+        });
         setError("Actie uitvoeren mislukt. Probeer het opnieuw.");
       }
     },
-    []
+    [messages]
   );
 
   return (
@@ -261,8 +311,8 @@ export default function AssistantPageClient() {
             <div
               className={`max-w-[85%] rounded-2xl px-4 py-3 ${
                 msg.role === "user"
-                  ? "rounded-tr-md bg-[var(--bg-elevated)] border border-[var(--card-border)]"
-                  : "rounded-tl-md bg-[var(--bg-surface)] border border-[var(--card-border)]"
+                  ? "rounded-tr-md glass-card border border-[var(--card-border)]"
+                  : "rounded-tl-md card-simple border border-[var(--card-border)]"
               }`}
             >
               <p className="whitespace-pre-wrap text-sm text-[var(--text-primary)]">
@@ -312,6 +362,23 @@ export default function AssistantPageClient() {
           </p>
         )}
       </div>
+      {latestAssistantActions && (
+        <section className="shrink-0 border-t border-[var(--card-border)] bg-[var(--bg-surface)]/80 px-3 py-2" aria-label="Suggested actions tray">
+          <p className="mb-2 text-[10px] font-semibold uppercase tracking-wider text-[var(--text-muted)]">Suggested actions</p>
+          <div className="flex flex-wrap gap-2">
+            {latestAssistantActions.actions.map((action, index) => (
+              <button
+                key={`${action.label}-${index}`}
+                type="button"
+                onClick={() => runSuggestedAction(latestAssistantActions.id, action)}
+                className="neon-button inline-flex min-h-[34px] items-center justify-center px-3 py-1.5 text-xs font-semibold"
+              >
+                {action.label}
+              </button>
+            ))}
+          </div>
+        </section>
+      )}
 
       <div className="shrink-0 border-t border-[var(--accent-neutral)] bg-[var(--bg-surface)] p-3">
         <div className="flex gap-2">

@@ -6,6 +6,7 @@ import type { Json, Task, TablesInsert } from "@/types/database.types";
 import type { ReputationScore } from "@/lib/identity-engine";
 import { isRecoveryTask } from "@/lib/recovery-task";
 import { incrementAvoidanceSkip, recordAvoidanceCompletion } from "@/app/actions/avoidance-tracker";
+import { trackEvent } from "@/app/actions/analytics-events";
 import { revalidatePath, unstable_cache } from "next/cache";
 import { revalidateTagMax } from "@/lib/revalidate";
 
@@ -354,7 +355,10 @@ function computeNextRecurrenceDate(dueDate: string, recurrenceRule: string | nul
   return null;
 }
 
-export async function completeTask(id: string): Promise<CompleteTaskResult> {
+export async function completeTask(
+  id: string,
+  options?: { startedAt?: string | null }
+): Promise<CompleteTaskResult> {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) throw new Error("Not authenticated");
@@ -398,12 +402,21 @@ export async function completeTask(id: string): Promise<CompleteTaskResult> {
     performanceRank = "B";
   }
 
-  await logTaskEvent({ taskId: id, eventType: "complete", performanceScore, performanceRank });
-  await supabase.from("analytics_events").insert({
-    user_id: user.id,
-    event_name: "mission_completed",
-    payload: { taskId: id, performanceRank, performanceScore } as unknown as Json,
+  const durationToCompleteSeconds =
+    options?.startedAt != null
+      ? Math.max(
+          0,
+          Math.round((Date.now() - new Date(options.startedAt).getTime()) / 1000)
+        )
+      : null;
+  await logTaskEvent({
+    taskId: id,
+    eventType: "complete",
+    performanceScore,
+    performanceRank,
+    durationToCompleteSeconds,
   });
+  await trackEvent("mission_completed", { taskId: id, performanceRank, performanceScore });
 
   if (t?.recurrence_rule) {
     const nextStr = computeNextRecurrenceDate(t.due_date, t.recurrence_rule ?? null, t.recurrence_weekdays ?? null);

@@ -2,7 +2,7 @@
 
 import { useState, useTransition, useEffect, useMemo, useCallback } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { createTask, deleteTask, duplicateTask, restoreTask, snoozeTask, uncompleteTask, skipNextOccurrence } from "@/app/actions/tasks";
+import { createTask, deleteTask, duplicateTask, restoreTask, snoozeTask, uncompleteTask, skipNextOccurrence, rescheduleTask } from "@/app/actions/tasks";
 import { trackEvent } from "@/app/actions/analytics-events";
 import { useOfflineCompleteTask } from "@/app/hooks/useOfflineCompleteTask";
 import { addToQueue } from "@/lib/offline-queue";
@@ -146,6 +146,7 @@ export function TaskList({
   const [showDoAnotherModal, setShowDoAnotherModal] = useState(false);
   const [nextMissionPromptTask, setNextMissionPromptTask] = useState<ExtendedTask | null>(null);
   const [showAllTasksModal, setShowAllTasksModal] = useState(false);
+  const [showReasoning, setShowReasoning] = useState(false);
   const [levelUpInfo, setLevelUpInfo] = useState<{
     level: number;
     reputation?: { discipline: number; consistency: number; impact: number } | null;
@@ -189,13 +190,20 @@ export function TaskList({
     [extendedTasks, optimisticCompleteIds]
   );
   const completedForDisplay = useMemo(
-    () =>
-      [
+    () => {
+      const merged = [
         ...(completedToday as ExtendedTask[]),
         ...extendedTasks
           .filter((t) => t.completed || optimisticCompleteIds.includes(t.id))
           .map((t) => ({ ...t, completed: true, completed_at: new Date().toISOString() } as ExtendedTask)),
-      ] as ExtendedTask[],
+      ] as ExtendedTask[];
+      // Avoid duplicate React keys when the same task exists in both server-completed and optimistic/local sets.
+      const byId = new Map<string, ExtendedTask>();
+      for (const task of merged) {
+        byId.set(task.id, task);
+      }
+      return Array.from(byId.values());
+    },
     [completedToday, extendedTasks, optimisticCompleteIds]
   );
 
@@ -253,6 +261,10 @@ export function TaskList({
       : slotsFilled
         ? "Let op: je focus slots zijn vol. Je kunt nog steeds toevoegen; overweeg eerst iets af te ronden of te verplaatsen."
         : null;
+  const topRecommendedTask = useMemo(() => {
+    const recommended = incompleteTasksForDisplay.find((t) => recommendedTaskIds?.includes(t.id));
+    return recommended ?? incompleteTasksForDisplay[0] ?? null;
+  }, [incompleteTasksForDisplay, recommendedTaskIds]);
 
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
@@ -389,6 +401,21 @@ export function TaskList({
     });
   }
 
+  function showMovedToast(taskId: string, fromDate: string, label: "Snoozed" | "Skipped next") {
+    toast.success(`${label} mission`, {
+      description: `Moved from ${fromDate}.`,
+      action: {
+        label: "Undo",
+        onClick: () => {
+          startTransition(async () => {
+            await rescheduleTask(taskId, fromDate);
+            router.refresh();
+          });
+        },
+      },
+    });
+  }
+
   async function handleConfirmDelete() {
     if (!confirmDeleteId) return;
     const id = confirmDeleteId;
@@ -419,6 +446,8 @@ export function TaskList({
   }
 
   function handleSnooze(id: string) {
+    const original = extendedTasks.find((t) => t.id === id);
+    const originalDate = original?.due_date ?? date;
     setSnoozingIds((prev) => new Set(prev).add(id));
     removeTask(id, date);
     startTransition(async () => {
@@ -428,6 +457,7 @@ export function TaskList({
         } else {
           await snoozeTask(id);
           void trackEvent("mission_skipped", { taskId: id, reason: "list_snooze" });
+          showMovedToast(id, originalDate, "Snoozed");
           router.refresh();
         }
       } finally {
@@ -437,6 +467,8 @@ export function TaskList({
   }
 
   function handleSkipNext(id: string) {
+    const original = extendedTasks.find((t) => t.id === id);
+    const originalDate = original?.due_date ?? date;
     setSkipNextIds((prev) => new Set(prev).add(id));
     removeTask(id, date);
     startTransition(async () => {
@@ -446,6 +478,7 @@ export function TaskList({
         } else {
           await skipNextOccurrence(id);
           void trackEvent("mission_skipped", { taskId: id, reason: "list_skip_next" });
+          showMovedToast(id, originalDate, "Skipped next");
           router.refresh();
         }
       } finally {
@@ -765,6 +798,45 @@ export function TaskList({
         </div>
       </div>
       <div className="p-4">
+        {topRecommendedTask && !isWarMode && (
+          <section className="mb-3 rounded-xl border border-[var(--accent-focus)]/35 bg-[var(--accent-focus)]/10 p-3">
+            <p className="text-[10px] font-semibold uppercase tracking-wider text-[var(--accent-focus)]">Suggested mission now</p>
+            <p className="mt-1 text-sm font-semibold text-[var(--text-primary)]">{topRecommendedTask.title}</p>
+            <div className="mt-2 flex flex-wrap gap-2">
+              <button
+                type="button"
+                onClick={() => { setDetailsTask(null); setFocusTask(topRecommendedTask); }}
+                className="rounded-lg bg-[var(--accent-focus)] px-3 py-1.5 text-xs font-semibold text-white hover:opacity-90"
+              >
+                Start now
+              </button>
+              <button
+                type="button"
+                onClick={() => setShowReasoning((v) => !v)}
+                className="rounded-lg border border-[var(--card-border)] px-3 py-1.5 text-xs font-medium text-[var(--text-muted)] hover:bg-[var(--bg-surface)] hover:text-[var(--text-primary)]"
+              >
+                {showReasoning ? "Hide why" : "Why this?"}
+              </button>
+            </div>
+            {showReasoning && (
+              <div className="mt-2 rounded-lg border border-[var(--card-border)]/70 bg-[var(--bg-surface)]/55 p-2 text-xs text-[var(--text-secondary)]">
+                This task is prioritized by current state and mission order. Detailed UMS factors stay in mission details to keep this surface fast to scan.
+              </div>
+            )}
+          </section>
+        )}
+
+        {!isWarMode && (
+          <section className="mb-3 rounded-xl border border-[var(--card-border)] bg-[var(--bg-surface)]/45 p-3" aria-label="Slots envelope">
+            <p className="text-[10px] font-semibold uppercase tracking-wider text-[var(--text-muted)]">Slots envelope</p>
+            <p className="mt-1 text-xs text-[var(--text-secondary)]">
+              Active: <strong>{activeCount}</strong> · Suggested: <strong>{suggestedTaskCount}</strong>
+              {Number.isFinite(maxSlots) ? <> · Max slots: <strong>{maxSlots}</strong></> : null}
+            </p>
+            {limitMessage ? <p className="mt-1 text-xs text-[var(--text-muted)]">{limitMessage}</p> : null}
+          </section>
+        )}
+
         {showAvoidance && (
           <p className="mb-3 rounded-xl border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-sm text-amber-200">{carryOverCount} tasks carried over. Pick one to focus on.</p>
         )}

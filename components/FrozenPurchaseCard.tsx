@@ -38,7 +38,12 @@ export function FrozenPurchaseCard({ activeFrozen, readyForAction, currency = "E
   return (
     <section className="card-simple overflow-hidden p-0">
       <div className="border-b border-[var(--card-border)] px-4 py-3">
-        <h2 className="text-base font-semibold text-[var(--text-primary)]">24h freeze</h2>
+        <div className="flex items-center justify-between gap-2">
+          <h2 className="text-base font-semibold text-[var(--text-primary)]">24h freeze</h2>
+          <span className="rounded-full border border-[var(--card-border)] bg-[var(--bg-surface)]/60 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.12em] text-[var(--text-muted)]">
+            Freeze slots {activeFrozen.length}/5
+          </span>
+        </div>
         <p className="mt-0.5 text-xs text-[var(--text-muted)]">Confirm or cancel. You can cancel early or add the amount to a goal.</p>
       </div>
       <div className="p-4 space-y-4">

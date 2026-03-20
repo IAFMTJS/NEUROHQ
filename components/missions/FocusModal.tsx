@@ -1,13 +1,14 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { snoozeTask } from "@/app/actions/tasks";
-import { abandonTaskWithCost, startTaskWithHeavyCost } from "@/app/actions/decision-cost";
+import { abandonTaskWithCost, startTaskWithHeavyCost, undoAbandonCost } from "@/app/actions/decision-cost";
 import { useOfflineCompleteTask } from "@/app/hooks/useOfflineCompleteTask";
 import { getDailyState, setEmotionalStatePreStart, type EmotionalStatePreStart } from "@/app/actions/daily-state";
 import { useHQStore } from "@/lib/hq-store";
 import { trackEvent } from "@/app/actions/analytics-events";
+import { toast } from "sonner";
 
 const DEFAULT_MINUTES = 25;
 
@@ -62,6 +63,9 @@ export function FocusModal({ open, onClose, taskId, taskTitle, date: dateProp, t
   const [dailyState, setDailyState] = useState<{ emotional_state?: string | null } | null>(null);
   const [emotionalStateSet, setEmotionalStateSet] = useState(false);
   const [sessionStarted, setSessionStarted] = useState(false);
+  const [confirmAbort, setConfirmAbort] = useState(false);
+  const [sessionStartedAt, setSessionStartedAt] = useState<string | null>(null);
+  const modalOpenedAtRef = useRef<string | null>(null);
   const outsideFocus =
     taskDomain &&
     strategyMapping &&
@@ -72,6 +76,9 @@ export function FocusModal({ open, onClose, taskId, taskTitle, date: dateProp, t
 
   useEffect(() => {
     if (!open) return;
+    modalOpenedAtRef.current = new Date().toISOString();
+    setConfirmAbort(false);
+    setSessionStartedAt(null);
     getDailyState(date).then((d) => setDailyState(d as { emotional_state?: string | null } | null));
   }, [open, date]);
 
@@ -102,12 +109,12 @@ export function FocusModal({ open, onClose, taskId, taskTitle, date: dateProp, t
         completed_at: new Date().toISOString(),
       } as any);
     }
-    completeTaskOffline(taskId).then((result) => {
+    completeTaskOffline(taskId, { startedAt: sessionStartedAt }).then((result) => {
       onComplete?.(result ?? undefined);
       router.refresh();
       onClose();
     }).finally(() => setPending(false));
-  }, [date, taskId, completeTaskOffline, onComplete, router, onClose, upsertTask]);
+  }, [date, taskId, completeTaskOffline, onComplete, router, onClose, sessionStartedAt, upsertTask]);
 
   const handleSnooze = useCallback(() => {
     setPending(true);
@@ -121,11 +128,22 @@ export function FocusModal({ open, onClose, taskId, taskTitle, date: dateProp, t
   }, [taskId, date, onSnooze, router, onClose, removeTask]);
 
   const handleAbort = useCallback(() => {
-    const ok = confirm("Abort current mission? This applies a small penalty.");
-    if (!ok) return;
     setPending(true);
     abandonTaskWithCost(taskId)
-      .then(() => {
+      .then((result) => {
+        setConfirmAbort(false);
+        toast.warning("Mission aborted with penalty.", {
+          description: `XP -${result.xpDeducted}, load +${result.loadBump}.`,
+          action: {
+            label: "Undo",
+            onClick: () => {
+              void undoAbandonCost(taskId, result.xpDeducted, result.loadBump).then(() => {
+                toast.success("Abort penalty undone.");
+                router.refresh();
+              });
+            },
+          },
+        });
         onClose();
         router.refresh();
       })
@@ -137,8 +155,8 @@ export function FocusModal({ open, onClose, taskId, taskTitle, date: dateProp, t
       onClose();
       return;
     }
-    handleAbort();
-  }, [sessionStarted, onClose, handleAbort]);
+    setConfirmAbort(true);
+  }, [sessionStarted, onClose]);
 
   if (!open) return null;
 
@@ -247,13 +265,20 @@ export function FocusModal({ open, onClose, taskId, taskTitle, date: dateProp, t
         </div>
 
         <footer className="modal-card-footer flex-wrap justify-center gap-2">
+          {confirmAbort && (
+            <div className="w-full rounded-xl border border-amber-500/40 bg-amber-500/10 px-3 py-2 text-center text-xs text-amber-200">
+              Abort this mission? This applies a small penalty.
+            </div>
+          )}
           {!running ? (
             <button
               type="button"
               onClick={() => {
                 setRunning(true);
                 setSessionStarted(true);
-                startTaskWithHeavyCost(taskId);
+                const startedAt = new Date().toISOString();
+                setSessionStartedAt(startedAt);
+                startTaskWithHeavyCost(taskId, { openedAt: modalOpenedAtRef.current });
               }}
               className="btn-primary rounded-xl px-6 py-3 text-base font-medium"
             >
@@ -286,11 +311,20 @@ export function FocusModal({ open, onClose, taskId, taskTitle, date: dateProp, t
           </button>
           <button
             type="button"
-            onClick={handleClose}
+            onClick={sessionStarted ? (confirmAbort ? handleAbort : () => setConfirmAbort(true)) : handleClose}
             className="rounded-xl border border-[var(--card-border)] bg-transparent px-6 py-3 text-base font-medium text-[var(--text-muted)] transition-colors hover:bg-[var(--accent-neutral)]"
           >
-            {sessionStarted ? "Abort" : "Close"}
+            {sessionStarted ? (confirmAbort ? "Confirm abort" : "Abort") : "Close"}
           </button>
+          {confirmAbort && (
+            <button
+              type="button"
+              onClick={() => setConfirmAbort(false)}
+              className="rounded-xl border border-[var(--card-border)] bg-transparent px-6 py-3 text-base font-medium text-[var(--text-primary)] transition-colors hover:bg-[var(--accent-neutral)]"
+            >
+              Keep mission
+            </button>
+          )}
         </footer>
       </div>
     </div>

@@ -4,8 +4,8 @@ import { revalidatePath } from "next/cache";
 import { revalidateTagMax } from "@/lib/revalidate";
 import { createClient } from "@/lib/supabase/server";
 import { isHeavyTask } from "@/lib/brain-mode";
+import { trackEvent } from "@/app/actions/analytics-events";
 import { logTaskEvent } from "./tasks";
-import type { Json } from "@/types/database.types";
 
 const HEAVY_START_FOCUS_COST = 5;
 const ABANDON_LOAD_BUMP = 5;
@@ -150,20 +150,57 @@ export async function abandonTaskWithCost(taskId: string): Promise<{ xpDeducted:
   const dateStr = new Date().toISOString().slice(0, 10);
   const result = await applyAbandonCost(taskId, dateStr);
   await logTaskEvent({ taskId, eventType: "abandon" });
-  if (user) {
-    await supabase.from("analytics_events").insert({
+  if (user) await trackEvent("mission_aborted", { taskId });
+  return result;
+}
+
+/**
+ * Reverse one abandon penalty (UI undo): restores deducted XP and reverts load bump.
+ */
+export async function undoAbandonCost(taskId: string, xpDeducted: number, loadBump: number): Promise<void> {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return;
+  const dateStr = new Date().toISOString().slice(0, 10);
+
+  if (xpDeducted > 0) {
+    const { data: xpRow } = await supabase.from("user_xp").select("total_xp").eq("user_id", user.id).single();
+    const currentTotal = (xpRow as { total_xp?: number } | null)?.total_xp ?? 0;
+    await supabase.from("user_xp").update({ total_xp: currentTotal + Math.max(0, xpDeducted) }).eq("user_id", user.id);
+    await supabase.from("xp_events").insert({
       user_id: user.id,
-      event_name: "mission_aborted",
-      payload: { taskId } as Json,
+      amount: Math.max(0, xpDeducted),
+      source_type: "task_abandon_penalty_undo",
     });
   }
-  return result;
+
+  const { data: dailyRow } = await supabase
+    .from("daily_state")
+    .select("load")
+    .eq("user_id", user.id)
+    .eq("date", dateStr)
+    .maybeSingle();
+  if (dailyRow) {
+    const currentLoad = (dailyRow as { load?: number | null }).load ?? 0;
+    const restoredLoad = Math.max(0, currentLoad - Math.max(0, loadBump));
+    await supabase.from("daily_state").update({ load: restoredLoad }).eq("user_id", user.id).eq("date", dateStr);
+  }
+
+  await trackEvent("mission_aborted_undo", { taskId, xpDeducted, loadBump });
+  revalidateTagMax(`daily-${user.id}-${dateStr}`);
+  revalidateTagMax(`energy-${user.id}-${dateStr}`);
+  revalidatePath("/dashboard");
+  revalidatePath("/tasks");
+  revalidatePath("/xp");
 }
 
 /**
  * Fase 5.1.1: Start task and apply heavy mission focus cost (-5) when task is heavy. Call from UI when user starts timer/task.
  */
-export async function startTaskWithHeavyCost(taskId: string): Promise<void> {
+export async function startTaskWithHeavyCost(
+  taskId: string,
+  options?: { openedAt?: string | null }
+): Promise<void> {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return;
@@ -171,10 +208,10 @@ export async function startTaskWithHeavyCost(taskId: string): Promise<void> {
   const energyRequired = (task as { energy_required?: number | null } | null)?.energy_required ?? null;
   const dateStr = new Date().toISOString().slice(0, 10);
   if (isHeavyTask(energyRequired)) await applyHeavyStartFocusCost(dateStr);
-  await logTaskEvent({ taskId, eventType: "start" });
-  await supabase.from("analytics_events").insert({
-    user_id: user.id,
-    event_name: "mission_started",
-    payload: { taskId, heavy: isHeavyTask(energyRequired) } as Json,
-  });
+  const durationBeforeStartSeconds =
+    options?.openedAt != null
+      ? Math.max(0, Math.round((Date.now() - new Date(options.openedAt).getTime()) / 1000))
+      : null;
+  await logTaskEvent({ taskId, eventType: "start", durationBeforeStartSeconds });
+  await trackEvent("mission_started", { taskId, heavy: isHeavyTask(energyRequired) });
 }

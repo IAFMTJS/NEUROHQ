@@ -31,6 +31,13 @@ import { addManualEvent } from "@/app/actions/calendar";
 import { addBudgetEntry } from "@/app/actions/budget";
 import { addLearningSession } from "@/app/actions/learning";
 import { processDCICMessage } from "@/lib/dcic/assistant-integration";
+import { getDailyState } from "@/app/actions/daily-state";
+import { getEnergyBudget } from "@/app/actions/energy";
+import { getTodaysTasks } from "@/app/actions/tasks";
+import { getBudgetSettings, getCurrentMonthExpensesCents } from "@/app/actions/budget";
+import { todayDateString } from "@/lib/utils/timezone";
+import { deriveUnifiedDecision } from "@/lib/unified-decision-engine";
+import { trackEvent } from "@/app/actions/analytics-events";
 
 const MAX_MESSAGE_LENGTH = 2000;
 const RATE_LIMIT_WINDOW_MS = 60_000;
@@ -100,6 +107,34 @@ export async function POST(request: Request) {
       });
     }
 
+    const dateStr = todayDateString();
+    const [dailyStateForDecision, energyBudgetForDecision, todaysTasksForDecision, budgetSettingsForDecision, monthExpensesForDecision] = await Promise.all([
+      getDailyState(dateStr),
+      getEnergyBudget(dateStr),
+      getTodaysTasks(dateStr, "normal"),
+      getBudgetSettings(),
+      getCurrentMonthExpensesCents(),
+    ]);
+    const spendableCents = Math.max(
+      0,
+      (budgetSettingsForDecision.monthly_budget_cents ?? 0) - (budgetSettingsForDecision.monthly_savings_cents ?? 0)
+    );
+    const budgetRemainingCents =
+      budgetSettingsForDecision.monthly_budget_cents != null
+        ? spendableCents - monthExpensesForDecision
+        : null;
+    const unifiedDecision = deriveUnifiedDecision({
+      dateStr,
+      hasBrainCheckIn:
+        dailyStateForDecision?.energy != null &&
+        dailyStateForDecision?.focus != null &&
+        dailyStateForDecision?.sensory_load != null,
+      tasksCount: (todaysTasksForDecision.tasks ?? []).length,
+      budgetRemainingCents,
+      energyRemaining: energyBudgetForDecision.remaining ?? null,
+      brainMode: energyBudgetForDecision.brainMode ?? null,
+    });
+
     const intent = classifyIntent(message);
     const signals = extractSignals(message);
     const crisisAssessment = evaluateCrisis(message, signals);
@@ -144,6 +179,12 @@ export async function POST(request: Request) {
 
     if (requestedAction) {
       try {
+        await trackEvent("decision_action", {
+          decisionId: unifiedDecision.decisionId,
+          decisionType: unifiedDecision.decisionType,
+          surface: "assistant",
+          actionType: requestedAction.type,
+        });
         if (requestedAction.type === "add_task") {
           await createTask({
             title: requestedAction.payload.title,
@@ -180,9 +221,23 @@ export async function POST(request: Request) {
           const topicPart = requestedAction.payload.topic ? ` (${requestedAction.payload.topic})` : "";
           responseText = responseText + ` ${requestedAction.payload.minutes} min geleerd${topicPart} gelogd.`;
         }
+        await trackEvent("decision_outcome", {
+          decisionId: unifiedDecision.decisionId,
+          decisionType: unifiedDecision.decisionType,
+          surface: "assistant",
+          outcome: "success",
+          actionType: requestedAction.type,
+        });
       } catch (err) {
         console.error("[assistant] Execute action failed", err);
         responseText = responseText + " Toevoegen mislukt. Probeer het opnieuw.";
+        await trackEvent("decision_outcome", {
+          decisionId: unifiedDecision.decisionId,
+          decisionType: unifiedDecision.decisionType,
+          surface: "assistant",
+          outcome: "failed",
+          actionType: requestedAction.type,
+        });
       }
     } else {
       suggestedActions = getSuggestedActionsFromContext(
@@ -190,6 +245,16 @@ export async function POST(request: Request) {
         message,
         extractedItem ?? null
       );
+      if (suggestedActions.length === 0 && unifiedDecision.decisionType === "create_mission") {
+        suggestedActions = [{
+          type: "add_task",
+          label: "Maak 1 missie voor vandaag",
+          payload: {
+            title: "Eerste missie vandaag",
+            due_date: dateStr,
+          },
+        }];
+      }
     }
 
     if (extractedItem) {
@@ -222,6 +287,13 @@ export async function POST(request: Request) {
       });
     }
 
+    await trackEvent("decision_exposed", {
+      decisionId: unifiedDecision.decisionId,
+      decisionType: unifiedDecision.decisionType,
+      surface: "assistant",
+      conversationMode,
+    });
+
     return NextResponse.json({
       response: responseText,
       escalationTier: escalationDecision.tier,
@@ -229,6 +301,7 @@ export async function POST(request: Request) {
       courageFlag: escalationDecision.courageFlag,
       suggestedActions: suggestedActions.length > 0 ? suggestedActions : undefined,
       executedAction: executedAction ?? undefined,
+      unifiedDecision,
       dcicAction: undefined, // Not a DCIC action
     });
   } catch (e) {

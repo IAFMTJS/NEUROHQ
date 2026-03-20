@@ -19,5 +19,15 @@ export function DeferredToaster() {
   }, []);
 
   if (!mounted) return null;
-  return <Toaster richColors position="bottom-center" closeButton />;
+  return (
+    <Toaster
+      richColors
+      position="bottom-center"
+      closeButton
+      offset="var(--toast-offset-bottom)"
+      toastOptions={{
+        className: "hq-toast",
+      }}
+    />
+  );
 }

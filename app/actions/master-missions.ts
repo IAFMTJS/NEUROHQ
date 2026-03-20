@@ -12,6 +12,7 @@ import { computeBrainMode } from "@/lib/brain-mode";
 import { pickMissionsForDay, type PickedMissionTemplate } from "@/lib/master-mission-pool";
 import { MASTER_MISSION_POOL } from "@/lib/mission-templates";
 import { getUserPreferencesOrDefaults } from "@/app/actions/preferences";
+import { trackEvent } from "@/app/actions/analytics-events";
 import { todayDateString } from "@/lib/utils/timezone";
 
 type DailyStateRow = {
@@ -365,6 +366,12 @@ export async function ensureMasterMissionsForToday(dailyStateFromSave?: DailySta
       }
       created++;
       autoMasterTitles.add(title);
+      await trackEvent("mission_suggested", {
+        taskTitle: title,
+        source: "auto_master_pool",
+        date: dateStr,
+        psychology_label: "MasterPoolAuto",
+      });
     } catch (e) {
       const msg = e instanceof Error ? e.message : String(e);
       const isDuplicate = /unique|duplicate|violates|23505/i.test(msg);
@@ -493,6 +500,12 @@ export async function addBonusAutoMissionsForToday(): Promise<EnsureMasterMissio
             : "discipline",
       });
       created++;
+      await trackEvent("mission_suggested", {
+        taskTitle: title,
+        source: "auto_master_bonus",
+        date: dateStr,
+        psychology_label: "MasterPoolBonus",
+      });
     } catch (e) {
       const msg = e instanceof Error ? e.message : String(e);
       if (!firstError) firstError = msg;

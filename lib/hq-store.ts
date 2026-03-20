@@ -129,25 +129,15 @@ export function getPersistedDashboardSync(): {
     if (typeof window === "undefined" || !window.localStorage) return { critical: null, secondary: null };
     const raw = window.localStorage.getItem(HQ_PERSIST_KEY);
     if (!raw) return { critical: null, secondary: null };
-    const parsed = JSON.parse(raw) as
-      | {
-          dashboardCritical?: DashboardCritical | null;
-          dashboardSecondary?: DashboardSecondary | null;
-        }
-      | {
-          state?: {
-            dashboardCritical?: DashboardCritical | null;
-            dashboardSecondary?: DashboardSecondary | null;
-          };
-          version?: number;
-        };
-    const state =
-      parsed && typeof parsed === "object" && "state" in parsed
-        ? parsed.state ?? {}
-        : parsed;
+    const parsed = JSON.parse(raw) as unknown;
+    const root = parsed && typeof parsed === "object" ? (parsed as Record<string, unknown>) : {};
+    const maybeState =
+      "state" in root && root.state && typeof root.state === "object"
+        ? (root.state as Record<string, unknown>)
+        : root;
     return {
-      critical: state?.dashboardCritical ?? null,
-      secondary: state?.dashboardSecondary ?? null,
+      critical: (maybeState.dashboardCritical as DashboardCritical | null | undefined) ?? null,
+      secondary: (maybeState.dashboardSecondary as DashboardSecondary | null | undefined) ?? null,
     };
   } catch {
     return { critical: null, secondary: null };

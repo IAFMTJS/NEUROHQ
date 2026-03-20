@@ -40,6 +40,7 @@ import { deriveCanonicalBudgetSignals } from "@/lib/budget/canonical";
 import { DisciplineIndexCard } from "@/components/budget/DisciplineIndexCard";
 import { BudgetQuickLogCard } from "@/components/budget/BudgetQuickLogCard";
 import { BudgetDailyControlToast } from "@/components/budget/BudgetDailyControlToast";
+import { BudgetSyncStatus } from "@/components/budget/BudgetSyncStatus";
 import { BudgetPerformanceSummaryCard } from "@/components/budget/BudgetPerformanceSummaryCard";
 import { BudgetPatternDetectionCard } from "@/components/budget/BudgetPatternDetectionCard";
 import { RemainingBudgetHero } from "@/components/budget/RemainingBudgetHero";
@@ -284,9 +285,12 @@ async function BudgetContent({ searchParams }: Props) {
         <>
           <div className="flex flex-wrap items-center justify-between gap-2">
             <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-cyan-200">1. Status</p>
-            <span className={`rounded-full border px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] ${commandStatus.border} ${commandStatus.tone}`}>
-              {commandStatus.title}
-            </span>
+            <div className="flex items-center gap-2">
+              <BudgetSyncStatus historyMode={historyMode} />
+              <span className={`rounded-full border px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] ${commandStatus.border} ${commandStatus.tone}`}>
+                {commandStatus.title}
+              </span>
+            </div>
           </div>
           <RemainingBudgetHero
             budgetCents={budgetSettings.monthly_budget_cents ?? 0}

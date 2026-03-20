@@ -6,12 +6,12 @@ import { completeTask, type CompleteTaskResult } from "@/app/actions/tasks";
 
 /** Call completeTask when online; when offline queue for sync. Returns level-up info when online so UI can show "Level up!" toast. */
 export function useOfflineCompleteTask() {
-  const run = useCallback(async (id: string): Promise<CompleteTaskResult | void> => {
+  const run = useCallback(async (id: string, options?: { startedAt?: string | null }): Promise<CompleteTaskResult | void> => {
     if (typeof navigator !== "undefined" && !navigator.onLine) {
-      await addToQueue("completeTask", { id });
+      await addToQueue("completeTask", { id, startedAt: options?.startedAt ?? null });
       return;
     }
-    return completeTask(id);
+    return completeTask(id, options);
   }, []);
   return run;
 }

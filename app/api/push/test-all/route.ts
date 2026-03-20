@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { sendPushToUser } from "@/lib/push";
+import type { PushPayload } from "@/lib/push";
 import { getQuoteByDayNumber } from "@/lib/quotes";
 import { getDayOfYearFromDateString } from "@/lib/utils/timezone";
 import { getLocalDateHour } from "@/lib/utils/timezone";
@@ -369,7 +370,7 @@ export async function GET(request: Request) {
         break;
       }
       case "shutdown-reminder": {
-        const payload = {
+        const payload: PushPayload = {
           title: "NEUROHQ",
           body: "Time to wind down. Rest well.",
           tag: "shutdown-reminder",
