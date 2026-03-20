@@ -112,6 +112,9 @@
   --mode-rgb-deep: 0, 136, 255;
   --mode-text-soft: #bfefff;
   --mode-text-strong: #e9f7ff;
+  --mode-bg-main: #050c18;
+  --mode-bg-elevated: #0b1e32;
+  --mode-bg-surface: #081726;
 
   /* Layout spacing – native-app feel, consistent rhythm */
   --page-padding-x: clamp(1rem, 4vw, 1.5rem);
@@ -224,6 +227,9 @@
   --mode-rgb-deep: 127, 29, 29;
   --mode-text-soft: #ffd1d1;
   --mode-text-strong: #ffe7e7;
+  --mode-bg-main: #120507;
+  --mode-bg-elevated: #24090d;
+  --mode-bg-surface: #1a070b;
 }
 
 [data-mode="recovery"] {
@@ -254,6 +260,9 @@
   --mode-rgb-deep: 22, 101, 52;
   --mode-text-soft: #caffdd;
   --mode-text-strong: #eafff1;
+  --mode-bg-main: #041108;
+  --mode-bg-elevated: #082012;
+  --mode-bg-surface: #06180d;
 }
 
 @keyframes hudEnergyPulse {
@@ -1853,7 +1862,7 @@ header h1 { margin: 0; }
 }
 
 .dashboard-cinematic {
-  background-color: #050c18;
+  background-color: var(--mode-bg-main);
   background-image: none;
   overflow: hidden;
 }
@@ -1917,8 +1926,8 @@ header h1 { margin: 0; }
 .dashboard-bg-blend {
   z-index: 2;
   background:
-    radial-gradient(circle at 52% 34%, rgba(120, 180, 255, 0.08), transparent 48%),
-    radial-gradient(circle at 82% 10%, rgba(120, 0, 255, 0.05), transparent 58%);
+    radial-gradient(circle at 52% 34%, rgba(var(--mode-rgb), 0.08), transparent 48%),
+    radial-gradient(circle at 82% 10%, rgba(var(--mode-rgb-deep), 0.06), transparent 58%);
 }
 
 .dashboard-bg-noise {
@@ -2019,7 +2028,11 @@ header h1 { margin: 0; }
 .dashboard-cinematic .card-simple,
 .dashboard-cinematic .card-simple-accent {
   border: 1px solid rgba(0, 200, 255, 0.2) !important;
-  background: linear-gradient(165deg, rgba(14, 30, 46, 0.62) 0%, rgba(10, 22, 35, 0.5) 100%) !important;
+  background: linear-gradient(
+    165deg,
+    rgba(var(--mode-rgb-deep), 0.42) 0%,
+    rgba(var(--mode-rgb), 0.18) 100%
+  ) !important;
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
   box-shadow:

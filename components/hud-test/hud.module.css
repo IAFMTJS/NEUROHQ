@@ -193,7 +193,7 @@
 .cinematicBackdrop {
   position: relative;
   min-height: 100vh;
-  background-color: #050c18;
+  background-color: var(--mode-bg-main, #050c18);
   background-image: url("/Background12.PNG");
   background-position: center center;
   background-size: cover;
@@ -237,7 +237,7 @@
 
 .colorBlend {
   z-index: 2;
-  background: radial-gradient(circle at 80% 10%, rgba(120, 0, 255, 0.06), transparent 60%);
+  background: radial-gradient(circle at 80% 10%, rgba(var(--mode-rgb-deep, 0, 136, 255), 0.08), transparent 60%);
 }
 
 .spaceMist {
@@ -384,7 +384,11 @@
   position: relative;
   border-radius: var(--panel-radius);
   padding: 2px;
-  background: linear-gradient(180deg, rgba(13, 28, 47, 0.68) 0%, rgba(20, 41, 64, 0.58) 100%);
+  background: linear-gradient(
+    180deg,
+    rgba(var(--mode-rgb-deep, 0, 136, 255), 0.5) 0%,
+    rgba(var(--mode-rgb, 0, 212, 255), 0.2) 100%
+  );
   border: 1px solid rgba(var(--mode-rgb), 0.22);
   box-shadow: 0 0 30px rgba(var(--mode-rgb), 0.12);
 }
@@ -426,7 +430,11 @@
 .panelBody {
   position: relative;
   border-radius: calc(var(--panel-radius) - 4px);
-  background: linear-gradient(180deg, rgba(17, 35, 54, 0.64) 0%, rgba(12, 28, 44, 0.56) 100%);
+  background: linear-gradient(
+    180deg,
+    rgba(var(--mode-rgb-deep, 0, 136, 255), 0.46) 0%,
+    rgba(var(--mode-rgb, 0, 212, 255), 0.18) 100%
+  );
   backdrop-filter: blur(14px);
   -webkit-backdrop-filter: blur(14px);
   padding: 28px;
@@ -560,7 +568,12 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  background: radial-gradient(circle at center, rgba(var(--mode-rgb), 0.1), rgba(3, 12, 24, 0.95) 70%);
+  background: radial-gradient(
+    circle at center,
+    rgba(var(--mode-rgb), 0.12),
+    rgba(var(--mode-rgb-deep, 0, 136, 255), 0.36) 70%,
+    rgba(0, 0, 0, 0.9) 100%
+  );
 }
 
 .energyRingCenter::before {
@@ -597,7 +610,12 @@
   padding: 0 32px;
   border-radius: var(--button-radius-pill);
   border: 1px solid rgba(var(--mode-rgb), 0.35);
-  background: linear-gradient(180deg, #0b1c2d 0%, #0f2b44 50%, #0a1826 100%);
+  background: linear-gradient(
+    180deg,
+    rgba(var(--mode-rgb-deep, 0, 136, 255), 0.72) 0%,
+    rgba(var(--mode-rgb, 0, 212, 255), 0.44) 50%,
+    rgba(var(--mode-rgb-deep, 0, 136, 255), 0.58) 100%
+  );
   box-shadow: 0 8px 25px rgba(0, 0, 0, 0.6), 0 0 20px rgba(var(--mode-rgb), 0.25);
   color: var(--peak-white);
   font-weight: 600;
@@ -644,7 +662,7 @@
   height: 58px;
   padding: 0 34px;
   border-radius: 18px;
-  background: rgba(10, 25, 45, 0.34);
+  background: rgba(var(--mode-rgb-deep, 0, 136, 255), 0.3);
   backdrop-filter: blur(16px);
   border: 1px solid rgba(var(--mode-rgb), 0.25);
   box-shadow:
