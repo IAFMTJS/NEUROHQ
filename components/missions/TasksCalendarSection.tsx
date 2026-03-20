@@ -130,29 +130,49 @@ export function TasksCalendarSection({
         </div>
       </div>
       <div className="p-4 space-y-5">
-        <div className="rounded-2xl border border-cyan-400/25 bg-[linear-gradient(180deg,rgba(8,23,42,0.9),rgba(5,15,30,0.92))] p-3 shadow-[0_0_18px_rgba(0,170,255,0.12)]">
+        <div
+          className="rounded-2xl border p-3"
+          style={{
+            borderColor: "rgba(var(--mode-rgb,0,212,255),0.25)",
+            background:
+              "linear-gradient(180deg, rgba(var(--mode-rgb-deep,0,136,255),0.36), rgba(var(--mode-rgb,0,212,255),0.16))",
+            boxShadow: "0 0 18px rgba(var(--mode-rgb,0,212,255),0.12)",
+          }}
+        >
           <div className="mb-3 flex items-center justify-between gap-2">
             <button
               type="button"
               onClick={() => {
                 setMonthParam(toMonthKeyUTC(prevMonthDate));
               }}
-              className="rounded-full border border-cyan-400/25 bg-[rgba(6,18,31,0.7)] px-2.5 py-1 text-xs text-cyan-100/80 hover:text-cyan-100"
+              className="rounded-full border px-2.5 py-1 text-xs hover:text-[var(--mode-text-strong,#fff)]"
+              style={{
+                borderColor: "rgba(var(--mode-rgb,0,212,255),0.25)",
+                background: "rgba(var(--mode-rgb-deep,0,136,255),0.35)",
+                color: "rgba(var(--mode-rgb,0,212,255),0.8)",
+              }}
             >
               ←
             </button>
-            <p className="text-sm font-semibold capitalize text-cyan-50">{monthLabel}</p>
+            <p className="text-sm font-semibold capitalize" style={{ color: "rgba(var(--mode-rgb,0,212,255),0.95)" }}>
+              {monthLabel}
+            </p>
             <button
               type="button"
               onClick={() => {
                 setMonthParam(toMonthKeyUTC(nextMonthDate));
               }}
-              className="rounded-full border border-cyan-400/25 bg-[rgba(6,18,31,0.7)] px-2.5 py-1 text-xs text-cyan-100/80 hover:text-cyan-100"
+              className="rounded-full border px-2.5 py-1 text-xs hover:text-[var(--mode-text-strong,#fff)]"
+              style={{
+                borderColor: "rgba(var(--mode-rgb,0,212,255),0.25)",
+                background: "rgba(var(--mode-rgb-deep,0,136,255),0.35)",
+                color: "rgba(var(--mode-rgb,0,212,255),0.8)",
+              }}
             >
               →
             </button>
           </div>
-          <div className="grid grid-cols-7 gap-1.5 text-center text-[10px] font-semibold uppercase tracking-wide text-cyan-100/65">
+          <div className="grid grid-cols-7 gap-1.5 text-center text-[10px] font-semibold uppercase tracking-wide" style={{ color: "rgba(var(--mode-rgb,0,212,255),0.65)" }}>
             {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((label) => (
               <span key={label}>{label}</span>
             ))}
@@ -167,18 +187,50 @@ export function TasksCalendarSection({
                 }}
                 className={`relative min-h-[52px] rounded-md border px-1.5 py-1 text-left text-xs transition ${
                   day.isSelected
-                    ? "border-cyan-300/70 bg-cyan-400/15 text-cyan-50 shadow-[0_0_12px_rgba(34,211,238,0.2)]"
+                    ? "text-[var(--mode-text-strong,#fff)]"
                     : day.inCurrentMonth
-                      ? "border-cyan-500/20 bg-[rgba(8,20,35,0.55)] text-cyan-100/90 hover:border-cyan-400/40"
-                      : "border-transparent bg-[rgba(8,20,35,0.2)] text-cyan-100/35"
+                      ? "hover:border-[rgba(var(--mode-rgb,0,212,255),0.4)]"
+                      : ""
                 }`}
+                style={{
+                  borderColor: day.isSelected
+                    ? "rgba(var(--mode-rgb,0,212,255),0.7)"
+                    : day.inCurrentMonth
+                      ? "rgba(var(--mode-rgb,0,212,255),0.2)"
+                      : "transparent",
+                  background: day.isSelected
+                    ? "rgba(var(--mode-rgb,0,212,255),0.15)"
+                    : day.inCurrentMonth
+                      ? "rgba(var(--mode-rgb-deep,0,136,255),0.22)"
+                      : "rgba(var(--mode-rgb-deep,0,136,255),0.08)",
+                  color: day.isSelected
+                    ? "rgba(var(--mode-rgb,0,212,255),0.95)"
+                    : day.inCurrentMonth
+                      ? "rgba(var(--mode-rgb,0,212,255),0.9)"
+                      : "rgba(var(--mode-rgb,0,212,255),0.35)",
+                  boxShadow: day.isSelected ? "0 0 12px rgba(var(--mode-rgb,0,212,255),0.2)" : undefined,
+                }}
               >
-                <span className={`inline-flex h-5 w-5 items-center justify-center rounded-full ${day.isToday ? "bg-cyan-500/25 text-cyan-100" : ""}`}>
+                <span
+                  className="inline-flex h-5 w-5 items-center justify-center rounded-full"
+                  style={
+                    day.isToday
+                      ? {
+                          background: "rgba(var(--mode-rgb,0,212,255),0.25)",
+                          color: "rgba(var(--mode-rgb,0,212,255),0.95)",
+                        }
+                      : undefined
+                  }
+                >
                   {day.dateKey.slice(8, 10)}
                 </span>
                 {day.eventCount > 0 && (
                   <span
-                    className={`absolute bottom-1.5 left-1/2 h-1.5 w-1.5 -translate-x-1/2 rounded-full ${day.eventCount >= 2 ? "bg-amber-300" : "bg-cyan-300"} shadow-[0_0_8px_rgba(56,189,248,0.8)]`}
+                    className="absolute bottom-1.5 left-1/2 h-1.5 w-1.5 -translate-x-1/2 rounded-full"
+                    style={{
+                      background: day.eventCount >= 2 ? "rgb(252 211 77)" : "rgba(var(--mode-rgb,0,212,255),0.8)",
+                      boxShadow: "0 0 8px rgba(var(--mode-rgb,0,212,255),0.8)",
+                    }}
                     aria-label={`${day.eventCount} agenda item${day.eventCount === 1 ? "" : "s"}`}
                   >
                     <span className="sr-only">{day.eventCount}</span>

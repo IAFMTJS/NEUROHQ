@@ -385,8 +385,8 @@
   border-radius: var(--panel-radius);
   padding: 2px;
   background: linear-gradient(180deg, rgba(13, 28, 47, 0.68) 0%, rgba(20, 41, 64, 0.58) 100%);
-  border: 1px solid rgba(0, 200, 255, 0.22);
-  box-shadow: 0 0 30px rgba(0, 200, 255, 0.12);
+  border: 1px solid rgba(var(--mode-rgb), 0.22);
+  box-shadow: 0 0 30px rgba(var(--mode-rgb), 0.12);
 }
 
 .panelShell {
@@ -397,20 +397,20 @@
   content: "";
   position: absolute;
   inset: -40px;
-  background: radial-gradient(circle at center, rgba(0, 255, 255, 0.1), transparent 70%);
+  background: radial-gradient(circle at center, rgba(var(--mode-rgb), 0.1), transparent 70%);
   filter: blur(40px);
   z-index: -1;
   pointer-events: none;
 }
 
 .panelFrame[data-variant="command"] {
-  border-color: rgba(0, 200, 255, 0.22);
-  box-shadow: 0 0 22px rgba(0, 200, 255, 0.08);
+  border-color: rgba(var(--mode-rgb), 0.22);
+  box-shadow: 0 0 22px rgba(var(--mode-rgb), 0.08);
 }
 
 .panelFrame[data-variant="glass"] {
-  border-color: rgba(0, 200, 255, 0.16);
-  box-shadow: 0 0 18px rgba(0, 200, 255, 0.06), 0 12px 28px rgba(0, 0, 0, 0.45);
+  border-color: rgba(var(--mode-rgb), 0.16);
+  box-shadow: 0 0 18px rgba(var(--mode-rgb), 0.06), 0 12px 28px rgba(0, 0, 0, 0.45);
 }
 
 .panelFrame[data-variant="tactical"] {
@@ -419,8 +419,8 @@
 }
 
 .panelFrame[data-variant="minimal"] {
-  border-color: rgba(0, 200, 255, 0.12);
-  box-shadow: 0 0 12px rgba(0, 200, 255, 0.05);
+  border-color: rgba(var(--mode-rgb), 0.12);
+  box-shadow: 0 0 12px rgba(var(--mode-rgb), 0.05);
 }
 
 .panelBody {
@@ -441,7 +441,7 @@
   right: 28px;
   height: 4px;
   border-radius: 2px;
-  background: linear-gradient(90deg, transparent, rgba(0, 229, 255, 0.6), transparent);
+  background: linear-gradient(90deg, transparent, rgba(var(--mode-rgb), 0.6), transparent);
   opacity: 0.72;
 }
 
@@ -470,8 +470,8 @@
   width: 6px;
   height: 6px;
   border-radius: 999px;
-  background: rgba(0, 229, 255, 0.85);
-  box-shadow: 0 0 12px rgba(0, 229, 255, 0.8);
+  background: rgba(var(--mode-rgb), 0.85);
+  box-shadow: 0 0 12px rgba(var(--mode-rgb), 0.8);
   opacity: 0.7;
   pointer-events: none;
 }
@@ -481,7 +481,7 @@
   z-index: 3;
   overflow: visible;
   border-radius: 50%;
-  box-shadow: 0 0 28px rgba(0, 229, 255, 0.36), 0 0 60px rgba(0, 229, 255, 0.12);
+  box-shadow: 0 0 28px rgba(var(--mode-rgb), 0.36), 0 0 60px rgba(var(--mode-rgb), 0.12);
   transition: transform var(--transition-180), box-shadow var(--transition-180), filter var(--transition-180);
   animation: subtlePulse 6s ease-in-out infinite;
 }
@@ -500,12 +500,12 @@
 
 .energyRingWrapper:hover {
   transform: scale(1.02);
-  box-shadow: 0 0 36px rgba(0, 229, 255, 0.55), 0 0 80px rgba(0, 229, 255, 0.18);
+  box-shadow: 0 0 36px rgba(var(--mode-rgb), 0.55), 0 0 80px rgba(var(--mode-rgb), 0.18);
 }
 
 .energyRingWrapper:active {
   transform: scale(0.97);
-  box-shadow: 0 0 20px rgba(0, 229, 255, 0.34), 0 0 48px rgba(0, 229, 255, 0.12);
+  box-shadow: 0 0 20px rgba(var(--mode-rgb), 0.34), 0 0 48px rgba(var(--mode-rgb), 0.12);
 }
 
 .energyRingWrapper[data-mode="alert"] {
@@ -546,8 +546,8 @@
 .energyRingDust {
   position: absolute;
   border-radius: 999px;
-  background: rgba(0, 229, 255, 0.18);
-  box-shadow: 0 0 7px rgba(0, 229, 255, 0.35);
+  background: rgba(var(--mode-rgb), 0.18);
+  box-shadow: 0 0 7px rgba(var(--mode-rgb), 0.35);
   pointer-events: none;
   animation: dustFloat 8s ease-in-out infinite;
 }
@@ -560,7 +560,7 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  background: radial-gradient(circle at center, rgba(0, 255, 255, 0.1), rgba(3, 12, 24, 0.95) 70%);
+  background: radial-gradient(circle at center, rgba(var(--mode-rgb), 0.1), rgba(3, 12, 24, 0.95) 70%);
 }
 
 .energyRingCenter::before {
@@ -596,9 +596,9 @@
   height: 56px;
   padding: 0 32px;
   border-radius: var(--button-radius-pill);
-  border: 1px solid rgba(0, 200, 255, 0.35);
+  border: 1px solid rgba(var(--mode-rgb), 0.35);
   background: linear-gradient(180deg, #0b1c2d 0%, #0f2b44 50%, #0a1826 100%);
-  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.6), 0 0 20px rgba(0, 200, 255, 0.25);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.6), 0 0 20px rgba(var(--mode-rgb), 0.25);
   color: var(--peak-white);
   font-weight: 600;
   letter-spacing: 1px;
@@ -615,7 +615,7 @@
   position: absolute;
   inset: 0;
   border-radius: inherit;
-  background: radial-gradient(circle at 50% 45%, rgba(0, 255, 255, 0.35), transparent 60%);
+  background: radial-gradient(circle at 50% 45%, rgba(var(--mode-rgb), 0.35), transparent 60%);
   opacity: 0.85;
   pointer-events: none;
   animation: energyPulse 2.5s ease-in-out infinite;
@@ -626,13 +626,13 @@
   position: absolute;
   inset: 0;
   border-radius: inherit;
-  box-shadow: inset 0 0 10px rgba(0, 255, 255, 0.4), 0 0 18px rgba(0, 255, 255, 0.35);
+  box-shadow: inset 0 0 10px rgba(var(--mode-rgb), 0.4), 0 0 18px rgba(var(--mode-rgb), 0.35);
   pointer-events: none;
 }
 
 .hudButton:hover {
   transform: translateY(-3px);
-  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.7), 0 0 35px rgba(0, 255, 255, 0.5);
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.7), 0 0 35px rgba(var(--mode-rgb), 0.5);
 }
 
 .hudButton:active {
@@ -646,12 +646,12 @@
   border-radius: 18px;
   background: rgba(10, 25, 45, 0.34);
   backdrop-filter: blur(16px);
-  border: 1px solid rgba(0, 200, 255, 0.25);
+  border: 1px solid rgba(var(--mode-rgb), 0.25);
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.08),
     inset 0 -2px 6px rgba(0, 0, 0, 0.4),
     0 8px 30px rgba(0, 0, 0, 0.6),
-    0 0 18px rgba(0, 200, 255, 0.18);
+    0 0 18px rgba(var(--mode-rgb), 0.18);
   color: #eaf6ff;
   text-transform: uppercase;
   font-weight: 600;
@@ -680,19 +680,19 @@
   position: absolute;
   inset: 0;
   border-radius: inherit;
-  background: radial-gradient(circle at 50% 45%, rgba(0, 255, 255, 0.25), transparent 65%);
+  background: radial-gradient(circle at 50% 45%, rgba(var(--mode-rgb), 0.25), transparent 65%);
   pointer-events: none;
   opacity: 0.85;
 }
 
 .glassButton:hover {
   transform: translateY(-3px);
-  border-color: rgba(0, 255, 255, 0.4);
+  border-color: rgba(var(--mode-rgb), 0.4);
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.1),
     inset 0 -2px 6px rgba(0, 0, 0, 0.42),
     0 14px 35px rgba(0, 0, 0, 0.7),
-    0 0 30px rgba(0, 255, 255, 0.45);
+    0 0 30px rgba(var(--mode-rgb), 0.45);
   filter: brightness(1.05);
 }
 
@@ -706,7 +706,7 @@
     inset 0 1px 0 rgba(255, 255, 255, 0.06),
     inset 0 -2px 5px rgba(0, 0, 0, 0.4),
     0 6px 18px rgba(0, 0, 0, 0.6),
-    0 0 14px rgba(0, 255, 255, 0.25);
+    0 0 14px rgba(var(--mode-rgb), 0.25);
 }
 
 .glassButtonCapsule {
@@ -806,7 +806,7 @@
 .divider {
   height: 1px;
   width: 100%;
-  background: rgba(0, 200, 255, 0.15);
+  background: rgba(var(--mode-rgb), 0.15);
   margin: 18px 0;
 }
 

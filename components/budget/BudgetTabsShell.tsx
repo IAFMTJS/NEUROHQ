@@ -41,7 +41,7 @@ export function BudgetTabsShell({
   const tabClass = (tab: TabId) =>
     `rounded-lg px-3 py-2 text-xs font-semibold transition-all ${
       activeTab === tab
-        ? "border border-cyan-300/40 bg-[linear-gradient(180deg,rgba(11,63,111,0.85),rgba(11,94,150,0.55))] text-[#eaf8ff] shadow-[0_0_14px_rgba(0,212,255,0.24)]"
+        ? "border text-[var(--mode-text-strong,#eaf8ff)]"
         : "text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[rgba(11,30,46,0.55)]"
     }`;
 
@@ -49,7 +49,11 @@ export function BudgetTabsShell({
     <>
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div
-          className="inline-flex flex-wrap gap-1 rounded-xl border border-[rgba(0,200,255,0.24)] bg-[rgba(10,22,35,0.56)] p-1.5 backdrop-blur-sm"
+          className="inline-flex flex-wrap gap-1 rounded-xl border p-1.5 backdrop-blur-sm"
+          style={{
+            borderColor: "rgba(var(--mode-rgb, 0, 212, 255), 0.28)",
+            background: "rgba(var(--mode-rgb-deep, 0, 136, 255), 0.26)",
+          }}
           role="tablist"
           aria-label="Budget views"
         >
@@ -61,6 +65,16 @@ export function BudgetTabsShell({
                 role="tab"
                 aria-selected={activeTab === tab.id}
                 className={tabClass(tab.id)}
+                style={
+                  activeTab === tab.id
+                    ? {
+                        borderColor: "rgba(var(--mode-rgb, 0, 212, 255), 0.44)",
+                        background:
+                          "linear-gradient(180deg, rgba(var(--mode-rgb-deep, 0, 136, 255), 0.85), rgba(var(--mode-rgb, 0, 212, 255), 0.42))",
+                        boxShadow: "0 0 14px rgba(var(--mode-rgb, 0, 212, 255), 0.24)",
+                      }
+                    : undefined
+                }
                 onClick={() => setTab(tab.id)}
               >
                 {tab.label}

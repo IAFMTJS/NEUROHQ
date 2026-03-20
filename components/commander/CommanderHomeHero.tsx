@@ -102,15 +102,29 @@ export function CommanderHomeHero({
         <CommanderStatRing value={effectiveLoadPct} variant="load" />
       </section>
       {dailyQuoteText && (
-        <div className="mx-auto w-full max-w-[520px] rounded-xl border border-cyan-400/35 bg-[linear-gradient(180deg,rgba(11,33,52,0.9),rgba(8,20,33,0.9))] px-3 py-2.5 text-center shadow-[0_0_14px_rgba(0,229,255,0.16)]">
-          <p className="mb-1 text-[9px] font-semibold uppercase tracking-[0.14em] text-cyan-200/80">
+        <div
+          className="mx-auto w-full max-w-[520px] rounded-xl px-3 py-2.5 text-center"
+          style={{
+            border: "1px solid rgba(var(--mode-rgb, 0, 212, 255), 0.35)",
+            background:
+              "linear-gradient(180deg, rgba(var(--mode-rgb-deep, 0, 136, 255), 0.55), rgba(var(--mode-rgb, 0, 212, 255), 0.16))",
+            boxShadow: "0 0 14px rgba(var(--mode-rgb, 0, 212, 255), 0.18)",
+          }}
+        >
+          <p
+            className="mb-1 text-[9px] font-semibold uppercase tracking-[0.14em]"
+            style={{ color: "rgba(var(--mode-rgb, 0, 212, 255), 0.78)" }}
+          >
             Daily Quote
           </p>
           <p className="text-[12px] italic leading-snug text-[var(--text-primary)]">
             &ldquo;{dailyQuoteText}&rdquo;
           </p>
           {dailyQuoteAuthor && (
-            <p className="mt-1 text-[10px] text-cyan-100/70">
+            <p
+              className="mt-1 text-[10px]"
+              style={{ color: "rgba(var(--mode-rgb, 0, 212, 255), 0.7)" }}
+            >
               — {dailyQuoteAuthor}
             </p>
           )}
@@ -134,7 +148,8 @@ export function CommanderHomeHero({
 
       <Link
         href="#brain-status-modal"
-        className="block w-full mt-2 py-2 text-center text-sm text-[var(--text-muted)] hover:text-[var(--text-secondary)] transition-colors no-underline rounded-lg border border-white/10 hover:border-[rgba(0,212,255,0.25)] hover:bg-white/5"
+        className="block w-full mt-2 py-2 text-center text-sm text-[var(--text-muted)] hover:text-[var(--text-secondary)] transition-colors no-underline rounded-lg border border-white/10 hover:bg-white/5"
+        style={{ borderColor: "rgba(var(--mode-rgb, 0, 212, 255), 0.28)" }}
       >
         Brain Status
       </Link>

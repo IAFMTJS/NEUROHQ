@@ -41,6 +41,7 @@ export function EnergyRing({
   mode = "default",
   softGlow = false,
 }: EnergyRingProps) {
+  const modeRgb = "var(--mode-rgb, 0, 212, 255)";
   const strokeWidth = 10;
   const radius = (size - strokeWidth) / 2;
   const circumference = 2 * Math.PI * radius;
@@ -83,7 +84,7 @@ export function EnergyRing({
         ? "rgba(0,255,136,0.18)"
         : isGreen
           ? "rgba(0,232,118,0.14)"
-      : "rgba(0,200,255,0.12)";
+      : `rgba(${modeRgb},0.14)`;
   const ringHalo = isHighAlert
     ? softGlow
       ? "rgba(185,28,28,0.28)"
@@ -101,8 +102,8 @@ export function EnergyRing({
             ? "rgba(0,232,118,0.26)"
             : "rgba(0,232,118,0.44)"
       : softGlow
-        ? "rgba(0,229,255,0.24)"
-        : "rgba(0,229,255,0.45)";
+        ? `rgba(${modeRgb},0.24)`
+        : `rgba(${modeRgb},0.45)`;
 
   const dust = [
     { top: "12%", left: "54%", size: 2, delay: "0s", duration: "7s" },
@@ -222,7 +223,16 @@ export function EnergyRing({
           const angle = (i / ticks) * Math.PI * 2 - Math.PI / 2;
           const x = Math.round((center + Math.cos(angle) * (radius + 8)) * 100) / 100;
           const y = Math.round((center + Math.sin(angle) * (radius + 8)) * 100) / 100;
-          return <circle key={`tick-${i}`} cx={x} cy={y} r={1.3} fill={isAlert ? "rgba(255,154,60,0.24)" : "rgba(0,200,255,0.18)"} />;
+          const tickFill = isHighAlert
+            ? "rgba(255,64,64,0.24)"
+            : isAlert
+              ? "rgba(255,154,60,0.24)"
+              : isGreenPeak
+                ? "rgba(0,255,136,0.24)"
+                : isGreen
+                  ? "rgba(0,232,118,0.2)"
+                  : `rgba(${modeRgb},0.2)`;
+          return <circle key={`tick-${i}`} cx={x} cy={y} r={1.3} fill={tickFill} />;
         })}
       </svg>
 

@@ -47,7 +47,7 @@ export function CalendarViewShell({
   const chipClass = (target: CalendarView) =>
     `rounded-full px-3 py-1 ${
       view === target
-        ? "bg-cyan-400/20 font-medium text-cyan-100"
+        ? "font-medium"
         : "text-[var(--text-muted)] hover:text-[var(--text-secondary)]"
     }`;
 
@@ -62,7 +62,7 @@ export function CalendarViewShell({
     if (view === "routines") {
       if (selectedDayRoutines.length === 0) {
         return (
-          <p className="rounded-lg border border-dashed border-cyan-400/30 px-3 py-2 text-xs text-cyan-100/70">
+          <p className="rounded-lg border border-dashed px-3 py-2 text-xs" style={{ borderColor: "rgba(var(--mode-rgb,0,212,255),0.3)", color: "rgba(var(--mode-rgb,0,212,255),0.7)" }}>
             Geen routines voor deze dag.
           </p>
         );
@@ -72,9 +72,10 @@ export function CalendarViewShell({
           {selectedDayRoutines.map((task) => (
             <li
               key={task.id}
-              className="rounded-lg border border-cyan-500/15 bg-[rgba(6,20,34,0.5)] px-3 py-2 text-sm"
+              className="rounded-lg border px-3 py-2 text-sm"
+              style={{ borderColor: "rgba(var(--mode-rgb,0,212,255),0.15)", background: "rgba(var(--mode-rgb-deep,0,136,255),0.25)" }}
             >
-              <span className={task.completed ? "text-cyan-100/45 line-through" : "text-cyan-50"}>
+              <span className={task.completed ? "line-through" : ""} style={{ color: task.completed ? "rgba(var(--mode-rgb,0,212,255),0.45)" : "rgba(var(--mode-rgb,0,212,255),0.95)" }}>
                 {task.title ?? "Untitled task"}
               </span>
             </li>
@@ -86,7 +87,7 @@ export function CalendarViewShell({
     if (view === "overdue") {
       if (overdueTasks.length === 0) {
         return (
-          <p className="rounded-lg border border-dashed border-cyan-400/30 px-3 py-2 text-xs text-cyan-100/70">
+          <p className="rounded-lg border border-dashed px-3 py-2 text-xs" style={{ borderColor: "rgba(var(--mode-rgb,0,212,255),0.3)", color: "rgba(var(--mode-rgb,0,212,255),0.7)" }}>
             Geen overdue missies. Nice.
           </p>
         );
@@ -96,12 +97,13 @@ export function CalendarViewShell({
           {overdueTasks.slice(0, 12).map((task) => (
             <li
               key={task.id}
-              className="rounded-lg border border-cyan-500/15 bg-[rgba(6,20,34,0.5)] px-3 py-2 text-sm"
+              className="rounded-lg border px-3 py-2 text-sm"
+              style={{ borderColor: "rgba(var(--mode-rgb,0,212,255),0.15)", background: "rgba(var(--mode-rgb-deep,0,136,255),0.25)" }}
             >
               <div className="flex items-center justify-between gap-2">
-                <span className="truncate text-cyan-50">{task.title ?? "Untitled task"}</span>
+                <span className="truncate" style={{ color: "rgba(var(--mode-rgb,0,212,255),0.95)" }}>{task.title ?? "Untitled task"}</span>
                 {task.due_date && (
-                  <span className="shrink-0 text-[11px] text-cyan-100/65">{task.due_date}</span>
+                  <span className="shrink-0 text-[11px]" style={{ color: "rgba(var(--mode-rgb,0,212,255),0.65)" }}>{task.due_date}</span>
                 )}
               </div>
             </li>
@@ -112,7 +114,7 @@ export function CalendarViewShell({
 
     if (selectedDayTasks.length === 0) {
       return (
-        <p className="rounded-lg border border-dashed border-cyan-400/30 px-3 py-2 text-xs text-cyan-100/70">
+        <p className="rounded-lg border border-dashed px-3 py-2 text-xs" style={{ borderColor: "rgba(var(--mode-rgb,0,212,255),0.3)", color: "rgba(var(--mode-rgb,0,212,255),0.7)" }}>
           Geen missies voor deze dag.
         </p>
       );
@@ -123,9 +125,10 @@ export function CalendarViewShell({
         {selectedDayTasks.map((task) => (
           <li
             key={task.id}
-            className="rounded-lg border border-cyan-500/15 bg-[rgba(6,20,34,0.5)] px-3 py-2 text-sm"
+            className="rounded-lg border px-3 py-2 text-sm"
+            style={{ borderColor: "rgba(var(--mode-rgb,0,212,255),0.15)", background: "rgba(var(--mode-rgb-deep,0,136,255),0.25)" }}
           >
-            <span className={task.completed ? "text-cyan-100/45 line-through" : "text-cyan-50"}>
+            <span className={task.completed ? "line-through" : ""} style={{ color: task.completed ? "rgba(var(--mode-rgb,0,212,255),0.45)" : "rgba(var(--mode-rgb,0,212,255),0.95)" }}>
               {task.title ?? "Untitled task"}
             </span>
           </li>
@@ -135,32 +138,33 @@ export function CalendarViewShell({
   };
 
   return (
-    <div className="rounded-2xl border border-cyan-400/20 bg-[linear-gradient(180deg,rgba(8,23,42,0.7),rgba(5,15,30,0.84))] p-3">
-      <h3 className="text-base font-semibold text-cyan-50">{heading}</h3>
+    <div className="rounded-2xl border p-3" style={{ borderColor: "rgba(var(--mode-rgb,0,212,255),0.2)", background: "linear-gradient(180deg, rgba(var(--mode-rgb-deep,0,136,255),0.28), rgba(var(--mode-rgb,0,212,255),0.14))" }}>
+      <h3 className="text-base font-semibold" style={{ color: "rgba(var(--mode-rgb,0,212,255),0.95)" }}>{heading}</h3>
 
       {/* Events block only hidden for overdue view */}
       {view !== "overdue" && (
         <div className="mt-3 space-y-2">
           {selectedDayEvents.length === 0 ? (
-            <p className="rounded-lg border border-dashed border-cyan-400/30 px-3 py-2 text-xs text-cyan-100/70">
+            <p className="rounded-lg border border-dashed px-3 py-2 text-xs" style={{ borderColor: "rgba(var(--mode-rgb,0,212,255),0.3)", color: "rgba(var(--mode-rgb,0,212,255),0.7)" }}>
               Geen agenda items voor deze dag.
             </p>
           ) : (
             selectedDayEvents.map((event) => (
               <div
                 key={event.id}
-                className="rounded-xl border border-cyan-500/20 bg-[rgba(6,20,34,0.68)] px-3 py-2.5"
+                className="rounded-xl border px-3 py-2.5"
+                style={{ borderColor: "rgba(var(--mode-rgb,0,212,255),0.2)", background: "rgba(var(--mode-rgb-deep,0,136,255),0.32)" }}
               >
                 <div className="flex items-center justify-between gap-2">
                   <div className="min-w-0">
-                    <p className="truncate text-sm font-medium text-cyan-50">
+                    <p className="truncate text-sm font-medium" style={{ color: "rgba(var(--mode-rgb,0,212,255),0.95)" }}>
                       {event.title ?? "Untitled"}
                     </p>
-                    <p className="mt-0.5 text-xs text-cyan-100/65">
+                    <p className="mt-0.5 text-xs" style={{ color: "rgba(var(--mode-rgb,0,212,255),0.65)" }}>
                       {event.is_social ? "Social" : "Work"}
                     </p>
                   </div>
-                  <span className="shrink-0 text-sm font-semibold text-cyan-100/90">
+                  <span className="shrink-0 text-sm font-semibold" style={{ color: "rgba(var(--mode-rgb,0,212,255),0.9)" }}>
                     {new Date(event.start_at).toLocaleTimeString("nl-NL", {
                       hour: "2-digit",
                       minute: "2-digit",
@@ -173,8 +177,8 @@ export function CalendarViewShell({
         </div>
       )}
 
-      <div className="mt-3 border-t border-cyan-500/20 pt-3">
-        <h4 className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-cyan-100/65">
+      <div className="mt-3 border-t pt-3" style={{ borderColor: "rgba(var(--mode-rgb,0,212,255),0.2)" }}>
+        <h4 className="mb-2 text-[11px] font-semibold uppercase tracking-wide" style={{ color: "rgba(var(--mode-rgb,0,212,255),0.65)" }}>
           {view === "routines"
             ? "Routine tasks"
             : view === "overdue"
@@ -185,10 +189,11 @@ export function CalendarViewShell({
       </div>
 
       {/* View chips - local state only, no navigation */}
-      <div className="mt-4 inline-flex rounded-full border border-cyan-400/25 bg-[rgba(8,22,38,0.82)] p-1 text-[11px]">
+      <div className="mt-4 inline-flex rounded-full border p-1 text-[11px]" style={{ borderColor: "rgba(var(--mode-rgb,0,212,255),0.25)", background: "rgba(var(--mode-rgb-deep,0,136,255),0.35)" }}>
         <button
           type="button"
           className={chipClass("today")}
+          style={view === "today" ? { background: "rgba(var(--mode-rgb,0,212,255),0.2)", color: "rgba(var(--mode-rgb,0,212,255),0.95)" } : undefined}
           onClick={() => setView("today")}
         >
           Today
@@ -196,6 +201,7 @@ export function CalendarViewShell({
         <button
           type="button"
           className={chipClass("calendar")}
+          style={view === "calendar" ? { background: "rgba(var(--mode-rgb,0,212,255),0.2)", color: "rgba(var(--mode-rgb,0,212,255),0.95)" } : undefined}
           onClick={() => setView("calendar")}
         >
           Calendar
@@ -203,6 +209,7 @@ export function CalendarViewShell({
         <button
           type="button"
           className={chipClass("routines")}
+          style={view === "routines" ? { background: "rgba(var(--mode-rgb,0,212,255),0.2)", color: "rgba(var(--mode-rgb,0,212,255),0.95)" } : undefined}
           onClick={() => setView("routines")}
         >
           Routines
@@ -210,6 +217,7 @@ export function CalendarViewShell({
         <button
           type="button"
           className={chipClass("overdue")}
+          style={view === "overdue" ? { background: "rgba(var(--mode-rgb,0,212,255),0.2)", color: "rgba(var(--mode-rgb,0,212,255),0.95)" } : undefined}
           onClick={() => setView("overdue")}
         >
           Overdue
