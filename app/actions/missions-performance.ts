@@ -9,6 +9,11 @@ import { getPressureIndex } from "@/app/actions/strategyFocus";
 import { getAlignmentThisWeek } from "@/app/actions/strategyFocus";
 import { isRecoveryTask } from "@/lib/recovery-task";
 import { yesterdayDate } from "@/lib/utils/timezone";
+import {
+  getBehavioralConstraints,
+  getEffectiveBehavioralStats,
+  normalizeBehavioralStats,
+} from "@/lib/behavioral-engine";
 /** Task row with optional performance-engine fields (domain, Mission DNA). */
 export type TaskWithMeta = {
   id: string;
@@ -230,14 +235,72 @@ async function getDecisionBlocksUncached(dateStr: string): Promise<DecisionBlock
     strategy ? getPressureIndex(strategy.id) : Promise.resolve({ pressure: 0, zone: "comfort" as const, daysRemaining: 0, targetRemaining: 0 }),
     strategy ? getAlignmentThisWeek(strategy.id) : Promise.resolve({ planned: {}, actual: {}, alignmentScore: 1 }),
     supabase.from("user_streak").select("last_completion_date").eq("user_id", user.id).single(),
-    supabase.from("daily_state").select("energy").eq("user_id", user.id).eq("date", dateStr).single(),
+    supabase
+      .from("daily_state")
+      .select("energy, focus, load, sensory_load, mental_battery, sleep_hours, physical_health")
+      .eq("user_id", user.id)
+      .eq("date", dateStr)
+      .single(),
   ]);
 
   const lastCompletion = (streakRow.data as { last_completion_date?: string | null } | null)?.last_completion_date ?? null;
   const streakAtRisk = lastCompletion !== yesterdayStr && lastCompletion !== dateStr;
   const pressureZone = pressureResult.zone;
   const alignmentScore = "alignmentScore" in alignmentWeek ? alignmentWeek.alignmentScore : 1;
-  const userEnergy = (dailyState.data as { energy?: number } | null)?.energy ?? 5;
+  const daily = dailyState.data as {
+    energy?: number | null;
+    focus?: number | null;
+    load?: number | null;
+    sensory_load?: number | null;
+    mental_battery?: number | null;
+    sleep_hours?: number | null;
+    physical_health?: number | null;
+  } | null;
+  const userEnergy = daily?.energy ?? 5;
+  const normalized = normalizeBehavioralStats({
+    energy: daily?.energy ?? 5,
+    focus: daily?.focus ?? 5,
+    mentalBattery: daily?.mental_battery ?? 5,
+    mentalLoad: daily?.load ?? daily?.sensory_load ?? 5,
+    physicalHealth: daily?.physical_health ?? 5,
+    sleepHours: daily?.sleep_hours ?? 6,
+  });
+  const constraints = getBehavioralConstraints(normalized);
+  const effective = getEffectiveBehavioralStats(normalized);
+
+  const constrainedTasks = tasks.filter((t) => {
+    const missionIntent = (t.mission_intent ?? "").toString().toLowerCase();
+    const isRecovery = missionIntent === "recovery" || isRecoveryTask(t);
+    if (constraints.forceRecovery) return isRecovery;
+    const mentalDemand = t.mental_load ?? t.cognitive_load ?? 5;
+    const socialDemand = (t as { social_load?: number | null }).social_load ?? 0;
+    const energyReq = t.energy_required ?? 5;
+    const domain = ((t.domain ?? "") as string).toLowerCase();
+
+    if (constraints.avoidSocialInteraction && socialDemand >= 4) return false;
+    if (constraints.limitSocialTasks && socialDemand >= 8) return false;
+    if (constraints.blockHeavyCognitive && mentalDemand >= 7) return false;
+
+    if (constraints.blockPhysical && energyReq >= 7) return false;
+    if (constraints.limitPhysicalTasks && energyReq >= 9) return false;
+
+    if (constraints.blockCharacterStretch) {
+      const heavyStretch = (t.discipline_weight ?? 0) >= 7 || mentalDemand >= 8;
+      if (heavyStretch) return false;
+    }
+    if (constraints.limitCharacterStretch) {
+      const extremeStretch = (t.discipline_weight ?? 0) >= 9 || mentalDemand >= 9;
+      if (extremeStretch) return false;
+    }
+
+    const mentalFit = effective.effectiveBattery * 10 >= Math.max(1, Math.min(10, mentalDemand));
+    const physicalFit =
+      domain === "health" || energyReq >= 7
+        ? effective.physical * 10 >= Math.max(1, Math.min(10, energyReq))
+        : true;
+    return mentalFit && physicalFit;
+  });
+  tasks = constrainedTasks.length > 0 ? constrainedTasks : tasks;
   const strategyPrimary = strategy?.primary_domain ?? "discipline";
   const strategySecondary = strategy?.secondary_domains ?? [];
 

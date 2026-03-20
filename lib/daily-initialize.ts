@@ -94,6 +94,7 @@ export async function initializeDailySystem(
     budget: null,
     analytics: null,
     settings: null,
+    dcicGameState: null,
     ui: {
       pagesPrefetched: [],
       assetsPrefetched: false,
@@ -171,6 +172,7 @@ async function runStep(
         if (!res.ok) return snapshot;
         const data = (await res.json()) as {
           date?: string;
+          dcicGameState?: unknown;
           tasks?: Record<string, unknown[]>;
           completedToday?: unknown[];
           dailyState?: Record<string, unknown> | null;
@@ -254,6 +256,7 @@ async function runStep(
           missions,
           budget,
           learning,
+          dcicGameState: data.dcicGameState ?? snapshot.dcicGameState ?? null,
         };
       } catch {
         return snapshot;

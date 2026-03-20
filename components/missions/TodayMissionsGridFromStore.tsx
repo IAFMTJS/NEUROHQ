@@ -1,7 +1,6 @@
 "use client";
 
 import { useHQStore } from "@/lib/hq-store";
-import { CommanderMissionCard } from "@/components/commander";
 import type { Task } from "@/types/database.types";
 
 /** Stable empty array so getSnapshot doesn't change every render (avoids React #185 / useSyncExternalStore loop). */
@@ -24,21 +23,9 @@ export function TodayMissionsGridFromStore({ dateStr, children }: Props) {
   const incomplete = storeTasks.filter((t) => !(t as { completed?: boolean }).completed);
 
   if (incomplete.length > 0) {
-    return (
-      <section className="mission-grid" aria-label="Today's missions">
-        {incomplete.map((t, i) => (
-          <CommanderMissionCard
-            key={t.id}
-            id={t.id}
-            title={t.title ?? "Task"}
-            subtitle={i === 0 ? "Active" : undefined}
-            state="active"
-            progressPct={0}
-            href="/tasks"
-          />
-        ))}
-      </section>
-    );
+    // Avoid rendering static placeholder-style mission cards ("Active", 0% progress)
+    // when we already have real tasks in the list below.
+    return null;
   }
 
   return <>{children}</>;

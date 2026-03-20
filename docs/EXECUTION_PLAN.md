@@ -55,7 +55,7 @@
 - [x] **4.2** Implement Undo Registry (client): store `{ id, actionType, payload, expiresAt }`; toast “Loon gehad geregistreerd. [Undo]” with 15–30 s TTL.
 - [x] **4.3** Add server action `undoPaydayReceived(previousLastPaydayDate: string | null)` with auth and validation.
 - [x] **4.4** On Undo click: call inverse action, remove registry entry, refresh.
-- [ ] **4.5** Optional: minimal `user_actions_audit` table for support (V2).
+- [x] **4.5** Optional: minimal `user_actions_audit` table for support (V2).
 
 ### §5 — Budget cards: optimisation and mutual consistency
 

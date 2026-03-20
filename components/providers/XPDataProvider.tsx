@@ -45,6 +45,20 @@ export function XPDataProvider({ children, initialDateStr, initialData }: XPData
     stateRef.current = state;
   }, [state]);
 
+  // When DailySnapshot.xp refreshes (background merge), adopt newer server totals without a full remount.
+  useEffect(() => {
+    if (initialData == null) return;
+    setState((prev) => {
+      const same =
+        prev.data &&
+        prev.data.dateStr === initialData.dateStr &&
+        prev.data.identity.total_xp === initialData.identity.total_xp &&
+        prev.data.identity.level === initialData.identity.level;
+      if (same) return prev;
+      return { ...prev, data: initialData, loading: false, error: null };
+    });
+  }, [initialData]);
+
   const setXPData = useCallback((data: XPCachePayload) => {
     setState((prev) => ({
       ...prev,

@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 
-type TabId = "overview" | "execute" | "analysis";
+type TabId = "overview" | "execute" | "analysis" | "optimization";
 type LegacyTabId = TabId | "tactical" | "goals";
 
 type Props = {
@@ -14,6 +14,7 @@ type Props = {
   tactical: React.ReactNode;
   analysis: React.ReactNode;
   goals: React.ReactNode;
+  optimization: React.ReactNode;
 };
 
 export function BudgetTabsShell({
@@ -25,6 +26,7 @@ export function BudgetTabsShell({
   tactical,
   analysis,
   goals,
+  optimization,
 }: Props) {
   const normalizeInitialTab = (tab: LegacyTabId): TabId => {
     if (tab === "tactical" || tab === "goals") return "execute";
@@ -35,6 +37,7 @@ export function BudgetTabsShell({
     { id: "overview", label: "Status" },
     { id: "execute", label: "Execute", hidden: historyMode },
     { id: "analysis", label: "Intelligence" },
+    { id: "optimization", label: "Optimization" },
   ];
 
   const setTab = (tab: TabId) => {
@@ -43,48 +46,32 @@ export function BudgetTabsShell({
   };
 
   const tabClass = (tab: TabId) =>
-    `rounded-lg px-3 py-2 text-xs font-semibold transition-all ${
-      activeTab === tab
-        ? "border text-[var(--mode-text-strong,#eaf8ff)]"
-        : "text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[rgba(11,30,46,0.55)]"
+    `dashboard-mini-btn ${
+      activeTab === tab ? "dashboard-mini-btn-primary" : "dashboard-mini-btn-secondary"
     }`;
 
   return (
     <>
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div
-          className="inline-flex flex-wrap gap-1 rounded-xl border p-1.5 backdrop-blur-sm"
-          style={{
-            borderColor: "rgba(var(--mode-rgb, 0, 212, 255), 0.28)",
-            background: "rgba(var(--mode-rgb-deep, 0, 136, 255), 0.26)",
-          }}
-          role="tablist"
-          aria-label="Budget views"
-        >
-          {tabs.map((tab) =>
-            tab.hidden ? null : (
-              <button
-                key={tab.id}
-                type="button"
-                role="tab"
-                aria-selected={activeTab === tab.id}
-                className={tabClass(tab.id)}
-                style={
-                  activeTab === tab.id
-                    ? {
-                        borderColor: "rgba(var(--mode-rgb, 0, 212, 255), 0.44)",
-                        background:
-                          "linear-gradient(180deg, rgba(var(--mode-rgb-deep, 0, 136, 255), 0.85), rgba(var(--mode-rgb, 0, 212, 255), 0.42))",
-                        boxShadow: "0 0 14px rgba(var(--mode-rgb, 0, 212, 255), 0.24)",
-                      }
-                    : undefined
-                }
-                onClick={() => setTab(tab.id)}
-              >
-                {tab.label}
-              </button>
-            ),
-          )}
+      <div className="space-y-3">
+        <div className="dashboard-top-strip">
+          <div className="dashboard-top-strip-track" role="tablist" aria-label="Budget views">
+            {tabs.map((tab) =>
+              tab.hidden ? null : (
+                <button
+                  key={tab.id}
+                  type="button"
+                  role="tab"
+                  aria-selected={activeTab === tab.id}
+                  className={tabClass(tab.id)}
+                  aria-current={activeTab === tab.id ? "page" : undefined}
+                  onClick={() => setTab(tab.id)}
+                >
+                  {tab.label}
+                </button>
+              ),
+            )}
+            <span className="dashboard-mini-strip-label">View</span>
+          </div>
         </div>
         {headerRight}
       </div>
@@ -98,6 +85,7 @@ export function BudgetTabsShell({
           </div>
         )}
         {activeTab === "analysis" && <div key="panel-analysis">{analysis}</div>}
+        {activeTab === "optimization" && <div key="panel-optimization">{optimization}</div>}
       </div>
     </>
   );

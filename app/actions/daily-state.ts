@@ -13,6 +13,7 @@ export type DailyStateInput = {
   sensory_load: number | null;
   sleep_hours: number | null;
   social_load: number | null;
+  physical_health?: number | null;
   /** 1–10: social/emotional buffer (Brain Circle). */
   mental_battery?: number | null;
   /** 0–100: accumulated pressure; usually set by system, optional in check-in. */
@@ -38,7 +39,7 @@ export async function getDailyState(date: string) {
   const { data: { session } } = await supabase.auth.getSession();
   const accessToken = session?.access_token ?? "";
   const DAILY_STATE_SELECT =
-    "id, user_id, date, energy, focus, sensory_load, sleep_hours, social_load, mental_battery, load, is_rest_day, auto_master_missions_generated, focus_consumed, focus_invested_today, invested_mission_id, emotional_state, mood_note, zero_completion_penalty_applied, created_at, updated_at";
+    "id, user_id, date, energy, focus, sensory_load, sleep_hours, social_load, physical_health, mental_battery, load, is_rest_day, auto_master_missions_generated, focus_consumed, focus_invested_today, invested_mission_id, emotional_state, mood_note, zero_completion_penalty_applied, created_at, updated_at";
   return unstable_cache(
     async (userId: string, dateKey: string, token: string) => {
       const client = createClientWithToken(token);
@@ -62,7 +63,7 @@ export async function getDailyStateUncached(date: string) {
   if (!user) return null;
   const { data } = await supabase
     .from("daily_state")
-    .select("energy, focus, sensory_load, social_load, sleep_hours, auto_master_missions_generated")
+    .select("energy, focus, sensory_load, social_load, physical_health, sleep_hours, auto_master_missions_generated")
     .eq("user_id", user.id)
     .eq("date", date)
     .maybeSingle();
@@ -88,6 +89,7 @@ export async function saveDailyState(input: DailyStateInput): Promise<SaveDailyS
       sensory_load: input.sensory_load ?? null,
       sleep_hours: input.sleep_hours,
       social_load: input.social_load ?? null,
+      physical_health: input.physical_health ?? null,
       mental_battery: input.mental_battery ?? null,
       load: input.load ?? null,
       is_rest_day: input.is_rest_day ?? null,
@@ -119,6 +121,7 @@ export async function saveDailyState(input: DailyStateInput): Promise<SaveDailyS
         focus: row.focus,
         sensory_load: row.sensory_load,
         social_load: row.social_load,
+        physical_health: row.physical_health,
         sleep_hours: row.sleep_hours,
         auto_master_missions_generated: false,
       });

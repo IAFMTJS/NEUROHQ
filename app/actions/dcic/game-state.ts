@@ -8,6 +8,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
 import type { GameState, Mission } from "@/lib/dcic/types";
+import { applyBrainLayerToGameState } from "@/lib/dcic/brain-game-state";
 import { updateDifficulty, generateDailyMissions } from "@/lib/dcic/difficulty-engine";
 import { rankFromLevel } from "@/lib/rank-ladder";
 
@@ -58,7 +59,7 @@ export async function getGameState(
     supabase.from("user_skills").select("skill_key").eq("user_id", user.id),
     supabase
       .from("daily_state")
-      .select("energy, focus, sensory_load")
+      .select("energy, focus, sensory_load, load, mental_battery, physical_health, sleep_hours")
       .eq("user_id", user.id)
       .eq("date", today)
       .single(),
@@ -157,6 +158,8 @@ export async function getGameState(
       constraints: {},
     },
   };
+
+  applyBrainLayerToGameState(gameState, dailyState as Parameters<typeof applyBrainLayerToGameState>[1]);
 
   return gameState;
 }

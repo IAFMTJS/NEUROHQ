@@ -11,33 +11,10 @@ import {
   type BehaviorProfile,
 } from "@/types/behavior-profile.types";
 import { getForcedConfrontationForDay, type ForcedConfrontationForDay } from "@/app/actions/confrontation-engine";
-import { bucketTodayItems, type BucketedToday, type TodayItem, type RawTodayTask } from "@/lib/today-engine";
+import { bucketTodayItems, rawTaskToTodayItem, type BucketedToday, type RawTodayTask } from "@/lib/today-engine";
 import { computeBrainMode } from "@/lib/brain-mode";
+import { getSuggestedTaskCount } from "@/lib/utils/energy";
 import { yesterdayDate } from "@/lib/utils/timezone";
-
-const DEFAULT_ENERGY = 2;
-const DEFAULT_XP = 50;
-
-/** Map task row to TodayItem (energy 1–5, base XP from impact or default). */
-function taskToTodayItem(t: {
-  id: string;
-  title?: string | null;
-  energy_required?: number | null;
-  impact?: number | null;
-  carry_over_count?: number | null;
-  category?: string | null;
-}): TodayItem {
-  const energy = Math.min(5, Math.max(1, (t.energy_required as number) ?? DEFAULT_ENERGY));
-  const xp = Math.max(10, Math.min(100, ((t.impact as number) ?? 5) * 15)) || DEFAULT_XP;
-  return {
-    id: t.id,
-    title: t.title ?? "Task",
-    energyCost: energy,
-    xpReward: xp,
-    carryOverCount: (t.carry_over_count as number) ?? 0,
-    category: t.category ?? null,
-  };
-}
 
 export interface TodayEngineResult {
   bucketed: BucketedToday;
@@ -87,27 +64,62 @@ export async function getTodayEngine(
   const lastCompletion = (streakRow as { last_completion_date?: string | null } | null)?.last_completion_date ?? null;
   const streakAtRisk = lastCompletion !== yesterdayStr && lastCompletion !== dateStr;
 
-  const items: TodayItem[] = (tasks ?? []).map((t, i) => {
-    const item = taskToTodayItem(t as Parameters<typeof taskToTodayItem>[0]);
-    if (streakAtRisk && i < 2) item.streakCritical = true;
-    return item;
-  });
   const [{ data: dailyRow }] = await Promise.all([
     supabase
       .from("daily_state")
-      .select("energy, focus, sensory_load, mental_battery, load")
+      .select("energy, focus, sensory_load, mental_battery, load, social_load, physical_health, sleep_hours")
       .eq("user_id", user.id)
       .eq("date", dateStr)
       .maybeSingle(),
   ]);
 
+  const ds = dailyRow as {
+    energy?: number | null;
+    focus?: number | null;
+    sensory_load?: number | null;
+    social_load?: number | null;
+    physical_health?: number | null;
+    sleep_hours?: number | null;
+  } | null;
+
+  const missionEquivalentCap = ds
+    ? getSuggestedTaskCount({
+        energy: ds.energy ?? 5,
+        focus: ds.focus ?? 5,
+        sensory_load: ds.sensory_load ?? 5,
+        social_load: ds.social_load ?? 5,
+        sleep_hours: ds.sleep_hours ?? null,
+        physical_health: ds.physical_health ?? null,
+      })
+    : undefined;
+
+  const items = (tasks ?? []).map((t, i) => {
+    const r = t as {
+      id: string;
+      title?: string | null;
+      energy_required?: number | null;
+      impact?: number | null;
+      carry_over_count?: number | null;
+      category?: string | null;
+    };
+    const raw: RawTodayTask = {
+      id: r.id,
+      title: r.title ?? null,
+      energy_required: r.energy_required ?? null,
+      impact: r.impact ?? null,
+      carry_over_count: r.carry_over_count ?? null,
+      category: r.category ?? null,
+    };
+    return rawTaskToTodayItem(raw, i, streakAtRisk);
+  });
+
   const headroom = typeof (dailyRow as { headroom?: number | null } | null)?.headroom === "number"
     ? (dailyRow as { headroom?: number | null }).headroom ?? 0
     : 0;
   const brainMode = computeBrainMode({
-    energy: (dailyRow as { energy?: number | null } | null)?.energy ?? null,
-    focus: (dailyRow as { focus?: number | null } | null)?.focus ?? null,
-    sensory_load: (dailyRow as { sensory_load?: number | null } | null)?.sensory_load ?? null,
+    energy: ds?.energy ?? null,
+    focus: ds?.focus ?? null,
+    sensory_load: ds?.sensory_load ?? null,
     headroom,
     load: (dailyRow as { load?: number | null } | null)?.load ?? null,
     mental_battery: (dailyRow as { mental_battery?: number | null } | null)?.mental_battery ?? null,
@@ -123,7 +135,12 @@ export async function getTodayEngine(
   const allowHeavyByTier = brainMode.tier !== "Low";
   const allowHeavyNow = allowHeavyByPattern && allowHeavyByTier;
 
-  const bucketed = bucketTodayItems(items, { streakAtRisk, nearUnlockSkills: [], allowHeavyNow });
+  const bucketed = bucketTodayItems(items, {
+    streakAtRisk,
+    nearUnlockSkills: [],
+    allowHeavyNow,
+    ...(missionEquivalentCap != null ? { missionEquivalentCap } : {}),
+  });
 
   return { bucketed, streakAtRisk, date: dateStr };
 }
@@ -141,6 +158,7 @@ export interface TodayEngineData {
     sensory_load: number;
     social_load: number;
     sleep_hours: number | null;
+    physical_health?: number | null;
   } | null;
   behaviorProfile: BehaviorProfile;
   forcedConfrontation: ForcedConfrontationForDay | null;
@@ -178,7 +196,7 @@ export async function getTodayEngineData(dateStr: string): Promise<TodayEngineDa
     supabase.from("user_streak").select("last_completion_date").eq("user_id", user.id).single(),
     supabase
       .from("daily_state")
-      .select("energy, focus, sensory_load, sleep_hours, social_load")
+      .select("energy, focus, sensory_load, sleep_hours, social_load, physical_health")
       .eq("user_id", user.id)
       .eq("date", dateStr)
       .single(),
@@ -227,6 +245,7 @@ export async function getTodayEngineData(dateStr: string): Promise<TodayEngineDa
     focus?: number;
     sensory_load?: number;
     social_load?: number;
+    physical_health?: number;
     sleep_hours?: number | null;
   } | null;
   const dailyState = ds
@@ -235,6 +254,7 @@ export async function getTodayEngineData(dateStr: string): Promise<TodayEngineDa
         focus: ds.focus ?? 5,
         sensory_load: ds.sensory_load ?? 5,
         social_load: ds.social_load ?? 5,
+        physical_health: ds.physical_health ?? 5,
         sleep_hours: ds.sleep_hours ?? null,
       }
     : null;

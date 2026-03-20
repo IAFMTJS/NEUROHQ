@@ -5,6 +5,8 @@ import { getTodayKey } from "@/lib/daily-date";
 import type { DailySnapshot } from "@/types/daily-snapshot";
 import type { Task } from "@/types/database.types";
 import { useHQStore } from "@/lib/hq-store";
+import { getDcicGameStateFromSnapshot } from "@/lib/daily-snapshot-full-sync";
+import { applyDCICModeOverrideIfAny } from "@/lib/dcic/dcic-mode-override";
 
 type Props = {
   snapshot: DailySnapshot | null;
@@ -24,6 +26,7 @@ export function StoreHydrator({ snapshot, children }: Props) {
     const {
       setTodayDate,
       setDashboardSnapshot,
+      setGameState,
       setTasksForDate,
       setTasksStatus,
       setTasksError,
@@ -39,6 +42,12 @@ export function StoreHydrator({ snapshot, children }: Props) {
 
     if (snapshot.date) {
       setTodayDate(snapshot.date);
+    }
+
+    const dcic = getDcicGameStateFromSnapshot(snapshot);
+    if (dcic) {
+      applyDCICModeOverrideIfAny(dcic);
+      setGameState(dcic);
     }
 
     if (snapshot.dashboard) {

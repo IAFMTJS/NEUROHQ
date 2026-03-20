@@ -138,6 +138,10 @@ export interface DailySnapshot {
   analytics: AnalyticsSnapshot | null;
   /** Optional for backward compat with snapshots saved before this field existed. */
   settings?: SettingsSnapshot | null;
+  /**
+   * DCIC game state from bootstrap — mirrors server + keeps cold start aligned with missions.
+   */
+  dcicGameState?: unknown | null;
 
   ui: DailySnapshotUIState;
 }

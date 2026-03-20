@@ -7,12 +7,21 @@ import { SciFiPanel } from "@/components/hud-test/SciFiPanel";
 
 type QuoteWithDay = { quote: Quote | null; day: number };
 
-const MODE_LABELS: Record<AppMode, string> = {
-  normal: "",
-  low_energy: "Low energy — we suggest fewer, lighter tasks.",
-  high_sensory: "High sensory load — minimal UI.",
-  driven: "Driven mode — high-impact tasks first.",
-  stabilize: "Stabilize mode — steady pace. Finish or reschedule when you can.",
+const MODE_LABELS: Record<AppMode, string[]> = {
+  normal: [],
+  low_energy: [
+    "Low energy: keep scope narrow and choose lighter tasks.",
+    "Low energy: one clean completion is better than five partial starts.",
+  ],
+  high_sensory: [
+    "High sensory load: keep stimuli low and actions simple.",
+  ],
+  driven: [
+    "Driven mode: use this window for high-impact execution.",
+  ],
+  stabilize: [
+    "Stabilize mode: finish essentials and protect consistency.",
+  ],
 };
 
 type Props = {
@@ -83,12 +92,12 @@ export function DashboardContextCard({
       </section>
 
       {/* Mode */}
-      {mode !== "normal" && MODE_LABELS[mode] && (
+      {mode !== "normal" && MODE_LABELS[mode]?.length > 0 && (
         <section className="border-b border-[var(--card-border)] px-4 py-2.5">
           <p className="text-xs font-medium text-[var(--text-muted)]">Modus vandaag</p>
           <p className="mt-0.5 flex items-center gap-2 text-sm text-[var(--text-primary)]">
             <span className="h-2 w-2 shrink-0 rounded-full bg-[var(--accent-focus)]" aria-hidden />
-            {MODE_LABELS[mode]}
+            {MODE_LABELS[mode][new Date().getDay() % MODE_LABELS[mode].length]}
           </p>
         </section>
       )}

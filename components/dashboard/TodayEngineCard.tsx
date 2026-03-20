@@ -11,6 +11,12 @@ type Props = {
   forecasts?: XPForecastItem[];
 };
 
+function missionSlotHint(missionEquivalent: number): string | null {
+  if (missionEquivalent >= 2) return "2× missie";
+  if (missionEquivalent <= 0.5) return "½ missie";
+  return null;
+}
+
 const bucketConfig = {
   critical: {
     label: "Critical",
@@ -44,7 +50,7 @@ export function TodayEngineCard({ bucketed, streakAtRisk, date, forecasts = [] }
       <div className="border-b border-[var(--card-border)] px-4 py-3">
         <h2 className="text-base font-semibold text-[var(--text-primary)]">Vandaag — door de app bepaald</h2>
         <p className="mt-0.5 text-xs text-[var(--text-muted)]">
-          Critical · High Impact · Growth Boost
+          Critical · High Impact · Growth Boost — zware taken tellen als 2 missie-slots, mini&apos;s als ½.
         </p>
       </div>
       <div className="p-4 space-y-4">
@@ -60,11 +66,17 @@ export function TodayEngineCard({ bucketed, streakAtRisk, date, forecasts = [] }
                   <span className="text-xs font-normal text-amber-200/80">— {bucketConfig.critical.sublabel}</span>
                 </div>
                 <ul className="mt-2 space-y-1">
-                  {bucketed.critical.map((t) => (
-                    <li key={t.id} className="text-sm text-[var(--text-secondary)]">
-                      {t.title}
-                    </li>
-                  ))}
+                  {bucketed.critical.map((t) => {
+                    const slotHint = missionSlotHint(t.missionEquivalent);
+                    return (
+                      <li key={t.id} className="flex flex-wrap items-baseline gap-2 text-sm text-[var(--text-secondary)]">
+                        <span>{t.title}</span>
+                        {slotHint ? (
+                          <span className="text-[10px] uppercase tracking-wide text-[var(--text-muted)]">{slotHint}</span>
+                        ) : null}
+                      </li>
+                    );
+                  })}
                 </ul>
               </div>
             )}
@@ -76,11 +88,17 @@ export function TodayEngineCard({ bucketed, streakAtRisk, date, forecasts = [] }
                   <span className="text-xs font-normal opacity-80">— {bucketConfig.high_impact.sublabel}</span>
                 </div>
                 <ul className="mt-2 space-y-1">
-                  {bucketed.high_impact.map((t) => (
-                    <li key={t.id} className="text-sm text-[var(--text-secondary)]">
-                      {t.title}
-                    </li>
-                  ))}
+                  {bucketed.high_impact.map((t) => {
+                    const slotHint = missionSlotHint(t.missionEquivalent);
+                    return (
+                      <li key={t.id} className="flex flex-wrap items-baseline gap-2 text-sm text-[var(--text-secondary)]">
+                        <span>{t.title}</span>
+                        {slotHint ? (
+                          <span className="text-[10px] uppercase tracking-wide text-[var(--text-muted)]">{slotHint}</span>
+                        ) : null}
+                      </li>
+                    );
+                  })}
                 </ul>
               </div>
             )}
@@ -92,11 +110,17 @@ export function TodayEngineCard({ bucketed, streakAtRisk, date, forecasts = [] }
                   <span className="text-xs font-normal opacity-80">— {bucketConfig.growth_boost.sublabel}</span>
                 </div>
                 <ul className="mt-2 space-y-1">
-                  {bucketed.growth_boost.map((t) => (
-                    <li key={t.id} className="text-sm text-[var(--text-secondary)]">
-                      {t.title}
-                    </li>
-                  ))}
+                  {bucketed.growth_boost.map((t) => {
+                    const slotHint = missionSlotHint(t.missionEquivalent);
+                    return (
+                      <li key={t.id} className="flex flex-wrap items-baseline gap-2 text-sm text-[var(--text-secondary)]">
+                        <span>{t.title}</span>
+                        {slotHint ? (
+                          <span className="text-[10px] uppercase tracking-wide text-[var(--text-muted)]">{slotHint}</span>
+                        ) : null}
+                      </li>
+                    );
+                  })}
                 </ul>
               </div>
             )}

@@ -1,8 +1,8 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useTransition } from "react";
-import { rescheduleTask } from "@/app/actions/tasks";
+import { useState, useTransition } from "react";
+import { rescheduleTask, skipNextOccurrence } from "@/app/actions/tasks";
 import type { Task } from "@/types/database.types";
 import { format } from "date-fns";
 import { nl } from "date-fns/locale";
@@ -10,12 +10,15 @@ import { nl } from "date-fns/locale";
 type Props = {
   routineTasks: Task[];
   suggestedDays: Record<string, string[]>;
+  suggestedPlans?: Record<string, Array<{ date: string; reason: string; priority: "high" | "medium" | "low" }>>;
   dateStr: string;
 };
 
-export function RoutineTaskList({ routineTasks, suggestedDays, dateStr }: Props) {
+export function RoutineTaskList({ routineTasks, suggestedDays, suggestedPlans = {}, dateStr }: Props) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
+  const [customDateByTask, setCustomDateByTask] = useState<Record<string, string>>({});
+  const [feedback, setFeedback] = useState<string | null>(null);
 
   if (routineTasks.length === 0) {
     return (
@@ -30,31 +33,124 @@ export function RoutineTaskList({ routineTasks, suggestedDays, dateStr }: Props)
   return (
     <div className="space-y-3">
       <p className="text-xs text-[var(--text-muted)]">
-        Taken die je minstens 1x per week of per maand wilt doen. Plan ze op een voorgestelde dag.
+        Taken die je ritme dragen. Gebruik high-priority momenten, plan vooruit of sla bewust 1 cyclus over.
       </p>
       <ul className="space-y-3">
         {routineTasks.map((task) => {
           const suggested = suggestedDays[task.id] ?? [];
+          const plans = suggestedPlans[task.id] ?? suggested.map((d) => ({
+            date: d,
+            reason: "Voorgesteld routinemoment.",
+            priority: "medium" as const,
+          }));
           const recurrence = (task as { recurrence_rule?: string | null }).recurrence_rule ?? "monthly";
+          const recurrenceWeekdays = (task as { recurrence_weekdays?: string | null }).recurrence_weekdays ?? "";
+          const isBiWeekly = recurrence === "weekly" && recurrenceWeekdays.includes("interval=2");
+          const dueDate = (task as { due_date?: string | null }).due_date ?? null;
+          const monthlyDay = dueDate ? Number(dueDate.slice(8, 10)) : null;
+          const quickLabel = recurrence === "daily" ? "Vandaag plannen" : "Volgende high-priority plannen";
+          const nextBest = plans[0]?.date ?? suggested[0] ?? dateStr;
+          const nextBestLabel = format(new Date(nextBest + "T12:00:00Z"), "EEE d MMM", { locale: nl });
+          const priorityColor = (priority: "high" | "medium" | "low") =>
+            priority === "high" ? "text-emerald-300" : priority === "medium" ? "text-cyan-300" : "text-[var(--text-muted)]";
+          const customDateValue = customDateByTask[task.id] ?? "";
           return (
             <li key={task.id} className="card-simple p-4">
               <div className="flex flex-col gap-2">
                 <span className="font-medium text-[var(--text-primary)]">{task.title ?? "Taak"}</span>
                 <span className="text-xs text-[var(--text-muted)]">
-                  {recurrence === "weekly" ? "Wekelijks" : "Maandelijks"}
-                  {suggested.length > 0 && ` · Beste dagen: ${suggested.map((d) => format(new Date(d + "T12:00:00Z"), "EEE d MMM", { locale: nl })).join(", ")}`}
+                  {recurrence === "daily" ? "Dagelijks" : recurrence === "weekly" ? (isBiWeekly ? "2-wekelijks" : "Wekelijks") : "Maandelijks"}
+                  {recurrence === "monthly" && monthlyDay != null ? ` (dag ${monthlyDay})` : ""}
+                  {plans.length > 0 &&
+                    ` · Aanbevolen: ${plans
+                      .map((p) => format(new Date(p.date + "T12:00:00Z"), "EEE d MMM", { locale: nl }))
+                      .join(", ")}`}
                 </span>
+                <div className="rounded-lg border border-[var(--card-border)] bg-[var(--bg-surface)]/35 p-3 space-y-2">
+                  <p className="text-[11px] uppercase tracking-wide text-[var(--text-muted)]">Voorgestelde momenten</p>
+                  {plans.slice(0, 3).map((plan) => (
+                    <div key={plan.date} className="flex flex-wrap items-center gap-2 text-xs">
+                      <span className={`font-semibold ${priorityColor(plan.priority)}`}>
+                        {plan.priority === "high" ? "High" : plan.priority === "medium" ? "Medium" : "Low"}
+                      </span>
+                      <span className="text-[var(--text-primary)]">
+                        {format(new Date(plan.date + "T12:00:00Z"), "EEE d MMM", { locale: nl })}
+                      </span>
+                      <span className="text-[var(--text-muted)]">- {plan.reason}</span>
+                    </div>
+                  ))}
+                </div>
+                <div className="mt-1 flex flex-wrap gap-2">
+                  <PlanForDateButton
+                    taskId={task.id}
+                    date={nextBest}
+                    label={quickLabel + ` (${nextBestLabel})`}
+                    pending={pending}
+                    onPlan={() => {
+                      startTransition(async () => {
+                        await rescheduleTask(task.id, nextBest);
+                        setFeedback(`${task.title ?? "Routine"} gepland op ${nextBestLabel}.`);
+                        router.refresh();
+                      });
+                    }}
+                  />
+                  <button
+                    type="button"
+                    disabled={pending}
+                    className="rounded-lg border border-[var(--card-border)] bg-[var(--bg-surface)] px-3 py-1.5 text-sm font-medium text-[var(--text-primary)] hover:bg-[var(--bg-hover)] disabled:opacity-50"
+                    onClick={() =>
+                      startTransition(async () => {
+                        await skipNextOccurrence(task.id);
+                        setFeedback(`${task.title ?? "Routine"} heeft 1 cyclus overgeslagen.`);
+                        router.refresh();
+                      })
+                    }
+                  >
+                    Sla 1 cyclus over
+                  </button>
+                </div>
+                <div className="mt-1 flex flex-wrap items-end gap-2">
+                  <label className="text-xs text-[var(--text-muted)]">
+                    Plan op eigen datum
+                    <input
+                      type="date"
+                      value={customDateValue}
+                      onChange={(e) =>
+                        setCustomDateByTask((prev) => ({
+                          ...prev,
+                          [task.id]: e.target.value,
+                        }))
+                      }
+                      className="mt-1 block rounded-lg border border-[var(--card-border)] bg-[var(--bg-surface)] px-2 py-1.5 text-sm text-[var(--text-primary)]"
+                    />
+                  </label>
+                  <button
+                    type="button"
+                    disabled={pending || !customDateValue}
+                    className="rounded-lg border border-[var(--card-border)] bg-[var(--bg-surface)] px-3 py-1.5 text-sm font-medium text-[var(--text-primary)] hover:bg-[var(--bg-hover)] disabled:opacity-50"
+                    onClick={() =>
+                      startTransition(async () => {
+                        await rescheduleTask(task.id, customDateValue);
+                        setFeedback(`${task.title ?? "Routine"} gepland op ${format(new Date(customDateValue + "T12:00:00Z"), "EEE d MMM", { locale: nl })}.`);
+                        router.refresh();
+                      })
+                    }
+                  >
+                    Plan datum
+                  </button>
+                </div>
                 <div className="mt-1 flex flex-wrap gap-2">
                   {suggested.slice(0, 3).map((day) => (
                     <PlanForDateButton
                       key={day}
                       taskId={task.id}
                       date={day}
-                      label={format(new Date(day + "T12:00:00Z"), "EEE d MMM", { locale: nl })}
+                      label={`Snel: ${format(new Date(day + "T12:00:00Z"), "EEE d MMM", { locale: nl })}`}
                       pending={pending}
                       onPlan={() => {
                         startTransition(async () => {
                           await rescheduleTask(task.id, day);
+                          setFeedback(`${task.title ?? "Routine"} gepland op ${format(new Date(day + "T12:00:00Z"), "EEE d MMM", { locale: nl })}.`);
                           router.refresh();
                         });
                       }}
@@ -66,6 +162,7 @@ export function RoutineTaskList({ routineTasks, suggestedDays, dateStr }: Props)
           );
         })}
       </ul>
+      {feedback && <p className="text-xs text-[var(--text-muted)]">{feedback}</p>}
     </div>
   );
 }

@@ -1,6 +1,13 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
+import {
+  brainSignalsRecoveryPriority,
+  getBehavioralConstraints,
+  getBrainState,
+  getEffectiveBehavioralStats,
+  normalizeBehavioralStats,
+} from "@/lib/behavioral-engine";
 
 /** Resource & Consequence Engine (Fase 2). No guilt, but friction. */
 export type ConsequenceState = {
@@ -48,7 +55,7 @@ export async function getConsequenceState(dateStr: string): Promise<ConsequenceS
   const [dailyRow, streakRow, completedToday] = await Promise.all([
     supabase
       .from("daily_state")
-      .select("energy, focus, sensory_load, load")
+      .select("energy, focus, sensory_load, load, mental_battery, physical_health, sleep_hours")
       .eq("user_id", user.id)
       .eq("date", dateStr)
       .single(),
@@ -66,10 +73,33 @@ export async function getConsequenceState(dateStr: string): Promise<ConsequenceS
       .limit(1),
   ]);
 
-  const energy = (dailyRow.data as { energy?: number | null } | null)?.energy ?? null;
-  const sensoryLoad = (dailyRow.data as { sensory_load?: number | null } | null)?.sensory_load ?? null;
-  const load = (dailyRow.data as { load?: number | null } | null)?.load ?? null;
+  const dr = dailyRow.data as {
+    energy?: number | null;
+    sensory_load?: number | null;
+    load?: number | null;
+    focus?: number | null;
+    mental_battery?: number | null;
+    physical_health?: number | null;
+    sleep_hours?: number | null;
+  } | null;
+  const energy = dr?.energy ?? null;
+  const sensoryLoad = dr?.sensory_load ?? null;
+  const load = dr?.load ?? null;
   const loadPct = load != null ? load : (sensoryLoad != null ? Math.round((sensoryLoad / 10) * 100) : 50);
+
+  const mentalLoadRaw = dr?.load ?? dr?.sensory_load ?? 5;
+  const normalized = normalizeBehavioralStats({
+    energy: dr?.energy ?? 5,
+    focus: dr?.focus ?? 5,
+    mentalBattery: dr?.mental_battery ?? 5,
+    mentalLoad: mentalLoadRaw,
+    physicalHealth: dr?.physical_health ?? 5,
+    sleepHours: dr?.sleep_hours ?? null,
+  });
+  const effective = getEffectiveBehavioralStats(normalized);
+  const brainState = getBrainState(effective);
+  const constraints = getBehavioralConstraints(normalized);
+  const brainRecovery = brainSignalsRecoveryPriority({ normalized, brainState, constraints });
 
   const energyDepleted = energy != null && energy <= 1;
   const loadOver80 = loadPct > 80;
@@ -104,7 +134,7 @@ export async function getConsequenceState(dateStr: string): Promise<ConsequenceS
   return {
     energyDepleted,
     loadOver80,
-    recoveryOnly: loadOver80 || burnout,
+    recoveryOnly: loadOver80 || burnout || brainRecovery,
     daysSinceLastCompletion,
     recoveryProtocol,
     nextMissionCostMultiplier,

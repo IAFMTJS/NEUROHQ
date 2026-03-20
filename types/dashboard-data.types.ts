@@ -29,8 +29,8 @@ export interface DashboardCritical {
   timeWindow: string;
   isTimeWindowActive: boolean;
   energyBudget: Record<string, unknown>;
-  state: { energy?: number; focus?: number; sensory_load?: number; sleep_hours?: number; social_load?: number } | null;
-  yesterdayState: { energy?: number; focus?: number; sensory_load?: number; sleep_hours?: number; social_load?: number } | null;
+  state: { energy?: number; focus?: number; sensory_load?: number; sleep_hours?: number; social_load?: number; physical_health?: number } | null;
+  yesterdayState: { energy?: number; focus?: number; sensory_load?: number; sleep_hours?: number; social_load?: number; physical_health?: number } | null;
   mode: AppMode;
   carryOverCount: number;
   copyVariant?: CopyVariant;

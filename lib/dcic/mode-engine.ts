@@ -193,11 +193,17 @@ export function updateWarStage(gameState: GameState, warStartedAt: string | null
 }
 
 export function autoModeCheck(gameState: GameState): void {
+  /** Brain status (getGameState → applyBrainLayerToGameState) heeft voorrang. */
+  if (gameState.mode.suggested === "recovery" && gameState.mode.current !== "recovery") {
+    switchMode(gameState, "recovery", { forced: true });
+    return;
+  }
+
   const { energy, focus, load } = gameState.stats;
 
   if (energy < 25 || load > 80) {
     if (gameState.mode.current !== "recovery") {
-      switchMode(gameState, "recovery");
+      switchMode(gameState, "recovery", { forced: true });
     }
     return;
   }

@@ -49,6 +49,7 @@ type Props = {
     sensory_load: number | null;
     sleep_hours: number | null;
     social_load: number | null;
+    physical_health?: number | null;
     mental_battery: number | null;
   };
   yesterday?: {
@@ -57,13 +58,15 @@ type Props = {
     sensory_load: number | null;
     sleep_hours: number | null;
     social_load: number | null;
+    physical_health?: number | null;
   };
   onSaved?: (next: {
     energy: number;
     focus: number;
     sensory_load: number;
     sleep_hours: number | null;
-    social_load: number;
+    social_load: number | null;
+    physical_health?: number;
     mental_battery: number;
   }) => void;
 };
@@ -82,7 +85,7 @@ export function BrainStatusModal({ open, onClose, date, initial, yesterday, onSa
   const [mentalBattery, setMentalBattery] = useState(initial.mental_battery ?? 5);
   const [load, setLoad] = useState(initial.sensory_load ?? 5);
   const [sleep, setSleep] = useState(String(initial.sleep_hours ?? ""));
-  const [social, setSocial] = useState(initial.social_load ?? 5);
+  const [physicalHealth, setPhysicalHealth] = useState(initial.physical_health ?? 5);
 
   useEffect(() => {
     if (open) {
@@ -91,11 +94,11 @@ export function BrainStatusModal({ open, onClose, date, initial, yesterday, onSa
       setMentalBattery(initial.mental_battery ?? 5);
       setLoad(initial.sensory_load ?? 5);
       setSleep(String(initial.sleep_hours ?? ""));
-      setSocial(initial.social_load ?? 5);
+      setPhysicalHealth(initial.physical_health ?? 5);
       setError(null);
       setSaved(false);
     }
-  }, [open, initial.energy, initial.focus, initial.mental_battery, initial.sensory_load, initial.sleep_hours, initial.social_load]);
+  }, [open, initial.energy, initial.focus, initial.mental_battery, initial.sensory_load, initial.sleep_hours, initial.physical_health]);
 
   const energyPct = scale1To10ToPct(energy);
   const focusPct = scale1To10ToPct(focus);
@@ -108,10 +111,10 @@ export function BrainStatusModal({ open, onClose, date, initial, yesterday, onSa
       energy,
       focus,
       sensory_load: load,
-      social_load: social,
+      social_load: initial.social_load ?? null,
       sleep_hours: sleep ? parseFloat(sleep) : null,
     }),
-    [energy, focus, load, social, sleep]
+    [energy, focus, load, initial.social_load, sleep]
   );
 
   function handleSubmit(e: React.FormEvent) {
@@ -122,7 +125,8 @@ export function BrainStatusModal({ open, onClose, date, initial, yesterday, onSa
       focus,
       sensory_load: load,
       sleep_hours: sleep ? parseFloat(sleep) : null,
-      social_load: social,
+      social_load: initial.social_load ?? null,
+      physical_health: physicalHealth,
       mental_battery: mentalBattery,
     };
 
@@ -140,6 +144,7 @@ export function BrainStatusModal({ open, onClose, date, initial, yesterday, onSa
           sensory_load: nextState.sensory_load,
           sleep_hours: nextState.sleep_hours,
           social_load: nextState.social_load,
+          physical_health: nextState.physical_health,
           mental_battery: nextState.mental_battery,
         });
         if (result.ok) {
@@ -266,7 +271,7 @@ export function BrainStatusModal({ open, onClose, date, initial, yesterday, onSa
                   setMentalBattery((yesterday as { mental_battery?: number | null }).mental_battery ?? 5);
                   setLoad(yesterday.sensory_load ?? 5);
                   setSleep(yesterday.sleep_hours != null ? String(yesterday.sleep_hours) : "");
-                  setSocial(yesterday.social_load ?? 5);
+                  setPhysicalHealth((yesterday as { physical_health?: number | null }).physical_health ?? 5);
                 }
               }}
               className="w-full rounded-lg border border-[var(--accent-neutral)] bg-[var(--bg-primary)]/60 px-4 py-2.5 text-sm text-[var(--text-secondary)] hover:bg-[var(--bg-surface)] hover:text-[var(--text-primary)] transition"
@@ -304,9 +309,9 @@ export function BrainStatusModal({ open, onClose, date, initial, yesterday, onSa
             max={10}
           />
           <HQSliderRow
-            label="Social load"
-            value={social}
-            onChange={setSocial}
+            label="Physical health"
+            value={physicalHealth}
+            onChange={setPhysicalHealth}
             min={1}
             max={10}
           />

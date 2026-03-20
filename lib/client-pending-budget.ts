@@ -97,6 +97,7 @@ export function setPendingBudgetSnapshot(
     };
     window.localStorage.setItem(BUDGET_KEY, JSON.stringify(next));
     dispatchBudgetEvent();
+    queueDailySnapshotMerge();
     return next;
   } catch {
     return null;
@@ -115,9 +116,15 @@ export function markPendingBudgetSynced(): void {
     };
     window.localStorage.setItem(BUDGET_KEY, JSON.stringify(next));
     dispatchBudgetEvent();
+    queueDailySnapshotMerge();
   } catch {
     // ignore
   }
+}
+
+function queueDailySnapshotMerge(): void {
+  if (typeof window === "undefined") return;
+  void import("@/lib/daily-snapshot-full-sync").then((m) => m.scheduleSyncDailySnapshot());
 }
 
 export function clearPendingBudgetSnapshot(): void {
@@ -125,6 +132,7 @@ export function clearPendingBudgetSnapshot(): void {
   try {
     window.localStorage.removeItem(BUDGET_KEY);
     dispatchBudgetEvent();
+    queueDailySnapshotMerge();
   } catch {
     // ignore
   }

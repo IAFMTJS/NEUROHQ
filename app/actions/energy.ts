@@ -83,6 +83,7 @@ function capacityFromDailyState(state: DailyStateRow): {
     sensory_load: sensoryLoad,
     social_load: socialLoad,
     sleep_hours: sleep,
+    physical_health: (state as { physical_health?: number | null }).physical_health ?? null,
   });
 
   // Capacity = suggestedTaskCount * cost per avg task * buffer. Ensures N tasks fit.
@@ -182,7 +183,7 @@ export const getEnergyBudget = cache(async (date: string): Promise<EnergyBudget>
       ] = await Promise.all([
         client
           .from("daily_state")
-          .select("energy, focus, sensory_load, sleep_hours, social_load, mental_battery, load, focus_consumed")
+          .select("energy, focus, sensory_load, sleep_hours, social_load, physical_health, mental_battery, load, focus_consumed")
           .eq("user_id", userId)
           .eq("date", dateKey)
           .single(),

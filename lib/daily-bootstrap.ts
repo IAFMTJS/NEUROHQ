@@ -2,12 +2,7 @@
 
 import { useEffect } from "react";
 import { useHQStore } from "@/lib/hq-store";
-import {
-  loadDailySnapshot,
-  saveDailySnapshot,
-  isCurrentSnapshot,
-} from "@/lib/daily-snapshot-storage";
-import type { DailySnapshot, DashboardSnapshot } from "@/types/daily-snapshot";
+import { mergeDailySnapshotFromNetwork } from "@/lib/daily-snapshot-full-sync";
 import { applyDCICModeOverrideIfAny } from "@/lib/dcic/dcic-mode-override";
 
 /**
@@ -16,13 +11,12 @@ import { applyDCICModeOverrideIfAny } from "@/lib/dcic/dcic-mode-override";
  * - DashboardLayoutClient hydrates todayDate from useDailySnapshot()
  * - MissionsProvider, BudgetSnapshotProvider, and DashboardDataProvider hydrate from snapshot
  *
- * This module only provides the optional periodic background refresh below.
+ * Periodic refresh runs a full snapshot merge (dashboard, bootstrap, xp, strategy, analytics, settings)
+ * so localStorage stays aligned with all server slices.
  */
 
 /**
- * Lightweight periodic refresh for headline metrics (dashboard, budget, learning, etc.).
- * Uses /api/bootstrap/today; does not affect first paint. Call only where a background
- * refresh is desired (e.g. long-lived dashboard shell).
+ * Background refresh: full network merge into DailySnapshot + HQ store updates from bootstrap.
  */
 export function usePeriodicBootstrapRefresh(intervalMinutes = 45) {
   const setTodayDate = useHQStore((s) => s.setTodayDate);
@@ -40,144 +34,27 @@ export function usePeriodicBootstrapRefresh(intervalMinutes = 45) {
 
     const runOnce = async () => {
       try {
-        const res = await fetch("/api/bootstrap/today", {
-          credentials: "include",
-          cache: "no-store",
-        });
-        if (!res.ok) return;
-        const data = (await res.json()) as {
-          date?: string;
-          dashboard?: { critical?: unknown; secondary?: unknown };
-          dcicGameState?: unknown;
-          tasks?: Record<string, unknown[]>;
-          completedToday?: unknown[];
-          dailyState?: Record<string, unknown> | null;
-          energyBudget?: Record<string, unknown> | null;
-          budget?: Record<string, unknown> | null;
-          learning?: unknown;
-        };
-        if (stopped) return;
+        const bootstrap = await mergeDailySnapshotFromNetwork();
+        if (stopped || !bootstrap) return;
 
-        const dateStr = (data.date as string | undefined) ?? undefined;
+        const dateStr = (bootstrap.date as string | undefined) ?? undefined;
 
         if (dateStr) setTodayDate(dateStr);
-        if (data.dashboard) {
+        if (bootstrap.dashboard) {
           setDashboardSnapshot({
-            critical: data.dashboard.critical as any,
-            secondary: data.dashboard.secondary as any,
+            critical: bootstrap.dashboard.critical as any,
+            secondary: bootstrap.dashboard.secondary as any,
           });
         }
-        if (data.dcicGameState) {
-          const nextDcic = data.dcicGameState as any;
+        if (bootstrap.dcicGameState) {
+          const nextDcic = bootstrap.dcicGameState as any;
           applyDCICModeOverrideIfAny(nextDcic);
           setGameState(nextDcic);
         }
-        if (data.dailyState) setTodayDailyState(data.dailyState);
-        if (data.energyBudget) setTodayEnergyBudget(data.energyBudget);
-        if (data.budget) setBudgetSnapshot(data.budget as any);
-        if (data.learning) setLearningSnapshot(data.learning as any);
-
-        // Best-effort: merge refreshed bootstrap payload back into the existing
-        // same-day DailySnapshot so cold start and `useDailySnapshot` stay aligned
-        // with tasks, dashboard, budget, and learning.
-        try {
-          const existing = await loadDailySnapshot();
-          if (existing && isCurrentSnapshot(existing)) {
-            const effectiveDate = dateStr ?? existing.date;
-            const baseMissions = existing.missions ?? {
-              dateStr: effectiveDate,
-              tasksByDate: {},
-              completedToday: [],
-              energyBudget: null,
-              dailyState: null,
-            };
-            const tasksPatch = data.tasks;
-            const hasMissionPatch =
-              tasksPatch != null ||
-              data.completedToday != null ||
-              data.dailyState != null ||
-              data.energyBudget != null;
-
-            const missionsNext = hasMissionPatch
-              ? {
-                  ...baseMissions,
-                  dateStr: effectiveDate,
-                  tasksByDate: { ...baseMissions.tasksByDate, ...(tasksPatch ?? {}) },
-                  completedToday: data.completedToday ?? baseMissions.completedToday,
-                  energyBudget: (data.energyBudget as Record<string, unknown>) ?? baseMissions.energyBudget,
-                  dailyState: (data.dailyState as Record<string, unknown>) ?? baseMissions.dailyState,
-                }
-              : existing.missions;
-
-            const dashboardNext: DailySnapshot["dashboard"] =
-              data.dashboard?.critical != null && data.dashboard?.secondary != null
-                ? {
-                    critical: data.dashboard.critical as DashboardSnapshot["critical"],
-                    secondary: data.dashboard.secondary as DashboardSnapshot["secondary"],
-                  }
-                : existing.dashboard;
-
-            const next: DailySnapshot = {
-              ...existing,
-              date: effectiveDate,
-              dashboard: dashboardNext,
-              missions: missionsNext,
-              budget:
-                data.budget != null
-                  ? (({
-                      ...(existing.budget ?? {
-                        today: effectiveDate,
-                        settings: {},
-                        currentMonthExpenses: null,
-                        currentMonthIncome: null,
-                        budgetRemainingCents: null,
-                        currency: "EUR",
-                        isWeekly: false,
-                        periodLabel: "this month",
-                        isPaydayCycle: false,
-                        disciplineScore: null,
-                        disciplineXpThisWeek: 0,
-                        disciplineCompletedToday: false,
-                        daysUnderBudgetThisWeek: null,
-                        unplannedSummary: { count: 0, totalCents: 0 },
-                      }),
-                      ...data.budget,
-                      today:
-                        (data as { budget?: { today?: string } }).budget?.["today"] ??
-                        existing.budget?.today ??
-                        effectiveDate,
-                    }) as DailySnapshot["budget"])
-                  : existing.budget,
-              learning:
-                data.learning != null
-                  ? (({
-                      ...(existing.learning ?? {
-                        today: effectiveDate,
-                        weeklyMinutes: 0,
-                        weeklyLearningTarget: 0,
-                        learningStreak: 0,
-                        focus: null,
-                        streams: [],
-                        consistency: null,
-                        reflection: { lastEntryDate: null, reflectionRequired: false },
-                      }),
-                      ...data.learning,
-                      today:
-                        (data as { learning?: { today?: string } }).learning?.["today"] ??
-                        existing.learning?.today ??
-                        effectiveDate,
-                    }) as DailySnapshot["learning"])
-                  : existing.learning,
-              ui: {
-                ...existing.ui,
-                savedAt: Date.now(),
-              },
-            };
-            await saveDailySnapshot(next);
-          }
-        } catch {
-          // non-critical; ignore snapshot merge errors
-        }
+        if (bootstrap.dailyState) setTodayDailyState(bootstrap.dailyState);
+        if (bootstrap.energyBudget) setTodayEnergyBudget(bootstrap.energyBudget);
+        if (bootstrap.budget) setBudgetSnapshot(bootstrap.budget as any);
+        if (bootstrap.learning) setLearningSnapshot(bootstrap.learning as any);
       } catch {
         // ignore periodic errors; will try again on next tick
       }

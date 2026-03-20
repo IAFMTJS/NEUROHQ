@@ -249,7 +249,7 @@ export function PaydayCard({ daysUntilNextIncome, nextPaydayLabel, incomeSources
               setPaydayDay(String(effectivePaydayDay));
               setShowModal(true);
             }}
-            className="text-sm font-medium text-[var(--accent-focus)] hover:underline"
+            className="dashboard-mini-btn dashboard-mini-btn-secondary text-sm"
           >
             Instellen
           </button>
@@ -274,7 +274,7 @@ export function PaydayCard({ daysUntilNextIncome, nextPaydayLabel, incomeSources
             type="button"
             onClick={handleVandaagLoonGehad}
             disabled={pending}
-            className="w-full rounded-lg border border-[var(--accent-focus)]/50 bg-[var(--accent-focus)]/10 px-3 py-2 text-sm font-medium text-[var(--accent-focus)] hover:bg-[var(--accent-focus)]/20 disabled:opacity-50"
+            className="btn-primary w-full rounded-lg px-3 py-2 text-sm font-medium disabled:opacity-50"
           >
             {pending ? "Bezig…" : "Vandaag loon gehad"}
           </button>
@@ -333,7 +333,7 @@ export function PaydayCard({ daysUntilNextIncome, nextPaydayLabel, incomeSources
             </ul>
           )}
         </div>
-        <button type="button" onClick={() => setShowModal(false)} className="mt-4 w-full rounded-lg border border-[var(--card-border)] py-2 text-sm">Sluiten</button>
+        <button type="button" onClick={() => setShowModal(false)} className="btn-secondary mt-4 w-full rounded-lg py-2 text-sm">Sluiten</button>
       </Modal>
     </>
   );

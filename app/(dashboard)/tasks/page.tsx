@@ -51,10 +51,6 @@ const EnergyCapBar = nextDynamic(
   () => import("@/components/missions/EnergyCapBar").then((m) => ({ default: m.EnergyCapBar })),
   { loading: () => <div className="h-10 animate-pulse rounded-lg bg-white/5" aria-hidden /> }
 );
-const SystemSuggestionsInline = nextDynamic(
-  () => import("@/components/missions/SystemSuggestionsInline").then((m) => ({ default: m.SystemSuggestionsInline })),
-  { loading: () => null }
-);
 const SmartSuggestionBanner = nextDynamic(
   () => import("@/components/missions/SmartSuggestionBanner").then((m) => ({ default: m.SmartSuggestionBanner })),
   { loading: () => null }
@@ -79,22 +75,15 @@ const ConsequenceBanner = nextDynamic(
 );
 
 async function ResistanceIndexBannerAsync() {
-  const data = await getResistanceIndex();
-  const ResistanceIndexBanner = (await import("@/components/missions/ResistanceIndexBanner")).ResistanceIndexBanner;
-  return <ResistanceIndexBanner message={data.message} />;
+  return getResistanceIndex();
 }
 
 async function RecoveryCampaignBannerAsync() {
-  const data = await getRecoveryCampaignNeeded();
-  if (!data.needed) return null;
-  const RecoveryCampaignBanner = (await import("@/components/missions/RecoveryCampaignBanner")).RecoveryCampaignBanner;
-  return <RecoveryCampaignBanner daysInactive={data.daysInactive} lastCompletionDate={data.lastCompletionDate} />;
+  return getRecoveryCampaignNeeded();
 }
 
 async function EmotionalStateCorrelationBannerAsync() {
-  const data = await getEmotionalStateCorrelations();
-  const EmotionalStateCorrelationBanner = (await import("@/components/missions/EmotionalStateCorrelationBanner")).EmotionalStateCorrelationBanner;
-  return <EmotionalStateCorrelationBanner message={data.message} />;
+  return getEmotionalStateCorrelations();
 }
 
 async function MetaInsights30BannerAsync() {
@@ -202,7 +191,7 @@ async function TasksHeaderMetaAsync({ dateStr, yesterdayStr }: { dateStr: string
 }
 
 async function MissionsSectionAsync({ dateStr, backlog }: { dateStr: string; backlog: Awaited<ReturnType<typeof getBacklogTasks>> }) {
-  const [mode, futureTasks, completedToday, smartSuggestion, energyCap, energyBudget, decisionBlocks, identity, identityEngine, tasksNormalResult] =
+  const [mode, futureTasks, completedToday, smartSuggestion, energyCap, energyBudget, decisionBlocks, identity, identityEngine, tasksNormalResult, resistanceIndex, recoveryCampaign, emotionalCorrelation] =
     await Promise.all([
       getMode(dateStr),
       getFutureTasks(dateStr),
@@ -214,6 +203,9 @@ async function MissionsSectionAsync({ dateStr, backlog }: { dateStr: string; bac
       getXPIdentity(),
       getIdentityEngine(),
       getTodaysTasks(dateStr, "normal"),
+      ResistanceIndexBannerAsync(),
+      RecoveryCampaignBannerAsync(),
+      EmotionalStateCorrelationBannerAsync(),
     ]);
 
   const taskMode: TaskListMode =
@@ -319,6 +311,23 @@ async function MissionsSectionAsync({ dateStr, backlog }: { dateStr: string; bac
           <h2 className="text-xl font-semibold text-[var(--text-primary)]">
             {decisionBlocks.topRecommendation?.title ?? "Selecteer je volgende missie"}
           </h2>
+          <p className="mt-2 text-sm text-[var(--text-muted)]">
+            {decisionBlocks.topRecommendation
+              ? `Must-do omdat deze missie vandaag de beste match heeft op strategie, energie en impact (UMS ${Math.round(
+                  decisionBlocks.topRecommendation.umsBreakdown.ums * 100
+                )}%).`
+              : "Geen harde must-do gevonden, start met een korte missie om momentum op te bouwen."}
+          </p>
+          {(decisionBlocks.alignmentFix.length > 0 || decisionBlocks.recovery.length > 0) && (
+            <ul className="mt-3 space-y-1 text-xs text-[var(--text-secondary)]">
+              {decisionBlocks.alignmentFix.slice(0, 2).map((task) => (
+                <li key={`align-${task.id}`}>Alignment suggestie: {(task.title ?? "Taak")}</li>
+              ))}
+              {decisionBlocks.recovery.slice(0, 1).map((task) => (
+                <li key={`recovery-${task.id}`}>Recovery suggestie: {(task.title ?? "Taak")}</li>
+              ))}
+            </ul>
+          )}
           <div className="mt-3">
             <Link
               href="/tasks#tasks-list"
@@ -329,25 +338,21 @@ async function MissionsSectionAsync({ dateStr, backlog }: { dateStr: string; bac
           </div>
         </div>
       </section>
-      <div className="tasks-war-hide">
-        <SystemSuggestionsInline
-          recovery={decisionBlocks.recovery}
-          alignmentFix={decisionBlocks.alignmentFix}
-          topRoi={decisionBlocks.tasksSortedByUMS.slice(0, 3)}
-        />
-      </div>
       <details className="tasks-war-hide rounded-xl border border-[var(--card-border)] bg-[var(--bg-surface)]/35 p-3">
         <summary className="cursor-pointer text-xs font-semibold uppercase tracking-wider text-[var(--text-muted)]">Diagnostics</summary>
         <div className="mt-3 space-y-3">
-          <Suspense fallback={null}>
-            <ResistanceIndexBannerAsync />
-          </Suspense>
-          <Suspense fallback={null}>
-            <RecoveryCampaignBannerAsync />
-          </Suspense>
-          <Suspense fallback={null}>
-            <EmotionalStateCorrelationBannerAsync />
-          </Suspense>
+          {resistanceIndex.message && <p className="text-sm text-[var(--text-primary)]">{resistanceIndex.message}</p>}
+          {recoveryCampaign.needed && (
+            <p className="text-sm text-[var(--text-primary)]">
+              Recovery-campagne actief: {recoveryCampaign.daysInactive} dagen zonder completion.
+            </p>
+          )}
+          {emotionalCorrelation.message && <p className="text-sm text-[var(--text-primary)]">{emotionalCorrelation.message}</p>}
+          {!resistanceIndex.message && !recoveryCampaign.needed && !emotionalCorrelation.message && (
+            <p className="text-sm text-[var(--text-muted)]">
+              Nog geen diagnostische signalen beschikbaar. Voltooi en log enkele missies om patroonanalyse te activeren.
+            </p>
+          )}
         </div>
       </details>
       {smartSuggestion.text && !decisionBlocks.topRecommendation ? (
@@ -393,21 +398,22 @@ async function MissionsSectionAsync({ dateStr, backlog }: { dateStr: string; bac
       />
       </div>
       </div>
-      <div className="tasks-war-hide">
-        <Suspense fallback={null}>
-          <MetaInsights30BannerAsync />
-        </Suspense>
-      </div>
-      <div className="tasks-war-hide">
-        <Suspense fallback={null}>
-          <ThirtyDayMirrorBannerAsync />
-        </Suspense>
-      </div>
-      <div className="tasks-war-hide">
-        <Suspense fallback={null}>
-          <WeeklyBehaviorSummaryCardAsync />
-        </Suspense>
-      </div>
+      <details className="tasks-war-hide rounded-xl border border-[var(--card-border)] bg-[var(--bg-surface)]/35 p-3">
+        <summary className="cursor-pointer text-xs font-semibold uppercase tracking-wider text-[var(--text-muted)]">
+          Meta (30d), Data-spiegel (30d), Weekly behavior summary
+        </summary>
+        <div className="mt-3 space-y-3">
+          <Suspense fallback={null}>
+            <MetaInsights30BannerAsync />
+          </Suspense>
+          <Suspense fallback={null}>
+            <ThirtyDayMirrorBannerAsync />
+          </Suspense>
+          <Suspense fallback={null}>
+            <WeeklyBehaviorSummaryCardAsync />
+          </Suspense>
+        </div>
+      </details>
       <div className="tasks-war-hide">
         <BacklogAndToekomstTriggers backlog={backlog} futureTasks={futureTasks} todayDate={dateStr} />
       </div>
@@ -440,12 +446,13 @@ async function CalendarSectionAsync({
 }
 
 async function RoutineSectionAsync({ dateStr }: { dateStr: string }) {
-  const { routineTasks, suggestedDays } = await getRoutineTasksWithSuggestions(dateStr);
+  const { routineTasks, suggestedDays, suggestedPlans } = await getRoutineTasksWithSuggestions(dateStr);
   const RoutineTaskList = (await import("@/components/missions/RoutineTaskList")).RoutineTaskList;
   return (
     <RoutineTaskList
       routineTasks={routineTasks}
       suggestedDays={suggestedDays}
+      suggestedPlans={suggestedPlans}
       dateStr={dateStr}
     />
   );

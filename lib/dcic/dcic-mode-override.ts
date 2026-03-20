@@ -4,6 +4,8 @@ import { getTodayKey } from "@/lib/daily-date";
 import type { GameState } from "./types";
 import { switchMode } from "./mode-engine";
 
+const BRAIN_SOFT_APPLY_KEY = "neurohq-brain-dcic-soft-v1";
+
 export type DCICModeOverride = "war" | "recovery" | "focus";
 
 const STORAGE_KEY = "neurohq-dcic-mode-override-v1";
@@ -56,6 +58,9 @@ export function clearDCICModeOverride(): void {
   if (typeof window === "undefined" || !window.localStorage) return;
   try {
     window.localStorage.removeItem(STORAGE_KEY);
+    if (window.sessionStorage) {
+      window.sessionStorage.removeItem(BRAIN_SOFT_APPLY_KEY);
+    }
   } catch {
     // best-effort only
   }
@@ -63,16 +68,34 @@ export function clearDCICModeOverride(): void {
 
 /**
  * Applies the local override to a gameState in-place.
- * Used to keep the "mode of the day" stable while the app periodically refetches game state.
+ * Zonder override: bij brain-suggestie recovery één keer per dag zacht naar recovery (cf. autoModeCheck na bootstrap).
  */
+function applyBrainSuggestedRecoveryIfEligible(gameState: GameState): void {
+  if (typeof window === "undefined" || !window.sessionStorage) return;
+  const override = readDCICModeOverride();
+  if (override) return;
+  if (gameState.mode?.suggested !== "recovery") return;
+  if (gameState.mode.current !== "focus") return;
+  const dayKey = getTodayKey();
+  try {
+    if (sessionStorage.getItem(BRAIN_SOFT_APPLY_KEY) === dayKey) return;
+    switchMode(gameState, "recovery", { forced: true });
+    sessionStorage.setItem(BRAIN_SOFT_APPLY_KEY, dayKey);
+  } catch {
+    // ignore
+  }
+}
+
 export function applyDCICModeOverrideIfAny(gameState: GameState): void {
   const override = readDCICModeOverride();
-  if (!override) return;
-  if (!gameState?.mode) return;
-
-  // switchMode mutates and also sets lock metadata correctly.
-  if (gameState.mode.current !== override.mode) {
-    switchMode(gameState, override.mode, { forced: true });
+  if (override) {
+    if (!gameState?.mode) return;
+    if (gameState.mode.current !== override.mode) {
+      switchMode(gameState, override.mode, { forced: true });
+    }
+    return;
   }
+
+  applyBrainSuggestedRecoveryIfEligible(gameState);
 }
 

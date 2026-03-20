@@ -2,16 +2,21 @@
 
 import { useEffect } from "react";
 import { flushHQStoreToStorage } from "@/lib/hq-store";
+import { scheduleSyncDailySnapshot } from "@/lib/daily-snapshot-full-sync";
 
 /**
  * Flush HQ store to localStorage when the app is hidden or closed,
  * so a full reload (reopen tab/PWA) always restores the latest state.
  * Zustand persist already writes on every state change; this adds an
  * explicit flush on hide/close so we don't rely on the last tick.
+ * Also schedules a full DailySnapshot merge so the snapshot file matches server + pending overlays.
  */
 export function HQStorePersistOnHide() {
   useEffect(() => {
-    const flush = () => flushHQStoreToStorage();
+    const flush = () => {
+      flushHQStoreToStorage();
+      scheduleSyncDailySnapshot(400);
+    };
 
     const onVisibilityChange = () => {
       if (document.visibilityState === "hidden") flush();

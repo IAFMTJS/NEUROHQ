@@ -58,6 +58,7 @@ export function AddBudgetEntryForm({
   const [category, setCategory] = useState("");
   const [categoryOther, setCategoryOther] = useState("");
   const [note, setNote] = useState("");
+  const [emergencyReason, setEmergencyReason] = useState("");
   const [storeName, setStoreName] = useState("");
   const [subscriptionName, setSubscriptionName] = useState("");
   const [detailName, setDetailName] = useState("");
@@ -112,6 +113,7 @@ export function AddBudgetEntryForm({
             store_name: category === "Boodschappen" && storeName ? storeName : null,
             subscription_name: category === "Abonnementen" && subscriptionName ? subscriptionName : null,
             detail_name: detailForCategory,
+            emergency_override_reason: emergencyReason || null,
           })
         );
         // Local-first: adjust pending budget snapshot so Dashboard/Budget badges update immediately.
@@ -130,6 +132,7 @@ export function AddBudgetEntryForm({
         setStoreName("");
         setSubscriptionName("");
         setDetailName("");
+        setEmergencyReason("");
         router.refresh();
         if (result?.id && isExpense && amount_cents < 0) {
           const { isPossibleImpulse, weeklyAvgCents } = await withServerActionRetry(() =>
@@ -297,6 +300,16 @@ export function AddBudgetEntryForm({
                 onChange={(e) => setNote(e.target.value)}
                 className="w-full rounded-lg border border-[var(--card-border)] bg-[var(--bg-primary)] px-3 py-2 text-sm text-[var(--text-primary)]"
                 placeholder="Short context for future you"
+              />
+            </label>
+            <label>
+              <span className="mb-1 block text-xs font-medium text-[var(--text-secondary)]">Emergency reason (if lock active)</span>
+              <input
+                type="text"
+                value={emergencyReason}
+                onChange={(e) => setEmergencyReason(e.target.value)}
+                className="w-full rounded-lg border border-[var(--card-border)] bg-[var(--bg-primary)] px-3 py-2 text-sm text-[var(--text-primary)]"
+                placeholder="Waarom is dit nu noodzakelijk?"
               />
             </label>
           </fieldset>
@@ -479,6 +492,16 @@ export function AddBudgetEntryForm({
             onChange={(e) => setNote(e.target.value)}
             placeholder="Optional"
             className="w-44 rounded-lg border border-[var(--card-border)] bg-[var(--bg-primary)] px-3 py-2.5 text-sm text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:border-[var(--accent-focus)] focus:outline-none focus:ring-2 focus:ring-[var(--accent-focus)]/30"
+          />
+        </label>
+        <label className="flex flex-col gap-1.5">
+          <span className="text-sm font-medium text-[var(--text-muted)]">Emergency reason (if lock active)</span>
+          <input
+            type="text"
+            value={emergencyReason}
+            onChange={(e) => setEmergencyReason(e.target.value)}
+            placeholder="Waarom is dit noodzakelijk?"
+            className="w-56 rounded-lg border border-[var(--card-border)] bg-[var(--bg-primary)] px-3 py-2.5 text-sm text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:border-[var(--accent-focus)] focus:outline-none focus:ring-2 focus:ring-[var(--accent-focus)]/30"
           />
         </label>
         <button type="submit" disabled={pending || readOnly} className="btn-primary rounded-lg px-4 py-2.5 text-sm font-medium disabled:opacity-50">

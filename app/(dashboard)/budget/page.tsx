@@ -31,6 +31,11 @@ import { getBudgetWeeklyReviewStatus } from "@/app/actions/budget-weekly-review"
 import { getBudgetDisciplineXpThisWeek, getBudgetDisciplineCompletedToday } from "@/app/actions/budget-discipline";
 import { syncBudgetDisciplineFromDataForToday } from "@/app/actions/missions-performance";
 import { getImpulseTimeWindow } from "@/app/actions/budget-impulse-pattern";
+import {
+  autoAwardBudgetOptimizationForCurrentUser,
+  getBudgetControlState,
+  getBudgetOptimizationSuggestions,
+} from "@/app/actions/budget-intelligence";
 import { formatMonthYearShort } from "@/lib/utils/date-locale";
 import { formatCents } from "@/lib/utils/currency";
 import { getBudgetToday, getBudgetAdjacentMonths, getPreviousPeriodBounds } from "@/lib/utils/budget-date";
@@ -59,6 +64,12 @@ import { GroceryMissionPlannerCard } from "@/components/budget/GroceryMissionPla
 import { ArchetypeRiskLensCard } from "@/components/budget/ArchetypeRiskLensCard";
 import { ImpulseTriggerMapCard } from "@/components/budget/ImpulseTriggerMapCard";
 import { ReflectionEngineCard } from "@/components/budget/ReflectionEngineCard";
+import { BudgetLockControlCard } from "@/components/budget/BudgetLockControlCard";
+import { BudgetPaydaySurveyCard } from "@/components/budget/BudgetPaydaySurveyCard";
+import { BudgetOptimizationCard } from "@/components/budget/BudgetOptimizationCard";
+import { SciFiPanel } from "@/components/hud-test/SciFiPanel";
+import { CornerNode } from "@/components/hud-test/CornerNode";
+import hudStyles from "@/components/hud-test/hud.module.css";
 
 const BudgetHistorySelector = nextDynamic(() => import("@/components/BudgetHistorySelector").then((m) => ({ default: m.BudgetHistorySelector })), { loading: () => null });
 const ExportBudgetCsvButton = nextDynamic(() => import("@/components/ExportBudgetCsvButton").then((m) => ({ default: m.ExportBudgetCsvButton })), { loading: () => null });
@@ -89,8 +100,8 @@ const BudgetWeeklyReviewCard = nextDynamic(
 );
 
 // Temporary gate for UX reset rollout; keep experimental cards disabled by default.
-const ENABLE_BUDGET_UX_EXPERIMENTS = true;
-const ENABLE_BUDGET_BEHAVIOR_REIMAGINING = true;
+const ENABLE_BUDGET_UX_EXPERIMENTS = false;
+const ENABLE_BUDGET_BEHAVIOR_REIMAGINING = false;
 
 type Props = { searchParams: Promise<{ month?: string; tab?: string }> };
 
@@ -110,6 +121,11 @@ async function BudgetContent({ searchParams }: Props) {
   } catch {
     /* table may not exist yet */
   }
+  try {
+    await autoAwardBudgetOptimizationForCurrentUser();
+  } catch {
+    /* ignore auto-award failures to keep budget page resilient */
+  }
   await syncBudgetDisciplineFromDataForToday();
   const periodBounds = await getBudgetPeriodBounds();
   const { periodStart, periodEnd, isPaydayCycle } = periodBounds;
@@ -118,7 +134,7 @@ async function BudgetContent({ searchParams }: Props) {
   const prevPeriodRange = isPaydayCycle
     ? getPreviousPeriodBounds(periodStart, paydayDayOfMonth ?? 25)
     : { prevStart: prevMonthStart, prevEnd: prevMonthEnd };
-  const [goals, entries, nextMonthEntries, prevMonthEntries, alternatives, budgetSettings, currentMonthExpenses, currentMonthIncome, currentWeekExpenses, currentWeekIncome, activeFrozen, readyForAction, unplannedSummary, contributions, recurringTemplates, financeState, financialInsights, incomeSources, budgetTargets, _paydayDayOfMonth, weeklyReviewStatus, disciplineXpThisWeek, disciplineCompletedToday, impulseWindow] = await Promise.all([
+  const [goals, entries, nextMonthEntries, prevMonthEntries, alternatives, budgetSettings, currentMonthExpenses, currentMonthIncome, currentWeekExpenses, currentWeekIncome, activeFrozen, readyForAction, unplannedSummary, contributions, recurringTemplates, financeState, financialInsights, incomeSources, budgetTargets, _paydayDayOfMonth, weeklyReviewStatus, disciplineXpThisWeek, disciplineCompletedToday, impulseWindow, budgetControlState, optimization] = await Promise.all([
     getSavingsGoals(),
     getBudgetEntries(periodStart, periodEnd),
     getBudgetEntries(nextMonthStart, nextMonthEnd),
@@ -143,6 +159,8 @@ async function BudgetContent({ searchParams }: Props) {
     getBudgetDisciplineXpThisWeek(),
     getBudgetDisciplineCompletedToday(),
     getImpulseTimeWindow(),
+    getBudgetControlState(),
+    getBudgetOptimizationSuggestions(),
   ]);
   type EntryRow = { date: string; amount_cents: number; category: string | null };
   const categoryTotals = (entries as EntryRow[])
@@ -162,8 +180,8 @@ async function BudgetContent({ searchParams }: Props) {
   const currency = budgetSettings.currency ?? "EUR";
   const isWeekly = budgetSettings.budget_period === "weekly";
 
-  const activeTab: "overview" | "execute" | "analysis" | "tactical" | "goals" =
-    tabParam === "execute" || tabParam === "tactical" || tabParam === "analysis" || tabParam === "goals"
+  const activeTab: "overview" | "execute" | "analysis" | "optimization" | "tactical" | "goals" =
+    tabParam === "execute" || tabParam === "tactical" || tabParam === "analysis" || tabParam === "goals" || tabParam === "optimization"
       ? tabParam
       : "overview";
 
@@ -272,8 +290,8 @@ async function BudgetContent({ searchParams }: Props) {
     <div className="flex flex-wrap items-center gap-3">
       <BudgetHistorySelector currentMonth={monthParam} />
       <ExportBudgetCsvButton />
-      <Link href="/strategy" className="text-sm font-medium text-[var(--accent-focus)] hover:underline">
-        Strategy →
+      <Link href="/strategy" className="dashboard-mini-btn dashboard-mini-btn-secondary text-sm">
+        Strategy
       </Link>
     </div>
   );
@@ -455,6 +473,13 @@ async function BudgetContent({ searchParams }: Props) {
         <div className="border-t border-[var(--card-border)] pt-4">
           <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-emerald-200">3. Execution Queue</p>
         </div>
+        {!historyMode && (
+          <BudgetLockControlCard
+            lockActive={budgetControlState.lockActive}
+            lockUntil={budgetControlState.lockUntil}
+            currency={currency}
+          />
+        )}
         <FrozenPurchaseCard activeFrozen={activeFrozen} readyForAction={readyForAction} currency={currency} goals={goals} />
         {!historyMode && !ENABLE_BUDGET_UX_EXPERIMENTS && <BudgetQuickLogCard date={today} currency={currency} />}
       </div>
@@ -678,7 +703,7 @@ async function BudgetContent({ searchParams }: Props) {
               )}
               <a
                 href="#add-entry"
-                className="mt-2 inline-block rounded-lg bg-[var(--accent-focus)]/20 px-3 py-2 text-sm font-medium text-[var(--text-primary)] hover:bg-[var(--accent-focus)]/30"
+                className="btn-secondary mt-2 inline-block rounded-lg px-3 py-2 text-sm font-medium"
               >
                 Eerste boeking toevoegen ↑
               </a>
@@ -710,41 +735,66 @@ async function BudgetContent({ searchParams }: Props) {
     </section>
   );
 
+  const optimizationSection = (
+    <div className="space-y-4">
+      {!historyMode && <BudgetPaydaySurveyCard required={budgetControlState.needsPaydaySurvey} />}
+      <BudgetOptimizationCard
+        summary={optimization.summary}
+        suggestions={optimization.suggestions}
+        challenges={optimization.challenges}
+      />
+    </div>
+  );
+
   return (
     <BudgetSnapshotProvider>
-      <div className="container page page-wide dashboard-page dashboard-cinematic relative z-10 pb-10">
-        <div className="space-y-4">
-          <div className="dashboard-bridge-frame">
-            <span className="dashboard-bridge-label" aria-hidden>
-              Budget Command
-            </span>
-            <HQPageHeader
-              title="Budget"
-              subtitle="Behavioral command center: plan, decide, and stay within your cycle."
-              backHref="/dashboard"
-            />
-          </div>
+      <main className={`relative min-h-screen overflow-hidden ${hudStyles.cinematicBackdrop}`}>
+        <div className={hudStyles.spaceMist} aria-hidden />
+        <div className={hudStyles.starLayerFar} aria-hidden />
+        <div className={hudStyles.starLayerNear} aria-hidden />
+        <div className={hudStyles.backgroundAtmosphere} aria-hidden />
+        <div className={hudStyles.colorBlend} aria-hidden />
+        <div className={hudStyles.spaceNoise} aria-hidden />
+        <div className="container page page-wide dashboard-page dashboard-cinematic relative z-10 pb-10">
+          <div className="space-y-4">
+            <SciFiPanel variant="glass" className={hudStyles.focusSecondary} bodyClassName="p-4 md:p-5">
+              <CornerNode corner="top-left" />
+              <CornerNode corner="top-right" />
+              <div className="[&>*+*]:mt-0">
+                <HQPageHeader
+                  title="Budget"
+                  subtitle="Behavioral command center: plan, decide, and stay within your cycle."
+                  backHref="/dashboard"
+                />
+              </div>
+            </SciFiPanel>
 
-          <div className="dashboard-bento">
-            <BudgetTabsShell
-              initialTab={activeTab}
-              isHistoryView={isHistoryView}
-              historyMode={historyMode}
-              headerRight={headerRight}
-              overview={overviewSection}
-              tactical={tacticalSection}
-              analysis={analysisSection}
-              goals={goalsSection}
-            />
-          </div>
+            <SciFiPanel variant="glass" className={hudStyles.focusSecondary} bodyClassName="p-4 md:p-6">
+              <CornerNode corner="top-left" />
+              <CornerNode corner="top-right" />
+              <div className="dashboard-bento">
+                <BudgetTabsShell
+                  initialTab={activeTab}
+                  isHistoryView={isHistoryView}
+                  historyMode={historyMode}
+                  headerRight={headerRight}
+                  overview={overviewSection}
+                  tactical={tacticalSection}
+                  analysis={analysisSection}
+                  goals={goalsSection}
+                  optimization={optimizationSection}
+                />
+              </div>
+            </SciFiPanel>
 
-          {!isHistoryView && (
-            <section className="mascot-hero-inner mx-auto" aria-hidden>
-              <HeroMascotImage page="budget" className="mascot-img" />
-            </section>
-          )}
+            {!isHistoryView && (
+              <section className="mascot-hero-inner mx-auto" aria-hidden>
+                <HeroMascotImage page="budget" className="mascot-img" />
+              </section>
+            )}
+          </div>
         </div>
-      </div>
+      </main>
     </BudgetSnapshotProvider>
   );
 }

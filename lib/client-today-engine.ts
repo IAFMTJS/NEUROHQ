@@ -26,6 +26,7 @@ export interface TodayEngineData {
     sensory_load: number;
     social_load: number;
     sleep_hours: number | null;
+    physical_health?: number | null;
   } | null;
   behaviorProfile: BehaviorProfile;
   /** Anti‑escape: Minimal Integrity hint na 3+ dagen zonder completion. */
@@ -114,12 +115,6 @@ function buildSuggestion(
 export function runTodayEngine(data: TodayEngineData): ClientTodayEngineResult {
   const items: TodayItem[] = data.tasks.map((t, i) => rawTaskToTodayItem(t, i, data.streakAtRisk));
   const allowHeavyNow = computeAllowHeavyNow(data.behaviorProfile, new Date());
-  const bucketed = bucketTodayItems(items, {
-    streakAtRisk: data.streakAtRisk,
-    nearUnlockSkills: [],
-    allowHeavyNow,
-  });
-  const suggestion = buildSuggestion(bucketed, data.xp.total_xp, data.streakAtRisk);
 
   const baseSuggested = data.dailyState
     ? getSuggestedTaskCount({
@@ -128,6 +123,7 @@ export function runTodayEngine(data: TodayEngineData): ClientTodayEngineResult {
         sensory_load: data.dailyState.sensory_load,
         social_load: data.dailyState.social_load,
         sleep_hours: data.dailyState.sleep_hours,
+        physical_health: data.dailyState.physical_health ?? null,
       })
     : 3;
 
@@ -137,6 +133,14 @@ export function runTodayEngine(data: TodayEngineData): ClientTodayEngineResult {
   } else if (data.behaviorProfile.disciplineLevel === "high") {
     suggestedTaskCount = Math.min(8, baseSuggested + 1);
   }
+
+  const bucketed = bucketTodayItems(items, {
+    streakAtRisk: data.streakAtRisk,
+    nearUnlockSkills: [],
+    allowHeavyNow,
+    missionEquivalentCap: suggestedTaskCount,
+  });
+  const suggestion = buildSuggestion(bucketed, data.xp.total_xp, data.streakAtRisk);
 
   const behaviorSuggestions = buildBehaviorSuggestions(data.behaviorProfile);
 

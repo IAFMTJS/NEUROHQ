@@ -1,0 +1,1099 @@
+Reimagining
+
+
+
+Behavioural engine
+	Brainstatus logica : Social load moet upgedate worden naar Gezondheid, soms kan je verkouden zijn, of je voelt je niet goed in je vel, je rug doet pijn etc en dan moet de app daar ook rekening mee houden, want sommige taken zijn mentaal zwaar en andere kunnen fysiek zwaar zijn
+	Brainstatus update : 🧠 1. DE GROOTSTE ERRORS IN JE HUIDIGE MODEL
+
+
+
+
+
+
+
+❌ Error 1: Overlap tussen variabelen
+
+
+
+
+
+energy vs mentalBattery vs sleep → deels hetzelfde effect
+👉 Resultaat: dubbele impact
+
+
+
+
+
+
+
+
+
+
+❌ Error 2: Geen harde limits
+
+
+
+
+
+iemand met rugpijn kan nog steeds fysieke tasks krijgen
+👉 omdat score dat niet tegenhoudt
+
+
+
+
+
+
+
+
+
+
+❌ Error 3: Score bepaalt te veel
+
+
+
+
+
+je gebruikt 1 score voor alles
+👉 terwijl realiteit multidimensionaal is
+
+
+
+
+
+
+
+
+
+
+❌ Error 4: Geen volgorde in beslissingen
+
+
+
+
+
+Je doet:
+
+
+
+score → state → tasks
+
+
+
+
+Maar mist:
+
+👉 constraints → modifiers → selection → validation
+
+
+
+
+
+
+
+
+
+⚙️ 2. NIEUWE ARCHITECTUUR (DIT IS JE ENGINE)
+
+
+
+
+
+We splitsen het in 5 lagen:
+
+INPUT → NORMALIZE → CONSTRAINTS → STATE → TASK ENGINE → XP ENGINE
+
+Niet sexy. Wel werkend.
+
+
+
+
+
+
+
+
+
+🧱 3. DEFINITIEVE DATA STRUCTUUR
+
+
+
+const userState = {
+
+  stats: {
+
+    energy: 70,
+
+    focus: 60,
+
+    mentalBattery: 50,
+
+    mentalLoad: 65,
+
+    physicalHealth: 40,
+
+    sleep: 6
+
+  }
+
+};
+
+Tasks:
+
+const task = {
+
+  id: 1,
+
+  name: "Deep Work",
+
+  type: "mental", // mental | physical | mixed | recovery
+
+  intensity: 80,
+
+  baseXP: 120
+
+};
+
+
+
+
+
+
+
+
+
+🔍 4. STEP 1 — NORMALIZATION (PURE)
+
+
+
+function normalizeStats(stats) {
+
+  return {
+
+    energy: stats.energy / 100,
+
+    focus: stats.focus / 100,
+
+    battery: stats.mentalBattery / 100,
+
+    load: stats.mentalLoad / 100,
+
+    physical: stats.physicalHealth / 100,
+
+    sleep: Math.min(1, stats.sleep / 8)
+
+  };
+
+}
+
+👉 Geen logica hier. Alleen data schoonmaken.
+
+
+
+
+
+
+
+
+
+🚫 5. STEP 2 — HARD CONSTRAINTS (KRITISCH)
+
+
+
+
+
+Hier beslis je wat NIET MAG
+
+function getConstraints(normalized) {
+
+
+
+  return {
+
+    blockPhysical: normalized.physical < 0.3,
+
+    blockMental: normalized.battery < 0.3,
+
+    forceRecovery:
+
+      normalized.battery < 0.2 ||
+
+      normalized.energy < 0.2 ||
+
+      normalized.sleep < 0.3
+
+  };
+
+
+
+}
+
+👉 Dit is waar 90% van apps falen
+
+Ze blokkeren niks → alles blijft “mogelijk”
+
+
+
+
+
+
+
+
+
+🧠 6. STEP 3 — EFFECTIVE STATS (INTERACTIES)
+
+
+
+
+
+Hier komt nuance:
+
+function getEffectiveStats(n) {
+
+
+
+  const effectiveBattery = n.battery - (n.load * 0.5);
+
+
+
+  return {
+
+    ...n,
+
+    effectiveBattery: Math.max(0, effectiveBattery)
+
+  };
+
+
+
+}
+
+
+
+
+
+
+
+
+
+🧬 7. STEP 4 — STATE ENGINE
+
+
+
+function getBrainState(e) {
+
+
+
+  const score =
+
+    e.energy * 0.2 +
+
+    e.focus * 0.2 +
+
+    e.effectiveBattery * 0.3 +
+
+    e.sleep * 0.15 +
+
+    e.physical * 0.15;
+
+
+
+  if (score >= 0.75) return "PEAK";
+
+  if (score >= 0.55) return "OPTIMAL";
+
+  if (score >= 0.35) return "LIMITED";
+
+  if (score >= 0.2) return "DRAINED";
+
+  return "CRASH";
+
+}
+
+👉 score = alleen voor “algemene toestand”
+
+NIET voor beperkingen
+
+
+
+
+
+
+
+
+
+🎯 8. STEP 5 — TASK ENGINE (HIER GEBEURT HET)
+
+
+
+
+
+
+
+8.1 Filter op constraints
+
+
+
+function filterTasks(tasks, constraints) {
+
+
+
+  return tasks.filter(task => {
+
+
+
+    if (constraints.forceRecovery && task.type !== "recovery") return false;
+
+
+
+    if (constraints.blockPhysical && task.type === "physical") return false;
+
+
+
+    if (constraints.blockMental && task.type === "mental") return false;
+
+
+
+    return true;
+
+  });
+
+
+
+}
+
+
+
+
+
+
+
+
+
+8.2 State-based selectie
+
+
+
+function selectTasks(tasks, state) {
+
+
+
+  const config = {
+
+    PEAK: { count: 5 },
+
+    OPTIMAL: { count: 4 },
+
+    LIMITED: { count: 3 },
+
+    DRAINED: { count: 2 },
+
+    CRASH: { count: 1 }
+
+  };
+
+
+
+  return tasks.slice(0, config[state].count);
+
+}
+
+
+
+
+
+
+
+
+
+💰 9. XP ENGINE (EINDELIJK CONSISTENT)
+
+
+
+function calculateXP(task, state, effectiveStats) {
+
+
+
+  const stateMultiplier = {
+
+    PEAK: 1.3,
+
+    OPTIMAL: 1.0,
+
+    LIMITED: 0.85,
+
+    DRAINED: 0.6,
+
+    CRASH: 0.3
+
+  };
+
+
+
+  const effortFactor =
+
+    task.type === "mental"
+
+      ? effectiveStats.effectiveBattery
+
+      : effectiveStats.physical;
+
+
+
+  return Math.floor(task.baseXP * stateMultiplier[state] * effortFactor);
+
+}
+
+
+
+
+
+
+
+
+
+🔁 10. FULL PIPELINE (DIT IS WAT JE CODE MOET DOEN)
+
+
+
+function runEngine(userState, allTasks) {
+
+
+
+  const normalized = normalizeStats(userState.stats);
+
+
+
+  const constraints = getConstraints(normalized);
+
+
+
+  const effectiveStats = getEffectiveStats(normalized);
+
+
+
+  const state = getBrainState(effectiveStats);
+
+
+
+  const availableTasks = filterTasks(allTasks, constraints);
+
+
+
+  const selectedTasks = selectTasks(availableTasks, state);
+
+
+
+  return {
+
+    state,
+
+    tasks: selectedTasks,
+
+    constraints
+
+  };
+
+
+
+}
+
+
+
+
+
+
+
+
+
+🧨 11. WAT JE NU HEBT
+
+
+
+
+
+Geen losse ideetjes meer.
+
+
+
+👉 Dit is:
+
+
+
+deterministisch
+uitbreidbaar
+debugbaar
+logisch
+
+
+
+
+
+
+
+
+
+
+💀 12. BRUTE REALITEIT
+
+
+
+
+
+De meeste mensen bouwen:
+
+👉 een systeem dat “cool klinkt”
+
+
+
+Jij zit nu op:
+
+👉 een systeem dat beslissingen neemt zoals een coach
+
+
+
+
+
+
+	Bestaande en nieuwe taken systeem update
+	🧠 1. DE GROTE FOUT DIE JE MOET VERMIJDEN
+
+
+
+
+
+Niet doen:
+
+
+
+10 sliders per taak
+“hoe zwaar is dit op een schaal van 1–100?”
+users laten nadenken
+
+
+
+
+Want users:
+
+👉 liegen
+
+👉 gokken
+
+👉 klikken random shit
+
+
+
+Dus:
+
+
+
+👉 jij classificeert, niet de user
+
+
+
+
+
+
+
+
+
+🧱 2. TASK DNA (MINIMALE STRUCTUUR)
+
+
+
+
+
+Elke task krijgt een vaste “DNA”:
+
+const task = {
+
+  id: "deep_work_1",
+
+  name: "Deep Work Session",
+
+
+
+  type: "mental",        // mental | physical | mixed | recovery
+
+  intensity: 80,         // 0–100
+
+  duration: 60,          // minuten
+
+
+
+  tags: ["focus", "productive"],
+
+
+
+  baseXP: 120
+
+};
+
+👉 Meer heb je NIET nodig
+
+👉 Alles extra = complexity cancer
+
+
+
+
+
+
+
+
+
+⚙️ 3. MAAR USERS GAAN DIT NIET INVULLEN
+
+
+
+
+
+Dus we bouwen:
+
+
+
+
+
+🔥 TASK PRESETS (DE MAGIE)
+
+
+
+
+
+User kiest:
+
+
+
+“Studeren”
+“Opruimen”
+“Workout”
+“Chillen”
+
+
+
+
+En jij map’t dat naar:
+
+const TASK_PRESETS = {
+
+
+
+  study: {
+
+    type: "mental",
+
+    intensity: 75,
+
+    duration: 60,
+
+    baseXP: 110
+
+  },
+
+
+
+  cleaning: {
+
+    type: "physical",
+
+    intensity: 60,
+
+    duration: 45,
+
+    baseXP: 90
+
+  },
+
+
+
+  workout: {
+
+    type: "physical",
+
+    intensity: 85,
+
+    duration: 60,
+
+    baseXP: 130
+
+  },
+
+
+
+  relax: {
+
+    type: "recovery",
+
+    intensity: 20,
+
+    duration: 30,
+
+    baseXP: 50
+
+  }
+
+
+
+};
+
+
+
+
+
+
+
+
+
+🧠 4. SLIMME AUTO-CLASSIFICATIE (ZONDER USER INPUT)
+
+
+
+
+
+User typt:
+
+👉 “kamer opruimen”
+
+
+
+Jij doet:
+
+function classifyTask(name) {
+
+
+
+  const lower = name.toLowerCase();
+
+
+
+  if (lower.includes("study") || lower.includes("learn"))
+
+    return TASK_PRESETS.study;
+
+
+
+  if (lower.includes("clean") || lower.includes("opruimen"))
+
+    return TASK_PRESETS.cleaning;
+
+
+
+  if (lower.includes("gym") || lower.includes("workout"))
+
+    return TASK_PRESETS.workout;
+
+
+
+  return TASK_PRESETS.relax;
+
+}
+
+👉 Simpel
+
+👉 uitbreidbaar
+
+👉 later AI-proof
+
+
+
+
+
+
+
+
+
+🧬 5. ADVANCED: TASK PROFILE SCORE
+
+
+
+
+
+Nu wordt het sexy.
+
+
+
+Je maakt per task een profiel:
+
+taskProfile = {
+
+  mentalLoad: 0.8,
+
+  physicalLoad: 0.2
+
+};
+
+Of:
+
+taskProfile = {
+
+  mentalLoad: 0.3,
+
+  physicalLoad: 0.7
+
+};
+
+
+
+
+
+
+
+
+
+Waarom?
+
+
+
+
+
+Omdat niet alles zwart-wit is:
+
+
+
+koken = mixed
+werken = mostly mental
+wandelen = low physical
+
+
+
+
+
+
+
+
+
+
+⚖️ 6. MATCHING ENGINE (DIT IS WAAR JE APP “SNAPT”)
+
+
+
+function isTaskSuitable(task, effectiveStats) {
+
+
+
+  const mentalFit =
+
+    effectiveStats.effectiveBattery >= task.mentalLoad * 100;
+
+
+
+  const physicalFit =
+
+    effectiveStats.physical >= task.physicalLoad * 100;
+
+
+
+  return mentalFit && physicalFit;
+
+}
+
+
+
+
+
+
+
+
+
+🧨 7. SLIMME DEFAULTS (DIT REDT JE UX)
+
+
+
+
+
+Als user niks invult:
+
+
+
+👉 jij vult automatisch:
+
+function createTask(name) {
+
+
+
+  const preset = classifyTask(name);
+
+
+
+  return {
+
+    id: crypto.randomUUID(),
+
+    name,
+
+    ...preset
+
+  };
+
+}
+
+👉 0 friction
+
+👉 100% bruikbaar
+
+
+
+
+
+
+
+
+
+🧠 8. AUTO-LEARNING (LATER, MAAR BELANGRIJK)
+
+
+
+
+
+Je kan tracken:
+
+
+
+task completion rate
+wanneer user tasks skipt
+welke taken altijd falen bij lage battery
+
+
+
+
+En dan:
+
+
+
+👉 intensity aanpassen per user
+
+task.intensity = adjustBasedOnHistory(task, userHistory);
+
+
+
+
+
+
+
+
+
+💰 9. BONUS: XP WORDT CONSISTENTER
+
+
+
+
+
+Want nu:
+
+
+
+👉 XP = functie van:
+
+
+
+intensity
+duration
+
+
+function calculateBaseXP(task) {
+
+  return Math.floor(task.intensity * (task.duration / 30));
+
+}
+
+👉 eindelijk logisch in plaats van random getallen
+
+
+
+
+
+
+
+
+
+🧱 10. WAT JE NU HEBT
+
+
+
+
+
+Niet meer:
+
+👉 “taken”
+
+
+
+Maar:
+
+👉 gestandaardiseerde entiteiten die de engine kan begrijpen
+
+
+
+
+
+
+
+
+
+💀 11. HARD TRUTH
+
+
+
+
+
+Zonder dit:
+
+👉 je engine blijft slim
+
+👉 maar je input blijft garbage
+
+
+
+= garbage in → garbage out
+
+
+
+Met dit:
+
+👉 je kan:
+
+
+
+automatisch taken genereren
+taken filteren
+taken schalen
+XP correct berekenen
+
+
+
+
+
+
+
+
+Je bent nu basically een systeem aan het bouwen dat:
+
+👉 taken begrijpt
+
+👉 mensen begrijpt
+
+👉 en die twee matcht zonder dat de user 15 sliders moet invullen alsof hij een vliegtuig aan het configureren is.
+
+
+
+En dat is exact waarom dit potentieel gevaarlijk goed wordt.
+
+
+Dashboard page
+
+
+Mission page
+	1. The your next move and system suggestions moeten samengevoegd worden en die modal moet ook uitleggen waarom de eerste taak de must do taak, waarom van al de taken dat die taak gekozen is 
+	2. Diagnostics geeft niets weer
+	3. Onder diagnostics is er nog eens een taskcard, dat hebben we niet nodig daar.
+	4. We hebben een in card header die dit zegt : Low energy — we suggest fewer, lighter tasks. Heavy tasks are hidden by default; you can add any. maar aangezien het vaak low energy is, staat er altijd hetzelfde, is het niet motiverend en hebben we er niets aan
+	5. Meta (laatste 30 dagen) + Data-spiegel (laatste 30 dagen) + Weekly behavior summary, moet standaard een ingeklapte modal zijn dat kan uitgeklapt worden
+	6. Routine Tab moet een upgrade krijgen, nu is het gewoon een lijst met de taken met 3 voorgestelde data maar routine = wekelijks, 2-wekelijks, maandelijks, of moet bv elke 16dag van de maand terugkomen en toegevoegd worden. etc en elke terugkerende taak moet dan ook in de routine tab worden opgenomen
+
+ 
+ Budget page
+	1. Het systeem moet soms dagen gaan blocken dat je die dagen geen geld kan uitgeven, dus budget blokkeren of vastzetten voor een dag of 2 dagelijkse ofso, met een uitzondering dat wel nooduitgaven kunnen gedaan worden want een mens moet altjd kunnen eten maar de user moet dan wel ingeven waarom het noodzakelijk was, die info moet dan verzameld worden in supabase in logs, iets dat niet terug geladen wordt naar de site, dat is puur om dan het model te trainen
+	2. 4 dagen voor het volgende verwachte loon moet de gebruiker een soort van verplichte survey invullen die helpt reflecteren maar die ook ontdekt door wat of hoe het komt dat het budget overschreden is, dan kan na een paar keer het systeem zich beginnen aanpassen op die redenen, ook die input moet gelogd worden in supabase zodat we dat kunnen gebruiken voor model training
+	3. We moeten een tab toevoegen, optimalisatie, die op basis van de data voorstellen doet om budget aan te passen of categorie budgetten aan te passen, te verhogen om te heralloceren etc en eventueel een uitdaging geven voor volgende maand en daar xp aan koppelen : Bv. Boodschappen volgende periode met 10% uitgaven verminderen en dan op het einde van de maand als het target behaald is : 400xp er automatisch bij indien gelukt
+
+Settings page 
+	1. Settings moeten gecategoriseerd worden in de juiste categorie bv Gebruiker, Systeem, Netwerk, Toestel, en ze daar in een samenklappende modals steken. Zodat het overzichtelijker wordt
+

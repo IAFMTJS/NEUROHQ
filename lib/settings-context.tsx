@@ -32,6 +32,13 @@ async function fetchSettings(): Promise<SettingsPayload> {
   return data as SettingsPayload;
 }
 
+async function fetchSettingsMeta(): Promise<{ preferencesUpdatedAt: string | null } | null> {
+  const res = await fetch("/api/settings?mode=meta", { credentials: "include", cache: "no-store" });
+  if (!res.ok) return null;
+  const data = await res.json();
+  return data as { preferencesUpdatedAt: string | null };
+}
+
 export function SettingsProvider({ children }: { children: ReactNode }) {
   const [settings, setSettings] = useState<SettingsPayload>(null);
 
@@ -67,13 +74,31 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     const onFocus = () => {
-      void fetchSettings()
-        .then((data) => setSettings(data))
-        .catch(() => setSettings(null));
+      void (async () => {
+        try {
+          if (!settings) {
+            setSettings(await fetchSettings());
+            return;
+          }
+          const meta = await fetchSettingsMeta();
+          const localUpdatedAt = settings.preferences?.updated_at ?? null;
+          if (!meta?.preferencesUpdatedAt || !localUpdatedAt) {
+            setSettings(await fetchSettings());
+            return;
+          }
+          const serverTs = Date.parse(meta.preferencesUpdatedAt);
+          const localTs = Date.parse(localUpdatedAt);
+          if (Number.isNaN(serverTs) || Number.isNaN(localTs) || serverTs > localTs) {
+            setSettings(await fetchSettings());
+          }
+        } catch {
+          setSettings(null);
+        }
+      })();
     };
     window.addEventListener("focus", onFocus);
     return () => window.removeEventListener("focus", onFocus);
-  }, []);
+  }, [settings]);
 
   return (
     <SettingsContext.Provider value={{ settings, invalidate }}>

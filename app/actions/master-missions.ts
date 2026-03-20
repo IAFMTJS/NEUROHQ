@@ -6,7 +6,7 @@ import { createClient, createServiceRoleClient } from "@/lib/supabase/server";
 import { getBehaviorProfile } from "@/app/actions/behavior-profile";
 import { getAvoidanceTracker } from "@/app/actions/avoidance-tracker";
 import { createTask } from "@/app/actions/tasks";
-import type { TablesInsert } from "@/types/database.types";
+import { bandFor10Scale, getMissionCountRangeForEnergyBand } from "@/lib/behavioral-engine";
 import { getSuggestedTaskCount } from "@/lib/utils/energy";
 import { computeBrainMode } from "@/lib/brain-mode";
 import { pickMissionsForDay, type PickedMissionTemplate } from "@/lib/master-mission-pool";
@@ -14,12 +14,14 @@ import { MASTER_MISSION_POOL } from "@/lib/mission-templates";
 import { getUserPreferencesOrDefaults } from "@/app/actions/preferences";
 import { trackEvent } from "@/app/actions/analytics-events";
 import { todayDateString } from "@/lib/utils/timezone";
+import { classifyTaskPreset, deriveBaseXpFromIntensityDuration } from "@/lib/task-presets";
 
 type DailyStateRow = {
   energy?: number | null;
   focus?: number | null;
   sensory_load?: number | null;
   social_load?: number | null;
+  physical_health?: number | null;
   sleep_hours?: number | null;
   auto_master_missions_generated?: boolean | null;
 };
@@ -38,6 +40,7 @@ export type DailyStateFromSave = {
   focus: number | null;
   sensory_load: number | null;
   social_load: number | null;
+  physical_health?: number | null;
   sleep_hours: number | null;
   auto_master_missions_generated: boolean;
 };
@@ -52,7 +55,7 @@ export async function getDailyStateForAllocator(): Promise<DailyStateFromSave | 
   const dateStr = todayDateString();
   const { data: row } = await serviceSupabase
     .from("daily_state")
-    .select("energy, focus, sensory_load, social_load, sleep_hours, auto_master_missions_generated")
+    .select("energy, focus, sensory_load, social_load, physical_health, sleep_hours, auto_master_missions_generated")
     .eq("user_id", user.id)
     .eq("date", dateStr)
     .maybeSingle();
@@ -62,6 +65,7 @@ export async function getDailyStateForAllocator(): Promise<DailyStateFromSave | 
     focus: row.focus ?? null,
     sensory_load: row.sensory_load ?? null,
     social_load: row.social_load ?? null,
+      physical_health: (row as { physical_health?: number | null }).physical_health ?? null,
     sleep_hours: row.sleep_hours ?? null,
     auto_master_missions_generated: row.auto_master_missions_generated ?? false,
   };
@@ -101,6 +105,7 @@ export async function ensureMasterMissionsForToday(dailyStateFromSave?: DailySta
       focus: dailyStateFromSave.focus,
       sensory_load: dailyStateFromSave.sensory_load,
       social_load: dailyStateFromSave.social_load,
+      physical_health: (dailyStateFromSave as { physical_health?: number | null }).physical_health ?? null,
       sleep_hours: dailyStateFromSave.sleep_hours,
       auto_master_missions_generated: dailyStateFromSave.auto_master_missions_generated,
     };
@@ -108,7 +113,7 @@ export async function ensureMasterMissionsForToday(dailyStateFromSave?: DailySta
   } else {
     const { data: dailyRowRaw } = await db
       .from("daily_state")
-      .select("energy, focus, sensory_load, social_load, sleep_hours, auto_master_missions_generated")
+      .select("energy, focus, sensory_load, social_load, physical_health, sleep_hours, auto_master_missions_generated")
       .eq("user_id", user.id)
       .eq("date", dateStr)
       .maybeSingle();
@@ -116,7 +121,7 @@ export async function ensureMasterMissionsForToday(dailyStateFromSave?: DailySta
     if (!dailyRow && supabase !== db) {
       const { data: fallback } = await supabase
         .from("daily_state")
-        .select("energy, focus, sensory_load, social_load, sleep_hours, auto_master_missions_generated")
+        .select("energy, focus, sensory_load, social_load, physical_health, sleep_hours, auto_master_missions_generated")
         .eq("user_id", user.id)
         .eq("date", dateStr)
         .maybeSingle();
@@ -152,10 +157,15 @@ export async function ensureMasterMissionsForToday(dailyStateFromSave?: DailySta
     allAutoTasks.map((t) => (t as { title?: string | null }).title ?? "").filter(Boolean)
   );
 
-  const MIN_AUTO_PER_DAY = 2;
-  const MAX_AUTO_PER_DAY = 4;
+  const DEFAULT_SLIDER = 5;
+  const energy = stateRow.energy ?? DEFAULT_SLIDER;
+  const energyBand = bandFor10Scale(energy);
+  const missionRange = getMissionCountRangeForEnergyBand(energyBand);
+  const MIN_AUTO_PER_DAY = missionRange.min;
+  const MAX_AUTO_PER_DAY = missionRange.max;
+
   const skipBecauseAlreadyGenerated =
-    !!stateRow.auto_master_missions_generated && existingAutoCount >= MIN_AUTO_PER_DAY;
+    !!stateRow.auto_master_missions_generated && existingAutoCount >= MAX_AUTO_PER_DAY;
   if (skipBecauseAlreadyGenerated) {
     if (process.env.NODE_ENV === "development") console.log("[auto-missions] exit: already_generated", { existingAutoCount });
     return { created: 0, debug: "already_generated", serviceRoleAvailable: !!serviceSupabase };
@@ -163,9 +173,6 @@ export async function ensureMasterMissionsForToday(dailyStateFromSave?: DailySta
   if (stateRow.auto_master_missions_generated && existingAutoCount < MIN_AUTO_PER_DAY && process.env.NODE_ENV === "development") {
     console.log("[auto-missions] self-heal: flag was true but only", existingAutoCount, "auto-missions, creating more");
   }
-
-  const DEFAULT_SLIDER = 5;
-  const energy = stateRow.energy ?? DEFAULT_SLIDER;
   const focus = stateRow.focus ?? DEFAULT_SLIDER;
   const sensory_load = stateRow.sensory_load ?? DEFAULT_SLIDER;
   const social_load = stateRow.social_load ?? DEFAULT_SLIDER;
@@ -173,12 +180,8 @@ export async function ensureMasterMissionsForToday(dailyStateFromSave?: DailySta
 
   const profile = await getBehaviorProfile();
 
-  // Auto-missies: altijd 2–4 per dag als brain status staat. Niet beperken door energy budget of totaal
-  // aantal andere taken — die taken bepalen alleen volgorde/prioriteit in de UI (bijv. "optioneel" sectie).
-  const slotsToAdd = Math.min(
-    MAX_AUTO_PER_DAY - existingAutoCount,
-    Math.max(0, MIN_AUTO_PER_DAY - existingAutoCount)
-  );
+  // Auto-missies: aantal volgens energy-band (laag 1–2 … uiterst 6). Vul tot plafond zolang nog niet gegenereerd.
+  const slotsToAdd = Math.max(0, MAX_AUTO_PER_DAY - existingAutoCount);
 
   if (slotsToAdd <= 0) {
     // Mark as generated so we don’t re-run unnecessarily; missions are already assigned.
@@ -327,23 +330,40 @@ export async function ensureMasterMissionsForToday(dailyStateFromSave?: DailySta
             : "discipline";
 
     try {
+      const preset = classifyTaskPreset(title);
+      const fallbackBaseXp = deriveBaseXpFromIntensityDuration(preset.intensity, preset.durationMinutes);
+      const energyRequired = tpl.energy ?? Math.min(10, Math.max(1, Math.round(preset.intensity / 10)));
+      const focusRequired = preset.type === "mental" ? 7 : preset.type === "mixed" ? 5 : 3;
+      const mentalLoad = preset.type === "mental" ? 8 : preset.type === "mixed" ? 5 : preset.type === "recovery" ? 2 : 3;
+      const socialLoad = preset.type === "physical" ? 3 : preset.type === "recovery" ? 2 : 5;
+      /** DB cognitive_load is 0.1–1; mental_load is 1–10. */
+      const cognitiveLoadNorm = Math.min(1, Math.max(0.1, Math.round((mentalLoad / 10) * 100) / 100));
+      const templateTags = tpl.tags ?? [];
       if (serviceSupabase) {
-        const row: TablesInsert<"tasks"> = {
+        const row = {
           user_id: user.id,
           title,
           due_date: dateStr,
-          energy_required: tpl.energy ?? 2,
+          energy_required: energyRequired,
+          focus_required: focusRequired,
+          mental_load: mentalLoad,
+          social_load: socialLoad,
+          cognitive_load: cognitiveLoadNorm,
           category: tpl.category ?? null,
           impact,
           domain: tpl.domain ?? null,
-          base_xp: tpl.baseXP ?? 50,
+          base_xp: Math.max(tpl.baseXP ?? 0, fallbackBaseXp),
           psychology_label: "MasterPoolAuto",
           avoidance_tag: tpl.avoidance_tag ?? null,
           hobby_tag: tpl.hobby_tag ?? null,
           notes: (tpl as { description?: string }).description?.trim() || null,
           mission_intent: missionIntent,
-        };
-        const { error } = await serviceSupabase.from("tasks").insert(row);
+          task_type: preset.type,
+          intensity: preset.intensity,
+          duration_minutes: preset.durationMinutes,
+          task_tags: templateTags,
+        } satisfies Record<string, unknown>;
+        const { error } = await serviceSupabase.from("tasks").insert(row as any);
         if (error) throw new Error(error.message);
         revalidateTagMax(`tasks-${user.id}-${dateStr}`);
         revalidatePath("/dashboard");
@@ -352,16 +372,24 @@ export async function ensureMasterMissionsForToday(dailyStateFromSave?: DailySta
         await createTask({
           title,
           due_date: dateStr,
-          energy_required: tpl.energy ?? 2,
+          energy_required: energyRequired,
+          focus_required: focusRequired,
+          mental_load: mentalLoad,
+          social_load: socialLoad,
+          cognitive_load: cognitiveLoadNorm,
           category: tpl.category ?? null,
           impact,
           domain: tpl.domain,
-          base_xp: tpl.baseXP ?? 50,
+          base_xp: Math.max(tpl.baseXP ?? 0, fallbackBaseXp),
           psychology_label: "MasterPoolAuto",
           avoidance_tag: tpl.avoidance_tag ?? null,
           hobby_tag: tpl.hobby_tag ?? null,
           notes: (tpl as { description?: string }).description?.trim() || null,
           mission_intent: missionIntent,
+          task_type: preset.type,
+          intensity: preset.intensity,
+          duration_minutes: preset.durationMinutes,
+          task_tags: templateTags,
         });
       }
       created++;
@@ -416,7 +444,7 @@ export async function addBonusAutoMissionsForToday(): Promise<EnsureMasterMissio
 
   const { data: dailyRowRaw } = await supabase
     .from("daily_state")
-    .select("energy, focus, sensory_load, social_load, sleep_hours")
+    .select("energy, focus, sensory_load, social_load, physical_health, sleep_hours")
     .eq("user_id", user.id)
     .eq("date", dateStr)
     .maybeSingle();
@@ -480,16 +508,27 @@ export async function addBonusAutoMissionsForToday(): Promise<EnsureMasterMissio
     if (!title) continue;
 
     try {
+      const preset = classifyTaskPreset(title);
+      const fallbackBaseXp = deriveBaseXpFromIntensityDuration(preset.intensity, preset.durationMinutes);
+      const energyRequired = tpl.energy ?? Math.min(10, Math.max(1, Math.round(preset.intensity / 10)));
+      const focusRequired = preset.type === "mental" ? 7 : preset.type === "mixed" ? 5 : 3;
+      const mentalLoad = preset.type === "mental" ? 8 : preset.type === "mixed" ? 5 : preset.type === "recovery" ? 2 : 3;
+      const socialLoad = preset.type === "physical" ? 3 : preset.type === "recovery" ? 2 : 5;
+      const cognitiveLoadNorm = Math.min(1, Math.max(0.1, Math.round((mentalLoad / 10) * 100) / 100));
       const impactRaw = tpl.baseXP ? Math.round((tpl.baseXP / 10) * 1.5) : 2;
       const impact = Math.min(3, Math.max(1, impactRaw));
       await createTask({
         title,
         due_date: dateStr,
-        energy_required: tpl.energy ?? 2,
+        energy_required: energyRequired,
+        focus_required: focusRequired,
+        mental_load: mentalLoad,
+        social_load: socialLoad,
+        cognitive_load: cognitiveLoadNorm,
         category: tpl.category ?? null,
         impact,
         domain: tpl.domain,
-        base_xp: tpl.baseXP ?? 40,
+        base_xp: Math.max(tpl.baseXP ?? 0, fallbackBaseXp),
         psychology_label: "MasterPoolBonus",
         avoidance_tag: tpl.avoidance_tag ?? null,
         hobby_tag: tpl.hobby_tag ?? null,
@@ -498,6 +537,10 @@ export async function addBonusAutoMissionsForToday(): Promise<EnsureMasterMissio
           tpl.tags?.includes("recovery") || brainMode.mode === "LowEnergy"
             ? "recovery"
             : "discipline",
+        task_type: preset.type,
+        intensity: preset.intensity,
+        duration_minutes: preset.durationMinutes,
+        task_tags: tpl.tags ?? [],
       });
       created++;
       await trackEvent("mission_suggested", {

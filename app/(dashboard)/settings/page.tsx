@@ -52,6 +52,50 @@ function SettingsShell() {
   );
 }
 
+function SettingsCategory({
+  title,
+  subtitle,
+  defaultOpen = false,
+  children,
+}: {
+  title: string;
+  subtitle: string;
+  defaultOpen?: boolean;
+  children: React.ReactNode;
+}) {
+  return (
+    <details className="card-simple overflow-hidden p-0" open={defaultOpen}>
+      <summary className="cursor-pointer list-none border-b border-[var(--card-border)] px-4 py-3">
+        <p className="text-xs font-semibold uppercase tracking-wide text-[var(--text-muted)]">{title}</p>
+        <p className="mt-0.5 text-xs text-[var(--text-muted)]">{subtitle}</p>
+      </summary>
+      <div className="space-y-4 p-4">{children}</div>
+    </details>
+  );
+}
+
+function SettingsSubCard({
+  title,
+  subtitle,
+  defaultOpen = false,
+  children,
+}: {
+  title: string;
+  subtitle: string;
+  defaultOpen?: boolean;
+  children: React.ReactNode;
+}) {
+  return (
+    <details className="card-simple overflow-hidden p-0" open={defaultOpen}>
+      <summary className="cursor-pointer list-none border-b border-[var(--card-border)] px-4 py-3">
+        <p className="text-xs font-semibold uppercase tracking-wide text-[var(--text-muted)]">{title}</p>
+        <p className="mt-0.5 text-xs text-[var(--text-muted)]">{subtitle}</p>
+      </summary>
+      <div className="space-y-4 p-4">{children}</div>
+    </details>
+  );
+}
+
 async function SettingsContent() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
@@ -71,42 +115,52 @@ async function SettingsContent() {
 
   return (
     <>
-      <section className="space-y-3" data-tutorial="settings-account">
-        <h2 className="text-xs font-semibold uppercase tracking-wide text-[var(--text-muted)]">Account</h2>
-        <div className="card-simple overflow-hidden p-0">
-          <div className="p-4">
-            <p className="text-sm text-[var(--text-muted)]">{user.email}</p>
+      <SettingsCategory title="Gebruiker" subtitle="Account, brain & gedrag, en budgetinstellingen" defaultOpen>
+        <section className="space-y-3" data-tutorial="settings-account">
+          <h2 className="text-xs font-semibold uppercase tracking-wide text-[var(--text-muted)]">Account</h2>
+          <div className="card-simple overflow-hidden p-0">
+            <div className="p-4">
+              <p className="text-sm text-[var(--text-muted)]">{user.email}</p>
+            </div>
           </div>
-        </div>
-      </section>
-
-      <section className="space-y-3">
-        <h2 className="text-xs font-semibold uppercase tracking-wide text-[var(--text-muted)]">Snel naar</h2>
+        </section>
         <SettingsQuickLinks />
-      </section>
+        <SettingsSubCard
+          title="Brain & gedrag"
+          subtitle="Gedragsprofiel, routines en planningsbias"
+          defaultOpen
+        >
+          <BehaviorProfileSettings initial={behaviorProfile} initialAutoMasterMissions={prefs.auto_master_missions} />
+          <SettingsDaysOff initialDaysOff={prefs.usual_days_off ?? null} initialMode={prefs.day_off_mode ?? "soft"} />
+        </SettingsSubCard>
+        <SettingsSubCard
+          title="Budget voorkeuren"
+          subtitle="Valuta, budgetperiode en impulscontrole"
+          defaultOpen
+        >
+          <SettingsBudget
+            initialCurrency={budgetSettings.currency}
+            initialImpulseThresholdPct={budgetSettings.impulse_threshold_pct}
+            initialBudgetPeriod={budgetSettings.budget_period}
+            initialImpulseQuickAddMinutes={budgetSettings.impulse_quick_add_minutes}
+            initialImpulseRiskCategories={budgetSettings.impulse_risk_categories}
+          />
+        </SettingsSubCard>
+      </SettingsCategory>
 
-      <section className="space-y-3">
-        <h2 className="text-xs font-semibold uppercase tracking-wide text-[var(--text-muted)]">Weergave</h2>
-        <div className="space-y-4">
-          <ThemePicker />
-          <SettingsCompactUi initialCompactUi={prefs.compact_ui} />
-          <SettingsReducedMotion initialReducedMotion={prefs.reduced_motion} />
-          <SettingsLightUI initialLightUi={prefs.light_ui} />
-          <XPBadge totalXp={xp.total_xp} level={xp.level} href="/settings" />
-        </div>
-      </section>
-
-      <section className="space-y-3">
-        <h2 className="text-xs font-semibold uppercase tracking-wide text-[var(--text-muted)]">DCIC debug</h2>
+      <SettingsCategory title="Systeem" subtitle="Weergave, modus en lokale appcontrole">
+        <ThemePicker />
+        <SettingsCompactUi initialCompactUi={prefs.compact_ui} />
+        <SettingsReducedMotion initialReducedMotion={prefs.reduced_motion} />
+        <SettingsLightUI initialLightUi={prefs.light_ui} />
+        <XPBadge totalXp={xp.total_xp} level={xp.level} href="/settings" />
         <SettingsDCICModeTest />
-      </section>
+        <SettingsClearCache />
+        <SettingsRefreshSnapshot />
+      </SettingsCategory>
 
-      <BehaviorProfileSettings initial={behaviorProfile} initialAutoMasterMissions={prefs.auto_master_missions} />
-      <SettingsDaysOff initialDaysOff={prefs.usual_days_off ?? null} initialMode={prefs.day_off_mode ?? "soft"} />
-
-      <section id="tijd-notificaties" className="space-y-3" data-tutorial="settings-push">
-        <h2 className="text-xs font-semibold uppercase tracking-wide text-[var(--text-muted)]">Tijd & notificaties</h2>
-        <div className="space-y-4">
+      <SettingsCategory title="Netwerk" subtitle="Notificaties, tijdzone en gekoppelde diensten">
+        <section id="tijd-notificaties" className="space-y-3" data-tutorial="settings-push">
           <SettingsTimezone initialTimezone={userTimezone} />
           <SettingsPush
             initialPushQuoteTime={pushQuoteTime}
@@ -119,44 +173,18 @@ async function SettingsContent() {
             initialPushPersonalityMode={prefs.push_personality_mode ?? "auto"}
           />
           <SettingsEmailReminders initialEnabled={prefs.email_reminders_enabled ?? true} />
-        </div>
-      </section>
+        </section>
+        <SettingsAppleCalendar />
+        <SettingsGoogleCalendar hasToken={hasGoogle} />
+      </SettingsCategory>
 
-      <section className="space-y-3">
-        <h2 className="text-xs font-semibold uppercase tracking-wide text-[var(--text-muted)]">Budget & geld</h2>
-        <SettingsBudget
-        initialCurrency={budgetSettings.currency}
-        initialImpulseThresholdPct={budgetSettings.impulse_threshold_pct}
-        initialBudgetPeriod={budgetSettings.budget_period}
-        initialImpulseQuickAddMinutes={budgetSettings.impulse_quick_add_minutes}
-        initialImpulseRiskCategories={budgetSettings.impulse_risk_categories}
-      />
-      </section>
-
-      <section className="space-y-3">
-        <h2 className="text-xs font-semibold uppercase tracking-wide text-[var(--text-muted)]">Agenda</h2>
-        <div className="space-y-4">
-          <SettingsAppleCalendar />
-          <SettingsGoogleCalendar hasToken={hasGoogle} />
-        </div>
-      </section>
-
-      <section className="space-y-3">
-        <h2 className="text-xs font-semibold uppercase tracking-wide text-[var(--text-muted)]">Gegevens & privacy</h2>
-        <div className="space-y-4">
-          <SettingsExport />
-          <SettingsDeleteAccount />
-        </div>
-      </section>
-
-      <section className="space-y-3">
-        <h2 className="text-xs font-semibold uppercase tracking-wide text-[var(--text-muted)]">Over & hulp</h2>
+      <SettingsCategory title="Toestel" subtitle="Export, privacy en apparaatgerichte beheeracties">
+        <SettingsExport />
+        <SettingsDeleteAccount />
         <SettingsHelpOnboarding />
         <SettingsWhereToConfigure />
-        <SettingsClearCache />
-        <SettingsRefreshSnapshot />
         <SettingsAbout appVersion={appVersion} />
-      </section>
+      </SettingsCategory>
     </>
   );
 }

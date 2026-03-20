@@ -77,7 +77,7 @@ export function BudgetPlanCard({ targets: initialTargets, spentByCategory, curre
             <h2 className="text-base font-semibold text-[var(--text-primary)]">Budgetplan per categorie</h2>
             <p className="mt-0.5 text-xs text-[var(--text-muted)]">Stel in hoeveel je per categorie wilt besteden.</p>
           </div>
-          <button type="button" onClick={() => { setShowModal(true); setEditingCategory(null); setEditTarget(""); }} className="text-sm font-medium text-[var(--accent-focus)] hover:underline">
+          <button type="button" onClick={() => { setShowModal(true); setEditingCategory(null); setEditTarget(""); }} className="dashboard-mini-btn dashboard-mini-btn-secondary text-sm">
             Bewerken
           </button>
         </div>
@@ -121,7 +121,7 @@ export function BudgetPlanCard({ targets: initialTargets, spentByCategory, curre
             <input type="number" step="0.01" min="0" value={editTarget} onChange={(e) => setEditTarget(e.target.value)} className="w-full rounded-lg border border-[var(--card-border)] bg-[var(--bg-primary)] px-3 py-2 text-sm" />
             <div className="flex gap-2">
               <button type="button" onClick={handleSaveTarget} disabled={pending} className="btn-primary rounded-lg px-4 py-2 text-sm font-medium disabled:opacity-50">{pending ? "Opslaan…" : "Opslaan"}</button>
-              <button type="button" onClick={() => { setEditingCategory(null); setEditTarget(""); }} className="rounded-lg border border-[var(--card-border)] px-4 py-2 text-sm">Annuleren</button>
+              <button type="button" onClick={() => { setEditingCategory(null); setEditTarget(""); }} className="btn-secondary rounded-lg px-4 py-2 text-sm">Annuleren</button>
             </div>
           </div>
         ) : (
@@ -133,14 +133,14 @@ export function BudgetPlanCard({ targets: initialTargets, spentByCategory, curre
                   <span className="text-sm text-[var(--text-primary)]">{cat}</span>
                   <div className="flex items-center gap-2">
                     <span className="text-sm tabular-nums text-[var(--text-muted)]">{t ? `${symbol}${(t.target_cents / 100).toFixed(2)}` : "—"}</span>
-                    <button type="button" onClick={() => openEdit(cat)} className="text-xs font-medium text-[var(--accent-focus)] hover:underline">{t ? "Wijzig" : "Stel in"}</button>
+                    <button type="button" onClick={() => openEdit(cat)} className="dashboard-mini-btn dashboard-mini-btn-secondary text-xs">{t ? "Wijzig" : "Stel in"}</button>
                   </div>
                 </li>
               );
             })}
           </ul>
         )}
-        <button type="button" onClick={() => setShowModal(false)} className="mt-4 w-full rounded-lg border border-[var(--card-border)] py-2 text-sm font-medium">Sluiten</button>
+        <button type="button" onClick={() => setShowModal(false)} className="btn-secondary mt-4 w-full rounded-lg py-2 text-sm font-medium">Sluiten</button>
       </Modal>
     </>
   );

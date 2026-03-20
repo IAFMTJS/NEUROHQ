@@ -3,6 +3,12 @@
 import { createClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
 import { levelFromTotalXP, xpToNextLevel, rankFromLevel, nextUnlockPreview } from "@/lib/xp";
+import {
+  getBrainState,
+  getBrainStateMultiplier,
+  getEffectiveBehavioralStats,
+  normalizeBehavioralStats,
+} from "@/lib/behavioral-engine";
 
 /** Default base XP when task has no base_xp (normaal niveau). */
 const XP_TASK_COMPLETE = 50;
@@ -183,7 +189,7 @@ export async function awardXPForTaskComplete(
     if (user && completionDate) {
       const { data: state } = await supabase
         .from("daily_state")
-        .select("energy, sensory_load, load")
+        .select("energy, focus, sensory_load, load, social_load, physical_health, sleep_hours, mental_battery")
         .eq("user_id", user.id)
         .eq("date", completionDate)
         .single();
@@ -207,6 +213,21 @@ export async function awardXPForTaskComplete(
       const { getConsequenceState } = await import("./consequence-engine");
       const consequence = await getConsequenceState(completionDate);
       if (consequence.recoveryProtocol) recoveryPenaltyMult = 0.95; // Weekly performance penalty (Fase 2)
+
+      const normalized = normalizeBehavioralStats({
+        energy: energy ?? 5,
+        focus: (state as { focus?: number | null } | null)?.focus ?? 5,
+        mentalBattery: (state as { mental_battery?: number | null } | null)?.mental_battery ?? 5,
+        mentalLoad: load ?? sensoryLoad ?? 5,
+        physicalHealth:
+          (state as { physical_health?: number | null } | null)?.physical_health ??
+          (state as { social_load?: number | null } | null)?.social_load ??
+          5,
+        sleepHours: (state as { sleep_hours?: number | null } | null)?.sleep_hours ?? 6,
+      });
+      const effective = getEffectiveBehavioralStats(normalized);
+      const brainState = getBrainState(effective);
+      energyMult *= getBrainStateMultiplier(brainState);
     }
   } catch {
     // Non-critical; keep multiplier = 1

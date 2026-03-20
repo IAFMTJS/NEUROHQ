@@ -1,4 +1,5 @@
 import { scale1To10ToPct } from "@/lib/dashboard-utils";
+import { bandFor10Scale, type StatBand } from "@/lib/behavioral-engine";
 
 export type HeadroomTier = "High" | "Medium" | "Low";
 export type BrainRisk = "Low" | "Medium" | "High";
@@ -10,6 +11,11 @@ export type TaskIntensity = "light" | "medium" | "heavy";
 export function getFocusSlots(focus1to10: number | null | undefined): number {
   const focusPct = scale1To10ToPct(focus1to10 ?? null);
   return Math.max(1, Math.floor(focusPct / 30));
+}
+
+/** Uiterst goed focus (9–10): dubbele growth-slots t.o.v. basis. */
+export function getGrowthSlotMultiplier(focus1to10: number | null | undefined): number {
+  return bandFor10Scale(focus1to10 ?? null) === "ultra" ? 2 : 1;
 }
 
 export function getHeadroomTier(headroom: number): HeadroomTier {
@@ -41,6 +47,13 @@ export function maxAllowedIntensityForTier(tier: HeadroomTier): TaskIntensity {
   if (tier === "High") return "heavy";
   if (tier === "Medium") return "medium";
   return "light";
+}
+
+/** Sensory load (mentale belasting) band: laag = geen stretch; gemiddeld = gekaderd; goed/ultra = voluit. */
+export function maxStretchIntensityForSensoryBand(sensoryBand: StatBand): TaskIntensity {
+  if (sensoryBand === "low") return "light";
+  if (sensoryBand === "medium") return "medium";
+  return "heavy";
 }
 
 export function classifyIntensity(energyRequired: number | null | undefined): TaskIntensity {
@@ -96,6 +109,12 @@ export type BrainMode = {
   effectiveStress: number;
   /** When true, show recovery missions / rest suggestion. */
   suggestRecovery: boolean;
+  /** Focus band (0–3 … 9–10 schaal). */
+  focusBand: StatBand;
+  /** Growth (learning) missions: 2× slots bij uiterst goed focus. */
+  growthSlotMultiplier: number;
+  /** Max intensity for “karakter-stretch” / zware exposure o.b.v. sensory band. */
+  maxStretchIntensity: TaskIntensity;
 };
 
 export function computeBrainMode(params: {
@@ -109,6 +128,10 @@ export function computeBrainMode(params: {
   mental_battery?: number | null;
 }): BrainMode {
   const focusSlots = getFocusSlots(params.focus ?? null);
+  const focusBand = bandFor10Scale(params.focus ?? null);
+  const growthSlotMultiplier = getGrowthSlotMultiplier(params.focus ?? null);
+  const sensoryBand = bandFor10Scale(params.sensory_load ?? null);
+  const maxStretchIntensity = maxStretchIntensityForSensoryBand(sensoryBand);
   const loadPct = params.load ?? scale1To10ToPct(params.sensory_load ?? null);
   const maxSlots = getMaxSlotsWithLoadRule(focusSlots, loadPct);
   const tier = getHeadroomTier(params.headroom);
@@ -131,6 +154,9 @@ export function computeBrainMode(params: {
     addBlocked,
     effectiveStress,
     suggestRecovery,
+    focusBand,
+    growthSlotMultiplier,
+    maxStretchIntensity,
   };
 }
 

@@ -5,6 +5,7 @@ import type { Database } from "@/types/database.types";
 import { revalidatePath } from "next/cache";
 import { getBudgetToday, getBudgetMonthBounds, getBudgetWeekBounds, getBudgetCycleBounds, getPreviousPaydayDateFromDay, getNextPaydayDateFromDay } from "@/lib/utils/budget-date";
 import { createAlternative } from "./alternatives";
+import { getBudgetControlState, submitEmergencyExpenseReason } from "./budget-intelligence";
 
 type BudgetSettingsRow = {
   monthly_budget_cents?: number | null;
@@ -18,6 +19,23 @@ type BudgetSettingsRow = {
 
 type BudgetEntryRow = Database["public"]["Tables"]["budget_entries"]["Row"];
 type BudgetEntryInsert = Database["public"]["Tables"]["budget_entries"]["Insert"];
+
+async function logUserActionAudit(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  userId: string,
+  actionType: string,
+  payload: Record<string, unknown>
+): Promise<void> {
+  try {
+    await supabase.from("user_actions_audit").insert({
+      user_id: userId,
+      action_type: actionType,
+      payload,
+    } as never);
+  } catch {
+    // Keep primary flows functional even when audit table is unavailable.
+  }
+}
 
 /** Explicit column list for budget_entries reads (per SUPABASE_PERFORMANCE_GUIDELINES). */
 const BUDGET_ENTRY_SELECT =
@@ -105,8 +123,22 @@ export async function updateBudgetSettings(params: {
 
 /** Set "vandaag loon gehad": start budgetperiode vandaag tot volgende verwachte loondag. */
 export async function setPaydayReceivedToday(): Promise<void> {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error("Not authenticated");
+  const { data: before } = await supabase
+    .from("users")
+    .select("last_payday_date")
+    .eq("id", user.id)
+    .single();
+  const previousLastPaydayDate =
+    (before as { last_payday_date?: string | null } | null)?.last_payday_date ?? null;
   const today = getBudgetToday();
   await updateBudgetSettings({ last_payday_date: today });
+  await logUserActionAudit(supabase, user.id, "payday_received_today", {
+    previous_last_payday_date: previousLastPaydayDate,
+    new_last_payday_date: today,
+  });
 }
 
 /** Undo "vandaag loon gehad": restore previous last_payday_date. Call within short window after setPaydayReceivedToday. */
@@ -122,6 +154,9 @@ export async function undoPaydayReceived(previousLastPaydayDate: string | null):
     .update({ last_payday_date: previousLastPaydayDate || null })
     .eq("id", user.id);
   if (error) throw new Error(error.message);
+  await logUserActionAudit(supabase, user.id, "undo_payday_received", {
+    restored_last_payday_date: previousLastPaydayDate || null,
+  });
   revalidatePath("/budget");
   revalidatePath("/settings");
   revalidatePath("/dashboard");
@@ -396,10 +431,21 @@ export async function addBudgetEntry(params: {
   store_name?: string | null;
   subscription_name?: string | null;
   detail_name?: string | null;
+  emergency_override_reason?: string | null;
 }): Promise<{ id: string } | null> {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) throw new Error("Not authenticated");
+  if (params.amount_cents < 0) {
+    const control = await getBudgetControlState();
+    const emergencyReason = params.emergency_override_reason?.trim() ?? "";
+    if (control.needsPaydaySurvey) {
+      throw new Error("Vul eerst de verplichte pre-payday survey in (T-4) in de Optimization-tab.");
+    }
+    if (control.lockActive && emergencyReason.length < 6) {
+      throw new Error("Budget lock actief: nooduitgaven vereisen een duidelijke reden (min. 6 tekens).");
+    }
+  }
   const row: BudgetEntryInsert = {
     user_id: user.id,
     amount_cents: params.amount_cents,
@@ -417,6 +463,13 @@ export async function addBudgetEntry(params: {
     .select("id")
     .single();
   if (error) throw new Error(error.message);
+  if (params.amount_cents < 0 && params.emergency_override_reason?.trim()) {
+    await submitEmergencyExpenseReason({
+      amountCents: Math.abs(params.amount_cents),
+      category: params.category ?? "unknown",
+      reason: params.emergency_override_reason.trim(),
+    });
+  }
   revalidatePath("/budget");
   revalidatePath("/dashboard");
   return data ? { id: data.id } : null;
@@ -431,16 +484,34 @@ export async function updateBudgetEntry(id: string, params: {
   store_name?: string | null;
   subscription_name?: string | null;
   detail_name?: string | null;
+  emergency_override_reason?: string | null;
 }) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) throw new Error("Not authenticated");
+  if ((params.amount_cents ?? 0) < 0) {
+    const control = await getBudgetControlState();
+    const emergencyReason = params.emergency_override_reason?.trim() ?? "";
+    if (control.needsPaydaySurvey) {
+      throw new Error("Vul eerst de verplichte pre-payday survey in (T-4) in de Optimization-tab.");
+    }
+    if (control.lockActive && emergencyReason.length < 6) {
+      throw new Error("Budget lock actief: nooduitgaven vereisen een duidelijke reden (min. 6 tekens).");
+    }
+  }
   const { error } = await supabase
     .from("budget_entries")
     .update(params)
     .eq("id", id)
     .eq("user_id", user.id);
   if (error) throw new Error(error.message);
+  if ((params.amount_cents ?? 0) < 0 && params.emergency_override_reason?.trim()) {
+    await submitEmergencyExpenseReason({
+      amountCents: Math.abs(params.amount_cents ?? 0),
+      category: params.category ?? "unknown",
+      reason: params.emergency_override_reason.trim(),
+    });
+  }
   revalidatePath("/budget");
   revalidatePath("/dashboard");
 }

@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache";
 import { revalidateTagMax } from "@/lib/revalidate";
 import { todayDateString } from "@/lib/utils/timezone";
 import { getMonthlyBookForCurrentMonth } from "@/app/actions/learning";
+import { classifyTaskPreset, deriveBaseXpFromIntensityDuration } from "@/lib/task-presets";
 
 type EnsureReadingMissionResult = { created: boolean; debug?: string };
 
@@ -45,16 +46,24 @@ export async function ensureReadingMissionForToday(): Promise<EnsureReadingMissi
   }
 
   const title = `Lees ${pagesToday} pagina's in je boek`;
+  const preset = classifyTaskPreset(title);
+  const fallbackBaseXp = deriveBaseXpFromIntensityDuration(preset.intensity, preset.durationMinutes);
+  const focusRequired = Math.max(4, preset.type === "mental" ? 7 : 5);
+  const mentalLoad = Math.max(4, preset.type === "mental" ? 8 : 5);
+  const socialLoad = preset.type === "recovery" ? 2 : 4;
 
   const { error } = await supabase.from("tasks").insert({
     user_id: user.id,
     title,
     due_date: today,
     energy_required: 2,
+    focus_required: focusRequired,
+    mental_load: mentalLoad,
+    social_load: socialLoad,
     category: "personal",
     impact: 2,
     domain: "learning",
-    base_xp: 40,
+    base_xp: Math.max(40, fallbackBaseXp),
     psychology_label: "MonthlyBookAuto",
     notes: "Maandelijkse boekdoel · auto-missie op basis van resterende pagina's.",
     mission_intent: "discipline",

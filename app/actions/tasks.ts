@@ -9,10 +9,11 @@ import { incrementAvoidanceSkip, recordAvoidanceCompletion } from "@/app/actions
 import { trackEvent } from "@/app/actions/analytics-events";
 import { revalidatePath, unstable_cache } from "next/cache";
 import { revalidateTagMax } from "@/lib/revalidate";
+import { classifyTaskPreset, deriveBaseXpFromIntensityDuration } from "@/lib/task-presets";
 
 /** Explicit column list for task reads (avoids select * per SUPABASE_PERFORMANCE_GUIDELINES). */
 const TASK_SELECT_COLUMNS =
-  "id, user_id, title, due_date, completed, completed_at, carry_over_count, energy_required, priority, notes, created_at, updated_at, parent_task_id, deleted_at, snooze_until, category, impact, domain, cognitive_load, emotional_resistance, mental_load, social_load, focus_required, recurrence_rule, recurrence_weekdays, difficulty, discipline_weight, strategic_value, psychology_label, mission_intent, mission_chain_id, validation_type, base_xp, avoidance_tag, hobby_tag, fatigue_impact, strategy_key_result_id, urgency";
+  "id, user_id, title, due_date, completed, completed_at, carry_over_count, energy_required, priority, notes, created_at, updated_at, parent_task_id, deleted_at, snooze_until, category, impact, domain, cognitive_load, emotional_resistance, mental_load, social_load, focus_required, recurrence_rule, recurrence_weekdays, difficulty, discipline_weight, strategic_value, psychology_label, mission_intent, mission_chain_id, validation_type, base_xp, avoidance_tag, hobby_tag, fatigue_impact, strategy_key_result_id, urgency, task_type, intensity, duration_minutes, task_tags";
 
 export type TaskListMode = "normal" | "low_energy" | "stabilize" | "driven";
 
@@ -201,6 +202,10 @@ export async function createTask(params: {
   avoidance_tag?: AvoidanceTag | null;
   /** Optional hobby tag to link this task to a hobby commitment. */
   hobby_tag?: HobbyTag | null;
+  task_type?: "mental" | "physical" | "mixed" | "recovery" | null;
+  intensity?: number | null;
+  duration_minutes?: number | null;
+  task_tags?: string[] | null;
 }) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
@@ -208,14 +213,16 @@ export async function createTask(params: {
 
   // High mental load is advisory only: user can always add missions; system may show warnings/locks in the UI.
 
+  const preset = classifyTaskPreset(params.title);
+  const inferredBaseXp = deriveBaseXpFromIntensityDuration(preset.intensity, preset.durationMinutes);
   const row: Record<string, unknown> = {
     user_id: user.id,
     title: params.title,
     due_date: params.due_date,
-    energy_required: params.energy_required ?? null,
-    focus_required: params.focus_required ?? null,
-    mental_load: params.mental_load ?? null,
-    social_load: params.social_load ?? null,
+    energy_required: params.energy_required ?? Math.min(10, Math.max(1, Math.round(preset.intensity / 10))),
+    focus_required: params.focus_required ?? (preset.type === "mental" ? 7 : preset.type === "mixed" ? 5 : 3),
+    mental_load: params.mental_load ?? (preset.type === "mental" ? 8 : preset.type === "mixed" ? 5 : preset.type === "recovery" ? 2 : 3),
+    social_load: params.social_load ?? (preset.type === "physical" ? 3 : preset.type === "recovery" ? 2 : 5),
     priority: params.priority ?? null,
     parent_task_id: params.parent_task_id ?? null,
     recurrence_rule: params.recurrence_rule ?? null,
@@ -224,19 +231,27 @@ export async function createTask(params: {
     impact: params.impact ?? null,
     urgency: params.urgency ?? null,
     notes: params.notes ?? null,
+    task_type: params.task_type ?? preset.type,
+    intensity: params.intensity ?? preset.intensity,
+    duration_minutes: params.duration_minutes ?? preset.durationMinutes,
+    task_tags: params.task_tags ?? [],
   };
   if (params.domain != null) row.domain = params.domain;
+  else row.domain = preset.domain;
   if (params.cognitive_load != null) row.cognitive_load = params.cognitive_load;
   if (params.emotional_resistance != null) row.emotional_resistance = params.emotional_resistance;
   if (params.discipline_weight != null) row.discipline_weight = params.discipline_weight;
   if (params.strategic_value != null) row.strategic_value = params.strategic_value;
   if (params.psychology_label != null) row.psychology_label = params.psychology_label;
   if (params.mission_intent != null) row.mission_intent = params.mission_intent;
+  else row.mission_intent = preset.missionIntent;
   if (params.mission_chain_id != null) row.mission_chain_id = params.mission_chain_id;
   if (params.validation_type != null) row.validation_type = params.validation_type;
   if (params.base_xp != null) row.base_xp = params.base_xp;
+  else row.base_xp = Math.max(preset.baseXp, inferredBaseXp);
   if (params.avoidance_tag != null) row.avoidance_tag = params.avoidance_tag;
   if (params.hobby_tag != null) row.hobby_tag = params.hobby_tag;
+  else if (preset.hobbyTag) row.hobby_tag = preset.hobbyTag;
 
   const { data, error } = await supabase
     .from("tasks")
@@ -327,7 +342,11 @@ function computeNextRecurrenceDate(dueDate: string, recurrenceRule: string | nul
   }
 
   if (recurrenceRule === "weekly" && recurrenceWeekdays?.trim()) {
-    const weekdays = recurrenceWeekdays
+    const raw = recurrenceWeekdays.trim();
+    const daysPart = raw.includes("days=") ? raw.split("days=")[1].split(";")[0] : raw.split("|")[0];
+    const intervalPart = raw.includes("interval=") ? Number(raw.split("interval=")[1].split(/[;|]/)[0]) : 1;
+    const intervalWeeks = Number.isFinite(intervalPart) && intervalPart > 1 ? Math.floor(intervalPart) : 1;
+    const weekdays = daysPart
       .split(",")
       .map((s) => parseInt(s.trim(), 10))
       .filter((n) => n >= 1 && n <= 7);
@@ -335,9 +354,17 @@ function computeNextRecurrenceDate(dueDate: string, recurrenceRule: string | nul
       base.setUTCDate(base.getUTCDate() + 7);
       return base.toISOString().slice(0, 10);
     }
+    const currentIso = getISOWeekday(base);
+    const sorted = [...weekdays].sort((a, b) => a - b);
+    const laterThisCycle = sorted.find((d) => d > currentIso);
     const nextDay = new Date(base);
-    nextDay.setUTCDate(nextDay.getUTCDate() + 1);
-    return nextWeekdayDate(nextDay, weekdays);
+    if (laterThisCycle != null) {
+      nextDay.setUTCDate(nextDay.getUTCDate() + (laterThisCycle - currentIso));
+      return nextDay.toISOString().slice(0, 10);
+    }
+    const firstWeekday = sorted[0] ?? currentIso;
+    nextDay.setUTCDate(nextDay.getUTCDate() + intervalWeeks * 7 + (firstWeekday - currentIso));
+    return nextDay.toISOString().slice(0, 10);
   }
 
   if (recurrenceRule === "weekly") {
@@ -346,6 +373,16 @@ function computeNextRecurrenceDate(dueDate: string, recurrenceRule: string | nul
   }
 
   if (recurrenceRule === "monthly") {
+    if (recurrenceWeekdays?.includes("monthday=")) {
+      const monthDay = Number(recurrenceWeekdays.split("monthday=")[1].split(/[;|]/)[0]);
+      const d = Number.isFinite(monthDay) ? Math.max(1, Math.min(31, Math.floor(monthDay))) : base.getUTCDate();
+      const targetMonth = base.getUTCMonth() + 1;
+      const targetYear = base.getUTCFullYear() + Math.floor(targetMonth / 12);
+      const monthIdx = targetMonth % 12;
+      const lastDay = new Date(Date.UTC(targetYear, monthIdx + 1, 0, 12, 0, 0)).getUTCDate();
+      base.setUTCFullYear(targetYear, monthIdx, Math.min(d, lastDay));
+      return base.toISOString().slice(0, 10);
+    }
     const day = base.getUTCDate();
     base.setUTCMonth(base.getUTCMonth() + 1);
     if (base.getUTCDate() !== day) base.setUTCDate(0);
@@ -364,7 +401,7 @@ export async function completeTask(
   if (!user) throw new Error("Not authenticated");
   const { data: task } = await supabase
     .from("tasks")
-    .select("recurrence_rule, recurrence_weekdays, due_date, title, energy_required, focus_required, mental_load, social_load, priority, category, impact, urgency, domain, discipline_weight, base_xp, avoidance_tag, hobby_tag, mission_intent")
+    .select("recurrence_rule, recurrence_weekdays, due_date, title, energy_required, focus_required, mental_load, social_load, priority, category, impact, urgency, domain, discipline_weight, base_xp, avoidance_tag, hobby_tag, mission_intent, task_type, intensity, duration_minutes, task_tags")
     .eq("id", id)
     .eq("user_id", user.id)
     .single();
@@ -375,7 +412,7 @@ export async function completeTask(
     .eq("user_id", user.id);
   if (error) throw new Error(error.message);
 
-  const t = task as { recurrence_rule?: string | null; recurrence_weekdays?: string | null; due_date: string; title: string; energy_required?: number | null; focus_required?: number | null; mental_load?: number | null; social_load?: number | null; priority?: number | null; category?: string | null; impact?: number | null; urgency?: number | null; domain?: string | null; discipline_weight?: number | null; base_xp?: number | null; avoidance_tag?: string | null; hobby_tag?: string | null; mission_intent?: string | null } | null;
+  const t = task as { recurrence_rule?: string | null; recurrence_weekdays?: string | null; due_date: string; title: string; energy_required?: number | null; focus_required?: number | null; mental_load?: number | null; social_load?: number | null; priority?: number | null; category?: string | null; impact?: number | null; urgency?: number | null; domain?: string | null; discipline_weight?: number | null; base_xp?: number | null; avoidance_tag?: string | null; hobby_tag?: string | null; mission_intent?: string | null; task_type?: string | null; intensity?: number | null; duration_minutes?: number | null; task_tags?: string[] | null } | null;
   const completionDate = t?.due_date ?? new Date().toISOString().slice(0, 10);
 
   const [{ data: dailyState }, { data: recentCompletions }] = await Promise.all([
@@ -437,6 +474,10 @@ export async function completeTask(
         urgency: t.urgency ?? null,
         base_xp: t.base_xp ?? null,
         hobby_tag: t.hobby_tag ?? null,
+        task_type: (t.task_type as any) ?? null,
+        intensity: t.intensity ?? null,
+        duration_minutes: t.duration_minutes ?? null,
+        task_tags: t.task_tags ?? [],
       } as TablesInsert<"tasks">);
       revalidateTagMax(`tasks-${user.id}-${nextStr}`);
     }
@@ -751,7 +792,7 @@ export async function getRoutineTasks(): Promise<Task[]> {
     .eq("completed", false)
     .is("parent_task_id", null)
     .is("deleted_at", null)
-    .in("recurrence_rule", ["monthly", "weekly"])
+    .in("recurrence_rule", ["daily", "monthly", "weekly"])
     .order("due_date", { ascending: true, nullsFirst: true })
     .order("created_at", { ascending: true })
     .limit(50);
@@ -762,6 +803,10 @@ export async function getRoutineTasks(): Promise<Task[]> {
 export async function getRoutineTasksWithSuggestions(dateStr: string): Promise<{
   routineTasks: Task[];
   suggestedDays: Record<string, string[]>;
+  suggestedPlans: Record<
+    string,
+    Array<{ date: string; reason: string; priority: "high" | "medium" | "low" }>
+  >;
 }> {
   const { getWeekBounds } = await import("@/lib/utils/learning");
   const weekStart = getWeekBounds(new Date(dateStr + "T12:00:00Z")).start;
@@ -772,10 +817,90 @@ export async function getRoutineTasksWithSuggestions(dateStr: string): Promise<{
   const { suggestBestDaysForRoutine } = await import("@/lib/routine-suggestions");
   const bestDays = suggestBestDaysForRoutine(weekLoad);
   const suggestedDays: Record<string, string[]> = {};
+  const suggestedPlans: Record<
+    string,
+    Array<{ date: string; reason: string; priority: "high" | "medium" | "low" }>
+  > = {};
   for (const t of routineTasks) {
+    const recurrence = (t as { recurrence_rule?: string | null }).recurrence_rule ?? "monthly";
+    const recurrenceWeekdays = (t as { recurrence_weekdays?: string | null }).recurrence_weekdays ?? null;
+    const dueDate = (t as { due_date?: string | null }).due_date ?? null;
+    if (recurrence === "weekly" && recurrenceWeekdays?.trim()) {
+      const days = recurrenceWeekdays
+        .split("days=")[1]?.split(";")[0] ?? recurrenceWeekdays.split("|")[0]
+        .split(",")
+        .map((s) => parseInt(s.trim(), 10))
+        .filter((n) => n >= 1 && n <= 7);
+      const intervalPart = recurrenceWeekdays.includes("interval=")
+        ? Number(recurrenceWeekdays.split("interval=")[1].split(/[;|]/)[0])
+        : 1;
+      const intervalWeeks = Number.isFinite(intervalPart) && intervalPart > 1 ? Math.floor(intervalPart) : 1;
+      const start = new Date(dateStr + "T12:00:00Z");
+      const nextCandidates: string[] = [];
+      for (let i = 0; i < intervalWeeks * 21; i++) {
+        const d = new Date(start);
+        d.setUTCDate(start.getUTCDate() + i);
+        const isoDay = d.getUTCDay() === 0 ? 7 : d.getUTCDay();
+        if (days.includes(isoDay)) {
+          if (intervalWeeks > 1) {
+            const weekIndex = Math.floor(i / 7);
+            if (weekIndex % intervalWeeks !== 0) continue;
+          }
+          nextCandidates.push(d.toISOString().slice(0, 10));
+        }
+      }
+      suggestedDays[t.id] = nextCandidates.slice(0, 3);
+      suggestedPlans[t.id] = nextCandidates.slice(0, 3).map((date, idx) => ({
+        date,
+        reason: idx === 0 ? "Valt exact op je wekelijkse ritme." : "Back-up moment binnen je weekritme.",
+        priority: idx === 0 ? "high" : idx === 1 ? "medium" : "low",
+      }));
+      continue;
+    }
+    if (recurrence === "monthly" && dueDate) {
+      const monthDay = Number(dueDate.slice(8, 10));
+      const now = new Date(dateStr + "T12:00:00Z");
+      const nextMonthlyCandidates: string[] = [];
+      for (let i = 0; i < 3; i++) {
+        const y = now.getUTCFullYear();
+        const m = now.getUTCMonth() + i;
+        const d = new Date(Date.UTC(y, m, 1, 12, 0, 0));
+        const lastDay = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth() + 1, 0, 12, 0, 0)).getUTCDate();
+        d.setUTCDate(Math.min(monthDay, lastDay));
+        nextMonthlyCandidates.push(d.toISOString().slice(0, 10));
+      }
+      suggestedDays[t.id] = nextMonthlyCandidates;
+      suggestedPlans[t.id] = nextMonthlyCandidates.map((date, idx) => ({
+        date,
+        reason: idx === 0 ? "Eerstvolgende maandslot voor deze routine." : "Vooruitplannen voor continu ritme.",
+        priority: idx === 0 ? "high" : "medium",
+      }));
+      continue;
+    }
+    if (recurrence === "daily") {
+      const start = new Date(dateStr + "T12:00:00Z");
+      const nextThree: string[] = [];
+      for (let i = 0; i < 3; i++) {
+        const d = new Date(start);
+        d.setUTCDate(start.getUTCDate() + i);
+        nextThree.push(d.toISOString().slice(0, 10));
+      }
+      suggestedDays[t.id] = nextThree;
+      suggestedPlans[t.id] = nextThree.map((date, idx) => ({
+        date,
+        reason: idx === 0 ? "Laagste frictie: direct volgende dag." : "Alternatief dagslot voor flexibiliteit.",
+        priority: idx === 0 ? "high" : "medium",
+      }));
+      continue;
+    }
     suggestedDays[t.id] = bestDays;
+    suggestedPlans[t.id] = bestDays.slice(0, 3).map((date, idx) => ({
+      date,
+      reason: idx === 0 ? "Beste balans tussen load en focus." : "Alternatief met lage planbelasting.",
+      priority: idx === 0 ? "high" : "medium",
+    }));
   }
-  return { routineTasks, suggestedDays };
+  return { routineTasks, suggestedDays, suggestedPlans };
 }
 
 /** Completed tasks for a given date (top-level only). */
@@ -890,12 +1015,12 @@ export async function duplicateTask(id: string, due_date: string) {
   if (!user) throw new Error("Not authenticated");
   const { data: task } = await supabase
     .from("tasks")
-    .select("title, category, recurrence_rule, recurrence_weekdays, impact, urgency, energy_required, focus_required, mental_load, social_load, priority, domain, base_xp")
+    .select("title, category, recurrence_rule, recurrence_weekdays, impact, urgency, energy_required, focus_required, mental_load, social_load, priority, domain, base_xp, task_type, intensity, duration_minutes, task_tags")
     .eq("id", id)
     .eq("user_id", user.id)
     .single();
   if (!task) throw new Error("Task not found");
-  const t = task as { title: string; category?: string | null; recurrence_rule?: string | null; recurrence_weekdays?: string | null; impact?: number | null; urgency?: number | null; energy_required?: number | null; focus_required?: number | null; mental_load?: number | null; social_load?: number | null; priority?: number | null; domain?: string | null; base_xp?: number | null };
+  const t = task as { title: string; category?: string | null; recurrence_rule?: string | null; recurrence_weekdays?: string | null; impact?: number | null; urgency?: number | null; energy_required?: number | null; focus_required?: number | null; mental_load?: number | null; social_load?: number | null; priority?: number | null; domain?: string | null; base_xp?: number | null; task_type?: string | null; intensity?: number | null; duration_minutes?: number | null; task_tags?: string[] | null };
   const { error } = await supabase.from("tasks").insert({
     user_id: user.id,
     title: t.title,
@@ -912,6 +1037,10 @@ export async function duplicateTask(id: string, due_date: string) {
     priority: t.priority ?? null,
     domain: t.domain ?? null,
     base_xp: t.base_xp ?? null,
+    task_type: (t.task_type as any) ?? null,
+    intensity: t.intensity ?? null,
+    duration_minutes: t.duration_minutes ?? null,
+    task_tags: t.task_tags ?? [],
   } as TablesInsert<"tasks">);
   if (error) throw new Error(error.message);
   revalidateTagMax(`tasks-${user.id}-${due_date}`);

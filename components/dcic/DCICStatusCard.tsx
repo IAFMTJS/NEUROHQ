@@ -105,6 +105,17 @@ export function DCICStatusCard({ gameState, status }: Props) {
           )}
         </div>
       </div>
+      {!loading && gameState?.mode?.suggested && (
+        <p className="border-t border-[var(--card-border)] px-4 py-2 text-xs text-[var(--text-muted)]">
+          Brain status suggereert vandaag:{" "}
+          <strong className="text-[var(--text-secondary)]">
+            {gameState.mode.suggested === "war" ? "War-modus (hoge capaciteit)" : "Recovery-modus"}
+          </strong>
+          {gameState.mode.current === "focus" && gameState.mode.suggested === "war"
+            ? " — activeer War in je missie-flow als je er klaar voor bent."
+            : null}
+        </p>
+      )}
     </section>
   );
 }

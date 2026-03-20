@@ -12,6 +12,7 @@ export type PendingDailyState = {
   sensory_load: number;
   sleep_hours: number | null;
   social_load: number;
+  physical_health?: number;
   mental_battery: number;
   _updatedAt: number;
   _synced?: boolean;
@@ -62,6 +63,7 @@ export function setPendingDailyState(
     };
     window.localStorage.setItem(dailyStateKey(date), JSON.stringify(payload));
     scheduleSync();
+    queueDailySnapshotMerge();
   } catch {
     // ignore
   }
@@ -79,6 +81,11 @@ export function markDailyStateSynced(date: string): void {
   } catch {
     // ignore
   }
+}
+
+function queueDailySnapshotMerge(): void {
+  if (typeof window === "undefined") return;
+  void import("@/lib/daily-snapshot-full-sync").then((m) => m.scheduleSyncDailySnapshot());
 }
 
 let syncTimer: ReturnType<typeof setTimeout> | null = null;
@@ -108,10 +115,12 @@ async function syncPending(): Promise<void> {
       sensory_load: parsed.sensory_load,
       sleep_hours: parsed.sleep_hours,
       social_load: parsed.social_load,
+      physical_health: parsed.physical_health ?? null,
       mental_battery: parsed.mental_battery,
     });
     if (result.ok) {
       markDailyStateSynced(today);
+      queueDailySnapshotMerge();
     }
   } catch (err) {
     console.error("[pending-writes] sync daily_state failed:", err);

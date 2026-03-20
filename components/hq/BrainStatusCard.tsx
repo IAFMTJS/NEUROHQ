@@ -24,6 +24,7 @@ type Props = {
     sensory_load: number | null;
     sleep_hours: number | null;
     social_load: number | null;
+    physical_health?: number | null;
     mental_battery: number | null;
     is_rest_day?: boolean | null;
   };
@@ -33,6 +34,7 @@ type Props = {
     sensory_load: number | null;
     sleep_hours: number | null;
     social_load: number | null;
+    physical_health?: number | null;
     mental_battery?: number | null;
   };
   brainMode?: BrainMode;
@@ -55,6 +57,7 @@ export const BrainStatusCard = memo(function BrainStatusCard({ date, initial, ye
         sensory_load: pending.sensory_load,
         sleep_hours: pending.sleep_hours,
         social_load: pending.social_load,
+        physical_health: pending.physical_health,
         mental_battery: pending.mental_battery,
       });
       return;
@@ -67,6 +70,7 @@ export const BrainStatusCard = memo(function BrainStatusCard({ date, initial, ye
         sensory_load?: number | null;
         sleep_hours?: number | null;
         social_load?: number | null;
+        physical_health?: number | null;
         mental_battery?: number | null;
       } | null;
       if (state) {
@@ -76,6 +80,7 @@ export const BrainStatusCard = memo(function BrainStatusCard({ date, initial, ye
           sensory_load: state.sensory_load ?? initial.sensory_load,
           sleep_hours: state.sleep_hours ?? initial.sleep_hours,
           social_load: state.social_load ?? initial.social_load,
+          physical_health: state.physical_health ?? initial.physical_health,
           mental_battery: state.mental_battery ?? initial.mental_battery,
         });
         return;
@@ -144,6 +149,21 @@ export const BrainStatusCard = memo(function BrainStatusCard({ date, initial, ye
                   return "Light per slot";
                 })()}
               </strong>
+              {" · "}
+              Stretch / exposure:{" "}
+              <strong>
+                {brainMode.maxStretchIntensity === "heavy"
+                  ? "voluit"
+                  : brainMode.maxStretchIntensity === "medium"
+                    ? "gekaderd"
+                    : "natuurlijk"}
+              </strong>
+              {brainMode.growthSlotMultiplier > 1 ? (
+                <>
+                  {" "}
+                  · Growth-slots: <strong>×{brainMode.growthSlotMultiplier}</strong>
+                </>
+              ) : null}
             </p>
             {xpEnergyLabel && (
               <p className="text-soft">
@@ -167,7 +187,7 @@ export const BrainStatusCard = memo(function BrainStatusCard({ date, initial, ye
               Focus stability at {focusPct}%
             </p>
             <p className="text-soft">
-              Energy, focus en mentale belasting bepalen je dagelijkse capaciteit. Sleep and social load affect headroom.
+              Energy, focus, fysieke health en mentale belasting bepalen je dagelijkse capaciteit. Slaap beinvloedt je headroom.
             </p>
           </>
         )}
