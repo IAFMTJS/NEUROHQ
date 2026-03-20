@@ -103,6 +103,10 @@
   --shadow-button-top: inset 0 1px 0 rgba(255,255,255,0.28);
   /* Center spotlight – focus hierarchy */
   --spotlight: radial-gradient(circle at 50% 25%, rgba(37,99,235,0.15), transparent 60%);
+  --spotlight-opacity: 0.65;
+  --spotlight-saturation: 1;
+  --spotlight-blur: 0px;
+  --spotlight-animation: none;
 
   /* Layout spacing – native-app feel, consistent rhythm */
   --page-padding-x: clamp(1rem, 4vw, 1.5rem);
@@ -192,9 +196,13 @@
   --accent-primary-dark: #991b1b;
   --accent-cyan: #f97373;
   --accent-amber: #f97316;
-  --glow-primary: rgba(220, 38, 38, 0.45);
-  --glow-cyan: rgba(248, 113, 113, 0.4);
-  --spotlight: radial-gradient(circle at 50% 25%, rgba(220,38,38,0.32), transparent 60%);
+  --glow-primary: rgba(220, 38, 38, 0.7);
+  --glow-cyan: rgba(248, 113, 113, 0.55);
+  --spotlight-opacity: 0.95;
+  --spotlight-saturation: 1.6;
+  --spotlight-blur: 0px;
+  --spotlight-animation: hudEnergyPulse 2s ease-in-out infinite;
+  --spotlight: radial-gradient(circle at 50% 18%, rgba(220,38,38,0.92), rgba(220,38,38,0.22) 34%, rgba(220,38,38,0.08) 55%, transparent 75%);
 }
 
 [data-mode="recovery"] {
@@ -202,9 +210,13 @@
   --accent-primary-dark: #166534;
   --accent-cyan: #4ade80;
   --accent-amber: #22c55e;
-  --glow-primary: rgba(34, 197, 94, 0.45);
-  --glow-cyan: rgba(74, 222, 128, 0.4);
-  --spotlight: radial-gradient(circle at 50% 25%, rgba(22,163,74,0.28), transparent 60%);
+  --glow-primary: rgba(34, 197, 94, 0.7);
+  --glow-cyan: rgba(74, 222, 128, 0.55);
+  --spotlight-opacity: 0.95;
+  --spotlight-saturation: 1.6;
+  --spotlight-blur: 0px;
+  --spotlight-animation: hudEnergyPulse 2.3s ease-in-out infinite;
+  --spotlight: radial-gradient(circle at 50% 18%, rgba(34,197,94,0.92), rgba(34,197,94,0.22) 34%, rgba(34,197,94,0.08) 55%, transparent 75%);
 }
 
 @keyframes hudEnergyPulse {
@@ -1590,6 +1602,10 @@ body::before {
   background: var(--spotlight);
   pointer-events: none;
   z-index: 0;
+  opacity: var(--spotlight-opacity, 0.65);
+  mix-blend-mode: screen;
+  filter: saturate(var(--spotlight-saturation, 1)) blur(var(--spotlight-blur, 0px));
+  animation: var(--spotlight-animation, none);
 }
 
 h1 { font-size: 28px; font-weight: 600; opacity: 0.85; }
