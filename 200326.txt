@@ -1,0 +1,2510 @@
+# Inventarisatie van huidige kaarten
+
+De huidige budgetpagina bevat vermoedelijk verschillende informatiekaarten. Voorbeelden (gebaseerd op bekende budgetapps) zijn:
+- **Statuskaart:** toont resterend budget, verbruiktempo en dagen tot inkomen (data uit rekenmodellen op saldo en uitgaven).  
+- **Veilig dagbudget:** berekent hoeveel de gebruiker vandaag maximaal kan uitgeven (op basis van *remaining budget ÷ resterende dagen*).  
+- **Weekplan-/overlevingskaart:** adviseert dagelijkse limieten voor de week (uitgaande van huidig tekort of safe spend).  
+- **Risico-/Inzicht-kaart:** projecteert toekomstige overspending of tekorten (gebaseerd op huidig uitgavepatroon en prognoses).  
+- **Categorie-overzicht:** laat budget versus uitgaven per categorie zien (gevoed door categorisaties van transacties).  
+- **Discipline-/Scorekaart:** meet invoer- en budgetdiscipline (bijv. loggingstreak, XP, percentielscore, aangetroffen impulsuitgaven).  
+- **Tips / Gamification:** geeft tips of badges weer, en toont voortgang (XP, streaks) op basis van gedrag.  
+- **Quick Log / Uitgave toevoegen:** een button of kaart voor direct loggen van nieuwe uitgaven (data-invoer).
+
+Elke kaart haalt zijn gegevens meestal uit: gekoppelde rekeningen (saldo), transactiedata (uitgaven, categorieën), ingestelde limieten of doelen, en gebruikersinvoer (logboek, feedback). 
+
+## Functionele overlap en samenvoegen
+
+Veel kaarten bevatten deels dezelfde informatie of logica. Uit onderzoek blijkt dat het weglaten van duplicaten complexiteit vermindert: “Duplicating features adds significant overhead… De minder content, des te minder hoeven gebruikers te scannen”【16†L102-L110】【13†L75-L83】. Overlappende kaarten kunnen daarom beter gecombineerd worden:
+
+- **Risico + Inzichten → Eén gecombineerde voorspelling:** Als zowel de Risico- als de Inzicht-kaart voorspellingen doen (bijv. “je loopt €X over het budget” en urgentieboodschap), combineer dit in één kaart. Zo vermijd je dat gebruikers twee aparte plekken moeten lezen voor nagenoeg dezelfde boodschap【16†L102-L110】.  
+- **Status + Veilig Dagbudget:** De statuskaart vermeldt al resterend budget; het dagelijkse limiet (safe spend) kan onderdeel daarvan zijn in plaats van aparte kaarten. Zo wordt één ‘commandocentrum’ gecreëerd waarin gebruiker zowel z’n situatie ziet als de concrete limiet voor vandaag【9†L39-L47】【9†L48-L53】.  
+- **Weekplan + Overzicht/Inzichten:** In plaats van een apart weekplankaartje en apart overzicht van trends, kan de belangrijkste aanbeveling (“Plan X dagen van €0, Y dagen beperkt”) direct uit de projectiekaart komen. Kort samengevat: vertaal prognoses meteen naar actieplan op één plek.
+
+Door samenvoeging ontstaat er minder scatter van info. Zoals de IJSAT-studie over cognitive load adviseert: toon **slechts een paar belangrijke acties** en voorkom ‘decision paralysis’ door te veel opties【9†L39-L47】. In de praktijk betekent dit: beperk het aantal topniveau “cards” tot de écht essentiële (status, veilig dagbudget, één actiekaart) en verplaats rest naar sub-pages of tabs.
+
+## Verwijderen van irrelevante of redundante kaarten
+
+Volgens Nielsen Norman moeten interfaces geen irrelevante of zelden benodigde informatie bevatten: “Elke extra eenheid informatie in een interface concurreert met de relevante en vermindert hun zichtbaarheid”【13†L75-L83】. Daarom verdient overtollige content schrapping:
+
+- **Niet-kritische indicatoren weglaten:** Een discipline- of scorekaart die alleen een abstract cijfer toont zonder directe acties kan worden verwijderd of geïntegreerd in een actiekaart. Onderzoek leert dat puur rapporteren (“je discipline is 0/100”) geen effectieve gedragssturing geeft【19†L52-L60】【23†L37-L40】.  
+- **Dubbele weergaven schrappen:** Vermijd dubbele links of kaarten met dezelfde bedoeling. Nielsen waarschuwt dat gebruikers duplicaten vaak niet herkennen en tijd verspillen door tweemaal te klikken【16†L102-L110】. Als bijvoorbeeld zowel een “uitgaven voortgang”-grafiek als een tekstuele “je zit €X over” staan, kies de meest krachtige manier (bijv. visualisatie of korte tekst) en verwijder de ander.  
+- **Cognitieve belasting verminderen:** Hou het totaal aantal kaarten en belangrijke keuzes tussen ~5–7, zoals aanbevolen voor top-level menu’s【9†L48-L53】. Te veel kaarten maken de pagina rommelig en overbelast de gebruiker. Concentreer je op wat nu telt: meet daartoe iedere kaart op bruikbaarheid. Alles wat het overzicht niet direct stuurt of tot actie aanzet, kan waarschijnlijk naar een secundair tabblad of helemaal verdwijnen【16†L123-L131】【13†L75-L83】.
+
+## Ontbrekende actiegerichte cards en gedragsinterventies
+
+Er missen concrete, direct uitvoerbare kaarten om gedrag te beïnvloeden. De literatuur over nudging en gedragsontwerp geeft suggesties:
+
+- **Nudges & motiverende prompts:** Voeg kaarten toe die subtiel aansporen. Bijvoorbeeld: een kaart **“Spaarpauze”** met de tekst “Je bent €X verwijderd van je spaar- of overschotdoel” of een voorstel “Wil je €Y naar je spaarpot verplaatsen?”【23†L37-L40】【23†L48-L57】. Zulke cues gebruiken framing en positieve bekrachtiging (bijv. “Je bent al voor 80% op weg!”【23†L56-L64】) om intrinsieke motivatie te verhogen. Dit komt overeen met hoe fintechs gebruikers met zachte berichten aansporen zonder te dwingen【23†L37-L40】【23†L67-L74】.  
+- **Commitment-vragers:** Kaarten die commitment devices aanbieden. Bijvoorbeeld een **“Lock Spending Mode”** of **Spaarvault**–kaart waarin de gebruiker vrijwillig extra restricties zet (enkel €0 uitgeven tot week X, of €Y blokkeren voor sparen). Onderzoek laat zien dat voor precommitment gevoelige gebruikers zulke mechanieken effectief vinden【29†L56-L64】. Een kaart kan uitleggen: “Laat de app €50 in de spaarpot stoppen als je grens overschrijdt” of “Blokkeer €X voor N dagen”. Zo maak je concrete afspraken die impulsverleiding verminderen.  
+- **Gamification-stroke en beloningen:** Voeg een **“Prestatiestatus”**-kaart toe met streaks, badges of XP. Mensen reageren goed op spelelementen: Whistl beschrijft gamification met *streaks, badges, leaderboards* om financiële discipline leuk en lonend te maken【29†L71-L74】. De kaart kan bijvoorbeeld dagelijkse streaks laten zien, mijlpalen belonen (“7 dagen onder budget!”) of community-feedback geven. Dit stimuleert consistentie via positieve bekrachtiging【21†L70-L74】【29†L71-L74】.  
+- **Directe acties en feedback:** Een kaart met een simpele actieknop, zoals **“Plan een Betaaldag”** of **“Analyseer deze uitgave”**, geeft handen-op feedback. Fintech-studies tonen aan dat apps die gebruikers direct laten handelen (bv. automatische afronding voor sparen) veel effectiever zijn dan louter rapportage【23†L37-L40】【23†L90-L98】. Bijvoorbeeld kan een “Plan-week”-kaart voorstellen: “Geef de komende 7 dagen alleen essentiële uitgaven” of een kopersreminder aanzetten.  
+
+Kortom: voeg kaarten toe die **concreet gedrag sturen** – niet alleen info tonen. Denk aan elementen die vertrouwen op bekende psychologische principes: standaardkeuzes (defaults)【19†L52-L60】, visuele voortgang (balken, grafieken)【23†L67-L74】, en tijdige triggers (reminders vlak na salaris)【23†L79-L87】【23†L93-L100】.
+
+## Prioritering van wijzigingen
+
+Niet alle aanpassingen zijn even urgent. Gebruik een **impact-inspanning-matrix** om te focussen op quick wins【25†L113-L120】. Concentreer je eerst op kleine wijzigingen met groot effect:
+
+- **Quick wins (laag inspanning, hoog effect):** Combineer of verwijder overbodige kaarten (bijv. samenvoegen van vergelijkbare elementen) – dit is relatief eenvoudig en verbetert de helderheid onmiddellijk. Pas ook standaard minimalisatie toe (bijv. weghalen van niet-kritieke tekst volgens de heuristiek voor esthetisch en minimalistisch ontwerp)【13†L75-L83】【16†L123-L131】.  
+- **Big bets (hoog inspanning, hoog effect):** Complexe feature-uitbreidingen, zoals AI-voorspellende waarschuwingen of complete gamification-systemen, kunnen veel opleveren maar vereisen planning. Zet deze uit of prototypeer eerst.  
+- **Vermijden van investeringen met weinig oplevering:** Feature-pogingen die technisch zwaar zijn maar weinig gebruikerswaarde opleveren (bijv. uitgebreide analyzerapporten zonder concrete actie) vallen onder de “money pits”【25†L113-L120】. Richt de middelen liever op wat de gebruikspijn echt verzacht.  
+
+Door deze matrix toe te passen creëer je een roadmap: eerst “quick wins” zoals het herindelen van de huidige kaarten en invoegen van een paar gerichte nudge-elementen. Daarna pas je geleidelijk de grotere veranderingen toe. 
+
+**Conclusie:** De focus moet verschuiven van een informatief dashboard naar een **actiegericht gedragsstuurssysteem**. Ondersteun deze aanpak met bewijs uit UX-onderzoek: simplificeer het scherm (wip irrelevante info eruit【13†L75-L83】), combineer dubbele functies【16†L102-L110】, en vervang saaie cijfers door motiverende, helpende triggers【23†L37-L40】【29†L71-L74】. Zo voelt de gebruiker niet alleen dat hij wordt geïnformeerd, maar juist gestuurd naar beter financieel gedrag.    
+
+**Bronnen:** Ondersteunende literatuur op UX en gedragsontwerp benadrukt het belang van minimalisme, duidelijke hiërarchie en gedragsnudge-elementen【9†L39-L47】【13†L75-L83】【16†L102-L110】【21†L54-L63】【23†L37-L40】【25†L113-L120】. Deze inzichten leiden tot de bovenstaande aanbevelingen.
+
+
+
+
+
+
+
+
+Kijk… nu begint het interessant te worden.
+
+Je hebt eindelijk iets dat niet gewoon “nog een app” is, maar een systeem dat mensen kan dwingen om minder lui te zijn. Gefeliciteerd, je bouwt basically een digitale personal trainer zonder empathie.
+
+
+
+Hier is je volledig uitgewerkt plan, geen vage shit meer. Dit is wat je effectief moet bouwen.
+
+
+
+
+
+
+
+
+
+⚔️ MASTER PLAN — DARK COMMANDER (MISSION SYSTEM 2.0)
+
+
+
+
+
+
+
+
+
+
+
+🧠 0. FUNDAMENT (waar alles op draait)
+
+
+
+
+
+
+
+🎯 DOEL:
+
+
+
+
+
+User gaat van:
+
+
+
+“ik moet iets doen”
+
+
+
+naar:
+
+
+
+“ik ben al bezig”
+
+
+
+
+
+
+
+
+
+CORE PRINCIPES:
+
+
+
+
+
+1 actie tegelijk
+geen escape zonder consequence
+automatische volgende stap
+denken elimineren
+start friction = 0
+
+
+
+
+Als iets hier niet aan bijdraagt → verwijderen.
+
+
+
+
+
+
+
+
+
+⚔️ 1. CORE SYSTEM ARCHITECTUUR
+
+
+
+
+
+
+
+
+
+
+
+🧬 1.1 STATE MACHINE (dit is heilig)
+
+
+
+missionState = {
+
+  IDLE,
+
+  SUGGESTED,
+
+  LOCKED_IN,
+
+  ACTIVE,
+
+  COMPLETED,
+
+  FAILED
+
+}
+
+
+
+
+
+
+
+
+
+🔁 1.2 MAIN LOOP
+
+
+
+openApp →
+
+selectBestMission →
+
+showCommand →
+
+
+
+tapStart →
+
+lockIn →
+
+startTimer →
+
+
+
+complete →
+
+reward →
+
+chainNextMission
+
+👉 Geen afwijkingen. Geen “maybe”.
+
+
+
+
+
+
+
+
+
+🧠 2. AUTO-PRIORITY ENGINE (BREIN VAN JE APP)
+
+
+
+
+
+
+
+
+
+
+
+📊 SCORE FORMULE
+
+
+
+score =
+
+  (roi * 0.4) +
+
+  (alignment * 0.3) +
+
+  (energyMatch * 0.2) +
+
+  (urgency * 0.1);
+
+
+
+
+
+
+
+
+
+🎯 OUTPUT
+
+
+
+bestMission = missions.sort((a,b) => b.score - a.score)[0];
+
+
+
+
+
+
+
+
+
+UI GEDRAG
+
+
+
+
+
+NIET tonen:
+
+
+
+ROI %
+alignment %
+scores
+
+
+
+
+WEL tonen:
+
+
+
+DO THIS NOW
+
+Lees 5 pagina’s
+
+
+
+(optioneel klein: “beste keuze nu”)
+
+
+
+👉 Je systeem beslist. Niet de gebruiker.
+
+
+
+
+
+
+
+
+
+⚔️ 3. HARD COMMIT SYSTEM
+
+
+
+
+
+
+
+
+
+
+
+FLOW
+
+
+
+tapMission →
+
+confirm →
+
+LOCK UI →
+
+enterWarMode
+
+
+
+
+
+
+
+
+
+LOCKED STATE
+
+
+
+
+
+User kan:
+
+
+
+❌ niet scrollen
+❌ niet switchen
+❌ niet browsen
+
+
+
+
+User kan enkel:
+
+
+
+✅ task doen
+✅ afronden
+⚠️ aborten (met penalty)
+
+
+
+
+👉 Dit is waar 90% van je impact zit.
+
+
+
+
+
+
+
+
+
+⚡ 4. WAR MODE (EXECUTION STATE)
+
+
+
+
+
+
+
+
+
+
+
+UI REGELS
+
+
+
+
+
+achtergrond → donkerder (bijna zwart)
+mascot → weg
+stats → weg
+nav → weg
+
+
+
+
+
+
+
+
+
+
+ENKEL ZICHTBAAR:
+
+
+
+
+
+taak
+timer
+progress
+complete knop
+
+
+
+
+
+
+
+
+
+
+PSYCHOLOGIE
+
+
+
+
+
+War mode moet voelen als:
+
+
+
+“We zitten erin. Geen bullshit meer.”
+
+
+
+
+
+
+
+
+
+⏱️ 5. TIMER SYSTEM
+
+
+
+
+
+
+
+
+
+
+
+MISSION STRUCTURE
+
+
+
+{
+
+  id,
+
+  name,
+
+  duration: 10, // minuten
+
+  energyCost: 15,
+
+  xpReward: 100
+
+}
+
+
+
+
+
+
+
+
+
+FLOW
+
+
+
+
+
+start → timer loopt
+finish → “session complete”
+
+
+
+
+
+
+
+
+
+
+BONUS:
+
+
+
+
+
+progress bar (subtiel)
+speed bonus mogelijk
+
+
+
+
+
+
+
+
+
+
+⚡ 6. ENERGY SYSTEM (NU ECHT BELANGRIJK)
+
+
+
+
+
+
+
+
+
+
+
+REGELS
+
+
+
+
+
+task start → energy -= cost
+recovery → energy +=
+energy < 30 → heavy tasks hidden
+
+
+
+
+
+
+
+
+
+
+TYPE MISSIONS
+
+
+
+type: "deep" | "light" | "recovery"
+
+
+
+
+
+
+
+
+
+GEDRAG
+
+
+
+
+
+👉 app past zich aan gebruiker aan
+
+👉 niet andersom
+
+
+
+
+
+
+
+
+
+🧨 7. CONSEQUENCE SYSTEM
+
+
+
+
+
+
+
+
+
+
+
+ABORT
+
+
+
+streak = 0
+
+xp -= 20
+
+
+
+
+
+
+
+
+
+CARRY OVER
+
+
+
+
+
+label: “unfinished”
+penalty volgende dag
+
+
+
+
+
+
+
+
+
+
+MICRO FEEDBACK
+
+
+
+
+
+Niet cringe, maar:
+
+
+
+“Focus broken.”
+
+
+
+
+
+
+
+👉 Geen consequence = geen discipline
+
+
+
+
+
+
+
+
+
+⚔️ 8. MOMENTUM ENGINE
+
+
+
+
+
+
+
+
+
+
+
+🔥 AUTO-CHAIN
+
+
+
+
+
+Na completion:
+
++120 XP
+
+🔥 streak x1.12
+
+
+
+NEXT:
+
+Admin: 3 mails
+
+
+
+[START]
+
+
+
+
+
+
+
+
+
+REGEL
+
+
+
+
+
+User mag niet:
+
+
+
+terug naar lijst
+nadenken
+
+
+
+
+👉 flow moet doorlopen
+
+
+
+
+
+
+
+
+
+🧠 9. STREAK SYSTEM (EMOTIONEEL ANKER)
+
+
+
+
+
+
+
+
+
+
+
+XP FORMULE
+
+
+
+xp = baseXP * (1 + (streak * 0.02))
+
+(max 1.5)
+
+
+
+
+
+
+
+
+
+BELANGRIJK
+
+
+
+
+
+streak zichtbaar
+verlies voelt slecht
+winst voelt goed
+
+
+
+
+👉 dit is je dopamine engine
+
+
+
+
+
+
+
+
+
+⚔️ 10. DATA SIMPLIFICATIE
+
+
+
+
+
+
+
+
+
+
+
+VERBERGEN:
+
+
+
+
+
+alignment %
+ROI %
+pressure %
+completion %
+
+
+
+
+
+
+
+
+
+
+TONEN:
+
+
+
+
+
+taak
+tijd
+XP
+streak
+
+
+
+
+
+
+
+
+👉 je maakt een tool, geen NASA dashboard
+
+
+
+
+
+
+
+
+
+⚔️ 11. SYSTEM UNIFICATION
+
+
+
+
+
+
+
+
+
+
+
+NIEUWE STRUCTUUR
+
+
+
+mission {
+
+  id,
+
+  name,
+
+  type: "task" | "routine" | "scheduled",
+
+  date,
+
+  recurrence,
+
+  duration,
+
+  energyCost
+
+}
+
+
+
+
+
+
+
+
+
+VIEWS
+
+
+
+
+
+Missions → execute
+Calendar → timeline
+Routine → template
+
+
+
+
+👉 1 systeem, 3 perspectieven
+
+
+
+
+
+
+
+
+
+⚔️ 12. UX FLOW (DE ULTIEME TEST)
+
+
+
+
+
+
+
+
+
+
+
+SCENARIO:
+
+
+
+
+
+User:
+
+
+
+moe
+geen zin
+afgeleid
+
+
+
+
+
+
+
+
+
+
+FLOW:
+
+
+
+
+
+opent app
+ziet 1 taak
+klikt start
+zit vast in flow
+rondt af
+krijgt reward
+volgende taak start
+
+
+
+
+
+
+
+
+👉 binnen 3 seconden moet hij bezig zijn
+
+
+
+
+
+
+
+
+
+🧨 13. ROADMAP (REALISTISCH)
+
+
+
+
+
+
+
+
+
+
+
+WEEK 1
+
+
+
+
+
+state machine
+auto-priority
+single mission focus
+
+
+
+
+
+
+
+
+
+
+WEEK 2
+
+
+
+
+
+timer system
+war mode lock
+energy systeem actief
+
+
+
+
+
+
+
+
+
+
+WEEK 3
+
+
+
+
+
+consequence systeem
+auto-chain
+streak multiplier zichtbaar
+
+
+
+
+
+
+
+
+
+
+WEEK 4
+
+
+
+
+
+unify systems
+UI simplification (hard kill)
+polish flow
+
+
+
+
+
+
+
+
+
+
+💀 EINDCONCLUSIE
+
+
+
+
+
+Je bouwt geen app.
+
+Je bouwt:
+
+
+
+een systeem dat mensen dwingt om minder lui te zijn dan ze willen zijn
+
+
+
+
+
+
+
+En even eerlijk…
+
+
+
+Als je dit goed doet:
+
+👉 mensen gaan het haten
+
+👉 maar blijven gebruiken
+
+
+
+En dat is exact hoe je weet dat je iets goeds hebt gebouwd.
+
+
+
+Nu stoppen met nadenken en beginnen met slopen wat overbodig is.
+
+
+
+
+
+Je wil dus geen “featuretje” toevoegen… je wil dat je hele app een soort stille stalker wordt die alles onthoudt en je langzaam beter (of genadeloos eerlijker) maakt.
+
+
+
+Prima. Dan moet je stoppen met denken in pagina’s en beginnen denken in systemen die overal doorheen lopen.
+
+
+
+
+
+
+
+
+
+🧠 1. De shift die je moet maken (anders blijf je prutsen)
+
+
+
+
+
+Nu:
+
+
+
+Home = stats
+Missions = acties
+Growth = skills
+XP = progress
+
+
+
+
+Straks:
+
+👉 Alles = input voor je behaviour engine
+
+
+
+Elke klik, elke skip, elke timing = data.
+
+
+
+
+
+
+
+
+
+🧬 2. Nieuwe core layer (boven ALLES)
+
+
+
+
+
+Je huidige core state is ok 
+
+Maar je mist een meta-layer
+
+
+
+Voeg dit toe:
+
+adaptive: {
+
+  profile: {
+
+    type: "unknown", // disciplined / chaotic / avoider / sprinter
+
+  },
+
+
+
+  behavior: {
+
+    patterns: {},
+
+    peakHours: [],
+
+    weakSpots: [],
+
+    strengths: []
+
+  },
+
+
+
+  scores: {
+
+    consistency: 0,
+
+    discipline: 0,
+
+    fatigue: 0,
+
+    avoidance: 0
+
+  },
+
+
+
+  system: {
+
+    currentMode: "focus",
+
+    difficulty: 1.0,
+
+    pressure: 1.0
+
+  }
+
+}
+
+Dit wordt je brein van de app.
+
+
+
+Niet zichtbaar. Maar alles stuurt hierop.
+
+
+
+
+
+
+
+
+
+⚙️ 3. Elke pagina moet “data teruggeven”
+
+
+
+
+
+
+
+🔹 HOME → passieve meting
+
+
+
+
+
+Wat je nu hebt:
+
+
+
+Energy / Focus / Load
+
+
+
+
+Wat je moet toevoegen:
+
+👉 Hoe snel opent user app
+
+👉 Hoe vaak per dag
+
+👉 Hoe lang blijft hij hangen
+
+trackSession({
+
+  openTime,
+
+  duration,
+
+  idleTime
+
+});
+
+Resultaat:
+
+
+
+Motivatie score
+Engagement score
+
+
+
+
+
+
+
+
+
+
+🔹 MISSIONS → gedrag in actie
+
+
+
+
+
+Hier gebeurt alles.
+
+
+
+Je moet tracken:
+
+
+
+Start → maar niet afgemaakt
+Afgemaakt → hoe snel
+Afgebroken → wanneer
+
+
+trackMission({
+
+  id,
+
+  startedAt,
+
+  completedAt,
+
+  abandoned: true/false
+
+});
+
+👉 Hier ontstaat:
+
+
+
+Discipline score
+Avoidance score
+
+
+
+
+
+
+
+
+
+
+🔹 GROWTH (skill tree) → intentie
+
+
+
+
+
+Nu:
+
+
+
+Unlock = gewoon klik
+
+
+
+
+Straks:
+
+👉 Welke skills kiest iemand?
+
+trackSkillChoice(skillKey);
+
+Resultaat:
+
+
+
+User voorkeur:
+focus-based
+recovery-based
+performance-based
+
+
+
+
+
+👉 Je app leert:
+
+“Deze gast wil progressie” vs “deze wil comfort”
+
+
+
+
+
+
+
+
+
+🔹 XP SYSTEM → moet adaptief worden
+
+
+
+
+
+Je XP is nu lineair 
+
+Dat is cute maar nutteloos.
+
+
+
+Maak:
+
+function calculateAdaptiveXP(baseXP) {
+
+
+
+  const { discipline, fatigue } = gameState.adaptive.scores;
+
+
+
+  let modifier = 1;
+
+
+
+  if (discipline > 70) modifier += 0.25;
+
+  if (fatigue > 70) modifier -= 0.2;
+
+
+
+  return Math.floor(baseXP * modifier);
+
+}
+
+👉 XP wordt persoonlijk
+
+👉 Mensen voelen dat zonder het te snappen
+
+
+
+
+
+
+
+
+
+🧠 4. Behaviour processing (dagelijkse brain update)
+
+
+
+
+
+Elke dag (bij reset):
+
+function processBehavior() {
+
+
+
+  calculateConsistency();
+
+  calculateFatigue();
+
+  calculateAvoidance();
+
+  calculatePeakHours();
+
+
+
+  updateUserProfile();
+
+  updateDifficulty();
+
+  updateMode();
+
+
+
+}
+
+
+
+
+
+
+
+
+
+🔥 4.1 User profile bepalen
+
+
+
+function updateUserProfile() {
+
+
+
+  const { consistency, avoidance } = gameState.adaptive.scores;
+
+
+
+  if (consistency > 80) return "disciplined";
+
+  if (avoidance > 60) return "avoider";
+
+  if (consistency < 40) return "chaotic";
+
+
+
+  return "balanced";
+
+}
+
+👉 Nu weet je wie je voor je hebt
+
+En je behandelt hem anders.
+
+
+
+
+
+
+
+
+
+⚔️ 4.2 Difficulty scaling (dit is cruciaal)
+
+
+
+function updateDifficulty() {
+
+
+
+  const profile = gameState.adaptive.profile;
+
+
+
+  if (profile === "disciplined") {
+
+    gameState.adaptive.system.difficulty = 1.3;
+
+  }
+
+
+
+  if (profile === "avoider") {
+
+    gameState.adaptive.system.difficulty = 0.8;
+
+  }
+
+
+
+}
+
+👉 Geen vaste difficulty meer
+
+👉 Alles past zich aan
+
+
+
+
+
+
+
+
+
+🎮 5. Missions worden dynamisch gegenereerd
+
+
+
+
+
+Stop met vaste missions.
+
+
+
+Maak een generator:
+
+function generateMission() {
+
+
+
+  const difficulty = gameState.adaptive.system.difficulty;
+
+  const fatigue = gameState.adaptive.scores.fatigue;
+
+
+
+  if (fatigue > 80) {
+
+    return { name: "Recovery Walk", xp: 40 };
+
+  }
+
+
+
+  if (difficulty > 1.2) {
+
+    return { name: "Deep Work 90min", xp: 200 };
+
+  }
+
+
+
+  return { name: "Focus Sprint 25min", xp: 100 };
+
+}
+
+👉 App beslist wat jij nodig hebt
+
+Niet wat jij wil
+
+
+
+
+
+
+
+
+
+🧨 6. Psychological layer (waar mensen hooked raken)
+
+
+
+
+
+Je hebt al streaks 
+
+Maar dat is beginner level.
+
+
+
+Voeg toe:
+
+
+
+
+
+6.1 Pressure system
+
+
+
+if (userSkippingTooMuch) {
+
+  gameState.adaptive.system.pressure += 0.2;
+
+}
+
+Effect:
+
+
+
+Hardere messaging
+Minder beloningen
+Meer confrontatie
+
+
+
+
+
+
+
+
+
+
+6.2 Soft manipulation (ja, dit is expres)
+
+
+
+
+
+Hoge discipline → respect tone
+Lage discipline → confronterende tone
+
+
+function getTone() {
+
+
+
+  if (discipline > 80) return "elite";
+
+  if (discipline < 40) return "confronting";
+
+
+
+  return "neutral";
+
+}
+
+👉 App praat anders tegen je
+
+👉 Dat voelt persoonlijk
+
+
+
+
+
+
+
+
+
+⚡ 7. UI moet volgen (niet leiden)
+
+
+
+
+
+Je motion system is al strak 
+
+Hou dat zo.
+
+
+
+Maar voeg toe:
+
+
+
+Active mission = afhankelijk van difficulty
+Glow intensity = afhankelijk van importance
+Cards reorderen op basis van gedrag
+
+
+
+
+👉 UI wordt dynamisch zonder rommelig te worden
+
+
+
+
+
+
+
+
+
+💀 8. De echte upgrade (die alles verandert)
+
+
+
+
+
+Maak dit:
+
+
+
+
+
+“Daily Evaluation Screen”
+
+
+
+
+
+Elke dag:
+
+
+
+“Je vermijdt focus taken”
+“Je piek ligt om 11:00”
+“Je discipline stijgt”
+
+
+
+
+Niet fluffy. Gewoon koud.
+
+
+
+👉 Mensen blijven hiervoor terugkomen
+
+👉 Omdat het confronterend is
+
+
+
+
+
+
+
+
+
+🎯 9. Samenvatting (want anders ga je weer alles tegelijk bouwen)
+
+
+
+
+
+Je moet dit doen:
+
+
+
+
+
+CORE
+
+
+
+
+
+Behaviour state toevoegen
+Tracking op elke actie
+
+
+
+
+
+
+PROCESSING
+
+
+
+
+
+Dagelijkse analyse
+Scores berekenen
+
+
+
+
+
+
+ADAPTATION
+
+
+
+
+
+XP aanpassen
+Missions aanpassen
+Difficulty aanpassen
+Mode automatisch
+
+
+
+
+
+
+PSYCHOLOGY
+
+
+
+
+
+Tone aanpassen
+Pressure systeem
+Confrontatie
+
+
+
+
+
+
+
+
+Je app moet stoppen met:
+
+👉 “Hier zijn wat taken”
+
+
+
+En beginnen met:
+
+👉 “Ik weet wat jij doet, en ik pas me aan”
+
+
+
+Dat verschil is exact waarom sommige apps vergeten worden en andere bijna verslavend worden.
+
+
+
+En jij zit echt op het randje van dat tweede… als je het niet halfbakken implementeert.
+
+
+
+
+
+
+
+Je wil concreet? Eindelijk. Geen filosofisch gedoe, gewoon wat je moet bouwen zodat je app stopt met doen alsof hij slim is en effectief slim wórdt.
+
+
+
+
+
+
+
+
+
+🧠 1. Adaptive Mission Engine (dit is je hart, momenteel een baksteen)
+
+
+
+
+
+
+
+Wat je moet doen
+
+
+
+
+
+Geef elke mission deze velden:
+
+
+successRate
+
+failureCount
+
+lastCompleted
+
+preferredTime
+
+difficultyScore
+
+
+
+Logica
+
+
+
+
+
+Veel success → difficulty omhoog
+Veel failures → difficulty omlaag
+Vaak genegeerd → andere timing
+
+
+
+
+
+
+Waarom
+
+
+
+
+
+Je app moet stoppen met:
+
+
+
+“hier is dezelfde missie elke dag”
+
+
+
+En beginnen met:
+
+
+
+“ik zie hoe jij werkt, dus ik pas me aan”
+
+
+
+
+
+
+
+
+
+☠️ 2. Failure Tracking (je grootste blinde vlek)
+
+
+
+
+
+
+
+Wat je moet doen
+
+
+
+
+
+Voeg per missie toe:
+
+status: "completed" | "failed" | "skipped"
+
+attempts: number
+
+failHistory: [timestamps]
+
+
+
+Nieuwe functie
+
+
+
+function markMissionFailed(missionId) {
+
+  const mission = findMission(missionId);
+
+  mission.status = "failed";
+
+  mission.failureCount += 1;
+
+}
+
+
+
+Waarom
+
+
+
+
+
+Zonder dit:
+
+
+
+leer je niks
+verbeter je niks
+blijf je dezelfde fouten herhalen (zoals een gemiddelde mens)
+
+
+
+
+
+
+
+
+
+
+🔗 3. Mission Chaining (stop met losse flodders)
+
+
+
+
+
+
+
+Wat je moet doen
+
+
+
+dependencies: [missionId]
+
+unlocks: [missionId]
+
+
+
+Logica
+
+
+
+
+
+Mission B activeert pas na A
+Mission completion → boost volgende
+
+
+
+
+
+
+Extra: Momentum bonus
+
+
+
+if (previousMissionCompletedWithin(1h)) {
+
+  xp *= 1.2;
+
+}
+
+
+
+Waarom
+
+
+
+
+
+Gedrag werkt in ketens, niet in losse taken.
+
+
+
+
+
+
+
+
+
+⏱️ 4. Time Intelligence (nu ben je blind voor timing)
+
+
+
+
+
+
+
+Wat je moet doen
+
+
+
+
+
+Log ALLES met timestamps:
+
+completedAt
+
+failedAt
+
+skippedAt
+
+
+
+Analyse regels
+
+
+
+
+
+Veel failures om 21:00 → vermijd zware tasks dan
+Veel success om 10:00 → push moeilijke tasks daar
+
+
+
+
+
+
+Waarom
+
+
+
+
+
+Je bouwt:
+
+
+
+persoonlijke ritme-engine
+
+
+
+In plaats van:
+
+
+
+random to-do lijst
+
+
+
+
+
+
+
+
+
+⚡ 5. Stat-driven Behavior (je stats moeten stoppen met cosplay)
+
+
+
+
+
+Je hebt:
+
+energy
+
+focus
+
+load
+
+
+
+Maak ze leidend
+
+
+
+
+
+
+
+Rules:
+
+
+
+if (energy < 30) → alleen lichte missions  
+
+if (focus > 70) → deep work missions unlock  
+
+if (load > 70) → minder missions tonen  
+
+
+
+Waarom
+
+
+
+
+
+Nu zijn je stats gewoon decoratie.
+
+Maak ze dictator.
+
+
+
+
+
+
+
+
+
+📉 6. Weekly Behavior Insights (dit maakt je app volwassen)
+
+
+
+
+
+
+
+Wat je moet doen
+
+
+
+
+
+Genereer elke week:
+
+
+
+success rate
+failure zones (tijdstippen)
+beste dag
+slechtste gewoonte
+
+
+
+
+
+
+Output voorbeeld
+
+
+
+Je faalt 73% van je avondtaken  
+
+Je piekt tussen 09:00–11:00  
+
+Je streak breekt meestal op woensdag
+
+
+
+Waarom
+
+
+
+
+
+Gebruiker moet zichzelf zien…
+
+anders verandert er niks.
+
+
+
+
+
+
+
+
+
+🧬 7. Dynamic Difficulty System
+
+
+
+
+
+
+
+Wat je moet doen
+
+
+
+
+
+Elke missie krijgt:
+
+baseXP
+
+difficultyMultiplier
+
+
+
+Formule
+
+
+
+adjustedXP = baseXP * (1 + failureCount * 0.1)
+
+OF:
+
+
+
+te makkelijk → minder XP
+te moeilijk → meer XP
+
+
+
+
+
+
+Waarom
+
+
+
+
+
+Balans = verslavend
+
+Te makkelijk = saai
+
+Te moeilijk = quit
+
+
+
+
+
+
+
+
+
+🔁 8. Smart Daily Reset (nu is het dom)
+
+
+
+
+
+Je huidige reset:
+
+missions.completed = false
+
+energy = 100
+
+Ja… alsof mensen elke dag resetten als een robot 
+
+
+
+
+
+Maak dit:
+
+
+
+
+
+incomplete missions → carry over (met penalty)
+streak afhankelijk reset
+energy gebaseerd op vorige dag gedrag
+
+
+
+
+
+
+
+
+
+
+🧠 9. Behavior Memory (dit is waar je “AI” begint)
+
+
+
+
+
+
+
+Wat je moet doen
+
+
+
+
+
+Maak profiel:
+
+userProfile = {
+
+  bestFocusTime: [],
+
+  weakMoments: [],
+
+  consistencyScore,
+
+  preferredMissionTypes
+
+}
+
+Update dit dagelijks.
+
+
+
+
+
+Waarom
+
+
+
+
+
+Zonder geheugen = geen intelligentie
+
+Je app heeft nu Alzheimer.
+
+
+
+
+
+
+
+
+
+🎯 10. Priority Engine (nu is alles even belangrijk… dus niets)
+
+
+
+
+
+
+
+Wat je moet doen
+
+
+
+
+
+Elke missie:
+
+priorityScore = 
+
+  importance +
+
+  urgency +
+
+  userWeakness +
+
+  streakImpact
+
+
+
+Sorteer:
+
+
+
+
+
+top 3 = zichtbaar
+rest = verborgen
+
+
+
+
+
+
+Waarom
+
+
+
+
+
+Te veel keuzes = niets doen
+
+Mensen zijn dramatisch slecht in prioriteiten.
+
+
+
+
+
+
+
+
+
+💀 Samengevat (de harde waarheid)
+
+
+
+
+
+Wat jij nu hebt:
+
+
+
+mooie structuur
+game loop
+discipline vibe
+
+
+
+
+Wat je mist:
+
+
+
+geheugen
+adaptatie
+timing
+intelligentie
+
+
+
+
+
+
+
+
+
+
+🧨 Als je dit goed doet…
+
+
+
+
+
+Dan wordt je app:
+
+
+
+een systeem dat mensen beter maakt tegen hun zin in
+
+
+
+En dat is exact waarom ze blijven terugkomen.
+
+
+
+
+

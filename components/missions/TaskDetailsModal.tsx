@@ -9,6 +9,7 @@ import { useOfflineCompleteTask } from "@/app/hooks/useOfflineCompleteTask";
 import type { SubtaskRow } from "@/app/actions/tasks";
 import { baseXpToLevelLabel } from "@/lib/mission-templates";
 import { useHQStore } from "@/lib/hq-store";
+import { trackEvent } from "@/app/actions/analytics-events";
 
 const WEEKDAY_LABELS: Record<number, string> = { 1: "Mon", 2: "Tue", 3: "Wed", 4: "Thu", 5: "Fri", 6: "Sat", 7: "Sun" };
 
@@ -142,6 +143,7 @@ export function TaskDetailsModal({
   function handleSnooze() {
     startTransition(async () => {
       await snoozeTask(task.id);
+      void trackEvent("mission_skipped", { taskId: task.id, reason: "details_modal_snooze" });
       onSnooze?.();
       const date = task.due_date ?? new Date().toISOString().slice(0, 10);
       removeTask(task.id, date);
@@ -327,6 +329,7 @@ export function TaskDetailsModal({
                         d.setUTCDate(d.getUTCDate() + 1);
                         const tomorrowStr = d.toISOString().slice(0, 10);
                         await snoozeTask(task.id);
+                        void trackEvent("mission_skipped", { taskId: task.id, reason: "low_synergy_reschedule" });
                         onSnooze?.();
                         removeTask(task.id, task.due_date ?? tomorrowStr);
                         router.refresh();

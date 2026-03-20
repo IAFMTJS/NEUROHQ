@@ -5,6 +5,7 @@ import { revalidateTagMax } from "@/lib/revalidate";
 import { createClient } from "@/lib/supabase/server";
 import { isHeavyTask } from "@/lib/brain-mode";
 import { logTaskEvent } from "./tasks";
+import type { Json } from "@/types/database.types";
 
 const HEAVY_START_FOCUS_COST = 5;
 const ABANDON_LOAD_BUMP = 5;
@@ -144,9 +145,18 @@ export async function getExcessActiveLoadBump(dateStr: string, maxSlots: number)
  * Abandon task with cost: apply XP -10%, Load +5, then log abandon event. Use from UI after confirmation.
  */
 export async function abandonTaskWithCost(taskId: string): Promise<{ xpDeducted: number; loadBump: number }> {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
   const dateStr = new Date().toISOString().slice(0, 10);
   const result = await applyAbandonCost(taskId, dateStr);
   await logTaskEvent({ taskId, eventType: "abandon" });
+  if (user) {
+    await supabase.from("analytics_events").insert({
+      user_id: user.id,
+      event_name: "mission_aborted",
+      payload: { taskId } as Json,
+    });
+  }
   return result;
 }
 
@@ -162,4 +172,9 @@ export async function startTaskWithHeavyCost(taskId: string): Promise<void> {
   const dateStr = new Date().toISOString().slice(0, 10);
   if (isHeavyTask(energyRequired)) await applyHeavyStartFocusCost(dateStr);
   await logTaskEvent({ taskId, eventType: "start" });
+  await supabase.from("analytics_events").insert({
+    user_id: user.id,
+    event_name: "mission_started",
+    payload: { taskId, heavy: isHeavyTask(energyRequired) } as Json,
+  });
 }

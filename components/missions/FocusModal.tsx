@@ -3,10 +3,11 @@
 import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { snoozeTask } from "@/app/actions/tasks";
-import { startTaskWithHeavyCost } from "@/app/actions/decision-cost";
+import { abandonTaskWithCost, startTaskWithHeavyCost } from "@/app/actions/decision-cost";
 import { useOfflineCompleteTask } from "@/app/hooks/useOfflineCompleteTask";
 import { getDailyState, setEmotionalStatePreStart, type EmotionalStatePreStart } from "@/app/actions/daily-state";
 import { useHQStore } from "@/lib/hq-store";
+import { trackEvent } from "@/app/actions/analytics-events";
 
 const DEFAULT_MINUTES = 25;
 
@@ -60,6 +61,7 @@ export function FocusModal({ open, onClose, taskId, taskTitle, date: dateProp, t
   const [running, setRunning] = useState(false);
   const [dailyState, setDailyState] = useState<{ emotional_state?: string | null } | null>(null);
   const [emotionalStateSet, setEmotionalStateSet] = useState(false);
+  const [sessionStarted, setSessionStarted] = useState(false);
   const outsideFocus =
     taskDomain &&
     strategyMapping &&
@@ -110,12 +112,33 @@ export function FocusModal({ open, onClose, taskId, taskTitle, date: dateProp, t
   const handleSnooze = useCallback(() => {
     setPending(true);
     snoozeTask(taskId).then(() => {
+      void trackEvent("mission_skipped", { taskId, reason: "focus_modal_snooze" });
       onSnooze?.();
       removeTask(taskId, date);
       router.refresh();
       onClose();
     }).finally(() => setPending(false));
   }, [taskId, date, onSnooze, router, onClose, removeTask]);
+
+  const handleAbort = useCallback(() => {
+    const ok = confirm("Abort current mission? This applies a small penalty.");
+    if (!ok) return;
+    setPending(true);
+    abandonTaskWithCost(taskId)
+      .then(() => {
+        onClose();
+        router.refresh();
+      })
+      .finally(() => setPending(false));
+  }, [taskId, onClose, router]);
+
+  const handleClose = useCallback(() => {
+    if (!sessionStarted) {
+      onClose();
+      return;
+    }
+    handleAbort();
+  }, [sessionStarted, onClose, handleAbort]);
 
   if (!open) return null;
 
@@ -126,7 +149,7 @@ export function FocusModal({ open, onClose, taskId, taskTitle, date: dateProp, t
       aria-modal="true"
       aria-labelledby="focus-modal-title"
     >
-      <div className="modal-backdrop absolute inset-0" aria-hidden onClick={onClose} />
+      <div className="modal-backdrop absolute inset-0" aria-hidden onClick={handleClose} />
       <div
         className="modal-card relative w-full max-w-sm"
         onClick={(e) => e.stopPropagation()}
@@ -140,7 +163,7 @@ export function FocusModal({ open, onClose, taskId, taskTitle, date: dateProp, t
           </div>
           <button
             type="button"
-            onClick={onClose}
+            onClick={handleClose}
             className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-[var(--text-muted)] transition-colors hover:bg-[var(--accent-neutral)] hover:text-[var(--text-primary)]"
             aria-label="Close"
           >
@@ -229,6 +252,7 @@ export function FocusModal({ open, onClose, taskId, taskTitle, date: dateProp, t
               type="button"
               onClick={() => {
                 setRunning(true);
+                setSessionStarted(true);
                 startTaskWithHeavyCost(taskId);
               }}
               className="btn-primary rounded-xl px-6 py-3 text-base font-medium"
@@ -262,10 +286,10 @@ export function FocusModal({ open, onClose, taskId, taskTitle, date: dateProp, t
           </button>
           <button
             type="button"
-            onClick={onClose}
+            onClick={handleClose}
             className="rounded-xl border border-[var(--card-border)] bg-transparent px-6 py-3 text-base font-medium text-[var(--text-muted)] transition-colors hover:bg-[var(--accent-neutral)]"
           >
-            Close
+            {sessionStarted ? "Abort" : "Close"}
           </button>
         </footer>
       </div>

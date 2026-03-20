@@ -25,6 +25,7 @@ import { useAppState } from "@/components/providers/AppStateProvider";
 import { addBonusAutoMissionsForToday } from "@/app/actions/master-missions";
 import { useHQStore } from "@/lib/hq-store";
 import { useTasksBootstrap } from "@/lib/tasks-bootstrap";
+import { useDCICGameState } from "@/lib/dcic/game-state-client";
 
 const WEEKDAY_LABELS: Record<number, string> = { 1: "Mon", 2: "Tue", 3: "Wed", 4: "Thu", 5: "Fri", 6: "Sat", 7: "Sun" };
 
@@ -104,6 +105,8 @@ export function TaskList({
   brainMode,
 }: Props) {
   const router = useRouter();
+  const { gameState } = useDCICGameState();
+  const isWarMode = gameState?.mode?.current === "war";
   const sevenDaysAgo = useMemo(() => {
     const d = new Date();
     d.setDate(d.getDate() - 7);
@@ -126,6 +129,7 @@ export function TaskList({
   const [addError, setAddError] = useState<string | null>(null);
   const [subtaskError, setSubtaskError] = useState<string | null>(null);
   const [filter, setFilter] = useState<"all" | "active" | "aanbevolen" | "nieuw" | "work" | "personal" | "recurring">("all");
+  const [viewMode, setViewMode] = useState<"focus" | "plan" | "backlog">("focus");
   const [detailsTask, setDetailsTask] = useState<ExtendedTask | null>(null);
   const [editTask, setEditTask] = useState<ExtendedTask | null>(null);
   const [focusTask, setFocusTask] = useState<ExtendedTask | null>(null);
@@ -140,6 +144,7 @@ export function TaskList({
     if (addParam && (/^\d{4}-\d{2}-\d{2}$/.test(addParam) || addParam === "today")) setAddFullOpen(true);
   }, [addParam]);
   const [showDoAnotherModal, setShowDoAnotherModal] = useState(false);
+  const [nextMissionPromptTask, setNextMissionPromptTask] = useState<ExtendedTask | null>(null);
   const [showAllTasksModal, setShowAllTasksModal] = useState(false);
   const [levelUpInfo, setLevelUpInfo] = useState<{
     level: number;
@@ -227,6 +232,10 @@ export function TaskList({
     sections.push({ label: "Bij capaciteit · optioneel", tasks: optionalAutoTasks as ExtendedTask[] });
   }
   const sectionsToShow = sections.some((s) => s.tasks.length > 0) ? sections : [{ label: "Vandaag", tasks: extendedTasks }];
+  const focusModeTasks = incompleteTasksForDisplay.slice(0, 3);
+  const warModeTasks = incompleteTasksForDisplay.slice(0, 1);
+  const backlogModeTasks = incompleteTasksForDisplay.filter((t) => (t.carry_over_count ?? 0) > 0);
+  const effectiveViewMode = isWarMode ? "focus" : viewMode;
   const flatIncompleteOrder: string[] = [];
   for (const s of sectionsToShow) {
     for (const t of s.tasks) {
@@ -285,6 +294,10 @@ export function TaskList({
 
   function handleComplete(id: string) {
     const completedCountBefore = completedForDisplay.length;
+    const nextCandidateId = flatIncompleteOrder.find((taskId) => taskId !== id) ?? null;
+    const nextCandidateTask = nextCandidateId
+      ? incompleteTasksForDisplay.find((t) => t.id === nextCandidateId) ?? null
+      : null;
     const task = extendedTasks.find((t) => t.id === id);
     if (task) {
       upsertTask({
@@ -298,7 +311,6 @@ export function TaskList({
     startTransition(async () => {
       try {
         const result = await completeTaskOffline(id);
-        trackEvent("mission_completed", { taskId: id });
         showCompleteToast(id, result ?? undefined);
         if (result?.levelUp && result.newLevel) {
           const rankPromotion = (result as { rankPromotion?: boolean; newRank?: string; previousRank?: string }).rankPromotion;
@@ -329,6 +341,9 @@ export function TaskList({
           );
         }
         appState?.triggerReward();
+        if (nextCandidateTask) {
+          setNextMissionPromptTask(nextCandidateTask);
+        }
         if (completedCountBefore + 1 >= suggestedTaskCount) {
           setDetailsTask(null);
           setFocusTask(null);
@@ -412,6 +427,7 @@ export function TaskList({
           await addToQueue("snoozeTask", { id });
         } else {
           await snoozeTask(id);
+          void trackEvent("mission_skipped", { taskId: id, reason: "list_snooze" });
           router.refresh();
         }
       } finally {
@@ -429,6 +445,7 @@ export function TaskList({
           await addToQueue("skipNextOccurrence", { id });
         } else {
           await skipNextOccurrence(id);
+          void trackEvent("mission_skipped", { taskId: id, reason: "list_skip_next" });
           router.refresh();
         }
       } finally {
@@ -720,25 +737,31 @@ export function TaskList({
             </h2>
             <p className="mt-0.5 text-xs text-[var(--text-muted)]">Volledige taakformulier · XP per missie</p>
           </div>
-          <div className="flex flex-wrap items-center gap-2">
-            <button
-              type="button"
-              onClick={() => { setDetailsTask(null); setFocusTask(null); setAddFullOpen(true); }}
-              className="rounded-full bg-[var(--accent-focus)] px-4 py-2.5 text-sm font-semibold text-white shadow-[0_0_12px_rgba(var(--mode-rgb,0,212,255),0.4)] hover:opacity-95 hover:shadow-[0_0_16px_rgba(var(--mode-rgb,0,212,255),0.5)]"
-            >
-              + Taak toevoegen
-            </button>
-            {mode === "stabilize" && <span className="rounded-full bg-amber-500/15 px-3 py-1 text-xs font-medium text-amber-200">Stabilize mode</span>}
-            {incompleteTasksForDisplay.length + completedForDisplay.length > 0 && (
+          {!isWarMode ? (
+            <div className="flex flex-wrap items-center gap-2">
               <button
                 type="button"
-                onClick={() => { setDetailsTask(null); setFocusTask(null); setShowAllTasksModal(true); }}
-                className="rounded-full border border-[var(--card-border)] px-3 py-1.5 text-xs font-medium text-[var(--text-muted)] hover:bg-[var(--bg-surface)] hover:text-[var(--text-primary)]"
+                onClick={() => { setDetailsTask(null); setFocusTask(null); setAddFullOpen(true); }}
+                className="rounded-full bg-[var(--accent-focus)] px-4 py-2.5 text-sm font-semibold text-white shadow-[0_0_12px_rgba(var(--mode-rgb,0,212,255),0.4)] hover:opacity-95 hover:shadow-[0_0_16px_rgba(var(--mode-rgb,0,212,255),0.5)]"
               >
-                All tasks ({incompleteTasksForDisplay.length + completedForDisplay.length})
+                + Taak toevoegen
               </button>
-            )}
-          </div>
+              {mode === "stabilize" && <span className="rounded-full bg-amber-500/15 px-3 py-1 text-xs font-medium text-amber-200">Stabilize mode</span>}
+              {incompleteTasksForDisplay.length + completedForDisplay.length > 0 && (
+                <button
+                  type="button"
+                  onClick={() => { setDetailsTask(null); setFocusTask(null); setShowAllTasksModal(true); }}
+                  className="rounded-full border border-[var(--card-border)] px-3 py-1.5 text-xs font-medium text-[var(--text-muted)] hover:bg-[var(--bg-surface)] hover:text-[var(--text-primary)]"
+                >
+                  All tasks ({incompleteTasksForDisplay.length + completedForDisplay.length})
+                </button>
+              )}
+            </div>
+          ) : (
+            <span className="rounded-full border border-[var(--accent-focus)]/40 bg-[var(--accent-focus)]/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.08em] text-[var(--accent-focus)]">
+              War tunnel
+            </span>
+          )}
         </div>
       </div>
       <div className="p-4">
@@ -746,7 +769,26 @@ export function TaskList({
           <p className="mb-3 rounded-xl border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-sm text-amber-200">{carryOverCount} tasks carried over. Pick one to focus on.</p>
         )}
 
-        {filteredTasks.length > 0 && (
+        {!isWarMode && (
+          <div className="mb-3 flex flex-wrap gap-2">
+            {(["focus", "plan", "backlog"] as const).map((m) => (
+              <button
+                key={m}
+                type="button"
+                onClick={() => setViewMode(m)}
+                className={`rounded-full px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.08em] ${
+                  viewMode === m
+                    ? "bg-[var(--accent-focus)]/20 text-[var(--accent-focus)] border border-[var(--accent-focus)]/40"
+                    : "border border-[var(--card-border)] text-[var(--text-muted)] hover:bg-[var(--bg-surface)] hover:text-[var(--text-primary)]"
+                }`}
+              >
+                {m}
+              </button>
+            ))}
+          </div>
+        )}
+
+        {effectiveViewMode === "plan" && filteredTasks.length > 0 && (
           <div className="mb-3 flex flex-wrap gap-2">
             {(["all", "active", "aanbevolen", "nieuw", "work", "personal", "recurring"] as const).map((f) => (
               <button
@@ -763,7 +805,27 @@ export function TaskList({
           </div>
         )}
 
-        {initialTasks.length === 0 ? (
+        {effectiveViewMode === "focus" ? (
+          (isWarMode ? warModeTasks : focusModeTasks).length === 0 ? (
+            <p className="rounded-lg border border-dashed border-[var(--card-border)]/50 bg-[var(--bg-surface)]/30 px-3 py-4 text-center text-xs text-[var(--text-muted)]">
+              Geen focus-missies beschikbaar.
+            </p>
+          ) : (
+            <ul className="space-y-2">
+              {(isWarMode ? warModeTasks : focusModeTasks).map((t, idx) => renderTask(t, idx === 0))}
+            </ul>
+          )
+        ) : effectiveViewMode === "backlog" ? (
+          backlogModeTasks.length === 0 ? (
+            <p className="rounded-lg border border-dashed border-[var(--card-border)]/50 bg-[var(--bg-surface)]/30 px-3 py-4 text-center text-xs text-[var(--text-muted)]">
+              Geen backlog-items in je huidige lijst.
+            </p>
+          ) : (
+            <ul className="space-y-2">
+              {backlogModeTasks.map((t) => renderTask(t, false))}
+            </ul>
+          )
+        ) : initialTasks.length === 0 ? (
           <div className="rounded-lg border border-dashed border-[var(--card-border)] bg-[var(--bg-surface)]/50 px-3 py-5 text-center text-sm text-[var(--text-muted)]">
             <p className="font-medium text-[var(--text-secondary)]">Geen taken vandaag.</p>
             <p className="mt-2">
@@ -811,7 +873,8 @@ export function TaskList({
           </div>
         )}
 
-        <div className="mt-4 flex justify-end">
+        {!isWarMode && (
+          <div className="mt-4 flex justify-end">
           <button
             type="button"
             onClick={() => { setDetailsTask(null); setFocusTask(null); setAddFullOpen(true); }}
@@ -819,7 +882,8 @@ export function TaskList({
           >
             + Taak toevoegen
           </button>
-        </div>
+          </div>
+        )}
 
         {detailsTask && (
           <TaskDetailsModal
@@ -912,6 +976,37 @@ export function TaskList({
               className="flex-1 rounded-lg bg-[var(--accent-focus)] px-3 py-2 text-sm font-medium text-white hover:opacity-90"
             >
               Voeg 2 bonusmissies toe
+            </button>
+          </div>
+        </Modal>
+        <Modal
+          open={!!nextMissionPromptTask}
+          onClose={() => setNextMissionPromptTask(null)}
+          title="Next mission ready"
+          size="sm"
+        >
+          <p className="text-sm text-[var(--text-muted)]">
+            Doorgaan met: <span className="font-medium text-[var(--text-primary)]">{nextMissionPromptTask?.title}</span>
+          </p>
+          <div className="mt-4 flex gap-2">
+            <button
+              type="button"
+              onClick={() => setNextMissionPromptTask(null)}
+              className="flex-1 rounded-lg border border-[var(--card-border)] px-3 py-2 text-sm font-medium text-[var(--text-primary)] hover:bg-[var(--bg-surface)]"
+            >
+              Later
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                if (!nextMissionPromptTask) return;
+                setDetailsTask(null);
+                setNextMissionPromptTask(null);
+                setFocusTask(nextMissionPromptTask);
+              }}
+              className="flex-1 rounded-lg bg-[var(--accent-focus)] px-3 py-2 text-sm font-medium text-white hover:opacity-90"
+            >
+              Start nu
             </button>
           </div>
         </Modal>

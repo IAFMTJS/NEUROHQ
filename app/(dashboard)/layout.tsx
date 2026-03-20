@@ -26,6 +26,7 @@ export default function DashboardLayout({
         >
           <PageMascot />
           {children}
+          <div className="bottom-nav-page-spacer" aria-hidden />
         </main>
       </DashboardLayoutClient>
     </BootstrapGate>

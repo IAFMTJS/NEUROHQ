@@ -2,10 +2,11 @@
 
 import { useState } from "react";
 
-type TabId = "overview" | "tactical" | "analysis" | "goals";
+type TabId = "overview" | "execute" | "analysis";
+type LegacyTabId = TabId | "tactical" | "goals";
 
 type Props = {
-  initialTab: TabId;
+  initialTab: LegacyTabId;
   isHistoryView: boolean;
   historyMode: boolean;
   headerRight: React.ReactNode;
@@ -25,16 +26,19 @@ export function BudgetTabsShell({
   analysis,
   goals,
 }: Props) {
-  const [activeTab, setActiveTab] = useState<TabId>(initialTab);
+  const normalizeInitialTab = (tab: LegacyTabId): TabId => {
+    if (tab === "tactical" || tab === "goals") return "execute";
+    return tab;
+  };
+  const [activeTab, setActiveTab] = useState<TabId>(normalizeInitialTab(initialTab));
   const tabs: Array<{ id: TabId; label: string; hidden?: boolean }> = [
-    { id: "overview", label: "Daily Command" },
-    { id: "tactical", label: "Planning & Execution", hidden: historyMode },
-    { id: "analysis", label: "Behavioral Intelligence" },
-    { id: "goals", label: "Goals & Ledger" },
+    { id: "overview", label: "Status" },
+    { id: "execute", label: "Execute", hidden: historyMode },
+    { id: "analysis", label: "Intelligence" },
   ];
 
   const setTab = (tab: TabId) => {
-    if (tab === "tactical" && historyMode) return;
+    if (tab === "execute" && historyMode) return;
     setActiveTab(tab);
   };
 
@@ -87,9 +91,13 @@ export function BudgetTabsShell({
 
       <div className="mt-4">
         {activeTab === "overview" && <div key="panel-overview">{overview}</div>}
-        {activeTab === "tactical" && !historyMode && <div key="panel-tactical">{tactical}</div>}
+        {activeTab === "execute" && !historyMode && (
+          <div key="panel-execute" className="space-y-4">
+            {tactical}
+            {goals}
+          </div>
+        )}
         {activeTab === "analysis" && <div key="panel-analysis">{analysis}</div>}
-        {activeTab === "goals" && <div key="panel-goals">{goals}</div>}
       </div>
     </>
   );

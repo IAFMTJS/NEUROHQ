@@ -2,7 +2,7 @@
 
 import { cache } from "react";
 import { createClient } from "@/lib/supabase/server";
-import type { Task, TablesInsert } from "@/types/database.types";
+import type { Json, Task, TablesInsert } from "@/types/database.types";
 import type { ReputationScore } from "@/lib/identity-engine";
 import { isRecoveryTask } from "@/lib/recovery-task";
 import { incrementAvoidanceSkip, recordAvoidanceCompletion } from "@/app/actions/avoidance-tracker";
@@ -399,6 +399,11 @@ export async function completeTask(id: string): Promise<CompleteTaskResult> {
   }
 
   await logTaskEvent({ taskId: id, eventType: "complete", performanceScore, performanceRank });
+  await supabase.from("analytics_events").insert({
+    user_id: user.id,
+    event_name: "mission_completed",
+    payload: { taskId: id, performanceRank, performanceScore } as unknown as Json,
+  });
 
   if (t?.recurrence_rule) {
     const nextStr = computeNextRecurrenceDate(t.due_date, t.recurrence_rule ?? null, t.recurrence_weekdays ?? null);

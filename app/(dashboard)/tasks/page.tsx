@@ -1,5 +1,6 @@
 import nextDynamic from "next/dynamic";
 import { Suspense } from "react";
+import Link from "next/link";
 import {
   getBacklogTasks,
   getCompletedTodayTasks,
@@ -22,6 +23,7 @@ import { getThirtyDayMirror } from "@/app/actions/thirty-day-mirror";
 import { getSmartSuggestion } from "@/app/actions/dcic/smart-suggestion";
 import { getEnergyCapToday } from "@/app/actions/dcic/energy-cap";
 import { getEnergyBudget } from "@/app/actions/energy";
+import { getAnalyticsEventsSummaryLast7 } from "@/app/actions/analytics-events";
 import { todayDateString, yesterdayDate } from "@/lib/utils/timezone";
 import { HeroMascotImage } from "@/components/HeroMascotImage";
 import { getXP, getXPIdentity } from "@/app/actions/xp";
@@ -49,12 +51,8 @@ const EnergyCapBar = nextDynamic(
   () => import("@/components/missions/EnergyCapBar").then((m) => ({ default: m.EnergyCapBar })),
   { loading: () => <div className="h-10 animate-pulse rounded-lg bg-white/5" aria-hidden /> }
 );
-const SmartRecommendationHero = nextDynamic(
-  () => import("@/components/missions/SmartRecommendationHero").then((m) => ({ default: m.SmartRecommendationHero })),
-  { loading: () => null }
-);
-const DecisionBlocksRow = nextDynamic(
-  () => import("@/components/missions/DecisionBlocksRow").then((m) => ({ default: m.DecisionBlocksRow })),
+const SystemSuggestionsInline = nextDynamic(
+  () => import("@/components/missions/SystemSuggestionsInline").then((m) => ({ default: m.SystemSuggestionsInline })),
   { loading: () => null }
 );
 const SmartSuggestionBanner = nextDynamic(
@@ -73,10 +71,6 @@ const CommanderMissionCard = nextDynamic(
 import { TaskList } from "@/components/TaskList";
 const BacklogAndToekomstTriggers = nextDynamic(
   () => import("@/components/missions/BacklogAndToekomstTriggers").then((m) => ({ default: m.BacklogAndToekomstTriggers })),
-  { loading: () => null }
-);
-const HighROISection = nextDynamic(
-  () => import("@/components/missions/HighROISection").then((m) => ({ default: m.HighROISection })),
   { loading: () => null }
 );
 const ConsequenceBanner = nextDynamic(
@@ -120,6 +114,28 @@ async function ThirtyDayMirrorBannerAsync() {
   const mirror = await getThirtyDayMirror();
   const ThirtyDayMirrorBanner = (await import("@/components/missions/ThirtyDayMirrorBanner")).ThirtyDayMirrorBanner;
   return <ThirtyDayMirrorBanner mirror={mirror} />;
+}
+
+async function WeeklyBehaviorSummaryCardAsync() {
+  const rows = await getAnalyticsEventsSummaryLast7();
+  const getCount = (eventName: string) => rows.find((r) => r.event_name === eventName)?.count ?? 0;
+  const started = getCount("mission_started");
+  const completed = getCount("mission_completed");
+  const skipped = getCount("mission_skipped");
+  const aborted = getCount("mission_aborted");
+  const completionRate = started > 0 ? Math.round((completed / started) * 100) : 0;
+  return (
+    <section className="rounded-xl border border-[var(--card-border)] bg-[var(--bg-surface)]/50 p-4 text-sm" aria-label="Weekly behavior summary">
+      <h3 className="text-xs font-semibold uppercase tracking-wider text-[var(--text-muted)]">Weekly behavior summary</h3>
+      <ul className="mt-2 space-y-1 text-[var(--text-primary)]">
+        <li><span className="text-[var(--text-muted)]">Started: </span>{started}</li>
+        <li><span className="text-[var(--text-muted)]">Completed: </span>{completed}</li>
+        <li><span className="text-[var(--text-muted)]">Completion rate: </span>{completionRate}%</li>
+        <li><span className="text-[var(--text-muted)]">Skipped: </span>{skipped}</li>
+        <li><span className="text-[var(--text-muted)]">Aborted: </span>{aborted}</li>
+      </ul>
+    </section>
+  );
 }
 
 type Props = {
@@ -297,27 +313,47 @@ async function MissionsSectionAsync({ dateStr, backlog }: { dateStr: string; bac
         recoveryProtocol={decisionBlocks.recoveryProtocol}
         daysSinceLastCompletion={decisionBlocks.daysSinceLastCompletion}
       />
-      <SmartRecommendationHero recommendation={decisionBlocks.topRecommendation} showUMSBreakdown />
-      <DecisionBlocksRow
-        streakCritical={decisionBlocks.streakCritical}
-        highPressure={decisionBlocks.highPressure}
-        recovery={decisionBlocks.recovery}
-        alignmentFix={decisionBlocks.alignmentFix}
-      />
-      <Suspense fallback={null}>
-        <ResistanceIndexBannerAsync />
-      </Suspense>
-      <Suspense fallback={null}>
-        <RecoveryCampaignBannerAsync />
-      </Suspense>
-      <HighROISection tasks={decisionBlocks.tasksSortedByUMS} maxItems={3} />
-      <Suspense fallback={null}>
-        <EmotionalStateCorrelationBannerAsync />
-      </Suspense>
+      <section className="space-y-2" aria-label="Command center">
+        <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--text-muted)]">Your next move</p>
+        <div className="rounded-2xl border border-[var(--accent-focus)]/40 bg-[var(--bg-surface)]/35 p-4">
+          <h2 className="text-xl font-semibold text-[var(--text-primary)]">
+            {decisionBlocks.topRecommendation?.title ?? "Selecteer je volgende missie"}
+          </h2>
+          <div className="mt-3">
+            <Link
+              href="/tasks#tasks-list"
+              className="inline-flex items-center justify-center rounded-full bg-[var(--accent-focus)] px-5 py-2.5 text-xs font-semibold uppercase tracking-[0.1em] text-white hover:opacity-90"
+            >
+              Start
+            </Link>
+          </div>
+        </div>
+      </section>
+      <div className="tasks-war-hide">
+        <SystemSuggestionsInline
+          recovery={decisionBlocks.recovery}
+          alignmentFix={decisionBlocks.alignmentFix}
+          topRoi={decisionBlocks.tasksSortedByUMS.slice(0, 3)}
+        />
+      </div>
+      <details className="tasks-war-hide rounded-xl border border-[var(--card-border)] bg-[var(--bg-surface)]/35 p-3">
+        <summary className="cursor-pointer text-xs font-semibold uppercase tracking-wider text-[var(--text-muted)]">Diagnostics</summary>
+        <div className="mt-3 space-y-3">
+          <Suspense fallback={null}>
+            <ResistanceIndexBannerAsync />
+          </Suspense>
+          <Suspense fallback={null}>
+            <RecoveryCampaignBannerAsync />
+          </Suspense>
+          <Suspense fallback={null}>
+            <EmotionalStateCorrelationBannerAsync />
+          </Suspense>
+        </div>
+      </details>
       {smartSuggestion.text && !decisionBlocks.topRecommendation ? (
         <SmartSuggestionBanner text={smartSuggestion.text} type={smartSuggestion.type} />
       ) : null}
-      <div data-tutorial="tasks-today">
+      <div data-tutorial="tasks-today" className="tasks-war-hide">
       <TodayMissionsGridFromStore dateStr={dateStr}>
         {missionCards.length > 0 && tasks.length === 0 && (
           <section className="mission-grid">
@@ -336,7 +372,7 @@ async function MissionsSectionAsync({ dateStr, backlog }: { dateStr: string; bac
           </section>
         )}
       </TodayMissionsGridFromStore>
-      <div data-tutorial="tasks-list">
+      <div data-tutorial="tasks-list" id="tasks-list">
       <TaskList
         date={dateStr}
         tasks={tasks as import("@/types/database.types").Task[]}
@@ -357,13 +393,24 @@ async function MissionsSectionAsync({ dateStr, backlog }: { dateStr: string; bac
       />
       </div>
       </div>
-      <Suspense fallback={null}>
-        <MetaInsights30BannerAsync />
-      </Suspense>
-      <Suspense fallback={null}>
-        <ThirtyDayMirrorBannerAsync />
-      </Suspense>
-      <BacklogAndToekomstTriggers backlog={backlog} futureTasks={futureTasks} todayDate={dateStr} />
+      <div className="tasks-war-hide">
+        <Suspense fallback={null}>
+          <MetaInsights30BannerAsync />
+        </Suspense>
+      </div>
+      <div className="tasks-war-hide">
+        <Suspense fallback={null}>
+          <ThirtyDayMirrorBannerAsync />
+        </Suspense>
+      </div>
+      <div className="tasks-war-hide">
+        <Suspense fallback={null}>
+          <WeeklyBehaviorSummaryCardAsync />
+        </Suspense>
+      </div>
+      <div className="tasks-war-hide">
+        <BacklogAndToekomstTriggers backlog={backlog} futureTasks={futureTasks} todayDate={dateStr} />
+      </div>
     </SciFiPanel>
   );
 }

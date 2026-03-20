@@ -118,6 +118,7 @@ export function DashboardLayoutClient({
               <div className="relative z-10 mx-auto flex min-h-0 max-h-[100dvh] w-full max-w-[100vw] flex-1 flex-col overflow-hidden bg-transparent md:min-h-[640px]">
                 {children}
               </div>
+              <div className="bottom-nav-underlay" aria-hidden />
               <BottomNavigation />
             </div>
           </>

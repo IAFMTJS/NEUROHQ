@@ -161,8 +161,8 @@ async function BudgetContent({ searchParams }: Props) {
   const currency = budgetSettings.currency ?? "EUR";
   const isWeekly = budgetSettings.budget_period === "weekly";
 
-  const activeTab: "overview" | "tactical" | "analysis" | "goals" =
-    tabParam === "tactical" || tabParam === "analysis" || tabParam === "goals"
+  const activeTab: "overview" | "execute" | "analysis" | "tactical" | "goals" =
+    tabParam === "execute" || tabParam === "tactical" || tabParam === "analysis" || tabParam === "goals"
       ? tabParam
       : "overview";
 
@@ -373,7 +373,7 @@ async function BudgetContent({ searchParams }: Props) {
                   <p className="text-xs text-[var(--text-muted)]">
                     Use your safe daily spend as hard cap and process frozen purchases before new non-essential spend.
                   </p>
-                  <Link href="/budget?tab=tactical" className="text-xs font-medium text-[var(--accent-focus)] hover:underline">
+                  <Link href="/budget?tab=execute" className="text-xs font-medium text-[var(--accent-focus)] hover:underline">
                     Open execution queue →
                   </Link>
                 </div>
