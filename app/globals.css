@@ -2003,9 +2003,9 @@ header h1 { margin: 0; }
     inset 0 1px 0 rgba(255, 255, 255, 0.08) !important;
 }
 
-.dashboard-cinematic [data-mode="war"] .glass-card,
-.dashboard-cinematic [data-mode="war"] .card-simple,
-.dashboard-cinematic [data-mode="war"] .card-simple-accent {
+[data-mode="war"] .dashboard-cinematic .glass-card,
+[data-mode="war"] .dashboard-cinematic .card-simple,
+[data-mode="war"] .dashboard-cinematic .card-simple-accent {
   border: 1px solid rgba(220, 38, 38, 0.22) !important;
   background: linear-gradient(165deg, rgba(74, 0, 12, 0.62) 0%, rgba(26, 0, 6, 0.52) 100%) !important;
   box-shadow:
@@ -2015,9 +2015,9 @@ header h1 { margin: 0; }
     inset 0 1px 0 rgba(255, 255, 255, 0.08) !important;
 }
 
-.dashboard-cinematic [data-mode="recovery"] .glass-card,
-.dashboard-cinematic [data-mode="recovery"] .card-simple,
-.dashboard-cinematic [data-mode="recovery"] .card-simple-accent {
+[data-mode="recovery"] .dashboard-cinematic .glass-card,
+[data-mode="recovery"] .dashboard-cinematic .card-simple,
+[data-mode="recovery"] .dashboard-cinematic .card-simple-accent {
   border: 1px solid rgba(34, 197, 94, 0.22) !important;
   background: linear-gradient(165deg, rgba(0, 55, 18, 0.62) 0%, rgba(0, 24, 10, 0.52) 100%) !important;
   box-shadow:
