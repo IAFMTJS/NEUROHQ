@@ -7,14 +7,17 @@
 
 import { useState } from "react";
 import type { SimulationResult } from "@/lib/dcic/types";
+import { readDCICModeOverride } from "@/lib/dcic/dcic-mode-override";
 
 // API wrapper: use /api/dcic/* so Service Worker can queue writes offline
 async function apiConfirmStartMission(missionId: string) {
+  const override = readDCICModeOverride();
+  const modeOverride = override?.mode;
   const res = await fetch("/api/dcic/confirm-start", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     credentials: "include",
-    body: JSON.stringify({ missionId }),
+    body: JSON.stringify({ missionId, modeOverride: modeOverride ?? undefined }),
   });
   const data = (await res.json().catch(() => ({}))) as { success?: boolean; error?: string };
   if (!res.ok || !data.success) {
@@ -24,11 +27,13 @@ async function apiConfirmStartMission(missionId: string) {
 }
 
 async function apiConfirmCompleteMission(missionId: string) {
+  const override = readDCICModeOverride();
+  const modeOverride = override?.mode;
   const res = await fetch("/api/dcic/confirm-complete", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     credentials: "include",
-    body: JSON.stringify({ missionId }),
+    body: JSON.stringify({ missionId, modeOverride: modeOverride ?? undefined }),
   });
   const data = (await res.json().catch(() => ({}))) as { success?: boolean; error?: string };
   if (!res.ok || !data.success) {

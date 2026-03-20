@@ -10,6 +10,7 @@ import { useEffect } from "react";
 import type { GameState } from "./types";
 import { getCachedGameState, setCachedGameState } from "./game-state-cache";
 import { useHQStore } from "@/lib/hq-store";
+import { applyDCICModeOverrideIfAny } from "./dcic-mode-override";
 
 export function useDCICGameState() {
   const gameState = useHQStore((s) => s.gameState);
@@ -30,6 +31,7 @@ export function useDCICGameState() {
       try {
         const cached = await getCachedGameState();
         if (!cancelled && cached) {
+          applyDCICModeOverrideIfAny(cached);
           setGameState(cached);
           setGameStateStatus("ready");
         }
@@ -57,6 +59,7 @@ export function useDCICGameState() {
         }
         const fresh = (await res.json()) as GameState;
         if (!cancelled && fresh) {
+          applyDCICModeOverrideIfAny(fresh);
           setGameState(fresh);
           setGameStateStatus("ready");
         }

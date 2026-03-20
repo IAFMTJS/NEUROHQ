@@ -8,6 +8,7 @@ import {
   isCurrentSnapshot,
 } from "@/lib/daily-snapshot-storage";
 import type { DailySnapshot, DashboardSnapshot } from "@/types/daily-snapshot";
+import { applyDCICModeOverrideIfAny } from "@/lib/dcic/dcic-mode-override";
 
 /**
  * Initial daily bootstrap is handled by the DailySnapshot system:
@@ -66,7 +67,11 @@ export function usePeriodicBootstrapRefresh(intervalMinutes = 45) {
             secondary: data.dashboard.secondary as any,
           });
         }
-        if (data.dcicGameState) setGameState(data.dcicGameState as any);
+        if (data.dcicGameState) {
+          const nextDcic = data.dcicGameState as any;
+          applyDCICModeOverrideIfAny(nextDcic);
+          setGameState(nextDcic);
+        }
         if (data.dailyState) setTodayDailyState(data.dailyState);
         if (data.energyBudget) setTodayEnergyBudget(data.energyBudget);
         if (data.budget) setBudgetSnapshot(data.budget as any);

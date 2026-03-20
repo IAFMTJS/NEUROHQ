@@ -13,7 +13,8 @@ import {
   executeCompleteMission,
   executeStartMission,
 } from "@/lib/dcic/execution-core";
-import type { ActionObject } from "@/lib/dcic/types";
+import { switchMode } from "@/lib/dcic/mode-engine";
+import type { ActionObject, GameState } from "@/lib/dcic/types";
 
 /**
  * Starts a mission
@@ -48,13 +49,20 @@ export async function startMission(missionId: string): Promise<{
 /**
  * Confirms and executes start mission
  */
-export async function confirmStartMission(missionId: string): Promise<{
+export async function confirmStartMission(
+  missionId: string,
+  options?: { modeOverride?: GameState["mode"]["current"] | null }
+): Promise<{
   success: boolean;
   error?: string;
 }> {
   const gameState = await getGameState({ includeFinance: false });
   if (!gameState) {
     return { success: false, error: "Game state not found" };
+  }
+
+  if (options?.modeOverride) {
+    switchMode(gameState, options.modeOverride, { forced: true });
   }
 
   const action = buildAction("start_mission", { missionId }, gameState);
@@ -120,13 +128,20 @@ export async function completeMission(missionId: string): Promise<{
 /**
  * Confirms and executes complete mission
  */
-export async function confirmCompleteMission(missionId: string): Promise<{
+export async function confirmCompleteMission(
+  missionId: string,
+  options?: { modeOverride?: GameState["mode"]["current"] | null }
+): Promise<{
   success: boolean;
   error?: string;
 }> {
   const gameState = await getGameState({ includeFinance: false });
   if (!gameState) {
     return { success: false, error: "Game state not found" };
+  }
+
+  if (options?.modeOverride) {
+    switchMode(gameState, options.modeOverride, { forced: true });
   }
 
   const action = buildAction("complete_mission", { missionId }, gameState);

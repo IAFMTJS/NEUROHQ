@@ -96,6 +96,11 @@ async function SettingsContent() {
         </div>
       </section>
 
+      <section className="space-y-3">
+        <h2 className="text-xs font-semibold uppercase tracking-wide text-[var(--text-muted)]">DCIC debug</h2>
+        <SettingsDCICModeTest />
+      </section>
+
       <BehaviorProfileSettings initial={behaviorProfile} initialAutoMasterMissions={prefs.auto_master_missions} />
       <SettingsDaysOff initialDaysOff={prefs.usual_days_off ?? null} initialMode={prefs.day_off_mode ?? "soft"} />
 
@@ -151,7 +156,6 @@ async function SettingsContent() {
         <SettingsClearCache />
         <SettingsRefreshSnapshot />
         <SettingsAbout appVersion={appVersion} />
-        <SettingsDCICModeTest />
       </section>
     </>
   );

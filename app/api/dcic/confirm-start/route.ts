@@ -5,11 +5,17 @@ export async function POST(request: Request) {
   try {
     const body = await request.json().catch(() => ({}));
     const missionId = typeof body?.missionId === "string" ? body.missionId : undefined;
+    const modeOverrideRaw = typeof body?.modeOverride === "string" ? body.modeOverride : undefined;
     if (!missionId) {
       return NextResponse.json({ success: false, error: "Missing missionId" }, { status: 400 });
     }
 
-    const result = await confirmStartMission(missionId);
+    const validModes = ["focus", "war", "recovery"] as const;
+    const modeOverride = modeOverrideRaw && validModes.includes(modeOverrideRaw as any)
+      ? (modeOverrideRaw as (typeof validModes)[number])
+      : null;
+
+    const result = await confirmStartMission(missionId, { modeOverride });
     const status = result.success ? 200 : 400;
     return NextResponse.json(result, { status });
   } catch (error) {
