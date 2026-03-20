@@ -39,6 +39,17 @@ export function DashboardLayoutClient({
   const setTodayDate = useHQStore((s) => s.setTodayDate);
   const mode = useHQStore((s) => s.gameState?.mode?.current ?? "focus");
 
+  // Important: some cinematic CSS (e.g. `body::before`) reads CSS variables that we
+  // only set via `[data-mode="war"|"recovery"]` selectors. To make sure those vars
+  // are visible to the `body` pseudo-element, mirror `data-mode` on <html>.
+  useEffect(() => {
+    try {
+      document.documentElement.dataset.mode = mode;
+    } catch {
+      // best-effort; ignore DOM/SSR issues
+    }
+  }, [mode]);
+
   // Hydrate HQ store from DailySnapshot (single source of truth); no duplicate /api/bootstrap/today fetch.
   useEffect(() => {
     if (dailySnapshot?.date) {
