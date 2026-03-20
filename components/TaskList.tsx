@@ -724,7 +724,7 @@ export function TaskList({
             <button
               type="button"
               onClick={() => { setDetailsTask(null); setFocusTask(null); setAddFullOpen(true); }}
-              className="rounded-full bg-[var(--accent-focus)] px-4 py-2.5 text-sm font-semibold text-white shadow-[0_0_12px_rgba(37,99,235,0.4)] hover:opacity-95 hover:shadow-[0_0_16px_rgba(37,99,235,0.5)]"
+              className="rounded-full bg-[var(--accent-focus)] px-4 py-2.5 text-sm font-semibold text-white shadow-[0_0_12px_rgba(var(--mode-rgb,0,212,255),0.4)] hover:opacity-95 hover:shadow-[0_0_16px_rgba(var(--mode-rgb,0,212,255),0.5)]"
             >
               + Taak toevoegen
             </button>

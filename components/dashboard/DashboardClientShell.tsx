@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, type CSSProperties } from "react";
 import Link from "next/link";
 import dynamic from "next/dynamic";
 import { getPendingDailyState } from "@/lib/client-pending-writes";
@@ -85,6 +85,25 @@ export function DashboardClientShell() {
   const [error, setError] = useState<string | null>(null);
   const [pendingDailyForHero, setPendingDailyForHero] = useState<ReturnType<typeof getPendingDailyState>>(null);
   const { gameState, status: dcicStatus } = useDCICGameState();
+  const dcicMode = gameState?.mode?.current ?? "focus";
+  const dcicModeVars = useMemo<CSSProperties>(() => {
+    if (dcicMode === "war") {
+      return {
+        "--mode-rgb": "220, 38, 38",
+        "--mode-rgb-deep": "127, 29, 29",
+      } as CSSProperties;
+    }
+    if (dcicMode === "recovery") {
+      return {
+        "--mode-rgb": "34, 197, 94",
+        "--mode-rgb-deep": "22, 101, 52",
+      } as CSSProperties;
+    }
+    return {
+      "--mode-rgb": "0, 212, 255",
+      "--mode-rgb-deep": "0, 136, 255",
+    } as CSSProperties;
+  }, [dcicMode]);
 
   useEffect(() => {
     const fromCache = cache?.critical ?? null;
@@ -391,7 +410,7 @@ export function DashboardClientShell() {
               </div>
             </div>
             <Divider1px />
-            <div data-tutorial="dashboard-command-bridge">
+            <div data-tutorial="dashboard-command-bridge" style={dcicModeVars}>
             <SciFiPanel className={`dashboard-bridge-frame idle-breathing ${hudStyles.focusPrimary}`} bodyClassName="dashboard-bridge-body" variant="command">
               <CornerNode corner="top-left" />
               <CornerNode corner="top-right" />

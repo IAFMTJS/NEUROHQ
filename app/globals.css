@@ -1121,12 +1121,12 @@
 /* Pill / badge glow (Today, labels) */
 .glow-pill {
   border: var(--glow-border-cyan);
-  box-shadow: 0 0 10px rgba(0, 212, 255, 0.15), inset 0 0 12px rgba(0, 212, 255, 0.04);
+  box-shadow: 0 0 10px rgba(var(--mode-rgb), 0.15), inset 0 0 12px rgba(var(--mode-rgb), 0.04);
   transition: box-shadow 0.2s ease, border-color 0.2s ease;
 }
 .glow-pill:hover {
-  box-shadow: 0 0 14px rgba(0, 212, 255, 0.25), inset 0 0 16px rgba(0, 212, 255, 0.06);
-  border-color: rgba(0, 212, 255, 0.35);
+  box-shadow: 0 0 14px rgba(var(--mode-rgb), 0.25), inset 0 0 16px rgba(var(--mode-rgb), 0.06);
+  border-color: rgba(var(--mode-rgb), 0.35);
 }
 
 /* Optioneel: subtiele “adem” glow voor highlights */
@@ -1901,16 +1901,16 @@ header h1 { margin: 0; }
 .dashboard-bg-mist {
   z-index: 0;
   background:
-    radial-gradient(circle at 28% 36%, rgba(0, 255, 255, 0.06), transparent 62%),
-    radial-gradient(circle at 74% 74%, rgba(0, 110, 255, 0.05), transparent 65%);
+    radial-gradient(circle at 28% 36%, rgba(var(--mode-rgb), 0.06), transparent 62%),
+    radial-gradient(circle at 74% 74%, rgba(var(--mode-rgb-deep), 0.05), transparent 65%);
   filter: blur(52px);
 }
 
 .dashboard-bg-atmosphere {
   z-index: 2;
   background:
-    radial-gradient(circle at 0% 50%, rgba(0, 255, 255, 0.07), transparent 60%),
-    radial-gradient(circle at 100% 50%, rgba(0, 200, 255, 0.05), transparent 60%);
+    radial-gradient(circle at 0% 50%, rgba(var(--mode-rgb), 0.07), transparent 60%),
+    radial-gradient(circle at 100% 50%, rgba(var(--mode-rgb-deep), 0.05), transparent 60%);
   animation: bgPulse 12s ease-in-out infinite;
 }
 
@@ -1934,7 +1934,12 @@ header h1 { margin: 0; }
   content: "";
   position: fixed;
   inset: -20%;
-  background: radial-gradient(circle at 50% 34%, rgba(0, 255, 255, 0.11), rgba(0, 120, 255, 0.07), transparent 63%);
+  background: radial-gradient(
+    circle at 50% 34%,
+    rgba(var(--mode-rgb), 0.11),
+    rgba(var(--mode-rgb-deep), 0.07),
+    transparent 63%
+  );
   pointer-events: none;
   z-index: 1;
 }
@@ -1953,25 +1958,33 @@ header h1 { margin: 0; }
   z-index: 3;
   padding: 0.75rem 1rem 1rem;
   margin-bottom: 0.5rem;
-  border: 1px solid rgba(0, 200, 255, 0.2);
-  background: linear-gradient(165deg, rgba(14, 30, 46, 0.56) 0%, rgba(9, 21, 34, 0.46) 100%) !important;
+  border: 1px solid rgba(var(--mode-rgb), 0.22);
+  background: linear-gradient(
+    165deg,
+    rgba(var(--mode-rgb-deep), 0.46) 0%,
+    rgba(var(--mode-rgb), 0.18) 100%
+  ) !important;
   backdrop-filter: blur(14px);
   -webkit-backdrop-filter: blur(14px);
 }
 
 .dashboard-bridge-body {
   padding: 1rem 1rem 1.125rem !important;
-  background: linear-gradient(180deg, rgba(14, 30, 46, 0.64) 0%, rgba(10, 24, 36, 0.56) 100%) !important;
+  background: linear-gradient(
+    180deg,
+    rgba(var(--mode-rgb-deep), 0.56) 0%,
+    rgba(var(--mode-rgb), 0.2) 100%
+  ) !important;
 }
 .dashboard-bridge-label {
   display: inline-block;
   font-size: 0.625rem;
   font-weight: 600;
   letter-spacing: 0.2em;
-  color: rgba(0, 212, 255, 0.7);
+  color: rgba(var(--mode-rgb), 0.78);
   text-transform: uppercase;
   margin-bottom: 0.25rem;
-  text-shadow: 0 0 12px rgba(0, 212, 255, 0.25);
+  text-shadow: 0 0 12px rgba(var(--mode-rgb), 0.25);
 }
 .dashboard-bento {
   position: relative;

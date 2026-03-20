@@ -22,6 +22,7 @@ import type { DashboardSnapshot } from "@/types/daily-snapshot";
 import { updateLastActiveDate } from "@/app/actions/behavior";
 import { useHQStore } from "@/lib/hq-store";
 import { usePeriodicBootstrapRefresh } from "@/lib/daily-bootstrap";
+import { useDCICGameState } from "@/lib/dcic/game-state-client";
 
 const LAST_ACTIVE_STORAGE_KEY = "neurohq-last-active-date";
 
@@ -37,7 +38,9 @@ export function DashboardLayoutClient({
 }: Props) {
   const dailySnapshot = useDailySnapshot();
   const setTodayDate = useHQStore((s) => s.setTodayDate);
-  const mode = useHQStore((s) => s.gameState?.mode?.current ?? "focus");
+  const hqMode = useHQStore((s) => s.gameState?.mode?.current ?? "focus");
+  const { gameState: dcicGameState } = useDCICGameState();
+  const mode = dcicGameState?.mode?.current ?? hqMode;
 
   // Important: some cinematic CSS (e.g. `body::before`) reads CSS variables that we
   // only set via `[data-mode="war"|"recovery"]` selectors. To make sure those vars
