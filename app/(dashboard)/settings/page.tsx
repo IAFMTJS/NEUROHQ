@@ -29,6 +29,7 @@ const SettingsQuickLinks = dynamic(() => import("@/components/settings/SettingsQ
 const SettingsWhereToConfigure = dynamic(() => import("@/components/settings/SettingsWhereToConfigure").then((m) => ({ default: m.SettingsWhereToConfigure })), { loading: () => null });
 const SettingsClearCache = dynamic(() => import("@/components/settings/SettingsClearCache").then((m) => ({ default: m.SettingsClearCache })), { loading: () => null });
 const SettingsRefreshSnapshot = dynamic(() => import("@/components/settings/SettingsRefreshSnapshot").then((m) => ({ default: m.SettingsRefreshSnapshot })), { loading: () => null });
+const SettingsDCICModeTest = dynamic(() => import("@/components/settings/SettingsDCICModeTest").then((m) => ({ default: m.SettingsDCICModeTest })), { loading: () => null });
 const BehaviorProfileSettings = dynamic(() => import("@/components/settings/BehaviorProfileSettings").then((m) => ({ default: m.BehaviorProfileSettings })), { loading: () => null });
 const SettingsDaysOff = dynamic(() => import("@/components/settings/SettingsDaysOff").then((m) => ({ default: m.SettingsDaysOff })), { loading: () => null });
 const SettingsEmailReminders = dynamic(() => import("@/components/settings/SettingsEmailReminders").then((m) => ({ default: m.SettingsEmailReminders })), { loading: () => <div className="min-h-[80px] animate-pulse rounded-xl bg-white/5" aria-hidden /> });
@@ -150,6 +151,7 @@ async function SettingsContent() {
         <SettingsClearCache />
         <SettingsRefreshSnapshot />
         <SettingsAbout appVersion={appVersion} />
+        <SettingsDCICModeTest />
       </section>
     </>
   );

@@ -5,6 +5,7 @@ import {
   useCallback,
   useContext,
   useEffect,
+  useRef,
   useState,
   type ReactNode,
 } from "react";
@@ -13,6 +14,7 @@ import { loadDailySnapshot, isCurrentSnapshot } from "@/lib/daily-snapshot-stora
 import { BootstrapLoader } from "@/components/bootstrap/BootstrapLoader";
 import { StoreHydrator } from "@/components/bootstrap/StoreHydrator";
 import type { InitializeResult } from "@/lib/daily-initialize";
+import { initializeDailySystem } from "@/lib/daily-initialize";
 
 /** Next local 00:01 from `from` (rollover check for calendar-day snapshot). */
 function msUntilNextLocal001(from: Date = new Date()): number {
@@ -50,31 +52,43 @@ const SNAPSHOT_STALENESS_POLL_MS = 60_000;
 export function BootstrapGate({ children }: Props) {
   const [ready, setReady] = useState(false);
   const [snapshot, setSnapshot] = useState<DailySnapshot | null>(null);
+  const refreshInFlightRef = useRef(false);
 
-  const tryHydrateFromStorage = useCallback(async (): Promise<boolean> => {
+  const tryHydrateFromStorage = useCallback(async (): Promise<{ hydrated: boolean; current: boolean }> => {
     const existing = await loadDailySnapshot();
-    if (existing && isCurrentSnapshot(existing)) {
-      setSnapshot(existing);
-      setReady(true);
-      return true;
-    }
-    return false;
+    if (!existing) return { hydrated: false, current: false };
+
+    // Important UX detail:
+    // - After 00:01 the stored snapshot is considered "not current".
+    // - If we block rendering and show the full loader, push-open UX becomes blank/spinner.
+    // - Instead: render immediately from the last stored snapshot and refresh in the background.
+    setSnapshot(existing);
+    setReady(true);
+    return { hydrated: true, current: isCurrentSnapshot(existing) };
   }, []);
 
   useEffect(() => {
     let cancelled = false;
 
     const run = async () => {
-      const ok = await tryHydrateFromStorage();
+      const hydrate = await tryHydrateFromStorage();
       if (cancelled) return;
-      if (!ok) {
-        setReady((wasReady) => {
-          if (wasReady) {
-            setSnapshot(null);
-            return false;
-          }
-          return wasReady;
-        });
+      // No stored snapshot => let <BootstrapLoader> handle the full initialization.
+      if (!hydrate.hydrated) return;
+
+      // Stored snapshot exists, but it's stale (not current) => refresh in the background.
+      if (!hydrate.current && !refreshInFlightRef.current) {
+        refreshInFlightRef.current = true;
+        try {
+          const result = await initializeDailySystem();
+          if (cancelled) return;
+          setSnapshot(result.snapshot);
+          setReady(true);
+        } catch {
+          // Best-effort: keep rendering from the stale snapshot until the next successful refresh.
+        } finally {
+          refreshInFlightRef.current = false;
+        }
       }
     };
 
