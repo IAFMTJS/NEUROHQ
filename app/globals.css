@@ -196,8 +196,20 @@
   --accent-primary-dark: #991b1b;
   --accent-cyan: #f97373;
   --accent-amber: #f97316;
-  --glow-primary: rgba(220, 38, 38, 0.7);
-  --glow-cyan: rgba(248, 113, 113, 0.55);
+  --glow-primary: rgba(220, 38, 38, 0.75);
+  --glow-cyan: rgba(248, 113, 113, 0.65);
+
+  /* UI surface + borders so cards/buttons feel "War" */
+  --bg-main: #070205;
+  --bg-elevated: #12040b;
+  --bg-card: #16060f;
+  --border-soft: rgba(248, 113, 113, 0.22);
+  --shadow-card-rim: 0 0 0 1px rgba(248, 113, 113, 0.25), inset 0 1px 0 rgba(255,255,255,0.05);
+
+  --neon-accent: rgba(220, 38, 38, 0.65);
+  --shadow-button: 0 6px 18px var(--glow-primary);
+  --shadow-button-top: inset 0 1px 0 rgba(255,255,255,0.26);
+
   --spotlight-opacity: 0.95;
   --spotlight-saturation: 1.6;
   --spotlight-blur: 0px;
@@ -210,8 +222,20 @@
   --accent-primary-dark: #166534;
   --accent-cyan: #4ade80;
   --accent-amber: #22c55e;
-  --glow-primary: rgba(34, 197, 94, 0.7);
-  --glow-cyan: rgba(74, 222, 128, 0.55);
+  --glow-primary: rgba(34, 197, 94, 0.75);
+  --glow-cyan: rgba(74, 222, 128, 0.65);
+
+  /* UI surface + borders so cards/buttons feel "Recovery" */
+  --bg-main: #041106;
+  --bg-elevated: #071b0c;
+  --bg-card: #0b2710;
+  --border-soft: rgba(74, 222, 128, 0.22);
+  --shadow-card-rim: 0 0 0 1px rgba(74, 222, 128, 0.25), inset 0 1px 0 rgba(255,255,255,0.05);
+
+  --neon-accent: rgba(34, 197, 94, 0.65);
+  --shadow-button: 0 6px 18px var(--glow-primary);
+  --shadow-button-top: inset 0 1px 0 rgba(255,255,255,0.26);
+
   --spotlight-opacity: 0.95;
   --spotlight-saturation: 1.6;
   --spotlight-blur: 0px;
