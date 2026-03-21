@@ -128,7 +128,6 @@ async function SettingsContent() {
         <SettingsSubCard
           title="Brain & gedrag"
           subtitle="Gedragsprofiel, routines en planningsbias"
-          defaultOpen
         >
           <BehaviorProfileSettings initial={behaviorProfile} initialAutoMasterMissions={prefs.auto_master_missions} />
           <SettingsDaysOff initialDaysOff={prefs.usual_days_off ?? null} initialMode={prefs.day_off_mode ?? "soft"} />
@@ -136,7 +135,6 @@ async function SettingsContent() {
         <SettingsSubCard
           title="Budget voorkeuren"
           subtitle="Valuta, budgetperiode en impulscontrole"
-          defaultOpen
         >
           <SettingsBudget
             initialCurrency={budgetSettings.currency}
