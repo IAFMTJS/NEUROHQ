@@ -826,8 +826,9 @@ export async function getRoutineTasksWithSuggestions(dateStr: string): Promise<{
     const recurrenceWeekdays = (t as { recurrence_weekdays?: string | null }).recurrence_weekdays ?? null;
     const dueDate = (t as { due_date?: string | null }).due_date ?? null;
     if (recurrence === "weekly" && recurrenceWeekdays?.trim()) {
-      const days = recurrenceWeekdays
-        .split("days=")[1]?.split(";")[0] ?? recurrenceWeekdays.split("|")[0]
+      const rawWeekdayPart =
+        recurrenceWeekdays.split("days=")[1]?.split(";")[0] ?? recurrenceWeekdays.split("|")[0];
+      const days = rawWeekdayPart
         .split(",")
         .map((s) => parseInt(s.trim(), 10))
         .filter((n) => n >= 1 && n <= 7);

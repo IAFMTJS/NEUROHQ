@@ -4,6 +4,7 @@ import type { GameState } from "@/lib/dcic/types";
 import type { DashboardCritical, DashboardSecondary } from "@/types/dashboard-data.types";
 import type { Task } from "@/types/database.types";
 import type { LearningSnapshot } from "@/types/hq-store.types";
+import { getTodayKey } from "@/lib/daily-date";
 
 export type { LearningSnapshot };
 
@@ -95,13 +96,17 @@ function normalizePersistedState(persisted: unknown): unknown {
 }
 
 function partialize(state: HQStore) {
+  // Do not persist today's tasks: they go stale across devices and sessions; server fetch is source of truth.
+  const today = getTodayKey();
+  const { [today]: _todayTasks, ...tasksByDateRest } = state.tasksByDate;
+  void _todayTasks;
   return {
     gameState: state.gameState,
     gameStateStatus: state.gameStateStatus,
     gameStateError: state.gameStateError,
     dashboardCritical: state.dashboardCritical,
     dashboardSecondary: state.dashboardSecondary,
-    tasksByDate: state.tasksByDate,
+    tasksByDate: tasksByDateRest,
     tasksStatus: state.tasksStatus,
     tasksError: state.tasksError,
     todayDate: state.todayDate,

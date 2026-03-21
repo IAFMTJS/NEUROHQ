@@ -11,6 +11,7 @@ import {
   getTodaysTasks,
   type TaskListMode,
 } from "@/app/actions/tasks";
+import { buildBlockedReasonsForTasks } from "@/lib/mission-block-reasons";
 import { getMode } from "@/app/actions/mode";
 import {
   getDecisionBlocks,
@@ -29,13 +30,13 @@ import { HeroMascotImage } from "@/components/HeroMascotImage";
 import { getXP, getXPIdentity } from "@/app/actions/xp";
 import { getIdentityEngine } from "@/app/actions/identity-engine";
 import { getUserPreferencesOrDefaults } from "@/app/actions/preferences";
-import { HQPageHeader } from "@/components/hq/HQPageHeader";
 import { XPBadge } from "@/components/XPBadge";
 import { SciFiPanel } from "@/components/hud-test/SciFiPanel";
 import { CornerNode } from "@/components/hud-test/CornerNode";
 import { Divider1px } from "@/components/hud-test/Divider1px";
 import hudStyles from "@/components/hud-test/hud.module.css";
 import { MissionsProvider, TasksTabsShell, TodayMissionsGridFromStore } from "@/components/missions";
+import { TasksHeaderChrome } from "@/components/missions/TasksHeaderChrome";
 import type { TasksTabId } from "@/components/missions/TasksTabsShell";
 import { TasksDailyBootstrap } from "@/components/missions/TasksDailyBootstrap";
 import { TasksCalendarAsync } from "./TasksCalendarAsync";
@@ -210,8 +211,13 @@ async function MissionsSectionAsync({ dateStr, backlog }: { dateStr: string; bac
 
   const taskMode: TaskListMode =
     mode === "stabilize" ? "stabilize" : mode === "low_energy" ? "low_energy" : mode === "driven" ? "driven" : "normal";
-  const { tasks, carryOverCount } =
-    taskMode === "normal" ? tasksNormalResult : await getTodaysTasks(dateStr, taskMode);
+  const { tasks: tasksNormal, carryOverCount } = tasksNormalResult;
+  const umsOrder = new Map(decisionBlocks.tasksSortedByUMS.map((t, i) => [t.id, i]));
+  const tasks = [...tasksNormal].sort((a, b) => (umsOrder.get(a.id) ?? 999) - (umsOrder.get(b.id) ?? 999));
+  const blockedReasonByTaskId = buildBlockedReasonsForTasks(tasks as import("@/types/database.types").Task[], {
+    taskMode,
+    recoveryOnly: !!decisionBlocks.recoveryOnly,
+  });
 
   const subtaskRows = await getSubtasksForTaskIds(tasks.map((t) => t.id));
   const subtasksByParent: Record<string, typeof subtaskRows> = {};
@@ -221,15 +227,25 @@ async function MissionsSectionAsync({ dateStr, backlog }: { dateStr: string; bac
     subtasksByParent[pid].push(s);
   }
 
-  const missionCardsFromUMS = decisionBlocks.tasksSortedByUMS.slice(0, 8).map((t, i) => ({
-    id: t.id,
-    title: t.title ?? "Task",
-    subtitle: i === 0 ? "Aanbevolen" : `UMS ${Math.round(t.umsBreakdown.ums * 100)}%`,
-    description: (t as { notes?: string | null }).notes ?? null,
-    state: (i === 0 ? "active" : "locked") as "active" | "locked",
-    progressPct: 0,
-    href: "/tasks",
-  }));
+  const firstUnblockedIndex = decisionBlocks.tasksSortedByUMS.findIndex((t) => !blockedReasonByTaskId[t.id]);
+  const missionCardsFromUMS = decisionBlocks.tasksSortedByUMS.slice(0, 8).map((t, i) => {
+    const blocked = !!blockedReasonByTaskId[t.id];
+    const isActive =
+      !blocked && firstUnblockedIndex !== -1 && i === firstUnblockedIndex;
+    return {
+      id: t.id,
+      title: t.title ?? "Task",
+      subtitle: blocked
+        ? "Geblokkeerd"
+        : isActive
+          ? "Aanbevolen"
+          : `UMS ${Math.round(t.umsBreakdown.ums * 100)}%`,
+      description: (t as { notes?: string | null }).notes ?? null,
+      state: (blocked ? "locked" : isActive ? "active" : "locked") as "active" | "locked",
+      progressPct: 0,
+      href: blocked ? undefined : "/tasks",
+    };
+  });
   const missionCardsCompleted = (completedToday as { id: string; title: string | null }[]).slice(0, 4).map((t) => ({
     id: t.id,
     title: t.title ?? "Done",
@@ -395,6 +411,7 @@ async function MissionsSectionAsync({ dateStr, backlog }: { dateStr: string; bac
         ]}
         identityLevel={identity.level}
         identityReputation={identityEngine.reputation ?? null}
+        blockedReasonByTaskId={blockedReasonByTaskId}
       />
       </div>
       </div>
@@ -493,21 +510,7 @@ export default async function TasksPage({ searchParams }: Props) {
 
   const headerSection = (
     <>
-      <SciFiPanel variant="glass" className={hudStyles.focusSecondary} bodyClassName="p-4 md:p-5">
-        <CornerNode corner="top-left" />
-        <CornerNode corner="top-right" />
-        <div className="[&>*+*]:mt-0">
-          <HQPageHeader
-            title="Missions"
-            subtitle={
-              <>
-                XP-missies · {dateStr} · Performance engine · One focus at a time
-              </>
-            }
-            backHref="/dashboard"
-          />
-        </div>
-      </SciFiPanel>
+      <TasksHeaderChrome dateStr={dateStr} />
       <section className="mascot-hero mascot-hero-top mascot-hero-mission mascot-hero-sharp" data-mascot-page="tasks" aria-hidden>
         <div className="mascot-hero-inner mx-auto">
           <HeroMascotImage page="tasks" className="mascot-img" heroLarge />

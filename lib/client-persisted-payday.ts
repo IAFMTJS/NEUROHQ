@@ -61,6 +61,17 @@ export function usePersistedPayday(): PersistedPayday | null {
   return payday;
 }
 
+/** Clear optimistic payday (e.g. server row newer than local). */
+export function clearPersistedPayday(): void {
+  if (typeof window === "undefined") return;
+  try {
+    window.localStorage.removeItem(PAYDAY_KEY);
+    dispatchPaydayEvent();
+  } catch {
+    // ignore
+  }
+}
+
 /** Save payday to localStorage (overwrites previous). Sync to Supabase separately. */
 export function setPersistedPayday(patch: {
   lastPaydayDate?: string | null;

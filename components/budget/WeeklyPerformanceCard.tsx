@@ -3,7 +3,7 @@
 import type { FC } from "react";
 
 type Props = {
-  /** Days this week where spending stayed within safe bounds (approx). */
+  /** Calm days this week: spend that day ≤ safe daily (incl. geen uitgave gelogd). */
   daysUnderBudget: number | null | undefined;
   /** XP earned from discipline-related budget actions (placeholder for now). */
   disciplineXp: number | null | undefined;
@@ -20,12 +20,12 @@ export const WeeklyPerformanceCard: FC<Props> = ({ daysUnderBudget, disciplineXp
       <div className="border-b border-[var(--card-border)] px-4 py-3">
         <h2 className="text-base font-semibold text-[var(--text-primary)]">Weekly Performance</h2>
         <p className="mt-0.5 text-xs text-[var(--text-muted)]">
-          Quick look at how steady your week is so far.
+          Rustige dagen: uitgave op of onder je veilige dagtempo (ook dagen zonder boeking).
         </p>
       </div>
       <div className="p-4 space-y-4">
         <div className="flex items-baseline justify-between">
-          <p className="text-sm text-[var(--text-muted)]">Days under budget</p>
+          <p className="text-sm text-[var(--text-muted)]">Kalme dagen</p>
           <p className="text-xl font-bold tabular-nums text-[var(--text-primary)]">
             {safeDays}/{maxDays}
           </p>
@@ -39,7 +39,7 @@ export const WeeklyPerformanceCard: FC<Props> = ({ daysUnderBudget, disciplineXp
             />
           </div>
           <p className="text-xs text-[var(--text-muted)]">
-            More calm days under your safe spend target = higher stability.
+            Hoger = meer dagen binnen je veilige dagbudget (geen overspend die dag).
           </p>
         </div>
 

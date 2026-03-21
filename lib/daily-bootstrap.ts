@@ -5,6 +5,43 @@ import { useHQStore } from "@/lib/hq-store";
 import { mergeDailySnapshotFromNetwork } from "@/lib/daily-snapshot-full-sync";
 import { applyDCICModeOverrideIfAny } from "@/lib/dcic/dcic-mode-override";
 
+/** Merge server bootstrap into IndexedDB snapshot and HQ store (after brain save, payday, etc.). */
+export async function refreshMergedSnapshotFromNetwork(): Promise<void> {
+  if (typeof window === "undefined") return;
+  try {
+    const bootstrap = await mergeDailySnapshotFromNetwork();
+    if (!bootstrap) return;
+    const {
+      setTodayDate,
+      setDashboardSnapshot,
+      setGameState,
+      setTodayDailyState,
+      setTodayEnergyBudget,
+      setBudgetSnapshot,
+      setLearningSnapshot,
+    } = useHQStore.getState();
+    const dateStr = (bootstrap.date as string | undefined) ?? undefined;
+    if (dateStr) setTodayDate(dateStr);
+    if (bootstrap.dashboard) {
+      setDashboardSnapshot({
+        critical: bootstrap.dashboard.critical as any,
+        secondary: bootstrap.dashboard.secondary as any,
+      });
+    }
+    if (bootstrap.dcicGameState) {
+      const nextDcic = bootstrap.dcicGameState as any;
+      applyDCICModeOverrideIfAny(nextDcic);
+      setGameState(nextDcic);
+    }
+    if (bootstrap.dailyState) setTodayDailyState(bootstrap.dailyState);
+    if (bootstrap.energyBudget) setTodayEnergyBudget(bootstrap.energyBudget);
+    if (bootstrap.budget) setBudgetSnapshot(bootstrap.budget as any);
+    if (bootstrap.learning) setLearningSnapshot(bootstrap.learning as any);
+  } catch {
+    // non-fatal; router.refresh still runs
+  }
+}
+
 /**
  * Initial daily bootstrap is handled by the DailySnapshot system:
  * - BootstrapGate runs initializeDailySystem(), which calls /api/bootstrap/today in fetchMissions

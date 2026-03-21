@@ -27,6 +27,8 @@ export type TaskWithMeta = {
   carry_over_count?: number;
   domain?: string | null;
   cognitive_load?: number | null;
+  mental_load?: number | null;
+  social_load?: number | null;
   emotional_resistance?: number | null;
   discipline_weight?: number | null;
   strategic_value?: number | null;
@@ -219,15 +221,10 @@ async function getDecisionBlocksUncached(dateStr: string): Promise<DecisionBlock
   const { getConsequenceState } = await import("./consequence-engine");
 
   const mode = await getMode(dateStr);
-  const taskMode: TaskListMode =
-    mode === "stabilize" ? "stabilize" : mode === "low_energy" ? "low_energy" : mode === "driven" ? "driven" : "normal";
-  const { tasks: rawTasks } = await getTodaysTasks(dateStr, taskMode);
+  const { tasks: rawTasks } = await getTodaysTasks(dateStr, "normal");
   let tasks = (rawTasks ?? []) as TaskWithMeta[];
 
   const consequenceState = await getConsequenceState(dateStr);
-  if (consequenceState.recoveryOnly) {
-    tasks = tasks.filter((t) => isRecoveryTask(t));
-  }
 
   const yesterdayStr = yesterdayDate(dateStr);
   const strategy = await getActiveStrategyFocus();
@@ -273,7 +270,7 @@ async function getDecisionBlocksUncached(dateStr: string): Promise<DecisionBlock
     const isRecovery = missionIntent === "recovery" || isRecoveryTask(t);
     if (constraints.forceRecovery) return isRecovery;
     const mentalDemand = t.mental_load ?? t.cognitive_load ?? 5;
-    const socialDemand = (t as { social_load?: number | null }).social_load ?? 0;
+    const socialDemand = t.social_load ?? 0;
     const energyReq = t.energy_required ?? 5;
     const domain = ((t.domain ?? "") as string).toLowerCase();
 
@@ -788,15 +785,12 @@ export async function getEmotionalStateCorrelations(): Promise<{
 
 /** Get today's tasks sorted by UMS (for mission grid). */
 export async function getTasksSortedByUMS(dateStr: string): Promise<TaskWithUMS[]> {
-  const { topRecommendation, streakAtRisk, pressureZone, alignmentScore } = await getDecisionBlocks(dateStr);
+  await getDecisionBlocks(dateStr);
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return [];
 
-  const mode = await getMode(dateStr);
-  const taskMode: TaskListMode =
-    mode === "stabilize" ? "stabilize" : mode === "low_energy" ? "low_energy" : mode === "driven" ? "driven" : "normal";
-  const { tasks: rawTasks } = await getTodaysTasks(dateStr, taskMode);
+  const { tasks: rawTasks } = await getTodaysTasks(dateStr, "normal");
   const tasks = (rawTasks ?? []) as TaskWithMeta[];
 
   const strategy = await getActiveStrategyFocus();

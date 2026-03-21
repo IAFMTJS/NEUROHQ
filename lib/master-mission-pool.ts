@@ -2,6 +2,30 @@ import type { BehaviorProfile } from "@/types/behavior-profile.types";
 import type { AvoidanceTracker } from "@/app/actions/avoidance-tracker";
 import { MASTER_MISSION_POOL, type MasterMissionTemplate } from "@/lib/mission-templates";
 
+/** Round-robin interleave so picks mix structure / energy / focus instead of one subcategory dominating. */
+function diversifyBySubcategoryPrefix(templates: MasterMissionTemplate[]): MasterMissionTemplate[] {
+  const buckets: MasterMissionTemplate[][] = [[], [], [], []];
+  for (const t of templates) {
+    const sc = t.subcategory ?? "";
+    if (sc.startsWith("structure_")) buckets[0].push(t);
+    else if (sc.startsWith("energy_")) buckets[1].push(t);
+    else if (sc.startsWith("focus_")) buckets[2].push(t);
+    else buckets[3].push(t);
+  }
+  const out: MasterMissionTemplate[] = [];
+  for (let guard = 0; guard < 400; guard++) {
+    let moved = false;
+    for (const b of buckets) {
+      if (b.length) {
+        out.push(b.shift()!);
+        moved = true;
+      }
+    }
+    if (!moved) break;
+  }
+  return out.length ? out : templates;
+}
+
 export type WeekTheme = BehaviorProfile["weekTheme"];
 
 export type PickedMissionTemplate = MasterMissionTemplate & {
@@ -94,12 +118,13 @@ function pickStructureEnergyFocus(context: PickContext, max: number): PickedMiss
   };
 
   const sorted = [...base].sort((a, b) => themedScore(b) - themedScore(a));
+  const diversified = diversifyBySubcategoryPrefix(sorted);
 
   // Prefer missions not used recently; then apply date-based rotation so we don’t always get the same top 2.
   const notRecent = recentlyUsedTitles?.size
-    ? sorted.filter((t) => t.title && !recentlyUsedTitles.has(t.title))
-    : sorted;
-  const pool = notRecent.length >= max ? notRecent : sorted;
+    ? diversified.filter((t) => t.title && !recentlyUsedTitles.has(t.title))
+    : diversified;
+  const pool = notRecent.length >= max ? notRecent : diversified;
   const topN = Math.min(8, pool.length);
   const takeFrom = pool.slice(0, topN);
 

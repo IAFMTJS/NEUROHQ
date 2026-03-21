@@ -17,27 +17,32 @@ export async function GET(request: Request) {
   const mode = url.searchParams.get("mode");
 
   if (mode === "meta") {
-    const { data: prefRow } = await supabase
-      .from("user_preferences")
-      .select("updated_at")
-      .eq("user_id", user.id)
-      .single();
+    const [{ data: prefRow }, { data: userTs }] = await Promise.all([
+      supabase.from("user_preferences").select("updated_at").eq("user_id", user.id).single(),
+      supabase.from("users").select("updated_at").eq("id", user.id).single(),
+    ]);
     return NextResponse.json({
       preferencesUpdatedAt: (prefRow as { updated_at?: string | null } | null)?.updated_at ?? null,
+      usersRowUpdatedAt: (userTs as { updated_at?: string | null } | null)?.updated_at ?? null,
     });
   }
 
   const [preferences, userRow] = await Promise.all([
     getUserPreferencesOrDefaults(),
-    supabase.from("users").select("last_payday_date, payday_day_of_month").eq("id", user.id).single(),
+    supabase.from("users").select("last_payday_date, payday_day_of_month, updated_at").eq("id", user.id).single(),
   ]);
 
-  const row = (userRow.data ?? {}) as { last_payday_date?: string | null; payday_day_of_month?: number | null };
+  const row = (userRow.data ?? {}) as {
+    last_payday_date?: string | null;
+    payday_day_of_month?: number | null;
+    updated_at?: string | null;
+  };
   return NextResponse.json({
     preferences,
     payday: {
       last_payday_date: row.last_payday_date ?? null,
       payday_day_of_month: row.payday_day_of_month ?? null,
     },
+    usersRowUpdatedAt: row.updated_at ?? null,
   });
 }

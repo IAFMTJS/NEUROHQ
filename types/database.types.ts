@@ -819,6 +819,7 @@ export type Database = {
           load: number | null
           mental_battery: number | null
           mood_note: string | null
+          physical_health: number | null
           sensory_load: number | null
           sleep_hours: number | null
           social_load: number | null
@@ -841,6 +842,7 @@ export type Database = {
           load?: number | null
           mental_battery?: number | null
           mood_note?: string | null
+          physical_health?: number | null
           sensory_load?: number | null
           sleep_hours?: number | null
           social_load?: number | null
@@ -863,6 +865,7 @@ export type Database = {
           load?: number | null
           mental_battery?: number | null
           mood_note?: string | null
+          physical_health?: number | null
           sensory_load?: number | null
           sleep_hours?: number | null
           social_load?: number | null
@@ -2238,11 +2241,15 @@ export type Database = {
           social_load: number | null
           strategic_value: number | null
           strategy_key_result_id: string | null
+          task_tags: Json
+          task_type: string | null
           title: string
           updated_at: string
           urgency: number | null
           user_id: string
           validation_type: string | null
+          duration_minutes: number | null
+          intensity: number | null
         }
         Insert: {
           avoidance_tag?: string | null
@@ -2278,11 +2285,15 @@ export type Database = {
           social_load?: number | null
           strategic_value?: number | null
           strategy_key_result_id?: string | null
+          task_tags?: Json
+          task_type?: string | null
           title: string
           updated_at?: string
           urgency?: number | null
           user_id: string
           validation_type?: string | null
+          duration_minutes?: number | null
+          intensity?: number | null
         }
         Update: {
           avoidance_tag?: string | null
@@ -2318,11 +2329,15 @@ export type Database = {
           social_load?: number | null
           strategic_value?: number | null
           strategy_key_result_id?: string | null
+          task_tags?: Json
+          task_type?: string | null
           title?: string
           updated_at?: string
           urgency?: number | null
           user_id?: string
           validation_type?: string | null
+          duration_minutes?: number | null
+          intensity?: number | null
         }
         Relationships: [
           {
@@ -2354,6 +2369,30 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      user_actions_audit: {
+        Row: {
+          action_type: string
+          created_at: string
+          id: string
+          payload: Json
+          user_id: string
+        }
+        Insert: {
+          action_type: string
+          created_at?: string
+          id?: string
+          payload?: Json
+          user_id: string
+        }
+        Update: {
+          action_type?: string
+          created_at?: string
+          id?: string
+          payload?: Json
+          user_id?: string
+        }
+        Relationships: []
       }
       user_analytics_daily: {
         Row: {

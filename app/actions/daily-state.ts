@@ -128,6 +128,12 @@ export async function saveDailyState(input: DailyStateInput): Promise<SaveDailyS
       autoMissionsCreated = result.created;
       autoMissionsDebug = result.debug;
       revalidateTagMax("decision-blocks");
+      try {
+        const { trimAutoMasterMissionsToEnergyBand } = await import("./master-missions");
+        await trimAutoMasterMissionsToEnergyBand(user.id, serverToday, row.energy);
+      } catch {
+        // non-fatal
+      }
     } catch (e) {
       autoMissionsDebug = e instanceof Error ? e.message : "error";
     }

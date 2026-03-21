@@ -464,8 +464,8 @@ function getWeeklySpending(financeState: FinanceState): number {
 }
 
 /**
- * Counts days this week (from week start up to today) where spending stayed at or below
- * safe daily spend. Used for the Weekly Performance card on the Budget page.
+ * Counts "calm" days this week (week start → today): total spend that day ≤ safe daily.
+ * Days with no logged spend count as calm (0 ≤ safeDaily). Overspend days do not count.
  */
 export function getSafeDaysThisWeek(financeState: FinanceState): number {
   const safeDaily = calculateSafeDailySpend(financeState);
@@ -487,8 +487,7 @@ export function getSafeDaysThisWeek(financeState: FinanceState): number {
     const spentThatDay = financeState.expenses
       .filter((e) => (e.date ?? "").slice(0, 10) === dayStr)
       .reduce((sum, e) => sum + Math.abs(e.amount), 0);
-    // Only count days where user actually spent and stayed at or under safe daily (ignore zero-spend days)
-    if (spentThatDay > 0 && spentThatDay <= safeDaily) safeDays++;
+    if (spentThatDay <= safeDaily) safeDays++;
     cursor.setUTCDate(cursor.getUTCDate() + 1);
   }
   return safeDays;

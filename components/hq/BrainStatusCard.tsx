@@ -1,11 +1,12 @@
 "use client";
 
-import { useState, memo, useEffect } from "react";
+import { useState, memo, useEffect, useMemo, type CSSProperties } from "react";
 import type { BrainMode } from "@/lib/brain-mode";
 import { maxAllowedIntensityForTier } from "@/lib/brain-mode";
 import { getPendingDailyState } from "@/lib/client-pending-writes";
 import { useHQStore } from "@/lib/hq-store";
 import { BrainStatusModal } from "./BrainStatusModal";
+import { useDCICGameState } from "@/lib/dcic/game-state-client";
 import { EnergyRing, type EnergyRingMode } from "@/components/hud-test/EnergyRing";
 import { scale1To10ToPct } from "@/lib/dashboard-utils";
 
@@ -42,6 +43,17 @@ type Props = {
 };
 
 export const BrainStatusCard = memo(function BrainStatusCard({ date, initial, yesterday, brainMode, suggestedTaskCount }: Props) {
+  const { gameState } = useDCICGameState();
+  const dcicMode = gameState?.mode?.current ?? "focus";
+  const dcicModeVars = useMemo<CSSProperties>(() => {
+    if (dcicMode === "war") {
+      return { "--mode-rgb": "220, 38, 38", "--mode-rgb-deep": "127, 29, 29" } as CSSProperties;
+    }
+    if (dcicMode === "recovery") {
+      return { "--mode-rgb": "34, 197, 94", "--mode-rgb-deep": "22, 101, 52" } as CSSProperties;
+    }
+    return { "--mode-rgb": "0, 212, 255", "--mode-rgb-deep": "0, 136, 255" } as CSSProperties;
+  }, [dcicMode]);
   const [modalOpen, setModalOpen] = useState(false);
   const [currentInitial, setCurrentInitial] = useState(initial);
   const todayDailyState = useHQStore((s) => s.todayDailyState);
@@ -118,7 +130,8 @@ export const BrainStatusCard = memo(function BrainStatusCard({ date, initial, ye
     <>
       <section
         id="brain-status-modal"
-        className="card page glass-card-3d"
+        className="card page glass-card-3d border-[rgba(var(--mode-rgb,0,212,255),0.35)] shadow-[0_0_24px_rgba(var(--mode-rgb,0,212,255),0.12)]"
+        style={dcicModeVars}
         aria-label="Brain Status"
         data-tutorial="brain-status-card"
       >

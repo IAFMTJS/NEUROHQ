@@ -87,6 +87,7 @@ export function DashboardClientShell() {
   const [error, setError] = useState<string | null>(null);
   const [pendingDailyForHero, setPendingDailyForHero] = useState<ReturnType<typeof getPendingDailyState>>(null);
   const [trackedNextActionShown, setTrackedNextActionShown] = useState(false);
+  const [nextBestDismissed, setNextBestDismissed] = useState(false);
   const { gameState, status: dcicStatus } = useDCICGameState();
   const dcicMode = gameState?.mode?.current ?? "focus";
   const dcicModeVars = useMemo<CSSProperties>(() => {
@@ -377,6 +378,16 @@ export function DashboardClientShell() {
   const nextDecisionId = critical?.unifiedDecision?.decisionId ?? `legacy-${dateStr}`;
 
   useEffect(() => {
+    try {
+      if (typeof sessionStorage !== "undefined" && sessionStorage.getItem(`neurohq-next-best-dismissed-${dateStr}`) === "1") {
+        setNextBestDismissed(true);
+      }
+    } catch {
+      // ignore
+    }
+  }, [dateStr]);
+
+  useEffect(() => {
     if (trackedNextActionShown) return;
     if (!nextBestAction?.title) return;
     setTrackedNextActionShown(true);
@@ -442,7 +453,7 @@ export function DashboardClientShell() {
           </>
         )}
         {!isMinimalUI && (
-          <div className="space-y-3">
+          <div className="space-y-3" style={dcicModeVars}>
             <ContextualTip
               tipId={TIP_IDS.BRAIN_STATUS}
               message="You can update your Brain Status here to set energy, focus and load for the day."
@@ -466,10 +477,29 @@ export function DashboardClientShell() {
                 <DashboardQuickBudgetLog />
               </div>
             </div>
+            {!nextBestDismissed && nextBestAction?.title && (
             <section className="card-simple cmd-stack-dense rounded-[var(--cmd-card-radius)] px-4 py-3" aria-label="Next best action">
-              <p className="text-[10px] font-semibold uppercase tracking-wider text-[var(--text-muted)]">Next best action</p>
-              <h3 className="mt-1 text-sm font-semibold text-[var(--text-primary)]">{nextBestAction.title}</h3>
-              <p className="mt-1 text-xs text-[var(--text-secondary)]">{nextBestAction.description}</p>
+              <div className="flex items-start justify-between gap-2">
+                <div className="min-w-0 flex-1">
+                  <p className="text-[10px] font-semibold uppercase tracking-wider text-[var(--text-muted)]">Next best action</p>
+                  <h3 className="mt-1 text-sm font-semibold text-[var(--text-primary)]">{nextBestAction.title}</h3>
+                  <p className="mt-1 text-xs text-[var(--text-secondary)]">{nextBestAction.description}</p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    try {
+                      sessionStorage.setItem(`neurohq-next-best-dismissed-${dateStr}`, "1");
+                    } catch {
+                      // ignore
+                    }
+                    setNextBestDismissed(true);
+                  }}
+                  className="shrink-0 rounded-lg border border-[var(--card-border)] px-2 py-1 text-[10px] font-medium text-[var(--text-muted)] hover:bg-[var(--bg-surface)]"
+                >
+                  Sluiten
+                </button>
+              </div>
               <div className="mt-3">
                 <Link
                   href={nextBestAction.href}
@@ -495,8 +525,9 @@ export function DashboardClientShell() {
                 </Link>
               </div>
             </section>
+            )}
             <Divider1px />
-            <div data-tutorial="dashboard-command-bridge" style={dcicModeVars}>
+            <div data-tutorial="dashboard-command-bridge">
             <SciFiPanel className={`dashboard-bridge-frame idle-breathing ${hudStyles.focusPrimary}`} bodyClassName="dashboard-bridge-body" variant="command">
               <CornerNode corner="top-left" />
               <CornerNode corner="top-right" />

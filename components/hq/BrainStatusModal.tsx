@@ -11,6 +11,7 @@ import { useOnboarding } from "@/components/onboarding/OnboardingProvider";
 import { Modal } from "@/components/Modal";
 import { scale1To10ToPct } from "@/lib/dashboard-utils";
 import { useHQStore } from "@/lib/hq-store";
+import { refreshMergedSnapshotFromNetwork } from "@/lib/daily-bootstrap";
 
 /** Short micro-descriptions to match reference image */
 function description(value: number, type: "energy" | "focus" | "load"): string {
@@ -111,7 +112,7 @@ export function BrainStatusModal({ open, onClose, date, initial, yesterday, onSa
       energy,
       focus,
       sensory_load: load,
-      social_load: initial.social_load ?? null,
+      social_load: initial.social_load ?? 5,
       sleep_hours: sleep ? parseFloat(sleep) : null,
     }),
     [energy, focus, load, initial.social_load, sleep]
@@ -132,7 +133,10 @@ export function BrainStatusModal({ open, onClose, date, initial, yesterday, onSa
 
     // Optimistic UI: update store, parent, and local storage immediately; background sync will push to Supabase.
     setTodayDailyState(nextState);
-    setPendingDailyState(date, nextState);
+    setPendingDailyState(date, {
+      ...nextState,
+      social_load: nextState.social_load ?? 5,
+    });
     onSaved?.(nextState);
 
     startTransition(async () => {
@@ -166,6 +170,7 @@ export function BrainStatusModal({ open, onClose, date, initial, yesterday, onSa
           try {
             window.dispatchEvent(new CustomEvent("neurohq-daily-state-saved", { detail: { date } }));
           } catch (_) {}
+          void refreshMergedSnapshotFromNetwork();
           router.refresh();
           setTimeout(() => {
             setSaved(false);

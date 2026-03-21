@@ -21,7 +21,6 @@ import {
 } from "@/lib/dcic/finance-engine";
 import {
   getBudgetCycleBounds,
-  getBudgetMonthBounds,
   getBudgetToday,
   getBudgetWeekBounds,
   getNextPaydayDateFromDay,
@@ -58,47 +57,6 @@ export async function getFinanceState(): Promise<FinanceState | null> {
     }
   } catch {
     // Table may not exist yet
-  }
-  // New users: no default income or payday (single “salary day”)
-  if (incomeSources.length === 0) {
-    const { monthStart, monthEnd } = getBudgetMonthBounds();
-    const { data: entries } = await supabase
-      .from("budget_entries")
-      .select("id, amount_cents, date, category, note, is_planned")
-      .eq("user_id", user.id)
-      .gte("date", monthStart)
-      .lte("date", monthEnd);
-    const { data: goalsData } = await supabase
-      .from("savings_goals")
-      .select("id, name, target_cents, current_cents, deadline")
-      .eq("user_id", user.id);
-    const goals: SavingsGoal[] = (goalsData || []).map((g) => ({
-      id: g.id,
-      name: g.name,
-      target: g.target_cents,
-      current: g.current_cents,
-      deadline: g.deadline,
-    }));
-    const expenses: Expense[] = (entries || [])
-      .filter((e) => e.amount_cents < 0)
-      .map((e) => ({
-        id: e.id,
-        amount: e.amount_cents,
-        date: e.date,
-        category: e.category,
-        note: e.note,
-        recurring: false,
-        isPlanned: e.is_planned || false,
-      }));
-    return {
-      income: { sources: [] },
-      cycle: { startDay: 1, startDate: monthStart },
-      balance: { current: 0 },
-      budgetTargets: [],
-      expenses,
-      goals,
-      disciplineScore: 0,
-    };
   }
 
   // Get budget settings and optional last_payday_date for period "van loon tot volgend loon"
@@ -297,7 +255,7 @@ export async function getFinanceState(): Promise<FinanceState | null> {
       sources: incomeSources,
     },
     cycle: {
-      startDay: extractDayOfMonth(incomeSources[0]?.dayOfMonth || 25),
+      startDay: extractDayOfMonth(paydayDay),
       startDate: cycleStartDateStr,
       nextPaydayDate: cycleNextPaydayDate,
       daysUntilNextIncome: cycleDaysUntilNextIncome,

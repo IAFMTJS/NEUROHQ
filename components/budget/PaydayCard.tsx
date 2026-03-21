@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState, useTransition } from "react";
+import { useEffect, useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { updateBudgetSettings, setPaydayReceivedToday } from "@/app/actions/budget";
 import { addIncomeSource, deleteIncomeSource } from "@/app/actions/dcic/income-sources";
@@ -22,6 +22,7 @@ import {
   usePendingBudgetSnapshot,
 } from "@/lib/client-pending-budget";
 import {
+  clearPersistedPayday,
   derivePaydayDisplay,
   setPersistedPayday,
   usePersistedPayday,
@@ -40,11 +41,22 @@ type Props = {
   /** Current period: van [cycleStartDate] tot [nextPaydayDate]. Voor "Vandaag loon gehad" + periodelabel. */
   cycleStartDate?: string | null;
   nextPaydayDate?: string | null;
+  /** `users.updated_at` from server — drop stale localStorage payday when server is newer */
+  serverRowUpdatedAt?: string | null;
 };
 
-export function PaydayCard({ daysUntilNextIncome, nextPaydayLabel, incomeSources, paydayDayOfMonth, currency = "EUR", cycleStartDate, nextPaydayDate }: Props) {
+export function PaydayCard({
+  daysUntilNextIncome,
+  nextPaydayLabel,
+  incomeSources,
+  paydayDayOfMonth,
+  currency = "EUR",
+  cycleStartDate,
+  nextPaydayDate,
+  serverRowUpdatedAt = null,
+}: Props) {
   const router = useRouter();
-  const { invalidate: invalidateSettings } = useSettings();
+  const { invalidate: invalidateSettings, settings: settingsPayload } = useSettings();
   const pushPaydayUndo = useUndoStore((s) => s.pushPaydayUndo);
   const removeUndo = useUndoStore((s) => s.remove);
   const persistedPayday = usePersistedPayday();
@@ -84,26 +96,35 @@ export function PaydayCard({ daysUntilNextIncome, nextPaydayLabel, incomeSources
       ? `Volgende loondag: ${format(new Date(effectiveNextPaydayDate + "T12:00:00Z"), "d MMMM", { locale: nl })}`
       : nextPaydayLabel;
   const symbol = getCurrencySymbol(pendingBudget?.currency ?? currency);
-  const hasSyncedPersistedRef = useRef(false);
 
+  /** Server is newer than optimistic localStorage: drop local so UI follows DB (fixes payday "reset" loops). */
   useEffect(() => {
-    if (hasSyncedPersistedRef.current || !persistedPayday) return;
-    const { lastPaydayDate, paydayDayOfMonth } = persistedPayday;
-    if (lastPaydayDate == null && paydayDayOfMonth == null) return;
-    hasSyncedPersistedRef.current = true;
-    (async () => {
-      try {
-        await updateBudgetSettings({
-          ...(lastPaydayDate != null && { last_payday_date: lastPaydayDate }),
-          ...(paydayDayOfMonth != null && { payday_day_of_month: paydayDayOfMonth }),
-        });
-        router.refresh();
-        await invalidateSettings();
-      } catch {
-        hasSyncedPersistedRef.current = false;
+    if (!persistedPayday || !serverRowUpdatedAt) return;
+    const serverTs = Date.parse(serverRowUpdatedAt);
+    if (Number.isNaN(serverTs) || persistedPayday.updatedAt >= serverTs) return;
+    clearPersistedPayday();
+    clearPendingBudgetSnapshot();
+  }, [persistedPayday, serverRowUpdatedAt]);
+
+  /** Settings read-through: if server payday differs from persisted, prefer server. */
+  useEffect(() => {
+    const p = settingsPayload?.payday;
+    if (!p || !persistedPayday) return;
+    const serverDay = p.payday_day_of_month ?? null;
+    const serverLast = p.last_payday_date ?? null;
+    const localDay = persistedPayday.paydayDayOfMonth;
+    const localLast = persistedPayday.lastPaydayDate;
+    const mismatch =
+      (serverDay != null && localDay != null && serverDay !== localDay) ||
+      (serverLast != null && localLast != null && serverLast !== localLast);
+    if (mismatch && serverRowUpdatedAt) {
+      const serverTs = Date.parse(serverRowUpdatedAt);
+      if (!Number.isNaN(serverTs) && persistedPayday.updatedAt < serverTs) {
+        clearPersistedPayday();
+        clearPendingBudgetSnapshot();
       }
-    })();
-  }, [persistedPayday, router, invalidateSettings]);
+    }
+  }, [settingsPayload?.payday, persistedPayday, serverRowUpdatedAt]);
 
   function handleVandaagLoonGehad() {
     setSaveError(null);

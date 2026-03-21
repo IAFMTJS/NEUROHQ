@@ -1,8 +1,10 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import type { BucketedToday } from "@/lib/today-engine";
 import type { XPForecastItem } from "@/app/actions/dcic/xp-forecast";
+import { Modal } from "@/components/Modal";
 
 type Props = {
   bucketed: BucketedToday;
@@ -39,6 +41,7 @@ const bucketConfig = {
 } as const;
 
 export function TodayEngineCard({ bucketed, streakAtRisk, date, forecasts = [] }: Props) {
+  const [explainOpen, setExplainOpen] = useState(false);
   const hasAny =
     bucketed.critical.length > 0 || bucketed.high_impact.length > 0 || bucketed.growth_boost.length > 0;
 
@@ -47,13 +50,23 @@ export function TodayEngineCard({ bucketed, streakAtRisk, date, forecasts = [] }
       className="glass-card glass-card-3d overflow-hidden rounded-2xl border border-[var(--card-border)]"
       aria-label="Today Engine"
     >
-      <div className="border-b border-[var(--card-border)] px-4 py-3">
-        <h2 className="text-base font-semibold text-[var(--text-primary)]">Vandaag — door de app bepaald</h2>
-        <p className="mt-0.5 text-xs text-[var(--text-muted)]">
-          Critical · High Impact · Growth Boost — zware taken tellen als 2 missie-slots, mini&apos;s als ½.
-        </p>
+      <div className="border-b border-[var(--card-border)] px-4 py-3 flex flex-wrap items-start justify-between gap-2">
+        <div className="min-w-0">
+          <h2 className="text-base font-semibold text-[var(--text-primary)]">Vandaag — door de app bepaald</h2>
+          <p className="mt-0.5 text-xs text-[var(--text-muted)]">
+            Drie buckets: streak/risico, impact, groei. Slotregels staan in &quot;Meer uitleg&quot;.
+          </p>
+        </div>
+        <button
+          type="button"
+          onClick={() => setExplainOpen(true)}
+          className="shrink-0 rounded-lg border border-[var(--card-border)] px-3 py-1.5 text-xs font-medium text-[var(--accent-focus)] hover:bg-[var(--bg-surface)]"
+        >
+          Meer uitleg
+        </button>
       </div>
-      <div className="p-4 space-y-4">
+      <div className="p-4 flex flex-col gap-4 md:flex-row md:items-stretch">
+        <div className="min-w-0 flex-1 space-y-4">
         {!hasAny ? (
           <p className="text-sm text-[var(--text-muted)]">Geen missies vandaag. Start er één op Missions.</p>
         ) : (
@@ -126,13 +139,6 @@ export function TodayEngineCard({ bucketed, streakAtRisk, date, forecasts = [] }
             )}
           </>
         )}
-        <Link
-          href="/tasks"
-          className="mt-2 block text-center text-sm font-medium text-[var(--accent-focus)] hover:underline"
-        >
-          Naar Missions →
-        </Link>
-
         {forecasts.length > 0 && (
           <div className="rounded-xl border border-[var(--card-border)]/70 bg-[var(--bg-surface)]/20 p-3">
             <h3 className="text-sm font-semibold text-[var(--text-primary)]">Als je vandaag…</h3>
@@ -158,7 +164,34 @@ export function TodayEngineCard({ bucketed, streakAtRisk, date, forecasts = [] }
             </ul>
           </div>
         )}
+        </div>
+        <div className="flex w-full shrink-0 flex-col justify-center gap-2 md:w-44 md:border-l md:border-[var(--card-border)] md:pl-4">
+          <Link
+            href="/tasks"
+            className="neon-button inline-flex min-h-[44px] w-full items-center justify-center rounded-xl px-4 py-2.5 text-center text-sm font-semibold"
+          >
+            Naar Missions
+          </Link>
+          <p className="text-center text-[10px] text-[var(--text-muted)] md:text-left">
+            {streakAtRisk ? "Streak onder druk — begin met Critical." : "Kies één focus; de rest wacht."}
+          </p>
+        </div>
       </div>
+
+      <Modal open={explainOpen} onClose={() => setExplainOpen(false)} title="Hoe vandaag werkt" size="md">
+        <div className="space-y-3 text-sm text-[var(--text-secondary)]">
+          <p>
+            De app sorteert je openstaande missies in <strong className="text-[var(--text-primary)]">Critical</strong> (streak/risico),{" "}
+            <strong className="text-[var(--text-primary)]">High Impact</strong> (meeste XP-waarde) en{" "}
+            <strong className="text-[var(--text-primary)]">Growth Boost</strong> (ontwikkeling / zwaardere groei).
+          </p>
+          <p>
+            <strong className="text-[var(--text-primary)]">Missie-slots:</strong> zware taken kosten ongeveer twee slots in je dag; heel korte
+            mini-missies tellen vaak als een half slot. Zo blijft je dag haalbaar binnen energie en focus.
+          </p>
+          <p className="text-xs text-[var(--text-muted)]">Datum context: {date}</p>
+        </div>
+      </Modal>
     </section>
   );
 }

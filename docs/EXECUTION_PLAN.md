@@ -43,7 +43,7 @@
 - [x] **2.2** Implement Settings Read-Through: context or React Query that fetches user preferences + user budget fields once per session/on focus, exposes to app, invalidates on save.
 - [x] **2.3** Narrow `client-persisted-payday` to optimistic UI only; after sync, replace with server state in read-through.
 - [x] **2.4** Ensure all mutations (PaydayCard, BudgetSummaryCard, preferences page) call server actions and then invalidate read-through + `router.refresh()`.
-- [ ] **2.5** Optional: use `user_preferences.updated_at` to detect staleness and force refetch when client cache is older.
+- [x] **2.5** Optional: use `user_preferences.updated_at` to detect staleness and force refetch when client cache is older.
 
 ---
 

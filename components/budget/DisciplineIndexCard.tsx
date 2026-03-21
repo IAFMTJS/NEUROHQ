@@ -5,6 +5,8 @@ import type { FC } from "react";
 type Props = {
   /** 0–100 discipline score */
   value: number | null | undefined;
+  /** False when user has no budget entries and no monthly budget — avoids misleading 0/100 Critical */
+  inputsReady?: boolean;
 };
 
 function getDisciplineLabel(score: number) {
@@ -13,8 +15,10 @@ function getDisciplineLabel(score: number) {
   return "Critical";
 }
 
-export const DisciplineIndexCard: FC<Props> = ({ value }) => {
+export const DisciplineIndexCard: FC<Props> = ({ value, inputsReady = true }) => {
   const safeValue = typeof value === "number" && Number.isFinite(value) ? Math.max(0, Math.min(100, value)) : null;
+  const showInsufficient =
+    !inputsReady && safeValue !== null && safeValue === 0;
 
   return (
     <section className="card-simple overflow-hidden p-0">
@@ -28,6 +32,10 @@ export const DisciplineIndexCard: FC<Props> = ({ value }) => {
         {safeValue == null ? (
           <p className="text-sm text-[var(--text-muted)]">
             Discipline score is not available yet.
+          </p>
+        ) : showInsufficient ? (
+          <p className="text-sm text-[var(--text-muted)]">
+            Stel een maandbudget in en log minstens één uitgave of inkomsten om een betrouwbare score te zien.
           </p>
         ) : (
           <>

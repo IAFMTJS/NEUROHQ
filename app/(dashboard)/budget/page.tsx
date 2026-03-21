@@ -42,6 +42,7 @@ import { getBudgetToday, getBudgetAdjacentMonths, getPreviousPeriodBounds } from
 import { getSafeDaysThisWeek, getBudgetLoadTrend } from "@/lib/dcic/finance-engine";
 import type { Insight } from "@/lib/dcic/finance-engine";
 import { deriveCanonicalBudgetSignals } from "@/lib/budget/canonical";
+import { BudgetOverviewLockGate } from "@/components/budget/BudgetOverviewLockGate";
 import { DisciplineIndexCard } from "@/components/budget/DisciplineIndexCard";
 import { BudgetQuickLogCard } from "@/components/budget/BudgetQuickLogCard";
 import { BudgetDailyControlToast } from "@/components/budget/BudgetDailyControlToast";
@@ -179,6 +180,8 @@ async function BudgetContent({ searchParams }: Props) {
   }, {} as Record<string, number>);
   const currency = budgetSettings.currency ?? "EUR";
   const isWeekly = budgetSettings.budget_period === "weekly";
+  const disciplineInputsReady =
+    (budgetSettings.monthly_budget_cents ?? 0) > 0 || (entries as EntryRow[]).length > 0;
 
   const activeTab: "overview" | "execute" | "analysis" | "optimization" | "tactical" | "goals" =
     tabParam === "execute" || tabParam === "tactical" || tabParam === "analysis" || tabParam === "goals" || tabParam === "optimization"
@@ -362,7 +365,10 @@ async function BudgetContent({ searchParams }: Props) {
       {!historyMode && (
         <>
           <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-cyan-200">3. Monitor</p>
-          <DisciplineIndexCard value={financeState?.disciplineScore ?? null} />
+          <DisciplineIndexCard
+            value={financeState?.disciplineScore ?? null}
+            inputsReady={disciplineInputsReady}
+          />
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             <FinancialStatusCard
               financeState={financeState}
@@ -440,6 +446,7 @@ async function BudgetContent({ searchParams }: Props) {
             currency={currency}
             cycleStartDate={financialInsights?.cycleStartDate ?? null}
             nextPaydayDate={financialInsights?.nextPaydayDate ?? null}
+            serverRowUpdatedAt={budgetSettings.row_updated_at}
           />
           <WeeklyTacticalCard
             financeState={financeState}
@@ -778,7 +785,14 @@ async function BudgetContent({ searchParams }: Props) {
                   isHistoryView={isHistoryView}
                   historyMode={historyMode}
                   headerRight={headerRight}
-                  overview={overviewSection}
+                  overview={
+                    <BudgetOverviewLockGate
+                      lockActive={!historyMode && budgetControlState.lockActive}
+                      lockUntil={budgetControlState.lockUntil}
+                    >
+                      {overviewSection}
+                    </BudgetOverviewLockGate>
+                  }
                   tactical={tacticalSection}
                   analysis={analysisSection}
                   goals={goalsSection}

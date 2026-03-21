@@ -64,6 +64,8 @@ type Props = {
   identityReputation?: { discipline: number; consistency: number; impact: number } | null;
   /** Brain mode for today, including focus slots and load-based risk. */
   brainMode?: BrainMode;
+  /** When set, complete/start is disabled and reason is shown (system gate: recovery / energy). */
+  blockedReasonByTaskId?: Record<string, string>;
 };
 
 function recurrenceLabel(task: ExtendedTask): string {
@@ -103,6 +105,7 @@ export function TaskList({
   identityLevel,
   identityReputation,
   brainMode,
+  blockedReasonByTaskId,
 }: Props) {
   const router = useRouter();
   const { gameState } = useDCICGameState();
@@ -250,7 +253,8 @@ export function TaskList({
       if (!t.completed) flatIncompleteOrder.push(t.id);
     }
   }
-  const firstIncompleteId = flatIncompleteOrder[0] ?? null;
+  const firstIncompleteId =
+    flatIncompleteOrder.find((tid) => !blockedReasonByTaskId?.[tid]) ?? flatIncompleteOrder[0] ?? null;
   const maxSlots = brainMode?.maxSlots ?? Infinity;
   const slotsFilled = Number.isFinite(maxSlots) ? activeCount >= maxSlots : false;
   const addBlocked = brainMode?.addBlocked ?? false;
@@ -305,6 +309,11 @@ export function TaskList({
   }
 
   function handleComplete(id: string) {
+    const blockReason = blockedReasonByTaskId?.[id];
+    if (blockReason) {
+      toast.error(blockReason);
+      return;
+    }
     const completedCountBefore = completedForDisplay.length;
     const nextCandidateId = flatIncompleteOrder.find((taskId) => taskId !== id) ?? null;
     const nextCandidateTask = nextCandidateId
@@ -606,6 +615,7 @@ export function TaskList({
     const subtasks = localSubtasksByParent[task.id] ?? [];
     const preview = recurrencePreview(task);
     const isRemoving = task.id === removingId;
+    const blockReason = blockedReasonByTaskId?.[task.id];
     return (
       <li
         key={task.id}
@@ -619,6 +629,8 @@ export function TaskList({
           className={`flex cursor-pointer items-center gap-3 rounded-lg border px-3 py-2.5 ${
             task.completed
               ? "border-[var(--card-border)] bg-[var(--bg-surface)]/50 opacity-70"
+              : blockReason
+                ? "border-[var(--card-border)] bg-[var(--bg-surface)]/40 opacity-75"
               : task.carry_over_count > 0
                 ? "border-amber-500/50 bg-amber-500/10"
                 : isFirstIncomplete
@@ -629,17 +641,22 @@ export function TaskList({
           <button
             type="button"
             onClick={(e) => { e.stopPropagation(); if (!task.completed) handleComplete(task.id); }}
-            disabled={task.completed || completingIds.has(task.id)}
+            disabled={task.completed || completingIds.has(task.id) || !!blockReason}
             className={`h-6 w-6 shrink-0 rounded-lg border-2 flex items-center justify-center ${
               task.completed ? "border-green-500 bg-green-500/20 text-green-400" : "border-neutral-500 bg-transparent hover:border-[var(--accent-focus)] hover:bg-[var(--accent-focus)]/20 text-transparent"
             } disabled:opacity-50`}
-            aria-label={task.completed ? "Completed" : completingIds.has(task.id) ? "Saving…" : "Complete task"}
+            aria-label={task.completed ? "Completed" : completingIds.has(task.id) ? "Saving…" : blockReason ? "Geblokkeerd" : "Complete task"}
           >
             {task.completed && <span className="text-sm">✓</span>}
           </button>
           <div className="min-w-0 flex-1">
             <div className="flex flex-wrap items-center gap-2">
-              {isFirstIncomplete && !task.completed && (
+              {blockReason && !task.completed && (
+                <span className="rounded bg-amber-500/20 px-2 py-0.5 text-[10px] font-semibold text-amber-200" title={blockReason}>
+                  Geblokkeerd
+                </span>
+              )}
+              {isFirstIncomplete && !task.completed && !blockReason && (
                 <span className="rounded bg-[var(--accent-focus)]/20 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-[var(--accent-focus)]">Today&apos;s mission</span>
               )}
               {task.carry_over_count > 0 && !task.completed && (
@@ -666,8 +683,11 @@ export function TaskList({
               </p>
             )}
             {preview && <p className="mt-0.5 text-[10px] text-[var(--text-muted)]">{preview}</p>}
+            {blockReason && !task.completed && (
+              <p className="mt-1 text-[11px] text-amber-200/90">{blockReason}</p>
+            )}
           </div>
-          {isFirstIncomplete && !task.completed && (
+          {isFirstIncomplete && !task.completed && !blockReason && (
             <button type="button" onClick={(e) => { e.stopPropagation(); setDetailsTask(null); setFocusTask(task); }} className="rounded-lg px-2 py-1 text-xs font-medium text-[var(--accent-focus)] hover:bg-[var(--accent-focus)]/10">
               Focus
             </button>

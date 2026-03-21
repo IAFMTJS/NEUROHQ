@@ -18,7 +18,7 @@ export function BudgetLockControlCard({ lockActive, lockUntil, currency }: Props
   const [message, setMessage] = useState<string | null>(null);
 
   return (
-    <section className="card-simple space-y-3">
+    <section id="budget-lock-control" className="card-simple space-y-3">
       <h3 className="text-sm font-semibold text-[var(--text-primary)]">Budget lock / no-spend</h3>
       <p className="text-xs text-[var(--text-muted)]">
         Active lock: {lockActive ? `ja, tot ${lockUntil ?? "-"}` : "nee"}.

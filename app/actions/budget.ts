@@ -54,6 +54,8 @@ export async function getBudgetSettings(): Promise<{
   budget_period: "monthly" | "weekly";
   impulse_quick_add_minutes: number | null;
   impulse_risk_categories: string[];
+  /** Server row `updated_at` — compare with client persisted payday to avoid stale localStorage overwriting server */
+  row_updated_at: string | null;
 }> {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
@@ -66,13 +68,14 @@ export async function getBudgetSettings(): Promise<{
       budget_period: "monthly",
       impulse_quick_add_minutes: null,
       impulse_risk_categories: [],
+      row_updated_at: null,
     };
   const { data } = await supabase
     .from("users")
-    .select("monthly_budget_cents, monthly_savings_cents, currency, impulse_threshold_pct, budget_period, impulse_quick_add_minutes, impulse_risk_categories")
+    .select("monthly_budget_cents, monthly_savings_cents, currency, impulse_threshold_pct, budget_period, impulse_quick_add_minutes, impulse_risk_categories, updated_at")
     .eq("id", user.id)
     .single();
-  const row = (data ?? {}) as BudgetSettingsRow;
+  const row = (data ?? {}) as BudgetSettingsRow & { updated_at?: string | null };
   const riskCat = row.impulse_risk_categories;
   return {
     monthly_budget_cents: row.monthly_budget_cents ?? null,
@@ -82,6 +85,7 @@ export async function getBudgetSettings(): Promise<{
     budget_period: row.budget_period === "weekly" ? "weekly" : "monthly",
     impulse_quick_add_minutes: typeof row.impulse_quick_add_minutes === "number" ? row.impulse_quick_add_minutes : null,
     impulse_risk_categories: Array.isArray(riskCat) ? riskCat.filter((c): c is string => typeof c === "string") : [],
+    row_updated_at: typeof row.updated_at === "string" ? row.updated_at : null,
   };
 }
 

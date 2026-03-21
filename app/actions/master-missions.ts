@@ -211,16 +211,16 @@ export async function ensureMasterMissionsForToday(dailyStateFromSave?: DailySta
   const avoidanceTracker = await getAvoidanceTracker();
   const allowHeavyNow = brainMode.mode !== "LowEnergy" && (!isUsualDayOff || dayOffMode === "soft");
 
-  // Recently used auto-mission titles (last 5 days, excluding today) so we avoid repeating the same tasks.
-  const fiveDaysAgo = new Date(dateStr);
-  fiveDaysAgo.setDate(fiveDaysAgo.getDate() - 5);
-  const fiveDaysAgoStr = fiveDaysAgo.toISOString().slice(0, 10);
+  // Recently used auto-mission titles (last 14 days, excluding today) for stronger variety.
+  const fourteenDaysAgo = new Date(dateStr);
+  fourteenDaysAgo.setDate(fourteenDaysAgo.getDate() - 14);
+  const fourteenDaysAgoStr = fourteenDaysAgo.toISOString().slice(0, 10);
   const { data: recentAuto } = await db
     .from("tasks")
     .select("title")
     .eq("user_id", user.id)
     .eq("psychology_label", "MasterPoolAuto")
-    .gte("due_date", fiveDaysAgoStr)
+    .gte("due_date", fourteenDaysAgoStr)
     .lt("due_date", dateStr)
     .is("parent_task_id", null);
   const recentlyUsedTitles = new Set(
@@ -430,6 +430,42 @@ export async function ensureMasterMissionsForToday(dailyStateFromSave?: DailySta
     createError: created === 0 ? firstError : undefined,
     serviceRoleAvailable: !!serviceSupabase,
   };
+}
+
+/** Soft-delete newest MasterPoolAuto tasks past the cap for the current energy band (brain status update). */
+export async function trimAutoMasterMissionsToEnergyBand(
+  userId: string,
+  dateStr: string,
+  energy: number | null
+): Promise<{ removed: number }> {
+  const band = bandFor10Scale(energy ?? 5);
+  const { max } = getMissionCountRangeForEnergyBand(band);
+  const serviceSupabase = createServiceRoleClient();
+  const db = serviceSupabase ?? (await createClient());
+  const { data: rows } = await db
+    .from("tasks")
+    .select("id, created_at")
+    .eq("user_id", userId)
+    .eq("due_date", dateStr)
+    .eq("psychology_label", "MasterPoolAuto")
+    .is("parent_task_id", null)
+    .is("deleted_at", null)
+    .order("created_at", { ascending: false });
+  const list = (rows ?? []) as { id: string }[];
+  if (list.length <= max) return { removed: 0 };
+  const toRemove = list.slice(max);
+  const now = new Date().toISOString();
+  let removed = 0;
+  for (const r of toRemove) {
+    const { error } = await db.from("tasks").update({ deleted_at: now }).eq("id", r.id);
+    if (!error) removed++;
+  }
+  if (removed > 0) {
+    revalidateTagMax(`tasks-${userId}-${dateStr}`);
+    revalidatePath("/tasks");
+    revalidatePath("/dashboard");
+  }
+  return { removed };
 }
 
 /** Optional: add 1–2 bonus auto-missions for today after baseline is done. */
