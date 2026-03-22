@@ -200,6 +200,8 @@
 
 /* Mode-specific accents (applied anywhere inside the dashboard shell via data-mode) */
 [data-mode="war"] {
+  --nav-border-accent: rgba(248, 113, 113, 0.5);
+  --nav-glow: rgba(220, 38, 38, 0.14);
   --accent-primary: #dc2626;
   --accent-primary-dark: #991b1b;
   --accent-cyan: #f97373;
@@ -233,6 +235,8 @@
 }
 
 [data-mode="recovery"] {
+  --nav-border-accent: rgba(74, 222, 128, 0.48);
+  --nav-glow: rgba(34, 197, 94, 0.14);
   --accent-primary: #16a34a;
   --accent-primary-dark: #166534;
   --accent-cyan: #4ade80;
@@ -263,6 +267,24 @@
   --mode-bg-main: #041108;
   --mode-bg-elevated: #082012;
   --mode-bg-surface: #06180d;
+}
+
+/* Semantic accents (A.6): prefer var(--semantic-*) in new/updated UI; follows DCIC data-mode on <html>. */
+:root {
+  --semantic-accent: var(--accent-focus, #00d4ff);
+  --semantic-ring: var(--accent-focus, #00d4ff);
+}
+[data-mode="focus"] {
+  --semantic-accent: var(--accent-focus, #00d4ff);
+  --semantic-ring: var(--accent-focus, #00d4ff);
+}
+[data-mode="war"] {
+  --semantic-accent: var(--accent-primary);
+  --semantic-ring: #f87171;
+}
+[data-mode="recovery"] {
+  --semantic-accent: var(--accent-primary);
+  --semantic-ring: #4ade80;
 }
 
 @keyframes hudEnergyPulse {
@@ -1189,10 +1211,10 @@
   background: linear-gradient(180deg, rgba(10, 14, 28, 0.98) 0%, rgba(6, 10, 22, 0.99) 100%);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
-  border-top: 2px solid rgba(0, 212, 255, 0.4);
+  border-top: 2px solid var(--nav-border-accent);
   box-shadow:
     0 -4px 16px rgba(0, 0, 0, 0.4),
-    0 0 12px rgba(0, 212, 255, 0.08),
+    0 0 12px var(--nav-glow),
     inset 0 1px 0 rgba(255, 255, 255, 0.05);
   display: flex;
   align-items: stretch;
@@ -1280,9 +1302,15 @@
 }
 
 .nav-item.active {
-  color: #00d4ff;
-  background: linear-gradient(180deg, rgba(0, 212, 255, 0.12) 0%, rgba(0, 212, 255, 0.05) 100%);
-  box-shadow: inset 0 0 16px rgba(0, 212, 255, 0.08), 0 0 10px rgba(0, 212, 255, 0.15);
+  color: var(--semantic-accent, #00d4ff);
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--semantic-accent, #00d4ff) 12%, transparent) 0%,
+    color-mix(in srgb, var(--semantic-accent, #00d4ff) 5%, transparent) 100%
+  );
+  box-shadow:
+    inset 0 0 16px color-mix(in srgb, var(--semantic-accent, #00d4ff) 8%, transparent),
+    0 0 10px color-mix(in srgb, var(--semantic-accent, #00d4ff) 15%, transparent);
 }
 
 .nav-item.active::before {
@@ -1292,8 +1320,13 @@
   left: 0;
   right: 0;
   height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(0, 212, 255, 0.7), transparent);
-  box-shadow: 0 0 8px rgba(0, 212, 255, 0.5);
+  background: linear-gradient(
+    90deg,
+    transparent,
+    color-mix(in srgb, var(--semantic-accent, #00d4ff) 70%, transparent),
+    transparent
+  );
+  box-shadow: 0 0 8px color-mix(in srgb, var(--semantic-accent, #00d4ff) 50%, transparent);
 }
 
 .nav-item.active::after {
@@ -1305,20 +1338,20 @@
   width: 18px;
   height: 2px;
   border-radius: 1px;
-  background: #00d4ff;
-  box-shadow: 0 0 8px rgba(0, 212, 255, 0.8);
+  background: var(--semantic-accent, #00d4ff);
+  box-shadow: 0 0 8px color-mix(in srgb, var(--semantic-accent, #00d4ff) 80%, transparent);
 }
 
 .nav-item svg {
   width: 18px;
   height: 18px;
   flex-shrink: 0;
-  filter: drop-shadow(0 0 1px rgba(0, 212, 255, 0.1));
+  filter: drop-shadow(0 0 1px color-mix(in srgb, var(--semantic-accent, #00d4ff) 10%, transparent));
 }
 
 .nav-item.active svg {
-  color: #00d4ff;
-  filter: drop-shadow(0 0 4px rgba(0, 212, 255, 0.6));
+  color: var(--semantic-accent, #00d4ff);
+  filter: drop-shadow(0 0 4px color-mix(in srgb, var(--semantic-accent, #00d4ff) 60%, transparent));
 }
 
 .nav-item .nav-item-icon {
@@ -1326,11 +1359,11 @@
   height: 24px;
   flex-shrink: 0;
   opacity: 0.7;
-  filter: drop-shadow(0 0 1px rgba(0, 212, 255, 0.1));
+  filter: drop-shadow(0 0 1px color-mix(in srgb, var(--semantic-accent, #00d4ff) 10%, transparent));
 }
 .nav-item.active .nav-item-icon {
   opacity: 1;
-  filter: drop-shadow(0 0 4px rgba(0, 212, 255, 0.6));
+  filter: drop-shadow(0 0 4px color-mix(in srgb, var(--semantic-accent, #00d4ff) 60%, transparent));
 }
 
 .nav-item span {
@@ -2801,6 +2834,8 @@ header h1 { margin: 0; }
   --card-border: var(--border-soft);
   --accent-focus: var(--accent-primary);
   --accent-cta: var(--accent-primary);
+  --nav-border-accent: rgba(0, 212, 255, 0.4);
+  --nav-glow: rgba(0, 212, 255, 0.08);
   --accent-neutral: var(--border-soft);
   --text-on-accent: var(--bg-main);
 

@@ -37,3 +37,25 @@ export function getQuoteByDayNumber(dayOfYear: number): QuoteRow | null {
   const row = QUOTES_BY_ID[String(id)];
   return row ?? null;
 }
+
+/** Push/notification body: quote text plus author, total length capped (default 120). */
+export function formatQuoteForPushBody(row: QuoteRow | null, maxLen = 120): string {
+  const text = row?.quote_text ?? "Your daily focus.";
+  const authorRaw = row?.author_name?.trim();
+  if (!authorRaw) {
+    return text.length > maxLen ? `${text.slice(0, Math.max(0, maxLen - 1))}…` : text;
+  }
+  let author = authorRaw;
+  let suffix = ` — ${author}`;
+  if (text.length + suffix.length <= maxLen) return `${text}${suffix}`;
+  const maxAuthor = Math.min(author.length, Math.max(8, maxLen - 20));
+  if (author.length > maxAuthor) {
+    author = `${author.slice(0, maxAuthor - 1)}…`;
+    suffix = ` — ${author}`;
+  }
+  const budget = maxLen - suffix.length - 1;
+  if (budget < 12) {
+    return `${text.slice(0, Math.max(0, maxLen - suffix.length - 1))}…${suffix}`;
+  }
+  return `${text.slice(0, budget)}…${suffix}`;
+}

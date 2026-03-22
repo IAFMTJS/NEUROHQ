@@ -23,6 +23,7 @@
     "build:icons": "node scripts/generate-pwa-icons.js",
     "generate-vapid": "node scripts/generate-vapid-keys.js",
     "db:types": "node scripts/gen-db-types.js",
+    "import-protocols": "node scripts/import-protocols-json.mjs",
     "postinstall": "patch-package && node scripts/patch-three-stdlib-uv1.js"
   },
   "dependencies": {

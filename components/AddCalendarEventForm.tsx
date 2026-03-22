@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 import { addManualEvent } from "@/app/actions/calendar";
 
 function toLocalDateStr(d: Date): string {
@@ -21,6 +22,7 @@ export function AddCalendarEventForm({ date, hasGoogleToken = false, allowAnyDat
   const [end, setEnd] = useState(`${eventDate}T10:00`);
   const [isSocial, setIsSocial] = useState(false);
   const [syncToGoogle, setSyncToGoogle] = useState(false);
+  const [alsoAsTask, setAlsoAsTask] = useState(false);
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
@@ -44,9 +46,13 @@ export function AddCalendarEventForm({ date, hasGoogleToken = false, allowAnyDat
           end_at: endAt,
           is_social: isSocial,
           sync_to_google: hasGoogleToken && syncToGoogle,
+          also_create_task: alsoAsTask,
         });
         const dayLabel = startDate.toLocaleDateString("nl-NL", { weekday: "short", day: "numeric", month: "short" });
         setSuccess(`Agenda-item opgeslagen voor ${dayLabel}.`);
+        if (alsoAsTask) {
+          toast.success("Taak gekoppeld aan deze afspraak — check Missions voor vandaag.");
+        }
         setTitle("");
         setEventDate(date);
         setStart(`${date}T09:00`);
@@ -121,6 +127,17 @@ export function AddCalendarEventForm({ date, hasGoogleToken = false, allowAnyDat
       <label className="flex items-center gap-2">
         <input type="checkbox" checked={isSocial} onChange={(e) => setIsSocial(e.target.checked)} className="rounded border-[var(--card-border)] text-[var(--accent-focus)] focus:ring-[var(--accent-focus)]" />
         <span className="text-sm text-[var(--text-muted)]">Social (×1.5 energy)</span>
+      </label>
+      <label className="flex w-full max-w-md items-start gap-2">
+        <input
+          type="checkbox"
+          checked={alsoAsTask}
+          onChange={(e) => setAlsoAsTask(e.target.checked)}
+          className="mt-0.5 rounded border-[var(--card-border)] text-[var(--accent-focus)] focus:ring-[var(--accent-focus)]"
+        />
+        <span className="text-sm text-[var(--text-muted)]">
+          Ook als taak (zelfde dag in Missions; gekoppeld aan dit agenda-item)
+        </span>
       </label>
       {hasGoogleToken && (
         <label className="flex items-center gap-2">

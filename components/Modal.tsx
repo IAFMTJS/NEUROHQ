@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import Image from "next/image";
 
@@ -12,6 +12,8 @@ type Props = {
   title: string;
   /** Optional subtitle under the title */
   subtitle?: string;
+  /** Optional badge beside the title row (e.g. budget lock) */
+  headerBadge?: ReactNode;
   children: React.ReactNode;
   /** Optional footer (e.g. Cancel + Confirm buttons) – rendered in a fixed bar at bottom */
   footer?: React.ReactNode;
@@ -35,6 +37,7 @@ export function Modal({
   onClose,
   title,
   subtitle,
+  headerBadge,
   children,
   footer,
   showBranding = false,
@@ -118,11 +121,12 @@ export function Modal({
                 </p>
               )}
             </div>
+            {headerBadge ? <div className="shrink-0">{headerBadge}</div> : null}
           </div>
           <button
             type="button"
             onClick={onClose}
-            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[18px] border border-[var(--glass-border-soft)] text-[var(--text-muted)] transition-colors hover:border-[var(--accent-focus)] hover:bg-[var(--accent-focus)]/10 hover:text-[var(--text-primary)] hover:shadow-[0_0_12px_rgba(0,229,255,0.2)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-focus)]"
+            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[18px] border border-[var(--glass-border-soft)] text-[var(--text-muted)] transition-colors hover:border-[var(--semantic-accent)] hover:bg-[var(--semantic-accent)]/10 hover:text-[var(--text-primary)] hover:shadow-[0_0_12px_rgba(0,229,255,0.2)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--semantic-ring)]"
             aria-label="Close"
           >
             <span className="text-xl leading-none" aria-hidden>

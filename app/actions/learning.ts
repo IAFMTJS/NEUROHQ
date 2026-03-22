@@ -513,6 +513,26 @@ export async function addMonthlyBook(title: string, totalPages?: number | null) 
   return setMonthlyBook(title, nextSlot, totalPages);
 }
 
+export async function updateMonthlyBookTitle(id: string, title: string) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error("Not authenticated");
+  const { error } = await supabase.from("monthly_books").update({ title: title.trim() }).eq("id", id).eq("user_id", user.id);
+  if (error) throw new Error(error.message);
+  revalidatePath("/learning");
+  revalidatePath("/dashboard");
+}
+
+export async function deleteMonthlyBook(id: string) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error("Not authenticated");
+  const { error } = await supabase.from("monthly_books").delete().eq("id", id).eq("user_id", user.id);
+  if (error) throw new Error(error.message);
+  revalidatePath("/learning");
+  revalidatePath("/dashboard");
+}
+
 export async function completeMonthlyBook(bookId?: string) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();

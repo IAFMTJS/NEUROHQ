@@ -4,7 +4,16 @@ import type { FC } from "react";
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import type { LearningStream } from "@/app/actions/learning-state";
-import { addLearningSession, setMonthlyBookPagesRead } from "@/app/actions/learning";
+import {
+  addLearningSession,
+  setMonthlyBookPagesRead,
+  deleteEducationOption,
+  deleteMonthlyBook,
+  updateEducationOption,
+  updateMonthlyBookTitle,
+} from "@/app/actions/learning";
+import { toast } from "sonner";
+import { Modal } from "@/components/Modal";
 
 type Props = {
   streams: LearningStream[];
@@ -14,6 +23,9 @@ export const GrowthStreamsList: FC<Props> = ({ streams }) => {
   const router = useRouter();
   const [pendingId, startTransition] = useTransition();
   const [pagesInput, setPagesInput] = useState<Record<string, string>>({});
+  const [deleteTarget, setDeleteTarget] = useState<LearningStream | null>(null);
+  const [editTarget, setEditTarget] = useState<LearningStream | null>(null);
+  const [editTitle, setEditTitle] = useState("");
 
   async function handleStartSession(stream: LearningStream) {
     const today = new Date().toISOString().slice(0, 10);
@@ -53,6 +65,78 @@ export const GrowthStreamsList: FC<Props> = ({ streams }) => {
 
   return (
     <section className="card-simple">
+      {editTarget && (
+        <Modal open title="Stream hernoemen" onClose={() => setEditTarget(null)}>
+          <div className="space-y-3">
+            <label className="block text-sm text-[var(--text-muted)]">
+              Titel
+              <input
+                value={editTitle}
+                onChange={(e) => setEditTitle(e.target.value)}
+                className="mt-1 w-full rounded-lg border border-[var(--card-border)] bg-[var(--bg-primary)] px-3 py-2 text-sm text-[var(--text-primary)]"
+              />
+            </label>
+            <button
+              type="button"
+              className="btn-primary rounded-lg px-4 py-2 text-sm"
+              onClick={() => {
+                const t = editTitle.trim();
+                if (!t) return;
+                startTransition(async () => {
+                  try {
+                    if (editTarget.type === "skill") {
+                      await updateEducationOption(editTarget.id, { name: t });
+                    } else {
+                      await updateMonthlyBookTitle(editTarget.id, t);
+                    }
+                    toast.success("Stream bijgewerkt.");
+                    setEditTarget(null);
+                    router.refresh();
+                  } catch (e) {
+                    toast.error(e instanceof Error ? e.message : "Opslaan mislukt.");
+                  }
+                });
+              }}
+            >
+              Opslaan
+            </button>
+          </div>
+        </Modal>
+      )}
+      {deleteTarget && (
+        <Modal open title="Stream verwijderen?" onClose={() => setDeleteTarget(null)}>
+          <p className="text-sm text-[var(--text-secondary)]">
+            <strong>{deleteTarget.title}</strong> verwijderen? Dit kan niet ongedaan worden.
+          </p>
+          <div className="mt-4 flex gap-2">
+            <button type="button" className="rounded-lg border border-[var(--card-border)] px-3 py-2 text-sm" onClick={() => setDeleteTarget(null)}>
+              Annuleren
+            </button>
+            <button
+              type="button"
+              className="rounded-lg bg-rose-600/90 px-3 py-2 text-sm font-semibold text-white"
+              onClick={() => {
+                startTransition(async () => {
+                  try {
+                    if (deleteTarget.type === "skill") {
+                      await deleteEducationOption(deleteTarget.id);
+                    } else {
+                      await deleteMonthlyBook(deleteTarget.id);
+                    }
+                    toast.success("Stream verwijderd.");
+                    setDeleteTarget(null);
+                    router.refresh();
+                  } catch (e) {
+                    toast.error(e instanceof Error ? e.message : "Verwijderen mislukt.");
+                  }
+                });
+              }}
+            >
+              Verwijderen
+            </button>
+          </div>
+        </Modal>
+      )}
       <div className="flex items-center justify-between gap-2 mb-3">
         <div>
           <h2 className="text-base font-semibold text-[var(--text-primary)]">Learning streams</h2>
@@ -134,14 +218,35 @@ export const GrowthStreamsList: FC<Props> = ({ streams }) => {
                   </div>
                 )}
               </div>
-              <button
-                type="button"
-                onClick={() => handleStartSession(stream)}
-                disabled={!!pendingId}
-                className="shrink-0 rounded-lg border border-[var(--card-border)] bg-[var(--bg-primary)] px-3 py-1.5 text-xs font-semibold text-[var(--text-primary)] hover:border-[var(--accent-focus)] hover:text-[var(--accent-focus)] disabled:opacity-50"
-              >
-                {pendingId ? "Deploying…" : "Engage session"}
-              </button>
+              <div className="flex shrink-0 flex-col gap-1.5">
+                <button
+                  type="button"
+                  onClick={() => handleStartSession(stream)}
+                  disabled={!!pendingId}
+                  className="rounded-lg border border-[var(--card-border)] bg-[var(--bg-primary)] px-3 py-1.5 text-xs font-semibold text-[var(--text-primary)] hover:border-[var(--accent-focus)] hover:text-[var(--accent-focus)] disabled:opacity-50"
+                >
+                  {pendingId ? "Deploying…" : "Engage session"}
+                </button>
+                <div className="flex gap-1">
+                  <button
+                    type="button"
+                    className="rounded px-2 py-0.5 text-[10px] text-[var(--text-muted)] hover:text-[var(--accent-focus)]"
+                    onClick={() => {
+                      setEditTarget(stream);
+                      setEditTitle(stream.title);
+                    }}
+                  >
+                    Edit
+                  </button>
+                  <button
+                    type="button"
+                    className="rounded px-2 py-0.5 text-[10px] text-rose-400/90 hover:text-rose-300"
+                    onClick={() => setDeleteTarget(stream)}
+                  >
+                    Delete
+                  </button>
+                </div>
+              </div>
             </div>
           );
         })}

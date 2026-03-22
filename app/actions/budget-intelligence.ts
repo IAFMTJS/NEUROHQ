@@ -375,8 +375,19 @@ export async function validateAndCompleteBudgetOptimizationChallenge(
         .gte("date", from)
         .lte("date", to);
       const rows = (entries ?? []) as Array<{ is_planned?: boolean | null; amount_cents: number }>;
+      if (rows.length === 0) {
+        return {
+          awardedXp: 0,
+          message:
+            "Nog geen uitgaven gelogd in de laatste 14 dagen. Blijf loggen — dan kunnen we deze challenge valideren.",
+        };
+      }
       if (rows.length < 8) {
-        return { awardedXp: 0, message: "Nog te weinig transacties in de laatste 14 dagen voor betrouwbare validatie." };
+        return {
+          awardedXp: 0,
+          message:
+            "Nog weinig transacties voor een harde meting — log een paar dagen door, dan wordt dit betrouwbaar.",
+        };
       }
       const total = rows.reduce((sum, r) => sum + Math.abs(r.amount_cents), 0);
       const unplanned = rows

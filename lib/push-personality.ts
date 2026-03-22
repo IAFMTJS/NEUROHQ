@@ -6,6 +6,8 @@
 
 import type { PushPayload } from "@/lib/push";
 import type { PersonalityMode } from "@/lib/behavioral-notifications";
+import { pickVariantIndex } from "@/lib/push-copy-variant";
+import type { PushCopyDedupe } from "@/lib/push-copy-dedupe";
 
 export type PushContext =
   | "quote"
@@ -19,34 +21,87 @@ export type PushContext =
   | "savings_alert"
   | "generic";
 
-function randomFrom<T>(arr: T[]): T {
-  return arr[Math.floor(Math.random() * arr.length)];
-}
-
-/** Chaos: pick randomly from multiple extreme variants so it feels unpredictable. */
-function chaosTitle(titles: string[]): string {
-  return randomFrom(titles);
-}
-
 /**
  * Rewrite a push payload's title (and optionally body) so it matches the user's notification personality.
  * Used for quote, calendar, morning, evening, weekly learning — i.e. all non-behavioral pushes.
+ * When `variantSeed` is set (e.g. `${userId}:${localDate}`), title/body pools pick a stable variant per day.
+ * Optional `dedupe` avoids repeating the same pool index within a sliding day window (A.2).
  */
+export type ApplyPersonalityOptions = {
+  dedupe?: PushCopyDedupe;
+};
+
 export function applyPersonalityToPayload(
   payload: PushPayload,
   personalityMode: PersonalityMode,
-  context: PushContext
+  context: PushContext,
+  variantSeed?: string,
+  options?: ApplyPersonalityOptions
 ): PushPayload {
   const title = payload.title ?? "NEUROHQ";
   const body = payload.body ?? "";
+  const dedupe = options?.dedupe;
+
+  const pickStr = (arr: string[], salt: string): string => {
+    if (!arr.length) return "";
+    const poolKey = `${context}:${personalityMode}:${salt}`;
+    const seedBase =
+      variantSeed != null && variantSeed !== ""
+        ? `${variantSeed}:${context}:${salt}`
+        : `rnd:${context}:${salt}:${Math.random().toString(36).slice(2)}`;
+    let idx: number;
+    if (dedupe) {
+      idx = dedupe.pickIndex(arr.length, poolKey, seedBase);
+    } else {
+      idx =
+        variantSeed != null && variantSeed !== ""
+          ? pickVariantIndex(`${variantSeed}:${context}:${salt}`, arr.length)
+          : Math.floor(Math.random() * arr.length);
+    }
+    return arr[idx] ?? arr[0]!;
+  };
 
   switch (context) {
     case "quote": {
       const titles: Record<PersonalityMode, string[]> = {
-        stoic: ["Focus.", "Awareness.", "One thought.", "—"],
-        friendly: ["Your daily nudge 💛", "A thought for you", "Good morning — here's your quote"],
-        coach: ["Daily focus", "One line to set the tone", "Quote of the day"],
-        drill: ["Read. Then move.", "Daily brief.", "Focus — then execute. No excuses."],
+        stoic: [
+          "Focus.",
+          "Awareness.",
+          "One thought.",
+          "—",
+          "Stillness.",
+          "Observe.",
+          "Breathe. Read.",
+          "One line.",
+        ],
+        friendly: [
+          "Your daily nudge 💛",
+          "A thought for you",
+          "Good morning — here's your quote",
+          "Tiny spark for today ✨",
+          "We're rooting for you",
+          "A gentle nudge",
+          "Soft reminder",
+          "Hope this lands well",
+        ],
+        coach: [
+          "Daily focus",
+          "One line to set the tone",
+          "Quote of the day",
+          "Start with this",
+          "Today's line",
+          "Set the tone",
+          "Brief. Then act.",
+          "Your opening move",
+        ],
+        drill: [
+          "Read. Then move.",
+          "Daily brief.",
+          "Focus — then execute. No excuses.",
+          "Line in. Work out.",
+          "No drift. Read this.",
+          "Quote. Then execute.",
+        ],
         chaos: [
           "⚠️ WISDOM INCOMING ⚠️",
           "RANDOM QUOTE. TAKE IT OR LEAVE IT.",
@@ -54,11 +109,15 @@ export function applyPersonalityToPayload(
           "QUOTE O' THE DAY (YES REALLY)",
           "INCOMING: ONE (1) THOUGHT 💥",
           "YOUR DAILY DOSE OF ???",
+          "QUOTE DROP 💥",
+          "BRAIN SNACK INCOMING",
+          "DAILY WORD SALAD",
+          "HERE. READ. MOVE ON.",
         ],
-        auto: ["NEUROHQ", "Daily focus", "NEUROHQ"],
+        auto: ["NEUROHQ", "Daily focus", "NEUROHQ", "Today's quote", "NEUROHQ — Daily", "One line"],
       };
-      const options = titles[personalityMode] ?? titles.auto;
-      return { ...payload, title: randomFrom(options), body: body || payload.body };
+      const titlePool = titles[personalityMode] ?? titles.auto;
+      return { ...payload, title: pickStr(titlePool, "quote:title"), body: body || payload.body };
     }
 
     case "calendar_morning": {
@@ -72,7 +131,7 @@ export function applyPersonalityToPayload(
         friendly: "What's on today 💛",
         coach: "Today's schedule",
         drill: "Today. Be there. No skip.",
-        chaos: chaosTitle(chaosTitles),
+        chaos: pickStr(chaosTitles, "calendar_morning:chaosTitle"),
         auto: "NEUROHQ — Today",
       };
       const bodyTemplates: Record<PersonalityMode, (s: string) => string> = {
@@ -80,11 +139,15 @@ export function applyPersonalityToPayload(
         friendly: (s) => `${s} — you've got this.`,
         coach: (s) => `${s}. Plan your blocks.`,
         drill: (s) => s,
-        chaos: (s) => randomFrom([
-          `${s.toUpperCase()} ← DON'T FORGET. WE'RE WATCHING.`,
-          `${s} (yes, really, today)`,
-          `REMINDER: ${s.toUpperCase()} 🔔`,
-        ]),
+        chaos: (s) =>
+          pickStr(
+            [
+              `${s.toUpperCase()} ← DON'T FORGET. WE'RE WATCHING.`,
+              `${s} (yes, really, today)`,
+              `REMINDER: ${s.toUpperCase()} 🔔`,
+            ],
+            "calendar_morning:chaosBody"
+          ),
         auto: (s) => s,
       };
       const t = bodyTemplates[personalityMode] ?? bodyTemplates.auto;
@@ -106,7 +169,7 @@ export function applyPersonalityToPayload(
         friendly: "Starting soon 💛",
         coach: "Up next",
         drill: "Event. Now. Move.",
-        chaos: chaosTitle(chaosReminderTitles),
+        chaos: pickStr(chaosReminderTitles, "calendar_reminder:chaosTitle"),
         auto: "NEUROHQ — Calendar",
       };
       const bodyTemplates: Record<PersonalityMode, (s: string) => string> = {
@@ -114,11 +177,15 @@ export function applyPersonalityToPayload(
         friendly: (s) => `Starting soon: ${s}. You're on it.`,
         coach: (s) => `${s} — time to switch context.`,
         drill: (s) => s,
-        chaos: (s) => randomFrom([
-          `${s.toUpperCase()} ← GO. NOW.`,
-          `THIS IS YOUR SIGN: ${s}`,
-          `${s} … unless you're gonna no-show. 🙃`,
-        ]),
+        chaos: (s) =>
+          pickStr(
+            [
+              `${s.toUpperCase()} ← GO. NOW.`,
+              `THIS IS YOUR SIGN: ${s}`,
+              `${s} … unless you're gonna no-show. 🙃`,
+            ],
+            "calendar_reminder:chaosBody"
+          ),
         auto: (s) => s,
       };
       const t = bodyTemplates[personalityMode] ?? bodyTemplates.auto;
@@ -135,13 +202,19 @@ export function applyPersonalityToPayload(
         "GOOD MORNING. (WE SAID IT. YOU DO THE REST.)",
         "WAKE UP. WE HAVE TASKS. ⚡",
         "MORNING BRIEF: YOU HAVE THINGS TO DO.",
+        "RISE. SHINE. EXECUTE. (OR DON'T. WE'LL ASK AGAIN.)",
+        "COFFEE OPTIONAL. MISSIONS NOT OPTIONAL. ☕⚡",
+        "NEW DAY. SAME BRAIN. DIFFERENT CHAOS.",
+        "ALERT: SUNLIGHT DETECTED. HUMAN ACTIVITY EXPECTED.",
+        "BRIEFING: YOU'RE AWAKE. CONGRATS. NOW WORK.",
+        "MORNING PROTOCOL INITIATED. GOOD LUCK.",
       ];
       const titleByPersonality: Record<PersonalityMode, string> = {
         stoic: "Morning.",
         friendly: "Good morning! 💛",
         coach: "Morning brief",
         drill: "Up. Missions waiting. No delay.",
-        chaos: chaosTitle(chaosMorningTitles),
+        chaos: pickStr(chaosMorningTitles, "morning:chaosTitle"),
         auto: "NEUROHQ — Morning",
       };
       const bodyByPersonality: Record<PersonalityMode, (b: string) => string> = {
@@ -151,11 +224,14 @@ export function applyPersonalityToPayload(
         drill: (b) => b.replace(/^Good morning\.?\s*/i, "").replace(/ mission\(s\)/i, " missions").replace(/ Set your brain status first\.?/i, " Log brain status. Now.") || b,
         chaos: (b) => {
           const n = (b.match(/\d+/)?.[0]) ?? "0";
-          return randomFrom([
-            b.toUpperCase().replace(/ GOOD MORNING\.?/i, "").replace(/\.$/, " 🔥"),
-            `${n} MISSION(S) LOADED. BRAIN STATUS? OPTIONAL. (JK. SET IT.)`,
-            `YOU HAVE THINGS. WE HAVE NOTIFICATIONS. COINCIDENCE? … NO.`,
-          ]);
+          return pickStr(
+            [
+              b.toUpperCase().replace(/ GOOD MORNING\.?/i, "").replace(/\.$/, " 🔥"),
+              `${n} MISSION(S) LOADED. BRAIN STATUS? OPTIONAL. (JK. SET IT.)`,
+              `YOU HAVE THINGS. WE HAVE NOTIFICATIONS. COINCIDENCE? … NO.`,
+            ],
+            "morning:chaosBody"
+          );
         },
         auto: (b) => b,
       };
@@ -172,13 +248,18 @@ export function applyPersonalityToPayload(
         "📊 EVENING AUDIT. THE SYSTEM DEMANDS INPUT.",
         "DAY'S END. WHAT DID YOU EVEN DO?",
         "NIGHT CHECK. LOG IT OR LIE TO YOURSELF. 🕐",
+        "EVENING ROLL CALL. ACCOUNTABILITY O'CLOCK.",
+        "SUNSET = STATS TIME. DON'T @ ME.",
+        "CLOSE THE LOOP. OR OPEN IT TOMORROW. YOUR CALL.",
+        "DAY COMPLETE? DEBATABLE. LOG ANYWAY.",
+        "NIGHT MODE: REFLECT, DON'T DEFLECT.",
       ];
       const titleByPersonality: Record<PersonalityMode, string> = {
         stoic: "Evening.",
         friendly: "Evening check-in 💛",
         coach: "Evening brief",
         drill: "Day's end. Log it. Full report.",
-        chaos: chaosTitle(chaosEveningTitles),
+        chaos: pickStr(chaosEveningTitles, "evening:chaosTitle"),
         auto: "NEUROHQ — Evening",
       };
       const bodyByPersonality: Record<PersonalityMode, (b: string) => string> = {
@@ -186,11 +267,15 @@ export function applyPersonalityToPayload(
         friendly: (b) => b,
         coach: (b) => b.replace(/Quick check-in before bed\?/i, "Quick log before bed?").replace(/ — /g, ". ") || b,
         drill: (b) => b.replace(/Evening check-in:?/gi, "Report:").replace(/\?/g, ".") || b,
-        chaos: (b) => randomFrom([
-          b.toUpperCase().replace(/EVENING/gi, "EVENING").replace(/CHECK-IN/gi, "CHECK-IN") + " 📊",
-          b.replace(/evening/gi, "EVENING").replace(/check-in/gi, "THE SYSTEM'S POLITE WAY OF SAYING LOG YOUR STUFF") || b,
-          `WRAP UP: ${b.toUpperCase()}`,
-        ]),
+        chaos: (b) =>
+          pickStr(
+            [
+              b.toUpperCase().replace(/EVENING/gi, "EVENING").replace(/CHECK-IN/gi, "CHECK-IN") + " 📊",
+              b.replace(/evening/gi, "EVENING").replace(/check-in/gi, "THE SYSTEM'S POLITE WAY OF SAYING LOG YOUR STUFF") || b,
+              `WRAP UP: ${b.toUpperCase()}`,
+            ],
+            "evening:chaosBody"
+          ),
         auto: (b) => b,
       };
       const fn = bodyByPersonality[personalityMode] ?? bodyByPersonality.auto;
@@ -212,7 +297,7 @@ export function applyPersonalityToPayload(
         friendly: "Weekly learning 💛",
         coach: "Learning recap",
         drill: "Learning report. Plan next. No skip.",
-        chaos: chaosTitle(chaosLearningTitles),
+        chaos: pickStr(chaosLearningTitles, "weekly_learning:chaosTitle"),
         auto: "NEUROHQ — Learning",
       };
       const bodyByPersonality: Record<PersonalityMode, (b: string) => string> = {
@@ -220,11 +305,15 @@ export function applyPersonalityToPayload(
         friendly: (b) => b,
         coach: (b) => b.replace(/Plan a learning block this week\.?/i, "Schedule one learning block this week.") || b,
         drill: (b) => b.replace(/\. /g, ". ").replace(/Plan a learning block this week\.?/i, "Block time this week.") || b,
-        chaos: (b) => randomFrom([
-          b.toUpperCase() + " 📚",
-          b.replace(/Last week/i, "LAST WEEK (yes we're counting)").replace(/Plan a learning block/i, "PLAN A BLOCK. OR DON'T. WE'RE JUST SAYING.") || b,
-          `LEARNING STATS: ${b.toUpperCase()}`,
-        ]),
+        chaos: (b) =>
+          pickStr(
+            [
+              b.toUpperCase() + " 📚",
+              b.replace(/Last week/i, "LAST WEEK (yes we're counting)").replace(/Plan a learning block/i, "PLAN A BLOCK. OR DON'T. WE'RE JUST SAYING.") || b,
+              `LEARNING STATS: ${b.toUpperCase()}`,
+            ],
+            "weekly_learning:chaosBody"
+          ),
         auto: (b) => b,
       };
       const fn = bodyByPersonality[personalityMode] ?? bodyByPersonality.auto;
@@ -246,7 +335,7 @@ export function applyPersonalityToPayload(
         friendly: "Frozen purchase ready 💛",
         coach: "Frozen purchase — confirm or cancel",
         drill: "Frozen purchase. Confirm or cancel. Now.",
-        chaos: chaosTitle(chaosFreezeTitles),
+        chaos: pickStr(chaosFreezeTitles, "freeze_reminder:chaosTitle"),
         auto: "NEUROHQ — Frozen purchase",
       };
       return { ...payload, title: titleByPersonality[personalityMode] ?? titleByPersonality.auto };
@@ -263,7 +352,7 @@ export function applyPersonalityToPayload(
         friendly: "Tasks carried over — pick one when you're ready 💛",
         coach: "Carried-over tasks: pick one to focus on.",
         drill: "Carry-over. Pick one. Now. No excuses.",
-        chaos: chaosTitle(chaosAvoidTitles),
+        chaos: pickStr(chaosAvoidTitles, "avoidance_alert:chaosTitle"),
         auto: "NEUROHQ",
       };
       const bodyByPersonality: Record<PersonalityMode, (b: string) => string> = {
@@ -271,11 +360,15 @@ export function applyPersonalityToPayload(
         friendly: (b) => b,
         coach: (b) => b,
         drill: (b) => b.replace(/Pick one to focus on\.?/i, "Pick one. Execute.") || b,
-        chaos: (b) => randomFrom([
-          b.toUpperCase() + " ← YOUR MOVE.",
-          b.replace(/Pick one to focus on/i, "Pick one. We're serious.") || b,
-          `${b.toUpperCase()} (YES, AGAIN.)`,
-        ]),
+        chaos: (b) =>
+          pickStr(
+            [
+              b.toUpperCase() + " ← YOUR MOVE.",
+              b.replace(/Pick one to focus on/i, "Pick one. We're serious.") || b,
+              `${b.toUpperCase()} (YES, AGAIN.)`,
+            ],
+            "avoidance_alert:chaosBody"
+          ),
         auto: (b) => b,
       };
       const fn = bodyByPersonality[personalityMode] ?? bodyByPersonality.auto;
@@ -297,7 +390,7 @@ export function applyPersonalityToPayload(
         friendly: "Savings goal reminder 💛",
         coach: "Savings goal — check progress.",
         drill: "Savings. Deadline ahead. Move.",
-        chaos: chaosTitle(chaosSavingsTitles),
+        chaos: pickStr(chaosSavingsTitles, "savings_alert:chaosTitle"),
         auto: "NEUROHQ — Savings",
       };
       return { ...payload, title: titleByPersonality[personalityMode] ?? titleByPersonality.auto };

@@ -12,33 +12,45 @@ type Props = {
 export function BudgetOverviewLockGate({ lockActive, lockUntil, children }: Props) {
   if (!lockActive) return <>{children}</>;
   return (
-    <div className="relative">
-      <div className="pointer-events-none select-none opacity-[0.38] [&_a]:pointer-events-none [&_button]:pointer-events-none">
-        {children}
-      </div>
+    <div className="space-y-2">
       <div
-        className="pointer-events-auto absolute inset-0 z-[5] flex min-h-[240px] items-center justify-center rounded-xl border-2 border-dashed border-amber-500/55 bg-[var(--bg-primary)]/88 p-6 text-center shadow-[0_0_40px_rgba(245,158,11,0.15)] backdrop-blur-sm"
+        className="sticky top-0 z-20 flex flex-wrap items-center justify-between gap-2 rounded-lg border border-amber-500/50 bg-amber-500/15 px-3 py-2 text-sm text-amber-100 shadow-sm backdrop-blur-sm"
         role="status"
         aria-live="polite"
       >
-        <div className="max-w-sm space-y-2">
-          <p className="text-3xl" aria-hidden>
-            🔒
-          </p>
-          <p className="text-base font-bold uppercase tracking-[0.12em] text-amber-200">No-spend lock</p>
-          {lockUntil ? (
-            <p className="text-xs text-[var(--text-muted)]">Actief tot {lockUntil}</p>
-          ) : null}
-          <p className="text-sm text-[var(--text-secondary)]">
-            Snel loggen en budget-acties in dit overzicht zijn geblokkeerd. Voor een nooduitgave gebruik je het budget-lock-paneel
-            onderaan.
-          </p>
-          <a
-            href="#budget-lock-control"
-            className="inline-block rounded-lg bg-[var(--accent-focus)]/20 px-3 py-2 text-xs font-semibold text-[var(--accent-focus)] hover:bg-[var(--accent-focus)]/30"
-          >
-            Naar nooduitgave / lock
-          </a>
+        <span className="font-semibold">
+          No-spend lock{lockUntil ? ` · tot ${lockUntil}` : ""}
+        </span>
+        <a
+          href="#budget-lock-control"
+          className="shrink-0 rounded-md bg-[var(--accent-focus)]/25 px-2.5 py-1 text-xs font-semibold text-[var(--accent-focus)] hover:bg-[var(--accent-focus)]/35"
+        >
+          Nooduitgave / lock
+        </a>
+      </div>
+      <div className="relative">
+        <div className="pointer-events-none select-none opacity-[0.38] [&_a]:pointer-events-none [&_button]:pointer-events-none">
+          {children}
+        </div>
+        <div
+          className="pointer-events-auto absolute inset-0 z-[5] flex min-h-[180px] items-start justify-center rounded-xl border-2 border-dashed border-amber-500/45 bg-[var(--bg-primary)]/82 pt-6 text-center shadow-[0_0_32px_rgba(245,158,11,0.12)] backdrop-blur-sm sm:pt-10"
+          role="presentation"
+        >
+          <div className="max-w-sm space-y-2 px-4">
+            <p className="text-2xl" aria-hidden>
+              🔒
+            </p>
+            <p className="text-sm font-bold uppercase tracking-[0.12em] text-amber-200">Overzicht geblokkeerd</p>
+            <p className="text-xs text-[var(--text-secondary)]">
+              Log snel uitgaven en budget-acties hier zijn gepauzeerd. Gebruik het paneel hieronder voor een noodpad.
+            </p>
+            <a
+              href="#budget-lock-control"
+              className="inline-block rounded-lg bg-[var(--accent-focus)]/20 px-3 py-2 text-xs font-semibold text-[var(--accent-focus)] hover:bg-[var(--accent-focus)]/30"
+            >
+              Naar nooduitgave
+            </a>
+          </div>
         </div>
       </div>
     </div>

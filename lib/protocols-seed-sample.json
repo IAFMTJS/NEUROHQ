@@ -1,0 +1,18 @@
+[
+  {
+    "slug": "protocol-sample-focus",
+    "locale": "nl",
+    "title": "Voorbeeld: focus-blok (stub)",
+    "summary": "Placeholder protocol voor import-test.",
+    "body_md": "## Stap 1\n\nKorte sessie; gebruik dit als sjabloon voor echte protocolcontent.",
+    "sort_order": 1
+  },
+  {
+    "slug": "protocol-sample-recovery",
+    "locale": "nl",
+    "title": "Voorbeeld: recovery pacing (stub)",
+    "summary": "Placeholder voor D.3 contentbibliotheek.",
+    "body_md": "## Recovery\n\nAdem, verlaag belasting, evalueer morgen opnieuw.",
+    "sort_order": 2
+  }
+]

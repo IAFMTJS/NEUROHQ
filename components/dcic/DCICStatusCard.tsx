@@ -1,15 +1,26 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import type { GameState } from "@/lib/dcic/types";
+import { Modal } from "@/components/Modal";
+import { DcicModeHelpContent } from "@/components/dcic/DcicModeHelpContent";
+import { readDCICModeOverride } from "@/lib/dcic/dcic-mode-override";
 
 type Status = "idle" | "loading" | "ready" | "error";
 
 type Props = {
   gameState: GameState | null;
   status: Status;
+  /** When true, daily brain check-in is missing — mode suggestions are less reliable. */
+  brainStateMissing?: boolean;
 };
 
-export function DCICStatusCard({ gameState, status }: Props) {
+export function DCICStatusCard({ gameState, status, brainStateMissing }: Props) {
+  const [modeHelpOpen, setModeHelpOpen] = useState(false);
+  const [storedOverride, setStoredOverride] = useState<ReturnType<typeof readDCICModeOverride>>(null);
+  useEffect(() => {
+    setStoredOverride(readDCICModeOverride());
+  }, [modeHelpOpen, gameState?.mode?.current]);
   const loading = status === "loading" && !gameState;
 
   if (status === "error" && !gameState) {
@@ -24,6 +35,10 @@ export function DCICStatusCard({ gameState, status }: Props) {
   const streakLongest = gameState?.streak.longest;
   const energy = gameState?.stats.energy;
   const focus = gameState?.stats.focus;
+  const manualOverrideActive = !!storedOverride && storedOverride.mode !== "focus";
+  const suggestionDiffersFromCurrent =
+    !!gameState?.mode?.suggested &&
+    gameState.mode.suggested !== gameState.mode.current;
 
   return (
     <section
@@ -105,17 +120,46 @@ export function DCICStatusCard({ gameState, status }: Props) {
           )}
         </div>
       </div>
-      {!loading && gameState?.mode?.suggested && (
-        <p className="border-t border-[var(--card-border)] px-4 py-2 text-xs text-[var(--text-muted)]">
-          Brain status suggereert vandaag:{" "}
-          <strong className="text-[var(--text-secondary)]">
-            {gameState.mode.suggested === "war" ? "War-modus (hoge capaciteit)" : "Recovery-modus"}
-          </strong>
-          {gameState.mode.current === "focus" && gameState.mode.suggested === "war"
-            ? " — activeer War in je missie-flow als je er klaar voor bent."
-            : null}
-        </p>
+      {!loading && gameState?.mode && (
+        <div className="space-y-2 border-t border-[var(--card-border)] px-4 py-2">
+          <p className="text-xs text-[var(--text-muted)]">
+            Actieve modus:{" "}
+            <strong className="text-[var(--text-secondary)]">
+              {gameState.mode.current === "war"
+                ? "War"
+                : gameState.mode.current === "recovery"
+                  ? "Recovery"
+                  : "Focus"}
+            </strong>
+            <button
+              type="button"
+              className="ml-2 inline-flex h-5 w-5 items-center justify-center rounded-full border border-[var(--card-border)] text-[10px] font-bold text-[var(--text-muted)] hover:border-[var(--accent-focus)] hover:text-[var(--accent-focus)]"
+              aria-label="Uitleg modus"
+              onClick={() => setModeHelpOpen(true)}
+            >
+              ?
+            </button>
+          </p>
+          {gameState.mode.suggested ? (
+            <p className="text-xs text-[var(--text-muted)]">
+              Brain status suggereert vandaag:{" "}
+              <strong className="text-[var(--text-secondary)]">
+                {gameState.mode.suggested === "war" ? "War-modus (hoge capaciteit)" : "Recovery-modus"}
+              </strong>
+              {gameState.mode.current === "focus" && gameState.mode.suggested === "war"
+                ? " — activeer War in je missie-flow als je er klaar voor bent."
+                : null}
+            </p>
+          ) : null}
+        </div>
       )}
+      <Modal open={modeHelpOpen} onClose={() => setModeHelpOpen(false)} title="Focus, War en Recovery">
+        <DcicModeHelpContent
+          brainStateMissing={brainStateMissing}
+          manualOverrideActive={manualOverrideActive}
+          suggestionDiffersFromCurrent={suggestionDiffersFromCurrent}
+        />
+      </Modal>
     </section>
   );
 }

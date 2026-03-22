@@ -7,6 +7,7 @@ import {
   createGoogleCalendarEvent,
   deleteGoogleCalendarEvent,
 } from "@/lib/calendar-google";
+import { createTask } from "@/app/actions/tasks";
 
 export async function getCalendarEventsForDate(date: string) {
   const supabase = await createClient();
@@ -49,6 +50,8 @@ export async function addManualEvent(params: {
   end_at: string;
   is_social?: boolean;
   sync_to_google?: boolean;
+  /** When true, creates a mission on the event’s local day and links it on the calendar row. */
+  also_create_task?: boolean;
 }) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
@@ -78,17 +81,108 @@ export async function addManualEvent(params: {
     }
   }
 
-  const { error } = await supabase.from("calendar_events").insert({
-    user_id: user.id,
-    title: params.title,
-    start_at: params.start_at,
-    end_at: params.end_at,
-    duration_hours: Math.round(duration_hours * 100) / 100,
-    is_social: params.is_social ?? false,
-    source,
-    external_id,
-  });
+  const { data: inserted, error } = await supabase
+    .from("calendar_events")
+    .insert({
+      user_id: user.id,
+      title: params.title,
+      start_at: params.start_at,
+      end_at: params.end_at,
+      duration_hours: Math.round(duration_hours * 100) / 100,
+      is_social: params.is_social ?? false,
+      source,
+      external_id,
+    })
+    .select("id")
+    .single();
   if (error) throw new Error(error.message);
+
+  if (params.also_create_task && inserted?.id) {
+    const dueDate = start.toISOString().slice(0, 10);
+    const created = await createTask({
+      title: params.title.trim(),
+      due_date: dueDate,
+      notes: "Gekoppeld aan deze agenda-afspraak.",
+      category: "personal",
+    });
+    if (created.id) {
+      await supabase.from("calendar_events").update({ linked_task_id: created.id }).eq("id", inserted.id).eq("user_id", user.id);
+    }
+  }
+
+  revalidatePath("/dashboard");
+  revalidatePath("/tasks");
+  revalidatePath("/budget");
+}
+
+export async function updateManualEvent(params: {
+  id: string;
+  title: string;
+  start_at: string;
+  end_at: string;
+  is_social?: boolean;
+  /** When true, ensure a linked mission task exists (creates one if missing). When false, clears `linked_task_id` (task rows are kept). */
+  link_task?: boolean;
+}) {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) throw new Error("Not authenticated");
+
+  const { data: row, error: fetchErr } = await supabase
+    .from("calendar_events")
+    .select("id, linked_task_id, source")
+    .eq("id", params.id)
+    .eq("user_id", user.id)
+    .maybeSingle();
+  if (fetchErr || !row) throw new Error("Afspraak niet gevonden.");
+  if (row.source !== "manual" && row.source !== "neurohq") {
+    throw new Error("Alleen handmatige afspraken kunnen hier worden bewerkt.");
+  }
+
+  const start = new Date(params.start_at);
+  const end = new Date(params.end_at);
+  const duration_hours = (end.getTime() - start.getTime()) / (60 * 60 * 1000);
+  if (duration_hours <= 0) throw new Error("Einde moet na start liggen.");
+
+  let linkedId: string | null = (row as { linked_task_id?: string | null }).linked_task_id ?? null;
+  const dueDate = start.toISOString().slice(0, 10);
+
+  if (params.link_task) {
+    if (!linkedId) {
+      const created = await createTask({
+        title: params.title.trim(),
+        due_date: dueDate,
+        notes: "Gekoppeld aan deze agenda-afspraak.",
+        category: "personal",
+      });
+      if (created.id) linkedId = created.id;
+    } else {
+      await supabase
+        .from("tasks")
+        .update({ title: params.title.trim(), due_date: dueDate })
+        .eq("id", linkedId)
+        .eq("user_id", user.id);
+    }
+  } else if (linkedId) {
+    linkedId = null;
+  }
+
+  const { error: upErr } = await supabase
+    .from("calendar_events")
+    .update({
+      title: params.title.trim(),
+      start_at: params.start_at,
+      end_at: params.end_at,
+      duration_hours: Math.round(duration_hours * 100) / 100,
+      is_social: params.is_social ?? false,
+      linked_task_id: linkedId,
+    })
+    .eq("id", params.id)
+    .eq("user_id", user.id);
+  if (upErr) throw new Error(upErr.message);
+
   revalidatePath("/dashboard");
   revalidatePath("/tasks");
   revalidatePath("/budget");

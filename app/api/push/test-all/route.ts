@@ -46,9 +46,9 @@ function isPushTestType(s: string): s is PushTestType {
 }
 
 // Keep in sync with lib/push.ts (diagnostics only; sending still uses that source of truth).
-const MAX_PUSH_PER_DAY = 20;
-const MAX_PUSH_BEFORE_LOW_PRIORITY_BLOCK = 13;
-const MAX_PUSH_PER_DAY_LOW_ENGAGEMENT = 15;
+const MAX_PUSH_PER_DAY = 40;
+const MAX_PUSH_BEFORE_LOW_PRIORITY_BLOCK = 26;
+const MAX_PUSH_PER_DAY_LOW_ENGAGEMENT = 30;
 
 type PushLimitState = {
   countAfterReset: number;

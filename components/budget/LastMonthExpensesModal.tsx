@@ -1,6 +1,7 @@
 "use client";
 
 import { Modal } from "@/components/Modal";
+import { BudgetLockHeaderBadge } from "@/components/budget/BudgetLockHeaderBadge";
 import { BudgetEntryList } from "@/components/BudgetEntryList";
 
 type Entry = {
@@ -26,7 +27,7 @@ type Props = {
 /** Modal: uitgaven van de vorige maand (archief / overzicht). */
 export function LastMonthExpensesModal({ open, onClose, entries, currency, goals }: Props) {
   return (
-    <Modal open={open} onClose={onClose} title="Uitgaven vorige maand" size="lg" showBranding={false}>
+    <Modal open={open} onClose={onClose} title="Uitgaven vorige maand" size="lg" showBranding={false} headerBadge={<BudgetLockHeaderBadge />}>
       <p className="text-sm text-[var(--text-muted)]">
         Boekingen van de vorige maand. Voor overzicht en vergelijking; tellen niet mee voor het budget van deze maand.
       </p>

@@ -33,5 +33,11 @@ if (!projectRef) {
 const cmd = `npx supabase gen types typescript --project-id ${projectRef}`;
 console.log("Generating types from Supabase...");
 const out = execSync(cmd, { encoding: "utf8", maxBuffer: 2 * 1024 * 1024 });
-writeFileSync(outPath, out, "utf8");
+const tail = `
+
+/** Convenience aliases used across the app */
+export type Task = Tables<"tasks">
+export type Quote = Tables<"quotes">
+`;
+writeFileSync(outPath, out + tail, "utf8");
 console.log("Wrote", outPath);

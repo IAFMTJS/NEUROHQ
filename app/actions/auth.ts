@@ -52,6 +52,24 @@ export async function updateUserTimezone(timezone: string) {
   revalidatePath("/settings");
 }
 
+/** One-time: set IANA timezone from the browser when still null (reliable push/local day). */
+export async function syncUserTimezoneFromBrowser(ianaTimezone: string): Promise<{ ok: boolean; skipped?: boolean }> {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { ok: false };
+  if (!ianaTimezone || typeof ianaTimezone !== "string" || ianaTimezone.length > 80 || !/^[\w/+\-]+$/.test(ianaTimezone)) {
+    return { ok: false };
+  }
+  const { data: row } = await supabase.from("users").select("timezone").eq("id", user.id).single();
+  const existing = (row as { timezone?: string | null } | null)?.timezone;
+  if (existing && String(existing).trim()) return { ok: true, skipped: true };
+  const { error } = await supabase.from("users").update({ timezone: ianaTimezone }).eq("id", user.id);
+  if (error) return { ok: false };
+  revalidatePath("/dashboard");
+  revalidatePath("/settings");
+  return { ok: true };
+}
+
 /** Whether the user has an active push subscription (persisted in DB; survives cache clear / navigation). */
 export async function getPushSubscriptionEnabled(): Promise<boolean> {
   const supabase = await createClient();

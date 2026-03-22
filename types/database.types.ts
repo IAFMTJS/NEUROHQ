@@ -294,7 +294,7 @@ export type Database = {
           date: string
           forced: boolean
           id: string
-          plan_json: unknown
+          plan_json: Json | null
           user_id: string
         }
         Insert: {
@@ -302,7 +302,7 @@ export type Database = {
           date: string
           forced?: boolean
           id?: string
-          plan_json?: unknown
+          plan_json?: Json | null
           user_id: string
         }
         Update: {
@@ -310,7 +310,7 @@ export type Database = {
           date?: string
           forced?: boolean
           id?: string
-          plan_json?: unknown
+          plan_json?: Json | null
           user_id?: string
         }
         Relationships: [
@@ -550,6 +550,66 @@ export type Database = {
           },
         ]
       }
+      budget_control_locks: {
+        Row: {
+          active: boolean
+          created_at: string
+          id: string
+          lock_from: string
+          lock_until: string
+          reason: string
+          user_id: string
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          id?: string
+          lock_from: string
+          lock_until: string
+          reason: string
+          user_id: string
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          id?: string
+          lock_from?: string
+          lock_until?: string
+          reason?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      budget_emergency_expense_logs: {
+        Row: {
+          amount_cents: number
+          category: string
+          created_at: string
+          date: string
+          id: string
+          reason: string
+          user_id: string
+        }
+        Insert: {
+          amount_cents: number
+          category: string
+          created_at?: string
+          date: string
+          id?: string
+          reason: string
+          user_id: string
+        }
+        Update: {
+          amount_cents?: number
+          category?: string
+          created_at?: string
+          date?: string
+          id?: string
+          reason?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       budget_entries: {
         Row: {
           amount_cents: number
@@ -668,6 +728,36 @@ export type Database = {
           },
         ]
       }
+      budget_optimization_challenges: {
+        Row: {
+          challenge_key: string
+          completed_at: string
+          created_at: string
+          id: string
+          reward_xp: number
+          status: string
+          user_id: string
+        }
+        Insert: {
+          challenge_key: string
+          completed_at?: string
+          created_at?: string
+          id?: string
+          reward_xp?: number
+          status?: string
+          user_id: string
+        }
+        Update: {
+          challenge_key?: string
+          completed_at?: string
+          created_at?: string
+          id?: string
+          reward_xp?: number
+          status?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       budget_targets: {
         Row: {
           category: string
@@ -709,6 +799,30 @@ export type Database = {
           },
         ]
       }
+      budget_training_logs: {
+        Row: {
+          created_at: string
+          id: string
+          log_type: string
+          payload: Json
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          log_type: string
+          payload?: Json
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          log_type?: string
+          payload?: Json
+          user_id?: string
+        }
+        Relationships: []
+      }
       calendar_events: {
         Row: {
           created_at: string
@@ -717,6 +831,7 @@ export type Database = {
           external_id: string | null
           id: string
           is_social: boolean
+          linked_task_id: string | null
           source: string | null
           start_at: string
           title: string | null
@@ -730,6 +845,7 @@ export type Database = {
           external_id?: string | null
           id?: string
           is_social?: boolean
+          linked_task_id?: string | null
           source?: string | null
           start_at: string
           title?: string | null
@@ -743,6 +859,7 @@ export type Database = {
           external_id?: string | null
           id?: string
           is_social?: boolean
+          linked_task_id?: string | null
           source?: string | null
           start_at?: string
           title?: string | null
@@ -750,6 +867,13 @@ export type Database = {
           user_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "calendar_events_linked_task_id_fkey"
+            columns: ["linked_task_id"]
+            isOneToOne: false
+            referencedRelation: "tasks"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "calendar_events_user_id_fkey"
             columns: ["user_id"]
@@ -803,10 +927,45 @@ export type Database = {
           },
         ]
       }
+      daily_explanations: {
+        Row: {
+          created_at: string
+          date: string
+          explanation_text: string | null
+          id: string
+          reason_type: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          date: string
+          explanation_text?: string | null
+          id?: string
+          reason_type?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          date?: string
+          explanation_text?: string | null
+          id?: string
+          reason_type?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "daily_explanations_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       daily_state: {
         Row: {
-          auto_master_missions_generated: boolean | null;
-          created_at: string;
+          auto_master_missions_generated: boolean
+          created_at: string
           date: string
           emotional_state: string | null
           energy: number | null
@@ -828,9 +987,9 @@ export type Database = {
           zero_completion_penalty_applied: boolean | null
         }
         Insert: {
-          auto_master_missions_generated?: boolean | null;
-          created_at?: string;
-          date: string;
+          auto_master_missions_generated?: boolean
+          created_at?: string
+          date: string
           emotional_state?: string | null
           energy?: number | null
           focus?: number | null
@@ -851,9 +1010,9 @@ export type Database = {
           zero_completion_penalty_applied?: boolean | null
         }
         Update: {
-          auto_master_missions_generated?: boolean | null;
-          created_at?: string;
-          date?: string;
+          auto_master_missions_generated?: boolean
+          created_at?: string
+          date?: string
           emotional_state?: string | null
           energy?: number | null
           focus?: number | null
@@ -875,42 +1034,14 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "daily_state_user_id_fkey"
-            columns: ["user_id"]
+            foreignKeyName: "daily_state_invested_mission_id_fkey"
+            columns: ["invested_mission_id"]
             isOneToOne: false
-            referencedRelation: "users"
+            referencedRelation: "missions"
             referencedColumns: ["id"]
           },
-        ]
-      }
-      daily_explanations: {
-        Row: {
-          id: string
-          user_id: string
-          date: string
-          reason_type: string | null
-          explanation_text: string | null
-          created_at: string
-        }
-        Insert: {
-          id?: string
-          user_id: string
-          date: string
-          reason_type?: string | null
-          explanation_text?: string | null
-          created_at?: string
-        }
-        Update: {
-          id?: string
-          user_id?: string
-          date?: string
-          reason_type?: string | null
-          explanation_text?: string | null
-          created_at?: string
-        }
-        Relationships: [
           {
-            foreignKeyName: "daily_explanations_user_id_fkey"
+            foreignKeyName: "daily_state_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "users"
@@ -1312,6 +1443,44 @@ export type Database = {
           },
         ]
       }
+      missed_opportunity_index: {
+        Row: {
+          completions_same_type: number
+          id: string
+          last_missed_at: string | null
+          missed_count: number
+          mission_type: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          completions_same_type?: number
+          id?: string
+          last_missed_at?: string | null
+          missed_count?: number
+          mission_type: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          completions_same_type?: number
+          id?: string
+          last_missed_at?: string | null
+          missed_count?: number
+          mission_type?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "missed_opportunity_index_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       mission_chain_steps: {
         Row: {
           chain_id: string
@@ -1430,44 +1599,6 @@ export type Database = {
           },
           {
             foreignKeyName: "mission_events_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "users"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      missed_opportunity_index: {
-        Row: {
-          completions_same_type: number
-          id: string
-          last_missed_at: string | null
-          missed_count: number
-          mission_type: string
-          updated_at: string
-          user_id: string
-        }
-        Insert: {
-          completions_same_type?: number
-          id?: string
-          last_missed_at?: string | null
-          missed_count?: number
-          mission_type: string
-          updated_at?: string
-          user_id: string
-        }
-        Update: {
-          completions_same_type?: number
-          id?: string
-          last_missed_at?: string | null
-          missed_count?: number
-          mission_type?: string
-          updated_at?: string
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "missed_opportunity_index_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "users"
@@ -1647,34 +1778,155 @@ export type Database = {
           },
         ]
       }
-      pending_xp_notifications: {
+      payday_reflection_surveys: {
         Row: {
-          id: string
-          user_id: string
-          total_xp: number
-          sources: Json
-          for_date: string
+          answers: Json
           created_at: string
+          id: string
+          survey_date: string
+          user_id: string
         }
         Insert: {
-          id?: string
-          user_id: string
-          total_xp?: number
-          sources?: Json
-          for_date: string
+          answers?: Json
           created_at?: string
+          id?: string
+          survey_date: string
+          user_id: string
         }
         Update: {
-          id?: string
-          user_id?: string
-          total_xp?: number
-          sources?: Json
-          for_date?: string
+          answers?: Json
           created_at?: string
+          id?: string
+          survey_date?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      pending_xp_notifications: {
+        Row: {
+          created_at: string
+          for_date: string
+          id: string
+          sources: Json
+          total_xp: number
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          for_date: string
+          id?: string
+          sources?: Json
+          total_xp?: number
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          for_date?: string
+          id?: string
+          sources?: Json
+          total_xp?: number
+          user_id?: string
         }
         Relationships: [
           {
             foreignKeyName: "pending_xp_notifications_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      protocol_library: {
+        Row: {
+          body_md: string
+          created_at: string
+          id: string
+          locale: string
+          slug: string
+          sort_order: number
+          summary: string | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          body_md?: string
+          created_at?: string
+          id?: string
+          locale?: string
+          slug: string
+          sort_order?: number
+          summary?: string | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          body_md?: string
+          created_at?: string
+          id?: string
+          locale?: string
+          slug?: string
+          sort_order?: number
+          summary?: string | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      push_engagement: {
+        Row: {
+          created_at: string
+          event_type: string
+          id: string
+          tag: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          event_type: string
+          id?: string
+          tag: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          event_type?: string
+          id?: string
+          tag?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "push_engagement_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      push_sends_log: {
+        Row: {
+          id: string
+          sent_at: string
+          trigger_type: string
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          sent_at?: string
+          trigger_type: string
+          user_id: string
+        }
+        Update: {
+          id?: string
+          sent_at?: string
+          trigger_type?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "push_sends_log_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "users"
@@ -1750,6 +2002,33 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      quotes: {
+        Row: {
+          author_name: string
+          created_at: string
+          era: string
+          id: number
+          quote_text: string
+          topic: string | null
+        }
+        Insert: {
+          author_name: string
+          created_at?: string
+          era: string
+          id: number
+          quote_text: string
+          topic?: string | null
+        }
+        Update: {
+          author_name?: string
+          created_at?: string
+          era?: string
+          id?: number
+          quote_text?: string
+          topic?: string | null
+        }
+        Relationships: []
       }
       reality_reports: {
         Row: {
@@ -2221,6 +2500,7 @@ export type Database = {
           discipline_weight: number | null
           domain: string | null
           due_date: string | null
+          duration_minutes: number | null
           emotional_resistance: number | null
           energy_required: number | null
           fatigue_impact: number | null
@@ -2228,6 +2508,7 @@ export type Database = {
           hobby_tag: string | null
           id: string
           impact: number | null
+          intensity: number | null
           mental_load: number | null
           mission_chain_id: string | null
           mission_intent: string | null
@@ -2241,15 +2522,13 @@ export type Database = {
           social_load: number | null
           strategic_value: number | null
           strategy_key_result_id: string | null
-          task_tags: Json
+          task_tags: Json | null
           task_type: string | null
           title: string
           updated_at: string
           urgency: number | null
           user_id: string
           validation_type: string | null
-          duration_minutes: number | null
-          intensity: number | null
         }
         Insert: {
           avoidance_tag?: string | null
@@ -2265,6 +2544,7 @@ export type Database = {
           discipline_weight?: number | null
           domain?: string | null
           due_date?: string | null
+          duration_minutes?: number | null
           emotional_resistance?: number | null
           energy_required?: number | null
           fatigue_impact?: number | null
@@ -2272,6 +2552,7 @@ export type Database = {
           hobby_tag?: string | null
           id?: string
           impact?: number | null
+          intensity?: number | null
           mental_load?: number | null
           mission_chain_id?: string | null
           mission_intent?: string | null
@@ -2285,15 +2566,13 @@ export type Database = {
           social_load?: number | null
           strategic_value?: number | null
           strategy_key_result_id?: string | null
-          task_tags?: Json
+          task_tags?: Json | null
           task_type?: string | null
           title: string
           updated_at?: string
           urgency?: number | null
           user_id: string
           validation_type?: string | null
-          duration_minutes?: number | null
-          intensity?: number | null
         }
         Update: {
           avoidance_tag?: string | null
@@ -2309,6 +2588,7 @@ export type Database = {
           discipline_weight?: number | null
           domain?: string | null
           due_date?: string | null
+          duration_minutes?: number | null
           emotional_resistance?: number | null
           energy_required?: number | null
           fatigue_impact?: number | null
@@ -2316,6 +2596,7 @@ export type Database = {
           hobby_tag?: string | null
           id?: string
           impact?: number | null
+          intensity?: number | null
           mental_load?: number | null
           mission_chain_id?: string | null
           mission_intent?: string | null
@@ -2329,15 +2610,13 @@ export type Database = {
           social_load?: number | null
           strategic_value?: number | null
           strategy_key_result_id?: string | null
-          task_tags?: Json
+          task_tags?: Json | null
           task_type?: string | null
           title?: string
           updated_at?: string
           urgency?: number | null
           user_id?: string
           validation_type?: string | null
-          duration_minutes?: number | null
-          intensity?: number | null
         }
         Relationships: [
           {
@@ -2363,6 +2642,41 @@ export type Database = {
           },
           {
             foreignKeyName: "tasks_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_acceptance_gates: {
+        Row: {
+          gate_type: string
+          id: string
+          payload: Json
+          resolved_at: string | null
+          triggered_at: string
+          user_id: string
+        }
+        Insert: {
+          gate_type: string
+          id?: string
+          payload?: Json
+          resolved_at?: string | null
+          triggered_at?: string
+          user_id: string
+        }
+        Update: {
+          gate_type?: string
+          id?: string
+          payload?: Json
+          resolved_at?: string | null
+          triggered_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_acceptance_gates_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "users"
@@ -2693,31 +3007,61 @@ export type Database = {
           auto_master_missions: boolean
           color_mode: string
           compact_ui: boolean
+          day_off_mode: string | null
+          email_reminders_enabled: boolean
+          light_ui: boolean
+          push_copy_history: Json
+          push_evening_enabled: boolean
+          push_morning_enabled: boolean
+          push_personality_mode: string | null
+          push_reminders_enabled: boolean
+          push_weekly_learning_enabled: boolean
           reduced_motion: boolean
           selected_emotion: string | null
           theme: string
           updated_at: string
           user_id: string
+          usual_days_off: number[] | null
         }
         Insert: {
           auto_master_missions?: boolean
           color_mode?: string
           compact_ui?: boolean
+          day_off_mode?: string | null
+          email_reminders_enabled?: boolean
+          light_ui?: boolean
+          push_copy_history?: Json
+          push_evening_enabled?: boolean
+          push_morning_enabled?: boolean
+          push_personality_mode?: string | null
+          push_reminders_enabled?: boolean
+          push_weekly_learning_enabled?: boolean
           reduced_motion?: boolean
           selected_emotion?: string | null
           theme?: string
           updated_at?: string
           user_id: string
+          usual_days_off?: number[] | null
         }
         Update: {
           auto_master_missions?: boolean
           color_mode?: string
           compact_ui?: boolean
+          day_off_mode?: string | null
+          email_reminders_enabled?: boolean
+          light_ui?: boolean
+          push_copy_history?: Json
+          push_evening_enabled?: boolean
+          push_morning_enabled?: boolean
+          push_personality_mode?: string | null
+          push_reminders_enabled?: boolean
+          push_weekly_learning_enabled?: boolean
           reduced_motion?: boolean
           selected_emotion?: string | null
           theme?: string
           updated_at?: string
           user_id?: string
+          usual_days_off?: number[] | null
         }
         Relationships: [
           {
@@ -3120,6 +3464,23 @@ export type Database = {
       }
     }
     Views: {
+      cached_rpc_functions: {
+        Row: {
+          argument_types: string | null
+          id: unknown
+          identity_argument_types: string | null
+          name: unknown
+          return_type: string | null
+          schema_name: unknown
+        }
+        Relationships: []
+      }
+      cached_timezone_names: {
+        Row: {
+          name: string | null
+        }
+        Relationships: []
+      }
       mission_user_stats: {
         Row: {
           avg_time_seconds: number | null
@@ -3316,15 +3677,6 @@ export const Constants = {
   },
 } as const
 
-/** Convenience alias for tasks table Row */
-export type Task = Database["public"]["Tables"]["tasks"]["Row"]
-
-/** Quote shape for quote-of-the-day (quotes table may be absent in schema; app expects this shape) */
-export type Quote = {
-  id: number
-  author_name: string
-  era: string
-  topic: string | null
-  quote_text: string
-  created_at: string
-}
+/** Convenience aliases used across the app */
+export type Task = Tables<"tasks">
+export type Quote = Tables<"quotes">

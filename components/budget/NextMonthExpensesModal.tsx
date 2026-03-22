@@ -1,6 +1,7 @@
 "use client";
 
 import { Modal } from "@/components/Modal";
+import { BudgetLockHeaderBadge } from "@/components/budget/BudgetLockHeaderBadge";
 import { BudgetEntryList } from "@/components/BudgetEntryList";
 
 type Entry = {
@@ -26,7 +27,7 @@ type Props = {
 /** Modal: uitgaven met datum in de volgende maand (aparte sectie, tellen niet mee voor deze maand). */
 export function NextMonthExpensesModal({ open, onClose, entries, currency, goals }: Props) {
   return (
-    <Modal open={open} onClose={onClose} title="Uitgaven volgende maand" size="lg" showBranding={false}>
+    <Modal open={open} onClose={onClose} title="Uitgaven volgende maand" size="lg" showBranding={false} headerBadge={<BudgetLockHeaderBadge />}>
       <p className="text-sm text-[var(--text-muted)]">
         Boekingen met datum in de volgende maand. Deze tellen niet mee voor het budget van deze maand en worden vanaf die datum automatisch zichtbaar.
       </p>

@@ -13,8 +13,10 @@ import {
   getReengagementSendsInLast7Days,
 } from "@/lib/behavioral-notification-server";
 import { runDailyHobbyCommitmentDecay } from "@/app/actions/hobby-commitment-decay";
-import { getQuoteByDayNumber } from "@/lib/quotes";
+import { getQuoteByDayNumber, formatQuoteForPushBody } from "@/lib/quotes";
 import { applyPersonalityToPayload } from "@/lib/push-personality";
+import { PushCopyDedupe, parsePushCopyHistory } from "@/lib/push-copy-dedupe";
+import { evaluateAcceptanceRulesForUser } from "@/lib/acceptance-rules-evaluator";
 
 /**
  * Vercel Cron: runs daily at 00:00 UTC.
@@ -97,7 +99,7 @@ export async function GET(request: Request) {
   if (process.env.VAPID_PRIVATE_KEY && process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY) {
     const dayOfYear = Math.max(1, Math.min(365, getDayOfYear(today)));
     const quoteRow = getQuoteByDayNumber(dayOfYear);
-    const quoteText = quoteRow?.quote_text ?? "Your daily focus.";
+    const quoteBody = formatQuoteForPushBody(quoteRow);
     const utcHour = today.getUTCHours();
     let pushUsersQuery = supabase
       .from("users")
@@ -119,7 +121,16 @@ export async function GET(request: Request) {
 
       try {
         const ctx = await loadUserNotificationContextForUser(supabase, u.id);
-        const quoteBody = quoteText.length > 120 ? quoteText.slice(0, 117) + "…" : quoteText;
+        const { data: prefRow } = await supabase
+          .from("user_preferences")
+          .select("push_copy_history")
+          .eq("user_id", u.id)
+          .maybeSingle();
+        const pushDedupe = new PushCopyDedupe(
+          todayStr,
+          parsePushCopyHistory((prefRow as { push_copy_history?: unknown } | null)?.push_copy_history),
+          7
+        );
         const basePayload = {
           title: "NEUROHQ",
           body: quoteBody,
@@ -127,9 +138,16 @@ export async function GET(request: Request) {
           url: "/dashboard",
           priority: "low" as const,
         };
-        const payload = applyPersonalityToPayload(basePayload, ctx.personalityMode, "quote");
+        const payload = applyPersonalityToPayload(basePayload, ctx.personalityMode, "quote", `${u.id}:${todayStr}`, {
+          dedupe: pushDedupe,
+        });
         const ok = await sendPushToUser(supabase, u.id, payload);
-        if (ok) pushSent++;
+        if (ok) {
+          pushSent++;
+          if (pushDedupe.dirty) {
+            await supabase.from("user_preferences").update({ push_copy_history: pushDedupe.getHistory() }).eq("user_id", u.id);
+          }
+        }
       } catch {
         // skip
       }
@@ -165,7 +183,12 @@ export async function GET(request: Request) {
           url: "/budget",
           priority: "high" as const,
         };
-        const payload = applyPersonalityToPayload(basePayload, ctx.personalityMode, "freeze_reminder");
+        const payload = applyPersonalityToPayload(
+          basePayload,
+          ctx.personalityMode,
+          "freeze_reminder",
+          `${userId}:${local.date}`
+        );
         const ok = await sendPushToUser(supabase, userId, payload);
         if (ok) {
           freezeReminderSent++;
@@ -187,7 +210,7 @@ export async function GET(request: Request) {
         .from("tasks")
         .select("carry_over_count")
         .eq("user_id", uid)
-        .eq("due_date", todayStr)
+        .eq("due_date", local.date)
         .eq("completed", false);
       const maxCarry = Math.max(0, ...(todaysIncomplete ?? []).map((t) => t.carry_over_count ?? 0));
       if (maxCarry >= 3) {
@@ -200,7 +223,12 @@ export async function GET(request: Request) {
             url: "/dashboard",
             priority: "high" as const,
           };
-          const payload = applyPersonalityToPayload(basePayload, ctx.personalityMode, "avoidance_alert");
+          const payload = applyPersonalityToPayload(
+            basePayload,
+            ctx.personalityMode,
+            "avoidance_alert",
+            `${uid}:${local.date}`
+          );
           const ok = await sendPushToUser(supabase, uid, payload);
           if (ok) avoidanceSent++;
         } catch {
@@ -410,6 +438,20 @@ export async function GET(request: Request) {
     hobbyDecayUsers = 0;
   }
 
+  let acceptanceRulesUsers = 0;
+  let acceptanceGatesOpened = 0;
+  try {
+    const { data: allUsersForRules } = await supabase.from("users").select("id");
+    for (const row of allUsersForRules ?? []) {
+      acceptanceRulesUsers++;
+      const r = await evaluateAcceptanceRulesForUser(supabase, row.id as string, todayStr);
+      if (r.opened) acceptanceGatesOpened++;
+    }
+  } catch {
+    acceptanceRulesUsers = 0;
+    acceptanceGatesOpened = 0;
+  }
+
   return NextResponse.json({
     ok: true,
     job: "daily",
@@ -425,6 +467,8 @@ export async function GET(request: Request) {
     streakProtectionSent,
     highMomentumSent,
     hobbyDecayUsers,
+    acceptanceRulesUsers,
+    acceptanceGatesOpened,
     from: yesterdayStr,
     to: todayStr,
   });

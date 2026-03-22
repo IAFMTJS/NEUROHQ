@@ -5,10 +5,10 @@ import { getLocalDateHour } from "@/lib/utils/timezone";
 // Daily limits to avoid overwhelming users while allowing richer scenarios.
 // High-priority pushes (e.g. critical reminders) are capped by MAX_PUSH_PER_DAY.
 // Low-priority pushes stop earlier so they don't crowd out important ones.
-const MAX_PUSH_PER_DAY = 20;
-const MAX_PUSH_BEFORE_LOW_PRIORITY_BLOCK = 13;
+const MAX_PUSH_PER_DAY = 40;
+const MAX_PUSH_BEFORE_LOW_PRIORITY_BLOCK = 26;
 /** When user has zero opens-from-push in last 7 days, cap at this to reduce fatigue. */
-const MAX_PUSH_PER_DAY_LOW_ENGAGEMENT = 15;
+const MAX_PUSH_PER_DAY_LOW_ENGAGEMENT = 30;
 
 export type PushPayload = {
   title: string;

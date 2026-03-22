@@ -1,6 +1,8 @@
 import { DashboardLayoutClient } from "@/components/dashboard/DashboardLayoutClient";
 import { PageMascot } from "@/components/PageMascot";
 import { BootstrapGate } from "@/components/bootstrap/BootstrapGate";
+import { TimezoneSyncBanner } from "@/components/TimezoneSyncBanner";
+import { AcceptanceGateLayer } from "@/components/acceptance/AcceptanceGateLayer";
 
 /** Auth enforced by proxy. Server renders <main> so client layout hydration matches (no Suspense vs main mismatch). */
 export default function DashboardLayout({
@@ -24,6 +26,8 @@ export default function DashboardLayout({
           }}
           tabIndex={-1}
         >
+          <TimezoneSyncBanner />
+          <AcceptanceGateLayer />
           <PageMascot />
           {children}
           <div className="bottom-nav-page-spacer" aria-hidden />

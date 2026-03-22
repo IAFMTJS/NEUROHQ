@@ -7,6 +7,7 @@ import { addIncomeSource, deleteIncomeSource } from "@/app/actions/dcic/income-s
 import type { IncomeSource } from "@/lib/dcic/types";
 import { toast } from "sonner";
 import { Modal } from "@/components/Modal";
+import { BudgetLockHeaderBadge } from "@/components/budget/BudgetLockHeaderBadge";
 import { getCurrencySymbol } from "@/lib/utils/currency";
 import { undoPaydayReceived } from "@/app/actions/budget";
 import { format } from "date-fns";
@@ -316,7 +317,7 @@ export function PaydayCard({
       </section>
       </div>
 
-      <Modal open={showModal} onClose={() => setShowModal(false)} title="Loon en loondag" showBranding>
+      <Modal open={showModal} onClose={() => setShowModal(false)} title="Loon en loondag" showBranding headerBadge={<BudgetLockHeaderBadge />}>
         <p className="text-sm text-[var(--text-muted)] mb-4">Loon is afhankelijk van maand en verwerkingstijd. Druk op &quot;Vandaag loon gehad&quot; om de dienstperiode te starten; stel anders de verwachte loondag in.</p>
         <div className="mb-4">
           <button type="button" onClick={handleVandaagLoonGehad} disabled={pending} className="btn-primary rounded-lg px-4 py-2 text-sm font-medium disabled:opacity-50">

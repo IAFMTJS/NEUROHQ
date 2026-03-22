@@ -784,6 +784,8 @@ async function BudgetContent({ searchParams }: Props) {
                   initialTab={activeTab}
                   isHistoryView={isHistoryView}
                   historyMode={historyMode}
+                  lockActive={budgetControlState.lockActive}
+                  lockUntil={budgetControlState.lockUntil}
                   headerRight={headerRight}
                   overview={
                     <BudgetOverviewLockGate

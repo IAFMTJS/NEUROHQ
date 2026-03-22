@@ -179,20 +179,37 @@ type MessagePool = Record<TriggerType, Partial<Record<Tone, MessageTemplate[]>>>
 // Personality-aligned copy: Stoic = short, wisdom; Friendly = warm, supportive; Coach = direct, action; Drill = aggressive; Chaos = sarcastic/overstimulating.
 export const MESSAGE_POOL: MessagePool = {
   brain_status_reminder: {
-    neutral: [{ body: "Your brain status hasn’t been logged." }],
-    friendly: [{ body: "Quick check-in — how’s your brain today? Set it when you’re ready." }],
-    stoic: [{ body: "Awareness precedes control. Log brain status." }],
-    coach: [{ body: "Set your brain status so we can tailor today’s missions." }],
-    aggressive: [{ body: "Brain status missing. Log it. Now." }],
+    neutral: [
+      { body: "Your brain status hasn’t been logged." },
+      { body: "Brain check-in still open for today." },
+    ],
+    friendly: [
+      { body: "Quick check-in — how’s your brain today? Set it when you’re ready." },
+      { body: "Still time for a gentle brain check-in — it helps us match your day." },
+    ],
+    stoic: [
+      { body: "Awareness precedes control. Log brain status." },
+      { body: "State unknown. Log energy and focus." },
+    ],
+    coach: [
+      { body: "Set your brain status so we can tailor today’s missions." },
+      { body: "Log brain status once — we’ll align difficulty and load." },
+    ],
+    aggressive: [
+      { body: "Brain status missing. Log it. Now." },
+      { body: "No brain data, no calibration. Log status." },
+    ],
     sarcastic: [
       { body: "Hard to optimize a brain we haven’t measured." },
       { body: "We’d love to help. If only we knew what state your brain is in. 🙃" },
       { body: "Brain status: unknown. The system is literally blind. Your move." },
+      { body: "Guessing your capacity is not a strategy. Log brain status." },
     ],
     overstimulating: [
       { body: "BRAIN STATUS MISSING ⚠️\nSYSTEM BLIND. LOG IT. NOW." },
       { body: "⚠️ NO BRAIN DATA ⚠️\nWE CAN'T HELP IF WE DON'T KNOW. LOG IT. 🔥" },
       { body: "ALERT: BRAIN STATUS = ???\nFIX IT. 🔴" },
+      { body: "INPUT REQUIRED: BRAIN ⚡\nLOG OR WE FLY BLIND." },
     ],
   },
   brain_status_recheck: {

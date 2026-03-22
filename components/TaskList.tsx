@@ -31,6 +31,7 @@ const WEEKDAY_LABELS: Record<number, string> = { 1: "Mon", 2: "Tue", 3: "Wed", 4
 
 type ExtendedTask = Task & {
   category?: string | null;
+  task_type?: string | null;
   recurrence_rule?: string | null;
   recurrence_weekdays?: string | null;
   impact?: number | null;
@@ -67,6 +68,10 @@ type Props = {
   /** When set, complete/start is disabled and reason is shown (system gate: recovery / energy). */
   blockedReasonByTaskId?: Record<string, string>;
 };
+
+function isRoutineTask(task: ExtendedTask): boolean {
+  return !!task.recurrence_rule?.trim() || task.task_type === "routine";
+}
 
 function recurrenceLabel(task: ExtendedTask): string {
   if (!task.recurrence_rule) return "";
@@ -631,8 +636,10 @@ export function TaskList({
               ? "border-[var(--card-border)] bg-[var(--bg-surface)]/50 opacity-70"
               : blockReason
                 ? "border-[var(--card-border)] bg-[var(--bg-surface)]/40 opacity-75"
-              : task.carry_over_count > 0
-                ? "border-amber-500/50 bg-amber-500/10"
+              : (task.carry_over_count ?? 0) > 0
+                ? isRoutineTask(task)
+                  ? "border-violet-500/40 bg-violet-500/10"
+                  : "border-amber-500/50 bg-amber-500/10"
                 : isFirstIncomplete
                   ? "border-[var(--accent-focus)]/50 bg-[var(--accent-focus)]/5"
                   : "border-[var(--card-border)] bg-[var(--bg-surface)]/50"
@@ -659,7 +666,20 @@ export function TaskList({
               {isFirstIncomplete && !task.completed && !blockReason && (
                 <span className="rounded bg-[var(--accent-focus)]/20 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-[var(--accent-focus)]">Today&apos;s mission</span>
               )}
-              {task.carry_over_count > 0 && !task.completed && (
+              {isRoutineTask(task) && !task.completed && (
+                <span
+                  className="rounded bg-violet-500/20 px-2 py-0.5 text-[10px] font-semibold text-violet-300"
+                  title={
+                    (task.carry_over_count ?? 0) > 0
+                      ? "Dit is je vaste routine; ook " + (task.carry_over_count ?? 0) + "× meegenomen."
+                      : "Vaste routine"
+                  }
+                >
+                  Routine
+                  {(task.carry_over_count ?? 0) > 0 ? ` · ${task.carry_over_count}×` : ""}
+                </span>
+              )}
+              {!isRoutineTask(task) && task.carry_over_count > 0 && !task.completed && (
                 <span className="rounded bg-amber-500/20 px-2 py-0.5 text-[10px] font-semibold text-amber-400">Carried over</span>
               )}
               {task.category && (

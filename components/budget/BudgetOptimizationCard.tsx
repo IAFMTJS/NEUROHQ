@@ -1,10 +1,12 @@
 "use client";
 
 import { useTransition, useState } from "react";
+import { toast } from "sonner";
 import {
   applyBudgetOptimizationLock,
   validateAndCompleteBudgetOptimizationChallenge,
 } from "@/app/actions/budget-intelligence";
+import { useBudgetLock } from "@/components/budget/BudgetLockContext";
 
 type Props = {
   summary: string;
@@ -13,6 +15,7 @@ type Props = {
 };
 
 export function BudgetOptimizationCard({ summary, suggestions, challenges }: Props) {
+  const { lockActive } = useBudgetLock();
   const [pending, startTransition] = useTransition();
   const [awardedXpByKey, setAwardedXpByKey] = useState<Record<string, number>>({});
   const [message, setMessage] = useState<string | null>(null);
@@ -29,27 +32,37 @@ export function BudgetOptimizationCard({ summary, suggestions, challenges }: Pro
         <div className="flex flex-wrap gap-2">
           <button
             type="button"
-            disabled={pending}
+            disabled={pending || lockActive}
+            title={lockActive ? "Er is al een no-spend lock actief." : undefined}
             className="rounded-lg border border-[var(--card-border)] px-3 py-2 text-xs font-semibold text-[var(--text-primary)] disabled:opacity-60"
-            onClick={() =>
+            onClick={() => {
+              if (lockActive) {
+                toast.message("Niet beschikbaar tijdens no-spend lock — gebruik het noodpad onderaan Execute.");
+                return;
+              }
               startTransition(async () => {
                 const result = await applyBudgetOptimizationLock(1);
                 setLockInfo(`24u focus-lock actief tot ${result.lockUntil}.`);
-              })
-            }
+              });
+            }}
           >
             Start 24u focus-lock
           </button>
           <button
             type="button"
-            disabled={pending}
+            disabled={pending || lockActive}
+            title={lockActive ? "Er is al een no-spend lock actief." : undefined}
             className="rounded-lg border border-[var(--card-border)] px-3 py-2 text-xs font-semibold text-[var(--text-primary)] disabled:opacity-60"
-            onClick={() =>
+            onClick={() => {
+              if (lockActive) {
+                toast.message("Niet beschikbaar tijdens no-spend lock — gebruik het noodpad onderaan Execute.");
+                return;
+              }
               startTransition(async () => {
                 const result = await applyBudgetOptimizationLock(3);
                 setLockInfo(`72u reset-lock actief tot ${result.lockUntil}.`);
-              })
-            }
+              });
+            }}
           >
             Start 72u reset-lock
           </button>
@@ -64,15 +77,19 @@ export function BudgetOptimizationCard({ summary, suggestions, challenges }: Pro
             <p className="mt-1 text-xs text-[var(--text-muted)]">Reward: {challenge.xp} XP</p>
             <button
               type="button"
-              disabled={pending}
+              disabled={pending || lockActive}
               className="mt-2 rounded-lg bg-[var(--accent-focus)] px-3 py-2 text-xs font-semibold text-black disabled:opacity-60"
-              onClick={() =>
+              onClick={() => {
+                if (lockActive) {
+                  toast.message("Challenge validatie is geblokkeerd tijdens no-spend lock.");
+                  return;
+                }
                 startTransition(async () => {
                   const result = await validateAndCompleteBudgetOptimizationChallenge(challenge.key);
                   setAwardedXpByKey((prev) => ({ ...prev, [challenge.key]: result.awardedXp }));
                   setMessage(result.message);
-                })
-              }
+                });
+              }}
             >
               {pending ? "Valideren..." : "Valideer resultaat"}
             </button>

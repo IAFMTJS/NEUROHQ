@@ -7,6 +7,8 @@ import { GrowthStreamsList } from "@/components/growth/GrowthStreamsList";
 import { GrowthReflectionCard } from "@/components/growth/GrowthReflectionCard";
 import { MonthlyBookCard } from "@/components/growth/MonthlyBookCard";
 import { AddLearningStreamCard } from "@/components/growth/AddLearningStreamCard";
+import { UserGoalMissionGeneratorCard } from "@/components/growth/UserGoalMissionGeneratorCard";
+import { GrowthAdaptiveHint } from "@/components/growth/GrowthAdaptiveHint";
 import { useHQStore } from "@/lib/hq-store";
 import { XPBadge } from "@/components/XPBadge";
 import Link from "next/link";
@@ -24,6 +26,9 @@ export function LearningContentClient({ todayStr, fallback }: Props) {
   const totalXp = gameState?.currentXP ?? null;
   const streak = gameState?.streak.current ?? null;
   const mode = gameState?.mode?.current ?? "focus";
+  const energyAvg = gameState?.stats.energy ?? null;
+  const focusAvg = gameState?.stats.focus ?? null;
+  const brainLogged = energyAvg != null && focusAvg != null;
 
   const currentBook = learning.streams.find((s) => s.type === "book") ?? null;
   const streamsCount = learning.streams.length;
@@ -131,6 +136,9 @@ export function LearningContentClient({ todayStr, fallback }: Props) {
             View XP
           </Link>
         </div>
+        <div className="border-t border-[var(--card-border)] px-4 py-3">
+          <GrowthAdaptiveHint energyAvg={energyAvg} focusAvg={focusAvg} brainLogged={brainLogged} />
+        </div>
       </section>
 
       <div className="grid gap-6 xl:grid-cols-12">
@@ -157,6 +165,7 @@ export function LearningContentClient({ todayStr, fallback }: Props) {
         </div>
       </div>
 
+      <UserGoalMissionGeneratorCard />
       <GrowthStreamsList streams={learning.streams} />
     </div>
   );

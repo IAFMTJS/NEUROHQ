@@ -3,7 +3,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { sendPushToUser } from "@/lib/push";
 import { getLocalDateHour, yesterdayDate, getDayOfYearFromDateString, isInQuietHours, utcStartOfLocalDayIso } from "@/lib/utils/timezone";
 import { isHighSensoryDayForUser } from "@/lib/mode-admin";
-import { getQuoteByDayNumber } from "@/lib/quotes";
+import { getQuoteByDayNumber, formatQuoteForPushBody } from "@/lib/quotes";
 import { isAppEmailConfigured, sendReminderToUser } from "@/lib/email";
 import {
   getMorningEmailData,
@@ -24,6 +24,7 @@ import {
   markBehavioralNotificationSent,
 } from "@/lib/behavioral-notification-server";
 import { applyPersonalityToPayload } from "@/lib/push-personality";
+import { PushCopyDedupe, parsePushCopyHistory } from "@/lib/push-copy-dedupe";
 
 /**
  * Vercel Cron: runs every hour.
@@ -32,7 +33,7 @@ import { applyPersonalityToPayload } from "@/lib/push-personality";
  * - 08:00 local: daily quote push + morning calendar heads-up.
  * - 09:00 local: morning email (quote, brain state reminder, today’s tasks & calendar) if email_reminders_enabled.
  * - 20:00 local: evening email (check-in: tasks done, expenses logged, brain status) if email_reminders_enabled.
- * Users without timezone are handled by the daily cron (00:00 UTC).
+ * Users without timezone: local date/hour use UTC; quote dedupe uses UTC midnight; they should set timezone (see TimezoneSyncBanner).
  */
 const ALLOWED_FORCE_HOURS = [0, 8, 9, 11, 20] as const;
 
@@ -63,10 +64,11 @@ function daysAgoUtc(dateStr: string, days: number): string {
 async function hasSentAchievementPushToday(
   supabase: ReturnType<typeof createAdminClient>,
   userId: string,
-  timezone: string,
+  timezone: string | null,
   todayStr: string
 ): Promise<boolean> {
-  const sinceIso = utcStartOfLocalDayIso(timezone, todayStr);
+  const sinceIso =
+    timezone && timezone.trim() ? utcStartOfLocalDayIso(timezone, todayStr) : `${todayStr}T00:00:00.000Z`;
   const { count } = await supabase
     .from("push_sends_log")
     .select("*", { count: "exact", head: true })
@@ -236,9 +238,12 @@ export async function GET(request: Request) {
       personalityMode: PersonalityMode;
     }
   >();
+  const pushCopyHistoryByUser = new Map<string, ReturnType<typeof parsePushCopyHistory>>();
   const { data: prefs, error: prefsError } = await supabase
     .from("user_preferences")
-    .select("user_id, email_reminders_enabled, push_reminders_enabled, push_morning_enabled, push_evening_enabled, push_personality_mode");
+    .select(
+      "user_id, email_reminders_enabled, push_reminders_enabled, push_morning_enabled, push_evening_enabled, push_personality_mode, push_copy_history"
+    );
   if (!prefsError && prefs?.length) {
     for (const pref of prefs) {
       const mode = (pref as { push_personality_mode?: PersonalityMode | null }).push_personality_mode ?? "auto";
@@ -249,6 +254,10 @@ export async function GET(request: Request) {
         pushEveningEnabled: pref.push_evening_enabled ?? true,
         personalityMode: mode,
       });
+      pushCopyHistoryByUser.set(
+        pref.user_id,
+        parsePushCopyHistory((pref as { push_copy_history?: unknown }).push_copy_history)
+      );
     }
   }
 
@@ -263,9 +272,12 @@ export async function GET(request: Request) {
   let achievementPushSent = 0;
 
   for (const u of users ?? []) {
-    const tz = u.timezone as string;
-    if (!tz) continue;
-    const { date: todayStr, hour: realHour } = getLocalDateHour(tz);
+    const tzRaw = (u.timezone as string | null) ?? null;
+    const tz = tzRaw && tzRaw.trim() ? tzRaw : null;
+    const nowClock = new Date();
+    const { date: todayStr, hour: realHour } = tz
+      ? getLocalDateHour(tz)
+      : { date: nowClock.toISOString().slice(0, 10), hour: nowClock.getUTCHours() };
     const hour = forceHour !== undefined ? forceHour : realHour;
     const userPrefs = prefsByUser.get(u.id) ?? {
       emailRemindersEnabled: true,
@@ -276,6 +288,8 @@ export async function GET(request: Request) {
     };
     const quietStart = u.push_quiet_hours_start ? String(u.push_quiet_hours_start).slice(0, 5) : null;
     const quietEnd = u.push_quiet_hours_end ? String(u.push_quiet_hours_end).slice(0, 5) : null;
+
+    const pushDedupe = new PushCopyDedupe(todayStr, parsePushCopyHistory(pushCopyHistoryByUser.get(u.id)), 7);
 
     if (hour === 0 && u.last_rollover_date !== todayStr) {
       const yesterdayStr = yesterdayDate(todayStr);
@@ -321,41 +335,46 @@ export async function GET(request: Request) {
       const pushQuoteEnabled = (u as { push_quote_enabled?: boolean | null }).push_quote_enabled !== false;
       if (pushQuoteEnabled && !isInQuietHours(hour, quietStart, quietEnd)) {
         // Deduplicate: already sent a daily quote today (in user's local day)?
+        let quoteAlreadySent = false;
         try {
-          const sinceIso = utcStartOfLocalDayIso(tz, todayStr);
+          const sinceIso = tz ? utcStartOfLocalDayIso(tz, todayStr) : `${todayStr}T00:00:00.000Z`;
           const { count: alreadySentCount } = await supabase
             .from("push_sends_log")
             .select("*", { count: "exact", head: true })
             .eq("user_id", u.id)
             .eq("trigger_type", "daily-quote")
             .gte("sent_at", sinceIso);
-          if ((alreadySentCount ?? 0) > 0) {
-            // Skip; today's quote already sent.
-            continue;
-          }
+          quoteAlreadySent = (alreadySentCount ?? 0) > 0;
         } catch {
-          // If log lookup fails, fall back to attempting send (sendPushToUser is still capped).
+          quoteAlreadySent = false;
         }
 
-        const highSensory = await isHighSensoryDayForUser(supabase, u.id, todayStr);
-        if (!highSensory) {
-          const dayOfYear = Math.max(1, Math.min(365, getDayOfYearFromDateString(todayStr)));
-          const quoteRow = getQuoteByDayNumber(dayOfYear);
-          const quoteText = quoteRow?.quote_text ?? "Your daily focus.";
-          const quoteBody = quoteText.length > 120 ? quoteText.slice(0, 117) + "…" : quoteText;
-          try {
-            const basePayload = {
-              title: "NEUROHQ",
-              body: quoteBody,
-              tag: "daily-quote",
-              url: "/dashboard",
-              priority: "low" as const,
-            };
-            const payload = applyPersonalityToPayload(basePayload, userPrefs.personalityMode, "quote");
-            const ok = await sendPushToUser(supabase, u.id, payload);
-            if (ok) quoteSent++;
-          } catch {
-            // skip
+        if (!quoteAlreadySent) {
+          const highSensory = await isHighSensoryDayForUser(supabase, u.id, todayStr);
+          if (!highSensory) {
+            const dayOfYear = Math.max(1, Math.min(365, getDayOfYearFromDateString(todayStr)));
+            const quoteRow = getQuoteByDayNumber(dayOfYear);
+            const quoteBody = formatQuoteForPushBody(quoteRow);
+            try {
+              const basePayload = {
+                title: "NEUROHQ",
+                body: quoteBody,
+                tag: "daily-quote",
+                url: "/dashboard",
+                priority: "low" as const,
+              };
+              const payload = applyPersonalityToPayload(
+                basePayload,
+                userPrefs.personalityMode,
+                "quote",
+                `${u.id}:${todayStr}`,
+                { dedupe: pushDedupe }
+              );
+              const ok = await sendPushToUser(supabase, u.id, payload);
+              if (ok) quoteSent++;
+            } catch {
+              // skip
+            }
           }
         }
       }
@@ -392,7 +411,13 @@ export async function GET(request: Request) {
             url: "/tasks?tab=calendar",
             priority: "normal" as const,
           };
-          const payload = applyPersonalityToPayload(basePayload, userPrefs.personalityMode, "calendar_morning");
+          const payload = applyPersonalityToPayload(
+            basePayload,
+            userPrefs.personalityMode,
+            "calendar_morning",
+            `${u.id}:${todayStr}`,
+            { dedupe: pushDedupe }
+          );
           const ok = await sendPushToUser(supabase, u.id, payload);
           if (ok) calendarReminderSent++;
         }
@@ -434,7 +459,13 @@ export async function GET(request: Request) {
             url: "/tasks?tab=calendar",
             priority: "normal" as const,
           };
-          const payload = applyPersonalityToPayload(basePayload, userPrefs.personalityMode, "calendar_reminder");
+          const payload = applyPersonalityToPayload(
+            basePayload,
+            userPrefs.personalityMode,
+            "calendar_reminder",
+            `${u.id}:${todayStr}`,
+            { dedupe: pushDedupe }
+          );
           const ok = await sendPushToUser(supabase, u.id, payload);
           if (ok) calendarReminderSent++;
         }
@@ -481,13 +512,24 @@ export async function GET(request: Request) {
             dailyState && (dailyState.energy != null || dailyState.focus != null)
           );
           if (!brainStatusDone) {
-            const ctx = await loadUserNotificationContextForUser(supabase, u.id as string, { dateStr: todayStr });
-            const result = buildBehavioralNotificationForContext(ctx, {
-              type: "brain_status_missing",
-            });
-            if (result) {
-              const ok = await sendPushToUser(supabase, u.id as string, result.payload);
-              if (ok) brainStatusRemindersSent++;
+            const { canSend } = await canSendBehavioralNotification(
+              supabase,
+              u.id as string,
+              "brain_status_reminder",
+              new Date()
+            );
+            if (canSend) {
+              const ctx = await loadUserNotificationContextForUser(supabase, u.id as string, { dateStr: todayStr });
+              const result = buildBehavioralNotificationForContext(ctx, {
+                type: "brain_status_missing",
+              });
+              if (result) {
+                const ok = await sendPushToUser(supabase, u.id as string, result.payload);
+                if (ok) {
+                  await markBehavioralNotificationSent(supabase, u.id as string, "brain_status_reminder");
+                  brainStatusRemindersSent++;
+                }
+              }
             }
           }
         } catch {
@@ -508,7 +550,13 @@ export async function GET(request: Request) {
         try {
           const data = await getMorningEmailData(supabase, u.id, todayStr);
           const basePayload = buildMorningPushPayload(data);
-          const payload = applyPersonalityToPayload(basePayload, userPrefs.personalityMode, "morning");
+          const payload = applyPersonalityToPayload(
+            basePayload,
+            userPrefs.personalityMode,
+            "morning",
+            `${u.id}:${todayStr}`,
+            { dedupe: pushDedupe }
+          );
           const sent = await sendPushToUser(supabase, u.id, payload);
           if (sent) morningPushSent++;
         } catch {
@@ -546,7 +594,13 @@ export async function GET(request: Request) {
         try {
           const data = await getEveningEmailData(supabase, u.id, todayStr);
           const basePayload = buildEveningPushPayload(data);
-          const payload = applyPersonalityToPayload(basePayload, userPrefs.personalityMode, "evening");
+          const payload = applyPersonalityToPayload(
+            basePayload,
+            userPrefs.personalityMode,
+            "evening",
+            `${u.id}:${todayStr}`,
+            { dedupe: pushDedupe }
+          );
           const sent = await sendPushToUser(supabase, u.id, payload);
           if (sent) eveningPushSent++;
         } catch {
@@ -700,6 +754,10 @@ export async function GET(request: Request) {
           // skip
         }
       }
+    }
+
+    if (pushDedupe.dirty) {
+      await supabase.from("user_preferences").update({ push_copy_history: pushDedupe.getHistory() }).eq("user_id", u.id);
     }
   }
 

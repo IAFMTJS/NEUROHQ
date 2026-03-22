@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { BudgetLockProvider, useBudgetLock } from "@/components/budget/BudgetLockContext";
 
 type TabId = "overview" | "execute" | "analysis" | "optimization";
 type LegacyTabId = TabId | "tactical" | "goals";
@@ -15,7 +16,31 @@ type Props = {
   analysis: React.ReactNode;
   goals: React.ReactNode;
   optimization: React.ReactNode;
+  lockActive: boolean;
+  lockUntil: string | null;
 };
+
+function BudgetLockStrip({ historyMode }: { historyMode: boolean }) {
+  const { lockActive, lockUntil } = useBudgetLock();
+  if (historyMode || !lockActive) return null;
+  return (
+    <div
+      className="mb-3 flex flex-wrap items-center justify-between gap-2 rounded-lg border border-amber-500/45 bg-amber-500/10 px-3 py-2 text-xs text-amber-100"
+      role="status"
+    >
+      <span>
+        <strong className="text-amber-200">No-spend lock</strong>
+        {lockUntil ? ` · tot ${lockUntil}` : ""} — snel loggen is geblokkeerd op deze tab; gebruik het noodpad onderaan Execute.
+      </span>
+      <a
+        href="#budget-lock-control"
+        className="shrink-0 font-semibold text-[var(--accent-focus)] underline-offset-2 hover:underline"
+      >
+        Naar lock / nooduitgave
+      </a>
+    </div>
+  );
+}
 
 export function BudgetTabsShell({
   initialTab,
@@ -27,6 +52,8 @@ export function BudgetTabsShell({
   analysis,
   goals,
   optimization,
+  lockActive,
+  lockUntil,
 }: Props) {
   const normalizeInitialTab = (tab: LegacyTabId): TabId => {
     if (tab === "tactical" || tab === "goals") return "execute";
@@ -51,7 +78,7 @@ export function BudgetTabsShell({
     }`;
 
   return (
-    <>
+    <BudgetLockProvider value={{ lockActive: lockActive && !historyMode, lockUntil }}>
       <div className="space-y-3">
         <div className="dashboard-top-strip">
           <div className="dashboard-top-strip-track" role="tablist" aria-label="Budget views">
@@ -76,6 +103,8 @@ export function BudgetTabsShell({
         {headerRight}
       </div>
 
+      <BudgetLockStrip historyMode={historyMode} />
+
       <div className="mt-4">
         {activeTab === "overview" && <div key="panel-overview">{overview}</div>}
         {activeTab === "execute" && !historyMode && (
@@ -87,6 +116,6 @@ export function BudgetTabsShell({
         {activeTab === "analysis" && <div key="panel-analysis">{analysis}</div>}
         {activeTab === "optimization" && <div key="panel-optimization">{optimization}</div>}
       </div>
-    </>
+    </BudgetLockProvider>
   );
 }

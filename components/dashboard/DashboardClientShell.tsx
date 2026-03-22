@@ -45,6 +45,9 @@ import { DCICStatusCard } from "@/components/dcic/DCICStatusCard";
 import { SetupReminderBanner } from "@/components/onboarding/SetupReminderBanner";
 import { ContextualTip } from "@/components/onboarding/ContextualTip";
 import { TIP_IDS } from "@/content/onboarding/tip-ids";
+import { toast } from "sonner";
+
+const DCIC_SUGGESTION_TOAST_KEY = "neurohq-dcic-suggestion-education-toast-v1";
 
 /* Below-fold: ssr: false = load after hydration. */
 const cardPlaceholder = (_className: string) => null;
@@ -108,6 +111,23 @@ export function DashboardClientShell() {
       "--mode-rgb-deep": "0, 136, 255",
     } as CSSProperties;
   }, [dcicMode]);
+
+  useEffect(() => {
+    if (dcicStatus !== "ready" || !gameState?.mode?.suggested) return;
+    try {
+      if (typeof window === "undefined" || localStorage.getItem(DCIC_SUGGESTION_TOAST_KEY)) return;
+      localStorage.setItem(DCIC_SUGGESTION_TOAST_KEY, "1");
+      const s = gameState.mode.suggested;
+      toast.info(
+        s === "war"
+          ? "Tip: vandaag suggereert je brain status War-modus (hoge capaciteit). Je kunt dit in je missie-flow activeren — niet verplicht."
+          : "Tip: vandaag suggereert je brain status Recovery (bescherming eerst). Tik op ? bij Commander status voor uitleg.",
+        { duration: 12_000 }
+      );
+    } catch {
+      // ignore storage
+    }
+  }, [dcicStatus, gameState?.mode?.suggested]);
 
   useEffect(() => {
     const fromCache = cache?.critical ?? null;
@@ -656,7 +676,11 @@ export function DashboardClientShell() {
               <div className="flex flex-col gap-4">
                 <CollapsibleDashboardCard title="Commander status (DCIC)" storageKey="dcic-status" defaultExpanded={true} dataTutorial="dashboard-dcic">
                   <div className="p-4 md:p-6">
-                    <DCICStatusCard gameState={gameState} status={dcicStatus} />
+                    <DCICStatusCard
+                      gameState={gameState}
+                      status={dcicStatus}
+                      brainStateMissing={critical ? critical.state == null : false}
+                    />
                   </div>
                 </CollapsibleDashboardCard>
                 <CollapsibleDashboardCard title="Vandaag door de app bepaald" storageKey="today-engine" defaultExpanded={true} dataTutorial="dashboard-today-engine">

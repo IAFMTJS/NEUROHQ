@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 import { upsertStrategyReview } from "@/app/actions/strategyFocus";
 import { domainLabel, type StrategyDomain } from "@/lib/strategyDomains";
 
@@ -44,6 +45,9 @@ export function StrategyWeeklyReviewCTA({
         strongest_domain: strongestDomain || undefined,
         notes: notes.trim() || undefined,
       });
+      toast.success(
+        "Review opgeslagen. Je gekozen drift en sterke domein voeden alignment en volgende week-prioriteit."
+      );
       router.refresh();
     } finally {
       setPending(false);

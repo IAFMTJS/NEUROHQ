@@ -6,6 +6,7 @@ import { addBudgetEntry, checkImpulseSignal, freezePurchase, updateBudgetEntry }
 import { Modal } from "@/components/Modal";
 import { getCurrencySymbol } from "@/lib/utils/currency";
 import { getPendingBudgetSnapshot, setPendingBudgetSnapshot } from "@/lib/client-pending-budget";
+import { useBudgetLock } from "@/components/budget/BudgetLockContext";
 
 const CATEGORY_PRESETS = ["Eten", "Vervoer", "Abonnementen", "Boodschappen", "Uit eten", "Gezondheid", "Overig"];
 type QuickTag = "planned" | "impulse" | "necessary";
@@ -52,6 +53,8 @@ export function AddBudgetEntryForm({
   mode?: "full" | "quick";
 }) {
   const router = useRouter();
+  const { lockActive: budgetLockActive } = useBudgetLock();
+  const effectiveReadOnly = readOnly || budgetLockActive;
   const formOpenedAt = useRef(Date.now());
   const [date, setDate] = useState(initialDate);
   const [amount, setAmount] = useState("");
@@ -86,7 +89,7 @@ export function AddBudgetEntryForm({
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (readOnly) return;
+    if (effectiveReadOnly) return;
     const cents = Math.round(parseFloat(amount) * 100);
     if (isNaN(cents) || cents === 0) return;
     const quickMode = mode === "quick";
@@ -243,7 +246,7 @@ export function AddBudgetEntryForm({
       </Modal>
       {mode === "quick" ? (
         <form id="budget-quick-log" onSubmit={handleSubmit} className="space-y-3 rounded-lg border border-[var(--card-border)] bg-[var(--bg-primary)]/40 p-4">
-          <fieldset disabled={readOnly} className="space-y-3 disabled:opacity-70">
+          <fieldset disabled={effectiveReadOnly} className="space-y-3 disabled:opacity-70">
             <div className="flex flex-wrap gap-3">
               <label className="flex-1 min-w-[120px]">
                 <span className="mb-1 block text-xs font-medium text-[var(--text-secondary)]">Amount</span>
@@ -316,18 +319,24 @@ export function AddBudgetEntryForm({
           <div className="flex justify-end">
             <button
               type="submit"
-              disabled={pending || !amount || readOnly}
+              disabled={pending || !amount || effectiveReadOnly}
               className="btn-primary inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-semibold disabled:opacity-50"
             >
               {pending ? "Logging..." : "Log Expense"}
             </button>
           </div>
           {submitError && <p className="text-xs text-rose-300">{submitError}</p>}
-          {readOnly && <p className="text-xs text-[var(--text-muted)]">History mode: adding entries is disabled.</p>}
+          {effectiveReadOnly && (
+            <p className="text-xs text-[var(--text-muted)]">
+              {budgetLockActive
+                ? "No-spend lock: gebruik het noodpad onderaan de Budget-pagina."
+                : "History mode: adding entries is disabled."}
+            </p>
+          )}
         </form>
       ) : (
       <form onSubmit={handleSubmit} className="flex flex-wrap items-end gap-4">
-        <fieldset disabled={readOnly} className="contents disabled:opacity-70">
+        <fieldset disabled={effectiveReadOnly} className="contents disabled:opacity-70">
         <label className="flex flex-col gap-1.5">
           <span className="text-sm font-medium text-[var(--text-muted)]">Date</span>
           <input
@@ -363,7 +372,7 @@ export function AddBudgetEntryForm({
           </div>
         </label>
         <label className="flex items-center gap-2">
-          <input type="checkbox" checked={isExpense} onChange={(e) => setIsExpense(e.target.checked)} disabled={readOnly} className="rounded border-[var(--card-border)] text-[var(--accent-focus)] focus:ring-[var(--accent-focus)] disabled:opacity-50" />
+          <input type="checkbox" checked={isExpense} onChange={(e) => setIsExpense(e.target.checked)} disabled={effectiveReadOnly} className="rounded border-[var(--card-border)] text-[var(--accent-focus)] focus:ring-[var(--accent-focus)] disabled:opacity-50" />
           <span className="text-sm text-[var(--text-muted)]">Expense</span>
         </label>
         <label className="flex flex-col gap-1.5">
@@ -504,12 +513,18 @@ export function AddBudgetEntryForm({
             className="w-56 rounded-lg border border-[var(--card-border)] bg-[var(--bg-primary)] px-3 py-2.5 text-sm text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:border-[var(--accent-focus)] focus:outline-none focus:ring-2 focus:ring-[var(--accent-focus)]/30"
           />
         </label>
-        <button type="submit" disabled={pending || readOnly} className="btn-primary rounded-lg px-4 py-2.5 text-sm font-medium disabled:opacity-50">
+        <button type="submit" disabled={pending || effectiveReadOnly} className="btn-primary rounded-lg px-4 py-2.5 text-sm font-medium disabled:opacity-50">
           Add
         </button>
         </fieldset>
         {submitError && <p className="text-xs text-rose-300">{submitError}</p>}
-        {readOnly && <p className="text-xs text-[var(--text-muted)]">History mode: adding entries is disabled.</p>}
+        {effectiveReadOnly && (
+          <p className="text-xs text-[var(--text-muted)]">
+            {budgetLockActive
+              ? "No-spend lock: gebruik het noodpad onderaan de Budget-pagina."
+              : "History mode: adding entries is disabled."}
+          </p>
+        )}
       </form>
       )}
     </>

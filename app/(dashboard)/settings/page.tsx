@@ -30,6 +30,7 @@ const SettingsWhereToConfigure = dynamic(() => import("@/components/settings/Set
 const SettingsClearCache = dynamic(() => import("@/components/settings/SettingsClearCache").then((m) => ({ default: m.SettingsClearCache })), { loading: () => null });
 const SettingsRefreshSnapshot = dynamic(() => import("@/components/settings/SettingsRefreshSnapshot").then((m) => ({ default: m.SettingsRefreshSnapshot })), { loading: () => null });
 const SettingsDCICModeTest = dynamic(() => import("@/components/settings/SettingsDCICModeTest").then((m) => ({ default: m.SettingsDCICModeTest })), { loading: () => null });
+const SettingsDcicModeExplain = dynamic(() => import("@/components/settings/SettingsDcicModeExplain").then((m) => ({ default: m.SettingsDcicModeExplain })), { loading: () => null });
 const BehaviorProfileSettings = dynamic(() => import("@/components/settings/BehaviorProfileSettings").then((m) => ({ default: m.BehaviorProfileSettings })), { loading: () => null });
 const SettingsDaysOff = dynamic(() => import("@/components/settings/SettingsDaysOff").then((m) => ({ default: m.SettingsDaysOff })), { loading: () => null });
 const SettingsEmailReminders = dynamic(() => import("@/components/settings/SettingsEmailReminders").then((m) => ({ default: m.SettingsEmailReminders })), { loading: () => <div className="min-h-[80px] animate-pulse rounded-xl bg-white/5" aria-hidden /> });
@@ -152,6 +153,7 @@ async function SettingsContent() {
         <SettingsReducedMotion initialReducedMotion={prefs.reduced_motion} />
         <SettingsLightUI initialLightUi={prefs.light_ui} />
         <XPBadge totalXp={xp.total_xp} level={xp.level} href="/settings" />
+        <SettingsDcicModeExplain />
         <SettingsDCICModeTest />
         <SettingsClearCache />
         <SettingsRefreshSnapshot />

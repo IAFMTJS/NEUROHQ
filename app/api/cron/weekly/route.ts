@@ -4,6 +4,7 @@ import { getRealityReportForUser } from "@/lib/report";
 import { getWeekBounds } from "@/lib/utils/learning";
 import { sendPushToUser } from "@/lib/push";
 import { applyPersonalityToPayload } from "@/lib/push-personality";
+import { PushCopyDedupe, parsePushCopyHistory } from "@/lib/push-copy-dedupe";
 import type { PersonalityMode } from "@/lib/behavioral-notifications";
 import { getLocalDateHour, isInQuietHours } from "@/lib/utils/timezone";
 import { isHighSensoryDayForUser } from "@/lib/mode-admin";
@@ -54,9 +55,12 @@ export async function GET(request: Request) {
       personalityMode: PersonalityMode;
     }
   >();
+  const pushCopyHistoryByUser = new Map<string, ReturnType<typeof parsePushCopyHistory>>();
   const { data: prefs, error: prefsError } = await supabase
     .from("user_preferences")
-    .select("user_id, email_reminders_enabled, push_reminders_enabled, push_weekly_learning_enabled, push_personality_mode");
+    .select(
+      "user_id, email_reminders_enabled, push_reminders_enabled, push_weekly_learning_enabled, push_personality_mode, push_copy_history"
+    );
   if (!prefsError && prefs?.length) {
     for (const pref of prefs) {
       const mode = (pref as { push_personality_mode?: PersonalityMode | null }).push_personality_mode ?? "auto";
@@ -66,6 +70,10 @@ export async function GET(request: Request) {
         pushWeeklyLearningEnabled: pref.push_weekly_learning_enabled ?? true,
         personalityMode: mode,
       });
+      pushCopyHistoryByUser.set(
+        pref.user_id,
+        parsePushCopyHistory((pref as { push_copy_history?: unknown }).push_copy_history)
+      );
     }
   }
 
@@ -85,6 +93,13 @@ export async function GET(request: Request) {
       pushWeeklyLearningEnabled: true,
       personalityMode: "auto" as PersonalityMode,
     };
+    const localDateForDedupe =
+      timezone && String(timezone).trim() ? getLocalDateHour(timezone as string).date : todayStr;
+    const pushDedupe = new PushCopyDedupe(
+      localDateForDedupe,
+      parsePushCopyHistory(pushCopyHistoryByUser.get(userId)),
+      7
+    );
     try {
       const payload = await getRealityReportForUser(supabase, userId, weekStart, weekEnd);
       const { error } = await supabase.from("reality_reports").upsert(
@@ -111,7 +126,13 @@ export async function GET(request: Request) {
         if (!highSensory && !isInQuietHours(local.hour, quietStart, quietEnd)) {
           try {
             const basePayload = buildWeeklyLearningPushPayload(payload.learningMinutes, payload.learningTarget);
-            const pushPayload = applyPersonalityToPayload(basePayload, userPrefs.personalityMode, "weekly_learning");
+            const pushPayload = applyPersonalityToPayload(
+              basePayload,
+              userPrefs.personalityMode,
+              "weekly_learning",
+              `${userId}:${localDate}`,
+              { dedupe: pushDedupe }
+            );
             const ok = await sendPushToUser(supabase, userId, pushPayload);
             if (ok) learningReminderSent++;
           } catch {
@@ -165,7 +186,13 @@ export async function GET(request: Request) {
               url: "/budget",
               priority: "high" as const,
             };
-            const pushPayload = applyPersonalityToPayload(basePayload, userPrefs.personalityMode, "savings_alert");
+            const pushPayload = applyPersonalityToPayload(
+              basePayload,
+              userPrefs.personalityMode,
+              "savings_alert",
+              `${userId}:${localDate}`,
+              { dedupe: pushDedupe }
+            );
             const ok = await sendPushToUser(supabase, userId, pushPayload);
             if (ok) savingsAlertSent++;
           } catch {
@@ -175,6 +202,10 @@ export async function GET(request: Request) {
       }
     } catch {
       // skip user on error
+    }
+
+    if (pushDedupe.dirty) {
+      await supabase.from("user_preferences").update({ push_copy_history: pushDedupe.getHistory() }).eq("user_id", userId);
     }
   }
 

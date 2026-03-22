@@ -1,8 +1,9 @@
 "use client";
 
-import { useTransition } from "react";
+import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { deleteCalendarEvent } from "@/app/actions/calendar";
+import { EditCalendarEventModal } from "@/components/EditCalendarEventModal";
 
 type Event = {
   id: string;
@@ -11,6 +12,7 @@ type Event = {
   end_at: string;
   is_social: boolean;
   source: string | null;
+  linked_task_id?: string | null;
 };
 
 import { DATE_LOCALE, formatDayShort } from "@/lib/utils/date-locale";
@@ -35,6 +37,7 @@ export function AgendaOnlyList({
 }) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
+  const [editing, setEditing] = useState<Event | null>(null);
 
   const byDay = new Map<string, Event[]>();
   for (const e of upcomingEvents) {
@@ -59,6 +62,8 @@ export function AgendaOnlyList({
   }
 
   return (
+    <>
+    <EditCalendarEventModal open={editing != null} event={editing} onClose={() => setEditing(null)} />
     <div className="space-y-4">
       {daysWithEvents.map((dateKey) => {
         const events = byDay.get(dateKey) ?? [];
@@ -78,6 +83,11 @@ export function AgendaOnlyList({
                   <div>
                     <span className="text-sm font-medium text-[var(--text-primary)]">
                       {e.title ?? "Untitled"}
+                      {e.linked_task_id ? (
+                        <span className="ml-2 rounded bg-violet-500/20 px-1.5 py-0.5 text-[10px] font-semibold text-violet-300">
+                          Taak
+                        </span>
+                      ) : null}
                     </span>
                     <span className="ml-2 text-xs text-neutral-400">
                       {new Date(e.start_at).toLocaleTimeString(DATE_LOCALE, { hour: "2-digit", minute: "2-digit" })} –{" "}
@@ -93,15 +103,25 @@ export function AgendaOnlyList({
                     >
                       Apple Kalender
                     </a>
-                    {e.source === "manual" && (
-                      <button
-                        type="button"
-                        onClick={() => handleDelete(e.id)}
-                        disabled={pending}
-                        className="text-xs text-neutral-500 hover:text-red-400"
-                      >
-                        Delete
-                      </button>
+                    {(e.source === "manual" || e.source === "neurohq") && (
+                      <>
+                        <button
+                          type="button"
+                          onClick={() => setEditing(e)}
+                          disabled={pending}
+                          className="text-xs text-[var(--accent-focus)] hover:underline"
+                        >
+                          Edit
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleDelete(e.id)}
+                          disabled={pending}
+                          className="text-xs text-neutral-500 hover:text-red-400"
+                        >
+                          Delete
+                        </button>
+                      </>
                     )}
                   </div>
                 </li>
@@ -111,5 +131,6 @@ export function AgendaOnlyList({
         );
       })}
     </div>
+    </>
   );
 }

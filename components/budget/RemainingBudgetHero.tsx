@@ -4,6 +4,7 @@ import { useEffect, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { HQModal, RadialMeter } from "@/components/hq";
 import { Modal } from "@/components/Modal";
+import { BudgetLockHeaderBadge } from "@/components/budget/BudgetLockHeaderBadge";
 import { updateBudgetSettings } from "@/app/actions/budget";
 import { formatCents, getCurrencySymbol } from "@/lib/utils/currency";
 import {
@@ -244,6 +245,9 @@ export function RemainingBudgetHero({
 
       <HQModal open={showDetails} onClose={() => setShowDetails(false)} width={520}>
         <div className="space-y-4">
+          <div className="flex flex-wrap items-center justify-end gap-2">
+            <BudgetLockHeaderBadge />
+          </div>
           <div>
             <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[var(--text-muted)]">
               Remaining budget
@@ -308,6 +312,7 @@ export function RemainingBudgetHero({
         onClose={() => setShowEdit(false)}
         title={hasSettings ? "Edit budget & savings" : "Set budget & savings"}
         showBranding
+        headerBadge={<BudgetLockHeaderBadge />}
       >
         <p className="text-sm text-[var(--text-muted)]">
           Total amount per {periodInput === "weekly" ? "week" : "month"}, and how much you reserve for savings.

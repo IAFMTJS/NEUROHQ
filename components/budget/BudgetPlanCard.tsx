@@ -3,6 +3,7 @@
 import { useState, useTransition } from "react";
 import { saveBudgetTarget } from "@/app/actions/dcic/finance-state";
 import { Modal } from "@/components/Modal";
+import { BudgetLockHeaderBadge } from "@/components/budget/BudgetLockHeaderBadge";
 import { getCurrencySymbol } from "@/lib/utils/currency";
 
 const DEFAULT_CATEGORIES = ["Housing", "Food", "Transport", "Vervoer", "Subscriptions", "Fun", "Savings", "Other"];
@@ -113,7 +114,13 @@ export function BudgetPlanCard({ targets: initialTargets, spentByCategory, curre
         </div>
       </section>
 
-      <Modal open={showModal} onClose={() => { setShowModal(false); setEditingCategory(null); }} title="Budgetplan per categorie" showBranding>
+      <Modal
+        open={showModal}
+        onClose={() => { setShowModal(false); setEditingCategory(null); }}
+        title="Budgetplan per categorie"
+        showBranding
+        headerBadge={<BudgetLockHeaderBadge />}
+      >
         <p className="text-sm text-[var(--text-muted)] mb-4">Gepland bedrag per maand per categorie.</p>
         {editingCategory ? (
           <div className="space-y-2">
