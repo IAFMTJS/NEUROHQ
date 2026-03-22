@@ -159,4 +159,25 @@
 
 ---
 
+## 7. Updates E2 — Neuro signals (toekomstige detectie / ML)
+
+**Bron:** productnotities “updates 22 03 E2” (neurodiversiteit data-first). Dit is **geen** medische classificatie in de app; wel signalen om later patronen te detecteren.
+
+**Profiel in app:** `behavior_profile.neuro_profile_tags` + opt-in `neuro_self_report_opt_in` (zie migratie 093, `lib/neuro-profile.ts`, settings Brain & gedrag).
+
+**Al geregistreerd in telemetrie:** `neuro_profile_saved`, `neuro_micro_report` (korte chips na skip/snooze), `task_paralysis_dismiss` (prompt gesloten zonder keuze).
+
+**Patronen om later te detecteren (bonus-sectie bron):** niet geïmplementeerd als regels — wel als backlog voor engine:
+
+- Starts only under pressure  
+- Fails after ~10 min consistently  
+- Only performs in morning  
+- Avoids cognitively heavy tasks  
+- Overperforms then crashes  
+- Needs structure to start, freedom to continue  
+
+**Edge-case signalen (opslag / model):** task paralysis duration, pre-task anxiety, post-task crash, fake productivity (druk bezig zonder output), recovery behavior type (doomscroll vs wandelen vs slapen) — toevoegen wanneer er dedicated events of structured logging voor bestaat.
+
+---
+
 *Deze analyse is gebaseerd op daadwerkelijke bestanden: `app/actions/analytics.ts`, `app/actions/tasks.ts`, `app/actions/xp.ts`, `app/actions/dcic/insight-engine.ts`, `app/actions/dcic/game-state.ts`, `components/missions/AddMissionModal3.tsx`, `components/missions/TaskDetailsModal.tsx`, `app/(dashboard)/report/page.tsx`, `app/(dashboard)/tasks/page.tsx`, en migraties 021, 032.*

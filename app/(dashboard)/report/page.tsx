@@ -24,6 +24,7 @@ import { getHeatmapLast30Days } from "@/app/actions/dcic/heatmap";
 import { getThirtyDayMirror } from "@/app/actions/thirty-day-mirror";
 import { getWeekBounds } from "@/lib/utils/learning";
 import {
+  DataMaturityBanner,
   InsightsMomentumHero,
   InsightsKeyNumbersStrip,
   InsightsGraphBlock,
@@ -149,6 +150,10 @@ async function ReportContent({ searchParams }: { searchParams: Promise<{ weekSta
             longestStreak={identity.streak.longest}
             bestDayOfWeek={insightState.bestDayOfWeek}
           />
+        )}
+
+        {insightState && (
+          <DataMaturityBanner maturity={insightState.dataMaturity} message={insightState.dataMaturityMessageNl} />
         )}
 
         {insightState && (

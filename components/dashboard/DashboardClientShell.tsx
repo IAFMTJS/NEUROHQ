@@ -13,7 +13,6 @@ import { CommanderHomeHero } from "@/components/commander";
 import { ModeBanner, ModeExplanationModal } from "@/components/dashboard/DashboardClientOnly";
 import { XPBadge } from "@/components/XPBadge";
 import { DashboardContextCard } from "@/components/dashboard/DashboardContextCard";
-import { DashboardUpdatesCard } from "@/components/dashboard/DashboardUpdatesCard";
 import { BudgetBadge } from "@/components/dashboard/BudgetBadge";
 import { DashboardActionsTrigger } from "@/components/dashboard/DashboardActionsTrigger";
 import { CollapsibleDashboardCard } from "@/components/dashboard/CollapsibleDashboardCard";
@@ -699,7 +698,6 @@ export function DashboardClientShell() {
                 </CollapsibleDashboardCard>
               </div>
               <div className="flex flex-col gap-4">
-                <DashboardUpdatesCard />
                 <CollapsibleDashboardCard title="Systeem modus" subtitle="Brain status & hoe voel je je vandaag" storageKey="systeem-modus" defaultExpanded={true} dataTutorial="dashboard-brain-status-section">
                   <div className="p-4 md:p-6 space-y-6">
                     <BrainStatusCard

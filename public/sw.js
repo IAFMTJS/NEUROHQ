@@ -3,7 +3,7 @@
 // - STATIC_CACHE (install): /offline, manifest, app-icon, core HUD visuals
 // - DYNAMIC_CACHE (per dag): HTML/API vallen terug op cache als offline; assets kunnen direct uit cache laden
 // - IndexedDB (neurohq-offline): offline mutaties (POST/PUT etc.) → gesynchroniseerd zodra er weer netwerk is
-const CACHE_VERSION = "v13";
+const CACHE_VERSION = "v14";
 const STATIC_CACHE = `neurohq-static-${CACHE_VERSION}`;
 const OFFLINE_PAGE = "/offline";
 
@@ -23,6 +23,23 @@ function getTodayDateString() {
 
 function getDynamicCacheName() {
   return "neurohq-dynamic-" + CACHE_VERSION + "-" + getTodayDateString();
+}
+
+/** Never let fetch handler reject — prevents "FetchEvent.respondWith received an error: Load failed" after PWA resume. */
+function offlineFallbackResponse() {
+  return caches.match(OFFLINE_PAGE).then(function (offline) {
+    return offline || new Response("Offline", { status: 503, statusText: "Offline" });
+  });
+}
+
+function safeRespondWith(event, getPromise) {
+  event.respondWith(
+    Promise.resolve()
+      .then(getPromise)
+      .catch(function () {
+        return offlineFallbackResponse();
+      })
+  );
 }
 
 // Offline mutation queue (IndexedDB) for API writes
@@ -331,8 +348,8 @@ self.addEventListener("fetch", function (event) {
 
   // JS/CSS: cache-first for today – serve from cache immediately on reopen, revalidate in background
   if (url.pathname.startsWith("/_next/static/") && (url.pathname.endsWith(".js") || url.pathname.endsWith(".css"))) {
-    event.respondWith(
-      caches.open(getDynamicCacheName()).then(function (cache) {
+    safeRespondWith(event, function () {
+      return caches.open(getDynamicCacheName()).then(function (cache) {
         return cache.match(event.request).then(function (cached) {
           var revalidate = fetch(event.request).then(function (response) {
             if (response.ok && event.request.method === "GET") {
@@ -351,8 +368,8 @@ self.addEventListener("fetch", function (event) {
             });
           });
         });
-      })
-    );
+      });
+    });
     return;
   }
   // Other static assets: images, fonts, icons - Cache First (Cache API only supports GET)
@@ -361,8 +378,8 @@ self.addEventListener("fetch", function (event) {
     url.pathname.startsWith("/icons/") ||
     url.pathname.startsWith("/mascots/")
   ) {
-    event.respondWith(
-      caches.match(event.request).then(function (cached) {
+    safeRespondWith(event, function () {
+      return caches.match(event.request).then(function (cached) {
         if (cached) return cached;
         return fetch(event.request).then(function (response) {
           if (response.ok && event.request.method === "GET") {
@@ -373,8 +390,8 @@ self.addEventListener("fetch", function (event) {
           }
           return response;
         });
-      })
-    );
+      });
+    });
     return;
   }
 
@@ -389,8 +406,8 @@ self.addEventListener("fetch", function (event) {
       url.pathname.startsWith("/api/stripe") ||
       url.pathname.startsWith("/api/billing")
     ) {
-      event.respondWith(
-        fetch(event.request).catch(function () {
+      safeRespondWith(event, function () {
+        return fetch(event.request).catch(function () {
           return new Response(
             JSON.stringify({ error: "Offline", offline: true }),
             {
@@ -398,8 +415,8 @@ self.addEventListener("fetch", function (event) {
               headers: { "Content-Type": "application/json" },
             }
           );
-        })
-      );
+        });
+      });
       return;
     }
 
@@ -408,8 +425,8 @@ self.addEventListener("fetch", function (event) {
       const networkRequest = event.request.clone();
       const queueRequest = event.request.clone();
 
-      event.respondWith(
-        fetch(networkRequest).catch(function () {
+      safeRespondWith(event, function () {
+        return fetch(networkRequest).catch(function () {
           // On network error, queue for background sync
           return queueRequest
             .text()
@@ -445,14 +462,14 @@ self.addEventListener("fetch", function (event) {
                 headers: { "Content-Type": "application/json" },
               });
             });
-        })
-      );
+        });
+      });
       return;
     }
 
     // GETs: network-first so fresh server state wins; fall back to cache when offline
-    event.respondWith(
-      caches.open(getDynamicCacheName()).then(function (cache) {
+    safeRespondWith(event, function () {
+      return caches.open(getDynamicCacheName()).then(function (cache) {
         return fetch(event.request)
           .then(function (response) {
             if (response.ok && event.request.method === "GET") {
@@ -472,8 +489,8 @@ self.addEventListener("fetch", function (event) {
               );
             });
           });
-      })
-    );
+      });
+    });
     return;
   }
 
@@ -485,8 +502,8 @@ self.addEventListener("fetch", function (event) {
       redirect: "follow",
     });
 
-    event.respondWith(
-      caches.open(getDynamicCacheName()).then(function (cache) {
+    safeRespondWith(event, function () {
+      return caches.open(getDynamicCacheName()).then(function (cache) {
         return (event.preloadResponse || Promise.resolve(null))
           .then(function (preloadedResponse) {
             if (preloadedResponse) {
@@ -512,14 +529,14 @@ self.addEventListener("fetch", function (event) {
               });
             });
           });
-      })
-    );
+      });
+    });
     return;
   }
 
   // Default: cache-first for today, then network (other GETs – data, etc.)
-  event.respondWith(
-    caches.open(getDynamicCacheName()).then(function (cache) {
+  safeRespondWith(event, function () {
+    return caches.open(getDynamicCacheName()).then(function (cache) {
       return cache.match(event.request).then(function (cached) {
         if (cached) {
           fetch(event.request).then(function (response) {
@@ -542,8 +559,8 @@ self.addEventListener("fetch", function (event) {
           });
         });
       });
-    })
-  );
+    });
+  });
 });
 
 // Push notifications

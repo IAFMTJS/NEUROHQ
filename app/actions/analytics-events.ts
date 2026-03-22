@@ -31,6 +31,9 @@ const EVENT_SCHEMAS: Record<string, EventSchema> = {
   decision_exposed: { version: 1, category: "engine", requiredKeys: ["decisionId", "decisionType", "surface"] },
   decision_action: { version: 1, category: "engine", requiredKeys: ["decisionId", "decisionType", "surface", "actionType"] },
   decision_outcome: { version: 1, category: "engine", requiredKeys: ["decisionId", "decisionType", "surface", "outcome"] },
+  neuro_profile_saved: { version: 1, category: "custom", requiredKeys: ["tagCount", "optIn"] },
+  neuro_micro_report: { version: 1, category: "custom", requiredKeys: ["kind", "value"] },
+  task_paralysis_dismiss: { version: 1, category: "custom", requiredKeys: ["surface"] },
 };
 
 function validatePayload(eventName: string, payload: Record<string, unknown>): { ok: boolean; missing: string[] } {
@@ -191,4 +194,21 @@ export async function getClosedLoopLearningSummary(days = 14): Promise<ClosedLoo
       outcomeRate: d.exposed > 0 ? d.outcomes / d.exposed : 0,
     }))
     .sort((a, b) => b.exposed - a.exposed);
+}
+
+/** Quick self-report (why stopped, focus break) — stored as analytics_events for later modeling. */
+export async function logNeuroMicroReport(params: {
+  kind: "why_stopped" | "focus_break" | "difficulty_feel";
+  value: string;
+  taskId?: string | null;
+}): Promise<void> {
+  const { getBehaviorProfile } = await import("@/app/actions/behavior-profile");
+  const profile = await getBehaviorProfile();
+  if (!profile.neuroSelfReportOptIn) return;
+
+  await trackEvent("neuro_micro_report", {
+    kind: params.kind,
+    value: params.value.slice(0, 200),
+    taskId: params.taskId ?? null,
+  });
 }

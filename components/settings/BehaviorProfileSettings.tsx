@@ -4,6 +4,12 @@ import { useState, useTransition, useEffect } from "react";
 import type { BehaviorProfile } from "@/types/behavior-profile.types";
 import { updateBehaviorProfile } from "@/app/actions/behavior-profile";
 import { updateUserPreferences } from "@/app/actions/preferences";
+import {
+  NEURO_PROFILE_TAG_IDS,
+  NEURO_PROFILE_TAG_LABELS_NL,
+  NEURO_PROFILE_SETTINGS_INTRO_NL,
+} from "@/lib/neuro-profile";
+import type { NeuroProfileTagId } from "@/lib/neuro-profile";
 
 type Props = {
   initial: BehaviorProfile;
@@ -71,6 +77,13 @@ export function BehaviorProfileSettings({ initial, initialAutoMasterMissions }: 
     setProfile({ identityTargets: Array.from(set) });
   }
 
+  function toggleNeuroTag(value: NeuroProfileTagId) {
+    const set = new Set(profile.neuroProfileTags);
+    if (set.has(value)) set.delete(value);
+    else set.add(value);
+    setProfile({ neuroProfileTags: Array.from(set) as BehaviorProfile["neuroProfileTags"] });
+  }
+
   function setAvoidance(tag: string, emotion: string) {
     const next = [...profile.avoidancePatterns.filter((p) => p.tag !== tag)];
     if (emotion) next.push({ tag, emotion });
@@ -122,6 +135,38 @@ export function BehaviorProfileSettings({ initial, initialAutoMasterMissions }: 
               </button>
             ))}
           </div>
+        </div>
+
+        <div>
+          <p className="text-xs font-medium text-[var(--text-secondary)]">Neuroprofiel (optioneel)</p>
+          <p className="mt-0.5 text-[11px] text-[var(--text-muted)]">{NEURO_PROFILE_SETTINGS_INTRO_NL}</p>
+          <div className="mt-2 flex flex-wrap gap-2">
+            {NEURO_PROFILE_TAG_IDS.map((id) => (
+              <button
+                key={id}
+                type="button"
+                onClick={() => toggleNeuroTag(id)}
+                className={`rounded-full px-3 py-1 text-xs ${
+                  profile.neuroProfileTags.includes(id)
+                    ? "bg-[var(--semantic-accent)]/20 text-[var(--semantic-accent)] border border-[var(--semantic-accent)]/60"
+                    : "bg-[var(--bg-surface)] text-[var(--text-muted)] border border-[var(--card-border)]"
+                }`}
+              >
+                {NEURO_PROFILE_TAG_LABELS_NL[id]}
+              </button>
+            ))}
+          </div>
+          <label className="mt-3 flex cursor-pointer items-start gap-2 text-[11px] text-[var(--text-secondary)]">
+            <input
+              type="checkbox"
+              checked={profile.neuroSelfReportOptIn}
+              onChange={(e) => setProfile({ neuroSelfReportOptIn: e.target.checked })}
+              className="mt-0.5 rounded border-[var(--card-border)]"
+            />
+            <span>
+              Snelle mini-vragen in de missie-flow (bijv. waarom gestopt) — kort, geen formulier. Helpt patronen te herkennen.
+            </span>
+          </label>
         </div>
 
         <div>

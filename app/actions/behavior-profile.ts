@@ -8,6 +8,8 @@ import {
   type WeekTheme,
   type AvoidancePattern,
 } from "@/types/behavior-profile.types";
+import { sanitizeNeuroProfileTags } from "@/lib/neuro-profile";
+import { trackEvent } from "@/app/actions/analytics-events";
 
 export async function getBehaviorProfile(): Promise<BehaviorProfile> {
   const supabase = await createClient();
@@ -25,6 +27,8 @@ export async function getBehaviorProfile(): Promise<BehaviorProfile> {
 
   const row = data as {
     identity_targets?: string[] | null;
+    neuro_profile_tags?: string[] | null;
+    neuro_self_report_opt_in?: boolean | null;
     avoidance_patterns?: unknown;
     energy_pattern?: string | null;
     discipline_level?: string | null;
@@ -46,6 +50,8 @@ export async function getBehaviorProfile(): Promise<BehaviorProfile> {
 
   return {
     identityTargets: Array.isArray(row.identity_targets) ? row.identity_targets : [],
+    neuroProfileTags: sanitizeNeuroProfileTags(row.neuro_profile_tags),
+    neuroSelfReportOptIn: Boolean(row.neuro_self_report_opt_in),
     avoidancePatterns: Array.isArray(row.avoidance_patterns as AvoidancePattern[])
       ? (row.avoidance_patterns as AvoidancePattern[])
       : [],
@@ -95,9 +101,17 @@ export async function updateBehaviorProfile(profile: BehaviorProfile): Promise<v
   } = await supabase.auth.getUser();
   if (!user) throw new Error("Not authenticated");
 
+  const prev = await getBehaviorProfile();
+  const nextTags = sanitizeNeuroProfileTags(profile.neuroProfileTags);
+  const tagsEqual =
+    [...prev.neuroProfileTags].sort().join(",") === [...nextTags].sort().join(",");
+  const neuroChanged = !tagsEqual || prev.neuroSelfReportOptIn !== profile.neuroSelfReportOptIn;
+
   const payload = {
     user_id: user.id,
     identity_targets: profile.identityTargets,
+    neuro_profile_tags: sanitizeNeuroProfileTags(profile.neuroProfileTags),
+    neuro_self_report_opt_in: profile.neuroSelfReportOptIn,
     avoidance_patterns: profile.avoidancePatterns,
     energy_pattern: profile.energyPattern,
     discipline_level: profile.disciplineLevel,
@@ -114,6 +128,13 @@ export async function updateBehaviorProfile(profile: BehaviorProfile): Promise<v
     .from("behavior_profile")
     .upsert(payload, { onConflict: "user_id" });
   if (error) throw new Error(error.message);
+
+  if (neuroChanged) {
+    void trackEvent("neuro_profile_saved", {
+      tagCount: nextTags.length,
+      optIn: profile.neuroSelfReportOptIn,
+    });
+  }
 
   revalidatePath("/settings");
 }

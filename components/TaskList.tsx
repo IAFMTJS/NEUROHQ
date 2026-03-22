@@ -26,6 +26,7 @@ import { addBonusAutoMissionsForToday } from "@/app/actions/master-missions";
 import { useHQStore } from "@/lib/hq-store";
 import { useTasksBootstrap } from "@/lib/tasks-bootstrap";
 import { useDCICGameState } from "@/lib/dcic/game-state-client";
+import { NeuroMicroReportBar } from "@/components/missions/NeuroMicroReportBar";
 
 const WEEKDAY_LABELS: Record<number, string> = { 1: "Mon", 2: "Tue", 3: "Wed", 4: "Thu", 5: "Fri", 6: "Sat", 7: "Sun" };
 
@@ -67,6 +68,8 @@ type Props = {
   brainMode?: BrainMode;
   /** When set, complete/start is disabled and reason is shown (system gate: recovery / energy). */
   blockedReasonByTaskId?: Record<string, string>;
+  /** Settings: show optional micro-report bar after skip/snooze (server also enforces opt-in). */
+  neuroSelfReportOptIn?: boolean;
 };
 
 function isRoutineTask(task: ExtendedTask): boolean {
@@ -111,6 +114,7 @@ export function TaskList({
   identityReputation,
   brainMode,
   blockedReasonByTaskId,
+  neuroSelfReportOptIn = false,
 }: Props) {
   const router = useRouter();
   const { gameState } = useDCICGameState();
@@ -144,6 +148,15 @@ export function TaskList({
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
   /** ID of task just removed; animate it out then clear (no re-render flash). */
   const [removingId, setRemovingId] = useState<string | null>(null);
+  const [microReportTaskId, setMicroReportTaskId] = useState<string | null>(null);
+
+  const queueMicroReport = useCallback(
+    (taskId: string) => {
+      if (!neuroSelfReportOptIn) return;
+      setMicroReportTaskId(taskId);
+    },
+    [neuroSelfReportOptIn]
+  );
   const addParam = searchParams.get("add");
   const [quickAddOpen, setQuickAddOpen] = useState(false);
   const [addFullOpen, setAddFullOpen] = useState(false);
@@ -471,6 +484,7 @@ export function TaskList({
         } else {
           await snoozeTask(id);
           void trackEvent("mission_skipped", { taskId: id, reason: "list_snooze" });
+          queueMicroReport(id);
           showMovedToast(id, originalDate, "Snoozed");
           router.refresh();
         }
@@ -492,6 +506,7 @@ export function TaskList({
         } else {
           await skipNextOccurrence(id);
           void trackEvent("mission_skipped", { taskId: id, reason: "list_skip_next" });
+          queueMicroReport(id);
           showMovedToast(id, originalDate, "Skipped next");
           router.refresh();
         }
@@ -1051,9 +1066,16 @@ export function TaskList({
             taskDomain={strategicByTaskId?.[focusTask.id]?.domain ?? (focusTask as { domain?: string | null }).domain ?? null}
             strategyMapping={strategyMapping ?? null}
             onComplete={() => setFocusTask(null)}
-            onSnooze={() => setFocusTask(null)}
+            onSnooze={() => {
+              const id = focusTask.id;
+              setFocusTask(null);
+              queueMicroReport(id);
+            }}
             energyMatchScore={strategicByTaskId?.[focusTask.id]?.energyMatch}
           />
+        )}
+        {microReportTaskId && (
+          <NeuroMicroReportBar taskId={microReportTaskId} onClose={() => setMicroReportTaskId(null)} />
         )}
         <ConfirmModal
           open={!!confirmDeleteId}

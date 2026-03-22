@@ -1,3 +1,4 @@
+export { DataMaturityBanner } from "./DataMaturityBanner";
 export { InsightsMomentumHero } from "./InsightsMomentumHero";
 export { InsightsKeyNumbersStrip } from "./InsightsKeyNumbersStrip";
 export { InsightsGraphBlock } from "./InsightsGraphBlock";

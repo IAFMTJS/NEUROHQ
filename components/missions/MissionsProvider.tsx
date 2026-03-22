@@ -53,7 +53,9 @@ export function MissionsProvider({ dateStr, children }: Props) {
     }
     for (const [day, tasks] of Object.entries(missions.tasksByDate)) {
       if (day === todayKey) continue;
-      setTasksForDate(day, tasks as Task[]);
+      const list = tasks as Task[];
+      const withoutDeleted = list.filter((t) => !(t as { deleted_at?: string | null }).deleted_at);
+      setTasksForDate(day, withoutDeleted);
     }
     setTasksError(null);
     setTasksStatus("ready");

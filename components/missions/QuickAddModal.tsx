@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 import { Modal } from "@/components/Modal";
 import { createTask } from "@/app/actions/tasks";
 import type { HeadroomTier } from "@/lib/brain-mode";
@@ -60,11 +61,13 @@ export function QuickAddModal({ open, onClose, date, onAdded, activeCountToday, 
     startTransition(async () => {
       try {
         const effectiveDueDate = (dueDate || date)?.trim() || date;
+        const recurrenceRule =
+          recurrence === "daily" ? "daily" : recurrence === "weekly" ? "weekly" : recurrence === "monthly" ? "monthly" : null;
         const result = await createTask({
           title: title.trim(),
           due_date: effectiveDueDate,
           category: category === "work" ? "work" : category === "personal" ? "personal" : null,
-          recurrence_rule: recurrence === "daily" ? "daily" : recurrence === "weekly" ? "weekly" : recurrence === "monthly" ? "monthly" : null,
+          recurrence_rule: recurrenceRule,
           recurrence_weekdays: recurrence_weekdays ?? null,
           impact: impact ? (parseInt(impact, 10) >= 1 && parseInt(impact, 10) <= 3 ? parseInt(impact, 10) : null) : null,
           urgency: urgency ? (parseInt(urgency, 10) >= 1 && parseInt(urgency, 10) <= 3 ? parseInt(urgency, 10) : null) : null,
@@ -75,6 +78,9 @@ export function QuickAddModal({ open, onClose, date, onAdded, activeCountToday, 
           priority: priority ? (parseInt(priority, 10) >= 1 && parseInt(priority, 10) <= 5 ? parseInt(priority, 10) : null) : null,
         });
         onAdded?.(result?.task);
+        if (recurrenceRule) {
+          toast.message("Ook zichtbaar onder Routine / Schema op Missions.");
+        }
         onClose();
       } catch (err) {
         setError(err instanceof Error ? err.message : "Failed to add");
@@ -111,6 +117,11 @@ export function QuickAddModal({ open, onClose, date, onAdded, activeCountToday, 
               <option value="weekly">Weekly</option>
               <option value="monthly">Monthly</option>
             </select>
+            {recurrence ? (
+              <p className="mt-1 text-[11px] text-[var(--text-muted)]">
+                Herhalende taken staan automatisch in Routine / Schema op de missie-pagina.
+              </p>
+            ) : null}
           </div>
         </div>
         {recurrence === "weekly" && (

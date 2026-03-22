@@ -11,6 +11,11 @@ import {
   type TrendDirection,
 } from "@/lib/insight-engine";
 import { xpToNextLevel } from "@/lib/xp";
+import {
+  dataMaturityBannerMessageNl,
+  type UserDataMaturity,
+} from "@/lib/user-data-maturity";
+import { getUserDataMaturitySnapshot } from "@/app/actions/user-data-maturity";
 
 export interface InsightGraphDay {
   date: string;
@@ -38,6 +43,10 @@ export interface InsightEngineState {
   graphData: InsightGraphDay[];
   /** Best day of week 0–6 (Sunday=0) for behavior copy. */
   bestDayOfWeek: number | null;
+  /** How much completion/task history we trust for personalization. */
+  dataMaturity: UserDataMaturity;
+  /** NL line for Insights banner (data usage transparency). */
+  dataMaturityMessageNl: string;
 }
 
 function momentumBand(score: number): "low" | "medium" | "high" {
@@ -260,6 +269,11 @@ async function getCompletionRateLast7(
     if (t === "complete") completed++;
   }
   if (started > 0) return completed / started;
+  // Typical missions flow logs "complete" but not always "start" — avoid a dead "—" in Insights.
+  if (completed > 0) {
+    const denom = started + completed;
+    return denom > 0 ? completed / denom : null;
+  }
 
   const { data: log } = await supabase
     .from("behaviour_log")
@@ -322,7 +336,7 @@ export async function getInsightEngineState(): Promise<InsightEngineState | null
     xpPrevious7 += byDate.get(d)?.xp ?? 0;
   }
 
-  const [completionRate, streakRow, behaviorRow, xpRow, frictionCount] = await Promise.all([
+  const [completionRate, streakRow, behaviorRow, xpRow, frictionCount, maturitySnap] = await Promise.all([
     getCompletionRateLast7(supabase, user.id),
     supabase.from("user_streak").select("current_streak, longest_streak, last_completion_date").eq("user_id", user.id).single(),
     supabase.from("user_behavior").select("last_active_date").eq("user_id", user.id).single(),
@@ -332,6 +346,7 @@ export async function getInsightEngineState(): Promise<InsightEngineState | null
       .select("id", { count: "exact", head: true })
       .eq("user_id", user.id)
       .gte("created_at", new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()),
+    getUserDataMaturitySnapshot(),
   ]);
 
   const currentStreak = (streakRow.data as { current_streak?: number } | null)?.current_streak ?? 0;
@@ -394,6 +409,8 @@ export async function getInsightEngineState(): Promise<InsightEngineState | null
 
   const graphData = buildGraphDataFromByDate(byDate, dates);
 
+  const dataMaturity = maturitySnap.maturity;
+
   return {
     momentum: { score: momentumScore, band: momentumResult.band },
     trend,
@@ -405,6 +422,8 @@ export async function getInsightEngineState(): Promise<InsightEngineState | null
     completionRateLast7: completionRate ?? null,
     graphData,
     bestDayOfWeek: bestDow ?? null,
+    dataMaturity,
+    dataMaturityMessageNl: dataMaturityBannerMessageNl(dataMaturity),
   };
 }
 

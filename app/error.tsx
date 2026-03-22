@@ -57,7 +57,18 @@ export default function Error({
           </p>
         )}
         <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:justify-center">
-          <PrimaryButton type="button" onClick={reset} className="w-auto px-6 py-2.5">
+          <PrimaryButton
+            type="button"
+            onClick={() => {
+              try {
+                reset();
+              } catch {
+                /* ignore */
+              }
+              window.location.reload();
+            }}
+            className="w-auto px-6 py-2.5"
+          >
             Opnieuw proberen
           </PrimaryButton>
           <Link

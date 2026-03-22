@@ -41,6 +41,8 @@ import type { TasksTabId } from "@/components/missions/TasksTabsShell";
 import { TasksDailyBootstrap } from "@/components/missions/TasksDailyBootstrap";
 import { TasksCalendarAsync } from "./TasksCalendarAsync";
 import { getGrowthEngineSnapshot } from "@/app/actions/growth-snapshot";
+import { getBehaviorProfile } from "@/app/actions/behavior-profile";
+import { neuroNextMoveHint } from "@/lib/neuro-copy";
 import { GrowthMissionsRibbon } from "@/components/growth/GrowthMissionsRibbon";
 
 /** Tasks page must always run on the server so latest data is rendered after refresh. */
@@ -217,6 +219,7 @@ async function MissionsSectionAsync({
     recoveryCampaign,
     emotionalCorrelation,
     growthSnap,
+    behaviorProfile,
   ] = await Promise.all([
     getMode(dateStr),
     getFutureTasks(dateStr),
@@ -232,6 +235,7 @@ async function MissionsSectionAsync({
     RecoveryCampaignBannerAsync(),
     EmotionalStateCorrelationBannerAsync(),
     getGrowthEngineSnapshot(),
+    getBehaviorProfile(),
   ]);
 
   const taskMode: TaskListMode =
@@ -314,18 +318,20 @@ async function MissionsSectionAsync({
   const missionCardsBase =
     missionCardsFromUMS.length > 0
       ? [...missionCardsFromUMS, ...missionCardsCompleted]
-      : [
-          ...tasks.slice(0, 8).map((t, i) => ({
-            id: (t as { id: string }).id,
-            title: (t as { title: string }).title ?? "Task",
-            subtitle: i === 0 ? "Active" : undefined,
-            description: (t as { notes?: string | null }).notes ?? null,
-            state: (i === 0 ? "active" : "locked") as "active" | "locked",
-            progressPct: 0,
-            href: "/tasks",
-          })),
-          ...missionCardsCompleted,
-        ];
+      : tasksNormal.length > 0
+        ? [
+            ...tasks.slice(0, 8).map((t, i) => ({
+              id: (t as { id: string }).id,
+              title: (t as { title: string }).title ?? "Task",
+              subtitle: i === 0 ? "Active" : undefined,
+              description: (t as { notes?: string | null }).notes ?? null,
+              state: (i === 0 ? "active" : "locked") as "active" | "locked",
+              progressPct: 0,
+              href: "/tasks",
+            })),
+            ...missionCardsCompleted,
+          ]
+        : [];
 
   const seenMissionIds = new Set<string>();
   const missionCards = missionCardsBase.filter((card) => {
@@ -333,6 +339,11 @@ async function MissionsSectionAsync({
     seenMissionIds.add(card.id);
     return true;
   });
+
+  const allMissionsDoneToday =
+    tasksNormal.length === 0 && Array.isArray(completedToday) && completedToday.length > 0;
+
+  const neuroLine = neuroNextMoveHint(behaviorProfile.neuroProfileTags);
 
   return (
     <SciFiPanel variant="glass" className={hudStyles.focusSecondary} bodyClassName="p-4 md:p-5">
@@ -351,15 +362,27 @@ async function MissionsSectionAsync({
         <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--text-muted)]">Your next move</p>
         <div className="rounded-2xl border border-[var(--accent-focus)]/40 bg-[var(--bg-surface)]/35 p-4">
           <h2 className="text-xl font-semibold text-[var(--text-primary)]">
-            {decisionBlocks.topRecommendation?.title ?? "Selecteer je volgende missie"}
+            {allMissionsDoneToday
+              ? "Alles gedaan voor vandaag"
+              : decisionBlocks.topRecommendation?.title ?? "Selecteer je volgende missie"}
           </h2>
           <p className="mt-2 text-sm text-[var(--text-muted)]">
-            {decisionBlocks.topRecommendation
-              ? `Must-do omdat deze missie vandaag de beste match heeft op strategie, energie en impact (UMS ${Math.round(
-                  decisionBlocks.topRecommendation.umsBreakdown.ums * 100
-                )}%).`
-              : "Geen harde must-do gevonden, start met een korte missie om momentum op te bouwen."}
+            {allMissionsDoneToday
+              ? "Geen open missies meer — top. Rust, vier het, of pak iets uit je backlog als je nog energie hebt."
+              : decisionBlocks.topRecommendation
+                ? `Must-do omdat deze missie vandaag de beste match heeft op strategie, energie en impact (UMS ${Math.round(
+                    decisionBlocks.topRecommendation.umsBreakdown.ums * 100
+                  )}%).`
+                : "Geen harde must-do gevonden, start met een korte missie om momentum op te bouwen."}
           </p>
+          {neuroLine && !allMissionsDoneToday && (
+            <p className="mt-2 rounded-lg border border-[var(--card-border)]/60 bg-[var(--bg-surface)]/40 px-3 py-2 text-xs text-[var(--text-secondary)]">
+              {neuroLine}
+            </p>
+          )}
+          {decisionBlocks.dataMaturityHintNl && !allMissionsDoneToday && (
+            <p className="mt-2 text-xs text-[var(--text-muted)]">{decisionBlocks.dataMaturityHintNl}</p>
+          )}
           {(decisionBlocks.alignmentFix.length > 0 || decisionBlocks.recovery.length > 0) && (
             <ul className="mt-3 space-y-1 text-xs text-[var(--text-secondary)]">
               {decisionBlocks.alignmentFix.slice(0, 2).map((task) => (
@@ -438,6 +461,7 @@ async function MissionsSectionAsync({
         identityLevel={identity.level}
         identityReputation={identityEngine.reputation ?? null}
         blockedReasonByTaskId={blockedReasonByTaskId}
+        neuroSelfReportOptIn={behaviorProfile.neuroSelfReportOptIn}
       />
       </div>
       </div>

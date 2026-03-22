@@ -267,6 +267,7 @@ export async function createTask(params: {
     throw new Error(msg);
   }
   revalidateTagMax(`tasks-${user.id}-${params.due_date}`);
+  revalidateTagMax("decision-blocks");
   revalidatePath("/dashboard");
   revalidatePath("/tasks");
   revalidatePath("/xp");
@@ -541,6 +542,7 @@ export async function completeTask(
   revalidatePath("/dashboard");
   revalidatePath("/tasks");
   revalidatePath("/xp");
+  revalidateTagMax("decision-blocks");
 
   // Snapshot updated Identity Engine reputation for level-up modal.
   let reputation: ReputationScore | null = null;
@@ -585,18 +587,28 @@ export async function uncompleteTask(id: string) {
   revalidatePath("/dashboard");
   revalidatePath("/tasks");
   revalidatePath("/xp");
+  revalidateTagMax("decision-blocks");
 }
 
 export async function deleteTask(id: string) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) throw new Error("Not authenticated");
+  const { data: row } = await supabase
+    .from("tasks")
+    .select("due_date")
+    .eq("id", id)
+    .eq("user_id", user.id)
+    .single();
+  const dueDate = (row as { due_date?: string } | null)?.due_date;
   const { error } = await supabase
     .from("tasks")
     .update({ deleted_at: new Date().toISOString(), updated_at: new Date().toISOString() })
     .eq("id", id)
     .eq("user_id", user.id);
   if (error) throw new Error(error.message);
+  if (dueDate) revalidateTagMax(`tasks-${user.id}-${dueDate}`);
+  revalidateTagMax("decision-blocks");
   const { revalidateDashboardCache } = await import("./dashboard-data");
   revalidateDashboardCache(user.id);
   revalidatePath("/dashboard");
@@ -615,6 +627,7 @@ export async function restoreTask(id: string) {
     .eq("id", id)
     .eq("user_id", user.id);
   if (error) throw new Error(error.message);
+  revalidateTagMax("decision-blocks");
   revalidatePath("/dashboard");
   revalidatePath("/tasks");
   revalidatePath("/xp");

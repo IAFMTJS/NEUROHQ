@@ -2,8 +2,14 @@ export type AvoidancePattern = { tag: string; emotion: string };
 
 export type WeekTheme = "environment_reset" | "self_discipline" | "health_body" | "courage";
 
+import type { NeuroProfileTagId } from "@/lib/neuro-profile";
+
 export type BehaviorProfile = {
   identityTargets: string[];
+  /** Optional tags for pacing, copy, and future telemetry — not a medical record. */
+  neuroProfileTags: NeuroProfileTagId[];
+  /** Opt in to quick “why stopped?” / focus-break prompts in missions flow. */
+  neuroSelfReportOptIn: boolean;
   avoidancePatterns: AvoidancePattern[];
   energyPattern: "morning_low" | "stable" | "evening_crash";
   disciplineLevel: "low" | "medium" | "high";
@@ -19,6 +25,8 @@ export type BehaviorProfile = {
 
 export const DEFAULT_BEHAVIOR_PROFILE: BehaviorProfile = {
   identityTargets: [],
+  neuroProfileTags: [],
+  neuroSelfReportOptIn: false,
   avoidancePatterns: [],
   energyPattern: "stable",
   disciplineLevel: "medium",

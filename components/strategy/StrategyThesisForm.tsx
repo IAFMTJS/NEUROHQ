@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { upsertStrategyFocus } from "@/app/actions/strategyFocus";
 import { domainLabel, type StrategyDomain, type WeeklyAllocation } from "@/lib/strategyDomains";
+import { applySliderChange } from "@/lib/weekly-allocation-ui";
 
 const DOMAINS: StrategyDomain[] = ["discipline", "health", "learning", "business"];
 const IDENTITIES = [
@@ -201,7 +202,7 @@ export function StrategyThesisForm() {
                 max={100}
                 value={alloc[d]}
                 onChange={(e) =>
-                  setAlloc((prev) => ({ ...prev, [d]: Number(e.target.value) }))
+                  setAlloc((prev) => applySliderChange(prev, d, Number(e.target.value)))
                 }
                 className="flex-1"
               />

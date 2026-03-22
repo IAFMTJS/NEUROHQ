@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useState, useCallback } from "react";
 import { updateWeeklyAllocation } from "@/app/actions/strategyFocus";
 import { domainLabel, type StrategyDomain, type WeeklyAllocation } from "@/lib/strategyDomains";
+import { applySliderChange, normalizeTo100 } from "@/lib/weekly-allocation-ui";
 
 const DOMAINS: StrategyDomain[] = ["discipline", "health", "learning", "business"];
 
@@ -11,23 +12,14 @@ type Props = {
   initialAllocation: WeeklyAllocation;
   /** Optional: show opportunity cost when allocation differs from initial */
   showOpportunityCost?: boolean;
+  /** Optional: extra line when user has neuro profile tags (strategy / personalization). */
+  neuroHint?: string | null;
 };
-
-function normalizeTo100(alloc: WeeklyAllocation): WeeklyAllocation {
-  const sum = Object.values(alloc).reduce((a, b) => a + b, 0);
-  if (sum === 0) return { discipline: 25, health: 25, learning: 25, business: 25 };
-  if (sum === 100) return { ...alloc };
-  const scale = 100 / sum;
-  const out = { ...alloc };
-  for (const d of DOMAINS) out[d] = Math.round(alloc[d] * scale);
-  const newSum = Object.values(out).reduce((a, b) => a + b, 0);
-  if (newSum !== 100) out[DOMAINS[0]] = (out[DOMAINS[0]] ?? 0) + (100 - newSum);
-  return out;
-}
 
 export function StrategyAllocationSliders({
   initialAllocation,
   showOpportunityCost = true,
+  neuroHint = null,
 }: Props) {
   const router = useRouter();
   const [alloc, setAlloc] = useState<WeeklyAllocation>(() => normalizeTo100(initialAllocation));
@@ -45,15 +37,9 @@ export function StrategyAllocationSliders({
       alloc.learning !== initialAllocation.learning ||
       alloc.business !== initialAllocation.business);
 
-  const handleChange = useCallback(
-    (domain: StrategyDomain, value: number) => {
-      setAlloc((prev) => {
-        const next = { ...prev, [domain]: value };
-        return normalizeTo100(next);
-      });
-    },
-    []
-  );
+  const handleChange = useCallback((domain: StrategyDomain, value: number) => {
+    setAlloc((prev) => applySliderChange(prev, domain, value));
+  }, []);
 
   const handleSave = async () => {
     const normalized = normalizeTo100(alloc);
@@ -73,8 +59,14 @@ export function StrategyAllocationSliders({
         Weekly focus budget (100 punten)
       </h2>
       <p className="mt-1 text-xs text-[var(--text-muted)]">
-        Verdeling via sliders (live opportunity cost bij aanpassen). Dit wordt de geplande distributie.
+        Stel je <strong>geplande</strong> weekly verdeling in (100 punten totaal). Live opportunity cost bij aanpassen. Het verschil met je echte week zie je onder het tabblad{" "}
+        <span className="font-medium text-[var(--text-secondary)]">Alignment &amp; momentum</span> (gepland vs. gedaan).
       </p>
+      {neuroHint ? (
+        <p className="mt-2 rounded-lg border border-[var(--card-border)]/60 bg-[var(--bg-surface)]/35 px-3 py-2 text-[11px] text-[var(--text-secondary)]">
+          {neuroHint}
+        </p>
+      ) : null}
       <div className="mt-3 space-y-3">
         {DOMAINS.map((d) => (
           <div key={d} className="flex items-center gap-3">

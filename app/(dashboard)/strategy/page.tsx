@@ -20,8 +20,11 @@ import { StrategyThesisHero } from "@/components/strategy/StrategyThesisHero";
 import { StrategyFocusMultipliers } from "@/components/strategy/StrategyFocusMultipliers";
 import { StrategyPhaseIndicator } from "@/components/strategy/StrategyPhaseIndicator";
 import { StrategyArchiveHistory } from "@/components/strategy/StrategyArchiveHistory";
-import { StrategyIntegratedOverview } from "@/components/strategy/StrategyIntegratedOverview";
 import { StrategyEngineSettingsSection } from "@/components/strategy/StrategyEngineSettingsSection";
+import { StrategyIntegratedOverview } from "@/components/strategy/StrategyIntegratedOverview";
+import { StrategyTabsShell } from "@/components/strategy/StrategyTabsShell";
+import { getBehaviorProfile } from "@/app/actions/behavior-profile";
+import { neuroStrategyBudgetHint } from "@/lib/neuro-copy";
 
 /** Force dynamic: strategy uses cookies (auth) and live data. */
 export const dynamic = "force-dynamic";
@@ -149,14 +152,16 @@ async function StrategyContent() {
   let driftAlert: { message: string; pctOff: number } | null = null;
   let reviewStatus = { reviewDue: false, weekNumber: 0, weekStart: "", lastReview: null as null | unknown };
 
+  let neuroBudgetHint: string | null = null;
   try {
-    const [p, a, log, mom, drift, review] = await Promise.all([
+    const [p, a, log, mom, drift, review, behaviorProfile] = await Promise.all([
       getPressureIndex(strategy.id),
       getAlignmentThisWeek(strategy.id),
       getAlignmentLog(strategy.id, 14),
       getMomentumByDomain(),
       getDriftAlert(strategy.id),
       getStrategyReviewStatus(strategy.id, strategy.start_date),
+      getBehaviorProfile(),
     ]);
     pressureData = p ?? pressureData;
     alignmentThisWeek = a ?? alignmentThisWeek;
@@ -164,6 +169,7 @@ async function StrategyContent() {
     momentum = mom ?? momentum;
     driftAlert = drift ?? null;
     reviewStatus = review ?? reviewStatus;
+    neuroBudgetHint = neuroStrategyBudgetHint(behaviorProfile.neuroProfileTags);
   } catch {
     // Fallbacks already set
   }
@@ -173,67 +179,78 @@ async function StrategyContent() {
     alignment_score: l.alignment_score,
   }));
 
-  return (
-    <div data-tutorial="strategy-content">
-      {reviewStatus.reviewDue && (
-        <div className="rounded-xl border border-amber-500/40 bg-amber-500/10 px-4 py-3 text-sm text-amber-200">
-          <strong>Zonder review: nieuwe week inactive.</strong> Voltooi je wekelijkse review hieronder om de strategie actief te houden.
-        </div>
-      )}
-
-      <div className="flex flex-wrap items-center justify-end gap-3">
-        <XPBadge totalXp={xp.total_xp} level={xp.level} compact href="/xp" />
-        <Link
-          href="/report"
-          className="link-glow-hover inline-flex items-center rounded-lg border border-[var(--card-border)] bg-[var(--bg-elevated)] px-4 py-2 text-sm font-medium text-[var(--text-primary)] transition-all duration-200 hover:border-[var(--accent-focus)] hover:text-[var(--accent-focus)]"
-        >
-          Reality report →
-        </Link>
+  const reviewBanner =
+    reviewStatus.reviewDue ? (
+      <div className="rounded-xl border border-amber-500/40 bg-amber-500/10 px-4 py-3 text-sm text-amber-200">
+        <strong>Zonder review: nieuwe week inactive.</strong> Voltooi je wekelijkse review in het tabblad Review om de strategie actief te houden.
       </div>
+    ) : null;
 
-      <StrategyThesisHero
-        thesis={strategy.thesis}
-        thesisWhy={strategy.thesis_why}
-        deadline={strategy.deadline}
-        targetMetric={strategy.target_metric}
-        pressure={pressureData.pressure}
-        zone={pressureData.zone}
-        daysRemaining={pressureData.daysRemaining}
+  return (
+    <div data-tutorial="strategy-content" className="space-y-6">
+      <StrategyTabsShell
+        banner={reviewBanner}
+        overview={
+          <>
+            <Suspense fallback={<div className="h-24 animate-pulse rounded-xl bg-[var(--bg-elevated)]/40" aria-hidden />}>
+              <StrategyIntegratedOverview />
+            </Suspense>
+            <div className="flex flex-wrap items-center justify-end gap-3">
+              <XPBadge totalXp={xp.total_xp} level={xp.level} compact href="/xp" />
+              <Link
+                href="/report"
+                className="link-glow-hover inline-flex items-center rounded-lg border border-[var(--card-border)] bg-[var(--bg-elevated)] px-4 py-2 text-sm font-medium text-[var(--text-primary)] transition-all duration-200 hover:border-[var(--accent-focus)] hover:text-[var(--accent-focus)]"
+              >
+                Reality report →
+              </Link>
+            </div>
+            <StrategyThesisHero
+              thesis={strategy.thesis}
+              thesisWhy={strategy.thesis_why}
+              deadline={strategy.deadline}
+              targetMetric={strategy.target_metric}
+              pressure={pressureData.pressure}
+              zone={pressureData.zone}
+              daysRemaining={pressureData.daysRemaining}
+            />
+            <StrategyFocusMultipliers
+              primaryDomain={strategy.primary_domain}
+              secondaryDomains={strategy.secondary_domains}
+            />
+          </>
+        }
+        focusBudget={
+          <StrategyAllocationSliders initialAllocation={strategy.weekly_allocation} neuroHint={neuroBudgetHint} />
+        }
+        alignment={
+          <>
+            <StrategyAlignmentGraph
+              plannedDistribution={alignmentThisWeek.planned}
+              actualDistribution={alignmentThisWeek.actual}
+              alignmentScore={alignmentThisWeek.alignmentScore}
+              alignmentLog={alignmentLogTrend}
+            />
+            <StrategyMomentumPerDomain momentumByDomain={momentum} />
+            {driftAlert && (
+              <StrategyDriftAlertBlock message={driftAlert.message} pctOff={driftAlert.pctOff} />
+            )}
+          </>
+        }
+        review={
+          <>
+            <StrategyPhaseIndicator phase={strategy.phase} />
+            <StrategyWeeklyReviewCTA
+              strategyId={strategy.id}
+              weekNumber={reviewStatus.weekNumber}
+              weekStart={reviewStatus.weekStart}
+              reviewDue={reviewStatus.reviewDue}
+              lastAlignmentScore={alignmentThisWeek.alignmentScore}
+            />
+            <StrategyArchiveCTA strategyId={strategy.id} />
+            <StrategyArchiveHistory past={past} />
+          </>
+        }
       />
-
-      <StrategyFocusMultipliers
-        primaryDomain={strategy.primary_domain}
-        secondaryDomains={strategy.secondary_domains}
-      />
-
-      <StrategyAllocationSliders initialAllocation={strategy.weekly_allocation} />
-
-      <StrategyAlignmentGraph
-        plannedDistribution={alignmentThisWeek.planned}
-        actualDistribution={alignmentThisWeek.actual}
-        alignmentScore={alignmentThisWeek.alignmentScore}
-        alignmentLog={alignmentLogTrend}
-      />
-
-      <StrategyMomentumPerDomain momentumByDomain={momentum} />
-
-      {driftAlert && (
-        <StrategyDriftAlertBlock message={driftAlert.message} pctOff={driftAlert.pctOff} />
-      )}
-
-      <StrategyPhaseIndicator phase={strategy.phase} />
-
-      <StrategyWeeklyReviewCTA
-        strategyId={strategy.id}
-        weekNumber={reviewStatus.weekNumber}
-        weekStart={reviewStatus.weekStart}
-        reviewDue={reviewStatus.reviewDue}
-        lastAlignmentScore={alignmentThisWeek.alignmentScore}
-      />
-
-      <StrategyArchiveCTA strategyId={strategy.id} />
-
-      <StrategyArchiveHistory past={past} />
     </div>
   );
 }
@@ -242,14 +259,11 @@ export default function StrategyPage() {
   return (
     <div className="container page space-y-6">
       <StrategyShell />
-      <Suspense fallback={<div className="h-40 animate-pulse rounded-2xl bg-[var(--bg-elevated)]/40" aria-hidden />}>
-        <StrategyIntegratedOverview />
+      <Suspense fallback={<div className="min-h-[200px] animate-pulse rounded-2xl bg-[var(--bg-elevated)]/30" aria-hidden />}>
+        <StrategyContent />
       </Suspense>
       <Suspense fallback={<div className="min-h-[200px] animate-pulse rounded-2xl bg-[var(--bg-elevated)]/30" aria-hidden />}>
         <StrategyEngineSettingsSection />
-      </Suspense>
-      <Suspense fallback={null}>
-        <StrategyContent />
       </Suspense>
     </div>
   );

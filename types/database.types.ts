@@ -437,6 +437,8 @@ export type Database = {
           hobby_commitment: Json | null
           identity_targets: string[]
           minimal_integrity_threshold_days: number
+          neuro_profile_tags: string[]
+          neuro_self_report_opt_in: boolean
           pet_attachment_level: number
           pet_type: string
           updated_at: string
@@ -451,6 +453,8 @@ export type Database = {
           hobby_commitment?: Json | null
           identity_targets?: string[]
           minimal_integrity_threshold_days?: number
+          neuro_profile_tags?: string[]
+          neuro_self_report_opt_in?: boolean
           pet_attachment_level?: number
           pet_type?: string
           updated_at?: string
@@ -465,6 +469,8 @@ export type Database = {
           hobby_commitment?: Json | null
           identity_targets?: string[]
           minimal_integrity_threshold_days?: number
+          neuro_profile_tags?: string[]
+          neuro_self_report_opt_in?: boolean
           pet_attachment_level?: number
           pet_type?: string
           updated_at?: string

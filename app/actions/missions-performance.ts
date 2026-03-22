@@ -10,6 +10,12 @@ import { getAlignmentThisWeek } from "@/app/actions/strategyFocus";
 import { isRecoveryTask } from "@/lib/recovery-task";
 import { yesterdayDate } from "@/lib/utils/timezone";
 import {
+  blendCompletionRate,
+  dataMaturityMissionsHintNl,
+  type UserDataMaturity,
+} from "@/lib/user-data-maturity";
+import { getUserDataMaturitySnapshot } from "@/app/actions/user-data-maturity";
+import {
   getBehavioralConstraints,
   getEffectiveBehavioralStats,
   normalizeBehavioralStats,
@@ -69,6 +75,10 @@ export type DecisionBlocksResult = {
   /** 5+ days no completions; show recovery protocol message. */
   recoveryProtocol?: boolean;
   daysSinceLastCompletion?: number;
+  /** Historical signal strength for per-task completion blending in UMS. */
+  dataMaturity: UserDataMaturity;
+  /** Optional NL line on Missions when personalization uses enough history. */
+  dataMaturityHintNl: string | null;
 };
 
 const EMPTY_DECISION_BLOCKS: DecisionBlocksResult = {
@@ -82,6 +92,8 @@ const EMPTY_DECISION_BLOCKS: DecisionBlocksResult = {
   pressureZone: "comfort",
   alignmentScore: 1,
   strategyMapping: null,
+  dataMaturity: "sparse",
+  dataMaturityHintNl: null,
 };
 
 function strategyAlignmentForTask(
@@ -181,7 +193,8 @@ function computeUMS(
 async function getTaskCompletionRates(
   supabase: Awaited<ReturnType<typeof createClient>>,
   userId: string,
-  taskIds: string[]
+  taskIds: string[],
+  dataMaturity: UserDataMaturity = "sparse"
 ): Promise<Record<string, number>> {
   if (taskIds.length === 0) return {};
   const { data: events } = await supabase
@@ -201,11 +214,12 @@ async function getTaskCompletionRates(
   for (const taskId of taskIds) {
     const t = byTask[taskId];
     if (!t) {
-      out[taskId] = 0.7;
+      out[taskId] = blendCompletionRate(0.7, dataMaturity);
       continue;
     }
     const attempts = t.start + t.complete + t.abandon;
-    out[taskId] = attempts > 0 ? Math.min(1, Math.max(0.2, t.complete / attempts)) : 0.7;
+    const raw = attempts > 0 ? Math.min(1, Math.max(0.2, t.complete / attempts)) : 0.7;
+    out[taskId] = blendCompletionRate(raw, dataMaturity);
   }
   return out;
 }
@@ -228,7 +242,8 @@ async function getDecisionBlocksUncached(dateStr: string): Promise<DecisionBlock
 
   const yesterdayStr = yesterdayDate(dateStr);
   const strategy = await getActiveStrategyFocus();
-  const [pressureResult, alignmentWeek, streakRow, dailyState] = await Promise.all([
+  const [maturitySnapshot, pressureResult, alignmentWeek, streakRow, dailyState] = await Promise.all([
+    getUserDataMaturitySnapshot(),
     strategy ? getPressureIndex(strategy.id) : Promise.resolve({ pressure: 0, zone: "comfort" as const, daysRemaining: 0, targetRemaining: 0 }),
     strategy ? getAlignmentThisWeek(strategy.id) : Promise.resolve({ planned: {}, actual: {}, alignmentScore: 1 }),
     supabase.from("user_streak").select("last_completion_date").eq("user_id", user.id).single(),
@@ -239,6 +254,7 @@ async function getDecisionBlocksUncached(dateStr: string): Promise<DecisionBlock
       .eq("date", dateStr)
       .single(),
   ]);
+  const dataMaturity = maturitySnapshot.maturity;
 
   const lastCompletion = (streakRow.data as { last_completion_date?: string | null } | null)?.last_completion_date ?? null;
   const streakAtRisk = lastCompletion !== yesterdayStr && lastCompletion !== dateStr;
@@ -304,7 +320,8 @@ async function getDecisionBlocksUncached(dateStr: string): Promise<DecisionBlock
   const completionRates = await getTaskCompletionRates(
     supabase,
     user.id,
-    tasks.map((t) => t.id)
+    tasks.map((t) => t.id),
+    dataMaturity
   );
 
   // Diversity: penalize tasks completed in last 3 days so same missions don't appear on top for days in a row
@@ -371,6 +388,8 @@ async function getDecisionBlocksUncached(dateStr: string): Promise<DecisionBlock
     recoveryOnly: consequenceState.recoveryOnly,
     recoveryProtocol: consequenceState.recoveryProtocol,
     daysSinceLastCompletion: consequenceState.daysSinceLastCompletion,
+    dataMaturity,
+    dataMaturityHintNl: dataMaturityMissionsHintNl(dataMaturity),
   };
 }
 
@@ -455,7 +474,13 @@ export async function getSimilarTasksCompletionRate(params: {
   const taskIds = similar.map((t) => t.id);
   if (taskIds.length === 0) return { rate: 0.7, count: 0, message: null };
 
-  const completionRates = await getTaskCompletionRates(supabase, user.id, taskIds);
+  const maturitySnap = await getUserDataMaturitySnapshot();
+  const completionRates = await getTaskCompletionRates(
+    supabase,
+    user.id,
+    taskIds,
+    maturitySnap.maturity
+  );
   const rates = Object.values(completionRates).filter((r) => r !== 0.7);
   const count = rates.length;
   const rate = count > 0 ? rates.reduce((a, b) => a + b, 0) / count : 0.7;
@@ -794,10 +819,18 @@ export async function getTasksSortedByUMS(dateStr: string): Promise<TaskWithUMS[
   const tasks = (rawTasks ?? []) as TaskWithMeta[];
 
   const strategy = await getActiveStrategyFocus();
-  const pressureResult = strategy ? await getPressureIndex(strategy.id) : { zone: "comfort" as const };
-  const dailyState = await supabase.from("daily_state").select("energy").eq("user_id", user.id).eq("date", dateStr).single();
+  const [maturitySnapshot, pressureResult, dailyState] = await Promise.all([
+    getUserDataMaturitySnapshot(),
+    strategy ? getPressureIndex(strategy.id) : Promise.resolve({ zone: "comfort" as const }),
+    supabase.from("daily_state").select("energy").eq("user_id", user.id).eq("date", dateStr).single(),
+  ]);
   const userEnergy = (dailyState.data as { energy?: number } | null)?.energy ?? 5;
-  const completionRates = await getTaskCompletionRates(supabase, user.id, tasks.map((t) => t.id));
+  const completionRates = await getTaskCompletionRates(
+    supabase,
+    user.id,
+    tasks.map((t) => t.id),
+    maturitySnapshot.maturity
+  );
 
   const withUMS: TaskWithUMS[] = tasks.map((t) => {
     const breakdown = computeUMS(t, {
