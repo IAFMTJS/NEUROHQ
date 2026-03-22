@@ -9,6 +9,18 @@
     "definition": {
       "version": 1,
       "goal_one_liner": "Conversatie-ready worden zonder miracle claims",
+      "trajectory_context": "Dit traject is opgebouwd als maandenlange progressie: eerst volume en herkenning, dan structuur, dan echte input/output. Geen crash-course — je plant weken, niet dagen.",
+      "prerequisites": [
+        "5–10 minuten vrij per dag minimum (meer is beter)",
+        "Een vaste plek voor audio (koptelefoon helpt)",
+        "Bereidheid om fouten te maken en te herhalen"
+      ],
+      "outcomes": [
+        "Een betrouwbaar woord- en reviewritme",
+        "Korte luister- en spreekmomenten zonder perfectionisme",
+        "Zicht op je zwakste schakel (klank, tempo, woorden, …)"
+      ],
+      "tags": ["Taal", "SRS", "Luisteren", "Spreken"],
       "estimated_weeks_min": 12,
       "estimated_weeks_max": 52,
       "phases": [
@@ -51,12 +63,38 @@
           "phase_id": "foundation",
           "title": "Week 1 — Bootstrap",
           "objective": "Startwoordenschat en luisteren met ondersteuning.",
+          "week_intent": "Geen perfecte week — wél een vaste gewoonte: elke werkdag dezelfde drie blokken (woorden, luisteren, schrijven), in totaal ±45 min verspreid.",
+          "coach_notes": "Mis je een dag: geen inhalen in het weekend tenzij je dat rustig vindt. Liever 5 dagen licht dan 2 dagen held.",
+          "day_overview": [
+            { "day_of_week": 1, "focus_line": "SRS start + korte audio met tekst", "task_ids": ["las-w1-t1", "las-w1-t2"] },
+            { "day_of_week": 2, "focus_line": "SRS + zelfde audio zonder tekst (1×)", "task_ids": ["las-w1-t1", "las-w1-t2"] },
+            { "day_of_week": 3, "focus_line": "SRS + schrijven (korte daglog)", "task_ids": ["las-w1-t1", "las-w1-t3"] },
+            { "day_of_week": 4, "focus_line": "SRS + nieuwe clip (5 min)", "task_ids": ["las-w1-t1", "las-w1-t2"] },
+            { "day_of_week": 5, "focus_line": "SRS + schrijven (iets langere zinnen)", "task_ids": ["las-w1-t1", "las-w1-t3"] },
+            { "day_of_week": 6, "focus_line": "Alleen review + rustig luisteren (optioneel)", "task_ids": ["las-w1-t2"] },
+            { "day_of_week": 7, "focus_line": "Weekreset: lees coach_notes + plan volgende week", "task_ids": [] }
+          ],
+          "weekly_checklist": [
+            "Minstens 5 dagen SRS geopend",
+            "Minstens 3 luister-sessies afgerond",
+            "Minstens 2 schrijf-sessies afgerond",
+            "Eén zin geschreven: wat was het moeilijkst?"
+          ],
           "tasks": [
             {
               "id": "las-w1-t1",
               "title": "Woorden (dagelijks)",
               "concrete": "Spaced repetition: nieuwe woorden + review.",
               "minutes": 15,
+              "why_it_matters": "Zonder herhaling verdwijnt vocab sneller dan je het bouwt — SRS is het skelet van dit traject.",
+              "frequency_note": "5–7× / week",
+              "preferred_days": [1, 2, 3, 4, 5],
+              "checklist": [
+                "Open je SRS-deck",
+                "Voeg batch nieuwe woorden toe (volgens tier)",
+                "Sluit af met korte review van gisteren"
+              ],
+              "reflection_prompt": "Welke 3 woorden bleven hangen en welke 3 niet — en waarom denk je dat?",
               "scaling": {
                 "easy": { "concrete": "10 nieuwe woorden + korte review", "minutes": 10 },
                 "medium": { "concrete": "20 nieuwe woorden + review", "minutes": 15 },
@@ -68,6 +106,14 @@
               "title": "Luisteren met ondersteuning",
               "concrete": "Korte audio met transcript; alleen luisteren eerste keer.",
               "minutes": 15,
+              "why_it_matters": "Input moet vooraf gaan op output — eerst klank en zin herkennen.",
+              "frequency_note": "3–5× / week",
+              "preferred_days": [1, 2, 4, 6],
+              "checklist": [
+                "Eerste keer: alleen luisteren",
+                "Tweede keer: meelezen met transcript",
+                "Noteer 1 zin die je bijblijft"
+              ],
               "scaling": {
                 "easy": { "concrete": "5 min audio + volgen met tekst", "minutes": 10 },
                 "medium": { "concrete": "10–15 min + 1x zonder tekst", "minutes": 18 },
@@ -79,6 +125,10 @@
               "title": "Schrijven",
               "concrete": "5 simpele zinnen over je dag.",
               "minutes": 12,
+              "why_it_matters": "Actieve productie maakt gaps zichtbaar; korte zinnen houden de drempel laag.",
+              "frequency_note": "2–3× / week",
+              "preferred_days": [3, 5],
+              "reflection_prompt": "Welke grammaticale fout maak je steeds opnieuw?",
               "scaling": {
                 "easy": { "concrete": "3 zinnen met woordenlijst erbij", "minutes": 10 },
                 "medium": { "concrete": "5 zinnen", "minutes": 12 },
@@ -92,6 +142,20 @@
           "phase_id": "foundation",
           "title": "Week 2 — Ritme",
           "objective": "Dagelijks ritme vasthouden; iets meer volume.",
+          "week_intent": "Week 1 was start — week 2 is herhaling met thema en iets langere luister-blokken.",
+          "coach_notes": "Voel je weerstand: verkort de tijd, niet de frequentie.",
+          "day_overview": [
+            { "day_of_week": 1, "focus_line": "Thema-woorden eten + SR", "task_ids": ["las-w2-t1"] },
+            { "day_of_week": 2, "focus_line": "Luister-lezen ronde 1", "task_ids": ["las-w2-t2"] },
+            { "day_of_week": 3, "focus_line": "SR + luister-lezen ronde 2", "task_ids": ["las-w2-t1", "las-w2-t2"] },
+            { "day_of_week": 4, "focus_line": "SR (hersteldag)", "task_ids": ["las-w2-t1"] },
+            { "day_of_week": 5, "focus_line": "Beide taken + mini-reflectie", "task_ids": ["las-w2-t1", "las-w2-t2"] }
+          ],
+          "weekly_checklist": [
+            "Thema-set woorden afgerond",
+            "Minstens 2× luister-lezen (2 rondes)",
+            "Geen ‘skip’ meer dan 2 dagen op rij"
+          ],
           "tasks": [
             {
               "id": "las-w2-t1",
@@ -332,6 +396,17 @@
     "definition": {
       "version": 1,
       "goal_one_liner": "Dagelijks 1–2 echte diepteblokken zonder context switching",
+      "trajectory_context": "Focus is een kalender- en aandachtsspel: je beschermt diepte tegen meetings, notificaties en multitask. Geschikt als je merkt dat je dagen ‘vol’ maar leeg voelt.",
+      "prerequisites": [
+        "Recht op minstens één ononderbroken venster van 25 min op werkdagen",
+        "Een plek waar je scherm/telefoon fysiek weg kunt leggen"
+      ],
+      "outcomes": [
+        "Vaste blokken in agenda die je niet meer ‘weggeeft’",
+        "Inzicht in je grootste afleiders (meetings vs apps vs mensen)",
+        "Een herhaalbaar template voor volgende maanden"
+      ],
+      "tags": ["Focus", "Diepte", "Agenda"],
       "estimated_weeks_min": 4,
       "estimated_weeks_max": 4,
       "phases": [
@@ -366,12 +441,34 @@
           "phase_id": "protect",
           "title": "Week 1 — Blokken planten",
           "objective": "Elke werkdag 1 focusblok van 25 min + 1 van 50 min.",
+          "week_intent": "Eerst bestaan de blokken in je agenda — nog niet perfect uitgevoerd. Consistentie gaat boven lengte.",
+          "coach_notes": "Als je baas/agenda blokkeert: verplaats blokken, maar verwijder ze niet. Liever korter dan weg.",
+          "day_overview": [
+            { "day_of_week": 1, "focus_line": "Blokken zetten + ochtend 25 min", "task_ids": ["fb-w1-t1", "fb-w1-t2", "fb-w1-t3"] },
+            { "day_of_week": 2, "focus_line": "50 min diepte + start-ritueel", "task_ids": ["fb-w1-t2", "fb-w1-t3"] },
+            { "day_of_week": 3, "focus_line": "25 min + audit: wat sloopte blokken?", "task_ids": ["fb-w1-t1"] },
+            { "day_of_week": 4, "focus_line": "Beide blokken + één taak minder multitask", "task_ids": ["fb-w1-t3"] },
+            { "day_of_week": 5, "focus_line": "Weekafsluiting: welke blokken werden wél gedaan?", "task_ids": ["fb-w1-t1"] }
+          ],
+          "weekly_checklist": [
+            "5× 25 min gepland en zichtbaar voor jezelf",
+            "5× 50 min gepland",
+            "Start-ritueel minstens 3× gebruikt"
+          ],
           "tasks": [
             {
               "id": "fb-w1-t1",
               "title": "Kalenderblokken",
               "concrete": "Zet 5× 25 min en 5× 50 min vast; geen overlapping met meetings waar mogelijk.",
               "minutes": 15,
+              "why_it_matters": "Wat niet gepland staat, verliest van alles wat wél op je scherm springt.",
+              "frequency_note": "1× setup (week)",
+              "preferred_days": [1],
+              "checklist": [
+                "Kies vaste starttijden (bijv. 09:00 / 14:00)",
+                "Kleur of label ‘diepte’ in agenda",
+                "Deel niks — dit is jouw contract met jezelf"
+              ],
               "scaling": {
                 "easy": { "concrete": "3 dagen met 1 blok per dag", "minutes": 10 },
                 "medium": { "concrete": "5 dagen zoals beschreven", "minutes": 15 },
@@ -383,6 +480,9 @@
               "title": "Start-ritueel",
               "concrete": "Voor elk blok: 60 sec zelfde start (adem / zelfde track / zelfde plek).",
               "minutes": 5,
+              "why_it_matters": "Het brein koppelt ‘diepte’ aan een cue — minder besluitvermoeidheid bij start.",
+              "frequency_note": "Bij elk gepland blok",
+              "reflection_prompt": "Welke 3 dingen onderbreken je meestal in de eerste 5 min?",
               "scaling": {
                 "easy": { "concrete": "Alleen ochtendblok", "minutes": 3 },
                 "medium": { "concrete": "Alle geplande blokken", "minutes": 5 },
@@ -394,6 +494,12 @@
               "title": "Eén taak per blok",
               "concrete": "Geen tab-switch: één ticket/één document per blok.",
               "minutes": 0,
+              "why_it_matters": "Context switching kost meer tijd dan je denkt — één taak maakt output meetbaar.",
+              "checklist": [
+                "Sluit alle tabs behalve één",
+                "Zet timer",
+                "Na afloop: 1 zin output opslaan"
+              ],
               "success_criteria": "Geen multitask tijdens de timer."
             }
           ]
@@ -489,6 +595,17 @@
     "definition": {
       "version": 1,
       "goal_one_liner": "Energie en focus terugbrengen zonder meteen weer te overbelasten",
+      "trajectory_context": "Recovery is omgekeerde prioriteit: eerst stabiliteit (slaap, grenzen), dan pas weer prestatie. Gebruik na burnout-risico, ziekte of chronische overload.",
+      "prerequisites": [
+        "Je kunt minstens één commitment uitstellen zonder catastrofe",
+        "Toegang tot basis rust (slaapvenster, geen 24/7 crisis)"
+      ],
+      "outcomes": [
+        "Minder ‘moeten’ op je bord",
+        "Een meetbare minimum-routine die vol te houden is",
+        "Heldere signalen wanneer je weer mag opbouwen"
+      ],
+      "tags": ["Recovery", "Energie", "Grenzen"],
       "estimated_weeks_min": 3,
       "estimated_weeks_max": 3,
       "phases": [
@@ -523,12 +640,32 @@
           "phase_id": "downshift",
           "title": "Week 1 — Alles minder",
           "objective": "Halveer optionele commitments; geen nieuwe doelen.",
+          "week_intent": "Week 1 is nee zeggen en slaap voorrang — geen verbetering, alleen minder lek.",
+          "coach_notes": "Schuldgevoel hoort bij herstel; noteer het, maar volg de cut list toch.",
+          "day_overview": [
+            { "day_of_week": 1, "focus_line": "Cut list + één ding minder", "task_ids": ["rc-w1-t1"] },
+            { "day_of_week": 2, "focus_line": "Slaap-anker check", "task_ids": ["rc-w1-t2"] },
+            { "day_of_week": 3, "focus_line": "Beweging licht", "task_ids": ["rc-w1-t3"] },
+            { "day_of_week": 4, "focus_line": "Herhaal cut list (blijf streng)", "task_ids": ["rc-w1-t1"] },
+            { "day_of_week": 5, "focus_line": "Midweek: energie 1–10 noteren", "task_ids": [] },
+            { "day_of_week": 6, "focus_line": "Geen productiviteit — alleen onderhoud", "task_ids": ["rc-w1-t3"] },
+            { "day_of_week": 7, "focus_line": "Rust / voorbereiding week 2", "task_ids": [] }
+          ],
+          "weekly_checklist": [
+            "Cut list staat zwart op wit",
+            "Slaap-anker minstens 5 nachten geprobeerd",
+            "Geen nieuw doel toegevoegd"
+          ],
           "tasks": [
             {
               "id": "rc-w1-t1",
               "title": "Cut list",
               "concrete": "Schrijf 3 dingen die je deze week weglaat of uitstelt.",
               "minutes": 20,
+              "why_it_matters": "Herstel begint bij ruimte — alles wat blijft kost nog steeds glucose.",
+              "frequency_note": "1× + midweek check",
+              "preferred_days": [1, 4],
+              "reflection_prompt": "Welke ‘must’ was eigenlijk een ‘wil’?",
               "scaling": {
                 "easy": { "concrete": "1 ding weglaten", "minutes": 10 },
                 "medium": { "concrete": "3 dingen", "minutes": 20 },

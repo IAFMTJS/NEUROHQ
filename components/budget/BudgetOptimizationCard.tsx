@@ -11,6 +11,7 @@ import {
 import { useBudgetLock } from "@/components/budget/BudgetLockContext";
 
 type Props = {
+  lockPanelHref: string;
   summary: string;
   suggestions: string[];
   challenges: Array<{ key: string; label: string; xp: number; description: string }>;
@@ -25,7 +26,7 @@ function formatLockUntil(iso: string | null): string | null {
   }
 }
 
-export function BudgetOptimizationCard({ summary, suggestions, challenges }: Props) {
+export function BudgetOptimizationCard({ lockPanelHref, summary, suggestions, challenges }: Props) {
   const { lockActive, lockUntil } = useBudgetLock();
   const [pending, startTransition] = useTransition();
   const [awardedXpByKey, setAwardedXpByKey] = useState<Record<string, number>>({});
@@ -46,7 +47,7 @@ export function BudgetOptimizationCard({ summary, suggestions, challenges }: Pro
           {untilLabel && <p className="mt-1 text-amber-50/95">Minstens tot {untilLabel}</p>}
           <p className="mt-1.5 text-[var(--text-secondary)]">{lockSummary}</p>
           <a
-            href="#budget-lock-control"
+            href={lockPanelHref}
             className="mt-2 inline-block text-xs font-semibold text-[var(--semantic-accent)] underline-offset-2 hover:underline"
           >
             Open lock- en nooduitgave-paneel op Execute

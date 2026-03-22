@@ -8,9 +8,11 @@ import { submitLearningReflection } from "@/app/actions/learning-state";
 type Props = {
   reflection: LearningReflectionState;
   today: string;
+  /** Omit outer card header when wrapped in CollapsibleDashboardCard. */
+  embedded?: boolean;
 };
 
-export const GrowthReflectionCard: FC<Props> = ({ reflection, today }) => {
+export const GrowthReflectionCard: FC<Props> = ({ reflection, today, embedded = false }) => {
   const [understood, setUnderstood] = useState(reflection.lastUnderstood ?? "");
   const [difficult, setDifficult] = useState(reflection.lastDifficult ?? "");
   const [adjust, setAdjust] = useState(reflection.lastAdjust ?? "");
@@ -36,19 +38,8 @@ export const GrowthReflectionCard: FC<Props> = ({ reflection, today }) => {
 
   const disabled = pending || submitted;
 
-  return (
-    <section
-      className={`card-simple overflow-hidden p-0 ${
-        highlight ? "ring-1 ring-[var(--accent-primary)]/40" : ""
-      }`}
-    >
-      <div className="border-b border-[var(--card-border)] px-4 py-3">
-        <h2 className="text-base font-semibold text-[var(--text-primary)]">Reflection</h2>
-        <p className="mt-0.5 text-xs text-[var(--text-muted)]">
-          Short weekly check-in. Max 500 characters per question.
-        </p>
-      </div>
-      <form onSubmit={handleSubmit} className="p-4 space-y-3">
+  const form = (
+      <form onSubmit={handleSubmit} className="space-y-3">
         <div>
           <label className="block text-xs font-medium text-[var(--text-muted)] mb-1">
             Where did you avoid effort?
@@ -104,6 +95,32 @@ export const GrowthReflectionCard: FC<Props> = ({ reflection, today }) => {
           </button>
         </div>
       </form>
+  );
+
+  if (embedded) {
+    if (highlight) {
+      return (
+        <div className="rounded-xl border border-[var(--card-border)] bg-[var(--bg-primary)]/40 p-4 ring-1 ring-[var(--accent-primary)]/40">
+          {form}
+        </div>
+      );
+    }
+    return form;
+  }
+
+  return (
+    <section
+      className={`card-simple overflow-hidden p-0 ${
+        highlight ? "ring-1 ring-[var(--accent-primary)]/40" : ""
+      }`}
+    >
+      <div className="border-b border-[var(--card-border)] px-4 py-3">
+        <h2 className="text-base font-semibold text-[var(--text-primary)]">Reflection</h2>
+        <p className="mt-0.5 text-xs text-[var(--text-muted)]">
+          Short weekly check-in. Max 500 characters per question.
+        </p>
+      </div>
+      <div className="p-4">{form}</div>
     </section>
   );
 };

@@ -68,6 +68,7 @@ import { ReflectionEngineCard } from "@/components/budget/ReflectionEngineCard";
 import { BudgetLockControlCard } from "@/components/budget/BudgetLockControlCard";
 import { BudgetPaydaySurveyCard } from "@/components/budget/BudgetPaydaySurveyCard";
 import { BudgetOptimizationCard } from "@/components/budget/BudgetOptimizationCard";
+import { StrategyEnginePaceHint } from "@/components/strategy/StrategyEnginePaceHint";
 import { SciFiPanel } from "@/components/hud-test/SciFiPanel";
 import { CornerNode } from "@/components/hud-test/CornerNode";
 import hudStyles from "@/components/hud-test/hud.module.css";
@@ -188,6 +189,11 @@ async function BudgetContent({ searchParams }: Props) {
       ? tabParam
       : "overview";
 
+  const lockPanelParams = new URLSearchParams();
+  if (isHistoryView && monthParam) lockPanelParams.set("month", monthParam);
+  lockPanelParams.set("tab", "execute");
+  const lockPanelHref = `/budget?${lockPanelParams.toString()}#budget-lock-control`;
+
   // Canonical page-level sources used by all sections/cards in this view.
   let expensesCents = currentMonthExpenses; // canonical spent value for active period
   let incomeCents = currentMonthIncome; // canonical income value for active period
@@ -286,7 +292,7 @@ async function BudgetContent({ searchParams }: Props) {
       : remainingToSpendCents < 0
       ? { title: "Critical", tone: "text-amber-200", border: "border-amber-400/30 bg-amber-400/10" }
       : remainingToSpendCents < 5000
-      ? { title: "Guarded", tone: "text-cyan-200", border: "border-cyan-400/30 bg-cyan-400/10" }
+      ? { title: "Guarded", tone: "text-[var(--mode-text-soft)]", border: "border-[var(--semantic-ring)]/30 bg-[var(--semantic-accent)]/10" }
       : { title: "Stable", tone: "text-emerald-200", border: "border-emerald-400/30 bg-emerald-400/10" };
 
   const headerRight = (
@@ -303,9 +309,14 @@ async function BudgetContent({ searchParams }: Props) {
     <div className="space-y-4">
       {!historyMode && <BudgetDailyControlToast />}
       {!historyMode && (
+        <Suspense fallback={null}>
+          <StrategyEnginePaceHint variant="budget" />
+        </Suspense>
+      )}
+      {!historyMode && (
         <>
           <div className="flex flex-wrap items-center justify-between gap-2">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-cyan-200">1. Status</p>
+            <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--mode-text-soft)]">1. Status</p>
             <div className="flex items-center gap-2">
               <BudgetSyncStatus historyMode={historyMode} />
               <span className={`rounded-full border px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] ${commandStatus.border} ${commandStatus.tone}`}>
@@ -335,7 +346,7 @@ async function BudgetContent({ searchParams }: Props) {
       {!historyMode && ENABLE_BUDGET_UX_EXPERIMENTS && (
         <section className="card-simple overflow-hidden p-0">
           <div className="px-4 pb-1 pt-3">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-cyan-200">2. Decide & Execute</p>
+            <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--mode-text-soft)]">2. Decide & Execute</p>
           </div>
           <div className="grid gap-4 p-4 lg:grid-cols-2">
             <BudgetNextActionCard
@@ -364,7 +375,7 @@ async function BudgetContent({ searchParams }: Props) {
       )}
       {!historyMode && (
         <>
-          <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-cyan-200">3. Monitor</p>
+          <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--mode-text-soft)]">3. Monitor</p>
           <DisciplineIndexCard
             value={financeState?.disciplineScore ?? null}
             inputsReady={disciplineInputsReady}
@@ -746,6 +757,7 @@ async function BudgetContent({ searchParams }: Props) {
     <div className="space-y-4">
       {!historyMode && <BudgetPaydaySurveyCard required={budgetControlState.needsPaydaySurvey} />}
       <BudgetOptimizationCard
+        lockPanelHref={lockPanelHref}
         summary={optimization.summary}
         suggestions={optimization.suggestions}
         challenges={optimization.challenges}
@@ -781,14 +793,17 @@ async function BudgetContent({ searchParams }: Props) {
               <CornerNode corner="top-right" />
               <div className="dashboard-bento">
                 <BudgetTabsShell
+                  key={`${monthParam ?? "live"}-${tabParam ?? "overview"}`}
                   initialTab={activeTab}
                   isHistoryView={isHistoryView}
                   historyMode={historyMode}
                   lockActive={budgetControlState.lockActive}
                   lockUntil={budgetControlState.lockUntil}
+                  lockPanelHref={lockPanelHref}
                   headerRight={headerRight}
                   overview={
                     <BudgetOverviewLockGate
+                      lockPanelHref={lockPanelHref}
                       lockActive={!historyMode && budgetControlState.lockActive}
                       lockUntil={budgetControlState.lockUntil}
                     >

@@ -1,5 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { UserNotificationContext, AppModeForPush } from "@/lib/behavioral-notifications";
+import { normalizeStrategyEngineParams } from "@/lib/strategy/engine-params";
 import type { TriggerType } from "@/lib/behavioral-notifications";
 import { getModeFromState } from "@/lib/app-mode";
 import { getWeekBounds } from "@/lib/utils/timezone";
@@ -44,11 +45,19 @@ export async function loadUserNotificationContextForUser(
   userId: string,
   options?: { dateStr?: string }
 ): Promise<UserNotificationContext> {
-  const { data: prefs } = await supabase
-    .from("user_preferences")
-    .select("push_personality_mode")
-    .eq("user_id", userId)
-    .maybeSingle();
+  const [{ data: prefs }, { data: sfRow }] = await Promise.all([
+    supabase
+      .from("user_preferences")
+      .select("push_personality_mode")
+      .eq("user_id", userId)
+      .maybeSingle(),
+    supabase
+      .from("strategy_focus")
+      .select("engine_params")
+      .eq("user_id", userId)
+      .eq("is_active", true)
+      .maybeSingle(),
+  ]);
 
   const personality =
     (prefs as { push_personality_mode?: UserNotificationContext["personalityMode"] | null } | null)
@@ -56,9 +65,12 @@ export async function loadUserNotificationContextForUser(
 
   const consistencyScore = await computeConsistencyScore(supabase, userId);
 
+  const ep = normalizeStrategyEngineParams((sfRow as { engine_params?: unknown } | null)?.engine_params);
+
   const base: UserNotificationContext = {
     consistencyScore,
     personalityMode: personality,
+    strategyNotificationStyles: sfRow ? ep.notifications : undefined,
   };
 
   const dateStr = options?.dateStr;

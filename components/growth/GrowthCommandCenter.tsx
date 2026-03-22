@@ -82,7 +82,7 @@ export function GrowthCommandCenter({
   return (
     <section
       id="growth-command"
-      className="scroll-mt-28 overflow-hidden rounded-2xl border border-[var(--semantic-accent)]/40 bg-gradient-to-br from-[var(--semantic-accent)]/14 via-[var(--bg-elevated)]/70 to-[var(--bg-primary)]/90 shadow-[0_0_56px_rgba(0,212,255,0.12)]"
+      className="scroll-mt-28 overflow-hidden rounded-2xl border border-[var(--semantic-accent)]/40 bg-gradient-to-br from-[var(--semantic-accent)]/14 via-[var(--bg-elevated)]/70 to-[var(--bg-primary)]/90 shadow-[0_0_56px_rgba(var(--mode-rgb),0.12)]"
     >
       <div className="border-b border-[var(--card-border)]/80 bg-[var(--bg-elevated)]/35 px-4 py-3 sm:px-5">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
@@ -152,6 +152,12 @@ export function GrowthCommandCenter({
                   <p className="text-[10px] font-bold uppercase tracking-wide text-[var(--semantic-accent)]">{phase.title}</p>
                   <p className="mt-0.5 text-lg font-semibold text-[var(--text-primary)]">{week.title}</p>
                   <p className="mt-1 text-sm text-[var(--text-secondary)]">{week.objective}</p>
+                  {week.week_intent && (
+                    <p className="mt-2 text-xs leading-relaxed text-[var(--text-muted)]">
+                      <span className="font-semibold text-[var(--semantic-accent)]">Intentie: </span>
+                      {week.week_intent}
+                    </p>
+                  )}
                 </div>
                 <div className="rounded-xl border border-[var(--card-border)] bg-[var(--bg-soft)] px-3 py-2 text-right">
                   <p className="text-[10px] uppercase text-[var(--text-muted)]">Week</p>
@@ -170,7 +176,7 @@ export function GrowthCommandCenter({
                 </div>
                 <div className="h-2.5 overflow-hidden rounded-full bg-[var(--bg-soft)]">
                   <div
-                    className="h-full rounded-full bg-gradient-to-r from-[var(--semantic-accent)] to-emerald-400/90 transition-[width]"
+                    className="h-full rounded-full bg-gradient-to-r from-[var(--semantic-accent)] to-[var(--semantic-ring)]/90 transition-[width]"
                     style={{ width: `${weekPct}%` }}
                   />
                 </div>

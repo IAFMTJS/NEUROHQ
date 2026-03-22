@@ -5,11 +5,13 @@ import type { ReactNode } from "react";
 type Props = {
   lockActive: boolean;
   lockUntil: string | null;
+  /** Opens Execute tab + scrolls to lock card (hash alone fails while Status is active). */
+  lockPanelHref: string;
   children: ReactNode;
 };
 
 /** Dims overview when no-spend lock is on; emergency path points to Budget lock card. */
-export function BudgetOverviewLockGate({ lockActive, lockUntil, children }: Props) {
+export function BudgetOverviewLockGate({ lockActive, lockUntil, lockPanelHref, children }: Props) {
   if (!lockActive) return <>{children}</>;
   return (
     <div className="space-y-2">
@@ -22,7 +24,7 @@ export function BudgetOverviewLockGate({ lockActive, lockUntil, children }: Prop
           No-spend lock{lockUntil ? ` · tot ${lockUntil}` : ""}
         </span>
         <a
-          href="#budget-lock-control"
+          href={lockPanelHref}
           className="shrink-0 rounded-md bg-[var(--accent-focus)]/25 px-2.5 py-1 text-xs font-semibold text-[var(--accent-focus)] hover:bg-[var(--accent-focus)]/35"
         >
           Nooduitgave / lock
@@ -45,7 +47,7 @@ export function BudgetOverviewLockGate({ lockActive, lockUntil, children }: Prop
               Log snel uitgaven en budget-acties hier zijn gepauzeerd. Gebruik het paneel hieronder voor een noodpad.
             </p>
             <a
-              href="#budget-lock-control"
+              href={lockPanelHref}
               className="inline-block rounded-lg bg-[var(--accent-focus)]/20 px-3 py-2 text-xs font-semibold text-[var(--accent-focus)] hover:bg-[var(--accent-focus)]/30"
             >
               Naar nooduitgave

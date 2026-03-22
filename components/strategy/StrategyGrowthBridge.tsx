@@ -13,10 +13,10 @@ export async function StrategyGrowthBridge() {
 
   return (
     <section
-      className="relative overflow-hidden rounded-2xl border border-[var(--semantic-accent)]/35 bg-gradient-to-br from-[var(--semantic-accent)]/12 via-[var(--bg-elevated)]/80 to-purple-500/10 shadow-[0_0_40px_rgba(0,212,255,0.08)]"
+      className="relative overflow-hidden rounded-2xl border border-[var(--semantic-accent)]/35 bg-gradient-to-br from-[var(--semantic-accent)]/12 via-[var(--bg-elevated)]/80 to-[var(--semantic-accent)]/8 shadow-[0_0_40px_rgba(var(--mode-rgb),0.08)]"
       aria-label="Growth en engine"
     >
-      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,rgba(0,212,255,0.12),transparent_55%)]" aria-hidden />
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,rgba(var(--mode-rgb),0.12),transparent_55%)]" aria-hidden />
       <div className="relative px-4 py-4 sm:px-5">
         <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
           <div className="min-w-0 space-y-1">

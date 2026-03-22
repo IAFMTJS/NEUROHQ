@@ -6,6 +6,7 @@
 import { bucketTodayItems, rawTaskToTodayItem, type BucketedToday, type RawTodayTask, type TodayItem } from "@/lib/today-engine";
 import type { BehaviorProfile } from "@/types/behavior-profile.types";
 import { getSuggestedTaskCount } from "@/lib/utils/energy";
+import type { MissionEngineTuning } from "@/lib/strategy/engine-params";
 import { xpToNextLevel } from "@/lib/xp";
 import { buildBehaviorSuggestions, type BehaviorSuggestions } from "@/lib/behavior-missions";
 
@@ -35,6 +36,8 @@ export interface TodayEngineData {
     daysInactive: number;
   } | null;
   forcedConfrontation?: ForcedConfrontation | null;
+  /** Active strategy mission tuning; omit for legacy cached payloads. */
+  missionEngine?: MissionEngineTuning | null;
 }
 
 export interface ForcedConfrontation {
@@ -117,14 +120,17 @@ export function runTodayEngine(data: TodayEngineData): ClientTodayEngineResult {
   const allowHeavyNow = computeAllowHeavyNow(data.behaviorProfile, new Date());
 
   const baseSuggested = data.dailyState
-    ? getSuggestedTaskCount({
-        energy: data.dailyState.energy,
-        focus: data.dailyState.focus,
-        sensory_load: data.dailyState.sensory_load,
-        social_load: data.dailyState.social_load,
-        sleep_hours: data.dailyState.sleep_hours,
-        physical_health: data.dailyState.physical_health ?? null,
-      })
+    ? getSuggestedTaskCount(
+        {
+          energy: data.dailyState.energy,
+          focus: data.dailyState.focus,
+          sensory_load: data.dailyState.sensory_load,
+          social_load: data.dailyState.social_load,
+          sleep_hours: data.dailyState.sleep_hours,
+          physical_health: data.dailyState.physical_health ?? null,
+        },
+        data.missionEngine ?? undefined
+      )
     : 3;
 
   let suggestedTaskCount = baseSuggested;

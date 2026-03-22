@@ -2281,6 +2281,7 @@ export type Database = {
           created_at: string
           deadline: string
           end_date: string | null
+          engine_params: Json
           id: string
           identity_profile: string
           is_active: boolean
@@ -2302,6 +2303,7 @@ export type Database = {
           created_at?: string
           deadline: string
           end_date?: string | null
+          engine_params?: Json
           id?: string
           identity_profile?: string
           is_active?: boolean
@@ -2323,6 +2325,7 @@ export type Database = {
           created_at?: string
           deadline?: string
           end_date?: string | null
+          engine_params?: Json
           id?: string
           identity_profile?: string
           is_active?: boolean

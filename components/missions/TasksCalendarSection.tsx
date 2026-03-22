@@ -133,10 +133,10 @@ export function TasksCalendarSection({
         <div
           className="rounded-2xl border p-3"
           style={{
-            borderColor: "rgba(var(--mode-rgb,0,212,255),0.25)",
+            borderColor: "rgba(var(--mode-rgb),0.25)",
             background:
-              "linear-gradient(180deg, rgba(var(--mode-rgb-deep,0,136,255),0.36), rgba(var(--mode-rgb,0,212,255),0.16))",
-            boxShadow: "0 0 18px rgba(var(--mode-rgb,0,212,255),0.12)",
+              "linear-gradient(180deg, rgba(var(--mode-rgb-deep),0.36), rgba(var(--mode-rgb),0.16))",
+            boxShadow: "0 0 18px rgba(var(--mode-rgb),0.12)",
           }}
         >
           <div className="mb-3 flex items-center justify-between gap-2">
@@ -147,14 +147,14 @@ export function TasksCalendarSection({
               }}
               className="rounded-full border px-2.5 py-1 text-xs hover:text-[var(--mode-text-strong,#fff)]"
               style={{
-                borderColor: "rgba(var(--mode-rgb,0,212,255),0.25)",
-                background: "rgba(var(--mode-rgb-deep,0,136,255),0.35)",
-                color: "rgba(var(--mode-rgb,0,212,255),0.8)",
+                borderColor: "rgba(var(--mode-rgb),0.25)",
+                background: "rgba(var(--mode-rgb-deep),0.35)",
+                color: "rgba(var(--mode-rgb),0.8)",
               }}
             >
               ←
             </button>
-            <p className="text-sm font-semibold capitalize" style={{ color: "rgba(var(--mode-rgb,0,212,255),0.95)" }}>
+            <p className="text-sm font-semibold capitalize" style={{ color: "rgba(var(--mode-rgb),0.95)" }}>
               {monthLabel}
             </p>
             <button
@@ -164,15 +164,15 @@ export function TasksCalendarSection({
               }}
               className="rounded-full border px-2.5 py-1 text-xs hover:text-[var(--mode-text-strong,#fff)]"
               style={{
-                borderColor: "rgba(var(--mode-rgb,0,212,255),0.25)",
-                background: "rgba(var(--mode-rgb-deep,0,136,255),0.35)",
-                color: "rgba(var(--mode-rgb,0,212,255),0.8)",
+                borderColor: "rgba(var(--mode-rgb),0.25)",
+                background: "rgba(var(--mode-rgb-deep),0.35)",
+                color: "rgba(var(--mode-rgb),0.8)",
               }}
             >
               →
             </button>
           </div>
-          <div className="grid grid-cols-7 gap-1.5 text-center text-[10px] font-semibold uppercase tracking-wide" style={{ color: "rgba(var(--mode-rgb,0,212,255),0.65)" }}>
+          <div className="grid grid-cols-7 gap-1.5 text-center text-[10px] font-semibold uppercase tracking-wide" style={{ color: "rgba(var(--mode-rgb),0.65)" }}>
             {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((label) => (
               <span key={label}>{label}</span>
             ))}
@@ -189,26 +189,26 @@ export function TasksCalendarSection({
                   day.isSelected
                     ? "text-[var(--mode-text-strong,#fff)]"
                     : day.inCurrentMonth
-                      ? "hover:border-[rgba(var(--mode-rgb,0,212,255),0.4)]"
+                      ? "hover:border-[rgba(var(--mode-rgb),0.4)]"
                       : ""
                 }`}
                 style={{
                   borderColor: day.isSelected
-                    ? "rgba(var(--mode-rgb,0,212,255),0.7)"
+                    ? "rgba(var(--mode-rgb),0.7)"
                     : day.inCurrentMonth
-                      ? "rgba(var(--mode-rgb,0,212,255),0.2)"
+                      ? "rgba(var(--mode-rgb),0.2)"
                       : "transparent",
                   background: day.isSelected
-                    ? "rgba(var(--mode-rgb,0,212,255),0.15)"
+                    ? "rgba(var(--mode-rgb),0.15)"
                     : day.inCurrentMonth
-                      ? "rgba(var(--mode-rgb-deep,0,136,255),0.22)"
-                      : "rgba(var(--mode-rgb-deep,0,136,255),0.08)",
+                      ? "rgba(var(--mode-rgb-deep),0.22)"
+                      : "rgba(var(--mode-rgb-deep),0.08)",
                   color: day.isSelected
-                    ? "rgba(var(--mode-rgb,0,212,255),0.95)"
+                    ? "rgba(var(--mode-rgb),0.95)"
                     : day.inCurrentMonth
-                      ? "rgba(var(--mode-rgb,0,212,255),0.9)"
-                      : "rgba(var(--mode-rgb,0,212,255),0.35)",
-                  boxShadow: day.isSelected ? "0 0 12px rgba(var(--mode-rgb,0,212,255),0.2)" : undefined,
+                      ? "rgba(var(--mode-rgb),0.9)"
+                      : "rgba(var(--mode-rgb),0.35)",
+                  boxShadow: day.isSelected ? "0 0 12px rgba(var(--mode-rgb),0.2)" : undefined,
                 }}
               >
                 <span
@@ -216,8 +216,8 @@ export function TasksCalendarSection({
                   style={
                     day.isToday
                       ? {
-                          background: "rgba(var(--mode-rgb,0,212,255),0.25)",
-                          color: "rgba(var(--mode-rgb,0,212,255),0.95)",
+                          background: "rgba(var(--mode-rgb),0.25)",
+                          color: "rgba(var(--mode-rgb),0.95)",
                         }
                       : undefined
                   }
@@ -228,8 +228,8 @@ export function TasksCalendarSection({
                   <span
                     className="absolute bottom-1.5 left-1/2 h-1.5 w-1.5 -translate-x-1/2 rounded-full"
                     style={{
-                      background: day.eventCount >= 2 ? "rgb(252 211 77)" : "rgba(var(--mode-rgb,0,212,255),0.8)",
-                      boxShadow: "0 0 8px rgba(var(--mode-rgb,0,212,255),0.8)",
+                      background: day.eventCount >= 2 ? "rgb(252 211 77)" : "rgba(var(--mode-rgb),0.8)",
+                      boxShadow: "0 0 8px rgba(var(--mode-rgb),0.8)",
                     }}
                     aria-label={`${day.eventCount} agenda item${day.eventCount === 1 ? "" : "s"}`}
                   >

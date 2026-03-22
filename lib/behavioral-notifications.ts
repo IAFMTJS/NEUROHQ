@@ -96,11 +96,20 @@ export type MessageTemplate = {
 
 export type AppModeForPush = "normal" | "low_energy" | "high_sensory" | "driven" | "stabilize";
 
+export type StrategyPushAreaStyle = "reminder" | "positive" | "balanced";
+
 export type UserNotificationContext = {
   /** 0–100: how consistent this user is (7–30d behaviour index). */
   consistencyScore: number;
   /** Selected personality mode; "auto" lets the engine adapt. */
   personalityMode: PersonalityMode;
+  /** Optional: Strategy page bias per domein (cron / template weights). */
+  strategyNotificationStyles?: {
+    missions: StrategyPushAreaStyle;
+    budget: StrategyPushAreaStyle;
+    growth: StrategyPushAreaStyle;
+    strategy: StrategyPushAreaStyle;
+  };
   /** Optional: derived from daily_state + carry_over for tone/light copy. */
   mode?: AppModeForPush;
   energy?: number | null;
@@ -113,6 +122,32 @@ export type UserNotificationContext = {
   /** Missions completed this week (for evening / weekly copy). */
   missionsCompletedThisWeek?: number;
 };
+
+export type StrategyNotificationAreaKey = "missions" | "budget" | "growth" | "strategy";
+
+/** Maps push trigger → Strategy engine notification bucket (for tone bias). */
+export function strategyAreaForTrigger(trigger: TriggerType): StrategyNotificationAreaKey {
+  switch (trigger) {
+    case "under_budget_today":
+    case "under_budget_week_streak":
+    case "budget_discipline_day":
+      return "budget";
+    case "learning_session_logged":
+    case "learning_week_target_hit":
+      return "growth";
+    case "rank_achieved":
+    case "rank_progress_close":
+    case "positive_surprise":
+    case "inactivity_24h":
+    case "inactivity_3d":
+    case "inactivity_7d":
+    case "inactivity_14d":
+    case "reflection_submitted":
+      return "strategy";
+    default:
+      return "missions";
+  }
+}
 
 // ---- Small helpers -----------------------------------------------------------
 
@@ -170,6 +205,29 @@ export function pickTone(baseCandidates: Tone[], ctx: UserNotificationContext): 
   }
 
   return randomFrom(baseCandidates.length ? baseCandidates : ["neutral"]);
+}
+
+/**
+ * Nudges tone toward reminder-heavy vs positive copy when Strategy engine sets a bias.
+ * Only picks from tones available for this trigger; does not invent new tones.
+ */
+function applyStrategyToneBias(
+  tone: Tone,
+  baseCandidates: Tone[],
+  ctx: UserNotificationContext,
+  trigger: TriggerType
+): Tone {
+  const styles = ctx.strategyNotificationStyles;
+  if (!styles) return tone;
+  const style = styles[strategyAreaForTrigger(trigger)];
+  if (style === "balanced") return tone;
+  if (Math.random() > 0.35) return tone;
+  const reminderLean: Tone[] = ["coach", "aggressive", "neutral", "stoic"];
+  const positiveLean: Tone[] = ["friendly", "coach", "neutral"];
+  const prefer = style === "reminder" ? reminderLean : positiveLean;
+  const allowed = baseCandidates.filter((t) => prefer.includes(t));
+  if (allowed.length) return randomFrom(allowed);
+  return tone;
 }
 
 // ---- Message pool (spec-backed) ---------------------------------------------
@@ -705,7 +763,7 @@ export function buildBehavioralNotificationForContext(
   if (!trigger) return null;
 
   const baseTones = getBaseTonesForTrigger(trigger);
-  const tone = pickTone(baseTones, ctx);
+  const tone = applyStrategyToneBias(pickTone(baseTones, ctx), baseTones, ctx, trigger);
 
   const template =
     trigger === "escalation_no_missions_today"

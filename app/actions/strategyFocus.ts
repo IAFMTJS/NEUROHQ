@@ -1,5 +1,6 @@
 "use server";
 
+import { cache } from "react";
 import { createClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
 import {
@@ -9,6 +10,12 @@ import {
   type StrategyDomain,
   type WeeklyAllocation,
 } from "@/lib/strategyDomains";
+import {
+  mergeStrategyEngineParams,
+  normalizeStrategyEngineParams,
+  type StrategyEngineParams,
+} from "@/lib/strategy/engine-params";
+import type { Json } from "@/types/database.types";
 
 export type StrategyFocusRow = {
   id: string;
@@ -20,6 +27,8 @@ export type StrategyFocusRow = {
   primary_domain: StrategyDomain;
   secondary_domains: string[];
   weekly_allocation: WeeklyAllocation;
+  /** Engine knobs: mission floors, lock caps, savings/growth targets, push bias. */
+  engine_params: StrategyEngineParams;
   phase: "accumulation" | "intensification" | "optimization" | "stabilization";
   identity_profile: "commander" | "builder" | "operator" | "athlete" | "scholar";
   start_date: string;
@@ -74,8 +83,8 @@ function normalizeAllocation(wa: Record<string, unknown> | null): WeeklyAllocati
   return out;
 }
 
-/** Get active strategy focus for current user. */
-export async function getActiveStrategyFocus(): Promise<StrategyFocusRow | null> {
+/** Get active strategy focus for current user (request-cached: one fetch per request). */
+export const getActiveStrategyFocus = cache(async (): Promise<StrategyFocusRow | null> => {
   const supabase = await createClient();
   const {
     data: { user },
@@ -94,7 +103,52 @@ export async function getActiveStrategyFocus(): Promise<StrategyFocusRow | null>
     ...data,
     secondary_domains: Array.isArray(data.secondary_domains) ? data.secondary_domains : [],
     weekly_allocation: normalizeAllocation(data.weekly_allocation as Record<string, unknown>),
+    engine_params: normalizeStrategyEngineParams((data as { engine_params?: unknown }).engine_params),
   } as StrategyFocusRow;
+});
+
+/** Active strategy engine params, or null if no active strategy. */
+export async function getActiveStrategyEngineParams(): Promise<StrategyEngineParams | null> {
+  const row = await getActiveStrategyFocus();
+  if (!row) return null;
+  return row.engine_params;
+}
+
+/** Merge partial engine params into the active strategy row. */
+export async function updateStrategyEngineParams(
+  strategyId: string,
+  patch: Parameters<typeof mergeStrategyEngineParams>[1]
+): Promise<void> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) throw new Error("Not authenticated");
+
+  const { data: row, error: fetchErr } = await supabase
+    .from("strategy_focus")
+    .select("engine_params")
+    .eq("id", strategyId)
+    .eq("user_id", user.id)
+    .maybeSingle();
+  if (fetchErr || !row) throw new Error("Strategie niet gevonden.");
+
+  const next = mergeStrategyEngineParams((row as { engine_params?: unknown }).engine_params, patch);
+  const { error } = await supabase
+    .from("strategy_focus")
+    .update({
+      engine_params: next as unknown as Json,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", strategyId)
+    .eq("user_id", user.id);
+  if (error) throw new Error(error.message ?? "Kon engine-instellingen niet opslaan.");
+
+  revalidatePath("/strategy");
+  revalidatePath("/dashboard");
+  revalidatePath("/tasks");
+  revalidatePath("/budget");
+  revalidatePath("/learning");
 }
 
 /** Upsert active strategy focus (creates or updates; only one active). */
@@ -214,6 +268,7 @@ export async function getPastStrategyFocus(limit = 10): Promise<StrategyFocusRow
     ...r,
     secondary_domains: Array.isArray(r.secondary_domains) ? r.secondary_domains : [],
     weekly_allocation: normalizeAllocation(r.weekly_allocation as Record<string, unknown>),
+    engine_params: normalizeStrategyEngineParams((r as { engine_params?: unknown }).engine_params),
     archive_reason: (r as { archive_reason?: string | null }).archive_reason ?? null,
     archive_reason_note: (r as { archive_reason_note?: string | null }).archive_reason_note ?? null,
   })) as StrategyFocusRow[];

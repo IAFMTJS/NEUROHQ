@@ -52,7 +52,7 @@ export function RoutineTaskList({ routineTasks, suggestedDays, suggestedPlans = 
           const nextBest = plans[0]?.date ?? suggested[0] ?? dateStr;
           const nextBestLabel = format(new Date(nextBest + "T12:00:00Z"), "EEE d MMM", { locale: nl });
           const priorityColor = (priority: "high" | "medium" | "low") =>
-            priority === "high" ? "text-emerald-300" : priority === "medium" ? "text-cyan-300" : "text-[var(--text-muted)]";
+            priority === "high" ? "text-emerald-300" : priority === "medium" ? "text-[var(--semantic-accent)]" : "text-[var(--text-muted)]";
           const customDateValue = customDateByTask[task.id] ?? "";
           return (
             <li key={task.id} className="card-simple p-4">

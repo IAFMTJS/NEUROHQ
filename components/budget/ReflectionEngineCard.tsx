@@ -12,8 +12,8 @@ export function ReflectionEngineCard() {
   const [answers, setAnswers] = useState<string[]>(["", "", ""]);
 
   return (
-    <section className="card-simple overflow-hidden p-0 ring-1 ring-sky-300/20 shadow-[0_0_20px_rgba(125,211,252,0.1)]">
-      <div className="border-b border-[var(--card-border)] bg-[linear-gradient(90deg,rgba(125,211,252,0.1),rgba(139,92,246,0.04))] px-4 py-3">
+    <section className="card-simple overflow-hidden p-0 ring-1 ring-[var(--semantic-ring)]/25 shadow-[0_0_20px_rgba(var(--mode-rgb),0.1)]">
+      <div className="border-b border-[var(--card-border)] bg-[linear-gradient(90deg,rgba(var(--mode-rgb),0.1),rgba(var(--mode-rgb-deep),0.04))] px-4 py-3">
         <h2 className="text-base font-semibold text-[var(--text-primary)]">Reflection engine</h2>
         <p className="mt-0.5 text-xs text-[var(--text-muted)]">Korte post-spend reflectie voor relapse prevention.</p>
       </div>

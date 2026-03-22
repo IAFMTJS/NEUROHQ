@@ -21,11 +21,25 @@ if (!url || !key) {
 }
 
 const seedFile = process.env.PROTOCOLS_SEED || "protocols-seed-full.json";
+const catalogFile = process.env.PROTOCOLS_SEED_CATALOG || "protocols-seed-catalog.json";
 const supabase = createClient(url, key);
-const raw = readFileSync(join(root, "lib", seedFile), "utf8");
-const rows = JSON.parse(raw);
 
-for (const row of rows) {
+const mainRaw = readFileSync(join(root, "lib", seedFile), "utf8");
+const rows = JSON.parse(mainRaw);
+
+let catalogRows = [];
+try {
+  const catPath = join(root, "lib", catalogFile);
+  const catRaw = readFileSync(catPath, "utf8");
+  catalogRows = JSON.parse(catRaw);
+  if (!Array.isArray(catalogRows)) catalogRows = [];
+} catch {
+  // Optional second file — ok if missing
+}
+
+const merged = [...rows, ...catalogRows];
+
+for (const row of merged) {
   const definition = row.definition ?? row.definition_json ?? {};
   const { error } = await supabase.from("protocol_library").upsert(
     {
@@ -44,4 +58,4 @@ for (const row of rows) {
   else console.log("OK", row.slug);
 }
 
-console.log("Done.", seedFile);
+console.log("Done.", seedFile, "+", catalogFile, `(${rows.length} + ${catalogRows.length} = ${merged.length} rows)`);

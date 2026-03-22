@@ -4,6 +4,7 @@ import {
   getMissionCountRangeForEnergyBand,
   getSleepScoreMultiplier,
 } from "@/lib/behavioral-engine";
+import { missionFloorForEnergy, type MissionEngineTuning } from "@/lib/strategy/engine-params";
 
 /** Base cost multiplier: energy_required (1–10) × this. Kept low so 3–5 small/medium tasks don't empty the budget. */
 const TASK_COST_MULTIPLIER = 2.5;
@@ -12,14 +13,17 @@ const TASK_COST_MULTIPLIER = 2.5;
  * Aanbevolen aantal missies op basis van energy-band, fysieke limiet en slaap (brainstatus-modifier).
  * Laag 1–2, gemiddeld 2–3, goed 4–5, uiterst 6 — daarna × slaap-multiplier, begrensd door energy-max.
  */
-export function getSuggestedTaskCount(input: {
-  energy: number;
-  focus: number;
-  sensory_load: number;
-  social_load: number;
-  sleep_hours: number | null;
-  physical_health?: number | null;
-}): number {
+export function getSuggestedTaskCount(
+  input: {
+    energy: number;
+    focus: number;
+    sensory_load: number;
+    social_load: number;
+    sleep_hours: number | null;
+    physical_health?: number | null;
+  },
+  missionEngine?: MissionEngineTuning | null
+): number {
   const { energy: e, sleep_hours: sleep, physical_health: phys } = input;
   const energyBand = bandFor10Scale(e);
   const { max: energyMax } = getMissionCountRangeForEnergyBand(energyBand);
@@ -34,7 +38,13 @@ export function getSuggestedTaskCount(input: {
   const sleepMult = getSleepScoreMultiplier(bandForSleepHours(sleep));
   let n = Math.round(base * sleepMult);
   n = Math.max(1, Math.min(8, n));
-  n = Math.min(n, energyMax);
+  if (!missionEngine) {
+    n = Math.min(n, energyMax);
+  } else {
+    const floor = missionFloorForEnergy(e, missionEngine);
+    n = Math.max(n, floor);
+    n = Math.min(8, n);
+  }
   return n;
 }
 

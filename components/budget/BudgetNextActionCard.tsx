@@ -62,7 +62,7 @@ export function BudgetNextActionCard({ remainingToSpendCents, readyForActionCoun
       <div className="border-b border-[var(--card-border)] px-4 py-3">
         <div className="flex items-center justify-between gap-2">
           <h2 className="text-base font-semibold text-[var(--text-primary)]">Volgende beste actie</h2>
-          <span className="rounded-full border border-cyan-400/30 bg-cyan-400/10 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-cyan-200">
+          <span className="rounded-full border border-[var(--semantic-ring)]/30 bg-[var(--semantic-accent)]/10 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--mode-text-soft)]">
             {statusLabel}
           </span>
         </div>

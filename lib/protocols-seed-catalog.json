@@ -1,0 +1,4748 @@
+[
+  {
+    "slug": "behavioral-intelligence-system",
+    "locale": "nl",
+    "title": "Behavioral Intelligence System",
+    "summary": "Gedrag observeren, triggers herkennen, kleine correcties.",
+    "sort_order": 4,
+    "body_md": "## Behavioral Intelligence System\n\nGedrag observeren, triggers herkennen, kleine correcties.\n\nCatalogusstub: concrete weektaken staan klaar in de app; diepere content kan iteratief worden vervangen (Updates 22-03).",
+    "definition": {
+      "version": 1,
+      "goal_one_liner": "Gedrag bewust sturen zonder drama",
+      "estimated_weeks_min": 4,
+      "estimated_weeks_max": 12,
+      "phases": [
+        {
+          "id": "p1",
+          "order": 1,
+          "title": "Fase 1 — Basis",
+          "summary": "Fundament en ritme vastzetten.",
+          "week_start": 1,
+          "week_end": 2
+        },
+        {
+          "id": "p2",
+          "order": 2,
+          "title": "Fase 2 — Verdieping",
+          "summary": "Volume en consistentie opvoeren.",
+          "week_start": 3,
+          "week_end": 4
+        }
+      ],
+      "weeks": [
+        {
+          "week_index": 1,
+          "phase_id": "p1",
+          "title": "Week 1",
+          "objective": "Baseline: noteer 3 terugkerende patronen (zonder oordeel).",
+          "tasks": [
+            {
+              "id": "behavioral-intelligence-system-w1-t1",
+              "title": "Kern-sessie",
+              "concrete": "25 min geconcentreerde oefening op dit traject; noteer 1 zin resultaat.",
+              "minutes": 25,
+              "scaling": {
+                "easy": {
+                  "concrete": "15 min gerichte oefening",
+                  "minutes": 15
+                },
+                "medium": {
+                  "concrete": "25 min zoals beschreven",
+                  "minutes": 25
+                },
+                "hard": {
+                  "concrete": "40 min + korte reflectie wat morgen anders",
+                  "minutes": 40
+                }
+              }
+            },
+            {
+              "id": "behavioral-intelligence-system-w1-t2",
+              "title": "Micro-reflectie",
+              "concrete": "10 min: wat werkte, wat niet; 1 concrete aanpassing voor volgende sessie.",
+              "minutes": 10,
+              "scaling": {
+                "easy": {
+                  "concrete": "5 min + 1 bullet",
+                  "minutes": 5
+                },
+                "medium": {
+                  "concrete": "10 min zoals beschreven",
+                  "minutes": 10
+                },
+                "hard": {
+                  "concrete": "15 min + accountability (bericht aan jezelf)",
+                  "minutes": 15
+                }
+              }
+            }
+          ]
+        },
+        {
+          "week_index": 2,
+          "phase_id": "p1",
+          "title": "Week 2",
+          "objective": "Kies 1 patroon; test 1 micro-interventie 5 dagen.",
+          "tasks": [
+            {
+              "id": "behavioral-intelligence-system-w2-t1",
+              "title": "Kern-sessie",
+              "concrete": "25 min geconcentreerde oefening op dit traject; noteer 1 zin resultaat.",
+              "minutes": 25,
+              "scaling": {
+                "easy": {
+                  "concrete": "15 min gerichte oefening",
+                  "minutes": 15
+                },
+                "medium": {
+                  "concrete": "25 min zoals beschreven",
+                  "minutes": 25
+                },
+                "hard": {
+                  "concrete": "40 min + korte reflectie wat morgen anders",
+                  "minutes": 40
+                }
+              }
+            },
+            {
+              "id": "behavioral-intelligence-system-w2-t2",
+              "title": "Micro-reflectie",
+              "concrete": "10 min: wat werkte, wat niet; 1 concrete aanpassing voor volgende sessie.",
+              "minutes": 10,
+              "scaling": {
+                "easy": {
+                  "concrete": "5 min + 1 bullet",
+                  "minutes": 5
+                },
+                "medium": {
+                  "concrete": "10 min zoals beschreven",
+                  "minutes": 10
+                },
+                "hard": {
+                  "concrete": "15 min + accountability (bericht aan jezelf)",
+                  "minutes": 15
+                }
+              }
+            }
+          ]
+        },
+        {
+          "week_index": 3,
+          "phase_id": "p2",
+          "title": "Week 3",
+          "objective": "Meet: wat veranderde in energie / uitkomst?",
+          "tasks": [
+            {
+              "id": "behavioral-intelligence-system-w3-t1",
+              "title": "Kern-sessie",
+              "concrete": "25 min geconcentreerde oefening op dit traject; noteer 1 zin resultaat.",
+              "minutes": 25,
+              "scaling": {
+                "easy": {
+                  "concrete": "15 min gerichte oefening",
+                  "minutes": 15
+                },
+                "medium": {
+                  "concrete": "25 min zoals beschreven",
+                  "minutes": 25
+                },
+                "hard": {
+                  "concrete": "40 min + korte reflectie wat morgen anders",
+                  "minutes": 40
+                }
+              }
+            },
+            {
+              "id": "behavioral-intelligence-system-w3-t2",
+              "title": "Micro-reflectie",
+              "concrete": "10 min: wat werkte, wat niet; 1 concrete aanpassing voor volgende sessie.",
+              "minutes": 10,
+              "scaling": {
+                "easy": {
+                  "concrete": "5 min + 1 bullet",
+                  "minutes": 5
+                },
+                "medium": {
+                  "concrete": "10 min zoals beschreven",
+                  "minutes": 10
+                },
+                "hard": {
+                  "concrete": "15 min + accountability (bericht aan jezelf)",
+                  "minutes": 15
+                }
+              }
+            }
+          ]
+        },
+        {
+          "week_index": 4,
+          "phase_id": "p2",
+          "title": "Week 4",
+          "objective": "Plan volgende cyclus: 1 gewoonte vastleggen in agenda.",
+          "tasks": [
+            {
+              "id": "behavioral-intelligence-system-w4-t1",
+              "title": "Kern-sessie",
+              "concrete": "25 min geconcentreerde oefening op dit traject; noteer 1 zin resultaat.",
+              "minutes": 25,
+              "scaling": {
+                "easy": {
+                  "concrete": "15 min gerichte oefening",
+                  "minutes": 15
+                },
+                "medium": {
+                  "concrete": "25 min zoals beschreven",
+                  "minutes": 25
+                },
+                "hard": {
+                  "concrete": "40 min + korte reflectie wat morgen anders",
+                  "minutes": 40
+                }
+              }
+            },
+            {
+              "id": "behavioral-intelligence-system-w4-t2",
+              "title": "Micro-reflectie",
+              "concrete": "10 min: wat werkte, wat niet; 1 concrete aanpassing voor volgende sessie.",
+              "minutes": 10,
+              "scaling": {
+                "easy": {
+                  "concrete": "5 min + 1 bullet",
+                  "minutes": 5
+                },
+                "medium": {
+                  "concrete": "10 min zoals beschreven",
+                  "minutes": 10
+                },
+                "hard": {
+                  "concrete": "15 min + accountability (bericht aan jezelf)",
+                  "minutes": 15
+                }
+              }
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "slug": "gardening-development-system",
+    "locale": "nl",
+    "title": "Gardening Development System",
+    "summary": "Seizoenen, routine, zorgritme — licht belastend traject.",
+    "sort_order": 5,
+    "body_md": "## Gardening Development System\n\nSeizoenen, routine, zorgritme — licht belastend traject.\n\nCatalogusstub: concrete weektaken staan klaar in de app; diepere content kan iteratief worden vervangen (Updates 22-03).",
+    "definition": {
+      "version": 1,
+      "goal_one_liner": "Consistent verzorgen > sporadisch perfectioneren",
+      "estimated_weeks_min": 4,
+      "estimated_weeks_max": 12,
+      "phases": [
+        {
+          "id": "p1",
+          "order": 1,
+          "title": "Fase 1 — Basis",
+          "summary": "Fundament en ritme vastzetten.",
+          "week_start": 1,
+          "week_end": 2
+        },
+        {
+          "id": "p2",
+          "order": 2,
+          "title": "Fase 2 — Verdieping",
+          "summary": "Volume en consistentie opvoeren.",
+          "week_start": 3,
+          "week_end": 4
+        }
+      ],
+      "weeks": [
+        {
+          "week_index": 1,
+          "phase_id": "p1",
+          "title": "Week 1",
+          "objective": "Inventariseer plek + licht/water; 1 vaste checkmoment.",
+          "tasks": [
+            {
+              "id": "gardening-development-system-w1-t1",
+              "title": "Kern-sessie",
+              "concrete": "25 min geconcentreerde oefening op dit traject; noteer 1 zin resultaat.",
+              "minutes": 25,
+              "scaling": {
+                "easy": {
+                  "concrete": "15 min gerichte oefening",
+                  "minutes": 15
+                },
+                "medium": {
+                  "concrete": "25 min zoals beschreven",
+                  "minutes": 25
+                },
+                "hard": {
+                  "concrete": "40 min + korte reflectie wat morgen anders",
+                  "minutes": 40
+                }
+              }
+            },
+            {
+              "id": "gardening-development-system-w1-t2",
+              "title": "Micro-reflectie",
+              "concrete": "10 min: wat werkte, wat niet; 1 concrete aanpassing voor volgende sessie.",
+              "minutes": 10,
+              "scaling": {
+                "easy": {
+                  "concrete": "5 min + 1 bullet",
+                  "minutes": 5
+                },
+                "medium": {
+                  "concrete": "10 min zoals beschreven",
+                  "minutes": 10
+                },
+                "hard": {
+                  "concrete": "15 min + accountability (bericht aan jezelf)",
+                  "minutes": 15
+                }
+              }
+            }
+          ]
+        },
+        {
+          "week_index": 2,
+          "phase_id": "p1",
+          "title": "Week 2",
+          "objective": "Weekschema: water + inspectie (4 dagen).",
+          "tasks": [
+            {
+              "id": "gardening-development-system-w2-t1",
+              "title": "Kern-sessie",
+              "concrete": "25 min geconcentreerde oefening op dit traject; noteer 1 zin resultaat.",
+              "minutes": 25,
+              "scaling": {
+                "easy": {
+                  "concrete": "15 min gerichte oefening",
+                  "minutes": 15
+                },
+                "medium": {
+                  "concrete": "25 min zoals beschreven",
+                  "minutes": 25
+                },
+                "hard": {
+                  "concrete": "40 min + korte reflectie wat morgen anders",
+                  "minutes": 40
+                }
+              }
+            },
+            {
+              "id": "gardening-development-system-w2-t2",
+              "title": "Micro-reflectie",
+              "concrete": "10 min: wat werkte, wat niet; 1 concrete aanpassing voor volgende sessie.",
+              "minutes": 10,
+              "scaling": {
+                "easy": {
+                  "concrete": "5 min + 1 bullet",
+                  "minutes": 5
+                },
+                "medium": {
+                  "concrete": "10 min zoals beschreven",
+                  "minutes": 10
+                },
+                "hard": {
+                  "concrete": "15 min + accountability (bericht aan jezelf)",
+                  "minutes": 15
+                }
+              }
+            }
+          ]
+        },
+        {
+          "week_index": 3,
+          "phase_id": "p2",
+          "title": "Week 3",
+          "objective": "Klein project: snoei / verpot / oogst (kies één).",
+          "tasks": [
+            {
+              "id": "gardening-development-system-w3-t1",
+              "title": "Kern-sessie",
+              "concrete": "25 min geconcentreerde oefening op dit traject; noteer 1 zin resultaat.",
+              "minutes": 25,
+              "scaling": {
+                "easy": {
+                  "concrete": "15 min gerichte oefening",
+                  "minutes": 15
+                },
+                "medium": {
+                  "concrete": "25 min zoals beschreven",
+                  "minutes": 25
+                },
+                "hard": {
+                  "concrete": "40 min + korte reflectie wat morgen anders",
+                  "minutes": 40
+                }
+              }
+            },
+            {
+              "id": "gardening-development-system-w3-t2",
+              "title": "Micro-reflectie",
+              "concrete": "10 min: wat werkte, wat niet; 1 concrete aanpassing voor volgende sessie.",
+              "minutes": 10,
+              "scaling": {
+                "easy": {
+                  "concrete": "5 min + 1 bullet",
+                  "minutes": 5
+                },
+                "medium": {
+                  "concrete": "10 min zoals beschreven",
+                  "minutes": 10
+                },
+                "hard": {
+                  "concrete": "15 min + accountability (bericht aan jezelf)",
+                  "minutes": 15
+                }
+              }
+            }
+          ]
+        },
+        {
+          "week_index": 4,
+          "phase_id": "p2",
+          "title": "Week 4",
+          "objective": "Evaluatie: wat volgend seizoen anders?",
+          "tasks": [
+            {
+              "id": "gardening-development-system-w4-t1",
+              "title": "Kern-sessie",
+              "concrete": "25 min geconcentreerde oefening op dit traject; noteer 1 zin resultaat.",
+              "minutes": 25,
+              "scaling": {
+                "easy": {
+                  "concrete": "15 min gerichte oefening",
+                  "minutes": 15
+                },
+                "medium": {
+                  "concrete": "25 min zoals beschreven",
+                  "minutes": 25
+                },
+                "hard": {
+                  "concrete": "40 min + korte reflectie wat morgen anders",
+                  "minutes": 40
+                }
+              }
+            },
+            {
+              "id": "gardening-development-system-w4-t2",
+              "title": "Micro-reflectie",
+              "concrete": "10 min: wat werkte, wat niet; 1 concrete aanpassing voor volgende sessie.",
+              "minutes": 10,
+              "scaling": {
+                "easy": {
+                  "concrete": "5 min + 1 bullet",
+                  "minutes": 5
+                },
+                "medium": {
+                  "concrete": "10 min zoals beschreven",
+                  "minutes": 10
+                },
+                "hard": {
+                  "concrete": "15 min + accountability (bericht aan jezelf)",
+                  "minutes": 15
+                }
+              }
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "slug": "focus-rebuild-system",
+    "locale": "nl",
+    "title": "Focus Rebuild System",
+    "summary": "Na afleiding of burnout: blokken terugbouwen.",
+    "sort_order": 6,
+    "body_md": "## Focus Rebuild System\n\nNa afleiding of burnout: blokken terugbouwen.\n\nCatalogusstub: concrete weektaken staan klaar in de app; diepere content kan iteratief worden vervangen (Updates 22-03).",
+    "definition": {
+      "version": 1,
+      "goal_one_liner": "Diepte terugwinnen in kleine stappen",
+      "estimated_weeks_min": 4,
+      "estimated_weeks_max": 12,
+      "phases": [
+        {
+          "id": "p1",
+          "order": 1,
+          "title": "Fase 1 — Basis",
+          "summary": "Fundament en ritme vastzetten.",
+          "week_start": 1,
+          "week_end": 2
+        },
+        {
+          "id": "p2",
+          "order": 2,
+          "title": "Fase 2 — Verdieping",
+          "summary": "Volume en consistentie opvoeren.",
+          "week_start": 3,
+          "week_end": 4
+        }
+      ],
+      "weeks": [
+        {
+          "week_index": 1,
+          "phase_id": "p1",
+          "title": "Week 1",
+          "objective": "3× 20 min blokken; telefoon buiten bereik.",
+          "tasks": [
+            {
+              "id": "focus-rebuild-system-w1-t1",
+              "title": "Kern-sessie",
+              "concrete": "25 min geconcentreerde oefening op dit traject; noteer 1 zin resultaat.",
+              "minutes": 25,
+              "scaling": {
+                "easy": {
+                  "concrete": "15 min gerichte oefening",
+                  "minutes": 15
+                },
+                "medium": {
+                  "concrete": "25 min zoals beschreven",
+                  "minutes": 25
+                },
+                "hard": {
+                  "concrete": "40 min + korte reflectie wat morgen anders",
+                  "minutes": 40
+                }
+              }
+            },
+            {
+              "id": "focus-rebuild-system-w1-t2",
+              "title": "Micro-reflectie",
+              "concrete": "10 min: wat werkte, wat niet; 1 concrete aanpassing voor volgende sessie.",
+              "minutes": 10,
+              "scaling": {
+                "easy": {
+                  "concrete": "5 min + 1 bullet",
+                  "minutes": 5
+                },
+                "medium": {
+                  "concrete": "10 min zoals beschreven",
+                  "minutes": 10
+                },
+                "hard": {
+                  "concrete": "15 min + accountability (bericht aan jezelf)",
+                  "minutes": 15
+                }
+              }
+            }
+          ]
+        },
+        {
+          "week_index": 2,
+          "phase_id": "p1",
+          "title": "Week 2",
+          "objective": "Verleng 1 blok per dag met 10 min.",
+          "tasks": [
+            {
+              "id": "focus-rebuild-system-w2-t1",
+              "title": "Kern-sessie",
+              "concrete": "25 min geconcentreerde oefening op dit traject; noteer 1 zin resultaat.",
+              "minutes": 25,
+              "scaling": {
+                "easy": {
+                  "concrete": "15 min gerichte oefening",
+                  "minutes": 15
+                },
+                "medium": {
+                  "concrete": "25 min zoals beschreven",
+                  "minutes": 25
+                },
+                "hard": {
+                  "concrete": "40 min + korte reflectie wat morgen anders",
+                  "minutes": 40
+                }
+              }
+            },
+            {
+              "id": "focus-rebuild-system-w2-t2",
+              "title": "Micro-reflectie",
+              "concrete": "10 min: wat werkte, wat niet; 1 concrete aanpassing voor volgende sessie.",
+              "minutes": 10,
+              "scaling": {
+                "easy": {
+                  "concrete": "5 min + 1 bullet",
+                  "minutes": 5
+                },
+                "medium": {
+                  "concrete": "10 min zoals beschreven",
+                  "minutes": 10
+                },
+                "hard": {
+                  "concrete": "15 min + accountability (bericht aan jezelf)",
+                  "minutes": 15
+                }
+              }
+            }
+          ]
+        },
+        {
+          "week_index": 3,
+          "phase_id": "p2",
+          "title": "Week 3",
+          "objective": "Audit: top 3 afleiders + één fix.",
+          "tasks": [
+            {
+              "id": "focus-rebuild-system-w3-t1",
+              "title": "Kern-sessie",
+              "concrete": "25 min geconcentreerde oefening op dit traject; noteer 1 zin resultaat.",
+              "minutes": 25,
+              "scaling": {
+                "easy": {
+                  "concrete": "15 min gerichte oefening",
+                  "minutes": 15
+                },
+                "medium": {
+                  "concrete": "25 min zoals beschreven",
+                  "minutes": 25
+                },
+                "hard": {
+                  "concrete": "40 min + korte reflectie wat morgen anders",
+                  "minutes": 40
+                }
+              }
+            },
+            {
+              "id": "focus-rebuild-system-w3-t2",
+              "title": "Micro-reflectie",
+              "concrete": "10 min: wat werkte, wat niet; 1 concrete aanpassing voor volgende sessie.",
+              "minutes": 10,
+              "scaling": {
+                "easy": {
+                  "concrete": "5 min + 1 bullet",
+                  "minutes": 5
+                },
+                "medium": {
+                  "concrete": "10 min zoals beschreven",
+                  "minutes": 10
+                },
+                "hard": {
+                  "concrete": "15 min + accountability (bericht aan jezelf)",
+                  "minutes": 15
+                }
+              }
+            }
+          ]
+        },
+        {
+          "week_index": 4,
+          "phase_id": "p2",
+          "title": "Week 4",
+          "objective": "Lock-in: template voor volgende 4 weken.",
+          "tasks": [
+            {
+              "id": "focus-rebuild-system-w4-t1",
+              "title": "Kern-sessie",
+              "concrete": "25 min geconcentreerde oefening op dit traject; noteer 1 zin resultaat.",
+              "minutes": 25,
+              "scaling": {
+                "easy": {
+                  "concrete": "15 min gerichte oefening",
+                  "minutes": 15
+                },
+                "medium": {
+                  "concrete": "25 min zoals beschreven",
+                  "minutes": 25
+                },
+                "hard": {
+                  "concrete": "40 min + korte reflectie wat morgen anders",
+                  "minutes": 40
+                }
+              }
+            },
+            {
+              "id": "focus-rebuild-system-w4-t2",
+              "title": "Micro-reflectie",
+              "concrete": "10 min: wat werkte, wat niet; 1 concrete aanpassing voor volgende sessie.",
+              "minutes": 10,
+              "scaling": {
+                "easy": {
+                  "concrete": "5 min + 1 bullet",
+                  "minutes": 5
+                },
+                "medium": {
+                  "concrete": "10 min zoals beschreven",
+                  "minutes": 10
+                },
+                "hard": {
+                  "concrete": "15 min + accountability (bericht aan jezelf)",
+                  "minutes": 15
+                }
+              }
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "slug": "speed-reading-comprehension",
+    "locale": "nl",
+    "title": "Speed Reading & Comprehension Protocol",
+    "summary": "Tempo omhoog zonder begrip te verliezen.",
+    "sort_order": 7,
+    "body_md": "## Speed Reading & Comprehension Protocol\n\nTempo omhoog zonder begrip te verliezen.\n\nCatalogusstub: concrete weektaken staan klaar in de app; diepere content kan iteratief worden vervangen (Updates 22-03).",
+    "definition": {
+      "version": 1,
+      "goal_one_liner": "Sneller lezen met controle op begrip",
+      "estimated_weeks_min": 4,
+      "estimated_weeks_max": 12,
+      "phases": [
+        {
+          "id": "p1",
+          "order": 1,
+          "title": "Fase 1 — Basis",
+          "summary": "Fundament en ritme vastzetten.",
+          "week_start": 1,
+          "week_end": 2
+        },
+        {
+          "id": "p2",
+          "order": 2,
+          "title": "Fase 2 — Verdieping",
+          "summary": "Volume en consistentie opvoeren.",
+          "week_start": 3,
+          "week_end": 4
+        }
+      ],
+      "weeks": [
+        {
+          "week_index": 1,
+          "phase_id": "p1",
+          "title": "Week 1",
+          "objective": "Meting: woorden/min + 3 vragen begrip.",
+          "tasks": [
+            {
+              "id": "speed-reading-comprehension-w1-t1",
+              "title": "Kern-sessie",
+              "concrete": "25 min geconcentreerde oefening op dit traject; noteer 1 zin resultaat.",
+              "minutes": 25,
+              "scaling": {
+                "easy": {
+                  "concrete": "15 min gerichte oefening",
+                  "minutes": 15
+                },
+                "medium": {
+                  "concrete": "25 min zoals beschreven",
+                  "minutes": 25
+                },
+                "hard": {
+                  "concrete": "40 min + korte reflectie wat morgen anders",
+                  "minutes": 40
+                }
+              }
+            },
+            {
+              "id": "speed-reading-comprehension-w1-t2",
+              "title": "Micro-reflectie",
+              "concrete": "10 min: wat werkte, wat niet; 1 concrete aanpassing voor volgende sessie.",
+              "minutes": 10,
+              "scaling": {
+                "easy": {
+                  "concrete": "5 min + 1 bullet",
+                  "minutes": 5
+                },
+                "medium": {
+                  "concrete": "10 min zoals beschreven",
+                  "minutes": 10
+                },
+                "hard": {
+                  "concrete": "15 min + accountability (bericht aan jezelf)",
+                  "minutes": 15
+                }
+              }
+            }
+          ]
+        },
+        {
+          "week_index": 2,
+          "phase_id": "p1",
+          "title": "Week 2",
+          "objective": "Techniek week: pointer / chunking 20 min/dag.",
+          "tasks": [
+            {
+              "id": "speed-reading-comprehension-w2-t1",
+              "title": "Kern-sessie",
+              "concrete": "25 min geconcentreerde oefening op dit traject; noteer 1 zin resultaat.",
+              "minutes": 25,
+              "scaling": {
+                "easy": {
+                  "concrete": "15 min gerichte oefening",
+                  "minutes": 15
+                },
+                "medium": {
+                  "concrete": "25 min zoals beschreven",
+                  "minutes": 25
+                },
+                "hard": {
+                  "concrete": "40 min + korte reflectie wat morgen anders",
+                  "minutes": 40
+                }
+              }
+            },
+            {
+              "id": "speed-reading-comprehension-w2-t2",
+              "title": "Micro-reflectie",
+              "concrete": "10 min: wat werkte, wat niet; 1 concrete aanpassing voor volgende sessie.",
+              "minutes": 10,
+              "scaling": {
+                "easy": {
+                  "concrete": "5 min + 1 bullet",
+                  "minutes": 5
+                },
+                "medium": {
+                  "concrete": "10 min zoals beschreven",
+                  "minutes": 10
+                },
+                "hard": {
+                  "concrete": "15 min + accountability (bericht aan jezelf)",
+                  "minutes": 15
+                }
+              }
+            }
+          ]
+        },
+        {
+          "week_index": 3,
+          "phase_id": "p2",
+          "title": "Week 3",
+          "objective": "Lange tekst: samenvatting in 5 bullets.",
+          "tasks": [
+            {
+              "id": "speed-reading-comprehension-w3-t1",
+              "title": "Kern-sessie",
+              "concrete": "25 min geconcentreerde oefening op dit traject; noteer 1 zin resultaat.",
+              "minutes": 25,
+              "scaling": {
+                "easy": {
+                  "concrete": "15 min gerichte oefening",
+                  "minutes": 15
+                },
+                "medium": {
+                  "concrete": "25 min zoals beschreven",
+                  "minutes": 25
+                },
+                "hard": {
+                  "concrete": "40 min + korte reflectie wat morgen anders",
+                  "minutes": 40
+                }
+              }
+            },
+            {
+              "id": "speed-reading-comprehension-w3-t2",
+              "title": "Micro-reflectie",
+              "concrete": "10 min: wat werkte, wat niet; 1 concrete aanpassing voor volgende sessie.",
+              "minutes": 10,
+              "scaling": {
+                "easy": {
+                  "concrete": "5 min + 1 bullet",
+                  "minutes": 5
+                },
+                "medium": {
+                  "concrete": "10 min zoals beschreven",
+                  "minutes": 10
+                },
+                "hard": {
+                  "concrete": "15 min + accountability (bericht aan jezelf)",
+                  "minutes": 15
+                }
+              }
+            }
+          ]
+        },
+        {
+          "week_index": 4,
+          "phase_id": "p2",
+          "title": "Week 4",
+          "objective": "Toets: zelfde teksttype onder tijdsdruk.",
+          "tasks": [
+            {
+              "id": "speed-reading-comprehension-w4-t1",
+              "title": "Kern-sessie",
+              "concrete": "25 min geconcentreerde oefening op dit traject; noteer 1 zin resultaat.",
+              "minutes": 25,
+              "scaling": {
+                "easy": {
+                  "concrete": "15 min gerichte oefening",
+                  "minutes": 15
+                },
+                "medium": {
+                  "concrete": "25 min zoals beschreven",
+                  "minutes": 25
+                },
+                "hard": {
+                  "concrete": "40 min + korte reflectie wat morgen anders",
+                  "minutes": 40
+                }
+              }
+            },
+            {
+              "id": "speed-reading-comprehension-w4-t2",
+              "title": "Micro-reflectie",
+              "concrete": "10 min: wat werkte, wat niet; 1 concrete aanpassing voor volgende sessie.",
+              "minutes": 10,
+              "scaling": {
+                "easy": {
+                  "concrete": "5 min + 1 bullet",
+                  "minutes": 5
+                },
+                "medium": {
+                  "concrete": "10 min zoals beschreven",
+                  "minutes": 10
+                },
+                "hard": {
+                  "concrete": "15 min + accountability (bericht aan jezelf)",
+                  "minutes": 15
+                }
+              }
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "slug": "decision-making-judgment",
+    "locale": "nl",
+    "title": "Decision Making & Judgment Protocol",
+    "summary": "Frameworks, onzekerheid, trade-offs.",
+    "sort_order": 8,
+    "body_md": "## Decision Making & Judgment Protocol\n\nFrameworks, onzekerheid, trade-offs.\n\nCatalogusstub: concrete weektaken staan klaar in de app; diepere content kan iteratief worden vervangen (Updates 22-03).",
+    "definition": {
+      "version": 1,
+      "goal_one_liner": "Betere beslissingen met minder rumination",
+      "estimated_weeks_min": 4,
+      "estimated_weeks_max": 12,
+      "phases": [
+        {
+          "id": "p1",
+          "order": 1,
+          "title": "Fase 1 — Basis",
+          "summary": "Fundament en ritme vastzetten.",
+          "week_start": 1,
+          "week_end": 2
+        },
+        {
+          "id": "p2",
+          "order": 2,
+          "title": "Fase 2 — Verdieping",
+          "summary": "Volume en consistentie opvoeren.",
+          "week_start": 3,
+          "week_end": 4
+        }
+      ],
+      "weeks": [
+        {
+          "week_index": 1,
+          "phase_id": "p1",
+          "title": "Week 1",
+          "objective": "Beslislog 3 dagen: besluit + uitkomst (1 regel).",
+          "tasks": [
+            {
+              "id": "decision-making-judgment-w1-t1",
+              "title": "Kern-sessie",
+              "concrete": "25 min geconcentreerde oefening op dit traject; noteer 1 zin resultaat.",
+              "minutes": 25,
+              "scaling": {
+                "easy": {
+                  "concrete": "15 min gerichte oefening",
+                  "minutes": 15
+                },
+                "medium": {
+                  "concrete": "25 min zoals beschreven",
+                  "minutes": 25
+                },
+                "hard": {
+                  "concrete": "40 min + korte reflectie wat morgen anders",
+                  "minutes": 40
+                }
+              }
+            },
+            {
+              "id": "decision-making-judgment-w1-t2",
+              "title": "Micro-reflectie",
+              "concrete": "10 min: wat werkte, wat niet; 1 concrete aanpassing voor volgende sessie.",
+              "minutes": 10,
+              "scaling": {
+                "easy": {
+                  "concrete": "5 min + 1 bullet",
+                  "minutes": 5
+                },
+                "medium": {
+                  "concrete": "10 min zoals beschreven",
+                  "minutes": 10
+                },
+                "hard": {
+                  "concrete": "15 min + accountability (bericht aan jezelf)",
+                  "minutes": 15
+                }
+              }
+            }
+          ]
+        },
+        {
+          "week_index": 2,
+          "phase_id": "p1",
+          "title": "Week 2",
+          "objective": "Eén framework (ICE / reversible) op 2 keuzes toepassen.",
+          "tasks": [
+            {
+              "id": "decision-making-judgment-w2-t1",
+              "title": "Kern-sessie",
+              "concrete": "25 min geconcentreerde oefening op dit traject; noteer 1 zin resultaat.",
+              "minutes": 25,
+              "scaling": {
+                "easy": {
+                  "concrete": "15 min gerichte oefening",
+                  "minutes": 15
+                },
+                "medium": {
+                  "concrete": "25 min zoals beschreven",
+                  "minutes": 25
+                },
+                "hard": {
+                  "concrete": "40 min + korte reflectie wat morgen anders",
+                  "minutes": 40
+                }
+              }
+            },
+            {
+              "id": "decision-making-judgment-w2-t2",
+              "title": "Micro-reflectie",
+              "concrete": "10 min: wat werkte, wat niet; 1 concrete aanpassing voor volgende sessie.",
+              "minutes": 10,
+              "scaling": {
+                "easy": {
+                  "concrete": "5 min + 1 bullet",
+                  "minutes": 5
+                },
+                "medium": {
+                  "concrete": "10 min zoals beschreven",
+                  "minutes": 10
+                },
+                "hard": {
+                  "concrete": "15 min + accountability (bericht aan jezelf)",
+                  "minutes": 15
+                }
+              }
+            }
+          ]
+        },
+        {
+          "week_index": 3,
+          "phase_id": "p2",
+          "title": "Week 3",
+          "objective": "Worst case / best case in 15 min uitwerken.",
+          "tasks": [
+            {
+              "id": "decision-making-judgment-w3-t1",
+              "title": "Kern-sessie",
+              "concrete": "25 min geconcentreerde oefening op dit traject; noteer 1 zin resultaat.",
+              "minutes": 25,
+              "scaling": {
+                "easy": {
+                  "concrete": "15 min gerichte oefening",
+                  "minutes": 15
+                },
+                "medium": {
+                  "concrete": "25 min zoals beschreven",
+                  "minutes": 25
+                },
+                "hard": {
+                  "concrete": "40 min + korte reflectie wat morgen anders",
+                  "minutes": 40
+                }
+              }
+            },
+            {
+              "id": "decision-making-judgment-w3-t2",
+              "title": "Micro-reflectie",
+              "concrete": "10 min: wat werkte, wat niet; 1 concrete aanpassing voor volgende sessie.",
+              "minutes": 10,
+              "scaling": {
+                "easy": {
+                  "concrete": "5 min + 1 bullet",
+                  "minutes": 5
+                },
+                "medium": {
+                  "concrete": "10 min zoals beschreven",
+                  "minutes": 10
+                },
+                "hard": {
+                  "concrete": "15 min + accountability (bericht aan jezelf)",
+                  "minutes": 15
+                }
+              }
+            }
+          ]
+        },
+        {
+          "week_index": 4,
+          "phase_id": "p2",
+          "title": "Week 4",
+          "objective": "Review: welk criterium ga je voortaan eerst leggen?",
+          "tasks": [
+            {
+              "id": "decision-making-judgment-w4-t1",
+              "title": "Kern-sessie",
+              "concrete": "25 min geconcentreerde oefening op dit traject; noteer 1 zin resultaat.",
+              "minutes": 25,
+              "scaling": {
+                "easy": {
+                  "concrete": "15 min gerichte oefening",
+                  "minutes": 15
+                },
+                "medium": {
+                  "concrete": "25 min zoals beschreven",
+                  "minutes": 25
+                },
+                "hard": {
+                  "concrete": "40 min + korte reflectie wat morgen anders",
+                  "minutes": 40
+                }
+              }
+            },
+            {
+              "id": "decision-making-judgment-w4-t2",
+              "title": "Micro-reflectie",
+              "concrete": "10 min: wat werkte, wat niet; 1 concrete aanpassing voor volgende sessie.",
+              "minutes": 10,
+              "scaling": {
+                "easy": {
+                  "concrete": "5 min + 1 bullet",
+                  "minutes": 5
+                },
+                "medium": {
+                  "concrete": "10 min zoals beschreven",
+                  "minutes": 10
+                },
+                "hard": {
+                  "concrete": "15 min + accountability (bericht aan jezelf)",
+                  "minutes": 15
+                }
+              }
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "slug": "persuasion-influence",
+    "locale": "nl",
+    "title": "Persuasion & Influence Protocol",
+    "summary": "Framing, empathie, ethische overtuiging.",
+    "sort_order": 9,
+    "body_md": "## Persuasion & Influence Protocol\n\nFraming, empathie, ethische overtuiging.\n\nCatalogusstub: concrete weektaken staan klaar in de app; diepere content kan iteratief worden vervangen (Updates 22-03).",
+    "definition": {
+      "version": 1,
+      "goal_one_liner": "Invloed zonder manipulatie",
+      "estimated_weeks_min": 4,
+      "estimated_weeks_max": 12,
+      "phases": [
+        {
+          "id": "p1",
+          "order": 1,
+          "title": "Fase 1 — Basis",
+          "summary": "Fundament en ritme vastzetten.",
+          "week_start": 1,
+          "week_end": 2
+        },
+        {
+          "id": "p2",
+          "order": 2,
+          "title": "Fase 2 — Verdieping",
+          "summary": "Volume en consistentie opvoeren.",
+          "week_start": 3,
+          "week_end": 4
+        }
+      ],
+      "weeks": [
+        {
+          "week_index": 1,
+          "phase_id": "p1",
+          "title": "Week 1",
+          "objective": "Observeer 2 gesprekken: wat werkte aan toon?",
+          "tasks": [
+            {
+              "id": "persuasion-influence-w1-t1",
+              "title": "Kern-sessie",
+              "concrete": "25 min geconcentreerde oefening op dit traject; noteer 1 zin resultaat.",
+              "minutes": 25,
+              "scaling": {
+                "easy": {
+                  "concrete": "15 min gerichte oefening",
+                  "minutes": 15
+                },
+                "medium": {
+                  "concrete": "25 min zoals beschreven",
+                  "minutes": 25
+                },
+                "hard": {
+                  "concrete": "40 min + korte reflectie wat morgen anders",
+                  "minutes": 40
+                }
+              }
+            },
+            {
+              "id": "persuasion-influence-w1-t2",
+              "title": "Micro-reflectie",
+              "concrete": "10 min: wat werkte, wat niet; 1 concrete aanpassing voor volgende sessie.",
+              "minutes": 10,
+              "scaling": {
+                "easy": {
+                  "concrete": "5 min + 1 bullet",
+                  "minutes": 5
+                },
+                "medium": {
+                  "concrete": "10 min zoals beschreven",
+                  "minutes": 10
+                },
+                "hard": {
+                  "concrete": "15 min + accountability (bericht aan jezelf)",
+                  "minutes": 15
+                }
+              }
+            }
+          ]
+        },
+        {
+          "week_index": 2,
+          "phase_id": "p1",
+          "title": "Week 2",
+          "objective": "Oefen: samenvatten voor je mijnen neemt.",
+          "tasks": [
+            {
+              "id": "persuasion-influence-w2-t1",
+              "title": "Kern-sessie",
+              "concrete": "25 min geconcentreerde oefening op dit traject; noteer 1 zin resultaat.",
+              "minutes": 25,
+              "scaling": {
+                "easy": {
+                  "concrete": "15 min gerichte oefening",
+                  "minutes": 15
+                },
+                "medium": {
+                  "concrete": "25 min zoals beschreven",
+                  "minutes": 25
+                },
+                "hard": {
+                  "concrete": "40 min + korte reflectie wat morgen anders",
+                  "minutes": 40
+                }
+              }
+            },
+            {
+              "id": "persuasion-influence-w2-t2",
+              "title": "Micro-reflectie",
+              "concrete": "10 min: wat werkte, wat niet; 1 concrete aanpassing voor volgende sessie.",
+              "minutes": 10,
+              "scaling": {
+                "easy": {
+                  "concrete": "5 min + 1 bullet",
+                  "minutes": 5
+                },
+                "medium": {
+                  "concrete": "10 min zoals beschreven",
+                  "minutes": 10
+                },
+                "hard": {
+                  "concrete": "15 min + accountability (bericht aan jezelf)",
+                  "minutes": 15
+                }
+              }
+            }
+          ]
+        },
+        {
+          "week_index": 3,
+          "phase_id": "p2",
+          "title": "Week 3",
+          "objective": "Eén moeilijk gesprek met voorbereid doel.",
+          "tasks": [
+            {
+              "id": "persuasion-influence-w3-t1",
+              "title": "Kern-sessie",
+              "concrete": "25 min geconcentreerde oefening op dit traject; noteer 1 zin resultaat.",
+              "minutes": 25,
+              "scaling": {
+                "easy": {
+                  "concrete": "15 min gerichte oefening",
+                  "minutes": 15
+                },
+                "medium": {
+                  "concrete": "25 min zoals beschreven",
+                  "minutes": 25
+                },
+                "hard": {
+                  "concrete": "40 min + korte reflectie wat morgen anders",
+                  "minutes": 40
+                }
+              }
+            },
+            {
+              "id": "persuasion-influence-w3-t2",
+              "title": "Micro-reflectie",
+              "concrete": "10 min: wat werkte, wat niet; 1 concrete aanpassing voor volgende sessie.",
+              "minutes": 10,
+              "scaling": {
+                "easy": {
+                  "concrete": "5 min + 1 bullet",
+                  "minutes": 5
+                },
+                "medium": {
+                  "concrete": "10 min zoals beschreven",
+                  "minutes": 10
+                },
+                "hard": {
+                  "concrete": "15 min + accountability (bericht aan jezelf)",
+                  "minutes": 15
+                }
+              }
+            }
+          ]
+        },
+        {
+          "week_index": 4,
+          "phase_id": "p2",
+          "title": "Week 4",
+          "objective": "Reflectie: eigen defaults (defensief / te soft).",
+          "tasks": [
+            {
+              "id": "persuasion-influence-w4-t1",
+              "title": "Kern-sessie",
+              "concrete": "25 min geconcentreerde oefening op dit traject; noteer 1 zin resultaat.",
+              "minutes": 25,
+              "scaling": {
+                "easy": {
+                  "concrete": "15 min gerichte oefening",
+                  "minutes": 15
+                },
+                "medium": {
+                  "concrete": "25 min zoals beschreven",
+                  "minutes": 25
+                },
+                "hard": {
+                  "concrete": "40 min + korte reflectie wat morgen anders",
+                  "minutes": 40
+                }
+              }
+            },
+            {
+              "id": "persuasion-influence-w4-t2",
+              "title": "Micro-reflectie",
+              "concrete": "10 min: wat werkte, wat niet; 1 concrete aanpassing voor volgende sessie.",
+              "minutes": 10,
+              "scaling": {
+                "easy": {
+                  "concrete": "5 min + 1 bullet",
+                  "minutes": 5
+                },
+                "medium": {
+                  "concrete": "10 min zoals beschreven",
+                  "minutes": 10
+                },
+                "hard": {
+                  "concrete": "15 min + accountability (bericht aan jezelf)",
+                  "minutes": 15
+                }
+              }
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "slug": "emotional-control-regulation",
+    "locale": "nl",
+    "title": "Emotional Control & Regulation Protocol",
+    "summary": "Triggers, adem, herstel na spike.",
+    "sort_order": 10,
+    "body_md": "## Emotional Control & Regulation Protocol\n\nTriggers, adem, herstel na spike.\n\nCatalogusstub: concrete weektaken staan klaar in de app; diepere content kan iteratief worden vervangen (Updates 22-03).",
+    "definition": {
+      "version": 1,
+      "goal_one_liner": "Emoties eerder merken en bijsturen",
+      "estimated_weeks_min": 4,
+      "estimated_weeks_max": 12,
+      "phases": [
+        {
+          "id": "p1",
+          "order": 1,
+          "title": "Fase 1 — Basis",
+          "summary": "Fundament en ritme vastzetten.",
+          "week_start": 1,
+          "week_end": 2
+        },
+        {
+          "id": "p2",
+          "order": 2,
+          "title": "Fase 2 — Verdieping",
+          "summary": "Volume en consistentie opvoeren.",
+          "week_start": 3,
+          "week_end": 4
+        }
+      ],
+      "weeks": [
+        {
+          "week_index": 1,
+          "phase_id": "p1",
+          "title": "Week 1",
+          "objective": "Signaalkaart: lichaam + gedachte bij stress.",
+          "tasks": [
+            {
+              "id": "emotional-control-regulation-w1-t1",
+              "title": "Kern-sessie",
+              "concrete": "25 min geconcentreerde oefening op dit traject; noteer 1 zin resultaat.",
+              "minutes": 25,
+              "scaling": {
+                "easy": {
+                  "concrete": "15 min gerichte oefening",
+                  "minutes": 15
+                },
+                "medium": {
+                  "concrete": "25 min zoals beschreven",
+                  "minutes": 25
+                },
+                "hard": {
+                  "concrete": "40 min + korte reflectie wat morgen anders",
+                  "minutes": 40
+                }
+              }
+            },
+            {
+              "id": "emotional-control-regulation-w1-t2",
+              "title": "Micro-reflectie",
+              "concrete": "10 min: wat werkte, wat niet; 1 concrete aanpassing voor volgende sessie.",
+              "minutes": 10,
+              "scaling": {
+                "easy": {
+                  "concrete": "5 min + 1 bullet",
+                  "minutes": 5
+                },
+                "medium": {
+                  "concrete": "10 min zoals beschreven",
+                  "minutes": 10
+                },
+                "hard": {
+                  "concrete": "15 min + accountability (bericht aan jezelf)",
+                  "minutes": 15
+                }
+              }
+            }
+          ]
+        },
+        {
+          "week_index": 2,
+          "phase_id": "p1",
+          "title": "Week 2",
+          "objective": "2 min adem voor moeilijke momenten (5 dagen).",
+          "tasks": [
+            {
+              "id": "emotional-control-regulation-w2-t1",
+              "title": "Kern-sessie",
+              "concrete": "25 min geconcentreerde oefening op dit traject; noteer 1 zin resultaat.",
+              "minutes": 25,
+              "scaling": {
+                "easy": {
+                  "concrete": "15 min gerichte oefening",
+                  "minutes": 15
+                },
+                "medium": {
+                  "concrete": "25 min zoals beschreven",
+                  "minutes": 25
+                },
+                "hard": {
+                  "concrete": "40 min + korte reflectie wat morgen anders",
+                  "minutes": 40
+                }
+              }
+            },
+            {
+              "id": "emotional-control-regulation-w2-t2",
+              "title": "Micro-reflectie",
+              "concrete": "10 min: wat werkte, wat niet; 1 concrete aanpassing voor volgende sessie.",
+              "minutes": 10,
+              "scaling": {
+                "easy": {
+                  "concrete": "5 min + 1 bullet",
+                  "minutes": 5
+                },
+                "medium": {
+                  "concrete": "10 min zoals beschreven",
+                  "minutes": 10
+                },
+                "hard": {
+                  "concrete": "15 min + accountability (bericht aan jezelf)",
+                  "minutes": 15
+                }
+              }
+            }
+          ]
+        },
+        {
+          "week_index": 3,
+          "phase_id": "p2",
+          "title": "Week 3",
+          "objective": "Na conflict: 10 min debrief zonder telefoon.",
+          "tasks": [
+            {
+              "id": "emotional-control-regulation-w3-t1",
+              "title": "Kern-sessie",
+              "concrete": "25 min geconcentreerde oefening op dit traject; noteer 1 zin resultaat.",
+              "minutes": 25,
+              "scaling": {
+                "easy": {
+                  "concrete": "15 min gerichte oefening",
+                  "minutes": 15
+                },
+                "medium": {
+                  "concrete": "25 min zoals beschreven",
+                  "minutes": 25
+                },
+                "hard": {
+                  "concrete": "40 min + korte reflectie wat morgen anders",
+                  "minutes": 40
+                }
+              }
+            },
+            {
+              "id": "emotional-control-regulation-w3-t2",
+              "title": "Micro-reflectie",
+              "concrete": "10 min: wat werkte, wat niet; 1 concrete aanpassing voor volgende sessie.",
+              "minutes": 10,
+              "scaling": {
+                "easy": {
+                  "concrete": "5 min + 1 bullet",
+                  "minutes": 5
+                },
+                "medium": {
+                  "concrete": "10 min zoals beschreven",
+                  "minutes": 10
+                },
+                "hard": {
+                  "concrete": "15 min + accountability (bericht aan jezelf)",
+                  "minutes": 15
+                }
+              }
+            }
+          ]
+        },
+        {
+          "week_index": 4,
+          "phase_id": "p2",
+          "title": "Week 4",
+          "objective": "Plan: wie bel je bij escalatie?",
+          "tasks": [
+            {
+              "id": "emotional-control-regulation-w4-t1",
+              "title": "Kern-sessie",
+              "concrete": "25 min geconcentreerde oefening op dit traject; noteer 1 zin resultaat.",
+              "minutes": 25,
+              "scaling": {
+                "easy": {
+                  "concrete": "15 min gerichte oefening",
+                  "minutes": 15
+                },
+                "medium": {
+                  "concrete": "25 min zoals beschreven",
+                  "minutes": 25
+                },
+                "hard": {
+                  "concrete": "40 min + korte reflectie wat morgen anders",
+                  "minutes": 40
+                }
+              }
+            },
+            {
+              "id": "emotional-control-regulation-w4-t2",
+              "title": "Micro-reflectie",
+              "concrete": "10 min: wat werkte, wat niet; 1 concrete aanpassing voor volgende sessie.",
+              "minutes": 10,
+              "scaling": {
+                "easy": {
+                  "concrete": "5 min + 1 bullet",
+                  "minutes": 5
+                },
+                "medium": {
+                  "concrete": "10 min zoals beschreven",
+                  "minutes": 10
+                },
+                "hard": {
+                  "concrete": "15 min + accountability (bericht aan jezelf)",
+                  "minutes": 15
+                }
+              }
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "slug": "digital-productivity-workflow",
+    "locale": "nl",
+    "title": "Digital Productivity & Workflow Protocol",
+    "summary": "Inbox, contexten, tooling minimaliseren.",
+    "sort_order": 11,
+    "body_md": "## Digital Productivity & Workflow Protocol\n\nInbox, contexten, tooling minimaliseren.\n\nCatalogusstub: concrete weektaken staan klaar in de app; diepere content kan iteratief worden vervangen (Updates 22-03).",
+    "definition": {
+      "version": 1,
+      "goal_one_liner": "Minder wisselen, meer af",
+      "estimated_weeks_min": 4,
+      "estimated_weeks_max": 12,
+      "phases": [
+        {
+          "id": "p1",
+          "order": 1,
+          "title": "Fase 1 — Basis",
+          "summary": "Fundament en ritme vastzetten.",
+          "week_start": 1,
+          "week_end": 2
+        },
+        {
+          "id": "p2",
+          "order": 2,
+          "title": "Fase 2 — Verdieping",
+          "summary": "Volume en consistentie opvoeren.",
+          "week_start": 3,
+          "week_end": 4
+        }
+      ],
+      "weeks": [
+        {
+          "week_index": 1,
+          "phase_id": "p1",
+          "title": "Week 1",
+          "objective": "Map: apps + notificaties + inbox sources.",
+          "tasks": [
+            {
+              "id": "digital-productivity-workflow-w1-t1",
+              "title": "Kern-sessie",
+              "concrete": "25 min geconcentreerde oefening op dit traject; noteer 1 zin resultaat.",
+              "minutes": 25,
+              "scaling": {
+                "easy": {
+                  "concrete": "15 min gerichte oefening",
+                  "minutes": 15
+                },
+                "medium": {
+                  "concrete": "25 min zoals beschreven",
+                  "minutes": 25
+                },
+                "hard": {
+                  "concrete": "40 min + korte reflectie wat morgen anders",
+                  "minutes": 40
+                }
+              }
+            },
+            {
+              "id": "digital-productivity-workflow-w1-t2",
+              "title": "Micro-reflectie",
+              "concrete": "10 min: wat werkte, wat niet; 1 concrete aanpassing voor volgende sessie.",
+              "minutes": 10,
+              "scaling": {
+                "easy": {
+                  "concrete": "5 min + 1 bullet",
+                  "minutes": 5
+                },
+                "medium": {
+                  "concrete": "10 min zoals beschreven",
+                  "minutes": 10
+                },
+                "hard": {
+                  "concrete": "15 min + accountability (bericht aan jezelf)",
+                  "minutes": 15
+                }
+              }
+            }
+          ]
+        },
+        {
+          "week_index": 2,
+          "phase_id": "p1",
+          "title": "Week 2",
+          "objective": "Één deep-work window per dag beschermen.",
+          "tasks": [
+            {
+              "id": "digital-productivity-workflow-w2-t1",
+              "title": "Kern-sessie",
+              "concrete": "25 min geconcentreerde oefening op dit traject; noteer 1 zin resultaat.",
+              "minutes": 25,
+              "scaling": {
+                "easy": {
+                  "concrete": "15 min gerichte oefening",
+                  "minutes": 15
+                },
+                "medium": {
+                  "concrete": "25 min zoals beschreven",
+                  "minutes": 25
+                },
+                "hard": {
+                  "concrete": "40 min + korte reflectie wat morgen anders",
+                  "minutes": 40
+                }
+              }
+            },
+            {
+              "id": "digital-productivity-workflow-w2-t2",
+              "title": "Micro-reflectie",
+              "concrete": "10 min: wat werkte, wat niet; 1 concrete aanpassing voor volgende sessie.",
+              "minutes": 10,
+              "scaling": {
+                "easy": {
+                  "concrete": "5 min + 1 bullet",
+                  "minutes": 5
+                },
+                "medium": {
+                  "concrete": "10 min zoals beschreven",
+                  "minutes": 10
+                },
+                "hard": {
+                  "concrete": "15 min + accountability (bericht aan jezelf)",
+                  "minutes": 15
+                }
+              }
+            }
+          ]
+        },
+        {
+          "week_index": 3,
+          "phase_id": "p2",
+          "title": "Week 3",
+          "objective": "Automatisering of template voor terugkerend werk.",
+          "tasks": [
+            {
+              "id": "digital-productivity-workflow-w3-t1",
+              "title": "Kern-sessie",
+              "concrete": "25 min geconcentreerde oefening op dit traject; noteer 1 zin resultaat.",
+              "minutes": 25,
+              "scaling": {
+                "easy": {
+                  "concrete": "15 min gerichte oefening",
+                  "minutes": 15
+                },
+                "medium": {
+                  "concrete": "25 min zoals beschreven",
+                  "minutes": 25
+                },
+                "hard": {
+                  "concrete": "40 min + korte reflectie wat morgen anders",
+                  "minutes": 40
+                }
+              }
+            },
+            {
+              "id": "digital-productivity-workflow-w3-t2",
+              "title": "Micro-reflectie",
+              "concrete": "10 min: wat werkte, wat niet; 1 concrete aanpassing voor volgende sessie.",
+              "minutes": 10,
+              "scaling": {
+                "easy": {
+                  "concrete": "5 min + 1 bullet",
+                  "minutes": 5
+                },
+                "medium": {
+                  "concrete": "10 min zoals beschreven",
+                  "minutes": 10
+                },
+                "hard": {
+                  "concrete": "15 min + accountability (bericht aan jezelf)",
+                  "minutes": 15
+                }
+              }
+            }
+          ]
+        },
+        {
+          "week_index": 4,
+          "phase_id": "p2",
+          "title": "Week 4",
+          "objective": "Review: wat schrap je definitief?",
+          "tasks": [
+            {
+              "id": "digital-productivity-workflow-w4-t1",
+              "title": "Kern-sessie",
+              "concrete": "25 min geconcentreerde oefening op dit traject; noteer 1 zin resultaat.",
+              "minutes": 25,
+              "scaling": {
+                "easy": {
+                  "concrete": "15 min gerichte oefening",
+                  "minutes": 15
+                },
+                "medium": {
+                  "concrete": "25 min zoals beschreven",
+                  "minutes": 25
+                },
+                "hard": {
+                  "concrete": "40 min + korte reflectie wat morgen anders",
+                  "minutes": 40
+                }
+              }
+            },
+            {
+              "id": "digital-productivity-workflow-w4-t2",
+              "title": "Micro-reflectie",
+              "concrete": "10 min: wat werkte, wat niet; 1 concrete aanpassing voor volgende sessie.",
+              "minutes": 10,
+              "scaling": {
+                "easy": {
+                  "concrete": "5 min + 1 bullet",
+                  "minutes": 5
+                },
+                "medium": {
+                  "concrete": "10 min zoals beschreven",
+                  "minutes": 10
+                },
+                "hard": {
+                  "concrete": "15 min + accountability (bericht aan jezelf)",
+                  "minutes": 15
+                }
+              }
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "slug": "discipline-consistency",
+    "locale": "nl",
+    "title": "Discipline & Consistency Protocol",
+    "summary": "Niet motivatie — systemen en streaks.",
+    "sort_order": 12,
+    "body_md": "## Discipline & Consistency Protocol\n\nNiet motivatie — systemen en streaks.\n\nCatalogusstub: concrete weektaken staan klaar in de app; diepere content kan iteratief worden vervangen (Updates 22-03).",
+    "definition": {
+      "version": 1,
+      "goal_one_liner": "Dagelijks minimum dat niet onderhandelbaar is",
+      "estimated_weeks_min": 4,
+      "estimated_weeks_max": 12,
+      "phases": [
+        {
+          "id": "p1",
+          "order": 1,
+          "title": "Fase 1 — Basis",
+          "summary": "Fundament en ritme vastzetten.",
+          "week_start": 1,
+          "week_end": 2
+        },
+        {
+          "id": "p2",
+          "order": 2,
+          "title": "Fase 2 — Verdieping",
+          "summary": "Volume en consistentie opvoeren.",
+          "week_start": 3,
+          "week_end": 4
+        }
+      ],
+      "weeks": [
+        {
+          "week_index": 1,
+          "phase_id": "p1",
+          "title": "Week 1",
+          "objective": "Kies 1 niet-onderhandelbare gewoonte (klein).",
+          "tasks": [
+            {
+              "id": "discipline-consistency-w1-t1",
+              "title": "Kern-sessie",
+              "concrete": "25 min geconcentreerde oefening op dit traject; noteer 1 zin resultaat.",
+              "minutes": 25,
+              "scaling": {
+                "easy": {
+                  "concrete": "15 min gerichte oefening",
+                  "minutes": 15
+                },
+                "medium": {
+                  "concrete": "25 min zoals beschreven",
+                  "minutes": 25
+                },
+                "hard": {
+                  "concrete": "40 min + korte reflectie wat morgen anders",
+                  "minutes": 40
+                }
+              }
+            },
+            {
+              "id": "discipline-consistency-w1-t2",
+              "title": "Micro-reflectie",
+              "concrete": "10 min: wat werkte, wat niet; 1 concrete aanpassing voor volgende sessie.",
+              "minutes": 10,
+              "scaling": {
+                "easy": {
+                  "concrete": "5 min + 1 bullet",
+                  "minutes": 5
+                },
+                "medium": {
+                  "concrete": "10 min zoals beschreven",
+                  "minutes": 10
+                },
+                "hard": {
+                  "concrete": "15 min + accountability (bericht aan jezelf)",
+                  "minutes": 15
+                }
+              }
+            }
+          ]
+        },
+        {
+          "week_index": 2,
+          "phase_id": "p1",
+          "title": "Week 2",
+          "objective": "Streak 7 dagen; geen nul dagen.",
+          "tasks": [
+            {
+              "id": "discipline-consistency-w2-t1",
+              "title": "Kern-sessie",
+              "concrete": "25 min geconcentreerde oefening op dit traject; noteer 1 zin resultaat.",
+              "minutes": 25,
+              "scaling": {
+                "easy": {
+                  "concrete": "15 min gerichte oefening",
+                  "minutes": 15
+                },
+                "medium": {
+                  "concrete": "25 min zoals beschreven",
+                  "minutes": 25
+                },
+                "hard": {
+                  "concrete": "40 min + korte reflectie wat morgen anders",
+                  "minutes": 40
+                }
+              }
+            },
+            {
+              "id": "discipline-consistency-w2-t2",
+              "title": "Micro-reflectie",
+              "concrete": "10 min: wat werkte, wat niet; 1 concrete aanpassing voor volgende sessie.",
+              "minutes": 10,
+              "scaling": {
+                "easy": {
+                  "concrete": "5 min + 1 bullet",
+                  "minutes": 5
+                },
+                "medium": {
+                  "concrete": "10 min zoals beschreven",
+                  "minutes": 10
+                },
+                "hard": {
+                  "concrete": "15 min + accountability (bericht aan jezelf)",
+                  "minutes": 15
+                }
+              }
+            }
+          ]
+        },
+        {
+          "week_index": 3,
+          "phase_id": "p2",
+          "title": "Week 3",
+          "objective": "Obstakel analyse: waar breekt het?",
+          "tasks": [
+            {
+              "id": "discipline-consistency-w3-t1",
+              "title": "Kern-sessie",
+              "concrete": "25 min geconcentreerde oefening op dit traject; noteer 1 zin resultaat.",
+              "minutes": 25,
+              "scaling": {
+                "easy": {
+                  "concrete": "15 min gerichte oefening",
+                  "minutes": 15
+                },
+                "medium": {
+                  "concrete": "25 min zoals beschreven",
+                  "minutes": 25
+                },
+                "hard": {
+                  "concrete": "40 min + korte reflectie wat morgen anders",
+                  "minutes": 40
+                }
+              }
+            },
+            {
+              "id": "discipline-consistency-w3-t2",
+              "title": "Micro-reflectie",
+              "concrete": "10 min: wat werkte, wat niet; 1 concrete aanpassing voor volgende sessie.",
+              "minutes": 10,
+              "scaling": {
+                "easy": {
+                  "concrete": "5 min + 1 bullet",
+                  "minutes": 5
+                },
+                "medium": {
+                  "concrete": "10 min zoals beschreven",
+                  "minutes": 10
+                },
+                "hard": {
+                  "concrete": "15 min + accountability (bericht aan jezelf)",
+                  "minutes": 15
+                }
+              }
+            }
+          ]
+        },
+        {
+          "week_index": 4,
+          "phase_id": "p2",
+          "title": "Week 4",
+          "objective": "Volgende 30 dagen: regel + accountability.",
+          "tasks": [
+            {
+              "id": "discipline-consistency-w4-t1",
+              "title": "Kern-sessie",
+              "concrete": "25 min geconcentreerde oefening op dit traject; noteer 1 zin resultaat.",
+              "minutes": 25,
+              "scaling": {
+                "easy": {
+                  "concrete": "15 min gerichte oefening",
+                  "minutes": 15
+                },
+                "medium": {
+                  "concrete": "25 min zoals beschreven",
+                  "minutes": 25
+                },
+                "hard": {
+                  "concrete": "40 min + korte reflectie wat morgen anders",
+                  "minutes": 40
+                }
+              }
+            },
+            {
+              "id": "discipline-consistency-w4-t2",
+              "title": "Micro-reflectie",
+              "concrete": "10 min: wat werkte, wat niet; 1 concrete aanpassing voor volgende sessie.",
+              "minutes": 10,
+              "scaling": {
+                "easy": {
+                  "concrete": "5 min + 1 bullet",
+                  "minutes": 5
+                },
+                "medium": {
+                  "concrete": "10 min zoals beschreven",
+                  "minutes": 10
+                },
+                "hard": {
+                  "concrete": "15 min + accountability (bericht aan jezelf)",
+                  "minutes": 15
+                }
+              }
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "slug": "financial-control-literacy",
+    "locale": "nl",
+    "title": "Financial Control & Literacy Protocol",
+    "summary": "Cashflow zicht, grenzen, wekelijkse review.",
+    "sort_order": 13,
+    "body_md": "## Financial Control & Literacy Protocol\n\nCashflow zicht, grenzen, wekelijkse review.\n\nCatalogusstub: concrete weektaken staan klaar in de app; diepere content kan iteratief worden vervangen (Updates 22-03).",
+    "definition": {
+      "version": 1,
+      "goal_one_liner": "Rust door overzicht en grenzen",
+      "estimated_weeks_min": 4,
+      "estimated_weeks_max": 12,
+      "phases": [
+        {
+          "id": "p1",
+          "order": 1,
+          "title": "Fase 1 — Basis",
+          "summary": "Fundament en ritme vastzetten.",
+          "week_start": 1,
+          "week_end": 2
+        },
+        {
+          "id": "p2",
+          "order": 2,
+          "title": "Fase 2 — Verdieping",
+          "summary": "Volume en consistentie opvoeren.",
+          "week_start": 3,
+          "week_end": 4
+        }
+      ],
+      "weeks": [
+        {
+          "week_index": 1,
+          "phase_id": "p1",
+          "title": "Week 1",
+          "objective": "Alle vaste lasten + inkomsten op één blad.",
+          "tasks": [
+            {
+              "id": "financial-control-literacy-w1-t1",
+              "title": "Kern-sessie",
+              "concrete": "25 min geconcentreerde oefening op dit traject; noteer 1 zin resultaat.",
+              "minutes": 25,
+              "scaling": {
+                "easy": {
+                  "concrete": "15 min gerichte oefening",
+                  "minutes": 15
+                },
+                "medium": {
+                  "concrete": "25 min zoals beschreven",
+                  "minutes": 25
+                },
+                "hard": {
+                  "concrete": "40 min + korte reflectie wat morgen anders",
+                  "minutes": 40
+                }
+              }
+            },
+            {
+              "id": "financial-control-literacy-w1-t2",
+              "title": "Micro-reflectie",
+              "concrete": "10 min: wat werkte, wat niet; 1 concrete aanpassing voor volgende sessie.",
+              "minutes": 10,
+              "scaling": {
+                "easy": {
+                  "concrete": "5 min + 1 bullet",
+                  "minutes": 5
+                },
+                "medium": {
+                  "concrete": "10 min zoals beschreven",
+                  "minutes": 10
+                },
+                "hard": {
+                  "concrete": "15 min + accountability (bericht aan jezelf)",
+                  "minutes": 15
+                }
+              }
+            }
+          ]
+        },
+        {
+          "week_index": 2,
+          "phase_id": "p1",
+          "title": "Week 2",
+          "objective": "Weekritme: 20 min transacties taggen.",
+          "tasks": [
+            {
+              "id": "financial-control-literacy-w2-t1",
+              "title": "Kern-sessie",
+              "concrete": "25 min geconcentreerde oefening op dit traject; noteer 1 zin resultaat.",
+              "minutes": 25,
+              "scaling": {
+                "easy": {
+                  "concrete": "15 min gerichte oefening",
+                  "minutes": 15
+                },
+                "medium": {
+                  "concrete": "25 min zoals beschreven",
+                  "minutes": 25
+                },
+                "hard": {
+                  "concrete": "40 min + korte reflectie wat morgen anders",
+                  "minutes": 40
+                }
+              }
+            },
+            {
+              "id": "financial-control-literacy-w2-t2",
+              "title": "Micro-reflectie",
+              "concrete": "10 min: wat werkte, wat niet; 1 concrete aanpassing voor volgende sessie.",
+              "minutes": 10,
+              "scaling": {
+                "easy": {
+                  "concrete": "5 min + 1 bullet",
+                  "minutes": 5
+                },
+                "medium": {
+                  "concrete": "10 min zoals beschreven",
+                  "minutes": 10
+                },
+                "hard": {
+                  "concrete": "15 min + accountability (bericht aan jezelf)",
+                  "minutes": 15
+                }
+              }
+            }
+          ]
+        },
+        {
+          "week_index": 3,
+          "phase_id": "p2",
+          "title": "Week 3",
+          "objective": "Eén besparingshefboom of schuldstap.",
+          "tasks": [
+            {
+              "id": "financial-control-literacy-w3-t1",
+              "title": "Kern-sessie",
+              "concrete": "25 min geconcentreerde oefening op dit traject; noteer 1 zin resultaat.",
+              "minutes": 25,
+              "scaling": {
+                "easy": {
+                  "concrete": "15 min gerichte oefening",
+                  "minutes": 15
+                },
+                "medium": {
+                  "concrete": "25 min zoals beschreven",
+                  "minutes": 25
+                },
+                "hard": {
+                  "concrete": "40 min + korte reflectie wat morgen anders",
+                  "minutes": 40
+                }
+              }
+            },
+            {
+              "id": "financial-control-literacy-w3-t2",
+              "title": "Micro-reflectie",
+              "concrete": "10 min: wat werkte, wat niet; 1 concrete aanpassing voor volgende sessie.",
+              "minutes": 10,
+              "scaling": {
+                "easy": {
+                  "concrete": "5 min + 1 bullet",
+                  "minutes": 5
+                },
+                "medium": {
+                  "concrete": "10 min zoals beschreven",
+                  "minutes": 10
+                },
+                "hard": {
+                  "concrete": "15 min + accountability (bericht aan jezelf)",
+                  "minutes": 15
+                }
+              }
+            }
+          ]
+        },
+        {
+          "week_index": 4,
+          "phase_id": "p2",
+          "title": "Week 4",
+          "objective": "Doel: buffer X — concrete datum.",
+          "tasks": [
+            {
+              "id": "financial-control-literacy-w4-t1",
+              "title": "Kern-sessie",
+              "concrete": "25 min geconcentreerde oefening op dit traject; noteer 1 zin resultaat.",
+              "minutes": 25,
+              "scaling": {
+                "easy": {
+                  "concrete": "15 min gerichte oefening",
+                  "minutes": 15
+                },
+                "medium": {
+                  "concrete": "25 min zoals beschreven",
+                  "minutes": 25
+                },
+                "hard": {
+                  "concrete": "40 min + korte reflectie wat morgen anders",
+                  "minutes": 40
+                }
+              }
+            },
+            {
+              "id": "financial-control-literacy-w4-t2",
+              "title": "Micro-reflectie",
+              "concrete": "10 min: wat werkte, wat niet; 1 concrete aanpassing voor volgende sessie.",
+              "minutes": 10,
+              "scaling": {
+                "easy": {
+                  "concrete": "5 min + 1 bullet",
+                  "minutes": 5
+                },
+                "medium": {
+                  "concrete": "10 min zoals beschreven",
+                  "minutes": 10
+                },
+                "hard": {
+                  "concrete": "15 min + accountability (bericht aan jezelf)",
+                  "minutes": 15
+                }
+              }
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "slug": "deep-work-focus-mastery",
+    "locale": "nl",
+    "title": "Deep Work & Focus Mastery Protocol",
+    "summary": "Diepte als vaardigheid — niet alleen tijd blokken.",
+    "sort_order": 14,
+    "body_md": "## Deep Work & Focus Mastery Protocol\n\nDiepte als vaardigheid — niet alleen tijd blokken.\n\nCatalogusstub: concrete weektaken staan klaar in de app; diepere content kan iteratief worden vervangen (Updates 22-03).",
+    "definition": {
+      "version": 1,
+      "goal_one_liner": "Langere ononderbroken output",
+      "estimated_weeks_min": 4,
+      "estimated_weeks_max": 12,
+      "phases": [
+        {
+          "id": "p1",
+          "order": 1,
+          "title": "Fase 1 — Basis",
+          "summary": "Fundament en ritme vastzetten.",
+          "week_start": 1,
+          "week_end": 2
+        },
+        {
+          "id": "p2",
+          "order": 2,
+          "title": "Fase 2 — Verdieping",
+          "summary": "Volume en consistentie opvoeren.",
+          "week_start": 3,
+          "week_end": 4
+        }
+      ],
+      "weeks": [
+        {
+          "week_index": 1,
+          "phase_id": "p1",
+          "title": "Week 1",
+          "objective": "2× 50 min blokken; één taak per blok.",
+          "tasks": [
+            {
+              "id": "deep-work-focus-mastery-w1-t1",
+              "title": "Kern-sessie",
+              "concrete": "25 min geconcentreerde oefening op dit traject; noteer 1 zin resultaat.",
+              "minutes": 25,
+              "scaling": {
+                "easy": {
+                  "concrete": "15 min gerichte oefening",
+                  "minutes": 15
+                },
+                "medium": {
+                  "concrete": "25 min zoals beschreven",
+                  "minutes": 25
+                },
+                "hard": {
+                  "concrete": "40 min + korte reflectie wat morgen anders",
+                  "minutes": 40
+                }
+              }
+            },
+            {
+              "id": "deep-work-focus-mastery-w1-t2",
+              "title": "Micro-reflectie",
+              "concrete": "10 min: wat werkte, wat niet; 1 concrete aanpassing voor volgende sessie.",
+              "minutes": 10,
+              "scaling": {
+                "easy": {
+                  "concrete": "5 min + 1 bullet",
+                  "minutes": 5
+                },
+                "medium": {
+                  "concrete": "10 min zoals beschreven",
+                  "minutes": 10
+                },
+                "hard": {
+                  "concrete": "15 min + accountability (bericht aan jezelf)",
+                  "minutes": 15
+                }
+              }
+            }
+          ]
+        },
+        {
+          "week_index": 2,
+          "phase_id": "p1",
+          "title": "Week 2",
+          "objective": "Meet diepte: self-rating 1–10 na sessie.",
+          "tasks": [
+            {
+              "id": "deep-work-focus-mastery-w2-t1",
+              "title": "Kern-sessie",
+              "concrete": "25 min geconcentreerde oefening op dit traject; noteer 1 zin resultaat.",
+              "minutes": 25,
+              "scaling": {
+                "easy": {
+                  "concrete": "15 min gerichte oefening",
+                  "minutes": 15
+                },
+                "medium": {
+                  "concrete": "25 min zoals beschreven",
+                  "minutes": 25
+                },
+                "hard": {
+                  "concrete": "40 min + korte reflectie wat morgen anders",
+                  "minutes": 40
+                }
+              }
+            },
+            {
+              "id": "deep-work-focus-mastery-w2-t2",
+              "title": "Micro-reflectie",
+              "concrete": "10 min: wat werkte, wat niet; 1 concrete aanpassing voor volgende sessie.",
+              "minutes": 10,
+              "scaling": {
+                "easy": {
+                  "concrete": "5 min + 1 bullet",
+                  "minutes": 5
+                },
+                "medium": {
+                  "concrete": "10 min zoals beschreven",
+                  "minutes": 10
+                },
+                "hard": {
+                  "concrete": "15 min + accountability (bericht aan jezelf)",
+                  "minutes": 15
+                }
+              }
+            }
+          ]
+        },
+        {
+          "week_index": 3,
+          "phase_id": "p2",
+          "title": "Week 3",
+          "objective": "Elimineer grootste context switch (1 week).",
+          "tasks": [
+            {
+              "id": "deep-work-focus-mastery-w3-t1",
+              "title": "Kern-sessie",
+              "concrete": "25 min geconcentreerde oefening op dit traject; noteer 1 zin resultaat.",
+              "minutes": 25,
+              "scaling": {
+                "easy": {
+                  "concrete": "15 min gerichte oefening",
+                  "minutes": 15
+                },
+                "medium": {
+                  "concrete": "25 min zoals beschreven",
+                  "minutes": 25
+                },
+                "hard": {
+                  "concrete": "40 min + korte reflectie wat morgen anders",
+                  "minutes": 40
+                }
+              }
+            },
+            {
+              "id": "deep-work-focus-mastery-w3-t2",
+              "title": "Micro-reflectie",
+              "concrete": "10 min: wat werkte, wat niet; 1 concrete aanpassing voor volgende sessie.",
+              "minutes": 10,
+              "scaling": {
+                "easy": {
+                  "concrete": "5 min + 1 bullet",
+                  "minutes": 5
+                },
+                "medium": {
+                  "concrete": "10 min zoals beschreven",
+                  "minutes": 10
+                },
+                "hard": {
+                  "concrete": "15 min + accountability (bericht aan jezelf)",
+                  "minutes": 15
+                }
+              }
+            }
+          ]
+        },
+        {
+          "week_index": 4,
+          "phase_id": "p2",
+          "title": "Week 4",
+          "objective": "Plan volgende maand: diepte-budget per week.",
+          "tasks": [
+            {
+              "id": "deep-work-focus-mastery-w4-t1",
+              "title": "Kern-sessie",
+              "concrete": "25 min geconcentreerde oefening op dit traject; noteer 1 zin resultaat.",
+              "minutes": 25,
+              "scaling": {
+                "easy": {
+                  "concrete": "15 min gerichte oefening",
+                  "minutes": 15
+                },
+                "medium": {
+                  "concrete": "25 min zoals beschreven",
+                  "minutes": 25
+                },
+                "hard": {
+                  "concrete": "40 min + korte reflectie wat morgen anders",
+                  "minutes": 40
+                }
+              }
+            },
+            {
+              "id": "deep-work-focus-mastery-w4-t2",
+              "title": "Micro-reflectie",
+              "concrete": "10 min: wat werkte, wat niet; 1 concrete aanpassing voor volgende sessie.",
+              "minutes": 10,
+              "scaling": {
+                "easy": {
+                  "concrete": "5 min + 1 bullet",
+                  "minutes": 5
+                },
+                "medium": {
+                  "concrete": "10 min zoals beschreven",
+                  "minutes": 10
+                },
+                "hard": {
+                  "concrete": "15 min + accountability (bericht aan jezelf)",
+                  "minutes": 15
+                }
+              }
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "slug": "communication-clarity-control",
+    "locale": "nl",
+    "title": "Communication Clarity & Control Protocol",
+    "summary": "Helderheid, tempo, grenzen in gesprekken.",
+    "sort_order": 15,
+    "body_md": "## Communication Clarity & Control Protocol\n\nHelderheid, tempo, grenzen in gesprekken.\n\nCatalogusstub: concrete weektaken staan klaar in de app; diepere content kan iteratief worden vervangen (Updates 22-03).",
+    "definition": {
+      "version": 1,
+      "goal_one_liner": "Minder ruis, meer duidelijkheid",
+      "estimated_weeks_min": 4,
+      "estimated_weeks_max": 12,
+      "phases": [
+        {
+          "id": "p1",
+          "order": 1,
+          "title": "Fase 1 — Basis",
+          "summary": "Fundament en ritme vastzetten.",
+          "week_start": 1,
+          "week_end": 2
+        },
+        {
+          "id": "p2",
+          "order": 2,
+          "title": "Fase 2 — Verdieping",
+          "summary": "Volume en consistentie opvoeren.",
+          "week_start": 3,
+          "week_end": 4
+        }
+      ],
+      "weeks": [
+        {
+          "week_index": 1,
+          "phase_id": "p1",
+          "title": "Week 1",
+          "objective": "3 gesprekken: doel vooraf in 1 zin.",
+          "tasks": [
+            {
+              "id": "communication-clarity-control-w1-t1",
+              "title": "Kern-sessie",
+              "concrete": "25 min geconcentreerde oefening op dit traject; noteer 1 zin resultaat.",
+              "minutes": 25,
+              "scaling": {
+                "easy": {
+                  "concrete": "15 min gerichte oefening",
+                  "minutes": 15
+                },
+                "medium": {
+                  "concrete": "25 min zoals beschreven",
+                  "minutes": 25
+                },
+                "hard": {
+                  "concrete": "40 min + korte reflectie wat morgen anders",
+                  "minutes": 40
+                }
+              }
+            },
+            {
+              "id": "communication-clarity-control-w1-t2",
+              "title": "Micro-reflectie",
+              "concrete": "10 min: wat werkte, wat niet; 1 concrete aanpassing voor volgende sessie.",
+              "minutes": 10,
+              "scaling": {
+                "easy": {
+                  "concrete": "5 min + 1 bullet",
+                  "minutes": 5
+                },
+                "medium": {
+                  "concrete": "10 min zoals beschreven",
+                  "minutes": 10
+                },
+                "hard": {
+                  "concrete": "15 min + accountability (bericht aan jezelf)",
+                  "minutes": 15
+                }
+              }
+            }
+          ]
+        },
+        {
+          "week_index": 2,
+          "phase_id": "p1",
+          "title": "Week 2",
+          "objective": "Oefen: ‘nee’ in 10 woorden of minder.",
+          "tasks": [
+            {
+              "id": "communication-clarity-control-w2-t1",
+              "title": "Kern-sessie",
+              "concrete": "25 min geconcentreerde oefening op dit traject; noteer 1 zin resultaat.",
+              "minutes": 25,
+              "scaling": {
+                "easy": {
+                  "concrete": "15 min gerichte oefening",
+                  "minutes": 15
+                },
+                "medium": {
+                  "concrete": "25 min zoals beschreven",
+                  "minutes": 25
+                },
+                "hard": {
+                  "concrete": "40 min + korte reflectie wat morgen anders",
+                  "minutes": 40
+                }
+              }
+            },
+            {
+              "id": "communication-clarity-control-w2-t2",
+              "title": "Micro-reflectie",
+              "concrete": "10 min: wat werkte, wat niet; 1 concrete aanpassing voor volgende sessie.",
+              "minutes": 10,
+              "scaling": {
+                "easy": {
+                  "concrete": "5 min + 1 bullet",
+                  "minutes": 5
+                },
+                "medium": {
+                  "concrete": "10 min zoals beschreven",
+                  "minutes": 10
+                },
+                "hard": {
+                  "concrete": "15 min + accountability (bericht aan jezelf)",
+                  "minutes": 15
+                }
+              }
+            }
+          ]
+        },
+        {
+          "week_index": 3,
+          "phase_id": "p2",
+          "title": "Week 3",
+          "objective": "Moeilijk mailtje: concept + verzend na 1 uur.",
+          "tasks": [
+            {
+              "id": "communication-clarity-control-w3-t1",
+              "title": "Kern-sessie",
+              "concrete": "25 min geconcentreerde oefening op dit traject; noteer 1 zin resultaat.",
+              "minutes": 25,
+              "scaling": {
+                "easy": {
+                  "concrete": "15 min gerichte oefening",
+                  "minutes": 15
+                },
+                "medium": {
+                  "concrete": "25 min zoals beschreven",
+                  "minutes": 25
+                },
+                "hard": {
+                  "concrete": "40 min + korte reflectie wat morgen anders",
+                  "minutes": 40
+                }
+              }
+            },
+            {
+              "id": "communication-clarity-control-w3-t2",
+              "title": "Micro-reflectie",
+              "concrete": "10 min: wat werkte, wat niet; 1 concrete aanpassing voor volgende sessie.",
+              "minutes": 10,
+              "scaling": {
+                "easy": {
+                  "concrete": "5 min + 1 bullet",
+                  "minutes": 5
+                },
+                "medium": {
+                  "concrete": "10 min zoals beschreven",
+                  "minutes": 10
+                },
+                "hard": {
+                  "concrete": "15 min + accountability (bericht aan jezelf)",
+                  "minutes": 15
+                }
+              }
+            }
+          ]
+        },
+        {
+          "week_index": 4,
+          "phase_id": "p2",
+          "title": "Week 4",
+          "objective": "Feedback: 1 constructief gesprek met script.",
+          "tasks": [
+            {
+              "id": "communication-clarity-control-w4-t1",
+              "title": "Kern-sessie",
+              "concrete": "25 min geconcentreerde oefening op dit traject; noteer 1 zin resultaat.",
+              "minutes": 25,
+              "scaling": {
+                "easy": {
+                  "concrete": "15 min gerichte oefening",
+                  "minutes": 15
+                },
+                "medium": {
+                  "concrete": "25 min zoals beschreven",
+                  "minutes": 25
+                },
+                "hard": {
+                  "concrete": "40 min + korte reflectie wat morgen anders",
+                  "minutes": 40
+                }
+              }
+            },
+            {
+              "id": "communication-clarity-control-w4-t2",
+              "title": "Micro-reflectie",
+              "concrete": "10 min: wat werkte, wat niet; 1 concrete aanpassing voor volgende sessie.",
+              "minutes": 10,
+              "scaling": {
+                "easy": {
+                  "concrete": "5 min + 1 bullet",
+                  "minutes": 5
+                },
+                "medium": {
+                  "concrete": "10 min zoals beschreven",
+                  "minutes": 10
+                },
+                "hard": {
+                  "concrete": "15 min + accountability (bericht aan jezelf)",
+                  "minutes": 15
+                }
+              }
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "slug": "critical-thinking-reasoning",
+    "locale": "nl",
+    "title": "Critical Thinking & Reasoning Protocol",
+    "summary": "Aannames, bronnen, conclusies testen.",
+    "sort_order": 16,
+    "body_md": "## Critical Thinking & Reasoning Protocol\n\nAannames, bronnen, conclusies testen.\n\nCatalogusstub: concrete weektaken staan klaar in de app; diepere content kan iteratief worden vervangen (Updates 22-03).",
+    "definition": {
+      "version": 1,
+      "goal_one_liner": "Minder slim klinken, meer juist redeneren",
+      "estimated_weeks_min": 4,
+      "estimated_weeks_max": 12,
+      "phases": [
+        {
+          "id": "p1",
+          "order": 1,
+          "title": "Fase 1 — Basis",
+          "summary": "Fundament en ritme vastzetten.",
+          "week_start": 1,
+          "week_end": 2
+        },
+        {
+          "id": "p2",
+          "order": 2,
+          "title": "Fase 2 — Verdieping",
+          "summary": "Volume en consistentie opvoeren.",
+          "week_start": 3,
+          "week_end": 4
+        }
+      ],
+      "weeks": [
+        {
+          "week_index": 1,
+          "phase_id": "p1",
+          "title": "Week 1",
+          "objective": "Drie claims deze week: bron + zekerheid 1–5.",
+          "tasks": [
+            {
+              "id": "critical-thinking-reasoning-w1-t1",
+              "title": "Kern-sessie",
+              "concrete": "25 min geconcentreerde oefening op dit traject; noteer 1 zin resultaat.",
+              "minutes": 25,
+              "scaling": {
+                "easy": {
+                  "concrete": "15 min gerichte oefening",
+                  "minutes": 15
+                },
+                "medium": {
+                  "concrete": "25 min zoals beschreven",
+                  "minutes": 25
+                },
+                "hard": {
+                  "concrete": "40 min + korte reflectie wat morgen anders",
+                  "minutes": 40
+                }
+              }
+            },
+            {
+              "id": "critical-thinking-reasoning-w1-t2",
+              "title": "Micro-reflectie",
+              "concrete": "10 min: wat werkte, wat niet; 1 concrete aanpassing voor volgende sessie.",
+              "minutes": 10,
+              "scaling": {
+                "easy": {
+                  "concrete": "5 min + 1 bullet",
+                  "minutes": 5
+                },
+                "medium": {
+                  "concrete": "10 min zoals beschreven",
+                  "minutes": 10
+                },
+                "hard": {
+                  "concrete": "15 min + accountability (bericht aan jezelf)",
+                  "minutes": 15
+                }
+              }
+            }
+          ]
+        },
+        {
+          "week_index": 2,
+          "phase_id": "p1",
+          "title": "Week 2",
+          "objective": "Steel-man: sterkste tegenargument 1 pagina.",
+          "tasks": [
+            {
+              "id": "critical-thinking-reasoning-w2-t1",
+              "title": "Kern-sessie",
+              "concrete": "25 min geconcentreerde oefening op dit traject; noteer 1 zin resultaat.",
+              "minutes": 25,
+              "scaling": {
+                "easy": {
+                  "concrete": "15 min gerichte oefening",
+                  "minutes": 15
+                },
+                "medium": {
+                  "concrete": "25 min zoals beschreven",
+                  "minutes": 25
+                },
+                "hard": {
+                  "concrete": "40 min + korte reflectie wat morgen anders",
+                  "minutes": 40
+                }
+              }
+            },
+            {
+              "id": "critical-thinking-reasoning-w2-t2",
+              "title": "Micro-reflectie",
+              "concrete": "10 min: wat werkte, wat niet; 1 concrete aanpassing voor volgende sessie.",
+              "minutes": 10,
+              "scaling": {
+                "easy": {
+                  "concrete": "5 min + 1 bullet",
+                  "minutes": 5
+                },
+                "medium": {
+                  "concrete": "10 min zoals beschreven",
+                  "minutes": 10
+                },
+                "hard": {
+                  "concrete": "15 min + accountability (bericht aan jezelf)",
+                  "minutes": 15
+                }
+              }
+            }
+          ]
+        },
+        {
+          "week_index": 3,
+          "phase_id": "p2",
+          "title": "Week 3",
+          "objective": "Beslis met expliciete onzekerheid (interval).",
+          "tasks": [
+            {
+              "id": "critical-thinking-reasoning-w3-t1",
+              "title": "Kern-sessie",
+              "concrete": "25 min geconcentreerde oefening op dit traject; noteer 1 zin resultaat.",
+              "minutes": 25,
+              "scaling": {
+                "easy": {
+                  "concrete": "15 min gerichte oefening",
+                  "minutes": 15
+                },
+                "medium": {
+                  "concrete": "25 min zoals beschreven",
+                  "minutes": 25
+                },
+                "hard": {
+                  "concrete": "40 min + korte reflectie wat morgen anders",
+                  "minutes": 40
+                }
+              }
+            },
+            {
+              "id": "critical-thinking-reasoning-w3-t2",
+              "title": "Micro-reflectie",
+              "concrete": "10 min: wat werkte, wat niet; 1 concrete aanpassing voor volgende sessie.",
+              "minutes": 10,
+              "scaling": {
+                "easy": {
+                  "concrete": "5 min + 1 bullet",
+                  "minutes": 5
+                },
+                "medium": {
+                  "concrete": "10 min zoals beschreven",
+                  "minutes": 10
+                },
+                "hard": {
+                  "concrete": "15 min + accountability (bericht aan jezelf)",
+                  "minutes": 15
+                }
+              }
+            }
+          ]
+        },
+        {
+          "week_index": 4,
+          "phase_id": "p2",
+          "title": "Week 4",
+          "objective": "Checklist voor volgende grote beslissing.",
+          "tasks": [
+            {
+              "id": "critical-thinking-reasoning-w4-t1",
+              "title": "Kern-sessie",
+              "concrete": "25 min geconcentreerde oefening op dit traject; noteer 1 zin resultaat.",
+              "minutes": 25,
+              "scaling": {
+                "easy": {
+                  "concrete": "15 min gerichte oefening",
+                  "minutes": 15
+                },
+                "medium": {
+                  "concrete": "25 min zoals beschreven",
+                  "minutes": 25
+                },
+                "hard": {
+                  "concrete": "40 min + korte reflectie wat morgen anders",
+                  "minutes": 40
+                }
+              }
+            },
+            {
+              "id": "critical-thinking-reasoning-w4-t2",
+              "title": "Micro-reflectie",
+              "concrete": "10 min: wat werkte, wat niet; 1 concrete aanpassing voor volgende sessie.",
+              "minutes": 10,
+              "scaling": {
+                "easy": {
+                  "concrete": "5 min + 1 bullet",
+                  "minutes": 5
+                },
+                "medium": {
+                  "concrete": "10 min zoals beschreven",
+                  "minutes": 10
+                },
+                "hard": {
+                  "concrete": "15 min + accountability (bericht aan jezelf)",
+                  "minutes": 15
+                }
+              }
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "slug": "memory-recall-mastery",
+    "locale": "nl",
+    "title": "Memory & Recall Mastery Protocol",
+    "summary": "Spaced repetition + actieve recall.",
+    "sort_order": 17,
+    "body_md": "## Memory & Recall Mastery Protocol\n\nSpaced repetition + actieve recall.\n\nCatalogusstub: concrete weektaken staan klaar in de app; diepere content kan iteratief worden vervangen (Updates 22-03).",
+    "definition": {
+      "version": 1,
+      "goal_one_liner": "Onthouden wat je echt nodig hebt",
+      "estimated_weeks_min": 4,
+      "estimated_weeks_max": 12,
+      "phases": [
+        {
+          "id": "p1",
+          "order": 1,
+          "title": "Fase 1 — Basis",
+          "summary": "Fundament en ritme vastzetten.",
+          "week_start": 1,
+          "week_end": 2
+        },
+        {
+          "id": "p2",
+          "order": 2,
+          "title": "Fase 2 — Verdieping",
+          "summary": "Volume en consistentie opvoeren.",
+          "week_start": 3,
+          "week_end": 4
+        }
+      ],
+      "weeks": [
+        {
+          "week_index": 1,
+          "phase_id": "p1",
+          "title": "Week 1",
+          "objective": "Kies 1 domein; 20 kaarten per dag.",
+          "tasks": [
+            {
+              "id": "memory-recall-mastery-w1-t1",
+              "title": "Kern-sessie",
+              "concrete": "25 min geconcentreerde oefening op dit traject; noteer 1 zin resultaat.",
+              "minutes": 25,
+              "scaling": {
+                "easy": {
+                  "concrete": "15 min gerichte oefening",
+                  "minutes": 15
+                },
+                "medium": {
+                  "concrete": "25 min zoals beschreven",
+                  "minutes": 25
+                },
+                "hard": {
+                  "concrete": "40 min + korte reflectie wat morgen anders",
+                  "minutes": 40
+                }
+              }
+            },
+            {
+              "id": "memory-recall-mastery-w1-t2",
+              "title": "Micro-reflectie",
+              "concrete": "10 min: wat werkte, wat niet; 1 concrete aanpassing voor volgende sessie.",
+              "minutes": 10,
+              "scaling": {
+                "easy": {
+                  "concrete": "5 min + 1 bullet",
+                  "minutes": 5
+                },
+                "medium": {
+                  "concrete": "10 min zoals beschreven",
+                  "minutes": 10
+                },
+                "hard": {
+                  "concrete": "15 min + accountability (bericht aan jezelf)",
+                  "minutes": 15
+                }
+              }
+            }
+          ]
+        },
+        {
+          "week_index": 2,
+          "phase_id": "p1",
+          "title": "Week 2",
+          "objective": "Leercurve loggen: fouten per sessie.",
+          "tasks": [
+            {
+              "id": "memory-recall-mastery-w2-t1",
+              "title": "Kern-sessie",
+              "concrete": "25 min geconcentreerde oefening op dit traject; noteer 1 zin resultaat.",
+              "minutes": 25,
+              "scaling": {
+                "easy": {
+                  "concrete": "15 min gerichte oefening",
+                  "minutes": 15
+                },
+                "medium": {
+                  "concrete": "25 min zoals beschreven",
+                  "minutes": 25
+                },
+                "hard": {
+                  "concrete": "40 min + korte reflectie wat morgen anders",
+                  "minutes": 40
+                }
+              }
+            },
+            {
+              "id": "memory-recall-mastery-w2-t2",
+              "title": "Micro-reflectie",
+              "concrete": "10 min: wat werkte, wat niet; 1 concrete aanpassing voor volgende sessie.",
+              "minutes": 10,
+              "scaling": {
+                "easy": {
+                  "concrete": "5 min + 1 bullet",
+                  "minutes": 5
+                },
+                "medium": {
+                  "concrete": "10 min zoals beschreven",
+                  "minutes": 10
+                },
+                "hard": {
+                  "concrete": "15 min + accountability (bericht aan jezelf)",
+                  "minutes": 15
+                }
+              }
+            }
+          ]
+        },
+        {
+          "week_index": 3,
+          "phase_id": "p2",
+          "title": "Week 3",
+          "objective": "Verhoog moeilijkheid of volume licht.",
+          "tasks": [
+            {
+              "id": "memory-recall-mastery-w3-t1",
+              "title": "Kern-sessie",
+              "concrete": "25 min geconcentreerde oefening op dit traject; noteer 1 zin resultaat.",
+              "minutes": 25,
+              "scaling": {
+                "easy": {
+                  "concrete": "15 min gerichte oefening",
+                  "minutes": 15
+                },
+                "medium": {
+                  "concrete": "25 min zoals beschreven",
+                  "minutes": 25
+                },
+                "hard": {
+                  "concrete": "40 min + korte reflectie wat morgen anders",
+                  "minutes": 40
+                }
+              }
+            },
+            {
+              "id": "memory-recall-mastery-w3-t2",
+              "title": "Micro-reflectie",
+              "concrete": "10 min: wat werkte, wat niet; 1 concrete aanpassing voor volgende sessie.",
+              "minutes": 10,
+              "scaling": {
+                "easy": {
+                  "concrete": "5 min + 1 bullet",
+                  "minutes": 5
+                },
+                "medium": {
+                  "concrete": "10 min zoals beschreven",
+                  "minutes": 10
+                },
+                "hard": {
+                  "concrete": "15 min + accountability (bericht aan jezelf)",
+                  "minutes": 15
+                }
+              }
+            }
+          ]
+        },
+        {
+          "week_index": 4,
+          "phase_id": "p2",
+          "title": "Week 4",
+          "objective": "Toets zonder materiaal 1× per week.",
+          "tasks": [
+            {
+              "id": "memory-recall-mastery-w4-t1",
+              "title": "Kern-sessie",
+              "concrete": "25 min geconcentreerde oefening op dit traject; noteer 1 zin resultaat.",
+              "minutes": 25,
+              "scaling": {
+                "easy": {
+                  "concrete": "15 min gerichte oefening",
+                  "minutes": 15
+                },
+                "medium": {
+                  "concrete": "25 min zoals beschreven",
+                  "minutes": 25
+                },
+                "hard": {
+                  "concrete": "40 min + korte reflectie wat morgen anders",
+                  "minutes": 40
+                }
+              }
+            },
+            {
+              "id": "memory-recall-mastery-w4-t2",
+              "title": "Micro-reflectie",
+              "concrete": "10 min: wat werkte, wat niet; 1 concrete aanpassing voor volgende sessie.",
+              "minutes": 10,
+              "scaling": {
+                "easy": {
+                  "concrete": "5 min + 1 bullet",
+                  "minutes": 5
+                },
+                "medium": {
+                  "concrete": "10 min zoals beschreven",
+                  "minutes": 10
+                },
+                "hard": {
+                  "concrete": "15 min + accountability (bericht aan jezelf)",
+                  "minutes": 15
+                }
+              }
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "slug": "cooking-kitchen-mastery",
+    "locale": "nl",
+    "title": "Cooking & Kitchen Mastery Protocol",
+    "summary": "Mise en place, messen, 4 basisrecepten.",
+    "sort_order": 18,
+    "body_md": "## Cooking & Kitchen Mastery Protocol\n\nMise en place, messen, 4 basisrecepten.\n\nCatalogusstub: concrete weektaken staan klaar in de app; diepere content kan iteratief worden vervangen (Updates 22-03).",
+    "definition": {
+      "version": 1,
+      "goal_one_liner": "Efficiënt en lekker zonder chaos",
+      "estimated_weeks_min": 4,
+      "estimated_weeks_max": 12,
+      "phases": [
+        {
+          "id": "p1",
+          "order": 1,
+          "title": "Fase 1 — Basis",
+          "summary": "Fundament en ritme vastzetten.",
+          "week_start": 1,
+          "week_end": 2
+        },
+        {
+          "id": "p2",
+          "order": 2,
+          "title": "Fase 2 — Verdieping",
+          "summary": "Volume en consistentie opvoeren.",
+          "week_start": 3,
+          "week_end": 4
+        }
+      ],
+      "weeks": [
+        {
+          "week_index": 1,
+          "phase_id": "p1",
+          "title": "Week 1",
+          "objective": "Keuken setup + messen slijpen / check.",
+          "tasks": [
+            {
+              "id": "cooking-kitchen-mastery-w1-t1",
+              "title": "Kern-sessie",
+              "concrete": "25 min geconcentreerde oefening op dit traject; noteer 1 zin resultaat.",
+              "minutes": 25,
+              "scaling": {
+                "easy": {
+                  "concrete": "15 min gerichte oefening",
+                  "minutes": 15
+                },
+                "medium": {
+                  "concrete": "25 min zoals beschreven",
+                  "minutes": 25
+                },
+                "hard": {
+                  "concrete": "40 min + korte reflectie wat morgen anders",
+                  "minutes": 40
+                }
+              }
+            },
+            {
+              "id": "cooking-kitchen-mastery-w1-t2",
+              "title": "Micro-reflectie",
+              "concrete": "10 min: wat werkte, wat niet; 1 concrete aanpassing voor volgende sessie.",
+              "minutes": 10,
+              "scaling": {
+                "easy": {
+                  "concrete": "5 min + 1 bullet",
+                  "minutes": 5
+                },
+                "medium": {
+                  "concrete": "10 min zoals beschreven",
+                  "minutes": 10
+                },
+                "hard": {
+                  "concrete": "15 min + accountability (bericht aan jezelf)",
+                  "minutes": 15
+                }
+              }
+            }
+          ]
+        },
+        {
+          "week_index": 2,
+          "phase_id": "p1",
+          "title": "Week 2",
+          "objective": "2 nieuwe recepten; timer per stap.",
+          "tasks": [
+            {
+              "id": "cooking-kitchen-mastery-w2-t1",
+              "title": "Kern-sessie",
+              "concrete": "25 min geconcentreerde oefening op dit traject; noteer 1 zin resultaat.",
+              "minutes": 25,
+              "scaling": {
+                "easy": {
+                  "concrete": "15 min gerichte oefening",
+                  "minutes": 15
+                },
+                "medium": {
+                  "concrete": "25 min zoals beschreven",
+                  "minutes": 25
+                },
+                "hard": {
+                  "concrete": "40 min + korte reflectie wat morgen anders",
+                  "minutes": 40
+                }
+              }
+            },
+            {
+              "id": "cooking-kitchen-mastery-w2-t2",
+              "title": "Micro-reflectie",
+              "concrete": "10 min: wat werkte, wat niet; 1 concrete aanpassing voor volgende sessie.",
+              "minutes": 10,
+              "scaling": {
+                "easy": {
+                  "concrete": "5 min + 1 bullet",
+                  "minutes": 5
+                },
+                "medium": {
+                  "concrete": "10 min zoals beschreven",
+                  "minutes": 10
+                },
+                "hard": {
+                  "concrete": "15 min + accountability (bericht aan jezelf)",
+                  "minutes": 15
+                }
+              }
+            }
+          ]
+        },
+        {
+          "week_index": 3,
+          "phase_id": "p2",
+          "title": "Week 3",
+          "objective": "Batch: 1 ingredient voor 3 maaltijden.",
+          "tasks": [
+            {
+              "id": "cooking-kitchen-mastery-w3-t1",
+              "title": "Kern-sessie",
+              "concrete": "25 min geconcentreerde oefening op dit traject; noteer 1 zin resultaat.",
+              "minutes": 25,
+              "scaling": {
+                "easy": {
+                  "concrete": "15 min gerichte oefening",
+                  "minutes": 15
+                },
+                "medium": {
+                  "concrete": "25 min zoals beschreven",
+                  "minutes": 25
+                },
+                "hard": {
+                  "concrete": "40 min + korte reflectie wat morgen anders",
+                  "minutes": 40
+                }
+              }
+            },
+            {
+              "id": "cooking-kitchen-mastery-w3-t2",
+              "title": "Micro-reflectie",
+              "concrete": "10 min: wat werkte, wat niet; 1 concrete aanpassing voor volgende sessie.",
+              "minutes": 10,
+              "scaling": {
+                "easy": {
+                  "concrete": "5 min + 1 bullet",
+                  "minutes": 5
+                },
+                "medium": {
+                  "concrete": "10 min zoals beschreven",
+                  "minutes": 10
+                },
+                "hard": {
+                  "concrete": "15 min + accountability (bericht aan jezelf)",
+                  "minutes": 15
+                }
+              }
+            }
+          ]
+        },
+        {
+          "week_index": 4,
+          "phase_id": "p2",
+          "title": "Week 4",
+          "objective": "Eigen ‘signature’ schaal naar 30 min.",
+          "tasks": [
+            {
+              "id": "cooking-kitchen-mastery-w4-t1",
+              "title": "Kern-sessie",
+              "concrete": "25 min geconcentreerde oefening op dit traject; noteer 1 zin resultaat.",
+              "minutes": 25,
+              "scaling": {
+                "easy": {
+                  "concrete": "15 min gerichte oefening",
+                  "minutes": 15
+                },
+                "medium": {
+                  "concrete": "25 min zoals beschreven",
+                  "minutes": 25
+                },
+                "hard": {
+                  "concrete": "40 min + korte reflectie wat morgen anders",
+                  "minutes": 40
+                }
+              }
+            },
+            {
+              "id": "cooking-kitchen-mastery-w4-t2",
+              "title": "Micro-reflectie",
+              "concrete": "10 min: wat werkte, wat niet; 1 concrete aanpassing voor volgende sessie.",
+              "minutes": 10,
+              "scaling": {
+                "easy": {
+                  "concrete": "5 min + 1 bullet",
+                  "minutes": 5
+                },
+                "medium": {
+                  "concrete": "10 min zoals beschreven",
+                  "minutes": 10
+                },
+                "hard": {
+                  "concrete": "15 min + accountability (bericht aan jezelf)",
+                  "minutes": 15
+                }
+              }
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "slug": "sleep-recovery-optimization",
+    "locale": "nl",
+    "title": "Sleep & Recovery Optimization Protocol",
+    "summary": "Ritme, licht, schermen — meetbaar beter slapen.",
+    "sort_order": 19,
+    "body_md": "## Sleep & Recovery Optimization Protocol\n\nRitme, licht, schermen — meetbaar beter slapen.\n\nCatalogusstub: concrete weektaken staan klaar in de app; diepere content kan iteratief worden vervangen (Updates 22-03).",
+    "definition": {
+      "version": 1,
+      "goal_one_liner": "Herstel als prestatie-factor",
+      "estimated_weeks_min": 4,
+      "estimated_weeks_max": 12,
+      "phases": [
+        {
+          "id": "p1",
+          "order": 1,
+          "title": "Fase 1 — Basis",
+          "summary": "Fundament en ritme vastzetten.",
+          "week_start": 1,
+          "week_end": 2
+        },
+        {
+          "id": "p2",
+          "order": 2,
+          "title": "Fase 2 — Verdieping",
+          "summary": "Volume en consistentie opvoeren.",
+          "week_start": 3,
+          "week_end": 4
+        }
+      ],
+      "weeks": [
+        {
+          "week_index": 1,
+          "phase_id": "p1",
+          "title": "Week 1",
+          "objective": "Vaste opstaan + 7 dagen log (kwaliteit 1–5).",
+          "tasks": [
+            {
+              "id": "sleep-recovery-optimization-w1-t1",
+              "title": "Kern-sessie",
+              "concrete": "25 min geconcentreerde oefening op dit traject; noteer 1 zin resultaat.",
+              "minutes": 25,
+              "scaling": {
+                "easy": {
+                  "concrete": "15 min gerichte oefening",
+                  "minutes": 15
+                },
+                "medium": {
+                  "concrete": "25 min zoals beschreven",
+                  "minutes": 25
+                },
+                "hard": {
+                  "concrete": "40 min + korte reflectie wat morgen anders",
+                  "minutes": 40
+                }
+              }
+            },
+            {
+              "id": "sleep-recovery-optimization-w1-t2",
+              "title": "Micro-reflectie",
+              "concrete": "10 min: wat werkte, wat niet; 1 concrete aanpassing voor volgende sessie.",
+              "minutes": 10,
+              "scaling": {
+                "easy": {
+                  "concrete": "5 min + 1 bullet",
+                  "minutes": 5
+                },
+                "medium": {
+                  "concrete": "10 min zoals beschreven",
+                  "minutes": 10
+                },
+                "hard": {
+                  "concrete": "15 min + accountability (bericht aan jezelf)",
+                  "minutes": 15
+                }
+              }
+            }
+          ]
+        },
+        {
+          "week_index": 2,
+          "phase_id": "p1",
+          "title": "Week 2",
+          "objective": "Scherm na 21:00 beperken 5 nachten.",
+          "tasks": [
+            {
+              "id": "sleep-recovery-optimization-w2-t1",
+              "title": "Kern-sessie",
+              "concrete": "25 min geconcentreerde oefening op dit traject; noteer 1 zin resultaat.",
+              "minutes": 25,
+              "scaling": {
+                "easy": {
+                  "concrete": "15 min gerichte oefening",
+                  "minutes": 15
+                },
+                "medium": {
+                  "concrete": "25 min zoals beschreven",
+                  "minutes": 25
+                },
+                "hard": {
+                  "concrete": "40 min + korte reflectie wat morgen anders",
+                  "minutes": 40
+                }
+              }
+            },
+            {
+              "id": "sleep-recovery-optimization-w2-t2",
+              "title": "Micro-reflectie",
+              "concrete": "10 min: wat werkte, wat niet; 1 concrete aanpassing voor volgende sessie.",
+              "minutes": 10,
+              "scaling": {
+                "easy": {
+                  "concrete": "5 min + 1 bullet",
+                  "minutes": 5
+                },
+                "medium": {
+                  "concrete": "10 min zoals beschreven",
+                  "minutes": 10
+                },
+                "hard": {
+                  "concrete": "15 min + accountability (bericht aan jezelf)",
+                  "minutes": 15
+                }
+              }
+            }
+          ]
+        },
+        {
+          "week_index": 3,
+          "phase_id": "p2",
+          "title": "Week 3",
+          "objective": "Ochtendlicht 10 min binnen 30 min wakker.",
+          "tasks": [
+            {
+              "id": "sleep-recovery-optimization-w3-t1",
+              "title": "Kern-sessie",
+              "concrete": "25 min geconcentreerde oefening op dit traject; noteer 1 zin resultaat.",
+              "minutes": 25,
+              "scaling": {
+                "easy": {
+                  "concrete": "15 min gerichte oefening",
+                  "minutes": 15
+                },
+                "medium": {
+                  "concrete": "25 min zoals beschreven",
+                  "minutes": 25
+                },
+                "hard": {
+                  "concrete": "40 min + korte reflectie wat morgen anders",
+                  "minutes": 40
+                }
+              }
+            },
+            {
+              "id": "sleep-recovery-optimization-w3-t2",
+              "title": "Micro-reflectie",
+              "concrete": "10 min: wat werkte, wat niet; 1 concrete aanpassing voor volgende sessie.",
+              "minutes": 10,
+              "scaling": {
+                "easy": {
+                  "concrete": "5 min + 1 bullet",
+                  "minutes": 5
+                },
+                "medium": {
+                  "concrete": "10 min zoals beschreven",
+                  "minutes": 10
+                },
+                "hard": {
+                  "concrete": "15 min + accountability (bericht aan jezelf)",
+                  "minutes": 15
+                }
+              }
+            }
+          ]
+        },
+        {
+          "week_index": 4,
+          "phase_id": "p2",
+          "title": "Week 4",
+          "objective": "Plan: 1 aanpassing vasthouden 30 dagen.",
+          "tasks": [
+            {
+              "id": "sleep-recovery-optimization-w4-t1",
+              "title": "Kern-sessie",
+              "concrete": "25 min geconcentreerde oefening op dit traject; noteer 1 zin resultaat.",
+              "minutes": 25,
+              "scaling": {
+                "easy": {
+                  "concrete": "15 min gerichte oefening",
+                  "minutes": 15
+                },
+                "medium": {
+                  "concrete": "25 min zoals beschreven",
+                  "minutes": 25
+                },
+                "hard": {
+                  "concrete": "40 min + korte reflectie wat morgen anders",
+                  "minutes": 40
+                }
+              }
+            },
+            {
+              "id": "sleep-recovery-optimization-w4-t2",
+              "title": "Micro-reflectie",
+              "concrete": "10 min: wat werkte, wat niet; 1 concrete aanpassing voor volgende sessie.",
+              "minutes": 10,
+              "scaling": {
+                "easy": {
+                  "concrete": "5 min + 1 bullet",
+                  "minutes": 5
+                },
+                "medium": {
+                  "concrete": "10 min zoals beschreven",
+                  "minutes": 10
+                },
+                "hard": {
+                  "concrete": "15 min + accountability (bericht aan jezelf)",
+                  "minutes": 15
+                }
+              }
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "slug": "body-language-nonverbal",
+    "locale": "nl",
+    "title": "Body Language & Non-Verbal Intelligence Protocol",
+    "summary": "Houding, oogcontact, stemtempo.",
+    "sort_order": 20,
+    "body_md": "## Body Language & Non-Verbal Intelligence Protocol\n\nHouding, oogcontact, stemtempo.\n\nCatalogusstub: concrete weektaken staan klaar in de app; diepere content kan iteratief worden vervangen (Updates 22-03).",
+    "definition": {
+      "version": 1,
+      "goal_one_liner": "Uitstraling afstemmen op intentie",
+      "estimated_weeks_min": 4,
+      "estimated_weeks_max": 12,
+      "phases": [
+        {
+          "id": "p1",
+          "order": 1,
+          "title": "Fase 1 — Basis",
+          "summary": "Fundament en ritme vastzetten.",
+          "week_start": 1,
+          "week_end": 2
+        },
+        {
+          "id": "p2",
+          "order": 2,
+          "title": "Fase 2 — Verdieping",
+          "summary": "Volume en consistentie opvoeren.",
+          "week_start": 3,
+          "week_end": 4
+        }
+      ],
+      "weeks": [
+        {
+          "week_index": 1,
+          "phase_id": "p1",
+          "title": "Week 1",
+          "objective": "Video 2 min: openingshouding + eerste zin.",
+          "tasks": [
+            {
+              "id": "body-language-nonverbal-w1-t1",
+              "title": "Kern-sessie",
+              "concrete": "25 min geconcentreerde oefening op dit traject; noteer 1 zin resultaat.",
+              "minutes": 25,
+              "scaling": {
+                "easy": {
+                  "concrete": "15 min gerichte oefening",
+                  "minutes": 15
+                },
+                "medium": {
+                  "concrete": "25 min zoals beschreven",
+                  "minutes": 25
+                },
+                "hard": {
+                  "concrete": "40 min + korte reflectie wat morgen anders",
+                  "minutes": 40
+                }
+              }
+            },
+            {
+              "id": "body-language-nonverbal-w1-t2",
+              "title": "Micro-reflectie",
+              "concrete": "10 min: wat werkte, wat niet; 1 concrete aanpassing voor volgende sessie.",
+              "minutes": 10,
+              "scaling": {
+                "easy": {
+                  "concrete": "5 min + 1 bullet",
+                  "minutes": 5
+                },
+                "medium": {
+                  "concrete": "10 min zoals beschreven",
+                  "minutes": 10
+                },
+                "hard": {
+                  "concrete": "15 min + accountability (bericht aan jezelf)",
+                  "minutes": 15
+                }
+              }
+            }
+          ]
+        },
+        {
+          "week_index": 2,
+          "phase_id": "p1",
+          "title": "Week 2",
+          "objective": "Spiegelen licht in 1 gesprek (niet overdrijven).",
+          "tasks": [
+            {
+              "id": "body-language-nonverbal-w2-t1",
+              "title": "Kern-sessie",
+              "concrete": "25 min geconcentreerde oefening op dit traject; noteer 1 zin resultaat.",
+              "minutes": 25,
+              "scaling": {
+                "easy": {
+                  "concrete": "15 min gerichte oefening",
+                  "minutes": 15
+                },
+                "medium": {
+                  "concrete": "25 min zoals beschreven",
+                  "minutes": 25
+                },
+                "hard": {
+                  "concrete": "40 min + korte reflectie wat morgen anders",
+                  "minutes": 40
+                }
+              }
+            },
+            {
+              "id": "body-language-nonverbal-w2-t2",
+              "title": "Micro-reflectie",
+              "concrete": "10 min: wat werkte, wat niet; 1 concrete aanpassing voor volgende sessie.",
+              "minutes": 10,
+              "scaling": {
+                "easy": {
+                  "concrete": "5 min + 1 bullet",
+                  "minutes": 5
+                },
+                "medium": {
+                  "concrete": "10 min zoals beschreven",
+                  "minutes": 10
+                },
+                "hard": {
+                  "concrete": "15 min + accountability (bericht aan jezelf)",
+                  "minutes": 15
+                }
+              }
+            }
+          ]
+        },
+        {
+          "week_index": 3,
+          "phase_id": "p2",
+          "title": "Week 3",
+          "objective": "Oefen: pauzes na kernzin.",
+          "tasks": [
+            {
+              "id": "body-language-nonverbal-w3-t1",
+              "title": "Kern-sessie",
+              "concrete": "25 min geconcentreerde oefening op dit traject; noteer 1 zin resultaat.",
+              "minutes": 25,
+              "scaling": {
+                "easy": {
+                  "concrete": "15 min gerichte oefening",
+                  "minutes": 15
+                },
+                "medium": {
+                  "concrete": "25 min zoals beschreven",
+                  "minutes": 25
+                },
+                "hard": {
+                  "concrete": "40 min + korte reflectie wat morgen anders",
+                  "minutes": 40
+                }
+              }
+            },
+            {
+              "id": "body-language-nonverbal-w3-t2",
+              "title": "Micro-reflectie",
+              "concrete": "10 min: wat werkte, wat niet; 1 concrete aanpassing voor volgende sessie.",
+              "minutes": 10,
+              "scaling": {
+                "easy": {
+                  "concrete": "5 min + 1 bullet",
+                  "minutes": 5
+                },
+                "medium": {
+                  "concrete": "10 min zoals beschreven",
+                  "minutes": 10
+                },
+                "hard": {
+                  "concrete": "15 min + accountability (bericht aan jezelf)",
+                  "minutes": 15
+                }
+              }
+            }
+          ]
+        },
+        {
+          "week_index": 4,
+          "phase_id": "p2",
+          "title": "Week 4",
+          "objective": "Feedback: vriend/collega op 1 punt.",
+          "tasks": [
+            {
+              "id": "body-language-nonverbal-w4-t1",
+              "title": "Kern-sessie",
+              "concrete": "25 min geconcentreerde oefening op dit traject; noteer 1 zin resultaat.",
+              "minutes": 25,
+              "scaling": {
+                "easy": {
+                  "concrete": "15 min gerichte oefening",
+                  "minutes": 15
+                },
+                "medium": {
+                  "concrete": "25 min zoals beschreven",
+                  "minutes": 25
+                },
+                "hard": {
+                  "concrete": "40 min + korte reflectie wat morgen anders",
+                  "minutes": 40
+                }
+              }
+            },
+            {
+              "id": "body-language-nonverbal-w4-t2",
+              "title": "Micro-reflectie",
+              "concrete": "10 min: wat werkte, wat niet; 1 concrete aanpassing voor volgende sessie.",
+              "minutes": 10,
+              "scaling": {
+                "easy": {
+                  "concrete": "5 min + 1 bullet",
+                  "minutes": 5
+                },
+                "medium": {
+                  "concrete": "10 min zoals beschreven",
+                  "minutes": 10
+                },
+                "hard": {
+                  "concrete": "15 min + accountability (bericht aan jezelf)",
+                  "minutes": 15
+                }
+              }
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "slug": "mobility-movement-control",
+    "locale": "nl",
+    "title": "Mobility & Movement Control Protocol",
+    "summary": "Gewrichten, houding, dagelijkse beweging.",
+    "sort_order": 21,
+    "body_md": "## Mobility & Movement Control Protocol\n\nGewrichten, houding, dagelijkse beweging.\n\nCatalogusstub: concrete weektaken staan klaar in de app; diepere content kan iteratief worden vervangen (Updates 22-03).",
+    "definition": {
+      "version": 1,
+      "goal_one_liner": "Bewegen zonder pijn door domme overload",
+      "estimated_weeks_min": 4,
+      "estimated_weeks_max": 12,
+      "phases": [
+        {
+          "id": "p1",
+          "order": 1,
+          "title": "Fase 1 — Basis",
+          "summary": "Fundament en ritme vastzetten.",
+          "week_start": 1,
+          "week_end": 2
+        },
+        {
+          "id": "p2",
+          "order": 2,
+          "title": "Fase 2 — Verdieping",
+          "summary": "Volume en consistentie opvoeren.",
+          "week_start": 3,
+          "week_end": 4
+        }
+      ],
+      "weeks": [
+        {
+          "week_index": 1,
+          "phase_id": "p1",
+          "title": "Week 1",
+          "objective": "Screening: nek/schouder/heup — waar strak?",
+          "tasks": [
+            {
+              "id": "mobility-movement-control-w1-t1",
+              "title": "Kern-sessie",
+              "concrete": "25 min geconcentreerde oefening op dit traject; noteer 1 zin resultaat.",
+              "minutes": 25,
+              "scaling": {
+                "easy": {
+                  "concrete": "15 min gerichte oefening",
+                  "minutes": 15
+                },
+                "medium": {
+                  "concrete": "25 min zoals beschreven",
+                  "minutes": 25
+                },
+                "hard": {
+                  "concrete": "40 min + korte reflectie wat morgen anders",
+                  "minutes": 40
+                }
+              }
+            },
+            {
+              "id": "mobility-movement-control-w1-t2",
+              "title": "Micro-reflectie",
+              "concrete": "10 min: wat werkte, wat niet; 1 concrete aanpassing voor volgende sessie.",
+              "minutes": 10,
+              "scaling": {
+                "easy": {
+                  "concrete": "5 min + 1 bullet",
+                  "minutes": 5
+                },
+                "medium": {
+                  "concrete": "10 min zoals beschreven",
+                  "minutes": 10
+                },
+                "hard": {
+                  "concrete": "15 min + accountability (bericht aan jezelf)",
+                  "minutes": 15
+                }
+              }
+            }
+          ]
+        },
+        {
+          "week_index": 2,
+          "phase_id": "p1",
+          "title": "Week 2",
+          "objective": "10 min routine 5 dagen (video volgen mag).",
+          "tasks": [
+            {
+              "id": "mobility-movement-control-w2-t1",
+              "title": "Kern-sessie",
+              "concrete": "25 min geconcentreerde oefening op dit traject; noteer 1 zin resultaat.",
+              "minutes": 25,
+              "scaling": {
+                "easy": {
+                  "concrete": "15 min gerichte oefening",
+                  "minutes": 15
+                },
+                "medium": {
+                  "concrete": "25 min zoals beschreven",
+                  "minutes": 25
+                },
+                "hard": {
+                  "concrete": "40 min + korte reflectie wat morgen anders",
+                  "minutes": 40
+                }
+              }
+            },
+            {
+              "id": "mobility-movement-control-w2-t2",
+              "title": "Micro-reflectie",
+              "concrete": "10 min: wat werkte, wat niet; 1 concrete aanpassing voor volgende sessie.",
+              "minutes": 10,
+              "scaling": {
+                "easy": {
+                  "concrete": "5 min + 1 bullet",
+                  "minutes": 5
+                },
+                "medium": {
+                  "concrete": "10 min zoals beschreven",
+                  "minutes": 10
+                },
+                "hard": {
+                  "concrete": "15 min + accountability (bericht aan jezelf)",
+                  "minutes": 15
+                }
+              }
+            }
+          ]
+        },
+        {
+          "week_index": 3,
+          "phase_id": "p2",
+          "title": "Week 3",
+          "objective": "Loop + adem: 20 min 3× deze week.",
+          "tasks": [
+            {
+              "id": "mobility-movement-control-w3-t1",
+              "title": "Kern-sessie",
+              "concrete": "25 min geconcentreerde oefening op dit traject; noteer 1 zin resultaat.",
+              "minutes": 25,
+              "scaling": {
+                "easy": {
+                  "concrete": "15 min gerichte oefening",
+                  "minutes": 15
+                },
+                "medium": {
+                  "concrete": "25 min zoals beschreven",
+                  "minutes": 25
+                },
+                "hard": {
+                  "concrete": "40 min + korte reflectie wat morgen anders",
+                  "minutes": 40
+                }
+              }
+            },
+            {
+              "id": "mobility-movement-control-w3-t2",
+              "title": "Micro-reflectie",
+              "concrete": "10 min: wat werkte, wat niet; 1 concrete aanpassing voor volgende sessie.",
+              "minutes": 10,
+              "scaling": {
+                "easy": {
+                  "concrete": "5 min + 1 bullet",
+                  "minutes": 5
+                },
+                "medium": {
+                  "concrete": "10 min zoals beschreven",
+                  "minutes": 10
+                },
+                "hard": {
+                  "concrete": "15 min + accountability (bericht aan jezelf)",
+                  "minutes": 15
+                }
+              }
+            }
+          ]
+        },
+        {
+          "week_index": 4,
+          "phase_id": "p2",
+          "title": "Week 4",
+          "objective": "Progressie: +1 oefening volgende maand.",
+          "tasks": [
+            {
+              "id": "mobility-movement-control-w4-t1",
+              "title": "Kern-sessie",
+              "concrete": "25 min geconcentreerde oefening op dit traject; noteer 1 zin resultaat.",
+              "minutes": 25,
+              "scaling": {
+                "easy": {
+                  "concrete": "15 min gerichte oefening",
+                  "minutes": 15
+                },
+                "medium": {
+                  "concrete": "25 min zoals beschreven",
+                  "minutes": 25
+                },
+                "hard": {
+                  "concrete": "40 min + korte reflectie wat morgen anders",
+                  "minutes": 40
+                }
+              }
+            },
+            {
+              "id": "mobility-movement-control-w4-t2",
+              "title": "Micro-reflectie",
+              "concrete": "10 min: wat werkte, wat niet; 1 concrete aanpassing voor volgende sessie.",
+              "minutes": 10,
+              "scaling": {
+                "easy": {
+                  "concrete": "5 min + 1 bullet",
+                  "minutes": 5
+                },
+                "medium": {
+                  "concrete": "10 min zoals beschreven",
+                  "minutes": 10
+                },
+                "hard": {
+                  "concrete": "15 min + accountability (bericht aan jezelf)",
+                  "minutes": 15
+                }
+              }
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "slug": "identity-self-mastery",
+    "locale": "nl",
+    "title": "Identity & Self-Mastery Protocol",
+    "summary": "Waarden → gedrag → bewijs.",
+    "sort_order": 22,
+    "body_md": "## Identity & Self-Mastery Protocol\n\nWaarden → gedrag → bewijs.\n\nCatalogusstub: concrete weektaken staan klaar in de app; diepere content kan iteratief worden vervangen (Updates 22-03).",
+    "definition": {
+      "version": 1,
+      "goal_one_liner": "Wie je wordt = wat je herhaalt",
+      "estimated_weeks_min": 4,
+      "estimated_weeks_max": 12,
+      "phases": [
+        {
+          "id": "p1",
+          "order": 1,
+          "title": "Fase 1 — Basis",
+          "summary": "Fundament en ritme vastzetten.",
+          "week_start": 1,
+          "week_end": 2
+        },
+        {
+          "id": "p2",
+          "order": 2,
+          "title": "Fase 2 — Verdieping",
+          "summary": "Volume en consistentie opvoeren.",
+          "week_start": 3,
+          "week_end": 4
+        }
+      ],
+      "weeks": [
+        {
+          "week_index": 1,
+          "phase_id": "p1",
+          "title": "Week 1",
+          "objective": "Schrijf 3 waarden + 1 gedrag per waarde.",
+          "tasks": [
+            {
+              "id": "identity-self-mastery-w1-t1",
+              "title": "Kern-sessie",
+              "concrete": "25 min geconcentreerde oefening op dit traject; noteer 1 zin resultaat.",
+              "minutes": 25,
+              "scaling": {
+                "easy": {
+                  "concrete": "15 min gerichte oefening",
+                  "minutes": 15
+                },
+                "medium": {
+                  "concrete": "25 min zoals beschreven",
+                  "minutes": 25
+                },
+                "hard": {
+                  "concrete": "40 min + korte reflectie wat morgen anders",
+                  "minutes": 40
+                }
+              }
+            },
+            {
+              "id": "identity-self-mastery-w1-t2",
+              "title": "Micro-reflectie",
+              "concrete": "10 min: wat werkte, wat niet; 1 concrete aanpassing voor volgende sessie.",
+              "minutes": 10,
+              "scaling": {
+                "easy": {
+                  "concrete": "5 min + 1 bullet",
+                  "minutes": 5
+                },
+                "medium": {
+                  "concrete": "10 min zoals beschreven",
+                  "minutes": 10
+                },
+                "hard": {
+                  "concrete": "15 min + accountability (bericht aan jezelf)",
+                  "minutes": 15
+                }
+              }
+            }
+          ]
+        },
+        {
+          "week_index": 2,
+          "phase_id": "p1",
+          "title": "Week 2",
+          "objective": "Dagelijks bewijs loggen (1 zin).",
+          "tasks": [
+            {
+              "id": "identity-self-mastery-w2-t1",
+              "title": "Kern-sessie",
+              "concrete": "25 min geconcentreerde oefening op dit traject; noteer 1 zin resultaat.",
+              "minutes": 25,
+              "scaling": {
+                "easy": {
+                  "concrete": "15 min gerichte oefening",
+                  "minutes": 15
+                },
+                "medium": {
+                  "concrete": "25 min zoals beschreven",
+                  "minutes": 25
+                },
+                "hard": {
+                  "concrete": "40 min + korte reflectie wat morgen anders",
+                  "minutes": 40
+                }
+              }
+            },
+            {
+              "id": "identity-self-mastery-w2-t2",
+              "title": "Micro-reflectie",
+              "concrete": "10 min: wat werkte, wat niet; 1 concrete aanpassing voor volgende sessie.",
+              "minutes": 10,
+              "scaling": {
+                "easy": {
+                  "concrete": "5 min + 1 bullet",
+                  "minutes": 5
+                },
+                "medium": {
+                  "concrete": "10 min zoals beschreven",
+                  "minutes": 10
+                },
+                "hard": {
+                  "concrete": "15 min + accountability (bericht aan jezelf)",
+                  "minutes": 15
+                }
+              }
+            }
+          ]
+        },
+        {
+          "week_index": 3,
+          "phase_id": "p2",
+          "title": "Week 3",
+          "objective": "Obstakel: waar gedrag niet matcht met identiteit?",
+          "tasks": [
+            {
+              "id": "identity-self-mastery-w3-t1",
+              "title": "Kern-sessie",
+              "concrete": "25 min geconcentreerde oefening op dit traject; noteer 1 zin resultaat.",
+              "minutes": 25,
+              "scaling": {
+                "easy": {
+                  "concrete": "15 min gerichte oefening",
+                  "minutes": 15
+                },
+                "medium": {
+                  "concrete": "25 min zoals beschreven",
+                  "minutes": 25
+                },
+                "hard": {
+                  "concrete": "40 min + korte reflectie wat morgen anders",
+                  "minutes": 40
+                }
+              }
+            },
+            {
+              "id": "identity-self-mastery-w3-t2",
+              "title": "Micro-reflectie",
+              "concrete": "10 min: wat werkte, wat niet; 1 concrete aanpassing voor volgende sessie.",
+              "minutes": 10,
+              "scaling": {
+                "easy": {
+                  "concrete": "5 min + 1 bullet",
+                  "minutes": 5
+                },
+                "medium": {
+                  "concrete": "10 min zoals beschreven",
+                  "minutes": 10
+                },
+                "hard": {
+                  "concrete": "15 min + accountability (bericht aan jezelf)",
+                  "minutes": 15
+                }
+              }
+            }
+          ]
+        },
+        {
+          "week_index": 4,
+          "phase_id": "p2",
+          "title": "Week 4",
+          "objective": "Commitment: publiek / partner / journal.",
+          "tasks": [
+            {
+              "id": "identity-self-mastery-w4-t1",
+              "title": "Kern-sessie",
+              "concrete": "25 min geconcentreerde oefening op dit traject; noteer 1 zin resultaat.",
+              "minutes": 25,
+              "scaling": {
+                "easy": {
+                  "concrete": "15 min gerichte oefening",
+                  "minutes": 15
+                },
+                "medium": {
+                  "concrete": "25 min zoals beschreven",
+                  "minutes": 25
+                },
+                "hard": {
+                  "concrete": "40 min + korte reflectie wat morgen anders",
+                  "minutes": 40
+                }
+              }
+            },
+            {
+              "id": "identity-self-mastery-w4-t2",
+              "title": "Micro-reflectie",
+              "concrete": "10 min: wat werkte, wat niet; 1 concrete aanpassing voor volgende sessie.",
+              "minutes": 10,
+              "scaling": {
+                "easy": {
+                  "concrete": "5 min + 1 bullet",
+                  "minutes": 5
+                },
+                "medium": {
+                  "concrete": "10 min zoals beschreven",
+                  "minutes": 10
+                },
+                "hard": {
+                  "concrete": "15 min + accountability (bericht aan jezelf)",
+                  "minutes": 15
+                }
+              }
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "slug": "leadership-team-execution",
+    "locale": "nl",
+    "title": "Leadership & Team Execution Protocol",
+    "summary": "Delegatie, heldere verwachtingen, follow-through.",
+    "sort_order": 23,
+    "body_md": "## Leadership & Team Execution Protocol\n\nDelegatie, heldere verwachtingen, follow-through.\n\nCatalogusstub: concrete weektaken staan klaar in de app; diepere content kan iteratief worden vervangen (Updates 22-03).",
+    "definition": {
+      "version": 1,
+      "goal_one_liner": "Mensen laten opleveren zonder micromanagement",
+      "estimated_weeks_min": 4,
+      "estimated_weeks_max": 12,
+      "phases": [
+        {
+          "id": "p1",
+          "order": 1,
+          "title": "Fase 1 — Basis",
+          "summary": "Fundament en ritme vastzetten.",
+          "week_start": 1,
+          "week_end": 2
+        },
+        {
+          "id": "p2",
+          "order": 2,
+          "title": "Fase 2 — Verdieping",
+          "summary": "Volume en consistentie opvoeren.",
+          "week_start": 3,
+          "week_end": 4
+        }
+      ],
+      "weeks": [
+        {
+          "week_index": 1,
+          "phase_id": "p1",
+          "title": "Week 1",
+          "objective": "1-op-1: doel + deadline + definitie van klaar.",
+          "tasks": [
+            {
+              "id": "leadership-team-execution-w1-t1",
+              "title": "Kern-sessie",
+              "concrete": "25 min geconcentreerde oefening op dit traject; noteer 1 zin resultaat.",
+              "minutes": 25,
+              "scaling": {
+                "easy": {
+                  "concrete": "15 min gerichte oefening",
+                  "minutes": 15
+                },
+                "medium": {
+                  "concrete": "25 min zoals beschreven",
+                  "minutes": 25
+                },
+                "hard": {
+                  "concrete": "40 min + korte reflectie wat morgen anders",
+                  "minutes": 40
+                }
+              }
+            },
+            {
+              "id": "leadership-team-execution-w1-t2",
+              "title": "Micro-reflectie",
+              "concrete": "10 min: wat werkte, wat niet; 1 concrete aanpassing voor volgende sessie.",
+              "minutes": 10,
+              "scaling": {
+                "easy": {
+                  "concrete": "5 min + 1 bullet",
+                  "minutes": 5
+                },
+                "medium": {
+                  "concrete": "10 min zoals beschreven",
+                  "minutes": 10
+                },
+                "hard": {
+                  "concrete": "15 min + accountability (bericht aan jezelf)",
+                  "minutes": 15
+                }
+              }
+            }
+          ]
+        },
+        {
+          "week_index": 2,
+          "phase_id": "p1",
+          "title": "Week 2",
+          "objective": "Board: wie wacht op wie — 1 bottleneck weg.",
+          "tasks": [
+            {
+              "id": "leadership-team-execution-w2-t1",
+              "title": "Kern-sessie",
+              "concrete": "25 min geconcentreerde oefening op dit traject; noteer 1 zin resultaat.",
+              "minutes": 25,
+              "scaling": {
+                "easy": {
+                  "concrete": "15 min gerichte oefening",
+                  "minutes": 15
+                },
+                "medium": {
+                  "concrete": "25 min zoals beschreven",
+                  "minutes": 25
+                },
+                "hard": {
+                  "concrete": "40 min + korte reflectie wat morgen anders",
+                  "minutes": 40
+                }
+              }
+            },
+            {
+              "id": "leadership-team-execution-w2-t2",
+              "title": "Micro-reflectie",
+              "concrete": "10 min: wat werkte, wat niet; 1 concrete aanpassing voor volgende sessie.",
+              "minutes": 10,
+              "scaling": {
+                "easy": {
+                  "concrete": "5 min + 1 bullet",
+                  "minutes": 5
+                },
+                "medium": {
+                  "concrete": "10 min zoals beschreven",
+                  "minutes": 10
+                },
+                "hard": {
+                  "concrete": "15 min + accountability (bericht aan jezelf)",
+                  "minutes": 15
+                }
+              }
+            }
+          ]
+        },
+        {
+          "week_index": 3,
+          "phase_id": "p2",
+          "title": "Week 3",
+          "objective": "Feedback: situatie-gedrag-impact 1×.",
+          "tasks": [
+            {
+              "id": "leadership-team-execution-w3-t1",
+              "title": "Kern-sessie",
+              "concrete": "25 min geconcentreerde oefening op dit traject; noteer 1 zin resultaat.",
+              "minutes": 25,
+              "scaling": {
+                "easy": {
+                  "concrete": "15 min gerichte oefening",
+                  "minutes": 15
+                },
+                "medium": {
+                  "concrete": "25 min zoals beschreven",
+                  "minutes": 25
+                },
+                "hard": {
+                  "concrete": "40 min + korte reflectie wat morgen anders",
+                  "minutes": 40
+                }
+              }
+            },
+            {
+              "id": "leadership-team-execution-w3-t2",
+              "title": "Micro-reflectie",
+              "concrete": "10 min: wat werkte, wat niet; 1 concrete aanpassing voor volgende sessie.",
+              "minutes": 10,
+              "scaling": {
+                "easy": {
+                  "concrete": "5 min + 1 bullet",
+                  "minutes": 5
+                },
+                "medium": {
+                  "concrete": "10 min zoals beschreven",
+                  "minutes": 10
+                },
+                "hard": {
+                  "concrete": "15 min + accountability (bericht aan jezelf)",
+                  "minutes": 15
+                }
+              }
+            }
+          ]
+        },
+        {
+          "week_index": 4,
+          "phase_id": "p2",
+          "title": "Week 4",
+          "objective": "Ritme: vaste team sync korter maken.",
+          "tasks": [
+            {
+              "id": "leadership-team-execution-w4-t1",
+              "title": "Kern-sessie",
+              "concrete": "25 min geconcentreerde oefening op dit traject; noteer 1 zin resultaat.",
+              "minutes": 25,
+              "scaling": {
+                "easy": {
+                  "concrete": "15 min gerichte oefening",
+                  "minutes": 15
+                },
+                "medium": {
+                  "concrete": "25 min zoals beschreven",
+                  "minutes": 25
+                },
+                "hard": {
+                  "concrete": "40 min + korte reflectie wat morgen anders",
+                  "minutes": 40
+                }
+              }
+            },
+            {
+              "id": "leadership-team-execution-w4-t2",
+              "title": "Micro-reflectie",
+              "concrete": "10 min: wat werkte, wat niet; 1 concrete aanpassing voor volgende sessie.",
+              "minutes": 10,
+              "scaling": {
+                "easy": {
+                  "concrete": "5 min + 1 bullet",
+                  "minutes": 5
+                },
+                "medium": {
+                  "concrete": "10 min zoals beschreven",
+                  "minutes": 10
+                },
+                "hard": {
+                  "concrete": "15 min + accountability (bericht aan jezelf)",
+                  "minutes": 15
+                }
+              }
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "slug": "stress-regulation-baseline",
+    "locale": "nl",
+    "title": "Stress & Regulation Baseline Protocol",
+    "summary": "Nervus systeem basis: adem, slaap, belasting.",
+    "sort_order": 24,
+    "body_md": "## Stress & Regulation Baseline Protocol\n\nNervus systeem basis: adem, slaap, belasting.\n\nCatalogusstub: concrete weektaken staan klaar in de app; diepere content kan iteratief worden vervangen (Updates 22-03).",
+    "definition": {
+      "version": 1,
+      "goal_one_liner": "Van reactief naar herstel-first",
+      "estimated_weeks_min": 4,
+      "estimated_weeks_max": 12,
+      "phases": [
+        {
+          "id": "p1",
+          "order": 1,
+          "title": "Fase 1 — Basis",
+          "summary": "Fundament en ritme vastzetten.",
+          "week_start": 1,
+          "week_end": 2
+        },
+        {
+          "id": "p2",
+          "order": 2,
+          "title": "Fase 2 — Verdieping",
+          "summary": "Volume en consistentie opvoeren.",
+          "week_start": 3,
+          "week_end": 4
+        }
+      ],
+      "weeks": [
+        {
+          "week_index": 1,
+          "phase_id": "p1",
+          "title": "Week 1",
+          "objective": "Stresslog: pieken + context 7 dagen.",
+          "tasks": [
+            {
+              "id": "stress-regulation-baseline-w1-t1",
+              "title": "Kern-sessie",
+              "concrete": "25 min geconcentreerde oefening op dit traject; noteer 1 zin resultaat.",
+              "minutes": 25,
+              "scaling": {
+                "easy": {
+                  "concrete": "15 min gerichte oefening",
+                  "minutes": 15
+                },
+                "medium": {
+                  "concrete": "25 min zoals beschreven",
+                  "minutes": 25
+                },
+                "hard": {
+                  "concrete": "40 min + korte reflectie wat morgen anders",
+                  "minutes": 40
+                }
+              }
+            },
+            {
+              "id": "stress-regulation-baseline-w1-t2",
+              "title": "Micro-reflectie",
+              "concrete": "10 min: wat werkte, wat niet; 1 concrete aanpassing voor volgende sessie.",
+              "minutes": 10,
+              "scaling": {
+                "easy": {
+                  "concrete": "5 min + 1 bullet",
+                  "minutes": 5
+                },
+                "medium": {
+                  "concrete": "10 min zoals beschreven",
+                  "minutes": 10
+                },
+                "hard": {
+                  "concrete": "15 min + accountability (bericht aan jezelf)",
+                  "minutes": 15
+                }
+              }
+            }
+          ]
+        },
+        {
+          "week_index": 2,
+          "phase_id": "p1",
+          "title": "Week 2",
+          "objective": "Dagelijkse downshift 5 min voor lunch.",
+          "tasks": [
+            {
+              "id": "stress-regulation-baseline-w2-t1",
+              "title": "Kern-sessie",
+              "concrete": "25 min geconcentreerde oefening op dit traject; noteer 1 zin resultaat.",
+              "minutes": 25,
+              "scaling": {
+                "easy": {
+                  "concrete": "15 min gerichte oefening",
+                  "minutes": 15
+                },
+                "medium": {
+                  "concrete": "25 min zoals beschreven",
+                  "minutes": 25
+                },
+                "hard": {
+                  "concrete": "40 min + korte reflectie wat morgen anders",
+                  "minutes": 40
+                }
+              }
+            },
+            {
+              "id": "stress-regulation-baseline-w2-t2",
+              "title": "Micro-reflectie",
+              "concrete": "10 min: wat werkte, wat niet; 1 concrete aanpassing voor volgende sessie.",
+              "minutes": 10,
+              "scaling": {
+                "easy": {
+                  "concrete": "5 min + 1 bullet",
+                  "minutes": 5
+                },
+                "medium": {
+                  "concrete": "10 min zoals beschreven",
+                  "minutes": 10
+                },
+                "hard": {
+                  "concrete": "15 min + accountability (bericht aan jezelf)",
+                  "minutes": 15
+                }
+              }
+            }
+          ]
+        },
+        {
+          "week_index": 3,
+          "phase_id": "p2",
+          "title": "Week 3",
+          "objective": "Eén commitment minder deze week.",
+          "tasks": [
+            {
+              "id": "stress-regulation-baseline-w3-t1",
+              "title": "Kern-sessie",
+              "concrete": "25 min geconcentreerde oefening op dit traject; noteer 1 zin resultaat.",
+              "minutes": 25,
+              "scaling": {
+                "easy": {
+                  "concrete": "15 min gerichte oefening",
+                  "minutes": 15
+                },
+                "medium": {
+                  "concrete": "25 min zoals beschreven",
+                  "minutes": 25
+                },
+                "hard": {
+                  "concrete": "40 min + korte reflectie wat morgen anders",
+                  "minutes": 40
+                }
+              }
+            },
+            {
+              "id": "stress-regulation-baseline-w3-t2",
+              "title": "Micro-reflectie",
+              "concrete": "10 min: wat werkte, wat niet; 1 concrete aanpassing voor volgende sessie.",
+              "minutes": 10,
+              "scaling": {
+                "easy": {
+                  "concrete": "5 min + 1 bullet",
+                  "minutes": 5
+                },
+                "medium": {
+                  "concrete": "10 min zoals beschreven",
+                  "minutes": 10
+                },
+                "hard": {
+                  "concrete": "15 min + accountability (bericht aan jezelf)",
+                  "minutes": 15
+                }
+              }
+            }
+          ]
+        },
+        {
+          "week_index": 4,
+          "phase_id": "p2",
+          "title": "Week 4",
+          "objective": "Plan: signalen die ‘stop’ betekenen.",
+          "tasks": [
+            {
+              "id": "stress-regulation-baseline-w4-t1",
+              "title": "Kern-sessie",
+              "concrete": "25 min geconcentreerde oefening op dit traject; noteer 1 zin resultaat.",
+              "minutes": 25,
+              "scaling": {
+                "easy": {
+                  "concrete": "15 min gerichte oefening",
+                  "minutes": 15
+                },
+                "medium": {
+                  "concrete": "25 min zoals beschreven",
+                  "minutes": 25
+                },
+                "hard": {
+                  "concrete": "40 min + korte reflectie wat morgen anders",
+                  "minutes": 40
+                }
+              }
+            },
+            {
+              "id": "stress-regulation-baseline-w4-t2",
+              "title": "Micro-reflectie",
+              "concrete": "10 min: wat werkte, wat niet; 1 concrete aanpassing voor volgende sessie.",
+              "minutes": 10,
+              "scaling": {
+                "easy": {
+                  "concrete": "5 min + 1 bullet",
+                  "minutes": 5
+                },
+                "medium": {
+                  "concrete": "10 min zoals beschreven",
+                  "minutes": 10
+                },
+                "hard": {
+                  "concrete": "15 min + accountability (bericht aan jezelf)",
+                  "minutes": 15
+                }
+              }
+            }
+          ]
+        }
+      ]
+    }
+  }
+]

@@ -130,7 +130,7 @@ export const BrainStatusCard = memo(function BrainStatusCard({ date, initial, ye
     <>
       <section
         id="brain-status-modal"
-        className="card page glass-card-3d border-[rgba(var(--mode-rgb,0,212,255),0.35)] shadow-[0_0_24px_rgba(var(--mode-rgb,0,212,255),0.12)]"
+        className="card page glass-card-3d border-[rgba(var(--mode-rgb),0.35)] shadow-[0_0_24px_rgba(var(--mode-rgb),0.12)]"
         style={dcicModeVars}
         aria-label="Brain Status"
         data-tutorial="brain-status-card"

@@ -3,6 +3,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
 import { addXP } from "@/app/actions/xp";
+import { calendarQuarterBounds, normalizeStrategyEngineParams } from "@/lib/strategy/engine-params";
 
 function isoDate(offsetDays = 0): string {
   const d = new Date();
@@ -15,6 +16,22 @@ async function getUserIdOrThrow(): Promise<string> {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) throw new Error("Not authenticated");
   return user.id;
+}
+
+/** Budget lock events this calendar quarter (for strategy engine cap). */
+export async function countBudgetLocksThisQuarter(): Promise<number> {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return 0;
+  const today = isoDate();
+  const { start, end } = calendarQuarterBounds(today);
+  const { count } = await (supabase as any)
+    .from("budget_control_locks")
+    .select("id", { count: "exact", head: true })
+    .eq("user_id", user.id)
+    .gte("lock_from", start)
+    .lte("lock_from", end);
+  return count ?? 0;
 }
 
 async function autoTuneBudgetPolicyFromSurveys(userId: string): Promise<void> {
@@ -140,6 +157,23 @@ export async function setBudgetNoSpendLock(params: {
 }): Promise<void> {
   const userId = await getUserIdOrThrow();
   const supabase = await createClient();
+
+  const { data: sfRow } = await supabase
+    .from("strategy_focus")
+    .select("engine_params")
+    .eq("user_id", userId)
+    .eq("is_active", true)
+    .maybeSingle();
+  const maxLocks = normalizeStrategyEngineParams(
+    (sfRow as { engine_params?: unknown } | null)?.engine_params
+  ).budget.maxLocksPerQuarter;
+  const used = await countBudgetLocksThisQuarter();
+  if (maxLocks > 0 && used >= maxLocks) {
+    throw new Error(
+      `Strategie-limiet: max ${maxLocks} budget-lock(s) dit kwartaal (${used} gebruikt). Pas aan op Strategy of wacht tot het volgende kwartaal.`
+    );
+  }
+
   const days = Math.max(1, Math.min(7, Math.floor(params.days)));
   const lockUntil = isoDate(days);
   await (supabase as any).from("budget_control_locks").insert({

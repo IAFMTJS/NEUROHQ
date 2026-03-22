@@ -30,7 +30,7 @@ export function FinancialInsightsCard({ insights }: FinancialInsightsCardProps) 
       case "warning":
         return "text-yellow-500 border-yellow-500/20 bg-yellow-500/10";
       case "suggestion":
-        return "text-blue-500 border-blue-500/20 bg-blue-500/10";
+        return "text-[var(--semantic-accent)] border-[var(--semantic-accent)]/20 bg-[var(--semantic-accent)]/10";
       default:
         return "text-[var(--text-primary)] border-[var(--card-border)] bg-[var(--bg-secondary)]";
     }

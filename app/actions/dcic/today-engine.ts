@@ -14,6 +14,7 @@ import { getForcedConfrontationForDay, type ForcedConfrontationForDay } from "@/
 import { bucketTodayItems, rawTaskToTodayItem, type BucketedToday, type RawTodayTask } from "@/lib/today-engine";
 import { computeBrainMode } from "@/lib/brain-mode";
 import { getSuggestedTaskCount } from "@/lib/utils/energy";
+import { normalizeStrategyEngineParams, type MissionEngineTuning } from "@/lib/strategy/engine-params";
 import { yesterdayDate } from "@/lib/utils/timezone";
 
 export interface TodayEngineResult {
@@ -64,14 +65,24 @@ export async function getTodayEngine(
   const lastCompletion = (streakRow as { last_completion_date?: string | null } | null)?.last_completion_date ?? null;
   const streakAtRisk = lastCompletion !== yesterdayStr && lastCompletion !== dateStr;
 
-  const [{ data: dailyRow }] = await Promise.all([
+  const [{ data: dailyRow }, { data: sfRow }] = await Promise.all([
     supabase
       .from("daily_state")
       .select("energy, focus, sensory_load, mental_battery, load, social_load, physical_health, sleep_hours")
       .eq("user_id", user.id)
       .eq("date", dateStr)
       .maybeSingle(),
+    supabase
+      .from("strategy_focus")
+      .select("engine_params")
+      .eq("user_id", user.id)
+      .eq("is_active", true)
+      .maybeSingle(),
   ]);
+
+  const missionTuning: MissionEngineTuning | null = sfRow
+    ? normalizeStrategyEngineParams((sfRow as { engine_params?: unknown }).engine_params).missions
+    : null;
 
   const ds = dailyRow as {
     energy?: number | null;
@@ -83,14 +94,17 @@ export async function getTodayEngine(
   } | null;
 
   const missionEquivalentCap = ds
-    ? getSuggestedTaskCount({
-        energy: ds.energy ?? 5,
-        focus: ds.focus ?? 5,
-        sensory_load: ds.sensory_load ?? 5,
-        social_load: ds.social_load ?? 5,
-        sleep_hours: ds.sleep_hours ?? null,
-        physical_health: ds.physical_health ?? null,
-      })
+    ? getSuggestedTaskCount(
+        {
+          energy: ds.energy ?? 5,
+          focus: ds.focus ?? 5,
+          sensory_load: ds.sensory_load ?? 5,
+          social_load: ds.social_load ?? 5,
+          sleep_hours: ds.sleep_hours ?? null,
+          physical_health: ds.physical_health ?? null,
+        },
+        missionTuning
+      )
     : undefined;
 
   const items = (tasks ?? []).map((t, i) => {
@@ -166,6 +180,8 @@ export interface TodayEngineData {
     active: boolean;
     daysInactive: number;
   } | null;
+  /** From active strategy engine; drives suggested task count on client. */
+  missionEngine: MissionEngineTuning | null;
 }
 
 export async function getTodayEngineData(dateStr: string): Promise<TodayEngineData> {
@@ -182,6 +198,7 @@ export async function getTodayEngineData(dateStr: string): Promise<TodayEngineDa
       behaviorProfile: DEFAULT_BEHAVIOR_PROFILE,
       forcedConfrontation: null,
       minimalIntegrity: null,
+      missionEngine: null,
     };
   }
 
@@ -191,7 +208,7 @@ export async function getTodayEngineData(dateStr: string): Promise<TodayEngineDa
   const { tasks } = await getTodaysTasks(dateStr, taskMode);
 
   const yesterdayStr = yesterdayDate(dateStr);
-  const [xpRes, streakRow, dailyRow, behaviorProfile, forcedConfrontation] = await Promise.all([
+  const [xpRes, streakRow, dailyRow, behaviorProfile, forcedConfrontation, sfRes] = await Promise.all([
     getXP(),
     supabase.from("user_streak").select("last_completion_date").eq("user_id", user.id).single(),
     supabase
@@ -202,6 +219,12 @@ export async function getTodayEngineData(dateStr: string): Promise<TodayEngineDa
       .single(),
     getBehaviorProfile(),
     getForcedConfrontationForDay(dateStr),
+    supabase
+      .from("strategy_focus")
+      .select("engine_params")
+      .eq("user_id", user.id)
+      .eq("is_active", true)
+      .maybeSingle(),
   ]);
 
   const lastCompletion =
@@ -259,6 +282,10 @@ export async function getTodayEngineData(dateStr: string): Promise<TodayEngineDa
       }
     : null;
 
+  const missionEngine = sfRes.data
+    ? normalizeStrategyEngineParams((sfRes.data as { engine_params?: unknown }).engine_params).missions
+    : null;
+
   return {
     tasks: rawTasks,
     streakAtRisk,
@@ -269,5 +296,6 @@ export async function getTodayEngineData(dateStr: string): Promise<TodayEngineDa
     behaviorProfile,
     forcedConfrontation,
     minimalIntegrity,
+    missionEngine,
   };
 }

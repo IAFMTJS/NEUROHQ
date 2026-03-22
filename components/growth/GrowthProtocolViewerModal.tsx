@@ -20,6 +20,8 @@ import {
   phaseForWeek,
   getScaledTask,
   weekForIndex,
+  dayOfWeekLabelNl,
+  sortedDayOverview,
 } from "@/lib/growth/protocol-definition";
 import type { DifficultyTier } from "@/lib/growth/adaptive-engine";
 import { tierLabelNl } from "@/lib/growth/tier-labels";
@@ -92,6 +94,40 @@ export function GrowthProtocolViewerModal({ protocol, progress, engineTier, onCl
             <span className="rounded-full bg-[var(--bg-soft)] px-2 py-0.5">
               Horizon ca. {def.estimated_weeks_min}–{def.estimated_weeks_max} wkn
             </span>
+            {def.tags && def.tags.length > 0 && (
+              <span className="rounded-full border border-[var(--card-border)] px-2 py-0.5">
+                {def.tags.join(" · ")}
+              </span>
+            )}
+          </div>
+        )}
+
+        {def && (def.trajectory_context || (def.prerequisites && def.prerequisites.length) || (def.outcomes && def.outcomes.length)) && (
+          <div className="mb-4 space-y-3 rounded-xl border border-[var(--semantic-accent)]/25 bg-[var(--semantic-accent)]/5 p-3">
+            <p className="text-[10px] font-bold uppercase tracking-wide text-[var(--semantic-accent)]">Traject</p>
+            {def.trajectory_context && (
+              <p className="text-sm leading-relaxed text-[var(--text-secondary)]">{def.trajectory_context}</p>
+            )}
+            {def.prerequisites && def.prerequisites.length > 0 && (
+              <div>
+                <p className="text-[10px] font-semibold uppercase tracking-wide text-[var(--text-muted)]">Voorwaarden</p>
+                <ul className="mt-1 list-inside list-disc text-sm text-[var(--text-secondary)]">
+                  {def.prerequisites.map((line) => (
+                    <li key={line}>{line}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+            {def.outcomes && def.outcomes.length > 0 && (
+              <div>
+                <p className="text-[10px] font-semibold uppercase tracking-wide text-[var(--text-muted)]">Wat je wél kan verwachten</p>
+                <ul className="mt-1 list-inside list-disc text-sm text-[var(--text-secondary)]">
+                  {def.outcomes.map((line) => (
+                    <li key={line}>{line}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
           </div>
         )}
 
@@ -140,6 +176,12 @@ export function GrowthProtocolViewerModal({ protocol, progress, engineTier, onCl
                 </p>
                 <p className="text-sm font-semibold text-[var(--text-primary)]">{week.title}</p>
                 <p className="text-xs text-[var(--text-secondary)]">{week.objective}</p>
+                {week.week_intent && (
+                  <p className="mt-2 rounded-lg border border-[var(--card-border)]/80 bg-[var(--bg-primary)]/40 px-2.5 py-2 text-xs leading-relaxed text-[var(--text-primary)]">
+                    <span className="font-semibold text-[var(--semantic-accent)]">Intentie: </span>
+                    {week.week_intent}
+                  </p>
+                )}
               </div>
               <div className="flex items-center gap-1">
                 <button
@@ -182,6 +224,49 @@ export function GrowthProtocolViewerModal({ protocol, progress, engineTier, onCl
               </div>
             </div>
 
+            {week.coach_notes && (
+              <div className="mb-3 rounded-lg border border-[var(--card-border)]/60 bg-[var(--bg-primary)]/35 p-3">
+                <p className="text-[10px] font-bold uppercase tracking-wide text-[var(--text-muted)]">Begeleiding</p>
+                <p className="mt-1 text-xs leading-relaxed text-[var(--text-secondary)]">{week.coach_notes}</p>
+              </div>
+            )}
+
+            {sortedDayOverview(week).length > 0 && (
+              <div className="mb-3">
+                <p className="text-[10px] font-bold uppercase tracking-wide text-[var(--text-muted)]">Suggestie per dag</p>
+                <div className="mt-2 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+                  {sortedDayOverview(week).map((d) => (
+                    <div
+                      key={d.day_of_week}
+                      className="rounded-lg border border-[var(--card-border)]/70 bg-[var(--bg-soft)]/60 px-2.5 py-2 text-xs"
+                    >
+                      <p className="font-semibold text-[var(--semantic-accent)]">{dayOfWeekLabelNl(d.day_of_week)}</p>
+                      <p className="mt-0.5 text-[var(--text-secondary)]">{d.focus_line}</p>
+                      {d.task_ids && d.task_ids.length > 0 && (
+                        <p className="mt-1 font-mono text-[10px] text-[var(--text-muted)]">
+                          → {d.task_ids.join(", ")}
+                        </p>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {week.weekly_checklist && week.weekly_checklist.length > 0 && (
+              <div className="mb-3 rounded-lg border border-emerald-500/20 bg-emerald-500/5 p-3">
+                <p className="text-[10px] font-bold uppercase tracking-wide text-emerald-200/80">Week-check</p>
+                <ul className="mt-2 space-y-1 text-xs text-[var(--text-secondary)]">
+                  {week.weekly_checklist.map((item) => (
+                    <li key={item} className="flex gap-2">
+                      <span className="text-emerald-400/90">□</span>
+                      <span>{item}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
             <ul className="space-y-3">
               {week.tasks.map((task) => {
                 const scaled = getScaledTask(task, tier);
@@ -211,11 +296,70 @@ export function GrowthProtocolViewerModal({ protocol, progress, engineTier, onCl
                         }
                       />
                       <div className="min-w-0 flex-1">
-                        <p className="text-sm font-semibold text-[var(--text-primary)]">{task.title}</p>
+                        <div className="flex flex-wrap items-center gap-2">
+                          <p className="text-sm font-semibold text-[var(--text-primary)]">{task.title}</p>
+                          {task.frequency_note && (
+                            <span className="rounded-full bg-[var(--bg-primary)] px-2 py-0.5 text-[10px] text-[var(--text-muted)]">
+                              {task.frequency_note}
+                            </span>
+                          )}
+                          {task.preferred_days && task.preferred_days.length > 0 && (
+                            <span className="flex flex-wrap gap-1">
+                              {task.preferred_days.map((d) => (
+                                <span
+                                  key={d}
+                                  className="rounded border border-[var(--card-border)] px-1.5 py-0.5 font-mono text-[10px] text-[var(--text-muted)]"
+                                >
+                                  {dayOfWeekLabelNl(d)}
+                                </span>
+                              ))}
+                            </span>
+                          )}
+                        </div>
+                        {task.why_it_matters && (
+                          <p className="mt-1 text-[11px] italic text-[var(--text-muted)]">{task.why_it_matters}</p>
+                        )}
                         <p className="mt-1 text-sm text-[var(--text-secondary)]">{scaled.concrete}</p>
                         <p className="mt-1 text-[11px] text-[var(--text-muted)]">
                           ~{scaled.minutes} min · tier <strong>{tierLabelNl(tier)}</strong>
                         </p>
+                        {task.checklist && task.checklist.length > 0 && (
+                          <ul className="mt-2 space-y-0.5 border-t border-[var(--card-border)]/50 pt-2 text-[11px] text-[var(--text-secondary)]">
+                            {task.checklist.map((c) => (
+                              <li key={c} className="flex gap-2">
+                                <span className="text-[var(--text-muted)]">•</span>
+                                {c}
+                              </li>
+                            ))}
+                          </ul>
+                        )}
+                        {task.reflection_prompt && (
+                          <p className="mt-2 rounded-md bg-[var(--bg-primary)]/50 px-2 py-1.5 text-[11px] text-[var(--text-secondary)]">
+                            <span className="font-semibold text-[var(--semantic-accent)]">Reflectie: </span>
+                            {task.reflection_prompt}
+                          </p>
+                        )}
+                        {task.resources && task.resources.length > 0 && (
+                          <ul className="mt-2 text-[11px] text-[var(--text-muted)]">
+                            {task.resources.map((r) => (
+                              <li key={r.label}>
+                                {r.url ? (
+                                  <a
+                                    href={r.url}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="text-[var(--semantic-accent)] underline-offset-2 hover:underline"
+                                  >
+                                    {r.label}
+                                  </a>
+                                ) : (
+                                  <span>{r.label}</span>
+                                )}
+                                {r.note ? ` — ${r.note}` : ""}
+                              </li>
+                            ))}
+                          </ul>
+                        )}
                         {task.success_criteria && (
                           <p className="mt-1 text-[11px] text-amber-200/90">Succes: {task.success_criteria}</p>
                         )}

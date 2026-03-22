@@ -16,10 +16,12 @@ function formatLockUntil(iso: string | null): string | null {
 type Props = {
   /** Extra context for screen readers / copy */
   context?: "execute" | "analysis" | "optimization";
+  /** Opens Execute tab + scrolls to lock card (hash alone fails on other tabs). */
+  lockPanelHref: string;
   className?: string;
 };
 
-export function BudgetLockTabBanner({ context, className = "" }: Props) {
+export function BudgetLockTabBanner({ context, lockPanelHref, className = "" }: Props) {
   const { lockActive, lockUntil } = useBudgetLock();
   if (!lockActive) return null;
 
@@ -46,7 +48,7 @@ export function BudgetLockTabBanner({ context, className = "" }: Props) {
           {until && <p className="text-xs text-amber-50/95">Tot minstens {until}</p>}
           <p className="text-xs text-[var(--text-secondary)]">{contextHint}</p>
           <a
-            href="#budget-lock-control"
+            href={lockPanelHref}
             className="inline-flex text-xs font-semibold text-[var(--semantic-accent)] underline-offset-2 hover:underline"
           >
             Naar lock- en nooduitgave-paneel

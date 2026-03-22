@@ -43,7 +43,7 @@ export function GrowthAdaptiveHint(props: {
   const focusPct = f != null ? Math.round(Math.max(0, Math.min(100, f))) : null;
 
   return (
-    <div className="overflow-hidden rounded-xl border border-[var(--semantic-ring)]/40 bg-gradient-to-br from-[var(--semantic-accent)]/12 via-[var(--bg-elevated)]/90 to-purple-500/10 shadow-[0_0_40px_rgba(0,212,255,0.06)]">
+    <div className="overflow-hidden rounded-xl border border-[var(--semantic-ring)]/40 bg-gradient-to-br from-[var(--semantic-accent)]/12 via-[var(--bg-elevated)]/90 to-[var(--semantic-accent)]/8 shadow-[0_0_40px_rgba(var(--mode-rgb),0.06)]">
       <div className="border-b border-[var(--card-border)]/80 px-4 py-2.5">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <div>
@@ -137,7 +137,7 @@ function Meter({ label, value }: { label: string; value: number | null }) {
       <div className="h-2.5 w-full overflow-hidden rounded-full bg-[var(--card-border)]/80">
         <div
           className={`h-full rounded-full transition-all ${
-            value == null ? "bg-[var(--text-muted)]/40" : "bg-gradient-to-r from-cyan-500/90 to-[var(--semantic-accent)]"
+            value == null ? "bg-[var(--text-muted)]/40" : "bg-gradient-to-r from-[var(--semantic-accent)]/90 to-[var(--semantic-ring)]/90"
           }`}
           style={{ width: `${value == null ? 35 : pct}%` }}
         />

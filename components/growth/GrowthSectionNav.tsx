@@ -2,8 +2,7 @@
 
 const LINKS = [
   { href: "#growth-command", label: "Command center" },
-  { href: "#growth-system", label: "Systeem" },
-  { href: "#growth-protocols", label: "Protocollen" },
+  { href: "#growth-system", label: "Systeem & protocollen" },
   { href: "#growth-overview", label: "Dashboard" },
   { href: "#growth-path", label: "Leerpad" },
   { href: "#growth-missions", label: "Doel → missies" },

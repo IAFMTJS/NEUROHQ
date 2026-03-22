@@ -5,7 +5,7 @@ import type { RecentCompletionWithRank } from "@/app/actions/dcic/insight-engine
 const RANK_COLORS: Record<string, string> = {
   S: "bg-amber-500/20 text-amber-400 border-amber-500/40",
   A: "bg-emerald-500/20 text-emerald-400 border-emerald-500/40",
-  B: "bg-sky-500/20 text-sky-400 border-sky-500/40",
+  B: "bg-[var(--semantic-accent)]/20 text-[var(--semantic-accent)] border-[var(--semantic-accent)]/40",
   C: "bg-slate-500/20 text-slate-400 border-slate-500/40",
 };
 

@@ -181,7 +181,7 @@ export const EnergyBudgetBar = memo(function EnergyBudgetBar({
                   )}
                   {calendarCost > 0 && (
                     <span>
-                      <span className="inline-block h-1.5 w-1.5 rounded-full bg-blue-500 align-middle" />{" "}
+                      <span className="inline-block h-1.5 w-1.5 rounded-full bg-[var(--semantic-accent)] align-middle" />{" "}
                       Calendar ({Math.round(calendarCost)})
                     </span>
                   )}

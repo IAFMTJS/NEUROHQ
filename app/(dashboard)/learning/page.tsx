@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import { HQPageHeader } from "@/components/hq";
 import { HeroMascotImage } from "@/components/HeroMascotImage";
 import { SciFiPanel } from "@/components/hud-test/SciFiPanel";
@@ -9,6 +10,7 @@ import { getProtocolLibrary } from "@/app/actions/protocol-library";
 import { getProtocolProgressMap } from "@/app/actions/protocol-progress";
 import { getGrowthFocus } from "@/app/actions/growth-focus";
 import { LearningContentClient } from "@/components/growth/LearningContentClient";
+import { StrategyEnginePaceHint } from "@/components/strategy/StrategyEnginePaceHint";
 
 export const dynamic = "force-dynamic";
 
@@ -52,6 +54,11 @@ export default async function LearningPage({ searchParams }: Props) {
             Start bij het command center: je focus-protocol, week en snelle acties naar Missions. Daarna systeem-loop,
             bibliotheek, dashboard en streams.
           </p>
+          <Suspense fallback={null}>
+            <div className="mt-4">
+              <StrategyEnginePaceHint variant="learning" />
+            </div>
+          </Suspense>
         </SciFiPanel>
 
         <SciFiPanel variant="glass" className={hudStyles.focusSecondary} bodyClassName="p-4 md:p-6">

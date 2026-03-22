@@ -13,6 +13,8 @@ type Props = {
   initialTab: LegacyTabId;
   isHistoryView: boolean;
   historyMode: boolean;
+  /** Opens Execute tab + scrolls to #budget-lock-control (lock card is only mounted there). */
+  lockPanelHref: string;
   headerRight: React.ReactNode;
   overview: React.ReactNode;
   tactical: React.ReactNode;
@@ -23,7 +25,7 @@ type Props = {
   lockUntil: string | null;
 };
 
-function BudgetLockStrip({ historyMode }: { historyMode: boolean }) {
+function BudgetLockStrip({ historyMode, lockPanelHref }: { historyMode: boolean; lockPanelHref: string }) {
   const { lockActive, lockUntil } = useBudgetLock();
   if (historyMode || !lockActive) return null;
   const untilShort = lockUntil
@@ -41,7 +43,7 @@ function BudgetLockStrip({ historyMode }: { historyMode: boolean }) {
         <span className="text-amber-100/90">Optimalisatie-start is gepauzeerd.</span> Gebruik Execute voor noodpad.
       </span>
       <a
-        href="#budget-lock-control"
+        href={lockPanelHref}
         className="shrink-0 rounded-md bg-amber-500/25 px-2.5 py-1 text-[11px] font-bold uppercase tracking-wide text-amber-50 underline-offset-2 hover:bg-amber-500/35 hover:underline"
       >
         Naar lock
@@ -54,6 +56,7 @@ export function BudgetTabsShell({
   initialTab,
   isHistoryView: _isHistoryView,
   historyMode,
+  lockPanelHref,
   headerRight,
   overview,
   tactical,
@@ -120,7 +123,7 @@ export function BudgetTabsShell({
         {headerRight}
       </div>
 
-      <BudgetLockStrip historyMode={historyMode} />
+      <BudgetLockStrip historyMode={historyMode} lockPanelHref={lockPanelHref} />
 
       <div className="mt-4">
         {activeTab === "overview" && <div key="panel-overview">{overview}</div>}
@@ -132,13 +135,13 @@ export function BudgetTabsShell({
         )}
         {activeTab === "analysis" && (
           <div key="panel-analysis" className="space-y-4">
-            <BudgetLockTabBanner context="analysis" />
+            <BudgetLockTabBanner context="analysis" lockPanelHref={lockPanelHref} />
             {analysis}
           </div>
         )}
         {activeTab === "optimization" && (
           <div key="panel-optimization" className="space-y-4">
-            <BudgetLockTabBanner context="optimization" />
+            <BudgetLockTabBanner context="optimization" lockPanelHref={lockPanelHref} />
             {optimization}
           </div>
         )}

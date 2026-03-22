@@ -184,7 +184,7 @@ async function TasksHeaderMetaAsync({ dateStr, yesterdayStr }: { dateStr: string
       <XPBadge totalXp={xp.total_xp} level={xp.level} compact href="/xp" />
       <div className="glow-pill inline-flex min-w-0 shrink-0 items-center gap-2 rounded-full bg-[var(--dc-bg-elevated)] px-4 py-2 text-sm font-medium text-[var(--dc-text-main)]" title="Vandaag" aria-label="Vandaag">
         <span
-          className="h-2 w-2 shrink-0 rounded-full bg-[var(--dc-accent-primary)] shadow-[0_0_8px_rgba(var(--mode-rgb,0,212,255),0.6)]"
+          className="h-2 w-2 shrink-0 rounded-full bg-[var(--dc-accent-primary)] shadow-[0_0_8px_rgba(var(--mode-rgb),0.6)]"
           aria-hidden
         />
         <span className="truncate">Today</span>

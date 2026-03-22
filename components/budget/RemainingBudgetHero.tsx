@@ -150,7 +150,7 @@ export function RemainingBudgetHero({
         data-tutorial="budget-hero"
       >
         <div className="border-b border-[var(--card-border)] px-5 py-3 sm:px-7">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-cyan-200">Budget Command Hero</p>
+          <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--mode-text-soft)]">Budget Command Hero</p>
         </div>
         <div className="relative flex flex-col items-center gap-6 px-5 py-6 sm:flex-row sm:items-stretch sm:justify-between sm:px-7 sm:py-7">
           <div className="flex items-center gap-6 sm:gap-8">

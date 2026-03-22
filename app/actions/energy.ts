@@ -4,6 +4,8 @@ import { cache } from "react";
 import { createClient, createClientWithToken } from "@/lib/supabase/server";
 import { unstable_cache } from "next/cache";
 import { splitTaskCost, taskCost, getSuggestedTaskCount } from "@/lib/utils/energy";
+import type { MissionEngineTuning } from "@/lib/strategy/engine-params";
+import { normalizeStrategyEngineParams } from "@/lib/strategy/engine-params";
 import { computeBrainMode, getFocusSlots, getMaxSlotsWithLoadRule, type BrainMode } from "@/lib/brain-mode";
 
 /** Default capacity when no brain status (daily_state) exists. */
@@ -53,7 +55,10 @@ const CAPACITY_BUFFER = 2.0; // 2× headroom so 3–5 tasks leave budget clearly
  * Advanced capacity model: capacities are derived from suggestedTaskCount so they
  * always align. suggestedTaskCount comes from brain status (energy, focus, load, sleep, social).
  */
-function capacityFromDailyState(state: DailyStateRow): {
+function capacityFromDailyState(
+  state: DailyStateRow,
+  missionEngine?: MissionEngineTuning | null
+): {
   energy: PoolBudget;
   focus: PoolBudget;
   load: PoolBudget;
@@ -77,14 +82,17 @@ function capacityFromDailyState(state: DailyStateRow): {
   const socialLoad = state.social_load ?? 5;
   const sleep = state.sleep_hours ?? 7;
 
-  const suggestedTaskCount = getSuggestedTaskCount({
-    energy: e,
-    focus: f,
-    sensory_load: sensoryLoad,
-    social_load: socialLoad,
-    sleep_hours: sleep,
-    physical_health: (state as { physical_health?: number | null }).physical_health ?? null,
-  });
+  const suggestedTaskCount = getSuggestedTaskCount(
+    {
+      energy: e,
+      focus: f,
+      sensory_load: sensoryLoad,
+      social_load: socialLoad,
+      sleep_hours: sleep,
+      physical_health: (state as { physical_health?: number | null }).physical_health ?? null,
+    },
+    missionEngine ?? null
+  );
 
   // Capacity = suggestedTaskCount * cost per avg task * buffer. Ensures N tasks fit.
   const energyCapacity = Math.round(suggestedTaskCount * AVG_TASK_ENERGY * CAPACITY_BUFFER);
@@ -180,6 +188,7 @@ export const getEnergyBudget = cache(async (date: string): Promise<EnergyBudget>
         { data: incompleteTasks },
         { data: events },
         { data: behaviorProfileRow },
+        { data: strategyRow },
       ] = await Promise.all([
         client
           .from("daily_state")
@@ -210,9 +219,19 @@ export const getEnergyBudget = cache(async (date: string): Promise<EnergyBudget>
           .gte("start_at", `${dateKey}T00:00:00Z`)
           .lt("start_at", `${dateKey}T23:59:59Z`),
         client.from("behavior_profile").select("discipline_level").eq("user_id", userId).maybeSingle(),
+        client
+          .from("strategy_focus")
+          .select("engine_params")
+          .eq("user_id", userId)
+          .eq("is_active", true)
+          .maybeSingle(),
       ]);
 
-  const base = capacityFromDailyState(dailyState as DailyStateRow);
+  const missionEngine = normalizeStrategyEngineParams(
+    (strategyRow as { engine_params?: unknown } | null)?.engine_params
+  ).missions;
+
+  const base = capacityFromDailyState(dailyState as DailyStateRow, missionEngine);
   const disciplineLevel = (behaviorProfileRow as { discipline_level?: string | null } | null)?.discipline_level ?? "medium";
   let suggestedTaskCount = base.suggestedTaskCount;
   if (disciplineLevel === "low") suggestedTaskCount = Math.max(1, suggestedTaskCount - 1);
@@ -361,7 +380,7 @@ export const getEnergyBudget = cache(async (date: string): Promise<EnergyBudget>
   const segments = [
     { label: "Tasks done", value: taskUsedTotal, color: "bg-emerald-500" },
     { label: "Planned", value: taskPlannedTotal, color: "bg-amber-500/80" },
-    { label: "Calendar", value: Math.round(calendarTotal), color: "bg-blue-500/70" },
+    { label: "Calendar", value: Math.round(calendarTotal), color: "bg-[var(--semantic-accent)]/70" },
   ].filter((s) => s.value > 0);
 
       const brainMode = computeBrainMode({

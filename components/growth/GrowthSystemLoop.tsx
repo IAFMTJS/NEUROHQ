@@ -32,7 +32,7 @@ export function GrowthSystemLoop() {
   return (
     <section
       id="growth-system"
-      className="scroll-mt-28 rounded-xl border border-[var(--semantic-accent)]/35 bg-gradient-to-br from-[var(--semantic-accent)]/10 via-[var(--bg-elevated)]/50 to-transparent p-4 shadow-[0_0_32px_rgba(0,212,255,0.08)]"
+      className="scroll-mt-28 rounded-xl border border-[var(--semantic-accent)]/35 bg-gradient-to-br from-[var(--semantic-accent)]/10 via-[var(--bg-elevated)]/50 to-transparent p-4 shadow-[0_0_32px_rgba(var(--mode-rgb),0.08)]"
     >
       <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[var(--semantic-accent)]">Growth-systeem</p>
       <h2 className="mt-1 text-base font-bold text-[var(--text-primary)]">Hoe het samenwerkt</h2>

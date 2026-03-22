@@ -20,7 +20,8 @@ import { StrategyThesisHero } from "@/components/strategy/StrategyThesisHero";
 import { StrategyFocusMultipliers } from "@/components/strategy/StrategyFocusMultipliers";
 import { StrategyPhaseIndicator } from "@/components/strategy/StrategyPhaseIndicator";
 import { StrategyArchiveHistory } from "@/components/strategy/StrategyArchiveHistory";
-import { StrategyGrowthBridge } from "@/components/strategy/StrategyGrowthBridge";
+import { StrategyIntegratedOverview } from "@/components/strategy/StrategyIntegratedOverview";
+import { StrategyEngineSettingsSection } from "@/components/strategy/StrategyEngineSettingsSection";
 
 /** Force dynamic: strategy uses cookies (auth) and live data. */
 export const dynamic = "force-dynamic";
@@ -30,7 +31,7 @@ function StrategyShell() {
     <>
       <HQPageHeader
         title="🧠 Strategy"
-        subtitle="4 lagen: Direction → Allocation → Accountability → Pressure & Adaptation"
+        subtitle="Missions, budget en growth in één strategische stack — daarna thesis, allocatie en alignment"
         backHref="/dashboard"
       />
       <section className="mascot-hero mascot-hero-top mascot-hero-sharp" data-mascot-page="strategy" aria-hidden>
@@ -127,12 +128,6 @@ async function StrategyContent() {
           <Link href="/report" className="link-glow-hover inline-flex items-center rounded-lg border border-[var(--card-border)] bg-[var(--bg-elevated)] px-4 py-2 text-sm font-medium text-[var(--text-primary)] transition-all duration-200 hover:border-[var(--accent-focus)] hover:text-[var(--accent-focus)]">
             Reality report →
           </Link>
-          <Link href="/budget" className="link-glow-hover inline-flex items-center rounded-lg border border-[var(--card-border)] bg-[var(--bg-elevated)] px-4 py-2 text-sm font-medium text-[var(--text-primary)] transition-all duration-200 hover:border-[var(--accent-focus)] hover:text-[var(--accent-focus)]">
-            Budget & goals →
-          </Link>
-          <Link href="/learning" className="link-glow-hover inline-flex items-center rounded-lg border border-[var(--card-border)] bg-[var(--bg-elevated)] px-4 py-2 text-sm font-medium text-[var(--text-primary)] transition-all duration-200 hover:border-[var(--accent-focus)] hover:text-[var(--accent-focus)]">
-            Growth →
-          </Link>
         </div>
         <StrategyThesisForm />
         <StrategyArchiveHistory past={past} />
@@ -194,18 +189,6 @@ async function StrategyContent() {
         >
           Reality report →
         </Link>
-        <Link
-          href="/budget"
-          className="link-glow-hover inline-flex items-center rounded-lg border border-[var(--card-border)] bg-[var(--bg-elevated)] px-4 py-2 text-sm font-medium text-[var(--text-primary)] transition-all duration-200 hover:border-[var(--accent-focus)] hover:text-[var(--accent-focus)]"
-        >
-          Budget & goals →
-        </Link>
-        <Link
-          href="/learning"
-          className="link-glow-hover inline-flex items-center rounded-lg border border-[var(--card-border)] bg-[var(--bg-elevated)] px-4 py-2 text-sm font-medium text-[var(--text-primary)] transition-all duration-200 hover:border-[var(--accent-focus)] hover:text-[var(--accent-focus)]"
-        >
-          Growth →
-        </Link>
       </div>
 
       <StrategyThesisHero
@@ -259,8 +242,11 @@ export default function StrategyPage() {
   return (
     <div className="container page space-y-6">
       <StrategyShell />
-      <Suspense fallback={<div className="h-24 animate-pulse rounded-2xl bg-[var(--bg-elevated)]/40" aria-hidden />}>
-        <StrategyGrowthBridge />
+      <Suspense fallback={<div className="h-40 animate-pulse rounded-2xl bg-[var(--bg-elevated)]/40" aria-hidden />}>
+        <StrategyIntegratedOverview />
+      </Suspense>
+      <Suspense fallback={<div className="min-h-[200px] animate-pulse rounded-2xl bg-[var(--bg-elevated)]/30" aria-hidden />}>
+        <StrategyEngineSettingsSection />
       </Suspense>
       <Suspense fallback={null}>
         <StrategyContent />

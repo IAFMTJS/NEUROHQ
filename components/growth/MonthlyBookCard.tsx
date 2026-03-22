@@ -8,9 +8,11 @@ import { addMonthlyBook, setMonthlyBook } from "@/app/actions/learning";
 type Props = {
   currentBookTitle: string | null;
   totalPages: number | null;
+  /** Omit outer card chrome when wrapped in CollapsibleDashboardCard. */
+  embedded?: boolean;
 };
 
-export const MonthlyBookCard: FC<Props> = ({ currentBookTitle, totalPages }) => {
+export const MonthlyBookCard: FC<Props> = ({ currentBookTitle, totalPages, embedded = false }) => {
   const router = useRouter();
   const [title, setTitle] = useState(currentBookTitle ?? "");
   const [pages, setPages] = useState(totalPages != null ? String(totalPages) : "");
@@ -45,15 +47,8 @@ export const MonthlyBookCard: FC<Props> = ({ currentBookTitle, totalPages }) => 
     });
   }
 
-  return (
-    <section className="card-simple overflow-hidden p-0">
-      <div className="border-b border-[var(--card-border)] px-4 py-3">
-        <h2 className="text-base font-semibold text-[var(--text-primary)]">Monthly book</h2>
-        <p className="mt-0.5 text-xs text-[var(--text-muted)]">
-          Set your current book so Growth and Missions can nudge you to read a few pages.
-        </p>
-      </div>
-      <form onSubmit={handleSubmit} className="p-4 space-y-3">
+  const form = (
+      <form onSubmit={handleSubmit} className="space-y-3">
         <div className="flex flex-col gap-2 sm:flex-row sm:items-end">
           <div className="flex-1">
             <label className="block text-xs font-medium text-[var(--text-muted)] mb-1">
@@ -98,6 +93,21 @@ export const MonthlyBookCard: FC<Props> = ({ currentBookTitle, totalPages }) => 
           </p>
         )}
       </form>
+  );
+
+  if (embedded) {
+    return form;
+  }
+
+  return (
+    <section className="card-simple overflow-hidden p-0">
+      <div className="border-b border-[var(--card-border)] px-4 py-3">
+        <h2 className="text-base font-semibold text-[var(--text-primary)]">Monthly book</h2>
+        <p className="mt-0.5 text-xs text-[var(--text-muted)]">
+          Set your current book so Growth and Missions can nudge you to read a few pages.
+        </p>
+      </div>
+      <div className="p-4">{form}</div>
     </section>
   );
 };
