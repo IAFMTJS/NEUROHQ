@@ -1,7 +1,10 @@
 "use client";
 
 import { useState } from "react";
+import { format } from "date-fns";
+import { nl } from "date-fns/locale";
 import { BudgetLockProvider, useBudgetLock } from "@/components/budget/BudgetLockContext";
+import { BudgetLockTabBanner } from "@/components/budget/BudgetLockTabBanner";
 
 type TabId = "overview" | "execute" | "analysis" | "optimization";
 type LegacyTabId = TabId | "tactical" | "goals";
@@ -23,20 +26,25 @@ type Props = {
 function BudgetLockStrip({ historyMode }: { historyMode: boolean }) {
   const { lockActive, lockUntil } = useBudgetLock();
   if (historyMode || !lockActive) return null;
+  const untilShort = lockUntil
+    ? format(new Date(`${lockUntil}T12:00:00Z`), "d MMM", { locale: nl })
+    : null;
   return (
     <div
-      className="mb-3 flex flex-wrap items-center justify-between gap-2 rounded-lg border border-amber-500/45 bg-amber-500/10 px-3 py-2 text-xs text-amber-100"
+      className="sticky top-0 z-[25] mb-3 flex flex-wrap items-center justify-between gap-2 rounded-xl border border-amber-400/50 bg-amber-500/[0.18] px-3 py-2.5 text-xs text-amber-50 shadow-[0_4px_24px_rgba(0,0,0,0.25)] backdrop-blur-md"
       role="status"
+      aria-live="polite"
     >
-      <span>
-        <strong className="text-amber-200">No-spend lock</strong>
-        {lockUntil ? ` · tot ${lockUntil}` : ""} — snel loggen is geblokkeerd op deze tab; gebruik het noodpad onderaan Execute.
+      <span className="min-w-0">
+        <strong className="text-amber-100">No-spend lock</strong>
+        {untilShort ? ` · tot ${untilShort}` : ""} — overzicht is beperkt; snel loggen uitgeschakeld op Goals.{" "}
+        <span className="text-amber-100/90">Optimalisatie-start is gepauzeerd.</span> Gebruik Execute voor noodpad.
       </span>
       <a
         href="#budget-lock-control"
-        className="shrink-0 font-semibold text-[var(--accent-focus)] underline-offset-2 hover:underline"
+        className="shrink-0 rounded-md bg-amber-500/25 px-2.5 py-1 text-[11px] font-bold uppercase tracking-wide text-amber-50 underline-offset-2 hover:bg-amber-500/35 hover:underline"
       >
-        Naar lock / nooduitgave
+        Naar lock
       </a>
     </div>
   );
@@ -97,6 +105,15 @@ export function BudgetTabsShell({
                 </button>
               ),
             )}
+            {!historyMode && lockActive && (
+              <span
+                className="inline-flex items-center gap-1.5 rounded-full border border-amber-400/55 bg-amber-500/25 px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.12em] text-amber-100 shadow-sm"
+                title="No-spend lock staat aan"
+              >
+                <span aria-hidden>🔒</span>
+                Lock
+              </span>
+            )}
             <span className="dashboard-mini-strip-label">View</span>
           </div>
         </div>
@@ -113,8 +130,18 @@ export function BudgetTabsShell({
             {goals}
           </div>
         )}
-        {activeTab === "analysis" && <div key="panel-analysis">{analysis}</div>}
-        {activeTab === "optimization" && <div key="panel-optimization">{optimization}</div>}
+        {activeTab === "analysis" && (
+          <div key="panel-analysis" className="space-y-4">
+            <BudgetLockTabBanner context="analysis" />
+            {analysis}
+          </div>
+        )}
+        {activeTab === "optimization" && (
+          <div key="panel-optimization" className="space-y-4">
+            <BudgetLockTabBanner context="optimization" />
+            {optimization}
+          </div>
+        )}
       </div>
     </BudgetLockProvider>
   );

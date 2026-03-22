@@ -6,6 +6,7 @@
 
 - `lib/growth/adaptive-engine.ts` — `weeklyDifficultyFromBrain()` (tier + fase-label; geen persistente lock yet).
 - UI: `GrowthAdaptiveHint` op `/learning`.
+- UI: `GrowthSectionNav` + `GrowthProtocolLibrary` (data uit `protocol_library`; modal met `body_md`) — Growth v2-schil met HUD zoals Budget.
 
 ## Roadmap (product)
 

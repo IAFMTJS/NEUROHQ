@@ -71,7 +71,7 @@ export function UserGoalMissionGeneratorCard() {
 
   return (
     <>
-      <section className="card-simple space-y-3">
+      <section className="card-simple space-y-3 border-l-4 border-[var(--semantic-accent)] bg-[var(--bg-elevated)]/30">
         <h2 className="text-base font-semibold text-[var(--text-primary)]">Doel → missies</h2>
         <p className="text-xs text-[var(--text-muted)]">
           Beschrijf waar je naartoe wilt. Optioneel: tags. Je ziet eerst een preview van ~20 micro-taken; na bevestiging

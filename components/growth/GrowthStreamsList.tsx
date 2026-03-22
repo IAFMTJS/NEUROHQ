@@ -54,11 +54,22 @@ export const GrowthStreamsList: FC<Props> = ({ streams }) => {
 
   if (streams.length === 0) {
     return (
-      <section className="card-simple">
-        <h2 className="text-base font-semibold text-[var(--text-primary)]">Learning streams</h2>
-        <p className="mt-1.5 text-sm text-[var(--text-muted)]">
-          Define your primary learning focus.
-        </p>
+      <section className="card-simple overflow-hidden border border-dashed border-[var(--semantic-ring)]/35 bg-[var(--bg-elevated)]/25 p-0">
+        <div className="border-b border-[var(--card-border)]/80 px-4 py-3">
+          <h2 className="text-base font-semibold text-[var(--text-primary)]">Learning streams</h2>
+          <p className="mt-0.5 text-xs text-[var(--text-muted)]">Nothing deployed yet — add a skill or book to see momentum here.</p>
+        </div>
+        <div className="space-y-3 px-4 py-5">
+          <p className="text-sm text-[var(--text-secondary)]">
+            Streams power the stats above and the 25-minute session button. Start with one focus you can defend for a week.
+          </p>
+          <a
+            href="#add-learning-stream"
+            className="inline-flex items-center justify-center rounded-lg bg-[var(--semantic-accent)]/20 px-4 py-2.5 text-sm font-semibold text-[var(--semantic-accent)] ring-1 ring-[var(--semantic-ring)]/50 hover:bg-[var(--semantic-accent)]/30"
+          >
+            Add your first stream →
+          </a>
+        </div>
       </section>
     );
   }

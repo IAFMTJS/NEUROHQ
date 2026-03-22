@@ -1,6 +1,8 @@
 "use client";
 
 import type { LearningState } from "@/app/actions/learning-state";
+import type { ProtocolLibraryRow } from "@/app/actions/protocol-library";
+import type { ProtocolProgressState } from "@/app/actions/protocol-progress";
 import { GrowthIntentCard } from "@/components/growth/GrowthIntentCard";
 import { GrowthConsistencyCard } from "@/components/growth/GrowthConsistencyCard";
 import { GrowthStreamsList } from "@/components/growth/GrowthStreamsList";
@@ -9,22 +11,36 @@ import { MonthlyBookCard } from "@/components/growth/MonthlyBookCard";
 import { AddLearningStreamCard } from "@/components/growth/AddLearningStreamCard";
 import { UserGoalMissionGeneratorCard } from "@/components/growth/UserGoalMissionGeneratorCard";
 import { GrowthAdaptiveHint } from "@/components/growth/GrowthAdaptiveHint";
+import { GrowthSectionNav } from "@/components/growth/GrowthSectionNav";
+import { GrowthProtocolLibrary } from "@/components/growth/GrowthProtocolLibrary";
 import { useHQStore } from "@/lib/hq-store";
 import { XPBadge } from "@/components/XPBadge";
 import Link from "next/link";
 
+type XPIdentityPayload = {
+  total_xp: number;
+  level: number;
+  streak: { current: number; longest: number; last_completion_date: string | null };
+};
+
 type Props = {
   todayStr: string;
   fallback: LearningState;
+  /** Server XP/streak so hero stats render before DCIC store hydrates. */
+  xpIdentity: XPIdentityPayload;
+  /** Protocol trajectories from `protocol_library` (D.3). */
+  protocols: ProtocolLibraryRow[];
+  /** Per-protocol voortgang (tiers, week, afgevinkte taken). */
+  progressMap: Record<string, ProtocolProgressState>;
 };
 
-export function LearningContentClient({ todayStr, fallback }: Props) {
+export function LearningContentClient({ todayStr, fallback, xpIdentity, protocols, progressMap }: Props) {
   const learning: LearningState = fallback;
   const gameState = useHQStore((s) => s.gameState);
 
-  const level = gameState?.level ?? null;
-  const totalXp = gameState?.currentXP ?? null;
-  const streak = gameState?.streak.current ?? null;
+  const level = gameState?.level ?? xpIdentity.level;
+  const totalXp = xpIdentity.total_xp;
+  const streak = gameState?.streak.current ?? xpIdentity.streak.current;
   const mode = gameState?.mode?.current ?? "focus";
   const energyAvg = gameState?.stats.energy ?? null;
   const focusAvg = gameState?.stats.focus ?? null;
@@ -53,9 +69,14 @@ export function LearningContentClient({ todayStr, fallback }: Props) {
 
   return (
     <div className="space-y-6" data-tutorial="growth-content">
-      <section className="card-simple overflow-hidden p-0">
-        <div className="border-b border-[var(--card-border)] px-4 py-3">
-          <p className="text-[11px] font-medium uppercase tracking-wide text-[var(--text-muted)]">
+      <GrowthSectionNav />
+
+      <section
+        id="growth-overview"
+        className="scroll-mt-28 card-simple overflow-hidden p-0 ring-1 ring-[var(--semantic-ring)]/20"
+      >
+        <div className="border-b border-[var(--card-border)] bg-[var(--bg-elevated)]/40 px-4 py-3">
+          <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-[var(--semantic-accent)]">
             Growth mission control
           </p>
           <p className="mt-1 text-sm text-[var(--text-secondary)]">
@@ -63,8 +84,11 @@ export function LearningContentClient({ todayStr, fallback }: Props) {
           </p>
         </div>
         <div className="grid gap-3 p-4 sm:grid-cols-2 lg:grid-cols-4">
-          <div className="rounded-lg border border-[var(--card-border)] bg-[var(--bg-soft)] px-3 py-2">
-            <p className="text-[11px] font-medium uppercase tracking-wide text-[var(--text-muted)]">
+          <div className="rounded-lg border border-[var(--card-border)] bg-[var(--bg-soft)] px-3 py-2.5 shadow-sm">
+            <p className="flex items-center gap-1.5 text-[11px] font-medium uppercase tracking-wide text-[var(--text-muted)]">
+              <span aria-hidden className="text-sm">
+                📚
+              </span>
               Streams
             </p>
             <p className="mt-1 text-base font-semibold text-[var(--text-primary)]">
@@ -72,15 +96,21 @@ export function LearningContentClient({ todayStr, fallback }: Props) {
             </p>
             <p className="text-[11px] text-[var(--text-muted)]">active this week</p>
           </div>
-          <div className="rounded-lg border border-[var(--card-border)] bg-[var(--bg-soft)] px-3 py-2">
-            <p className="text-[11px] font-medium uppercase tracking-wide text-[var(--text-muted)]">
+          <div className="rounded-lg border border-[var(--card-border)] bg-[var(--bg-soft)] px-3 py-2.5 shadow-sm">
+            <p className="flex items-center gap-1.5 text-[11px] font-medium uppercase tracking-wide text-[var(--text-muted)]">
+              <span aria-hidden className="text-sm">
+                ⏱
+              </span>
               Weekly sessions
             </p>
             <p className="mt-1 text-base font-semibold text-[var(--text-primary)]">{sessionsThisWeek}</p>
             <p className="text-[11px] text-[var(--text-muted)]">across all streams</p>
           </div>
-          <div className="rounded-lg border border-[var(--card-border)] bg-[var(--bg-soft)] px-3 py-2">
-            <p className="text-[11px] font-medium uppercase tracking-wide text-[var(--text-muted)]">
+          <div className="rounded-lg border border-[var(--card-border)] bg-[var(--bg-soft)] px-3 py-2.5 shadow-sm">
+            <p className="flex items-center gap-1.5 text-[11px] font-medium uppercase tracking-wide text-[var(--text-muted)]">
+              <span aria-hidden className="text-sm">
+                ✓
+              </span>
               Consistency
             </p>
             <p className="mt-1 text-base font-semibold text-[var(--text-primary)]">{consistencyStatus}</p>
@@ -88,33 +118,25 @@ export function LearningContentClient({ todayStr, fallback }: Props) {
               {learning.consistency.sessionsThisWeek}/{learning.consistency.weeklyTargetSessions} sessions
             </p>
           </div>
-          {level != null && totalXp != null ? (
-            <div className="rounded-lg border border-[var(--card-border)] bg-[var(--bg-soft)] px-3 py-2">
-              <div className="flex items-start justify-between gap-2">
-                <div>
-                  <p className="text-[11px] font-medium uppercase tracking-wide text-[var(--text-muted)]">
-                    Core engine
-                  </p>
-                  <p className="mt-1 text-base font-semibold text-[var(--text-primary)]">
-                    L{level} · {streak ?? 0}d
-                  </p>
-                  <p className="text-[11px] text-[var(--text-muted)]">
-                    {mode === "war" ? "WAR" : mode === "recovery" ? "RECOVERY" : "FOCUS"} mode
-                  </p>
-                </div>
-                <XPBadge totalXp={totalXp} level={level} compact href="/xp" />
+          <div className="rounded-lg border border-[var(--card-border)] bg-gradient-to-br from-[var(--bg-soft)] to-[var(--semantic-accent)]/8 px-3 py-2.5 shadow-sm">
+            <div className="flex items-start justify-between gap-2">
+              <div>
+                <p className="flex items-center gap-1.5 text-[11px] font-medium uppercase tracking-wide text-[var(--text-muted)]">
+                  <span aria-hidden className="text-sm">
+                    ⚡
+                  </span>
+                  Core engine
+                </p>
+                <p className="mt-1 text-base font-semibold text-[var(--text-primary)]">
+                  L{level} · {streak}d
+                </p>
+                <p className="text-[11px] text-[var(--text-muted)]">
+                  {mode === "war" ? "WAR" : mode === "recovery" ? "RECOVERY" : "FOCUS"} mode
+                </p>
               </div>
+              <XPBadge totalXp={totalXp} level={level} compact href="/xp" />
             </div>
-          ) : (
-            <div className="rounded-lg border border-[var(--card-border)] bg-[var(--bg-soft)] px-3 py-2">
-              <p className="text-[11px] font-medium uppercase tracking-wide text-[var(--text-muted)]">
-                Next step
-              </p>
-              <p className="mt-1 text-sm text-[var(--text-secondary)]">
-                Add one stream and run a 25-minute session to start momentum.
-              </p>
-            </div>
-          )}
+          </div>
         </div>
         <div className="flex flex-wrap items-center gap-2 border-t border-[var(--card-border)] px-4 py-3">
           <Link
@@ -136,12 +158,14 @@ export function LearningContentClient({ todayStr, fallback }: Props) {
             View XP
           </Link>
         </div>
-        <div className="border-t border-[var(--card-border)] px-4 py-3">
+        <div className="border-t border-[var(--card-border)] px-4 py-4">
           <GrowthAdaptiveHint energyAvg={energyAvg} focusAvg={focusAvg} brainLogged={brainLogged} />
         </div>
       </section>
 
-      <div className="grid gap-6 xl:grid-cols-12">
+      <GrowthProtocolLibrary protocols={protocols} progressMap={progressMap} />
+
+      <div id="growth-path" className="scroll-mt-28 grid gap-6 xl:grid-cols-12">
         <div className="space-y-6 xl:col-span-7">
           <GrowthIntentCard
             focus={learning.focus}
@@ -165,8 +189,12 @@ export function LearningContentClient({ todayStr, fallback }: Props) {
         </div>
       </div>
 
-      <UserGoalMissionGeneratorCard />
-      <GrowthStreamsList streams={learning.streams} />
+      <div id="growth-missions" className="scroll-mt-28">
+        <UserGoalMissionGeneratorCard />
+      </div>
+      <div id="growth-streams" className="scroll-mt-28">
+        <GrowthStreamsList streams={learning.streams} />
+      </div>
     </div>
   );
 }

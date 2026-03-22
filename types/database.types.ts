@@ -1841,6 +1841,7 @@ export type Database = {
         Row: {
           body_md: string
           created_at: string
+          definition_json: unknown
           id: string
           locale: string
           slug: string
@@ -1852,6 +1853,7 @@ export type Database = {
         Insert: {
           body_md?: string
           created_at?: string
+          definition_json?: unknown
           id?: string
           locale?: string
           slug: string
@@ -1863,6 +1865,7 @@ export type Database = {
         Update: {
           body_md?: string
           created_at?: string
+          definition_json?: unknown
           id?: string
           locale?: string
           slug?: string
@@ -1872,6 +1875,50 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      user_protocol_progress: {
+        Row: {
+          completed_task_ids: unknown
+          created_at: string
+          current_week_index: number
+          id: string
+          locale: string
+          preferred_tier: string
+          protocol_slug: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          completed_task_ids?: unknown
+          created_at?: string
+          current_week_index?: number
+          id?: string
+          locale?: string
+          preferred_tier?: string
+          protocol_slug: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          completed_task_ids?: unknown
+          created_at?: string
+          current_week_index?: number
+          id?: string
+          locale?: string
+          preferred_tier?: string
+          protocol_slug?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_protocol_progress_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       push_engagement: {
         Row: {

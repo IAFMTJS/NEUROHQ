@@ -1,0 +1,613 @@
+[
+  {
+    "slug": "language-acquisition-system",
+    "locale": "nl",
+    "title": "Language Acquisition System",
+    "summary": "Multi-fase traject: vocab → structuur → integratie → mastery. Gebaseerd op Updates 22-03 (PHASES → WEEKS → sessies).",
+    "sort_order": 1,
+    "body_md": "## Language Acquisition System\n\nRealistische horizon: **3–6 maanden** minimaal. Dit is geen 4-weken challenge maar een **multi-phase progression**.\n\n- **Foundation**: woorden + herkennen\n- **Structure**: grammatica + bouwen\n- **Integration**: echte content\n- **Mastery**: doorlopend verfijnen",
+    "definition": {
+      "version": 1,
+      "goal_one_liner": "Conversatie-ready worden zonder miracle claims",
+      "estimated_weeks_min": 12,
+      "estimated_weeks_max": 52,
+      "phases": [
+        {
+          "id": "foundation",
+          "order": 1,
+          "title": "Phase 1 — Foundation",
+          "summary": "Basis vocab en simpele zinnen herkennen.",
+          "week_start": 1,
+          "week_end": 4
+        },
+        {
+          "id": "structure",
+          "order": 2,
+          "title": "Phase 2 — Structure",
+          "summary": "Grammatica begrijpen en zinnen bouwen.",
+          "week_start": 5,
+          "week_end": 6
+        },
+        {
+          "id": "integration",
+          "order": 3,
+          "title": "Phase 3 — Integration",
+          "summary": "Echte content begrijpen en produceren.",
+          "week_start": 7,
+          "week_end": 8
+        },
+        {
+          "id": "mastery",
+          "order": 4,
+          "title": "Phase 4 — Mastery",
+          "summary": "Doorlopend verfijnen; geen einddatum.",
+          "week_start": 9,
+          "week_end": 999
+        }
+      ],
+      "weeks": [
+        {
+          "week_index": 1,
+          "phase_id": "foundation",
+          "title": "Week 1 — Bootstrap",
+          "objective": "Startwoordenschat en luisteren met ondersteuning.",
+          "tasks": [
+            {
+              "id": "las-w1-t1",
+              "title": "Woorden (dagelijks)",
+              "concrete": "Spaced repetition: nieuwe woorden + review.",
+              "minutes": 15,
+              "scaling": {
+                "easy": { "concrete": "10 nieuwe woorden + korte review", "minutes": 10 },
+                "medium": { "concrete": "20 nieuwe woorden + review", "minutes": 15 },
+                "hard": { "concrete": "40 woorden + actieve recall zonder hints", "minutes": 25 }
+              }
+            },
+            {
+              "id": "las-w1-t2",
+              "title": "Luisteren met ondersteuning",
+              "concrete": "Korte audio met transcript; alleen luisteren eerste keer.",
+              "minutes": 15,
+              "scaling": {
+                "easy": { "concrete": "5 min audio + volgen met tekst", "minutes": 10 },
+                "medium": { "concrete": "10–15 min + 1x zonder tekst", "minutes": 18 },
+                "hard": { "concrete": "20 min zonder subtitles", "minutes": 22 }
+              }
+            },
+            {
+              "id": "las-w1-t3",
+              "title": "Schrijven",
+              "concrete": "5 simpele zinnen over je dag.",
+              "minutes": 12,
+              "scaling": {
+                "easy": { "concrete": "3 zinnen met woordenlijst erbij", "minutes": 10 },
+                "medium": { "concrete": "5 zinnen", "minutes": 12 },
+                "hard": { "concrete": "8 zinnen + 1 fout laten corrigeren door een native speaker/tool", "minutes": 20 }
+              }
+            }
+          ]
+        },
+        {
+          "week_index": 2,
+          "phase_id": "foundation",
+          "title": "Week 2 — Ritme",
+          "objective": "Dagelijks ritme vasthouden; iets meer volume.",
+          "tasks": [
+            {
+              "id": "las-w2-t1",
+              "title": "Woordenlijst uitbreiden",
+              "concrete": "Zelfde SR-systeem; focus op thema (eten/reizen).",
+              "minutes": 15,
+              "scaling": {
+                "easy": { "concrete": "10 woorden thema eten", "minutes": 12 },
+                "medium": { "concrete": "20 woorden + meng met week 1", "minutes": 15 },
+                "hard": { "concrete": "40 woorden + output drill", "minutes": 28 }
+              }
+            },
+            {
+              "id": "las-w2-t2",
+              "title": "Luister-lezen",
+              "concrete": "Zelfde audio 2×: 1× met tekst, 1× alleen audio.",
+              "minutes": 20,
+              "scaling": {
+                "easy": { "concrete": "Alleen herhaling met tekst", "minutes": 12 },
+                "medium": { "concrete": "2 rondes zoals beschreven", "minutes": 20 },
+                "hard": { "concrete": "3 rondes + dictatie 1 zin", "minutes": 28 }
+              }
+            }
+          ]
+        },
+        {
+          "week_index": 3,
+          "phase_id": "foundation",
+          "title": "Week 3 — Herkenning",
+          "objective": "Zinnen in het wild herkennen (korte video’s).",
+          "tasks": [
+            {
+              "id": "las-w3-t1",
+              "title": "Video met subs",
+              "concrete": "10 min content; noteer 10 herkende woorden.",
+              "minutes": 20,
+              "scaling": {
+                "easy": { "concrete": "5 min + 5 woorden", "minutes": 12 },
+                "medium": { "concrete": "10 min + 10 woorden", "minutes": 20 },
+                "hard": { "concrete": "20 min + samenvatting in 3 zinnen", "minutes": 30 }
+              }
+            },
+            {
+              "id": "las-w3-t2",
+              "title": "Mini-gesprek",
+              "concrete": "Hardop 2 min monoloog: voorstellen + 1 vraag stellen.",
+              "minutes": 10,
+              "scaling": {
+                "easy": { "concrete": "30 sec + spiekkaart", "minutes": 8 },
+                "medium": { "concrete": "2 min", "minutes": 10 },
+                "hard": { "concrete": "5 min zonder spiek", "minutes": 15 }
+              }
+            }
+          ]
+        },
+        {
+          "week_index": 4,
+          "phase_id": "foundation",
+          "title": "Week 4 — Foundation checkpoint",
+          "objective": "Week review: wat zit vast, wat niet.",
+          "tasks": [
+            {
+              "id": "las-w4-t1",
+              "title": "Zelftest",
+              "concrete": "50 woorden uit week 1–3: active recall.",
+              "minutes": 25,
+              "scaling": {
+                "easy": { "concrete": "25 woorden", "minutes": 15 },
+                "medium": { "concrete": "50 woorden", "minutes": 25 },
+                "hard": { "concrete": "75 woorden + 5 min speaking", "minutes": 40 }
+              }
+            },
+            {
+              "id": "las-w4-t2",
+              "title": "Reflectie (schrijven)",
+              "concrete": "3 bullets: moeilijkste klank, beste gewoonte, volgende focus.",
+              "minutes": 12,
+              "success_criteria": "Opgeslagen in Growth reflectie of journal."
+            }
+          ]
+        },
+        {
+          "week_index": 5,
+          "phase_id": "structure",
+          "title": "Week 5 — Zinnen ontleden",
+          "objective": "Grammatica-patronen herkennen en namaken.",
+          "tasks": [
+            {
+              "id": "las-w5-t1",
+              "title": "Pattern mining",
+              "concrete": "10 zinnen uit tekst: onderwerp/werkwoord/object markeren.",
+              "minutes": 20,
+              "scaling": {
+                "easy": { "concrete": "5 zinnen met voorgestelde kleuren", "minutes": 15 },
+                "medium": { "concrete": "10 zinnen zelf", "minutes": 20 },
+                "hard": { "concrete": "15 zinnen + eigen voorbeeldzin", "minutes": 30 }
+              }
+            },
+            {
+              "id": "las-w5-t2",
+              "title": "Productie",
+              "concrete": "Maak 8 zinnen met hetzelfde patroon.",
+              "minutes": 18,
+              "scaling": {
+                "easy": { "concrete": "4 zinnen met sjabloon", "minutes": 12 },
+                "medium": { "concrete": "8 zinnen", "minutes": 18 },
+                "hard": { "concrete": "12 zinnen + 1 fout laten verbeteren", "minutes": 28 }
+              }
+            }
+          ]
+        },
+        {
+          "week_index": 6,
+          "phase_id": "structure",
+          "title": "Week 6 — Korte teksten",
+          "objective": "Begrip + antwoord in eigen woorden.",
+          "tasks": [
+            {
+              "id": "las-w6-t1",
+              "title": "Lezen",
+              "concrete": "300–500 woorden; 5 begripsvragen.",
+              "minutes": 30,
+              "scaling": {
+                "easy": { "concrete": "150 woorden + 3 vragen", "minutes": 18 },
+                "medium": { "concrete": "400 woorden + 5 vragen", "minutes": 30 },
+                "hard": { "concrete": "700 woorden + samenvatting 5 zinnen", "minutes": 45 }
+              }
+            },
+            {
+              "id": "las-w6-t2",
+              "title": "Antwoord schrijven",
+              "concrete": "Beantwoord 3 vragen in doeltaal (3–5 zinnen totaal).",
+              "minutes": 20,
+              "scaling": {
+                "easy": { "concrete": "1 vraag + bulletpoints", "minutes": 12 },
+                "medium": { "concrete": "3 vragen", "minutes": 20 },
+                "hard": { "concrete": "5 vragen kort", "minutes": 30 }
+              }
+            }
+          ]
+        },
+        {
+          "week_index": 7,
+          "phase_id": "integration",
+          "title": "Week 7 — Echte content",
+          "objective": "Series/artikelen; gedeeltelijk zonder hulp.",
+          "tasks": [
+            {
+              "id": "las-w7-t1",
+              "title": "Content zonder training wheels",
+              "concrete": "1 aflevering of artikel; 1× met subs, 1× gedeeltelijk zonder.",
+              "minutes": 35,
+              "scaling": {
+                "easy": { "concrete": "10 min met subs alleen", "minutes": 15 },
+                "medium": { "concrete": "25 min zoals beschreven", "minutes": 35 },
+                "hard": { "concrete": "45 min + transcript vergelijken", "minutes": 50 }
+              }
+            },
+            {
+              "id": "las-w7-t2",
+              "title": "Speaking simulatie",
+              "concrete": "Role-play hardop: winkel / info balie (5–8 min).",
+              "minutes": 15,
+              "scaling": {
+                "easy": { "concrete": "3 min met script", "minutes": 10 },
+                "medium": { "concrete": "6 min half geïmproviseerd", "minutes": 15 },
+                "hard": { "concrete": "10 min + opname terugluisteren", "minutes": 22 }
+              }
+            }
+          ]
+        },
+        {
+          "week_index": 8,
+          "phase_id": "integration",
+          "title": "Week 8 — Integratie checkpoint",
+          "objective": "Lange output + feedback loop.",
+          "tasks": [
+            {
+              "id": "las-w8-t1",
+              "title": "Schrijf 150 woorden",
+              "concrete": "Eén mening + argument + tegenargument.",
+              "minutes": 40,
+              "scaling": {
+                "easy": { "concrete": "80 woorden", "minutes": 22 },
+                "medium": { "concrete": "150 woorden", "minutes": 40 },
+                "hard": { "concrete": "250 woorden + herschrijven", "minutes": 55 }
+              }
+            },
+            {
+              "id": "las-w8-t2",
+              "title": "Feedback",
+              "concrete": "Taalpartner of AI: 3 concrete fixes toepassen in herschrijving.",
+              "minutes": 25,
+              "success_criteria": "Herschreven versie opgeslagen."
+            }
+          ]
+        },
+        {
+          "week_index": 9,
+          "phase_id": "mastery",
+          "title": "Week 9+ — Mastery cadence",
+          "objective": "Herhaalbare week: inhoud wisselt, structuur blijft.",
+          "tasks": [
+            {
+              "id": "las-w9-t1",
+              "title": "Volume week",
+              "concrete": "Totaal 3 uur verdeeld: luisteren / lezen / spreken.",
+              "minutes": 180,
+              "scaling": {
+                "easy": { "concrete": "90 min totaal", "minutes": 90 },
+                "medium": { "concrete": "3 uur verdeeld over 5 dagen", "minutes": 180 },
+                "hard": { "concrete": "4 uur + 1 live gesprek", "minutes": 240 }
+              }
+            },
+            {
+              "id": "las-w9-t2",
+              "title": "Weak spot drill",
+              "concrete": "Kies 1 fout die vaak terugkomt; 5 dagen micro-drills.",
+              "minutes": 30,
+              "scaling": {
+                "easy": { "concrete": "3 dagen × 5 min", "minutes": 15 },
+                "medium": { "concrete": "5 dagen × 6 min", "minutes": 30 },
+                "hard": { "concrete": "7 dagen + logboek", "minutes": 45 }
+              }
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "slug": "protocol-sample-focus",
+    "locale": "nl",
+    "title": "Focus-blok (diepte-werk)",
+    "summary": "4-weken traject: bescherming van diepte, audit, en herhaling — uitgebreid t.o.v. stub-voorbeeld.",
+    "sort_order": 2,
+    "body_md": "## Focus-blok\n\nGeen vage “focus verbeteren”: **concrete blokken**, **afleiding audit**, en **herstel**.",
+    "definition": {
+      "version": 1,
+      "goal_one_liner": "Dagelijks 1–2 echte diepteblokken zonder context switching",
+      "estimated_weeks_min": 4,
+      "estimated_weeks_max": 4,
+      "phases": [
+        {
+          "id": "protect",
+          "order": 1,
+          "title": "Phase 1 — Protect depth",
+          "summary": "Blokken in agenda zetten en respecteren.",
+          "week_start": 1,
+          "week_end": 2
+        },
+        {
+          "id": "audit",
+          "order": 2,
+          "title": "Phase 2 — Audit",
+          "summary": "Afleiding en triggers meten.",
+          "week_start": 3,
+          "week_end": 3
+        },
+        {
+          "id": "lock",
+          "order": 3,
+          "title": "Phase 3 — Lock-in",
+          "summary": "Gedrag vastzetten + herhalingsritme.",
+          "week_start": 4,
+          "week_end": 4
+        }
+      ],
+      "weeks": [
+        {
+          "week_index": 1,
+          "phase_id": "protect",
+          "title": "Week 1 — Blokken planten",
+          "objective": "Elke werkdag 1 focusblok van 25 min + 1 van 50 min.",
+          "tasks": [
+            {
+              "id": "fb-w1-t1",
+              "title": "Kalenderblokken",
+              "concrete": "Zet 5× 25 min en 5× 50 min vast; geen overlapping met meetings waar mogelijk.",
+              "minutes": 15,
+              "scaling": {
+                "easy": { "concrete": "3 dagen met 1 blok per dag", "minutes": 10 },
+                "medium": { "concrete": "5 dagen zoals beschreven", "minutes": 15 },
+                "hard": { "concrete": "5 dagen + telefoon in andere kamer", "minutes": 20 }
+              }
+            },
+            {
+              "id": "fb-w1-t2",
+              "title": "Start-ritueel",
+              "concrete": "Voor elk blok: 60 sec zelfde start (adem / zelfde track / zelfde plek).",
+              "minutes": 5,
+              "scaling": {
+                "easy": { "concrete": "Alleen ochtendblok", "minutes": 3 },
+                "medium": { "concrete": "Alle geplande blokken", "minutes": 5 },
+                "hard": { "concrete": "Alle blokken + log of het gebeurde", "minutes": 8 }
+              }
+            },
+            {
+              "id": "fb-w1-t3",
+              "title": "Eén taak per blok",
+              "concrete": "Geen tab-switch: één ticket/één document per blok.",
+              "minutes": 0,
+              "success_criteria": "Geen multitask tijdens de timer."
+            }
+          ]
+        },
+        {
+          "week_index": 2,
+          "phase_id": "protect",
+          "title": "Week 2 — Diepte verhogen",
+          "objective": "Verleng waar het kan; noteer weerstand.",
+          "tasks": [
+            {
+              "id": "fb-w2-t1",
+              "title": "Blok +10",
+              "concrete": "2 blokken deze week 10 min langer dan gepland (als energie OK).",
+              "minutes": 20,
+              "scaling": {
+                "easy": { "concrete": "1 blok +5 min", "minutes": 10 },
+                "medium": { "concrete": "2 blokken +10", "minutes": 20 },
+                "hard": { "concrete": "4 blokken +10 + reflectie", "minutes": 35 }
+              }
+            },
+            {
+              "id": "fb-w2-t2",
+              "title": "Weerstand log",
+              "concrete": "Na elk blok: 1 zin ‘waarom ik afdwaalde’ (of ‘niet’).",
+              "minutes": 10,
+              "success_criteria": "5 entries deze week."
+            }
+          ]
+        },
+        {
+          "week_index": 3,
+          "phase_id": "audit",
+          "title": "Week 3 — Afleiding audit",
+          "objective": "Top 3 afleiders elimineren of begrenzen.",
+          "tasks": [
+            {
+              "id": "fb-w3-t1",
+              "title": "Meting",
+              "concrete": "2 dagen: tel interrupties (app/notificatie/anderen) per uur diepte.",
+              "minutes": 30,
+              "scaling": {
+                "easy": { "concrete": "1 dag tellen", "minutes": 15 },
+                "medium": { "concrete": "2 dagen", "minutes": 30 },
+                "hard": { "concrete": "3 dagen + screenshot van notificatie-instellingen", "minutes": 45 }
+              }
+            },
+            {
+              "id": "fb-w3-t2",
+              "title": "Fix één lever",
+              "concrete": "Kies de grootste lever: notificaties uit / app verwijderd / deur dicht.",
+              "minutes": 20,
+              "success_criteria": "Actie uitgevoerd + gezien in week 4."
+            }
+          ]
+        },
+        {
+          "week_index": 4,
+          "phase_id": "lock",
+          "title": "Week 4 — Lock-in",
+          "objective": "Ritme vasthouden 4 weken; plan volgende cyclus.",
+          "tasks": [
+            {
+              "id": "fb-w4-t1",
+              "title": "Review",
+              "concrete": "30 min: wat werkte, wat niet; 3 regels plan voor volgende maand.",
+              "minutes": 30,
+              "scaling": {
+                "easy": { "concrete": "15 min + 1 regel plan", "minutes": 15 },
+                "medium": { "concrete": "30 min zoals beschreven", "minutes": 30 },
+                "hard": { "concrete": "45 min + accountability partner bericht", "minutes": 45 }
+              }
+            },
+            {
+              "id": "fb-w4-t2",
+              "title": "Herhaal template",
+              "concrete": "Kopieer week 1-kalendersjabloon naar volgende 4 weken (lege blokken).",
+              "minutes": 15,
+              "success_criteria": "Template staat in agenda."
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "slug": "protocol-sample-recovery",
+    "locale": "nl",
+    "title": "Recovery pacing",
+    "summary": "3 weken: belasting omlaag, stabiliseren, en lichte opbouw — geen hero-week.",
+    "sort_order": 3,
+    "body_md": "## Recovery pacing\n\nGebruik dit na overload of ziekte. **Geen schaamte-sprint**: eerst stabiliteit.",
+    "definition": {
+      "version": 1,
+      "goal_one_liner": "Energie en focus terugbrengen zonder meteen weer te overbelasten",
+      "estimated_weeks_min": 3,
+      "estimated_weeks_max": 3,
+      "phases": [
+        {
+          "id": "downshift",
+          "order": 1,
+          "title": "Phase 1 — Downshift",
+          "summary": "Volume omlaag, slaap voorop.",
+          "week_start": 1,
+          "week_end": 1
+        },
+        {
+          "id": "stabilize",
+          "order": 2,
+          "title": "Phase 2 — Stabilize",
+          "summary": "Vaste minimale gewoontes.",
+          "week_start": 2,
+          "week_end": 2
+        },
+        {
+          "id": "ramp",
+          "order": 3,
+          "title": "Phase 3 — Light ramp",
+          "summary": "Kleine opbouw.",
+          "week_start": 3,
+          "week_end": 3
+        }
+      ],
+      "weeks": [
+        {
+          "week_index": 1,
+          "phase_id": "downshift",
+          "title": "Week 1 — Alles minder",
+          "objective": "Halveer optionele commitments; geen nieuwe doelen.",
+          "tasks": [
+            {
+              "id": "rc-w1-t1",
+              "title": "Cut list",
+              "concrete": "Schrijf 3 dingen die je deze week weglaat of uitstelt.",
+              "minutes": 20,
+              "scaling": {
+                "easy": { "concrete": "1 ding weglaten", "minutes": 10 },
+                "medium": { "concrete": "3 dingen", "minutes": 20 },
+                "hard": { "concrete": "5 dingen + tegen iemand gezegd", "minutes": 35 }
+              }
+            },
+            {
+              "id": "rc-w1-t2",
+              "title": "Slaap-anker",
+              "concrete": "Vaste bedtijd 5 nachten (±30 min venster).",
+              "minutes": 5,
+              "success_criteria": "5 checkmarks in journal."
+            },
+            {
+              "id": "rc-w1-t3",
+              "title": "Lichte beweging",
+              "concrete": "10 min wandelen zonder doel, 4 dagen.",
+              "minutes": 40,
+              "scaling": {
+                "easy": { "concrete": "5 min × 2 dagen", "minutes": 10 },
+                "medium": { "concrete": "10 min × 4", "minutes": 40 },
+                "hard": { "concrete": "20 min × 4 + buiten", "minutes": 80 }
+              }
+            }
+          ]
+        },
+        {
+          "week_index": 2,
+          "phase_id": "stabilize",
+          "title": "Week 2 — Minimum viable week",
+          "objective": "3 vaste ankers per dag (klein).",
+          "tasks": [
+            {
+              "id": "rc-w2-t1",
+              "title": "Drie ankers",
+              "concrete": "Bijv. ontbijt / 10 min beweging / 1 focusblok 15 min.",
+              "minutes": 30,
+              "scaling": {
+                "easy": { "concrete": "2 ankers", "minutes": 20 },
+                "medium": { "concrete": "3 ankers 5 dagen", "minutes": 30 },
+                "hard": { "concrete": "3 ankers 7 dagen + log", "minutes": 45 }
+              }
+            },
+            {
+              "id": "rc-w2-t2",
+              "title": "Scherm na 21:00",
+              "concrete": "Geen werk-mail/social (kies één); 5 avonden.",
+              "minutes": 0,
+              "success_criteria": "5 dagen volgehouden of eerlijk herpland."
+            }
+          ]
+        },
+        {
+          "week_index": 3,
+          "phase_id": "ramp",
+          "title": "Week 3 — Zachte opbouw",
+          "objective": "Voeg één productieve belasting toe; meet energie.",
+          "tasks": [
+            {
+              "id": "rc-w3-t1",
+              "title": "Eén extra blok",
+              "concrete": "25 min focus op belangrijkste taak, 4 dagen.",
+              "minutes": 100,
+              "scaling": {
+                "easy": { "concrete": "15 min × 2 dagen", "minutes": 30 },
+                "medium": { "concrete": "25 min × 4", "minutes": 100 },
+                "hard": { "concrete": "2× 25 min + 1× 50 min", "minutes": 150 }
+              }
+            },
+            {
+              "id": "rc-w3-t2",
+              "title": "Energie-score",
+              "concrete": "Aan het eind van de dag 1–10 + één zin oorzaak.",
+              "minutes": 10,
+              "success_criteria": "7 dagen ingevuld."
+            }
+          ]
+        }
+      ]
+    }
+  }
+]

@@ -1,6 +1,8 @@
 "use client";
 
 import { useTransition, useState } from "react";
+import { format } from "date-fns";
+import { nl } from "date-fns/locale";
 import { toast } from "sonner";
 import {
   applyBudgetOptimizationLock,
@@ -14,20 +16,59 @@ type Props = {
   challenges: Array<{ key: string; label: string; xp: number; description: string }>;
 };
 
+function formatLockUntil(iso: string | null): string | null {
+  if (!iso) return null;
+  try {
+    return format(new Date(`${iso}T12:00:00Z`), "d MMMM yyyy", { locale: nl });
+  } catch {
+    return iso;
+  }
+}
+
 export function BudgetOptimizationCard({ summary, suggestions, challenges }: Props) {
-  const { lockActive } = useBudgetLock();
+  const { lockActive, lockUntil } = useBudgetLock();
   const [pending, startTransition] = useTransition();
   const [awardedXpByKey, setAwardedXpByKey] = useState<Record<string, number>>({});
   const [message, setMessage] = useState<string | null>(null);
   const [lockInfo, setLockInfo] = useState<string | null>(null);
+
+  const lockSummary =
+    "Je hebt al een no-spend lock lopen. Extra focus-locks en challenge-validatie horen bij één actie tegelijk — volg je huidige lock af op Execute, of log een nooduitgave als dat nodig is.";
+  const untilLabel = formatLockUntil(lockUntil);
+
   return (
     <section className="card-simple space-y-3">
       <h3 className="text-sm font-semibold text-[var(--text-primary)]">Optimalisatie</h3>
-      <p className="text-xs text-[var(--text-muted)]">{summary}</p>
-      <ul className="space-y-1 text-sm text-[var(--text-primary)]">
-        {suggestions.length === 0 ? <li>Nog geen concrete suggesties beschikbaar.</li> : suggestions.map((s) => <li key={s}>- {s}</li>)}
+
+      {lockActive && (
+        <div className="rounded-lg border border-amber-400/50 bg-amber-500/15 px-3 py-2.5 text-xs text-amber-50">
+          <p className="font-semibold text-amber-100">Lock actief — interventies hieronder staan op pauze</p>
+          {untilLabel && <p className="mt-1 text-amber-50/95">Minstens tot {untilLabel}</p>}
+          <p className="mt-1.5 text-[var(--text-secondary)]">{lockSummary}</p>
+          <a
+            href="#budget-lock-control"
+            className="mt-2 inline-block text-xs font-semibold text-[var(--semantic-accent)] underline-offset-2 hover:underline"
+          >
+            Open lock- en nooduitgave-paneel op Execute
+          </a>
+        </div>
+      )}
+
+      <p className={`text-xs text-[var(--text-muted)] ${lockActive ? "opacity-80" : ""}`}>
+        {lockActive ? "Suggesties blijven ter referentie; prioriteit is je lopende lock." : summary}
+      </p>
+      <ul
+        className={`space-y-1 text-sm text-[var(--text-primary)] ${lockActive ? "rounded-lg border border-[var(--card-border)]/60 bg-[var(--bg-primary)]/30 p-2 opacity-70" : ""}`}
+      >
+        {suggestions.length === 0 ? (
+          <li>{lockActive ? "Geen extra suggesties nodig — focus op je lock." : "Nog geen concrete suggesties beschikbaar."}</li>
+        ) : (
+          suggestions.map((s) => <li key={s}>- {s}</li>)
+        )}
       </ul>
-      <div className="rounded-lg border border-[var(--card-border)] bg-[var(--bg-surface)]/50 p-3 space-y-2">
+      <div
+        className={`rounded-lg border border-[var(--card-border)] bg-[var(--bg-surface)]/50 p-3 space-y-2 ${lockActive ? "opacity-60" : ""}`}
+      >
         <p className="text-xs font-semibold uppercase tracking-wide text-[var(--text-muted)]">Snelle interventies</p>
         <div className="flex flex-wrap gap-2">
           <button
@@ -68,7 +109,7 @@ export function BudgetOptimizationCard({ summary, suggestions, challenges }: Pro
           </button>
         </div>
       </div>
-      <div className="space-y-2">
+      <div className={`space-y-2 ${lockActive ? "opacity-60" : ""}`}>
         <p className="text-xs font-semibold uppercase tracking-wide text-[var(--text-muted)]">Challenges</p>
         {challenges.map((challenge) => (
           <div key={challenge.key} className="rounded-lg border border-[var(--card-border)] bg-[var(--bg-surface)]/50 p-3">
