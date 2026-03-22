@@ -96,14 +96,23 @@ export function GrowthAdaptiveHint(props: {
             })}
           </div>
           <p className="text-[11px] leading-relaxed text-[var(--text-muted)]">
-            Full weekly lock + session scaling ships in engine phase 2. For now this steers difficulty only.
+            Koppel dit aan je protocol-tier: bij <strong className="text-[var(--text-secondary)]">{pill.label}</strong> hoort
+            in de bibliotheek dezelfde load (Light / Standard / Heavy). Zo blijft engine en traject gelijk.
           </p>
-          <Link
-            href="/dashboard"
-            className="inline-flex text-xs font-semibold text-[var(--semantic-accent)] underline-offset-2 hover:underline"
-          >
-            Log brain check-in on Dashboard →
-          </Link>
+          <div className="mt-2 flex flex-wrap gap-x-3 gap-y-1">
+            <Link
+              href="#growth-protocols"
+              className="inline-flex text-xs font-semibold text-[var(--semantic-accent)] underline-offset-2 hover:underline"
+            >
+              Open protocollen →
+            </Link>
+            <Link
+              href="/dashboard"
+              className="inline-flex text-xs font-semibold text-[var(--text-muted)] underline-offset-2 hover:text-[var(--semantic-accent)] hover:underline"
+            >
+              Brain check-in (Dashboard)
+            </Link>
+          </div>
         </div>
       </div>
     </div>

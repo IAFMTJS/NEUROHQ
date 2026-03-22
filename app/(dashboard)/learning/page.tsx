@@ -7,6 +7,7 @@ import { getLearningState } from "@/app/actions/learning-state";
 import { getXPIdentity } from "@/app/actions/xp";
 import { getProtocolLibrary } from "@/app/actions/protocol-library";
 import { getProtocolProgressMap } from "@/app/actions/protocol-progress";
+import { getGrowthFocus } from "@/app/actions/growth-focus";
 import { LearningContentClient } from "@/components/growth/LearningContentClient";
 
 export const dynamic = "force-dynamic";
@@ -17,11 +18,12 @@ export default async function LearningPage({ searchParams }: Props) {
   void searchParams;
   const today = new Date();
   const todayStr = today.toISOString().slice(0, 10);
-  const [learningState, xpIdentity, protocols, progressMap] = await Promise.all([
+  const [learningState, xpIdentity, protocols, progressMap, growthFocus] = await Promise.all([
     getLearningState(),
     getXPIdentity(),
     getProtocolLibrary("nl"),
     getProtocolProgressMap(),
+    getGrowthFocus(),
   ]);
 
   return (
@@ -47,8 +49,8 @@ export default async function LearningPage({ searchParams }: Props) {
             </div>
           </section>
           <p className="mt-4 text-xs text-[var(--text-muted)]">
-            Gebruik de sectienavigatie hieronder: eerst overzicht en adaptive load, dan de protocolbibliotheek, daarna je
-            leerpad en streams.
+            Start bij het command center: je focus-protocol, week en snelle acties naar Missions. Daarna systeem-loop,
+            bibliotheek, dashboard en streams.
           </p>
         </SciFiPanel>
 
@@ -61,6 +63,7 @@ export default async function LearningPage({ searchParams }: Props) {
             xpIdentity={xpIdentity}
             protocols={protocols}
             progressMap={progressMap}
+            growthFocus={growthFocus}
           />
         </SciFiPanel>
       </div>

@@ -1,23 +1,27 @@
 "use client";
 
-import { useState } from "react";
 import type { ProtocolLibraryRow } from "@/app/actions/protocol-library";
 import type { ProtocolProgressState } from "@/app/actions/protocol-progress";
-import { GrowthProtocolViewerModal } from "@/components/growth/GrowthProtocolViewerModal";
 import { parseProtocolDefinition, maxWeekIndex } from "@/lib/growth/protocol-definition";
 
 type Props = {
   protocols: ProtocolLibraryRow[];
   progressMap: Record<string, ProtocolProgressState>;
+  /** Shared with Growth command center — one modal for the whole page. */
+  viewerProtocol: ProtocolLibraryRow | null;
+  onViewerProtocolChange: (p: ProtocolLibraryRow | null) => void;
 };
 
 function progressKey(slug: string, locale: string) {
   return `${slug}::${locale}`;
 }
 
-export function GrowthProtocolLibrary({ protocols, progressMap }: Props) {
-  const [open, setOpen] = useState<ProtocolLibraryRow | null>(null);
-
+export function GrowthProtocolLibrary({
+  protocols,
+  progressMap,
+  viewerProtocol: open,
+  onViewerProtocolChange: setOpen,
+}: Props) {
   const progressFor = (p: ProtocolLibraryRow) => progressMap[progressKey(p.slug, p.locale)] ?? null;
 
   return (
@@ -78,14 +82,6 @@ export function GrowthProtocolLibrary({ protocols, progressMap }: Props) {
             );
           })}
         </ul>
-      )}
-
-      {open && (
-        <GrowthProtocolViewerModal
-          protocol={open}
-          progress={progressFor(open)}
-          onClose={() => setOpen(null)}
-        />
       )}
     </section>
   );

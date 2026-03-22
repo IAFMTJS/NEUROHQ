@@ -1,8 +1,10 @@
 "use client";
 
+import { useState } from "react";
 import type { LearningState } from "@/app/actions/learning-state";
 import type { ProtocolLibraryRow } from "@/app/actions/protocol-library";
 import type { ProtocolProgressState } from "@/app/actions/protocol-progress";
+import type { GrowthFocusState } from "@/app/actions/growth-focus";
 import { GrowthIntentCard } from "@/components/growth/GrowthIntentCard";
 import { GrowthConsistencyCard } from "@/components/growth/GrowthConsistencyCard";
 import { GrowthStreamsList } from "@/components/growth/GrowthStreamsList";
@@ -13,6 +15,10 @@ import { UserGoalMissionGeneratorCard } from "@/components/growth/UserGoalMissio
 import { GrowthAdaptiveHint } from "@/components/growth/GrowthAdaptiveHint";
 import { GrowthSectionNav } from "@/components/growth/GrowthSectionNav";
 import { GrowthProtocolLibrary } from "@/components/growth/GrowthProtocolLibrary";
+import { GrowthCommandCenter } from "@/components/growth/GrowthCommandCenter";
+import { GrowthProtocolViewerModal } from "@/components/growth/GrowthProtocolViewerModal";
+import { GrowthSystemLoop } from "@/components/growth/GrowthSystemLoop";
+import { weeklyDifficultyFromBrain } from "@/lib/growth/adaptive-engine";
 import { useHQStore } from "@/lib/hq-store";
 import { XPBadge } from "@/components/XPBadge";
 import Link from "next/link";
@@ -32,9 +38,23 @@ type Props = {
   protocols: ProtocolLibraryRow[];
   /** Per-protocol voortgang (tiers, week, afgevinkte taken). */
   progressMap: Record<string, ProtocolProgressState>;
+  /** Opgeslagen focus-protocol (user_preferences). */
+  growthFocus: GrowthFocusState;
 };
 
-export function LearningContentClient({ todayStr, fallback, xpIdentity, protocols, progressMap }: Props) {
+function progressKey(slug: string, locale: string) {
+  return `${slug}::${locale}`;
+}
+
+export function LearningContentClient({
+  todayStr,
+  fallback,
+  xpIdentity,
+  protocols,
+  progressMap,
+  growthFocus,
+}: Props) {
+  const [viewerProtocol, setViewerProtocol] = useState<ProtocolLibraryRow | null>(null);
   const learning: LearningState = fallback;
   const gameState = useHQStore((s) => s.gameState);
 
@@ -45,6 +65,11 @@ export function LearningContentClient({ todayStr, fallback, xpIdentity, protocol
   const energyAvg = gameState?.stats.energy ?? null;
   const focusAvg = gameState?.stats.focus ?? null;
   const brainLogged = energyAvg != null && focusAvg != null;
+  const { tier: engineTier } = weeklyDifficultyFromBrain({
+    energyAvg,
+    focusAvg,
+    brainLogged,
+  });
 
   const currentBook = learning.streams.find((s) => s.type === "book") ?? null;
   const streamsCount = learning.streams.length;
@@ -71,16 +96,33 @@ export function LearningContentClient({ todayStr, fallback, xpIdentity, protocol
     <div className="space-y-6" data-tutorial="growth-content">
       <GrowthSectionNav />
 
+      <GrowthCommandCenter
+        protocols={protocols}
+        progressMap={progressMap}
+        engineTier={engineTier}
+        growthFocus={growthFocus}
+        onOpenProtocol={setViewerProtocol}
+      />
+
+      <GrowthSystemLoop />
+
+      <GrowthProtocolLibrary
+        protocols={protocols}
+        progressMap={progressMap}
+        viewerProtocol={viewerProtocol}
+        onViewerProtocolChange={setViewerProtocol}
+      />
+
       <section
         id="growth-overview"
         className="scroll-mt-28 card-simple overflow-hidden p-0 ring-1 ring-[var(--semantic-ring)]/20"
       >
         <div className="border-b border-[var(--card-border)] bg-[var(--bg-elevated)]/40 px-4 py-3">
           <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-[var(--semantic-accent)]">
-            Growth mission control
+            Growth dashboard
           </p>
           <p className="mt-1 text-sm text-[var(--text-secondary)]">
-            Intent, consistency, and deliberate sessions in one tactical board.
+            Streams, sessies, consistentie en engine — naast je gekozen protocol hierboven.
           </p>
         </div>
         <div className="grid gap-3 p-4 sm:grid-cols-2 lg:grid-cols-4">
@@ -163,8 +205,6 @@ export function LearningContentClient({ todayStr, fallback, xpIdentity, protocol
         </div>
       </section>
 
-      <GrowthProtocolLibrary protocols={protocols} progressMap={progressMap} />
-
       <div id="growth-path" className="scroll-mt-28 grid gap-6 xl:grid-cols-12">
         <div className="space-y-6 xl:col-span-7">
           <GrowthIntentCard
@@ -195,6 +235,15 @@ export function LearningContentClient({ todayStr, fallback, xpIdentity, protocol
       <div id="growth-streams" className="scroll-mt-28">
         <GrowthStreamsList streams={learning.streams} />
       </div>
+
+      {viewerProtocol && (
+        <GrowthProtocolViewerModal
+          protocol={viewerProtocol}
+          progress={progressMap[progressKey(viewerProtocol.slug, viewerProtocol.locale)] ?? null}
+          engineTier={engineTier}
+          onClose={() => setViewerProtocol(null)}
+        />
+      )}
     </div>
   );
 }

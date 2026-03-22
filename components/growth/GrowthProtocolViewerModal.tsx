@@ -2,8 +2,11 @@
 
 import { useTransition } from "react";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 import type { ProtocolLibraryRow } from "@/app/actions/protocol-library";
 import type { ProtocolProgressState } from "@/app/actions/protocol-progress";
+import { commitProtocolWeekToMissions } from "@/app/actions/protocol-missions";
+import { setGrowthFocusProtocol } from "@/app/actions/growth-focus";
 import {
   setProtocolPreferredTier,
   setProtocolCurrentWeek,
@@ -23,6 +26,8 @@ import type { DifficultyTier } from "@/lib/growth/adaptive-engine";
 type Props = {
   protocol: ProtocolLibraryRow;
   progress: ProtocolProgressState | null;
+  /** Adaptive engine tier (brain) — toon hint als protocol-tier afwijkt. */
+  engineTier?: DifficultyTier | null;
   onClose: () => void;
 };
 
@@ -34,7 +39,7 @@ function tierLabel(t: DifficultyTier): string {
   return "Standard";
 }
 
-export function GrowthProtocolViewerModal({ protocol, progress, onClose }: Props) {
+export function GrowthProtocolViewerModal({ protocol, progress, engineTier, onClose }: Props) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
 
@@ -63,6 +68,27 @@ export function GrowthProtocolViewerModal({ protocol, progress, onClose }: Props
       <div className="max-h-[min(78dvh,720px)] overflow-y-auto px-4 py-4">
         {protocol.summary && <p className="mb-3 text-sm text-[var(--text-secondary)]">{protocol.summary}</p>}
 
+        <div className="mb-4 flex flex-wrap gap-2">
+          <button
+            type="button"
+            disabled={pending}
+            className="rounded-lg border border-emerald-500/40 bg-emerald-500/10 px-3 py-1.5 text-xs font-semibold text-emerald-100 hover:bg-emerald-500/20 disabled:opacity-50"
+            onClick={() =>
+              startTransition(async () => {
+                try {
+                  await setGrowthFocusProtocol({ slug: protocol.slug, locale: protocol.locale });
+                  toast.success("Dit protocol is nu je focus op Growth.");
+                  refresh();
+                } catch (e) {
+                  toast.error(e instanceof Error ? e.message : "Mislukt.");
+                }
+              })
+            }
+          >
+            {pending ? "Bezig…" : "Markeer als mijn focus"}
+          </button>
+        </div>
+
         {def && (
           <div className="mb-4 flex flex-wrap items-center gap-2 text-[11px] text-[var(--text-muted)]">
             <span className="rounded-full bg-[var(--bg-soft)] px-2 py-0.5">
@@ -71,6 +97,13 @@ export function GrowthProtocolViewerModal({ protocol, progress, onClose }: Props
             <span className="rounded-full bg-[var(--bg-soft)] px-2 py-0.5">
               Horizon ca. {def.estimated_weeks_min}–{def.estimated_weeks_max} wkn
             </span>
+          </div>
+        )}
+
+        {engineTier != null && engineTier !== tier && (
+          <div className="mb-3 rounded-lg border border-amber-400/40 bg-amber-500/10 px-3 py-2 text-xs text-amber-100">
+            Engine adviseert <strong>{tierLabel(engineTier)}</strong>, protocol staat op <strong>{tierLabel(tier)}</strong>.
+            Pas tier hierboven aan voor één lijn met je brain load.
           </div>
         )}
 
@@ -203,6 +236,53 @@ export function GrowthProtocolViewerModal({ protocol, progress, onClose }: Props
                 Laatste week in deze seed — herhaal patroon of breid content uit in de bibliotheek (zie docs).
               </p>
             )}
+
+            <div className="mt-4 border-t border-[var(--card-border)] pt-4">
+              <p className="text-[11px] font-semibold uppercase tracking-wide text-[var(--text-muted)]">
+                Koppeling Missions
+              </p>
+              <p className="mt-1 text-xs text-[var(--text-secondary)]">
+                Zet deze week als concrete taken op je bord (vandaag). Al bestaande dezelfde protocol-stap wordt overgeslagen.
+              </p>
+              <div className="mt-3 flex flex-wrap gap-2">
+                <button
+                  type="button"
+                  disabled={pending}
+                  className="rounded-lg bg-[var(--semantic-accent)] px-4 py-2 text-sm font-semibold text-black hover:opacity-95 disabled:opacity-50"
+                  onClick={() =>
+                    startTransition(async () => {
+                      try {
+                        const r = await commitProtocolWeekToMissions({
+                          protocol_slug: protocol.slug,
+                          locale: protocol.locale,
+                        });
+                        toast.success(
+                          r.created > 0
+                            ? `${r.created} taken op Missions${r.skipped ? ` (${r.skipped} al gepland)` : ""}.`
+                            : `Geen nieuwe taken — ${r.skipped} stonden al op vandaag.`,
+                        );
+                        refresh();
+                      } catch (e) {
+                        toast.error(e instanceof Error ? e.message : "Mislukt.");
+                      }
+                    })
+                  }
+                >
+                  {pending ? "Bezig…" : "Zet deze week op Missions"}
+                </button>
+                <button
+                  type="button"
+                  disabled={pending}
+                  className="rounded-lg border border-[var(--card-border)] px-4 py-2 text-sm font-medium text-[var(--text-secondary)] hover:border-[var(--semantic-accent)]/50"
+                  onClick={() => {
+                    onClose();
+                    router.push("/tasks");
+                  }}
+                >
+                  Naar Missions →
+                </button>
+              </div>
+            </div>
           </>
         )}
 

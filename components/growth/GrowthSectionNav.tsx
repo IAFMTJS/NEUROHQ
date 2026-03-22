@@ -1,8 +1,10 @@
 "use client";
 
 const LINKS = [
-  { href: "#growth-overview", label: "Overzicht" },
+  { href: "#growth-command", label: "Command center" },
+  { href: "#growth-system", label: "Systeem" },
   { href: "#growth-protocols", label: "Protocollen" },
+  { href: "#growth-overview", label: "Dashboard" },
   { href: "#growth-path", label: "Leerpad" },
   { href: "#growth-missions", label: "Doel → missies" },
   { href: "#growth-streams", label: "Streams" },

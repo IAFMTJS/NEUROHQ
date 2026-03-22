@@ -3056,6 +3056,8 @@ export type Database = {
           compact_ui: boolean
           day_off_mode: string | null
           email_reminders_enabled: boolean
+          growth_focus_protocol_locale: string | null
+          growth_focus_protocol_slug: string | null
           light_ui: boolean
           push_copy_history: Json
           push_evening_enabled: boolean
@@ -3076,6 +3078,8 @@ export type Database = {
           compact_ui?: boolean
           day_off_mode?: string | null
           email_reminders_enabled?: boolean
+          growth_focus_protocol_locale?: string | null
+          growth_focus_protocol_slug?: string | null
           light_ui?: boolean
           push_copy_history?: Json
           push_evening_enabled?: boolean
@@ -3096,6 +3100,8 @@ export type Database = {
           compact_ui?: boolean
           day_off_mode?: string | null
           email_reminders_enabled?: boolean
+          growth_focus_protocol_locale?: string | null
+          growth_focus_protocol_slug?: string | null
           light_ui?: boolean
           push_copy_history?: Json
           push_evening_enabled?: boolean
