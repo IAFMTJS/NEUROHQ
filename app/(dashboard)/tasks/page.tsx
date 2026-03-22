@@ -40,6 +40,8 @@ import { TasksHeaderChrome } from "@/components/missions/TasksHeaderChrome";
 import type { TasksTabId } from "@/components/missions/TasksTabsShell";
 import { TasksDailyBootstrap } from "@/components/missions/TasksDailyBootstrap";
 import { TasksCalendarAsync } from "./TasksCalendarAsync";
+import { getGrowthEngineSnapshot } from "@/app/actions/growth-snapshot";
+import { GrowthMissionsRibbon } from "@/components/growth/GrowthMissionsRibbon";
 
 /** Tasks page must always run on the server so latest data is rendered after refresh. */
 export const dynamic = "force-dynamic";
@@ -129,7 +131,7 @@ async function WeeklyBehaviorSummaryCardAsync() {
 }
 
 type Props = {
-  searchParams: Promise<{ tab?: string; add?: string; month?: string; day?: string; calView?: string }>;
+  searchParams: Promise<{ tab?: string; add?: string; month?: string; day?: string; calView?: string; growth?: string }>;
 };
 
 type CalendarView = "today" | "calendar" | "routines" | "overdue";
@@ -191,23 +193,46 @@ async function TasksHeaderMetaAsync({ dateStr, yesterdayStr }: { dateStr: string
   );
 }
 
-async function MissionsSectionAsync({ dateStr, backlog }: { dateStr: string; backlog: Awaited<ReturnType<typeof getBacklogTasks>> }) {
-  const [mode, futureTasks, completedToday, smartSuggestion, energyCap, energyBudget, decisionBlocks, identity, identityEngine, tasksNormalResult, resistanceIndex, recoveryCampaign, emotionalCorrelation] =
-    await Promise.all([
-      getMode(dateStr),
-      getFutureTasks(dateStr),
-      getCompletedTodayTasks(dateStr),
-      getSmartSuggestion(dateStr),
-      getEnergyCapToday(dateStr),
-      getEnergyBudget(dateStr),
-      getDecisionBlocks(dateStr),
-      getXPIdentity(),
-      getIdentityEngine(),
-      getTodaysTasks(dateStr, "normal"),
-      ResistanceIndexBannerAsync(),
-      RecoveryCampaignBannerAsync(),
-      EmotionalStateCorrelationBannerAsync(),
-    ]);
+async function MissionsSectionAsync({
+  dateStr,
+  backlog,
+  growthFromGrowthPage = false,
+}: {
+  dateStr: string;
+  backlog: Awaited<ReturnType<typeof getBacklogTasks>>;
+  growthFromGrowthPage?: boolean;
+}) {
+  const [
+    mode,
+    futureTasks,
+    completedToday,
+    smartSuggestion,
+    energyCap,
+    energyBudget,
+    decisionBlocks,
+    identity,
+    identityEngine,
+    tasksNormalResult,
+    resistanceIndex,
+    recoveryCampaign,
+    emotionalCorrelation,
+    growthSnap,
+  ] = await Promise.all([
+    getMode(dateStr),
+    getFutureTasks(dateStr),
+    getCompletedTodayTasks(dateStr),
+    getSmartSuggestion(dateStr),
+    getEnergyCapToday(dateStr),
+    getEnergyBudget(dateStr),
+    getDecisionBlocks(dateStr),
+    getXPIdentity(),
+    getIdentityEngine(),
+    getTodaysTasks(dateStr, "normal"),
+    ResistanceIndexBannerAsync(),
+    RecoveryCampaignBannerAsync(),
+    EmotionalStateCorrelationBannerAsync(),
+    getGrowthEngineSnapshot(),
+  ]);
 
   const taskMode: TaskListMode =
     mode === "stabilize" ? "stabilize" : mode === "low_energy" ? "low_energy" : mode === "driven" ? "driven" : "normal";
@@ -313,6 +338,7 @@ async function MissionsSectionAsync({ dateStr, backlog }: { dateStr: string; bac
     <SciFiPanel variant="glass" className={hudStyles.focusSecondary} bodyClassName="p-4 md:p-5">
       <CornerNode corner="top-left" />
       <CornerNode corner="top-right" />
+      <GrowthMissionsRibbon snap={growthSnap} fromGrowthPage={growthFromGrowthPage} />
       <ModeBanner mode={mode} />
       <EnergyCapBar used={energyCap.used} cap={energyCap.cap} remaining={energyCap.remaining} planned={energyCap.planned} />
       <ConsequenceBanner
@@ -479,6 +505,7 @@ export default async function TasksPage({ searchParams }: Props) {
   const dateStr = todayDateString();
   const yesterdayStr = yesterdayDate(dateStr);
   const params = await searchParams;
+  const growthFromGrowthPage = params.growth === "1";
   const tabParam = params.tab;
   const activeTab: TasksTabId =
     tabParam === "routine" ? "routine" : tabParam === "calendar" ? "calendar" : "missions";
@@ -541,7 +568,7 @@ export default async function TasksPage({ searchParams }: Props) {
           <TasksTabsShell initialTab={activeTab} missionsHref={missionsHref} calendarHref={calendarHref} routineHref={routineHref} header={headerSection}>
             {activeTab === "missions" ? (
               <Suspense fallback={null}>
-                <MissionsSectionAsync dateStr={dateStr} backlog={backlog} />
+                <MissionsSectionAsync dateStr={dateStr} backlog={backlog} growthFromGrowthPage={growthFromGrowthPage} />
               </Suspense>
             ) : activeTab === "calendar" ? (
               <Suspense fallback={null}>

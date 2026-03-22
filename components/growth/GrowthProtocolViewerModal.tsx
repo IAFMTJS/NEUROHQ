@@ -22,6 +22,7 @@ import {
   weekForIndex,
 } from "@/lib/growth/protocol-definition";
 import type { DifficultyTier } from "@/lib/growth/adaptive-engine";
+import { tierLabelNl } from "@/lib/growth/tier-labels";
 
 type Props = {
   protocol: ProtocolLibraryRow;
@@ -32,12 +33,6 @@ type Props = {
 };
 
 const TIERS: DifficultyTier[] = ["easy", "medium", "hard"];
-
-function tierLabel(t: DifficultyTier): string {
-  if (t === "easy") return "Light";
-  if (t === "hard") return "Heavy";
-  return "Standard";
-}
 
 export function GrowthProtocolViewerModal({ protocol, progress, engineTier, onClose }: Props) {
   const router = useRouter();
@@ -102,7 +97,7 @@ export function GrowthProtocolViewerModal({ protocol, progress, engineTier, onCl
 
         {engineTier != null && engineTier !== tier && (
           <div className="mb-3 rounded-lg border border-amber-400/40 bg-amber-500/10 px-3 py-2 text-xs text-amber-100">
-            Engine adviseert <strong>{tierLabel(engineTier)}</strong>, protocol staat op <strong>{tierLabel(tier)}</strong>.
+            Engine adviseert <strong>{tierLabelNl(engineTier)}</strong>, protocol staat op <strong>{tierLabelNl(tier)}</strong>.
             Pas tier hierboven aan voor één lijn met je brain load.
           </div>
         )}
@@ -127,7 +122,7 @@ export function GrowthProtocolViewerModal({ protocol, progress, engineTier, onCl
                     : "border-[var(--card-border)] text-[var(--text-muted)] hover:border-[var(--semantic-accent)]/40"
                 }`}
               >
-                {tierLabel(t)}
+                {tierLabelNl(t)}
               </button>
             ))}
           </div>
@@ -219,7 +214,7 @@ export function GrowthProtocolViewerModal({ protocol, progress, engineTier, onCl
                         <p className="text-sm font-semibold text-[var(--text-primary)]">{task.title}</p>
                         <p className="mt-1 text-sm text-[var(--text-secondary)]">{scaled.concrete}</p>
                         <p className="mt-1 text-[11px] text-[var(--text-muted)]">
-                          ~{scaled.minutes} min · tier <strong>{tierLabel(tier)}</strong>
+                          ~{scaled.minutes} min · tier <strong>{tierLabelNl(tier)}</strong>
                         </p>
                         {task.success_criteria && (
                           <p className="mt-1 text-[11px] text-amber-200/90">Succes: {task.success_criteria}</p>

@@ -3,6 +3,7 @@
 import type { ProtocolLibraryRow } from "@/app/actions/protocol-library";
 import type { ProtocolProgressState } from "@/app/actions/protocol-progress";
 import { parseProtocolDefinition, maxWeekIndex } from "@/lib/growth/protocol-definition";
+import { progressKey } from "@/lib/growth/resolve-focus-protocol";
 
 type Props = {
   protocols: ProtocolLibraryRow[];
@@ -11,10 +12,6 @@ type Props = {
   viewerProtocol: ProtocolLibraryRow | null;
   onViewerProtocolChange: (p: ProtocolLibraryRow | null) => void;
 };
-
-function progressKey(slug: string, locale: string) {
-  return `${slug}::${locale}`;
-}
 
 export function GrowthProtocolLibrary({
   protocols,

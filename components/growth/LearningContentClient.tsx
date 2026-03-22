@@ -19,6 +19,7 @@ import { GrowthCommandCenter } from "@/components/growth/GrowthCommandCenter";
 import { GrowthProtocolViewerModal } from "@/components/growth/GrowthProtocolViewerModal";
 import { GrowthSystemLoop } from "@/components/growth/GrowthSystemLoop";
 import { weeklyDifficultyFromBrain } from "@/lib/growth/adaptive-engine";
+import { progressKey } from "@/lib/growth/resolve-focus-protocol";
 import { useHQStore } from "@/lib/hq-store";
 import { XPBadge } from "@/components/XPBadge";
 import Link from "next/link";
@@ -41,10 +42,6 @@ type Props = {
   /** Opgeslagen focus-protocol (user_preferences). */
   growthFocus: GrowthFocusState;
 };
-
-function progressKey(slug: string, locale: string) {
-  return `${slug}::${locale}`;
-}
 
 export function LearningContentClient({
   todayStr,

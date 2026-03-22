@@ -48,9 +48,9 @@ export function GrowthAdaptiveHint(props: {
         <div className="flex flex-wrap items-center justify-between gap-2">
           <div>
             <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[var(--text-muted)]">
-              Adaptive training
+              Adaptieve belasting
             </p>
-            <p className="mt-0.5 text-sm font-semibold text-[var(--text-primary)]">Load preview (phase 1)</p>
+            <p className="mt-0.5 text-sm font-semibold text-[var(--text-primary)]">Load preview (fase 1)</p>
           </div>
           <span
             className={`rounded-full border px-3 py-1 text-[11px] font-bold uppercase tracking-wide ${pill.className}`}
@@ -62,7 +62,7 @@ export function GrowthAdaptiveHint(props: {
 
       <div className="grid gap-4 p-4 sm:grid-cols-2">
         <div className="space-y-3">
-          <p className="text-[11px] font-semibold uppercase tracking-wide text-[var(--text-muted)]">Brain signal</p>
+          <p className="text-[11px] font-semibold uppercase tracking-wide text-[var(--text-muted)]">Brain-signaal</p>
           <Meter label="Energy" value={energyPct} />
           <Meter label="Focus" value={focusPct} />
           {!props.brainLogged && (
@@ -74,7 +74,7 @@ export function GrowthAdaptiveHint(props: {
         </div>
 
         <div className="space-y-3">
-          <p className="text-[11px] font-semibold uppercase tracking-wide text-[var(--text-muted)]">Weekly phase</p>
+          <p className="text-[11px] font-semibold uppercase tracking-wide text-[var(--text-muted)]">Weekfase</p>
           <p className="text-xs text-[var(--text-secondary)]">{phaseLabel(lockedPhase)}</p>
           <div className="flex gap-1">
             {DAYS.map((d, i) => {
@@ -88,7 +88,7 @@ export function GrowthAdaptiveHint(props: {
                       ? "bg-[var(--semantic-accent)]/25 text-[var(--semantic-accent)] ring-1 ring-[var(--semantic-ring)]/50"
                       : "bg-[var(--bg-primary)]/60 text-[var(--text-muted)]"
                   }`}
-                  title={highlight ? "Suggested emphasis window" : "Recovery / flex"}
+                  title={highlight ? "Suggested emphasis window" : "Recovery / flexibel"}
                 >
                   {d}
                 </div>
@@ -101,16 +101,22 @@ export function GrowthAdaptiveHint(props: {
           </p>
           <div className="mt-2 flex flex-wrap gap-x-3 gap-y-1">
             <Link
-              href="#growth-protocols"
+              href="#growth-command"
               className="inline-flex text-xs font-semibold text-[var(--semantic-accent)] underline-offset-2 hover:underline"
             >
-              Open protocollen →
+              Command center →
             </Link>
             <Link
               href="/dashboard"
               className="inline-flex text-xs font-semibold text-[var(--text-muted)] underline-offset-2 hover:text-[var(--semantic-accent)] hover:underline"
             >
-              Brain check-in (Dashboard)
+              Brain check-in (dashboard)
+            </Link>
+            <Link
+              href="/strategy"
+              className="inline-flex text-xs font-semibold text-[var(--text-muted)] underline-offset-2 hover:text-[var(--semantic-accent)] hover:underline"
+            >
+              Strategy
             </Link>
           </div>
         </div>

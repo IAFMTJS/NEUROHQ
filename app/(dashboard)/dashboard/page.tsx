@@ -1,6 +1,8 @@
+import { Suspense } from "react";
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import { DashboardClientShell } from "@/components/dashboard/DashboardClientShell";
+import { GrowthDashboardStrip } from "@/components/growth/GrowthDashboardStrip";
 
 /** Force dynamic: dashboard uses cookies (auth) and live data. */
 export const dynamic = "force-dynamic";
@@ -16,6 +18,9 @@ export default async function DashboardPage() {
   // provider so first paint uses snapshot and stays instant for the whole day.
   return (
     <main className="container page page-wide dashboard-page relative z-10 pb-10">
+      <Suspense fallback={null}>
+        <GrowthDashboardStrip />
+      </Suspense>
       <DashboardClientShell />
     </main>
   );

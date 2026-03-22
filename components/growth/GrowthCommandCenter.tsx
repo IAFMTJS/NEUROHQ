@@ -17,6 +17,8 @@ import {
   getScaledTask,
 } from "@/lib/growth/protocol-definition";
 import type { DifficultyTier } from "@/lib/growth/adaptive-engine";
+import { progressKey, resolveFocusProtocol } from "@/lib/growth/resolve-focus-protocol";
+import { tierLabelNl } from "@/lib/growth/tier-labels";
 
 type Props = {
   protocols: ProtocolLibraryRow[];
@@ -25,32 +27,6 @@ type Props = {
   growthFocus: GrowthFocusState;
   onOpenProtocol: (p: ProtocolLibraryRow) => void;
 };
-
-function progressKey(slug: string, locale: string) {
-  return `${slug}::${locale}`;
-}
-
-function tierLabel(t: DifficultyTier): string {
-  if (t === "easy") return "Light";
-  if (t === "hard") return "Heavy";
-  return "Standard";
-}
-
-function resolveActiveProtocol(
-  protocols: ProtocolLibraryRow[],
-  progressMap: Record<string, ProtocolProgressState>,
-  focus: GrowthFocusState,
-): ProtocolLibraryRow | null {
-  if (protocols.length === 0) return null;
-  if (focus.slug) {
-    const exact = protocols.find((p) => p.slug === focus.slug && p.locale === focus.locale);
-    if (exact) return exact;
-    const slugOnly = protocols.find((p) => p.slug === focus.slug);
-    if (slugOnly) return slugOnly;
-  }
-  const withProgress = protocols.find((p) => progressMap[progressKey(p.slug, p.locale)]);
-  return withProgress ?? protocols[0] ?? null;
-}
 
 export function GrowthCommandCenter({
   protocols,
@@ -63,22 +39,9 @@ export function GrowthCommandCenter({
   const [pending, startTransition] = useTransition();
 
   const active = useMemo(
-    () => resolveActiveProtocol(protocols, progressMap, growthFocus),
+    () => resolveFocusProtocol(protocols, progressMap, growthFocus),
     [protocols, progressMap, growthFocus],
   );
-
-  const prog = active ? progressMap[progressKey(active.slug, active.locale)] ?? null : null;
-  const def = active ? parseProtocolDefinition(active.definition_json) : null;
-  const tier = prog?.preferred_tier ?? "medium";
-  const weekIndex = prog?.current_week_index ?? 1;
-  const completed = new Set(prog?.completed_task_ids ?? []);
-  const week = def ? weekForIndex(def, weekIndex) : undefined;
-  const phase = def ? phaseForWeek(def, weekIndex) : undefined;
-  const maxW = def ? maxWeekIndex(def) : 1;
-
-  const doneInWeek = week ? week.tasks.filter((t) => completed.has(t.id)).length : 0;
-  const totalInWeek = week?.tasks.length ?? 0;
-  const weekPct = totalInWeek > 0 ? Math.round((doneInWeek / totalInWeek) * 100) : 0;
 
   const focusSelectValue = useMemo(() => {
     if (!growthFocus.slug) return "";
@@ -102,6 +65,20 @@ export function GrowthCommandCenter({
     );
   }
 
+  const safeActive = active ?? protocols[0]!;
+  const prog = progressMap[progressKey(safeActive.slug, safeActive.locale)] ?? null;
+  const def = parseProtocolDefinition(safeActive.definition_json);
+  const tier = prog?.preferred_tier ?? "medium";
+  const weekIndex = prog?.current_week_index ?? 1;
+  const completed = new Set(prog?.completed_task_ids ?? []);
+  const week = def ? weekForIndex(def, weekIndex) : undefined;
+  const phase = def ? phaseForWeek(def, weekIndex) : undefined;
+  const maxW = def ? maxWeekIndex(def) : 1;
+
+  const doneInWeek = week ? week.tasks.filter((t) => completed.has(t.id)).length : 0;
+  const totalInWeek = week?.tasks.length ?? 0;
+  const weekPct = totalInWeek > 0 ? Math.round((doneInWeek / totalInWeek) * 100) : 0;
+
   return (
     <section
       id="growth-command"
@@ -114,10 +91,10 @@ export function GrowthCommandCenter({
               Growth command center
             </p>
             <h2 className="mt-1 text-xl font-bold tracking-tight text-[var(--text-primary)] sm:text-2xl">
-              {active.title}
+              {safeActive.title}
             </h2>
             <p className="mt-1 text-xs text-[var(--text-muted)]">
-              <span className="font-mono text-[10px] uppercase">{active.slug}</span>
+              <span className="font-mono text-[10px] uppercase">{safeActive.slug}</span>
               {growthFocus.slug ? (
                 <span className="ml-2 rounded-full bg-emerald-500/15 px-2 py-0.5 text-[10px] font-semibold text-emerald-200/90">
                   Jouw focus
@@ -201,11 +178,11 @@ export function GrowthCommandCenter({
 
               <div className="flex flex-wrap gap-2">
                 <span className="rounded-full border border-[var(--card-border)] bg-[var(--bg-soft)] px-2.5 py-1 text-[11px] text-[var(--text-secondary)]">
-                  Protocol-tier: <strong className="text-[var(--text-primary)]">{tierLabel(tier)}</strong>
+                  Protocol-tier: <strong className="text-[var(--text-primary)]">{tierLabelNl(tier)}</strong>
                 </span>
                 {engineTier != null && (
                   <span className="rounded-full border border-[var(--card-border)] bg-[var(--bg-soft)] px-2.5 py-1 text-[11px] text-[var(--text-secondary)]">
-                    Engine: <strong className="text-[var(--text-primary)]">{tierLabel(engineTier)}</strong>
+                    Engine: <strong className="text-[var(--text-primary)]">{tierLabelNl(engineTier)}</strong>
                   </span>
                 )}
               </div>
@@ -225,7 +202,7 @@ export function GrowthCommandCenter({
             type="button"
             disabled={pending}
             className="rounded-lg bg-[var(--semantic-accent)] px-4 py-2.5 text-sm font-semibold text-black hover:opacity-95 disabled:opacity-50"
-            onClick={() => onOpenProtocol(active)}
+            onClick={() => onOpenProtocol(safeActive)}
           >
             Open volledig traject
           </button>
@@ -238,8 +215,8 @@ export function GrowthCommandCenter({
                 startTransition(async () => {
                   try {
                     const r = await commitProtocolWeekToMissions({
-                      protocol_slug: active.slug,
-                      locale: active.locale,
+                      protocol_slug: safeActive.slug,
+                      locale: safeActive.locale,
                     });
                     toast.success(
                       r.created > 0
@@ -257,7 +234,7 @@ export function GrowthCommandCenter({
             </button>
           )}
           <Link
-            href="/tasks"
+            href="/tasks?growth=1"
             className="inline-flex items-center justify-center rounded-lg border border-[var(--card-border)] px-4 py-2.5 text-sm font-medium text-[var(--text-secondary)] hover:border-[var(--semantic-accent)]/50 hover:text-[var(--semantic-accent)]"
           >
             Naar Missions-bord →

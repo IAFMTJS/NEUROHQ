@@ -20,6 +20,7 @@ import { StrategyThesisHero } from "@/components/strategy/StrategyThesisHero";
 import { StrategyFocusMultipliers } from "@/components/strategy/StrategyFocusMultipliers";
 import { StrategyPhaseIndicator } from "@/components/strategy/StrategyPhaseIndicator";
 import { StrategyArchiveHistory } from "@/components/strategy/StrategyArchiveHistory";
+import { StrategyGrowthBridge } from "@/components/strategy/StrategyGrowthBridge";
 
 /** Force dynamic: strategy uses cookies (auth) and live data. */
 export const dynamic = "force-dynamic";
@@ -258,6 +259,9 @@ export default function StrategyPage() {
   return (
     <div className="container page space-y-6">
       <StrategyShell />
+      <Suspense fallback={<div className="h-24 animate-pulse rounded-2xl bg-[var(--bg-elevated)]/40" aria-hidden />}>
+        <StrategyGrowthBridge />
+      </Suspense>
       <Suspense fallback={null}>
         <StrategyContent />
       </Suspense>
