@@ -607,6 +607,7 @@ export async function deleteTask(id: string) {
     .eq("id", id)
     .eq("user_id", user.id);
   if (error) throw new Error(error.message);
+  await trackEvent("mission_deleted", { taskId: id });
   if (dueDate) revalidateTagMax(`tasks-${user.id}-${dueDate}`);
   revalidateTagMax("decision-blocks");
   const { revalidateDashboardCache } = await import("./dashboard-data");

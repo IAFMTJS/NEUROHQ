@@ -1,4 +1,5 @@
 import type { PushPayload } from "@/lib/push";
+import { STRATEGY_MONTHLY_TIPS } from "@/lib/strategy-monthly-tips";
 
 // ---- Tone + personality model ------------------------------------------------
 
@@ -56,7 +57,13 @@ export type TriggerType =
   | "behavioral_coaching_high_brain_idle"
   | "behavioral_coaching_low_brain_active"
   | "too_many_open_missions"
-  | "escalation_no_missions_today";
+  | "escalation_no_missions_today"
+  | "strategy_check_in_soft"
+  | "strategy_check_in_firm"
+  | "strategy_quarter_incomplete"
+  | "growth_focus_unset"
+  | "strategy_monthly_tip"
+  | "growth_learning_idle";
 
 // High-level behavior events the rest of the app / crons can emit.
 // These are intentionally compact and behaviour-focused; they are not DB models.
@@ -85,7 +92,12 @@ export type BehaviorEvent =
   | { type: "too_many_open_missions"; openMissions: number }
   | { type: "inactivity_window"; daysInactive: number }
   | { type: "positive_surprise"; consistencyScore: number }
-  | { type: "escalation_no_missions_today"; ignoredCount: number };
+  | { type: "escalation_no_missions_today"; ignoredCount: number }
+  | { type: "strategy_check_in_reminder"; tier: "soft" | "firm" }
+  | { type: "strategy_quarter_incomplete"; percentComplete: number }
+  | { type: "growth_focus_unset" }
+  | { type: "strategy_monthly_tip"; month: number }
+  | { type: "growth_learning_idle" };
 
 export type MessageTemplate = {
   title?: string;
@@ -144,6 +156,14 @@ export function strategyAreaForTrigger(trigger: TriggerType): StrategyNotificati
     case "inactivity_14d":
     case "reflection_submitted":
       return "strategy";
+    case "strategy_check_in_soft":
+    case "strategy_check_in_firm":
+    case "strategy_quarter_incomplete":
+    case "strategy_monthly_tip":
+      return "strategy";
+    case "growth_focus_unset":
+    case "growth_learning_idle":
+      return "growth";
     default:
       return "missions";
   }
@@ -540,6 +560,72 @@ export const MESSAGE_POOL: MessagePool = {
     sarcastic: [{ body: "Today's mission count: zero. We're just putting that out there. 😬" }],
     overstimulating: [{ body: "⚠️ ZERO MISSIONS TODAY. ONE. DO IT. NOW. 🔥" }],
   },
+  strategy_check_in_soft: {
+    neutral: [
+      { body: "Strategy check-in: a quick look keeps your quarter aligned.", url: "/strategy" },
+    ],
+    friendly: [
+      {
+        body: "Haven’t checked Strategy in a few days — open it and tap check-in when you’re ready.",
+        url: "/strategy",
+      },
+    ],
+    stoic: [{ body: "Strategy needs a glance. Check in.", url: "/strategy" }],
+    coach: [{ body: "Quick strategy check-in: confirm your line for the week.", url: "/strategy" }],
+    sarcastic: [{ body: "Your strategy page misses you. It’s not clingy. Much. Strategy tab. 🙃", url: "/strategy" }],
+    overstimulating: [{ body: "STRATEGY CHECK-IN DUE ⚡ OPEN /STRATEGY ⚡", url: "/strategy" }],
+  },
+  strategy_check_in_firm: {
+    neutral: [{ body: "Strategy check-in overdue — open Strategy and confirm your direction.", url: "/strategy" }],
+    friendly: [
+      {
+        body: "It’s been a while since a strategy check-in. One minute on Strategy resets the thread.",
+        url: "/strategy",
+      },
+    ],
+    stoic: [{ body: "No check-in for several days. Open Strategy.", url: "/strategy" }],
+    coach: [{ body: "Strategy check-in is overdue. Open the page and lock one decision.", url: "/strategy" }],
+    aggressive: [{ body: "Strategy check-in: overdue. Open it now.", url: "/strategy" }],
+    sarcastic: [{ body: "The quarter won’t steer itself. Strategy. Check-in. Now.", url: "/strategy" }],
+    overstimulating: [{ body: "⚠️ STRATEGY SILENCE DETECTED. CHECK-IN REQUIRED. /STRATEGY 🔥", url: "/strategy" }],
+  },
+  strategy_quarter_incomplete: {
+    neutral: [
+      {
+        body: "Your quarterly strategy still has open fields. Finish one item today.",
+        url: "/strategy",
+      },
+    ],
+    friendly: [
+      {
+        body: "Your strategy form isn’t complete yet — one field today gets you unstuck.",
+        url: "/strategy",
+      },
+    ],
+    stoic: [{ body: "Quarterly strategy incomplete. Complete one field.", url: "/strategy" }],
+    coach: [{ body: "Strategy completion gap: pick one section and close it today.", url: "/strategy" }],
+    sarcastic: [{ body: "Half a strategy is a mood board. Finish a section. 😏", url: "/strategy" }],
+  },
+  growth_focus_unset: {
+    neutral: [{ body: "Pick a growth focus in Learning so missions can align with it.", url: "/learning" }],
+    friendly: [{ body: "You haven’t set a growth focus yet — choose one path when you’re ready.", url: "/learning" }],
+    stoic: [{ body: "Set a growth focus. Then execute.", url: "/learning" }],
+    coach: [{ body: "Choose a growth protocol so your week has a learning spine.", url: "/learning" }],
+    sarcastic: [{ body: "Growth page is empty. Bold strategy. Pick a protocol. 🙃", url: "/learning" }],
+  },
+  strategy_monthly_tip: {
+    neutral: [{ body: "Monthly strategy tip.", url: "/strategy" }],
+    friendly: [{ body: "Here’s a small strategy tip for this month.", url: "/strategy" }],
+    stoic: [{ body: "Monthly tip: refine one line in Strategy.", url: "/strategy" }],
+    coach: [{ body: "Monthly strategy tip — apply one change today.", url: "/strategy" }],
+  },
+  growth_learning_idle: {
+    neutral: [{ body: "No learning logged recently — one short session keeps growth honest.", url: "/learning" }],
+    friendly: [{ body: "Learning’s been quiet — a tiny session in Growth still counts.", url: "/learning" }],
+    stoic: [{ body: "Learning idle. Log one session.", url: "/learning" }],
+    coach: [{ body: "No learning minutes lately. Schedule one block this week.", url: "/learning" }],
+    sarcastic: [{ body: "Your growth graph is flat. Not judging. (Okay, a little.) 📉", url: "/learning" }],
+  },
 };
 
 export function pickMessage(trigger: TriggerType, tone: Tone): MessageTemplate | null {
@@ -559,7 +645,8 @@ export function decidePriority(trigger: TriggerType): PushPayload["priority"] {
     trigger === "rank_achieved" ||
     trigger === "inactivity_7d" ||
     trigger === "inactivity_14d" ||
-    trigger === "behavioral_coaching_high_brain_idle"
+    trigger === "behavioral_coaching_high_brain_idle" ||
+    trigger === "strategy_check_in_firm"
   ) {
     return "high";
   }
@@ -579,7 +666,10 @@ export function decidePriority(trigger: TriggerType): PushPayload["priority"] {
     trigger === "learning_session_logged" ||
     trigger === "learning_week_target_hit" ||
     trigger === "reflection_submitted" ||
-    trigger === "recovery_task_completed"
+    trigger === "recovery_task_completed" ||
+    trigger === "strategy_monthly_tip" ||
+    trigger === "growth_focus_unset" ||
+    trigger === "growth_learning_idle"
   ) {
     return "low";
   }
@@ -758,6 +848,21 @@ export function buildBehavioralNotificationForContext(
     case "escalation_no_missions_today":
       trigger = "escalation_no_missions_today";
       break;
+    case "strategy_check_in_reminder":
+      trigger = event.tier === "firm" ? "strategy_check_in_firm" : "strategy_check_in_soft";
+      break;
+    case "strategy_quarter_incomplete":
+      trigger = "strategy_quarter_incomplete";
+      break;
+    case "growth_focus_unset":
+      trigger = "growth_focus_unset";
+      break;
+    case "strategy_monthly_tip":
+      trigger = "strategy_monthly_tip";
+      break;
+    case "growth_learning_idle":
+      trigger = "growth_learning_idle";
+      break;
   }
 
   if (!trigger) return null;
@@ -774,11 +879,24 @@ export function buildBehavioralNotificationForContext(
 
   if (!template) return null;
 
+  let body = template.body;
+  let url = template.url ?? "/dashboard";
+  if (event.type === "strategy_quarter_incomplete") {
+    body = `Your quarterly strategy is about ${event.percentComplete}% complete. Open Strategy and finish one section.`;
+    url = "/strategy";
+  } else if (event.type === "strategy_monthly_tip") {
+    const idx = ((event.month % 12) + 12) % 12;
+    body = STRATEGY_MONTHLY_TIPS[idx] ?? STRATEGY_MONTHLY_TIPS[0];
+    url = "/strategy";
+  } else if (event.type === "growth_focus_unset" || event.type === "growth_learning_idle") {
+    url = template.url ?? "/learning";
+  }
+
   const payload: PushPayload = {
     title: template.title ?? "NEUROHQ",
-    body: template.body,
+    body,
     tag: template.tag ?? trigger,
-    url: template.url ?? "/dashboard",
+    url,
     priority: decidePriority(trigger),
   };
 

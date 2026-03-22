@@ -18,6 +18,12 @@ export type PushPayload = {
   priority?: "low" | "normal" | "high";
   /** App icon badge count (1–99). Sent with every push so iOS/PWA shows a badge until the user opens the app. Default 1. */
   badge?: number;
+  /**
+   * Daily quote only: split fields so title can show the author and body the quote (personality copy).
+   * Stripped before sending to the service worker.
+   */
+  quoteText?: string | null;
+  quoteAuthor?: string | null;
 };
 
 let vapidConfigured = false;
@@ -113,7 +119,9 @@ export async function sendPushToUser(
   }
 
   const payloadToSend = {
-    ...payload,
+    title: payload.title,
+    body: payload.body ?? "",
+    tag: payload.tag,
     url: urlWithClickTracking(payload.url, payload.tag),
     badge: badgeCount,
   };

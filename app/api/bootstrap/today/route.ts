@@ -20,7 +20,6 @@ import { getBudgetDisciplineXpThisWeek, getBudgetDisciplineCompletedToday } from
 import { getFinanceState, getFinancialInsightsSafe } from "@/app/actions/dcic/finance-state";
 import { getUnplannedWeeklySummary } from "@/app/actions/budget";
 import type { LearningSnapshot } from "@/types/hq-store.types";
-import { autoModeCheck, passiveRecoveryTick } from "@/lib/dcic/mode-engine";
 import { updateDynamicMissions } from "@/lib/dcic/dynamic-missions";
 import { triggerRandomEvents } from "@/lib/dcic/event-engine";
 
@@ -97,8 +96,6 @@ export async function GET() {
     const isWeekly = budgetSettings.budget_period === "weekly";
 
     const now = Date.now();
-    autoModeCheck(dcicGameState);
-    passiveRecoveryTick(dcicGameState);
     updateDynamicMissions(dcicGameState, now);
     triggerRandomEvents(dcicGameState, dateStr);
     await saveGameState(dcicGameState);

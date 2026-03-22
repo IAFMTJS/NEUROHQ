@@ -2,7 +2,8 @@ import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { sendPushToUser } from "@/lib/push";
 import type { PushPayload } from "@/lib/push";
-import { getQuoteByDayNumber } from "@/lib/quotes";
+import { getQuoteByDayNumber, prepareQuoteForPersonalityPush } from "@/lib/quotes";
+import { getConfiguredReleaseVersion, getReleaseNotesLines, formatReleaseNotesForPushBody } from "@/lib/app-release";
 import { getDayOfYearFromDateString } from "@/lib/utils/timezone";
 import { getLocalDateHour } from "@/lib/utils/timezone";
 import {
@@ -37,6 +38,13 @@ const PUSH_TYPES = [
   "streak-growth",
   "streak-protection",
   "momentum",
+  "app-release",
+  "strategy-check-in-soft",
+  "strategy-check-in-firm",
+  "strategy-quarter-incomplete",
+  "growth-focus-unset",
+  "strategy-monthly-tip",
+  "growth-learning-idle",
 ] as const;
 
 export type PushTestType = (typeof PUSH_TYPES)[number];
@@ -197,7 +205,7 @@ export async function GET(request: Request) {
   const todayStr = new Date().toISOString().slice(0, 10);
   const dayOfYear = Math.max(1, Math.min(365, getDayOfYearFromDateString(todayStr)));
   const quoteRow = getQuoteByDayNumber(dayOfYear);
-  const quoteText = quoteRow?.quote_text ?? "Your daily focus.";
+  const { quoteText, author: quoteAuthor, combinedBody } = prepareQuoteForPersonalityPush(quoteRow);
 
   let ok = false;
   const ctx = await loadUserNotificationContextForUser(supabase, userId);
@@ -209,12 +217,14 @@ export async function GET(request: Request) {
       case "daily-quote": {
         const base = {
           title: "NEUROHQ",
-          body: quoteText.length > 120 ? quoteText.slice(0, 117) + "…" : quoteText,
+          body: combinedBody,
           tag: "daily-quote",
           url: "/dashboard",
           priority: "low" as const,
+          quoteText,
+          quoteAuthor,
         };
-        const payload = applyPersonalityToPayload(base, ctx.personalityMode, "quote");
+        const payload = applyPersonalityToPayload(base, ctx.personalityMode, "quote", `${userId}:${todayStr}`);
         const limitState = await getPushLimitState(supabase, userRecord, payload.priority);
         if (limitState.blockedBy !== "none") {
           return NextResponse.json({
@@ -523,6 +533,163 @@ export async function GET(request: Request) {
             });
           }
           ok = await sendPushToUser(supabase, userId, result.payload);
+        }
+        break;
+      }
+      case "app-release": {
+        const version = getConfiguredReleaseVersion();
+        const lines = getReleaseNotesLines();
+        if (!version || !lines.length) {
+          return NextResponse.json(
+            {
+              ok: false,
+              type: typeParam,
+              message:
+                "Set NEUROHQ_APP_RELEASE_VERSION and NEUROHQ_APP_RELEASE_NOTES_JSON (JSON array of short strings) on the server to test.",
+            },
+            { status: 400 }
+          );
+        }
+        const body = formatReleaseNotesForPushBody(lines);
+        const base = {
+          title: "NEUROHQ",
+          body,
+          tag: "app-release",
+          url: "/dashboard?whats_new=1",
+          priority: "normal" as const,
+        };
+        const payload = applyPersonalityToPayload(base, ctx.personalityMode, "release_notes", `${userId}:${version}`);
+        const limitState = await getPushLimitState(supabase, userRecord, payload.priority);
+        if (limitState.blockedBy !== "none") {
+          return NextResponse.json({
+            ok: false,
+            type: typeParam,
+            userId,
+            message: "Send blocked by push limits.",
+            reason: limitState.blockedBy,
+            limitState,
+          });
+        }
+        ok = await sendPushToUser(supabase, userId, payload);
+        break;
+      }
+      case "strategy-check-in-soft": {
+        const re = buildBehavioralNotificationForContext(ctx, {
+          type: "strategy_check_in_reminder",
+          tier: "soft",
+        });
+        if (re) {
+          const limitState = await getPushLimitState(supabase, userRecord, re.payload.priority);
+          if (limitState.blockedBy !== "none") {
+            return NextResponse.json({
+              ok: false,
+              type: typeParam,
+              userId,
+              message: "Send blocked by push limits.",
+              reason: limitState.blockedBy,
+              limitState,
+            });
+          }
+          ok = await sendPushToUser(supabase, userId, re.payload);
+        }
+        break;
+      }
+      case "strategy-check-in-firm": {
+        const re = buildBehavioralNotificationForContext(ctx, {
+          type: "strategy_check_in_reminder",
+          tier: "firm",
+        });
+        if (re) {
+          const limitState = await getPushLimitState(supabase, userRecord, re.payload.priority);
+          if (limitState.blockedBy !== "none") {
+            return NextResponse.json({
+              ok: false,
+              type: typeParam,
+              userId,
+              message: "Send blocked by push limits.",
+              reason: limitState.blockedBy,
+              limitState,
+            });
+          }
+          ok = await sendPushToUser(supabase, userId, re.payload);
+        }
+        break;
+      }
+      case "strategy-quarter-incomplete": {
+        const re = buildBehavioralNotificationForContext(ctx, {
+          type: "strategy_quarter_incomplete",
+          percentComplete: 42,
+        });
+        if (re) {
+          const limitState = await getPushLimitState(supabase, userRecord, re.payload.priority);
+          if (limitState.blockedBy !== "none") {
+            return NextResponse.json({
+              ok: false,
+              type: typeParam,
+              userId,
+              message: "Send blocked by push limits.",
+              reason: limitState.blockedBy,
+              limitState,
+            });
+          }
+          ok = await sendPushToUser(supabase, userId, re.payload);
+        }
+        break;
+      }
+      case "growth-focus-unset": {
+        const re = buildBehavioralNotificationForContext(ctx, { type: "growth_focus_unset" });
+        if (re) {
+          const limitState = await getPushLimitState(supabase, userRecord, re.payload.priority);
+          if (limitState.blockedBy !== "none") {
+            return NextResponse.json({
+              ok: false,
+              type: typeParam,
+              userId,
+              message: "Send blocked by push limits.",
+              reason: limitState.blockedBy,
+              limitState,
+            });
+          }
+          ok = await sendPushToUser(supabase, userId, re.payload);
+        }
+        break;
+      }
+      case "strategy-monthly-tip": {
+        const re = buildBehavioralNotificationForContext(ctx, {
+          type: "strategy_monthly_tip",
+          month: new Date().getMonth(),
+        });
+        if (re) {
+          const limitState = await getPushLimitState(supabase, userRecord, re.payload.priority);
+          if (limitState.blockedBy !== "none") {
+            return NextResponse.json({
+              ok: false,
+              type: typeParam,
+              userId,
+              message: "Send blocked by push limits.",
+              reason: limitState.blockedBy,
+              limitState,
+            });
+          }
+          ok = await sendPushToUser(supabase, userId, re.payload);
+        }
+        break;
+      }
+      case "growth-learning-idle": {
+        const re = buildBehavioralNotificationForContext(ctx, { type: "growth_learning_idle" });
+        if (re) {
+          const limitState = await getPushLimitState(supabase, userRecord, re.payload.priority);
+          if (limitState.blockedBy !== "none") {
+            return NextResponse.json({
+              ok: false,
+              type: typeParam,
+              userId,
+              message: "Send blocked by push limits.",
+              reason: limitState.blockedBy,
+              limitState,
+            });
+          }
+          ok = await sendPushToUser(supabase, userId, re.payload);
         }
         break;
       }

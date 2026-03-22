@@ -9,8 +9,19 @@ import { createClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
 import type { GameState, Mission } from "@/lib/dcic/types";
 import { applyBrainLayerToGameState } from "@/lib/dcic/brain-game-state";
+import { countWarTierDays, type DailyRowForBrain } from "@/lib/dcic/brain-status-average";
+import { autoModeCheck, passiveRecoveryTick } from "@/lib/dcic/mode-engine";
 import { updateDifficulty, generateDailyMissions } from "@/lib/dcic/difficulty-engine";
 import { rankFromLevel } from "@/lib/rank-ladder";
+
+const DCIC_MODE_VALUES: GameState["mode"]["current"][] = ["focus", "war", "recovery"];
+
+function parseLockedDcicMode(raw: unknown): GameState["mode"]["current"] | null {
+  if (typeof raw !== "string") return null;
+  return DCIC_MODE_VALUES.includes(raw as GameState["mode"]["current"])
+    ? (raw as GameState["mode"]["current"])
+    : null;
+}
 
 type GetGameStateOptions = {
   includeFinance?: boolean;
@@ -35,6 +46,10 @@ export async function getGameState(
 
   const MISSIONS_SELECT =
     "id, name, xp_reward, energy_cost, completed, active, started_at, completed_at, difficulty_level, focus_requirement, social_intensity, mission_type, category, skill_link, recurrence_type, streak_eligible, mission_intent, expires_at, created_at";
+  const weekStart = new Date(today + "T12:00:00Z");
+  weekStart.setUTCDate(weekStart.getUTCDate() - 6);
+  const weekStartStr = weekStart.toISOString().slice(0, 10);
+
   const [
     { data: xpData },
     { data: missionsData },
@@ -42,6 +57,7 @@ export async function getGameState(
     { data: achievementsData },
     { data: skillsData },
     { data: dailyState },
+    { data: dailyStateWeek },
   ] = await Promise.all([
     supabase.from("user_xp").select("total_xp").eq("user_id", user.id).single(),
     supabase
@@ -59,11 +75,21 @@ export async function getGameState(
     supabase.from("user_skills").select("skill_key").eq("user_id", user.id),
     supabase
       .from("daily_state")
-      .select("energy, focus, sensory_load, load, mental_battery, physical_health, sleep_hours")
+      .select(
+        "energy, focus, sensory_load, load, mental_battery, physical_health, sleep_hours, dcic_mode"
+      )
       .eq("user_id", user.id)
       .eq("date", today)
-      .single(),
+      .maybeSingle(),
+    supabase
+      .from("daily_state")
+      .select("energy, focus, sensory_load, load, mental_battery, physical_health, sleep_hours")
+      .eq("user_id", user.id)
+      .gte("date", weekStartStr)
+      .lte("date", today),
   ]);
+
+  const warTierDaysLast7 = countWarTierDays((dailyStateWeek ?? []) as DailyRowForBrain[]);
 
   const totalXP = (xpData?.total_xp as number) ?? 0;
   const level = calculateLevelFromXP(totalXP);
@@ -135,6 +161,8 @@ export async function getGameState(
       warStage: 1,
       suggested: null,
       nextWarBonus: null,
+      brainStatusAveragePercent: null,
+      warTierDaysLast7: warTierDaysLast7,
     },
     authority: {
       overrideChance: 0.15,
@@ -159,7 +187,26 @@ export async function getGameState(
     },
   };
 
-  applyBrainLayerToGameState(gameState, dailyState as Parameters<typeof applyBrainLayerToGameState>[1]);
+  applyBrainLayerToGameState(gameState, dailyState as Parameters<typeof applyBrainLayerToGameState>[1], {
+    warTierDaysLast7,
+  });
+
+  const lockedMode = parseLockedDcicMode(dailyState?.dcic_mode);
+  if (lockedMode) {
+    gameState.mode.current = lockedMode;
+    passiveRecoveryTick(gameState);
+  } else {
+    autoModeCheck(gameState);
+    passiveRecoveryTick(gameState);
+    const { error: lockErr } = await supabase.rpc("lock_daily_dcic_mode_if_unset", {
+      p_user_id: user.id,
+      p_date: today,
+      p_mode: gameState.mode.current,
+    });
+    if (lockErr) {
+      console.error("lock_daily_dcic_mode_if_unset:", lockErr);
+    }
+  }
 
   return gameState;
 }
@@ -228,6 +275,7 @@ export async function saveGameState(gameState: GameState): Promise<boolean> {
       energy: gameState.stats.energy,
       focus: gameState.stats.focus,
       sensory_load: gameState.stats.load,
+      dcic_mode: gameState.mode.current,
     });
 
     revalidatePath("/dashboard");

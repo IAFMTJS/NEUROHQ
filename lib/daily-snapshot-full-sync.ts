@@ -4,6 +4,9 @@
  * Full merge of all DailySnapshot slices from the network + local pending overlays.
  * Use after mutations, on hide, and periodically so IndexedDB/localStorage snapshot
  * stays aligned without relying on full rerenders.
+ *
+ * Bootstrap `dcicGameState` includes day-locked DCIC mode (server `daily_state.dcic_mode`);
+ * merging replaces the cached copy so offline first-paint matches the same rules as the API.
  */
 
 import { getTodayKey } from "@/lib/daily-date";

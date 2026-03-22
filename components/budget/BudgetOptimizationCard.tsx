@@ -1,14 +1,13 @@
 "use client";
 
 import { useTransition, useState } from "react";
-import { format } from "date-fns";
-import { nl } from "date-fns/locale";
 import { toast } from "sonner";
 import {
   applyBudgetOptimizationLock,
   validateAndCompleteBudgetOptimizationChallenge,
 } from "@/app/actions/budget-intelligence";
 import { useBudgetLock } from "@/components/budget/BudgetLockContext";
+import { formatLockEndDateTime, formatLockEndShort } from "@/lib/budget-lock-display";
 
 type Props = {
   lockPanelHref: string;
@@ -17,17 +16,8 @@ type Props = {
   challenges: Array<{ key: string; label: string; xp: number; description: string }>;
 };
 
-function formatLockUntil(iso: string | null): string | null {
-  if (!iso) return null;
-  try {
-    return format(new Date(`${iso}T12:00:00Z`), "d MMMM yyyy", { locale: nl });
-  } catch {
-    return iso;
-  }
-}
-
 export function BudgetOptimizationCard({ lockPanelHref, summary, suggestions, challenges }: Props) {
-  const { lockActive, lockUntil } = useBudgetLock();
+  const { lockActive, lockUntilAt } = useBudgetLock();
   const [pending, startTransition] = useTransition();
   const [awardedXpByKey, setAwardedXpByKey] = useState<Record<string, number>>({});
   const [message, setMessage] = useState<string | null>(null);
@@ -35,7 +25,7 @@ export function BudgetOptimizationCard({ lockPanelHref, summary, suggestions, ch
 
   const lockSummary =
     "Je hebt al een no-spend lock lopen. Extra focus-locks en challenge-validatie horen bij één actie tegelijk — volg je huidige lock af op Execute, of log een nooduitgave als dat nodig is.";
-  const untilLabel = formatLockUntil(lockUntil);
+  const untilLabel = formatLockEndDateTime(lockUntilAt);
 
   return (
     <section className="card-simple space-y-3">
@@ -44,7 +34,7 @@ export function BudgetOptimizationCard({ lockPanelHref, summary, suggestions, ch
       {lockActive && (
         <div className="rounded-lg border border-amber-400/50 bg-amber-500/15 px-3 py-2.5 text-xs text-amber-50">
           <p className="font-semibold text-amber-100">Lock actief — interventies hieronder staan op pauze</p>
-          {untilLabel && <p className="mt-1 text-amber-50/95">Minstens tot {untilLabel}</p>}
+          {untilLabel && <p className="mt-1 text-amber-50/95">Tot {untilLabel}</p>}
           <p className="mt-1.5 text-[var(--text-secondary)]">{lockSummary}</p>
           <a
             href={lockPanelHref}
@@ -84,7 +74,9 @@ export function BudgetOptimizationCard({ lockPanelHref, summary, suggestions, ch
               }
               startTransition(async () => {
                 const result = await applyBudgetOptimizationLock(1);
-                setLockInfo(`24u focus-lock actief tot ${result.lockUntil}.`);
+                setLockInfo(
+                  `24u focus-lock actief tot ${formatLockEndShort(result.lockUntilAt) ?? result.lockUntil}.`
+                );
               });
             }}
           >
@@ -102,7 +94,9 @@ export function BudgetOptimizationCard({ lockPanelHref, summary, suggestions, ch
               }
               startTransition(async () => {
                 const result = await applyBudgetOptimizationLock(3);
-                setLockInfo(`72u reset-lock actief tot ${result.lockUntil}.`);
+                setLockInfo(
+                  `72u reset-lock actief tot ${formatLockEndShort(result.lockUntilAt) ?? result.lockUntil}.`
+                );
               });
             }}
           >

@@ -1,4 +1,9 @@
-export const LATEST_SNAPSHOT_VERSION = 1 as const;
+/**
+ * Bump when the persisted snapshot contract changes (new required slices, incompatible shape).
+ * v2: DCIC mode is day-locked server-side (`daily_state.dcic_mode`); `dcicGameState` in the snapshot
+ * must match bootstrap `getGameState` for that date. Stale v1 snapshots are discarded via `isCompatibleSnapshot`.
+ */
+export const LATEST_SNAPSHOT_VERSION = 2 as const;
 
 export type DailySnapshotVersion = typeof LATEST_SNAPSHOT_VERSION;
 
@@ -139,7 +144,9 @@ export interface DailySnapshot {
   /** Optional for backward compat with snapshots saved before this field existed. */
   settings?: SettingsSnapshot | null;
   /**
-   * DCIC game state from bootstrap — mirrors server + keeps cold start aligned with missions.
+   * DCIC game state from `/api/bootstrap/today` — same object as server `getGameState` after
+   * `lock_daily_dcic_mode_if_unset` (mode stable for the calendar day). Refreshed by
+   * `mergeDailySnapshotFromNetwork` / `scheduleSyncDailySnapshot` after mutations.
    */
   dcicGameState?: unknown | null;
 

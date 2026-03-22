@@ -495,6 +495,7 @@ async function BudgetContent({ searchParams }: Props) {
           <BudgetLockControlCard
             lockActive={budgetControlState.lockActive}
             lockUntil={budgetControlState.lockUntil}
+            lockUntilAt={budgetControlState.lockUntilAt}
             currency={currency}
           />
         )}
@@ -799,6 +800,7 @@ async function BudgetContent({ searchParams }: Props) {
                   historyMode={historyMode}
                   lockActive={budgetControlState.lockActive}
                   lockUntil={budgetControlState.lockUntil}
+                  lockUntilAt={budgetControlState.lockUntilAt}
                   lockPanelHref={lockPanelHref}
                   headerRight={headerRight}
                   overview={
@@ -806,6 +808,7 @@ async function BudgetContent({ searchParams }: Props) {
                       lockPanelHref={lockPanelHref}
                       lockActive={!historyMode && budgetControlState.lockActive}
                       lockUntil={budgetControlState.lockUntil}
+                      lockUntilAt={budgetControlState.lockUntilAt}
                     >
                       {overviewSection}
                     </BudgetOverviewLockGate>

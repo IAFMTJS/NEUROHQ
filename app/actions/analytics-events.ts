@@ -16,6 +16,7 @@ const CORE_EVENT_NAMES = new Set([
   "mission_completed",
   "mission_aborted",
   "mission_skipped",
+  "mission_deleted",
   "CTA_clicked",
 ] as const);
 
@@ -25,6 +26,7 @@ const EVENT_SCHEMAS: Record<string, EventSchema> = {
   mission_completed: { version: 1, category: "core", requiredKeys: ["taskId"] },
   mission_aborted: { version: 1, category: "core", requiredKeys: ["taskId"] },
   mission_skipped: { version: 1, category: "core", requiredKeys: ["taskId"] },
+  mission_deleted: { version: 1, category: "core", requiredKeys: ["taskId"] },
   CTA_clicked: { version: 1, category: "core", requiredKeys: ["context"] },
   CTA_shown: { version: 1, category: "custom", requiredKeys: ["context"] },
   card_viewed: { version: 1, category: "custom", requiredKeys: ["context"] },

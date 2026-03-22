@@ -188,6 +188,15 @@ async function StrategyContent() {
 
   return (
     <div data-tutorial="strategy-content" className="space-y-6">
+      <div className="flex flex-wrap items-center justify-end gap-3">
+        <XPBadge totalXp={xp.total_xp} level={xp.level} compact href="/xp" />
+        <Link
+          href="/report"
+          className="link-glow-hover inline-flex items-center rounded-lg border border-[var(--card-border)] bg-[var(--bg-elevated)] px-4 py-2 text-sm font-medium text-[var(--text-primary)] transition-all duration-200 hover:border-[var(--accent-focus)] hover:text-[var(--accent-focus)]"
+        >
+          Reality report →
+        </Link>
+      </div>
       <StrategyTabsShell
         banner={reviewBanner}
         overview={
@@ -195,15 +204,6 @@ async function StrategyContent() {
             <Suspense fallback={<div className="h-24 animate-pulse rounded-xl bg-[var(--bg-elevated)]/40" aria-hidden />}>
               <StrategyIntegratedOverview />
             </Suspense>
-            <div className="flex flex-wrap items-center justify-end gap-3">
-              <XPBadge totalXp={xp.total_xp} level={xp.level} compact href="/xp" />
-              <Link
-                href="/report"
-                className="link-glow-hover inline-flex items-center rounded-lg border border-[var(--card-border)] bg-[var(--bg-elevated)] px-4 py-2 text-sm font-medium text-[var(--text-primary)] transition-all duration-200 hover:border-[var(--accent-focus)] hover:text-[var(--accent-focus)]"
-              >
-                Reality report →
-              </Link>
-            </div>
             <StrategyThesisHero
               thesis={strategy.thesis}
               thesisWhy={strategy.thesis_why}
@@ -213,14 +213,16 @@ async function StrategyContent() {
               zone={pressureData.zone}
               daysRemaining={pressureData.daysRemaining}
             />
+          </>
+        }
+        focusBudget={
+          <>
             <StrategyFocusMultipliers
               primaryDomain={strategy.primary_domain}
               secondaryDomains={strategy.secondary_domains}
             />
+            <StrategyAllocationSliders initialAllocation={strategy.weekly_allocation} neuroHint={neuroBudgetHint} />
           </>
-        }
-        focusBudget={
-          <StrategyAllocationSliders initialAllocation={strategy.weekly_allocation} neuroHint={neuroBudgetHint} />
         }
         alignment={
           <>

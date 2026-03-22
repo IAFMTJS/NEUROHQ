@@ -393,6 +393,30 @@ async function getDecisionBlocksUncached(dateStr: string): Promise<DecisionBlock
   };
 }
 
+/**
+ * Cached decision blocks can briefly list tasks that were soft-deleted after the cache entry
+ * was built. Drop any task not in today's fresh list and re-pick top UMS.
+ */
+function intersectDecisionBlocksWithValidTasks(
+  result: DecisionBlocksResult,
+  validIds: Set<string>
+): DecisionBlocksResult {
+  const take = (arr: TaskWithMeta[]) => arr.filter((t) => validIds.has(t.id));
+  const tasksSorted = [...result.tasksSortedByUMS.filter((t) => validIds.has(t.id))].sort(
+    (a, b) => b.umsBreakdown.ums - a.umsBreakdown.ums
+  );
+  const topRecommendation = tasksSorted[0] ?? null;
+  return {
+    ...result,
+    streakCritical: take(result.streakCritical),
+    highPressure: take(result.highPressure),
+    recovery: take(result.recovery),
+    alignmentFix: take(result.alignmentFix),
+    topRecommendation,
+    tasksSortedByUMS: tasksSorted,
+  };
+}
+
 const decisionBlocksCache = unstable_cache(
   async (userId: string, dateStr: string) => {
     // userId is part of the cache key; the inner function reads auth from cookies.
@@ -406,7 +430,20 @@ export async function getDecisionBlocks(dateStr: string): Promise<DecisionBlocks
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return EMPTY_DECISION_BLOCKS;
-  return decisionBlocksCache(user.id, dateStr);
+
+  const [cached, { tasks: freshTasks }] = await Promise.all([
+    decisionBlocksCache(user.id, dateStr),
+    getTodaysTasks(dateStr, "normal"),
+  ]);
+  const validIds = new Set(freshTasks.map((t) => t.id));
+  let sanitized = intersectDecisionBlocksWithValidTasks(cached, validIds);
+
+  if (sanitized.tasksSortedByUMS.length === 0 && freshTasks.length > 0) {
+    const recomputed = await getDecisionBlocksUncached(dateStr);
+    sanitized = intersectDecisionBlocksWithValidTasks(recomputed, validIds);
+  }
+
+  return sanitized;
 }
 
 /** Week data for Calendar Modal 3.0: time budget, strategy allocation, pressure. */

@@ -178,6 +178,12 @@ const TRIGGER_COOLDOWN_HOURS: Partial<Record<TriggerType, number>> = {
   learning_week_target_hit: 48,
   reflection_submitted: 48,
   recovery_task_completed: 24,
+  strategy_check_in_soft: 72,
+  strategy_check_in_firm: 48,
+  strategy_quarter_incomplete: 168,
+  growth_focus_unset: 336,
+  strategy_monthly_tip: 720,
+  growth_learning_idle: 168,
 };
 
 /**

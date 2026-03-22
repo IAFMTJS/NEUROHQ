@@ -96,13 +96,15 @@ When you change user-facing behaviour (tasks, budget, assistant, settings, routi
 1. Connect the repo to Vercel.  
 2. Set environment variables in Vercel (same as `.env.local`).  
 3. Add **CRON_SECRET** in Vercel and (optional) in Vercel Cron config set “Authorization: Bearer \<CRON_SECRET\>” for cron invocations.  
-4. **Hourly jobs (timezone-aware pushes, rollover, dedupe, morning/evening email windows)** are **not** in `vercel.json` — Vercel Hobby only allows each cron path to run **once per day**. Use **GitHub Actions** instead: `.github/workflows/cron-hourly.yml` runs every hour and `curl`s `PRODUCTION_URL/api/cron/hourly` with `Authorization: Bearer CRON_SECRET`. Set repository secrets `CRON_SECRET` and `PRODUCTION_URL` (and optionally `VERCEL_AUTOMATION_BYPASS_SECRET` if Deployment Protection is on).  
-5. Vercel Cron (paths below; send `Authorization: Bearer <CRON_SECRET>` if set):
+4. **Hourly jobs (timezone-aware pushes, rollover, dedupe, morning/evening email windows)** are **not** in `vercel.json` — Vercel Hobby only allows each cron path to run **once per day**. Use **GitHub Actions** instead: `.github/workflows/cron-hourly.yml` runs every hour and calls `PRODUCTION_URL/api/cron/hourly` via `scripts/gh-call-cron.sh`. Set repository secrets `CRON_SECRET` and `PRODUCTION_URL` (and optionally `VERCEL_AUTOMATION_BYPASS_SECRET` if Deployment Protection is on).  
+5. **Optional:** run the other crons from GitHub too (same secrets) so everything is in one place: `cron-daily.yml`, `cron-weekly.yml`, `cron-evening.yml`, `cron-quarterly.yml`, `cron-strategy-growth.yml` (strategy/growth nudges). If you enable these, **remove the matching schedules from `vercel.json`** so each path runs only once.  
+6. Vercel Cron (paths below; send `Authorization: Bearer <CRON_SECRET>` if set) — only if you are **not** using the GitHub workflows for the same path:
    - **Daily** (`/api/cron/daily`) — 00:00 UTC: rollover + quote for users without timezone; freeze reminders, avoidance alert
    - **Evening** (`/api/cron/evening`) — 21:00 UTC: shutdown reminder
    - **Weekly** (`/api/cron/weekly`) — Monday 09:00 UTC: reality report, learning reminder, savings alert
    - **Quarterly** (`/api/cron/quarterly`) — 1st of Jan/Apr/Jul/Oct 06:00 UTC: ensure current quarter strategy row per user
-6. Deploy checklist: run migrations 001–008, enable Email/Password auth, set env vars. See **DEPLOY.md** for step-by-step Supabase/Vercel setup and a full smoke test checklist. For PWA installability and Lighthouse, see **LIGHTHOUSE_PWA.md**.
+   - **Strategy & growth** (`/api/cron/strategy-growth`) — not in `vercel.json` by default; use `cron-strategy-growth.yml` (10:30 UTC daily).
+7. Deploy checklist: run migrations 001–008, enable Email/Password auth, set env vars. See **DEPLOY.md** for step-by-step Supabase/Vercel setup and a full smoke test checklist. For PWA installability and Lighthouse, see **LIGHTHOUSE_PWA.md**.
 
 Build command: `npm run build`. Framework: Next.js.
 

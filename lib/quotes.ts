@@ -38,6 +38,60 @@ export function getQuoteByDayNumber(dayOfYear: number): QuoteRow | null {
   return row ?? null;
 }
 
+/** Max characters for quote text in the notification body (author goes in the title). */
+export const PUSH_QUOTE_BODY_MAX_CHARS = 220;
+
+/**
+ * Quote + author for personality push formatting: author is always visible in the title when present;
+ * body is the quote (truncated). `combinedBody` stays compatible with legacy single-field formatting.
+ */
+export function prepareQuoteForPersonalityPush(
+  row: QuoteRow | null,
+  maxQuoteChars = PUSH_QUOTE_BODY_MAX_CHARS
+): {
+  quoteText: string;
+  author: string | null;
+  combinedBody: string;
+} {
+  const author = row?.author_name?.trim() || null;
+  const raw = (row?.quote_text ?? "Your daily focus.").trim();
+  const quoteText =
+    raw.length > maxQuoteChars ? `${raw.slice(0, Math.max(0, maxQuoteChars - 1))}…` : raw;
+  return {
+    quoteText,
+    author,
+    combinedBody: formatQuoteForPushBody(row, 160),
+  };
+}
+
+/**
+ * Parse legacy "quote — author" combined lines (em dash, en dash, or ASCII hyphen).
+ */
+export function parseQuoteBodyCombined(combined: string): { quote: string; author: string | null } {
+  const s = combined.trim();
+  const splitAt = (idx: number, sepLen: number): { quote: string; author: string | null } | null => {
+    if (idx < 8) return null;
+    const author = s.slice(idx + sepLen).trim();
+    return { quote: s.slice(0, idx).trim(), author: author || null };
+  };
+  const em = s.lastIndexOf(" — ");
+  if (em >= 8) {
+    const r = splitAt(em, 3);
+    if (r) return r;
+  }
+  const en = s.lastIndexOf(" – ");
+  if (en >= 8) {
+    const r = splitAt(en, 3);
+    if (r) return r;
+  }
+  const hy = s.lastIndexOf(" - ");
+  if (hy >= 8) {
+    const r = splitAt(hy, 3);
+    if (r) return r;
+  }
+  return { quote: s, author: null };
+}
+
 /** Push/notification body: quote text plus author, total length capped (default 120). */
 export function formatQuoteForPushBody(row: QuoteRow | null, maxLen = 120): string {
   const text = row?.quote_text ?? "Your daily focus.";

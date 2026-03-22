@@ -1,17 +1,8 @@
 "use client";
 
-import { format } from "date-fns";
-import { nl } from "date-fns/locale";
 import { useBudgetLock } from "@/components/budget/BudgetLockContext";
-
-function formatLockUntil(iso: string | null): string | null {
-  if (!iso) return null;
-  try {
-    return format(new Date(`${iso}T12:00:00Z`), "d MMMM yyyy", { locale: nl });
-  } catch {
-    return iso;
-  }
-}
+import { BudgetLockCountdown } from "@/components/budget/BudgetLockCountdown";
+import { formatLockEndDateTime } from "@/lib/budget-lock-display";
 
 type Props = {
   /** Extra context for screen readers / copy */
@@ -22,10 +13,10 @@ type Props = {
 };
 
 export function BudgetLockTabBanner({ context, lockPanelHref, className = "" }: Props) {
-  const { lockActive, lockUntil } = useBudgetLock();
+  const { lockActive, lockUntilAt } = useBudgetLock();
   if (!lockActive) return null;
 
-  const until = formatLockUntil(lockUntil);
+  const until = formatLockEndDateTime(lockUntilAt);
   const contextHint =
     context === "optimization"
       ? "Extra lock-interventies en challenges zijn uitgeschakeld."
@@ -45,7 +36,12 @@ export function BudgetLockTabBanner({ context, lockPanelHref, className = "" }: 
         </span>
         <div className="min-w-0 flex-1 space-y-1">
           <p className="text-sm font-bold uppercase tracking-[0.14em] text-amber-100">No-spend lock actief</p>
-          {until && <p className="text-xs text-amber-50/95">Tot minstens {until}</p>}
+          {until && <p className="text-xs text-amber-50/95">Tot {until}</p>}
+          {lockUntilAt && (
+            <p className="text-xs text-amber-50/90" aria-hidden>
+              <BudgetLockCountdown unlockAtIso={lockUntilAt} />
+            </p>
+          )}
           <p className="text-xs text-[var(--text-secondary)]">{contextHint}</p>
           <a
             href={lockPanelHref}

@@ -8,6 +8,7 @@ import type { PushPayload } from "@/lib/push";
 import type { PersonalityMode } from "@/lib/behavioral-notifications";
 import { pickVariantIndex } from "@/lib/push-copy-variant";
 import type { PushCopyDedupe } from "@/lib/push-copy-dedupe";
+import { parseQuoteBodyCombined } from "@/lib/quotes";
 
 export type PushContext =
   | "quote"
@@ -19,6 +20,7 @@ export type PushContext =
   | "freeze_reminder"
   | "avoidance_alert"
   | "savings_alert"
+  | "release_notes"
   | "generic";
 
 /**
@@ -63,12 +65,39 @@ export function applyPersonalityToPayload(
 
   switch (context) {
     case "quote": {
-      const titles: Record<PersonalityMode, string[]> = {
+      let author = (payload.quoteAuthor ?? "").trim() || null;
+      let quotePlain = (payload.quoteText ?? "").trim();
+      if (!quotePlain && payload.body) {
+        const parsed = parseQuoteBodyCombined(payload.body);
+        quotePlain = parsed.quote;
+        if (!author) author = parsed.author;
+      }
+      if (!quotePlain) quotePlain = (payload.body ?? "").trim();
+
+      const pickBodyVariant = (variants: string[], salt: string): string => {
+        if (!variants.length) return quotePlain;
+        const poolKey = `${context}:${personalityMode}:${salt}`;
+        const seedBase =
+          variantSeed != null && variantSeed !== ""
+            ? `${variantSeed}:${context}:${salt}`
+            : `rnd:${context}:${salt}:${Math.random().toString(36).slice(2)}`;
+        let idx: number;
+        if (dedupe) {
+          idx = dedupe.pickIndex(variants.length, poolKey, seedBase);
+        } else {
+          idx =
+            variantSeed != null && variantSeed !== ""
+              ? pickVariantIndex(`${variantSeed}:${context}:${salt}`, variants.length)
+              : Math.floor(Math.random() * variants.length);
+        }
+        return variants[idx] ?? variants[0]!;
+      };
+
+      const titlesNoAuthor: Record<PersonalityMode, string[]> = {
         stoic: [
           "Focus.",
           "Awareness.",
           "One thought.",
-          "—",
           "Stillness.",
           "Observe.",
           "Breathe. Read.",
@@ -116,8 +145,122 @@ export function applyPersonalityToPayload(
         ],
         auto: ["NEUROHQ", "Daily focus", "NEUROHQ", "Today's quote", "NEUROHQ — Daily", "One line"],
       };
-      const titlePool = titles[personalityMode] ?? titles.auto;
-      return { ...payload, title: pickStr(titlePool, "quote:title"), body: body || payload.body };
+
+      const titlesWithAuthor = (a: string): Record<PersonalityMode, string[]> => ({
+        stoic: [`${a}`, `Today · ${a}`, `One voice · ${a}`, `Read · ${a}`, `Stillness · ${a}`, `${a} · one line`],
+        friendly: [
+          `From ${a} 💛`,
+          `A moment with ${a}`,
+          `${a} · for you`,
+          `Inspired by ${a}`,
+          `Today's gentle line · ${a}`,
+          `${a} sent this one`,
+        ],
+        coach: [
+          `${a} · today's line`,
+          `Quote · ${a}`,
+          `Lead with ${a}`,
+          `Set the tone · ${a}`,
+          `${a} — brief, then act`,
+          `Your opening move · ${a}`,
+        ],
+        drill: [
+          `${a}. Read. Move.`,
+          `Line from ${a}`,
+          `${a} — no drift`,
+          `Quote · ${a} · execute`,
+          `Brief from ${a}`,
+        ],
+        chaos: [
+          `🚨 ${a.toUpperCase()} SAID WHAT?!`,
+          `QUOTE BY ${a.toUpperCase()} (HANDLE IT)`,
+          `AUTHOR: ${a} — DEAL WITH IT`,
+          `⚠️ ${a} DROPPED A LINE ⚠️`,
+          `SOURCE: ${a} (YES REALLY)`,
+        ],
+        auto: [`${a} · NEUROHQ`, `Quote · ${a}`, `Daily · ${a}`, `${a}`, `NEUROHQ · ${a}`],
+      });
+
+      const bodyByMode: Record<PersonalityMode, string[]> = {
+        stoic: [
+          quotePlain,
+          `“${quotePlain}”`,
+          quotePlain,
+          `One line: ${quotePlain}`,
+        ],
+        friendly: [
+          quotePlain,
+          `Here's the line: ${quotePlain}`,
+          `Take this in: ${quotePlain}`,
+          `💛 ${quotePlain}`,
+        ],
+        coach: [
+          quotePlain,
+          `Today's line: ${quotePlain}`,
+          `Lead with this: ${quotePlain}`,
+          `Carry this today: ${quotePlain}`,
+        ],
+        drill: [
+          quotePlain,
+          `Read. ${quotePlain}`,
+          `${quotePlain} — now execute.`,
+          `Line in: ${quotePlain}`,
+        ],
+        chaos: [
+          quotePlain,
+          `🚨 ${quotePlain} 🚨`,
+          `BRAIN RECEIVED: ${quotePlain.toUpperCase()}`,
+          `QUOTE GO BRR: ${quotePlain}`,
+        ],
+        auto: [quotePlain, quotePlain, `${quotePlain}`, quotePlain],
+      };
+
+      const tw = author ? titlesWithAuthor(author) : null;
+      const titlePool = tw
+        ? (tw[personalityMode] ?? tw.auto)
+        : (titlesNoAuthor[personalityMode] ?? titlesNoAuthor.auto);
+      const bodyPool = bodyByMode[personalityMode] ?? bodyByMode.auto;
+      const nextBody = pickBodyVariant(bodyPool, "quote:body");
+      const nextTitle = pickStr(titlePool, "quote:title");
+
+      const { quoteText: _qt, quoteAuthor: _qa, ...rest } = payload;
+      return { ...rest, title: nextTitle, body: nextBody };
+    }
+
+    case "release_notes": {
+      const baseBody = body || payload.body || "";
+      const bullets: Record<PersonalityMode, (b: string) => string> = {
+        stoic: (b) => b,
+        friendly: (b) => `What's new: ${b}`,
+        coach: (b) => `Updates: ${b}`,
+        drill: (b) => `Shipped: ${b}`,
+        chaos: (b) =>
+          pickStr(
+            [
+              `🆕 ${b.toUpperCase()}`,
+              `PATCH NOTES (READ OR DON'T): ${b}`,
+              `NEW STUFF: ${b}`,
+            ],
+            "release_notes:chaosBody"
+          ),
+        auto: (b) => b,
+      };
+      const titlePools: Record<PersonalityMode, string[]> = {
+        stoic: ["Update.", "What's new.", "NEUROHQ update"],
+        friendly: ["Something new for you 💛", "Fresh updates ✨", "NEUROHQ — what's new"],
+        coach: ["New in NEUROHQ", "Product update", "Here's what shipped"],
+        drill: ["Update. Read the list.", "NEUROHQ — changelog", "Shipped. Review."],
+        chaos: [
+          "🆕 THEY SHIPPED STUFF AGAIN",
+          "APP UPDATED. YOU'RE WELCOME.",
+          "NEW FEATURES. SAME BRAIN.",
+        ],
+        auto: ["NEUROHQ — Update", "What's new", "NEUROHQ"],
+      };
+      const pool = titlePools[personalityMode] ?? titlePools.auto;
+      const t = bullets[personalityMode] ?? bullets.auto;
+      const { quoteText: _q1, quoteAuthor: _q2, ...rest } = payload;
+      return { ...rest, title: pickStr(pool, "release_notes:title"), body: t(baseBody) };
     }
 
     case "calendar_morning": {

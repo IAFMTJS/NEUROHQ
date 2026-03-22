@@ -26,7 +26,7 @@ function DomainFocusVsMissions(args: {
         );
       })}
       <p className="pt-1 text-[10px] text-[var(--text-muted)]">
-        Vergelijking: weekly allocation (hieronder ook met sliders) vs open missies deze week per domein.
+        Vergelijking: weekly allocation (tab Focus &amp; budget) vs open missies deze week per domein.
       </p>
     </div>
   );
@@ -60,23 +60,13 @@ export async function StrategyIntegratedOverview() {
       className="space-y-4"
       aria-label="Strategische stack: missions, budget, growth"
     >
-      <div className="flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <h2 className="text-sm font-bold uppercase tracking-[0.18em] text-[var(--text-muted)]">
-            Strategische stack
-          </h2>
-          <p className="mt-1 text-sm text-[var(--text-secondary)]">
-            Missions, budget en growth in één beeld — zo zie je of je week je intentie volgt.
-          </p>
-        </div>
-        <div className="flex flex-wrap gap-2">
-          <Link
-            href="/report"
-            className="inline-flex items-center rounded-lg border border-[var(--card-border)] bg-[var(--bg-elevated)] px-3 py-1.5 text-xs font-medium text-[var(--text-primary)] hover:border-[var(--accent-focus)]"
-          >
-            Reality report
-          </Link>
-        </div>
+      <div className="flex flex-col gap-1">
+        <h2 className="text-sm font-bold uppercase tracking-[0.18em] text-[var(--text-muted)]">
+          Strategische stack
+        </h2>
+        <p className="mt-1 text-sm text-[var(--text-secondary)]">
+          Missions, budget en growth in één beeld — zo zie je of je week je intentie volgt.
+        </p>
       </div>
 
       <div className="grid gap-4 lg:grid-cols-3">

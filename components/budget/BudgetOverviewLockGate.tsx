@@ -5,14 +5,19 @@ import type { ReactNode } from "react";
 type Props = {
   lockActive: boolean;
   lockUntil: string | null;
+  lockUntilAt: string | null;
   /** Opens Execute tab + scrolls to lock card (hash alone fails while Status is active). */
   lockPanelHref: string;
   children: ReactNode;
 };
 
 /** Dims overview when no-spend lock is on; emergency path points to Budget lock card. */
-export function BudgetOverviewLockGate({ lockActive, lockUntil, lockPanelHref, children }: Props) {
+export function BudgetOverviewLockGate({ lockActive, lockUntil, lockUntilAt, lockPanelHref, children }: Props) {
   if (!lockActive) return <>{children}</>;
+  const untilLabel =
+    lockUntilAt != null
+      ? new Date(lockUntilAt).toLocaleString("nl-NL", { dateStyle: "medium", timeStyle: "short" })
+      : lockUntil ?? "";
   return (
     <div className="space-y-2">
       <div
@@ -21,7 +26,7 @@ export function BudgetOverviewLockGate({ lockActive, lockUntil, lockPanelHref, c
         aria-live="polite"
       >
         <span className="font-semibold">
-          No-spend lock{lockUntil ? ` · tot ${lockUntil}` : ""}
+          No-spend lock{untilLabel ? ` · tot ${untilLabel}` : ""}
         </span>
         <a
           href={lockPanelHref}

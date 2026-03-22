@@ -1,0 +1,30 @@
+# Trigger /api/cron/daily from GitHub (rollover, quotes UTC users, behavioral, release notes, …).
+# If you use this, disable the same schedule in vercel.json to avoid double runs.
+name: Cron daily
+
+on:
+  schedule:
+    - cron: "0 0 * * *"
+  workflow_dispatch:
+
+jobs:
+  trigger-daily:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check secrets
+        env:
+          CRON_SECRET: ${{ secrets.CRON_SECRET || vars.CRON_SECRET }}
+          PRODUCTION_URL: ${{ secrets.PRODUCTION_URL || vars.PRODUCTION_URL }}
+        run: |
+          CRON_SECRET="${CRON_SECRET#"${CRON_SECRET%%[![:space:]]*}"}"
+          CRON_SECRET="${CRON_SECRET%"${CRON_SECRET##*[![:space:]]}"}"
+          PRODUCTION_URL="${PRODUCTION_URL#"${PRODUCTION_URL%%[![:space:]]*}"}"
+          PRODUCTION_URL="${PRODUCTION_URL%"${PRODUCTION_URL##*[![:space:]]}"}"
+          if [ -z "$CRON_SECRET" ] || [ -z "$PRODUCTION_URL" ]; then echo "Set CRON_SECRET and PRODUCTION_URL in Actions secrets/vars."; exit 1; fi
+      - name: Call /api/cron/daily
+        env:
+          CRON_SECRET: ${{ secrets.CRON_SECRET || vars.CRON_SECRET }}
+          PRODUCTION_URL: ${{ secrets.PRODUCTION_URL || vars.PRODUCTION_URL }}
+          VERCEL_AUTOMATION_BYPASS_SECRET: ${{ secrets.VERCEL_AUTOMATION_BYPASS_SECRET || vars.VERCEL_AUTOMATION_BYPASS_SECRET }}
+        run: bash scripts/gh-call-cron.sh /api/cron/daily

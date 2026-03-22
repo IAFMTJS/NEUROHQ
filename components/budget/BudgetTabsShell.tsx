@@ -1,10 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import { format } from "date-fns";
-import { nl } from "date-fns/locale";
 import { BudgetLockProvider, useBudgetLock } from "@/components/budget/BudgetLockContext";
 import { BudgetLockTabBanner } from "@/components/budget/BudgetLockTabBanner";
+import { BudgetLockCountdown } from "@/components/budget/BudgetLockCountdown";
+import { formatLockEndShort } from "@/lib/budget-lock-display";
 
 type TabId = "overview" | "execute" | "analysis" | "optimization";
 type LegacyTabId = TabId | "tactical" | "goals";
@@ -23,14 +23,13 @@ type Props = {
   optimization: React.ReactNode;
   lockActive: boolean;
   lockUntil: string | null;
+  lockUntilAt: string | null;
 };
 
 function BudgetLockStrip({ historyMode, lockPanelHref }: { historyMode: boolean; lockPanelHref: string }) {
-  const { lockActive, lockUntil } = useBudgetLock();
+  const { lockActive, lockUntilAt } = useBudgetLock();
   if (historyMode || !lockActive) return null;
-  const untilShort = lockUntil
-    ? format(new Date(`${lockUntil}T12:00:00Z`), "d MMM", { locale: nl })
-    : null;
+  const untilShort = lockUntilAt ? formatLockEndShort(lockUntilAt) : null;
   return (
     <div
       className="sticky top-0 z-[25] mb-3 flex flex-wrap items-center justify-between gap-2 rounded-xl border border-amber-400/50 bg-amber-500/[0.18] px-3 py-2.5 text-xs text-amber-50 shadow-[0_4px_24px_rgba(0,0,0,0.25)] backdrop-blur-md"
@@ -39,7 +38,15 @@ function BudgetLockStrip({ historyMode, lockPanelHref }: { historyMode: boolean;
     >
       <span className="min-w-0">
         <strong className="text-amber-100">No-spend lock</strong>
-        {untilShort ? ` · tot ${untilShort}` : ""} — overzicht is beperkt; snel loggen uitgeschakeld op Goals.{" "}
+        {untilShort ? ` · tot ${untilShort}` : ""}
+        {lockUntilAt ? (
+          <span aria-hidden className="inline">
+            {" "}
+            ·{" "}
+            <BudgetLockCountdown unlockAtIso={lockUntilAt} className="text-amber-100/95" />
+          </span>
+        ) : null}{" "}
+        — overzicht is beperkt; snel loggen uitgeschakeld op Goals.{" "}
         <span className="text-amber-100/90">Optimalisatie-start is gepauzeerd.</span> Gebruik Execute voor noodpad.
       </span>
       <a
@@ -65,6 +72,7 @@ export function BudgetTabsShell({
   optimization,
   lockActive,
   lockUntil,
+  lockUntilAt,
 }: Props) {
   const normalizeInitialTab = (tab: LegacyTabId): TabId => {
     if (tab === "tactical" || tab === "goals") return "execute";
@@ -89,7 +97,7 @@ export function BudgetTabsShell({
     }`;
 
   return (
-    <BudgetLockProvider value={{ lockActive: lockActive && !historyMode, lockUntil }}>
+    <BudgetLockProvider value={{ lockActive: lockActive && !historyMode, lockUntil, lockUntilAt }}>
       <div className="space-y-3">
         <div className="dashboard-top-strip">
           <div className="dashboard-top-strip-track" role="tablist" aria-label="Budget views">

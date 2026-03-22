@@ -3,7 +3,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { sendPushToUser } from "@/lib/push";
 import { getLocalDateHour, yesterdayDate, getDayOfYearFromDateString, isInQuietHours, utcStartOfLocalDayIso } from "@/lib/utils/timezone";
 import { isHighSensoryDayForUser } from "@/lib/mode-admin";
-import { getQuoteByDayNumber, formatQuoteForPushBody } from "@/lib/quotes";
+import { getQuoteByDayNumber, prepareQuoteForPersonalityPush } from "@/lib/quotes";
 import { isAppEmailConfigured, sendReminderToUser } from "@/lib/email";
 import {
   getMorningEmailData,
@@ -355,14 +355,16 @@ export async function GET(request: Request) {
           if (!highSensory) {
             const dayOfYear = Math.max(1, Math.min(365, getDayOfYearFromDateString(todayStr)));
             const quoteRow = getQuoteByDayNumber(dayOfYear);
-            const quoteBody = formatQuoteForPushBody(quoteRow);
+            const { quoteText, author, combinedBody } = prepareQuoteForPersonalityPush(quoteRow);
             try {
               const basePayload = {
                 title: "NEUROHQ",
-                body: quoteBody,
+                body: combinedBody,
                 tag: "daily-quote",
                 url: "/dashboard",
                 priority: "low" as const,
+                quoteText,
+                quoteAuthor: author,
               };
               const payload = applyPersonalityToPayload(
                 basePayload,

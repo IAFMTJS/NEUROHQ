@@ -54,7 +54,14 @@ $allTypes = @(
     "reengage",
     "streak-growth",
     "streak-protection",
-    "momentum"
+    "momentum",
+    "app-release",
+    "strategy-check-in-soft",
+    "strategy-check-in-firm",
+    "strategy-quarter-incomplete",
+    "growth-focus-unset",
+    "strategy-monthly-tip",
+    "growth-learning-idle"
 )
 
 $typesToRun = if ($Type) {
@@ -66,26 +73,27 @@ $typesToRun = if ($Type) {
     $allTypes
 }
 
-Write-Host "Push notification tests — BaseUrl: $BaseUrl" -ForegroundColor Cyan
+Write-Host "Push notification tests - BaseUrl: $BaseUrl" -ForegroundColor Cyan
 if ($UserId) { Write-Host "Target userId: $UserId" -ForegroundColor Cyan }
 Write-Host ""
 
 $failed = 0
 foreach ($t in $typesToRun) {
     $url = "$BaseUrl/api/push/test-all?type=$t"
-    if ($UserId) { $url += "&userId=$UserId" }
+    # Use single-quoted '&userId=' - PS 5.1 can misparse "&" after += inside double quotes.
+    if ($UserId) { $url = $url + '&userId=' + $UserId }
     try {
         $response = Invoke-RestMethod -Uri $url -Method Get -Headers $headers -ErrorAction Stop
         if ($response.ok) {
-            Write-Host "[OK] $t" -ForegroundColor Green
+            Write-Host ('[OK] ' + $t) -ForegroundColor Green
         } else {
-            Write-Host "[--] $t — $($response.message)" -ForegroundColor Yellow
+            Write-Host ('[--] ' + $t + ' - ' + $response.message) -ForegroundColor Yellow
         }
     } catch {
         $statusCode = $_.Exception.Response.StatusCode.value__
         $body = ""
         if ($_.ErrorDetails.Message) { $body = $_.ErrorDetails.Message }
-        Write-Host "[FAIL] $t — HTTP $statusCode $body" -ForegroundColor Red
+        Write-Host ('[FAIL] ' + $t + ' - HTTP ' + $statusCode + ' ' + $body) -ForegroundColor Red
         $failed++
     }
 }
@@ -94,5 +102,5 @@ Write-Host ""
 if ($failed -eq 0) {
     Write-Host "Done. Check your device for the notifications." -ForegroundColor Green
 } else {
-    Write-Host "$failed request(s) failed. Check CRON_SECRET and that the dev server is running." -ForegroundColor Yellow
+    Write-Host "$($failed) request(s) failed. Check CRON_SECRET and that the dev server is running." -ForegroundColor Yellow
 }

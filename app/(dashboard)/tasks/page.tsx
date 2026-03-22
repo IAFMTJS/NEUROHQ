@@ -117,6 +117,7 @@ async function WeeklyBehaviorSummaryCardAsync() {
   const completed = getCount("mission_completed");
   const skipped = getCount("mission_skipped");
   const aborted = getCount("mission_aborted");
+  const deleted = getCount("mission_deleted");
   const completionRate = started > 0 ? Math.round((completed / started) * 100) : 0;
   return (
     <section className="rounded-xl border border-[var(--card-border)] bg-[var(--bg-surface)]/50 p-4 text-sm" aria-label="Weekly behavior summary">
@@ -127,6 +128,7 @@ async function WeeklyBehaviorSummaryCardAsync() {
         <li><span className="text-[var(--text-muted)]">Completion rate: </span>{completionRate}%</li>
         <li><span className="text-[var(--text-muted)]">Skipped: </span>{skipped}</li>
         <li><span className="text-[var(--text-muted)]">Aborted: </span>{aborted}</li>
+        <li><span className="text-[var(--text-muted)]">Deleted: </span>{deleted}</li>
       </ul>
     </section>
   );
@@ -373,8 +375,29 @@ async function MissionsSectionAsync({
                 ? `Must-do omdat deze missie vandaag de beste match heeft op strategie, energie en impact (UMS ${Math.round(
                     decisionBlocks.topRecommendation.umsBreakdown.ums * 100
                   )}%).`
-                : "Geen harde must-do gevonden, start met een korte missie om momentum op te bouwen."}
+                : tasksNormal.length > 0
+                  ? "Geen aparte top-pick nu — kies een missie in de lijst hieronder, of verdiep je context op Learning of Strategy."
+                  : "Geen harde must-do gevonden, start met een korte missie om momentum op te bouwen."}
           </p>
+          {!allMissionsDoneToday && !decisionBlocks.topRecommendation && tasksNormal.length > 0 && (
+            <p className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-[var(--text-secondary)]">
+              <Link
+                href="/learning"
+                className="font-medium text-[var(--accent-focus)] underline-offset-2 hover:underline"
+              >
+                Learning
+              </Link>
+              <span className="text-[var(--text-muted)]" aria-hidden>
+                ·
+              </span>
+              <Link
+                href="/strategy"
+                className="font-medium text-[var(--accent-focus)] underline-offset-2 hover:underline"
+              >
+                Strategy
+              </Link>
+            </p>
+          )}
           {neuroLine && !allMissionsDoneToday && (
             <p className="mt-2 rounded-lg border border-[var(--card-border)]/60 bg-[var(--bg-surface)]/40 px-3 py-2 text-xs text-[var(--text-secondary)]">
               {neuroLine}

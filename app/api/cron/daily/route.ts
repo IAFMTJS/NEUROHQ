@@ -13,10 +13,11 @@ import {
   getReengagementSendsInLast7Days,
 } from "@/lib/behavioral-notification-server";
 import { runDailyHobbyCommitmentDecay } from "@/app/actions/hobby-commitment-decay";
-import { getQuoteByDayNumber, formatQuoteForPushBody } from "@/lib/quotes";
+import { getQuoteByDayNumber, prepareQuoteForPersonalityPush } from "@/lib/quotes";
 import { applyPersonalityToPayload } from "@/lib/push-personality";
 import { PushCopyDedupe, parsePushCopyHistory } from "@/lib/push-copy-dedupe";
 import { evaluateAcceptanceRulesForUser } from "@/lib/acceptance-rules-evaluator";
+import { runReleaseNotesPush } from "@/lib/release-notes-push";
 
 /**
  * Vercel Cron: runs daily at 00:00 UTC.
@@ -99,7 +100,7 @@ export async function GET(request: Request) {
   if (process.env.VAPID_PRIVATE_KEY && process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY) {
     const dayOfYear = Math.max(1, Math.min(365, getDayOfYear(today)));
     const quoteRow = getQuoteByDayNumber(dayOfYear);
-    const quoteBody = formatQuoteForPushBody(quoteRow);
+    const { quoteText, author: quoteAuthor, combinedBody } = prepareQuoteForPersonalityPush(quoteRow);
     const utcHour = today.getUTCHours();
     let pushUsersQuery = supabase
       .from("users")
@@ -133,10 +134,12 @@ export async function GET(request: Request) {
         );
         const basePayload = {
           title: "NEUROHQ",
-          body: quoteBody,
+          body: combinedBody,
           tag: "daily-quote",
           url: "/dashboard",
           priority: "low" as const,
+          quoteText,
+          quoteAuthor,
         };
         const payload = applyPersonalityToPayload(basePayload, ctx.personalityMode, "quote", `${u.id}:${todayStr}`, {
           dedupe: pushDedupe,
@@ -452,6 +455,16 @@ export async function GET(request: Request) {
     acceptanceGatesOpened = 0;
   }
 
+  let releaseNotesSent = 0;
+  let releaseNotesSkip: string | null = null;
+  try {
+    const rr = await runReleaseNotesPush(supabase, { userIdFilter });
+    releaseNotesSent = rr.sent;
+    releaseNotesSkip = rr.skippedReason;
+  } catch {
+    releaseNotesSent = 0;
+  }
+
   return NextResponse.json({
     ok: true,
     job: "daily",
@@ -469,6 +482,8 @@ export async function GET(request: Request) {
     hobbyDecayUsers,
     acceptanceRulesUsers,
     acceptanceGatesOpened,
+    releaseNotesSent,
+    ...(releaseNotesSkip && { releaseNotesSkip }),
     from: yesterdayStr,
     to: todayStr,
   });

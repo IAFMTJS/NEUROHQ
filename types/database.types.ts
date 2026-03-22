@@ -563,6 +563,7 @@ export type Database = {
           id: string
           lock_from: string
           lock_until: string
+          lock_until_at: string
           reason: string
           user_id: string
         }
@@ -572,6 +573,7 @@ export type Database = {
           id?: string
           lock_from: string
           lock_until: string
+          lock_until_at: string
           reason: string
           user_id: string
         }
@@ -581,6 +583,7 @@ export type Database = {
           id?: string
           lock_from?: string
           lock_until?: string
+          lock_until_at?: string
           reason?: string
           user_id?: string
         }
@@ -973,6 +976,7 @@ export type Database = {
           auto_master_missions_generated: boolean
           created_at: string
           date: string
+          dcic_mode: string | null
           emotional_state: string | null
           energy: number | null
           focus: number | null
@@ -996,6 +1000,7 @@ export type Database = {
           auto_master_missions_generated?: boolean
           created_at?: string
           date: string
+          dcic_mode?: string | null
           emotional_state?: string | null
           energy?: number | null
           focus?: number | null
@@ -1019,6 +1024,7 @@ export type Database = {
           auto_master_missions_generated?: boolean
           created_at?: string
           date?: string
+          dcic_mode?: string | null
           emotional_state?: string | null
           energy?: number | null
           focus?: number | null
@@ -3067,6 +3073,7 @@ export type Database = {
           email_reminders_enabled: boolean
           growth_focus_protocol_locale: string | null
           growth_focus_protocol_slug: string | null
+          last_release_push_version: string | null
           light_ui: boolean
           push_copy_history: Json
           push_evening_enabled: boolean
@@ -3089,6 +3096,7 @@ export type Database = {
           email_reminders_enabled?: boolean
           growth_focus_protocol_locale?: string | null
           growth_focus_protocol_slug?: string | null
+          last_release_push_version?: string | null
           light_ui?: boolean
           push_copy_history?: Json
           push_evening_enabled?: boolean
@@ -3111,6 +3119,7 @@ export type Database = {
           email_reminders_enabled?: boolean
           growth_focus_protocol_locale?: string | null
           growth_focus_protocol_slug?: string | null
+          last_release_push_version?: string | null
           light_ui?: boolean
           push_copy_history?: Json
           push_evening_enabled?: boolean
@@ -3597,6 +3606,10 @@ export type Database = {
     }
     Functions: {
       current_user_is_admin: { Args: never; Returns: boolean }
+      lock_daily_dcic_mode_if_unset: {
+        Args: { p_date: string; p_mode: string; p_user_id: string }
+        Returns: undefined
+      }
       get_calendar_feed_events: {
         Args: { p_token: string }
         Returns: {

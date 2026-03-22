@@ -167,6 +167,10 @@ export interface GameState {
     suggested?: "war" | "recovery" | null;
     /** Optional bonus applied on next war session after good recovery. */
     nextWarBonus?: number | null;
+    /** 0–100 composite from daily brain check-in (energy, focus, battery, physical). */
+    brainStatusAveragePercent?: number | null;
+    /** Last 7d days with composite >75% (war-tier); unlocks recovery when avg>60 but burned out. */
+    warTierDaysLast7?: number;
   };
   /** System authority and behavioural patterns used for overrides and anti-cheat. */
   authority: {

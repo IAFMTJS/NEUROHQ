@@ -104,20 +104,23 @@ async function autoTuneBudgetPolicyFromSurveys(userId: string): Promise<void> {
 export async function getBudgetControlState(): Promise<{
   lockActive: boolean;
   lockUntil: string | null;
+  /** ISO instant when lock ends; use for countdown. */
+  lockUntilAt: string | null;
   needsPaydaySurvey: boolean;
 }> {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return { lockActive: false, lockUntil: null, needsPaydaySurvey: false };
+  if (!user) return { lockActive: false, lockUntil: null, lockUntilAt: null, needsPaydaySurvey: false };
 
   const today = isoDate();
+  const nowIso = new Date().toISOString();
   const [{ data: lock }, { data: settings }, { data: survey }] = await Promise.all([
     (supabase as any)
       .from("budget_control_locks")
-      .select("id, lock_until")
+      .select("id, lock_until, lock_until_at")
       .eq("user_id", user.id)
       .eq("active", true)
-      .gte("lock_until", today)
+      .gt("lock_until_at", nowIso)
       .order("created_at", { ascending: false })
       .limit(1)
       .maybeSingle(),
@@ -136,8 +139,10 @@ export async function getBudgetControlState(): Promise<{
       .maybeSingle(),
   ]);
 
-  const lockUntil = (lock as { lock_until?: string | null } | null)?.lock_until ?? null;
-  const lockActive = !!lockUntil;
+  const lockRow = lock as { lock_until?: string | null; lock_until_at?: string | null } | null;
+  const lockUntil = lockRow?.lock_until ?? null;
+  const lockUntilAt = lockRow?.lock_until_at ?? null;
+  const lockActive = !!lockUntilAt;
 
   const todayDate = new Date(today + "T12:00:00Z");
   const paydayDay = Math.max(1, Math.min(28, (settings?.payday_day_of_month as number | null) ?? 25));
@@ -148,12 +153,14 @@ export async function getBudgetControlState(): Promise<{
   const hasRecentSurvey = !!survey;
   const needsPaydaySurvey = daysToPayday <= 4 && !hasRecentSurvey;
 
-  return { lockActive, lockUntil, needsPaydaySurvey };
+  return { lockActive, lockUntil, lockUntilAt, needsPaydaySurvey };
 }
 
 export async function setBudgetNoSpendLock(params: {
   days: number;
   reason: string;
+  /** Exact unlock instant (ISO). When set, overrides end-of-day from `days`. */
+  lockUntilAtIso?: string;
 }): Promise<void> {
   const userId = await getUserIdOrThrow();
   const supabase = await createClient();
@@ -175,18 +182,45 @@ export async function setBudgetNoSpendLock(params: {
   }
 
   const days = Math.max(1, Math.min(7, Math.floor(params.days)));
-  const lockUntil = isoDate(days);
+  let lockUntilAt: Date;
+  let lockUntilYmd: string;
+
+  if (params.lockUntilAtIso) {
+    lockUntilAt = new Date(params.lockUntilAtIso);
+    if (Number.isNaN(lockUntilAt.getTime())) {
+      throw new Error("Ongeldige eindtijd.");
+    }
+    if (lockUntilAt.getTime() <= Date.now()) {
+      throw new Error("Eindtijd moet in de toekomst liggen.");
+    }
+    const maxEnd = new Date();
+    maxEnd.setDate(maxEnd.getDate() + 8);
+    if (lockUntilAt.getTime() > maxEnd.getTime()) {
+      throw new Error("Lock maximaal ongeveer 7 dagen.");
+    }
+    lockUntilYmd = lockUntilAt.toLocaleDateString("en-CA", { timeZone: "Europe/Amsterdam" });
+  } else {
+    lockUntilYmd = isoDate(days);
+    lockUntilAt = new Date(`${lockUntilYmd}T23:59:59.999Z`);
+  }
+
   await (supabase as any).from("budget_control_locks").insert({
     user_id: userId,
     lock_from: isoDate(),
-    lock_until: lockUntil,
+    lock_until: lockUntilYmd,
+    lock_until_at: lockUntilAt.toISOString(),
     reason: params.reason.slice(0, 240),
     active: true,
   });
   await (supabase as any).from("budget_training_logs").insert({
     user_id: userId,
     log_type: "budget_lock_created",
-    payload: { days, reason: params.reason.slice(0, 240), lockUntil },
+    payload: {
+      days,
+      reason: params.reason.slice(0, 240),
+      lockUntil: lockUntilYmd,
+      lockUntilAt: lockUntilAt.toISOString(),
+    },
   });
   revalidatePath("/budget");
 }
@@ -496,12 +530,15 @@ export async function validateAndCompleteBudgetOptimizationChallenge(
   };
 }
 
-export async function applyBudgetOptimizationLock(days: number): Promise<{ lockUntil: string }> {
+export async function applyBudgetOptimizationLock(days: number): Promise<{ lockUntil: string; lockUntilAt: string }> {
   const safeDays = Math.max(1, Math.min(7, Math.floor(days)));
+  const lockUntilYmd = isoDate(safeDays);
+  const lockUntilAtIso = new Date(`${lockUntilYmd}T23:59:59.999Z`).toISOString();
   await setBudgetNoSpendLock({
     days: safeDays,
     reason: safeDays >= 3 ? "Optimization reset window" : "Optimization focus window",
+    lockUntilAtIso,
   });
-  return { lockUntil: isoDate(safeDays) };
+  return { lockUntil: lockUntilYmd, lockUntilAt: lockUntilAtIso };
 }
 
