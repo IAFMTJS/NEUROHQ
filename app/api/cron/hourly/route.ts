@@ -27,7 +27,8 @@ import { applyPersonalityToPayload } from "@/lib/push-personality";
 import { PushCopyDedupe, parsePushCopyHistory } from "@/lib/push-copy-dedupe";
 
 /**
- * Vercel Cron: runs every hour.
+ * Hourly scheduler: on Vercel Hobby, invoke via GitHub Actions (`.github/workflows/cron-hourly.yml`), not `vercel.json`
+ * (Hobby allows at most one run per day per cron path). The route is unchanged; only the trigger moves off Vercel.
  * For users with timezone set:
  * - 00:00 local: task rollover only.
  * - 08:00 local: daily quote push + morning calendar heads-up.

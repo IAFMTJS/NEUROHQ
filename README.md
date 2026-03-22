@@ -96,13 +96,13 @@ When you change user-facing behaviour (tasks, budget, assistant, settings, routi
 1. Connect the repo to Vercel.  
 2. Set environment variables in Vercel (same as `.env.local`).  
 3. Add **CRON_SECRET** in Vercel and (optional) in Vercel Cron config set “Authorization: Bearer \<CRON_SECRET\>” for cron invocations.  
-4. Cron routes (send `Authorization: Bearer <CRON_SECRET>` if set):
+4. **Hourly jobs (timezone-aware pushes, rollover, dedupe, morning/evening email windows)** are **not** in `vercel.json` — Vercel Hobby only allows each cron path to run **once per day**. Use **GitHub Actions** instead: `.github/workflows/cron-hourly.yml` runs every hour and `curl`s `PRODUCTION_URL/api/cron/hourly` with `Authorization: Bearer CRON_SECRET`. Set repository secrets `CRON_SECRET` and `PRODUCTION_URL` (and optionally `VERCEL_AUTOMATION_BYPASS_SECRET` if Deployment Protection is on).  
+5. Vercel Cron (paths below; send `Authorization: Bearer <CRON_SECRET>` if set):
    - **Daily** (`/api/cron/daily`) — 00:00 UTC: rollover + quote for users without timezone; freeze reminders, avoidance alert
-   - **Hourly** (`/api/cron/hourly`) — not scheduled on Vercel Hobby (limit: 1 run/day). Endpoint exists for manual/Pro use: rollover + quote for users with timezone when it’s 00:00 in their TZ
    - **Evening** (`/api/cron/evening`) — 21:00 UTC: shutdown reminder
    - **Weekly** (`/api/cron/weekly`) — Monday 09:00 UTC: reality report, learning reminder, savings alert
    - **Quarterly** (`/api/cron/quarterly`) — 1st of Jan/Apr/Jul/Oct 06:00 UTC: ensure current quarter strategy row per user
-5. Deploy checklist: run migrations 001–008, enable Email/Password auth, set env vars. See **DEPLOY.md** for step-by-step Supabase/Vercel setup and a full smoke test checklist. For PWA installability and Lighthouse, see **LIGHTHOUSE_PWA.md**.
+6. Deploy checklist: run migrations 001–008, enable Email/Password auth, set env vars. See **DEPLOY.md** for step-by-step Supabase/Vercel setup and a full smoke test checklist. For PWA installability and Lighthouse, see **LIGHTHOUSE_PWA.md**.
 
 Build command: `npm run build`. Framework: Next.js.
 
