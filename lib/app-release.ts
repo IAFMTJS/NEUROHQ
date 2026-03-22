@@ -1,12 +1,27 @@
 /**
- * Configure a release summary push by setting env on deploy:
- * - NEUROHQ_APP_RELEASE_VERSION — bump when you ship user-visible changes (any string, e.g. 2025.03.22 or 1.4.0).
- * - NEUROHQ_APP_RELEASE_NOTES_JSON — JSON array of short bullet strings, e.g. ["Budget lock", "Strategy tab"].
- * Users with push enabled get one notification per version; ack is stored in user_preferences.last_release_push_version.
+ * Release "what's new" push: version + bullet lines.
+ *
+ * **Default (no Vercel edits):** bump `version` and `notes` in `lib/release-notes.json`, commit, deploy.
+ *
+ * **Optional overrides** (e.g. hotfix text without redeploy): set on the server
+ * - `NEUROHQ_APP_RELEASE_VERSION` — replaces file version when set
+ * - `NEUROHQ_APP_RELEASE_NOTES_JSON` — JSON array; when set, replaces file notes
+ *
+ * Users get at most one push per version; ack in `user_preferences.last_release_push_version`.
  */
 
+import releaseNotesFile from "./release-notes.json";
+
+type ReleaseNotesFile = { version?: string; notes?: string[] };
+
+function fileData(): ReleaseNotesFile {
+  return releaseNotesFile as ReleaseNotesFile;
+}
+
 export function getConfiguredReleaseVersion(): string | null {
-  const v = process.env.NEUROHQ_APP_RELEASE_VERSION?.trim();
+  const env = process.env.NEUROHQ_APP_RELEASE_VERSION?.trim();
+  if (env) return env;
+  const v = fileData().version?.trim();
   return v && v.length > 0 ? v : null;
 }
 
@@ -24,6 +39,10 @@ export function getReleaseNotesLines(): string[] {
     } catch {
       // ignore invalid JSON
     }
+  }
+  const notes = fileData().notes;
+  if (Array.isArray(notes)) {
+    return notes.filter((x): x is string => typeof x === "string").map((s) => s.trim()).filter(Boolean);
   }
   return [];
 }

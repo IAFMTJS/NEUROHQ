@@ -540,15 +540,15 @@ export async function GET(request: Request) {
         const version = getConfiguredReleaseVersion();
         const lines = getReleaseNotesLines();
         if (!version || !lines.length) {
-          return NextResponse.json(
-            {
-              ok: false,
-              type: typeParam,
-              message:
-                "Set NEUROHQ_APP_RELEASE_VERSION and NEUROHQ_APP_RELEASE_NOTES_JSON (JSON array of short strings) on the server to test.",
-            },
-            { status: 400 }
-          );
+          // 200 so batch scripts (e.g. test-push-notifications.ps1) don’t treat this as HTTP failure.
+          return NextResponse.json({
+            ok: false,
+            skipped: true,
+            type: typeParam,
+            userId,
+            message:
+              "Skipped: set NEUROHQ_APP_RELEASE_VERSION and NEUROHQ_APP_RELEASE_NOTES_JSON on the server to test app-release.",
+          });
         }
         const body = formatReleaseNotesForPushBody(lines);
         const base = {
