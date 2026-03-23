@@ -11,6 +11,18 @@ export type TaskScaling = {
   minutes: number;
 };
 
+export type ProtocolReflectionBlock = {
+  prompt: string;
+  capture_hint?: string;
+  success_signal?: string;
+};
+
+export type ProtocolExecutionFlow = {
+  micro: string;
+  meso: string;
+  macro: string;
+};
+
 /** Optionele bron of referentie bij een taak (geen harde URL vereiste). */
 export type ProtocolTaskResource = {
   label: string;
@@ -33,7 +45,16 @@ export type ProtocolTask = {
   /** "3× per week", "dagelijks", etc. */
   frequency_note?: string;
   checklist?: string[];
+  /** Concrete "do this now" actions (micro). */
+  micro_actions?: string[];
+  /** End-to-end execution sequence for this task. */
+  execution_steps?: string[];
+  /** Meso-layer link: what system capability this task builds. */
+  meso_outcome?: string;
+  /** Macro-layer link: bigger trajectory reason. */
+  macro_link?: string;
   reflection_prompt?: string;
+  reflection_block?: ProtocolReflectionBlock;
   resources?: ProtocolTaskResource[];
 };
 
@@ -60,6 +81,10 @@ export type ProtocolWeek = {
   day_overview?: WeekDayOverview[];
   /** Afronding van de week (checklist-stijl). */
   weekly_checklist?: string[];
+  /** Week execution framing: micro (today), meso (week), macro (trajectory). */
+  execution_flow?: ProtocolExecutionFlow;
+  /** Reflection prompts for week-level closure. */
+  weekly_reflection_block?: string[];
 };
 
 export type ProtocolPhase = {
@@ -85,6 +110,10 @@ export type ProtocolDefinitionV1 = {
   outcomes?: string[];
   /** Vrij te gebruiken voor filter/SEO later. */
   tags?: string[];
+  /** Shared execution frame across the full trajectory. */
+  execution_framework?: ProtocolExecutionFlow;
+  /** Generic quality bars for protocol execution. */
+  quality_gates?: string[];
 };
 
 export function parseProtocolDefinition(raw: unknown): ProtocolDefinitionV1 | null {

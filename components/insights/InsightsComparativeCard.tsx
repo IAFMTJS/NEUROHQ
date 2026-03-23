@@ -33,7 +33,7 @@ export function InsightsComparativeCard({ sentence }: Props) {
           Meer insights
         </button>
       ) : (
-        <Link href="/report#patterns" className="btn-hq-secondary inline-flex w-full items-center justify-center rounded-[var(--hq-btn-radius)] py-2.5 px-4">
+        <Link href="/report?tab=patterns" className="btn-hq-secondary inline-flex w-full items-center justify-center rounded-[var(--hq-btn-radius)] py-2.5 px-4">
           Meer insights
         </Link>
       )}

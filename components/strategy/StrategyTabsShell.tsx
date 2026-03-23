@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
 export type StrategyTabId = "overview" | "focus" | "alignment" | "review";
 
@@ -21,13 +22,35 @@ type Props = {
 };
 
 export function StrategyTabsShell({ overview, focusBudget, alignment, review, banner }: Props) {
-  const [tab, setTab] = useState<StrategyTabId>("overview");
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const tabFromQuery = searchParams.get("tab");
+  const initialTab = TABS.some((t) => t.id === tabFromQuery)
+    ? (tabFromQuery as StrategyTabId)
+    : "overview";
+  const [tab, setTab] = useState<StrategyTabId>(initialTab);
+
+  useEffect(() => {
+    if (!tabFromQuery) return;
+    if (!TABS.some((t) => t.id === tabFromQuery)) return;
+    const next = tabFromQuery as StrategyTabId;
+    if (next !== tab) setTab(next);
+  }, [tabFromQuery, tab]);
 
   const panels: Record<StrategyTabId, React.ReactNode> = {
     overview,
     focus: focusBudget,
     alignment,
     review,
+  };
+
+  const setTabWithUrl = (nextTab: StrategyTabId) => {
+    setTab(nextTab);
+    const params = new URLSearchParams(searchParams.toString());
+    params.set("tab", nextTab);
+    const query = params.toString();
+    router.replace(query ? `${pathname}?${query}` : pathname, { scroll: false });
   };
 
   return (
@@ -47,7 +70,7 @@ export function StrategyTabsShell({ overview, focusBudget, alignment, review, ba
               role="tab"
               aria-selected={selected}
               id={`strategy-tab-${t.id}`}
-              onClick={() => setTab(t.id)}
+              onClick={() => setTabWithUrl(t.id)}
               className={`rounded-t-lg px-3 py-2 text-sm font-medium transition-colors ${
                 selected
                   ? "border border-b-0 border-[var(--card-border)] bg-[var(--bg-elevated)] text-[var(--text-primary)]"

@@ -1,0 +1,1940 @@
+[
+  {
+    "id": "ext-81-eliminate-low-value-task",
+    "source_id": 81,
+    "source_category": "business",
+    "title": "Eliminate Low Value Task",
+    "domain": "business",
+    "category": "work",
+    "subcategory": "structure_planning",
+    "tags": [
+      "strategy",
+      "structure"
+    ],
+    "baseXP": 50,
+    "energy": 2,
+    "durationMinutes": 15,
+    "description": "Verwijder een taak die weinig impact heeft."
+  },
+  {
+    "id": "ext-82-focus-reallocation",
+    "source_id": 82,
+    "source_category": "business",
+    "title": "Focus Reallocation",
+    "domain": "business",
+    "category": "work",
+    "subcategory": "structure_planning",
+    "tags": [
+      "strategy",
+      "structure"
+    ],
+    "baseXP": 100,
+    "energy": 3,
+    "durationMinutes": 30,
+    "description": "Herverdeeld je tijd naar activiteiten met meer impact."
+  },
+  {
+    "id": "ext-80-strategy-reset",
+    "source_id": 80,
+    "source_category": "business",
+    "title": "Strategy Reset",
+    "domain": "business",
+    "category": "work",
+    "subcategory": "structure_planning",
+    "tags": [
+      "strategy",
+      "structure"
+    ],
+    "baseXP": 100,
+    "energy": 4,
+    "durationMinutes": 45,
+    "description": "Herbekijk je prioriteiten en strategie."
+  },
+  {
+    "id": "ext-1108-active-listening",
+    "source_id": 1108,
+    "source_category": "sociaal",
+    "title": "Active Listening",
+    "domain": "discipline",
+    "category": "personal",
+    "subcategory": "courage",
+    "tags": [
+      "courage",
+      "social"
+    ],
+    "baseXP": 50,
+    "energy": 2,
+    "durationMinutes": 20,
+    "description": "Luisteren zonder onderbreken."
+  },
+  {
+    "id": "ext-1116-check-in-circle",
+    "source_id": 1116,
+    "source_category": "sociaal",
+    "title": "Check In Circle",
+    "domain": "discipline",
+    "category": "personal",
+    "subcategory": "courage",
+    "tags": [
+      "courage",
+      "social"
+    ],
+    "baseXP": 50,
+    "energy": 2,
+    "durationMinutes": 20,
+    "description": "Meerdere contacten."
+  },
+  {
+    "id": "ext-1107-compliment-action",
+    "source_id": 1107,
+    "source_category": "sociaal",
+    "title": "Compliment Action",
+    "domain": "discipline",
+    "category": "personal",
+    "subcategory": "courage",
+    "tags": [
+      "courage",
+      "social"
+    ],
+    "baseXP": 25,
+    "energy": 1,
+    "durationMinutes": 5,
+    "description": "Compliment geven."
+  },
+  {
+    "id": "ext-1114-conflict-resolve",
+    "source_id": 1114,
+    "source_category": "sociaal",
+    "title": "Conflict Resolve",
+    "domain": "discipline",
+    "category": "personal",
+    "subcategory": "courage",
+    "tags": [
+      "courage",
+      "social"
+    ],
+    "baseXP": 100,
+    "energy": 3,
+    "durationMinutes": 30,
+    "description": "Conflict oplossen."
+  },
+  {
+    "id": "ext-1109-deep-question",
+    "source_id": 1109,
+    "source_category": "sociaal",
+    "title": "Deep Question",
+    "domain": "discipline",
+    "category": "personal",
+    "subcategory": "courage",
+    "tags": [
+      "courage",
+      "social"
+    ],
+    "baseXP": 25,
+    "energy": 1,
+    "durationMinutes": 10,
+    "description": "Diepe vraag stellen."
+  },
+  {
+    "id": "ext-1113-emotional-openness",
+    "source_id": 1113,
+    "source_category": "sociaal",
+    "title": "Emotional Openness",
+    "domain": "discipline",
+    "category": "personal",
+    "subcategory": "courage",
+    "tags": [
+      "courage",
+      "social"
+    ],
+    "baseXP": 75,
+    "energy": 2,
+    "durationMinutes": 20,
+    "description": "Persoonlijk delen."
+  },
+  {
+    "id": "ext-1118-gratitude-message",
+    "source_id": 1118,
+    "source_category": "sociaal",
+    "title": "Gratitude Message",
+    "domain": "discipline",
+    "category": "personal",
+    "subcategory": "courage",
+    "tags": [
+      "courage",
+      "social"
+    ],
+    "baseXP": 25,
+    "energy": 1,
+    "durationMinutes": 10,
+    "description": "Dankbaarheid tonen."
+  },
+  {
+    "id": "ext-1120-group-interaction",
+    "source_id": 1120,
+    "source_category": "sociaal",
+    "title": "Group Interaction",
+    "domain": "discipline",
+    "category": "personal",
+    "subcategory": "courage",
+    "tags": [
+      "courage",
+      "social"
+    ],
+    "baseXP": 75,
+    "energy": 4,
+    "durationMinutes": 45,
+    "description": "Groepsgesprek."
+  },
+  {
+    "id": "ext-1103-meaningful-conversation",
+    "source_id": 1103,
+    "source_category": "sociaal",
+    "title": "Meaningful Conversation",
+    "domain": "discipline",
+    "category": "personal",
+    "subcategory": "courage",
+    "tags": [
+      "courage",
+      "social"
+    ],
+    "baseXP": 75,
+    "energy": 3,
+    "durationMinutes": 30,
+    "description": "Diep gesprek."
+  },
+  {
+    "id": "ext-1105-meet-up",
+    "source_id": 1105,
+    "source_category": "sociaal",
+    "title": "Meet Up",
+    "domain": "discipline",
+    "category": "personal",
+    "subcategory": "courage",
+    "tags": [
+      "courage",
+      "social"
+    ],
+    "baseXP": 100,
+    "energy": 4,
+    "durationMinutes": 60,
+    "description": "Afspreken."
+  },
+  {
+    "id": "ext-1111-network-expansion",
+    "source_id": 1111,
+    "source_category": "sociaal",
+    "title": "Network Expansion",
+    "domain": "discipline",
+    "category": "personal",
+    "subcategory": "courage",
+    "tags": [
+      "courage",
+      "social"
+    ],
+    "baseXP": 100,
+    "energy": 3,
+    "durationMinutes": 30,
+    "description": "Nieuwe connecties."
+  },
+  {
+    "id": "ext-1102-quick-call",
+    "source_id": 1102,
+    "source_category": "sociaal",
+    "title": "Quick Call",
+    "domain": "discipline",
+    "category": "personal",
+    "subcategory": "courage",
+    "tags": [
+      "courage",
+      "social"
+    ],
+    "baseXP": 25,
+    "energy": 1,
+    "durationMinutes": 10,
+    "description": "Kort bellen."
+  },
+  {
+    "id": "ext-1101-reach-out",
+    "source_id": 1101,
+    "source_category": "sociaal",
+    "title": "Reach Out",
+    "domain": "discipline",
+    "category": "personal",
+    "subcategory": "courage",
+    "tags": [
+      "courage",
+      "social"
+    ],
+    "baseXP": 25,
+    "energy": 1,
+    "durationMinutes": 10,
+    "description": "Contact opnemen."
+  },
+  {
+    "id": "ext-1106-reconnect",
+    "source_id": 1106,
+    "source_category": "sociaal",
+    "title": "Reconnect",
+    "domain": "discipline",
+    "category": "personal",
+    "subcategory": "courage",
+    "tags": [
+      "courage",
+      "social"
+    ],
+    "baseXP": 50,
+    "energy": 2,
+    "durationMinutes": 20,
+    "description": "Contact herstellen."
+  },
+  {
+    "id": "ext-1112-shared-activity",
+    "source_id": 1112,
+    "source_category": "sociaal",
+    "title": "Shared Activity",
+    "domain": "discipline",
+    "category": "personal",
+    "subcategory": "courage",
+    "tags": [
+      "courage",
+      "social"
+    ],
+    "baseXP": 75,
+    "energy": 4,
+    "durationMinutes": 45,
+    "description": "Samen iets doen."
+  },
+  {
+    "id": "ext-1119-small-talk-practice",
+    "source_id": 1119,
+    "source_category": "sociaal",
+    "title": "Small Talk Practice",
+    "domain": "discipline",
+    "category": "personal",
+    "subcategory": "courage",
+    "tags": [
+      "courage",
+      "social"
+    ],
+    "baseXP": 25,
+    "energy": 1,
+    "durationMinutes": 10,
+    "description": "Small talk oefenen."
+  },
+  {
+    "id": "ext-1104-social-exposure",
+    "source_id": 1104,
+    "source_category": "sociaal",
+    "title": "Social Exposure",
+    "domain": "discipline",
+    "category": "personal",
+    "subcategory": "courage",
+    "tags": [
+      "courage",
+      "social"
+    ],
+    "baseXP": 100,
+    "energy": 3,
+    "durationMinutes": 30,
+    "description": "Nieuwe mensen."
+  },
+  {
+    "id": "ext-1117-social-presence",
+    "source_id": 1117,
+    "source_category": "sociaal",
+    "title": "Social Presence",
+    "domain": "discipline",
+    "category": "personal",
+    "subcategory": "courage",
+    "tags": [
+      "courage",
+      "social"
+    ],
+    "baseXP": 50,
+    "energy": 2,
+    "durationMinutes": 20,
+    "description": "Aanwezig zijn."
+  },
+  {
+    "id": "ext-1110-social-risk",
+    "source_id": 1110,
+    "source_category": "sociaal",
+    "title": "Social Risk",
+    "domain": "discipline",
+    "category": "personal",
+    "subcategory": "courage",
+    "tags": [
+      "courage",
+      "social"
+    ],
+    "baseXP": 100,
+    "energy": 2,
+    "durationMinutes": 20,
+    "description": "Sociaal ongemak aangaan."
+  },
+  {
+    "id": "ext-1115-support-action",
+    "source_id": 1115,
+    "source_category": "sociaal",
+    "title": "Support Action",
+    "domain": "discipline",
+    "category": "personal",
+    "subcategory": "courage",
+    "tags": [
+      "courage",
+      "social"
+    ],
+    "baseXP": 50,
+    "energy": 2,
+    "durationMinutes": 20,
+    "description": "Iemand helpen."
+  },
+  {
+    "id": "ext-1316-cognitive-immersion",
+    "source_id": 1316,
+    "source_category": "hyperfocus",
+    "title": "Cognitive Immersion",
+    "domain": "discipline",
+    "category": "work",
+    "subcategory": "focus_attention",
+    "tags": [
+      "focus",
+      "deep_work"
+    ],
+    "baseXP": 150,
+    "energy": 5,
+    "durationMinutes": 90,
+    "description": "Volledig mentaal."
+  },
+  {
+    "id": "ext-12-consistency-check",
+    "source_id": 12,
+    "source_category": "discipline",
+    "title": "Consistency Check",
+    "domain": "discipline",
+    "category": "personal",
+    "subcategory": "focus_attention",
+    "tags": [
+      "focus",
+      "self_discipline"
+    ],
+    "baseXP": 25,
+    "energy": 1,
+    "durationMinutes": 10,
+    "description": "Controleer of je je geplande acties effectief hebt uitgevoerd."
+  },
+  {
+    "id": "ext-1312-creative-flow",
+    "source_id": 1312,
+    "source_category": "hyperfocus",
+    "title": "Creative Flow",
+    "domain": "discipline",
+    "category": "work",
+    "subcategory": "focus_attention",
+    "tags": [
+      "focus",
+      "deep_work"
+    ],
+    "baseXP": 150,
+    "energy": 5,
+    "durationMinutes": 90,
+    "description": "Creatieve flow."
+  },
+  {
+    "id": "ext-10-deadline-sprint",
+    "source_id": 10,
+    "source_category": "discipline",
+    "title": "Deadline Sprint",
+    "domain": "discipline",
+    "category": "personal",
+    "subcategory": "focus_attention",
+    "tags": [
+      "focus",
+      "self_discipline"
+    ],
+    "baseXP": 75,
+    "energy": 4,
+    "durationMinutes": 45,
+    "description": "Werk onder tijdsdruk met een harde deadline om snelheid te verhogen."
+  },
+  {
+    "id": "ext-1315-deep-build",
+    "source_id": 1315,
+    "source_category": "hyperfocus",
+    "title": "Deep Build",
+    "domain": "discipline",
+    "category": "work",
+    "subcategory": "focus_attention",
+    "tags": [
+      "focus",
+      "deep_work"
+    ],
+    "baseXP": 150,
+    "energy": 5,
+    "durationMinutes": 90,
+    "description": "Iets bouwen."
+  },
+  {
+    "id": "ext-1304-deep-creation",
+    "source_id": 1304,
+    "source_category": "hyperfocus",
+    "title": "Deep Creation",
+    "domain": "discipline",
+    "category": "work",
+    "subcategory": "focus_attention",
+    "tags": [
+      "focus",
+      "deep_work"
+    ],
+    "baseXP": 150,
+    "energy": 5,
+    "durationMinutes": 90,
+    "description": "Intens creëren."
+  },
+  {
+    "id": "ext-1320-deep-isolation-work",
+    "source_id": 1320,
+    "source_category": "hyperfocus",
+    "title": "Deep Isolation Work",
+    "domain": "discipline",
+    "category": "work",
+    "subcategory": "focus_attention",
+    "tags": [
+      "focus",
+      "deep_work"
+    ],
+    "baseXP": 150,
+    "energy": 5,
+    "durationMinutes": 90,
+    "description": "Volledig alleen."
+  },
+  {
+    "id": "ext-1308-deep-problem-solve",
+    "source_id": 1308,
+    "source_category": "hyperfocus",
+    "title": "Deep Problem Solve",
+    "domain": "discipline",
+    "category": "work",
+    "subcategory": "focus_attention",
+    "tags": [
+      "focus",
+      "deep_work"
+    ],
+    "baseXP": 150,
+    "energy": 5,
+    "durationMinutes": 90,
+    "description": "Complex oplossen."
+  },
+  {
+    "id": "ext-3-deep-work-block",
+    "source_id": 3,
+    "source_category": "discipline",
+    "title": "Deep Work Block",
+    "domain": "discipline",
+    "category": "personal",
+    "subcategory": "focus_attention",
+    "tags": [
+      "focus",
+      "self_discipline"
+    ],
+    "baseXP": 100,
+    "energy": 4,
+    "durationMinutes": 60,
+    "description": "Werk 45-90 minuten diep gefocust zonder afleiding aan cognitief zwaar werk."
+  },
+  {
+    "id": "ext-5-execute-despite-mood",
+    "source_id": 5,
+    "source_category": "discipline",
+    "title": "Execute Despite Mood",
+    "domain": "discipline",
+    "category": "personal",
+    "subcategory": "focus_attention",
+    "tags": [
+      "focus",
+      "self_discipline"
+    ],
+    "baseXP": 120,
+    "energy": 3,
+    "durationMinutes": 30,
+    "description": "Voer een taak uit ondanks weerstand, vermoeidheid of gebrek aan motivatie."
+  },
+  {
+    "id": "ext-1311-execution-frenzy",
+    "source_id": 1311,
+    "source_category": "hyperfocus",
+    "title": "Execution Frenzy",
+    "domain": "discipline",
+    "category": "work",
+    "subcategory": "focus_attention",
+    "tags": [
+      "focus",
+      "deep_work"
+    ],
+    "baseXP": 150,
+    "energy": 4,
+    "durationMinutes": 60,
+    "description": "Snelle output."
+  },
+  {
+    "id": "ext-6-fear-confrontation",
+    "source_id": 6,
+    "source_category": "discipline",
+    "title": "Fear Confrontation",
+    "domain": "discipline",
+    "category": "personal",
+    "subcategory": "focus_attention",
+    "tags": [
+      "focus",
+      "self_discipline"
+    ],
+    "baseXP": 150,
+    "energy": 2,
+    "durationMinutes": 20,
+    "description": "Doe iets dat je uitstelt door angst of ongemak (gesprek, beslissing, actie)."
+  },
+  {
+    "id": "ext-1302-flow-extension",
+    "source_id": 1302,
+    "source_category": "hyperfocus",
+    "title": "Flow Extension",
+    "domain": "discipline",
+    "category": "work",
+    "subcategory": "focus_attention",
+    "tags": [
+      "focus",
+      "deep_work"
+    ],
+    "baseXP": 100,
+    "energy": 4,
+    "durationMinutes": 60,
+    "description": "Flow verlengen."
+  },
+  {
+    "id": "ext-1313-focus-lock",
+    "source_id": 1313,
+    "source_category": "hyperfocus",
+    "title": "Focus Lock",
+    "domain": "discipline",
+    "category": "work",
+    "subcategory": "focus_attention",
+    "tags": [
+      "focus",
+      "deep_work"
+    ],
+    "baseXP": 100,
+    "energy": 4,
+    "durationMinutes": 60,
+    "description": "Geen switch."
+  },
+  {
+    "id": "ext-1310-focus-marathon",
+    "source_id": 1310,
+    "source_category": "hyperfocus",
+    "title": "Focus Marathon",
+    "domain": "discipline",
+    "category": "work",
+    "subcategory": "focus_attention",
+    "tags": [
+      "focus",
+      "deep_work"
+    ],
+    "baseXP": 150,
+    "energy": 6,
+    "durationMinutes": 120,
+    "description": "Lang focus."
+  },
+  {
+    "id": "ext-2-focus-sprint-medium",
+    "source_id": 2,
+    "source_category": "discipline",
+    "title": "Focus Sprint Medium",
+    "domain": "discipline",
+    "category": "personal",
+    "subcategory": "focus_attention",
+    "tags": [
+      "focus",
+      "self_discipline"
+    ],
+    "baseXP": 25,
+    "energy": 2,
+    "durationMinutes": 15,
+    "description": "Werk 10-20 minuten onafgebroken aan één taak met volledige focus."
+  },
+  {
+    "id": "ext-1-focus-sprint-short",
+    "source_id": 1,
+    "source_category": "discipline",
+    "title": "Focus Sprint Short",
+    "domain": "discipline",
+    "category": "personal",
+    "subcategory": "focus_attention",
+    "tags": [
+      "focus",
+      "self_discipline"
+    ],
+    "baseXP": 25,
+    "energy": 1,
+    "durationMinutes": 5,
+    "description": "Werk 5-10 minuten gefocust aan één taak zonder afleiding om weerstand te doorbreken."
+  },
+  {
+    "id": "ext-4-hard-thing-first",
+    "source_id": 4,
+    "source_category": "discipline",
+    "title": "Hard Thing First",
+    "domain": "discipline",
+    "category": "personal",
+    "subcategory": "focus_attention",
+    "tags": [
+      "focus",
+      "self_discipline"
+    ],
+    "baseXP": 100,
+    "energy": 3,
+    "durationMinutes": 30,
+    "description": "Start je dag met de moeilijkste of meest vermeden taak."
+  },
+  {
+    "id": "ext-1309-hyper-learning",
+    "source_id": 1309,
+    "source_category": "hyperfocus",
+    "title": "Hyper Learning",
+    "domain": "discipline",
+    "category": "work",
+    "subcategory": "focus_attention",
+    "tags": [
+      "focus",
+      "deep_work"
+    ],
+    "baseXP": 150,
+    "energy": 5,
+    "durationMinutes": 90,
+    "description": "Intens leren."
+  },
+  {
+    "id": "ext-1301-hyperfocus-block",
+    "source_id": 1301,
+    "source_category": "hyperfocus",
+    "title": "Hyperfocus Block",
+    "domain": "discipline",
+    "category": "work",
+    "subcategory": "focus_attention",
+    "tags": [
+      "focus",
+      "deep_work"
+    ],
+    "baseXP": 150,
+    "energy": 5,
+    "durationMinutes": 90,
+    "description": "Diepe focus."
+  },
+  {
+    "id": "ext-7-no-distraction-block",
+    "source_id": 7,
+    "source_category": "discipline",
+    "title": "No Distraction Block",
+    "domain": "discipline",
+    "category": "personal",
+    "subcategory": "focus_attention",
+    "tags": [
+      "focus",
+      "self_discipline"
+    ],
+    "baseXP": 50,
+    "energy": 3,
+    "durationMinutes": 30,
+    "description": "Werk zonder telefoon, notificaties of externe prikkels."
+  },
+  {
+    "id": "ext-1303-obsession-channeling",
+    "source_id": 1303,
+    "source_category": "hyperfocus",
+    "title": "Obsession Channeling",
+    "domain": "discipline",
+    "category": "work",
+    "subcategory": "focus_attention",
+    "tags": [
+      "focus",
+      "deep_work"
+    ],
+    "baseXP": 150,
+    "energy": 4,
+    "durationMinutes": 60,
+    "description": "Obsessie benutten."
+  },
+  {
+    "id": "ext-1319-obsession-loop",
+    "source_id": 1319,
+    "source_category": "hyperfocus",
+    "title": "Obsession Loop",
+    "domain": "discipline",
+    "category": "work",
+    "subcategory": "focus_attention",
+    "tags": [
+      "focus",
+      "deep_work"
+    ],
+    "baseXP": 150,
+    "energy": 5,
+    "durationMinutes": 90,
+    "description": "Blijven doorgaan."
+  },
+  {
+    "id": "ext-9-output-only-mode",
+    "source_id": 9,
+    "source_category": "discipline",
+    "title": "Output Only Mode",
+    "domain": "discipline",
+    "category": "personal",
+    "subcategory": "focus_attention",
+    "tags": [
+      "focus",
+      "self_discipline"
+    ],
+    "baseXP": 100,
+    "energy": 4,
+    "durationMinutes": 45,
+    "description": "Produceer output zonder te consumeren (geen research, enkel creëren)."
+  },
+  {
+    "id": "ext-1318-output-surge",
+    "source_id": 1318,
+    "source_category": "hyperfocus",
+    "title": "Output Surge",
+    "domain": "discipline",
+    "category": "work",
+    "subcategory": "focus_attention",
+    "tags": [
+      "focus",
+      "deep_work"
+    ],
+    "baseXP": 150,
+    "energy": 4,
+    "durationMinutes": 60,
+    "description": "Max output."
+  },
+  {
+    "id": "ext-11-remove-one-distraction",
+    "source_id": 11,
+    "source_category": "discipline",
+    "title": "Remove One Distraction",
+    "domain": "discipline",
+    "category": "personal",
+    "subcategory": "focus_attention",
+    "tags": [
+      "focus",
+      "self_discipline"
+    ],
+    "baseXP": 25,
+    "energy": 1,
+    "durationMinutes": 10,
+    "description": "Identificeer en verwijder één structurele afleiding uit je omgeving."
+  },
+  {
+    "id": "ext-1307-single-goal-lock",
+    "source_id": 1307,
+    "source_category": "hyperfocus",
+    "title": "Single Goal Lock",
+    "domain": "discipline",
+    "category": "work",
+    "subcategory": "focus_attention",
+    "tags": [
+      "focus",
+      "deep_work"
+    ],
+    "baseXP": 100,
+    "energy": 4,
+    "durationMinutes": 60,
+    "description": "1 doel."
+  },
+  {
+    "id": "ext-8-single-task-hour",
+    "source_id": 8,
+    "source_category": "discipline",
+    "title": "Single Task Hour",
+    "domain": "discipline",
+    "category": "personal",
+    "subcategory": "focus_attention",
+    "tags": [
+      "focus",
+      "self_discipline"
+    ],
+    "baseXP": 75,
+    "energy": 4,
+    "durationMinutes": 60,
+    "description": "Werk één uur aan exact één taak zonder te switchen."
+  },
+  {
+    "id": "ext-1317-skill-obsession",
+    "source_id": 1317,
+    "source_category": "hyperfocus",
+    "title": "Skill Obsession",
+    "domain": "discipline",
+    "category": "work",
+    "subcategory": "focus_attention",
+    "tags": [
+      "focus",
+      "deep_work"
+    ],
+    "baseXP": 100,
+    "energy": 4,
+    "durationMinutes": 60,
+    "description": "Skill trainen."
+  },
+  {
+    "id": "ext-1306-time-loss-session",
+    "source_id": 1306,
+    "source_category": "hyperfocus",
+    "title": "Time Loss Session",
+    "domain": "discipline",
+    "category": "work",
+    "subcategory": "focus_attention",
+    "tags": [
+      "focus",
+      "deep_work"
+    ],
+    "baseXP": 150,
+    "energy": 5,
+    "durationMinutes": 90,
+    "description": "Tijd vergeten."
+  },
+  {
+    "id": "ext-1305-tunnel-work",
+    "source_id": 1305,
+    "source_category": "hyperfocus",
+    "title": "Tunnel Work",
+    "domain": "discipline",
+    "category": "work",
+    "subcategory": "focus_attention",
+    "tags": [
+      "focus",
+      "deep_work"
+    ],
+    "baseXP": 100,
+    "energy": 4,
+    "durationMinutes": 60,
+    "description": "Geen prikkels."
+  },
+  {
+    "id": "ext-1314-zero-interruption-work",
+    "source_id": 1314,
+    "source_category": "hyperfocus",
+    "title": "Zero Interruption Work",
+    "domain": "discipline",
+    "category": "work",
+    "subcategory": "focus_attention",
+    "tags": [
+      "focus",
+      "deep_work"
+    ],
+    "baseXP": 150,
+    "energy": 5,
+    "durationMinutes": 90,
+    "description": "Geen onderbreking."
+  },
+  {
+    "id": "ext-42-hiit-session",
+    "source_id": 42,
+    "source_category": "health",
+    "title": "HIIT Session",
+    "domain": "health",
+    "category": "personal",
+    "subcategory": "energy_movement",
+    "tags": [
+      "energy",
+      "health_body"
+    ],
+    "baseXP": 75,
+    "energy": 2,
+    "durationMinutes": 20,
+    "description": "Intensieve training voor conditie en vetverbranding."
+  },
+  {
+    "id": "ext-45-hydration-reset",
+    "source_id": 45,
+    "source_category": "health",
+    "title": "Hydration Reset",
+    "domain": "health",
+    "category": "personal",
+    "subcategory": "energy_movement",
+    "tags": [
+      "energy",
+      "health_body"
+    ],
+    "baseXP": 25,
+    "energy": 1,
+    "durationMinutes": 5,
+    "description": "Drink voldoende water en herstel je hydratatie."
+  },
+  {
+    "id": "ext-43-mobility-work",
+    "source_id": 43,
+    "source_category": "health",
+    "title": "Mobility Work",
+    "domain": "health",
+    "category": "personal",
+    "subcategory": "energy_movement",
+    "tags": [
+      "energy",
+      "health_body"
+    ],
+    "baseXP": 25,
+    "energy": 2,
+    "durationMinutes": 15,
+    "description": "Verbeter flexibiliteit en mobiliteit."
+  },
+  {
+    "id": "ext-44-sleep-discipline",
+    "source_id": 44,
+    "source_category": "health",
+    "title": "Sleep Discipline",
+    "domain": "health",
+    "category": "personal",
+    "subcategory": "energy_movement",
+    "tags": [
+      "energy",
+      "health_body"
+    ],
+    "baseXP": 75,
+    "energy": 1,
+    "durationMinutes": 0,
+    "description": "Ga op tijd slapen en respecteer je slaapritme."
+  },
+  {
+    "id": "ext-41-strength-training",
+    "source_id": 41,
+    "source_category": "health",
+    "title": "Strength Training",
+    "domain": "health",
+    "category": "personal",
+    "subcategory": "energy_movement",
+    "tags": [
+      "energy",
+      "health_body"
+    ],
+    "baseXP": 100,
+    "energy": 4,
+    "durationMinutes": 60,
+    "description": "Krachttraining voor fysieke ontwikkeling."
+  },
+  {
+    "id": "ext-40-walk-20-min",
+    "source_id": 40,
+    "source_category": "health",
+    "title": "Walk 20 Min",
+    "domain": "health",
+    "category": "personal",
+    "subcategory": "energy_movement",
+    "tags": [
+      "energy",
+      "health_body"
+    ],
+    "baseXP": 50,
+    "energy": 2,
+    "durationMinutes": 20,
+    "description": "Lichte beweging om energie en focus te verbeteren."
+  },
+  {
+    "id": "ext-1215-auto-pilot-activity",
+    "source_id": 1215,
+    "source_category": "breinloos",
+    "title": "Auto Pilot Activity",
+    "domain": "health",
+    "category": "personal",
+    "subcategory": "energy_recovery",
+    "tags": [
+      "recovery",
+      "decompress"
+    ],
+    "baseXP": 50,
+    "energy": 3,
+    "durationMinutes": 30,
+    "description": "Repetitieve actie."
+  },
+  {
+    "id": "ext-1214-background-noise",
+    "source_id": 1214,
+    "source_category": "breinloos",
+    "title": "Background Noise",
+    "domain": "health",
+    "category": "personal",
+    "subcategory": "energy_recovery",
+    "tags": [
+      "recovery",
+      "decompress"
+    ],
+    "baseXP": 25,
+    "energy": 2,
+    "durationMinutes": 15,
+    "description": "Geluid op achtergrond."
+  },
+  {
+    "id": "ext-60-brain-dump",
+    "source_id": 60,
+    "source_category": "recovery",
+    "title": "Brain Dump",
+    "domain": "health",
+    "category": "personal",
+    "subcategory": "energy_recovery",
+    "tags": [
+      "recovery",
+      "health_body"
+    ],
+    "baseXP": 50,
+    "energy": 2,
+    "durationMinutes": 15,
+    "description": "Schrijf alles uit je hoofd om mentale ruimte te creëren."
+  },
+  {
+    "id": "ext-1205-casual-gaming",
+    "source_id": 1205,
+    "source_category": "breinloos",
+    "title": "Casual Gaming",
+    "domain": "health",
+    "category": "personal",
+    "subcategory": "energy_recovery",
+    "tags": [
+      "recovery",
+      "decompress"
+    ],
+    "baseXP": 50,
+    "energy": 3,
+    "durationMinutes": 30,
+    "description": "Simpele game."
+  },
+  {
+    "id": "ext-1209-comfort-viewing",
+    "source_id": 1209,
+    "source_category": "breinloos",
+    "title": "Comfort Viewing",
+    "domain": "health",
+    "category": "personal",
+    "subcategory": "energy_recovery",
+    "tags": [
+      "recovery",
+      "decompress"
+    ],
+    "baseXP": 50,
+    "energy": 3,
+    "durationMinutes": 30,
+    "description": "Vertrouwde content."
+  },
+  {
+    "id": "ext-1201-controlled-scroll",
+    "source_id": 1201,
+    "source_category": "breinloos",
+    "title": "Controlled Scroll",
+    "domain": "health",
+    "category": "personal",
+    "subcategory": "energy_recovery",
+    "tags": [
+      "recovery",
+      "decompress"
+    ],
+    "baseXP": 25,
+    "energy": 2,
+    "durationMinutes": 15,
+    "description": "Scroll met limiet."
+  },
+  {
+    "id": "ext-1218-disengage-block",
+    "source_id": 1218,
+    "source_category": "breinloos",
+    "title": "Disengage Block",
+    "domain": "health",
+    "category": "personal",
+    "subcategory": "energy_recovery",
+    "tags": [
+      "recovery",
+      "decompress"
+    ],
+    "baseXP": 50,
+    "energy": 3,
+    "durationMinutes": 30,
+    "description": "Afkoppelen."
+  },
+  {
+    "id": "ext-62-emotional-check-in",
+    "source_id": 62,
+    "source_category": "recovery",
+    "title": "Emotional Check-in",
+    "domain": "health",
+    "category": "personal",
+    "subcategory": "energy_recovery",
+    "tags": [
+      "recovery",
+      "health_body"
+    ],
+    "baseXP": 50,
+    "energy": 2,
+    "durationMinutes": 15,
+    "description": "Sta stil bij je emotionele staat zonder oordeel."
+  },
+  {
+    "id": "ext-1207-idle-sitting",
+    "source_id": 1207,
+    "source_category": "breinloos",
+    "title": "Idle Sitting",
+    "domain": "health",
+    "category": "personal",
+    "subcategory": "energy_recovery",
+    "tags": [
+      "recovery",
+      "decompress"
+    ],
+    "baseXP": 25,
+    "energy": 1,
+    "durationMinutes": 10,
+    "description": "Zitten zonder doel."
+  },
+  {
+    "id": "ext-1212-lazy-reset",
+    "source_id": 1212,
+    "source_category": "breinloos",
+    "title": "Lazy Reset",
+    "domain": "health",
+    "category": "personal",
+    "subcategory": "energy_recovery",
+    "tags": [
+      "recovery",
+      "decompress"
+    ],
+    "baseXP": 50,
+    "energy": 3,
+    "durationMinutes": 30,
+    "description": "Niets doen."
+  },
+  {
+    "id": "ext-1208-light-browsing",
+    "source_id": 1208,
+    "source_category": "breinloos",
+    "title": "Light Browsing",
+    "domain": "health",
+    "category": "personal",
+    "subcategory": "energy_recovery",
+    "tags": [
+      "recovery",
+      "decompress"
+    ],
+    "baseXP": 25,
+    "energy": 2,
+    "durationMinutes": 15,
+    "description": "Random browsen."
+  },
+  {
+    "id": "ext-1216-loop-content",
+    "source_id": 1216,
+    "source_category": "breinloos",
+    "title": "Loop Content",
+    "domain": "health",
+    "category": "personal",
+    "subcategory": "energy_recovery",
+    "tags": [
+      "recovery",
+      "decompress"
+    ],
+    "baseXP": 25,
+    "energy": 1,
+    "durationMinutes": 10,
+    "description": "Herhaling."
+  },
+  {
+    "id": "ext-1217-low-effort-media",
+    "source_id": 1217,
+    "source_category": "breinloos",
+    "title": "Low Effort Media",
+    "domain": "health",
+    "category": "personal",
+    "subcategory": "energy_recovery",
+    "tags": [
+      "recovery",
+      "decompress"
+    ],
+    "baseXP": 50,
+    "energy": 3,
+    "durationMinutes": 30,
+    "description": "Makkelijke content."
+  },
+  {
+    "id": "ext-1213-mind-drift",
+    "source_id": 1213,
+    "source_category": "breinloos",
+    "title": "Mind Drift",
+    "domain": "health",
+    "category": "personal",
+    "subcategory": "energy_recovery",
+    "tags": [
+      "recovery",
+      "decompress"
+    ],
+    "baseXP": 25,
+    "energy": 2,
+    "durationMinutes": 15,
+    "description": "Gedachten laten gaan."
+  },
+  {
+    "id": "ext-1204-mindless-walk",
+    "source_id": 1204,
+    "source_category": "breinloos",
+    "title": "Mindless Walk",
+    "domain": "health",
+    "category": "personal",
+    "subcategory": "energy_recovery",
+    "tags": [
+      "recovery",
+      "decompress"
+    ],
+    "baseXP": 50,
+    "energy": 3,
+    "durationMinutes": 30,
+    "description": "Wandelen zonder doel."
+  },
+  {
+    "id": "ext-1203-music-drift",
+    "source_id": 1203,
+    "source_category": "breinloos",
+    "title": "Music Drift",
+    "domain": "health",
+    "category": "personal",
+    "subcategory": "energy_recovery",
+    "tags": [
+      "recovery",
+      "decompress"
+    ],
+    "baseXP": 25,
+    "energy": 2,
+    "durationMinutes": 15,
+    "description": "Muziek op achtergrond."
+  },
+  {
+    "id": "ext-1220-passive-recovery",
+    "source_id": 1220,
+    "source_category": "breinloos",
+    "title": "Passive Recovery",
+    "domain": "health",
+    "category": "personal",
+    "subcategory": "energy_recovery",
+    "tags": [
+      "recovery",
+      "decompress"
+    ],
+    "baseXP": 50,
+    "energy": 3,
+    "durationMinutes": 30,
+    "description": "Herstellen zonder inspanning."
+  },
+  {
+    "id": "ext-1202-passive-watching",
+    "source_id": 1202,
+    "source_category": "breinloos",
+    "title": "Passive Watching",
+    "domain": "health",
+    "category": "personal",
+    "subcategory": "energy_recovery",
+    "tags": [
+      "recovery",
+      "decompress"
+    ],
+    "baseXP": 50,
+    "energy": 3,
+    "durationMinutes": 30,
+    "description": "Kijken zonder nadenken."
+  },
+  {
+    "id": "ext-1206-rest-eyes",
+    "source_id": 1206,
+    "source_category": "breinloos",
+    "title": "Rest Eyes",
+    "domain": "health",
+    "category": "personal",
+    "subcategory": "energy_recovery",
+    "tags": [
+      "recovery",
+      "decompress"
+    ],
+    "baseXP": 25,
+    "energy": 1,
+    "durationMinutes": 10,
+    "description": "Ogen sluiten."
+  },
+  {
+    "id": "ext-1211-snack-break",
+    "source_id": 1211,
+    "source_category": "breinloos",
+    "title": "Snack Break",
+    "domain": "health",
+    "category": "personal",
+    "subcategory": "energy_recovery",
+    "tags": [
+      "recovery",
+      "decompress"
+    ],
+    "baseXP": 25,
+    "energy": 1,
+    "durationMinutes": 10,
+    "description": "Snack moment."
+  },
+  {
+    "id": "ext-61-task-prune",
+    "source_id": 61,
+    "source_category": "recovery",
+    "title": "Task Prune",
+    "domain": "health",
+    "category": "personal",
+    "subcategory": "energy_recovery",
+    "tags": [
+      "recovery",
+      "health_body"
+    ],
+    "baseXP": 50,
+    "energy": 2,
+    "durationMinutes": 15,
+    "description": "Schrap overbodige taken om focus te herstellen."
+  },
+  {
+    "id": "ext-1219-visual-drift",
+    "source_id": 1219,
+    "source_category": "breinloos",
+    "title": "Visual Drift",
+    "domain": "health",
+    "category": "personal",
+    "subcategory": "energy_recovery",
+    "tags": [
+      "recovery",
+      "decompress"
+    ],
+    "baseXP": 25,
+    "energy": 1,
+    "durationMinutes": 10,
+    "description": "Staren."
+  },
+  {
+    "id": "ext-63-weekly-review",
+    "source_id": 63,
+    "source_category": "recovery",
+    "title": "Weekly Review",
+    "domain": "health",
+    "category": "personal",
+    "subcategory": "energy_recovery",
+    "tags": [
+      "recovery",
+      "health_body"
+    ],
+    "baseXP": 100,
+    "energy": 4,
+    "durationMinutes": 60,
+    "description": "Analyseer je week en stuur bij waar nodig."
+  },
+  {
+    "id": "ext-1210-zero-input-moment",
+    "source_id": 1210,
+    "source_category": "breinloos",
+    "title": "Zero Input Moment",
+    "domain": "health",
+    "category": "personal",
+    "subcategory": "energy_recovery",
+    "tags": [
+      "recovery",
+      "decompress"
+    ],
+    "baseXP": 25,
+    "energy": 1,
+    "durationMinutes": 10,
+    "description": "Geen input."
+  },
+  {
+    "id": "ext-28-analytical-breakdown",
+    "source_id": 28,
+    "source_category": "learning",
+    "title": "Analytical Breakdown",
+    "domain": "learning",
+    "category": "personal",
+    "subcategory": "growth_learning",
+    "tags": [
+      "growth",
+      "learning"
+    ],
+    "baseXP": 75,
+    "energy": 3,
+    "durationMinutes": 30,
+    "description": "Breek een complex onderwerp op in onderdelen en analyseer ze."
+  },
+  {
+    "id": "ext-24-apply-concept",
+    "source_id": 24,
+    "source_category": "learning",
+    "title": "Apply Concept",
+    "domain": "learning",
+    "category": "personal",
+    "subcategory": "growth_learning",
+    "tags": [
+      "growth",
+      "learning"
+    ],
+    "baseXP": 100,
+    "energy": 4,
+    "durationMinutes": 45,
+    "description": "Pas een nieuw geleerd concept direct toe in de praktijk."
+  },
+  {
+    "id": "ext-21-concept-mapping",
+    "source_id": 21,
+    "source_category": "learning",
+    "title": "Concept Mapping",
+    "domain": "learning",
+    "category": "personal",
+    "subcategory": "growth_learning",
+    "tags": [
+      "growth",
+      "learning"
+    ],
+    "baseXP": 50,
+    "energy": 2,
+    "durationMinutes": 20,
+    "description": "Visualiseer verbanden tussen concepten om inzicht te verdiepen."
+  },
+  {
+    "id": "ext-23-deep-research",
+    "source_id": 23,
+    "source_category": "learning",
+    "title": "Deep Research",
+    "domain": "learning",
+    "category": "personal",
+    "subcategory": "growth_learning",
+    "tags": [
+      "growth",
+      "learning"
+    ],
+    "baseXP": 100,
+    "energy": 4,
+    "durationMinutes": 60,
+    "description": "Duik diep in een onderwerp en analyseer meerdere bronnen."
+  },
+  {
+    "id": "ext-25-practice-drill",
+    "source_id": 25,
+    "source_category": "learning",
+    "title": "Practice Drill",
+    "domain": "learning",
+    "category": "personal",
+    "subcategory": "growth_learning",
+    "tags": [
+      "growth",
+      "learning"
+    ],
+    "baseXP": 50,
+    "energy": 3,
+    "durationMinutes": 30,
+    "description": "Herhaal een vaardigheid gericht om beter te worden."
+  },
+  {
+    "id": "ext-20-read-10-pages",
+    "source_id": 20,
+    "source_category": "learning",
+    "title": "Read 10 Pages",
+    "domain": "learning",
+    "category": "personal",
+    "subcategory": "growth_learning",
+    "tags": [
+      "growth",
+      "learning"
+    ],
+    "baseXP": 50,
+    "energy": 2,
+    "durationMinutes": 20,
+    "description": "Lees actief en probeer de kernideeën te begrijpen."
+  },
+  {
+    "id": "ext-26-structured-notes",
+    "source_id": 26,
+    "source_category": "learning",
+    "title": "Structured Notes",
+    "domain": "learning",
+    "category": "personal",
+    "subcategory": "growth_learning",
+    "tags": [
+      "growth",
+      "learning"
+    ],
+    "baseXP": 50,
+    "energy": 3,
+    "durationMinutes": 30,
+    "description": "Maak gestructureerde aantekeningen van wat je leert."
+  },
+  {
+    "id": "ext-22-teach-back",
+    "source_id": 22,
+    "source_category": "learning",
+    "title": "Teach Back",
+    "domain": "learning",
+    "category": "personal",
+    "subcategory": "growth_learning",
+    "tags": [
+      "growth",
+      "learning"
+    ],
+    "baseXP": 100,
+    "energy": 3,
+    "durationMinutes": 30,
+    "description": "Leg een concept uit alsof je iemand anders les geeft."
+  },
+  {
+    "id": "ext-27-test-simulation",
+    "source_id": 27,
+    "source_category": "learning",
+    "title": "Test Simulation",
+    "domain": "learning",
+    "category": "personal",
+    "subcategory": "growth_learning",
+    "tags": [
+      "growth",
+      "learning"
+    ],
+    "baseXP": 100,
+    "energy": 4,
+    "durationMinutes": 45,
+    "description": "Test jezelf onder realistische omstandigheden."
+  },
+  {
+    "id": "ext-1010-aesthetic-setup",
+    "source_id": 1010,
+    "source_category": "plezier",
+    "title": "Aesthetic Setup",
+    "domain": "learning",
+    "category": "personal",
+    "subcategory": "hobby_creative",
+    "tags": [
+      "hobby",
+      "recovery"
+    ],
+    "baseXP": 50,
+    "energy": 3,
+    "durationMinutes": 30,
+    "description": "Maak omgeving mooier."
+  },
+  {
+    "id": "ext-1019-comfort-activity",
+    "source_id": 1019,
+    "source_category": "plezier",
+    "title": "Comfort Activity",
+    "domain": "learning",
+    "category": "personal",
+    "subcategory": "hobby_creative",
+    "tags": [
+      "hobby",
+      "recovery"
+    ],
+    "baseXP": 25,
+    "energy": 2,
+    "durationMinutes": 20,
+    "description": "Comfort zoeken."
+  },
+  {
+    "id": "ext-1013-creative-build",
+    "source_id": 1013,
+    "source_category": "plezier",
+    "title": "Creative Build",
+    "domain": "learning",
+    "category": "personal",
+    "subcategory": "hobby_creative",
+    "tags": [
+      "hobby",
+      "recovery"
+    ],
+    "baseXP": 75,
+    "energy": 4,
+    "durationMinutes": 45,
+    "description": "Maak iets tastbaars."
+  },
+  {
+    "id": "ext-1002-creative-play",
+    "source_id": 1002,
+    "source_category": "plezier",
+    "title": "Creative Play",
+    "domain": "learning",
+    "category": "personal",
+    "subcategory": "hobby_creative",
+    "tags": [
+      "hobby",
+      "recovery"
+    ],
+    "baseXP": 75,
+    "energy": 4,
+    "durationMinutes": 45,
+    "description": "Creëer iets puur voor plezier."
+  },
+  {
+    "id": "ext-1008-creative-writing-fun",
+    "source_id": 1008,
+    "source_category": "plezier",
+    "title": "Creative Writing Fun",
+    "domain": "learning",
+    "category": "personal",
+    "subcategory": "hobby_creative",
+    "tags": [
+      "hobby",
+      "recovery"
+    ],
+    "baseXP": 50,
+    "energy": 3,
+    "durationMinutes": 30,
+    "description": "Schrijf zonder doel."
+  },
+  {
+    "id": "ext-1017-energy-boost-activity",
+    "source_id": 1017,
+    "source_category": "plezier",
+    "title": "Energy Boost Activity",
+    "domain": "learning",
+    "category": "personal",
+    "subcategory": "hobby_creative",
+    "tags": [
+      "hobby",
+      "recovery"
+    ],
+    "baseXP": 50,
+    "energy": 3,
+    "durationMinutes": 30,
+    "description": "Leuke energieke activiteit."
+  },
+  {
+    "id": "ext-1006-game-session",
+    "source_id": 1006,
+    "source_category": "plezier",
+    "title": "Game Session",
+    "domain": "learning",
+    "category": "personal",
+    "subcategory": "hobby_creative",
+    "tags": [
+      "hobby",
+      "recovery"
+    ],
+    "baseXP": 50,
+    "energy": 3,
+    "durationMinutes": 30,
+    "description": "Speel bewust een game."
+  },
+  {
+    "id": "ext-1016-hobby-block",
+    "source_id": 1016,
+    "source_category": "plezier",
+    "title": "Hobby Block",
+    "domain": "learning",
+    "category": "personal",
+    "subcategory": "hobby_creative",
+    "tags": [
+      "hobby",
+      "recovery"
+    ],
+    "baseXP": 75,
+    "energy": 4,
+    "durationMinutes": 45,
+    "description": "Werk aan hobby."
+  },
+  {
+    "id": "ext-1011-humor-boost",
+    "source_id": 1011,
+    "source_category": "plezier",
+    "title": "Humor Boost",
+    "domain": "learning",
+    "category": "personal",
+    "subcategory": "hobby_creative",
+    "tags": [
+      "hobby",
+      "recovery"
+    ],
+    "baseXP": 25,
+    "energy": 2,
+    "durationMinutes": 15,
+    "description": "Verhoog je humeur."
+  },
+  {
+    "id": "ext-1001-intentional-fun-block",
+    "source_id": 1001,
+    "source_category": "plezier",
+    "title": "Intentional Fun Block",
+    "domain": "learning",
+    "category": "personal",
+    "subcategory": "hobby_creative",
+    "tags": [
+      "hobby",
+      "recovery"
+    ],
+    "baseXP": 50,
+    "energy": 3,
+    "durationMinutes": 30,
+    "description": "Doe bewust iets dat je leuk vindt zonder afleiding."
+  },
+  {
+    "id": "ext-1003-micro-joy",
+    "source_id": 1003,
+    "source_category": "plezier",
+    "title": "Micro Joy",
+    "domain": "learning",
+    "category": "personal",
+    "subcategory": "hobby_creative",
+    "tags": [
+      "hobby",
+      "recovery"
+    ],
+    "baseXP": 25,
+    "energy": 1,
+    "durationMinutes": 10,
+    "description": "Snelle mood boost."
+  },
+  {
+    "id": "ext-1012-mini-adventure",
+    "source_id": 1012,
+    "source_category": "plezier",
+    "title": "Mini Adventure",
+    "domain": "learning",
+    "category": "personal",
+    "subcategory": "hobby_creative",
+    "tags": [
+      "hobby",
+      "recovery"
+    ],
+    "baseXP": 75,
+    "energy": 4,
+    "durationMinutes": 45,
+    "description": "Ga spontaan ergens heen."
+  },
+  {
+    "id": "ext-1005-music-immersion",
+    "source_id": 1005,
+    "source_category": "plezier",
+    "title": "Music Immersion",
+    "domain": "learning",
+    "category": "personal",
+    "subcategory": "hobby_creative",
+    "tags": [
+      "hobby",
+      "recovery"
+    ],
+    "baseXP": 25,
+    "energy": 2,
+    "durationMinutes": 15,
+    "description": "Luister actief naar muziek."
+  },
+  {
+    "id": "ext-1007-nature-enjoyment",
+    "source_id": 1007,
+    "source_category": "plezier",
+    "title": "Nature Enjoyment",
+    "domain": "learning",
+    "category": "personal",
+    "subcategory": "hobby_creative",
+    "tags": [
+      "hobby",
+      "recovery"
+    ],
+    "baseXP": 50,
+    "energy": 3,
+    "durationMinutes": 30,
+    "description": "Geniet van natuur."
+  },
+  {
+    "id": "ext-1004-new-experience",
+    "source_id": 1004,
+    "source_category": "plezier",
+    "title": "New Experience",
+    "domain": "learning",
+    "category": "personal",
+    "subcategory": "hobby_creative",
+    "tags": [
+      "hobby",
+      "recovery"
+    ],
+    "baseXP": 100,
+    "energy": 4,
+    "durationMinutes": 60,
+    "description": "Doe iets nieuws."
+  },
+  {
+    "id": "ext-1014-photo-capture",
+    "source_id": 1014,
+    "source_category": "plezier",
+    "title": "Photo Capture",
+    "domain": "learning",
+    "category": "personal",
+    "subcategory": "hobby_creative",
+    "tags": [
+      "hobby",
+      "recovery"
+    ],
+    "baseXP": 25,
+    "energy": 2,
+    "durationMinutes": 15,
+    "description": "Leg momenten vast."
+  },
+  {
+    "id": "ext-1020-reward-block",
+    "source_id": 1020,
+    "source_category": "plezier",
+    "title": "Reward Block",
+    "domain": "learning",
+    "category": "personal",
+    "subcategory": "hobby_creative",
+    "tags": [
+      "hobby",
+      "recovery"
+    ],
+    "baseXP": 50,
+    "energy": 3,
+    "durationMinutes": 30,
+    "description": "Geef jezelf beloning."
+  },
+  {
+    "id": "ext-1018-spontaneity-action",
+    "source_id": 1018,
+    "source_category": "plezier",
+    "title": "Spontaneity Action",
+    "domain": "learning",
+    "category": "personal",
+    "subcategory": "hobby_creative",
+    "tags": [
+      "hobby",
+      "recovery"
+    ],
+    "baseXP": 50,
+    "energy": 2,
+    "durationMinutes": 20,
+    "description": "Doe iets spontaan."
+  },
+  {
+    "id": "ext-1009-taste-exploration",
+    "source_id": 1009,
+    "source_category": "plezier",
+    "title": "Taste Exploration",
+    "domain": "learning",
+    "category": "personal",
+    "subcategory": "hobby_creative",
+    "tags": [
+      "hobby",
+      "recovery"
+    ],
+    "baseXP": 25,
+    "energy": 2,
+    "durationMinutes": 15,
+    "description": "Probeer nieuwe smaken."
+  },
+  {
+    "id": "ext-1015-vibe-session",
+    "source_id": 1015,
+    "source_category": "plezier",
+    "title": "Vibe Session",
+    "domain": "learning",
+    "category": "personal",
+    "subcategory": "hobby_creative",
+    "tags": [
+      "hobby",
+      "recovery"
+    ],
+    "baseXP": 25,
+    "energy": 2,
+    "durationMinutes": 15,
+    "description": "Geniet van het moment."
+  }
+]

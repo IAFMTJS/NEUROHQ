@@ -184,10 +184,16 @@ export async function mergeDailySnapshotFromNetwork(): Promise<BootstrapTodayRes
     }
     const dateStr = (bootstrap.date as string) ?? next.date;
     const prevTasks = next.missions?.tasksByDate ?? {};
+    const todayTasks = ((bootstrap.tasks ?? {})[dateStr] ?? []) as Array<{ completed?: boolean }>;
+    const completedFromTodayTasks = todayTasks.filter((task) => task.completed === true);
     const missions = {
       dateStr,
       tasksByDate: { ...prevTasks, ...(bootstrap.tasks ?? {}) },
-      completedToday: bootstrap.completedToday ?? next.missions?.completedToday ?? [],
+      completedToday:
+        bootstrap.completedToday ??
+        (completedFromTodayTasks.length > 0
+          ? completedFromTodayTasks
+          : next.missions?.completedToday ?? []),
       energyBudget: (bootstrap.energyBudget as Record<string, unknown>) ?? next.missions?.energyBudget ?? null,
       dailyState: (bootstrap.dailyState as Record<string, unknown>) ?? next.missions?.dailyState ?? null,
     };

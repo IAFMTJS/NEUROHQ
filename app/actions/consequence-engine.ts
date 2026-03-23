@@ -7,6 +7,7 @@ import {
   getBrainState,
   getEffectiveBehavioralStats,
   normalizeBehavioralStats,
+  resolveMentalLoad1To10,
 } from "@/lib/behavioral-engine";
 
 /** Resource & Consequence Engine (Fase 2). No guilt, but friction. */
@@ -87,7 +88,11 @@ export async function getConsequenceState(dateStr: string): Promise<ConsequenceS
   const load = dr?.load ?? null;
   const loadPct = load != null ? load : (sensoryLoad != null ? Math.round((sensoryLoad / 10) * 100) : 50);
 
-  const mentalLoadRaw = dr?.load ?? dr?.sensory_load ?? 5;
+  const mentalLoadRaw = resolveMentalLoad1To10({
+    systemLoad: dr?.load ?? null,
+    sensoryLoad: dr?.sensory_load ?? null,
+    fallback: 5,
+  });
   const normalized = normalizeBehavioralStats({
     energy: dr?.energy ?? 5,
     focus: dr?.focus ?? 5,

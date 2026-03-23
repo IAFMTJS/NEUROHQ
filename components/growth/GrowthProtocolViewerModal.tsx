@@ -2,7 +2,6 @@
 
 import { useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { toast } from "sonner";
 import type { ProtocolLibraryRow } from "@/app/actions/protocol-library";
 import type { ProtocolProgressState } from "@/app/actions/protocol-progress";
 import { commitProtocolWeekToMissions } from "@/app/actions/protocol-missions";
@@ -25,6 +24,7 @@ import {
 } from "@/lib/growth/protocol-definition";
 import type { DifficultyTier } from "@/lib/growth/adaptive-engine";
 import { tierLabelNl } from "@/lib/growth/tier-labels";
+import { neuroToast } from "@/lib/ui/neuro-toast";
 
 type Props = {
   protocol: ProtocolLibraryRow;
@@ -74,10 +74,10 @@ export function GrowthProtocolViewerModal({ protocol, progress, engineTier, onCl
               startTransition(async () => {
                 try {
                   await setGrowthFocusProtocol({ slug: protocol.slug, locale: protocol.locale });
-                  toast.success("Dit protocol is nu je focus op Growth.");
+                  neuroToast.success("Dit protocol is nu je focus op Growth.");
                   refresh();
                 } catch (e) {
-                  toast.error(e instanceof Error ? e.message : "Mislukt.");
+                  neuroToast.error(e instanceof Error ? e.message : "Mislukt.");
                 }
               })
             }
@@ -127,6 +127,38 @@ export function GrowthProtocolViewerModal({ protocol, progress, engineTier, onCl
                   ))}
                 </ul>
               </div>
+            )}
+          </div>
+        )}
+
+        {def?.execution_framework && (
+          <div className="mb-4 rounded-xl border border-[var(--card-border)] bg-[var(--bg-soft)]/45 p-3">
+            <p className="text-[10px] font-bold uppercase tracking-wide text-[var(--semantic-accent)]">
+              Execution framework
+            </p>
+            <div className="mt-2 grid gap-2 md:grid-cols-3">
+              <div className="rounded-lg border border-[var(--card-border)]/70 bg-[var(--bg-primary)]/40 p-2">
+                <p className="text-[10px] uppercase text-[var(--text-muted)]">Micro</p>
+                <p className="mt-1 text-xs text-[var(--text-secondary)]">{def.execution_framework.micro}</p>
+              </div>
+              <div className="rounded-lg border border-[var(--card-border)]/70 bg-[var(--bg-primary)]/40 p-2">
+                <p className="text-[10px] uppercase text-[var(--text-muted)]">Meso</p>
+                <p className="mt-1 text-xs text-[var(--text-secondary)]">{def.execution_framework.meso}</p>
+              </div>
+              <div className="rounded-lg border border-[var(--card-border)]/70 bg-[var(--bg-primary)]/40 p-2">
+                <p className="text-[10px] uppercase text-[var(--text-muted)]">Macro</p>
+                <p className="mt-1 text-xs text-[var(--text-secondary)]">{def.execution_framework.macro}</p>
+              </div>
+            </div>
+            {def.quality_gates && def.quality_gates.length > 0 && (
+              <ul className="mt-3 space-y-1 text-xs text-[var(--text-secondary)]">
+                {def.quality_gates.map((gate) => (
+                  <li key={gate} className="flex gap-2">
+                    <span className="text-[var(--semantic-accent)]">•</span>
+                    <span>{gate}</span>
+                  </li>
+                ))}
+              </ul>
             )}
           </div>
         )}
@@ -224,6 +256,28 @@ export function GrowthProtocolViewerModal({ protocol, progress, engineTier, onCl
               </div>
             </div>
 
+            {week.execution_flow && (
+              <div className="mb-3 rounded-lg border border-[var(--card-border)]/70 bg-[var(--bg-soft)]/55 p-3">
+                <p className="text-[10px] font-bold uppercase tracking-wide text-[var(--semantic-accent)]">
+                  Week execution flow
+                </p>
+                <div className="mt-2 grid gap-2 md:grid-cols-3">
+                  <div className="rounded-md border border-[var(--card-border)]/60 bg-[var(--bg-primary)]/35 p-2">
+                    <p className="text-[10px] uppercase text-[var(--text-muted)]">Micro</p>
+                    <p className="mt-1 text-xs text-[var(--text-secondary)]">{week.execution_flow.micro}</p>
+                  </div>
+                  <div className="rounded-md border border-[var(--card-border)]/60 bg-[var(--bg-primary)]/35 p-2">
+                    <p className="text-[10px] uppercase text-[var(--text-muted)]">Meso</p>
+                    <p className="mt-1 text-xs text-[var(--text-secondary)]">{week.execution_flow.meso}</p>
+                  </div>
+                  <div className="rounded-md border border-[var(--card-border)]/60 bg-[var(--bg-primary)]/35 p-2">
+                    <p className="text-[10px] uppercase text-[var(--text-muted)]">Macro</p>
+                    <p className="mt-1 text-xs text-[var(--text-secondary)]">{week.execution_flow.macro}</p>
+                  </div>
+                </div>
+              </div>
+            )}
+
             {week.coach_notes && (
               <div className="mb-3 rounded-lg border border-[var(--card-border)]/60 bg-[var(--bg-primary)]/35 p-3">
                 <p className="text-[10px] font-bold uppercase tracking-wide text-[var(--text-muted)]">Begeleiding</p>
@@ -261,6 +315,22 @@ export function GrowthProtocolViewerModal({ protocol, progress, engineTier, onCl
                     <li key={item} className="flex gap-2">
                       <span className="text-emerald-400/90">□</span>
                       <span>{item}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
+            {week.weekly_reflection_block && week.weekly_reflection_block.length > 0 && (
+              <div className="mb-3 rounded-lg border border-cyan-500/25 bg-cyan-500/6 p-3">
+                <p className="text-[10px] font-bold uppercase tracking-wide text-cyan-200/85">
+                  Week reflection block
+                </p>
+                <ul className="mt-2 space-y-1 text-xs text-[var(--text-secondary)]">
+                  {week.weekly_reflection_block.map((line) => (
+                    <li key={line} className="flex gap-2">
+                      <span className="text-cyan-300/80">→</span>
+                      <span>{line}</span>
                     </li>
                   ))}
                 </ul>
@@ -333,11 +403,74 @@ export function GrowthProtocolViewerModal({ protocol, progress, engineTier, onCl
                             ))}
                           </ul>
                         )}
+                        {task.micro_actions && task.micro_actions.length > 0 && (
+                          <div className="mt-2 rounded-md border border-[var(--card-border)]/60 bg-[var(--bg-primary)]/40 px-2 py-1.5">
+                            <p className="text-[10px] font-semibold uppercase tracking-wide text-[var(--text-muted)]">
+                              Micro acties
+                            </p>
+                            <ul className="mt-1 space-y-0.5 text-[11px] text-[var(--text-secondary)]">
+                              {task.micro_actions.map((step) => (
+                                <li key={step} className="flex gap-2">
+                                  <span className="text-[var(--semantic-accent)]">•</span>
+                                  <span>{step}</span>
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                        )}
+                        {task.execution_steps && task.execution_steps.length > 0 && (
+                          <div className="mt-2 rounded-md border border-[var(--card-border)]/60 bg-[var(--bg-primary)]/35 px-2 py-1.5">
+                            <p className="text-[10px] font-semibold uppercase tracking-wide text-[var(--text-muted)]">
+                              Uitvoerstappen
+                            </p>
+                            <ol className="mt-1 list-inside list-decimal space-y-0.5 text-[11px] text-[var(--text-secondary)]">
+                              {task.execution_steps.map((step) => (
+                                <li key={step}>{step}</li>
+                              ))}
+                            </ol>
+                          </div>
+                        )}
+                        {(task.meso_outcome || task.macro_link) && (
+                          <div className="mt-2 grid gap-1 rounded-md border border-[var(--card-border)]/60 bg-[var(--bg-primary)]/35 px-2 py-1.5 text-[11px] text-[var(--text-secondary)]">
+                            {task.meso_outcome && (
+                              <p>
+                                <span className="font-semibold text-[var(--text-muted)]">Meso: </span>
+                                {task.meso_outcome}
+                              </p>
+                            )}
+                            {task.macro_link && (
+                              <p>
+                                <span className="font-semibold text-[var(--text-muted)]">Macro: </span>
+                                {task.macro_link}
+                              </p>
+                            )}
+                          </div>
+                        )}
                         {task.reflection_prompt && (
                           <p className="mt-2 rounded-md bg-[var(--bg-primary)]/50 px-2 py-1.5 text-[11px] text-[var(--text-secondary)]">
                             <span className="font-semibold text-[var(--semantic-accent)]">Reflectie: </span>
                             {task.reflection_prompt}
                           </p>
+                        )}
+                        {task.reflection_block?.prompt && (
+                          <div className="mt-2 rounded-md border border-cyan-500/25 bg-cyan-500/8 px-2 py-1.5 text-[11px] text-[var(--text-secondary)]">
+                            <p>
+                              <span className="font-semibold text-cyan-200/90">Reflectieblok: </span>
+                              {task.reflection_block.prompt}
+                            </p>
+                            {task.reflection_block.capture_hint && (
+                              <p className="mt-1 text-[var(--text-muted)]">
+                                <span className="font-semibold">Capture: </span>
+                                {task.reflection_block.capture_hint}
+                              </p>
+                            )}
+                            {task.reflection_block.success_signal && (
+                              <p className="mt-1 text-emerald-200/85">
+                                <span className="font-semibold">Succes-signaal: </span>
+                                {task.reflection_block.success_signal}
+                              </p>
+                            )}
+                          </div>
                         )}
                         {task.resources && task.resources.length > 0 && (
                           <ul className="mt-2 text-[11px] text-[var(--text-muted)]">
@@ -395,14 +528,14 @@ export function GrowthProtocolViewerModal({ protocol, progress, engineTier, onCl
                           protocol_slug: protocol.slug,
                           locale: protocol.locale,
                         });
-                        toast.success(
+                        neuroToast.success(
                           r.created > 0
                             ? `${r.created} taken op Missions${r.skipped ? ` (${r.skipped} al gepland)` : ""}.`
                             : `Geen nieuwe taken — ${r.skipped} stonden al op vandaag.`,
                         );
                         refresh();
                       } catch (e) {
-                        toast.error(e instanceof Error ? e.message : "Mislukt.");
+                        neuroToast.error(e instanceof Error ? e.message : "Mislukt.");
                       }
                     })
                   }

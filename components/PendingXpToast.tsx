@@ -1,8 +1,8 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { toast } from "sonner";
 import { getAndClearPendingXpNotification } from "@/app/actions/pending-xp-notification";
+import { neuroToast } from "@/lib/ui/neuro-toast";
 
 /** On mount, fetches any pending XP notification (from automatic XP) and shows a one-time toast. */
 export function PendingXpToast() {
@@ -19,7 +19,7 @@ export function PendingXpToast() {
         ? notification.sources.map((s) => `${s.label}: +${s.xp} XP`).join(" · ")
         : `+${notification.totalXp} XP`;
 
-      toast.success(
+      neuroToast.success(
         notification.forDate
           ? `Verdiend (${notification.forDate}): ${lines} — Totaal +${notification.totalXp} XP`
           : `XP verdiend: ${lines} — Totaal +${notification.totalXp} XP`,

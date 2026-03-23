@@ -18,13 +18,15 @@ import {
   type StrategicPreview,
   FocusModal,
 } from "@/components/missions";
-import { toast } from "sonner";
+import { neuroToast } from "@/lib/ui/neuro-toast";
 import { Modal } from "@/components/Modal";
 import { ErrorWithNextStep } from "@/components/ui/ErrorWithNextStep";
 import { useAppState } from "@/components/providers/AppStateProvider";
 import { addBonusAutoMissionsForToday } from "@/app/actions/master-missions";
 import { useHQStore } from "@/lib/hq-store";
 import { useTasksBootstrap } from "@/lib/tasks-bootstrap";
+import { refreshMergedSnapshotFromNetwork } from "@/lib/daily-bootstrap";
+import { parseMissionProgressionFromTaskTags } from "@/lib/mission-progression";
 import { useDCICGameState } from "@/lib/dcic/game-state-client";
 import { NeuroMicroReportBar } from "@/components/missions/NeuroMicroReportBar";
 
@@ -312,13 +314,14 @@ export function TaskList({
       result?.performanceScore != null
         ? `Score ${result.performanceScore}${result.xpAwarded != null ? ` · +${result.xpAwarded} XP` : ""}`
         : undefined;
-    toast.success(`Mission voltooid${rankLabel}`, {
+    neuroToast.success(`Mission voltooid${rankLabel}`, {
       description: desc,
       action: {
         label: "Ongedaan maken",
         onClick: () => {
           startTransition(async () => {
             await uncompleteTask(taskId);
+            void refreshMergedSnapshotFromNetwork();
             router.refresh();
           });
         },
@@ -329,7 +332,7 @@ export function TaskList({
   function handleComplete(id: string) {
     const blockReason = blockedReasonByTaskId?.[id];
     if (blockReason) {
-      toast.error(blockReason);
+      neuroToast.error(blockReason);
       return;
     }
     const completedCountBefore = completedForDisplay.length;
@@ -355,7 +358,7 @@ export function TaskList({
           const rankPromotion = (result as { rankPromotion?: boolean; newRank?: string; previousRank?: string }).rankPromotion;
           const newRank = (result as { newRank?: string }).newRank;
           const previousRank = (result as { previousRank?: string }).previousRank;
-          toast.success(
+          neuroToast.success(
             rankPromotion && newRank
               ? `Rank promotion · ${newRank}`
               : `Level up · Level ${result.newLevel}`,
@@ -374,7 +377,7 @@ export function TaskList({
           });
         }
         if (result?.lowSynergy) {
-          toast.warning(
+          neuroToast.warning(
             "Low synergy state · XP −25%, lagere kans op afronden. Dit is een beslissing van de engine — beter om deze missie op een ander moment te plannen.",
             { duration: 7000 }
           );
@@ -389,6 +392,7 @@ export function TaskList({
           setEditTask(null);
           setShowDoAnotherModal(true);
         }
+        void refreshMergedSnapshotFromNetwork();
         router.refresh();
       } catch {
         if (task) {
@@ -415,7 +419,7 @@ export function TaskList({
   }
 
   function showDeleteToast(taskId: string) {
-    toast.success("Mission verwijderd", {
+    neuroToast.success("Mission verwijderd", {
       action: {
         label: "Ongedaan maken",
         onClick: () => {
@@ -429,7 +433,7 @@ export function TaskList({
   }
 
   function showMovedToast(taskId: string, fromDate: string, label: "Snoozed" | "Skipped next") {
-    toast.success(`${label} mission`, {
+    neuroToast.success(`${label} mission`, {
       description: `Moved from ${fromDate}.`,
       action: {
         label: "Undo",
@@ -455,6 +459,7 @@ export function TaskList({
         addToQueue("deleteTask", { id });
       } else {
         deleteTask(id);
+          void refreshMergedSnapshotFromNetwork();
       }
       showDeleteToast(id);
     }, 320);
@@ -486,6 +491,7 @@ export function TaskList({
           void trackEvent("mission_skipped", { taskId: id, reason: "list_snooze" });
           queueMicroReport(id);
           showMovedToast(id, originalDate, "Snoozed");
+          void refreshMergedSnapshotFromNetwork();
           router.refresh();
         }
       } finally {
@@ -508,6 +514,7 @@ export function TaskList({
           void trackEvent("mission_skipped", { taskId: id, reason: "list_skip_next" });
           queueMicroReport(id);
           showMovedToast(id, originalDate, "Skipped next");
+          void refreshMergedSnapshotFromNetwork();
           router.refresh();
         }
       } finally {
@@ -530,6 +537,7 @@ export function TaskList({
         await addToQueue("uncompleteTask", { id });
       } else {
         await uncompleteTask(id);
+        void refreshMergedSnapshotFromNetwork();
       }
       // No router.refresh() — list already updated from upsertTask.
     });
@@ -636,6 +644,7 @@ export function TaskList({
     const preview = recurrencePreview(task);
     const isRemoving = task.id === removingId;
     const blockReason = blockedReasonByTaskId?.[task.id];
+    const progressionMeta = parseMissionProgressionFromTaskTags(task.task_tags);
     return (
       <li
         key={task.id}
@@ -709,12 +718,27 @@ export function TaskList({
               {task.social_load != null && (
                 <span className="rounded bg-white/10 px-1.5 py-0.5 text-[10px] font-medium text-white/80" title="Social load">👥{task.social_load}</span>
               )}
+              {progressionMeta && (
+                <span
+                  className="rounded bg-cyan-500/15 px-1.5 py-0.5 text-[10px] font-semibold text-cyan-300"
+                  title={`Progression ${progressionMeta.key}`}
+                >
+                  Lv {progressionMeta.tier}
+                  {progressionMeta.nextTier ? ` → ${progressionMeta.nextTier}` : " · Max"}
+                </span>
+              )}
               <span className={`text-sm text-[var(--text-primary)] ${task.completed ? "line-through text-[var(--text-muted)]" : ""}`}>{task.title}</span>
             </div>
             {recurrenceLabel(task) && <p className="mt-0.5 text-xs text-[var(--text-muted)]">{recurrenceLabel(task)}</p>}
             {task.notes?.trim() && (
               <p className="mt-0.5 line-clamp-2 text-xs text-[var(--text-muted)]" title={task.notes}>
                 {task.notes}
+              </p>
+            )}
+            {progressionMeta && !task.completed && (
+              <p className="mt-0.5 text-[11px] text-cyan-200/90">
+                Progression: {progressionMeta.key.replaceAll("_", " ")} · huidige tier {progressionMeta.tier}
+                {progressionMeta.nextTier ? ` · volgende tier ${progressionMeta.nextTier}` : " · max tier bereikt"}
               </p>
             )}
             {preview && <p className="mt-0.5 text-[10px] text-[var(--text-muted)]">{preview}</p>}
@@ -1100,10 +1124,10 @@ export function TaskList({
                 startTransition(async () => {
                   try {
                     await addBonusAutoMissionsForToday();
-                    toast.success("2 bonusmissies toegevoegd.");
+                    neuroToast.success("2 bonusmissies toegevoegd.");
                     router.refresh();
                   } catch {
-                    toast.error("Bonusmissies toevoegen is niet gelukt. Probeer later opnieuw.");
+                    neuroToast.error("Bonusmissies toevoegen is niet gelukt. Probeer later opnieuw.");
                   }
                 });
               }}

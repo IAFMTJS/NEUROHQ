@@ -10,6 +10,7 @@ import { trackEvent } from "@/app/actions/analytics-events";
 import { revalidatePath, unstable_cache } from "next/cache";
 import { revalidateTagMax } from "@/lib/revalidate";
 import { classifyTaskPreset, deriveBaseXpFromIntensityDuration } from "@/lib/task-presets";
+import { parseMissionProgressionFromTaskTags } from "@/lib/mission-progression";
 
 /** Explicit column list for task reads (avoids select * per SUPABASE_PERFORMANCE_GUIDELINES). */
 const TASK_SELECT_COLUMNS =
@@ -516,6 +517,35 @@ export async function completeTask(
     afterEconomy.push(recordAvoidanceCompletion(t.avoidance_tag));
   }
   await Promise.all(afterEconomy);
+
+  const progressionMeta = parseMissionProgressionFromTaskTags(t?.task_tags ?? null);
+  if (progressionMeta) {
+    try {
+      const { data: progressionRow } = await (supabase as any)
+        .from("mission_progression_state")
+        .select("current_tier, completions")
+        .eq("user_id", user.id)
+        .eq("progression_key", progressionMeta.key)
+        .maybeSingle();
+      const currentTierRaw = (progressionRow as { current_tier?: number | null } | null)?.current_tier ?? 0;
+      const completionsRaw = (progressionRow as { completions?: number | null } | null)?.completions ?? 0;
+      const currentTier = Number.isFinite(currentTierRaw) ? Number(currentTierRaw) : 0;
+      const completions = Number.isFinite(completionsRaw) ? Number(completionsRaw) : 0;
+      await (supabase as any).from("mission_progression_state").upsert(
+        {
+          user_id: user.id,
+          progression_key: progressionMeta.key,
+          current_tier: Math.max(currentTier, progressionMeta.tier),
+          completions: completions + 1,
+          last_completed_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        },
+        { onConflict: "user_id,progression_key" }
+      );
+    } catch (err) {
+      console.error("Mission progression update failed:", err);
+    }
+  }
 
   const { logBehaviourEntry } = await import("./dcic/behaviour-log");
   // Map task impact (1–3) to difficulty_level so identity engine impact reputation updates (needs >= 0.7 or xp >= 80).

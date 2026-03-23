@@ -264,6 +264,18 @@ export function BrainStatusModal({ open, onClose, date, initial, yesterday, onSa
           </p>
         </div>
 
+        <div className="rounded-xl border border-[var(--card-border)] bg-[var(--bg-surface)]/35 px-4 py-3">
+          <p className="text-xs font-semibold uppercase tracking-wide text-[var(--text-muted)]">
+            Hoe het systeem redeneert
+          </p>
+          <ul className="mt-2 space-y-1 text-xs text-[var(--text-secondary)]">
+            <li>Energy + Focus: hoger betekent meer directe uitvoercapaciteit.</li>
+            <li>Mental battery: hoger betekent een grotere mentale buffer doorheen de dag.</li>
+            <li>Mentale belasting: hoger betekent zwaardere druk; dat verlaagt je effectieve mentale buffer.</li>
+            <li>Slaap en physical health sturen de mode mee (focus/war/recovery), ook als energy goed is.</li>
+          </ul>
+        </div>
+
         {/* Form */}
         <form onSubmit={handleSubmit} className="space-y-5">
           {hasYesterday && (

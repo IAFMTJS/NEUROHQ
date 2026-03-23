@@ -9,6 +9,7 @@ import {
   getBrainState,
   getEffectiveBehavioralStats,
   normalizeBehavioralStats,
+  resolveMentalLoad1To10,
 } from "@/lib/behavioral-engine";
 import type { DcicModeSuggestion } from "@/lib/behavioral-engine";
 
@@ -35,6 +36,7 @@ export function applyBrainLayerToGameState(
     gameState.mode.brainStatusAveragePercent = null;
     gameState.mode.warTierDaysLast7 = warTierDaysLast7;
     gameState.mode.suggested = null;
+    gameState.mode.modeReason = null;
     gameState.authority.lastSuggestedMode = null;
     return;
   }
@@ -43,12 +45,16 @@ export function applyBrainLayerToGameState(
   gameState.mode.brainStatusAveragePercent = avgPct;
   gameState.mode.warTierDaysLast7 = warTierDaysLast7;
 
-  const mentalLoad = daily.load ?? daily.sensory_load ?? 5;
+  const mentalLoad = resolveMentalLoad1To10({
+    systemLoad: daily.load ?? null,
+    sensoryLoad: daily.sensory_load ?? null,
+    fallback: 5,
+  });
   const normalized = normalizeBehavioralStats({
     energy: daily.energy,
     focus: daily.focus,
     mentalBattery: daily.mental_battery ?? 5,
-    mentalLoad: mentalLoad ?? 5,
+    mentalLoad,
     physicalHealth: daily.physical_health ?? 5,
     sleepHours: daily.sleep_hours ?? null,
   });
@@ -58,12 +64,15 @@ export function applyBrainLayerToGameState(
   const legacy = deriveDcicSuggestedMode({ normalized, effective, brainState, constraints });
 
   let suggested: DcicModeSuggestion = null;
+  let modeReason: string | null = null;
 
   if (avgPct != null) {
     if (avgPct > 75) {
       suggested = "war";
+      modeReason = "brain_average_above_75";
     } else if (avgPct < 25) {
       suggested = "recovery";
+      modeReason = "brain_average_below_25";
     }
   }
 
@@ -73,14 +82,17 @@ export function applyBrainLayerToGameState(
         avgPct != null && avgPct > 60 && warTierDaysLast7 < 3;
       if (!blockLegacyRecovery) {
         suggested = "recovery";
+        modeReason = "legacy_recovery_signal";
       }
     } else if (legacy === "war") {
       if (avgPct == null || avgPct > 75) {
         suggested = "war";
+        modeReason = "legacy_war_signal";
       }
     }
   }
 
   gameState.mode.suggested = suggested;
+  gameState.mode.modeReason = suggested ? modeReason : null;
   gameState.authority.lastSuggestedMode = suggested;
 }

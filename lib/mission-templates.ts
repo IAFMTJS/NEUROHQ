@@ -3,6 +3,8 @@
  * XP: 25 = weinig, 50 = normaal, 100 = veel. Bij voltooiing wordt deze base XP (× multipliers) uitbetaald.
  */
 
+import externalAutomissions from "@/lib/automissions-update-23-pe.normalized.json";
+
 export type XpLevel = "low" | "normal" | "high";
 
 export type MissionTemplate = {
@@ -191,7 +193,22 @@ export type MasterMissionTemplate = MissionTemplate & {
   hobby_tag?: "fitness" | "music" | "language" | "creative" | null;
 };
 
-export const MASTER_MISSION_POOL: MasterMissionTemplate[] = [
+type ExternalAutomissionSeed = {
+  id: string;
+  source_id: number | null;
+  source_category: string;
+  title: string;
+  domain: MissionTemplate["domain"];
+  category: "work" | "personal" | null;
+  subcategory: NonNullable<MasterMissionTemplate["subcategory"]>;
+  tags: string[];
+  baseXP: number;
+  energy: number;
+  durationMinutes: number | null;
+  description: string;
+};
+
+const CORE_MASTER_MISSION_POOL: MasterMissionTemplate[] = [
   // Structure: Micro/Deep Cleaning, Administration, Control & Planning
   {
     id: "structure-micro-desk-reset",
@@ -669,6 +686,59 @@ export const MASTER_MISSION_POOL: MasterMissionTemplate[] = [
     tags: ["weekly_reflection", "growth", "environment_reset"],
   },
 ];
+
+const EXTERNAL_MASTER_MISSION_SEED = externalAutomissions as ExternalAutomissionSeed[];
+
+function xpLevelFromBaseXP(baseXP: number): XpLevel {
+  return baseXP >= 75 ? "high" : baseXP >= 40 ? "normal" : "low";
+}
+
+function mergeExternalMasterMissions(
+  core: MasterMissionTemplate[],
+  externalSeed: ExternalAutomissionSeed[]
+): MasterMissionTemplate[] {
+  const merged = [...core];
+  const seenIds = new Set(core.map((mission) => mission.id));
+  const seenTitles = new Set(core.map((mission) => mission.title.trim().toLowerCase()));
+
+  for (const seed of externalSeed) {
+    const id = seed.id?.trim();
+    const title = seed.title?.trim();
+    if (!id || !title) continue;
+
+    const titleKey = title.toLowerCase();
+    if (seenIds.has(id) || seenTitles.has(titleKey)) continue;
+
+    const baseXP = Math.max(10, Math.min(300, Math.round(seed.baseXP)));
+    const energy = Math.max(1, Math.min(10, Math.round(seed.energy)));
+    const tags =
+      Array.isArray(seed.tags) && seed.tags.length > 0
+        ? seed.tags.filter((tag): tag is string => typeof tag === "string" && tag.trim().length > 0)
+        : ["auto_import"];
+
+    merged.push({
+      id,
+      title,
+      domain: seed.domain,
+      category: seed.category ?? "personal",
+      subcategory: seed.subcategory,
+      baseXP,
+      xpLevel: xpLevelFromBaseXP(baseXP),
+      energy,
+      tags,
+      description: seed.description?.trim() || "Imported mission template.",
+    });
+    seenIds.add(id);
+    seenTitles.add(titleKey);
+  }
+
+  return merged;
+}
+
+export const MASTER_MISSION_POOL: MasterMissionTemplate[] = mergeExternalMasterMissions(
+  CORE_MASTER_MISSION_POOL,
+  EXTERNAL_MASTER_MISSION_SEED
+);
 
 /** Label for XP level (Veel XP, Normaal XP, Weinig XP). */
 export function xpLevelLabel(level: XpLevel): string {

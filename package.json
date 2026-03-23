@@ -24,6 +24,8 @@
     "generate-vapid": "node scripts/generate-vapid-keys.js",
     "db:types": "node scripts/gen-db-types.js",
     "import-protocols": "node scripts/import-protocols-json.mjs",
+    "import:automissions": "node scripts/import-automissions-json.mjs",
+    "validate:automissions": "node scripts/validate-automissions.mjs --write",
     "build:protocol-catalog": "node scripts/build-protocol-catalog.mjs",
     "postinstall": "patch-package && node scripts/patch-three-stdlib-uv1.js"
   },

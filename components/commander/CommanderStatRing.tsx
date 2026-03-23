@@ -18,15 +18,19 @@ type Props = {
 export function CommanderStatRing({ value, variant }: Props) {
   const pct = Math.min(100, Math.max(0, value));
   const absolute = (pct / 10).toFixed(1);
-  const isLow = pct <= 20;
+  const isLow = variant === "load" ? pct >= 80 : pct <= 20;
   const lowHint = LOW_VALUE_HINT[variant];
   const label = variant === "energy" ? "Energy" : variant === "focus" ? "Focus" : "Load";
-  // Threshold mapping:
-  // <=20 red, 21-69 default, 70-89 green, >=90 peak green
+  // Product choice: default ring follows current DCIC mode color (focus/war/recovery).
+  // Thresholds only override when the value is risky.
   let mode: EnergyRingMode = "default";
-  if (pct <= 20) mode = "high-alert";
-  else if (pct >= 90) mode = "green-peak";
-  else if (pct >= 70) mode = "green";
+  if (variant === "load") {
+    if (pct >= 80) mode = "high-alert";
+    else if (pct >= 65) mode = "alert";
+  } else {
+    if (pct <= 20) mode = "high-alert";
+    else if (pct <= 35) mode = "alert";
+  }
 
   return (
     <div className="flex flex-col items-center gap-1">

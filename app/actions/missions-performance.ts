@@ -19,6 +19,7 @@ import {
   getBehavioralConstraints,
   getEffectiveBehavioralStats,
   normalizeBehavioralStats,
+  resolveMentalLoad1To10,
 } from "@/lib/behavioral-engine";
 /** Task row with optional performance-engine fields (domain, Mission DNA). */
 export type TaskWithMeta = {
@@ -274,7 +275,11 @@ async function getDecisionBlocksUncached(dateStr: string): Promise<DecisionBlock
     energy: daily?.energy ?? 5,
     focus: daily?.focus ?? 5,
     mentalBattery: daily?.mental_battery ?? 5,
-    mentalLoad: daily?.load ?? daily?.sensory_load ?? 5,
+    mentalLoad: resolveMentalLoad1To10({
+      systemLoad: daily?.load ?? null,
+      sensoryLoad: daily?.sensory_load ?? null,
+      fallback: 5,
+    }),
     physicalHealth: daily?.physical_health ?? 5,
     sleepHours: daily?.sleep_hours ?? 6,
   });

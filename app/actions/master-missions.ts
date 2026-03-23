@@ -15,6 +15,7 @@ import { getUserPreferencesOrDefaults } from "@/app/actions/preferences";
 import { trackEvent } from "@/app/actions/analytics-events";
 import { todayDateString } from "@/lib/utils/timezone";
 import { classifyTaskPreset, deriveBaseXpFromIntensityDuration } from "@/lib/task-presets";
+import { buildMissionProgressionStateMap, resolveMissionProgressionPlan } from "@/lib/mission-progression";
 
 type DailyStateRow = {
   energy?: number | null;
@@ -179,6 +180,22 @@ export async function ensureMasterMissionsForToday(dailyStateFromSave?: DailySta
   const sleep_hours = stateRow.sleep_hours ?? null;
 
   const profile = await getBehaviorProfile();
+  let progressionStateMap = buildMissionProgressionStateMap([]);
+  try {
+    const { data: progressionRows } = await (db as any)
+      .from("mission_progression_state")
+      .select("progression_key, current_tier, completions")
+      .eq("user_id", user.id);
+    progressionStateMap = buildMissionProgressionStateMap(
+      (progressionRows ?? []) as Array<{
+        progression_key?: unknown;
+        current_tier?: unknown;
+        completions?: unknown;
+      }>
+    );
+  } catch {
+    progressionStateMap = buildMissionProgressionStateMap([]);
+  }
 
   // Auto-missies: aantal volgens energy-band (laag 1–2 … uiterst 6). Vul tot plafond zolang nog niet gegenereerd.
   const slotsToAdd = Math.max(0, MAX_AUTO_PER_DAY - existingAutoCount);
@@ -238,6 +255,8 @@ export async function ensureMasterMissionsForToday(dailyStateFromSave?: DailySta
     focus1To10: focus ?? null,
     sensoryLoad1To10: sensory_load ?? null,
     socialLoad1To10: social_load ?? null,
+    sleepHours: sleep_hours ?? null,
+    brainMode: brainMode.mode,
     dayType: isUsualDayOff ? (dayOffMode === "hard" ? "off_hard" : "off_soft") : "work",
   });
 
@@ -331,14 +350,37 @@ export async function ensureMasterMissionsForToday(dailyStateFromSave?: DailySta
 
     try {
       const preset = classifyTaskPreset(title);
+      const progressionPlan = resolveMissionProgressionPlan(tpl, progressionStateMap);
       const fallbackBaseXp = deriveBaseXpFromIntensityDuration(preset.intensity, preset.durationMinutes);
-      const energyRequired = tpl.energy ?? Math.min(10, Math.max(1, Math.round(preset.intensity / 10)));
+      const progressionEnergy = progressionPlan?.energy ?? null;
+      const energyRequired =
+        progressionEnergy ??
+        tpl.energy ??
+        Math.min(10, Math.max(1, Math.round(preset.intensity / 10)));
       const focusRequired = preset.type === "mental" ? 7 : preset.type === "mixed" ? 5 : 3;
       const mentalLoad = preset.type === "mental" ? 8 : preset.type === "mixed" ? 5 : preset.type === "recovery" ? 2 : 3;
       const socialLoad = preset.type === "physical" ? 3 : preset.type === "recovery" ? 2 : 5;
       /** DB cognitive_load is 0.1–1; mental_load is 1–10. */
       const cognitiveLoadNorm = Math.min(1, Math.max(0.1, Math.round((mentalLoad / 10) * 100) / 100));
-      const templateTags = tpl.tags ?? [];
+      const templateTags = Array.from(
+        new Set([...(tpl.tags ?? []), ...(progressionPlan?.taskTags ?? [])])
+      );
+      const resolvedDurationMinutes = progressionPlan?.durationMinutes ?? preset.durationMinutes;
+      const resolvedBaseXp = Math.max(
+        progressionPlan?.baseXP ?? tpl.baseXP ?? 0,
+        fallbackBaseXp
+      );
+      const notesBase = (tpl as { description?: string }).description?.trim() || null;
+      const autoReason = tpl.reason?.trim() || null;
+      const progressionNote = progressionPlan?.noteLine ?? null;
+      const notesWithReason =
+        notesBase && autoReason
+          ? `${notesBase}\n\n[Auto reason] ${autoReason}`
+          : notesBase ?? (autoReason ? `[Auto reason] ${autoReason}` : null);
+      const notes =
+        notesWithReason && progressionNote
+          ? `${notesWithReason}\n\n${progressionNote}`
+          : notesWithReason ?? progressionNote;
       if (serviceSupabase) {
         const row = {
           user_id: user.id,
@@ -352,15 +394,15 @@ export async function ensureMasterMissionsForToday(dailyStateFromSave?: DailySta
           category: tpl.category ?? null,
           impact,
           domain: tpl.domain ?? null,
-          base_xp: Math.max(tpl.baseXP ?? 0, fallbackBaseXp),
+          base_xp: resolvedBaseXp,
           psychology_label: "MasterPoolAuto",
           avoidance_tag: tpl.avoidance_tag ?? null,
           hobby_tag: tpl.hobby_tag ?? null,
-          notes: (tpl as { description?: string }).description?.trim() || null,
+          notes,
           mission_intent: missionIntent,
           task_type: preset.type,
           intensity: preset.intensity,
-          duration_minutes: preset.durationMinutes,
+          duration_minutes: resolvedDurationMinutes,
           task_tags: templateTags,
         } satisfies Record<string, unknown>;
         const { error } = await serviceSupabase.from("tasks").insert(row as any);
@@ -380,19 +422,26 @@ export async function ensureMasterMissionsForToday(dailyStateFromSave?: DailySta
           category: tpl.category ?? null,
           impact,
           domain: tpl.domain,
-          base_xp: Math.max(tpl.baseXP ?? 0, fallbackBaseXp),
+          base_xp: resolvedBaseXp,
           psychology_label: "MasterPoolAuto",
           avoidance_tag: tpl.avoidance_tag ?? null,
           hobby_tag: tpl.hobby_tag ?? null,
-          notes: (tpl as { description?: string }).description?.trim() || null,
+          notes,
           mission_intent: missionIntent,
           task_type: preset.type,
           intensity: preset.intensity,
-          duration_minutes: preset.durationMinutes,
+          duration_minutes: resolvedDurationMinutes,
           task_tags: templateTags,
         });
       }
       created++;
+      if (progressionPlan) {
+        const prev = progressionStateMap[progressionPlan.key];
+        progressionStateMap[progressionPlan.key] = {
+          currentTier: Math.max(prev?.currentTier ?? 0, progressionPlan.tier),
+          completions: prev?.completions ?? 0,
+        };
+      }
       autoMasterTitles.add(title);
       await trackEvent("mission_suggested", {
         taskTitle: title,

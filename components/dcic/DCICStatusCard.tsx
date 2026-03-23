@@ -15,6 +15,22 @@ type Props = {
   brainStateMissing?: boolean;
 };
 
+function modeReasonLabel(reason: string | null | undefined): string | null {
+  if (!reason) return null;
+  switch (reason) {
+    case "brain_average_above_75":
+      return "Gemiddelde brainstatus > 75%";
+    case "brain_average_below_25":
+      return "Gemiddelde brainstatus < 25%";
+    case "legacy_recovery_signal":
+      return "Recovery-signalen (energie/slaap/batterij/belasting)";
+    case "legacy_war_signal":
+      return "War-signalen (hoge capaciteit met beheersbare belasting)";
+    default:
+      return null;
+  }
+}
+
 export function DCICStatusCard({ gameState, status, brainStateMissing }: Props) {
   const [modeHelpOpen, setModeHelpOpen] = useState(false);
   const [storedOverride, setStoredOverride] = useState<ReturnType<typeof readDCICModeOverride>>(null);
@@ -39,6 +55,7 @@ export function DCICStatusCard({ gameState, status, brainStateMissing }: Props) 
   const suggestionDiffersFromCurrent =
     !!gameState?.mode?.suggested &&
     gameState.mode.suggested !== gameState.mode.current;
+  const suggestionReason = modeReasonLabel(gameState?.mode?.modeReason ?? null);
 
   return (
     <section
@@ -149,6 +166,11 @@ export function DCICStatusCard({ gameState, status, brainStateMissing }: Props) 
               {gameState.mode.current === "focus" && gameState.mode.suggested === "war"
                 ? " — activeer War in je missie-flow als je er klaar voor bent."
                 : null}
+            </p>
+          ) : null}
+          {suggestionReason ? (
+            <p className="text-[11px] text-[var(--text-muted)]">
+              Reden: <span className="text-[var(--text-secondary)]">{suggestionReason}</span>
             </p>
           ) : null}
         </div>

@@ -21,6 +21,16 @@
         "Zicht op je zwakste schakel (klank, tempo, woorden, …)"
       ],
       "tags": ["Taal", "SRS", "Luisteren", "Spreken"],
+      "execution_framework": {
+        "micro": "Elke sessie heeft een concrete done-state binnen 10-30 minuten.",
+        "meso": "Elke week bouwt 1 systeemcapability (input, output, retrieval, reflectie).",
+        "macro": "Elke fase schuift op van herkenning naar autonome productie."
+      },
+      "quality_gates": [
+        "No zero-days langer dan 2 dagen op rij",
+        "Per week minstens 1 reflectie met concrete aanpassing",
+        "Tier pas verhogen als medium stabiel haalbaar blijft"
+      ],
       "estimated_weeks_min": 12,
       "estimated_weeks_max": 52,
       "phases": [
@@ -65,6 +75,11 @@
           "objective": "Startwoordenschat en luisteren met ondersteuning.",
           "week_intent": "Geen perfecte week — wél een vaste gewoonte: elke werkdag dezelfde drie blokken (woorden, luisteren, schrijven), in totaal ±45 min verspreid.",
           "coach_notes": "Mis je een dag: geen inhalen in het weekend tenzij je dat rustig vindt. Liever 5 dagen licht dan 2 dagen held.",
+          "execution_flow": {
+            "micro": "Open timer, voer 1 taak volledig af, sluit af met 1 reflectiezin.",
+            "meso": "Herhaal exact hetzelfde ritme op vaste dagen zodat het systeem automatisch wordt.",
+            "macro": "Foundation draait om herkenning en consistency, niet om snelheid."
+          },
           "day_overview": [
             { "day_of_week": 1, "focus_line": "SRS start + korte audio met tekst", "task_ids": ["las-w1-t1", "las-w1-t2"] },
             { "day_of_week": 2, "focus_line": "SRS + zelfde audio zonder tekst (1×)", "task_ids": ["las-w1-t1", "las-w1-t2"] },
@@ -80,6 +95,11 @@
             "Minstens 2 schrijf-sessies afgerond",
             "Eén zin geschreven: wat was het moeilijkst?"
           ],
+          "weekly_reflection_block": [
+            "Wat was de kleinste actie die jouw routine redde op een moeilijke dag?",
+            "Welke stap gaf de meeste transfer naar echte gesprekken?",
+            "Wat ga je volgende week lichter maken om vol te houden?"
+          ],
           "tasks": [
             {
               "id": "las-w1-t1",
@@ -94,6 +114,23 @@
                 "Voeg batch nieuwe woorden toe (volgens tier)",
                 "Sluit af met korte review van gisteren"
               ],
+              "micro_actions": [
+                "Start 15-min timer",
+                "Verwerk eerst due reviews",
+                "Voeg nieuwe woorden toe in 2 mini-batches"
+              ],
+              "execution_steps": [
+                "Capture: verzamel woorden uit audio/tekst van gisteren",
+                "Consolidate: label woorden op thema (eten, werk, dagelijks)",
+                "Recall: test jezelf zonder hints op de 5 moeilijkste woorden"
+              ],
+              "meso_outcome": "Bouwt retrieval-snelheid voor kernvocab.",
+              "macro_link": "Legt de basis voor fase 2 waarin je zinnen actief gaat bouwen.",
+              "reflection_block": {
+                "prompt": "Welke woorden bleken passief bekend maar actief nog niet beschikbaar?",
+                "capture_hint": "Schrijf 3 woorden + 1 voorbeeldzin per woord.",
+                "success_signal": "Je kunt minstens 3 moeilijke woorden hardop gebruiken zonder spiek."
+              },
               "reflection_prompt": "Welke 3 woorden bleven hangen en welke 3 niet — en waarom denk je dat?",
               "scaling": {
                 "easy": { "concrete": "10 nieuwe woorden + korte review", "minutes": 10 },
@@ -114,6 +151,22 @@
                 "Tweede keer: meelezen met transcript",
                 "Noteer 1 zin die je bijblijft"
               ],
+              "micro_actions": [
+                "Kies 1 korte audio (max 3 min)",
+                "Luister 1x zonder pauze",
+                "Luister 1x met transcript en markeer sleutelzin"
+              ],
+              "execution_steps": [
+                "Input: pure luisterronde zonder analyse",
+                "Linking: koppel klank aan transcript",
+                "Output: herhaal 1 kernzin hardop"
+              ],
+              "meso_outcome": "Verbetert audio-decoding en patroonherkenning.",
+              "macro_link": "Voorbereiding op integration-fase waar input deels zonder support loopt.",
+              "reflection_block": {
+                "prompt": "Welk stuk audio voelde te snel en waarom?",
+                "capture_hint": "Noteer tijdstempel + 1 hypothese (woordenschat, tempo, uitspraak)."
+              },
               "scaling": {
                 "easy": { "concrete": "5 min audio + volgen met tekst", "minutes": 10 },
                 "medium": { "concrete": "10–15 min + 1x zonder tekst", "minutes": 18 },
@@ -128,6 +181,22 @@
               "why_it_matters": "Actieve productie maakt gaps zichtbaar; korte zinnen houden de drempel laag.",
               "frequency_note": "2–3× / week",
               "preferred_days": [3, 5],
+              "micro_actions": [
+                "Kies 1 mini-onderwerp (dag/werk/plannen)",
+                "Schrijf eerst kernwoorden op",
+                "Maak daarna volledige zinnen"
+              ],
+              "execution_steps": [
+                "Draft: schrijf ruwe versie zonder corrigeren",
+                "Refine: verbeter 1 grammaticaal patroon",
+                "Ship: lees 1x hardop en sla op"
+              ],
+              "meso_outcome": "Bouwt output-confidence en zichtbaar feedbackmateriaal.",
+              "macro_link": "Versnelt overgang van passieve herkenning naar actieve productie.",
+              "reflection_block": {
+                "prompt": "Welke fout komt telkens terug in jouw output?",
+                "capture_hint": "Log fouttype + 1 correcte voorbeeldzin."
+              },
               "reflection_prompt": "Welke grammaticale fout maak je steeds opnieuw?",
               "scaling": {
                 "easy": { "concrete": "3 zinnen met woordenlijst erbij", "minutes": 10 },

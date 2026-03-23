@@ -1,0 +1,68 @@
+A. Systeem :
+	1. Modes zijn niet definitief en de snapshot krijgt geen update zodat het systeem voor die dag de nodige modus blijft behouden zonder constant te moeten opnieuw switchen
+	2. Als brainstatus voor de 2de of 3e keer wordt upgedate, dan moeten die updated status de huidige verdeling opnieuw bekijken want als er plots energy is bij gekomen bijvoorbeeld, dan kan er een extra taak toegevoegd worden indien nodig
+	3. Automissions wordt niet volledig benut, er zijn zoveel automissions maar er is zo weinig veriatie in het toekennen er van
+
+
+B. Dashboard :
+	1. Next best action moet gesloten kunnen worden, nu staat dat permanent ookal is er missie uitgevoerd enzo
+	2. Command Dashboard System Overview card moet ook visual kleur update krijgen bij modus wissel naar recovery of warmode
+	3. Dit moet een duidelijker modal of card worden, dit voelt als halve uitleg en halve actie : 
+		Vandaag — door de app bepaald
+		Critical · High Impact · Growth Boost — zware taken tellen als 2 missie-slots, mini's als ½.
+
+		🧠
+		Growth Boost
+		— Unlock progress
+		Nervous system: 5 min breathing
+		½ missie
+		Recovery: 15 min decompress
+
+	4. Systeem modus Brain status & hoe voel je je vandaag. Moet ook kleur update krijgen bij wisselen van modus
+
+C. Mission page:
+	1. Today's missions. Commander : geeft enkel missies die mogen weer. Terwijl dat het alle missies moet weergeven, maar degene die niet toegelaten worden door het systeem tenzij de andere taken eerst gedaan worden moeten wel zichtbaar zijn maar mogen geblokkeerd staan tot de vereisten zijn vervuld
+	2. Onderstaande header moet ook kleur veranderen wanneer een andere modus is geactiveerd
+		← HQ
+		Missions
+		Recovery mode
+		XP-missies · 2026-03-21 · Performance engine · One focus at a time
+
+D. Budget page : 
+	1. Budget lock moet visueel zichtbaar zijn, moet er dus echt LOCKED uitzien met uitzondering van de emergency expense
+	2. Onderstaande card wordt niet voorzien van de juiste data of er is geen logica om de data te gebruiken en de functie is niet volledig uitgewerkt
+		Discipline Index
+		Combined signal from budget adherence, impulse control, logging consistency, and weekly reviews.
+
+		Score
+
+		0/100
+
+		Status: Critical
+
+	3. Onderstaande card wordt niet voorzien van de juiste data of er is geen logica om de data te gebruiken en de functie is niet volledig uitgewerkt
+
+		Weekly Performance
+		Quick look at how steady your week is so far.
+
+		Days under budget
+
+		0/7
+
+		More calm days under your safe spend target = higher stability.
+
+		XP from discipline
+
+		+210 XP
+
+	4. Ik heb onderstaande modal of card al zoveeeeeel keer upgedate en de nieuw ingegeven datum van loon beschikbaar op wordt CONSTANT gereset naar een bepaalde datum, is of wel niet user specific instelling of het systeem slaat het niet juist op, onderstaand omschrijf ik over welke modal het gaat
+		Loon en dagen over
+		Instellen
+		Periode: van 1 mrt. tot 25 apr. 2026
+
+		Nog te gaan tot volgend loon
+		35 dagen
+		Volgende loondag: 25 april
+
+		Vandaag loon gehad
+

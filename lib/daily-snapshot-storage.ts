@@ -31,6 +31,21 @@ export async function loadDailySnapshot(): Promise<DailySnapshot | null> {
   }
 }
 
+/** Sync variant for first-paint fallbacks that cannot await. */
+export function loadDailySnapshotSync(): DailySnapshot | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const raw = window.localStorage.getItem(STORAGE_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as unknown;
+    if (!isCompatibleSnapshot(parsed)) return null;
+    return parsed;
+  } catch (err) {
+    console.warn("[daily-snapshot] loadDailySnapshotSync failed", err);
+    return null;
+  }
+}
+
 export async function saveDailySnapshot(snapshot: DailySnapshot): Promise<void> {
   if (typeof window === "undefined") return;
   try {

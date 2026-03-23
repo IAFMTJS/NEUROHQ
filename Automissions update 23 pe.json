@@ -1,0 +1,378 @@
+[
+  {
+    "id": 1,
+    "name": "Focus Sprint Short",
+    "category": "discipline",
+    "xp": 15,
+    "duration_min": 5,
+    "description": "Werk 5-10 minuten gefocust aan één taak zonder afleiding om weerstand te doorbreken."
+  },
+  {
+    "id": 2,
+    "name": "Focus Sprint Medium",
+    "category": "discipline",
+    "xp": 25,
+    "duration_min": 15,
+    "description": "Werk 10-20 minuten onafgebroken aan één taak met volledige focus."
+  },
+  {
+    "id": 3,
+    "name": "Deep Work Block",
+    "category": "discipline",
+    "xp": 100,
+    "duration_min": 60,
+    "description": "Werk 45-90 minuten diep gefocust zonder afleiding aan cognitief zwaar werk."
+  },
+  {
+    "id": 4,
+    "name": "Hard Thing First",
+    "category": "discipline",
+    "xp": 100,
+    "duration_min": 30,
+    "description": "Start je dag met de moeilijkste of meest vermeden taak."
+  },
+  {
+    "id": 5,
+    "name": "Execute Despite Mood",
+    "category": "discipline",
+    "xp": 120,
+    "duration_min": 30,
+    "description": "Voer een taak uit ondanks weerstand, vermoeidheid of gebrek aan motivatie."
+  },
+  {
+    "id": 6,
+    "name": "Fear Confrontation",
+    "category": "discipline",
+    "xp": 150,
+    "duration_min": 20,
+    "description": "Doe iets dat je uitstelt door angst of ongemak (gesprek, beslissing, actie)."
+  },
+  {
+    "id": 7,
+    "name": "No Distraction Block",
+    "category": "discipline",
+    "xp": 50,
+    "duration_min": 30,
+    "description": "Werk zonder telefoon, notificaties of externe prikkels."
+  },
+  {
+    "id": 8,
+    "name": "Single Task Hour",
+    "category": "discipline",
+    "xp": 75,
+    "duration_min": 60,
+    "description": "Werk één uur aan exact één taak zonder te switchen."
+  },
+  {
+    "id": 9,
+    "name": "Output Only Mode",
+    "category": "discipline",
+    "xp": 100,
+    "duration_min": 45,
+    "description": "Produceer output zonder te consumeren (geen research, enkel creëren)."
+  },
+  {
+    "id": 10,
+    "name": "Deadline Sprint",
+    "category": "discipline",
+    "xp": 75,
+    "duration_min": 45,
+    "description": "Werk onder tijdsdruk met een harde deadline om snelheid te verhogen."
+  },
+  {
+    "id": 11,
+    "name": "Remove One Distraction",
+    "category": "discipline",
+    "xp": 25,
+    "duration_min": 10,
+    "description": "Identificeer en verwijder één structurele afleiding uit je omgeving."
+  },
+  {
+    "id": 12,
+    "name": "Consistency Check",
+    "category": "discipline",
+    "xp": 25,
+    "duration_min": 10,
+    "description": "Controleer of je je geplande acties effectief hebt uitgevoerd."
+  },
+
+  {
+    "id": 20,
+    "name": "Read 10 Pages",
+    "category": "learning",
+    "xp": 50,
+    "duration_min": 20,
+    "description": "Lees actief en probeer de kernideeën te begrijpen."
+  },
+  {
+    "id": 21,
+    "name": "Concept Mapping",
+    "category": "learning",
+    "xp": 50,
+    "duration_min": 20,
+    "description": "Visualiseer verbanden tussen concepten om inzicht te verdiepen."
+  },
+  {
+    "id": 22,
+    "name": "Teach Back",
+    "category": "learning",
+    "xp": 100,
+    "duration_min": 30,
+    "description": "Leg een concept uit alsof je iemand anders les geeft."
+  },
+  {
+    "id": 23,
+    "name": "Deep Research",
+    "category": "learning",
+    "xp": 100,
+    "duration_min": 60,
+    "description": "Duik diep in een onderwerp en analyseer meerdere bronnen."
+  },
+  {
+    "id": 24,
+    "name": "Apply Concept",
+    "category": "learning",
+    "xp": 100,
+    "duration_min": 45,
+    "description": "Pas een nieuw geleerd concept direct toe in de praktijk."
+  },
+  {
+    "id": 25,
+    "name": "Practice Drill",
+    "category": "learning",
+    "xp": 50,
+    "duration_min": 30,
+    "description": "Herhaal een vaardigheid gericht om beter te worden."
+  },
+  {
+    "id": 26,
+    "name": "Structured Notes",
+    "category": "learning",
+    "xp": 50,
+    "duration_min": 30,
+    "description": "Maak gestructureerde aantekeningen van wat je leert."
+  },
+  {
+    "id": 27,
+    "name": "Test Simulation",
+    "category": "learning",
+    "xp": 100,
+    "duration_min": 45,
+    "description": "Test jezelf onder realistische omstandigheden."
+  },
+  {
+    "id": 28,
+    "name": "Analytical Breakdown",
+    "category": "learning",
+    "xp": 75,
+    "duration_min": 30,
+    "description": "Breek een complex onderwerp op in onderdelen en analyseer ze."
+  },
+
+  {
+    "id": 40,
+    "name": "Walk 20 Min",
+    "category": "health",
+    "xp": 50,
+    "duration_min": 20,
+    "description": "Lichte beweging om energie en focus te verbeteren."
+  },
+  {
+    "id": 41,
+    "name": "Strength Training",
+    "category": "health",
+    "xp": 100,
+    "duration_min": 60,
+    "description": "Krachttraining voor fysieke ontwikkeling."
+  },
+  {
+    "id": 42,
+    "name": "HIIT Session",
+    "category": "health",
+    "xp": 75,
+    "duration_min": 20,
+    "description": "Intensieve training voor conditie en vetverbranding."
+  },
+  {
+    "id": 43,
+    "name": "Mobility Work",
+    "category": "health",
+    "xp": 25,
+    "duration_min": 15,
+    "description": "Verbeter flexibiliteit en mobiliteit."
+  },
+  {
+    "id": 44,
+    "name": "Sleep Discipline",
+    "category": "health",
+    "xp": 75,
+    "duration_min": 0,
+    "description": "Ga op tijd slapen en respecteer je slaapritme."
+  },
+  {
+    "id": 45,
+    "name": "Hydration Reset",
+    "category": "health",
+    "xp": 25,
+    "duration_min": 5,
+    "description": "Drink voldoende water en herstel je hydratatie."
+  },
+
+  {
+    "id": 60,
+    "name": "Brain Dump",
+    "category": "recovery",
+    "xp": 50,
+    "duration_min": 15,
+    "description": "Schrijf alles uit je hoofd om mentale ruimte te creëren."
+  },
+  {
+    "id": 61,
+    "name": "Task Prune",
+    "category": "recovery",
+    "xp": 50,
+    "duration_min": 15,
+    "description": "Schrap overbodige taken om focus te herstellen."
+  },
+  {
+    "id": 62,
+    "name": "Emotional Check-in",
+    "category": "recovery",
+    "xp": 50,
+    "duration_min": 15,
+    "description": "Sta stil bij je emotionele staat zonder oordeel."
+  },
+  {
+    "id": 63,
+    "name": "Weekly Review",
+    "category": "recovery",
+    "xp": 100,
+    "duration_min": 60,
+    "description": "Analyseer je week en stuur bij waar nodig."
+  },
+
+  {
+    "id": 80,
+    "name": "Strategy Reset",
+    "category": "business",
+    "xp": 100,
+    "duration_min": 45,
+    "description": "Herbekijk je prioriteiten en strategie."
+  },
+  {
+    "id": 81,
+    "name": "Eliminate Low Value Task",
+    "category": "business",
+    "xp": 50,
+    "duration_min": 15,
+    "description": "Verwijder een taak die weinig impact heeft."
+  },
+  {
+    "id": 82,
+    "name": "Focus Reallocation",
+    "category": "business",
+    "xp": 100,
+    "duration_min": 30,
+    "description": "Herverdeeld je tijd naar activiteiten met meer impact."
+  }
+]
+
+
+
+
+[
+  {"id":1001,"name":"Intentional Fun Block","category":"plezier","xp":50,"duration_min":30,"description":"Doe bewust iets dat je leuk vindt zonder afleiding.","examples":["Film kijken zonder telefoon","Serie binge (met limiet)","Gamen zonder multitask"]},
+  {"id":1002,"name":"Creative Play","category":"plezier","xp":75,"duration_min":45,"description":"Creëer iets puur voor plezier.","examples":["Tekenen","Muziek maken","Ideeën schetsen"]},
+  {"id":1003,"name":"Micro Joy","category":"plezier","xp":25,"duration_min":10,"description":"Snelle mood boost.","examples":["Koffie halen","Even buiten","Favoriet liedje"]},
+  {"id":1004,"name":"New Experience","category":"plezier","xp":100,"duration_min":60,"description":"Doe iets nieuws.","examples":["Nieuwe plek","Nieuwe hobby","Nieuw eten"]},
+  {"id":1005,"name":"Music Immersion","category":"plezier","xp":25,"duration_min":15,"description":"Luister actief naar muziek.","examples":["Album luisteren","Nieuwe artiest","Playlist focus"]},
+  {"id":1006,"name":"Game Session","category":"plezier","xp":50,"duration_min":30,"description":"Speel bewust een game.","examples":["Console game","Mobile game","PC game"]},
+  {"id":1007,"name":"Nature Enjoyment","category":"plezier","xp":50,"duration_min":30,"description":"Geniet van natuur.","examples":["Park","Wandelen","Buiten zitten"]},
+  {"id":1008,"name":"Creative Writing Fun","category":"plezier","xp":50,"duration_min":30,"description":"Schrijf zonder doel.","examples":["Story","Gedachten","Fictie"]},
+  {"id":1009,"name":"Taste Exploration","category":"plezier","xp":25,"duration_min":15,"description":"Probeer nieuwe smaken.","examples":["Nieuwe snack","Nieuw drankje","Restaurant"]},
+  {"id":1010,"name":"Aesthetic Setup","category":"plezier","xp":50,"duration_min":30,"description":"Maak omgeving mooier.","examples":["Kamer","Licht","Decor"]},
+  {"id":1011,"name":"Humor Boost","category":"plezier","xp":25,"duration_min":15,"description":"Verhoog je humeur.","examples":["Comedy kijken","Memes","Stand-up"]},
+  {"id":1012,"name":"Mini Adventure","category":"plezier","xp":75,"duration_min":45,"description":"Ga spontaan ergens heen.","examples":["Nieuwe wijk","Random rit","Nieuwe plek"]},
+  {"id":1013,"name":"Creative Build","category":"plezier","xp":75,"duration_min":45,"description":"Maak iets tastbaars.","examples":["DIY","Lego","Knutselen"]},
+  {"id":1014,"name":"Photo Capture","category":"plezier","xp":25,"duration_min":15,"description":"Leg momenten vast.","examples":["Foto’s maken","Moment vastleggen","Creatieve shots"]},
+  {"id":1015,"name":"Vibe Session","category":"plezier","xp":25,"duration_min":15,"description":"Geniet van het moment.","examples":["Zitten en chillen","Muziek luisteren","Niets doen"]},
+  {"id":1016,"name":"Hobby Block","category":"plezier","xp":75,"duration_min":45,"description":"Werk aan hobby.","examples":["Schilderen","Muziek","Verzamelen"]},
+  {"id":1017,"name":"Energy Boost Activity","category":"plezier","xp":50,"duration_min":30,"description":"Leuke energieke activiteit.","examples":["Dansen","Actieve game","Sportief plezier"]},
+  {"id":1018,"name":"Spontaneity Action","category":"plezier","xp":50,"duration_min":20,"description":"Doe iets spontaan.","examples":["Last-minute plan","Iets onverwacht","Random actie"]},
+  {"id":1019,"name":"Comfort Activity","category":"plezier","xp":25,"duration_min":20,"description":"Comfort zoeken.","examples":["Dekentje","Thee","Comfort food"]},
+  {"id":1020,"name":"Reward Block","category":"plezier","xp":50,"duration_min":30,"description":"Geef jezelf beloning.","examples":["Snack","Serie","Rustmoment"]}
+]
+
+
+[
+  {"id":1101,"name":"Reach Out","category":"sociaal","xp":25,"duration_min":10,"description":"Contact opnemen.","examples":["App sturen","Check-in","Bericht"]},
+  {"id":1102,"name":"Quick Call","category":"sociaal","xp":25,"duration_min":10,"description":"Kort bellen.","examples":["Even bellen","Snelle update","Kort gesprek"]},
+  {"id":1103,"name":"Meaningful Conversation","category":"sociaal","xp":75,"duration_min":30,"description":"Diep gesprek.","examples":["Over doelen","Geen small talk","Open gesprek"]},
+  {"id":1104,"name":"Social Exposure","category":"sociaal","xp":100,"duration_min":30,"description":"Nieuwe mensen.","examples":["Event","Netwerken","Aanspreken"]},
+  {"id":1105,"name":"Meet Up","category":"sociaal","xp":100,"duration_min":60,"description":"Afspreken.","examples":["Koffie","Eten","Wandeling"]},
+  {"id":1106,"name":"Reconnect","category":"sociaal","xp":50,"duration_min":20,"description":"Contact herstellen.","examples":["Oude vriend","Familie","Ex-collega"]},
+  {"id":1107,"name":"Compliment Action","category":"sociaal","xp":25,"duration_min":5,"description":"Compliment geven.","examples":["Werk","Uiterlijk","Inzet"]},
+  {"id":1108,"name":"Active Listening","category":"sociaal","xp":50,"duration_min":20,"description":"Luisteren zonder onderbreken.","examples":["Doorvragen","Niet onderbreken","Focus"]},
+  {"id":1109,"name":"Deep Question","category":"sociaal","xp":25,"duration_min":10,"description":"Diepe vraag stellen.","examples":["Doelen","Angsten","Visie"]},
+  {"id":1110,"name":"Social Risk","category":"sociaal","xp":100,"duration_min":20,"description":"Sociaal ongemak aangaan.","examples":["Aanspreken","Kwetsbaar zijn","Risico nemen"]},
+  {"id":1111,"name":"Network Expansion","category":"sociaal","xp":100,"duration_min":30,"description":"Nieuwe connecties.","examples":["LinkedIn","Event","Introductie"]},
+  {"id":1112,"name":"Shared Activity","category":"sociaal","xp":75,"duration_min":45,"description":"Samen iets doen.","examples":["Sport","Game","Hobby"]},
+  {"id":1113,"name":"Emotional Openness","category":"sociaal","xp":75,"duration_min":20,"description":"Persoonlijk delen.","examples":["Gevoelens","Ervaring","Struggles"]},
+  {"id":1114,"name":"Conflict Resolve","category":"sociaal","xp":100,"duration_min":30,"description":"Conflict oplossen.","examples":["Gesprek","Uitklaren","Excuses"]},
+  {"id":1115,"name":"Support Action","category":"sociaal","xp":50,"duration_min":20,"description":"Iemand helpen.","examples":["Luisteren","Helpen","Ondersteunen"]},
+  {"id":1116,"name":"Check In Circle","category":"sociaal","xp":50,"duration_min":20,"description":"Meerdere contacten.","examples":["3 mensen appen","Groepschat","Check-ins"]},
+  {"id":1117,"name":"Social Presence","category":"sociaal","xp":50,"duration_min":20,"description":"Aanwezig zijn.","examples":["Niet op telefoon","Aandacht","Meedoen"]},
+  {"id":1118,"name":"Gratitude Message","category":"sociaal","xp":25,"duration_min":10,"description":"Dankbaarheid tonen.","examples":["Bedanken","Appreciatie","Erkenning"]},
+  {"id":1119,"name":"Small Talk Practice","category":"sociaal","xp":25,"duration_min":10,"description":"Small talk oefenen.","examples":["Kassa","Werk","Random gesprek"]},
+  {"id":1120,"name":"Group Interaction","category":"sociaal","xp":75,"duration_min":45,"description":"Groepsgesprek.","examples":["Groep","Meeting","Event"]}
+]
+
+
+
+[
+  {"id":1201,"name":"Controlled Scroll","category":"breinloos","xp":25,"duration_min":15,"description":"Scroll met limiet.","examples":["TikTok","Instagram","Shorts"]},
+  {"id":1202,"name":"Passive Watching","category":"breinloos","xp":50,"duration_min":30,"description":"Kijken zonder nadenken.","examples":["Netflix","TV","YouTube"]},
+  {"id":1203,"name":"Music Drift","category":"breinloos","xp":25,"duration_min":15,"description":"Muziek op achtergrond.","examples":["Playlist","Lo-fi","Radio"]},
+  {"id":1204,"name":"Mindless Walk","category":"breinloos","xp":50,"duration_min":30,"description":"Wandelen zonder doel.","examples":["Rondje","Geen plan","Even eruit"]},
+  {"id":1205,"name":"Casual Gaming","category":"breinloos","xp":50,"duration_min":30,"description":"Simpele game.","examples":["Mobile","Casual","Relaxed"]},
+  {"id":1206,"name":"Rest Eyes","category":"breinloos","xp":25,"duration_min":10,"description":"Ogen sluiten.","examples":["Bank","Stoel","Rust"]},
+  {"id":1207,"name":"Idle Sitting","category":"breinloos","xp":25,"duration_min":10,"description":"Zitten zonder doel.","examples":["Staren","Chillen","Niets"]},
+  {"id":1208,"name":"Light Browsing","category":"breinloos","xp":25,"duration_min":15,"description":"Random browsen.","examples":["Nieuws","Reddit","Web"]},
+  {"id":1209,"name":"Comfort Viewing","category":"breinloos","xp":50,"duration_min":30,"description":"Vertrouwde content.","examples":["Favoriete serie","Herhaling","Comfort video"]},
+  {"id":1210,"name":"Zero Input Moment","category":"breinloos","xp":25,"duration_min":10,"description":"Geen input.","examples":["Stilte","Ogen dicht","Niets"]},
+  {"id":1211,"name":"Snack Break","category":"breinloos","xp":25,"duration_min":10,"description":"Snack moment.","examples":["Snack","Drank","Kleine pauze"]},
+  {"id":1212,"name":"Lazy Reset","category":"breinloos","xp":50,"duration_min":30,"description":"Niets doen.","examples":["Liggen","Chillen","Rust"]},
+  {"id":1213,"name":"Mind Drift","category":"breinloos","xp":25,"duration_min":15,"description":"Gedachten laten gaan.","examples":["Dag dromen","Niets forceren","Afwezig"]},
+  {"id":1214,"name":"Background Noise","category":"breinloos","xp":25,"duration_min":15,"description":"Geluid op achtergrond.","examples":["TV aan","Podcast","Muziek"]},
+  {"id":1215,"name":"Auto Pilot Activity","category":"breinloos","xp":50,"duration_min":30,"description":"Repetitieve actie.","examples":["Opruimen","Douchen","Routine"]},
+  {"id":1216,"name":"Loop Content","category":"breinloos","xp":25,"duration_min":10,"description":"Herhaling.","examples":["Zelfde video","Zelfde muziek","Loop"]},
+  {"id":1217,"name":"Low Effort Media","category":"breinloos","xp":50,"duration_min":30,"description":"Makkelijke content.","examples":["Reality","Clips","Shorts"]},
+  {"id":1218,"name":"Disengage Block","category":"breinloos","xp":50,"duration_min":30,"description":"Afkoppelen.","examples":["Alles uit","Rust","Geen taken"]},
+  {"id":1219,"name":"Visual Drift","category":"breinloos","xp":25,"duration_min":10,"description":"Staren.","examples":["Raam","Lucht","Niets"]},
+  {"id":1220,"name":"Passive Recovery","category":"breinloos","xp":50,"duration_min":30,"description":"Herstellen zonder inspanning.","examples":["Liggen","TV","Muziek"]}
+]
+
+
+
+[
+  {"id":1301,"name":"Hyperfocus Block","category":"hyperfocus","xp":150,"duration_min":90,"description":"Diepe focus.","examples":["Coderen","Project bouwen","Alles afsluiten"]},
+  {"id":1302,"name":"Flow Extension","category":"hyperfocus","xp":100,"duration_min":60,"description":"Flow verlengen.","examples":["Nog een uur","Doorgaan","Niet stoppen"]},
+  {"id":1303,"name":"Obsession Channeling","category":"hyperfocus","xp":150,"duration_min":60,"description":"Obsessie benutten.","examples":["Idee bouwen","Concept","Focus"]},
+  {"id":1304,"name":"Deep Creation","category":"hyperfocus","xp":150,"duration_min":90,"description":"Intens creëren.","examples":["Design","Code","Content"]},
+  {"id":1305,"name":"Tunnel Work","category":"hyperfocus","xp":100,"duration_min":60,"description":"Geen prikkels.","examples":["Notificaties uit","Alleen","Deep work"]},
+  {"id":1306,"name":"Time Loss Session","category":"hyperfocus","xp":150,"duration_min":90,"description":"Tijd vergeten.","examples":["Flow","Geen klok","Diep werk"]},
+  {"id":1307,"name":"Single Goal Lock","category":"hyperfocus","xp":100,"duration_min":60,"description":"1 doel.","examples":["1 taak","Geen switch","Focus"]},
+  {"id":1308,"name":"Deep Problem Solve","category":"hyperfocus","xp":150,"duration_min":90,"description":"Complex oplossen.","examples":["Probleem","Analyse","Strategie"]},
+  {"id":1309,"name":"Hyper Learning","category":"hyperfocus","xp":150,"duration_min":90,"description":"Intens leren.","examples":["Studie","Deep dive","Research"]},
+  {"id":1310,"name":"Focus Marathon","category":"hyperfocus","xp":150,"duration_min":120,"description":"Lang focus.","examples":["2 uur werken","Lang project","Deep session"]},
+  {"id":1311,"name":"Execution Frenzy","category":"hyperfocus","xp":150,"duration_min":60,"description":"Snelle output.","examples":["Taken knallen","Snel werken","Output"]},
+  {"id":1312,"name":"Creative Flow","category":"hyperfocus","xp":150,"duration_min":90,"description":"Creatieve flow.","examples":["Schrijven","Design","Ideeën"]},
+  {"id":1313,"name":"Focus Lock","category":"hyperfocus","xp":100,"duration_min":60,"description":"Geen switch.","examples":["1 taak","Geen multitask","Focus"]},
+  {"id":1314,"name":"Zero Interruption Work","category":"hyperfocus","xp":150,"duration_min":90,"description":"Geen onderbreking.","examples":["Alles uit","Offline","Deep work"]},
+  {"id":1315,"name":"Deep Build","category":"hyperfocus","xp":150,"duration_min":90,"description":"Iets bouwen.","examples":["App","Project","Concept"]},
+  {"id":1316,"name":"Cognitive Immersion","category":"hyperfocus","xp":150,"duration_min":90,"description":"Volledig mentaal.","examples":["Analyse","Strategie","Denken"]},
+  {"id":1317,"name":"Skill Obsession","category":"hyperfocus","xp":100,"duration_min":60,"description":"Skill trainen.","examples":["Oefenen","Herhalen","Verbeteren"]},
+  {"id":1318,"name":"Output Surge","category":"hyperfocus","xp":150,"duration_min":60,"description":"Max output.","examples":["Schrijven","Taken","Creatie"]},
+  {"id":1319,"name":"Obsession Loop","category":"hyperfocus","xp":150,"duration_min":90,"description":"Blijven doorgaan.","examples":["Zelfde taak","Diep gaan","Herhalen"]},
+  {"id":1320,"name":"Deep Isolation Work","category":"hyperfocus","xp":150,"duration_min":90,"description":"Volledig alleen.","examples":["Afzondering","Geen contact","Focus"]}
+]

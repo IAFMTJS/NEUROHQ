@@ -3,7 +3,6 @@
 import { useMemo, useTransition } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { toast } from "sonner";
 import type { ProtocolLibraryRow } from "@/app/actions/protocol-library";
 import type { ProtocolProgressState } from "@/app/actions/protocol-progress";
 import { commitProtocolWeekToMissions } from "@/app/actions/protocol-missions";
@@ -19,6 +18,7 @@ import {
 import type { DifficultyTier } from "@/lib/growth/adaptive-engine";
 import { progressKey, resolveFocusProtocol } from "@/lib/growth/resolve-focus-protocol";
 import { tierLabelNl } from "@/lib/growth/tier-labels";
+import { neuroToast } from "@/lib/ui/neuro-toast";
 
 type Props = {
   protocols: ProtocolLibraryRow[];
@@ -118,16 +118,16 @@ export function GrowthCommandCenter({
                   try {
                     if (!id) {
                       await setGrowthFocusProtocol({ slug: null });
-                      toast.success("Focus gewist.");
+                      neuroToast.success("Focus gewist.");
                     } else {
                       const p = protocols.find((x) => x.id === id);
                       if (!p) return;
                       await setGrowthFocusProtocol({ slug: p.slug, locale: p.locale });
-                      toast.success("Focus-protocol bijgewerkt.");
+                      neuroToast.success("Focus-protocol bijgewerkt.");
                     }
                     router.refresh();
                   } catch (err) {
-                    toast.error(err instanceof Error ? err.message : "Mislukt.");
+                    neuroToast.error(err instanceof Error ? err.message : "Mislukt.");
                   }
                 });
               }}
@@ -157,6 +157,22 @@ export function GrowthCommandCenter({
                       <span className="font-semibold text-[var(--semantic-accent)]">Intentie: </span>
                       {week.week_intent}
                     </p>
+                  )}
+                  {week.execution_flow && (
+                    <div className="mt-2 grid gap-1 rounded-lg border border-[var(--card-border)]/70 bg-[var(--bg-soft)]/60 px-2.5 py-2 text-[11px] text-[var(--text-secondary)]">
+                      <p>
+                        <span className="font-semibold text-[var(--text-muted)]">Micro: </span>
+                        {week.execution_flow.micro}
+                      </p>
+                      <p>
+                        <span className="font-semibold text-[var(--text-muted)]">Meso: </span>
+                        {week.execution_flow.meso}
+                      </p>
+                      <p>
+                        <span className="font-semibold text-[var(--text-muted)]">Macro: </span>
+                        {week.execution_flow.macro}
+                      </p>
+                    </div>
                   )}
                 </div>
                 <div className="rounded-xl border border-[var(--card-border)] bg-[var(--bg-soft)] px-3 py-2 text-right">
@@ -224,14 +240,14 @@ export function GrowthCommandCenter({
                       protocol_slug: safeActive.slug,
                       locale: safeActive.locale,
                     });
-                    toast.success(
+                    neuroToast.success(
                       r.created > 0
                         ? `${r.created} taken op Missions${r.skipped ? ` (${r.skipped} al gepland)` : ""}.`
                         : `Geen nieuwe taken — ${r.skipped} stonden al op vandaag.`,
                     );
                     router.refresh();
                   } catch (e) {
-                    toast.error(e instanceof Error ? e.message : "Mislukt.");
+                    neuroToast.error(e instanceof Error ? e.message : "Mislukt.");
                   }
                 })
               }

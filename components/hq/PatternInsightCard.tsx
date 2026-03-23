@@ -34,7 +34,7 @@ export function PatternInsightCard({
           DETAILS
         </Link>
         <Link
-          href="/report#patterns"
+          href="/report?tab=patterns"
           className="text-center text-sm font-medium text-[var(--accent-focus)] hover:underline"
         >
           See 30-day patterns →

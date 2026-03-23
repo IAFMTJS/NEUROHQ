@@ -8,6 +8,11 @@ import type { DifficultyTier } from "@/lib/growth/adaptive-engine";
 
 const PTASK_MARKER = (id: string) => `ptask:${id}`;
 
+function protocolTaskBaseXp(minutes: number, tier: DifficultyTier): number {
+  const tierBonus = tier === "hard" ? 12 : tier === "medium" ? 6 : 2;
+  return Math.max(8, Math.min(120, Math.round(minutes * 0.9) + tierBonus));
+}
+
 /** Push current protocol week tasks to Missions board (tasks table), deduped by ptask id + due date. */
 export async function commitProtocolWeekToMissions(params: {
   protocol_slug: string;
@@ -78,13 +83,24 @@ export async function commitProtocolWeekToMissions(params: {
     const scaled = getScaledTask(task, tier);
     const notes = [
       scaled.concrete,
+      task.success_criteria ? `Succescriterium: ${task.success_criteria}` : null,
+      task.execution_steps && task.execution_steps.length > 0
+        ? `Execution steps:\n${task.execution_steps.map((step, idx) => `${idx + 1}. ${step}`).join("\n")}`
+        : null,
+      task.checklist && task.checklist.length > 0
+        ? `Checklist:\n${task.checklist.map((c) => `- ${c}`).join("\n")}`
+        : null,
+      task.reflection_prompt ? `Reflectie: ${task.reflection_prompt}` : null,
+      task.reflection_block?.prompt ? `Reflectieblok: ${task.reflection_block.prompt}` : null,
       "",
       "---",
       `protocol:${params.protocol_slug}`,
       PTASK_MARKER(task.id),
       `week:${weekIndex}`,
       `tier:${tier}`,
-    ].join("\n");
+    ]
+      .filter((line): line is string => !!line)
+      .join("\n");
 
     const r = await createTask({
       title: `${titlePrefix} · ${task.title}`.slice(0, 200),
@@ -94,8 +110,15 @@ export async function commitProtocolWeekToMissions(params: {
       mission_intent: "experiment",
       task_type: "mental",
       duration_minutes: scaled.minutes,
-      base_xp: tier === "hard" ? 15 : tier === "easy" ? 8 : 10,
-      task_tags: ["growth", "protocol", params.protocol_slug],
+      base_xp: protocolTaskBaseXp(scaled.minutes, tier),
+      task_tags: [
+        "growth",
+        "protocol",
+        params.protocol_slug,
+        `protocol_week:${weekIndex}`,
+        `protocol_task:${task.id}`,
+        `protocol_tier:${tier}`,
+      ],
     });
     if (r.id) {
       taskIds.push(r.id);

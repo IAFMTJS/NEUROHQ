@@ -1,0 +1,2557 @@
+[
+  {
+    "id": 1,
+    "author": "Marcus Aurelius",
+    "era": "Ancient Rome (121–180 AD)",
+    "theme": "control",
+    "quote": "You have power over your mind—not outside events."
+  },
+  {
+    "id": 2,
+    "author": "Seneca",
+    "era": "Ancient Rome (4 BC–65 AD)",
+    "theme": "fear",
+    "quote": "We suffer more often in imagination than in reality."
+  },
+  {
+    "id": 3,
+    "author": "Epictetus",
+    "era": "Ancient Greece/Rome (50–135 AD)",
+    "theme": "freedom",
+    "quote": "No man is free who is not master of himself."
+  },
+  {
+    "id": 4,
+    "author": "Epictetus",
+    "era": "Ancient Greece/Rome (50–135 AD)",
+    "theme": "perception",
+    "quote": "It is not things themselves that disturb us, but our judgments about them."
+  },
+  {
+    "id": 5,
+    "author": "Marcus Aurelius",
+    "era": "Ancient Rome (121–180 AD)",
+    "theme": "virtue",
+    "quote": "Waste no more time arguing what a good man should be. Be one."
+  },
+  {
+    "id": 6,
+    "author": "Marcus Aurelius",
+    "era": "Ancient Rome (121–180 AD)",
+    "theme": "action",
+    "quote": "The impediment to action advances action."
+  },
+  {
+    "id": 7,
+    "author": "Confucius",
+    "era": "Ancient China (551–479 BC)",
+    "theme": "discipline",
+    "quote": "He who conquers himself is the mightiest warrior."
+  },
+  {
+    "id": 8,
+    "author": "Socrates",
+    "era": "Ancient Greece (470–399 BC)",
+    "theme": "self-knowledge",
+    "quote": "The unexamined life is not worth living."
+  },
+  {
+    "id": 9,
+    "author": "Aristotle",
+    "era": "Ancient Greece (384–322 BC)",
+    "theme": "wisdom",
+    "quote": "Knowing yourself is the beginning of all wisdom."
+  },
+  {
+    "id": 10,
+    "author": "Friedrich Nietzsche",
+    "era": "19th Century (1844–1900)",
+    "theme": "purpose",
+    "quote": "He who has a why to live can bear almost any how."
+  },
+  {
+    "id": 11,
+    "author": "Friedrich Nietzsche",
+    "era": "19th Century (1844–1900)",
+    "theme": "strength",
+    "quote": "That which does not kill us makes us stronger."
+  },
+  {
+    "id": 12,
+    "author": "Viktor Frankl",
+    "era": "20th Century (1905–1997)",
+    "theme": "awareness",
+    "quote": "Between stimulus and response there is a space."
+  },
+  {
+    "id": 13,
+    "author": "Viktor Frankl",
+    "era": "20th Century (1905–1997)",
+    "theme": "adaptation",
+    "quote": "When we are no longer able to change a situation, we are challenged to change ourselves."
+  },
+  {
+    "id": 14,
+    "author": "Epictetus",
+    "era": "Ancient Greece/Rome (50–135 AD)",
+    "theme": "anxiety",
+    "quote": "Man is not worried by real problems so much as by his imagined anxieties."
+  },
+  {
+    "id": 15,
+    "author": "Epictetus",
+    "era": "Ancient Greece/Rome (50–135 AD)",
+    "theme": "action",
+    "quote": "First say to yourself what you would be; then do what you have to do."
+  },
+  {
+    "id": 16,
+    "author": "Marcus Aurelius",
+    "era": "Ancient Rome (121–180 AD)",
+    "theme": "mind",
+    "quote": "The soul becomes dyed with the color of its thoughts."
+  },
+  {
+    "id": 17,
+    "author": "Seneca",
+    "era": "Ancient Rome (4 BC–65 AD)",
+    "theme": "growth",
+    "quote": "Difficulties strengthen the mind, as labor does the body."
+  },
+  {
+    "id": 18,
+    "author": "Seneca",
+    "era": "Ancient Rome (4 BC–65 AD)",
+    "theme": "preparation",
+    "quote": "Luck is what happens when preparation meets opportunity."
+  },
+  {
+    "id": 19,
+    "author": "Seneca",
+    "era": "Ancient Rome (4 BC–65 AD)",
+    "theme": "fear",
+    "quote": "He suffers more than necessary, who suffers before it is necessary."
+  },
+  {
+    "id": 20,
+    "author": "Epictetus",
+    "era": "Ancient Greece/Rome (50–135 AD)",
+    "theme": "control",
+    "quote": "Make the best use of what is in your power."
+  },
+  {
+    "id": 21,
+    "author": "Marcus Aurelius",
+    "era": "Ancient Rome (121–180 AD)",
+    "theme": "control",
+    "quote": "You always have the option of not having an opinion."
+  },
+  {
+    "id": 22,
+    "author": "Seneca",
+    "era": "Ancient Rome (4 BC–65 AD)",
+    "theme": "time",
+    "quote": "It is not that we have little time, but that we waste much of it."
+  },
+  {
+    "id": 23,
+    "author": "Epictetus",
+    "era": "Ancient Greece/Rome (50–135 AD)",
+    "theme": "freedom",
+    "quote": "If you want to improve, be content to be thought foolish."
+  },
+  {
+    "id": 24,
+    "author": "Confucius",
+    "era": "Ancient China (551–479 BC)",
+    "theme": "discipline",
+    "quote": "To see what is right and not do it is lack of courage."
+  },
+  {
+    "id": 25,
+    "author": "Lao Tzu",
+    "era": "Ancient China (6th Century BC)",
+    "theme": "balance",
+    "quote": "Care about what other people think and you will always be their prisoner."
+  },
+  {
+    "id": 26,
+    "author": "Socrates",
+    "era": "Ancient Greece (470–399 BC)",
+    "theme": "knowledge",
+    "quote": "I know that I know nothing."
+  },
+  {
+    "id": 27,
+    "author": "Aristotle",
+    "era": "Ancient Greece (384–322 BC)",
+    "theme": "habit",
+    "quote": "Pleasure in the job puts perfection in the work."
+  },
+  {
+    "id": 28,
+    "author": "Heraclitus",
+    "era": "Ancient Greece (535–475 BC)",
+    "theme": "change",
+    "quote": "The only constant is change."
+  },
+  {
+    "id": 29,
+    "author": "Friedrich Nietzsche",
+    "era": "19th Century (1844–1900)",
+    "theme": "truth",
+    "quote": "Convictions are more dangerous enemies of truth than lies."
+  },
+  {
+    "id": 30,
+    "author": "Søren Kierkegaard",
+    "era": "19th Century (1813–1855)",
+    "theme": "choice",
+    "quote": "Life must be lived forward but understood backward."
+  },
+  {
+    "id": 31,
+    "author": "Arthur Schopenhauer",
+    "era": "19th Century (1788–1860)",
+    "theme": "desire",
+    "quote": "A man can do what he wants, but not want what he wants."
+  },
+  {
+    "id": 32,
+    "author": "Fyodor Dostoevsky",
+    "era": "19th Century (1821–1881)",
+    "theme": "mind",
+    "quote": "To think too much is a disease."
+  },
+  {
+    "id": 33,
+    "author": "Ralph Waldo Emerson",
+    "era": "19th Century (1803–1882)",
+    "theme": "self",
+    "quote": "Envy is ignorance, imitation is suicide."
+  },
+  {
+    "id": 34,
+    "author": "Henry David Thoreau",
+    "era": "19th Century (1817–1862)",
+    "theme": "simplicity",
+    "quote": "Our life is frittered away by detail."
+  },
+  {
+    "id": 35,
+    "author": "William James",
+    "era": "19th–20th Century (1842–1910)",
+    "theme": "action",
+    "quote": "Nothing is so fatiguing as the eternal hanging on of an uncompleted task."
+  },
+  {
+    "id": 36,
+    "author": "Carl Jung",
+    "era": "20th Century (1875–1961)",
+    "theme": "shadow",
+    "quote": "What you resist persists."
+  },
+  {
+    "id": 37,
+    "author": "Sigmund Freud",
+    "era": "20th Century (1856–1939)",
+    "theme": "mind",
+    "quote": "Unexpressed emotions will never die."
+  },
+  {
+    "id": 38,
+    "author": "Albert Camus",
+    "era": "20th Century (1913–1960)",
+    "theme": "absurdity",
+    "quote": "Nobody realizes that some people expend tremendous energy merely to be normal."
+  },
+  {
+    "id": 39,
+    "author": "Jean-Paul Sartre",
+    "era": "20th Century (1905–1980)",
+    "theme": "freedom",
+    "quote": "We are nothing else but what we make of ourselves."
+  },
+  {
+    "id": 40,
+    "author": "Simone Weil",
+    "era": "20th Century (1909–1943)",
+    "theme": "attention",
+    "quote": "Attention is the rarest and purest form of generosity."
+  },
+  {
+    "id": 41,
+    "author": "George Orwell",
+    "era": "20th Century (1903–1950)",
+    "theme": "power",
+    "quote": "Power is not a means; it is an end."
+  },
+  {
+    "id": 42,
+    "author": "Bertrand Russell",
+    "era": "20th Century (1872–1970)",
+    "theme": "thinking",
+    "quote": "The good life is one inspired by love and guided by knowledge."
+  },
+  {
+    "id": 43,
+    "author": "Hannah Arendt",
+    "era": "20th Century (1906–1975)",
+    "theme": "thinking",
+    "quote": "Thinking without a banister."
+  },
+  {
+    "id": 44,
+    "author": "Alan Watts",
+    "era": "20th Century (1915–1973)",
+    "theme": "identity",
+    "quote": "Trying to define yourself is like trying to bite your own teeth."
+  },
+  {
+    "id": 45,
+    "author": "Bruce Lee",
+    "era": "20th Century (1940–1973)",
+    "theme": "action",
+    "quote": "To hell with circumstances; I create opportunities."
+  },
+  {
+    "id": 46,
+    "author": "Rumi",
+    "era": "13th Century (1207–1273)",
+    "theme": "growth",
+    "quote": "Set your life on fire. Seek those who fan your flames."
+  },
+  {
+    "id": 47,
+    "author": "Voltaire",
+    "era": "18th Century (1694–1778)",
+    "theme": "thinking",
+    "quote": "Doubt is not a pleasant condition, but certainty is absurd."
+  },
+  {
+    "id": 48,
+    "author": "David Hume",
+    "era": "18th Century (1711–1776)",
+    "theme": "habit",
+    "quote": "Custom is the great guide of human life."
+  },
+  {
+    "id": 49,
+    "author": "John Locke",
+    "era": "17th Century (1632–1704)",
+    "theme": "identity",
+    "quote": "Actions are the best interpreters of thoughts."
+  },
+  {
+    "id": 50,
+    "author": "René Descartes",
+    "era": "17th Century (1596–1650)",
+    "theme": "reason",
+    "quote": "Conquer yourself rather than the world."
+  },
+  {
+    "id": 51,
+    "author": "Blaise Pascal",
+    "era": "17th Century (1623–1662)",
+    "theme": "mind",
+    "quote": "Man is but a reed, the most feeble thing in nature, but he is a thinking reed."
+  },
+  {
+    "id": 52,
+    "author": "Michel de Montaigne",
+    "era": "16th Century (1533–1592)",
+    "theme": "self",
+    "quote": "He who fears he shall suffer already suffers."
+  },
+  {
+    "id": 53,
+    "author": "Cicero",
+    "era": "Ancient Rome (106–43 BC)",
+    "theme": "virtue",
+    "quote": "Gratitude is not only the greatest of virtues, but the parent of all others."
+  },
+  {
+    "id": 54,
+    "author": "Seneca",
+    "era": "Ancient Rome (4 BC–65 AD)",
+    "theme": "fear",
+    "quote": "We are more often frightened than hurt."
+  },
+  {
+    "id": 55,
+    "author": "Marcus Aurelius",
+    "era": "Ancient Rome (121–180 AD)",
+    "theme": "acceptance",
+    "quote": "Accept whatever comes to you woven in the pattern of your destiny."
+  },
+  {
+    "id": 56,
+    "author": "Epictetus",
+    "era": "Ancient Greece/Rome (50–135 AD)",
+    "theme": "control",
+    "quote": "Do not seek for events to happen as you wish, but wish them to happen as they do."
+  },
+  {
+    "id": 57,
+    "author": "Confucius",
+    "era": "Ancient China (551–479 BC)",
+    "theme": "ethics",
+    "quote": "The superior man acts before he speaks."
+  },
+  {
+    "id": 58,
+    "author": "Lao Tzu",
+    "era": "Ancient China (6th Century BC)",
+    "theme": "wisdom",
+    "quote": "Knowing others is intelligence; knowing yourself is true wisdom."
+  },
+  {
+    "id": 59,
+    "author": "Sun Tzu",
+    "era": "Ancient China (5th Century BC)",
+    "theme": "strategy",
+    "quote": "In the midst of chaos, there is also opportunity."
+  },
+  {
+    "id": 60,
+    "author": "Aristotle",
+    "era": "Ancient Greece (384–322 BC)",
+    "theme": "thinking",
+    "quote": "It is the mark of an educated mind to entertain a thought without accepting it."
+  },
+  {
+    "id": 61,
+    "author": "Plato",
+    "era": "Ancient Greece (427–347 BC)",
+    "theme": "truth",
+    "quote": "Reality is created by the mind."
+  },
+  {
+    "id": 62,
+    "author": "Heraclitus",
+    "era": "Ancient Greece (535–475 BC)",
+    "theme": "conflict",
+    "quote": "War is the father of all things."
+  },
+  {
+    "id": 63,
+    "author": "Friedrich Nietzsche",
+    "era": "19th Century (1844–1900)",
+    "theme": "power",
+    "quote": "He who cannot obey himself will be commanded."
+  },
+  {
+    "id": 64,
+    "author": "Søren Kierkegaard",
+    "era": "19th Century (1813–1855)",
+    "theme": "self",
+    "quote": "The most common form of despair is not being who you are."
+  },
+  {
+    "id": 65,
+    "author": "Arthur Schopenhauer",
+    "era": "19th Century (1788–1860)",
+    "theme": "happiness",
+    "quote": "Happiness belongs to those who are sufficient unto themselves."
+  },
+  {
+    "id": 66,
+    "author": "Fyodor Dostoevsky",
+    "era": "19th Century (1821–1881)",
+    "theme": "truth",
+    "quote": "To live without hope is to cease to live."
+  },
+  {
+    "id": 67,
+    "author": "Ralph Waldo Emerson",
+    "era": "19th Century (1803–1882)",
+    "theme": "power",
+    "quote": "What lies within us is greater than what lies before us."
+  },
+  {
+    "id": 68,
+    "author": "Henry David Thoreau",
+    "era": "19th Century (1817–1862)",
+    "theme": "freedom",
+    "quote": "Go confidently in the direction of your dreams."
+  },
+  {
+    "id": 69,
+    "author": "William James",
+    "era": "19th–20th Century (1842–1910)",
+    "theme": "belief",
+    "quote": "Human beings can alter their lives by altering their attitudes."
+  },
+  {
+    "id": 70,
+    "author": "Carl Jung",
+    "era": "20th Century (1875–1961)",
+    "theme": "self",
+    "quote": "Your vision will become clear only when you can look into your own heart."
+  },
+  {
+    "id": 71,
+    "author": "Sigmund Freud",
+    "era": "20th Century (1856–1939)",
+    "theme": "mind",
+    "quote": "Where id was, there ego shall be."
+  },
+  {
+    "id": 72,
+    "author": "Albert Camus",
+    "era": "20th Century (1913–1960)",
+    "theme": "freedom",
+    "quote": "To be happy, we must not be too concerned with others."
+  },
+  {
+    "id": 73,
+    "author": "Jean-Paul Sartre",
+    "era": "20th Century (1905–1980)",
+    "theme": "responsibility",
+    "quote": "Man is nothing else but what he makes of himself."
+  },
+  {
+    "id": 74,
+    "author": "Simone de Beauvoir",
+    "era": "20th Century (1908–1986)",
+    "theme": "identity",
+    "quote": "Change your life today."
+  },
+  {
+    "id": 75,
+    "author": "George Orwell",
+    "era": "20th Century (1903–1950)",
+    "theme": "truth",
+    "quote": "To see what is in front of one's nose needs constant struggle."
+  },
+  {
+    "id": 76,
+    "author": "Bertrand Russell",
+    "era": "20th Century (1872–1970)",
+    "theme": "wisdom",
+    "quote": "Fools and fanatics are always so certain."
+  },
+  {
+    "id": 77,
+    "author": "Hannah Arendt",
+    "era": "20th Century (1906–1975)",
+    "theme": "evil",
+    "quote": "The banality of evil."
+  },
+  {
+    "id": 78,
+    "author": "Alan Watts",
+    "era": "20th Century (1915–1973)",
+    "theme": "mind",
+    "quote": "Muddy water is best cleared by leaving it alone."
+  },
+  {
+    "id": 79,
+    "author": "Bruce Lee",
+    "era": "20th Century (1940–1973)",
+    "theme": "discipline",
+    "quote": "Long-term consistency beats short-term intensity."
+  },
+  {
+    "id": 80,
+    "author": "Rumi",
+    "era": "13th Century (1207–1273)",
+    "theme": "love",
+    "quote": "Let yourself be silently drawn by what you truly love."
+  },
+  {
+    "id": 81,
+    "author": "Voltaire",
+    "era": "18th Century (1694–1778)",
+    "theme": "thinking",
+    "quote": "Common sense is not so common."
+  },
+  {
+    "id": 82,
+    "author": "David Hume",
+    "era": "18th Century (1711–1776)",
+    "theme": "belief",
+    "quote": "A wise man proportions his belief to the evidence."
+  },
+  {
+    "id": 83,
+    "author": "John Locke",
+    "era": "17th Century (1632–1704)",
+    "theme": "mind",
+    "quote": "No man's knowledge can go beyond his experience."
+  },
+  {
+    "id": 84,
+    "author": "René Descartes",
+    "era": "17th Century (1596–1650)",
+    "theme": "certainty",
+    "quote": "In order to seek truth, it is necessary to doubt."
+  },
+  {
+    "id": 85,
+    "author": "Blaise Pascal",
+    "era": "17th Century (1623–1662)",
+    "theme": "human nature",
+    "quote": "All men seek happiness."
+  },
+  {
+    "id": 86,
+    "author": "Michel de Montaigne",
+    "era": "16th Century (1533–1592)",
+    "theme": "self",
+    "quote": "A wise man never loses anything if he has himself."
+  },
+  {
+    "id": 87,
+    "author": "Cicero",
+    "era": "Ancient Rome (106–43 BC)",
+    "theme": "justice",
+    "quote": "The safety of the people shall be the highest law."
+  },
+  {
+    "id": 88,
+    "author": "Seneca",
+    "era": "Ancient Rome (4 BC–65 AD)",
+    "theme": "anger",
+    "quote": "Anger, if not restrained, is more harmful than the injury."
+  },
+  {
+    "id": 89,
+    "author": "Marcus Aurelius",
+    "era": "Ancient Rome (121–180 AD)",
+    "theme": "clarity",
+    "quote": "You can choose not to be harmed—and you won’t feel harmed."
+  },
+  {
+    "id": 90,
+    "author": "Epictetus",
+    "era": "Ancient Greece/Rome (50–135 AD)",
+    "theme": "freedom",
+    "quote": "Only the educated are free."
+  },
+  {
+    "id": 91,
+    "author": "Confucius",
+    "era": "Ancient China (551–479 BC)",
+    "theme": "learning",
+    "quote": "Real knowledge is to know the extent of one's ignorance."
+  },
+  {
+    "id": 92,
+    "author": "Lao Tzu",
+    "era": "Ancient China (6th Century BC)",
+    "theme": "simplicity",
+    "quote": "Nature does not hurry, yet everything is accomplished."
+  },
+  {
+    "id": 93,
+    "author": "Sun Tzu",
+    "era": "Ancient China (5th Century BC)",
+    "theme": "strategy",
+    "quote": "Victorious warriors win first and then go to war."
+  },
+  {
+    "id": 94,
+    "author": "Aristotle",
+    "era": "Ancient Greece (384–322 BC)",
+    "theme": "virtue",
+    "quote": "We become just by doing just acts."
+  },
+  {
+    "id": 95,
+    "author": "Plato",
+    "era": "Ancient Greece (427–347 BC)",
+    "theme": "ignorance",
+    "quote": "Ignorance is the root and stem of all evil."
+  },
+  {
+    "id": 96,
+    "author": "Heraclitus",
+    "era": "Ancient Greece (535–475 BC)",
+    "theme": "depth",
+    "quote": "The hidden harmony is better than the obvious."
+  },
+  {
+    "id": 97,
+    "author": "Friedrich Nietzsche",
+    "era": "19th Century (1844–1900)",
+    "theme": "growth",
+    "quote": "Become who you are."
+  },
+  {
+    "id": 98,
+    "author": "Søren Kierkegaard",
+    "era": "19th Century (1813–1855)",
+    "theme": "faith",
+    "quote": "Faith begins precisely where thinking leaves off."
+  },
+  {
+    "id": 99,
+    "author": "Arthur Schopenhauer",
+    "era": "19th Century (1788–1860)",
+    "theme": "life",
+    "quote": "Life is a constant striving."
+  },
+  {
+    "id": 100,
+    "author": "Fyodor Dostoevsky",
+    "era": "19th Century (1821–1881)",
+    "theme": "self",
+    "quote": "Above all, do not lie to yourself."
+  },
+  {
+    "id": 101,
+    "author": "Ralph Waldo Emerson",
+    "era": "19th Century (1803–1882)",
+    "theme": "self",
+    "quote": "Nothing can bring you peace but yourself."
+  },
+  {
+    "id": 102,
+    "author": "Henry David Thoreau",
+    "era": "19th Century (1817–1862)",
+    "theme": "awareness",
+    "quote": "It is not what you look at that matters, it is what you see."
+  },
+  {
+    "id": 103,
+    "author": "William James",
+    "era": "19th–20th Century (1842–1910)",
+    "theme": "focus",
+    "quote": "The art of being wise is knowing what to overlook."
+  },
+  {
+    "id": 104,
+    "author": "Carl Jung",
+    "era": "20th Century (1875–1961)",
+    "theme": "growth",
+    "quote": "There is no coming to consciousness without pain."
+  },
+  {
+    "id": 105,
+    "author": "Sigmund Freud",
+    "era": "20th Century (1856–1939)",
+    "theme": "truth",
+    "quote": "Being entirely honest with oneself is a good exercise."
+  },
+  {
+    "id": 106,
+    "author": "Albert Camus",
+    "era": "20th Century (1913–1960)",
+    "theme": "meaning",
+    "quote": "Life is the sum of all your choices."
+  },
+  {
+    "id": 107,
+    "author": "Jean-Paul Sartre",
+    "era": "20th Century (1905–1980)",
+    "theme": "existence",
+    "quote": "Existence precedes essence."
+  },
+  {
+    "id": 108,
+    "author": "Simone de Beauvoir",
+    "era": "20th Century (1908–1986)",
+    "theme": "identity",
+    "quote": "One is not born, but rather becomes who one is."
+  },
+  {
+    "id": 109,
+    "author": "George Orwell",
+    "era": "20th Century (1903–1950)",
+    "theme": "truth",
+    "quote": "The further a society drifts from truth, the more it will hate those who speak it."
+  },
+  {
+    "id": 110,
+    "author": "Bertrand Russell",
+    "era": "20th Century (1872–1970)",
+    "theme": "thinking",
+    "quote": "Do not fear to be eccentric in opinion."
+  },
+  {
+    "id": 111,
+    "author": "Hannah Arendt",
+    "era": "20th Century (1906–1975)",
+    "theme": "responsibility",
+    "quote": "Most evil is done by people who never make up their minds."
+  },
+  {
+    "id": 112,
+    "author": "Alan Watts",
+    "era": "20th Century (1915–1973)",
+    "theme": "identity",
+    "quote": "You are an aperture through which the universe is looking at itself."
+  },
+  {
+    "id": 113,
+    "author": "Bruce Lee",
+    "era": "20th Century (1940–1973)",
+    "theme": "simplicity",
+    "quote": "Simplicity is the key to brilliance."
+  },
+  {
+    "id": 114,
+    "author": "Rumi",
+    "era": "13th Century (1207–1273)",
+    "theme": "truth",
+    "quote": "Sell your cleverness and buy bewilderment."
+  },
+  {
+    "id": 115,
+    "author": "Voltaire",
+    "era": "18th Century (1694–1778)",
+    "theme": "freedom",
+    "quote": "It is dangerous to be right when authority is wrong."
+  },
+  {
+    "id": 116,
+    "author": "David Hume",
+    "era": "18th Century (1711–1776)",
+    "theme": "reason",
+    "quote": "Reason is, and ought only to be the slave of the passions."
+  },
+  {
+    "id": 117,
+    "author": "John Locke",
+    "era": "17th Century (1632–1704)",
+    "theme": "knowledge",
+    "quote": "New opinions are always suspected."
+  },
+  {
+    "id": 118,
+    "author": "René Descartes",
+    "era": "17th Century (1596–1650)",
+    "theme": "method",
+    "quote": "Divide each difficulty into as many parts as possible."
+  },
+  {
+    "id": 119,
+    "author": "Blaise Pascal",
+    "era": "17th Century (1623–1662)",
+    "theme": "existence",
+    "quote": "Man is but a thinking reed."
+  },
+  {
+    "id": 120,
+    "author": "Michel de Montaigne",
+    "era": "16th Century (1533–1592)",
+    "theme": "self",
+    "quote": "He who knows himself knows others."
+  },
+  {
+    "id": 121,
+    "author": "Lao Tzu",
+    "era": "Ancient China (6th Century BC)",
+    "theme": "control",
+    "quote": "Mastering others is strength; mastering yourself is true power."
+  },
+  {
+    "id": 122,
+    "author": "Lao Tzu",
+    "era": "Ancient China (6th Century BC)",
+    "theme": "ego",
+    "quote": "He who knows that enough is enough will always have enough."
+  },
+  {
+    "id": 123,
+    "author": "Sun Tzu",
+    "era": "Ancient China (5th Century BC)",
+    "theme": "strategy",
+    "quote": "Know yourself and you will win all battles."
+  },
+  {
+    "id": 124,
+    "author": "Sun Tzu",
+    "era": "Ancient China (5th Century BC)",
+    "theme": "awareness",
+    "quote": "Opportunities multiply as they are seized."
+  },
+  {
+    "id": 125,
+    "author": "Buddha",
+    "era": "Ancient India (563–483 BC)",
+    "theme": "mind",
+    "quote": "What you think, you become."
+  },
+  {
+    "id": 126,
+    "author": "Buddha",
+    "era": "Ancient India (563–483 BC)",
+    "theme": "discipline",
+    "quote": "The mind is everything. What you think you become."
+  },
+  {
+    "id": 127,
+    "author": "Aristotle",
+    "era": "Ancient Greece (384–322 BC)",
+    "theme": "habit",
+    "quote": "We are what we repeatedly do."
+  },
+  {
+    "id": 128,
+    "author": "Aristotle",
+    "era": "Ancient Greece (384–322 BC)",
+    "theme": "excellence",
+    "quote": "Excellence is never an accident."
+  },
+  {
+    "id": 129,
+    "author": "Heraclitus",
+    "era": "Ancient Greece (535–475 BC)",
+    "theme": "change",
+    "quote": "No man ever steps in the same river twice."
+  },
+  {
+    "id": 130,
+    "author": "Heraclitus",
+    "era": "Ancient Greece (535–475 BC)",
+    "theme": "identity",
+    "quote": "Character is fate."
+  },
+  {
+    "id": 131,
+    "author": "Søren Kierkegaard",
+    "era": "19th Century (1813–1855)",
+    "theme": "anxiety",
+    "quote": "Anxiety is the dizziness of freedom."
+  },
+  {
+    "id": 132,
+    "author": "Søren Kierkegaard",
+    "era": "19th Century (1813–1855)",
+    "theme": "truth",
+    "quote": "Truth is subjectivity."
+  },
+  {
+    "id": 133,
+    "author": "Arthur Schopenhauer",
+    "era": "19th Century (1788–1860)",
+    "theme": "suffering",
+    "quote": "Life swings like a pendulum between pain and boredom."
+  },
+  {
+    "id": 134,
+    "author": "Arthur Schopenhauer",
+    "era": "19th Century (1788–1860)",
+    "theme": "perception",
+    "quote": "Every man takes the limits of his own field of vision for the limits of the world."
+  },
+  {
+    "id": 135,
+    "author": "Friedrich Nietzsche",
+    "era": "19th Century (1844–1900)",
+    "theme": "truth",
+    "quote": "There are no facts, only interpretations."
+  },
+  {
+    "id": 136,
+    "author": "Friedrich Nietzsche",
+    "era": "19th Century (1844–1900)",
+    "theme": "growth",
+    "quote": "Become who you are."
+  },
+  {
+    "id": 137,
+    "author": "Fyodor Dostoevsky",
+    "era": "19th Century (1821–1881)",
+    "theme": "suffering",
+    "quote": "Pain and suffering are always inevitable for a large intelligence."
+  },
+  {
+    "id": 138,
+    "author": "Fyodor Dostoevsky",
+    "era": "19th Century (1821–1881)",
+    "theme": "truth",
+    "quote": "The mystery of human existence lies not in just staying alive, but in finding something to live for."
+  },
+  {
+    "id": 139,
+    "author": "Ralph Waldo Emerson",
+    "era": "19th Century (1803–1882)",
+    "theme": "self-reliance",
+    "quote": "What lies behind us and what lies before us are tiny matters compared to what lies within us."
+  },
+  {
+    "id": 140,
+    "author": "Ralph Waldo Emerson",
+    "era": "19th Century (1803–1882)",
+    "theme": "authenticity",
+    "quote": "To be yourself in a world that is constantly trying to make you something else is the greatest accomplishment."
+  },
+  {
+    "id": 141,
+    "author": "Immanuel Kant",
+    "era": "18th Century (1724–1804)",
+    "theme": "reason",
+    "quote": "Dare to know."
+  },
+  {
+    "id": 142,
+    "author": "Immanuel Kant",
+    "era": "18th Century (1724–1804)",
+    "theme": "morality",
+    "quote": "Act so that your principle could be universal law."
+  },
+  {
+    "id": 143,
+    "author": "John Locke",
+    "era": "17th Century (1632–1704)",
+    "theme": "freedom",
+    "quote": "Where there is no law, there is no freedom."
+  },
+  {
+    "id": 144,
+    "author": "David Hume",
+    "era": "18th Century (1711–1776)",
+    "theme": "skepticism",
+    "quote": "A wise man proportions his belief to the evidence."
+  },
+  {
+    "id": 145,
+    "author": "Voltaire",
+    "era": "18th Century (1694–1778)",
+    "theme": "freedom",
+    "quote": "It is better to risk saving a guilty man than to condemn an innocent one."
+  },
+  {
+    "id": 146,
+    "author": "Jean-Jacques Rousseau",
+    "era": "18th Century (1712–1778)",
+    "theme": "society",
+    "quote": "Man is born free, and everywhere he is in chains."
+  },
+  {
+    "id": 147,
+    "author": "Jean-Jacques Rousseau",
+    "era": "18th Century (1712–1778)",
+    "theme": "nature",
+    "quote": "Everything is good as it leaves the hands of the Author of things."
+  },
+  {
+    "id": 148,
+    "author": "Baruch Spinoza",
+    "era": "17th Century (1632–1677)",
+    "theme": "freedom",
+    "quote": "The more you struggle to live, the less you live."
+  },
+  {
+    "id": 149,
+    "author": "Baruch Spinoza",
+    "era": "17th Century (1632–1677)",
+    "theme": "emotion",
+    "quote": "An emotion which is a passion ceases to be a passion as soon as we form a clear idea of it."
+  },
+  {
+    "id": 150,
+    "author": "Thomas Hobbes",
+    "era": "17th Century (1588–1679)",
+    "theme": "power",
+    "quote": "Knowledge is power."
+  },
+  {
+    "id": 151,
+    "author": "Thomas Hobbes",
+    "era": "17th Century (1588–1679)",
+    "theme": "human nature",
+    "quote": "The condition of man is a condition of war."
+  },
+  {
+    "id": 152,
+    "author": "Niccolò Machiavelli",
+    "era": "16th Century (1469–1527)",
+    "theme": "power",
+    "quote": "It is better to be feared than loved, if you cannot be both."
+  },
+  {
+    "id": 153,
+    "author": "Niccolò Machiavelli",
+    "era": "16th Century (1469–1527)",
+    "theme": "strategy",
+    "quote": "Never waste the opportunity offered by a good crisis."
+  },
+  {
+    "id": 154,
+    "author": "Francis Bacon",
+    "era": "17th Century (1561–1626)",
+    "theme": "knowledge",
+    "quote": "Knowledge itself is power."
+  },
+  {
+    "id": 155,
+    "author": "Francis Bacon",
+    "era": "17th Century (1561–1626)",
+    "theme": "truth",
+    "quote": "Truth emerges more readily from error than from confusion."
+  },
+  {
+    "id": 156,
+    "author": "Benedict de Spinoza",
+    "era": "17th Century (1632–1677)",
+    "theme": "mind",
+    "quote": "The mind's highest good is the knowledge of God."
+  },
+  {
+    "id": 157,
+    "author": "Gottfried Wilhelm Leibniz",
+    "era": "17th Century (1646–1716)",
+    "theme": "reason",
+    "quote": "Nothing happens without a reason."
+  },
+  {
+    "id": 158,
+    "author": "Gottfried Wilhelm Leibniz",
+    "era": "17th Century (1646–1716)",
+    "theme": "optimism",
+    "quote": "This is the best of all possible worlds."
+  },
+  {
+    "id": 159,
+    "author": "Denis Diderot",
+    "era": "18th Century (1713–1784)",
+    "theme": "truth",
+    "quote": "Skepticism is the first step toward truth."
+  },
+  {
+    "id": 160,
+    "author": "Montesquieu",
+    "era": "18th Century (1689–1755)",
+    "theme": "power",
+    "quote": "Power should be a check to power."
+  },
+  {
+    "id": 161,
+    "author": "Georg Wilhelm Friedrich Hegel",
+    "era": "19th Century (1770–1831)",
+    "theme": "history",
+    "quote": "We learn from history that we do not learn from history."
+  },
+  {
+    "id": 162,
+    "author": "Georg Wilhelm Friedrich Hegel",
+    "era": "19th Century (1770–1831)",
+    "theme": "conflict",
+    "quote": "Contradiction is the root of all movement."
+  },
+  {
+    "id": 163,
+    "author": "Karl Marx",
+    "era": "19th Century (1818–1883)",
+    "theme": "society",
+    "quote": "Philosophers have only interpreted the world; the point is to change it."
+  },
+  {
+    "id": 164,
+    "author": "Karl Marx",
+    "era": "19th Century (1818–1883)",
+    "theme": "power",
+    "quote": "History repeats itself, first as tragedy, then as farce."
+  },
+  {
+    "id": 165,
+    "author": "John Stuart Mill",
+    "era": "19th Century (1806–1873)",
+    "theme": "freedom",
+    "quote": "Unpopular opinions are often the most necessary."
+  },
+  {
+    "id": 166,
+    "author": "John Stuart Mill",
+    "era": "19th Century (1806–1873)",
+    "theme": "individuality",
+    "quote": "Genius breathes more freely in an atmosphere of freedom."
+  },
+  {
+    "id": 167,
+    "author": "Alexis de Tocqueville",
+    "era": "19th Century (1805–1859)",
+    "theme": "democracy",
+    "quote": "Liberty cannot be established without morality."
+  },
+  {
+    "id": 168,
+    "author": "Alexis de Tocqueville",
+    "era": "19th Century (1805–1859)",
+    "theme": "society",
+    "quote": "The health of a democratic society may be measured by the quality of functions performed by private citizens."
+  },
+  {
+    "id": 169,
+    "author": "Auguste Comte",
+    "era": "19th Century (1798–1857)",
+    "theme": "order",
+    "quote": "Order and progress."
+  },
+  {
+    "id": 170,
+    "author": "Herbert Spencer",
+    "era": "19th Century (1820–1903)",
+    "theme": "evolution",
+    "quote": "Survival of the fittest."
+  },
+  {
+    "id": 171,
+    "author": "Friedrich Nietzsche",
+    "era": "19th Century (1844–1900)",
+    "theme": "power",
+    "quote": "He who has a why to live can bear almost any how."
+  },
+  {
+    "id": 172,
+    "author": "Friedrich Nietzsche",
+    "era": "19th Century (1844–1900)",
+    "theme": "truth",
+    "quote": "There are no facts, only interpretations."
+  },
+  {
+    "id": 173,
+    "author": "Søren Kierkegaard",
+    "era": "19th Century (1813–1855)",
+    "theme": "choice",
+    "quote": "Life is not a problem to be solved, but a reality to be experienced."
+  },
+  {
+    "id": 174,
+    "author": "Arthur Schopenhauer",
+    "era": "19th Century (1788–1860)",
+    "theme": "desire",
+    "quote": "All striving comes from lack."
+  },
+  {
+    "id": 175,
+    "author": "Fyodor Dostoevsky",
+    "era": "19th Century (1821–1881)",
+    "theme": "freedom",
+    "quote": "Man only likes to count his troubles."
+  },
+  {
+    "id": 176,
+    "author": "Ralph Waldo Emerson",
+    "era": "19th Century (1803–1882)",
+    "theme": "self",
+    "quote": "Trust thyself."
+  },
+  {
+    "id": 177,
+    "author": "Henry David Thoreau",
+    "era": "19th Century (1817–1862)",
+    "theme": "simplicity",
+    "quote": "Simplify, simplify."
+  },
+  {
+    "id": 178,
+    "author": "William James",
+    "era": "19th–20th Century (1842–1910)",
+    "theme": "belief",
+    "quote": "Belief creates the actual fact."
+  },
+  {
+    "id": 179,
+    "author": "Friedrich Engels",
+    "era": "19th Century (1820–1895)",
+    "theme": "society",
+    "quote": "Freedom is the recognition of necessity."
+  },
+  {
+    "id": 180,
+    "author": "Max Weber",
+    "era": "19th–20th Century (1864–1920)",
+    "theme": "responsibility",
+    "quote": "Politics is a strong and slow boring of hard boards."
+  },
+  {
+    "id": 181,
+    "author": "Sigmund Freud",
+    "era": "20th Century (1856–1939)",
+    "theme": "mind",
+    "quote": "Where id was, ego shall be."
+  },
+  {
+    "id": 182,
+    "author": "Carl Jung",
+    "era": "20th Century (1875–1961)",
+    "theme": "shadow",
+    "quote": "Until you make the unconscious conscious, it will direct your life."
+  },
+  {
+    "id": 183,
+    "author": "Albert Camus",
+    "era": "20th Century (1913–1960)",
+    "theme": "absurdity",
+    "quote": "The absurd is born of confrontation."
+  },
+  {
+    "id": 184,
+    "author": "Jean-Paul Sartre",
+    "era": "20th Century (1905–1980)",
+    "theme": "freedom",
+    "quote": "Man is condemned to be free."
+  },
+  {
+    "id": 185,
+    "author": "Simone de Beauvoir",
+    "era": "20th Century (1908–1986)",
+    "theme": "identity",
+    "quote": "Freedom is the source from which all significations flow."
+  },
+  {
+    "id": 186,
+    "author": "Hannah Arendt",
+    "era": "20th Century (1906–1975)",
+    "theme": "thinking",
+    "quote": "Thinking is dangerous."
+  },
+  {
+    "id": 187,
+    "author": "Michel Foucault",
+    "era": "20th Century (1926–1984)",
+    "theme": "power",
+    "quote": "Knowledge is not made for understanding; it is made for cutting."
+  },
+  {
+    "id": 188,
+    "author": "Michel Foucault",
+    "era": "20th Century (1926–1984)",
+    "theme": "truth",
+    "quote": "Truth is a thing of this world."
+  },
+  {
+    "id": 189,
+    "author": "Jacques Derrida",
+    "era": "20th Century (1930–2004)",
+    "theme": "language",
+    "quote": "There is nothing outside the text."
+  },
+  {
+    "id": 190,
+    "author": "Jacques Derrida",
+    "era": "20th Century (1930–2004)",
+    "theme": "meaning",
+    "quote": "Meaning is always deferred."
+  },
+  {
+    "id": 191,
+    "author": "Ludwig Wittgenstein",
+    "era": "20th Century (1889–1951)",
+    "theme": "language",
+    "quote": "The limits of my language mean the limits of my world."
+  },
+  {
+    "id": 192,
+    "author": "Ludwig Wittgenstein",
+    "era": "20th Century (1889–1951)",
+    "theme": "clarity",
+    "quote": "Whereof one cannot speak, thereof one must be silent."
+  },
+  {
+    "id": 193,
+    "author": "Bertrand Russell",
+    "era": "20th Century (1872–1970)",
+    "theme": "logic",
+    "quote": "Mathematics is the supreme judge."
+  },
+  {
+    "id": 194,
+    "author": "Karl Popper",
+    "era": "20th Century (1902–1994)",
+    "theme": "science",
+    "quote": "Science must begin with myths."
+  },
+  {
+    "id": 195,
+    "author": "Karl Popper",
+    "era": "20th Century (1902–1994)",
+    "theme": "truth",
+    "quote": "We may become the makers of our fate."
+  },
+  {
+    "id": 196,
+    "author": "Thomas Kuhn",
+    "era": "20th Century (1922–1996)",
+    "theme": "paradigm",
+    "quote": "Scientific revolutions change the way we see the world."
+  },
+  {
+    "id": 197,
+    "author": "Thomas Kuhn",
+    "era": "20th Century (1922–1996)",
+    "theme": "knowledge",
+    "quote": "What a man sees depends on what he looks at and also on what his experience has taught him."
+  },
+  {
+    "id": 198,
+    "author": "Noam Chomsky",
+    "era": "20th–21st Century (1928– )",
+    "theme": "power",
+    "quote": "The smart way to keep people passive is to limit acceptable opinion."
+  },
+  {
+    "id": 199,
+    "author": "Noam Chomsky",
+    "era": "20th–21st Century (1928– )",
+    "theme": "truth",
+    "quote": "If we don't believe in freedom of expression for people we despise, we don't believe in it at all."
+  },
+  {
+    "id": 200,
+    "author": "Slavoj Žižek",
+    "era": "20th–21st Century (1949– )",
+    "theme": "ideology",
+    "quote": "Ideology is strongest when we think we are outside it."
+  },
+  {
+    "id": 201,
+    "author": "Albert Camus",
+    "era": "20th Century (1913–1960)",
+    "theme": "absurdity",
+    "quote": "The only way to deal with an unfree world is to become so absolutely free."
+  },
+  {
+    "id": 202,
+    "author": "Jean-Paul Sartre",
+    "era": "20th Century (1905–1980)",
+    "theme": "existence",
+    "quote": "Existence precedes essence."
+  },
+  {
+    "id": 203,
+    "author": "Simone de Beauvoir",
+    "era": "20th Century (1908–1986)",
+    "theme": "freedom",
+    "quote": "One's life has value so long as one attributes value to the life of others."
+  },
+  {
+    "id": 204,
+    "author": "Hannah Arendt",
+    "era": "20th Century (1906–1975)",
+    "theme": "power",
+    "quote": "Power corresponds to the human ability to act in concert."
+  },
+  {
+    "id": 205,
+    "author": "Michel Foucault",
+    "era": "20th Century (1926–1984)",
+    "theme": "power",
+    "quote": "Power is everywhere, not because it embraces everything, but because it comes from everywhere."
+  },
+  {
+    "id": 206,
+    "author": "Michel Foucault",
+    "era": "20th Century (1926–1984)",
+    "theme": "knowledge",
+    "quote": "Where there is power, there is resistance."
+  },
+  {
+    "id": 207,
+    "author": "Jacques Derrida",
+    "era": "20th Century (1930–2004)",
+    "theme": "truth",
+    "quote": "There is no outside-text."
+  },
+  {
+    "id": 208,
+    "author": "Ludwig Wittgenstein",
+    "era": "20th Century (1889–1951)",
+    "theme": "language",
+    "quote": "Philosophy is a battle against the bewitchment of our intelligence by language."
+  },
+  {
+    "id": 209,
+    "author": "Bertrand Russell",
+    "era": "20th Century (1872–1970)",
+    "theme": "thinking",
+    "quote": "The good life is one inspired by love and guided by knowledge."
+  },
+  {
+    "id": 210,
+    "author": "Karl Popper",
+    "era": "20th Century (1902–1994)",
+    "theme": "truth",
+    "quote": "We are not students of some subject matter, but students of problems."
+  },
+  {
+    "id": 211,
+    "author": "Thomas Kuhn",
+    "era": "20th Century (1922–1996)",
+    "theme": "science",
+    "quote": "Normal science does not aim at novelty."
+  },
+  {
+    "id": 212,
+    "author": "Noam Chomsky",
+    "era": "20th–21st Century (1928– )",
+    "theme": "power",
+    "quote": "Control of thought is more important for governments than control of actions."
+  },
+  {
+    "id": 213,
+    "author": "Noam Chomsky",
+    "era": "20th–21st Century (1928– )",
+    "theme": "media",
+    "quote": "The smart way to keep people passive is to strictly limit the spectrum of acceptable opinion."
+  },
+  {
+    "id": 214,
+    "author": "Slavoj Žižek",
+    "era": "20th–21st Century (1949– )",
+    "theme": "ideology",
+    "quote": "The problem is not that we dream too much, but that we do not dream enough."
+  },
+  {
+    "id": 215,
+    "author": "Slavoj Žižek",
+    "era": "20th–21st Century (1949– )",
+    "theme": "reality",
+    "quote": "We feel free because we lack the language to articulate our unfreedom."
+  },
+  {
+    "id": 216,
+    "author": "Peter Singer",
+    "era": "20th–21st Century (1946– )",
+    "theme": "ethics",
+    "quote": "If it is in our power to prevent something bad without sacrificing anything of comparable importance, we ought to do it."
+  },
+  {
+    "id": 217,
+    "author": "Daniel Dennett",
+    "era": "20th–21st Century (1942– )",
+    "theme": "consciousness",
+    "quote": "A mind is what a brain does."
+  },
+  {
+    "id": 218,
+    "author": "Sam Harris",
+    "era": "21st Century (1967– )",
+    "theme": "belief",
+    "quote": "Beliefs are what we take to be true."
+  },
+  {
+    "id": 219,
+    "author": "Jordan Peterson",
+    "era": "21st Century (1962– )",
+    "theme": "responsibility",
+    "quote": "If you can't understand why someone is doing something, look at the consequences."
+  },
+  {
+    "id": 220,
+    "author": "Nassim Nicholas Taleb",
+    "era": "21st Century (1960– )",
+    "theme": "uncertainty",
+    "quote": "The inability to predict outliers implies the inability to predict the course of history."
+  },
+  {
+    "id": 221,
+    "author": "Nassim Nicholas Taleb",
+    "era": "21st Century (1960– )",
+    "theme": "risk",
+    "quote": "You should worry less about small probabilities and more about large consequences."
+  },
+  {
+    "id": 222,
+    "author": "Yuval Noah Harari",
+    "era": "21st Century (1976– )",
+    "theme": "society",
+    "quote": "Humans think in stories rather than in facts."
+  },
+  {
+    "id": 223,
+    "author": "Yuval Noah Harari",
+    "era": "21st Century (1976– )",
+    "theme": "power",
+    "quote": "Data is the new oil."
+  },
+  {
+    "id": 224,
+    "author": "Naval Ravikant",
+    "era": "21st Century (1974– )",
+    "theme": "wealth",
+    "quote": "Seek wealth, not money or status."
+  },
+  {
+    "id": 225,
+    "author": "Naval Ravikant",
+    "era": "21st Century (1974– )",
+    "theme": "happiness",
+    "quote": "Happiness is a skill."
+  },
+  {
+    "id": 226,
+    "author": "Ray Dalio",
+    "era": "21st Century (1949– )",
+    "theme": "truth",
+    "quote": "Truth is the essential foundation for producing good outcomes."
+  },
+  {
+    "id": 227,
+    "author": "Ray Dalio",
+    "era": "21st Century (1949– )",
+    "theme": "learning",
+    "quote": "Pain plus reflection equals progress."
+  },
+  {
+    "id": 228,
+    "author": "James Clear",
+    "era": "21st Century (1986– )",
+    "theme": "habit",
+    "quote": "You do not rise to the level of your goals, you fall to the level of your systems."
+  },
+  {
+    "id": 229,
+    "author": "James Clear",
+    "era": "21st Century (1986– )",
+    "theme": "identity",
+    "quote": "Every action you take is a vote for the type of person you wish to become."
+  },
+  {
+    "id": 230,
+    "author": "Cal Newport",
+    "era": "21st Century (1982– )",
+    "theme": "focus",
+    "quote": "Clarity about what matters provides clarity about what does not."
+  },
+  {
+    "id": 231,
+    "author": "Cal Newport",
+    "era": "21st Century (1982– )",
+    "theme": "work",
+    "quote": "Deep work is the ability to focus without distraction."
+  },
+  {
+    "id": 232,
+    "author": "Jocko Willink",
+    "era": "21st Century (1971– )",
+    "theme": "discipline",
+    "quote": "Discipline equals freedom."
+  },
+  {
+    "id": 233,
+    "author": "David Goggins",
+    "era": "21st Century (1975– )",
+    "theme": "resilience",
+    "quote": "You are in danger of living a life so comfortable and soft."
+  },
+  {
+    "id": 234,
+    "author": "David Goggins",
+    "era": "21st Century (1975– )",
+    "theme": "mind",
+    "quote": "The most important conversations you'll ever have are the ones you have with yourself."
+  },
+  {
+    "id": 235,
+    "author": "Andrew Huberman",
+    "era": "21st Century",
+    "theme": "behavior",
+    "quote": "Behavior is the final output of the nervous system."
+  },
+  {
+    "id": 236,
+    "author": "Robert Greene",
+    "era": "21st Century (1959– )",
+    "theme": "power",
+    "quote": "Powerful people impress and intimidate by saying less."
+  },
+  {
+    "id": 237,
+    "author": "Robert Greene",
+    "era": "21st Century (1959– )",
+    "theme": "strategy",
+    "quote": "Mastery is not a function of genius, but of time and intense focus."
+  },
+  {
+    "id": 238,
+    "author": "Tim Ferriss",
+    "era": "21st Century (1977– )",
+    "theme": "fear",
+    "quote": "What we fear doing most is usually what we most need to do."
+  },
+  {
+    "id": 239,
+    "author": "Mark Manson",
+    "era": "21st Century (1984– )",
+    "theme": "values",
+    "quote": "Who you are is defined by what you're willing to struggle for."
+  },
+  {
+    "id": 240,
+    "author": "Ryan Holiday",
+    "era": "21st Century (1987– )",
+    "theme": "stoicism",
+    "quote": "The obstacle is the way."
+  },
+  {
+    "id": 241,
+    "author": "Albert Camus",
+    "era": "20th Century (1913–1960)",
+    "theme": "absurdity",
+    "quote": "In the depth of winter, I finally learned that within me there lay an invincible summer."
+  },
+  {
+    "id": 242,
+    "author": "Albert Camus",
+    "era": "20th Century (1913–1960)",
+    "theme": "meaning",
+    "quote": "The struggle itself toward the heights is enough to fill a man's heart."
+  },
+  {
+    "id": 243,
+    "author": "Jean-Paul Sartre",
+    "era": "20th Century (1905–1980)",
+    "theme": "freedom",
+    "quote": "Man is condemned to be free."
+  },
+  {
+    "id": 244,
+    "author": "Jean-Paul Sartre",
+    "era": "20th Century (1905–1980)",
+    "theme": "responsibility",
+    "quote": "We are our choices."
+  },
+  {
+    "id": 245,
+    "author": "Simone de Beauvoir",
+    "era": "20th Century (1908–1986)",
+    "theme": "identity",
+    "quote": "One is not born, but rather becomes, who one is."
+  },
+  {
+    "id": 246,
+    "author": "Simone de Beauvoir",
+    "era": "20th Century (1908–1986)",
+    "theme": "freedom",
+    "quote": "Change your life today. Don't gamble on the future."
+  },
+  {
+    "id": 247,
+    "author": "Carl Jung",
+    "era": "20th Century (1875–1961)",
+    "theme": "shadow",
+    "quote": "Until you make the unconscious conscious, it will direct your life."
+  },
+  {
+    "id": 248,
+    "author": "Carl Jung",
+    "era": "20th Century (1875–1961)",
+    "theme": "awareness",
+    "quote": "Who looks outside, dreams; who looks inside, awakens."
+  },
+  {
+    "id": 249,
+    "author": "William James",
+    "era": "19th–20th Century (1842–1910)",
+    "theme": "belief",
+    "quote": "The greatest discovery of my generation is that a human being can alter his life by altering his attitudes."
+  },
+  {
+    "id": 250,
+    "author": "William James",
+    "era": "19th–20th Century (1842–1910)",
+    "theme": "action",
+    "quote": "Act as if what you do makes a difference. It does."
+  },
+  {
+    "id": 251,
+    "author": "Bertrand Russell",
+    "era": "20th Century (1872–1970)",
+    "theme": "fear",
+    "quote": "To conquer fear is the beginning of wisdom."
+  },
+  {
+    "id": 252,
+    "author": "Bertrand Russell",
+    "era": "20th Century (1872–1970)",
+    "theme": "clarity",
+    "quote": "The trouble with the world is that the stupid are cocksure and the intelligent are full of doubt."
+  },
+  {
+    "id": 253,
+    "author": "George Orwell",
+    "era": "20th Century (1903–1950)",
+    "theme": "truth",
+    "quote": "In a time of deceit, telling the truth is a revolutionary act."
+  },
+  {
+    "id": 254,
+    "author": "George Orwell",
+    "era": "20th Century (1903–1950)",
+    "theme": "freedom",
+    "quote": "Freedom is the freedom to say that two plus two make four."
+  },
+  {
+    "id": 255,
+    "author": "Hannah Arendt",
+    "era": "20th Century (1906–1975)",
+    "theme": "thinking",
+    "quote": "The most radical revolutionary will become a conservative the day after the revolution."
+  },
+  {
+    "id": 256,
+    "author": "Hannah Arendt",
+    "era": "20th Century (1906–1975)",
+    "theme": "responsibility",
+    "quote": "The sad truth is that most evil is done by people who never make up their minds to be good or evil."
+  },
+  {
+    "id": 257,
+    "author": "Michel de Montaigne",
+    "era": "16th Century (1533–1592)",
+    "theme": "fear",
+    "quote": "He who fears he shall suffer, already suffers what he fears."
+  },
+  {
+    "id": 258,
+    "author": "Michel de Montaigne",
+    "era": "16th Century (1533–1592)",
+    "theme": "self",
+    "quote": "The greatest thing in the world is to know how to belong to oneself."
+  },
+  {
+    "id": 259,
+    "author": "Blaise Pascal",
+    "era": "17th Century (1623–1662)",
+    "theme": "distraction",
+    "quote": "All of humanity's problems stem from man's inability to sit quietly in a room alone."
+  },
+  {
+    "id": 260,
+    "author": "Blaise Pascal",
+    "era": "17th Century (1623–1662)",
+    "theme": "reason",
+    "quote": "The heart has its reasons which reason knows nothing of."
+  },
+  {
+    "id": 261,
+    "author": "René Descartes",
+    "era": "17th Century (1596–1650)",
+    "theme": "existence",
+    "quote": "I think, therefore I am."
+  },
+  {
+    "id": 262,
+    "author": "Immanuel Kant",
+    "era": "18th Century (1724–1804)",
+    "theme": "morality",
+    "quote": "Act only according to that maxim whereby you can will that it should become a universal law."
+  },
+  {
+    "id": 263,
+    "author": "Immanuel Kant",
+    "era": "18th Century (1724–1804)",
+    "theme": "duty",
+    "quote": "Science is organized knowledge. Wisdom is organized life."
+  },
+  {
+    "id": 264,
+    "author": "John Locke",
+    "era": "17th Century (1632–1704)",
+    "theme": "mind",
+    "quote": "The mind is furnished with ideas by experience alone."
+  },
+  {
+    "id": 265,
+    "author": "David Hume",
+    "era": "18th Century (1711–1776)",
+    "theme": "reason",
+    "quote": "Reason is, and ought only to be the slave of the passions."
+  },
+  {
+    "id": 266,
+    "author": "Voltaire",
+    "era": "18th Century (1694–1778)",
+    "theme": "freedom",
+    "quote": "Judge a man by his questions rather than by his answers."
+  },
+  {
+    "id": 267,
+    "author": "Voltaire",
+    "era": "18th Century (1694–1778)",
+    "theme": "thinking",
+    "quote": "Think for yourself and let others enjoy the privilege of doing so too."
+  },
+  {
+    "id": 268,
+    "author": "Rumi",
+    "era": "13th Century (1207–1273)",
+    "theme": "love",
+    "quote": "What you seek is seeking you."
+  },
+  {
+    "id": 269,
+    "author": "Rumi",
+    "era": "13th Century (1207–1273)",
+    "theme": "growth",
+    "quote": "Where there is ruin, there is hope for a treasure."
+  },
+  {
+    "id": 270,
+    "author": "Kahlil Gibran",
+    "era": "20th Century (1883–1931)",
+    "theme": "pain",
+    "quote": "Out of suffering have emerged the strongest souls."
+  },
+  {
+    "id": 271,
+    "author": "Kahlil Gibran",
+    "era": "20th Century (1883–1931)",
+    "theme": "self",
+    "quote": "Your pain is the breaking of the shell that encloses your understanding."
+  },
+  {
+    "id": 272,
+    "author": "Bruce Lee",
+    "era": "20th Century (1940–1973)",
+    "theme": "adaptation",
+    "quote": "Be water, my friend."
+  },
+  {
+    "id": 273,
+    "author": "Bruce Lee",
+    "era": "20th Century (1940–1973)",
+    "theme": "action",
+    "quote": "Knowing is not enough, we must apply."
+  },
+  {
+    "id": 274,
+    "author": "Epictetus",
+    "era": "Ancient Greece/Rome (50–135 AD)",
+    "theme": "control",
+    "quote": "Don't explain your philosophy. Embody it."
+  },
+  {
+    "id": 275,
+    "author": "Marcus Aurelius",
+    "era": "Ancient Rome (121–180 AD)",
+    "theme": "focus",
+    "quote": "You could leave life right now. Let that determine what you do and say and think."
+  },
+  {
+    "id": 276,
+    "author": "Seneca",
+    "era": "Ancient Rome (4 BC–65 AD)",
+    "theme": "time",
+    "quote": "It is not that we have a short time to live, but that we waste much of it."
+  },
+  {
+    "id": 277,
+    "author": "Seneca",
+    "era": "Ancient Rome (4 BC–65 AD)",
+    "theme": "presence",
+    "quote": "True happiness is to enjoy the present without anxious dependence upon the future."
+  },
+  {
+    "id": 278,
+    "author": "Epictetus",
+    "era": "Ancient Greece/Rome (50–135 AD)",
+    "theme": "control",
+    "quote": "Seek not for events to happen as you wish, but wish them to happen as they do happen."
+  },
+  {
+    "id": 279,
+    "author": "Marcus Aurelius",
+    "era": "Ancient Rome (121–180 AD)",
+    "theme": "perception",
+    "quote": "Everything we hear is an opinion, not a fact."
+  },
+  {
+    "id": 280,
+    "author": "Marcus Aurelius",
+    "era": "Ancient Rome (121–180 AD)",
+    "theme": "perception",
+    "quote": "Everything we see is a perspective, not the truth."
+  },
+  {
+    "id": 281,
+    "author": "Friedrich Nietzsche",
+    "era": "19th Century (1844–1900)",
+    "theme": "truth",
+    "quote": "He who fights with monsters should be careful lest he thereby become a monster."
+  },
+  {
+    "id": 282,
+    "author": "Friedrich Nietzsche",
+    "era": "19th Century (1844–1900)",
+    "theme": "depth",
+    "quote": "When you gaze long into an abyss, the abyss also gazes into you."
+  },
+  {
+    "id": 283,
+    "author": "Fyodor Dostoevsky",
+    "era": "19th Century (1821–1881)",
+    "theme": "freedom",
+    "quote": "The secret of man's being is not only to live but to have something to live for."
+  },
+  {
+    "id": 284,
+    "author": "Fyodor Dostoevsky",
+    "era": "19th Century (1821–1881)",
+    "theme": "suffering",
+    "quote": "The darker the night, the brighter the stars."
+  },
+  {
+    "id": 285,
+    "author": "Viktor Frankl",
+    "era": "20th Century (1905–1997)",
+    "theme": "meaning",
+    "quote": "Those who have a 'why' to live can bear almost any 'how'."
+  },
+  {
+    "id": 286,
+    "author": "Viktor Frankl",
+    "era": "20th Century (1905–1997)",
+    "theme": "choice",
+    "quote": "Everything can be taken from a man but one thing: the last of the human freedoms."
+  },
+  {
+    "id": 287,
+    "author": "Ralph Waldo Emerson",
+    "era": "19th Century (1803–1882)",
+    "theme": "self",
+    "quote": "What you do speaks so loudly that I cannot hear what you say."
+  },
+  {
+    "id": 288,
+    "author": "Ralph Waldo Emerson",
+    "era": "19th Century (1803–1882)",
+    "theme": "growth",
+    "quote": "Do the thing you fear and the death of fear is certain."
+  },
+  {
+    "id": 289,
+    "author": "William James",
+    "era": "19th–20th Century (1842–1910)",
+    "theme": "belief",
+    "quote": "Believe that life is worth living and your belief will help create the fact."
+  },
+  {
+    "id": 290,
+    "author": "William James",
+    "era": "19th–20th Century (1842–1910)",
+    "theme": "mind",
+    "quote": "The greatest weapon against stress is our ability to choose one thought over another."
+  },
+  {
+    "id": 291,
+    "author": "Bertrand Russell",
+    "era": "20th Century (1872–1970)",
+    "theme": "clarity",
+    "quote": "The whole problem with the world is that fools and fanatics are always so certain."
+  },
+  {
+    "id": 292,
+    "author": "George Orwell",
+    "era": "20th Century (1903–1950)",
+    "theme": "truth",
+    "quote": "If liberty means anything at all, it means the right to tell people what they do not want to hear."
+  },
+  {
+    "id": 293,
+    "author": "Albert Camus",
+    "era": "20th Century (1913–1960)",
+    "theme": "freedom",
+    "quote": "Freedom is nothing but a chance to be better."
+  },
+  {
+    "id": 294,
+    "author": "Jean-Paul Sartre",
+    "era": "20th Century (1905–1980)",
+    "theme": "responsibility",
+    "quote": "Freedom is what you do with what's been done to you."
+  },
+  {
+    "id": 295,
+    "author": "Carl Jung",
+    "era": "20th Century (1875–1961)",
+    "theme": "shadow",
+    "quote": "I am not what happened to me, I am what I choose to become."
+  },
+  {
+    "id": 296,
+    "author": "Carl Jung",
+    "era": "20th Century (1875–1961)",
+    "theme": "growth",
+    "quote": "There is no coming to consciousness without pain."
+  },
+  {
+    "id": 297,
+    "author": "Lao Tzu",
+    "era": "Ancient China",
+    "theme": "simplicity",
+    "quote": "Nature does not hurry, yet everything is accomplished."
+  },
+  {
+    "id": 298,
+    "author": "Lao Tzu",
+    "era": "Ancient China",
+    "theme": "contentment",
+    "quote": "He who knows that enough is enough will always have enough."
+  },
+  {
+    "id": 299,
+    "author": "Sun Tzu",
+    "era": "Ancient China",
+    "theme": "strategy",
+    "quote": "The supreme art of war is to subdue the enemy without fighting."
+  },
+  {
+    "id": 300,
+    "author": "Sun Tzu",
+    "era": "Ancient China",
+    "theme": "awareness",
+    "quote": "If you know the enemy and know yourself, you need not fear the result of a hundred battles."
+  },
+  {
+    "id": 301,
+    "author": "Buddha",
+    "era": "Ancient India",
+    "theme": "mind",
+    "quote": "What we think, we become."
+  },
+  {
+    "id": 302,
+    "author": "Buddha",
+    "era": "Ancient India",
+    "theme": "peace",
+    "quote": "Peace comes from within. Do not seek it without."
+  },
+  {
+    "id": 303,
+    "author": "Aristotle",
+    "era": "Ancient Greece",
+    "theme": "virtue",
+    "quote": "Happiness is the meaning and the purpose of life."
+  },
+  {
+    "id": 304,
+    "author": "Aristotle",
+    "era": "Ancient Greece",
+    "theme": "habit",
+    "quote": "Quality is not an act, it is a habit."
+  },
+  {
+    "id": 305,
+    "author": "Socrates",
+    "era": "Ancient Greece",
+    "theme": "wisdom",
+    "quote": "Wonder is the beginning of wisdom."
+  },
+  {
+    "id": 306,
+    "author": "Socrates",
+    "era": "Ancient Greece",
+    "theme": "truth",
+    "quote": "Be as you wish to seem."
+  },
+  {
+    "id": 307,
+    "author": "Heraclitus",
+    "era": "Ancient Greece",
+    "theme": "change",
+    "quote": "There is nothing permanent except change."
+  },
+  {
+    "id": 308,
+    "author": "Heraclitus",
+    "era": "Ancient Greece",
+    "theme": "conflict",
+    "quote": "Out of discord comes the fairest harmony."
+  },
+  {
+    "id": 309,
+    "author": "Michel de Montaigne",
+    "era": "16th Century",
+    "theme": "self",
+    "quote": "He who knows himself knows others."
+  },
+  {
+    "id": 310,
+    "author": "Michel de Montaigne",
+    "era": "16th Century",
+    "theme": "fear",
+    "quote": "My life has been full of terrible misfortunes most of which never happened."
+  },
+  {
+    "id": 311,
+    "author": "Blaise Pascal",
+    "era": "17th Century",
+    "theme": "thought",
+    "quote": "Man is but a reed, the most feeble thing in nature, but he is a thinking reed."
+  },
+  {
+    "id": 312,
+    "author": "René Descartes",
+    "era": "17th Century",
+    "theme": "reason",
+    "quote": "Divide each difficulty into as many parts as is feasible."
+  },
+  {
+    "id": 313,
+    "author": "Immanuel Kant",
+    "era": "18th Century",
+    "theme": "duty",
+    "quote": "Act in such a way that you treat humanity always as an end."
+  },
+  {
+    "id": 314,
+    "author": "David Hume",
+    "era": "18th Century",
+    "theme": "reason",
+    "quote": "Beauty in things exists in the mind which contemplates them."
+  },
+  {
+    "id": 315,
+    "author": "Voltaire",
+    "era": "18th Century",
+    "theme": "freedom",
+    "quote": "Those who can make you believe absurdities can make you commit atrocities."
+  },
+  {
+    "id": 316,
+    "author": "Rumi",
+    "era": "13th Century",
+    "theme": "growth",
+    "quote": "Yesterday I was clever, so I wanted to change the world. Today I am wise, so I am changing myself."
+  },
+  {
+    "id": 317,
+    "author": "Rumi",
+    "era": "13th Century",
+    "theme": "love",
+    "quote": "Stop acting so small. You are the universe in ecstatic motion."
+  },
+  {
+    "id": 318,
+    "author": "Kahlil Gibran",
+    "era": "20th Century",
+    "theme": "pain",
+    "quote": "The deeper that sorrow carves into your being, the more joy you can contain."
+  },
+  {
+    "id": 319,
+    "author": "Bruce Lee",
+    "era": "20th Century",
+    "theme": "adaptation",
+    "quote": "Absorb what is useful, discard what is not."
+  },
+  {
+    "id": 320,
+    "author": "Bruce Lee",
+    "era": "20th Century",
+    "theme": "growth",
+    "quote": "Mistakes are always forgivable if one has the courage to admit them."
+  },
+  {
+    "id": 321,
+    "author": "Marcus Aurelius",
+    "era": "Ancient Rome",
+    "theme": "focus",
+    "quote": "Do every act of your life as though it were the very last."
+  },
+  {
+    "id": 322,
+    "author": "Seneca",
+    "era": "Ancient Rome",
+    "theme": "time",
+    "quote": "While we are postponing, life speeds by."
+  },
+  {
+    "id": 323,
+    "author": "Epictetus",
+    "era": "Ancient Greece/Rome",
+    "theme": "control",
+    "quote": "Only the educated are free."
+  },
+  {
+    "id": 324,
+    "author": "Friedrich Nietzsche",
+    "era": "19th Century",
+    "theme": "individuality",
+    "quote": "No price is too high to pay for the privilege of owning yourself."
+  },
+  {
+    "id": 325,
+    "author": "Fyodor Dostoevsky",
+    "era": "19th Century",
+    "theme": "truth",
+    "quote": "Above all, do not lie to yourself."
+  },
+  {
+    "id": 326,
+    "author": "Viktor Frankl",
+    "era": "20th Century",
+    "theme": "meaning",
+    "quote": "Life is never made unbearable by circumstances, but only by lack of meaning."
+  },
+  {
+    "id": 327,
+    "author": "Carl Jung",
+    "era": "20th Century",
+    "theme": "shadow",
+    "quote": "Knowing your own darkness is the best method for dealing with the darkness of others."
+  },
+  {
+    "id": 328,
+    "author": "Albert Camus",
+    "era": "20th Century",
+    "theme": "meaning",
+    "quote": "Real generosity toward the future lies in giving all to the present."
+  },
+  {
+    "id": 329,
+    "author": "Jean-Paul Sartre",
+    "era": "20th Century",
+    "theme": "existence",
+    "quote": "Existence precedes essence."
+  },
+  {
+    "id": 330,
+    "author": "George Orwell",
+    "era": "20th Century",
+    "theme": "truth",
+    "quote": "The further a society drifts from truth, the more it will hate those who speak it."
+  },
+  {
+    "id": 331,
+    "author": "Bertrand Russell",
+    "era": "20th Century",
+    "theme": "thinking",
+    "quote": "Do not fear to be eccentric in opinion."
+  },
+  {
+    "id": 332,
+    "author": "William James",
+    "era": "19th–20th Century",
+    "theme": "action",
+    "quote": "Action may not always bring happiness, but there is no happiness without action."
+  },
+  {
+    "id": 333,
+    "author": "Ralph Waldo Emerson",
+    "era": "19th Century",
+    "theme": "authenticity",
+    "quote": "To be great is to be misunderstood."
+  },
+  {
+    "id": 334,
+    "author": "Confucius",
+    "era": "Ancient China",
+    "theme": "growth",
+    "quote": "It does not matter how slowly you go as long as you do not stop."
+  },
+  {
+    "id": 335,
+    "author": "Confucius",
+    "era": "Ancient China",
+    "theme": "learning",
+    "quote": "Real knowledge is to know the extent of one's ignorance."
+  },
+  {
+    "id": 336,
+    "author": "Plato",
+    "era": "Ancient Greece",
+    "theme": "truth",
+    "quote": "Wise men speak because they have something to say."
+  },
+  {
+    "id": 337,
+    "author": "Plato",
+    "era": "Ancient Greece",
+    "theme": "ignorance",
+    "quote": "Ignorance is the root and stem of all evil."
+  },
+  {
+    "id": 338,
+    "author": "Aristotle",
+    "era": "Ancient Greece",
+    "theme": "courage",
+    "quote": "Courage is the first of human qualities."
+  },
+  {
+    "id": 339,
+    "author": "Heraclitus",
+    "era": "Ancient Greece",
+    "theme": "change",
+    "quote": "The only constant in life is change."
+  },
+  {
+    "id": 340,
+    "author": "Seneca",
+    "era": "Ancient Rome",
+    "theme": "difficulty",
+    "quote": "A gem cannot be polished without friction."
+  },
+  {
+    "id": 341,
+    "author": "Marcus Aurelius",
+    "era": "Ancient Rome",
+    "theme": "mind",
+    "quote": "The happiness of your life depends upon the quality of your thoughts."
+  },
+  {
+    "id": 342,
+    "author": "Epictetus",
+    "era": "Ancient Greece/Rome",
+    "theme": "reaction",
+    "quote": "It's not what happens to you, but how you react to it that matters."
+  },
+  {
+    "id": 343,
+    "author": "Nietzsche",
+    "era": "19th Century",
+    "theme": "truth",
+    "quote": "Sometimes people don't want to hear the truth."
+  },
+  {
+    "id": 344,
+    "author": "Dostoevsky",
+    "era": "19th Century",
+    "theme": "self",
+    "quote": "The soul is healed by being with children."
+  },
+  {
+    "id": 345,
+    "author": "Camus",
+    "era": "20th Century",
+    "theme": "revolt",
+    "quote": "The only way to deal with an unfree world is to become so absolutely free."
+  },
+  {
+    "id": 346,
+    "author": "Jung",
+    "era": "20th Century",
+    "theme": "self",
+    "quote": "The privilege of a lifetime is to become who you truly are."
+  },
+  {
+    "id": 347,
+    "author": "Frankl",
+    "era": "20th Century",
+    "theme": "meaning",
+    "quote": "When we are no longer able to change a situation, we are challenged to change ourselves."
+  },
+  {
+    "id": 348,
+    "author": "Orwell",
+    "era": "20th Century",
+    "theme": "freedom",
+    "quote": "Freedom is the right to tell people what they do not want to hear."
+  },
+  {
+    "id": 349,
+    "author": "Russell",
+    "era": "20th Century",
+    "theme": "uncertainty",
+    "quote": "The intelligent are full of doubt."
+  },
+  {
+    "id": 350,
+    "author": "Emerson",
+    "era": "19th Century",
+    "theme": "self",
+    "quote": "Nothing can bring you peace but yourself."
+  },
+  {
+    "id": 351,
+    "author": "William James",
+    "era": "19th–20th Century",
+    "theme": "mind",
+    "quote": "The greatest weapon against stress is our ability to choose one thought over another."
+  },
+  {
+    "id": 352,
+    "author": "Buddha",
+    "era": "Ancient India",
+    "theme": "discipline",
+    "quote": "What we think, we become."
+  },
+  {
+    "id": 353,
+    "author": "Lao Tzu",
+    "era": "Ancient China",
+    "theme": "simplicity",
+    "quote": "Simplicity is the ultimate sophistication."
+  },
+  {
+    "id": 354,
+    "author": "Sun Tzu",
+    "era": "Ancient China",
+    "theme": "strategy",
+    "quote": "Victorious warriors win first and then go to war."
+  },
+  {
+    "id": 355,
+    "author": "Confucius",
+    "era": "Ancient China",
+    "theme": "discipline",
+    "quote": "The man who moves a mountain begins by carrying away small stones."
+  },
+  {
+    "id": 356,
+    "author": "Plato",
+    "era": "Ancient Greece",
+    "theme": "justice",
+    "quote": "The price good men pay for indifference to public affairs is to be ruled by evil men."
+  },
+  {
+    "id": 357,
+    "author": "Aristotle",
+    "era": "Ancient Greece",
+    "theme": "friendship",
+    "quote": "Wishing to be friends is quick work, but friendship is a slow ripening fruit."
+  },
+  {
+    "id": 358,
+    "author": "Heraclitus",
+    "era": "Ancient Greece",
+    "theme": "depth",
+    "quote": "The hidden harmony is better than the obvious."
+  },
+  {
+    "id": 359,
+    "author": "Seneca",
+    "era": "Ancient Rome",
+    "theme": "adversity",
+    "quote": "Difficulties strengthen the mind."
+  },
+  {
+    "id": 360,
+    "author": "Marcus Aurelius",
+    "era": "Ancient Rome",
+    "theme": "focus",
+    "quote": "Confine yourself to the present."
+  },
+  {
+    "id": 361,
+    "author": "Epictetus",
+    "era": "Ancient Greece/Rome",
+    "theme": "control",
+    "quote": "Wealth consists not in having great possessions, but in having few wants."
+  },
+  {
+    "id": 362,
+    "author": "Nietzsche",
+    "era": "19th Century",
+    "theme": "growth",
+    "quote": "One must still have chaos in oneself to give birth to a dancing star."
+  },
+  {
+    "id": 363,
+    "author": "Dostoevsky",
+    "era": "19th Century",
+    "theme": "truth",
+    "quote": "The best way to keep a prisoner from escaping is to make sure he never knows he's in prison."
+  },
+  {
+    "id": 364,
+    "author": "Camus",
+    "era": "20th Century",
+    "theme": "life",
+    "quote": "Live to the point of tears."
+  },
+  {
+    "id": 365,
+    "author": "Jung",
+    "era": "20th Century",
+    "theme": "self",
+    "quote": "Your visions will become clear only when you can look into your own heart."
+  }
+]

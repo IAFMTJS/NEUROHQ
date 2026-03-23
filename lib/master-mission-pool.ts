@@ -1,6 +1,7 @@
 import type { BehaviorProfile } from "@/types/behavior-profile.types";
 import type { AvoidanceTracker } from "@/app/actions/avoidance-tracker";
 import { MASTER_MISSION_POOL, type MasterMissionTemplate } from "@/lib/mission-templates";
+import { evaluateTemplateAgainstTriggers, resolveMissionTriggers } from "@/lib/mission-triggers";
 
 /** Round-robin interleave so picks mix structure / energy / focus instead of one subcategory dominating. */
 function diversifyBySubcategoryPrefix(templates: MasterMissionTemplate[]): MasterMissionTemplate[] {
@@ -47,6 +48,8 @@ export type PickContext = {
   focus1To10?: number | null;
   sensoryLoad1To10?: number | null;
   socialLoad1To10?: number | null;
+  sleepHours?: number | null;
+  brainMode?: "Stable" | "Driven" | "Cautious" | "LowEnergy" | null;
   /** Day type for scheduling bias (work vs typical days off). */
   dayType?: "work" | "off_soft" | "off_hard";
 };
@@ -65,6 +68,8 @@ function pickStructureEnergyFocus(context: PickContext, max: number): PickedMiss
     focus1To10,
     sensoryLoad1To10,
     socialLoad1To10,
+    sleepHours,
+    brainMode,
     dayType,
   } = context;
 
@@ -85,6 +90,31 @@ function pickStructureEnergyFocus(context: PickContext, max: number): PickedMiss
     base = base.filter(
       (t) => (t.subcategory?.startsWith("structure_") || t.subcategory?.startsWith("energy_")) && !t.tags?.includes("push")
     );
+  }
+
+  const activeTriggers = resolveMissionTriggers({
+    energy1To10,
+    focus1To10,
+    sensoryLoad1To10,
+    socialLoad1To10,
+    sleepHours,
+    dayType,
+    allowHeavyNow,
+    brainMode,
+  });
+  const triggerEvalCache = new Map<string, ReturnType<typeof evaluateTemplateAgainstTriggers>>();
+  const triggerEval = (template: MasterMissionTemplate) => {
+    const key = template.id;
+    const cached = triggerEvalCache.get(key);
+    if (cached) return cached;
+    const next = evaluateTemplateAgainstTriggers(template, activeTriggers);
+    triggerEvalCache.set(key, next);
+    return next;
+  };
+
+  const triggerFiltered = base.filter((template) => !triggerEval(template).blocked);
+  if (triggerFiltered.length > 0) {
+    base = triggerFiltered;
   }
 
   const themedScore = (t: MasterMissionTemplate): number => {
@@ -114,6 +144,7 @@ function pickStructureEnergyFocus(context: PickContext, max: number): PickedMiss
       if (t.subcategory?.startsWith("structure_")) score += 0.5;
       if (dayType === "off_hard" && t.tags?.includes("push")) score -= 2;
     }
+    score += triggerEval(t).score;
     return score;
   };
 
@@ -148,16 +179,24 @@ function pickStructureEnergyFocus(context: PickContext, max: number): PickedMiss
   return chosen.map((t) => ({
     ...t,
     slot: "structure_energy_focus" as const,
-    reason:
-      weekTheme === "environment_reset"
-        ? "Structure/Energy/Focus missie die past bij Environment Reset."
-        : weekTheme === "self_discipline"
-          ? "Structure/Energy/Focus missie die zelfdiscipline traint."
-          : weekTheme === "health_body"
-            ? "Structure/Energy/Focus missie die je lichaam en energie ondersteunt."
-            : weekTheme === "courage"
-              ? "Structure/Energy/Focus missie met lichte courage‑component."
-              : "Structure/Energy/Focus missie voor vandaag.",
+    reason: (() => {
+      const triggerReasons = triggerEval(t).reasons.slice(0, 4);
+      const triggerReasonText =
+        triggerReasons.length > 0
+          ? ` Triggers: ${triggerReasons.join(", ")}.`
+          : "";
+      const baseReason =
+        weekTheme === "environment_reset"
+          ? "Structure/Energy/Focus missie die past bij Environment Reset."
+          : weekTheme === "self_discipline"
+            ? "Structure/Energy/Focus missie die zelfdiscipline traint."
+            : weekTheme === "health_body"
+              ? "Structure/Energy/Focus missie die je lichaam en energie ondersteunt."
+              : weekTheme === "courage"
+                ? "Structure/Energy/Focus missie met lichte courage‑component."
+                : "Structure/Energy/Focus missie voor vandaag.";
+      return baseReason + triggerReasonText;
+    })(),
   }));
 }
 

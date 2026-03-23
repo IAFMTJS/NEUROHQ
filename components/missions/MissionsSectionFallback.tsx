@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
-import { loadDailySnapshot } from "@/lib/client-cache";
+import { loadDailySnapshotSync } from "@/lib/daily-snapshot-storage";
 import { SciFiPanel } from "@/components/hud-test/SciFiPanel";
 import { CornerNode } from "@/components/hud-test/CornerNode";
 import { Skeleton } from "@/components/Skeleton";
@@ -126,7 +126,24 @@ type Props = { dateStr: string };
 
 /** Renders mission layout instantly from cached snapshot when available; otherwise skeleton matching final layout. */
 export function MissionsSectionFallback({ dateStr }: Props) {
-  const snapshot = useMemo(() => loadDailySnapshot<SnapshotData>("missions"), []);
+  const snapshot = useMemo(() => {
+    const daily = loadDailySnapshotSync();
+    const missions = daily?.missions;
+    if (!missions || missions.dateStr !== dateStr) return null;
+    const tasks = ((missions.tasksByDate?.[dateStr] ?? []) as CachedMission[]) ?? [];
+    const completedToday =
+      ((missions.completedToday ?? []) as CachedMission[]).length > 0
+        ? ((missions.completedToday ?? []) as CachedMission[])
+        : tasks.filter((task) => task.completed);
+    return {
+      dateKey: missions.dateStr,
+      data: {
+        dateKey: missions.dateStr,
+        tasks,
+        completedToday,
+      },
+    };
+  }, [dateStr]);
   if (snapshot?.data && snapshot.dateKey === dateStr && (snapshot.data.tasks?.length > 0 || (snapshot.data.completedToday?.length ?? 0) > 0)) {
     return <CachedLayout snapshot={snapshot.data} dateStr={dateStr} />;
   }

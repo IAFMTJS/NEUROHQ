@@ -18,3 +18,4 @@ export { InsightsComparativeCard } from "./InsightsComparativeCard";
 export { InsightsFriction40Card } from "./InsightsFriction40Card";
 export { InsightsTrackedEventsCard } from "./InsightsTrackedEventsCard";
 export { InsightsRecentRanksCard } from "./InsightsRecentRanksCard";
+export { InsightsPatternSignalsCard } from "./InsightsPatternSignalsCard";

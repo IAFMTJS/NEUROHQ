@@ -768,7 +768,12 @@
 /* Light UI: flat background – no starfield, nebula, grain or fixed attachment for fast paint */
 [data-light-ui="true"] html,
 [data-light-ui="true"] body {
-  background-image: linear-gradient(180deg, var(--cinematic-navy) 0%, var(--cinematic-navy-mid) 50%, var(--cinematic-navy-bottom) 100%) !important;
+  background-image: linear-gradient(
+    180deg,
+    rgba(var(--mode-rgb-deep), 0.16) 0%,
+    rgba(11, 20, 36, 0.98) 48%,
+    rgba(var(--mode-rgb), 0.12) 100%
+  ) !important;
   background-size: 100% 100% !important;
   background-attachment: scroll !important;
 }
@@ -806,13 +811,23 @@
 [data-light-ui="true"] .modal-overlay {
   backdrop-filter: none !important;
   -webkit-backdrop-filter: none !important;
-  background: linear-gradient(165deg, rgba(14, 24, 42, 0.97) 0%, rgba(10, 18, 32, 0.98) 100%) !important;
+  background: linear-gradient(
+    165deg,
+    rgba(var(--mode-rgb-deep), 0.22) 0%,
+    rgba(10, 18, 32, 0.98) 62%,
+    rgba(var(--mode-rgb), 0.12) 100%
+  ) !important;
 }
 [data-light-ui="true"] .modal-overlay { background: rgba(0, 0, 0, 0.7) !important; }
 [data-light-ui="true"] .dashboard-bridge-body {
   backdrop-filter: none !important;
   -webkit-backdrop-filter: none !important;
-  background: linear-gradient(180deg, rgba(12, 22, 38, 0.98) 0%, rgba(10, 18, 30, 0.99) 100%) !important;
+  background: linear-gradient(
+    180deg,
+    rgba(var(--mode-rgb-deep), 0.22) 0%,
+    rgba(10, 18, 30, 0.99) 62%,
+    rgba(var(--mode-rgb), 0.12) 100%
+  ) !important;
 }
 [data-light-ui="true"] .panelBody,
 [data-light-ui="true"] [class*="panelBody"] {

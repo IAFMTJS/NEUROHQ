@@ -8,6 +8,7 @@ import {
   getBrainStateMultiplier,
   getEffectiveBehavioralStats,
   normalizeBehavioralStats,
+  resolveMentalLoad1To10,
 } from "@/lib/behavioral-engine";
 
 /** Default base XP when task has no base_xp (normaal niveau). */
@@ -218,7 +219,11 @@ export async function awardXPForTaskComplete(
         energy: energy ?? 5,
         focus: (state as { focus?: number | null } | null)?.focus ?? 5,
         mentalBattery: (state as { mental_battery?: number | null } | null)?.mental_battery ?? 5,
-        mentalLoad: load ?? sensoryLoad ?? 5,
+        mentalLoad: resolveMentalLoad1To10({
+          systemLoad: load ?? null,
+          sensoryLoad: sensoryLoad ?? null,
+          fallback: 5,
+        }),
         physicalHealth:
           (state as { physical_health?: number | null } | null)?.physical_health ??
           (state as { social_load?: number | null } | null)?.social_load ??

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Toaster } from "sonner";
+import { NeuroToastIcon } from "@/components/brand/NeuroToastIcon";
 
 /**
  * Renders Toaster after first paint so sonner doesn't block initial hydration.
@@ -25,6 +26,13 @@ export function DeferredToaster() {
       position="bottom-center"
       closeButton
       offset="var(--toast-offset-bottom)"
+      icons={{
+        success: <NeuroToastIcon variant="success" />,
+        error: <NeuroToastIcon variant="error" />,
+        warning: <NeuroToastIcon variant="warning" />,
+        info: <NeuroToastIcon variant="info" />,
+        loading: <NeuroToastIcon variant="loading" />,
+      }}
       toastOptions={{
         className: "hq-toast",
       }}

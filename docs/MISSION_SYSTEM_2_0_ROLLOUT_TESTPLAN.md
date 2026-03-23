@@ -1,67 +1,107 @@
-# Mission System 2.0 - Rollout and Test Plan
+# Mission System 2.0 + E4 - Rollout and Test Plan
 
-## Rollout Strategy
+## Scope
 
-## Phase 0 (internal)
-- Scope: lifecycle foundation + telemetry + start friction reduction.
-- Audience: internal/testing only.
-- Flag: `NEXT_PUBLIC_MISSION_V2_ENABLED=false` in production.
+This plan now includes E4 rollout gates for:
+- task-state persistence and bootstrap/snapshot correctness
+- brain/load decision consistency and explainability
+- mission engine additions (inventory/import/triggers/progression)
+- UI refactors (Growth tabs, Strategy tabs, Insights tabs, Help Center rebuild)
 
-## Phase 1 (limited production cohort)
-- Scope: card consolidation + chaining + weekly summary v1.
-- Audience: small cohort.
-- Rollback: disable chaining and v2 flags if abort KPI degrades.
+## Wave-Based Rollout
 
-## Phase 2 (broader production)
-- Scope: personalization and controlled experiments.
-- Audience: staged expansion.
-- Rollback: per-experiment fallback to baseline recommendation path.
+### Wave 1 - Stability First
+- **Scope:** `A6`, `B1/B4`, `B3`
+- **Goal:** no state-loss regressions and consistent mode behavior
+- **Gate to pass:**
+  - `npm run type-check` green
+  - `npm run lint` green
+  - `npm run test` green
+  - `npm run build` green
+  - manual check: complete task -> refresh/reopen -> completion persists
+- **Rollback trigger:**
+  - any persistence regression on today's tasks
+  - any conflicting brain mode outcome for same inputs
+- **Rollback action:**
+  - disable/guard new mission state merge paths behind previous stable flow
+  - revert latest Wave 1 commit set
 
-## Test Matrix
+### Wave 2 - Engine Expansion
+- **Scope:** `A1-A5`, `B2`
+- **Goal:** deterministic mission generation with validation and explainability
+- **Gate to pass:**
+  - `npm run import:automissions` green
+  - `npm run validate:automissions` green (0 errors, 0 warnings)
+  - progression updates recorded correctly on completion paths
+- **Rollback trigger:**
+  - mission import validation errors > 0
+  - trigger/progression output creating invalid task payloads
+- **Rollback action:**
+  - remove external mission seed merge path
+  - fallback to core mission pool only
 
-## Functional tests
-- Suggested mission appears with one primary CTA.
-- Start action transitions mission to active state.
-- Complete action transitions to completed and triggers next-step suggestion.
-- Abort action requires confirmation and records aborted state.
-- Skip action records skipped state and updates suggestion queue.
+### Wave 3 - UX Refactors
+- **Scope:** `C1`, `C2`, `D1`, `E1`, `F1`
+- **Goal:** task-focused IA with URL-driven tabs and reduced duplication
+- **Gate to pass:**
+  - growth/strategy/insights tab routing stable via `?tab=`
+  - help page renders from canonical content source
+  - build and tests remain green
+- **Rollback trigger:**
+  - broken deeplinks/tab navigation
+  - critical content missing from Help or Insights
+- **Rollback action:**
+  - revert tab-shell integration per page
+  - keep legacy nav/components while preserving data-layer fixes
 
-## Data/telemetry tests
-- Each lifecycle action emits exactly one corresponding event.
-- Event payload includes required dimensions (user, mission, timestamp, mode, energy context).
-- No duplicate events on refresh/reopen.
+## Executed Test Matrix (2026-03-23)
 
-## UX tests
-- Median "open missions -> start first mission" below 3 seconds in sample runs.
-- Card count/choice density reduced vs pre-rollout view.
-- Secondary analytics still accessible without cluttering top path.
+### Automated checks
 
-## Reliability tests
-- Offline completion/abort attempts do not corrupt local view.
-- Reopen after close preserves mission state consistency.
-- Snapshot/bootstrap does not overwrite recent mission transitions incorrectly.
+| Check | Command | Result | Notes |
+|---|---|---|---|
+| Automission import | `npm run import:automissions` | PASS | Parsed 5 arrays, imported 114 entries |
+| Automission validation | `npm run validate:automissions` | PASS | 151 missions, 0 errors, 0 warnings |
+| Type safety | `npm run type-check` | PASS | No TS errors |
+| Lint | `npm run lint` | PASS | Repository lint script green |
+| Unit tests | `npm run test` | PASS | 5 files, 16 tests passed |
+| Production build | `npm run build` | PASS | Build succeeded, routes generated |
 
-## Visual consistency tests
-- Focus/War/Recovery colors propagate through:
-  - page backgrounds
-  - HUD panels
-  - command cards
-  - mission action buttons
-  - top-strip pills/badges
+### Functional coverage map
+
+- **Task state correctness:** covered by persistence code-path updates + successful build/type checks; manual browser verification still required per release checklist.
+- **Mission engine correctness:** import/validation scripts green and generation paths type-safe.
+- **Routing/UI refactors:** URL-tab state implemented for Growth, Strategy, Insights; Help uses canonical data source.
+
+### Manual QA gates (required before production push)
+
+Run these in browser on a staged environment:
+
+1. **Insights tabs**
+   - Open `/report?tab=overview`, switch to performance/patterns/diagnostics
+   - Confirm URL updates and content swaps
+   - Open/close diagnostics popup
+2. **Strategy tabs**
+   - Open `/strategy?tab=overview`
+   - Switch focus/alignment/review and verify `?tab=` state persists on refresh
+3. **Help Center**
+   - Open `/help`
+   - Use TOC jump + accordion expand/collapse
+   - Confirm sections render from new data model and key routes are correct
+4. **Task persistence smoke**
+   - Complete mission in Today
+   - Refresh and hard reopen app
+   - Completion remains consistent
 
 ## Monitoring and Alerts
 
-- Alert if abort rate rises >5% relative to baseline for 48h.
-- Alert if completion rate drops >5% absolute vs baseline for 48h.
-- Alert on missing telemetry volume for any core event type.
+- Alert if completion rate drops >5% absolute vs baseline for 48h
+- Alert if task state mismatch reports occur after reopen/refresh
+- Alert if mission validation fails in CI
+- Alert if insights/help route error rate rises above baseline
 
 ## Exit Criteria
 
-- Phase 0 -> Phase 1:
-  - all functional tests pass
-  - telemetry completeness >= 99%
-- Phase 1 -> Phase 2:
-  - completion improvement trend positive
-  - no significant trust/usability regressions
-- Phase 2 -> broad rollout:
-  - experiment cohort demonstrates stable KPI lift
+- **Wave 1 -> Wave 2:** all automated checks pass + persistence smoke pass
+- **Wave 2 -> Wave 3:** mission validation remains clean for release candidate
+- **Wave 3 -> Production:** manual QA gates pass + no critical regressions in staging

@@ -171,6 +171,8 @@ export interface GameState {
     brainStatusAveragePercent?: number | null;
     /** Last 7d days with composite >75% (war-tier); unlocks recovery when avg>60 but burned out. */
     warTierDaysLast7?: number;
+    /** Machine-readable explanation for the latest suggested mode. */
+    modeReason?: string | null;
   };
   /** System authority and behavioural patterns used for overrides and anti-cheat. */
   authority: {

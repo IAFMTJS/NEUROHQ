@@ -8,16 +8,26 @@ export function ReportWeekSelector({
   storedWeeks,
   currentWeekStart,
   selectedWeekStart,
+  activeTab,
 }: {
   storedWeeks: Week[];
   currentWeekStart: string;
   selectedWeekStart: string;
+  activeTab?: string;
 }) {
+  const hrefForWeek = (weekStart: string | null) => {
+    const params = new URLSearchParams();
+    if (weekStart) params.set("weekStart", weekStart);
+    if (activeTab) params.set("tab", activeTab);
+    const query = params.toString();
+    return query ? `/report?${query}` : "/report";
+  };
+
   const isCurrent = selectedWeekStart === currentWeekStart;
   return (
     <nav aria-label="Select report week" className="flex flex-wrap gap-2">
       <Link
-        href="/report"
+        href={hrefForWeek(null)}
         className={`rounded-full px-4 py-2 text-sm font-medium transition focus:outline-none focus:ring-2 focus:ring-[var(--accent-focus)] focus:ring-offset-2 focus:ring-offset-[var(--bg-primary)] ${
           isCurrent
             ? "bg-[var(--accent-focus)] text-[var(--bg-primary)]"
@@ -31,7 +41,7 @@ export function ReportWeekSelector({
         .map((w) => (
           <Link
             key={w.week_start}
-            href={`/report?weekStart=${encodeURIComponent(w.week_start)}`}
+            href={hrefForWeek(w.week_start)}
             className={`rounded-full px-4 py-2 text-sm font-medium transition focus:outline-none focus:ring-2 focus:ring-[var(--accent-focus)] focus:ring-offset-2 focus:ring-offset-[var(--bg-primary)] ${
               selectedWeekStart === w.week_start
                 ? "bg-[var(--accent-focus)] text-[var(--bg-primary)]"

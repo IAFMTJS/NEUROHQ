@@ -4,7 +4,7 @@ import { getDashboardPayload } from "@/app/actions/dashboard-data";
 import { getGameState, saveGameState } from "@/app/actions/dcic/game-state";
 import { todayDateString } from "@/lib/utils/timezone";
 import { getWeekBounds } from "@/lib/utils/learning";
-import { getTodaysTasks, getCompletedTodayTasks } from "@/app/actions/tasks";
+import { getTasksForDate } from "@/app/actions/tasks";
 import { getDailyState } from "@/app/actions/daily-state";
 import { getEnergyBudget } from "@/app/actions/energy";
 import {
@@ -38,8 +38,7 @@ export async function GET() {
     const [
       dashboard,
       dcicGameState,
-      tasksResult,
-      completedToday,
+      tasksForDate,
       dailyState,
       energyBudget,
       budgetSettings,
@@ -58,8 +57,7 @@ export async function GET() {
     ] = await Promise.all([
       getDashboardPayload(),
       getGameState({ includeFinance: false }),
-      getTodaysTasks(dateStr, "normal"),
-      getCompletedTodayTasks(dateStr),
+      getTasksForDate(dateStr),
       getDailyState(dateStr),
       getEnergyBudget(dateStr),
       getBudgetSettings(),
@@ -114,12 +112,16 @@ export async function GET() {
       },
     };
 
+    const completedToday = (tasksForDate ?? []).filter(
+      (task) => !!(task as { completed?: boolean }).completed
+    );
+
     const payload = {
       date: dateStr,
       dashboard,
       dcicGameState,
       tasks: {
-        [dateStr]: tasksResult.tasks,
+        [dateStr]: tasksForDate ?? [],
       },
       completedToday,
       dailyState,

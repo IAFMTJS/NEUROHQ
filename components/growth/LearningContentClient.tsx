@@ -13,11 +13,11 @@ import { MonthlyBookCard } from "@/components/growth/MonthlyBookCard";
 import { AddLearningStreamCard } from "@/components/growth/AddLearningStreamCard";
 import { UserGoalMissionGeneratorCard } from "@/components/growth/UserGoalMissionGeneratorCard";
 import { GrowthAdaptiveHint } from "@/components/growth/GrowthAdaptiveHint";
-import { GrowthSectionNav } from "@/components/growth/GrowthSectionNav";
 import { GrowthProtocolLibrary } from "@/components/growth/GrowthProtocolLibrary";
 import { GrowthCommandCenter } from "@/components/growth/GrowthCommandCenter";
 import { GrowthProtocolViewerModal } from "@/components/growth/GrowthProtocolViewerModal";
 import { GrowthSystemLoop } from "@/components/growth/GrowthSystemLoop";
+import { GrowthTabsShell } from "@/components/growth/GrowthTabsShell";
 import { CollapsibleDashboardCard } from "@/components/dashboard/CollapsibleDashboardCard";
 import { weeklyDifficultyFromBrain } from "@/lib/growth/adaptive-engine";
 import { progressKey } from "@/lib/growth/resolve-focus-protocol";
@@ -92,17 +92,21 @@ export function LearningContentClient({
 
   return (
     <div className="space-y-6" data-tutorial="growth-content">
-      <GrowthSectionNav />
+      <GrowthTabsShell>
+        {(activeTab) => (
+          <>
+            {activeTab === "command" && (
+              <GrowthCommandCenter
+                protocols={protocols}
+                progressMap={progressMap}
+                engineTier={engineTier}
+                growthFocus={growthFocus}
+                onOpenProtocol={setViewerProtocol}
+              />
+            )}
 
-      <GrowthCommandCenter
-        protocols={protocols}
-        progressMap={progressMap}
-        engineTier={engineTier}
-        growthFocus={growthFocus}
-        onOpenProtocol={setViewerProtocol}
-      />
-
-      <div id="growth-system" className="scroll-mt-28">
+            {activeTab === "system" && (
+              <div id="growth-system" className="scroll-mt-28">
         <CollapsibleDashboardCard
           title="Systeemloop & protocollenbibliotheek"
           subtitle="Hoe Growth in elkaar zit — en alle trajecten doorbladeren."
@@ -121,9 +125,11 @@ export function LearningContentClient({
             />
           </div>
         </CollapsibleDashboardCard>
-      </div>
+              </div>
+            )}
 
-      <section
+            {activeTab === "overview" && (
+              <section
         id="growth-overview"
         className="scroll-mt-28 card-simple overflow-hidden p-0 ring-1 ring-[var(--semantic-ring)]/20"
       >
@@ -224,9 +230,11 @@ export function LearningContentClient({
             </div>
           </div>
         </CollapsibleDashboardCard>
-      </section>
+              </section>
+            )}
 
-      <div id="growth-path" className="scroll-mt-28 grid gap-6 xl:grid-cols-12">
+            {activeTab === "path" && (
+              <div id="growth-path" className="scroll-mt-28 grid gap-6 xl:grid-cols-12">
         <div className="space-y-6 xl:col-span-7">
           <GrowthIntentCard
             focus={learning.focus}
@@ -270,14 +278,22 @@ export function LearningContentClient({
           </CollapsibleDashboardCard>
           <AddLearningStreamCard />
         </div>
-      </div>
+              </div>
+            )}
 
-      <div id="growth-missions" className="scroll-mt-28">
-        <UserGoalMissionGeneratorCard />
-      </div>
-      <div id="growth-streams" className="scroll-mt-28">
-        <GrowthStreamsList streams={learning.streams} />
-      </div>
+            {activeTab === "missions" && (
+              <div id="growth-missions" className="scroll-mt-28">
+                <UserGoalMissionGeneratorCard />
+              </div>
+            )}
+            {activeTab === "streams" && (
+              <div id="growth-streams" className="scroll-mt-28">
+                <GrowthStreamsList streams={learning.streams} />
+              </div>
+            )}
+          </>
+        )}
+      </GrowthTabsShell>
 
       {viewerProtocol && (
         <GrowthProtocolViewerModal

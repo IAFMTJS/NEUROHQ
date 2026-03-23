@@ -44,7 +44,7 @@ import { DCICStatusCard } from "@/components/dcic/DCICStatusCard";
 import { SetupReminderBanner } from "@/components/onboarding/SetupReminderBanner";
 import { ContextualTip } from "@/components/onboarding/ContextualTip";
 import { TIP_IDS } from "@/content/onboarding/tip-ids";
-import { toast } from "sonner";
+import { neuroToast } from "@/lib/ui/neuro-toast";
 
 const DCIC_SUGGESTION_TOAST_KEY = "neurohq-dcic-suggestion-education-toast-v1";
 
@@ -117,7 +117,7 @@ export function DashboardClientShell() {
       if (typeof window === "undefined" || localStorage.getItem(DCIC_SUGGESTION_TOAST_KEY)) return;
       localStorage.setItem(DCIC_SUGGESTION_TOAST_KEY, "1");
       const s = gameState.mode.suggested;
-      toast.info(
+      neuroToast.info(
         s === "war"
           ? "Tip: vandaag suggereert je brain status War-modus (hoge capaciteit). Je kunt dit in je missie-flow activeren — niet verplicht."
           : "Tip: vandaag suggereert je brain status Recovery (bescherming eerst). Tik op ? bij Commander status voor uitleg.",
@@ -456,7 +456,11 @@ export function DashboardClientShell() {
           <div className={hudStyles.spaceNoise} aria-hidden />
         </>
       )}
-      <div className={`${!isMinimalUI ? "container page page-wide dashboard-page dashboard-cinematic relative z-10 pb-10" : ""}`}>
+      <div
+        className={`${!isMinimalUI ? "container page page-wide dashboard-page dashboard-cinematic relative z-10 pb-10" : ""}`}
+        style={dcicModeVars}
+        data-mode={dcicMode}
+      >
         {!isMinimalUI && (
           <>
             <SetupReminderBanner />
@@ -472,7 +476,7 @@ export function DashboardClientShell() {
           </>
         )}
         {!isMinimalUI && (
-          <div className="space-y-3" style={dcicModeVars}>
+          <div className="space-y-3">
             <ContextualTip
               tipId={TIP_IDS.BRAIN_STATUS}
               message="You can update your Brain Status here to set energy, focus and load for the day."

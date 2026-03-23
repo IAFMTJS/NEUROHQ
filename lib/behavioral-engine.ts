@@ -67,6 +67,38 @@ function normalizeStat(raw: number | null | undefined, max: number): number {
   return clamp01(raw / max);
 }
 
+function clamp1To10(value: number): number {
+  return Math.max(1, Math.min(10, value));
+}
+
+/**
+ * `daily_state.load` is primarily a 0-100 pressure score.
+ * Older flows may still pass 1-10 values. This helper accepts both.
+ */
+export function normalizeSystemLoadToTenScale(load: number | null | undefined): number | null {
+  if (load == null || !Number.isFinite(load)) return null;
+  const n = Number(load);
+  if (n <= 10) return clamp1To10(n);
+  return clamp1To10(n / 10);
+}
+
+/**
+ * Resolve one canonical 1-10 mental load for the behavioral engine.
+ * Preference: system pressure (`load`) -> sensory check-in (`sensory_load`) -> fallback.
+ */
+export function resolveMentalLoad1To10(input: {
+  systemLoad?: number | null;
+  sensoryLoad?: number | null;
+  fallback?: number;
+}): number {
+  const fromSystem = normalizeSystemLoadToTenScale(input.systemLoad ?? null);
+  if (fromSystem != null) return fromSystem;
+  if (input.sensoryLoad != null && Number.isFinite(input.sensoryLoad)) {
+    return clamp1To10(Number(input.sensoryLoad));
+  }
+  return clamp1To10(input.fallback ?? 5);
+}
+
 /** 10-punts schaal: laag / gemiddeld / goed / uiterst goed. */
 export function bandFor10Scale(raw: number | null | undefined): StatBand {
   if (raw == null) return "medium";
@@ -178,9 +210,10 @@ export function getBehavioralConstraints(n: NormalizedBehavioralStats): Behavior
     preferPhysical: bands.physical === "ultra",
     avoidSocialInteraction: bands.battery === "low",
     limitSocialTasks: bands.battery === "medium",
-    blockCharacterStretch: bands.load === "low",
+    // Load is burden: high load should restrict stretch work.
+    blockCharacterStretch: bands.load === "good" || bands.load === "ultra",
     limitCharacterStretch: bands.load === "medium",
-    preferCharacterStretch: bands.load === "ultra",
+    preferCharacterStretch: bands.load === "low",
     blockHeavyCognitive: eb < 0.25,
     forceRecovery: eb < 0.2 || ee < 0.2,
   };
@@ -250,15 +283,18 @@ export function deriveDcicSuggestedMode(input: {
     constraints.forceRecovery ||
     bands.energy === "low" ||
     sleepBand === "low" ||
-    bands.battery === "low";
+    bands.battery === "low" ||
+    bands.load === "good" ||
+    bands.load === "ultra";
 
   if (wantsRecovery) return "recovery";
 
+  const loadAllowsWar = bands.load === "low" || bands.load === "medium";
   const wantsWar =
     (brainState === "PEAK" || brainState === "OPTIMAL") &&
     (bands.energy === "good" || bands.energy === "ultra") &&
     (bands.focus === "good" || bands.focus === "ultra") &&
-    (bands.load === "good" || bands.load === "ultra");
+    loadAllowsWar;
 
   if (wantsWar) return "war";
 
