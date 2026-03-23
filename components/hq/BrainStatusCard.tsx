@@ -205,7 +205,7 @@ export const BrainStatusCard = memo(function BrainStatusCard({ date, initial, ye
           </>
         )}
         {/* Compact radial meters preview */}
-        <div className="rounded-2xl bg-[rgba(11,18,32,0.75)] backdrop-blur-xl border border-white/[0.08] border-t-[rgba(0,229,255,0.2)] shadow-[0_-2px_0_0_rgba(0,229,255,0.06)] p-5 mb-6">
+        <div className="mb-6 rounded-2xl border border-white/[0.08] border-t-[rgba(var(--mode-rgb),0.22)] bg-[rgba(var(--mode-rgb-deep),0.18)] p-5 shadow-[0_-2px_0_0_rgba(var(--mode-rgb),0.08)] backdrop-blur-xl">
           <div className="grid grid-cols-3 gap-4">
             <div className="flex flex-col items-center gap-1" data-tutorial="brain-status-energy">
               <EnergyRing progress={energyPct} size={84} label="" value={`${energyPct}%`} mode={getRingMode(energyPct)} softGlow />

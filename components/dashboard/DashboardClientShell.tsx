@@ -308,12 +308,21 @@ export function DashboardClientShell() {
 
   // Prefer HQ store for today's tasks whenever the store has data for this date (from bootstrap
   // or from add/move). This ensures added/moved missions show on all cards without full refresh.
-  const EMPTY_TASKS: { id: string; title: string | null; carry_over_count?: number }[] = [];
+  const EMPTY_TASKS: {
+    id: string;
+    title: string | null;
+    carry_over_count?: number;
+    completed?: boolean | null;
+    completed_at?: string | null;
+  }[] = [];
   const storeTasksForToday = useHQStore((s) => (dateStr ? (s.tasksByDate?.[dateStr] as typeof EMPTY_TASKS) : undefined));
   const hasStoreDataForToday = storeTasksForToday !== undefined;
+  const activeStoreTasksForToday = (storeTasksForToday ?? EMPTY_TASKS).filter(
+    (t) => t.completed !== true && !t.completed_at
+  );
   const todaysTasks =
     hasStoreDataForToday
-      ? (storeTasksForToday ?? EMPTY_TASKS).map((t) => ({
+      ? activeStoreTasksForToday.map((t) => ({
           id: t.id,
           title: t.title ?? "Task",
           carryOverCount: (t as { carry_over_count?: number }).carry_over_count ?? 0,

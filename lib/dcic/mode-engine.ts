@@ -206,12 +206,6 @@ export function autoModeCheck(gameState: GameState): void {
     }
   }
 
-  /** Legacy / suggested recovery (na applyBrainLayer), o.a. wanneer geen brain % bekend is. */
-  if (gameState.mode.suggested === "recovery" && gameState.mode.current !== "recovery") {
-    switchMode(gameState, "recovery", { forced: true });
-    return;
-  }
-
   const { energy, focus, load } = gameState.stats;
 
   if (avg == null && (energy < 25 || load > 80)) {

@@ -1,10 +1,11 @@
-import { defineConfig } from "vitest/config";
+import { configDefaults, defineConfig } from "vitest/config";
 import path from "path";
 
 export default defineConfig({
   test: {
     environment: "node",
     include: ["**/*.test.ts", "**/*.spec.ts"],
+    exclude: [...configDefaults.exclude, "tests/smoke/**"],
   },
   resolve: {
     alias: {

@@ -92,6 +92,9 @@ export async function saveDailyState(input: DailyStateInput): Promise<SaveDailyS
       physical_health: input.physical_health ?? null,
       mental_battery: input.mental_battery ?? null,
       load: input.load ?? null,
+      // Unlock day mode after check-in changes so server can recalculate
+      // based on the latest brain status instead of a stale early lock.
+      dcic_mode: null,
       is_rest_day: input.is_rest_day ?? null,
       // Clear so the auto-mission engine runs on every update (direct line: dashboard → allocator).
       auto_master_missions_generated: false,

@@ -66,26 +66,6 @@ export function clearDCICModeOverride(): void {
   }
 }
 
-/**
- * Applies the local override to a gameState in-place.
- * Zonder override: bij brain-suggestie recovery één keer per dag zacht naar recovery (cf. autoModeCheck na bootstrap).
- */
-function applyBrainSuggestedRecoveryIfEligible(gameState: GameState): void {
-  if (typeof window === "undefined" || !window.sessionStorage) return;
-  const override = readDCICModeOverride();
-  if (override) return;
-  if (gameState.mode?.suggested !== "recovery") return;
-  if (gameState.mode.current !== "focus") return;
-  const dayKey = getTodayKey();
-  try {
-    if (sessionStorage.getItem(BRAIN_SOFT_APPLY_KEY) === dayKey) return;
-    switchMode(gameState, "recovery", { forced: true });
-    sessionStorage.setItem(BRAIN_SOFT_APPLY_KEY, dayKey);
-  } catch {
-    // ignore
-  }
-}
-
 export function applyDCICModeOverrideIfAny(gameState: GameState): void {
   const override = readDCICModeOverride();
   if (override) {
@@ -95,7 +75,5 @@ export function applyDCICModeOverrideIfAny(gameState: GameState): void {
     }
     return;
   }
-
-  applyBrainSuggestedRecoveryIfEligible(gameState);
 }
 
