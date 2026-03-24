@@ -107,10 +107,23 @@ export async function getBudgetControlState(): Promise<{
   /** ISO instant when lock ends; use for countdown. */
   lockUntilAt: string | null;
   needsPaydaySurvey: boolean;
+  /** Days until next expected payday (cycle marker for urgency UX). */
+  daysToPayday: number | null;
+  /** Recent pre-payday survey found in the last 31 days. */
+  hasRecentSurvey: boolean;
 }> {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return { lockActive: false, lockUntil: null, lockUntilAt: null, needsPaydaySurvey: false };
+  if (!user) {
+    return {
+      lockActive: false,
+      lockUntil: null,
+      lockUntilAt: null,
+      needsPaydaySurvey: false,
+      daysToPayday: null,
+      hasRecentSurvey: false,
+    };
+  }
 
   const today = isoDate();
   const nowIso = new Date().toISOString();
@@ -153,7 +166,14 @@ export async function getBudgetControlState(): Promise<{
   const hasRecentSurvey = !!survey;
   const needsPaydaySurvey = daysToPayday <= 4 && !hasRecentSurvey;
 
-  return { lockActive, lockUntil, lockUntilAt, needsPaydaySurvey };
+  return {
+    lockActive,
+    lockUntil,
+    lockUntilAt,
+    needsPaydaySurvey,
+    daysToPayday,
+    hasRecentSurvey,
+  };
 }
 
 export async function setBudgetNoSpendLock(params: {
@@ -161,24 +181,28 @@ export async function setBudgetNoSpendLock(params: {
   reason: string;
   /** Exact unlock instant (ISO). When set, overrides end-of-day from `days`. */
   lockUntilAtIso?: string;
+  /** Auto safety-locks may bypass strategy quota limits. */
+  bypassStrategyCap?: boolean;
 }): Promise<void> {
   const userId = await getUserIdOrThrow();
   const supabase = await createClient();
 
-  const { data: sfRow } = await supabase
-    .from("strategy_focus")
-    .select("engine_params")
-    .eq("user_id", userId)
-    .eq("is_active", true)
-    .maybeSingle();
-  const maxLocks = normalizeStrategyEngineParams(
-    (sfRow as { engine_params?: unknown } | null)?.engine_params
-  ).budget.maxLocksPerQuarter;
-  const used = await countBudgetLocksThisQuarter();
-  if (maxLocks > 0 && used >= maxLocks) {
-    throw new Error(
-      `Strategie-limiet: max ${maxLocks} budget-lock(s) dit kwartaal (${used} gebruikt). Pas aan op Strategy of wacht tot het volgende kwartaal.`
-    );
+  if (!params.bypassStrategyCap) {
+    const { data: sfRow } = await supabase
+      .from("strategy_focus")
+      .select("engine_params")
+      .eq("user_id", userId)
+      .eq("is_active", true)
+      .maybeSingle();
+    const maxLocks = normalizeStrategyEngineParams(
+      (sfRow as { engine_params?: unknown } | null)?.engine_params
+    ).budget.maxLocksPerQuarter;
+    const used = await countBudgetLocksThisQuarter();
+    if (maxLocks > 0 && used >= maxLocks) {
+      throw new Error(
+        `Strategie-limiet: max ${maxLocks} budget-lock(s) dit kwartaal (${used} gebruikt). Pas aan op Strategy of wacht tot het volgende kwartaal.`
+      );
+    }
   }
 
   const days = Math.max(1, Math.min(7, Math.floor(params.days)));

@@ -5,7 +5,7 @@ import type { Database } from "@/types/database.types";
 import { revalidatePath } from "next/cache";
 import { getBudgetToday, getBudgetMonthBounds, getBudgetWeekBounds, getBudgetCycleBounds, getPreviousPaydayDateFromDay, getNextPaydayDateFromDay } from "@/lib/utils/budget-date";
 import { createAlternative } from "./alternatives";
-import { getBudgetControlState, submitEmergencyExpenseReason } from "./budget-intelligence";
+import { getBudgetControlState, setBudgetNoSpendLock, submitEmergencyExpenseReason } from "./budget-intelligence";
 
 type BudgetSettingsRow = {
   monthly_budget_cents?: number | null;
@@ -361,6 +361,110 @@ export async function getMonthIncomeCents(year: number, month: number): Promise<
 const MAX_ACTIVE_FREEZES = 5;
 const BASE_FREEZE_HOURS = 24;
 
+type AutoBudgetLockInput = {
+  expenseDeltaCents: number;
+  isPlanned: boolean;
+  category?: string | null;
+  source: "add" | "update";
+};
+
+function resolveAutoBudgetLockRule(input: {
+  spendableCents: number;
+  remainingBeforeCents: number;
+  remainingAfterCents: number;
+  expenseDeltaCents: number;
+  isPlanned: boolean;
+  daysToPayday: number | null;
+}): { hours: number; reasonCode: string } | null {
+  const {
+    spendableCents,
+    remainingBeforeCents,
+    remainingAfterCents,
+    expenseDeltaCents,
+    isPlanned,
+    daysToPayday,
+  } = input;
+  if (spendableCents <= 0 || expenseDeltaCents <= 0) return null;
+
+  const crossedIntoNegative = remainingBeforeCents >= 0 && remainingAfterCents < 0;
+  const deepOverspend = remainingAfterCents <= -Math.round(spendableCents * 0.15);
+  const singleHitRatio = expenseDeltaCents / Math.max(1, spendableCents);
+  const largeSingleHit = singleHitRatio >= 0.35;
+  const impulseSpike = !isPlanned && singleHitRatio >= 0.22;
+  const lateCycleUnplannedSpike =
+    !isPlanned && daysToPayday != null && daysToPayday <= 4 && singleHitRatio >= 0.12;
+
+  if (crossedIntoNegative && deepOverspend) {
+    return { hours: 24, reasonCode: "crossed_budget_deep_overspend" };
+  }
+  if (crossedIntoNegative) {
+    return { hours: 12, reasonCode: "crossed_budget_single_expense" };
+  }
+  if (remainingAfterCents < 0) {
+    return { hours: 12, reasonCode: "budget_already_negative" };
+  }
+  if (largeSingleHit) {
+    return { hours: 12, reasonCode: "single_expense_large_share" };
+  }
+  if (impulseSpike) {
+    return { hours: 12, reasonCode: "impulse_spike" };
+  }
+  if (lateCycleUnplannedSpike) {
+    return { hours: 8, reasonCode: "late_cycle_unplanned_spike" };
+  }
+  return null;
+}
+
+/**
+ * Auto safety lock:
+ * - Crossing below zero in one move => immediate 12h lock (24h when deep overspend).
+ * - Large single-hit expense / unplanned spike => short cooldown lock.
+ * Non-blocking: never throws into add/update flow.
+ */
+async function maybeApplyAutomaticBudgetLockAfterExpense(input: AutoBudgetLockInput): Promise<void> {
+  try {
+    const control = await getBudgetControlState();
+    if (control.lockActive) return;
+
+    const settings = await getBudgetSettings();
+    const spendableCents = Math.max(
+      0,
+      (settings.monthly_budget_cents ?? 0) - (settings.monthly_savings_cents ?? 0)
+    );
+    if (spendableCents <= 0) return;
+
+    const spentAfterCents = await getCurrentMonthExpensesCents();
+    const remainingAfterCents = spendableCents - spentAfterCents;
+    const remainingBeforeCents = remainingAfterCents + Math.max(0, input.expenseDeltaCents);
+
+    const rule = resolveAutoBudgetLockRule({
+      spendableCents,
+      remainingBeforeCents,
+      remainingAfterCents,
+      expenseDeltaCents: Math.max(0, input.expenseDeltaCents),
+      isPlanned: input.isPlanned,
+      daysToPayday: control.daysToPayday,
+    });
+    if (!rule) return;
+
+    const unlockAt = new Date(Date.now() + rule.hours * 60 * 60 * 1000);
+    await setBudgetNoSpendLock({
+      days: Math.max(1, Math.ceil(rule.hours / 24)),
+      lockUntilAtIso: unlockAt.toISOString(),
+      bypassStrategyCap: true,
+      reason: [
+        `AUTO_LOCK:${rule.reasonCode}`,
+        `source=${input.source}`,
+        `remaining_after_cents=${remainingAfterCents}`,
+        `expense_delta_cents=${Math.max(0, input.expenseDeltaCents)}`,
+        `category=${(input.category ?? "unknown").slice(0, 40)}`,
+      ].join(";"),
+    });
+  } catch {
+    // Auto lock is safety-only and must never block the budget mutation.
+  }
+}
+
 async function getFreezeHours(): Promise<number> {
   try {
     const supabase = await createClient();
@@ -474,6 +578,14 @@ export async function addBudgetEntry(params: {
       reason: params.emergency_override_reason.trim(),
     });
   }
+  if (params.amount_cents < 0) {
+    await maybeApplyAutomaticBudgetLockAfterExpense({
+      expenseDeltaCents: Math.abs(params.amount_cents),
+      isPlanned: params.is_planned ?? false,
+      category: params.category ?? null,
+      source: "add",
+    });
+  }
   revalidatePath("/budget");
   revalidatePath("/dashboard");
   return data ? { id: data.id } : null;
@@ -493,7 +605,18 @@ export async function updateBudgetEntry(id: string, params: {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) throw new Error("Not authenticated");
-  if ((params.amount_cents ?? 0) < 0) {
+  const { data: existingRow, error: existingError } = await supabase
+    .from("budget_entries")
+    .select("amount_cents, is_planned, category")
+    .eq("id", id)
+    .eq("user_id", user.id)
+    .maybeSingle();
+  if (existingError) throw new Error(existingError.message);
+  if (!existingRow) throw new Error("Budget entry not found.");
+
+  const previousAmount = (existingRow as { amount_cents?: number | null }).amount_cents ?? 0;
+  const nextAmount = params.amount_cents ?? previousAmount;
+  if (nextAmount < 0) {
     const control = await getBudgetControlState();
     const emergencyReason = params.emergency_override_reason?.trim() ?? "";
     if (control.needsPaydaySurvey) {
@@ -509,12 +632,25 @@ export async function updateBudgetEntry(id: string, params: {
     .eq("id", id)
     .eq("user_id", user.id);
   if (error) throw new Error(error.message);
-  if ((params.amount_cents ?? 0) < 0 && params.emergency_override_reason?.trim()) {
+  if (nextAmount < 0 && params.emergency_override_reason?.trim()) {
     await submitEmergencyExpenseReason({
-      amountCents: Math.abs(params.amount_cents ?? 0),
-      category: params.category ?? "unknown",
+      amountCents: Math.abs(nextAmount),
+      category: params.category ?? (existingRow as { category?: string | null }).category ?? "unknown",
       reason: params.emergency_override_reason.trim(),
     });
+  }
+  if (nextAmount < 0) {
+    const previousExpenseCents = previousAmount < 0 ? Math.abs(previousAmount) : 0;
+    const nextExpenseCents = Math.abs(nextAmount);
+    const expenseDeltaCents = Math.max(0, nextExpenseCents - previousExpenseCents);
+    if (expenseDeltaCents > 0) {
+      await maybeApplyAutomaticBudgetLockAfterExpense({
+        expenseDeltaCents,
+        isPlanned: params.is_planned ?? ((existingRow as { is_planned?: boolean | null }).is_planned ?? false),
+        category: params.category ?? (existingRow as { category?: string | null }).category ?? null,
+        source: "update",
+      });
+    }
   }
   revalidatePath("/budget");
   revalidatePath("/dashboard");

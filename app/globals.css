@@ -220,11 +220,17 @@
   --shadow-button: 0 6px 18px var(--glow-primary);
   --shadow-button-top: inset 0 1px 0 rgba(255,255,255,0.26);
 
-  --spotlight-opacity: 0.95;
-  --spotlight-saturation: 1.6;
+  --spotlight-opacity: 0.62;
+  --spotlight-saturation: 1.1;
   --spotlight-blur: 0px;
-  --spotlight-animation: hudEnergyPulse 2s ease-in-out infinite;
-  --spotlight: radial-gradient(circle at 50% 18%, rgba(220,38,38,0.92), rgba(220,38,38,0.22) 34%, rgba(220,38,38,0.08) 55%, transparent 75%);
+  --spotlight-animation: none;
+  --spotlight: radial-gradient(
+    circle at 50% 18%,
+    rgba(220, 38, 38, 0.42),
+    rgba(220, 38, 38, 0.14) 34%,
+    rgba(220, 38, 38, 0.05) 55%,
+    transparent 75%
+  );
   --mode-rgb: 220, 38, 38;
   --mode-rgb-deep: 127, 29, 29;
   --mode-text-soft: #ffd1d1;
@@ -232,9 +238,6 @@
   --mode-bg-main: #120507;
   --mode-bg-elevated: #24090d;
   --mode-bg-surface: #1a070b;
-  --cinematic-navy: #120507;
-  --cinematic-navy-mid: #1b070c;
-  --cinematic-navy-bottom: #24090f;
 }
 
 [data-mode="recovery"] {
@@ -258,11 +261,17 @@
   --shadow-button: 0 6px 18px var(--glow-primary);
   --shadow-button-top: inset 0 1px 0 rgba(255,255,255,0.26);
 
-  --spotlight-opacity: 0.95;
-  --spotlight-saturation: 1.6;
+  --spotlight-opacity: 0.62;
+  --spotlight-saturation: 1.1;
   --spotlight-blur: 0px;
-  --spotlight-animation: hudEnergyPulse 2.3s ease-in-out infinite;
-  --spotlight: radial-gradient(circle at 50% 18%, rgba(34,197,94,0.92), rgba(34,197,94,0.22) 34%, rgba(34,197,94,0.08) 55%, transparent 75%);
+  --spotlight-animation: none;
+  --spotlight: radial-gradient(
+    circle at 50% 18%,
+    rgba(34, 197, 94, 0.42),
+    rgba(34, 197, 94, 0.14) 34%,
+    rgba(34, 197, 94, 0.05) 55%,
+    transparent 75%
+  );
   --mode-rgb: 34, 197, 94;
   --mode-rgb-deep: 22, 101, 52;
   --mode-text-soft: #caffdd;
@@ -270,9 +279,6 @@
   --mode-bg-main: #041108;
   --mode-bg-elevated: #082012;
   --mode-bg-surface: #06180d;
-  --cinematic-navy: #041108;
-  --cinematic-navy-mid: #071b0f;
-  --cinematic-navy-bottom: #082414;
 }
 
 /* Semantic accents (A.6): prefer var(--semantic-*) in new/updated UI; follows DCIC data-mode on <html>. */
@@ -786,11 +792,22 @@ html[data-light-ui="true"],
 html[data-light-ui="true"] body {
   background-image: linear-gradient(
     180deg,
-    rgba(var(--mode-rgb-deep), 0.16) 0%,
-    rgba(11, 20, 36, 0.98) 48%,
-    rgba(var(--mode-rgb), 0.12) 100%
+    rgba(8, 14, 24, 0.99) 0%,
+    rgba(8, 14, 24, 0.985) 52%,
+    rgba(8, 14, 24, 0.99) 100%
+  ),
+  radial-gradient(
+    ellipse 90% 46% at 50% -20%,
+    rgba(var(--mode-rgb-deep), 0.045),
+    transparent 64%
+  ),
+  radial-gradient(
+    ellipse 90% 46% at 50% 120%,
+    rgba(var(--mode-rgb), 0.04),
+    transparent 62%
   ) !important;
-  background-size: 100% 100% !important;
+  background-size: 100% 100%, 100% 100%, 100% 100% !important;
+  background-repeat: no-repeat !important;
   background-attachment: scroll !important;
 }
 [data-light-ui="true"] body::after,
@@ -1425,6 +1442,37 @@ html[data-light-ui="true"] body {
   border: 1px solid rgba(var(--mode-rgb), 0.25) !important;
   background: linear-gradient(165deg, rgba(18, 28, 55, 0.88) 0%, rgba(12, 20, 42, 0.95) 100%) !important;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.42), 0 0 0 1px rgba(var(--mode-rgb), 0.12) !important;
+}
+[data-sonner-toaster] [data-sonner-toast].hq-toast-prepayday {
+  border-width: 1px !important;
+}
+[data-sonner-toaster] [data-sonner-toast].hq-toast-prepayday-watch {
+  border-color: rgba(56, 189, 248, 0.44) !important;
+  box-shadow:
+    0 10px 30px rgba(0, 0, 0, 0.42),
+    0 0 0 1px rgba(56, 189, 248, 0.22),
+    0 0 18px rgba(56, 189, 248, 0.16) !important;
+}
+[data-sonner-toaster] [data-sonner-toast].hq-toast-prepayday-priority {
+  border-color: rgba(251, 191, 36, 0.52) !important;
+  box-shadow:
+    0 10px 30px rgba(0, 0, 0, 0.42),
+    0 0 0 1px rgba(251, 191, 36, 0.24),
+    0 0 22px rgba(251, 191, 36, 0.2) !important;
+}
+[data-sonner-toaster] [data-sonner-toast].hq-toast-prepayday-high {
+  border-color: rgba(251, 146, 60, 0.58) !important;
+  box-shadow:
+    0 12px 32px rgba(0, 0, 0, 0.44),
+    0 0 0 1px rgba(251, 146, 60, 0.28),
+    0 0 28px rgba(251, 146, 60, 0.26) !important;
+}
+[data-sonner-toaster] [data-sonner-toast].hq-toast-prepayday-critical {
+  border-color: rgba(239, 68, 68, 0.66) !important;
+  box-shadow:
+    0 12px 34px rgba(0, 0, 0, 0.46),
+    0 0 0 1px rgba(239, 68, 68, 0.34),
+    0 0 34px rgba(239, 68, 68, 0.32) !important;
 }
 [data-sonner-toaster] [data-sonner-toast][data-type="success"] {
   border-color: rgba(0, 232, 118, 0.28) !important;

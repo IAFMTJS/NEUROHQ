@@ -46,6 +46,7 @@ import { BudgetOverviewLockGate } from "@/components/budget/BudgetOverviewLockGa
 import { DisciplineIndexCard } from "@/components/budget/DisciplineIndexCard";
 import { BudgetQuickLogCard } from "@/components/budget/BudgetQuickLogCard";
 import { BudgetDailyControlToast } from "@/components/budget/BudgetDailyControlToast";
+import { BudgetPrePaydayUrgencyToast } from "@/components/budget/BudgetPrePaydayUrgencyToast";
 import { BudgetSyncStatus } from "@/components/budget/BudgetSyncStatus";
 import { BudgetPerformanceSummaryCard } from "@/components/budget/BudgetPerformanceSummaryCard";
 import { BudgetPatternDetectionCard } from "@/components/budget/BudgetPatternDetectionCard";
@@ -792,6 +793,13 @@ async function BudgetContent({ searchParams }: Props) {
             <SciFiPanel variant="glass" className={hudStyles.focusSecondary} bodyClassName="p-4 md:p-6">
               <CornerNode corner="top-left" />
               <CornerNode corner="top-right" />
+              {!historyMode && (
+                <BudgetPrePaydayUrgencyToast
+                  daysToPayday={budgetControlState.daysToPayday}
+                  needsPaydaySurvey={budgetControlState.needsPaydaySurvey}
+                  hasRecentSurvey={budgetControlState.hasRecentSurvey}
+                />
+              )}
               <div className="dashboard-bento">
                 <BudgetTabsShell
                   key={`${monthParam ?? "live"}-${tabParam ?? "overview"}`}
