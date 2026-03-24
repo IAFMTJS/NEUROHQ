@@ -11,6 +11,7 @@ import { addBudgetEntry } from "@/app/actions/budget";
 import { addLearningSession } from "@/app/actions/learning";
 import { trackEvent } from "@/app/actions/analytics-events";
 import type { Intent, SimulationResult } from "@/lib/dcic/types";
+import { humanizeDecisionType, humanizeReasonCode } from "@/lib/unified-decision-labels";
 
 const MissionConfirmationModal = dynamic(
   () =>
@@ -22,6 +23,16 @@ const MissionConfirmationModal = dynamic(
 
 type SuggestedAction =
   | { type: "add_task"; label: string; payload: { title: string; due_date: string } }
+  | {
+      type: "add_routine_task";
+      label: string;
+      payload: {
+        title: string;
+        due_date: string;
+        recurrence_rule: "daily" | "weekly" | "monthly";
+        recurrence_weekdays?: string;
+      };
+    }
   | {
       type: "add_expense";
       label: string;
@@ -46,6 +57,15 @@ type DCICAction = {
   };
 };
 
+type UnifiedDecisionMeta = {
+  decisionId: string;
+  decisionType: string;
+  source?: string;
+  confidence?: "low" | "medium" | "high";
+  horizon?: "past" | "present" | "future" | "blended";
+  reasonCodes?: string[];
+};
+
 type Message = {
   id: string;
   role: "user" | "assistant";
@@ -55,7 +75,7 @@ type Message = {
   courageFlag?: boolean;
   suggestedActions?: SuggestedAction[];
   dcicAction?: DCICAction;
-  unifiedDecision?: { decisionId: string; decisionType: string };
+  unifiedDecision?: UnifiedDecisionMeta;
 };
 
 export default function AssistantPageClient() {
@@ -177,6 +197,10 @@ export default function AssistantPageClient() {
         decisionId,
         decisionType: msg.unifiedDecision?.decisionType ?? "assistant_suggested_actions",
         surface: "assistant",
+        decisionSource: msg.unifiedDecision?.source ?? "assistant",
+        decisionConfidence: msg.unifiedDecision?.confidence ?? "unknown",
+        decisionHorizon: msg.unifiedDecision?.horizon ?? "unknown",
+        decisionReasonCodes: msg.unifiedDecision?.reasonCodes ?? [],
       });
     }
   }, [messages]);
@@ -205,17 +229,32 @@ export default function AssistantPageClient() {
       const sourceMessage = messages.find((m) => m.id === msgId);
       const decisionId = sourceMessage?.unifiedDecision?.decisionId ?? msgId;
       const decisionType = sourceMessage?.unifiedDecision?.decisionType ?? "assistant_suggested_actions";
+      const decisionSource = sourceMessage?.unifiedDecision?.source ?? "assistant";
+      const decisionConfidence = sourceMessage?.unifiedDecision?.confidence ?? "unknown";
+      const decisionHorizon = sourceMessage?.unifiedDecision?.horizon ?? "unknown";
+      const decisionReasonCodes = sourceMessage?.unifiedDecision?.reasonCodes ?? [];
       try {
         await trackEvent("decision_action", {
           decisionId,
           decisionType,
           surface: "assistant",
           actionType: action.type,
+          decisionSource,
+          decisionConfidence,
+          decisionHorizon,
+          decisionReasonCodes,
         });
         if (action.type === "add_task") {
           await createTask({
             title: action.payload.title,
             due_date: action.payload.due_date,
+          });
+        } else if (action.type === "add_routine_task") {
+          await createTask({
+            title: action.payload.title,
+            due_date: action.payload.due_date,
+            recurrence_rule: action.payload.recurrence_rule,
+            recurrence_weekdays: action.payload.recurrence_weekdays,
           });
         } else if (action.type === "add_expense") {
           await addBudgetEntry({
@@ -249,6 +288,10 @@ export default function AssistantPageClient() {
           surface: "assistant",
           outcome: "success",
           actionType: action.type,
+          decisionSource,
+          decisionConfidence,
+          decisionHorizon,
+          decisionReasonCodes,
         });
       } catch {
         await trackEvent("decision_outcome", {
@@ -257,12 +300,39 @@ export default function AssistantPageClient() {
           surface: "assistant",
           outcome: "failed",
           actionType: action.type,
+          decisionSource,
+          decisionConfidence,
+          decisionHorizon,
+          decisionReasonCodes,
         });
         setError("Actie uitvoeren mislukt. Probeer het opnieuw.");
       }
     },
     [messages]
   );
+
+  const confidenceLabelMap: Record<"low" | "medium" | "high", string> = {
+    low: "Laag",
+    medium: "Middel",
+    high: "Hoog",
+  };
+  const confidenceToneMap: Record<"low" | "medium" | "high", string> = {
+    low: "border-amber-500/40 bg-amber-500/10 text-amber-200",
+    medium: "border-sky-500/40 bg-sky-500/10 text-sky-200",
+    high: "border-emerald-500/40 bg-emerald-500/10 text-emerald-200",
+  };
+  const horizonLabelMap: Record<"past" | "present" | "future" | "blended", string> = {
+    past: "Verleden",
+    present: "Nu",
+    future: "Toekomst",
+    blended: "Gemengd",
+  };
+  const horizonToneMap: Record<"past" | "present" | "future" | "blended", string> = {
+    past: "border-slate-500/40 bg-slate-500/10 text-slate-200",
+    present: "border-cyan-500/40 bg-cyan-500/10 text-cyan-200",
+    future: "border-violet-500/40 bg-violet-500/10 text-violet-200",
+    blended: "border-fuchsia-500/40 bg-fuchsia-500/10 text-fuchsia-200",
+  };
 
   return (
     <div className="flex h-full min-h-0 flex-col">
@@ -318,6 +388,46 @@ export default function AssistantPageClient() {
               <p className="whitespace-pre-wrap text-sm text-[var(--text-primary)]">
                 {msg.content}
               </p>
+              {msg.role === "assistant" && msg.unifiedDecision && (
+                <div className="mt-2 rounded-lg border border-[var(--card-border)] bg-[var(--bg-primary)]/40 px-2.5 py-2">
+                  <div className="flex flex-wrap items-center gap-1.5">
+                    <span className="rounded-full border border-[var(--card-border)] bg-[var(--bg-primary)] px-2 py-0.5 text-[10px] font-medium text-[var(--text-secondary)]">
+                      Beslissing: {humanizeDecisionType(msg.unifiedDecision.decisionType)}
+                    </span>
+                    {msg.unifiedDecision.confidence && (
+                      <span
+                        className={`rounded-full border px-2 py-0.5 text-[10px] font-medium ${confidenceToneMap[msg.unifiedDecision.confidence]}`}
+                      >
+                        Vertrouwen: {confidenceLabelMap[msg.unifiedDecision.confidence]}
+                      </span>
+                    )}
+                    {msg.unifiedDecision.horizon && (
+                      <span
+                        className={`rounded-full border px-2 py-0.5 text-[10px] font-medium ${horizonToneMap[msg.unifiedDecision.horizon]}`}
+                      >
+                        Horizon: {horizonLabelMap[msg.unifiedDecision.horizon]}
+                      </span>
+                    )}
+                  </div>
+                  {(msg.unifiedDecision.reasonCodes ?? []).length > 0 && (
+                    <div className="mt-1">
+                      <p className="text-[10px] font-semibold uppercase tracking-wider text-[var(--text-muted)]">
+                        Waarom nu
+                      </p>
+                      <div className="mt-1 flex flex-wrap gap-1.5">
+                        {(msg.unifiedDecision.reasonCodes ?? []).slice(0, 3).map((code) => (
+                          <span
+                            key={code}
+                            className="rounded-full border border-[var(--card-border)] bg-[var(--bg-primary)] px-2 py-0.5 text-[10px] font-medium text-[var(--text-secondary)]"
+                          >
+                            {humanizeReasonCode(code)}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
               {msg.role === "assistant" &&
                 msg.escalationTier !== undefined &&
                 msg.escalationTier > 1 && (

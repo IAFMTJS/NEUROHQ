@@ -8,6 +8,8 @@ type Props = {
   readyForActionCount: number;
   daysUntilNextIncome: number;
   insights: Insight[] | null | undefined;
+  forecastProjectedBalanceCents?: number | null;
+  forecastOverspendCents?: number | null;
 };
 
 function getActionText(remainingToSpendCents: number | null, readyForActionCount: number, daysUntilNextIncome: number, hasRisk: boolean) {
@@ -51,11 +53,18 @@ function getActionText(remainingToSpendCents: number | null, readyForActionCount
   };
 }
 
-export function BudgetNextActionCard({ remainingToSpendCents, readyForActionCount, daysUntilNextIncome, insights }: Props) {
+export function BudgetNextActionCard({
+  remainingToSpendCents,
+  readyForActionCount,
+  daysUntilNextIncome,
+  insights,
+  forecastProjectedBalanceCents,
+  forecastOverspendCents,
+}: Props) {
   const hasRisk = (insights ?? []).some((i) => i.type === "warning" || i.type === "critical");
   const action = getActionText(remainingToSpendCents, readyForActionCount, daysUntilNextIncome, hasRisk);
   const statusLabel =
-    remainingToSpendCents == null ? "History mode" : remainingToSpendCents < 0 ? "High urgency" : "Actionable now";
+    remainingToSpendCents == null ? "Historie" : remainingToSpendCents < 0 ? "Hoge urgentie" : "Actie nu";
 
   return (
     <section className="card-simple-accent overflow-hidden p-0">
@@ -70,6 +79,21 @@ export function BudgetNextActionCard({ remainingToSpendCents, readyForActionCoun
       <div className="space-y-3 p-4">
         <p className="text-lg font-semibold text-[var(--text-primary)]">{action.title}</p>
         <p className="text-sm text-[var(--text-muted)]">{action.body}</p>
+        {forecastProjectedBalanceCents != null && (
+          <div className="rounded-lg border border-[var(--card-border)] bg-[var(--bg-primary)]/40 px-3 py-2">
+            <p className="text-xs text-[var(--text-muted)]">
+              Forecast eindsaldo cyclus:{" "}
+              <span className={forecastProjectedBalanceCents < 0 ? "font-medium text-amber-300" : "font-medium text-[var(--text-primary)]"}>
+                €{(forecastProjectedBalanceCents / 100).toFixed(2)}
+              </span>
+            </p>
+            {(forecastOverspendCents ?? 0) > 0 && (
+              <p className="mt-1 text-xs text-amber-300">
+                Verwacht tekort: €{((forecastOverspendCents ?? 0) / 100).toFixed(2)}
+              </p>
+            )}
+          </div>
+        )}
         <Link
           href={action.href}
           className="btn-primary inline-flex h-auto w-auto items-center justify-center rounded-lg px-4 py-2 text-xs font-semibold uppercase tracking-[0.08em]"

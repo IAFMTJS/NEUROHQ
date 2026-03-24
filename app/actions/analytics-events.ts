@@ -30,9 +30,44 @@ const EVENT_SCHEMAS: Record<string, EventSchema> = {
   CTA_clicked: { version: 1, category: "core", requiredKeys: ["context"] },
   CTA_shown: { version: 1, category: "custom", requiredKeys: ["context"] },
   card_viewed: { version: 1, category: "custom", requiredKeys: ["context"] },
-  decision_exposed: { version: 1, category: "engine", requiredKeys: ["decisionId", "decisionType", "surface"] },
-  decision_action: { version: 1, category: "engine", requiredKeys: ["decisionId", "decisionType", "surface", "actionType"] },
-  decision_outcome: { version: 1, category: "engine", requiredKeys: ["decisionId", "decisionType", "surface", "outcome"] },
+  decision_exposed: {
+    version: 1,
+    category: "engine",
+    requiredKeys: [
+      "decisionId",
+      "decisionType",
+      "surface",
+      "decisionSource",
+      "decisionConfidence",
+      "decisionHorizon",
+    ],
+  },
+  decision_action: {
+    version: 1,
+    category: "engine",
+    requiredKeys: [
+      "decisionId",
+      "decisionType",
+      "surface",
+      "actionType",
+      "decisionSource",
+      "decisionConfidence",
+      "decisionHorizon",
+    ],
+  },
+  decision_outcome: {
+    version: 1,
+    category: "engine",
+    requiredKeys: [
+      "decisionId",
+      "decisionType",
+      "surface",
+      "outcome",
+      "decisionSource",
+      "decisionConfidence",
+      "decisionHorizon",
+    ],
+  },
   neuro_profile_saved: { version: 1, category: "custom", requiredKeys: ["tagCount", "optIn"] },
   neuro_micro_report: { version: 1, category: "custom", requiredKeys: ["kind", "value"] },
   task_paralysis_dismiss: { version: 1, category: "custom", requiredKeys: ["surface"] },
@@ -94,6 +129,91 @@ export async function getAnalyticsEventsSummaryLast7(): Promise<AnalyticsEventSu
   return Array.from(byName.entries())
     .map(([event_name, count]) => ({ event_name, count }))
     .sort((a, b) => b.count - a.count);
+}
+
+export type AdaptiveDecisionSignals = {
+  started: number;
+  completed: number;
+  skipped: number;
+  deleted: number;
+  aborted: number;
+  completionRate: number | null;
+  skipDeleteRate: number | null;
+  frictionHigh: boolean;
+};
+
+const ADAPTIVE_DECISION_EVENT_NAMES = [
+  "mission_started",
+  "mission_completed",
+  "mission_skipped",
+  "mission_deleted",
+  "mission_aborted",
+] as const;
+
+/**
+ * Compact behavior signal for decisioning (last N days).
+ * Uses mission start/complete/skip/delete/abort events.
+ */
+export async function getAdaptiveDecisionSignalsLast7(days = 7): Promise<AdaptiveDecisionSignals> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) {
+    return {
+      started: 0,
+      completed: 0,
+      skipped: 0,
+      deleted: 0,
+      aborted: 0,
+      completionRate: null,
+      skipDeleteRate: null,
+      frictionHigh: false,
+    };
+  }
+
+  const horizonDays = Math.max(1, days);
+  const since = new Date(Date.now() - horizonDays * 24 * 60 * 60 * 1000).toISOString();
+  const { data: rows } = await supabase
+    .from("analytics_events")
+    .select("event_name")
+    .eq("user_id", user.id)
+    .gte("created_at", since)
+    .in("event_name", [...ADAPTIVE_DECISION_EVENT_NAMES]);
+
+  const counts = {
+    started: 0,
+    completed: 0,
+    skipped: 0,
+    deleted: 0,
+    aborted: 0,
+  };
+
+  for (const row of rows ?? []) {
+    const eventName = (row as { event_name?: string }).event_name ?? "";
+    if (eventName === "mission_started") counts.started += 1;
+    else if (eventName === "mission_completed") counts.completed += 1;
+    else if (eventName === "mission_skipped") counts.skipped += 1;
+    else if (eventName === "mission_deleted") counts.deleted += 1;
+    else if (eventName === "mission_aborted") counts.aborted += 1;
+  }
+
+  const avoidCount = counts.skipped + counts.deleted + counts.aborted;
+  const denominator =
+    counts.started > 0 ? counts.started : counts.completed + avoidCount;
+  const completionRate =
+    denominator > 0 ? counts.completed / denominator : null;
+  const skipDeleteRate =
+    denominator > 0 ? avoidCount / denominator : null;
+  const frictionHigh =
+    avoidCount >= 3 || (skipDeleteRate != null && skipDeleteRate >= 0.45);
+
+  return {
+    ...counts,
+    completionRate,
+    skipDeleteRate,
+    frictionHigh,
+  };
 }
 
 export type TelemetryGovernanceSnapshot = {

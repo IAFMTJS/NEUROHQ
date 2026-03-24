@@ -9,7 +9,7 @@ import { getModeFromState } from "@/lib/app-mode";
 import { getQuoteForDay } from "@/app/actions/quote";
 import { getEnergyBudget } from "@/app/actions/energy";
 import { getLearningStreak, getWeeklyMinutes, getWeeklyLearningTarget } from "@/app/actions/learning";
-import { getBudgetSettings, getCurrentMonthExpensesCents } from "@/app/actions/budget";
+import { getBudgetSettings, getCurrentMonthExpensesCents, getMonthExpensesCents } from "@/app/actions/budget";
 import { getUserPreferencesOrDefaults } from "@/app/actions/preferences";
 import { getXP, getXPIdentity } from "@/app/actions/xp";
 import { getUserEconomy } from "@/app/actions/economy";
@@ -39,7 +39,10 @@ import { getProgressionRankState } from "@/app/actions/progression-rank";
 import { getPrimeWindow } from "@/app/actions/prime-window";
 import { getWeeklyBudgetOutcome } from "@/app/actions/weekly-budget-feedback";
 import { getWeekSummary, upsertDailyAnalytics } from "@/app/actions/analytics";
+import { getAdaptiveDecisionSignalsLast7 } from "@/app/actions/analytics-events";
 import { getConsequenceState } from "@/app/actions/consequence-engine";
+import { getBehaviorProfile } from "@/app/actions/behavior-profile";
+import { getFinancialInsightsSafe } from "@/app/actions/dcic/finance-state";
 import { applyZeroCompletionRollover } from "@/app/actions/daily-obligation";
 import { deriveUnifiedDecision } from "@/lib/unified-decision-engine";
 import type { EnergyBudget } from "@/app/actions/energy";
@@ -120,6 +123,12 @@ async function buildCriticalPayload(ctx: TodayContext): Promise<DashboardCritica
   const today = new Date();
   const quoteDay = Math.max(1, Math.min(365, getDayOfYearFromDateString(ctx.dateStr)));
   const { start: thisWeekStart, end: thisWeekEnd } = getWeekBounds(today);
+  const todayUtc = new Date(ctx.dateStr + "T12:00:00Z");
+  const currentYear = todayUtc.getUTCFullYear();
+  const currentMonth = todayUtc.getUTCMonth() + 1;
+  const prevMonth = currentMonth === 1 ? 12 : currentMonth - 1;
+  const prevMonthYear = currentMonth === 1 ? currentYear - 1 : currentYear;
+  const isoDay = todayUtc.getUTCDay() === 0 ? 7 : todayUtc.getUTCDay();
 
   const [
     quoteToday,
@@ -137,6 +146,11 @@ async function buildCriticalPayload(ctx: TodayContext): Promise<DashboardCritica
     weeklyLearningTarget,
     autoSuggestions,
     consequenceState,
+    behaviorProfile,
+    adaptiveDecisionSignals,
+    adaptiveDecisionSignals30d,
+    financialInsights,
+    monthExpensesTrend,
   ] = await Promise.all([
     getQuoteForDay(quoteDay),
     getLearningStreak(),
@@ -153,6 +167,20 @@ async function buildCriticalPayload(ctx: TodayContext): Promise<DashboardCritica
     getWeeklyLearningTarget(),
     getAutoSuggestions(ctx.dateStr),
     getConsequenceState(ctx.dateStr),
+    getBehaviorProfile(),
+    getAdaptiveDecisionSignalsLast7(7),
+    getAdaptiveDecisionSignalsLast7(30),
+    getFinancialInsightsSafe(),
+    (async () => {
+      const [currentMonthExpenses, previousMonthExpenses] = await Promise.all([
+        getMonthExpensesCents(currentYear, currentMonth),
+        getMonthExpensesCents(prevMonthYear, prevMonth),
+      ]);
+      return {
+        currentMonthExpenses,
+        previousMonthExpenses,
+      };
+    })(),
   ]);
 
   const { state, yesterdayState, tasks, carryOverCount, mode, energyBudget, todayEngine } = ctx;
@@ -217,13 +245,69 @@ async function buildCriticalPayload(ctx: TodayContext): Promise<DashboardCritica
   ]
     .filter((a) => a.show)
     .slice(0, 2);
+  const monthlyTrendPct =
+    monthExpensesTrend.previousMonthExpenses > 0
+      ? (monthExpensesTrend.currentMonthExpenses - monthExpensesTrend.previousMonthExpenses) /
+        monthExpensesTrend.previousMonthExpenses
+      : null;
+  const selectedEmotion = prefs.selected_emotion ?? null;
+  const isUsualDayOff = (prefs.usual_days_off ?? []).includes(isoDay);
+
   const unifiedDecision = deriveUnifiedDecision({
     dateStr: ctx.dateStr,
     hasBrainCheckIn: state?.energy != null && state?.focus != null && state?.sensory_load != null,
     tasksCount: todaysTasks.length,
+    carryOverCount,
+    streakAtRisk,
+    suggestedTaskCapacity: energyBudget.suggestedTaskCount ?? null,
+    completedTaskCount: energyBudget.completedTaskCount ?? null,
     budgetRemainingCents,
     energyRemaining: energyBudget.remaining ?? null,
     brainMode: energyBudget.brainMode ?? null,
+    brainState: {
+      energy: state?.energy ?? null,
+      focus: state?.focus ?? null,
+      sensoryLoad: state?.sensory_load ?? null,
+      mentalBattery: (state as { mental_battery?: number | null } | null)?.mental_battery ?? null,
+    },
+    adaptiveSignals: {
+      completionRate: adaptiveDecisionSignals.completionRate,
+      skipDeleteRate: adaptiveDecisionSignals.skipDeleteRate,
+      skipped: adaptiveDecisionSignals.skipped,
+      deleted: adaptiveDecisionSignals.deleted,
+      aborted: adaptiveDecisionSignals.aborted,
+      frictionHigh: adaptiveDecisionSignals.frictionHigh,
+      completionRate30d: adaptiveDecisionSignals30d.completionRate,
+      skipDeleteRate30d: adaptiveDecisionSignals30d.skipDeleteRate,
+    },
+    weeklyLearning: {
+      minutes: weeklyLearningMinutes,
+      targetMinutes: weeklyLearningTarget,
+    },
+    temporal: {
+      hourOfDay: new Date().getHours(),
+      dayOfWeek: new Date().getDay(),
+    },
+    settings: {
+      selectedEmotion,
+      isUsualDayOff,
+      dayOffMode: prefs.day_off_mode ?? null,
+      pushPersonalityMode: prefs.push_personality_mode ?? null,
+      autoMasterMissions: prefs.auto_master_missions,
+    },
+    budgetIntelligence: {
+      monthlyTrendPct,
+      projectedEndBalanceCents: financialInsights?.forecast?.projectedBalance ?? null,
+      daysToPayday: financialInsights?.daysUntilNextIncome ?? null,
+    },
+    behavior: {
+      disciplineLevel: behaviorProfile.disciplineLevel,
+      hasNeuroProfile: behaviorProfile.neuroProfileTags.length > 0,
+      confrontationMode: behaviorProfile.confrontationMode,
+      weekTheme: behaviorProfile.weekTheme,
+      energyPattern: behaviorProfile.energyPattern,
+      identityTargetCount: behaviorProfile.identityTargets.length,
+    },
   });
 
   return {

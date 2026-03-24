@@ -23,6 +23,8 @@ type Props = {
   periodLabel?: string;
   budgetPeriod?: "monthly" | "weekly";
   historyMode?: boolean;
+  forecastProjectedBalanceCents?: number | null;
+  forecastOverspendCents?: number | null;
 };
 
 const FORMULA_TOOLTIP = "Spendable = budget minus savings. Remaining = spendable minus expenses.";
@@ -36,6 +38,8 @@ export function BudgetSummaryCard({
   periodLabel = "this month",
   budgetPeriod = "monthly",
   historyMode = false,
+  forecastProjectedBalanceCents = null,
+  forecastOverspendCents = null,
 }: Props) {
   const pendingBudget = usePendingBudgetSnapshot();
   const pendingActive = pendingBudget != null && pendingBudget.synced !== true;
@@ -206,6 +210,27 @@ export function BudgetSummaryCard({
                       style={{ width: `${Math.min(100, spentPct)}%` }}
                     />
                   </div>
+                </div>
+              )}
+              {!historyMode && forecastProjectedBalanceCents != null && (
+                <div className="mt-4 rounded-lg border border-[var(--card-border)] bg-[var(--bg-primary)]/35 px-3 py-2.5">
+                  <p className="text-xs text-[var(--text-muted)]">
+                    Forecast eindsaldo cyclus:{" "}
+                    <span
+                      className={
+                        forecastProjectedBalanceCents < 0
+                          ? "font-medium text-amber-300"
+                          : "font-medium text-[var(--text-primary)]"
+                      }
+                    >
+                      {formatCents(forecastProjectedBalanceCents, effectiveCurrency)}
+                    </span>
+                  </p>
+                  {(forecastOverspendCents ?? 0) > 0 && (
+                    <p className="mt-1 text-xs text-amber-300">
+                      Verwacht tekort: {formatCents(forecastOverspendCents ?? 0, effectiveCurrency)}
+                    </p>
+                  )}
                 </div>
               )}
             </>

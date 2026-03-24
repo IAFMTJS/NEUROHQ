@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
 import { addXP } from "@/app/actions/xp";
 import { calendarQuarterBounds, normalizeStrategyEngineParams } from "@/lib/strategy/engine-params";
+import { getFinancialInsightsSafe } from "@/app/actions/dcic/finance-state";
 
 function isoDate(offsetDays = 0): string {
   const d = new Date();
@@ -307,6 +308,20 @@ export async function getBudgetOptimizationSuggestions(): Promise<{
   suggestions: string[];
   challenges: Array<{ key: string; label: string; xp: number; description: string }>;
 }> {
+  function toMonthKey(date: Date): string {
+    const y = date.getUTCFullYear();
+    const m = String(date.getUTCMonth() + 1).padStart(2, "0");
+    return `${y}-${m}`;
+  }
+
+  function monthKeyOffset(base: Date, offsetMonths: number): string {
+    return toMonthKey(new Date(Date.UTC(base.getUTCFullYear(), base.getUTCMonth() + offsetMonths, 1, 12)));
+  }
+
+  function pctLabel(value: number): string {
+    return `${value >= 0 ? "+" : ""}${Math.round(value * 100)}%`;
+  }
+
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) {
@@ -329,13 +344,16 @@ export async function getBudgetOptimizationSuggestions(): Promise<{
       ],
     };
   }
-  const [{ data: entries }, { data: surveys }] = await Promise.all([
+  const now = new Date();
+  const historyStart = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - 4, 1, 12));
+  const historyStartStr = historyStart.toISOString().slice(0, 10);
+  const [{ data: entries }, { data: surveys }, financialInsights] = await Promise.all([
     supabase
     .from("budget_entries")
     .select("amount_cents, category, date")
     .eq("user_id", user.id)
     .lt("amount_cents", 0)
-    .gte("date", isoDate(-30)),
+    .gte("date", historyStartStr),
     (supabase as any)
       .from("payday_reflection_surveys")
       .select("answers, survey_date")
@@ -343,9 +361,16 @@ export async function getBudgetOptimizationSuggestions(): Promise<{
       .gte("survey_date", isoDate(-120))
       .order("survey_date", { ascending: false })
       .limit(12),
+    getFinancialInsightsSafe(),
   ]);
-  const rows = (entries ?? []) as { amount_cents: number; category: string | null }[];
-  const byCat = rows.reduce((acc, row) => {
+  const rows = (entries ?? []) as { amount_cents: number; category: string | null; date: string }[];
+  const currentMonthKey = monthKeyOffset(now, 0);
+  const prevMonthKey = monthKeyOffset(now, -1);
+  const prev2MonthKey = monthKeyOffset(now, -2);
+  const prev3MonthKey = monthKeyOffset(now, -3);
+
+  const rowsLast30 = rows.filter((r) => r.date >= isoDate(-30));
+  const byCat = rowsLast30.reduce((acc, row) => {
     const key = (row.category ?? "Other").trim() || "Other";
     acc[key] = (acc[key] ?? 0) + Math.abs(row.amount_cents);
     return acc;
@@ -355,6 +380,78 @@ export async function getBudgetOptimizationSuggestions(): Promise<{
     const monthly = (amount / 100).toFixed(2);
     return `${cat}: heralloceer ~10% (${monthly}) naar buffer/sparen of strakker dagbudget.`;
   });
+
+  const byMonthTotals = new Map<string, number>();
+  const byMonthCategory = new Map<string, Record<string, number>>();
+  for (const row of rows) {
+    const monthKey = row.date.slice(0, 7);
+    const amount = Math.abs(row.amount_cents);
+    const category = (row.category ?? "Other").trim() || "Other";
+    byMonthTotals.set(monthKey, (byMonthTotals.get(monthKey) ?? 0) + amount);
+    const categoryMap = byMonthCategory.get(monthKey) ?? {};
+    categoryMap[category] = (categoryMap[category] ?? 0) + amount;
+    byMonthCategory.set(monthKey, categoryMap);
+  }
+
+  const currentMonthTotal = byMonthTotals.get(currentMonthKey) ?? 0;
+  const prevMonthTotal = byMonthTotals.get(prevMonthKey) ?? 0;
+  const prev2MonthTotal = byMonthTotals.get(prev2MonthKey) ?? 0;
+  const prev3MonthTotal = byMonthTotals.get(prev3MonthKey) ?? 0;
+  const baselineCandidates = [prevMonthTotal, prev2MonthTotal, prev3MonthTotal].filter((v) => v > 0);
+  const baselineAvg =
+    baselineCandidates.length > 0
+      ? Math.round(baselineCandidates.reduce((sum, v) => sum + v, 0) / baselineCandidates.length)
+      : 0;
+
+  if (prevMonthTotal > 0) {
+    const monthTrend = (currentMonthTotal - prevMonthTotal) / prevMonthTotal;
+    if (monthTrend >= 0.12) {
+      suggestions.push(
+        `Maandtrend: totale uitgaven ${pctLabel(monthTrend)} t.o.v. vorige maand. Plan nu 2 low-spend dagen om de trend te breken.`
+      );
+    } else if (monthTrend <= -0.1) {
+      suggestions.push(
+        `Sterke verbetering: uitgaven ${pctLabel(monthTrend)} t.o.v. vorige maand. Behoud dit ritme en schuif het verschil naar je buffer.`
+      );
+    }
+  }
+
+  if (baselineAvg > 0 && currentMonthTotal > baselineAvg * 1.15) {
+    const overshootPct = (currentMonthTotal - baselineAvg) / baselineAvg;
+    suggestions.push(
+      `Je zit ${pctLabel(overshootPct)} boven je 3-maands baseline. Verlaag caps in je topcategorieen met 8-12% voor de rest van de cyclus.`
+    );
+  }
+
+  const currentMonthCategories = byMonthCategory.get(currentMonthKey) ?? {};
+  const prevMonthCategories = byMonthCategory.get(prevMonthKey) ?? {};
+  let risingCategory: { category: string; pct: number; current: number; previous: number } | null = null;
+  for (const [category, currentValue] of Object.entries(currentMonthCategories)) {
+    const previousValue = prevMonthCategories[category] ?? 0;
+    if (previousValue <= 0 || currentValue < 2000) continue;
+    const pct = (currentValue - previousValue) / previousValue;
+    if (pct < 0.18) continue;
+    if (!risingCategory || pct > risingCategory.pct) {
+      risingCategory = { category, pct, current: currentValue, previous: previousValue };
+    }
+  }
+  if (risingCategory) {
+    suggestions.push(
+      `${risingCategory.category} stijgt ${pctLabel(risingCategory.pct)} vs vorige maand. Zet hier een tijdelijke cap + reminder op piekdagen.`
+    );
+  }
+
+  const forecast = financialInsights?.forecast;
+  if (forecast && forecast.projectedBalance < 0) {
+    suggestions.push(
+      `Forecast: als je tempo gelijk blijft, eindig je met ongeveer EUR ${(Math.abs(forecast.projectedBalance) / 100).toFixed(0)} tekort. Verlaag je burn-rate vandaag met 10-15%.`
+    );
+  } else if (forecast && forecast.projectedBalance > 0) {
+    suggestions.push(
+      `Forecast: je ligt op koers voor een positief cyclussaldo van ~EUR ${(forecast.projectedBalance / 100).toFixed(0)}. Plan dit direct als buffer/savings-transfer.`
+    );
+  }
+
   const reasonCounts = new Map<string, number>();
   for (const survey of (surveys ?? []) as { answers?: { primary_reason?: string } | null }[]) {
     const reason = survey?.answers?.primary_reason;
@@ -375,11 +472,15 @@ export async function getBudgetOptimizationSuggestions(): Promise<{
     }
   }
   await autoTuneBudgetPolicyFromSurveys(user.id);
+  const monthCoverage = [currentMonthTotal, prevMonthTotal, prev2MonthTotal, prev3MonthTotal].filter((v) => v > 0).length;
+  const summaryParts: string[] = [];
+  if (topCats.length > 0) summaryParts.push("Topcategorieen laatste 30 dagen");
+  if (monthCoverage >= 2) summaryParts.push("maand-op-maand trendanalyse");
+  if (forecast) summaryParts.push("cyclus-forecast");
   return {
-    summary:
-      topCats.length > 0
-        ? "Topcategorieen van de laatste 30 dagen + surveypatronen geanalyseerd."
-        : "Nog te weinig uitgaven voor sterke optimalisaties.",
+    summary: summaryParts.length > 0
+      ? `${summaryParts.join(" + ")} geanalyseerd.`
+      : "Nog te weinig uitgaven voor sterke optimalisaties.",
     suggestions,
     challenges: [
       {

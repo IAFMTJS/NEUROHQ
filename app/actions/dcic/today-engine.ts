@@ -65,7 +65,8 @@ export async function getTodayEngine(
   const lastCompletion = (streakRow as { last_completion_date?: string | null } | null)?.last_completion_date ?? null;
   const streakAtRisk = lastCompletion !== yesterdayStr && lastCompletion !== dateStr;
 
-  const [{ data: dailyRow }, { data: sfRow }] = await Promise.all([
+  const sinceIso = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+  const [{ data: dailyRow }, { data: sfRow }, { data: adaptiveEventRows }] = await Promise.all([
     supabase
       .from("daily_state")
       .select("energy, focus, sensory_load, mental_battery, load, social_load, physical_health, sleep_hours")
@@ -78,6 +79,18 @@ export async function getTodayEngine(
       .eq("user_id", user.id)
       .eq("is_active", true)
       .maybeSingle(),
+    supabase
+      .from("analytics_events")
+      .select("event_name")
+      .eq("user_id", user.id)
+      .gte("created_at", sinceIso)
+      .in("event_name", [
+        "mission_started",
+        "mission_completed",
+        "mission_skipped",
+        "mission_deleted",
+        "mission_aborted",
+      ]),
   ]);
 
   const missionTuning: MissionEngineTuning | null = sfRow
@@ -106,6 +119,32 @@ export async function getTodayEngine(
         missionTuning
       )
     : undefined;
+
+  const adaptiveCounts = {
+    started: 0,
+    completed: 0,
+    skipped: 0,
+    deleted: 0,
+    aborted: 0,
+  };
+  for (const row of adaptiveEventRows ?? []) {
+    const eventName = (row as { event_name?: string }).event_name ?? "";
+    if (eventName === "mission_started") adaptiveCounts.started += 1;
+    else if (eventName === "mission_completed") adaptiveCounts.completed += 1;
+    else if (eventName === "mission_skipped") adaptiveCounts.skipped += 1;
+    else if (eventName === "mission_deleted") adaptiveCounts.deleted += 1;
+    else if (eventName === "mission_aborted") adaptiveCounts.aborted += 1;
+  }
+  const avoidCount =
+    adaptiveCounts.skipped + adaptiveCounts.deleted + adaptiveCounts.aborted;
+  const adaptiveDenominator =
+    adaptiveCounts.started > 0
+      ? adaptiveCounts.started
+      : adaptiveCounts.completed + avoidCount;
+  const skipDeleteRate =
+    adaptiveDenominator > 0 ? avoidCount / adaptiveDenominator : 0;
+  const avoidancePressureHigh =
+    avoidCount >= 3 || skipDeleteRate >= 0.45;
 
   const items = (tasks ?? []).map((t, i) => {
     const r = t as {
@@ -147,13 +186,27 @@ export async function getTodayEngine(
         : true
     : true;
   const allowHeavyByTier = brainMode.tier !== "Low";
-  const allowHeavyNow = allowHeavyByPattern && allowHeavyByTier;
+  const hasNeuroProfile = behaviorProfile.neuroProfileTags.length > 0;
+  const allowHeavyByNeuroProfile =
+    !hasNeuroProfile || (ds?.sensory_load ?? 5) < 7;
+  const allowHeavyByFriction = !avoidancePressureHigh;
+  const allowHeavyNow =
+    allowHeavyByPattern &&
+    allowHeavyByTier &&
+    allowHeavyByNeuroProfile &&
+    allowHeavyByFriction;
+  const missionEquivalentCapAdjusted =
+    missionEquivalentCap != null
+      ? Math.max(1, missionEquivalentCap - (avoidancePressureHigh ? 1 : 0))
+      : undefined;
 
   const bucketed = bucketTodayItems(items, {
     streakAtRisk,
     nearUnlockSkills: [],
     allowHeavyNow,
-    ...(missionEquivalentCap != null ? { missionEquivalentCap } : {}),
+    ...(missionEquivalentCapAdjusted != null
+      ? { missionEquivalentCap: missionEquivalentCapAdjusted }
+      : {}),
   });
 
   return { bucketed, streakAtRisk, date: dateStr };

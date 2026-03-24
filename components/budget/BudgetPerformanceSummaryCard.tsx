@@ -46,22 +46,28 @@ export const BudgetPerformanceSummaryCard: FC<Props> = ({
 
   const driftPerDayCents = burnRate - safeDaily;
   const driftPerDayAbs = Math.abs(driftPerDayCents);
+  const forecastStatus =
+    forecast.projectedBalance < 0
+      ? { label: "Tekortrisico", tone: "text-red-300" }
+      : driftPerDayCents > 0
+        ? { label: "Tempo loopt op", tone: "text-amber-300" }
+        : { label: "Op koers", tone: "text-emerald-300" };
 
-  let loadLabel: "Stable" | "Tight" | "Critical" = "Stable";
-  if (burnRate > safeDaily * 1.15) loadLabel = "Critical";
-  else if (burnRate > safeDaily * 0.9) loadLabel = "Tight";
+  let loadLabel: "Stabiel" | "Strak" | "Kritiek" = "Stabiel";
+  if (burnRate > safeDaily * 1.15) loadLabel = "Kritiek";
+  else if (burnRate > safeDaily * 0.9) loadLabel = "Strak";
 
   return (
     <section className="card-simple overflow-hidden p-0">
       <div className="border-b border-[var(--card-border)] px-4 py-3">
-        <h2 className="text-base font-semibold text-[var(--text-primary)]">Performance Summary</h2>
+        <h2 className="text-base font-semibold text-[var(--text-primary)]">Prestatie-overzicht</h2>
         <p className="mt-0.5 text-xs text-[var(--text-muted)]">
-          High-level accuracy and pace for {periodLabel}.
+          Nauwkeurigheid en tempo voor {periodLabel}.
         </p>
       </div>
       <div className="p-4 space-y-3">
         <div className="flex items-baseline justify-between">
-          <p className="text-sm text-[var(--text-muted)]">Budget accuracy</p>
+          <p className="text-sm text-[var(--text-muted)]">Budgetnauwkeurigheid</p>
           <p className="text-xl font-bold tabular-nums text-[var(--text-primary)]">
             {budgetAccuracy}%
           </p>
@@ -75,13 +81,13 @@ export const BudgetPerformanceSummaryCard: FC<Props> = ({
 
         <div className="grid gap-2 sm:grid-cols-2">
           <div>
-            <p className="text-xs text-[var(--text-muted)]">Safe daily spend</p>
+            <p className="text-xs text-[var(--text-muted)]">Veilig dagbudget</p>
             <p className="text-lg font-semibold tabular-nums text-[var(--accent-primary)]">
               €{(safeDaily / 100).toFixed(2)}
             </p>
           </div>
           <div>
-            <p className="text-xs text-[var(--text-muted)]">Current burn rate</p>
+            <p className="text-xs text-[var(--text-muted)]">Huidige burn rate</p>
             <p className="text-lg font-semibold tabular-nums text-[var(--text-primary)]">
               €{(burnRate / 100).toFixed(2)}
             </p>
@@ -92,9 +98,9 @@ export const BudgetPerformanceSummaryCard: FC<Props> = ({
           <p className="text-xs text-[var(--text-muted)]">Trend</p>
           <p
             className={`text-sm font-semibold ${
-              loadLabel === "Stable"
+              loadLabel === "Stabiel"
                 ? "text-green-400"
-                : loadLabel === "Tight"
+                : loadLabel === "Strak"
                 ? "text-amber-400"
                 : "text-red-400"
             }`}
@@ -103,15 +109,30 @@ export const BudgetPerformanceSummaryCard: FC<Props> = ({
           </p>
         </div>
 
-        <div className="flex items-center justify-between">
-          <p className="text-xs text-[var(--text-muted)]">Projected balance at cycle end</p>
-          <p
-            className={`text-sm font-medium tabular-nums ${
-              remainingBalance < 0 ? "text-amber-400" : "text-[var(--text-primary)]"
-            }`}
-          >
-            €{(forecast.projectedBalance / 100).toFixed(2)}
+        <div className="rounded-lg border border-[var(--card-border)] bg-[var(--bg-primary)]/35 px-3 py-2.5">
+          <div className="flex items-center justify-between gap-2">
+            <p className="text-xs text-[var(--text-muted)]">Forecast-signaal</p>
+            <p className={`text-xs font-semibold ${forecastStatus.tone}`}>{forecastStatus.label}</p>
+          </div>
+          <p className="mt-1 text-xs text-[var(--text-muted)]">
+            Verwachte uitgaven tot einde cyclus:{" "}
+            <span className="font-medium text-[var(--text-primary)]">€{(forecast.projectedSpend / 100).toFixed(2)}</span>
           </p>
+          <p className="mt-1 text-xs text-[var(--text-muted)]">
+            Verwacht eindsaldo cyclus:{" "}
+            <span
+              className={`font-medium tabular-nums ${
+                remainingBalance < 0 ? "text-amber-400" : "text-[var(--text-primary)]"
+              }`}
+            >
+              €{(forecast.projectedBalance / 100).toFixed(2)}
+            </span>
+          </p>
+          {forecast.overspend > 0 && (
+            <p className="mt-1 text-xs text-amber-300">
+              Verwacht tekort: €{(forecast.overspend / 100).toFixed(2)}
+            </p>
+          )}
         </div>
       </div>
     </section>

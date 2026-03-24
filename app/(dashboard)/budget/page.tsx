@@ -355,6 +355,8 @@ async function BudgetContent({ searchParams }: Props) {
               readyForActionCount={readyForAction.length}
               daysUntilNextIncome={canonicalBudgetView.daysUntilNextIncome}
               insights={financialInsights?.insights}
+              forecastProjectedBalanceCents={financialInsights?.forecast?.projectedBalance ?? null}
+              forecastOverspendCents={financialInsights?.forecast?.overspend ?? null}
             />
             <div id="budget-quick-log">
               <BudgetQuickLogCard date={today} currency={currency} />
@@ -372,6 +374,8 @@ async function BudgetContent({ searchParams }: Props) {
           periodLabel={periodLabel}
           budgetPeriod={budgetSettings.budget_period}
           historyMode={historyMode}
+          forecastProjectedBalanceCents={financialInsights?.forecast?.projectedBalance ?? null}
+          forecastOverspendCents={financialInsights?.forecast?.overspend ?? null}
         />
       )}
       {!historyMode && (

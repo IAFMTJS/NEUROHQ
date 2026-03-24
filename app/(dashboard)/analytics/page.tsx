@@ -9,6 +9,7 @@ import { getWeekSummary, getAnalyticsRange } from "@/app/actions/analytics";
 import { getAnalyticsFunnel } from "@/app/actions/analytics-funnel";
 import { getWeeklyLearningTarget } from "@/app/actions/learning";
 import { getTelemetryGovernanceSnapshot, getClosedLoopLearningSummary } from "@/app/actions/analytics-events";
+import { humanizeDecisionType } from "@/lib/unified-decision-labels";
 
 function formatMinutes(m: number): string {
   if (m < 60) return `${m} min`;
@@ -356,7 +357,8 @@ async function AnalyticsContent() {
                 key={row.decisionType}
                 className="rounded-lg border border-[var(--card-border)]/60 bg-[var(--bg-surface)]/60 p-3 text-sm"
               >
-                <p className="font-medium text-[var(--text-primary)]">{row.decisionType}</p>
+                <p className="font-medium text-[var(--text-primary)]">{humanizeDecisionType(row.decisionType)}</p>
+                <p className="mt-0.5 text-[11px] text-[var(--text-muted)]">{row.decisionType}</p>
                 <p className="text-xs text-[var(--text-muted)]">
                   Exposed {row.exposed} · Acted {row.acted} ({Math.round(row.actionRate * 100)}%) · Outcomes {row.outcomes} ({Math.round(row.outcomeRate * 100)}%)
                 </p>

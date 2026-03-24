@@ -23,6 +23,7 @@ import { CornerNode } from "@/components/hud-test/CornerNode";
 import hudStyles from "@/components/hud-test/hud.module.css";
 import { DelayedFallback } from "@/components/ui/DelayedFallback";
 import { isAssistantEnabled } from "@/lib/feature-flags";
+import { humanizeDecisionType, humanizeReasonCode } from "@/lib/unified-decision-labels";
 import { useDashboardData, fetchAll, type DashboardCritical, type DashboardSecondary } from "@/components/providers/DashboardDataProvider";
 import type { CopyVariant } from "@/app/actions/adaptive";
 import type { BrainMode } from "@/lib/brain-mode";
@@ -400,10 +401,14 @@ export function DashboardClientShell() {
         description: critical.unifiedDecision.description,
         href: critical.unifiedDecision.href,
         cta: critical.unifiedDecision.cta,
+        confidence: critical.unifiedDecision.confidence,
+        horizon: critical.unifiedDecision.horizon,
+        reasonCodes: critical.unifiedDecision.reasonCodes,
       }
     : brainUI.nextAction;
   const nextDecisionType = critical?.unifiedDecision?.decisionType ?? "legacy_next_action";
   const nextDecisionId = critical?.unifiedDecision?.decisionId ?? `legacy-${dateStr}`;
+  const nextActionDecisionMeta = critical?.unifiedDecision ?? null;
 
   useEffect(() => {
     try {
@@ -429,8 +434,22 @@ export function DashboardClientShell() {
       decisionType: nextDecisionType,
       surface: "dashboard",
       href: nextBestAction.href,
+      decisionSource: nextActionDecisionMeta?.source ?? "legacy",
+      decisionConfidence: nextActionDecisionMeta?.confidence ?? "unknown",
+      decisionHorizon: nextActionDecisionMeta?.horizon ?? "unknown",
+      decisionReasonCodes: nextActionDecisionMeta?.reasonCodes ?? [],
     });
-  }, [nextBestAction?.href, nextBestAction?.title, nextDecisionId, nextDecisionType, trackedNextActionShown]);
+  }, [
+    nextActionDecisionMeta?.confidence,
+    nextActionDecisionMeta?.horizon,
+    nextActionDecisionMeta?.reasonCodes,
+    nextActionDecisionMeta?.source,
+    nextBestAction?.href,
+    nextBestAction?.title,
+    nextDecisionId,
+    nextDecisionType,
+    trackedNextActionShown,
+  ]);
 
   useEffect(() => {
     if (!critical) return;
@@ -449,6 +468,29 @@ export function DashboardClientShell() {
       streakAtRisk: Boolean((secondary.todayEngine as { streakAtRisk?: boolean }).streakAtRisk),
     });
   }, [dateStr, secondary?.todayEngine]);
+
+  const confidenceLabelMap: Record<"low" | "medium" | "high", string> = {
+    low: "Laag",
+    medium: "Middel",
+    high: "Hoog",
+  };
+  const confidenceToneMap: Record<"low" | "medium" | "high", string> = {
+    low: "border-amber-500/40 bg-amber-500/10 text-amber-200",
+    medium: "border-sky-500/40 bg-sky-500/10 text-sky-200",
+    high: "border-emerald-500/40 bg-emerald-500/10 text-emerald-200",
+  };
+  const horizonLabelMap: Record<"past" | "present" | "future" | "blended", string> = {
+    past: "Verleden",
+    present: "Nu",
+    future: "Toekomst",
+    blended: "Gemengd",
+  };
+  const horizonToneMap: Record<"past" | "present" | "future" | "blended", string> = {
+    past: "border-slate-500/40 bg-slate-500/10 text-slate-200",
+    present: "border-cyan-500/40 bg-cyan-500/10 text-cyan-200",
+    future: "border-violet-500/40 bg-violet-500/10 text-violet-200",
+    blended: "border-fuchsia-500/40 bg-fuchsia-500/10 text-fuchsia-200",
+  };
 
   return (
     <main
@@ -516,6 +558,46 @@ export function DashboardClientShell() {
                   <p className="text-[10px] font-semibold uppercase tracking-wider text-[var(--text-muted)]">Next best action</p>
                   <h3 className="mt-1 text-sm font-semibold text-[var(--text-primary)]">{nextBestAction.title}</h3>
                   <p className="mt-1 text-xs text-[var(--text-secondary)]">{nextBestAction.description}</p>
+                  {nextActionDecisionMeta && (
+                    <>
+                      <div className="mt-2 flex flex-wrap gap-2">
+                        <span className="rounded-full border border-[var(--card-border)] bg-[var(--bg-primary)]/60 px-2 py-0.5 text-[10px] font-medium text-[var(--text-secondary)]">
+                          Beslissing: {humanizeDecisionType(nextActionDecisionMeta.decisionType)}
+                        </span>
+                        {nextActionDecisionMeta.confidence && (
+                          <span
+                            className={`rounded-full border px-2 py-0.5 text-[10px] font-medium ${confidenceToneMap[nextActionDecisionMeta.confidence]}`}
+                          >
+                            Vertrouwen: {confidenceLabelMap[nextActionDecisionMeta.confidence]}
+                          </span>
+                        )}
+                        {nextActionDecisionMeta.horizon && (
+                          <span
+                            className={`rounded-full border px-2 py-0.5 text-[10px] font-medium ${horizonToneMap[nextActionDecisionMeta.horizon]}`}
+                          >
+                            Horizon: {horizonLabelMap[nextActionDecisionMeta.horizon]}
+                          </span>
+                        )}
+                      </div>
+                      {(nextActionDecisionMeta.reasonCodes ?? []).length > 0 && (
+                        <div className="mt-1">
+                          <p className="text-[10px] font-semibold uppercase tracking-wider text-[var(--text-muted)]">
+                            Waarom nu
+                          </p>
+                          <div className="mt-1 flex flex-wrap gap-1.5">
+                            {(nextActionDecisionMeta.reasonCodes ?? []).slice(0, 3).map((code) => (
+                              <span
+                                key={code}
+                                className="rounded-full border border-[var(--card-border)] bg-[var(--bg-primary)]/60 px-2 py-0.5 text-[10px] font-medium text-[var(--text-secondary)]"
+                              >
+                                {humanizeReasonCode(code)}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </>
+                  )}
                 </div>
                 <button
                   type="button"
@@ -549,6 +631,10 @@ export function DashboardClientShell() {
                         surface: "dashboard",
                         actionType: "cta_click",
                         href: nextBestAction.href,
+                        decisionSource: nextActionDecisionMeta?.source ?? "legacy",
+                        decisionConfidence: nextActionDecisionMeta?.confidence ?? "unknown",
+                        decisionHorizon: nextActionDecisionMeta?.horizon ?? "unknown",
+                        decisionReasonCodes: nextActionDecisionMeta?.reasonCodes ?? [],
                       }),
                     ])
                   }

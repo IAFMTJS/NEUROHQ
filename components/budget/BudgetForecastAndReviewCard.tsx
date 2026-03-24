@@ -45,6 +45,12 @@ export function BudgetForecastAndReviewCard({
   const driftPerDayCents = burnRate - safeDaily;
   const driftPerDayAbs = Math.abs(driftPerDayCents);
   const remainingBalance = remainingToSpendCents ?? forecast.projectedBalance;
+  const forecastStatus =
+    forecast.projectedBalance < 0
+      ? { label: "Tekortrisico", tone: "text-red-300" }
+      : driftPerDayCents > 0
+        ? { label: "Tempo loopt op", tone: "text-amber-300" }
+        : { label: "Op koers", tone: "text-emerald-300" };
 
   function handleComplete() {
     if (done) return;
@@ -88,6 +94,23 @@ export function BudgetForecastAndReviewCard({
           Huidige afwijking: ongeveer €{(driftPerDayAbs / 100).toFixed(2)} per dag{" "}
           {driftPerDayCents > 0 ? "boven" : "onder"} veilig tempo.
         </p>
+        <div className="rounded-lg border border-[var(--card-border)] bg-[var(--bg-primary)]/35 px-3 py-2.5">
+          <div className="flex items-center justify-between gap-2">
+            <p className="text-xs text-[var(--text-muted)]">Forecast-signaal</p>
+            <p className={`text-xs font-semibold ${forecastStatus.tone}`}>{forecastStatus.label}</p>
+          </div>
+          <p className="mt-1 text-xs text-[var(--text-muted)]">
+            Verwachte uitgaven tot einde cyclus:{" "}
+            <span className="font-medium text-[var(--text-primary)]">
+              €{(forecast.projectedSpend / 100).toFixed(2)}
+            </span>
+          </p>
+          {forecast.overspend > 0 && (
+            <p className="mt-1 text-xs text-amber-300">
+              Verwacht tekort: €{(forecast.overspend / 100).toFixed(2)}
+            </p>
+          )}
+        </div>
         <div className="flex items-center justify-between rounded-lg border border-[var(--card-border)] bg-[var(--bg-primary)]/30 px-3 py-2">
           <p className="text-xs text-[var(--text-muted)]">Status weekreview</p>
           <button

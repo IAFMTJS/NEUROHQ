@@ -34,10 +34,20 @@ import { processDCICMessage } from "@/lib/dcic/assistant-integration";
 import { getDailyState } from "@/app/actions/daily-state";
 import { getEnergyBudget } from "@/app/actions/energy";
 import { getTodaysTasks } from "@/app/actions/tasks";
-import { getBudgetSettings, getCurrentMonthExpensesCents } from "@/app/actions/budget";
+import {
+  getBudgetSettings,
+  getCurrentMonthExpensesCents,
+  getMonthExpensesCents,
+} from "@/app/actions/budget";
 import { todayDateString } from "@/lib/utils/timezone";
 import { deriveUnifiedDecision } from "@/lib/unified-decision-engine";
 import { trackEvent } from "@/app/actions/analytics-events";
+import { getAdaptiveDecisionSignalsLast7 } from "@/app/actions/analytics-events";
+import { getBehaviorProfile } from "@/app/actions/behavior-profile";
+import { getWeekBounds } from "@/lib/utils/learning";
+import { getWeeklyLearningTarget, getWeeklyMinutes } from "@/app/actions/learning";
+import { getUserPreferencesOrDefaults } from "@/app/actions/preferences";
+import { getFinancialInsightsSafe } from "@/app/actions/dcic/finance-state";
 
 const MAX_MESSAGE_LENGTH = 2000;
 const RATE_LIMIT_WINDOW_MS = 60_000;
@@ -108,13 +118,54 @@ export async function POST(request: Request) {
     }
 
     const dateStr = todayDateString();
-    const [dailyStateForDecision, energyBudgetForDecision, todaysTasksForDecision, budgetSettingsForDecision, monthExpensesForDecision] = await Promise.all([
+    const weekBounds = getWeekBounds(new Date(dateStr + "T12:00:00"));
+    const dateUtc = new Date(dateStr + "T12:00:00Z");
+    const currentYear = dateUtc.getUTCFullYear();
+    const currentMonth = dateUtc.getUTCMonth() + 1;
+    const prevMonth = currentMonth === 1 ? 12 : currentMonth - 1;
+    const prevMonthYear = currentMonth === 1 ? currentYear - 1 : currentYear;
+    const isoDay = dateUtc.getUTCDay() === 0 ? 7 : dateUtc.getUTCDay();
+    const [
+      dailyStateForDecision,
+      energyBudgetForDecision,
+      todaysTasksForDecision,
+      budgetSettingsForDecision,
+      monthExpensesForDecision,
+      behaviorProfileForDecision,
+      userPreferencesForDecision,
+      adaptiveDecisionSignals,
+      adaptiveDecisionSignals30d,
+      weeklyLearningMinutes,
+      weeklyLearningTarget,
+      financialInsights,
+      monthExpenseTrend,
+    ] = await Promise.all([
       getDailyState(dateStr),
       getEnergyBudget(dateStr),
       getTodaysTasks(dateStr, "normal"),
       getBudgetSettings(),
       getCurrentMonthExpensesCents(),
+      getBehaviorProfile(),
+      getUserPreferencesOrDefaults(),
+      getAdaptiveDecisionSignalsLast7(7),
+      getAdaptiveDecisionSignalsLast7(30),
+      getWeeklyMinutes(weekBounds.start, weekBounds.end),
+      getWeeklyLearningTarget(),
+      getFinancialInsightsSafe(),
+      (async () => {
+        const [currentMonthExpenses, previousMonthExpenses] = await Promise.all([
+          getMonthExpensesCents(currentYear, currentMonth),
+          getMonthExpensesCents(prevMonthYear, prevMonth),
+        ]);
+        return { currentMonthExpenses, previousMonthExpenses };
+      })(),
     ]);
+    const monthlyTrendPct =
+      monthExpenseTrend.previousMonthExpenses > 0
+        ? (monthExpenseTrend.currentMonthExpenses -
+            monthExpenseTrend.previousMonthExpenses) /
+          monthExpenseTrend.previousMonthExpenses
+        : null;
     const spendableCents = Math.max(
       0,
       (budgetSettingsForDecision.monthly_budget_cents ?? 0) - (budgetSettingsForDecision.monthly_savings_cents ?? 0)
@@ -130,9 +181,62 @@ export async function POST(request: Request) {
         dailyStateForDecision?.focus != null &&
         dailyStateForDecision?.sensory_load != null,
       tasksCount: (todaysTasksForDecision.tasks ?? []).length,
+      carryOverCount: todaysTasksForDecision.carryOverCount ?? 0,
+      suggestedTaskCapacity: energyBudgetForDecision.suggestedTaskCount ?? null,
+      completedTaskCount: energyBudgetForDecision.completedTaskCount ?? null,
       budgetRemainingCents,
       energyRemaining: energyBudgetForDecision.remaining ?? null,
       brainMode: energyBudgetForDecision.brainMode ?? null,
+      brainState: {
+        energy: dailyStateForDecision?.energy ?? null,
+        focus: dailyStateForDecision?.focus ?? null,
+        sensoryLoad: dailyStateForDecision?.sensory_load ?? null,
+        mentalBattery:
+          (dailyStateForDecision as { mental_battery?: number | null } | null)
+            ?.mental_battery ?? null,
+      },
+      adaptiveSignals: {
+        completionRate: adaptiveDecisionSignals.completionRate,
+        skipDeleteRate: adaptiveDecisionSignals.skipDeleteRate,
+        skipped: adaptiveDecisionSignals.skipped,
+        deleted: adaptiveDecisionSignals.deleted,
+        aborted: adaptiveDecisionSignals.aborted,
+        frictionHigh: adaptiveDecisionSignals.frictionHigh,
+        completionRate30d: adaptiveDecisionSignals30d.completionRate,
+        skipDeleteRate30d: adaptiveDecisionSignals30d.skipDeleteRate,
+      },
+      weeklyLearning: {
+        minutes: weeklyLearningMinutes,
+        targetMinutes: weeklyLearningTarget,
+      },
+      temporal: {
+        hourOfDay: new Date().getHours(),
+        dayOfWeek: new Date().getDay(),
+      },
+      settings: {
+        selectedEmotion: userPreferencesForDecision.selected_emotion ?? null,
+        isUsualDayOff: (userPreferencesForDecision.usual_days_off ?? []).includes(
+          isoDay
+        ),
+        dayOffMode: userPreferencesForDecision.day_off_mode ?? null,
+        pushPersonalityMode:
+          userPreferencesForDecision.push_personality_mode ?? null,
+        autoMasterMissions: userPreferencesForDecision.auto_master_missions,
+      },
+      budgetIntelligence: {
+        monthlyTrendPct,
+        projectedEndBalanceCents: financialInsights?.forecast?.projectedBalance ?? null,
+        daysToPayday: financialInsights?.daysUntilNextIncome ?? null,
+      },
+      behavior: {
+        disciplineLevel: behaviorProfileForDecision.disciplineLevel,
+        hasNeuroProfile:
+          behaviorProfileForDecision.neuroProfileTags.length > 0,
+        confrontationMode: behaviorProfileForDecision.confrontationMode,
+        weekTheme: behaviorProfileForDecision.weekTheme,
+        energyPattern: behaviorProfileForDecision.energyPattern,
+        identityTargetCount: behaviorProfileForDecision.identityTargets.length,
+      },
     });
 
     const intent = classifyIntent(message);
@@ -184,6 +288,10 @@ export async function POST(request: Request) {
           decisionType: unifiedDecision.decisionType,
           surface: "assistant",
           actionType: requestedAction.type,
+          decisionSource: unifiedDecision.source,
+          decisionConfidence: unifiedDecision.confidence,
+          decisionHorizon: unifiedDecision.horizon,
+          decisionReasonCodes: unifiedDecision.reasonCodes,
         });
         if (requestedAction.type === "add_task") {
           await createTask({
@@ -192,6 +300,17 @@ export async function POST(request: Request) {
           });
           executedAction = "task";
           responseText = responseText + ` Taak '${requestedAction.payload.title}' toegevoegd.`;
+        } else if (requestedAction.type === "add_routine_task") {
+          await createTask({
+            title: requestedAction.payload.title,
+            due_date: requestedAction.payload.due_date,
+            recurrence_rule: requestedAction.payload.recurrence_rule,
+            recurrence_weekdays: requestedAction.payload.recurrence_weekdays,
+          });
+          executedAction = "routine_task";
+          responseText =
+            responseText +
+            ` Routine '${requestedAction.payload.title}' toegevoegd (${requestedAction.payload.recurrence_rule}).`;
         } else if (requestedAction.type === "add_expense") {
           await addBudgetEntry({
             amount_cents: requestedAction.payload.amount_cents,
@@ -227,6 +346,10 @@ export async function POST(request: Request) {
           surface: "assistant",
           outcome: "success",
           actionType: requestedAction.type,
+          decisionSource: unifiedDecision.source,
+          decisionConfidence: unifiedDecision.confidence,
+          decisionHorizon: unifiedDecision.horizon,
+          decisionReasonCodes: unifiedDecision.reasonCodes,
         });
       } catch (err) {
         console.error("[assistant] Execute action failed", err);
@@ -237,6 +360,10 @@ export async function POST(request: Request) {
           surface: "assistant",
           outcome: "failed",
           actionType: requestedAction.type,
+          decisionSource: unifiedDecision.source,
+          decisionConfidence: unifiedDecision.confidence,
+          decisionHorizon: unifiedDecision.horizon,
+          decisionReasonCodes: unifiedDecision.reasonCodes,
         });
       }
     } else {
@@ -292,6 +419,10 @@ export async function POST(request: Request) {
       decisionType: unifiedDecision.decisionType,
       surface: "assistant",
       conversationMode,
+      decisionSource: unifiedDecision.source,
+      decisionConfidence: unifiedDecision.confidence,
+      decisionHorizon: unifiedDecision.horizon,
+      decisionReasonCodes: unifiedDecision.reasonCodes,
     });
 
     return NextResponse.json({

@@ -4,6 +4,7 @@
  *
  * Assistant kan alle trackbare input afhandelen:
  * - Taken (add_task): taak, todo, plan X voor vandaag, zet X op de lijst, etc.
+ * - Routines (add_routine_task): wekelijks/dagelijks/maandelijks ritme direct als recurring task.
  * - Uitgaven (add_expense): X euro, X euro aan Y, uitgegeven, besteed, etc.
  * - Agenda (add_calendar): afspraak, plan X om 14:00, zet X in agenda, blok, event, etc.
  * - Leren (add_learning): X min geleerd, geleerd: onderwerp 20 min, log 30 min, growth: X, etc.
@@ -12,6 +13,13 @@
 export type AddTaskPayload = {
   title: string;
   due_date: string;
+};
+
+export type AddRoutineTaskPayload = {
+  title: string;
+  due_date: string;
+  recurrence_rule: "daily" | "weekly" | "monthly";
+  recurrence_weekdays?: string;
 };
 
 export type AddExpensePayload = {
@@ -36,6 +44,7 @@ export type AddLearningPayload = {
 
 export type RequestedAction =
   | { type: "add_task"; payload: AddTaskPayload }
+  | { type: "add_routine_task"; payload: AddRoutineTaskPayload }
   | { type: "add_expense"; payload: AddExpensePayload }
   | { type: "add_calendar"; payload: AddCalendarPayload }
   | { type: "add_learning"; payload: AddLearningPayload };
@@ -131,6 +140,44 @@ export function parseAddTask(message: string): AddTaskPayload | null {
   }
   if (title.length < 2) return null;
   return { title, due_date };
+}
+
+/** Haalt recurring taak intent + payload uit het bericht (dagelijks/wekelijks/maandelijks). */
+export function parseAddRoutineTask(message: string): AddRoutineTaskPayload | null {
+  const m = message.trim();
+  const lower = m.toLowerCase();
+  const isWeekly = /\b(wekelijks|elke week|iedere week)\b/i.test(lower);
+  const isDaily = /\b(dagelijks|elke dag|iedere dag)\b/i.test(lower);
+  const isMonthly = /\b(maandelijks|elke maand|iedere maand)\b/i.test(lower);
+  if (!isWeekly && !isDaily && !isMonthly) return null;
+
+  const stripped = m
+    .replace(/\b(wekelijks|dagelijks|maandelijks)\b/gi, "")
+    .replace(/\b(elke|iedere)\s+(week|dag|maand)\b/gi, "")
+    .trim();
+
+  const task = parseAddTask(stripped.length > 0 ? stripped : m);
+  if (!task) return null;
+
+  const recurrence_rule: AddRoutineTaskPayload["recurrence_rule"] = isDaily
+    ? "daily"
+    : isMonthly
+      ? "monthly"
+      : "weekly";
+
+  const payload: AddRoutineTaskPayload = {
+    title: task.title,
+    due_date: task.due_date,
+    recurrence_rule,
+  };
+
+  if (recurrence_rule === "weekly") {
+    const date = new Date(`${task.due_date}T12:00:00`);
+    const isoDay = date.getUTCDay() === 0 ? 7 : date.getUTCDay();
+    payload.recurrence_weekdays = `days=${isoDay};interval=1`;
+  }
+
+  return payload;
 }
 
 /** Haalt add_expense intent + payload uit het bericht. Euro's → cents (negatief). */
@@ -263,7 +310,8 @@ export function parseAddLearning(message: string): AddLearningPayload | null {
 
 /**
  * Bepaalt of het bericht expliciet om een actie vraagt (taak, uitgave, agenda of leren).
- * Retourneert de eerste gevonden actie. Volgorde: expense (getal+eur) → learning (min+keyword) → calendar → task.
+ * Retourneert de eerste gevonden actie.
+ * Volgorde: expense (getal+eur) → learning (min+keyword) → calendar → routine → task.
  */
 export function extractRequestedAction(message: string): RequestedAction | null {
   const expense = parseAddExpense(message);
@@ -272,6 +320,8 @@ export function extractRequestedAction(message: string): RequestedAction | null 
   if (learning) return { type: "add_learning", payload: learning };
   const calendar = parseAddCalendar(message);
   if (calendar) return { type: "add_calendar", payload: calendar };
+  const routine = parseAddRoutineTask(message);
+  if (routine) return { type: "add_routine_task", payload: routine };
   const task = parseAddTask(message);
   if (task) return { type: "add_task", payload: task };
   return null;
@@ -291,6 +341,7 @@ export function getCalendarSlotFromMessage(message: string): { start_at: string;
 
 export type SuggestedAction =
   | { type: "add_task"; label: string; payload: AddTaskPayload }
+  | { type: "add_routine_task"; label: string; payload: AddRoutineTaskPayload }
   | { type: "add_expense"; label: string; payload: AddExpensePayload }
   | { type: "add_calendar"; label: string; payload: AddCalendarPayload }
   | { type: "add_learning"; label: string; payload: AddLearningPayload };
@@ -341,6 +392,8 @@ export function getSuggestedActionsFromContext(
 
   if (extractedItem && (extractedItem.type === "task" || extractedItem.type === "goal" || extractedItem.type === "skill")) {
     const title = extractedItem.content;
+    const routineDate = new Date(`${today}T12:00:00`);
+    const routineIsoDay = routineDate.getUTCDay() === 0 ? 7 : routineDate.getUTCDay();
     suggestions.push({
       type: "add_task",
       label: `Taak '${title}' toevoegen`,
@@ -358,6 +411,16 @@ export function getSuggestedActionsFromContext(
         type: "add_learning",
         label: `Log 30 min '${title}'`,
         payload: { minutes: 30, date: today, topic: title },
+      });
+      suggestions.push({
+        type: "add_routine_task",
+        label: `Maak wekelijkse routine '${title}'`,
+        payload: {
+          title: `${title} routine`,
+          due_date: today,
+          recurrence_rule: "weekly",
+          recurrence_weekdays: `days=${routineIsoDay};interval=1`,
+        },
       });
     }
   }

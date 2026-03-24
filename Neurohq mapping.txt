@@ -1,0 +1,337 @@
+[NEUROHQ - IDEAL SYSTEM MAPPING V4 (MAR 2026)]
+
+GOAL OF THIS FILE
+- 1 source of truth for how NeuroHQ should work end-to-end.
+- Code-aligned with current implementation, plus ideal target behavior.
+- Focus on smart control layer: engine must use past/present/future + user-specific settings/profile.
+
+------------------------------------------------------------
+
+0) CORE CONTROL MODEL
+
+CONTROL GRAPH:
+USER STATE + SETTINGS + PROFILE + HISTORY + FORECASTS
+-> UNIFIED DECISION ENGINE
+-> PAGE/TAB ROUTING + NEXT ACTION + SAFETY INTERVENTIONS
+-> TELEMETRY (exposed/action/outcome)
+-> POLICY ADAPTATION
+
+INPUT LAYERS:
+- State now: brain check-in, task load, budget remaining, active locks, weekly learning.
+- Behavioral history: completion/skip/delete/abort and trend deltas (7d vs 30d).
+- User-specific preferences: days-off mode, emotion, push personality mode, auto-mission preferences.
+- User profile: discipline, confrontation style, energy pattern, identity targets, week theme.
+- Future projection: budget cycle forecast, streak risk, learning target miss risk.
+
+OUTPUT LAYERS:
+- Decision card payload (title, CTA, confidence, horizon, reasonCodes).
+- Route intent (dashboard/tasks/budget/learning/assistant).
+- Safety intensity (guidance, strong warning, hard guardrail, lock-while-risk).
+- Adaptive trace (what was suggested, what user did, result quality).
+
+------------------------------------------------------------
+
+1) LIVE ROUTE MAP (SYSTEM SURFACES)
+
+PUBLIC / AUTH:
+- /
+- /login
+- /signup
+- /forgot-password
+- /offline
+
+PRIMARY APP PAGES:
+- /dashboard
+- /tasks
+- /budget
+- /learning
+- /xp
+- /strategy
+- /report
+- /settings
+- /assistant (feature flagged)
+
+SUPPORT:
+- /help
+- /analytics
+- /analytics/maker (admin)
+- /learning/analytics
+
+------------------------------------------------------------
+
+2) SMART ENGINE STACK (CURRENT + IDEAL TARGET)
+
+A) Brain State Interpreter
+- Current: daily_state + mode + energy budget.
+- Ideal: also detect mismatch states (high motivation but low cognitive stability).
+
+B) Today Execution Engine
+- Current: critical/high_impact/growth_boost buckets + adaptive mission pressure.
+- Ideal: domain-aware failure windows (time-of-day + task type + user pattern).
+
+C) Unified Decision Engine (V4 target)
+- Current: scored candidates with confidence/horizon/reasonCodes.
+- Now includes settings/profile/budget-forecast signals.
+- Ideal: global decision bus with cross-page hard routing under risk.
+
+D) Budget Control Intelligence
+- Current: lock states, optimization suggestions, survey-based auto-tuning.
+- Now includes month-on-month trend + cycle forecast suggestions.
+- Ideal: category-level causal predictions and payday-window policies.
+
+E) Growth/Strategy/Insight Engines
+- Current: learning target tracking, strategy momentum/drift, report diagnostics.
+- Ideal: one shared priority model so all modules align to same weekly objective.
+
+F) Assistant Engine
+- Current: deterministic action extraction + unified decision context.
+- Ideal: same decision policy as dashboard/tasks/budget with identical risk thresholds.
+
+------------------------------------------------------------
+
+3) UNIFIED DECISION ENGINE V4 - CANONICAL INPUT CONTRACT
+
+PAST SIGNALS:
+- adaptiveSignals.completionRate (7d), skipDeleteRate (7d).
+- adaptiveSignals.completionRate30d, skipDeleteRate30d baseline.
+- adaptiveSignals.skipped/deleted/aborted + frictionHigh.
+- carryOverCount + completion trend vs baseline.
+
+PRESENT SIGNALS:
+- hasBrainCheckIn + brainState (energy/focus/sensory/mental battery).
+- brainMode + energyRemaining + tasksCount + capacity and completedTaskCount.
+- budgetRemainingCents.
+- settings snapshot:
+  - selectedEmotion
+  - isUsualDayOff
+  - dayOffMode
+  - pushPersonalityMode
+  - autoMasterMissions
+- profile snapshot:
+  - disciplineLevel
+  - confrontationMode
+  - energyPattern
+  - weekTheme
+  - identityTargetCount
+  - hasNeuroProfile
+
+FUTURE SIGNALS:
+- streakAtRisk.
+- weeklyLearning progress vs target.
+- temporal hour/day context.
+- budget intelligence:
+  - monthlyTrendPct
+  - projectedEndBalanceCents
+  - daysToPayday
+
+OUTPUT CONTRACT:
+- decisionId, decisionType, source, surface.
+- title, description, href, cta.
+- confidence (low/medium/high).
+- horizon (past/present/future/blended).
+- reasonCodes (machine-readable explanation).
+
+CALL SITES:
+- app/actions/dashboard-data.ts
+- app/api/assistant/message/route.ts
+
+------------------------------------------------------------
+
+4) BUDGET INTELLIGENCE V4
+
+CURRENT LIVE SMART BEHAVIOR:
+- Detect lock status and enforce emergency reason path.
+- Analyze top spend categories (recent period).
+- Read survey causes (impulse/social/unexpected/underestimated).
+- Auto-tune impulse settings based on repeated survey reasons.
+
+UPGRADED NOW:
+- Month-on-month trend logic in optimization suggestions.
+- 3-month baseline comparison for overshoot detection.
+- Rising-category detection (category drift alerts).
+- Forecast-aware suggestions from cycle projection (projected end balance).
+
+IDEAL NEXT:
+- Category + weekday + payday-window forecast matrix.
+- Planned vs unplanned drift predictor by category.
+- Adaptive caps per user archetype and seasonality.
+- Simulated scenario cards (if you cut category X by Y% -> projected gain Z).
+
+------------------------------------------------------------
+
+5) PAGE-BY-PAGE IDEAL CAPABILITY MAP
+
+DASHBOARD (/dashboard)
+- Role: system control bridge.
+- Must ingest: full decision payload + risk and pacing context.
+- Ideal:
+  - show confidence/horizon/reasonCodes inline.
+  - show "why now" and "what happens if ignored".
+  - route directly to exact tab/anchor when risk is high.
+
+TASKS (/tasks)
+- Role: execution engine.
+- Must ingest: brain mode, avoidance pressure, confrontation style, day-off mode.
+- Ideal:
+  - adaptive mission pool by profile + time-of-day success windows.
+  - hard anti-overload cap when low-capacity + high carry-over.
+  - friction-specific rescue flows (stuck start, repeated skip, delete loops).
+
+BUDGET (/budget)
+- Role: financial stability + behavior discipline.
+- Must ingest: month history, cycle forecast, survey patterns, lock state.
+- Ideal:
+  - category risk radar with next-7-day prediction.
+  - projected end-cycle range (best/base/worst case).
+  - recommended interventions by confidence (soft nudge -> lock policy).
+
+LEARNING (/learning)
+- Role: growth execution and consistency.
+- Must ingest: weekly target gap + capacity window + strategy alignment.
+- Ideal:
+  - adaptive learning block timing using energy pattern.
+  - mission recommendation linked to weekTheme and identity goals.
+  - forecast of weekly completion probability with catch-up plan.
+
+XP (/xp)
+- Role: motivation and progress feedback.
+- Must ingest: real effort quality, not only completion count.
+- Ideal:
+  - XP weighting adjusted by recovery/discipline context.
+  - anti-gaming checks (low-value spam vs meaningful progress).
+  - identity-path progression suggestions.
+
+STRATEGY (/strategy)
+- Role: long-horizon alignment.
+- Must ingest: execution drift, budget stress, learning consistency.
+- Ideal:
+  - strategy pressure index affects daily decision weights.
+  - quarterly objective health score with intervention triggers.
+  - direct bridge from strategy drift -> task/budget corrective missions.
+
+INSIGHTS (/report)
+- Role: pattern and diagnostic intelligence.
+- Must ingest: all module outcomes in one timeline.
+- Ideal:
+  - causal lens: what actually improved outcomes.
+  - failure windows by domain/time/load.
+  - policy replay: which interventions worked for this user.
+
+ANALYTICS (/analytics)
+- Role: telemetry governance + behavior quality.
+- Must ingest: exposure/action/outcome loop quality.
+- Ideal:
+  - reliability score for each decision type.
+  - recommendation calibration monitoring (confidence vs actual outcome).
+  - operator dashboard for low-signal or noisy modules.
+
+SETTINGS (/settings)
+- Role: user-specific control center for engine personalization.
+- Must ingest/store:
+  - preferences (emotion, days-off, push personality, UI modes).
+  - profile (discipline, confrontation, energy pattern, identity, week theme).
+  - budget rhythm (payday day, cycle preferences, risk categories).
+- Ideal:
+  - explicit preview: "how your settings change engine behavior".
+  - profile confidence meter (data sufficiency for adaptation quality).
+  - one-click policy profiles (protect/recover/push/performance mode).
+
+ASSISTANT (/assistant)
+- Role: conversational control interface.
+- Must ingest: same unified decision context as dashboard.
+- Ideal:
+  - reasonCodes translated to user-language rationale.
+  - action plans with fallback path when user rejects suggestion.
+  - forced risk protocol when critical budget or burnout risk is detected.
+
+HELP (/help)
+- Role: explainability and onboarding.
+- Ideal:
+  - live documentation for decision logic and intervention model.
+  - glossary connected to in-app reasonCodes and confidence labels.
+
+------------------------------------------------------------
+
+6) API MAP (CURRENT CORE)
+
+CORE:
+- /api/bootstrap/today
+- /api/dashboard/data
+- /api/settings
+- /api/export
+- /api/account/delete
+
+TASKS/DCIC:
+- /api/tasks
+- /api/tasks/reschedule
+- /api/tasks/daily-bootstrap
+- /api/dcic/game-state
+- /api/dcic/confirm-start
+- /api/dcic/confirm-complete
+
+ASSISTANT:
+- /api/assistant/check
+- /api/assistant/message
+
+BUDGET/STRATEGY/XP/ANALYTICS:
+- /api/budget/context
+- /api/budget/payday-survey
+- /api/strategy/snapshot
+- /api/xp/context
+- /api/analytics/snapshot
+
+CRON/JOBS:
+- /api/cron/hourly
+- /api/cron/daily
+- /api/cron/evening
+- /api/cron/weekly
+- /api/cron/quarterly
+
+------------------------------------------------------------
+
+7) DATA LAYER MAP (PRACTICAL DOMAINS)
+
+STATE:
+- daily_state, user_streak, user_preferences, behavior_profile.
+
+EXECUTION:
+- tasks, task_events, mission progression/state, routine metadata.
+
+BUDGET:
+- users budget settings fields, budget_entries, recurring templates, lock tables,
+  payday surveys, optimization challenge logs, training logs.
+
+GROWTH/STRATEGY/XP:
+- learning sessions/streams, strategy focus/review, XP identity/rank tables.
+
+INSIGHT/TELEMETRY:
+- analytics_events, user_analytics_daily, report snapshots, closed-loop metrics.
+
+------------------------------------------------------------
+
+8) CONTROL LAYER STATUS
+
+ALREADY LIVE:
+- unified decision on dashboard + assistant.
+- adaptive mission bucketing and UMS ranking.
+- budget locks and optimization loop.
+- strategy/growth/insight page intelligence foundations.
+
+UPGRADED IN THIS ITERATION:
+- unified engine now consumes settings/profile-specific signals.
+- assistant + dashboard now pass user settings and richer profile context.
+- budget optimization now uses previous-month patterns and future cycle forecast.
+
+IDEAL NEXT STEPS:
+- global decision bus with page/tab-level hard routing.
+- cross-module policy enforcement in critical risk states.
+- causal modeling by domain/time-of-day.
+- per-user policy optimization over longer horizons (monthly/quarterly).
+
+------------------------------------------------------------
+
+9) IMPLEMENTATION NOTE
+
+This mapping is intentionally "current + ideal":
+- Current: reflects actual code paths and signals already integrated.
+- Ideal: defines the target behavior per page and per engine for the next upgrades.
