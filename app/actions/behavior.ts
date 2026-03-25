@@ -285,6 +285,49 @@ export async function getAccountabilitySettings(): Promise<AccountabilitySetting
   return defaultSettings;
 }
 
+/** Update accountability settings used by discipline/penalty loops. */
+export async function updateAccountabilitySettings(
+  patch: Partial<AccountabilitySettings>
+): Promise<void> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) throw new Error("Not authenticated");
+
+  const current = await getAccountabilitySettings();
+  const next: AccountabilitySettings = {
+    enabled: patch.enabled ?? current.enabled,
+    penaltyXPEnabled: patch.penaltyXPEnabled ?? current.penaltyXPEnabled,
+    penaltyXPAmount:
+      patch.penaltyXPAmount != null
+        ? Math.max(0, Math.min(500, Math.round(patch.penaltyXPAmount)))
+        : current.penaltyXPAmount,
+    streakFreezeTokens:
+      patch.streakFreezeTokens != null
+        ? Math.max(0, Math.min(10, Math.round(patch.streakFreezeTokens)))
+        : current.streakFreezeTokens,
+  };
+
+  await supabase.from("accountability_settings").upsert(
+    {
+      user_id: user.id,
+      enabled: next.enabled,
+      penalty_xp_enabled: next.penaltyXPEnabled,
+      penalty_xp_amount: next.penaltyXPAmount,
+      streak_freeze_tokens: next.streakFreezeTokens,
+      updated_at: new Date().toISOString(),
+    },
+    {
+      onConflict: "user_id",
+    }
+  );
+
+  revalidatePath("/settings");
+  revalidatePath("/dashboard");
+  revalidatePath("/tasks");
+}
+
 /** Apply penalty XP for missed day */
 export async function applyPenaltyXP(): Promise<void> {
   const settings = await getAccountabilitySettings();

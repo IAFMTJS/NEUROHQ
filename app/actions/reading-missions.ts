@@ -35,14 +35,14 @@ export async function ensureReadingMissionForToday(): Promise<EnsureReadingMissi
 
   const { data: existing } = await supabase
     .from("tasks")
-    .select("id")
+    .select("id, deleted_at")
     .eq("user_id", user.id)
     .eq("due_date", today)
     .eq("psychology_label", "MonthlyBookAuto")
-    .is("deleted_at", null)
     .limit(1);
   if (existing && existing.length > 0) {
-    return { created: false, debug: "already_exists" };
+    const wasDeleted = (existing[0] as { deleted_at?: string | null }).deleted_at != null;
+    return { created: false, debug: wasDeleted ? "already_deleted_today" : "already_exists" };
   }
 
   const title = `Lees ${pagesToday} pagina's in je boek`;

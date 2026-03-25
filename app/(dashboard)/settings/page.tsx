@@ -9,6 +9,7 @@ import { getBudgetSettings } from "@/app/actions/budget";
 import { getXP } from "@/app/actions/xp";
 import { getUserPreferencesOrDefaults } from "@/app/actions/preferences";
 import { getBehaviorProfile } from "@/app/actions/behavior-profile";
+import { getStudyPlan, getAccountabilitySettings } from "@/app/actions/behavior";
 import { XPBadge } from "@/components/XPBadge";
 import dynamic from "next/dynamic";
 import { SettingsSnapshotFallback } from "@/components/settings/SettingsSnapshotFallback";
@@ -32,6 +33,7 @@ const SettingsRefreshSnapshot = dynamic(() => import("@/components/settings/Sett
 const SettingsDCICModeTest = dynamic(() => import("@/components/settings/SettingsDCICModeTest").then((m) => ({ default: m.SettingsDCICModeTest })), { loading: () => null });
 const SettingsDcicModeExplain = dynamic(() => import("@/components/settings/SettingsDcicModeExplain").then((m) => ({ default: m.SettingsDcicModeExplain })), { loading: () => null });
 const BehaviorProfileSettings = dynamic(() => import("@/components/settings/BehaviorProfileSettings").then((m) => ({ default: m.BehaviorProfileSettings })), { loading: () => null });
+const SettingsEngineProfile = dynamic(() => import("@/components/settings/SettingsEngineProfile").then((m) => ({ default: m.SettingsEngineProfile })), { loading: () => null });
 const SettingsDaysOff = dynamic(() => import("@/components/settings/SettingsDaysOff").then((m) => ({ default: m.SettingsDaysOff })), { loading: () => null });
 const SettingsEmailReminders = dynamic(() => import("@/components/settings/SettingsEmailReminders").then((m) => ({ default: m.SettingsEmailReminders })), { loading: () => <div className="min-h-[80px] animate-pulse rounded-xl bg-white/5" aria-hidden /> });
 const SettingsHelpOnboarding = dynamic(() => import("@/components/settings/SettingsHelpOnboarding").then((m) => ({ default: m.SettingsHelpOnboarding })), { loading: () => null });
@@ -101,7 +103,7 @@ async function SettingsContent() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/login");
-  const [hasGoogle, userTimezone, budgetSettings, xp, pushQuoteTime, pushQuietHours, pushEnabled, prefs, behaviorProfile] = await Promise.all([
+  const [hasGoogle, userTimezone, budgetSettings, xp, pushQuoteTime, pushQuietHours, pushEnabled, prefs, behaviorProfile, studyPlan, accountabilitySettings] = await Promise.all([
     hasGoogleCalendarToken(),
     getUserTimezone(),
     getBudgetSettings(),
@@ -111,6 +113,8 @@ async function SettingsContent() {
     getPushSubscriptionEnabled(),
     getUserPreferencesOrDefaults(),
     getBehaviorProfile(),
+    getStudyPlan(),
+    getAccountabilitySettings(),
   ]);
   const appVersion = process.env.NEXT_PUBLIC_APP_VERSION ?? "1.0.0";
 
@@ -131,6 +135,10 @@ async function SettingsContent() {
           subtitle="Gedragsprofiel, routines en planningsbias"
         >
           <BehaviorProfileSettings initial={behaviorProfile} initialAutoMasterMissions={prefs.auto_master_missions} />
+          <SettingsEngineProfile
+            initialStudyPlan={studyPlan}
+            initialAccountability={accountabilitySettings}
+          />
           <SettingsDaysOff initialDaysOff={prefs.usual_days_off ?? null} initialMode={prefs.day_off_mode ?? "soft"} />
         </SettingsSubCard>
         <SettingsSubCard

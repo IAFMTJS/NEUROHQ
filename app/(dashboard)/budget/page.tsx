@@ -185,15 +185,16 @@ async function BudgetContent({ searchParams }: Props) {
   const disciplineInputsReady =
     (budgetSettings.monthly_budget_cents ?? 0) > 0 || (entries as EntryRow[]).length > 0;
 
-  const activeTab: "overview" | "execute" | "analysis" | "optimization" | "tactical" | "goals" =
-    tabParam === "execute" || tabParam === "tactical" || tabParam === "analysis" || tabParam === "goals" || tabParam === "optimization"
+  const activeTab: "overview" | "execute" | "analysis" | "optimization" | "lock" | "tactical" | "goals" =
+    tabParam === "execute" || tabParam === "tactical" || tabParam === "analysis" || tabParam === "goals" || tabParam === "optimization" || tabParam === "lock"
       ? tabParam
       : "overview";
 
   const lockPanelParams = new URLSearchParams();
   if (isHistoryView && monthParam) lockPanelParams.set("month", monthParam);
-  lockPanelParams.set("tab", "execute");
+  lockPanelParams.set("tab", "lock");
   const lockPanelHref = `/budget?${lockPanelParams.toString()}#budget-lock-control`;
+  const emergencyPanelHref = `/budget?${lockPanelParams.toString()}#budget-lock-emergency`;
 
   // Canonical page-level sources used by all sections/cards in this view.
   let expensesCents = currentMonthExpenses; // canonical spent value for active period
@@ -496,14 +497,6 @@ async function BudgetContent({ searchParams }: Props) {
         <div className="border-t border-[var(--card-border)] pt-4">
           <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-emerald-200">3. Execution Queue</p>
         </div>
-        {!historyMode && (
-          <BudgetLockControlCard
-            lockActive={budgetControlState.lockActive}
-            lockUntil={budgetControlState.lockUntil}
-            lockUntilAt={budgetControlState.lockUntilAt}
-            currency={currency}
-          />
-        )}
         <FrozenPurchaseCard activeFrozen={activeFrozen} readyForAction={readyForAction} currency={currency} goals={goals} />
         {!historyMode && !ENABLE_BUDGET_UX_EXPERIMENTS && <BudgetQuickLogCard date={today} currency={currency} />}
       </div>
@@ -771,6 +764,22 @@ async function BudgetContent({ searchParams }: Props) {
     </div>
   );
 
+  const lockSection = (
+    <section className="card-simple overflow-hidden p-0">
+      <div className="space-y-4 p-4">
+        <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-amber-200">No-spend lock</p>
+        {!historyMode && (
+          <BudgetLockControlCard
+            lockActive={budgetControlState.lockActive}
+            lockUntil={budgetControlState.lockUntil}
+            lockUntilAt={budgetControlState.lockUntilAt}
+            currency={currency}
+          />
+        )}
+      </div>
+    </section>
+  );
+
   return (
     <BudgetSnapshotProvider>
       <main className={`relative min-h-screen overflow-hidden ${hudStyles.cinematicBackdrop}`}>
@@ -818,6 +827,7 @@ async function BudgetContent({ searchParams }: Props) {
                   overview={
                     <BudgetOverviewLockGate
                       lockPanelHref={lockPanelHref}
+                      emergencyPanelHref={emergencyPanelHref}
                       lockActive={!historyMode && budgetControlState.lockActive}
                       lockUntil={budgetControlState.lockUntil}
                       lockUntilAt={budgetControlState.lockUntilAt}
@@ -829,6 +839,7 @@ async function BudgetContent({ searchParams }: Props) {
                   analysis={analysisSection}
                   goals={goalsSection}
                   optimization={optimizationSection}
+                  lock={lockSection}
                 />
               </div>
             </SciFiPanel>

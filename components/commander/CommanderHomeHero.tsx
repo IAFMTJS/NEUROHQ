@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { getMascotSrcForPage } from "@/lib/mascots";
 import { CommanderStatRing } from "./CommanderStatRing";
 import { ClientCTALink } from "./ClientCTALink";
@@ -56,6 +55,15 @@ export function CommanderHomeHero({
   const focusLow = effectiveFocusPct < 20;
   const statusBadge =
     energyLow ? "Slaap of rust eerst" : focusLow ? "Neem een korte pauze" : streakAtRisk ? "Streak in gevaar" : null;
+
+  const handleOpenBrainStatus = () => {
+    window.dispatchEvent(new CustomEvent("neurohq-open-brain-status", { detail: { source: "commander-system-overview" } }));
+    void import("sonner")
+      .then(({ toast }) => {
+        toast.message("Brain Status check-in geopend.");
+      })
+      .catch(() => {});
+  };
 
   return (
     <>
@@ -135,7 +143,7 @@ export function CommanderHomeHero({
         href={missionHref}
         label={missionLabel}
         tone="glass"
-        className="commander-cta-glass block w-full no-underline rounded-full h-[48px] min-h-[48px] px-5 text-[11px] tracking-[0.08em]"
+        className={`commander-cta-glass block w-full no-underline rounded-full h-[48px] min-h-[48px] px-5 text-[11px] tracking-[0.08em] ${dailyQuoteText ? "mt-3.5" : "mt-2"}`}
         streakAtRisk={streakAtRisk}
       >
         {missionLabel}
@@ -146,13 +154,14 @@ export function CommanderHomeHero({
         </p>
       )}
 
-      <Link
-        href="#brain-status-modal"
+      <button
+        type="button"
+        onClick={handleOpenBrainStatus}
         className="block w-full mt-2 py-2 text-center text-sm text-[var(--text-muted)] hover:text-[var(--text-secondary)] transition-colors no-underline rounded-lg border border-white/10 hover:bg-white/5"
         style={{ borderColor: "rgba(var(--mode-rgb, 0, 212, 255), 0.28)" }}
       >
         Brain Status
-      </Link>
+      </button>
     </>
   );
 }

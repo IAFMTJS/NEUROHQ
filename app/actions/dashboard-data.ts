@@ -15,7 +15,7 @@ import { getXP, getXPIdentity } from "@/app/actions/xp";
 import { getUserEconomy } from "@/app/actions/economy";
 import { getTodayEngine } from "@/app/actions/dcic/today-engine";
 import { getAutoSuggestions } from "@/app/actions/dcic/smart-suggestion";
-import { getAccountabilitySettings } from "@/app/actions/behavior";
+import { getAccountabilitySettings, getStudyPlan } from "@/app/actions/behavior";
 import { shouldShowStrategyCheckInReminder } from "@/app/actions/strategy";
 import { getFrictionSignals } from "@/app/actions/friction";
 import { getAdaptiveSuggestions } from "@/app/actions/adaptive";
@@ -139,6 +139,7 @@ async function buildCriticalPayload(ctx: TodayContext): Promise<DashboardCritica
     budgetSettings,
     currentMonthExpenses,
     accountabilitySettings,
+    studyPlan,
     showStrategyCheckIn,
     frictionSignals,
     adaptiveSuggestions,
@@ -160,6 +161,7 @@ async function buildCriticalPayload(ctx: TodayContext): Promise<DashboardCritica
     getBudgetSettings(),
     getCurrentMonthExpensesCents(),
     getAccountabilitySettings(),
+    getStudyPlan(),
     shouldShowStrategyCheckInReminder(),
     getFrictionSignals(),
     getAdaptiveSuggestions(ctx.dateStr),
@@ -211,12 +213,12 @@ async function buildCriticalPayload(ctx: TodayContext): Promise<DashboardCritica
     streakAtRisk && todaysTasks.length > 0
       ? ["Behoud je streak — 1 missie", "Behoud streak"]
       : firstTask
-        ? [`Voltooi 1 missie voor +${estimatedXP} XP`, "Start missie", "Volgende stap", `Claim +${estimatedXP} XP`]
+        ? [`Voltooi 1 missie (±${estimatedXP} XP)`, "Start missie", "Volgende stap", `Pak je volgende missie`]
         : ["Start Mission", "Start missie", "Volgende stap"];
   const missionLabel = ctaVariants[quoteDay % ctaVariants.length];
   const missionSubtext =
     todaysTasks.length > 0
-      ? "Ga naar je missies en kies de volgende taak."
+      ? `Ga naar je missies en kies de volgende taak. XP-waarde is een indicatie (tot ongeveer ${estimatedXP}).`
       : "Praat met de assistant om een taak toe te voegen.";
   const learningNeeded = weeklyLearningMinutes < weeklyLearningTarget;
   const emptyMissionMessage = learningNeeded
@@ -283,6 +285,17 @@ async function buildCriticalPayload(ctx: TodayContext): Promise<DashboardCritica
     weeklyLearning: {
       minutes: weeklyLearningMinutes,
       targetMinutes: weeklyLearningTarget,
+    },
+    studyPlan: {
+      dailyGoalMinutes: studyPlan.dailyGoalMinutes,
+      preferredTime: studyPlan.preferredTime,
+      reminderEnabled: studyPlan.reminderEnabled,
+    },
+    accountability: {
+      enabled: accountabilitySettings.enabled,
+      penaltyXPEnabled: accountabilitySettings.penaltyXPEnabled,
+      penaltyXPAmount: accountabilitySettings.penaltyXPAmount,
+      streakFreezeTokens: accountabilitySettings.streakFreezeTokens,
     },
     temporal: {
       hourOfDay: new Date().getHours(),

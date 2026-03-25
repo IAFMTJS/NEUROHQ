@@ -766,11 +766,6 @@ export function DashboardClientShell() {
                   </div>
                 </section>
               </CollapsibleDashboardCard>
-              <CollapsibleDashboardCard title="Active missions" storageKey="active-missions" defaultExpanded={true} className="lg:col-span-2">
-                <div className="dashboard-mission-hero p-4 md:p-6" data-tutorial="dashboard-active-missions">
-                  <ActiveMissionCard tasks={todaysTasks} emptyMessage={emptyMissionMessage} emptyHref={emptyMissionHref} timeWindow={timeWindow} isTimeWindowActive={isTimeWindowActive} />
-                </div>
-              </CollapsibleDashboardCard>
               <div className="flex flex-col gap-4">
                 <CollapsibleDashboardCard title="Commander status (DCIC)" storageKey="dcic-status" defaultExpanded={true} dataTutorial="dashboard-dcic">
                   <div className="p-4 md:p-6">
@@ -789,6 +784,11 @@ export function DashboardClientShell() {
                         streakAtRisk={(todayEngine as { streakAtRisk: boolean }).streakAtRisk}
                         date={(todayEngine as { date: string }).date}
                         forecasts={xpForecast as XPForecastItem[]}
+                        activeTasks={todaysTasks}
+                        emptyMissionMessage={emptyMissionMessage}
+                        emptyMissionHref={emptyMissionHref}
+                        timeWindow={timeWindow}
+                        isTimeWindowActive={isTimeWindowActive}
                       />
                     </div>
                   ) : (
@@ -807,27 +807,25 @@ export function DashboardClientShell() {
                   suggestedTaskCount={(secEnergyBudget.suggestedTaskCount as number) ?? 3}
                 />
                     <DangerousModulesCard embedded />
+                    <div data-tutorial="dashboard-energy-bar">
+                      <EnergyBudgetBar
+                        remaining={secEnergyBudget.remaining as number}
+                        capacity={secEnergyBudget.capacity as number}
+                        suggestedTaskCount={secEnergyBudget.suggestedTaskCount as number}
+                        taskUsed={secEnergyBudget.taskUsed as number}
+                        completedTaskCount={secEnergyBudget.completedTaskCount as number}
+                        taskPlanned={secEnergyBudget.taskPlanned as number}
+                        calendarCost={secEnergyBudget.calendarCost as number}
+                        energy={secEnergyBudget.energy as PoolBudget}
+                        focus={secEnergyBudget.focus as PoolBudget}
+                        load={secEnergyBudget.load as PoolBudget}
+                        insight={secEnergyBudget.insight as string}
+                        brainMode={secEnergyBudget.brainMode as BrainMode}
+                        segments={secEnergyBudget.segments as { label: string; value: number; color: string }[]}
+                      />
+                    </div>
                   </div>
                 </CollapsibleDashboardCard>
-                {(!isMinimalUI || (secEnergyBudget.remaining as number) < 20) && (
-                  <div data-tutorial="dashboard-energy-bar">
-                  <EnergyBudgetBar
-                    remaining={secEnergyBudget.remaining as number}
-                    capacity={secEnergyBudget.capacity as number}
-                    suggestedTaskCount={secEnergyBudget.suggestedTaskCount as number}
-                    taskUsed={secEnergyBudget.taskUsed as number}
-                    completedTaskCount={secEnergyBudget.completedTaskCount as number}
-                    taskPlanned={secEnergyBudget.taskPlanned as number}
-                    calendarCost={secEnergyBudget.calendarCost as number}
-                    energy={secEnergyBudget.energy as PoolBudget}
-                    focus={secEnergyBudget.focus as PoolBudget}
-                    load={secEnergyBudget.load as PoolBudget}
-                    insight={secEnergyBudget.insight as string}
-                    brainMode={secEnergyBudget.brainMode as BrainMode}
-                    segments={secEnergyBudget.segments as { label: string; value: number; color: string }[]}
-                  />
-                  </div>
-                )}
                 <div data-tutorial="dashboard-context-card">
                 <DashboardContextCard
                   prev={{

@@ -1,7 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
-import { useRouter } from "next/navigation";
+import { useEffect, useState, useTransition } from "react";
 import { toast } from "sonner";
 import { Modal } from "@/components/Modal";
 import { createTask } from "@/app/actions/tasks";
@@ -18,16 +17,25 @@ type Props = {
   activeCountToday?: number;
   maxSlotsToday?: number;
   addBlockedToday?: boolean;
+  defaultRecurrence?: "" | "daily" | "weekly" | "monthly";
 };
 
-export function QuickAddModal({ open, onClose, date, onAdded, activeCountToday, maxSlotsToday, addBlockedToday }: Props) {
-  const router = useRouter();
+export function QuickAddModal({
+  open,
+  onClose,
+  date,
+  onAdded,
+  activeCountToday,
+  maxSlotsToday,
+  addBlockedToday,
+  defaultRecurrence = "",
+}: Props) {
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
   const [title, setTitle] = useState("");
   const [dueDate, setDueDate] = useState(date);
   const [category, setCategory] = useState("");
-  const [recurrence, setRecurrence] = useState("");
+  const [recurrence, setRecurrence] = useState<"" | "daily" | "weekly" | "monthly">(defaultRecurrence);
   const [weekdays, setWeekdays] = useState<number[]>([]);
   const [impact, setImpact] = useState("");
   const [urgency, setUrgency] = useState("");
@@ -37,6 +45,12 @@ export function QuickAddModal({ open, onClose, date, onAdded, activeCountToday, 
   const [socialLoad, setSocialLoad] = useState("");
   const [priority, setPriority] = useState("");
   const [showMore, setShowMore] = useState(false);
+
+  useEffect(() => {
+    if (!open) return;
+    setDueDate(date);
+    setRecurrence(defaultRecurrence);
+  }, [open, date, defaultRecurrence]);
 
   function toggleWeekday(d: number) {
     setWeekdays((prev) => (prev.includes(d) ? prev.filter((x) => x !== d) : [...prev, d].sort((a, b) => a - b)));
@@ -111,7 +125,11 @@ export function QuickAddModal({ open, onClose, date, onAdded, activeCountToday, 
           </div>
           <div className="flex-1 min-w-[100px]">
             <label className="block text-xs font-medium text-[var(--text-muted)]">Recurrence</label>
-            <select value={recurrence} onChange={(e) => setRecurrence(e.target.value)} className="mt-1 w-full rounded-lg border border-[var(--card-border)] bg-[var(--bg-primary)] px-2.5 py-2 text-sm text-[var(--text-primary)]">
+            <select
+              value={recurrence}
+              onChange={(e) => setRecurrence((e.target.value || "") as "" | "daily" | "weekly" | "monthly")}
+              className="mt-1 w-full rounded-lg border border-[var(--card-border)] bg-[var(--bg-primary)] px-2.5 py-2 text-sm text-[var(--text-primary)]"
+            >
               <option value="">Once</option>
               <option value="daily">Daily</option>
               <option value="weekly">Weekly</option>

@@ -6,7 +6,7 @@ import { formatLockEndDateTime } from "@/lib/budget-lock-display";
 
 type Props = {
   /** Extra context for screen readers / copy */
-  context?: "execute" | "analysis" | "optimization";
+  context?: "overview" | "execute" | "analysis" | "optimization";
   /** Opens Execute tab + scrolls to lock card (hash alone fails on other tabs). */
   lockPanelHref: string;
   className?: string;
@@ -18,7 +18,9 @@ export function BudgetLockTabBanner({ context, lockPanelHref, className = "" }: 
 
   const until = formatLockEndDateTime(lockUntilAt);
   const contextHint =
-    context === "optimization"
+    context === "overview"
+      ? "Status blijft zichtbaar, maar acties lopen via de Lock-tab."
+      : context === "optimization"
       ? "Extra lock-interventies en challenges zijn uitgeschakeld."
       : context === "analysis"
         ? "Signalen blijven zichtbaar; snelle acties volgen je lock op Execute."

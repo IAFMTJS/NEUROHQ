@@ -6,7 +6,7 @@ import { BudgetLockTabBanner } from "@/components/budget/BudgetLockTabBanner";
 import { BudgetLockCountdown } from "@/components/budget/BudgetLockCountdown";
 import { formatLockEndShort } from "@/lib/budget-lock-display";
 
-type TabId = "overview" | "execute" | "analysis" | "optimization";
+type TabId = "overview" | "execute" | "analysis" | "optimization" | "lock";
 type LegacyTabId = TabId | "tactical" | "goals";
 
 type Props = {
@@ -21,6 +21,7 @@ type Props = {
   analysis: React.ReactNode;
   goals: React.ReactNode;
   optimization: React.ReactNode;
+  lock: React.ReactNode;
   lockActive: boolean;
   lockUntil: string | null;
   lockUntilAt: string | null;
@@ -70,6 +71,7 @@ export function BudgetTabsShell({
   analysis,
   goals,
   optimization,
+  lock,
   lockActive,
   lockUntil,
   lockUntilAt,
@@ -84,6 +86,7 @@ export function BudgetTabsShell({
     { id: "execute", label: "Execute", hidden: historyMode },
     { id: "analysis", label: "Intelligence" },
     { id: "optimization", label: "Optimization" },
+    { id: "lock", label: "Lock", hidden: historyMode },
   ];
 
   const setTab = (tab: TabId) => {
@@ -134,9 +137,15 @@ export function BudgetTabsShell({
       <BudgetLockStrip historyMode={historyMode} lockPanelHref={lockPanelHref} />
 
       <div className="mt-4">
-        {activeTab === "overview" && <div key="panel-overview">{overview}</div>}
+        {activeTab === "overview" && (
+          <div key="panel-overview" className="space-y-4">
+            <BudgetLockTabBanner context="overview" lockPanelHref={lockPanelHref} />
+            {overview}
+          </div>
+        )}
         {activeTab === "execute" && !historyMode && (
           <div key="panel-execute" className="space-y-4">
+            <BudgetLockTabBanner context="execute" lockPanelHref={lockPanelHref} />
             {tactical}
             {goals}
           </div>
@@ -151,6 +160,11 @@ export function BudgetTabsShell({
           <div key="panel-optimization" className="space-y-4">
             <BudgetLockTabBanner context="optimization" lockPanelHref={lockPanelHref} />
             {optimization}
+          </div>
+        )}
+        {activeTab === "lock" && !historyMode && (
+          <div key="panel-lock" className="space-y-4">
+            {lock}
           </div>
         )}
       </div>

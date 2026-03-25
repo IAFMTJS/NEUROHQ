@@ -686,21 +686,35 @@ export async function snoozeTask(id: string) {
   if (!user) throw new Error("Not authenticated");
   const { data: task } = await supabase
     .from("tasks")
-    .select("due_date, avoidance_tag")
+    .select("due_date, recurrence_rule, recurrence_weekdays, avoidance_tag")
     .eq("id", id)
     .eq("user_id", user.id)
     .single();
   if (!task?.due_date) throw new Error("Task not found");
-  const tomorrow = new Date(task.due_date + "T12:00:00Z");
-  tomorrow.setUTCDate(tomorrow.getUTCDate() + 1);
-  const tomorrowStr = tomorrow.toISOString().slice(0, 10);
+  const row = task as {
+    due_date: string;
+    recurrence_rule?: string | null;
+    recurrence_weekdays?: string | null;
+    avoidance_tag?: string | null;
+  };
+  const todayStr = todayDateString();
+  // Snooze should always move forward from "now" for overdue missions, not from an old due date.
+  const baseDate = row.due_date < todayStr ? todayStr : row.due_date;
+  const fallbackTomorrow = new Date(baseDate + "T12:00:00Z");
+  fallbackTomorrow.setUTCDate(fallbackTomorrow.getUTCDate() + 1);
+  const fallbackTomorrowStr = fallbackTomorrow.toISOString().slice(0, 10);
+  const nextRecurrence =
+    row.recurrence_rule != null
+      ? computeNextRecurrenceDate(baseDate, row.recurrence_rule, row.recurrence_weekdays ?? null)
+      : null;
+  const nextDueDate = nextRecurrence ?? fallbackTomorrowStr;
   const { error } = await supabase
     .from("tasks")
-    .update({ due_date: tomorrowStr })
+    .update({ due_date: nextDueDate })
     .eq("id", id)
     .eq("user_id", user.id);
   if (error) throw new Error(error.message);
-  const tag = (task as { avoidance_tag?: string | null }).avoidance_tag ?? null;
+  const tag = row.avoidance_tag ?? null;
   if (tag === "household" || tag === "administration" || tag === "social") {
     await incrementAvoidanceSkip(tag);
   }

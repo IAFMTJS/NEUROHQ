@@ -11,6 +11,11 @@ type Props = {
   streakAtRisk: boolean;
   date: string;
   forecasts?: XPForecastItem[];
+  activeTasks?: { id: string; title: string; carryOverCount?: number }[];
+  emptyMissionMessage?: string;
+  emptyMissionHref?: string;
+  timeWindow?: string;
+  isTimeWindowActive?: boolean;
 };
 
 function missionSlotHint(missionEquivalent: number): string | null {
@@ -40,7 +45,17 @@ const bucketConfig = {
   },
 } as const;
 
-export function TodayEngineCard({ bucketed, streakAtRisk, date, forecasts = [] }: Props) {
+export function TodayEngineCard({
+  bucketed,
+  streakAtRisk,
+  date,
+  forecasts = [],
+  activeTasks = [],
+  emptyMissionMessage = "Geen missies vandaag. Start er een op Missions.",
+  emptyMissionHref = "/tasks",
+  timeWindow,
+  isTimeWindowActive = false,
+}: Props) {
   const [explainOpen, setExplainOpen] = useState(false);
   const hasAny =
     bucketed.critical.length > 0 || bucketed.high_impact.length > 0 || bucketed.growth_boost.length > 0;
@@ -67,6 +82,42 @@ export function TodayEngineCard({ bucketed, streakAtRisk, date, forecasts = [] }
       </div>
       <div className="p-4 flex flex-col gap-4 md:flex-row md:items-stretch">
         <div className="min-w-0 flex-1 space-y-4">
+        <div className="rounded-xl border border-[var(--card-border)]/70 bg-[var(--bg-surface)]/25 p-3">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <h3 className="text-sm font-semibold text-[var(--text-primary)]">Active missions</h3>
+            {timeWindow ? (
+              <span
+                className={`rounded-full border px-2 py-0.5 text-[10px] uppercase tracking-wide ${
+                  isTimeWindowActive
+                    ? "border-emerald-400/50 text-emerald-300"
+                    : "border-[var(--card-border)] text-[var(--text-muted)]"
+                }`}
+              >
+                {timeWindow}
+              </span>
+            ) : null}
+          </div>
+          {activeTasks.length > 0 ? (
+            <ul className="mt-2 space-y-1.5">
+              {activeTasks.slice(0, 4).map((task) => (
+                <li key={task.id} className="flex items-center gap-2 text-sm text-[var(--text-secondary)]">
+                  <span
+                    className={`h-2 w-2 shrink-0 rounded-full ${
+                      task.carryOverCount && task.carryOverCount > 0 ? "bg-[#ffbf8e]" : "bg-[var(--accent-focus)]"
+                    }`}
+                    aria-hidden
+                  />
+                  <span className="min-w-0 truncate">{task.title}</span>
+                </li>
+              ))}
+              {activeTasks.length > 4 && (
+                <li className="text-xs text-[var(--text-muted)]">+{activeTasks.length - 4} extra missies</li>
+              )}
+            </ul>
+          ) : (
+            <p className="mt-2 text-sm text-[var(--text-muted)]">{emptyMissionMessage}</p>
+          )}
+        </div>
         {!hasAny ? (
           <p className="text-sm text-[var(--text-muted)]">Geen missies vandaag. Start er één op Missions.</p>
         ) : (
@@ -167,7 +218,7 @@ export function TodayEngineCard({ bucketed, streakAtRisk, date, forecasts = [] }
         </div>
         <div className="flex w-full shrink-0 flex-col justify-center gap-2 md:w-44 md:border-l md:border-[var(--card-border)] md:pl-4">
           <Link
-            href="/tasks"
+            href={activeTasks.length > 0 ? "/tasks" : emptyMissionHref}
             className="neon-button inline-flex min-h-[44px] w-full items-center justify-center rounded-xl px-4 py-2.5 text-center text-sm font-semibold"
           >
             Naar Missions

@@ -33,6 +33,17 @@ export type UnifiedDecisionInput = {
     minutes: number | null;
     targetMinutes: number | null;
   } | null;
+  studyPlan?: {
+    dailyGoalMinutes?: number | null;
+    preferredTime?: string | null;
+    reminderEnabled?: boolean;
+  } | null;
+  accountability?: {
+    enabled?: boolean;
+    penaltyXPEnabled?: boolean;
+    penaltyXPAmount?: number | null;
+    streakFreezeTokens?: number | null;
+  } | null;
   temporal?: {
     hourOfDay?: number | null;
     dayOfWeek?: number | null;
@@ -117,6 +128,14 @@ function currentHour(input: UnifiedDecisionInput): number {
     return Math.max(0, Math.min(23, Math.floor(raw)));
   }
   return new Date().getHours();
+}
+
+function preferredHour(input: UnifiedDecisionInput): number | null {
+  const raw = input.studyPlan?.preferredTime;
+  if (!raw || !/^\d{2}:\d{2}$/.test(raw)) return null;
+  const hh = Number(raw.slice(0, 2));
+  if (!Number.isFinite(hh)) return null;
+  return Math.max(0, Math.min(23, hh));
 }
 
 function getCompletionTrend(
@@ -216,7 +235,22 @@ export function deriveUnifiedDecision(input: UnifiedDecisionInput): UnifiedDecis
   const suggestedCapacity = input.suggestedTaskCapacity ?? null;
   const completedTaskCount = Math.max(0, input.completedTaskCount ?? 0);
   const hour = currentHour(input);
+  const preferredExecutionHour = preferredHour(input);
+  const preferredWindowMatch =
+    preferredExecutionHour != null && Math.abs(hour - preferredExecutionHour) <= 2;
   const isLateDay = hour >= LATE_DAY_HOUR;
+  const accountabilityEnabled = input.accountability?.enabled === true;
+  const penaltyXPEnabled = input.accountability?.penaltyXPEnabled === true;
+  const penaltyXPAmount = input.accountability?.penaltyXPAmount ?? null;
+  const penaltyPressureHigh =
+    accountabilityEnabled &&
+    penaltyXPEnabled &&
+    penaltyXPAmount != null &&
+    penaltyXPAmount >= 75;
+  const freezeTokens = input.accountability?.streakFreezeTokens ?? 0;
+  const learningTargetDaily = input.studyPlan?.dailyGoalMinutes ?? null;
+  const learningTargetAggressive = learningTargetDaily != null && learningTargetDaily >= 45;
+  const learningRemindersEnabled = input.studyPlan?.reminderEnabled === true;
   const overloadNow =
     suggestedCapacity != null &&
     safeTasksCount >= suggestedCapacity + OVERLOAD_BUFFER_TASKS;
@@ -318,20 +352,47 @@ export function deriveUnifiedDecision(input: UnifiedDecisionInput): UnifiedDecis
     );
   }
 
-  if (effectiveLowBrainCapacity && (avoidancePressureHigh || performanceDrift)) {
+  if (preferredWindowMatch && !effectiveLowBrainCapacity && safeTasksCount > 0) {
+    candidates.push(
+      candidate({
+        score: 72 + (freezeTokens > 0 ? 3 : 0),
+        decisionType: "execute_next_mission",
+        source: "temporal_model",
+        title: "Gebruik je voorkeursvenster",
+        description:
+          "Dit is je ingestelde focusmoment. Start nu 1 missie met hoge slagingskans zodat de rest van je dag lichter blijft.",
+        href: "/tasks",
+        cta: "Start in focusvenster",
+        surface: "tasks",
+        horizon: "present",
+        reasonCodes: [
+          "preferred_execution_window",
+          freezeTokens > 0 ? "freeze_tokens_available" : "no_freeze_tokens",
+        ],
+      })
+    );
+  }
+
+  if (
+    (effectiveLowBrainCapacity && (avoidancePressureHigh || performanceDrift)) ||
+    (penaltyPressureHigh && performanceDrift)
+  ) {
     const driftLabel =
       completionTrend === "declining"
         ? "completion daalt t.o.v. je 30d-baseline"
         : avoidanceTrend === "worse"
           ? "avoidance stijgt t.o.v. je 30d-baseline"
           : "frictie ligt hoger dan normaal";
+    const pressureSuffix = penaltyPressureHigh
+      ? " Je accountability-penalty staat hoog, dus kies nu vooral op zekere completion."
+      : "";
     candidates.push(
       candidate({
-        score: 82,
+        score: 82 + (penaltyPressureHigh ? 6 : 0),
         decisionType: "recovery_protocol",
         source: "adaptive_loop",
         title: "Schakel over naar recovery-protocol",
-        description: `Lage capaciteit + adaptieve signalen (${driftLabel}). Kies 1 korte missie om stress te verlagen en momentum te herstellen.`,
+        description: `Lage capaciteit + adaptieve signalen (${driftLabel}). Kies 1 korte missie om stress te verlagen en momentum te herstellen.${pressureSuffix}`,
         href: "/tasks",
         cta: "Open recovery flow",
         surface: "tasks",
@@ -341,6 +402,7 @@ export function deriveUnifiedDecision(input: UnifiedDecisionInput): UnifiedDecis
           lowCapacityByEmotion ? "emotion_capacity_penalty" : "brain_capacity_penalty",
           "adaptive_drift",
           "avoidance_or_decline",
+          penaltyPressureHigh ? "penalty_pressure_high" : "penalty_pressure_low",
         ],
       })
     );
@@ -412,19 +474,25 @@ export function deriveUnifiedDecision(input: UnifiedDecisionInput): UnifiedDecis
   }
 
   if (safeTasksCount === 0) {
+    const createMissionScore = 79 - (penaltyPressureHigh ? 8 : 0);
     candidates.push(
       candidate({
-        score: 79,
+        score: createMissionScore,
         decisionType: "create_mission",
         source: "assistant_bridge",
         title: "Genereer je volgende missie",
         description:
-          "Geen actieve missie vandaag. Laat assistant of missions een haalbare volgende stap bouwen.",
+          penaltyPressureHigh
+            ? "Geen actieve missie vandaag. Zet 1 haalbare missie klaar met hoge slagingskans, zodat je penalty-risico laag blijft."
+            : "Geen actieve missie vandaag. Laat assistant of missions een haalbare volgende stap bouwen.",
         href: "/assistant",
         cta: "Create mission",
         surface: "assistant",
         horizon: "present",
-        reasonCodes: ["no_active_tasks"],
+        reasonCodes: [
+          "no_active_tasks",
+          penaltyPressureHigh ? "penalty_pressure_high" : "penalty_pressure_low",
+        ],
       })
     );
   }
@@ -441,19 +509,26 @@ export function deriveUnifiedDecision(input: UnifiedDecisionInput): UnifiedDecis
         : null;
     candidates.push(
       candidate({
-        score: 66,
+        score:
+          66 +
+          (learningTargetAggressive ? 6 : 0) +
+          (learningRemindersEnabled ? 2 : 0),
         decisionType: "learning_block",
         source: "adaptive_loop",
         title: "Plan een korte growth-block",
         description:
           shortfall != null
-            ? `Je zit ongeveer ${shortfall} minuten onder je weekdoel. Plan nu 20-30 minuten learning om je weeklijn te beschermen.`
-            : "Je learning-consistentie daalt. Plan nu een korte growth-block om je weeklijn te beschermen.",
+            ? `Je zit ongeveer ${shortfall} minuten onder je weekdoel. Plan nu 20-30 minuten learning om je weeklijn te beschermen.${learningTargetAggressive ? " Je hebt een hoger persoonlijk dagdoel ingesteld, dus consistency weegt extra zwaar." : ""}`
+            : `Je learning-consistentie daalt. Plan nu een korte growth-block om je weeklijn te beschermen.${learningRemindersEnabled ? " Reminder-profiel staat aan, dus dit moment past bij je ingestelde ritme." : ""}`,
         href: "/learning",
         cta: "Open growth command",
         surface: "dashboard",
         horizon: "future",
-        reasonCodes: ["learning_behind", "consistency_protection"],
+        reasonCodes: [
+          "learning_behind",
+          "consistency_protection",
+          learningTargetAggressive ? "aggressive_learning_goal" : "standard_learning_goal",
+        ],
       })
     );
   }
@@ -463,13 +538,16 @@ export function deriveUnifiedDecision(input: UnifiedDecisionInput): UnifiedDecis
     effectiveLowBrainCapacity ||
     avoidancePressureHigh ||
     (budgetUnderStressBuffer && lowDiscipline) ||
-    hardDayOff
+    hardDayOff ||
+    penaltyPressureHigh
   ) {
     const pressureReason =
       avoidancePressureHigh
         ? "Je recente skip/delete patroon is hoog; pak een kleine zekere completion."
         : hardDayOff
           ? "Vandaag is ingesteld als vrije dag; kies een lichte onderhoudsmissie om ritme te bewaren zonder overload."
+        : penaltyPressureHigh
+          ? "Je accountability-penalty staat hoog. Kies een missie met lage frictie en hoge afrondkans."
         : budgetUnderStressBuffer
           ? "Kleine budgetbuffer kan extra stress geven; houd je missie licht en haalbaar."
           : "Je capaciteit is krap. Pak een lage-frictie missie om momentum te houden.";
@@ -478,7 +556,8 @@ export function deriveUnifiedDecision(input: UnifiedDecisionInput): UnifiedDecis
       (effectiveLowBrainCapacity ? 8 : 0) +
       (avoidancePressureHigh ? 6 : 0) +
       ((input.energyRemaining ?? 0) < 0 ? 4 : 0) +
-      (hardDayOff ? 4 : 0);
+      (hardDayOff ? 4 : 0) +
+      (penaltyPressureHigh ? 5 : 0);
     candidates.push(
       candidate({
         score,
@@ -493,6 +572,7 @@ export function deriveUnifiedDecision(input: UnifiedDecisionInput): UnifiedDecis
         reasonCodes: [
           effectiveLowBrainCapacity ? "low_capacity" : "energy_guard",
           avoidancePressureHigh ? "avoidance_pressure" : "friction_control",
+          penaltyPressureHigh ? "penalty_pressure_high" : "penalty_pressure_low",
         ],
       })
     );

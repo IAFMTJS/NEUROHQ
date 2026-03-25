@@ -110,9 +110,16 @@ export const BrainStatusCard = memo(function BrainStatusCard({ date, initial, ye
         window.history.replaceState(null, "", window.location.pathname + window.location.search);
       }
     };
+    const openFromDashboard = () => {
+      setModalOpen(true);
+    };
     openIfHash();
     window.addEventListener("hashchange", openIfHash);
-    return () => window.removeEventListener("hashchange", openIfHash);
+    window.addEventListener("neurohq-open-brain-status", openFromDashboard as EventListener);
+    return () => {
+      window.removeEventListener("hashchange", openIfHash);
+      window.removeEventListener("neurohq-open-brain-status", openFromDashboard as EventListener);
+    };
   }, []);
 
   const energyPct = scale1To10ToPct(currentInitial.energy);

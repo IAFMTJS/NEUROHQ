@@ -1,9 +1,10 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
 import { setBudgetNoSpendLock, submitEmergencyExpenseReason } from "@/app/actions/budget-intelligence";
 import { BudgetLockCountdown } from "@/components/budget/BudgetLockCountdown";
 import { formatLockEndDateTime } from "@/lib/budget-lock-display";
+import { Modal } from "@/components/Modal";
 
 type Props = {
   lockActive: boolean;
@@ -19,7 +20,21 @@ export function BudgetLockControlCard({ lockActive, lockUntil, lockUntilAt, curr
   const [reason, setReason] = useState("");
   const [emergencyReason, setEmergencyReason] = useState("");
   const [emergencyAmount, setEmergencyAmount] = useState("0");
+  const [emergencyOpen, setEmergencyOpen] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
+
+  useEffect(() => {
+    const openIfHash = () => {
+      if (typeof window === "undefined") return;
+      if (window.location.hash === "#budget-lock-emergency") {
+        setEmergencyOpen(true);
+        window.history.replaceState(null, "", `${window.location.pathname}${window.location.search}#budget-lock-control`);
+      }
+    };
+    openIfHash();
+    window.addEventListener("hashchange", openIfHash);
+    return () => window.removeEventListener("hashchange", openIfHash);
+  }, []);
 
   return (
     <section id="budget-lock-control" className="card-simple space-y-3">
@@ -93,44 +108,73 @@ export function BudgetLockControlCard({ lockActive, lockUntil, lockUntilAt, curr
 
       <div className="border-t border-[var(--card-border)] pt-3">
         <p className="text-xs font-medium text-[var(--text-secondary)]">Nooduitgave reden loggen</p>
-        <div className="mt-2 grid gap-2 sm:grid-cols-2">
-          <label className="text-xs text-[var(--text-muted)]">
-            Bedrag ({currency})
-            <input
-              value={emergencyAmount}
-              onChange={(e) => setEmergencyAmount(e.target.value)}
-              className="mt-1 w-full rounded-lg border border-[var(--card-border)] bg-[var(--bg-primary)] px-2 py-1.5 text-sm"
-            />
-          </label>
-          <label className="text-xs text-[var(--text-muted)]">
-            Waarom noodzakelijk?
-            <input
-              value={emergencyReason}
-              onChange={(e) => setEmergencyReason(e.target.value)}
-              className="mt-1 w-full rounded-lg border border-[var(--card-border)] bg-[var(--bg-primary)] px-2 py-1.5 text-sm"
-            />
-          </label>
-        </div>
         <button
+          id="budget-lock-emergency"
           type="button"
-          disabled={pending || emergencyReason.trim().length < 4}
           className="mt-2 rounded-lg border border-[var(--card-border)] px-3 py-2 text-xs font-semibold"
-          onClick={() =>
-            startTransition(async () => {
-              const amountCents = Math.round(Number(emergencyAmount || 0) * 100);
-              await submitEmergencyExpenseReason({
-                amountCents,
-                category: "emergency",
-                reason: emergencyReason,
-              });
-              setMessage("Nooduitgave reden gelogd voor training.");
-            })
-          }
+          onClick={() => setEmergencyOpen(true)}
         >
-          Log nooduitgave reden
+          Nooduitgave toevoegen
         </button>
       </div>
       {message && <p className="text-xs text-[var(--text-muted)]">{message}</p>}
+
+      <Modal
+        open={emergencyOpen}
+        onClose={() => setEmergencyOpen(false)}
+        title="Nooduitgave toevoegen"
+        subtitle="Log bedrag + reden om lock-beslissingen te trainen."
+        size="md"
+      >
+        <div className="space-y-3">
+          <div className="grid gap-3 sm:grid-cols-2">
+            <label className="text-xs text-[var(--text-muted)]">
+              Bedrag ({currency})
+              <input
+                value={emergencyAmount}
+                onChange={(e) => setEmergencyAmount(e.target.value)}
+                className="mt-1 w-full rounded-lg border border-[var(--card-border)] bg-[var(--bg-primary)] px-2 py-2 text-sm"
+              />
+            </label>
+            <label className="text-xs text-[var(--text-muted)]">
+              Waarom noodzakelijk?
+              <input
+                value={emergencyReason}
+                onChange={(e) => setEmergencyReason(e.target.value)}
+                className="mt-1 w-full rounded-lg border border-[var(--card-border)] bg-[var(--bg-primary)] px-2 py-2 text-sm"
+              />
+            </label>
+          </div>
+          <div className="flex justify-end gap-2">
+            <button
+              type="button"
+              className="rounded-lg border border-[var(--card-border)] px-3 py-2 text-xs font-semibold"
+              onClick={() => setEmergencyOpen(false)}
+            >
+              Sluiten
+            </button>
+            <button
+              type="button"
+              disabled={pending || emergencyReason.trim().length < 4}
+              className="rounded-lg bg-[var(--accent-focus)] px-3 py-2 text-xs font-semibold text-black disabled:opacity-60"
+              onClick={() =>
+                startTransition(async () => {
+                  const amountCents = Math.round(Number(emergencyAmount || 0) * 100);
+                  await submitEmergencyExpenseReason({
+                    amountCents,
+                    category: "emergency",
+                    reason: emergencyReason,
+                  });
+                  setMessage("Nooduitgave reden gelogd voor training.");
+                  setEmergencyOpen(false);
+                })
+              }
+            >
+              {pending ? "Opslaan..." : "Opslaan"}
+            </button>
+          </div>
+        </div>
+      </Modal>
     </section>
   );
 }

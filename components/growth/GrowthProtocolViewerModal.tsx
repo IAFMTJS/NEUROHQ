@@ -1,8 +1,9 @@
 "use client";
 
-import { useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import type { ProtocolLibraryRow } from "@/app/actions/protocol-library";
+import { updateProtocolLibraryContent } from "@/app/actions/protocol-library";
 import type { ProtocolProgressState } from "@/app/actions/protocol-progress";
 import { commitProtocolWeekToMissions } from "@/app/actions/protocol-missions";
 import { setGrowthFocusProtocol } from "@/app/actions/growth-focus";
@@ -39,6 +40,10 @@ const TIERS: DifficultyTier[] = ["easy", "medium", "hard"];
 export function GrowthProtocolViewerModal({ protocol, progress, engineTier, onClose }: Props) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
+  const [editOpen, setEditOpen] = useState(false);
+  const [editTitle, setEditTitle] = useState(protocol.title);
+  const [editSummary, setEditSummary] = useState(protocol.summary ?? "");
+  const [editBody, setEditBody] = useState(protocol.body_md ?? "");
 
   const def = parseProtocolDefinition(protocol.definition_json);
   const tier = progress?.preferred_tier ?? "medium";
@@ -48,6 +53,13 @@ export function GrowthProtocolViewerModal({ protocol, progress, engineTier, onCl
   const week = def ? weekForIndex(def, weekIndex) : undefined;
   const phase = def ? phaseForWeek(def, weekIndex) : undefined;
   const maxW = def ? maxWeekIndex(def) : 1;
+
+  useEffect(() => {
+    setEditOpen(false);
+    setEditTitle(protocol.title);
+    setEditSummary(protocol.summary ?? "");
+    setEditBody(protocol.body_md ?? "");
+  }, [protocol.id, protocol.title, protocol.summary, protocol.body_md]);
 
   function refresh() {
     router.refresh();
@@ -84,7 +96,86 @@ export function GrowthProtocolViewerModal({ protocol, progress, engineTier, onCl
           >
             {pending ? "Bezig…" : "Markeer als mijn focus"}
           </button>
+          <button
+            type="button"
+            disabled={pending}
+            className="rounded-lg border border-[var(--card-border)] px-3 py-1.5 text-xs font-semibold text-[var(--text-secondary)] hover:border-[var(--semantic-accent)]/40"
+            onClick={() => setEditOpen((v) => !v)}
+          >
+            {editOpen ? "Editor sluiten" : "Bewerk inhoud"}
+          </button>
         </div>
+
+        {editOpen && (
+          <section className="mb-4 space-y-3 rounded-xl border border-[var(--semantic-accent)]/35 bg-[var(--bg-soft)]/65 p-3">
+            <p className="text-[10px] font-bold uppercase tracking-wide text-[var(--semantic-accent)]">
+              Protocol editor
+            </p>
+            <label className="block text-xs text-[var(--text-muted)]">
+              Titel
+              <input
+                value={editTitle}
+                onChange={(e) => setEditTitle(e.target.value)}
+                className="mt-1 w-full rounded-lg border border-[var(--card-border)] bg-[var(--bg-primary)] px-3 py-2 text-sm text-[var(--text-primary)]"
+              />
+            </label>
+            <label className="block text-xs text-[var(--text-muted)]">
+              Samenvatting
+              <input
+                value={editSummary}
+                onChange={(e) => setEditSummary(e.target.value)}
+                className="mt-1 w-full rounded-lg border border-[var(--card-border)] bg-[var(--bg-primary)] px-3 py-2 text-sm text-[var(--text-primary)]"
+              />
+            </label>
+            <label className="block text-xs text-[var(--text-muted)]">
+              Inhoud (Markdown)
+              <textarea
+                value={editBody}
+                onChange={(e) => setEditBody(e.target.value)}
+                rows={10}
+                className="mt-1 w-full rounded-lg border border-[var(--card-border)] bg-[var(--bg-primary)] px-3 py-2 text-sm text-[var(--text-primary)]"
+              />
+            </label>
+            <div className="flex flex-wrap justify-end gap-2">
+              <button
+                type="button"
+                className="rounded-lg border border-[var(--card-border)] px-3 py-2 text-xs font-semibold"
+                onClick={() => {
+                  setEditTitle(protocol.title);
+                  setEditSummary(protocol.summary ?? "");
+                  setEditBody(protocol.body_md ?? "");
+                  setEditOpen(false);
+                }}
+              >
+                Annuleer
+              </button>
+              <button
+                type="button"
+                disabled={pending}
+                className="rounded-lg bg-[var(--semantic-accent)] px-3 py-2 text-xs font-semibold text-black disabled:opacity-50"
+                onClick={() =>
+                  startTransition(async () => {
+                    try {
+                      await updateProtocolLibraryContent({
+                        id: protocol.id,
+                        title: editTitle,
+                        summary: editSummary,
+                        body_md: editBody,
+                      });
+                      neuroToast.success("Protocolinhoud opgeslagen.");
+                      setEditOpen(false);
+                      refresh();
+                    } catch (e) {
+                      neuroToast.error(e instanceof Error ? e.message : "Opslaan mislukt.");
+                    }
+                  })
+                }
+              >
+                {pending ? "Opslaan…" : "Opslaan"}
+              </button>
+            </div>
+          </section>
+        )}
 
         {def && (
           <div className="mb-4 flex flex-wrap items-center gap-2 text-[11px] text-[var(--text-muted)]">
