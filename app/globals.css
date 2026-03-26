@@ -2284,6 +2284,11 @@ header h1 { margin: 0; }
   margin-bottom: 0.25rem;
   text-shadow: 0 0 12px rgba(var(--mode-rgb), 0.25);
 }
+
+/* System overview icon rail: slight overlap + shadow so buttons read over mascot */
+.dashboard-cinematic .bridge-system-overview-rail {
+  filter: drop-shadow(-6px 2px 14px rgba(0, 0, 0, 0.42));
+}
 .dashboard-bento {
   position: relative;
   z-index: 3;

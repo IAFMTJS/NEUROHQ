@@ -27,6 +27,8 @@ type Props = {
   autoSuggestions?: { text: string; type: string }[];
   /** When true, skip the inner "Dashboard / System Overview" title (e.g. when HQHeader is shown above). */
   hideBuiltInTitle?: boolean;
+  /** Dashboard bridge: left-align column so module icons can sit on the right with overlay. */
+  bridgeLayout?: boolean;
 };
 
 export function CommanderHomeHero({
@@ -43,6 +45,7 @@ export function CommanderHomeHero({
   dailyQuoteAuthor,
   autoSuggestions = [],
   hideBuiltInTitle = false,
+  bridgeLayout = false,
 }: Props) {
   const todayDailyState = useHQStore((s) => s.todayDailyState);
   const effectiveEnergyPct =
@@ -68,17 +71,17 @@ export function CommanderHomeHero({
       .catch(() => {});
   };
 
-  return (
+  const inner = (
     <>
       {!hideBuiltInTitle && (
-        <header>
+        <header className={bridgeLayout ? "text-left" : undefined}>
           <h1>Dashboard</h1>
           <p className="text-soft">System Overview</p>
         </header>
       )}
 
       <section
-        className="mascot-hero mascot-hero-top relative"
+        className={`mascot-hero mascot-hero-top relative${bridgeLayout ? " mx-0 max-w-[min(280px,85vw)]" : ""}`}
         aria-hidden
         data-energy-low={energyLow || undefined}
         data-focus-low={focusLow || undefined}
@@ -109,14 +112,14 @@ export function CommanderHomeHero({
         </ul>
       )}
 
-      <section className="stats">
+      <section className={`stats${bridgeLayout ? " !justify-start gap-3 md:gap-4" : ""}`}>
         <CommanderStatRing value={effectiveEnergyPct} variant="energy" />
         <CommanderStatRing value={effectiveFocusPct} variant="focus" />
         <CommanderStatRing value={effectiveLoadPct} variant="load" />
       </section>
       {dailyQuoteText && (
         <div
-          className="mx-auto w-full max-w-[520px] rounded-xl px-3 py-2.5 text-center"
+          className={`w-full max-w-[520px] rounded-xl px-3 py-2.5 ${bridgeLayout ? "mx-0 text-left" : "mx-auto text-center"}`}
           style={{
             border: "1px solid rgba(var(--mode-rgb, 0, 212, 255), 0.35)",
             background:
@@ -154,7 +157,7 @@ export function CommanderHomeHero({
         {missionLabel}
       </ClientCTALink>
       {missionSubtext && (
-        <p className="mt-1.5 text-xs text-[var(--text-muted)] text-center">
+        <p className={`mt-1.5 text-xs text-[var(--text-muted)] ${bridgeLayout ? "text-left" : "text-center"}`}>
           {missionSubtext}
         </p>
       )}
@@ -162,11 +165,16 @@ export function CommanderHomeHero({
       <button
         type="button"
         onClick={handleOpenBrainStatus}
-        className="block w-full mt-2 py-2 text-center text-sm text-[var(--text-muted)] hover:text-[var(--text-secondary)] transition-colors no-underline rounded-lg border border-white/10 hover:bg-white/5"
+        className={`block w-full mt-2 py-2 text-sm text-[var(--text-muted)] hover:text-[var(--text-secondary)] transition-colors no-underline rounded-lg border border-white/10 hover:bg-white/5 ${bridgeLayout ? "text-left px-1" : "text-center"}`}
         style={{ borderColor: "rgba(var(--mode-rgb, 0, 212, 255), 0.28)" }}
       >
         Brain Status
       </button>
     </>
   );
+
+  if (bridgeLayout) {
+    return <div className="bridge-layout-hero text-left">{inner}</div>;
+  }
+  return inner;
 }

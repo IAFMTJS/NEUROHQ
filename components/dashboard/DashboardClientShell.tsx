@@ -652,9 +652,13 @@ export function DashboardClientShell() {
                 <CornerNode corner="top-left" />
                 <CornerNode corner="top-right" />
                 <span className="dashboard-bridge-label shrink-0" aria-hidden>Command</span>
-                <div className="dashboard-command-bridge flex flex-row items-start gap-2 sm:gap-3">
-                  <div className="min-w-0 flex-1">
+                <div
+                  className="dashboard-command-bridge relative mx-auto w-full max-w-lg"
+                  data-tutorial="dashboard-command-bridge"
+                >
+                  <div className="relative z-0 w-full">
                     <CommanderHomeHero
+                      bridgeLayout
                       hideBuiltInTitle={false}
                       energyPct={heroEnergyPct}
                       focusPct={heroFocusPct}
@@ -670,9 +674,11 @@ export function DashboardClientShell() {
                       autoSuggestions={autoSuggestions}
                     />
                   </div>
-                  <SystemOverviewCard
-                    compact
-                    sections={[
+                  <div className="pointer-events-none absolute right-0 top-[5%] z-20 sm:top-[8%]">
+                    <div className="bridge-system-overview-rail pointer-events-auto -translate-x-2 sm:-translate-x-3">
+                      <SystemOverviewCard
+                        compact
+                        sections={[
                       {
                         id: "level",
                         icon: "🧭",
@@ -801,8 +807,10 @@ export function DashboardClientShell() {
                           </div>
                         ),
                       },
-                    ]}
-                  />
+                        ]}
+                      />
+                    </div>
+                  </div>
                 </div>
               </SciFiPanel>
             </div>
