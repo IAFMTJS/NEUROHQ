@@ -11,6 +11,7 @@ import { revalidatePath, unstable_cache } from "next/cache";
 import { revalidateTagMax } from "@/lib/revalidate";
 import { classifyTaskPreset, deriveBaseXpFromIntensityDuration } from "@/lib/task-presets";
 import { parseMissionProgressionFromTaskTags } from "@/lib/mission-progression";
+import { todayDateString } from "@/lib/utils/timezone";
 
 /** Explicit column list for task reads (avoids select * per SUPABASE_PERFORMANCE_GUIDELINES). */
 const TASK_SELECT_COLUMNS =
