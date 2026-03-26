@@ -1,4 +1,8 @@
 import type { BrainMode } from "@/lib/brain-mode";
+import {
+  rankUnifiedDecisionCandidates,
+  type UnifiedDecisionRankingMode,
+} from "@/lib/unified-decision-ranker";
 
 export type UnifiedDecisionInput = {
   dateStr: string;
@@ -70,7 +74,7 @@ export type UnifiedDecisionInput = {
   };
 };
 
-export type UnifiedDecision = {
+type UnifiedDecisionCore = {
   decisionId: string;
   decisionType:
     | "check_in"
@@ -100,14 +104,41 @@ export type UnifiedDecision = {
   reasonCodes: string[];
 };
 
+export type UnifiedDecision = UnifiedDecisionCore & {
+  engineVersion: string;
+  rankingMode: UnifiedDecisionRankingMode;
+  modelVersion: string;
+  selectedScore: number;
+  candidateCount: number;
+  candidateSnapshot: UnifiedDecisionCandidateSnapshot[];
+  featureSnapshot: UnifiedDecisionFeatureSnapshot;
+};
+
+export type UnifiedDecisionCandidateSnapshot = {
+  candidateId: string;
+  decisionType: UnifiedDecision["decisionType"];
+  source: UnifiedDecision["source"];
+  score: number;
+  confidence: UnifiedDecision["confidence"];
+  horizon: UnifiedDecision["horizon"];
+  reasonCodes: string[];
+};
+
+export type UnifiedDecisionFeatureSnapshot = Record<
+  string,
+  string | number | boolean | null
+>;
+
 const LOW_BUDGET_STRESS_CENTS = 5_000; // ~EUR 50
 const LATE_DAY_HOUR = 19;
 const OVERLOAD_BUFFER_TASKS = 2;
 const LEARNING_BEHIND_RATIO = 0.7;
 const LOW_ENERGY_EMOTIONS = new Set(["drained", "sleepy", "angry"]);
 const HIGH_DRIVE_EMOTIONS = new Set(["motivated", "excited", "hyped", "evil"]);
+const UNIFIED_DECISION_ENGINE_VERSION = "ude-v1-hybrid-ready";
+const DEFAULT_MODEL_VERSION = "rules-v1";
 
-type DecisionCandidate = Omit<UnifiedDecision, "decisionId"> & {
+type DecisionCandidate = Omit<UnifiedDecisionCore, "decisionId"> & {
   score: number;
 };
 
@@ -166,6 +197,49 @@ function normalizeEmotion(input: UnifiedDecisionInput): string | null {
   const raw = input.settings?.selectedEmotion;
   if (!raw) return null;
   return raw.trim().toLowerCase();
+}
+
+function buildFeatureSnapshot(input: UnifiedDecisionInput): UnifiedDecisionFeatureSnapshot {
+  return {
+    hasBrainCheckIn: input.hasBrainCheckIn,
+    tasksCount: Math.max(0, input.tasksCount),
+    carryOverCount: Math.max(0, input.carryOverCount ?? 0),
+    streakAtRisk: input.streakAtRisk === true,
+    budgetRemainingCents: input.budgetRemainingCents ?? null,
+    projectedEndBalanceCents:
+      input.budgetIntelligence?.projectedEndBalanceCents ?? null,
+    monthlyTrendPct: input.budgetIntelligence?.monthlyTrendPct ?? null,
+    daysToPayday: input.budgetIntelligence?.daysToPayday ?? null,
+    energyRemaining: input.energyRemaining ?? null,
+    suggestedTaskCapacity: input.suggestedTaskCapacity ?? null,
+    completedTaskCount: input.completedTaskCount ?? null,
+    brainEnergy: input.brainState?.energy ?? null,
+    brainFocus: input.brainState?.focus ?? null,
+    brainSensoryLoad: input.brainState?.sensoryLoad ?? null,
+    brainMentalBattery: input.brainState?.mentalBattery ?? null,
+    completionRate7d: input.adaptiveSignals?.completionRate ?? null,
+    skipDeleteRate7d: input.adaptiveSignals?.skipDeleteRate ?? null,
+    completionRate30d: input.adaptiveSignals?.completionRate30d ?? null,
+    skipDeleteRate30d: input.adaptiveSignals?.skipDeleteRate30d ?? null,
+    adaptiveFrictionHigh: input.adaptiveSignals?.frictionHigh ?? false,
+    weeklyLearningMinutes: input.weeklyLearning?.minutes ?? null,
+    weeklyLearningTargetMinutes: input.weeklyLearning?.targetMinutes ?? null,
+    studyDailyGoalMinutes: input.studyPlan?.dailyGoalMinutes ?? null,
+    preferredExecutionHour: preferredHour(input),
+    reminderEnabled: input.studyPlan?.reminderEnabled ?? false,
+    accountabilityEnabled: input.accountability?.enabled ?? false,
+    penaltyXPEnabled: input.accountability?.penaltyXPEnabled ?? false,
+    penaltyXPAmount: input.accountability?.penaltyXPAmount ?? null,
+    streakFreezeTokens: input.accountability?.streakFreezeTokens ?? null,
+    selectedEmotion: normalizeEmotion(input),
+    isUsualDayOff: input.settings?.isUsualDayOff ?? false,
+    dayOffMode: input.settings?.dayOffMode ?? null,
+    confrontationMode: input.behavior?.confrontationMode ?? null,
+    disciplineLevel: input.behavior?.disciplineLevel ?? null,
+    energyPattern: input.behavior?.energyPattern ?? null,
+    hourOfDay: currentHour(input),
+    dayOfWeek: input.temporal?.dayOfWeek ?? null,
+  };
 }
 
 function isLowBrainCapacity(input: UnifiedDecisionInput): boolean {
@@ -274,8 +348,10 @@ export function deriveUnifiedDecision(input: UnifiedDecisionInput): UnifiedDecis
       : null;
   const learningBehind =
     learningRatio != null && learningRatio < LEARNING_BEHIND_RATIO;
+  const featureSnapshot = buildFeatureSnapshot(input);
 
   if (!input.hasBrainCheckIn) {
+    const reasonCodes = ["missing_brain_checkin"];
     return {
       decisionId: `${baseId}-check_in`,
       decisionType: "check_in",
@@ -287,7 +363,24 @@ export function deriveUnifiedDecision(input: UnifiedDecisionInput): UnifiedDecis
       surface: "dashboard",
       confidence: "high",
       horizon: "present",
-      reasonCodes: ["missing_brain_checkin"],
+      reasonCodes,
+      engineVersion: UNIFIED_DECISION_ENGINE_VERSION,
+      rankingMode: "rules",
+      modelVersion: DEFAULT_MODEL_VERSION,
+      selectedScore: 100,
+      candidateCount: 1,
+      candidateSnapshot: [
+        {
+          candidateId: "candidate-check_in",
+          decisionType: "check_in",
+          source: "assistant_bridge",
+          score: 100,
+          confidence: "high",
+          horizon: "present",
+          reasonCodes,
+        },
+      ],
+      featureSnapshot,
     };
   }
 
@@ -599,12 +692,57 @@ export function deriveUnifiedDecision(input: UnifiedDecisionInput): UnifiedDecis
     })
   );
 
-  candidates.sort((a, b) => b.score - a.score);
-  const selected = candidates[0];
+  const candidatesWithIds = candidates.map((entry, index) => ({
+    candidateId: `candidate-${index + 1}-${entry.decisionType}`,
+    entry,
+  }));
+  const rankOutput = rankUnifiedDecisionCandidates({
+    dateStr: input.dateStr,
+    featureSnapshot,
+    candidates: candidatesWithIds.map((row) => ({
+      candidateId: row.candidateId,
+      ruleScore: row.entry.score,
+    })),
+  });
+  const candidateById = new Map(
+    candidatesWithIds.map((row) => [row.candidateId, row.entry] as const)
+  );
+  const rankedCandidates = rankOutput.rankedCandidateIds
+    .map((candidateId) => {
+      const entry = candidateById.get(candidateId);
+      if (!entry) return null;
+      return { candidateId, entry };
+    })
+    .filter(
+      (
+        row
+      ): row is {
+        candidateId: string;
+        entry: DecisionCandidate;
+      } => row != null
+    );
+  if (rankedCandidates.length === 0) {
+    rankedCandidates.push(
+      ...candidatesWithIds
+        .sort((a, b) => b.entry.score - a.entry.score)
+        .map((row) => ({ candidateId: row.candidateId, entry: row.entry }))
+    );
+  }
+  const selectedRow = rankedCandidates[0];
+  const selected = selectedRow.entry;
   const reasonPart =
     selected.reasonCodes.length > 0
       ? selected.reasonCodes.slice(0, 3).join("_")
       : "default";
+  const candidateSnapshot = rankedCandidates.slice(0, 8).map((row) => ({
+    candidateId: row.candidateId,
+    decisionType: row.entry.decisionType,
+    source: row.entry.source,
+    score: row.entry.score,
+    confidence: row.entry.confidence,
+    horizon: row.entry.horizon,
+    reasonCodes: row.entry.reasonCodes,
+  }));
 
   return {
     decisionId: `${baseId}-${selected.decisionType}-${reasonPart}`,
@@ -618,5 +756,12 @@ export function deriveUnifiedDecision(input: UnifiedDecisionInput): UnifiedDecis
     confidence: selected.confidence,
     horizon: selected.horizon,
     reasonCodes: selected.reasonCodes,
+    engineVersion: UNIFIED_DECISION_ENGINE_VERSION,
+    rankingMode: rankOutput.rankingMode,
+    modelVersion: rankOutput.modelVersion,
+    selectedScore: selected.score,
+    candidateCount: candidatesWithIds.length,
+    candidateSnapshot,
+    featureSnapshot,
   };
 }

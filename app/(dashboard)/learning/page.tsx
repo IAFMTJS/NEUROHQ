@@ -42,7 +42,7 @@ export default async function LearningPage({ searchParams }: Props) {
           <CornerNode corner="top-right" />
           <HQPageHeader
             title="Growth"
-            subtitle="Eén systeem: protocollen (trajecten) → streams (jouw focus) → sessies → reflectie — gekoppeld aan XP en strategy."
+            subtitle="Simpel command center voor groei: kies focus, plan je leerpad, voer uit."
             backHref="/dashboard"
           />
           <section className="mascot-hero mascot-hero-top mascot-hero-sharp mt-2" data-mascot-page="learning" aria-hidden>
@@ -50,10 +50,7 @@ export default async function LearningPage({ searchParams }: Props) {
               <HeroMascotImage page="learning" className="mascot-img" heroLarge />
             </div>
           </section>
-          <p className="mt-4 text-xs text-[var(--text-muted)]">
-            Start bij het command center: je focus-protocol, week en snelle acties naar Missions. Daarna systeem-loop,
-            bibliotheek, dashboard en streams.
-          </p>
+          <p className="mt-4 text-xs text-[var(--text-muted)]">Minder tabs, meer uitvoeren: focus op command center en je actieve leerpad.</p>
           <Suspense fallback={null}>
             <div className="mt-4">
               <StrategyEnginePaceHint variant="learning" />

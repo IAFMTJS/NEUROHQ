@@ -1422,6 +1422,20 @@ html[data-light-ui="true"] body {
   text-align: center;
 }
 
+.nav-item-dashboard {
+  transform: translateY(-6px);
+  border-left: 1px solid rgba(255, 255, 255, 0.06);
+  border-right: 1px solid rgba(255, 255, 255, 0.06);
+  border-top: 1px solid color-mix(in srgb, var(--semantic-accent, #00d4ff) 30%, transparent);
+  border-radius: 14px 14px 0 0;
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.nav-item-dashboard .nav-item-icon {
+  width: 28px;
+  height: 28px;
+}
+
 /* TOAST (LOCKED) */
 .toast {
   position: fixed;

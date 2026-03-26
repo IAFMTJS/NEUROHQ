@@ -292,6 +292,13 @@ export async function POST(request: Request) {
           decisionConfidence: unifiedDecision.confidence,
           decisionHorizon: unifiedDecision.horizon,
           decisionReasonCodes: unifiedDecision.reasonCodes,
+          decisionEngineVersion: unifiedDecision.engineVersion,
+          decisionRankingMode: unifiedDecision.rankingMode,
+          decisionModelVersion: unifiedDecision.modelVersion,
+          decisionCandidateCount: unifiedDecision.candidateCount,
+          decisionSelectedScore: unifiedDecision.selectedScore,
+          decisionCandidates: unifiedDecision.candidateSnapshot,
+          decisionFeatureSnapshot: unifiedDecision.featureSnapshot,
         });
         if (requestedAction.type === "add_task") {
           await createTask({
@@ -350,6 +357,13 @@ export async function POST(request: Request) {
           decisionConfidence: unifiedDecision.confidence,
           decisionHorizon: unifiedDecision.horizon,
           decisionReasonCodes: unifiedDecision.reasonCodes,
+          decisionEngineVersion: unifiedDecision.engineVersion,
+          decisionRankingMode: unifiedDecision.rankingMode,
+          decisionModelVersion: unifiedDecision.modelVersion,
+          decisionCandidateCount: unifiedDecision.candidateCount,
+          decisionSelectedScore: unifiedDecision.selectedScore,
+          decisionCandidates: unifiedDecision.candidateSnapshot,
+          decisionFeatureSnapshot: unifiedDecision.featureSnapshot,
         });
       } catch (err) {
         console.error("[assistant] Execute action failed", err);
@@ -364,6 +378,13 @@ export async function POST(request: Request) {
           decisionConfidence: unifiedDecision.confidence,
           decisionHorizon: unifiedDecision.horizon,
           decisionReasonCodes: unifiedDecision.reasonCodes,
+          decisionEngineVersion: unifiedDecision.engineVersion,
+          decisionRankingMode: unifiedDecision.rankingMode,
+          decisionModelVersion: unifiedDecision.modelVersion,
+          decisionCandidateCount: unifiedDecision.candidateCount,
+          decisionSelectedScore: unifiedDecision.selectedScore,
+          decisionCandidates: unifiedDecision.candidateSnapshot,
+          decisionFeatureSnapshot: unifiedDecision.featureSnapshot,
         });
       }
     } else {
@@ -423,6 +444,13 @@ export async function POST(request: Request) {
       decisionConfidence: unifiedDecision.confidence,
       decisionHorizon: unifiedDecision.horizon,
       decisionReasonCodes: unifiedDecision.reasonCodes,
+      decisionEngineVersion: unifiedDecision.engineVersion,
+      decisionRankingMode: unifiedDecision.rankingMode,
+      decisionModelVersion: unifiedDecision.modelVersion,
+      decisionCandidateCount: unifiedDecision.candidateCount,
+      decisionSelectedScore: unifiedDecision.selectedScore,
+      decisionCandidates: unifiedDecision.candidateSnapshot,
+      decisionFeatureSnapshot: unifiedDecision.featureSnapshot,
     });
 
     return NextResponse.json({

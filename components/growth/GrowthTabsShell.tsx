@@ -5,27 +5,18 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
 export type GrowthTabId =
   | "command"
-  | "system"
-  | "overview"
   | "path"
-  | "missions"
   | "streams";
 
 const TABS: { id: GrowthTabId; label: string }[] = [
-  { id: "command", label: "Command center" },
-  { id: "system", label: "Systeem & protocollen" },
-  { id: "overview", label: "Dashboard" },
+  { id: "command", label: "Commandocentrum" },
   { id: "path", label: "Leerpad" },
-  { id: "missions", label: "Doel → missies" },
-  { id: "streams", label: "Streams" },
+  { id: "streams", label: "Stromen" },
 ];
 
 const HASH_TO_TAB: Record<string, GrowthTabId> = {
   "#growth-command": "command",
-  "#growth-system": "system",
-  "#growth-overview": "overview",
   "#growth-path": "path",
-  "#growth-missions": "missions",
   "#growth-streams": "streams",
 };
 
@@ -72,7 +63,7 @@ export function GrowthTabsShell({ children }: Props) {
   }, [tabFromQuery, replaceUrl]);
 
   const activeLabel = useMemo(
-    () => TABS.find((tab) => tab.id === activeTab)?.label ?? "Growth",
+    () => TABS.find((tab) => tab.id === activeTab)?.label ?? "Groei",
     [activeTab]
   );
 
@@ -80,7 +71,7 @@ export function GrowthTabsShell({ children }: Props) {
     <div className="space-y-4">
       <nav
         className="sticky top-[calc(env(safe-area-inset-top,0px)+8px)] z-30 -mx-1 flex flex-wrap gap-2 rounded-xl border border-[var(--card-border)]/80 bg-[var(--bg-primary)]/75 px-2 py-2 backdrop-blur-md"
-        aria-label="Growth tabs"
+        aria-label="Groei-tabs"
       >
         {TABS.map((tab) => {
           const selected = tab.id === activeTab;
@@ -106,7 +97,7 @@ export function GrowthTabsShell({ children }: Props) {
         })}
       </nav>
 
-      <section aria-label={`Growth tab: ${activeLabel}`}>{children(activeTab)}</section>
+      <section aria-label={`Groei-tab: ${activeLabel}`}>{children(activeTab)}</section>
     </div>
   );
 }

@@ -26,7 +26,6 @@ const ThemePicker = dynamic(() => import("@/components/settings/ThemePicker").th
 const SettingsCompactUi = dynamic(() => import("@/components/settings/SettingsCompactUi").then((m) => ({ default: m.SettingsCompactUi })), { loading: () => null });
 const SettingsReducedMotion = dynamic(() => import("@/components/settings/SettingsReducedMotion").then((m) => ({ default: m.SettingsReducedMotion })), { loading: () => null });
 const SettingsLightUI = dynamic(() => import("@/components/settings/SettingsLightUI").then((m) => ({ default: m.SettingsLightUI })), { loading: () => null });
-const SettingsQuickLinks = dynamic(() => import("@/components/settings/SettingsQuickLinks").then((m) => ({ default: m.SettingsQuickLinks })), { loading: () => <div className="min-h-[60px] animate-pulse rounded-lg bg-white/5" aria-hidden /> });
 const SettingsWhereToConfigure = dynamic(() => import("@/components/settings/SettingsWhereToConfigure").then((m) => ({ default: m.SettingsWhereToConfigure })), { loading: () => null });
 const SettingsClearCache = dynamic(() => import("@/components/settings/SettingsClearCache").then((m) => ({ default: m.SettingsClearCache })), { loading: () => null });
 const SettingsRefreshSnapshot = dynamic(() => import("@/components/settings/SettingsRefreshSnapshot").then((m) => ({ default: m.SettingsRefreshSnapshot })), { loading: () => null });
@@ -129,7 +128,6 @@ async function SettingsContent() {
             </div>
           </div>
         </section>
-        <SettingsQuickLinks />
         <SettingsSubCard
           title="Brain & gedrag"
           subtitle="Gedragsprofiel, routines en planningsbias"

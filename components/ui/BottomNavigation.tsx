@@ -5,28 +5,21 @@ import { usePathname, useRouter } from "next/navigation";
 import { memo, useCallback, useRef, useState } from "react";
 import {
   IconHQ,
-  IconAssistant,
   IconMissions,
   IconBudget,
   IconGrowth,
-  IconXP,
   IconStrategy,
-  IconInsights,
   IconSettings,
 } from "@/components/hq/NavIcons";
-import { isAssistantEnabled } from "@/lib/feature-flags";
 
 /** PNG filename in public/nav/ (exact name, case-sensitive on server). No value = use SVG only. Includes XP. */
 const navLinks = [
-  { href: "/dashboard", label: "HQ", Icon: IconHQ, pngFile: "Dashboard.png" },
-  { href: "/assistant", label: "Assistant", Icon: IconAssistant, pngFile: "Assistent.png" },
-  { href: "/tasks", label: "Missions", Icon: IconMissions, pngFile: "Missions.png" },
+  { href: "/tasks", label: "Missies", Icon: IconMissions, pngFile: "Missions.png" },
   { href: "/budget", label: "Budget", Icon: IconBudget, pngFile: "Budget.png" },
-  { href: "/learning", label: "Growth", Icon: IconGrowth, pngFile: "Growth.png" },
-  { href: "/xp", label: "XP", Icon: IconXP, pngFile: "XP.png" },
-  { href: "/strategy", label: "Strategy", Icon: IconStrategy, pngFile: "Strategy.png" },
-  { href: "/report", label: "Insight", Icon: IconInsights, pngFile: "Insights.png" },
-  { href: "/settings", label: "Settings", Icon: IconSettings, pngFile: "Settings.png" },
+  { href: "/dashboard", label: "Dashboard", Icon: IconHQ, pngFile: "Dashboard.png" },
+  { href: "/learning", label: "Groei", Icon: IconGrowth, pngFile: "Growth.png" },
+  { href: "/strategy", label: "Strategie", Icon: IconStrategy, pngFile: "Strategy.png" },
+  { href: "/profile", label: "Profiel", Icon: IconSettings, pngFile: "Settings.png" },
 ] as const;
 
 /** Try PNG from public/nav/*.png first (for deployment). Falls back to SVG on 404. Add dashboard.png, missions.png, etc. to public/nav/ to use PNG icons. */
@@ -57,7 +50,7 @@ export default memo(function BottomNavigation() {
     router.prefetch(href);
   }, [pathname, router]);
 
-  const links = navLinks.filter((link) => link.href !== "/assistant" || isAssistantEnabled());
+  const links = navLinks;
 
   return (
     <nav
@@ -71,7 +64,7 @@ export default memo(function BottomNavigation() {
           <Link
             key={link.href}
             href={link.href}
-            className={`nav-item ${active ? "active" : ""}`}
+            className={`nav-item ${link.href === "/dashboard" ? "nav-item-dashboard" : ""} ${active ? "active" : ""}`}
             prefetch={false}
             onMouseEnter={() => prefetchOnIntent(link.href)}
             onFocus={() => prefetchOnIntent(link.href)}

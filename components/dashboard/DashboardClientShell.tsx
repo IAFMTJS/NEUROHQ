@@ -3,6 +3,8 @@
 import { useEffect, useState, useMemo, type CSSProperties } from "react";
 import Link from "next/link";
 import dynamic from "next/dynamic";
+import { Modal } from "@/components/Modal";
+import { AddBudgetEntryForm } from "@/components/AddBudgetEntryForm";
 import { trackEvent } from "@/app/actions/analytics-events";
 import { getPendingDailyState } from "@/lib/client-pending-writes";
 import { usePendingBudgetSnapshot } from "@/lib/client-pending-budget";
@@ -15,8 +17,8 @@ import { XPBadge } from "@/components/XPBadge";
 import { DashboardContextCard } from "@/components/dashboard/DashboardContextCard";
 import { BudgetBadge } from "@/components/dashboard/BudgetBadge";
 import { DashboardActionsTrigger } from "@/components/dashboard/DashboardActionsTrigger";
-import { CollapsibleDashboardCard } from "@/components/dashboard/CollapsibleDashboardCard";
 import { DashboardQuickBudgetLog } from "@/components/dashboard/DashboardQuickBudgetLog";
+import { SystemOverviewCard } from "@/components/dashboard/SystemOverviewCard";
 import { SciFiPanel } from "@/components/hud-test/SciFiPanel";
 import { Divider1px } from "@/components/hud-test/Divider1px";
 import { CornerNode } from "@/components/hud-test/CornerNode";
@@ -91,6 +93,7 @@ export function DashboardClientShell() {
   const [pendingDailyForHero, setPendingDailyForHero] = useState<ReturnType<typeof getPendingDailyState>>(null);
   const [trackedNextActionShown, setTrackedNextActionShown] = useState(false);
   const [nextBestDismissed, setNextBestDismissed] = useState(false);
+  const [budgetGuardrailOpen, setBudgetGuardrailOpen] = useState(false);
   const { gameState, status: dcicStatus } = useDCICGameState();
   const dcicMode = gameState?.mode?.current ?? "focus";
   const dcicModeVars = useMemo<CSSProperties>(() => {
@@ -438,6 +441,13 @@ export function DashboardClientShell() {
       decisionConfidence: nextActionDecisionMeta?.confidence ?? "unknown",
       decisionHorizon: nextActionDecisionMeta?.horizon ?? "unknown",
       decisionReasonCodes: nextActionDecisionMeta?.reasonCodes ?? [],
+      decisionEngineVersion: nextActionDecisionMeta?.engineVersion ?? "legacy",
+      decisionRankingMode: nextActionDecisionMeta?.rankingMode ?? "legacy",
+      decisionModelVersion: nextActionDecisionMeta?.modelVersion ?? "legacy",
+      decisionCandidateCount: nextActionDecisionMeta?.candidateCount ?? 0,
+      decisionSelectedScore: nextActionDecisionMeta?.selectedScore ?? -1,
+      decisionCandidates: nextActionDecisionMeta?.candidateSnapshot ?? [],
+      decisionFeatureSnapshot: nextActionDecisionMeta?.featureSnapshot ?? {},
     });
   }, [
     nextActionDecisionMeta?.confidence,
@@ -618,7 +628,11 @@ export function DashboardClientShell() {
                 <Link
                   href={nextBestAction.href}
                   className="neon-button inline-flex min-h-[42px] items-center justify-center px-4 py-2 text-xs font-semibold"
-                  onClick={() =>
+                  onClick={(e) => {
+                    if (nextBestAction.href.startsWith("/budget")) {
+                      e.preventDefault();
+                      setBudgetGuardrailOpen(true);
+                    }
                     void Promise.all([
                       trackEvent("CTA_clicked", {
                         context: "dashboard_next_best_action",
@@ -635,9 +649,16 @@ export function DashboardClientShell() {
                         decisionConfidence: nextActionDecisionMeta?.confidence ?? "unknown",
                         decisionHorizon: nextActionDecisionMeta?.horizon ?? "unknown",
                         decisionReasonCodes: nextActionDecisionMeta?.reasonCodes ?? [],
+                        decisionEngineVersion: nextActionDecisionMeta?.engineVersion ?? "legacy",
+                        decisionRankingMode: nextActionDecisionMeta?.rankingMode ?? "legacy",
+                        decisionModelVersion: nextActionDecisionMeta?.modelVersion ?? "legacy",
+                        decisionCandidateCount: nextActionDecisionMeta?.candidateCount ?? 0,
+                        decisionSelectedScore: nextActionDecisionMeta?.selectedScore ?? -1,
+                        decisionCandidates: nextActionDecisionMeta?.candidateSnapshot ?? [],
+                        decisionFeatureSnapshot: nextActionDecisionMeta?.featureSnapshot ?? {},
                       }),
                     ])
-                  }
+                  }}
                 >
                   {nextBestAction.cta}
                 </Link>
@@ -733,52 +754,67 @@ export function DashboardClientShell() {
           <SciFiPanel variant="glass" className={hudStyles.focusSecondary} bodyClassName="p-4 md:p-6">
             <CornerNode corner="top-left" />
             <CornerNode corner="top-right" />
-            <div className={`dashboard-bento grid grid-cols-1 gap-4 lg:grid-cols-2 lg:gap-6 ${skipCinematicLayers ? "light-ui-defer-paint" : ""}`}>
-              <CollapsibleDashboardCard title="Level & voortgang" storageKey="level" defaultExpanded={true} className="lg:col-span-2" dataTutorial="dashboard-level-progress">
-                <section className="glass-card glass-card-3d rounded-none border-0 p-0">
-                  <div className="grid gap-0 md:grid-cols-2">
-                    {identity && identityEngine ? (
-                      <>
-                        <IdentityBlock
-                          level={(identity as { level: number }).level}
-                          rank={(identity as { rank: string }).rank}
-                          streak={(identity as { streak: { current: number } }).streak?.current ?? 0}
-                          xpToNextLevel={(identity as { xp_to_next_level: number }).xp_to_next_level}
-                          nextUnlock={((identity as { next_unlock?: { level: number; rank: string; xpNeeded: number } | null }).next_unlock) ?? { level: 0, rank: "-", xpNeeded: 0 }}
-                          archetype={(identityEngine as { archetype: Archetype })?.archetype ?? "operator"}
-                          evolutionPhase={(identityEngine as { evolutionPhase: EvolutionPhase })?.evolutionPhase ?? "initiate"}
-                          reputation={(identityEngine as { reputation?: ReputationScore })?.reputation ?? { discipline: 0, consistency: 0, impact: 0 }}
-                          embedded
+            <div className={skipCinematicLayers ? "light-ui-defer-paint" : ""}>
+              <SystemOverviewCard
+                sections={[
+                  {
+                    id: "level",
+                    icon: "🧭",
+                    title: "Level & voortgang",
+                    subtitle: "Identiteit, momentum en progressie",
+                    content: (
+                      <section className="space-y-4">
+                        <div className="grid gap-4 md:grid-cols-2">
+                          {identity && identityEngine ? (
+                            <>
+                              <IdentityBlock
+                                level={(identity as { level: number }).level}
+                                rank={(identity as { rank: string }).rank}
+                                streak={(identity as { streak: { current: number } }).streak?.current ?? 0}
+                                xpToNextLevel={(identity as { xp_to_next_level: number }).xp_to_next_level}
+                                nextUnlock={((identity as { next_unlock?: { level: number; rank: string; xpNeeded: number } | null }).next_unlock) ?? { level: 0, rank: "-", xpNeeded: 0 }}
+                                archetype={(identityEngine as { archetype: Archetype })?.archetype ?? "operator"}
+                                evolutionPhase={(identityEngine as { evolutionPhase: EvolutionPhase })?.evolutionPhase ?? "initiate"}
+                                reputation={(identityEngine as { reputation?: ReputationScore })?.reputation ?? { discipline: 0, consistency: 0, impact: 0 }}
+                                embedded
+                              />
+                              <MomentumScore
+                                score={((insightState as { momentum?: { score: number } })?.momentum?.score ?? (momentum as { score: number })?.score) ?? 0}
+                                band={(((insightState as { momentum?: { band: string } })?.momentum?.band ?? (momentum as { band: string })?.band) ?? "medium") as MomentumBand}
+                                embedded
+                              />
+                            </>
+                          ) : (
+                            <>
+                              <div className="glass-card min-h-[140px] animate-pulse rounded-[22px]" aria-hidden />
+                              <div className="glass-card min-h-[100px] animate-pulse rounded-[22px]" aria-hidden />
+                            </>
+                          )}
+                        </div>
+                      </section>
+                    ),
+                  },
+                  {
+                    id: "dcic",
+                    icon: "🛰️",
+                    title: "Commander status (DCIC)",
+                    subtitle: "Mode en command-situatie",
+                    content: (
+                      <div className="space-y-4">
+                        <DCICStatusCard
+                          gameState={gameState}
+                          status={dcicStatus}
+                          brainStateMissing={critical ? critical.state == null : false}
                         />
-                        <MomentumScore
-                          score={((insightState as { momentum?: { score: number } })?.momentum?.score ?? (momentum as { score: number })?.score) ?? 0}
-                          band={(((insightState as { momentum?: { band: string } })?.momentum?.band ?? (momentum as { band: string })?.band) ?? "medium") as MomentumBand}
-                          embedded
-                          className="border-t border-[var(--card-border)] md:border-t-0 md:border-l"
-                        />
-                      </>
-                    ) : (
-                      <>
-                        <div className="glass-card min-h-[140px] animate-pulse rounded-[22px]" aria-hidden />
-                        <div className="glass-card min-h-[100px] animate-pulse rounded-[22px] border-t border-[var(--card-border)] md:border-t-0 md:border-l" aria-hidden />
-                      </>
-                    )}
-                  </div>
-                </section>
-              </CollapsibleDashboardCard>
-              <div className="flex flex-col gap-4">
-                <CollapsibleDashboardCard title="Commander status (DCIC)" storageKey="dcic-status" defaultExpanded={true} dataTutorial="dashboard-dcic">
-                  <div className="p-4 md:p-6">
-                    <DCICStatusCard
-                      gameState={gameState}
-                      status={dcicStatus}
-                      brainStateMissing={critical ? critical.state == null : false}
-                    />
-                  </div>
-                </CollapsibleDashboardCard>
-                <CollapsibleDashboardCard title="Vandaag door de app bepaald" storageKey="today-engine" defaultExpanded={true} dataTutorial="dashboard-today-engine">
-                  {todayEngine != null && xpForecast !== undefined ? (
-                    <div className="p-4 md:p-6">
+                      </div>
+                    ),
+                  },
+                  {
+                    id: "today",
+                    icon: "📌",
+                    title: "Vandaag door de app bepaald",
+                    subtitle: "Buckets, risico en XP-impact",
+                    content: todayEngine != null && xpForecast !== undefined ? (
                       <TodayEngineCard
                         bucketed={(todayEngine as { bucketed: BucketedToday }).bucketed}
                         streakAtRisk={(todayEngine as { streakAtRisk: boolean }).streakAtRisk}
@@ -790,66 +826,107 @@ export function DashboardClientShell() {
                         timeWindow={timeWindow}
                         isTimeWindowActive={isTimeWindowActive}
                       />
-                    </div>
-                  ) : (
-                    <div className="glass-card min-h-[160px] animate-pulse rounded-[22px] m-4" aria-hidden />
-                  )}
-                </CollapsibleDashboardCard>
-              </div>
-              <div className="flex flex-col gap-4">
-                <CollapsibleDashboardCard title="Systeem modus" subtitle="Brain status & hoe voel je je vandaag" storageKey="systeem-modus" defaultExpanded={true} dataTutorial="dashboard-brain-status-section">
-                  <div className="p-4 md:p-6 space-y-6">
-                    <BrainStatusCard
-                  date={dateStr}
-                  initial={{ energy: secState?.energy ?? null, focus: secState?.focus ?? null, sensory_load: secState?.sensory_load ?? null, sleep_hours: secState?.sleep_hours ?? null, social_load: secState?.social_load ?? null, physical_health: (secState as { physical_health?: number | null })?.physical_health ?? null, mental_battery: (secState as { mental_battery?: number | null })?.mental_battery ?? null }}
-                  yesterday={{ energy: secYesterdayState?.energy ?? null, focus: secYesterdayState?.focus ?? null, sensory_load: secYesterdayState?.sensory_load ?? null, sleep_hours: secYesterdayState?.sleep_hours ?? null, social_load: secYesterdayState?.social_load ?? null, physical_health: (secYesterdayState as { physical_health?: number | null })?.physical_health ?? null, mental_battery: (secYesterdayState as { mental_battery?: number | null })?.mental_battery ?? null }}
-                  brainMode={secEnergyBudget.brainMode as BrainMode}
-                  suggestedTaskCount={(secEnergyBudget.suggestedTaskCount as number) ?? 3}
-                />
-                    <DangerousModulesCard embedded />
-                    <div data-tutorial="dashboard-energy-bar">
-                      <EnergyBudgetBar
-                        remaining={secEnergyBudget.remaining as number}
-                        capacity={secEnergyBudget.capacity as number}
-                        suggestedTaskCount={secEnergyBudget.suggestedTaskCount as number}
-                        taskUsed={secEnergyBudget.taskUsed as number}
-                        completedTaskCount={secEnergyBudget.completedTaskCount as number}
-                        taskPlanned={secEnergyBudget.taskPlanned as number}
-                        calendarCost={secEnergyBudget.calendarCost as number}
-                        energy={secEnergyBudget.energy as PoolBudget}
-                        focus={secEnergyBudget.focus as PoolBudget}
-                        load={secEnergyBudget.load as PoolBudget}
-                        insight={secEnergyBudget.insight as string}
-                        brainMode={secEnergyBudget.brainMode as BrainMode}
-                        segments={secEnergyBudget.segments as { label: string; value: number; color: string }[]}
-                      />
-                    </div>
-                  </div>
-                </CollapsibleDashboardCard>
-                <div data-tutorial="dashboard-context-card">
-                <DashboardContextCard
-                  prev={{
-                    quote: secondary && quotesResult ? quotesResult[0] : null,
-                    day: secondary ? Math.max(1, quoteDay - 1) : Math.max(1, Math.min(365, getDayOfYearFromDateString(dateStr) - 1)),
-                  }}
-                  current={{
-                    quote: (secondary && quotesResult ? quotesResult[1] : null) ?? (dailyQuoteText ? { id: 0, quote_text: dailyQuoteText, author_name: dailyQuoteAuthor ?? "", era: "", topic: null, created_at: "" } : null),
-                    day: secondary ? quoteDay : getDayOfYearFromDateString(dateStr),
-                  }}
-                  next={{
-                    quote: secondary && quotesResult ? quotesResult[2] : null,
-                    day: secondary ? Math.min(365, quoteDay + 1) : Math.min(365, getDayOfYearFromDateString(dateStr) + 1),
-                  }}
-                  mode={mode}
-                  identityStatement={(strategy as { identity_statement?: string } | null)?.identity_statement ?? null}
-                />
-                </div>
-                <ModeExplanationModal mode={mode} />
-                {mode === "driven" && <FocusBlock />}
-              </div>
+                    ) : (
+                      <div className="glass-card min-h-[160px] animate-pulse rounded-[22px]" aria-hidden />
+                    ),
+                  },
+                  {
+                    id: "system",
+                    icon: "🧠",
+                    title: "Systeem modus",
+                    subtitle: "Brain status & hoe voel je je vandaag",
+                    content: (
+                      <div className="space-y-6">
+                        <BrainStatusCard
+                          date={dateStr}
+                          initial={{ energy: secState?.energy ?? null, focus: secState?.focus ?? null, sensory_load: secState?.sensory_load ?? null, sleep_hours: secState?.sleep_hours ?? null, social_load: secState?.social_load ?? null, physical_health: (secState as { physical_health?: number | null })?.physical_health ?? null, mental_battery: (secState as { mental_battery?: number | null })?.mental_battery ?? null }}
+                          yesterday={{ energy: secYesterdayState?.energy ?? null, focus: secYesterdayState?.focus ?? null, sensory_load: secYesterdayState?.sensory_load ?? null, sleep_hours: secYesterdayState?.sleep_hours ?? null, social_load: secYesterdayState?.social_load ?? null, physical_health: (secYesterdayState as { physical_health?: number | null })?.physical_health ?? null, mental_battery: (secYesterdayState as { mental_battery?: number | null })?.mental_battery ?? null }}
+                          brainMode={secEnergyBudget.brainMode as BrainMode}
+                          suggestedTaskCount={(secEnergyBudget.suggestedTaskCount as number) ?? 3}
+                        />
+                        <DangerousModulesCard embedded />
+                        <div data-tutorial="dashboard-energy-bar">
+                          <EnergyBudgetBar
+                            remaining={secEnergyBudget.remaining as number}
+                            capacity={secEnergyBudget.capacity as number}
+                            suggestedTaskCount={secEnergyBudget.suggestedTaskCount as number}
+                            taskUsed={secEnergyBudget.taskUsed as number}
+                            completedTaskCount={secEnergyBudget.completedTaskCount as number}
+                            taskPlanned={secEnergyBudget.taskPlanned as number}
+                            calendarCost={secEnergyBudget.calendarCost as number}
+                            energy={secEnergyBudget.energy as PoolBudget}
+                            focus={secEnergyBudget.focus as PoolBudget}
+                            load={secEnergyBudget.load as PoolBudget}
+                            insight={secEnergyBudget.insight as string}
+                            brainMode={secEnergyBudget.brainMode as BrainMode}
+                            segments={secEnergyBudget.segments as { label: string; value: number; color: string }[]}
+                          />
+                        </div>
+                        <div data-tutorial="dashboard-context-card">
+                          <DashboardContextCard
+                            prev={{
+                              quote: secondary && quotesResult ? quotesResult[0] : null,
+                              day: secondary ? Math.max(1, quoteDay - 1) : Math.max(1, Math.min(365, getDayOfYearFromDateString(dateStr) - 1)),
+                            }}
+                            current={{
+                              quote: (secondary && quotesResult ? quotesResult[1] : null) ?? (dailyQuoteText ? { id: 0, quote_text: dailyQuoteText, author_name: dailyQuoteAuthor ?? "", era: "", topic: null, created_at: "" } : null),
+                              day: secondary ? quoteDay : getDayOfYearFromDateString(dateStr),
+                            }}
+                            next={{
+                              quote: secondary && quotesResult ? quotesResult[2] : null,
+                              day: secondary ? Math.min(365, quoteDay + 1) : Math.min(365, getDayOfYearFromDateString(dateStr) + 1),
+                            }}
+                            mode={mode}
+                            identityStatement={(strategy as { identity_statement?: string } | null)?.identity_statement ?? null}
+                          />
+                        </div>
+                        <ModeExplanationModal mode={mode} />
+                        {mode === "driven" && <FocusBlock />}
+                      </div>
+                    ),
+                  },
+                ]}
+              />
             </div>
           </SciFiPanel>
         )}
+
+        <Modal
+          open={budgetGuardrailOpen}
+          onClose={() => setBudgetGuardrailOpen(false)}
+          title="Budget guardrail"
+          subtitle="Doe eerst een snelle interventie, ga dan door naar Budget."
+          size="lg"
+        >
+          <div className="space-y-4">
+            <div className="rounded-lg border border-[var(--card-border)] bg-[var(--bg-surface)]/35 p-3">
+              <p className="text-xs text-[var(--text-muted)]">
+                Snelle stap: log meteen de uitgave/inkomst die je guardrail triggert. Daarna open je Execute op de juiste card.
+              </p>
+            </div>
+            <AddBudgetEntryForm
+              date={dateStr}
+              currency={badgeCurrency}
+              onSuccess={() => setBudgetGuardrailOpen(false)}
+            />
+            <div className="flex flex-wrap gap-2">
+              <Link
+                href="/budget?tab=execute#entries-frozen"
+                onClick={() => setBudgetGuardrailOpen(false)}
+                className="rounded-lg border border-[var(--card-border)] px-3 py-2 text-xs font-semibold text-[var(--text-primary)] hover:bg-[var(--bg-hover)]"
+              >
+                Open Execute → Entries & frozen
+              </Link>
+              <Link
+                href="/budget?tab=lock#budget-lock-control"
+                onClick={() => setBudgetGuardrailOpen(false)}
+                className="rounded-lg border border-[var(--card-border)] px-3 py-2 text-xs font-semibold text-[var(--text-primary)] hover:bg-[var(--bg-hover)]"
+              >
+                Open no-spend lock
+              </Link>
+            </div>
+          </div>
+        </Modal>
       </div>
     </main>
   );

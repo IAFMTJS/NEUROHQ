@@ -83,50 +83,24 @@ export default function XPPageContent({
   activeMissionCountToday,
 }: Props) {
   const router = useRouter();
-  const [xpView, setXpView] = useState<"command" | "analytics" | "library">("command");
+  const [xpView, setXpView] = useState<"command" | "analytics">("command");
   const [commanderMode, setCommanderMode] = useState(true);
   const [chartDays, setChartDays] = useState<7 | 14>(14);
   const [pendingAddId, setPendingAddId] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
-  const [domainFilter, setDomainFilter] = useState<string>("");
-  const [xpLevelFilter, setXpLevelFilter] = useState<string>("");
-  const [searchQuery, setSearchQuery] = useState("");
-  const [expandedTemplateId, setExpandedTemplateId] = useState<string | null>(null);
-  const [catalogOpen, setCatalogOpen] = useState(false);
   const [showAllSources, setShowAllSources] = useState(false);
-  const [missionFiltersOpen, setMissionFiltersOpen] = useState(false);
   const [projectionOpen, setProjectionOpen] = useState(false);
-  /** Date to add extra missions to (default: today; user can pick another day). */
-  const [addMissionDate, setAddMissionDate] = useState(todayStr);
+  const [challengeDate, setChallengeDate] = useState(todayStr);
   const maxSlotsToday = brainModeToday.maxSlots;
   const addBlockedToday = brainModeToday.addBlocked;
-
-  const fitnessCommitment = behaviorProfile.hobbyCommitment.fitness ?? 0;
-  const showFitnessDecayMirror = fitnessCommitment > 0 && fitnessCommitment <= 0.3;
 
   const chartDataFiltered = useMemo(
     () => (chartDays === 7 ? chartData.slice(-7) : chartData),
     [chartData, chartDays]
   );
 
-  const filteredTemplates = useMemo(() => {
+  const recommendedTemplates = useMemo(() => {
     let list = missionTemplates;
-    if (domainFilter) {
-      list = list.filter((t) => t.domain === domainFilter);
-    }
-    if (xpLevelFilter) {
-      list = list.filter((t) => (t.xpLevel ?? "normal") === xpLevelFilter);
-    }
-    if (searchQuery.trim()) {
-      const q = searchQuery.trim().toLowerCase();
-      list = list.filter(
-        (t) =>
-          t.title.toLowerCase().includes(q) ||
-          (t.description ?? "").toLowerCase().includes(q)
-      );
-    }
-
-    // Behaviour-based weighting: boost templates die matchen met identity targets en hobbies
     const identityTargets = new Set(behaviorProfile.identityTargets);
     const fitnessCommitment = behaviorProfile.hobbyCommitment.fitness ?? 0;
 
@@ -140,16 +114,14 @@ export default function XPPageContent({
     };
 
     return [...list].sort((a, b) => scoreTemplate(b) - scoreTemplate(a));
-  }, [missionTemplates, domainFilter, xpLevelFilter, searchQuery, behaviorProfile]);
-
-  const recommendedTemplates = useMemo(() => filteredTemplates.slice(0, 3), [filteredTemplates]);
+  }, [missionTemplates, behaviorProfile]);
 
   const cardClass = commanderMode
     ? "rounded-2xl border-2 border-[var(--accent-focus)]/40 bg-[var(--dc-bg-elevated)] p-4 shadow-lg"
     : "glass-card p-4 rounded-2xl border border-[var(--card-border)]";
 
   function addMission(template: MissionTemplateItem, dueDate?: string) {
-    const date = dueDate ?? addMissionDate ?? todayStr;
+    const date = dueDate ?? challengeDate ?? todayStr;
     const slotsFilledToday = activeMissionCountToday >= maxSlotsToday;
     const limitMessage =
       addBlockedToday && date === todayStr
@@ -191,7 +163,6 @@ export default function XPPageContent({
     ? chartDataFiltered.reduce((lowest, item) => (item.value < lowest.value ? item : lowest), chartDataFiltered[0])
     : null;
   const selectedVsPrevious = xpPrevious7 > 0 ? Math.round(((xpLast7 - xpPrevious7) / xpPrevious7) * 100) : null;
-  const sourceItems = showAllSources ? xpBySource : xpBySource.slice(0, 3);
   const focusPriority = addBlockedToday
     ? "Rond eerst 1 open missie af — alleen voltooien geeft XP."
     : activeMissionCountToday >= maxSlotsToday
@@ -208,6 +179,20 @@ export default function XPPageContent({
     recommendedTemplates[2]?.baseXP != null
       ? `Reserveer hoog-XP werk: ${recommendedTemplates[2].title} (+${recommendedTemplates[2].baseXP} XP).`
       : "Plan morgen 1 missie met hogere base-XP — voltooien op Missions levert het meeste.";
+  const dailyChallengeReward = Math.max(10, Math.round(identity.xp_to_next_level * 0.1));
+  const daySeed = new Date(`${todayStr}T12:00:00Z`).getUTCDate();
+  const challengePool = recommendedTemplates.length > 0 ? recommendedTemplates : missionTemplates;
+  const dailyChallenges = Array.from({ length: Math.min(3, challengePool.length) }).map((_, idx) => {
+    const item = challengePool[(daySeed + idx) % challengePool.length];
+    return {
+      id: `${item.id}-${idx}`,
+      title: item.title,
+      template: item,
+      rewardXp: dailyChallengeReward,
+      tone: idx === 0 ? "Opstart" : idx === 1 ? "Momentum" : "Uitdaging",
+    };
+  });
+  const multiplierEligible = (ins?.completionRateLast7 ?? 0) >= 0.95 && identity.streak.current >= 7;
 
   return (
     <div className="space-y-6">
@@ -284,11 +269,11 @@ export default function XPPageContent({
         <div className="flex flex-wrap gap-2">
           <button type="button" onClick={() => setXpView("command")} className={`rounded-xl px-3 py-1.5 text-xs font-semibold transition ${xpView === "command" ? "bg-[var(--accent-focus)]/20 text-[var(--accent-focus)]" : "text-[var(--text-muted)] hover:text-[var(--text-primary)]"}`}>XP verdienen</button>
           <button type="button" onClick={() => setXpView("analytics")} className={`rounded-xl px-3 py-1.5 text-xs font-semibold transition ${xpView === "analytics" ? "bg-[var(--accent-focus)]/20 text-[var(--accent-focus)]" : "text-[var(--text-muted)] hover:text-[var(--text-primary)]"}`}>Verdiende XP</button>
-          <button type="button" onClick={() => setXpView("library")} className={`rounded-xl px-3 py-1.5 text-xs font-semibold transition ${xpView === "library" ? "bg-[var(--accent-focus)]/20 text-[var(--accent-focus)]" : "text-[var(--text-muted)] hover:text-[var(--text-primary)]"}`}>Missie-XP lijst</button>
         </div>
       </section>
 
       {xpView === "command" && (
+        <>
         <section className="grid gap-4 lg:grid-cols-3">
           <div className={`${cardClass} lg:col-span-2 space-y-4`}>
             <div>
@@ -320,7 +305,6 @@ export default function XPPageContent({
               <div className="mt-3 flex flex-wrap gap-2">
                 <a href="/tasks" className="rounded-lg bg-[var(--accent-focus)]/20 px-3 py-2 text-xs font-semibold text-[var(--accent-focus)] hover:bg-[var(--accent-focus)]/30">Naar Missions (XP vrijspelen)</a>
                 <a href="/learning" className="rounded-lg border border-[var(--card-border)] px-3 py-2 text-xs font-semibold text-[var(--text-primary)] hover:bg-white/10">Learning → XP</a>
-                <button type="button" onClick={() => setXpView("library")} className="rounded-lg border border-[var(--card-border)] px-3 py-2 text-xs font-semibold text-[var(--text-primary)] hover:bg-white/10">Missies met base-XP</button>
               </div>
             </div>
           </div>
@@ -345,17 +329,73 @@ export default function XPPageContent({
               <div className="mt-3 border-t border-[var(--card-border)]/60 pt-3">
                 <p className="text-[10px] font-semibold uppercase tracking-wide text-[var(--text-muted)]">Waar kwam XP vandaan (7d)</p>
                 <ul className="mt-2 space-y-1.5">
-                  {xpBySource.slice(0, 3).map((item) => (
+                  {(showAllSources ? xpBySource : xpBySource.slice(0, 3)).map((item) => (
                     <li key={item.source_type} className="flex items-center justify-between text-xs">
                       <span className="text-[var(--text-secondary)]">{sourceLabel(item.source_type)}</span>
                       <span className="font-medium text-[var(--accent-focus)]">+{item.total} XP</span>
                     </li>
                   ))}
                 </ul>
+                {xpBySource.length > 3 && (
+                  <button
+                    type="button"
+                    onClick={() => setShowAllSources((v) => !v)}
+                    className="mt-2 text-xs font-medium text-[var(--accent-focus)] hover:underline"
+                  >
+                    {showAllSources ? "Toon minder" : "Toon alle bronnen"}
+                  </button>
+                )}
               </div>
             )}
           </div>
         </section>
+
+        <section className={`${cardClass} space-y-4`}>
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <div>
+              <h3 className="text-sm font-semibold text-[var(--text-primary)]">Dagelijkse challenges</h3>
+              <p className="mt-1 text-xs text-[var(--text-muted)]">
+                3 lichte challenges, elk ongeveer {dailyChallengeReward} XP ({Math.round((dailyChallengeReward / Math.max(1, identity.xp_to_next_level)) * 100)}% richting volgend level).
+              </p>
+            </div>
+            <input
+              type="date"
+              value={challengeDate}
+              onChange={(e) => setChallengeDate(e.target.value || todayStr)}
+              className="rounded-lg border border-[var(--card-border)] bg-[var(--bg-primary)] px-2 py-1.5 text-sm text-[var(--text-primary)]"
+            />
+          </div>
+          <div className="grid gap-2 md:grid-cols-3">
+            {dailyChallenges.map((challenge) => (
+              <div key={challenge.id} className="rounded-xl border border-[var(--card-border)] bg-[var(--bg-primary)]/35 p-3">
+                <p className="text-[10px] uppercase tracking-wide text-[var(--text-muted)]">{challenge.tone}</p>
+                <p className="mt-1 text-sm font-medium text-[var(--text-primary)]">{challenge.title}</p>
+                <p className="mt-1 text-xs text-[var(--accent-focus)]">+{challenge.rewardXp} XP potentieel</p>
+                <button
+                  type="button"
+                  onClick={() => addMission(challenge.template)}
+                  disabled={isPending && pendingAddId === challenge.template.id}
+                  className="mt-2 rounded-lg border border-[var(--card-border)] px-2.5 py-1.5 text-xs font-semibold text-[var(--text-primary)] hover:bg-white/10 disabled:opacity-50"
+                >
+                  {pendingAddId === challenge.template.id ? "Toevoegen..." : "Plan uitdaging"}
+                </button>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        <section className={`${cardClass} space-y-2`}>
+          <h3 className="text-sm font-semibold text-[var(--text-primary)]">Multiplier-weekactie · Dubbel of niets</h3>
+          <p className="text-xs text-[var(--text-muted)]">
+            Alles uitvoeren wat de app deze week bepaalt = dubbele XP. Eentje missen = geen week-multiplier.
+          </p>
+          <p className={`text-sm font-semibold ${multiplierEligible ? "text-emerald-300" : "text-amber-300"}`}>
+            {multiplierEligible
+              ? "Multiplier-status: actief (2x weekbonus in bereik)."
+              : "Multiplier-status: nog niet actief. Verhoog completion en houd streak vast."}
+          </p>
+        </section>
+        </>
       )}
 
       {xpView === "analytics" && (
@@ -406,80 +446,7 @@ export default function XPPageContent({
         </>
       )}
 
-      {xpView !== "analytics" && (
-        <section className={cardClass} aria-label="XP missies browser">
-          <div className="flex flex-wrap items-center justify-between gap-2">
-            <div>
-              <h3 className="text-sm font-semibold text-[var(--text-primary)]">Missies met XP-potentieel</h3>
-              <p className="mt-1 text-xs text-[var(--text-muted)]">
-                Toevoegreegels: base-XP staat per template. <strong className="text-[var(--text-primary)]">XP krijg je na voltooien</strong> op Missions — niet bij aanmaken.
-              </p>
-            </div>
-            <div className="flex items-center gap-2">
-              <label className="text-xs text-[var(--text-muted)]">Datum</label>
-              <input type="date" value={addMissionDate} onChange={(e) => setAddMissionDate(e.target.value || todayStr)} className="rounded-lg border border-[var(--card-border)] bg-[var(--bg-primary)] px-2 py-1.5 text-sm text-[var(--text-primary)]" aria-label="Datum voor toe te voegen missie" />
-            </div>
-          </div>
-          <div className="mt-3 space-y-2">
-            <input type="search" placeholder="Zoek missie..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="w-full rounded-lg border border-[var(--card-border)] bg-[var(--bg-primary)] px-3 py-2 text-sm text-[var(--text-primary)] placeholder-[var(--text-muted)]" aria-label="Zoek missies" />
-            <button type="button" onClick={() => setMissionFiltersOpen((v) => !v)} className="text-xs font-medium text-[var(--accent-focus)] hover:underline">{missionFiltersOpen || commanderMode ? "Verberg filters" : "Toon filters"}</button>
-            {(missionFiltersOpen || commanderMode) && (
-              <div className="grid gap-2 md:grid-cols-2">
-                <select value={domainFilter} onChange={(e) => setDomainFilter(e.target.value)} className="rounded-lg border border-[var(--card-border)] bg-[var(--bg-primary)] px-3 py-2 text-sm text-[var(--text-primary)]" aria-label="Filter domein">
-                  <option value="">Alle domeinen</option><option value="discipline">Discipline</option><option value="health">Health</option><option value="learning">Learning</option><option value="business">Business</option>
-                </select>
-                <select value={xpLevelFilter} onChange={(e) => setXpLevelFilter(e.target.value)} className="rounded-lg border border-[var(--card-border)] bg-[var(--bg-primary)] px-3 py-2 text-sm text-[var(--text-primary)]" aria-label="Filter XP-niveau">
-                  <option value="">Alle XP-niveaus</option><option value="low">Low</option><option value="normal">Normal</option><option value="high">High</option>
-                </select>
-              </div>
-            )}
-          </div>
-          {recommendedTemplates.length > 0 && (
-            <div className="mt-3 rounded-xl border border-[var(--accent-focus)]/30 bg-[var(--accent-focus)]/5 p-3">
-              <p className="text-[10px] font-semibold uppercase tracking-wide text-[var(--accent-focus)]">Snelste XP-kans (top 3)</p>
-              <p className="mt-0.5 text-[11px] text-[var(--text-muted)]">Tik om toe te voegen → rond af voor de punten.</p>
-              <div className="mt-2 flex flex-wrap gap-2">
-                {recommendedTemplates.map((t) => (
-                  <button key={`rec-${t.id}`} type="button" onClick={() => addMission(t)} disabled={isPending && pendingAddId === t.id} className="rounded-full border border-[var(--accent-focus)]/30 px-3 py-1 text-xs text-[var(--text-primary)] hover:bg-[var(--accent-focus)]/15 disabled:opacity-50">{pendingAddId === t.id ? "..." : t.title}</button>
-                ))}
-              </div>
-            </div>
-          )}
-          <div className="mt-3 rounded-xl border border-[var(--card-border)] bg-[var(--bg-primary)]/30">
-            <button type="button" onClick={() => setCatalogOpen((v) => !v)} className="flex w-full items-center justify-between px-3 py-2 text-left" aria-expanded={catalogOpen}>
-              <span className="text-sm font-medium text-[var(--text-primary)]">Alle XP-templates ({filteredTemplates.length})</span>
-              <span className="text-xs text-[var(--accent-focus)]">{catalogOpen ? "Inklappen" : "Uitklappen"} {catalogOpen ? "▲" : "▼"}</span>
-            </button>
-            {catalogOpen && (
-              <ul className="grid gap-1 border-t border-[var(--card-border)]/70 p-2">
-                {filteredTemplates.map((t) => (
-                  <li key={t.id} className="rounded-lg border border-[var(--card-border)]/70 bg-[var(--bg-primary)]/35 px-2.5 py-2">
-                    <div className="flex items-center justify-between gap-2">
-                      <div className="min-w-0">
-                        <p className="truncate text-xs font-medium text-[var(--text-primary)]">{t.title}</p>
-                        <div className="mt-0.5 flex items-center gap-1.5 text-[11px]">
-                          <span className="rounded bg-[var(--accent-focus)]/15 px-1 py-0.5 text-[var(--accent-focus)]">{t.domain}</span>
-                          <span className="text-[var(--text-muted)]">{t.baseXP ?? "—"} XP</span>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-1">
-                        <button type="button" onClick={() => addMission(t)} disabled={isPending && pendingAddId === t.id} className="rounded-md bg-[var(--accent-focus)]/20 px-2 py-1 text-[11px] font-medium text-[var(--accent-focus)] hover:bg-[var(--accent-focus)]/30 disabled:opacity-50">{pendingAddId === t.id ? "..." : "Add"}</button>
-                        {t.description && <button type="button" onClick={() => setExpandedTemplateId(expandedTemplateId === t.id ? null : t.id)} className="rounded-md px-1.5 py-1 text-[11px] text-[var(--text-muted)] hover:bg-white/10 hover:text-[var(--text-primary)]" aria-expanded={expandedTemplateId === t.id}>{expandedTemplateId === t.id ? "−" : "+"}</button>}
-                      </div>
-                    </div>
-                    {t.description && expandedTemplateId === t.id && <p className="mt-1 border-t border-[var(--card-border)]/50 pt-1.5 text-[11px] text-[var(--text-muted)]">{t.description}</p>}
-                  </li>
-                ))}
-              </ul>
-            )}
-          </div>
-          {filteredTemplates.length === 0 && <p className="mt-3 text-sm text-[var(--text-muted)]">Geen missies gevonden. Pas je filters aan.</p>}
-          <div className="mt-4 flex flex-wrap items-center justify-between gap-2">
-            <p className="text-xs text-[var(--text-muted)]">{showFitnessDecayMirror ? "Fitness-commitment zakt; plan bewust een health missie om momentum te beschermen." : "Tip: combineer korte en langere missies voor stabiele velocity."}</p>
-            <a href="/tasks" className="text-sm font-medium text-[var(--accent-focus)] hover:underline">Volledige Missions-pagina →</a>
-          </div>
-        </section>
-      )}
+      {xpView !== "analytics" && null}
     </div>
   );
 }

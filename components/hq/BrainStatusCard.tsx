@@ -58,8 +58,7 @@ export const BrainStatusCard = memo(function BrainStatusCard({ date, initial, ye
   const [currentInitial, setCurrentInitial] = useState(initial);
   const todayDailyState = useHQStore((s) => s.todayDailyState);
 
-  // One-time bootstrap of currentInitial from pending/local store when the component mounts for this date.
-  // Avoids reacting to every store/localStorage change, which was causing update loops in Strict Mode.
+  // Keep modal seed in sync with freshest available state for this date.
   useEffect(() => {
     const pending = getPendingDailyState(date);
     if (pending) {
@@ -100,8 +99,17 @@ export const BrainStatusCard = memo(function BrainStatusCard({ date, initial, ye
     }
 
     setCurrentInitial(initial);
-    // Intentionally do NOT include initial/todayDailyState in deps: we only want a one-time bootstrap per date.
-  }, [date]);
+  }, [
+    date,
+    initial.energy,
+    initial.focus,
+    initial.sensory_load,
+    initial.sleep_hours,
+    initial.social_load,
+    initial.physical_health,
+    initial.mental_battery,
+    todayDailyState,
+  ]);
 
   useEffect(() => {
     const openIfHash = () => {

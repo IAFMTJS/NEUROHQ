@@ -7,6 +7,7 @@ import type { Task } from "@/types/database.types";
 import { format } from "date-fns";
 import { nl } from "date-fns/locale";
 import { QuickAddModal } from "./QuickAddModal";
+import { EditMissionModal } from "@/components/missions";
 
 type Props = {
   routineTasks: Task[];
@@ -21,6 +22,7 @@ export function RoutineTaskList({ routineTasks, suggestedDays, suggestedPlans = 
   const [customDateByTask, setCustomDateByTask] = useState<Record<string, string>>({});
   const [feedback, setFeedback] = useState<string | null>(null);
   const [addRoutineOpen, setAddRoutineOpen] = useState(false);
+  const [editTask, setEditTask] = useState<Task | null>(null);
 
   if (routineTasks.length === 0) {
     return (
@@ -159,12 +161,14 @@ export function RoutineTaskList({ routineTasks, suggestedDays, suggestedPlans = 
                   >
                     Sla 1 cyclus over
                   </button>
-                  <a
-                    href="/tasks?tab=missions#tasks-list"
-                    className="rounded-lg border border-[var(--card-border)] bg-[var(--bg-surface)] px-3 py-1.5 text-sm font-medium text-[var(--text-primary)] hover:bg-[var(--bg-hover)]"
+                  <button
+                    type="button"
+                    disabled={pending}
+                    className="rounded-lg border border-[var(--card-border)] bg-[var(--bg-surface)] px-3 py-1.5 text-sm font-medium text-[var(--text-primary)] hover:bg-[var(--bg-hover)] disabled:opacity-50"
+                    onClick={() => setEditTask(task)}
                   >
                     Bewerk details
-                  </a>
+                  </button>
                 </div>
                 <div className="mt-1 flex flex-wrap items-end gap-2">
                   <label className="text-xs text-[var(--text-muted)]">
@@ -230,6 +234,18 @@ export function RoutineTaskList({ routineTasks, suggestedDays, suggestedPlans = 
           router.refresh();
         }}
       />
+      {editTask && (
+        <EditMissionModal
+          open
+          onClose={() => setEditTask(null)}
+          task={editTask}
+          onSaved={() => {
+            setFeedback(`${editTask.title ?? "Routine"} bijgewerkt.`);
+            setEditTask(null);
+            router.refresh();
+          }}
+        />
+      )}
     </div>
   );
 }

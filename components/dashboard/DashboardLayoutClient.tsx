@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
+import Link from "next/link";
 import BottomNavigation from "@/components/ui/BottomNavigation";
 import { KeyboardShortcuts } from "@/components/KeyboardShortcuts";
 import { ThemeHydrate } from "@/components/providers/ThemeHydrate";
@@ -115,6 +116,14 @@ export function DashboardLayoutClient({
               </a>
               <KeyboardShortcuts />
               <HelpFloatingIcon />
+              <Link
+                href="/settings"
+                className="fixed right-3 top-3 z-[70] rounded-full border border-[var(--card-border)] bg-[var(--bg-surface)]/80 px-2.5 py-1.5 text-sm font-semibold text-[var(--text-primary)] backdrop-blur hover:bg-[var(--bg-hover)]"
+                aria-label="Open settings"
+                title="Settings"
+              >
+                ⚙
+              </Link>
               <div className="relative z-10 mx-auto flex min-h-0 max-h-[100dvh] w-full max-w-[100vw] flex-1 flex-col overflow-hidden bg-transparent md:min-h-[640px]">
                 {children}
               </div>

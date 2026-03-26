@@ -64,6 +64,21 @@ type UnifiedDecisionMeta = {
   confidence?: "low" | "medium" | "high";
   horizon?: "past" | "present" | "future" | "blended";
   reasonCodes?: string[];
+  engineVersion?: string;
+  rankingMode?: string;
+  modelVersion?: string;
+  selectedScore?: number;
+  candidateCount?: number;
+  candidateSnapshot?: Array<{
+    candidateId: string;
+    decisionType: string;
+    source: string;
+    score: number;
+    confidence: "low" | "medium" | "high";
+    horizon: "past" | "present" | "future" | "blended";
+    reasonCodes: string[];
+  }>;
+  featureSnapshot?: Record<string, unknown>;
 };
 
 type Message = {
@@ -201,6 +216,13 @@ export default function AssistantPageClient() {
         decisionConfidence: msg.unifiedDecision?.confidence ?? "unknown",
         decisionHorizon: msg.unifiedDecision?.horizon ?? "unknown",
         decisionReasonCodes: msg.unifiedDecision?.reasonCodes ?? [],
+        decisionEngineVersion: msg.unifiedDecision?.engineVersion ?? "unknown",
+        decisionRankingMode: msg.unifiedDecision?.rankingMode ?? "unknown",
+        decisionModelVersion: msg.unifiedDecision?.modelVersion ?? "unknown",
+        decisionCandidateCount: msg.unifiedDecision?.candidateCount ?? 0,
+        decisionSelectedScore: msg.unifiedDecision?.selectedScore ?? -1,
+        decisionCandidates: msg.unifiedDecision?.candidateSnapshot ?? [],
+        decisionFeatureSnapshot: msg.unifiedDecision?.featureSnapshot ?? {},
       });
     }
   }, [messages]);
@@ -233,6 +255,20 @@ export default function AssistantPageClient() {
       const decisionConfidence = sourceMessage?.unifiedDecision?.confidence ?? "unknown";
       const decisionHorizon = sourceMessage?.unifiedDecision?.horizon ?? "unknown";
       const decisionReasonCodes = sourceMessage?.unifiedDecision?.reasonCodes ?? [];
+      const decisionEngineVersion =
+        sourceMessage?.unifiedDecision?.engineVersion ?? "unknown";
+      const decisionRankingMode =
+        sourceMessage?.unifiedDecision?.rankingMode ?? "unknown";
+      const decisionModelVersion =
+        sourceMessage?.unifiedDecision?.modelVersion ?? "unknown";
+      const decisionCandidateCount =
+        sourceMessage?.unifiedDecision?.candidateCount ?? 0;
+      const decisionSelectedScore =
+        sourceMessage?.unifiedDecision?.selectedScore ?? -1;
+      const decisionCandidates =
+        sourceMessage?.unifiedDecision?.candidateSnapshot ?? [];
+      const decisionFeatureSnapshot =
+        sourceMessage?.unifiedDecision?.featureSnapshot ?? {};
       try {
         await trackEvent("decision_action", {
           decisionId,
@@ -243,6 +279,13 @@ export default function AssistantPageClient() {
           decisionConfidence,
           decisionHorizon,
           decisionReasonCodes,
+          decisionEngineVersion,
+          decisionRankingMode,
+          decisionModelVersion,
+          decisionCandidateCount,
+          decisionSelectedScore,
+          decisionCandidates,
+          decisionFeatureSnapshot,
         });
         if (action.type === "add_task") {
           await createTask({
@@ -292,6 +335,13 @@ export default function AssistantPageClient() {
           decisionConfidence,
           decisionHorizon,
           decisionReasonCodes,
+          decisionEngineVersion,
+          decisionRankingMode,
+          decisionModelVersion,
+          decisionCandidateCount,
+          decisionSelectedScore,
+          decisionCandidates,
+          decisionFeatureSnapshot,
         });
       } catch {
         await trackEvent("decision_outcome", {
@@ -304,6 +354,13 @@ export default function AssistantPageClient() {
           decisionConfidence,
           decisionHorizon,
           decisionReasonCodes,
+          decisionEngineVersion,
+          decisionRankingMode,
+          decisionModelVersion,
+          decisionCandidateCount,
+          decisionSelectedScore,
+          decisionCandidates,
+          decisionFeatureSnapshot,
         });
         setError("Actie uitvoeren mislukt. Probeer het opnieuw.");
       }
