@@ -1292,9 +1292,9 @@ html[data-light-ui="true"] body {
   pointer-events: none;
 }
 
-/* Real in-flow spacer so page content clears bottom nav area (+ hub protrusion). */
+/* Real in-flow spacer so page content clears bottom nav area. */
 .bottom-nav-page-spacer {
-  height: calc(var(--footer-height, 60px) + 40px + env(safe-area-inset-bottom));
+  height: calc(var(--footer-height, 60px) + 28px + env(safe-area-inset-bottom));
   width: 100%;
   pointer-events: none;
 }
@@ -1424,73 +1424,47 @@ html[data-light-ui="true"] body {
   text-align: center;
 }
 
-/* Center HQ / Dashboard: floating hub (reads as primary home control) */
+/* Center HQ / Dashboard: compact in-bar pill (no floating disc; balances with 6 other tabs) */
 .nav-item-dashboard {
   position: relative;
-  z-index: 3;
-  overflow: visible;
-  flex: 1.08 1 0;
-  border-left: none;
-  border-right: none;
-  border-top: none;
-  border-radius: 0;
-  background: transparent;
-  transform: none;
-  padding-top: 10px;
+  z-index: 2;
+  flex: 1 1 0;
+  padding-top: 4px;
+  padding-bottom: 6px;
 }
 
-/* Specificity matches .nav-item.active::before so hub shape wins over the active top-line bar */
 .nav-item.nav-item-dashboard::before {
-  content: "";
-  position: absolute;
-  top: -20px;
-  left: 50%;
-  right: auto;
-  transform: translateX(-50%);
-  width: 54px;
-  height: 54px;
-  border-radius: 50%;
-  pointer-events: none;
-  z-index: 0;
-  background:
-    radial-gradient(
-      circle at 35% 28%,
-      color-mix(in srgb, var(--semantic-accent, #00d4ff) 22%, rgba(255, 255, 255, 0.08)) 0%,
-      transparent 55%
-    ),
-    linear-gradient(155deg, rgba(28, 36, 58, 0.98) 0%, rgba(12, 16, 32, 0.98) 100%);
-  border: 2px solid color-mix(in srgb, var(--semantic-accent, #00d4ff) 38%, rgba(255, 255, 255, 0.12));
-  box-shadow:
-    0 10px 28px rgba(0, 0, 0, 0.45),
-    0 0 0 1px rgba(0, 0, 0, 0.35) inset,
-    0 1px 0 rgba(255, 255, 255, 0.14) inset,
-    0 0 28px color-mix(in srgb, var(--semantic-accent, #00d4ff) 28%, transparent);
-  transition:
-    box-shadow 0.2s ease,
-    border-color 0.2s ease,
-    transform 0.2s ease;
-}
-
-.nav-item.nav-item-dashboard:hover::before {
-  border-color: color-mix(in srgb, var(--semantic-accent, #00d4ff) 55%, rgba(255, 255, 255, 0.2));
-  transform: translateX(-50%) scale(1.04);
-  box-shadow:
-    0 12px 32px rgba(0, 0, 0, 0.5),
-    0 0 0 1px rgba(0, 0, 0, 0.35) inset,
-    0 1px 0 rgba(255, 255, 255, 0.16) inset,
-    0 0 36px color-mix(in srgb, var(--semantic-accent, #00d4ff) 38%, transparent);
+  display: none;
 }
 
 .nav-item-dashboard .nav-item-icon {
   position: relative;
   z-index: 1;
-  width: 30px;
-  height: 30px;
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--semantic-accent, #00d4ff) 14%, rgba(255, 255, 255, 0.06)) 0%,
+    rgba(12, 18, 34, 0.92) 100%
+  );
+  border: 1px solid color-mix(in srgb, var(--semantic-accent, #00d4ff) 38%, rgba(255, 255, 255, 0.1));
+  box-shadow:
+    0 2px 10px rgba(0, 0, 0, 0.35),
+    0 0 0 1px rgba(0, 0, 0, 0.22) inset;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+}
+
+.nav-item-dashboard:hover .nav-item-icon {
+  border-color: color-mix(in srgb, var(--semantic-accent, #00d4ff) 52%, rgba(255, 255, 255, 0.16));
+  box-shadow:
+    0 4px 14px rgba(0, 0, 0, 0.4),
+    0 0 18px color-mix(in srgb, var(--semantic-accent, #00d4ff) 24%, transparent);
 }
 
 .nav-item-dashboard .nav-item-icon img {
-  width: 26px;
-  height: 26px;
+  width: 22px;
+  height: 22px;
 }
 
 .nav-item-dashboard > span:last-child {
@@ -1498,7 +1472,7 @@ html[data-light-ui="true"] body {
   z-index: 1;
   margin-top: 2px;
   font-weight: 700;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.03em;
   font-size: clamp(10px, 2.5vw, 11px);
   color: rgba(255, 255, 255, 0.58);
   transition: color 0.15s ease;
@@ -1508,28 +1482,17 @@ html[data-light-ui="true"] body {
   color: rgba(255, 255, 255, 0.92);
 }
 
-/* Hub active: ring + glow; drop full-tab active chrome (underline handled below) */
 .nav-item-dashboard.active {
   color: var(--semantic-accent, #00d4ff);
   background: transparent;
   box-shadow: none;
 }
 
-.nav-item.nav-item-dashboard.active::before {
-  transform: translateX(-50%) scale(1);
-  border-color: color-mix(in srgb, var(--semantic-accent, #00d4ff) 70%, rgba(255, 255, 255, 0.25));
-  background:
-    radial-gradient(
-      circle at 35% 28%,
-      color-mix(in srgb, var(--semantic-accent, #00d4ff) 35%, transparent) 0%,
-      transparent 58%
-    ),
-    linear-gradient(155deg, rgba(24, 40, 62, 0.99) 0%, rgba(10, 18, 38, 0.99) 100%);
+.nav-item-dashboard.active .nav-item-icon {
+  border-color: color-mix(in srgb, var(--semantic-accent, #00d4ff) 62%, rgba(255, 255, 255, 0.2));
   box-shadow:
-    0 12px 32px rgba(0, 0, 0, 0.5),
-    0 0 0 1px color-mix(in srgb, var(--semantic-accent, #00d4ff) 25%, transparent) inset,
-    0 1px 0 rgba(255, 255, 255, 0.12) inset,
-    0 0 40px color-mix(in srgb, var(--semantic-accent, #00d4ff) 45%, transparent);
+    0 0 0 1px color-mix(in srgb, var(--semantic-accent, #00d4ff) 22%, transparent) inset,
+    0 0 20px color-mix(in srgb, var(--semantic-accent, #00d4ff) 32%, transparent);
 }
 
 .nav-item-dashboard.active > span:last-child {
@@ -1537,26 +1500,17 @@ html[data-light-ui="true"] body {
 }
 
 .nav-item-dashboard.active::after {
-  bottom: 6px;
-  width: 22px;
-  height: 3px;
-  border-radius: 2px;
-  opacity: 0.85;
+  bottom: 5px;
+  width: 18px;
+  height: 2px;
+  border-radius: 1px;
+  opacity: 0.88;
 }
 
-[data-light-ui="true"] .nav-item.nav-item-dashboard::before {
-  background:
-    radial-gradient(
-      circle at 35% 28%,
-      color-mix(in srgb, var(--semantic-accent, #00d4ff) 18%, rgba(255, 255, 255, 0.5)) 0%,
-      transparent 55%
-    ),
-    linear-gradient(165deg, rgba(var(--mode-rgb-deep), 0.35) 0%, rgba(255, 255, 255, 0.96) 100%);
-  box-shadow:
-    0 8px 24px rgba(0, 0, 0, 0.18),
-    0 0 0 1px rgba(0, 0, 0, 0.06) inset,
-    0 1px 0 rgba(255, 255, 255, 0.85) inset,
-    0 0 20px color-mix(in srgb, var(--semantic-accent, #00d4ff) 18%, transparent);
+[data-light-ui="true"] .nav-item-dashboard .nav-item-icon {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.96) 0%, rgba(var(--mode-rgb-deep), 0.06) 100%);
+  border-color: color-mix(in srgb, var(--semantic-accent, #00d4ff) 30%, rgba(0, 0, 0, 0.1));
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12), 0 0 0 1px rgba(0, 0, 0, 0.05) inset;
 }
 
 [data-light-ui="true"] .nav-item-dashboard > span:last-child {

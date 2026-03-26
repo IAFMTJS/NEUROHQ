@@ -4,7 +4,9 @@ import { useEffect, useState } from "react";
 
 const STORAGE_KEY = "neurohq-callsign";
 
-export function UserCallsignCard() {
+type Props = { embedded?: boolean };
+
+export function UserCallsignCard({ embedded = false }: Props) {
   const [callsign, setCallsign] = useState("Commander");
   const [saved, setSaved] = useState(false);
 
@@ -19,14 +21,14 @@ export function UserCallsignCard() {
     }
   }, []);
 
-  return (
-    <section className="card-simple space-y-3">
-      <div>
-        <p className="text-xs font-semibold uppercase tracking-wide text-[var(--text-muted)]">Personalisatie</p>
-        <p className="mt-1 text-xs text-[var(--text-muted)]">
-          Kies hoe de app je aanspreekt in de begroeting.
-        </p>
-      </div>
+  const inner = (
+    <>
+      {!embedded && (
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-wide text-[var(--text-muted)]">Personalisatie</p>
+          <p className="mt-1 text-xs text-[var(--text-muted)]">Kies hoe de app je aanspreekt in de begroeting.</p>
+        </div>
+      )}
       <label className="block text-xs text-[var(--text-muted)]">
         Aanspreektitel
         <input
@@ -58,7 +60,13 @@ export function UserCallsignCard() {
         Opslaan
       </button>
       {saved && <p className="text-xs text-[var(--text-muted)]">Opgeslagen.</p>}
-    </section>
+    </>
   );
+
+  if (embedded) {
+    return <div className="space-y-3">{inner}</div>;
+  }
+
+  return <section className="card-simple space-y-3">{inner}</section>;
 }
 
