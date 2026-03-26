@@ -11,6 +11,8 @@ import { getBudgetSettings } from "@/app/actions/budget";
 import { getXPFullContext } from "@/app/actions/xp-context";
 import { UserCallsignCard } from "@/components/settings/UserCallsignCard";
 import { ProfileCategory, ProfileSubCard } from "@/components/profile/ProfileSection";
+import { ProfileIdentitySummary } from "@/components/profile/ProfileIdentitySummary";
+import { ProfileQuickNav } from "@/components/profile/ProfileQuickNav";
 
 const ThemePicker = nextDynamic(() => import("@/components/settings/ThemePicker").then((m) => ({ default: m.ThemePicker })), { loading: () => null });
 const SettingsCompactUi = nextDynamic(() => import("@/components/settings/SettingsCompactUi").then((m) => ({ default: m.SettingsCompactUi })), { loading: () => null });
@@ -22,12 +24,6 @@ const SettingsDaysOff = nextDynamic(() => import("@/components/settings/Settings
 const SettingsBudget = nextDynamic(() => import("@/components/SettingsBudget").then((m) => ({ default: m.SettingsBudget })), { loading: () => null });
 
 export const dynamic = "force-dynamic";
-
-function momentumNl(band: "low" | "medium" | "high"): string {
-  if (band === "high") return "hoog";
-  if (band === "medium") return "gemiddeld";
-  return "laag";
-}
 
 export default async function ProfilePage() {
   const supabase = await createClient();
@@ -46,12 +42,29 @@ export default async function ProfilePage() {
   ]);
 
   const { identity, insightState } = xpCtx;
-  const xp7 = insightState?.xpLast7 ?? 0;
-  const xpPrev7 = insightState?.xpPrevious7 ?? 0;
 
   return (
     <div className="container page page-wide space-y-5">
-      <HQPageHeader title="Profiel" subtitle="Account, inzichten en personalisatie — compact gegroepeerd." backHref="/dashboard" />
+      <HQPageHeader
+        title="Profiel"
+        subtitle="Jouw bridge: voortgang, coaching, persona — technische opties blijven onder Instellingen."
+        backHref="/dashboard"
+      />
+
+      <ProfileIdentitySummary identity={identity} insightState={insightState} behaviorProfile={behaviorProfile} />
+
+      <ProfileQuickNav />
+
+      <div className="rounded-xl border border-[var(--card-border)]/70 bg-[var(--bg-surface)]/10 px-3 py-2.5 text-xs text-[var(--text-secondary)]">
+        <p className="font-medium text-[var(--text-primary)]">Engine &amp; opslag</p>
+        <p className="mt-1">
+          Missies, XP-hints en push-toon gebruiken o.a. je behavior profile, user_preferences (incl. HQ-persona) en
+          budgetvelden op users — alles per user_id in Supabase. Kaarten met een opslaan-knop schrijven naar de server; het
+          dashboard spiegelt persona daarna via bootstrap en{" "}
+          <code className="rounded bg-[var(--bg-primary)] px-1 py-0.5 text-[10px]">/api/settings</code> naar dit apparaat.
+        </p>
+      </div>
+
       <section className="mascot-hero mascot-hero-top mascot-hero-sharp" data-mascot-page="settings" aria-hidden>
         <div className="mascot-hero-inner mx-auto">
           <HeroMascotImage page="settings" className="mascot-img" heroLarge />
@@ -68,53 +81,13 @@ export default async function ProfilePage() {
         </div>
       </ProfileCategory>
 
-      <ProfileCategory title="Inzichten" subtitle="Korte voortgang — details staan op Rapport en XP" defaultOpen>
-        <div className="grid gap-3 sm:grid-cols-2">
-          <div className="rounded-xl border border-[var(--card-border)] bg-[var(--bg-surface)]/20 px-3 py-2.5">
-            <p className="text-[10px] font-semibold uppercase tracking-wide text-[var(--text-muted)]">Niveau</p>
-            <p className="mt-0.5 text-lg font-semibold tabular-nums text-[var(--text-primary)]">
-              {identity.level}{" "}
-              <span className="text-sm font-normal text-[var(--text-secondary)]">· {identity.rank}</span>
-            </p>
-            <p className="mt-1 text-xs text-[var(--text-muted)]">{identity.xp_to_next_level} XP tot volgende level</p>
-          </div>
-          <div className="rounded-xl border border-[var(--card-border)] bg-[var(--bg-surface)]/20 px-3 py-2.5">
-            <p className="text-[10px] font-semibold uppercase tracking-wide text-[var(--text-muted)]">Streak</p>
-            <p className="mt-0.5 text-lg font-semibold tabular-nums text-[var(--text-primary)]">{identity.streak.current} dagen</p>
-            <p className="mt-1 text-xs text-[var(--text-muted)]">Langste: {identity.streak.longest}</p>
-          </div>
-          <div className="rounded-xl border border-[var(--card-border)] bg-[var(--bg-surface)]/20 px-3 py-2.5 sm:col-span-2">
-            <p className="text-[10px] font-semibold uppercase tracking-wide text-[var(--text-muted)]">Laatste 7 dagen</p>
-            <div className="mt-1 flex flex-wrap items-baseline gap-x-4 gap-y-1 text-sm text-[var(--text-primary)]">
-              <span>
-                <span className="tabular-nums font-semibold">{xp7}</span> XP
-              </span>
-              <span className="text-[var(--text-muted)]">
-                vs. week ervoor: <span className="tabular-nums text-[var(--text-secondary)]">{xpPrev7}</span>
-              </span>
-              {insightState && (
-                <span className="text-[var(--text-muted)]">
-                  Momentum: <span className="text-[var(--text-secondary)]">{momentumNl(insightState.momentum.band)}</span>
-                </span>
-              )}
-            </div>
-          </div>
-        </div>
-        <div className="flex flex-wrap gap-2">
-          <Link href="/report" className="btn-secondary inline-flex items-center rounded-lg px-3 py-2 text-sm font-medium">
-            Rapport
-          </Link>
-          <Link
-            href="/xp"
-            className="inline-flex items-center rounded-lg border border-[var(--card-border)] px-3 py-2 text-sm font-medium text-[var(--text-secondary)] transition hover:bg-[var(--bg-hover)]/40 hover:text-[var(--text-primary)]"
-          >
-            XP &amp; voorspelling
-          </Link>
-        </div>
-      </ProfileCategory>
-
-      <ProfileCategory title="Personalisatie" subtitle="Hoe we je aanspreken" defaultOpen>
-        <UserCallsignCard embedded />
+      <ProfileCategory title="Personalisatie" subtitle="HQ-koptekst, aanspreeknaam en begroeting (zoals op het dashboard)" defaultOpen>
+        <UserCallsignCard
+          embedded
+          initialDisplayCallsign={prefs.display_callsign ?? null}
+          initialHqHeadline={prefs.hq_headline ?? null}
+          initialGreetingLocale={prefs.greeting_locale ?? "en"}
+        />
       </ProfileCategory>
 
       <ProfileCategory title="Weergave" subtitle="Thema en interface">

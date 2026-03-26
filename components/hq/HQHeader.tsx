@@ -2,20 +2,29 @@
 
 import { useState, useEffect } from "react";
 import type { CopyVariant } from "@/app/actions/adaptive";
+import { greetingForHour } from "@/lib/hq-greeting";
+import {
+  PERSONA_STORAGE,
+  PERSONA_UPDATED_EVENT,
+  parseGreetingLocale,
+  type PersonaGreetingLocale,
+} from "@/lib/user-persona-storage";
 
-function getGreeting(): string {
-  const h = new Date().getHours();
-  if (h < 12) return "Good morning";
-  if (h < 17) return "Good afternoon";
-  return "Good evening";
-}
+const DEFAULT_HEADLINE = "Commander HQ";
 
-function formatDate(): string {
-  return new Date().toLocaleDateString("en-US", {
-    weekday: "long",
-    month: "short",
-    day: "numeric",
-  });
+function readPersonaFromStorage(): { headline: string; callsign: string; locale: PersonaGreetingLocale } {
+  try {
+    const headlineRaw = window.localStorage.getItem(PERSONA_STORAGE.hqHeadline);
+    const callsignRaw = window.localStorage.getItem(PERSONA_STORAGE.callsign);
+    const localeRaw = window.localStorage.getItem(PERSONA_STORAGE.greetingLocale);
+    return {
+      headline: headlineRaw?.trim() ? headlineRaw.trim().slice(0, 40) : DEFAULT_HEADLINE,
+      callsign: callsignRaw?.trim() ? callsignRaw.trim() : "Commander",
+      locale: parseGreetingLocale(localeRaw),
+    };
+  } catch {
+    return { headline: DEFAULT_HEADLINE, callsign: "Commander", locale: "en" };
+  }
 }
 
 const COPY_SUBTITLE: Record<CopyVariant, string | null> = {
@@ -25,8 +34,6 @@ const COPY_SUBTITLE: Record<CopyVariant, string | null> = {
   stabilize: "Steady pace.",
   high_sensory: "Minimal mode.",
 };
-const CALLSIGN_STORAGE_KEY = "neurohq-callsign";
-
 type Props = {
   energyPct?: number;
   focusPct?: number;
@@ -36,14 +43,15 @@ type Props = {
 };
 
 export function HQHeader({ energyPct: _energyPct = 0, focusPct: _focusPct = 0, loadPct: _loadPct = 0, copyVariant = "default" }: Props) {
-  const [greeting, setGreeting] = useState(getGreeting);
-  const [dateStr, setDateStr] = useState(formatDate);
+  const [greeting, setGreeting] = useState(() => greetingForHour(new Date().getHours(), "en"));
+  const [hqHeadline, setHqHeadline] = useState(DEFAULT_HEADLINE);
   const [callsign, setCallsign] = useState("Commander");
 
   useEffect(() => {
     const tick = () => {
-      setGreeting(getGreeting());
-      setDateStr(formatDate());
+      const h = new Date().getHours();
+      const { locale } = readPersonaFromStorage();
+      setGreeting(greetingForHour(h, locale));
     };
     tick();
     const id = setInterval(tick, 60_000);
@@ -51,25 +59,30 @@ export function HQHeader({ energyPct: _energyPct = 0, focusPct: _focusPct = 0, l
   }, []);
 
   useEffect(() => {
-    const readCallsign = () => {
-      try {
-        const stored = window.localStorage.getItem(CALLSIGN_STORAGE_KEY);
-        setCallsign(stored && stored.trim() ? stored.trim() : "Commander");
-      } catch {
-        setCallsign("Commander");
-      }
+    const readPersona = () => {
+      const p = readPersonaFromStorage();
+      setHqHeadline(p.headline);
+      setCallsign(p.callsign);
+      setGreeting(greetingForHour(new Date().getHours(), p.locale));
     };
-    readCallsign();
-    window.addEventListener("neurohq-callsign-updated", readCallsign as EventListener);
-    return () => window.removeEventListener("neurohq-callsign-updated", readCallsign as EventListener);
+    readPersona();
+    const onPersona = () => readPersona();
+    window.addEventListener(PERSONA_UPDATED_EVENT, onPersona as EventListener);
+    window.addEventListener("neurohq-callsign-updated", onPersona as EventListener);
+    return () => {
+      window.removeEventListener(PERSONA_UPDATED_EVENT, onPersona as EventListener);
+      window.removeEventListener("neurohq-callsign-updated", onPersona as EventListener);
+    };
   }, []);
 
   const copyLine = COPY_SUBTITLE[copyVariant];
 
   return (
     <header className="flex flex-col items-center gap-1 pt-0 pb-1 mt-0">
-      <h1 className="hq-h1 text-center leading-tight">Commander HQ</h1>
-      <p className="hq-date text-center opacity-70">{greeting}, {callsign}</p>
+      <h1 className="hq-h1 text-center leading-tight">{hqHeadline}</h1>
+      <p className="hq-date text-center opacity-70">
+        {greeting}, {callsign}
+      </p>
       {copyLine && <p className="hq-date text-center text-xs opacity-70">{copyLine}</p>}
     </header>
   );

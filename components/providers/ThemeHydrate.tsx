@@ -4,6 +4,7 @@ import { useEffect } from "react";
 import { useTheme } from "./ThemeProvider";
 import { useBootstrap } from "./BootstrapProvider";
 import { getUserPreferencesOrDefaults } from "@/app/actions/preferences";
+import { applyServerPersonaToLocalStorage } from "@/lib/user-persona-storage";
 
 /** Call once when inside authenticated area to sync theme/emotion from server. Prefers bootstrap preferences when available to avoid duplicate fetch. */
 export function ThemeHydrate() {
@@ -20,6 +21,11 @@ export function ThemeHydrate() {
         if (!cancelled) {
           hydrate(prefs);
           try {
+            applyServerPersonaToLocalStorage({
+              display_callsign: prefs.display_callsign,
+              hq_headline: prefs.hq_headline,
+              greeting_locale: prefs.greeting_locale,
+            });
             // Only overwrite DOM/localStorage if server prefs differ from current; avoids flash when light UI already set from inline script
             const currentLight = document.documentElement.getAttribute("data-light-ui");
             const nextLight = prefs.light_ui ? "true" : "false";

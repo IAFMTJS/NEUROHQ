@@ -674,8 +674,8 @@ export function DashboardClientShell() {
                       autoSuggestions={autoSuggestions}
                     />
                   </div>
-                  <div className="pointer-events-none absolute right-0 top-[5%] z-20 sm:top-[8%]">
-                    <div className="bridge-system-overview-rail pointer-events-auto -translate-x-2 sm:-translate-x-3">
+                  <div className="pointer-events-none absolute right-0 top-[5%] z-30 sm:top-[8%]">
+                    <div className="bridge-system-overview-rail pointer-events-auto -translate-x-1 sm:-translate-x-2">
                       <SystemOverviewCard
                         compact
                         sections={[

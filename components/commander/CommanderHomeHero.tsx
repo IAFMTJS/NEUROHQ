@@ -27,7 +27,7 @@ type Props = {
   autoSuggestions?: { text: string; type: string }[];
   /** When true, skip the inner "Dashboard / System Overview" title (e.g. when HQHeader is shown above). */
   hideBuiltInTitle?: boolean;
-  /** Dashboard bridge: left-align column so module icons can sit on the right with overlay. */
+  /** Dashboard bridge: tekst/links blijven links; mascot + stat-rings gecentreerd; icon-rail overlay rechts. */
   bridgeLayout?: boolean;
 };
 
@@ -81,7 +81,7 @@ export function CommanderHomeHero({
       )}
 
       <section
-        className={`mascot-hero mascot-hero-top relative${bridgeLayout ? " mx-0 max-w-[min(280px,85vw)]" : ""}`}
+        className="mascot-hero mascot-hero-top relative w-full"
         aria-hidden
         data-energy-low={energyLow || undefined}
         data-focus-low={focusLow || undefined}
@@ -112,7 +112,7 @@ export function CommanderHomeHero({
         </ul>
       )}
 
-      <section className={`stats${bridgeLayout ? " !justify-start gap-3 md:gap-4" : ""}`}>
+      <section className={`stats${bridgeLayout ? " !justify-center gap-3 md:gap-4" : ""}`}>
         <CommanderStatRing value={effectiveEnergyPct} variant="energy" />
         <CommanderStatRing value={effectiveFocusPct} variant="focus" />
         <CommanderStatRing value={effectiveLoadPct} variant="load" />

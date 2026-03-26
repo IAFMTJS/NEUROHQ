@@ -3070,9 +3070,12 @@ export type Database = {
           color_mode: string
           compact_ui: boolean
           day_off_mode: string | null
+          display_callsign: string | null
           email_reminders_enabled: boolean
+          greeting_locale: string | null
           growth_focus_protocol_locale: string | null
           growth_focus_protocol_slug: string | null
+          hq_headline: string | null
           last_release_push_version: string | null
           light_ui: boolean
           push_copy_history: Json
@@ -3093,9 +3096,12 @@ export type Database = {
           color_mode?: string
           compact_ui?: boolean
           day_off_mode?: string | null
+          display_callsign?: string | null
           email_reminders_enabled?: boolean
+          greeting_locale?: string | null
           growth_focus_protocol_locale?: string | null
           growth_focus_protocol_slug?: string | null
+          hq_headline?: string | null
           last_release_push_version?: string | null
           light_ui?: boolean
           push_copy_history?: Json
@@ -3116,9 +3122,12 @@ export type Database = {
           color_mode?: string
           compact_ui?: boolean
           day_off_mode?: string | null
+          display_callsign?: string | null
           email_reminders_enabled?: boolean
+          greeting_locale?: string | null
           growth_focus_protocol_locale?: string | null
           growth_focus_protocol_slug?: string | null
+          hq_headline?: string | null
           last_release_push_version?: string | null
           light_ui?: boolean
           push_copy_history?: Json

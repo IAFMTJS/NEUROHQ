@@ -3,9 +3,27 @@
 import { cache } from "react";
 import { createClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
-import { PREFERENCES_DEFAULTS, type UserPreferences } from "@/types/preferences.types";
+import { PREFERENCES_DEFAULTS, type GreetingLocale, type UserPreferences } from "@/types/preferences.types";
 
 const DEFAULTS = PREFERENCES_DEFAULTS;
+
+function normCallsign(v: string | null | undefined): string | null {
+  if (v == null) return null;
+  const t = String(v).trim();
+  if (!t) return null;
+  return t.slice(0, 24);
+}
+
+function normHeadline(v: string | null | undefined): string | null {
+  if (v == null) return null;
+  const t = String(v).trim();
+  if (!t) return null;
+  return t.slice(0, 40);
+}
+
+function normGreetingLocale(v: GreetingLocale | null | undefined): GreetingLocale {
+  return v === "nl" ? "nl" : "en";
+}
 
 /** Cached per request so dashboard API and multiple callers don't repeat the same Supabase read. */
 export const getUserPreferences = cache(async (): Promise<UserPreferences | null> => {
@@ -16,7 +34,7 @@ export const getUserPreferences = cache(async (): Promise<UserPreferences | null
   const { data, error } = await supabase
     .from("user_preferences")
     .select(
-      "theme, color_mode, selected_emotion, compact_ui, reduced_motion, light_ui, auto_master_missions, usual_days_off, day_off_mode, email_reminders_enabled, push_reminders_enabled, push_morning_enabled, push_evening_enabled, push_weekly_learning_enabled, push_personality_mode, updated_at",
+      "theme, color_mode, selected_emotion, compact_ui, reduced_motion, light_ui, auto_master_missions, usual_days_off, day_off_mode, email_reminders_enabled, push_reminders_enabled, push_morning_enabled, push_evening_enabled, push_weekly_learning_enabled, push_personality_mode, display_callsign, hq_headline, greeting_locale, updated_at",
     )
     .eq("user_id", user.id)
     .single();
@@ -36,6 +54,9 @@ export const getUserPreferences = cache(async (): Promise<UserPreferences | null
       msg.includes("push_evening_enabled") ||
       msg.includes("push_weekly_learning_enabled") ||
       msg.includes("push_personality_mode") ||
+      msg.includes("display_callsign") ||
+      msg.includes("hq_headline") ||
+      msg.includes("greeting_locale") ||
       msg.toLowerCase().includes("schema cache")
     ) {
       const { data: legacyData, error: legacyError } = await supabase
@@ -64,6 +85,9 @@ export const getUserPreferences = cache(async (): Promise<UserPreferences | null
         push_evening_enabled: DEFAULTS.push_evening_enabled ?? true,
         push_weekly_learning_enabled: DEFAULTS.push_weekly_learning_enabled ?? true,
         push_personality_mode: DEFAULTS.push_personality_mode ?? "auto",
+        display_callsign: DEFAULTS.display_callsign ?? null,
+        hq_headline: DEFAULTS.hq_headline ?? null,
+        greeting_locale: DEFAULTS.greeting_locale ?? "en",
         updated_at: legacyData.updated_at ?? DEFAULTS.updated_at,
       };
     }
@@ -88,6 +112,9 @@ export const getUserPreferences = cache(async (): Promise<UserPreferences | null
     push_evening_enabled?: boolean | null;
     push_weekly_learning_enabled?: boolean | null;
     push_personality_mode?: UserPreferences["push_personality_mode"] | null;
+    display_callsign?: string | null;
+    hq_headline?: string | null;
+    greeting_locale?: string | null;
     updated_at?: string | null;
   };
   return {
@@ -106,6 +133,9 @@ export const getUserPreferences = cache(async (): Promise<UserPreferences | null
     push_evening_enabled: row.push_evening_enabled ?? DEFAULTS.push_evening_enabled ?? true,
     push_weekly_learning_enabled: row.push_weekly_learning_enabled ?? DEFAULTS.push_weekly_learning_enabled ?? true,
     push_personality_mode: row.push_personality_mode ?? DEFAULTS.push_personality_mode ?? "auto",
+    display_callsign: normCallsign(row.display_callsign),
+    hq_headline: normHeadline(row.hq_headline),
+    greeting_locale: normGreetingLocale(row.greeting_locale as GreetingLocale | null),
     updated_at: row.updated_at ?? DEFAULTS.updated_at,
   };
 });
@@ -119,7 +149,24 @@ export async function getUserPreferencesOrDefaults(): Promise<UserPreferences> {
 type UpdatePayload = Partial<
   Pick<
     UserPreferences,
-    "theme" | "color_mode" | "selected_emotion" | "compact_ui" | "reduced_motion" | "light_ui" | "auto_master_missions" | "usual_days_off" | "day_off_mode" | "email_reminders_enabled" | "push_reminders_enabled" | "push_morning_enabled" | "push_evening_enabled" | "push_weekly_learning_enabled" | "push_personality_mode"
+    | "theme"
+    | "color_mode"
+    | "selected_emotion"
+    | "compact_ui"
+    | "reduced_motion"
+    | "light_ui"
+    | "auto_master_missions"
+    | "usual_days_off"
+    | "day_off_mode"
+    | "email_reminders_enabled"
+    | "push_reminders_enabled"
+    | "push_morning_enabled"
+    | "push_evening_enabled"
+    | "push_weekly_learning_enabled"
+    | "push_personality_mode"
+    | "display_callsign"
+    | "hq_headline"
+    | "greeting_locale"
   >
 >;
 
@@ -146,6 +193,18 @@ export async function updateUserPreferences(payload: UpdatePayload) {
     push_evening_enabled: payload.push_evening_enabled ?? current.push_evening_enabled ?? true,
     push_weekly_learning_enabled: payload.push_weekly_learning_enabled ?? current.push_weekly_learning_enabled ?? true,
     push_personality_mode: payload.push_personality_mode ?? current.push_personality_mode ?? "auto",
+    display_callsign:
+      payload.display_callsign !== undefined
+        ? normCallsign(payload.display_callsign)
+        : normCallsign(current.display_callsign ?? null),
+    hq_headline:
+      payload.hq_headline !== undefined
+        ? normHeadline(payload.hq_headline)
+        : normHeadline(current.hq_headline ?? null),
+    greeting_locale:
+      payload.greeting_locale !== undefined
+        ? normGreetingLocale(payload.greeting_locale)
+        : normGreetingLocale(current.greeting_locale ?? undefined),
     updated_at: new Date().toISOString(),
   };
   const legacyRow = {
@@ -181,6 +240,9 @@ export async function updateUserPreferences(payload: UpdatePayload) {
       msg.includes("push_evening_enabled") ||
       msg.includes("push_weekly_learning_enabled") ||
       msg.includes("push_personality_mode") ||
+      msg.includes("display_callsign") ||
+      msg.includes("hq_headline") ||
+      msg.includes("greeting_locale") ||
       msg.toLowerCase().includes("schema cache")
     ) {
       const legacy = await supabase
@@ -194,6 +256,7 @@ export async function updateUserPreferences(payload: UpdatePayload) {
 
   if (finalError) throw new Error(finalError.message);
   revalidatePath("/dashboard");
+  revalidatePath("/profile");
   // Do not revalidate /settings here: it causes the settings page to re-render and
   // remount dynamic components (SettingsDaysOff, SettingsPush), which use loading: null
   // and thus disappear briefly. Client state is already optimistic; fresh data loads on next visit.

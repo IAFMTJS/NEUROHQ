@@ -19,6 +19,9 @@ export type EmotionKey =
 
 export type PushPersonalityMode = "auto" | "stoic" | "friendly" | "coach" | "drill" | "chaos";
 
+/** HQ header time-of-day copy (separate from app i18n). */
+export type GreetingLocale = "en" | "nl";
+
 export interface UserPreferences {
   theme: ThemeId;
   color_mode: ColorMode;
@@ -45,6 +48,12 @@ export interface UserPreferences {
   push_weekly_learning_enabled?: boolean;
   /** Personality / tone mode for behavioural push notifications. */
   push_personality_mode?: PushPersonalityMode | null;
+  /** HQ dashboard greeting name (e.g. Commander, Princess). Null = default Commander. */
+  display_callsign?: string | null;
+  /** Main line above greeting on dashboard. Null = default Commander HQ. */
+  hq_headline?: string | null;
+  /** Time-of-day greeting language on HQ header. */
+  greeting_locale?: GreetingLocale | null;
   updated_at: string;
 }
 
@@ -65,5 +74,8 @@ export const PREFERENCES_DEFAULTS: UserPreferences = {
   push_evening_enabled: true,
   push_weekly_learning_enabled: true,
   push_personality_mode: "auto",
+  display_callsign: null,
+  hq_headline: null,
+  greeting_locale: "en",
   updated_at: new Date().toISOString(),
 };
