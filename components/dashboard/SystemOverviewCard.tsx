@@ -30,7 +30,7 @@ export function SystemOverviewCard({ sections, compact = false }: Props) {
       <section
         className={
           compact
-            ? "rounded-xl border border-[var(--card-border)] bg-[var(--bg-surface)]/30 p-3"
+            ? "flex shrink-0 flex-col justify-start gap-2 self-stretch py-0.5"
             : "card-simple rounded-[var(--cmd-card-radius)] p-4 md:p-5"
         }
         aria-label="Command dashboard systeemoverzicht"
@@ -48,7 +48,13 @@ export function SystemOverviewCard({ sections, compact = false }: Props) {
             </div>
           </div>
         )}
-        <div className={`${compact ? "flex items-center justify-center gap-2" : "mt-4 grid grid-cols-4 gap-2"}`}>
+        <div
+          className={`${
+            compact
+              ? "flex flex-col items-center gap-2"
+              : "mt-4 grid grid-cols-4 gap-2"
+          }`}
+        >
           {sections.map((section) => (
             <button
               key={section.id}
@@ -59,12 +65,12 @@ export function SystemOverviewCard({ sections, compact = false }: Props) {
               aria-pressed={openSectionId === section.id}
               className={`rounded-xl border text-left transition-all ${
                 compact
-                  ? "h-9 w-9 p-0 text-center border-cyan-400/30 bg-cyan-500/10 shadow-[0_0_10px_rgba(34,211,238,0.2)] hover:bg-cyan-400/20 hover:shadow-[0_0_14px_rgba(34,211,238,0.34)] data-[pressed=true]:bg-cyan-300/25 data-[pressed=true]:border-cyan-300/60 data-[pressed=true]:shadow-[0_0_16px_rgba(34,211,238,0.42)]"
+                  ? "h-10 w-10 shrink-0 p-0 text-center border-cyan-400/30 bg-cyan-500/10 shadow-[0_0_10px_rgba(34,211,238,0.2)] hover:bg-cyan-400/20 hover:shadow-[0_0_14px_rgba(34,211,238,0.34)] data-[pressed=true]:bg-cyan-300/25 data-[pressed=true]:border-cyan-300/60 data-[pressed=true]:shadow-[0_0_16px_rgba(34,211,238,0.42)]"
                   : "border-[var(--card-border)] bg-[var(--bg-surface)]/40 px-3 py-3 hover:bg-[var(--bg-hover)]"
               }`}
               data-pressed={openSectionId === section.id ? "true" : "false"}
             >
-              <p className={`${compact ? "text-sm leading-9" : "text-lg"}`} aria-hidden>
+              <p className={`${compact ? "text-base leading-10" : "text-lg"}`} aria-hidden>
                 {section.icon}
               </p>
               {compact ? (

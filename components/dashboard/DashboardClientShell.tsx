@@ -14,7 +14,10 @@ import { ModeBanner, ModeExplanationModal } from "@/components/dashboard/Dashboa
 import { DashboardContextCard } from "@/components/dashboard/DashboardContextCard";
 import { DashboardQuickBudgetLog } from "@/components/dashboard/DashboardQuickBudgetLog";
 import { SystemOverviewCard } from "@/components/dashboard/SystemOverviewCard";
+import { BudgetBadge } from "@/components/dashboard/BudgetBadge";
+import { DashboardActionsTrigger } from "@/components/dashboard/DashboardActionsTrigger";
 import { CommanderHomeHero } from "@/components/commander";
+import { HudLinkButton } from "@/components/hud-test/HudLinkButton";
 import { SciFiPanel } from "@/components/hud-test/SciFiPanel";
 import { CornerNode } from "@/components/hud-test/CornerNode";
 import hudStyles from "@/components/hud-test/hud.module.css";
@@ -407,6 +410,28 @@ export function DashboardClientShell() {
   const nextActionDecisionMeta = critical?.unifiedDecision ?? null;
 
   useEffect(() => {
+    if (typeof window === "undefined") return;
+    if (nextDecisionType !== "budget_guardrail") return;
+    const u = critical?.unifiedDecision;
+    if (!u?.title) return;
+    const key = `neurohq-budget-guardrail-nudge-${dateStr}-${u.decisionId ?? "default"}`;
+    try {
+      if (sessionStorage.getItem(key) === "1") return;
+      sessionStorage.setItem(key, "1");
+    } catch {
+      return;
+    }
+    neuroToast.warning(u.title, {
+      description: u.description,
+      duration: 22_000,
+      action: {
+        label: u.cta ?? "Open guardrail",
+        onClick: () => setBudgetGuardrailOpen(true),
+      },
+    });
+  }, [critical?.unifiedDecision, dateStr, nextDecisionType]);
+
+  useEffect(() => {
     try {
       if (typeof sessionStorage !== "undefined" && sessionStorage.getItem(`neurohq-next-best-dismissed-${dateStr}`) === "1") {
         setNextBestDismissed(true);
@@ -495,6 +520,43 @@ export function DashboardClientShell() {
     blended: "border-fuchsia-500/40 bg-fuchsia-500/10 text-fuchsia-200",
   };
 
+  const dashboardHudStripTrack = (
+    <div className="dashboard-top-strip-track">
+      <BudgetBadge budgetRemainingCents={badgeBudgetRemainingCents ?? 0} currency={badgeCurrency} />
+      <HudLinkButton
+        href="/xp"
+        className="dashboard-hud-chip shrink-0 whitespace-nowrap rounded-[10px] px-2 text-[9px] font-semibold normal-case tracking-[0.03em]"
+        style={{
+          height: "26px",
+          minHeight: "26px",
+          paddingTop: 0,
+          paddingBottom: 0,
+          paddingLeft: "6px",
+          paddingRight: "6px",
+        }}
+        aria-label={`XP en niveau: level ${dcicLevel}`}
+      >
+        <span className="tabular-nums">Lv {dcicLevel}</span>
+        <span className="text-[var(--text-muted)]">XP</span>
+      </HudLinkButton>
+      <DashboardActionsTrigger count={actionsCount}>
+        {topQuickActions.length === 0 ? (
+          <p className="py-2 text-sm text-[var(--text-muted)]">Geen snelle acties vandaag.</p>
+        ) : (
+          topQuickActions.map((action) => (
+            <Link
+              key={action.key}
+              href={action.href}
+              className="block rounded-lg border border-[var(--card-border)] px-3 py-2.5 text-sm font-medium text-[var(--text-primary)] transition-colors hover:bg-[var(--bg-hover)]"
+            >
+              {action.label}
+            </Link>
+          ))
+        )}
+      </DashboardActionsTrigger>
+    </div>
+  );
+
   return (
     <main
       className={`relative min-h-screen overflow-hidden ${!skipCinematicLayers ? hudStyles.cinematicBackdrop : ""} ${isMinimalUI ? "minimal-ui" : ""}`}
@@ -522,6 +584,9 @@ export function DashboardClientShell() {
                 <HQHeader energyPct={energyPct} focusPct={focusPct} loadPct={loadPct} copyVariant={copyVariant} />
               </div>
             </header>
+            <div className="dashboard-cinematic w-full px-2">
+              <div className="dashboard-top-strip relative z-10 mt-1">{dashboardHudStripTrack}</div>
+            </div>
             <BrainStatusCard
               date={dateStr}
               initial={{ energy: state?.energy ?? null, focus: state?.focus ?? null, sensory_load: state?.sensory_load ?? null, sleep_hours: state?.sleep_hours ?? null, social_load: state?.social_load ?? null, physical_health: (state as { physical_health?: number | null })?.physical_health ?? null, mental_battery: (state as { mental_battery?: number | null })?.mental_battery ?? null, is_rest_day: (state as { is_rest_day?: boolean | null })?.is_rest_day ?? null }}
@@ -576,164 +641,173 @@ export function DashboardClientShell() {
         )}
 
         {!isMinimalUI && (
-          <SciFiPanel variant="glass" className={hudStyles.focusSecondary} bodyClassName="p-4 md:p-6">
-            <CornerNode corner="top-left" />
-            <CornerNode corner="top-right" />
-            <div className={`space-y-4 ${skipCinematicLayers ? "light-ui-defer-paint" : ""}`}>
-              <SciFiPanel className={`dashboard-bridge-frame idle-breathing ${hudStyles.focusPrimary}`} bodyClassName="dashboard-bridge-body" variant="command">
-                <CornerNode corner="top-left" />
-                <CornerNode corner="top-right" />
-                <span className="dashboard-bridge-label" aria-hidden>Command</span>
-                <CommanderHomeHero
-                  energyPct={heroEnergyPct}
-                  focusPct={heroFocusPct}
-                  loadPct={heroLoadPct}
-                  missionHref="/tasks"
-                  missionLabel={missionLabel}
-                  singleGoalLabel={singleGoalLabel}
-                  missionSubtext={missionSubtext}
-                  exportDate={dateStr}
-                  streakAtRisk={streakAtRisk}
-                  dailyQuoteText={dailyQuoteText}
-                  dailyQuoteAuthor={dailyQuoteAuthor}
-                  autoSuggestions={autoSuggestions}
+          <>
+            <header className="relative z-10 px-1 pt-2 pb-3 md:pt-3 md:pb-4">
+              <HQHeader energyPct={heroEnergyPct} focusPct={heroFocusPct} loadPct={heroLoadPct} copyVariant={copyVariant} />
+            </header>
+            <div className="dashboard-top-strip relative z-10 mt-0 px-1">{dashboardHudStripTrack}</div>
+            <SciFiPanel
+              className={`dashboard-bridge-frame idle-breathing ${hudStyles.focusPrimary}`}
+              bodyClassName={`dashboard-bridge-body dashboard-bridge-one-view flex h-[calc(100dvh-11.25rem)] max-h-[calc(100dvh-11.25rem)] flex-col gap-1.5 overflow-hidden [-webkit-overflow-scrolling:touch] ${skipCinematicLayers ? "light-ui-defer-paint" : ""}`}
+              variant="command"
+            >
+              <CornerNode corner="top-left" />
+              <CornerNode corner="top-right" />
+              <span className="dashboard-bridge-label shrink-0" aria-hidden>Command</span>
+              <div className="dashboard-command-bridge flex min-h-0 min-w-0 flex-1 flex-row gap-2 sm:gap-3">
+                <div className="commander-bridge-scroll min-h-0 min-w-0 flex-1 overflow-y-auto overflow-x-hidden [-webkit-overflow-scrolling:touch] pr-0.5">
+                  <CommanderHomeHero
+                    hideBuiltInTitle
+                    energyPct={heroEnergyPct}
+                    focusPct={heroFocusPct}
+                    loadPct={heroLoadPct}
+                    missionHref="/tasks"
+                    missionLabel={missionLabel}
+                    singleGoalLabel={singleGoalLabel}
+                    missionSubtext={missionSubtext}
+                    exportDate={dateStr}
+                    streakAtRisk={streakAtRisk}
+                    dailyQuoteText={dailyQuoteText}
+                    dailyQuoteAuthor={dailyQuoteAuthor}
+                    autoSuggestions={autoSuggestions}
+                  />
+                </div>
+                <SystemOverviewCard
+                  compact
+                  sections={[
+                      {
+                        id: "level",
+                        icon: "🧭",
+                        title: "Level & voortgang",
+                        subtitle: "Identiteit, momentum en progressie",
+                        content: (
+                          <section className="space-y-4">
+                            <div className="grid gap-4 md:grid-cols-2">
+                              {identity && identityEngine ? (
+                                <>
+                                  <IdentityBlock
+                                    level={(identity as { level: number }).level}
+                                    rank={(identity as { rank: string }).rank}
+                                    streak={(identity as { streak: { current: number } }).streak?.current ?? 0}
+                                    xpToNextLevel={(identity as { xp_to_next_level: number }).xp_to_next_level}
+                                    nextUnlock={((identity as { next_unlock?: { level: number; rank: string; xpNeeded: number } | null }).next_unlock) ?? { level: 0, rank: "-", xpNeeded: 0 }}
+                                    archetype={(identityEngine as { archetype: Archetype })?.archetype ?? "operator"}
+                                    evolutionPhase={(identityEngine as { evolutionPhase: EvolutionPhase })?.evolutionPhase ?? "initiate"}
+                                    reputation={(identityEngine as { reputation?: ReputationScore })?.reputation ?? { discipline: 0, consistency: 0, impact: 0 }}
+                                    embedded
+                                  />
+                                  <MomentumScore
+                                    score={((insightState as { momentum?: { score: number } })?.momentum?.score ?? (momentum as { score: number })?.score) ?? 0}
+                                    band={(((insightState as { momentum?: { band: string } })?.momentum?.band ?? (momentum as { band: string })?.band) ?? "medium") as MomentumBand}
+                                    embedded
+                                  />
+                                </>
+                              ) : (
+                                <>
+                                  <div className="glass-card min-h-[140px] animate-pulse rounded-[22px]" aria-hidden />
+                                  <div className="glass-card min-h-[100px] animate-pulse rounded-[22px]" aria-hidden />
+                                </>
+                              )}
+                            </div>
+                          </section>
+                        ),
+                      },
+                      {
+                        id: "dcic",
+                        icon: "🛰️",
+                        title: "Commander status (DCIC)",
+                        subtitle: "Mode en command-situatie",
+                        content: (
+                          <div className="space-y-4">
+                            <DCICStatusCard
+                              gameState={gameState}
+                              status={dcicStatus}
+                              brainStateMissing={critical ? critical.state == null : false}
+                            />
+                          </div>
+                        ),
+                      },
+                      {
+                        id: "today",
+                        icon: "📌",
+                        title: "Vandaag door de app bepaald",
+                        subtitle: "Buckets, risico en XP-impact",
+                        content: todayEngine != null && xpForecast !== undefined ? (
+                          <TodayEngineCard
+                            bucketed={(todayEngine as { bucketed: BucketedToday }).bucketed}
+                            streakAtRisk={(todayEngine as { streakAtRisk: boolean }).streakAtRisk}
+                            date={(todayEngine as { date: string }).date}
+                            forecasts={xpForecast as XPForecastItem[]}
+                            activeTasks={todaysTasks}
+                            emptyMissionMessage={emptyMissionMessage}
+                            emptyMissionHref={emptyMissionHref}
+                            timeWindow={timeWindow}
+                            isTimeWindowActive={isTimeWindowActive}
+                          />
+                        ) : (
+                          <div className="glass-card min-h-[160px] animate-pulse rounded-[22px]" aria-hidden />
+                        ),
+                      },
+                      {
+                        id: "system",
+                        icon: "🧠",
+                        title: "Systeem modus",
+                        subtitle: "Brain status & hoe voel je je vandaag",
+                        content: (
+                          <div className="space-y-6">
+                            <BrainStatusCard
+                              date={dateStr}
+                              initial={{ energy: secState?.energy ?? null, focus: secState?.focus ?? null, sensory_load: secState?.sensory_load ?? null, sleep_hours: secState?.sleep_hours ?? null, social_load: secState?.social_load ?? null, physical_health: (secState as { physical_health?: number | null })?.physical_health ?? null, mental_battery: (secState as { mental_battery?: number | null })?.mental_battery ?? null }}
+                              yesterday={{ energy: secYesterdayState?.energy ?? null, focus: secYesterdayState?.focus ?? null, sensory_load: secYesterdayState?.sensory_load ?? null, sleep_hours: secYesterdayState?.sleep_hours ?? null, social_load: secYesterdayState?.social_load ?? null, physical_health: (secYesterdayState as { physical_health?: number | null })?.physical_health ?? null, mental_battery: (secYesterdayState as { mental_battery?: number | null })?.mental_battery ?? null }}
+                              brainMode={secEnergyBudget.brainMode as BrainMode}
+                              suggestedTaskCount={(secEnergyBudget.suggestedTaskCount as number) ?? 3}
+                            />
+                            <DangerousModulesCard embedded />
+                            <div data-tutorial="dashboard-energy-bar">
+                              <EnergyBudgetBar
+                                remaining={secEnergyBudget.remaining as number}
+                                capacity={secEnergyBudget.capacity as number}
+                                suggestedTaskCount={secEnergyBudget.suggestedTaskCount as number}
+                                taskUsed={secEnergyBudget.taskUsed as number}
+                                completedTaskCount={secEnergyBudget.completedTaskCount as number}
+                                taskPlanned={secEnergyBudget.taskPlanned as number}
+                                calendarCost={secEnergyBudget.calendarCost as number}
+                                energy={secEnergyBudget.energy as PoolBudget}
+                                focus={secEnergyBudget.focus as PoolBudget}
+                                load={secEnergyBudget.load as PoolBudget}
+                                insight={secEnergyBudget.insight as string}
+                                brainMode={secEnergyBudget.brainMode as BrainMode}
+                                segments={secEnergyBudget.segments as { label: string; value: number; color: string }[]}
+                              />
+                            </div>
+                            <div data-tutorial="dashboard-context-card">
+                              <DashboardContextCard
+                                prev={{
+                                  quote: secondary && quotesResult ? quotesResult[0] : null,
+                                  day: secondary ? Math.max(1, quoteDay - 1) : Math.max(1, Math.min(365, getDayOfYearFromDateString(dateStr) - 1)),
+                                }}
+                                current={{
+                                  quote: (secondary && quotesResult ? quotesResult[1] : null) ?? (dailyQuoteText ? { id: 0, quote_text: dailyQuoteText, author_name: dailyQuoteAuthor ?? "", era: "", topic: null, created_at: "" } : null),
+                                  day: secondary ? quoteDay : getDayOfYearFromDateString(dateStr),
+                                }}
+                                next={{
+                                  quote: secondary && quotesResult ? quotesResult[2] : null,
+                                  day: secondary ? Math.min(365, quoteDay + 1) : Math.min(365, getDayOfYearFromDateString(dateStr) + 1),
+                                }}
+                                mode={mode}
+                                identityStatement={(strategy as { identity_statement?: string } | null)?.identity_statement ?? null}
+                              />
+                            </div>
+                            <ModeExplanationModal mode={mode} />
+                            {mode === "driven" && <FocusBlock />}
+                          </div>
+                        ),
+                      },
+                    ]}
                 />
-              </SciFiPanel>
-              <SystemOverviewCard
-                compact
-                sections={[
-                  {
-                    id: "level",
-                    icon: "🧭",
-                    title: "Level & voortgang",
-                    subtitle: "Identiteit, momentum en progressie",
-                    content: (
-                      <section className="space-y-4">
-                        <div className="grid gap-4 md:grid-cols-2">
-                          {identity && identityEngine ? (
-                            <>
-                              <IdentityBlock
-                                level={(identity as { level: number }).level}
-                                rank={(identity as { rank: string }).rank}
-                                streak={(identity as { streak: { current: number } }).streak?.current ?? 0}
-                                xpToNextLevel={(identity as { xp_to_next_level: number }).xp_to_next_level}
-                                nextUnlock={((identity as { next_unlock?: { level: number; rank: string; xpNeeded: number } | null }).next_unlock) ?? { level: 0, rank: "-", xpNeeded: 0 }}
-                                archetype={(identityEngine as { archetype: Archetype })?.archetype ?? "operator"}
-                                evolutionPhase={(identityEngine as { evolutionPhase: EvolutionPhase })?.evolutionPhase ?? "initiate"}
-                                reputation={(identityEngine as { reputation?: ReputationScore })?.reputation ?? { discipline: 0, consistency: 0, impact: 0 }}
-                                embedded
-                              />
-                              <MomentumScore
-                                score={((insightState as { momentum?: { score: number } })?.momentum?.score ?? (momentum as { score: number })?.score) ?? 0}
-                                band={(((insightState as { momentum?: { band: string } })?.momentum?.band ?? (momentum as { band: string })?.band) ?? "medium") as MomentumBand}
-                                embedded
-                              />
-                            </>
-                          ) : (
-                            <>
-                              <div className="glass-card min-h-[140px] animate-pulse rounded-[22px]" aria-hidden />
-                              <div className="glass-card min-h-[100px] animate-pulse rounded-[22px]" aria-hidden />
-                            </>
-                          )}
-                        </div>
-                      </section>
-                    ),
-                  },
-                  {
-                    id: "dcic",
-                    icon: "🛰️",
-                    title: "Commander status (DCIC)",
-                    subtitle: "Mode en command-situatie",
-                    content: (
-                      <div className="space-y-4">
-                        <DCICStatusCard
-                          gameState={gameState}
-                          status={dcicStatus}
-                          brainStateMissing={critical ? critical.state == null : false}
-                        />
-                      </div>
-                    ),
-                  },
-                  {
-                    id: "today",
-                    icon: "📌",
-                    title: "Vandaag door de app bepaald",
-                    subtitle: "Buckets, risico en XP-impact",
-                    content: todayEngine != null && xpForecast !== undefined ? (
-                      <TodayEngineCard
-                        bucketed={(todayEngine as { bucketed: BucketedToday }).bucketed}
-                        streakAtRisk={(todayEngine as { streakAtRisk: boolean }).streakAtRisk}
-                        date={(todayEngine as { date: string }).date}
-                        forecasts={xpForecast as XPForecastItem[]}
-                        activeTasks={todaysTasks}
-                        emptyMissionMessage={emptyMissionMessage}
-                        emptyMissionHref={emptyMissionHref}
-                        timeWindow={timeWindow}
-                        isTimeWindowActive={isTimeWindowActive}
-                      />
-                    ) : (
-                      <div className="glass-card min-h-[160px] animate-pulse rounded-[22px]" aria-hidden />
-                    ),
-                  },
-                  {
-                    id: "system",
-                    icon: "🧠",
-                    title: "Systeem modus",
-                    subtitle: "Brain status & hoe voel je je vandaag",
-                    content: (
-                      <div className="space-y-6">
-                        <BrainStatusCard
-                          date={dateStr}
-                          initial={{ energy: secState?.energy ?? null, focus: secState?.focus ?? null, sensory_load: secState?.sensory_load ?? null, sleep_hours: secState?.sleep_hours ?? null, social_load: secState?.social_load ?? null, physical_health: (secState as { physical_health?: number | null })?.physical_health ?? null, mental_battery: (secState as { mental_battery?: number | null })?.mental_battery ?? null }}
-                          yesterday={{ energy: secYesterdayState?.energy ?? null, focus: secYesterdayState?.focus ?? null, sensory_load: secYesterdayState?.sensory_load ?? null, sleep_hours: secYesterdayState?.sleep_hours ?? null, social_load: secYesterdayState?.social_load ?? null, physical_health: (secYesterdayState as { physical_health?: number | null })?.physical_health ?? null, mental_battery: (secYesterdayState as { mental_battery?: number | null })?.mental_battery ?? null }}
-                          brainMode={secEnergyBudget.brainMode as BrainMode}
-                          suggestedTaskCount={(secEnergyBudget.suggestedTaskCount as number) ?? 3}
-                        />
-                        <DangerousModulesCard embedded />
-                        <div data-tutorial="dashboard-energy-bar">
-                          <EnergyBudgetBar
-                            remaining={secEnergyBudget.remaining as number}
-                            capacity={secEnergyBudget.capacity as number}
-                            suggestedTaskCount={secEnergyBudget.suggestedTaskCount as number}
-                            taskUsed={secEnergyBudget.taskUsed as number}
-                            completedTaskCount={secEnergyBudget.completedTaskCount as number}
-                            taskPlanned={secEnergyBudget.taskPlanned as number}
-                            calendarCost={secEnergyBudget.calendarCost as number}
-                            energy={secEnergyBudget.energy as PoolBudget}
-                            focus={secEnergyBudget.focus as PoolBudget}
-                            load={secEnergyBudget.load as PoolBudget}
-                            insight={secEnergyBudget.insight as string}
-                            brainMode={secEnergyBudget.brainMode as BrainMode}
-                            segments={secEnergyBudget.segments as { label: string; value: number; color: string }[]}
-                          />
-                        </div>
-                        <div data-tutorial="dashboard-context-card">
-                          <DashboardContextCard
-                            prev={{
-                              quote: secondary && quotesResult ? quotesResult[0] : null,
-                              day: secondary ? Math.max(1, quoteDay - 1) : Math.max(1, Math.min(365, getDayOfYearFromDateString(dateStr) - 1)),
-                            }}
-                            current={{
-                              quote: (secondary && quotesResult ? quotesResult[1] : null) ?? (dailyQuoteText ? { id: 0, quote_text: dailyQuoteText, author_name: dailyQuoteAuthor ?? "", era: "", topic: null, created_at: "" } : null),
-                              day: secondary ? quoteDay : getDayOfYearFromDateString(dateStr),
-                            }}
-                            next={{
-                              quote: secondary && quotesResult ? quotesResult[2] : null,
-                              day: secondary ? Math.min(365, quoteDay + 1) : Math.min(365, getDayOfYearFromDateString(dateStr) + 1),
-                            }}
-                            mode={mode}
-                            identityStatement={(strategy as { identity_statement?: string } | null)?.identity_statement ?? null}
-                          />
-                        </div>
-                        <ModeExplanationModal mode={mode} />
-                        {mode === "driven" && <FocusBlock />}
-                      </div>
-                    ),
-                  },
-                ]}
-              />
-            </div>
-          </SciFiPanel>
+              </div>
+            </SciFiPanel>
+          </>
         )}
 
         <Modal

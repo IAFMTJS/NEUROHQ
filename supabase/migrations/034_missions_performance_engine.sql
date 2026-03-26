@@ -65,7 +65,7 @@ COMMENT ON TABLE public.task_events IS 'Task lifecycle events for resistance ind
 
 -- 4. mission_user_stats: per-user per-mission aggregates (for DCIC missions)
 -- View from mission_events + behaviour_log for completion_rate, hesitation_time, avg_time, ROI
-CREATE OR REPLACE VIEW public.mission_user_stats AS
+CREATE OR REPLACE VIEW public.mission_user_stats WITH (security_invoker = true) AS
 SELECT
   me.user_id,
   me.mission_id,
@@ -79,7 +79,7 @@ GROUP BY me.user_id, me.mission_id;
 COMMENT ON VIEW public.mission_user_stats IS 'Per-user per-mission: completion_rate, hesitation_time, avg_time (ROI computed in app)';
 
 -- 5. task_user_stats: per-user per-task aggregates (for tasks-as-missions)
-CREATE OR REPLACE VIEW public.task_user_stats AS
+CREATE OR REPLACE VIEW public.task_user_stats WITH (security_invoker = true) AS
 SELECT
   te.user_id,
   te.task_id,

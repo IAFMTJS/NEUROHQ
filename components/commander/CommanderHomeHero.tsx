@@ -25,6 +25,8 @@ type Props = {
   dailyQuoteAuthor?: string | null;
   /** Fase 4: 1–3 auto-suggestions (capacity + day + history). */
   autoSuggestions?: { text: string; type: string }[];
+  /** When true, skip the inner "Dashboard / System Overview" title (e.g. when HQHeader is shown above). */
+  hideBuiltInTitle?: boolean;
 };
 
 export function CommanderHomeHero({
@@ -40,6 +42,7 @@ export function CommanderHomeHero({
   dailyQuoteText,
   dailyQuoteAuthor,
   autoSuggestions = [],
+  hideBuiltInTitle = false,
 }: Props) {
   const todayDailyState = useHQStore((s) => s.todayDailyState);
   const effectiveEnergyPct =
@@ -67,10 +70,12 @@ export function CommanderHomeHero({
 
   return (
     <>
-      <header>
-        <h1>Dashboard</h1>
-        <p className="text-soft">System Overview</p>
-      </header>
+      {!hideBuiltInTitle && (
+        <header>
+          <h1>Dashboard</h1>
+          <p className="text-soft">System Overview</p>
+        </header>
+      )}
 
       <section
         className="mascot-hero mascot-hero-top relative"

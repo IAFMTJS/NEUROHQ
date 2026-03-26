@@ -72,7 +72,13 @@ export default memo(function BottomNavigation() {
             onFocus={() => prefetchOnIntent(link.href)}
             onTouchStart={() => prefetchOnIntent(link.href)}
           >
-            <span className="nav-item-icon flex items-center justify-center [&_svg]:w-[18px] [&_svg]:h-[18px]">
+            <span
+              className={`nav-item-icon flex items-center justify-center ${
+                link.href === "/dashboard"
+                  ? "[&_svg]:h-[34px] [&_svg]:w-[34px]"
+                  : "[&_svg]:h-[18px] [&_svg]:w-[18px]"
+              }`}
+            >
               <NavIcon
                 src={`/nav/${encodeURIComponent(link.pngFile)}`}
                 Icon={Icon}
