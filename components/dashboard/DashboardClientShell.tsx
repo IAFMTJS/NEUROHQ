@@ -558,8 +558,8 @@ export function DashboardClientShell() {
   );
 
   return (
-    <main
-      className={`relative min-h-screen overflow-hidden ${!skipCinematicLayers ? hudStyles.cinematicBackdrop : ""} ${isMinimalUI ? "minimal-ui" : ""}`}
+    <div
+      className={`relative min-h-screen overflow-x-hidden ${!skipCinematicLayers ? hudStyles.cinematicBackdrop : ""} ${isMinimalUI ? "minimal-ui" : ""}`}
       data-minimal={isMinimalUI ? "true" : undefined}
     >
       {!skipCinematicLayers && (
@@ -642,39 +642,37 @@ export function DashboardClientShell() {
 
         {!isMinimalUI && (
           <>
-            <header className="relative z-10 px-1 pt-2 pb-3 md:pt-3 md:pb-4">
-              <HQHeader energyPct={heroEnergyPct} focusPct={heroFocusPct} loadPct={heroLoadPct} copyVariant={copyVariant} />
-            </header>
-            <div className="dashboard-top-strip relative z-10 mt-0 px-1">{dashboardHudStripTrack}</div>
-            <SciFiPanel
-              className={`dashboard-bridge-frame idle-breathing ${hudStyles.focusPrimary}`}
-              bodyClassName={`dashboard-bridge-body dashboard-bridge-one-view flex h-[calc(100dvh-11.25rem)] max-h-[calc(100dvh-11.25rem)] flex-col gap-1.5 overflow-hidden [-webkit-overflow-scrolling:touch] ${skipCinematicLayers ? "light-ui-defer-paint" : ""}`}
-              variant="command"
-            >
-              <CornerNode corner="top-left" />
-              <CornerNode corner="top-right" />
-              <span className="dashboard-bridge-label shrink-0" aria-hidden>Command</span>
-              <div className="dashboard-command-bridge flex min-h-0 min-w-0 flex-1 flex-row gap-2 sm:gap-3">
-                <div className="commander-bridge-scroll min-h-0 min-w-0 flex-1 overflow-y-auto overflow-x-hidden [-webkit-overflow-scrolling:touch] pr-0.5">
-                  <CommanderHomeHero
-                    hideBuiltInTitle
-                    energyPct={heroEnergyPct}
-                    focusPct={heroFocusPct}
-                    loadPct={heroLoadPct}
-                    missionHref="/tasks"
-                    missionLabel={missionLabel}
-                    singleGoalLabel={singleGoalLabel}
-                    missionSubtext={missionSubtext}
-                    exportDate={dateStr}
-                    streakAtRisk={streakAtRisk}
-                    dailyQuoteText={dailyQuoteText}
-                    dailyQuoteAuthor={dailyQuoteAuthor}
-                    autoSuggestions={autoSuggestions}
-                  />
-                </div>
-                <SystemOverviewCard
-                  compact
-                  sections={[
+            <div className="space-y-3 px-1 pt-2 md:pt-3">
+              <div className="dashboard-top-strip relative z-10">{dashboardHudStripTrack}</div>
+              <SciFiPanel
+                className={`dashboard-bridge-frame idle-breathing ${hudStyles.focusPrimary}`}
+                bodyClassName={`dashboard-bridge-body flex flex-col gap-3 [-webkit-overflow-scrolling:touch] ${skipCinematicLayers ? "light-ui-defer-paint" : ""}`}
+                variant="command"
+              >
+                <CornerNode corner="top-left" />
+                <CornerNode corner="top-right" />
+                <span className="dashboard-bridge-label shrink-0" aria-hidden>Command</span>
+                <div className="dashboard-command-bridge flex flex-row items-start gap-2 sm:gap-3">
+                  <div className="min-w-0 flex-1">
+                    <CommanderHomeHero
+                      hideBuiltInTitle={false}
+                      energyPct={heroEnergyPct}
+                      focusPct={heroFocusPct}
+                      loadPct={heroLoadPct}
+                      missionHref="/tasks"
+                      missionLabel={missionLabel}
+                      singleGoalLabel={singleGoalLabel}
+                      missionSubtext={missionSubtext}
+                      exportDate={dateStr}
+                      streakAtRisk={streakAtRisk}
+                      dailyQuoteText={dailyQuoteText}
+                      dailyQuoteAuthor={dailyQuoteAuthor}
+                      autoSuggestions={autoSuggestions}
+                    />
+                  </div>
+                  <SystemOverviewCard
+                    compact
+                    sections={[
                       {
                         id: "level",
                         icon: "🧭",
@@ -804,9 +802,10 @@ export function DashboardClientShell() {
                         ),
                       },
                     ]}
-                />
-              </div>
-            </SciFiPanel>
+                  />
+                </div>
+              </SciFiPanel>
+            </div>
           </>
         )}
 
@@ -894,6 +893,6 @@ export function DashboardClientShell() {
           </div>
         </Modal>
       </div>
-    </main>
+    </div>
   );
 }

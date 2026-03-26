@@ -75,7 +75,7 @@ export default memo(function BottomNavigation() {
             <span
               className={`nav-item-icon flex items-center justify-center ${
                 link.href === "/dashboard"
-                  ? "[&_svg]:h-[34px] [&_svg]:w-[34px]"
+                  ? "[&_svg]:h-[32px] [&_svg]:w-[32px]"
                   : "[&_svg]:h-[18px] [&_svg]:w-[18px]"
               }`}
             >
