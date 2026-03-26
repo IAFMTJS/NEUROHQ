@@ -202,23 +202,23 @@ export default function XPPageContent({
           <div className="space-y-4 lg:col-span-2">
             <div className="flex items-center justify-between gap-3">
               <div>
-                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--accent-focus)]">XP NEXUS</p>
+                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--accent-focus)]">Command Bridge</p>
                 <h2 className="mt-1 text-2xl font-semibold text-[var(--text-primary)] sm:text-3xl">Level {identity.level} · {identity.rank}</h2>
               </div>
               <label className="inline-flex cursor-pointer items-center gap-2 rounded-full border border-[var(--card-border)] bg-[var(--bg-primary)]/70 px-3 py-2 text-xs text-[var(--text-primary)]">
-                <span className={!commanderMode ? "font-semibold" : "text-[var(--text-muted)]"}>Basic</span>
+                <span className={!commanderMode ? "font-semibold" : "text-[var(--text-muted)]"}>Focus</span>
                 <input
                   type="checkbox"
                   checked={commanderMode}
                   onChange={(e) => setCommanderMode(e.target.checked)}
                   className="rounded border-[var(--card-border)]"
-                  aria-label="Commander mode aan/uit"
+                  aria-label="Levensmodus wisselen"
                 />
-                <span className={commanderMode ? "font-semibold text-[var(--accent-focus)]" : "text-[var(--text-muted)]"}>Commander</span>
+                <span className={commanderMode ? "font-semibold text-[var(--accent-focus)]" : "text-[var(--text-muted)]"}>Command</span>
               </label>
             </div>
             <p className="max-w-2xl text-sm text-[var(--text-secondary)]">
-              XP krijg je door <strong className="text-[var(--text-primary)]">missies af te ronden</strong>, streaks vast te houden en learning & brain-status actief te houden. Toevoegen alleen telt niet — voltooien wel.
+              Dit is je bridge: kies je levensmodus en stuur je ritme. XP krijg je door <strong className="text-[var(--text-primary)]">missies af te ronden</strong>, streaks vast te houden en learning & brain-status actief te houden.
             </p>
             <div className="grid gap-2 sm:grid-cols-3">
               <div className="rounded-xl border border-[var(--accent-focus)]/35 bg-[var(--bg-primary)]/55 px-3 py-2.5">
@@ -267,13 +267,27 @@ export default function XPPageContent({
 
       <section className="rounded-2xl border border-[var(--card-border)] bg-[var(--bg-primary)]/35 p-2">
         <div className="flex flex-wrap gap-2">
-          <button type="button" onClick={() => setXpView("command")} className={`rounded-xl px-3 py-1.5 text-xs font-semibold transition ${xpView === "command" ? "bg-[var(--accent-focus)]/20 text-[var(--accent-focus)]" : "text-[var(--text-muted)] hover:text-[var(--text-primary)]"}`}>XP verdienen</button>
-          <button type="button" onClick={() => setXpView("analytics")} className={`rounded-xl px-3 py-1.5 text-xs font-semibold transition ${xpView === "analytics" ? "bg-[var(--accent-focus)]/20 text-[var(--accent-focus)]" : "text-[var(--text-muted)] hover:text-[var(--text-primary)]"}`}>Verdiende XP</button>
+          <button type="button" onClick={() => setXpView("command")} className={`rounded-xl px-3 py-1.5 text-xs font-semibold transition ${xpView === "command" ? "bg-[var(--accent-focus)]/20 text-[var(--accent-focus)]" : "text-[var(--text-muted)] hover:text-[var(--text-primary)]"}`}>Levensmodus</button>
+          <button type="button" onClick={() => setXpView("analytics")} className={`rounded-xl px-3 py-1.5 text-xs font-semibold transition ${xpView === "analytics" ? "bg-[var(--accent-focus)]/20 text-[var(--accent-focus)]" : "text-[var(--text-muted)] hover:text-[var(--text-primary)]"}`}>XP updates</button>
         </div>
       </section>
 
       {xpView === "command" && (
         <>
+        <section className="relative overflow-hidden rounded-2xl border border-fuchsia-400/45 bg-gradient-to-r from-fuchsia-500/12 via-violet-500/10 to-cyan-500/10 p-4">
+          <div className="pointer-events-none absolute -right-8 -top-8 h-24 w-24 rounded-full bg-fuchsia-400/20 blur-2xl" />
+          <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-fuchsia-200">Bridge Protocol</p>
+          <h3 className="mt-1 text-sm font-semibold text-[var(--text-primary)]">Multiplier-weekactie · Dubbel of niets</h3>
+          <p className="mt-1 text-xs text-[var(--text-secondary)]">
+            Alles uitvoeren wat de app deze week bepaalt = dubbele XP. Nog 1 item missen = geen week-multiplier.
+          </p>
+          <p className={`mt-2 text-sm font-semibold ${multiplierEligible ? "text-emerald-300" : "text-amber-300"}`}>
+            {multiplierEligible
+              ? "Protocol-status: actief (2x weekbonus in bereik)."
+              : "Protocol-status: nog niet actief. Verhoog completion en houd streak vast."}
+          </p>
+        </section>
+
         <section className="grid gap-4 lg:grid-cols-3">
           <div className={`${cardClass} lg:col-span-2 space-y-4`}>
             <div>
@@ -384,17 +398,6 @@ export default function XPPageContent({
           </div>
         </section>
 
-        <section className={`${cardClass} space-y-2`}>
-          <h3 className="text-sm font-semibold text-[var(--text-primary)]">Multiplier-weekactie · Dubbel of niets</h3>
-          <p className="text-xs text-[var(--text-muted)]">
-            Alles uitvoeren wat de app deze week bepaalt = dubbele XP. Eentje missen = geen week-multiplier.
-          </p>
-          <p className={`text-sm font-semibold ${multiplierEligible ? "text-emerald-300" : "text-amber-300"}`}>
-            {multiplierEligible
-              ? "Multiplier-status: actief (2x weekbonus in bereik)."
-              : "Multiplier-status: nog niet actief. Verhoog completion en houd streak vast."}
-          </p>
-        </section>
         </>
       )}
 

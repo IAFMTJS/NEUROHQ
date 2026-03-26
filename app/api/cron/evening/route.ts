@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { sendPushToUser } from "@/lib/push";
-import { getLocalDateHour, isInQuietHours } from "@/lib/utils/timezone";
+import { getLocalDateTimeParts, isInQuietHours, utcStartOfLocalDayIso } from "@/lib/utils/timezone";
 import { isHighSensoryDayForUser } from "@/lib/mode-admin";
 
 /**
@@ -32,17 +32,49 @@ export async function GET(request: Request) {
   if (userIdFilter) usersQuery = usersQuery.eq("id", userIdFilter);
   const { data: users } = await usersQuery;
 
+  const prefsByUser = new Map<
+    string,
+    {
+      pushRemindersEnabled: boolean;
+      pushEveningEnabled: boolean;
+    }
+  >();
+  const { data: prefs } = await supabase
+    .from("user_preferences")
+    .select("user_id, push_reminders_enabled, push_evening_enabled");
+  for (const pref of prefs ?? []) {
+    prefsByUser.set(pref.user_id, {
+      pushRemindersEnabled: pref.push_reminders_enabled ?? true,
+      pushEveningEnabled: pref.push_evening_enabled ?? true,
+    });
+  }
+
   let sent = 0;
   if (process.env.VAPID_PRIVATE_KEY && process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY) {
     for (const u of users ?? []) {
       try {
         const tz = (u as { timezone?: string | null }).timezone ?? null;
-        const { date: localDate, hour: localHour } = tz
-          ? getLocalDateHour(tz)
-          : { date: now.toISOString().slice(0, 10), hour: utcHour };
+        const localNow = tz
+          ? getLocalDateTimeParts(tz, now)
+          : { date: now.toISOString().slice(0, 10), hour: utcHour, minute: now.getUTCMinutes() };
+        const { date: localDate, hour: localHour } = localNow;
+        const userPrefs = prefsByUser.get(u.id as string) ?? {
+          pushRemindersEnabled: true,
+          pushEveningEnabled: true,
+        };
+        if (!userPrefs.pushRemindersEnabled || !userPrefs.pushEveningEnabled) continue;
         const quietStart = u.push_quiet_hours_start ? String(u.push_quiet_hours_start).slice(0, 5) : null;
         const quietEnd = u.push_quiet_hours_end ? String(u.push_quiet_hours_end).slice(0, 5) : null;
-        if (isInQuietHours(localHour, quietStart, quietEnd)) continue;
+        if (isInQuietHours(localHour, quietStart, quietEnd, localNow.minute)) continue;
+
+        const sinceIso = tz ? utcStartOfLocalDayIso(tz, localDate) : `${localDate}T00:00:00.000Z`;
+        const { count: alreadySentCount } = await supabase
+          .from("push_sends_log")
+          .select("*", { count: "exact", head: true })
+          .eq("user_id", u.id as string)
+          .eq("trigger_type", "shutdown-reminder")
+          .gte("sent_at", sinceIso);
+        if ((alreadySentCount ?? 0) > 0) continue;
 
         // HIGH_SENSORY: skip shutdown reminder on high sensory days
         const highSensory = await isHighSensoryDayForUser(supabase, u.id as string, localDate);

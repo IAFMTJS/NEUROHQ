@@ -9,17 +9,19 @@ import {
   IconBudget,
   IconGrowth,
   IconStrategy,
+  IconUser,
   IconSettings,
 } from "@/components/hq/NavIcons";
 
 /** PNG filename in public/nav/ (exact name, case-sensitive on server). No value = use SVG only. Includes XP. */
 const navLinks = [
-  { href: "/tasks", label: "Missies", Icon: IconMissions, pngFile: "Missions.png" },
+  { href: "/tasks", label: "Missions", Icon: IconMissions, pngFile: "Missions.png" },
   { href: "/budget", label: "Budget", Icon: IconBudget, pngFile: "Budget.png" },
+  { href: "/learning", label: "Growth", Icon: IconGrowth, pngFile: "Growth.png" },
   { href: "/dashboard", label: "Dashboard", Icon: IconHQ, pngFile: "Dashboard.png" },
-  { href: "/learning", label: "Groei", Icon: IconGrowth, pngFile: "Growth.png" },
-  { href: "/strategy", label: "Strategie", Icon: IconStrategy, pngFile: "Strategy.png" },
-  { href: "/profile", label: "Profiel", Icon: IconSettings, pngFile: "Settings.png" },
+  { href: "/strategy", label: "Strategy", Icon: IconStrategy, pngFile: "Strategy.png" },
+  { href: "/profile", label: "User", Icon: IconUser, pngFile: "User.png" },
+  { href: "/settings", label: "Settings", Icon: IconSettings, pngFile: "Settings.png" },
 ] as const;
 
 /** Try PNG from public/nav/*.png first (for deployment). Falls back to SVG on 404. Add dashboard.png, missions.png, etc. to public/nav/ to use PNG icons. */

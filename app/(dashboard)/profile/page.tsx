@@ -3,7 +3,6 @@ import { redirect } from "next/navigation";
 import nextDynamic from "next/dynamic";
 import { HQPageHeader } from "@/components/hq";
 import { HeroMascotImage } from "@/components/HeroMascotImage";
-import { getXPFullContext } from "@/app/actions/xp-context";
 import { getUserPreferencesOrDefaults } from "@/app/actions/preferences";
 import { getBehaviorProfile } from "@/app/actions/behavior-profile";
 import { getStudyPlan, getAccountabilitySettings } from "@/app/actions/behavior";
@@ -28,8 +27,7 @@ export default async function ProfilePage() {
   } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
-  const [xpContext, prefs, behaviorProfile, studyPlan, accountabilitySettings, budgetSettings] = await Promise.all([
-    getXPFullContext(),
+  const [prefs, behaviorProfile, studyPlan, accountabilitySettings, budgetSettings] = await Promise.all([
     getUserPreferencesOrDefaults(),
     getBehaviorProfile(),
     getStudyPlan(),
@@ -37,46 +35,17 @@ export default async function ProfilePage() {
     getBudgetSettings(),
   ]);
 
-  const insight = xpContext.insightState;
-
   return (
     <div className="container page page-wide space-y-6">
       <HQPageHeader
         title="Profiel"
-        subtitle="Jouw insights + persoonlijke instellingen in één command center."
+        subtitle="Persoonlijke instellingen en personalisatie."
         backHref="/dashboard"
       />
       <section className="mascot-hero mascot-hero-top mascot-hero-sharp" data-mascot-page="settings" aria-hidden>
         <div className="mascot-hero-inner mx-auto">
           <HeroMascotImage page="settings" className="mascot-img" heroLarge />
         </div>
-      </section>
-
-      <section className="card-simple space-y-3">
-        <p className="text-xs font-semibold uppercase tracking-wide text-[var(--text-muted)]">Insights snapshot</p>
-        {insight ? (
-          <div className="grid gap-3 sm:grid-cols-3">
-            <div className="rounded-lg border border-[var(--card-border)] bg-[var(--bg-surface)]/40 p-3">
-              <p className="text-[10px] uppercase tracking-wide text-[var(--text-muted)]">Momentum</p>
-              <p className="mt-1 text-sm font-semibold text-[var(--text-primary)]">{insight.momentum.score}/100</p>
-            </div>
-            <div className="rounded-lg border border-[var(--card-border)] bg-[var(--bg-surface)]/40 p-3">
-              <p className="text-[10px] uppercase tracking-wide text-[var(--text-muted)]">XP 7d</p>
-              <p className="mt-1 text-sm font-semibold text-[var(--text-primary)]">{insight.xpLast7}</p>
-            </div>
-            <div className="rounded-lg border border-[var(--card-border)] bg-[var(--bg-surface)]/40 p-3">
-              <p className="text-[10px] uppercase tracking-wide text-[var(--text-muted)]">Completion 7d</p>
-              <p className="mt-1 text-sm font-semibold text-[var(--text-primary)]">
-                {insight.completionRateLast7 != null ? `${Math.round(insight.completionRateLast7 * 100)}%` : "-"}
-              </p>
-            </div>
-          </div>
-        ) : (
-          <p className="text-sm text-[var(--text-muted)]">Nog niet genoeg data voor een insights snapshot.</p>
-        )}
-        <a href="/report" className="text-sm font-semibold text-[var(--accent-focus)] hover:underline">
-          Open volledige Insights pagina
-        </a>
       </section>
 
       <UserCallsignCard />

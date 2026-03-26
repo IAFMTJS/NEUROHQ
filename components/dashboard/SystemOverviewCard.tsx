@@ -15,9 +15,10 @@ type Section = {
 
 type Props = {
   sections: Section[];
+  compact?: boolean;
 };
 
-export function SystemOverviewCard({ sections }: Props) {
+export function SystemOverviewCard({ sections, compact = false }: Props) {
   const [openSectionId, setOpenSectionId] = useState<SectionId | null>(null);
   const openSection = useMemo(
     () => sections.find((section) => section.id === openSectionId) ?? null,
@@ -26,31 +27,54 @@ export function SystemOverviewCard({ sections }: Props) {
 
   return (
     <>
-      <section className="card-simple rounded-[var(--cmd-card-radius)] p-4 md:p-5" aria-label="Command dashboard systeemoverzicht">
-        <div className="flex flex-wrap items-start justify-between gap-3">
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-wide text-[var(--text-muted)]">
-              Command dashboard
-            </p>
-            <h2 className="mt-1 text-base font-semibold text-[var(--text-primary)]">Systeemoverzicht</h2>
-            <p className="mt-1 text-xs text-[var(--text-muted)]">
-              Open een module voor detail en acties.
-            </p>
+      <section
+        className={
+          compact
+            ? "rounded-xl border border-[var(--card-border)] bg-[var(--bg-surface)]/30 p-3"
+            : "card-simple rounded-[var(--cmd-card-radius)] p-4 md:p-5"
+        }
+        aria-label="Command dashboard systeemoverzicht"
+      >
+        {!compact && (
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-wide text-[var(--text-muted)]">
+                Command dashboard
+              </p>
+              <h2 className="mt-1 text-base font-semibold text-[var(--text-primary)]">Systeemoverzicht</h2>
+              <p className="mt-1 text-xs text-[var(--text-muted)]">
+                Open een module voor detail en acties.
+              </p>
+            </div>
           </div>
-        </div>
-        <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-4">
+        )}
+        <div className={`${compact ? "flex items-center justify-center gap-2" : "mt-4 grid grid-cols-4 gap-2"}`}>
           {sections.map((section) => (
             <button
               key={section.id}
               type="button"
               onClick={() => setOpenSectionId(section.id)}
-              className="rounded-xl border border-[var(--card-border)] bg-[var(--bg-surface)]/40 px-3 py-3 text-left hover:bg-[var(--bg-hover)]"
+              title={section.title}
+              aria-label={section.title}
+              aria-pressed={openSectionId === section.id}
+              className={`rounded-xl border text-left transition-all ${
+                compact
+                  ? "h-9 w-9 p-0 text-center border-cyan-400/30 bg-cyan-500/10 shadow-[0_0_10px_rgba(34,211,238,0.2)] hover:bg-cyan-400/20 hover:shadow-[0_0_14px_rgba(34,211,238,0.34)] data-[pressed=true]:bg-cyan-300/25 data-[pressed=true]:border-cyan-300/60 data-[pressed=true]:shadow-[0_0_16px_rgba(34,211,238,0.42)]"
+                  : "border-[var(--card-border)] bg-[var(--bg-surface)]/40 px-3 py-3 hover:bg-[var(--bg-hover)]"
+              }`}
+              data-pressed={openSectionId === section.id ? "true" : "false"}
             >
-              <p className="text-lg" aria-hidden>
+              <p className={`${compact ? "text-sm leading-9" : "text-lg"}`} aria-hidden>
                 {section.icon}
               </p>
-              <p className="mt-1 text-xs font-semibold text-[var(--text-primary)]">{section.title}</p>
-              <p className="mt-0.5 text-[10px] text-[var(--text-muted)]">{section.subtitle}</p>
+              {compact ? (
+                <span className="sr-only">{section.title}</span>
+              ) : (
+                <>
+                  <p className="mt-1 text-[11px] font-semibold text-[var(--text-primary)]">{section.title}</p>
+                  <p className="mt-0.5 text-[10px] text-[var(--text-muted)]">{section.subtitle}</p>
+                </>
+              )}
             </button>
           ))}
         </div>

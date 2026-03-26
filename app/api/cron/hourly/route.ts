@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { sendPushToUser } from "@/lib/push";
-import { getLocalDateHour, yesterdayDate, getDayOfYearFromDateString, isInQuietHours, utcStartOfLocalDayIso } from "@/lib/utils/timezone";
+import { getLocalDateTimeParts, yesterdayDate, getDayOfYearFromDateString, isInQuietHours, utcStartOfLocalDayIso } from "@/lib/utils/timezone";
 import { isHighSensoryDayForUser } from "@/lib/mode-admin";
 import { getQuoteByDayNumber, prepareQuoteForPersonalityPush } from "@/lib/quotes";
 import { isAppEmailConfigured, sendReminderToUser } from "@/lib/email";
@@ -75,6 +75,24 @@ async function hasSentAchievementPushToday(
     .select("*", { count: "exact", head: true })
     .eq("user_id", userId)
     .in("trigger_type", POSITIVE_ACHIEVEMENT_TRIGGERS)
+    .gte("sent_at", sinceIso);
+  return (count ?? 0) > 0;
+}
+
+async function hasSentTriggerToday(
+  supabase: ReturnType<typeof createAdminClient>,
+  userId: string,
+  triggerType: string,
+  timezone: string | null,
+  localDate: string
+): Promise<boolean> {
+  const sinceIso =
+    timezone && timezone.trim() ? utcStartOfLocalDayIso(timezone, localDate) : `${localDate}T00:00:00.000Z`;
+  const { count } = await supabase
+    .from("push_sends_log")
+    .select("*", { count: "exact", head: true })
+    .eq("user_id", userId)
+    .eq("trigger_type", triggerType)
     .gte("sent_at", sinceIso);
   return (count ?? 0) > 0;
 }
@@ -276,9 +294,10 @@ export async function GET(request: Request) {
     const tzRaw = (u.timezone as string | null) ?? null;
     const tz = tzRaw && tzRaw.trim() ? tzRaw : null;
     const nowClock = new Date();
-    const { date: todayStr, hour: realHour } = tz
-      ? getLocalDateHour(tz)
-      : { date: nowClock.toISOString().slice(0, 10), hour: nowClock.getUTCHours() };
+    const localNow = tz
+      ? getLocalDateTimeParts(tz, nowClock)
+      : { date: nowClock.toISOString().slice(0, 10), hour: nowClock.getUTCHours(), minute: nowClock.getUTCMinutes() };
+    const { date: todayStr, hour: realHour } = localNow;
     const hour = forceHour !== undefined ? forceHour : realHour;
     const userPrefs = prefsByUser.get(u.id) ?? {
       emailRemindersEnabled: true,
@@ -334,7 +353,7 @@ export async function GET(request: Request) {
       userPrefs.pushRemindersEnabled
     ) {
       const pushQuoteEnabled = (u as { push_quote_enabled?: boolean | null }).push_quote_enabled !== false;
-      if (pushQuoteEnabled && !isInQuietHours(hour, quietStart, quietEnd)) {
+      if (pushQuoteEnabled && !isInQuietHours(hour, quietStart, quietEnd, localNow.minute)) {
         // Deduplicate: already sent a daily quote today (in user's local day)?
         let quoteAlreadySent = false;
         try {
@@ -390,7 +409,7 @@ export async function GET(request: Request) {
       process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY &&
       userPrefs.pushRemindersEnabled &&
       (u as { push_subscription_json?: unknown }).push_subscription_json &&
-      !isInQuietHours(hour, quietStart, quietEnd)
+      !isInQuietHours(hour, quietStart, quietEnd, localNow.minute)
     ) {
       try {
         const { data: todayEvents } = await supabase
@@ -435,7 +454,7 @@ export async function GET(request: Request) {
       process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY &&
       userPrefs.pushRemindersEnabled &&
       (u as { push_subscription_json?: unknown }).push_subscription_json &&
-      !isInQuietHours(hour, quietStart, quietEnd)
+      !isInQuietHours(hour, quietStart, quietEnd, localNow.minute)
     ) {
       try {
         const now = new Date();
@@ -500,7 +519,7 @@ export async function GET(request: Request) {
       userPrefs.pushRemindersEnabled &&
       process.env.VAPID_PRIVATE_KEY &&
       process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY &&
-      !isInQuietHours(hour, quietStart, quietEnd)
+      !isInQuietHours(hour, quietStart, quietEnd, localNow.minute)
     ) {
       const highSensory = await isHighSensoryDayForUser(supabase, u.id as string, todayStr);
       if (!highSensory) {
@@ -541,27 +560,31 @@ export async function GET(request: Request) {
       }
     }
     if (
-      hour === 9 &&
+      hour >= 9 &&
+      hour < 13 &&
       userPrefs.pushRemindersEnabled &&
       userPrefs.pushMorningEnabled &&
       process.env.VAPID_PRIVATE_KEY &&
       process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY &&
-      !isInQuietHours(hour, quietStart, quietEnd)
+      !isInQuietHours(hour, quietStart, quietEnd, localNow.minute)
     ) {
       const highSensory = await isHighSensoryDayForUser(supabase, u.id, todayStr);
       if (!highSensory) {
         try {
-          const data = await getMorningEmailData(supabase, u.id, todayStr);
-          const basePayload = buildMorningPushPayload(data);
-          const payload = applyPersonalityToPayload(
-            basePayload,
-            userPrefs.personalityMode,
-            "morning",
-            `${u.id}:${todayStr}`,
-            { dedupe: pushDedupe }
-          );
-          const sent = await sendPushToUser(supabase, u.id, payload);
-          if (sent) morningPushSent++;
+          const alreadySentMorning = await hasSentTriggerToday(supabase, u.id, "morning-reminder", tz, todayStr);
+          if (!alreadySentMorning) {
+            const data = await getMorningEmailData(supabase, u.id, todayStr);
+            const basePayload = buildMorningPushPayload(data);
+            const payload = applyPersonalityToPayload(
+              basePayload,
+              userPrefs.personalityMode,
+              "morning",
+              `${u.id}:${todayStr}`,
+              { dedupe: pushDedupe }
+            );
+            const sent = await sendPushToUser(supabase, u.id, payload);
+            if (sent) morningPushSent++;
+          }
         } catch {
           // skip
         }
@@ -585,27 +608,31 @@ export async function GET(request: Request) {
       }
     }
     if (
-      hour === 20 &&
+      hour >= 20 &&
+      hour <= 23 &&
       userPrefs.pushRemindersEnabled &&
       userPrefs.pushEveningEnabled &&
       process.env.VAPID_PRIVATE_KEY &&
       process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY &&
-      !isInQuietHours(hour, quietStart, quietEnd)
+      !isInQuietHours(hour, quietStart, quietEnd, localNow.minute)
     ) {
       const highSensory = await isHighSensoryDayForUser(supabase, u.id, todayStr);
       if (!highSensory) {
         try {
-          const data = await getEveningEmailData(supabase, u.id, todayStr);
-          const basePayload = buildEveningPushPayload(data);
-          const payload = applyPersonalityToPayload(
-            basePayload,
-            userPrefs.personalityMode,
-            "evening",
-            `${u.id}:${todayStr}`,
-            { dedupe: pushDedupe }
-          );
-          const sent = await sendPushToUser(supabase, u.id, payload);
-          if (sent) eveningPushSent++;
+          const alreadySentEvening = await hasSentTriggerToday(supabase, u.id, "evening-reminder", tz, todayStr);
+          if (!alreadySentEvening) {
+            const data = await getEveningEmailData(supabase, u.id, todayStr);
+            const basePayload = buildEveningPushPayload(data);
+            const payload = applyPersonalityToPayload(
+              basePayload,
+              userPrefs.personalityMode,
+              "evening",
+              `${u.id}:${todayStr}`,
+              { dedupe: pushDedupe }
+            );
+            const sent = await sendPushToUser(supabase, u.id, payload);
+            if (sent) eveningPushSent++;
+          }
         } catch {
           // skip
         }

@@ -5,11 +5,8 @@ import { HeroMascotImage } from "@/components/HeroMascotImage";
 import { HQPageHeader } from "@/components/hq";
 import { hasGoogleCalendarToken } from "@/app/actions/calendar";
 import { getUserTimezone, getPushQuoteTime, getPushQuietHours, getPushSubscriptionEnabled } from "@/app/actions/auth";
-import { getBudgetSettings } from "@/app/actions/budget";
 import { getXP } from "@/app/actions/xp";
 import { getUserPreferencesOrDefaults } from "@/app/actions/preferences";
-import { getBehaviorProfile } from "@/app/actions/behavior-profile";
-import { getStudyPlan, getAccountabilitySettings } from "@/app/actions/behavior";
 import { XPBadge } from "@/components/XPBadge";
 import dynamic from "next/dynamic";
 import { SettingsSnapshotFallback } from "@/components/settings/SettingsSnapshotFallback";
@@ -31,9 +28,7 @@ const SettingsClearCache = dynamic(() => import("@/components/settings/SettingsC
 const SettingsRefreshSnapshot = dynamic(() => import("@/components/settings/SettingsRefreshSnapshot").then((m) => ({ default: m.SettingsRefreshSnapshot })), { loading: () => null });
 const SettingsDCICModeTest = dynamic(() => import("@/components/settings/SettingsDCICModeTest").then((m) => ({ default: m.SettingsDCICModeTest })), { loading: () => null });
 const SettingsDcicModeExplain = dynamic(() => import("@/components/settings/SettingsDcicModeExplain").then((m) => ({ default: m.SettingsDcicModeExplain })), { loading: () => null });
-const BehaviorProfileSettings = dynamic(() => import("@/components/settings/BehaviorProfileSettings").then((m) => ({ default: m.BehaviorProfileSettings })), { loading: () => null });
-const SettingsEngineProfile = dynamic(() => import("@/components/settings/SettingsEngineProfile").then((m) => ({ default: m.SettingsEngineProfile })), { loading: () => null });
-const SettingsDaysOff = dynamic(() => import("@/components/settings/SettingsDaysOff").then((m) => ({ default: m.SettingsDaysOff })), { loading: () => null });
+const SettingsQuickLinks = dynamic(() => import("@/components/settings/SettingsQuickLinks").then((m) => ({ default: m.SettingsQuickLinks })), { loading: () => null });
 const SettingsEmailReminders = dynamic(() => import("@/components/settings/SettingsEmailReminders").then((m) => ({ default: m.SettingsEmailReminders })), { loading: () => <div className="min-h-[80px] animate-pulse rounded-xl bg-white/5" aria-hidden /> });
 const SettingsHelpOnboarding = dynamic(() => import("@/components/settings/SettingsHelpOnboarding").then((m) => ({ default: m.SettingsHelpOnboarding })), { loading: () => null });
 
@@ -102,24 +97,20 @@ async function SettingsContent() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/login");
-  const [hasGoogle, userTimezone, budgetSettings, xp, pushQuoteTime, pushQuietHours, pushEnabled, prefs, behaviorProfile, studyPlan, accountabilitySettings] = await Promise.all([
+  const [hasGoogle, userTimezone, xp, pushQuoteTime, pushQuietHours, pushEnabled, prefs] = await Promise.all([
     hasGoogleCalendarToken(),
     getUserTimezone(),
-    getBudgetSettings(),
     getXP(),
     getPushQuoteTime(),
     getPushQuietHours(),
     getPushSubscriptionEnabled(),
     getUserPreferencesOrDefaults(),
-    getBehaviorProfile(),
-    getStudyPlan(),
-    getAccountabilitySettings(),
   ]);
   const appVersion = process.env.NEXT_PUBLIC_APP_VERSION ?? "1.0.0";
 
   return (
     <>
-      <SettingsCategory title="Gebruiker" subtitle="Account, brain & gedrag, en budgetinstellingen" defaultOpen>
+      <SettingsCategory title="Gebruiker" subtitle="Accountinformatie" defaultOpen>
         <section className="space-y-3" data-tutorial="settings-account">
           <h2 className="text-xs font-semibold uppercase tracking-wide text-[var(--text-muted)]">Account</h2>
           <div className="card-simple overflow-hidden p-0">
@@ -128,29 +119,6 @@ async function SettingsContent() {
             </div>
           </div>
         </section>
-        <SettingsSubCard
-          title="Brain & gedrag"
-          subtitle="Gedragsprofiel, routines en planningsbias"
-        >
-          <BehaviorProfileSettings initial={behaviorProfile} initialAutoMasterMissions={prefs.auto_master_missions} />
-          <SettingsEngineProfile
-            initialStudyPlan={studyPlan}
-            initialAccountability={accountabilitySettings}
-          />
-          <SettingsDaysOff initialDaysOff={prefs.usual_days_off ?? null} initialMode={prefs.day_off_mode ?? "soft"} />
-        </SettingsSubCard>
-        <SettingsSubCard
-          title="Budget voorkeuren"
-          subtitle="Valuta, budgetperiode en impulscontrole"
-        >
-          <SettingsBudget
-            initialCurrency={budgetSettings.currency}
-            initialImpulseThresholdPct={budgetSettings.impulse_threshold_pct}
-            initialBudgetPeriod={budgetSettings.budget_period}
-            initialImpulseQuickAddMinutes={budgetSettings.impulse_quick_add_minutes}
-            initialImpulseRiskCategories={budgetSettings.impulse_risk_categories}
-          />
-        </SettingsSubCard>
       </SettingsCategory>
 
       <SettingsCategory title="Systeem" subtitle="Weergave, modus en lokale appcontrole">
@@ -185,6 +153,7 @@ async function SettingsContent() {
       </SettingsCategory>
 
       <SettingsCategory title="Toestel" subtitle="Export, privacy en apparaatgerichte beheeracties">
+        <SettingsQuickLinks />
         <SettingsExport />
         <SettingsDeleteAccount />
         <SettingsHelpOnboarding />

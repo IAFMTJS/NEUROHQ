@@ -1,30 +1,24 @@
 "use client";
 
-import { useEffect, useState, useMemo, type CSSProperties } from "react";
+import { useEffect, useState, useMemo, useTransition, type CSSProperties } from "react";
 import Link from "next/link";
 import dynamic from "next/dynamic";
 import { Modal } from "@/components/Modal";
-import { AddBudgetEntryForm } from "@/components/AddBudgetEntryForm";
 import { trackEvent } from "@/app/actions/analytics-events";
+import { applyBudgetOptimizationLock } from "@/app/actions/budget-intelligence";
 import { getPendingDailyState } from "@/lib/client-pending-writes";
 import { usePendingBudgetSnapshot } from "@/lib/client-pending-budget";
 import { useHQStore } from "@/lib/hq-store";
 import { HQHeader, BrainStatusCard, ActiveMissionCard } from "@/components/hq";
-import { EconomyBadge } from "@/components/EconomyBadge";
-import { CommanderHomeHero } from "@/components/commander";
 import { ModeBanner, ModeExplanationModal } from "@/components/dashboard/DashboardClientOnly";
-import { XPBadge } from "@/components/XPBadge";
 import { DashboardContextCard } from "@/components/dashboard/DashboardContextCard";
-import { BudgetBadge } from "@/components/dashboard/BudgetBadge";
-import { DashboardActionsTrigger } from "@/components/dashboard/DashboardActionsTrigger";
 import { DashboardQuickBudgetLog } from "@/components/dashboard/DashboardQuickBudgetLog";
 import { SystemOverviewCard } from "@/components/dashboard/SystemOverviewCard";
+import { CommanderHomeHero } from "@/components/commander";
 import { SciFiPanel } from "@/components/hud-test/SciFiPanel";
-import { Divider1px } from "@/components/hud-test/Divider1px";
 import { CornerNode } from "@/components/hud-test/CornerNode";
 import hudStyles from "@/components/hud-test/hud.module.css";
 import { DelayedFallback } from "@/components/ui/DelayedFallback";
-import { isAssistantEnabled } from "@/lib/feature-flags";
 import { humanizeDecisionType, humanizeReasonCode } from "@/lib/unified-decision-labels";
 import { useDashboardData, fetchAll, type DashboardCritical, type DashboardSecondary } from "@/components/providers/DashboardDataProvider";
 import type { CopyVariant } from "@/app/actions/adaptive";
@@ -44,9 +38,6 @@ import { getDayOfYearFromDateString } from "@/lib/utils/timezone";
 import { useDCICGameState } from "@/lib/dcic/game-state-client";
 import { deriveBrainUI } from "@/lib/brain-ui";
 import { DCICStatusCard } from "@/components/dcic/DCICStatusCard";
-import { SetupReminderBanner } from "@/components/onboarding/SetupReminderBanner";
-import { ContextualTip } from "@/components/onboarding/ContextualTip";
-import { TIP_IDS } from "@/content/onboarding/tip-ids";
 import { neuroToast } from "@/lib/ui/neuro-toast";
 
 const DCIC_SUGGESTION_TOAST_KEY = "neurohq-dcic-suggestion-education-toast-v1";
@@ -94,6 +85,8 @@ export function DashboardClientShell() {
   const [trackedNextActionShown, setTrackedNextActionShown] = useState(false);
   const [nextBestDismissed, setNextBestDismissed] = useState(false);
   const [budgetGuardrailOpen, setBudgetGuardrailOpen] = useState(false);
+  const [budgetGuardrailPending, startBudgetGuardrailTransition] = useTransition();
+  const [budgetGuardrailStatus, setBudgetGuardrailStatus] = useState<string | null>(null);
   const { gameState, status: dcicStatus } = useDCICGameState();
   const dcicMode = gameState?.mode?.current ?? "focus";
   const dcicModeVars = useMemo<CSSProperties>(() => {
@@ -522,174 +515,6 @@ export function DashboardClientShell() {
         style={dcicModeVars}
         data-mode={dcicMode}
       >
-        {!isMinimalUI && (
-          <>
-            <SetupReminderBanner />
-            <EnergyOverBudgetBanner remaining={(effectiveEnergyBudget.remaining as number) ?? 0} dateStr={dateStr} />
-            <LateDayNoTaskBanner
-              completedTodayCount={
-                ((todayEnergyBudget as { completedTaskCount?: number } | null)?.completedTaskCount ??
-                  (energyBudget.completedTaskCount as number)) ?? 0
-              }
-              dateStr={dateStr}
-            />
-            <EveningNoTaskModal dateStr={dateStr} />
-          </>
-        )}
-        {!isMinimalUI && (
-          <div className="space-y-3">
-            <ContextualTip
-              tipId={TIP_IDS.BRAIN_STATUS}
-              message="You can update your Brain Status here to set energy, focus and load for the day."
-            />
-              <div className="dashboard-top-strip">
-              <div className="dashboard-top-strip-track">
-                <XPBadge totalXp={xp.total_xp} level={dcicLevel} compact href="/xp" />
-                {badgeBudgetRemainingCents != null && <BudgetBadge budgetRemainingCents={badgeBudgetRemainingCents} currency={badgeCurrency} />}
-                <EconomyBadge disciplinePoints={economy.discipline_points} focusCredits={economy.focus_credits} momentumBoosters={economy.momentum_boosters} compact />
-                <DashboardActionsTrigger count={actionsCount}>
-                  {topQuickActions.length === 0 ? (
-                    <p className="text-sm text-[var(--text-muted)]">Geen open acties. Check je missies of strategy.</p>
-                  ) : (
-                    topQuickActions.map((action) => (
-                      <Link key={action.key} href={action.href} className="block rounded-lg border border-[var(--card-border)] bg-[var(--bg-surface)]/50 px-3 py-2 text-sm font-medium text-[var(--text-primary)] hover:bg-[var(--bg-surface)]" onClick={() => { /* sheet closes via default link nav */ }}>
-                        {action.label}
-                      </Link>
-                    ))
-                  )}
-                </DashboardActionsTrigger>
-                <DashboardQuickBudgetLog />
-              </div>
-            </div>
-            {!nextBestDismissed && nextBestAction?.title && (
-            <section className="card-simple cmd-stack-dense rounded-[var(--cmd-card-radius)] px-4 py-3" aria-label="Next best action">
-              <div className="flex items-start justify-between gap-2">
-                <div className="min-w-0 flex-1">
-                  <p className="text-[10px] font-semibold uppercase tracking-wider text-[var(--text-muted)]">Next best action</p>
-                  <h3 className="mt-1 text-sm font-semibold text-[var(--text-primary)]">{nextBestAction.title}</h3>
-                  <p className="mt-1 text-xs text-[var(--text-secondary)]">{nextBestAction.description}</p>
-                  {nextActionDecisionMeta && (
-                    <>
-                      <div className="mt-2 flex flex-wrap gap-2">
-                        <span className="rounded-full border border-[var(--card-border)] bg-[var(--bg-primary)]/60 px-2 py-0.5 text-[10px] font-medium text-[var(--text-secondary)]">
-                          Beslissing: {humanizeDecisionType(nextActionDecisionMeta.decisionType)}
-                        </span>
-                        {nextActionDecisionMeta.confidence && (
-                          <span
-                            className={`rounded-full border px-2 py-0.5 text-[10px] font-medium ${confidenceToneMap[nextActionDecisionMeta.confidence]}`}
-                          >
-                            Vertrouwen: {confidenceLabelMap[nextActionDecisionMeta.confidence]}
-                          </span>
-                        )}
-                        {nextActionDecisionMeta.horizon && (
-                          <span
-                            className={`rounded-full border px-2 py-0.5 text-[10px] font-medium ${horizonToneMap[nextActionDecisionMeta.horizon]}`}
-                          >
-                            Horizon: {horizonLabelMap[nextActionDecisionMeta.horizon]}
-                          </span>
-                        )}
-                      </div>
-                      {(nextActionDecisionMeta.reasonCodes ?? []).length > 0 && (
-                        <div className="mt-1">
-                          <p className="text-[10px] font-semibold uppercase tracking-wider text-[var(--text-muted)]">
-                            Waarom nu
-                          </p>
-                          <div className="mt-1 flex flex-wrap gap-1.5">
-                            {(nextActionDecisionMeta.reasonCodes ?? []).slice(0, 3).map((code) => (
-                              <span
-                                key={code}
-                                className="rounded-full border border-[var(--card-border)] bg-[var(--bg-primary)]/60 px-2 py-0.5 text-[10px] font-medium text-[var(--text-secondary)]"
-                              >
-                                {humanizeReasonCode(code)}
-                              </span>
-                            ))}
-                          </div>
-                        </div>
-                      )}
-                    </>
-                  )}
-                </div>
-                <button
-                  type="button"
-                  onClick={() => {
-                    try {
-                      sessionStorage.setItem(`neurohq-next-best-dismissed-${dateStr}`, "1");
-                    } catch {
-                      // ignore
-                    }
-                    setNextBestDismissed(true);
-                  }}
-                  className="shrink-0 rounded-lg border border-[var(--card-border)] px-2 py-1 text-[10px] font-medium text-[var(--text-muted)] hover:bg-[var(--bg-surface)]"
-                >
-                  Sluiten
-                </button>
-              </div>
-              <div className="mt-3">
-                <Link
-                  href={nextBestAction.href}
-                  className="neon-button inline-flex min-h-[42px] items-center justify-center px-4 py-2 text-xs font-semibold"
-                  onClick={(e) => {
-                    if (nextBestAction.href.startsWith("/budget")) {
-                      e.preventDefault();
-                      setBudgetGuardrailOpen(true);
-                    }
-                    void Promise.all([
-                      trackEvent("CTA_clicked", {
-                        context: "dashboard_next_best_action",
-                        title: nextBestAction.title,
-                        href: nextBestAction.href,
-                      }),
-                      trackEvent("decision_action", {
-                        decisionId: nextDecisionId,
-                        decisionType: nextDecisionType,
-                        surface: "dashboard",
-                        actionType: "cta_click",
-                        href: nextBestAction.href,
-                        decisionSource: nextActionDecisionMeta?.source ?? "legacy",
-                        decisionConfidence: nextActionDecisionMeta?.confidence ?? "unknown",
-                        decisionHorizon: nextActionDecisionMeta?.horizon ?? "unknown",
-                        decisionReasonCodes: nextActionDecisionMeta?.reasonCodes ?? [],
-                        decisionEngineVersion: nextActionDecisionMeta?.engineVersion ?? "legacy",
-                        decisionRankingMode: nextActionDecisionMeta?.rankingMode ?? "legacy",
-                        decisionModelVersion: nextActionDecisionMeta?.modelVersion ?? "legacy",
-                        decisionCandidateCount: nextActionDecisionMeta?.candidateCount ?? 0,
-                        decisionSelectedScore: nextActionDecisionMeta?.selectedScore ?? -1,
-                        decisionCandidates: nextActionDecisionMeta?.candidateSnapshot ?? [],
-                        decisionFeatureSnapshot: nextActionDecisionMeta?.featureSnapshot ?? {},
-                      }),
-                    ])
-                  }}
-                >
-                  {nextBestAction.cta}
-                </Link>
-              </div>
-            </section>
-            )}
-            <Divider1px />
-            <div data-tutorial="dashboard-command-bridge">
-            <SciFiPanel className={`dashboard-bridge-frame idle-breathing ${hudStyles.focusPrimary}`} bodyClassName="dashboard-bridge-body" variant="command">
-              <CornerNode corner="top-left" />
-              <CornerNode corner="top-right" />
-              <span className="dashboard-bridge-label" aria-hidden>Command</span>
-              <CommanderHomeHero
-                energyPct={heroEnergyPct}
-                focusPct={heroFocusPct}
-                loadPct={heroLoadPct}
-                missionHref={todaysTasks.length > 0 ? "/tasks" : (isAssistantEnabled() ? "/assistant" : "/tasks")}
-                missionLabel={missionLabel}
-                singleGoalLabel={singleGoalLabel}
-                missionSubtext={missionSubtext}
-                exportDate={dateStr}
-                streakAtRisk={streakAtRisk}
-                dailyQuoteText={dailyQuoteText}
-                dailyQuoteAuthor={dailyQuoteAuthor}
-                autoSuggestions={autoSuggestions}
-              />
-            </SciFiPanel>
-            </div>
-          </div>
-        )}
-
         {isMinimalUI && (
           <>
             <header className="flex flex-col gap-0 relative pt-14 overflow-visible">
@@ -754,8 +579,28 @@ export function DashboardClientShell() {
           <SciFiPanel variant="glass" className={hudStyles.focusSecondary} bodyClassName="p-4 md:p-6">
             <CornerNode corner="top-left" />
             <CornerNode corner="top-right" />
-            <div className={skipCinematicLayers ? "light-ui-defer-paint" : ""}>
+            <div className={`space-y-4 ${skipCinematicLayers ? "light-ui-defer-paint" : ""}`}>
+              <SciFiPanel className={`dashboard-bridge-frame idle-breathing ${hudStyles.focusPrimary}`} bodyClassName="dashboard-bridge-body" variant="command">
+                <CornerNode corner="top-left" />
+                <CornerNode corner="top-right" />
+                <span className="dashboard-bridge-label" aria-hidden>Command</span>
+                <CommanderHomeHero
+                  energyPct={heroEnergyPct}
+                  focusPct={heroFocusPct}
+                  loadPct={heroLoadPct}
+                  missionHref="/tasks"
+                  missionLabel={missionLabel}
+                  singleGoalLabel={singleGoalLabel}
+                  missionSubtext={missionSubtext}
+                  exportDate={dateStr}
+                  streakAtRisk={streakAtRisk}
+                  dailyQuoteText={dailyQuoteText}
+                  dailyQuoteAuthor={dailyQuoteAuthor}
+                  autoSuggestions={autoSuggestions}
+                />
+              </SciFiPanel>
               <SystemOverviewCard
+                compact
                 sections={[
                   {
                     id: "level",
@@ -895,20 +740,60 @@ export function DashboardClientShell() {
           open={budgetGuardrailOpen}
           onClose={() => setBudgetGuardrailOpen(false)}
           title="Budget guardrail"
-          subtitle="Doe eerst een snelle interventie, ga dan door naar Budget."
+          subtitle="Zet eerst een echte guardrail, ga daarna door naar de juiste Budget-cards."
           size="lg"
         >
           <div className="space-y-4">
             <div className="rounded-lg border border-[var(--card-border)] bg-[var(--bg-surface)]/35 p-3">
               <p className="text-xs text-[var(--text-muted)]">
-                Snelle stap: log meteen de uitgave/inkomst die je guardrail triggert. Daarna open je Execute op de juiste card.
+                Kies eerst je interventie (24u of 72u lock). Daarna kun je direct door naar lock/nooduitgave of entries.
               </p>
             </div>
-            <AddBudgetEntryForm
-              date={dateStr}
-              currency={badgeCurrency}
-              onSuccess={() => setBudgetGuardrailOpen(false)}
-            />
+            <div className="flex flex-wrap gap-2">
+              <button
+                type="button"
+                disabled={budgetGuardrailPending}
+                onClick={() =>
+                  startBudgetGuardrailTransition(async () => {
+                    try {
+                      const result = await applyBudgetOptimizationLock(1);
+                      setBudgetGuardrailStatus(`24u focus-lock actief tot ${result.lockUntil}.`);
+                      neuroToast.success("24u focus-lock geactiveerd.");
+                    } catch (err) {
+                      const msg = err instanceof Error ? err.message : "Kon 24u lock niet activeren.";
+                      setBudgetGuardrailStatus(msg);
+                      neuroToast.error(msg);
+                    }
+                  })
+                }
+                className="rounded-lg border border-[var(--card-border)] px-3 py-2 text-xs font-semibold text-[var(--text-primary)] hover:bg-[var(--bg-hover)] disabled:opacity-60"
+              >
+                {budgetGuardrailPending ? "Bezig..." : "Activeer 24u guardrail"}
+              </button>
+              <button
+                type="button"
+                disabled={budgetGuardrailPending}
+                onClick={() =>
+                  startBudgetGuardrailTransition(async () => {
+                    try {
+                      const result = await applyBudgetOptimizationLock(3);
+                      setBudgetGuardrailStatus(`72u reset-lock actief tot ${result.lockUntil}.`);
+                      neuroToast.success("72u reset-lock geactiveerd.");
+                    } catch (err) {
+                      const msg = err instanceof Error ? err.message : "Kon 72u lock niet activeren.";
+                      setBudgetGuardrailStatus(msg);
+                      neuroToast.error(msg);
+                    }
+                  })
+                }
+                className="rounded-lg border border-[var(--card-border)] px-3 py-2 text-xs font-semibold text-[var(--text-primary)] hover:bg-[var(--bg-hover)] disabled:opacity-60"
+              >
+                {budgetGuardrailPending ? "Bezig..." : "Activeer 72u guardrail"}
+              </button>
+            </div>
+            {budgetGuardrailStatus && (
+              <p className="text-xs text-[var(--text-muted)]">{budgetGuardrailStatus}</p>
+            )}
             <div className="flex flex-wrap gap-2">
               <Link
                 href="/budget?tab=execute#entries-frozen"
@@ -923,6 +808,13 @@ export function DashboardClientShell() {
                 className="rounded-lg border border-[var(--card-border)] px-3 py-2 text-xs font-semibold text-[var(--text-primary)] hover:bg-[var(--bg-hover)]"
               >
                 Open no-spend lock
+              </Link>
+              <Link
+                href="/budget?tab=lock#budget-lock-emergency"
+                onClick={() => setBudgetGuardrailOpen(false)}
+                className="rounded-lg border border-[var(--card-border)] px-3 py-2 text-xs font-semibold text-[var(--text-primary)] hover:bg-[var(--bg-hover)]"
+              >
+                Open nooduitgave
               </Link>
             </div>
           </div>

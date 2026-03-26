@@ -70,6 +70,15 @@ export function IconSettings({ active }: { active?: boolean }) {
   );
 }
 
+export function IconUser({ active }: { active?: boolean }) {
+  return (
+    <svg className={iconClass} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={stroke} strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+      <circle cx="12" cy="8" r="4" />
+      <path d="M4 20a8 8 0 0116 0" />
+    </svg>
+  );
+}
+
 export function IconAssistant({ active }: { active?: boolean }) {
   return (
     <svg className={iconClass} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={stroke} strokeLinecap="round" strokeLinejoin="round" aria-hidden>

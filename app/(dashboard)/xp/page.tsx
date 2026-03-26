@@ -8,8 +8,8 @@ function XPShell() {
   return (
     <div className="flex flex-wrap items-center justify-between gap-2">
       <HQPageHeader
-        title="XP Nexus"
-        subtitle="Effectief XP verdienen: missies, streaks en alle actieve bronnen"
+        title="XP Command Bridge"
+        subtitle="Kies je levensmodus, volg streaks en stuur je XP-richting."
         backHref="/dashboard"
       />
     </div>
