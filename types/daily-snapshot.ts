@@ -2,6 +2,7 @@
  * Bump when the persisted snapshot contract changes (new required slices, incompatible shape).
  * v2: DCIC mode is day-locked server-side (`daily_state.dcic_mode`); `dcicGameState` in the snapshot
  * must match bootstrap `getGameState` for that date. Stale v1 snapshots are discarded via `isCompatibleSnapshot`.
+ * Prefetch routes / mascot list in `lib/daily-initialize.ts` track current IA (profile, insights) without a version bump.
  */
 export const LATEST_SNAPSHOT_VERSION = 2 as const;
 

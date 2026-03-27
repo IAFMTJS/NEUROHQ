@@ -24,6 +24,9 @@ import { updateLastActiveDate } from "@/app/actions/behavior";
 import { useHQStore } from "@/lib/hq-store";
 import { usePeriodicBootstrapRefresh } from "@/lib/daily-bootstrap";
 import { useDCICGameState } from "@/lib/dcic/game-state-client";
+import { profileSettingsHref } from "@/lib/profile-routes";
+import { AlertsBell } from "@/components/alerts/AlertsBell";
+import { PERIODIC_SNAPSHOT_REFRESH_MINUTES } from "@/lib/client-refresh";
 
 const LAST_ACTIVE_STORAGE_KEY = "neurohq-last-active-date";
 
@@ -62,7 +65,7 @@ export function DashboardLayoutClient({
   }, [dailySnapshot?.date, setTodayDate]);
 
   /** Keeps HQ store + persisted DailySnapshot aligned with `/api/bootstrap/today` between full preloads. */
-  usePeriodicBootstrapRefresh(30);
+  usePeriodicBootstrapRefresh(PERIODIC_SNAPSHOT_REFRESH_MINUTES);
 
   useEffect(() => {
     const today = new Date().toISOString().slice(0, 10);
@@ -74,7 +77,7 @@ export function DashboardLayoutClient({
     }
 
     // Update last active date on app start (behavior tracking).
-    // This is throttled per device/day to avoid repeated background POSTs.
+    // Throttle: at most one POST per calendar day per device (`LAST_ACTIVE_STORAGE_KEY` in localStorage).
     updateLastActiveDate().catch((err) => {
       console.error("Failed to update last active date:", err);
       try {
@@ -116,8 +119,9 @@ export function DashboardLayoutClient({
               </a>
               <KeyboardShortcuts />
               <HelpFloatingIcon />
+              <AlertsBell />
               <Link
-                href="/settings"
+                href={profileSettingsHref("system")}
                 className="fixed right-3 top-3 z-[70] rounded-full border border-[var(--card-border)] bg-[var(--bg-surface)]/80 px-2.5 py-1.5 text-sm font-semibold text-[var(--text-primary)] backdrop-blur hover:bg-[var(--bg-hover)]"
                 aria-label="Open settings"
                 title="Settings"

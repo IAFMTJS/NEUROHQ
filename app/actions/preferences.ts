@@ -34,7 +34,7 @@ export const getUserPreferences = cache(async (): Promise<UserPreferences | null
   const { data, error } = await supabase
     .from("user_preferences")
     .select(
-      "theme, color_mode, selected_emotion, compact_ui, reduced_motion, light_ui, auto_master_missions, usual_days_off, day_off_mode, email_reminders_enabled, push_reminders_enabled, push_morning_enabled, push_evening_enabled, push_weekly_learning_enabled, push_personality_mode, display_callsign, hq_headline, greeting_locale, updated_at",
+      "theme, color_mode, selected_emotion, compact_ui, reduced_motion, light_ui, simplified_content, auto_master_missions, usual_days_off, day_off_mode, email_reminders_enabled, push_reminders_enabled, push_morning_enabled, push_evening_enabled, push_weekly_learning_enabled, push_personality_mode, display_callsign, hq_headline, greeting_locale, updated_at",
     )
     .eq("user_id", user.id)
     .single();
@@ -57,6 +57,7 @@ export const getUserPreferences = cache(async (): Promise<UserPreferences | null
       msg.includes("display_callsign") ||
       msg.includes("hq_headline") ||
       msg.includes("greeting_locale") ||
+      msg.includes("simplified_content") ||
       msg.toLowerCase().includes("schema cache")
     ) {
       const { data: legacyData, error: legacyError } = await supabase
@@ -88,6 +89,7 @@ export const getUserPreferences = cache(async (): Promise<UserPreferences | null
         display_callsign: DEFAULTS.display_callsign ?? null,
         hq_headline: DEFAULTS.hq_headline ?? null,
         greeting_locale: DEFAULTS.greeting_locale ?? "en",
+        simplified_content: DEFAULTS.simplified_content,
         updated_at: legacyData.updated_at ?? DEFAULTS.updated_at,
       };
     }
@@ -103,6 +105,7 @@ export const getUserPreferences = cache(async (): Promise<UserPreferences | null
     compact_ui?: boolean | null;
     reduced_motion?: boolean | null;
     light_ui?: boolean | null;
+    simplified_content?: boolean | null;
     auto_master_missions?: boolean | null;
     usual_days_off?: number[] | null;
     day_off_mode?: UserPreferences["day_off_mode"] | null;
@@ -124,6 +127,7 @@ export const getUserPreferences = cache(async (): Promise<UserPreferences | null
     compact_ui: row.compact_ui ?? DEFAULTS.compact_ui,
     reduced_motion: row.reduced_motion ?? DEFAULTS.reduced_motion,
     light_ui: row.light_ui ?? DEFAULTS.light_ui,
+    simplified_content: row.simplified_content ?? DEFAULTS.simplified_content,
     auto_master_missions: row.auto_master_missions ?? DEFAULTS.auto_master_missions,
     usual_days_off: row.usual_days_off ?? DEFAULTS.usual_days_off ?? null,
     day_off_mode: row.day_off_mode ?? DEFAULTS.day_off_mode ?? null,
@@ -155,6 +159,7 @@ type UpdatePayload = Partial<
     | "compact_ui"
     | "reduced_motion"
     | "light_ui"
+    | "simplified_content"
     | "auto_master_missions"
     | "usual_days_off"
     | "day_off_mode"
@@ -184,6 +189,7 @@ export async function updateUserPreferences(payload: UpdatePayload) {
     compact_ui: payload.compact_ui ?? current.compact_ui,
     reduced_motion: payload.reduced_motion ?? current.reduced_motion,
     light_ui: payload.light_ui ?? current.light_ui,
+    simplified_content: payload.simplified_content ?? current.simplified_content,
     auto_master_missions: payload.auto_master_missions ?? current.auto_master_missions,
     usual_days_off: payload.usual_days_off ?? current.usual_days_off ?? null,
     day_off_mode: payload.day_off_mode ?? current.day_off_mode ?? null,
@@ -243,6 +249,7 @@ export async function updateUserPreferences(payload: UpdatePayload) {
       msg.includes("display_callsign") ||
       msg.includes("hq_headline") ||
       msg.includes("greeting_locale") ||
+      msg.includes("simplified_content") ||
       msg.toLowerCase().includes("schema cache")
     ) {
       const legacy = await supabase

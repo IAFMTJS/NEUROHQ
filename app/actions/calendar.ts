@@ -233,7 +233,8 @@ export async function getOrCreateCalendarFeedToken(): Promise<string> {
     .update({ calendar_feed_token: token })
     .eq("id", user.id);
   if (error) throw new Error(error.message);
-  revalidatePath("/settings");
+    revalidatePath("/settings");
+    revalidatePath("/profile");
   return token;
 }
 

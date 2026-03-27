@@ -30,6 +30,10 @@ export interface UserPreferences {
   reduced_motion: boolean;
   /** Light version: same visuals, minimal animations, fast UI. */
   light_ui: boolean;
+  /**
+   * Shorter copy on cards, fewer promotional toasts/shortcut strips. Same styling tokens.
+   */
+  simplified_content: boolean;
   /** Auto-missies uit Master Pool. Default on; user can disable in settings. First-time users only get auto missions after brain state is set. */
   auto_master_missions: boolean;
    /** Typische vrije dagen (1=Mon..7=Sun) voor zachte planning-bias. */
@@ -65,6 +69,7 @@ export const PREFERENCES_DEFAULTS: UserPreferences = {
   compact_ui: false,
   reduced_motion: false,
   light_ui: true,
+  simplified_content: false,
   auto_master_missions: true,
   usual_days_off: null,
   day_off_mode: null,

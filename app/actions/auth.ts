@@ -50,6 +50,7 @@ export async function updateUserTimezone(timezone: string) {
   if (error) throw new Error(error.message);
   revalidatePath("/dashboard");
   revalidatePath("/settings");
+  revalidatePath("/profile");
 }
 
 /** One-time: set IANA timezone from the browser when still null (reliable push/local day). */
@@ -67,6 +68,7 @@ export async function syncUserTimezoneFromBrowser(ianaTimezone: string): Promise
   if (error) return { ok: false };
   revalidatePath("/dashboard");
   revalidatePath("/settings");
+  revalidatePath("/profile");
   return { ok: true };
 }
 
@@ -112,6 +114,7 @@ export async function updatePushQuoteTime(time: string | null): Promise<string |
   const { error } = await supabase.from("users").update({ push_quote_time: value }).eq("id", user.id);
   if (error) throw new Error(error.message);
   revalidatePath("/settings");
+  revalidatePath("/profile");
   return value;
 }
 
@@ -142,5 +145,6 @@ export async function updatePushQuietHours(start: string | null, end: string | n
   }).eq("id", user.id);
   if (error) throw new Error(error.message);
   revalidatePath("/settings");
+  revalidatePath("/profile");
   return { start: startVal, end: endVal };
 }

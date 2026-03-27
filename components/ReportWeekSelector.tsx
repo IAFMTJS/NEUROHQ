@@ -9,13 +9,17 @@ export function ReportWeekSelector({
   currentWeekStart,
   selectedWeekStart,
   activeTab,
+  buildWeekHref,
 }: {
   storedWeeks: Week[];
   currentWeekStart: string;
   selectedWeekStart: string;
   activeTab?: string;
+  /** Override link targets (e.g. profile settings insights embed). */
+  buildWeekHref?: (weekStart: string | null) => string;
 }) {
   const hrefForWeek = (weekStart: string | null) => {
+    if (buildWeekHref) return buildWeekHref(weekStart);
     const params = new URLSearchParams();
     if (weekStart) params.set("weekStart", weekStart);
     if (activeTab) params.set("tab", activeTab);

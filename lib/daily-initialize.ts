@@ -350,12 +350,13 @@ async function runStep(
           "/dashboard",
           "/tasks",
           "/xp",
-          "/report",
+          "/profile?view=settings&settingsTab=insights",
           "/strategy",
           "/learning",
           "/learning/analytics",
           "/budget",
           "/settings",
+          "/profile",
           "/help",
           "/assistant",
         ];
@@ -378,6 +379,7 @@ async function runStep(
           getMascotSrcForPage("tasks"),
           getMascotSrcForPage("xp"),
           getMascotSrcForPage("budget"),
+          getMascotSrcForPage("profile"),
         ];
         assets.forEach((src) => {
           try {

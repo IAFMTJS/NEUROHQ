@@ -25,6 +25,7 @@ import {
 } from "@/lib/behavioral-notification-server";
 import { applyPersonalityToPayload } from "@/lib/push-personality";
 import { PushCopyDedupe, parsePushCopyHistory } from "@/lib/push-copy-dedupe";
+import { dispatchPendingUserAlertPushes } from "@/lib/pending-alerts-push";
 
 /**
  * Hourly scheduler: on Vercel Hobby, invoke via GitHub Actions (`.github/workflows/cron-hourly.yml`), not `vercel.json`
@@ -791,6 +792,13 @@ export async function GET(request: Request) {
     }
   }
 
+  let alertPushSent = 0;
+  try {
+    alertPushSent = await dispatchPendingUserAlertPushes(supabase);
+  } catch {
+    // non-fatal
+  }
+
   return NextResponse.json({
     ok: true,
     job: "hourly",
@@ -805,6 +813,7 @@ export async function GET(request: Request) {
     brainStatusRemindersSent,
     calendarReminderSent,
     achievementPushSent,
+    alertPushSent,
     usersChecked: users?.length ?? 0,
   });
 }

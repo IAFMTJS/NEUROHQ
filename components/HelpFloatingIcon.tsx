@@ -1,12 +1,15 @@
 "use client";
 
 import Link from "next/link";
+import { useSettings } from "@/lib/settings-context";
 
 /**
  * Global help icon: fixed position, opens /help. Does not modify app state.
  * Rendered inside dashboard layout so it appears on every app page.
  */
 export function HelpFloatingIcon() {
+  const { settings } = useSettings();
+  if (settings?.preferences?.simplified_content) return null;
   return (
     <Link
       href="/help"

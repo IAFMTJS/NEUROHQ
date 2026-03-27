@@ -66,6 +66,7 @@ export async function addDisciplinePoints(userId: string, amount: number): Promi
   revalidatePath("/dashboard");
   revalidatePath("/tasks");
   revalidatePath("/settings");
+  revalidatePath("/profile");
 }
 
 export async function addFocusCredits(userId: string, amount: number): Promise<void> {
@@ -82,6 +83,7 @@ export async function addFocusCredits(userId: string, amount: number): Promise<v
   revalidatePath("/dashboard");
   revalidatePath("/tasks");
   revalidatePath("/settings");
+  revalidatePath("/profile");
 }
 
 export async function addMomentumBoosters(userId: string, amount: number): Promise<void> {
@@ -98,6 +100,7 @@ export async function addMomentumBoosters(userId: string, amount: number): Promi
   revalidatePath("/dashboard");
   revalidatePath("/tasks");
   revalidatePath("/settings");
+  revalidatePath("/profile");
 }
 
 /** Award economy for completing a task: +1 discipline, +1 focus (capped 10/day), optional +1 momentum on chain complete. */

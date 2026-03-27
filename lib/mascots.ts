@@ -17,6 +17,7 @@ export type DashboardPage =
   | "budget"
   | "strategy"
   | "settings"
+  | "profile"
   | "xp";
 
 /** Page name (route segment) → mascot filename in "New styling idea" */
@@ -31,6 +32,7 @@ export const MASCOT_FILE_BY_PAGE: Record<DashboardPage, string> = {
   budget: "Budget page.png",
   strategy: "Strategy page.png",
   settings: "Settings page.png",
+  profile: "User page.PNG",
   xp: "XP page.png",
 };
 
@@ -55,7 +57,7 @@ const MASCOTS_BASE = "/mascots";
 
 /** Returns the public URL for a page’s mascot (e.g. /mascots/Budget%20page.png). */
 /** Bump this when you edit a mascot image so the browser loads the new file. */
-const MASCOT_CACHE_VERSION = 2;
+const MASCOT_CACHE_VERSION = 3;
 
 /**
  * Returns the public URL for a page's mascot. Optionally pass a state (e.g. "stable" | "driven" | "lowenergy" for XP)
@@ -90,7 +92,17 @@ export function pageFromPathname(pathname: string): DashboardPage {
 
 /** HeroMascotVariant (UI label) → DashboardPage (route). Used by HeroMascotImage. */
 export const MASCOT_VARIANT_TO_PAGE: Record<
-  "homepage" | "missions" | "assistant" | "analytics" | "budget" | "report" | "growth" | "strategy" | "settings" | "xp",
+  | "homepage"
+  | "missions"
+  | "assistant"
+  | "analytics"
+  | "budget"
+  | "report"
+  | "growth"
+  | "strategy"
+  | "settings"
+  | "profile"
+  | "xp",
   DashboardPage
 > = {
   homepage: "dashboard",
@@ -102,5 +114,6 @@ export const MASCOT_VARIANT_TO_PAGE: Record<
   growth: "learning",
   strategy: "strategy",
   settings: "settings",
+  profile: "profile",
   xp: "xp",
 };

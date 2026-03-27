@@ -12,6 +12,7 @@ const NEXT_ROUTE_CANDIDATES: Record<string, string[]> = {
   "/learning": ["/dashboard"],
   "/strategy": ["/dashboard"],
   "/settings": ["/dashboard"],
+  "/profile": ["/dashboard"],
   "/xp": ["/dashboard"],
 };
 

@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { memo, useCallback, useRef, useState } from "react";
 import {
   IconHQ,
@@ -18,23 +18,34 @@ const navLinks = [
   { href: "/tasks", label: "Missions", Icon: IconMissions, pngFile: "Missions.png" },
   { href: "/budget", label: "Budget", Icon: IconBudget, pngFile: "Budget.png" },
   { href: "/learning", label: "Growth", Icon: IconGrowth, pngFile: "Growth.png" },
-  { href: "/dashboard", label: "Dashboard", Icon: IconHQ, pngFile: "Dashboard.png" },
+  { href: "/dashboard", label: "Dashboard", Icon: IconHQ, pngFile: "Dashboard.png", large: true },
   { href: "/strategy", label: "Strategy", Icon: IconStrategy, pngFile: "Strategy.png" },
   { href: "/profile", label: "User", Icon: IconUser, pngFile: "User.png" },
   { href: "/settings", label: "Settings", Icon: IconSettings, pngFile: "Settings.png" },
 ] as const;
 
 /** Try PNG from public/nav/*.png first (for deployment). Falls back to SVG on 404. Add dashboard.png, missions.png, etc. to public/nav/ to use PNG icons. */
-function NavIcon({ src, Icon, active }: { src: string; Icon: React.ComponentType<{ active?: boolean }>; active: boolean }) {
+function NavIcon({
+  src,
+  Icon,
+  active,
+  large,
+}: {
+  src: string;
+  Icon: React.ComponentType<{ active?: boolean }>;
+  active: boolean;
+  large?: boolean;
+}) {
   const [useSvg, setUseSvg] = useState(false);
   if (useSvg) return <Icon active={active} />;
+  const px = large ? 32 : 22;
   return (
     <img
       src={src}
       alt=""
-      width={24}
-      height={24}
-      className="object-contain w-6 h-6"
+      width={px}
+      height={px}
+      className={`object-contain ${large ? "h-8 w-8" : "h-[22px] w-[22px]"}`}
       onError={() => setUseSvg(true)}
     />
   );
@@ -42,6 +53,7 @@ function NavIcon({ src, Icon, active }: { src: string; Icon: React.ComponentType
 
 export default memo(function BottomNavigation() {
   const pathname = usePathname();
+  const searchParams = useSearchParams();
   const router = useRouter();
   const prefetchedRoutesRef = useRef<Set<string>>(new Set());
 
@@ -60,8 +72,13 @@ export default memo(function BottomNavigation() {
       aria-label="Main navigation"
     >
       {links.map((link) => {
-        const active = pathname === link.href;
+        const active =
+          link.href === "/settings"
+            ? pathname === "/settings" ||
+              (pathname === "/profile" && searchParams.get("view") === "settings")
+            : pathname === link.href;
         const Icon = link.Icon;
+        const large = "large" in link && link.large === true;
         return (
           <Link
             key={link.href}
@@ -75,7 +92,7 @@ export default memo(function BottomNavigation() {
             <span
               className={`nav-item-icon flex items-center justify-center ${
                 link.href === "/dashboard"
-                  ? "[&_svg]:h-[32px] [&_svg]:w-[32px]"
+                  ? "[&_svg]:h-[34px] [&_svg]:w-[34px]"
                   : "[&_svg]:h-[18px] [&_svg]:w-[18px]"
               }`}
             >
@@ -83,6 +100,7 @@ export default memo(function BottomNavigation() {
                 src={`/nav/${encodeURIComponent(link.pngFile)}`}
                 Icon={Icon}
                 active={active}
+                large={large}
               />
             </span>
             <span>{link.label}</span>

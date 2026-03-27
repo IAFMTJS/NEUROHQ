@@ -121,7 +121,8 @@ export async function updateBudgetSettings(params: {
   const { error } = await supabase.from("users").update(updates).eq("id", user.id);
   if (error) throw new Error(error.message);
   revalidatePath("/budget");
-  revalidatePath("/settings");
+    revalidatePath("/settings");
+    revalidatePath("/profile");
   revalidatePath("/dashboard");
 }
 
@@ -162,7 +163,8 @@ export async function undoPaydayReceived(previousLastPaydayDate: string | null):
     restored_last_payday_date: previousLastPaydayDate || null,
   });
   revalidatePath("/budget");
-  revalidatePath("/settings");
+    revalidatePath("/settings");
+    revalidatePath("/profile");
   revalidatePath("/dashboard");
 }
 

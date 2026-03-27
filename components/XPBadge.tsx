@@ -35,7 +35,7 @@ export function XPBadge({ totalXp, level, compact = false, href }: Props) {
         <p className="text-sm font-bold text-[var(--accent-focus)]">Level {level}</p>
         <p className="text-xs text-[var(--text-muted)]"><AnimatedNumber value={totalXp} /> XP total</p>
       </div>
-      <span className="ml-auto text-sm text-[var(--accent-focus)]">View in Settings →</span>
+        <span className="ml-auto text-sm text-[var(--accent-focus)]">Naar instellingen →</span>
     </Link>
   );
 }

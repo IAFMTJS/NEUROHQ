@@ -1,0 +1,61 @@
+import type { SupabaseClient } from "@supabase/supabase-js";
+import { sendPushToUser } from "@/lib/push";
+
+type PendingRow = {
+  id: string;
+  user_id: string;
+  title: string;
+  body: string | null;
+  link_path: string | null;
+  push_tag: string | null;
+  severity: string;
+};
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type AnyDb = { from: (t: string) => any };
+
+/**
+ * Sends push for alerts that were created but not yet delivered (e.g. immediate send failed).
+ * Called from hourly cron with service/admin client. Respects normal sendPushToUser caps.
+ */
+export async function dispatchPendingUserAlertPushes(supabase: SupabaseClient): Promise<number> {
+  const db = supabase as unknown as AnyDb;
+  const since = new Date(Date.now() - 48 * 60 * 60 * 1000).toISOString();
+  const { data: rows, error } = await db
+    .from("user_alerts")
+    .select("id, user_id, title, body, link_path, push_tag, severity")
+    .is("push_sent_at", null)
+    .is("read_at", null)
+    .gte("created_at", since)
+    .order("created_at", { ascending: true })
+    .limit(80);
+
+  if (error || !rows?.length) return 0;
+
+  let sent = 0;
+  for (const raw of rows as PendingRow[]) {
+    const { data: prefRow } = await supabase
+      .from("user_preferences")
+      .select("push_reminders_enabled")
+      .eq("user_id", raw.user_id)
+      .maybeSingle();
+    if ((prefRow as { push_reminders_enabled?: boolean } | null)?.push_reminders_enabled === false) {
+      continue;
+    }
+
+    const path = raw.link_path?.trim() || "/dashboard";
+    const url = path.startsWith("/") ? path : `/${path}`;
+    const ok = await sendPushToUser(supabase, raw.user_id, {
+      title: raw.title,
+      body: raw.body ?? undefined,
+      url,
+      tag: raw.push_tag ?? `hq-alert-${raw.id}`,
+      priority: raw.severity === "urgent" ? "high" : "normal",
+    });
+    if (ok) {
+      await db.from("user_alerts").update({ push_sent_at: new Date().toISOString() }).eq("id", raw.id);
+      sent++;
+    }
+  }
+  return sent;
+}

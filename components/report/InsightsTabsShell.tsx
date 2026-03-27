@@ -25,9 +25,11 @@ type Props = {
   activeTab: InsightsTabId;
   weekStart?: string | null;
   children: React.ReactNode;
+  /** When set (e.g. profile embed), tab links use this instead of `/report?tab=`. */
+  resolveTabHref?: (tab: InsightsTabId) => string;
 };
 
-export function InsightsTabsShell({ activeTab, weekStart, children }: Props) {
+export function InsightsTabsShell({ activeTab, weekStart, children, resolveTabHref }: Props) {
   return (
     <div className="space-y-4">
       <nav
@@ -36,10 +38,11 @@ export function InsightsTabsShell({ activeTab, weekStart, children }: Props) {
       >
         {TABS.map((tab) => {
           const selected = tab.id === activeTab;
+          const href = resolveTabHref ? resolveTabHref(tab.id) : buildTabHref(tab.id, weekStart);
           return (
             <Link
               key={tab.id}
-              href={buildTabHref(tab.id, weekStart)}
+              href={href}
               scroll={false}
               aria-current={selected ? "page" : undefined}
               className={`rounded-lg border px-2.5 py-1.5 text-[11px] font-semibold uppercase tracking-wide transition ${

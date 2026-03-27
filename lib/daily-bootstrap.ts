@@ -4,6 +4,7 @@ import { useEffect } from "react";
 import { useHQStore } from "@/lib/hq-store";
 import { mergeDailySnapshotFromNetwork } from "@/lib/daily-snapshot-full-sync";
 import { applyDCICModeOverrideIfAny } from "@/lib/dcic/dcic-mode-override";
+import { PERIODIC_SNAPSHOT_REFRESH_MINUTES } from "@/lib/client-refresh";
 
 /** Merge server bootstrap into IndexedDB snapshot and HQ store (after brain save, payday, etc.). */
 export async function refreshMergedSnapshotFromNetwork(): Promise<void> {
@@ -49,13 +50,13 @@ export async function refreshMergedSnapshotFromNetwork(): Promise<void> {
  * - MissionsProvider, BudgetSnapshotProvider, and DashboardDataProvider hydrate from snapshot
  *
  * Periodic refresh runs a full snapshot merge (dashboard, bootstrap, xp, strategy, analytics, settings)
- * so localStorage stays aligned with all server slices.
+ * so localStorage stays aligned with all server slices. Interval: `PERIODIC_SNAPSHOT_REFRESH_MINUTES` in `lib/client-refresh.ts`.
  */
 
 /**
  * Background refresh: full network merge into DailySnapshot + HQ store updates from bootstrap.
  */
-export function usePeriodicBootstrapRefresh(intervalMinutes = 45) {
+export function usePeriodicBootstrapRefresh(intervalMinutes = PERIODIC_SNAPSHOT_REFRESH_MINUTES) {
   const setTodayDate = useHQStore((s) => s.setTodayDate);
   const setDashboardSnapshot = useHQStore((s) => s.setDashboardSnapshot);
   const setGameState = useHQStore((s) => s.setGameState);

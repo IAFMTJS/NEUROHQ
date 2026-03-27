@@ -137,5 +137,6 @@ export async function updateBehaviorProfile(profile: BehaviorProfile): Promise<v
   }
 
   revalidatePath("/settings");
+  revalidatePath("/profile");
 }
 

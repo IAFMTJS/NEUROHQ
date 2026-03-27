@@ -324,6 +324,7 @@ export async function updateAccountabilitySettings(
   );
 
   revalidatePath("/settings");
+  revalidatePath("/profile");
   revalidatePath("/dashboard");
   revalidatePath("/tasks");
 }

@@ -14,14 +14,17 @@ function stripSignature(snap: GrowthEngineSnapshot): string {
 
 type Props = {
   snap: GrowthEngineSnapshot;
+  /** Eenvoudige modus: geen growth shortcut-toast (nav heeft Growth/Strategy). */
+  simplifiedContent?: boolean;
 };
 
 /** Snapshot as a single toast so the command bridge can own the fold without an inline strip. */
-export function GrowthDashboardStripClient({ snap }: Props) {
+export function GrowthDashboardStripClient({ snap, simplifiedContent = false }: Props) {
   const sig = useMemo(() => stripSignature(snap), [snap]);
   const toastShownForSig = useRef<string | null>(null);
 
   useEffect(() => {
+    if (simplifiedContent) return;
     if (typeof window === "undefined") return;
     try {
       if (localStorage.getItem(STORAGE_KEY) === sig) return;
@@ -118,7 +121,7 @@ export function GrowthDashboardStripClient({ snap }: Props) {
       ),
       { duration: 26_000 }
     );
-  }, [sig, snap]);
+  }, [sig, snap, simplifiedContent]);
 
   return null;
 }
