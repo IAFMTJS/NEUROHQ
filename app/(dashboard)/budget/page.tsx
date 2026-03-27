@@ -30,6 +30,7 @@ import { getAlternatives } from "@/app/actions/alternatives";
 import { getBudgetWeeklyReviewStatus } from "@/app/actions/budget-weekly-review";
 import { getBudgetDisciplineXpThisWeek, getBudgetDisciplineCompletedToday } from "@/app/actions/budget-discipline";
 import { syncBudgetDisciplineFromDataForToday } from "@/app/actions/missions-performance";
+import { getUserPreferencesOrDefaults } from "@/app/actions/preferences";
 import { getImpulseTimeWindow } from "@/app/actions/budget-impulse-pattern";
 import {
   autoAwardBudgetOptimizationForCurrentUser,
@@ -128,6 +129,9 @@ async function BudgetContent({ searchParams }: Props) {
     /* ignore auto-award failures to keep budget page resilient */
   }
   await syncBudgetDisciplineFromDataForToday();
+  const prefs = await getUserPreferencesOrDefaults();
+  const simplifiedBudget = prefs.simplified_content === true;
+  const skipBudgetCinematic = prefs.light_ui === true || simplifiedBudget;
   const periodBounds = await getBudgetPeriodBounds();
   const { periodStart, periodEnd, isPaydayCycle } = periodBounds;
   const { nextMonthStart, nextMonthEnd, prevMonthStart, prevMonthEnd } = getBudgetAdjacentMonths();
@@ -700,77 +704,101 @@ async function BudgetContent({ searchParams }: Props) {
     </section>
   );
 
+  const budgetTabsShell = (
+    <BudgetTabsShell
+      key={`${monthParam ?? "live"}-${tabParam ?? "overview"}`}
+      initialTab={activeTab}
+      isHistoryView={isHistoryView}
+      historyMode={historyMode}
+      lockActive={budgetControlState.lockActive}
+      lockUntil={budgetControlState.lockUntil}
+      lockUntilAt={budgetControlState.lockUntilAt}
+      lockPanelHref={lockPanelHref}
+      headerRight={headerRight}
+      simplifiedLayout={simplifiedBudget}
+      simplifiedTopSlot={
+        simplifiedBudget && !historyMode ? (
+          <BudgetPrePaydayUrgencyToast
+            daysToPayday={budgetControlState.daysToPayday}
+            needsPaydaySurvey={budgetControlState.needsPaydaySurvey}
+            hasRecentSurvey={budgetControlState.hasRecentSurvey}
+          />
+        ) : undefined
+      }
+      overview={
+        <BudgetOverviewLockGate
+          lockPanelHref={lockPanelHref}
+          emergencyPanelHref={emergencyPanelHref}
+          lockActive={!historyMode && budgetControlState.lockActive}
+          lockUntil={budgetControlState.lockUntil}
+          lockUntilAt={budgetControlState.lockUntilAt}
+        >
+          {overviewSection}
+        </BudgetOverviewLockGate>
+      }
+      tactical={tacticalSection}
+      analysis={analysisSection}
+      goals={goalsSection}
+      optimization={optimizationSection}
+      lock={lockSection}
+    />
+  );
+
   return (
     <BudgetSnapshotProvider>
-      <main className={`relative min-h-screen overflow-hidden ${hudStyles.cinematicBackdrop}`}>
-        <div className={hudStyles.spaceMist} aria-hidden />
-        <div className={hudStyles.starLayerFar} aria-hidden />
-        <div className={hudStyles.starLayerNear} aria-hidden />
-        <div className={hudStyles.backgroundAtmosphere} aria-hidden />
-        <div className={hudStyles.colorBlend} aria-hidden />
-        <div className={hudStyles.spaceNoise} aria-hidden />
-        <div className="container page page-wide dashboard-page dashboard-cinematic relative z-10 pb-10">
-          <div className="space-y-4">
-            <SciFiPanel variant="glass" className={hudStyles.focusSecondary} bodyClassName="p-4 md:p-5">
-              <CornerNode corner="top-left" />
-              <CornerNode corner="top-right" />
-              <div className="[&>*+*]:mt-0">
-                <HQPageHeader
-                  title="Budget"
-                  subtitle="Behavioral command center: plan, decide, and stay within your cycle."
-                  backHref="/dashboard"
-                />
-              </div>
-            </SciFiPanel>
-
-            <SciFiPanel variant="glass" className={hudStyles.focusSecondary} bodyClassName="p-4 md:p-6">
-              <CornerNode corner="top-left" />
-              <CornerNode corner="top-right" />
-              {!historyMode && (
-                <BudgetPrePaydayUrgencyToast
-                  daysToPayday={budgetControlState.daysToPayday}
-                  needsPaydaySurvey={budgetControlState.needsPaydaySurvey}
-                  hasRecentSurvey={budgetControlState.hasRecentSurvey}
-                />
-              )}
-              <div className="dashboard-bento">
-                <BudgetTabsShell
-                  key={`${monthParam ?? "live"}-${tabParam ?? "overview"}`}
-                  initialTab={activeTab}
-                  isHistoryView={isHistoryView}
-                  historyMode={historyMode}
-                  lockActive={budgetControlState.lockActive}
-                  lockUntil={budgetControlState.lockUntil}
-                  lockUntilAt={budgetControlState.lockUntilAt}
-                  lockPanelHref={lockPanelHref}
-                  headerRight={headerRight}
-                  overview={
-                    <BudgetOverviewLockGate
-                      lockPanelHref={lockPanelHref}
-                      emergencyPanelHref={emergencyPanelHref}
-                      lockActive={!historyMode && budgetControlState.lockActive}
-                      lockUntil={budgetControlState.lockUntil}
-                      lockUntilAt={budgetControlState.lockUntilAt}
-                    >
-                      {overviewSection}
-                    </BudgetOverviewLockGate>
-                  }
-                  tactical={tacticalSection}
-                  analysis={analysisSection}
-                  goals={goalsSection}
-                  optimization={optimizationSection}
-                  lock={lockSection}
-                />
-              </div>
-            </SciFiPanel>
-
-            {!isHistoryView && (
-              <section className="mascot-hero-inner mx-auto" aria-hidden>
-                <HeroMascotImage page="budget" className="mascot-img" />
-              </section>
-            )}
+      <main
+        className={`relative overflow-hidden ${simplifiedBudget ? "flex min-h-0 flex-1 flex-col" : "min-h-screen"} ${!skipBudgetCinematic ? hudStyles.cinematicBackdrop : ""}`}
+      >
+        {!skipBudgetCinematic && (
+          <>
+            <div className={hudStyles.spaceMist} aria-hidden />
+            <div className={hudStyles.starLayerFar} aria-hidden />
+            <div className={hudStyles.starLayerNear} aria-hidden />
+            <div className={hudStyles.backgroundAtmosphere} aria-hidden />
+            <div className={hudStyles.colorBlend} aria-hidden />
+            <div className={hudStyles.spaceNoise} aria-hidden />
+          </>
+        )}
+        {simplifiedBudget ? (
+          <div className="relative z-10 flex min-h-[calc(100svh-7rem)] w-full max-w-none flex-1 flex-col pb-6 sm:min-h-[calc(100svh-6.5rem)] dashboard-cinematic">
+            {budgetTabsShell}
           </div>
-        </div>
+        ) : (
+          <div className="container page page-wide dashboard-page dashboard-cinematic relative z-10 pb-10">
+            <div className="space-y-4">
+              <SciFiPanel variant="glass" className={hudStyles.focusSecondary} bodyClassName="p-4 md:p-5">
+                <CornerNode corner="top-left" />
+                <CornerNode corner="top-right" />
+                <div className="[&>*+*]:mt-0">
+                  <HQPageHeader
+                    title="Budget"
+                    subtitle="Behavioral command center: plan, decide, and stay within your cycle."
+                    backHref="/dashboard"
+                  />
+                </div>
+              </SciFiPanel>
+
+              <SciFiPanel variant="glass" className={hudStyles.focusSecondary} bodyClassName="p-4 md:p-6">
+                <CornerNode corner="top-left" />
+                <CornerNode corner="top-right" />
+                {!historyMode && (
+                  <BudgetPrePaydayUrgencyToast
+                    daysToPayday={budgetControlState.daysToPayday}
+                    needsPaydaySurvey={budgetControlState.needsPaydaySurvey}
+                    hasRecentSurvey={budgetControlState.hasRecentSurvey}
+                  />
+                )}
+                <div className="dashboard-bento">{budgetTabsShell}</div>
+              </SciFiPanel>
+
+              {!isHistoryView && (
+                <section className="mascot-hero-inner mx-auto" aria-hidden>
+                  <HeroMascotImage page="budget" className="mascot-img" />
+                </section>
+              )}
+            </div>
+          </div>
+        )}
       </main>
     </BudgetSnapshotProvider>
   );

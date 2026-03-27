@@ -264,6 +264,7 @@ export async function updateUserPreferences(payload: UpdatePayload) {
   if (finalError) throw new Error(finalError.message);
   revalidatePath("/dashboard");
   revalidatePath("/profile");
+  revalidatePath("/settings");
   // Do not revalidate /settings here: it causes the settings page to re-render and
   // remount dynamic components (SettingsDaysOff, SettingsPush), which use loading: null
   // and thus disappear briefly. Client state is already optimistic; fresh data loads on next visit.

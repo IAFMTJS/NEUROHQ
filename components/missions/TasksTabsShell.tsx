@@ -9,18 +9,45 @@ type Props = {
   routineHref: string;
   header: React.ReactNode;
   children: React.ReactNode;
+  /** One column fills height; tighter gap (simplified missions). */
+  fillViewport?: boolean;
+  /** Keep tab row visible while scrolling. */
+  stickyTabs?: boolean;
 };
 
-export function TasksTabsShell({ initialTab, missionsHref, calendarHref, routineHref, header, children }: Props) {
+export function TasksTabsShell({
+  initialTab,
+  missionsHref,
+  calendarHref,
+  routineHref,
+  header,
+  children,
+  fillViewport = false,
+  stickyTabs = false,
+}: Props) {
   const tabClass = (tab: TasksTabId) =>
     `dashboard-mini-btn ${
       initialTab === tab ? "dashboard-mini-btn-primary" : "dashboard-mini-btn-secondary"
     }`;
 
-  return (
+  const tabsWrapperClass = [
+    "dashboard-top-strip mt-0",
+    fillViewport ? "shrink-0 px-1 sm:px-2" : "",
+    stickyTabs
+      ? "sticky top-0 z-20 border-b border-[var(--card-border)]/50 bg-[var(--bg-surface)]/85 backdrop-blur-md supports-[backdrop-filter]:bg-[var(--bg-surface)]/70"
+      : "",
+  ]
+    .filter(Boolean)
+    .join(" ");
+
+  const bodyClass = fillViewport
+    ? "mt-2 flex min-h-0 flex-1 flex-col gap-0 px-0 sm:px-1"
+    : "mt-6 space-y-6";
+
+  const body = (
     <>
       {header}
-      <div className="dashboard-top-strip mt-0">
+      <div className={tabsWrapperClass}>
         <div className="dashboard-top-strip-track">
           <Link
             href={missionsHref}
@@ -46,10 +73,16 @@ export function TasksTabsShell({ initialTab, missionsHref, calendarHref, routine
           <span className="dashboard-mini-strip-label">View</span>
         </div>
       </div>
-      <div className="mt-6 space-y-6">
+      <div className={bodyClass}>
         {children}
       </div>
     </>
   );
+
+  if (fillViewport) {
+    return <div className="flex min-h-0 flex-1 flex-col">{body}</div>;
+  }
+
+  return body;
 }
 

@@ -44,6 +44,8 @@ import { getGrowthEngineSnapshot } from "@/app/actions/growth-snapshot";
 import { getBehaviorProfile } from "@/app/actions/behavior-profile";
 import { neuroNextMoveHint } from "@/lib/neuro-copy";
 import { GrowthMissionsRibbon } from "@/components/growth/GrowthMissionsRibbon";
+import { profileEngineHref } from "@/lib/profile-routes";
+import { defaultTimeWindow } from "@/lib/dashboard-utils";
 
 /** Tasks page must always run on the server so latest data is rendered after refresh. */
 export const dynamic = "force-dynamic";
@@ -171,10 +173,18 @@ function makeTasksHref(
   return query ? `/tasks?${query}` : "/tasks";
 }
 
-async function TasksHeaderMetaAsync({ dateStr, yesterdayStr }: { dateStr: string; yesterdayStr: string }) {
+async function TasksHeaderMetaAsync({
+  dateStr,
+  yesterdayStr,
+  simplified = false,
+}: {
+  dateStr: string;
+  yesterdayStr: string;
+  simplified?: boolean;
+}) {
   const [xp, yesterdayTasksRaw] = await Promise.all([
     getXP(),
-    getTasksForDate(yesterdayStr),
+    simplified ? Promise.resolve([]) : getTasksForDate(yesterdayStr),
   ]);
   const yesterdayTasks = (yesterdayTasksRaw ?? []).map((t) => ({
     id: (t as { id: string }).id,
@@ -184,7 +194,7 @@ async function TasksHeaderMetaAsync({ dateStr, yesterdayStr }: { dateStr: string
 
   return (
     <div className="mascot-follow-row flex flex-wrap items-center justify-end gap-2">
-      <YesterdayTasksSection yesterdayTasks={yesterdayTasks} todayStr={dateStr} />
+      {!simplified && <YesterdayTasksSection yesterdayTasks={yesterdayTasks} todayStr={dateStr} />}
       <XPBadge totalXp={xp.total_xp} level={xp.level} compact href="/xp" />
       <div className="glow-pill inline-flex min-w-0 shrink-0 items-center gap-2 rounded-full bg-[var(--dc-bg-elevated)] px-4 py-2 text-sm font-medium text-[var(--dc-text-main)]" title="Vandaag" aria-label="Vandaag">
         <span
@@ -201,10 +211,12 @@ async function MissionsSectionAsync({
   dateStr,
   backlog,
   growthFromGrowthPage = false,
+  simplifiedContent = false,
 }: {
   dateStr: string;
   backlog: Awaited<ReturnType<typeof getBacklogTasks>>;
   growthFromGrowthPage?: boolean;
+  simplifiedContent?: boolean;
 }) {
   const [
     mode,
@@ -346,6 +358,117 @@ async function MissionsSectionAsync({
     tasksNormal.length === 0 && Array.isArray(completedToday) && completedToday.length > 0;
 
   const neuroLine = neuroNextMoveHint(behaviorProfile.neuroProfileTags);
+
+  if (simplifiedContent) {
+    const simpleTitle = allMissionsDoneToday
+      ? "Alles gedaan voor vandaag"
+      : (decisionBlocks.topRecommendation?.title ??
+        (tasksNormal.length > 0 ? "Je taken vandaag" : "Nog geen taken vandaag"));
+    const simpleSubtitle = allMissionsDoneToday
+      ? "Geen open taken meer. Rust, of bekijk Agenda voor extra of geplande dingen."
+      : decisionBlocks.topRecommendation
+        ? "Werk de lijst hieronder af — één ding tegelijk."
+        : tasksNormal.length > 0
+          ? "Kies waar je mee start in de lijst."
+          : "Voeg een kleine taak toe om momentum op te bouwen.";
+    const { window: timeWindow, isActive: isTimeWindowActive } = defaultTimeWindow();
+
+    return (
+      <div className="flex min-h-0 w-full max-w-none flex-1 flex-col">
+        <SciFiPanel
+          variant="command"
+          className="hq-card-enter relative flex min-h-0 w-full flex-1 flex-col overflow-hidden dashboard-active-mission"
+          bodyClassName="relative z-10 flex min-h-0 flex-1 flex-col gap-3 p-4 sm:p-5 md:p-6"
+        >
+          <CornerNode corner="top-left" />
+          <CornerNode corner="top-right" />
+          <div className="flex shrink-0 items-start justify-between gap-3">
+            <h2 className="hq-h2 min-w-0 flex-1 text-[var(--text-primary)]">Today&apos;s missions</h2>
+            <Link
+              href="/dashboard"
+              className="shrink-0 pt-0.5 text-[11px] font-semibold uppercase tracking-wide text-[var(--accent-focus)] underline-offset-2 hover:underline"
+            >
+              HQ
+            </Link>
+          </div>
+          <Divider1px className="my-1 shrink-0" />
+          <EnergyCapBar used={energyCap.used} cap={energyCap.cap} remaining={energyCap.remaining} planned={energyCap.planned} />
+          <ConsequenceBanner
+            energyDepleted={(energyBudget as { consequence?: { energyDepleted?: boolean } }).consequence?.energyDepleted}
+            recoveryOnly={decisionBlocks.recoveryOnly}
+            recoveryProtocol={decisionBlocks.recoveryProtocol}
+            daysSinceLastCompletion={decisionBlocks.daysSinceLastCompletion}
+          />
+          <section className="shrink-0 space-y-1 rounded-xl border border-[var(--accent-focus)]/35 bg-[var(--bg-surface)]/35 p-3">
+            <h3 className="text-base font-semibold text-[var(--text-primary)]">{simpleTitle}</h3>
+            <p className="text-sm text-[var(--text-muted)]">{simpleSubtitle}</p>
+            {neuroLine && !allMissionsDoneToday && (
+              <p className="mt-2 text-xs text-[var(--text-secondary)]">{neuroLine}</p>
+            )}
+          </section>
+          <p
+            className={`shrink-0 text-xs tracking-widest uppercase ${isTimeWindowActive ? "text-[var(--accent-focus)]" : "text-[var(--text-muted)]"}`}
+          >
+            Optimal time frame: {timeWindow.replace("–", " – ")}
+          </p>
+          <div
+            className="min-h-0 flex-1 overflow-y-auto overscroll-contain [-webkit-overflow-scrolling:touch] pb-1"
+            data-tutorial="tasks-list"
+            id="tasks-list"
+          >
+            <TodayMissionsGridFromStore dateStr={dateStr}>
+              {missionCards.length > 0 && tasks.length === 0 && (
+                <section className="mission-grid mb-3">
+                  {missionCards.map((m) => (
+                    <CommanderMissionCard
+                      key={m.id}
+                      id={m.id}
+                      title={m.title}
+                      subtitle={m.subtitle}
+                      description={"description" in m ? (m as { description?: string | null }).description : null}
+                      state={m.state}
+                      progressPct={m.progressPct}
+                      href={m.href}
+                    />
+                  ))}
+                </section>
+              )}
+            </TodayMissionsGridFromStore>
+            <TaskList
+              date={dateStr}
+              tasks={tasks as import("@/types/database.types").Task[]}
+              completedToday={completedToday as import("@/types/database.types").Task[]}
+              mode={taskMode}
+              carryOverCount={carryOverCount}
+              subtasksByParent={subtasksByParent}
+              suggestedTaskCount={energyBudget.suggestedTaskCount}
+              brainMode={energyBudget.brainMode}
+              strategicByTaskId={strategicByTaskId}
+              strategyMapping={decisionBlocks.strategyMapping}
+              recommendedTaskIds={[
+                ...(decisionBlocks.topRecommendation?.id ? [decisionBlocks.topRecommendation.id] : []),
+                ...(decisionBlocks.alignmentFix?.map((t) => t.id) ?? []),
+              ]}
+              identityLevel={identity.level}
+              identityReputation={identityEngine.reputation ?? null}
+              blockedReasonByTaskId={blockedReasonByTaskId as Record<string, string>}
+              neuroSelfReportOptIn={behaviorProfile.neuroSelfReportOptIn}
+            />
+          </div>
+          <p className="shrink-0 pt-1 text-center text-[11px] text-[var(--text-muted)]">
+            <Link href="/tasks?tab=calendar" className="text-[var(--accent-focus)] underline-offset-2 hover:underline">
+              Calendar, routine &amp; backlog
+            </Link>
+            {" · "}
+            <Link href={profileEngineHref("modes")} className="text-[var(--accent-focus)] underline-offset-2 hover:underline">
+              Turn off simplified
+            </Link>
+          </p>
+          <p className="pb-0.5 text-center text-xs text-[var(--text-muted)]">All systems active</p>
+        </SciFiPanel>
+      </div>
+    );
+  }
 
   return (
     <SciFiPanel variant="glass" className={hudStyles.focusSecondary} bodyClassName="p-4 md:p-5">
@@ -517,12 +640,14 @@ async function CalendarSectionAsync({
   selectedCalendarDay,
   calendarView,
   backlog,
+  simplifiedContent = false,
 }: {
   dateStr: string;
   monthParam: string;
   selectedCalendarDay: string;
   calendarView: CalendarView;
   backlog: Awaited<ReturnType<typeof getBacklogTasks>>;
+  simplifiedContent?: boolean;
 }) {
   return (
     <TasksCalendarAsync
@@ -531,13 +656,63 @@ async function CalendarSectionAsync({
       selectedCalendarDay={selectedCalendarDay}
       calendarView={calendarView}
       backlog={(backlog ?? []) as { id: string; title: string | null; due_date: string | null }[]}
+      simplifiedContent={simplifiedContent}
     />
   );
 }
 
-async function RoutineSectionAsync({ dateStr }: { dateStr: string }) {
+async function RoutineSectionAsync({
+  dateStr,
+  simplifiedContent = false,
+}: {
+  dateStr: string;
+  simplifiedContent?: boolean;
+}) {
   const { routineTasks, suggestedDays, suggestedPlans } = await getRoutineTasksWithSuggestions(dateStr);
   const RoutineTaskList = (await import("@/components/missions/RoutineTaskList")).RoutineTaskList;
+
+  if (simplifiedContent) {
+    return (
+      <div className="flex min-h-0 w-full max-w-none flex-1 flex-col">
+        <SciFiPanel
+          variant="command"
+          className="hq-card-enter relative flex min-h-0 w-full flex-1 flex-col overflow-hidden dashboard-active-mission"
+          bodyClassName="relative z-10 flex min-h-0 flex-1 flex-col gap-0 p-0"
+        >
+          <CornerNode corner="top-left" />
+          <CornerNode corner="top-right" />
+          <div className="flex shrink-0 items-start justify-between gap-3 border-b border-[var(--card-border)]/40 px-4 py-3">
+            <h2 className="hq-h2 min-w-0 flex-1 text-[var(--text-primary)]">Routines</h2>
+            <Link
+              href="/dashboard"
+              className="shrink-0 pt-0.5 text-[11px] font-semibold uppercase tracking-wide text-[var(--accent-focus)] underline-offset-2 hover:underline"
+            >
+              HQ
+            </Link>
+          </div>
+          <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-3 py-3 [-webkit-overflow-scrolling:touch]">
+            <RoutineTaskList
+              routineTasks={routineTasks}
+              suggestedDays={suggestedDays}
+              suggestedPlans={suggestedPlans}
+              dateStr={dateStr}
+              simplifiedLayout
+            />
+          </div>
+          <p className="shrink-0 border-t border-[var(--card-border)]/40 px-4 py-2 text-center text-[11px] text-[var(--text-muted)]">
+            <Link href="/tasks?tab=missions" className="text-[var(--accent-focus)] underline-offset-2 hover:underline">
+              Missions
+            </Link>
+            {" · "}
+            <Link href={profileEngineHref("modes")} className="text-[var(--accent-focus)] underline-offset-2 hover:underline">
+              Turn off simplified
+            </Link>
+          </p>
+        </SciFiPanel>
+      </div>
+    );
+  }
+
   return (
     <RoutineTaskList
       routineTasks={routineTasks}
@@ -580,25 +755,35 @@ export default async function TasksPage({ searchParams }: Props) {
     activeTab,
     { tab: "routine" }
   );
-  const skipCinematicLayers = prefs.light_ui === true;
+  const skipCinematicLayers = prefs.light_ui === true || prefs.simplified_content === true;
+  /** Simplified mode: no missions page chrome; tabs + one full-height column for all task tabs. */
+  const simplifiedTasksFillLayout = prefs.simplified_content === true;
 
-  const headerSection = (
+  const headerSection = simplifiedTasksFillLayout ? null : (
     <>
-      <TasksHeaderChrome dateStr={dateStr} />
-      <section className="mascot-hero mascot-hero-top mascot-hero-mission mascot-hero-sharp" data-mascot-page="tasks" aria-hidden>
-        <div className="mascot-hero-inner mx-auto">
-          <HeroMascotImage page="tasks" className="mascot-img" heroLarge />
-        </div>
-      </section>
+      <TasksHeaderChrome dateStr={dateStr} simplified={prefs.simplified_content === true} />
+      {!prefs.simplified_content && (
+        <section className="mascot-hero mascot-hero-top mascot-hero-mission mascot-hero-sharp" data-mascot-page="tasks" aria-hidden>
+          <div className="mascot-hero-inner mx-auto">
+            <HeroMascotImage page="tasks" className="mascot-img" heroLarge />
+          </div>
+        </section>
+      )}
       <Suspense fallback={null}>
-        <TasksHeaderMetaAsync dateStr={dateStr} yesterdayStr={yesterdayStr} />
+        <TasksHeaderMetaAsync
+          dateStr={dateStr}
+          yesterdayStr={yesterdayStr}
+          simplified={prefs.simplified_content === true}
+        />
       </Suspense>
-      <Divider1px />
+      {!prefs.simplified_content && <Divider1px />}
     </>
   );
 
   return (
-    <main className={`relative min-h-screen overflow-hidden ${!skipCinematicLayers ? hudStyles.cinematicBackdrop : ""}`}>
+    <main
+      className={`relative overflow-hidden ${simplifiedTasksFillLayout ? "flex min-h-0 flex-1 flex-col" : "min-h-screen"} ${!skipCinematicLayers ? hudStyles.cinematicBackdrop : ""}`}
+    >
       {!skipCinematicLayers && (
         <>
           <div className={hudStyles.spaceMist} aria-hidden />
@@ -611,11 +796,30 @@ export default async function TasksPage({ searchParams }: Props) {
       )}
       <MissionsProvider dateStr={dateStr}>
         <TasksDailyBootstrap dateStr={dateStr} enabled={activeTab === "missions"} />
-        <div className="container page page-wide dashboard-cinematic relative z-10">
-          <TasksTabsShell initialTab={activeTab} missionsHref={missionsHref} calendarHref={calendarHref} routineHref={routineHref} header={headerSection}>
+        <div
+          className={
+            simplifiedTasksFillLayout
+              ? "relative z-10 flex min-h-[calc(100svh-7rem)] w-full max-w-none flex-1 flex-col dashboard-cinematic sm:min-h-[calc(100svh-6.5rem)]"
+              : "container page page-wide dashboard-cinematic relative z-10"
+          }
+        >
+          <TasksTabsShell
+            initialTab={activeTab}
+            missionsHref={missionsHref}
+            calendarHref={calendarHref}
+            routineHref={routineHref}
+            header={headerSection}
+            fillViewport={simplifiedTasksFillLayout}
+            stickyTabs={simplifiedTasksFillLayout}
+          >
             {activeTab === "missions" ? (
               <Suspense fallback={null}>
-                <MissionsSectionAsync dateStr={dateStr} backlog={backlog} growthFromGrowthPage={growthFromGrowthPage} />
+                <MissionsSectionAsync
+                  dateStr={dateStr}
+                  backlog={backlog}
+                  growthFromGrowthPage={growthFromGrowthPage}
+                  simplifiedContent={prefs.simplified_content === true}
+                />
               </Suspense>
             ) : activeTab === "calendar" ? (
               <Suspense fallback={null}>
@@ -625,11 +829,12 @@ export default async function TasksPage({ searchParams }: Props) {
                   selectedCalendarDay={selectedCalendarDay}
                   calendarView={calendarView}
                   backlog={backlog}
+                  simplifiedContent={prefs.simplified_content === true}
                 />
               </Suspense>
             ) : (
               <Suspense fallback={null}>
-                <RoutineSectionAsync dateStr={dateStr} />
+                <RoutineSectionAsync dateStr={dateStr} simplifiedContent={prefs.simplified_content === true} />
               </Suspense>
             )}
           </TasksTabsShell>

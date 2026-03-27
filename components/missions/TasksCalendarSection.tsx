@@ -32,6 +32,8 @@ type Props = {
   hasGoogle: boolean;
   initialCalView: "today" | "calendar" | "routines" | "overdue";
   overdueTasks: { id: string; title: string | null; due_date: string | null }[];
+  /** Tasks page simplified mode: compact chrome, scrolls inside parent card. */
+  simplifiedLayout?: boolean;
 };
 
 export function TasksCalendarSection({
@@ -43,6 +45,7 @@ export function TasksCalendarSection({
   hasGoogle,
   initialCalView,
   overdueTasks,
+  simplifiedLayout = false,
 }: Props) {
   const [monthParam, setMonthParam] = useState(() => initialMonth);
   const [selectedCalendarDay, setSelectedCalendarDay] = useState(() => initialDay);
@@ -117,19 +120,28 @@ export function TasksCalendarSection({
     timeZone: "UTC",
   });
 
+  const contentPad = simplifiedLayout ? "p-3 space-y-4" : "p-4 space-y-5";
+
   return (
     <section className="overflow-hidden p-0" id="agenda">
-      <div className="border-b border-[var(--card-border)] px-4 py-3">
-        <h2 className="text-base font-semibold text-[var(--text-primary)]">Calendar · Agenda overview</h2>
-        <p className="mt-0.5 text-xs text-[var(--text-muted)]">
-          Klik op een dag in het maandoverzicht om events en missies voor die datum te zien.
-        </p>
-        <div className="mt-2 flex flex-wrap items-center gap-2">
-          <CalendarModal3Trigger date={dateStr} />
-          <span className="text-[11px] text-[var(--text-muted)]">Open de strategische weekplanner voor extra detail.</span>
+      {!simplifiedLayout && (
+        <div className="border-b border-[var(--card-border)] px-4 py-3">
+          <h2 className="text-base font-semibold text-[var(--text-primary)]">Calendar · Agenda overview</h2>
+          <p className="mt-0.5 text-xs text-[var(--text-muted)]">
+            Klik op een dag in het maandoverzicht om events en missies voor die datum te zien.
+          </p>
+          <div className="mt-2 flex flex-wrap items-center gap-2">
+            <CalendarModal3Trigger date={dateStr} />
+            <span className="text-[11px] text-[var(--text-muted)]">Open de strategische weekplanner voor extra detail.</span>
+          </div>
         </div>
-      </div>
-      <div className="p-4 space-y-5">
+      )}
+      {simplifiedLayout && (
+        <div className="shrink-0 border-b border-[var(--card-border)]/40 px-3 py-2">
+          <CalendarModal3Trigger date={dateStr} />
+        </div>
+      )}
+      <div className={contentPad}>
         <div
           className="rounded-2xl border p-3"
           style={{

@@ -20,7 +20,6 @@ import { getMetaInsights30 } from "@/app/actions/missions-performance";
 import { getHeatmapLast30Days } from "@/app/actions/dcic/heatmap";
 import { getThirtyDayMirror } from "@/app/actions/thirty-day-mirror";
 import { getWeekBounds } from "@/lib/utils/learning";
-import { profileInsightsHref } from "@/lib/profile-routes";
 import {
   DataMaturityBanner,
   InsightsMomentumHero,
@@ -38,7 +37,7 @@ import {
   InsightsPatternSignalsCard,
 } from "@/components/insights";
 import { DataUnavailable } from "@/components/DataUnavailable";
-import { InsightsTabsShell, isInsightsTabId, type InsightsTabId } from "@/components/report/InsightsTabsShell";
+import { InsightsTabsShell, isInsightsTabId } from "@/components/report/InsightsTabsShell";
 import { InsightsDiagnosticsPopup } from "@/components/report/InsightsDiagnosticsPopup";
 
 const ReportWeekSelector = nextDynamic(
@@ -66,11 +65,10 @@ export type ReportInsightsSearchParams = Promise<{ weekStart?: string; tab?: str
 
 type Props = {
   searchParams: ReportInsightsSearchParams;
-  /** Use `/profile?...` for insights tabs & week selector instead of `/report`. */
-  embedInProfile?: boolean;
+  simplifiedLayout?: boolean;
 };
 
-export async function ReportInsightsContent({ searchParams, embedInProfile }: Props) {
+export async function ReportInsightsContent({ searchParams, simplifiedLayout = false }: Props) {
   try {
     const params = await searchParams;
     const today = new Date();
@@ -106,14 +104,6 @@ export async function ReportInsightsContent({ searchParams, embedInProfile }: Pr
 
     const report = isCurrentWeek ? currentReport : (await getStoredReport(selectedWeekStart)) ?? currentReport;
 
-    const resolveTabHref = embedInProfile
-      ? (tab: InsightsTabId) => profileInsightsHref(tab, weekStartParam)
-      : undefined;
-
-    const buildWeekHref = embedInProfile
-      ? (weekStart: string | null) => profileInsightsHref(activeTab, weekStart ?? undefined)
-      : undefined;
-
     return (
       <div className="space-y-6">
         <div className="flex flex-wrap items-center justify-between gap-2">
@@ -136,7 +126,7 @@ export async function ReportInsightsContent({ searchParams, embedInProfile }: Pr
         {insightState && <DataMaturityBanner maturity={insightState.dataMaturity} message={insightState.dataMaturityMessageNl} />}
 
         {insightState && (
-          <InsightsTabsShell activeTab={activeTab} weekStart={weekStartParam} resolveTabHref={resolveTabHref}>
+          <InsightsTabsShell activeTab={activeTab} weekStart={weekStartParam} simplifiedLayout={simplifiedLayout}>
             {activeTab === "overview" && (
               <div className="space-y-4">
                 <InsightsMomentumHero
@@ -309,7 +299,6 @@ export async function ReportInsightsContent({ searchParams, embedInProfile }: Pr
                       currentWeekStart={currentWeekStart}
                       selectedWeekStart={selectedWeekStart}
                       activeTab={activeTab}
-                      buildWeekHref={buildWeekHref}
                     />
                     <ReportAnalysis report={report} />
                     <RealityReportCard report={report} />
@@ -328,7 +317,6 @@ export async function ReportInsightsContent({ searchParams, embedInProfile }: Pr
               currentWeekStart={currentWeekStart}
               selectedWeekStart={selectedWeekStart}
               activeTab={activeTab}
-              buildWeekHref={buildWeekHref}
             />
             <ReportAnalysis report={report} />
             <RealityReportCard report={report} />

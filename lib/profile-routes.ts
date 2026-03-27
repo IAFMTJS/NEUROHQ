@@ -1,23 +1,18 @@
-/** Query-driven profile UX: home strip vs settings workspace. */
+/** Profiel: home vs engine-workspace. Site-instellingen: `/settings`. Insights: `/report`. */
 
-export type ProfileMainView = "home" | "settings";
+export type ProfileMainView = "home" | "engine";
 
-export type ProfileSettingsTabId = "identity" | "behavior" | "system" | "budget" | "insights";
+/** Subtabs onder Profiel → Engine (geen site-instellingen). */
+export type ProfileEngineTabId = "identity" | "behavior" | "modes";
 
-const SETTINGS_TABS = new Set<ProfileSettingsTabId>([
-  "identity",
-  "behavior",
-  "system",
-  "budget",
-  "insights",
-]);
+const ENGINE_TABS = new Set<ProfileEngineTabId>(["identity", "behavior", "modes"]);
 
 export function parseProfileMainView(raw: string | undefined | null): ProfileMainView {
-  return raw === "settings" ? "settings" : "home";
+  return raw === "engine" ? "engine" : "home";
 }
 
-export function parseProfileSettingsTab(raw: string | undefined | null): ProfileSettingsTabId {
-  if (raw && SETTINGS_TABS.has(raw as ProfileSettingsTabId)) return raw as ProfileSettingsTabId;
+export function parseProfileEngineTab(raw: string | undefined | null): ProfileEngineTabId {
+  if (raw && ENGINE_TABS.has(raw as ProfileEngineTabId)) return raw as ProfileEngineTabId;
   return "identity";
 }
 
@@ -25,19 +20,17 @@ export function profileHomeHref(): string {
   return "/profile";
 }
 
-export function profileSettingsHref(tab: ProfileSettingsTabId): string {
+export function profileEngineHref(tab: ProfileEngineTabId): string {
   const p = new URLSearchParams();
-  p.set("view", "settings");
-  p.set("settingsTab", tab);
+  p.set("view", "engine");
+  p.set("engineTab", tab);
   return `/profile?${p.toString()}`;
 }
 
-/** Insights nested tab + optional week (used when settingsTab=insights). */
-export function profileInsightsHref(insightsTab: string, weekStart?: string | null | undefined): string {
+/** Insights: altijd op `/report`. */
+export function reportInsightsHref(insightsTab: string, weekStart?: string | null | undefined): string {
   const p = new URLSearchParams();
-  p.set("view", "settings");
-  p.set("settingsTab", "insights");
-  p.set("insightsTab", insightsTab);
+  p.set("tab", insightsTab);
   if (weekStart) p.set("weekStart", weekStart);
-  return `/profile?${p.toString()}`;
+  return `/report?${p.toString()}`;
 }

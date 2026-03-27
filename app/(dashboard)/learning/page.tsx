@@ -4,6 +4,7 @@ import { HeroMascotImage } from "@/components/HeroMascotImage";
 import { SciFiPanel } from "@/components/hud-test/SciFiPanel";
 import { CornerNode } from "@/components/hud-test/CornerNode";
 import hudStyles from "@/components/hud-test/hud.module.css";
+import { getUserPreferencesOrDefaults } from "@/app/actions/preferences";
 import { getLearningState } from "@/app/actions/learning-state";
 import { getXPIdentity } from "@/app/actions/xp";
 import { getProtocolLibrary } from "@/app/actions/protocol-library";
@@ -11,6 +12,8 @@ import { getProtocolProgressMap } from "@/app/actions/protocol-progress";
 import { getGrowthFocus } from "@/app/actions/growth-focus";
 import { LearningContentClient } from "@/components/growth/LearningContentClient";
 import { StrategyEnginePaceHint } from "@/components/strategy/StrategyEnginePaceHint";
+import { SimplifiedPageShell } from "@/components/layout/SimplifiedPageShell";
+import { SIMPLIFIED_VIEWPORT_WRAPPER } from "@/lib/simplified-page-layout";
 
 export const dynamic = "force-dynamic";
 
@@ -20,13 +23,48 @@ export default async function LearningPage({ searchParams }: Props) {
   void searchParams;
   const today = new Date();
   const todayStr = today.toISOString().slice(0, 10);
-  const [learningState, xpIdentity, protocols, progressMap, growthFocus] = await Promise.all([
+  const [prefs, learningState, xpIdentity, protocols, progressMap, growthFocus] = await Promise.all([
+    getUserPreferencesOrDefaults(),
     getLearningState(),
     getXPIdentity(),
     getProtocolLibrary("nl"),
     getProtocolProgressMap(),
     getGrowthFocus(),
   ]);
+  const simplified = prefs.simplified_content === true;
+
+  const learningBody = (
+    <LearningContentClient
+      todayStr={todayStr}
+      fallback={learningState}
+      xpIdentity={xpIdentity}
+      protocols={protocols}
+      progressMap={progressMap}
+      growthFocus={growthFocus}
+    />
+  );
+
+  if (simplified) {
+    return (
+      <div className={SIMPLIFIED_VIEWPORT_WRAPPER}>
+        <SimplifiedPageShell
+          title="Growth"
+          footerLinks={[
+            { href: "/tasks", label: "Missions" },
+            { href: "/dashboard", label: "HQ" },
+            { href: "/budget", label: "Budget" },
+          ]}
+          topSlot={
+            <Suspense fallback={null}>
+              <StrategyEnginePaceHint variant="learning" />
+            </Suspense>
+          }
+        >
+          {learningBody}
+        </SimplifiedPageShell>
+      </div>
+    );
+  }
 
   return (
     <div className={`relative min-h-screen overflow-hidden ${hudStyles.cinematicBackdrop}`}>
@@ -61,14 +99,7 @@ export default async function LearningPage({ searchParams }: Props) {
         <SciFiPanel variant="glass" className={hudStyles.focusSecondary} bodyClassName="p-4 md:p-6">
           <CornerNode corner="top-left" />
           <CornerNode corner="top-right" />
-          <LearningContentClient
-            todayStr={todayStr}
-            fallback={learningState}
-            xpIdentity={xpIdentity}
-            protocols={protocols}
-            progressMap={progressMap}
-            growthFocus={growthFocus}
-          />
+          {learningBody}
         </SciFiPanel>
       </div>
     </div>

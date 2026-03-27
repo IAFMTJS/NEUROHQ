@@ -1,7 +1,7 @@
 import Link from "next/link";
 import type { XPFullContext } from "@/app/actions/xp-context";
 import { xpProgressInLevel, xpRangeForNextLevel } from "@/lib/xp";
-import { profileSettingsHref } from "@/lib/profile-routes";
+import { reportInsightsHref } from "@/lib/profile-routes";
 
 type Props = {
   identity: XPFullContext["identity"];
@@ -67,7 +67,7 @@ export function ProfileHomeCompact({ identity, insightState }: Props) {
         <p className="mt-2 line-clamp-4 text-sm leading-snug text-[var(--text-primary)]">{insightOneLiner}</p>
         <div className="mt-2 flex flex-wrap gap-2">
           <Link
-            href={profileSettingsHref("insights")}
+            href={reportInsightsHref("overview")}
             className="text-[11px] font-semibold text-[var(--accent-focus)] hover:underline"
           >
             Volledige insights

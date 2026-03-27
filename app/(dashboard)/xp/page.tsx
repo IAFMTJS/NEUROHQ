@@ -3,6 +3,9 @@ import { HQPageHeader } from "@/components/hq";
 import { SciFiPanel } from "@/components/hud-test/SciFiPanel";
 import { CornerNode } from "@/components/hud-test/CornerNode";
 import hudStyles from "@/components/hud-test/hud.module.css";
+import { getUserPreferencesOrDefaults } from "@/app/actions/preferences";
+import { SimplifiedPageShell } from "@/components/layout/SimplifiedPageShell";
+import { SIMPLIFIED_VIEWPORT_WRAPPER } from "@/lib/simplified-page-layout";
 
 function XPShell() {
   return (
@@ -21,7 +24,30 @@ async function XPContent() {
   return <XPPageClient todayStr={today} />;
 }
 
-export default function XPPage() {
+export default async function XPPage() {
+  const prefs = await getUserPreferencesOrDefaults();
+  const simplified = prefs.simplified_content === true;
+  const todayStr = new Date().toISOString().slice(0, 10);
+
+  if (simplified) {
+    return (
+      <main className="flex min-h-0 flex-1 flex-col">
+        <div className={SIMPLIFIED_VIEWPORT_WRAPPER}>
+          <SimplifiedPageShell
+            title="XP"
+            footerLinks={[
+              { href: "/tasks", label: "Missions" },
+              { href: "/report", label: "Insights" },
+              { href: "/dashboard", label: "HQ" },
+            ]}
+          >
+            <XPPageClient todayStr={todayStr} />
+          </SimplifiedPageShell>
+        </div>
+      </main>
+    );
+  }
+
   return (
     <main className={`relative min-h-screen overflow-hidden ${hudStyles.cinematicBackdrop}`}>
       <div className={hudStyles.spaceMist} aria-hidden />

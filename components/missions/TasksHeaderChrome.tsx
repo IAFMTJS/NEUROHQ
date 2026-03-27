@@ -14,10 +14,12 @@ function dcicModeLabel(mode: string | undefined): string {
 
 type Props = {
   dateStr: string;
+  /** Shorter copy when Simplified content is on in settings. */
+  simplified?: boolean;
 };
 
 /** Missions page header: DCIC mode tint comes from SciFiPanel; subtitle shows current DCIC mode. */
-export function TasksHeaderChrome({ dateStr }: Props) {
+export function TasksHeaderChrome({ dateStr, simplified = false }: Props) {
   const { gameState } = useDCICGameState();
   const dcicMode = gameState?.mode?.current ?? "focus";
 
@@ -29,12 +31,18 @@ export function TasksHeaderChrome({ dateStr }: Props) {
         <HQPageHeader
           title="Missions"
           subtitle={
-            <>
-              <span className="block text-[var(--accent-focus)]">{dcicModeLabel(dcicMode)}</span>
+            simplified ? (
               <span className="mt-1 block text-[var(--text-muted)]">
-                XP-missies · {dateStr} · Performance engine · One focus at a time
+                Today · {dateStr} · {dcicModeLabel(dcicMode)}
               </span>
-            </>
+            ) : (
+              <>
+                <span className="block text-[var(--accent-focus)]">{dcicModeLabel(dcicMode)}</span>
+                <span className="mt-1 block text-[var(--text-muted)]">
+                  XP-missies · {dateStr} · Performance engine · One focus at a time
+                </span>
+              </>
+            )
           }
           backHref="/dashboard"
         />

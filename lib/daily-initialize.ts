@@ -350,7 +350,7 @@ async function runStep(
           "/dashboard",
           "/tasks",
           "/xp",
-          "/profile?view=settings&settingsTab=insights",
+          "/report",
           "/strategy",
           "/learning",
           "/learning/analytics",

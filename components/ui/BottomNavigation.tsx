@@ -13,14 +13,17 @@ import {
   IconSettings,
 } from "@/components/hq/NavIcons";
 
-/** PNG filename in public/nav/ (exact name, case-sensitive on server). No value = use SVG only. Includes XP. */
+/**
+ * PNG for each tab: default `/nav/<pngFile>` (see public/nav/README.md).
+ * `iconSrc` overrides when the asset lives elsewhere (e.g. public/Icons/).
+ */
 const navLinks = [
   { href: "/tasks", label: "Missions", Icon: IconMissions, pngFile: "Missions.png" },
   { href: "/budget", label: "Budget", Icon: IconBudget, pngFile: "Budget.png" },
   { href: "/learning", label: "Growth", Icon: IconGrowth, pngFile: "Growth.png" },
   { href: "/dashboard", label: "Dashboard", Icon: IconHQ, pngFile: "Dashboard.png", large: true },
   { href: "/strategy", label: "Strategy", Icon: IconStrategy, pngFile: "Strategy.png" },
-  { href: "/profile", label: "User", Icon: IconUser, pngFile: "User.png" },
+  { href: "/profile", label: "User", Icon: IconUser, pngFile: "User.png", iconSrc: "/Icons/User.PNG" },
   { href: "/settings", label: "Settings", Icon: IconSettings, pngFile: "Settings.png" },
 ] as const;
 
@@ -53,7 +56,6 @@ function NavIcon({
 
 export default memo(function BottomNavigation() {
   const pathname = usePathname();
-  const searchParams = useSearchParams();
   const router = useRouter();
   const prefetchedRoutesRef = useRef<Set<string>>(new Set());
 
@@ -72,11 +74,7 @@ export default memo(function BottomNavigation() {
       aria-label="Main navigation"
     >
       {links.map((link) => {
-        const active =
-          link.href === "/settings"
-            ? pathname === "/settings" ||
-              (pathname === "/profile" && searchParams.get("view") === "settings")
-            : pathname === link.href;
+        const active = pathname === link.href;
         const Icon = link.Icon;
         const large = "large" in link && link.large === true;
         return (
@@ -97,7 +95,7 @@ export default memo(function BottomNavigation() {
               }`}
             >
               <NavIcon
-                src={`/nav/${encodeURIComponent(link.pngFile)}`}
+                src={"iconSrc" in link && link.iconSrc ? link.iconSrc : `/nav/${encodeURIComponent(link.pngFile)}`}
                 Icon={Icon}
                 active={active}
                 large={large}

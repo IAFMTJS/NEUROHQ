@@ -1,6 +1,9 @@
 import dynamic from "next/dynamic";
 import { HQPageHeader } from "@/components/hq";
+import { getUserPreferencesOrDefaults } from "@/app/actions/preferences";
 import { getLearningAnalytics } from "@/app/actions/learning-analytics";
+import { SimplifiedPageShell } from "@/components/layout/SimplifiedPageShell";
+import { SIMPLIFIED_VIEWPORT_WRAPPER } from "@/lib/simplified-page-layout";
 
 const LearningVelocityChart = dynamic(
   () => import("@/components/learning/LearningVelocityChart").then((m) => ({ default: m.LearningVelocityChart })),
@@ -10,16 +13,11 @@ const LearningVelocityChart = dynamic(
 type Props = {};
 
 export default async function LearningAnalyticsPage(_props: Props) {
-  const analytics = await getLearningAnalytics();
+  const [prefs, analytics] = await Promise.all([getUserPreferencesOrDefaults(), getLearningAnalytics()]);
+  const simplified = prefs.simplified_content === true;
 
-  return (
-    <div className="container page space-y-6">
-      <HQPageHeader
-        title="Growth analytics"
-        subtitle="Trends in your learning sessions and topic focus."
-        backHref="/learning"
-      />
-
+  const body = (
+    <>
       <section className="card-simple">
         <h2 className="text-base font-semibold text-[var(--text-primary)]">Trend summary</h2>
         <p className="mt-1 text-sm text-[var(--text-muted)]">
@@ -83,6 +81,34 @@ export default async function LearningAnalyticsPage(_props: Props) {
           </>
         )}
       </section>
+    </>
+  );
+
+  if (simplified) {
+    return (
+      <div className={SIMPLIFIED_VIEWPORT_WRAPPER}>
+        <SimplifiedPageShell
+          title="Growth analytics"
+          footerLinks={[
+            { href: "/learning", label: "Growth" },
+            { href: "/dashboard", label: "HQ" },
+            { href: "/tasks", label: "Missions" },
+          ]}
+        >
+          <div className="space-y-6">{body}</div>
+        </SimplifiedPageShell>
+      </div>
+    );
+  }
+
+  return (
+    <div className="container page space-y-6">
+      <HQPageHeader
+        title="Growth analytics"
+        subtitle="Trends in your learning sessions and topic focus."
+        backHref="/learning"
+      />
+      {body}
     </div>
   );
 }

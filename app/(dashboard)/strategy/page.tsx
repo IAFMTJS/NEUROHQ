@@ -24,7 +24,10 @@ import { StrategyEngineSettingsSection } from "@/components/strategy/StrategyEng
 import { StrategyIntegratedOverview } from "@/components/strategy/StrategyIntegratedOverview";
 import { StrategyTabsShell } from "@/components/strategy/StrategyTabsShell";
 import { getBehaviorProfile } from "@/app/actions/behavior-profile";
+import { getUserPreferencesOrDefaults } from "@/app/actions/preferences";
 import { neuroStrategyBudgetHint } from "@/lib/neuro-copy";
+import { SimplifiedPageShell } from "@/components/layout/SimplifiedPageShell";
+import { SIMPLIFIED_VIEWPORT_WRAPPER } from "@/lib/simplified-page-layout";
 
 /** Force dynamic: strategy uses cookies (auth) and live data. */
 export const dynamic = "force-dynamic";
@@ -93,7 +96,7 @@ const StrategyArchiveCTA = nextDynamic(
   { loading: () => null }
 );
 
-async function StrategyContent() {
+async function StrategyContent({ simplifiedLayout = false }: { simplifiedLayout?: boolean }) {
   let strategy: Awaited<ReturnType<typeof getActiveStrategyFocus>> = null;
   let past: Awaited<ReturnType<typeof getPastStrategyFocus>> = [];
   let xp: Awaited<ReturnType<typeof getXP>> = { total_xp: 0, level: 1 };
@@ -111,7 +114,9 @@ async function StrategyContent() {
     console.error("Strategy page data load failed (check Supabase env and migrations):", e);
     return (
       <>
-        <HQPageHeader title="🧠 Strategy" subtitle="Kon strategie niet laden." backHref="/dashboard" />
+        {!simplifiedLayout && (
+          <HQPageHeader title="🧠 Strategy" subtitle="Kon strategie niet laden." backHref="/dashboard" />
+        )}
         <div className="rounded-xl border border-amber-500/40 bg-amber-500/10 px-4 py-3 text-sm text-[var(--text-primary)]">
           <p className="font-medium">Er is iets misgegaan</p>
           <p className="mt-1 text-[var(--text-muted)]">
@@ -198,6 +203,7 @@ async function StrategyContent() {
         </Link>
       </div>
       <StrategyTabsShell
+        simplifiedLayout={simplifiedLayout}
         banner={reviewBanner}
         overview={
           <>
@@ -257,7 +263,34 @@ async function StrategyContent() {
   );
 }
 
-export default function StrategyPage() {
+export default async function StrategyPage() {
+  const prefs = await getUserPreferencesOrDefaults();
+  const simplified = prefs.simplified_content === true;
+
+  if (simplified) {
+    return (
+      <div className={SIMPLIFIED_VIEWPORT_WRAPPER}>
+        <SimplifiedPageShell
+          title="Strategy"
+          footerLinks={[
+            { href: "/tasks", label: "Missions" },
+            { href: "/report", label: "Insights" },
+            { href: "/budget", label: "Budget" },
+          ]}
+        >
+          <div className="space-y-6">
+            <Suspense fallback={<div className="min-h-[200px] animate-pulse rounded-2xl bg-[var(--bg-elevated)]/30" aria-hidden />}>
+              <StrategyContent simplifiedLayout />
+            </Suspense>
+            <Suspense fallback={<div className="min-h-[200px] animate-pulse rounded-2xl bg-[var(--bg-elevated)]/30" aria-hidden />}>
+              <StrategyEngineSettingsSection />
+            </Suspense>
+          </div>
+        </SimplifiedPageShell>
+      </div>
+    );
+  }
+
   return (
     <div className="container page space-y-6">
       <StrategyShell />

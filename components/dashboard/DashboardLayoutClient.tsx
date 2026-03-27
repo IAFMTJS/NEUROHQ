@@ -24,7 +24,6 @@ import { updateLastActiveDate } from "@/app/actions/behavior";
 import { useHQStore } from "@/lib/hq-store";
 import { usePeriodicBootstrapRefresh } from "@/lib/daily-bootstrap";
 import { useDCICGameState } from "@/lib/dcic/game-state-client";
-import { profileSettingsHref } from "@/lib/profile-routes";
 import { AlertsBell } from "@/components/alerts/AlertsBell";
 import { PERIODIC_SNAPSHOT_REFRESH_MINUTES } from "@/lib/client-refresh";
 
@@ -121,7 +120,7 @@ export function DashboardLayoutClient({
               <HelpFloatingIcon />
               <AlertsBell />
               <Link
-                href={profileSettingsHref("system")}
+                href="/settings"
                 className="fixed right-3 top-3 z-[70] rounded-full border border-[var(--card-border)] bg-[var(--bg-surface)]/80 px-2.5 py-1.5 text-sm font-semibold text-[var(--text-primary)] backdrop-blur hover:bg-[var(--bg-hover)]"
                 aria-label="Open settings"
                 title="Settings"

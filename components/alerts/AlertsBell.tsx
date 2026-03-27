@@ -115,7 +115,7 @@ export function AlertsBell() {
             </ul>
           )}
           <Link
-            href="/profile?view=settings&settingsTab=system"
+            href="/settings"
             className="mt-1 block px-2 py-1.5 text-center text-[11px] font-medium text-[var(--accent-focus)] hover:underline"
             onClick={() => setOpen(false)}
           >

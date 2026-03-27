@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { profileInsightsHref } from "@/lib/profile-routes";
+import { reportInsightsHref } from "@/lib/profile-routes";
 
 const LINKS = [
   { href: "/dashboard", label: "Dashboard", desc: "Energy, brain status, vandaag" },
@@ -9,7 +9,7 @@ const LINKS = [
   { href: "/budget", label: "Budget", desc: "Uitgaven en doelen" },
   { href: "/learning", label: "Growth", desc: "Learning-doel en sessies" },
   { href: "/strategy", label: "Strategy", desc: "Kwartaal en check-in" },
-  { href: profileInsightsHref("overview"), label: "Insights", desc: "Weekrapport" },
+  { href: reportInsightsHref("overview"), label: "Insights", desc: "Weekrapport" },
 ];
 
 export function SettingsQuickLinks() {

@@ -14,9 +14,18 @@ type Props = {
   suggestedDays: Record<string, string[]>;
   suggestedPlans?: Record<string, Array<{ date: string; reason: string; priority: "high" | "medium" | "low" }>>;
   dateStr: string;
+  /** Simplified tasks page: slightly tighter stack inside full-height card. */
+  simplifiedLayout?: boolean;
 };
 
-export function RoutineTaskList({ routineTasks, suggestedDays, suggestedPlans = {}, dateStr }: Props) {
+export function RoutineTaskList({
+  routineTasks,
+  suggestedDays,
+  suggestedPlans = {},
+  dateStr,
+  simplifiedLayout = false,
+}: Props) {
+  const stackGap = simplifiedLayout ? "space-y-2" : "space-y-3";
   const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [customDateByTask, setCustomDateByTask] = useState<Record<string, string>>({});
@@ -26,7 +35,7 @@ export function RoutineTaskList({ routineTasks, suggestedDays, suggestedPlans = 
 
   if (routineTasks.length === 0) {
     return (
-      <div className="space-y-3">
+      <div className={stackGap}>
         <div className="card-simple p-4">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
@@ -64,7 +73,7 @@ export function RoutineTaskList({ routineTasks, suggestedDays, suggestedPlans = 
   }
 
   return (
-    <div className="space-y-3">
+    <div className={stackGap}>
       <div className="card-simple p-4">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
