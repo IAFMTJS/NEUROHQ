@@ -14,7 +14,7 @@ export function HelpFloatingIcon() {
     <Link
       href="/help"
       aria-label="Open Help Center"
-      className="help-floating-icon fixed bottom-[calc(var(--footer-height,60px)+env(safe-area-inset-bottom)+52px)] right-[max(1rem,env(safe-area-inset-right))] z-[100] flex h-10 w-10 items-center justify-center rounded-full border border-[var(--card-border)] bg-[var(--bg-primary)]/90 text-[var(--text-muted)] shadow-lg backdrop-blur-sm hover:border-[var(--accent-focus)] hover:text-[var(--accent-focus)] focus:outline-none focus:ring-2 focus:ring-[var(--accent-focus)]"
+      className="help-floating-icon fixed bottom-[calc(var(--footer-height,58px)+var(--bottom-nav-arch,28px)+env(safe-area-inset-bottom)+52px)] right-[max(1rem,env(safe-area-inset-right))] z-[100] flex h-10 w-10 items-center justify-center rounded-full border border-[var(--card-border)] bg-[var(--bg-primary)]/90 text-[var(--text-muted)] shadow-lg backdrop-blur-sm hover:border-[var(--accent-focus)] hover:text-[var(--accent-focus)] focus:outline-none focus:ring-2 focus:ring-[var(--accent-focus)]"
     >
       <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
         <circle cx="12" cy="12" r="10" />

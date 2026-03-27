@@ -22,7 +22,7 @@ export default function DashboardLayout({
             paddingTop:
               "calc(env(safe-area-inset-top, 0px) + var(--main-padding-top, 40px))",
             paddingBottom:
-              "calc(var(--footer-height, 60px) + env(safe-area-inset-bottom) + var(--main-padding-bottom, 16px))",
+              "calc(var(--footer-height, 58px) + var(--bottom-nav-arch, 28px) + env(safe-area-inset-bottom) + var(--main-padding-bottom, 16px))",
           }}
           tabIndex={-1}
         >

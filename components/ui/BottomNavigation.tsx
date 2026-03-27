@@ -69,42 +69,44 @@ export default memo(function BottomNavigation() {
   const links = navLinks;
 
   return (
-    <nav
-      className="bottom-nav"
-      aria-label="Main navigation"
-    >
-      {links.map((link) => {
-        const active = pathname === link.href;
-        const Icon = link.Icon;
-        const large = "large" in link && link.large === true;
-        return (
-          <Link
-            key={link.href}
-            href={link.href}
-            className={`nav-item ${link.href === "/dashboard" ? "nav-item-dashboard" : ""} ${active ? "active" : ""}`}
-            prefetch={false}
-            onMouseEnter={() => prefetchOnIntent(link.href)}
-            onFocus={() => prefetchOnIntent(link.href)}
-            onTouchStart={() => prefetchOnIntent(link.href)}
-          >
-            <span
-              className={`nav-item-icon flex items-center justify-center ${
-                link.href === "/dashboard"
-                  ? "[&_svg]:h-[34px] [&_svg]:w-[34px]"
-                  : "[&_svg]:h-[18px] [&_svg]:w-[18px]"
-              }`}
+    <nav className="bottom-nav" aria-label="Main navigation">
+      <div className="bottom-nav-plate" aria-hidden>
+        <span className="bottom-nav-plate-glow" aria-hidden />
+      </div>
+      <div className="bottom-nav-items">
+        {links.map((link) => {
+          const active = pathname === link.href;
+          const Icon = link.Icon;
+          const large = "large" in link && link.large === true;
+          return (
+            <Link
+              key={link.href}
+              href={link.href}
+              className={`nav-item ${link.href === "/dashboard" ? "nav-item-dashboard" : ""} ${active ? "active" : ""}`}
+              prefetch={false}
+              onMouseEnter={() => prefetchOnIntent(link.href)}
+              onFocus={() => prefetchOnIntent(link.href)}
+              onTouchStart={() => prefetchOnIntent(link.href)}
             >
-              <NavIcon
-                src={"iconSrc" in link && link.iconSrc ? link.iconSrc : `/nav/${encodeURIComponent(link.pngFile)}`}
-                Icon={Icon}
-                active={active}
-                large={large}
-              />
-            </span>
-            <span>{link.label}</span>
-          </Link>
-        );
-      })}
+              <span
+                className={`nav-item-icon flex items-center justify-center ${
+                  link.href === "/dashboard"
+                    ? "[&_svg]:h-[34px] [&_svg]:w-[34px]"
+                    : "[&_svg]:h-[18px] [&_svg]:w-[18px]"
+                }`}
+              >
+                <NavIcon
+                  src={"iconSrc" in link && link.iconSrc ? link.iconSrc : `/nav/${encodeURIComponent(link.pngFile)}`}
+                  Icon={Icon}
+                  active={active}
+                  large={large}
+                />
+              </span>
+              <span>{link.label}</span>
+            </Link>
+          );
+        })}
+      </div>
     </nav>
   );
 });

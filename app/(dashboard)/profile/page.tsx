@@ -8,7 +8,7 @@ import { getUserPreferencesOrDefaults } from "@/app/actions/preferences";
 import { getBehaviorProfile } from "@/app/actions/behavior-profile";
 import { getStudyPlan, getAccountabilitySettings } from "@/app/actions/behavior";
 import { getXPFullContext } from "@/app/actions/xp-context";
-import { UserCallsignCard } from "@/components/settings/UserCallsignCard";
+import { ProfileEngineIdentityCard } from "@/components/profile/ProfileEngineIdentityCard";
 import { ProfileCategory } from "@/components/profile/ProfileSection";
 import { ProfileHomeCompact } from "@/components/profile/ProfileHomeCompact";
 import {
@@ -176,18 +176,16 @@ export default async function ProfilePage({ searchParams }: { searchParams: Prom
       <EngineTabNav active={engineTab} />
 
       {engineTab === "identity" && (
-        <div className="space-y-4">
-          <div className="card-simple p-4">
-            <p className="text-[11px] font-medium uppercase tracking-wide text-[var(--text-muted)]">Account (alleen ter referentie)</p>
-            <p className="mt-1 break-all text-sm text-[var(--text-primary)]">{user.email}</p>
-          </div>
-          <UserCallsignCard
-            embedded
-            initialDisplayCallsign={prefs.display_callsign ?? null}
-            initialHqHeadline={prefs.hq_headline ?? null}
-            initialGreetingLocale={prefs.greeting_locale ?? "en"}
-          />
-        </div>
+        <ProfileEngineIdentityCard
+          userEmail={user.email ?? ""}
+          behaviorProfile={behaviorProfile}
+          displayCallsign={prefs.display_callsign ?? null}
+          hqHeadline={prefs.hq_headline ?? null}
+          greetingLocale={prefs.greeting_locale ?? "en"}
+          selectedEmotion={prefs.selected_emotion}
+          pushPersonalityMode={prefs.push_personality_mode ?? null}
+          themeId={prefs.theme}
+        />
       )}
 
       {engineTab === "behavior" && (

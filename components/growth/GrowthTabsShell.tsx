@@ -69,8 +69,9 @@ export function GrowthTabsShell({ children }: Props) {
 
   return (
     <div className="space-y-4">
+      {/* No sticky: inside dashboard / simplified scrollports sticky tabs paint over the card below. */}
       <nav
-        className="sticky top-[calc(env(safe-area-inset-top,0px)+8px)] z-30 -mx-1 flex flex-wrap gap-2 rounded-xl border border-[var(--card-border)]/80 bg-[var(--bg-primary)]/75 px-2 py-2 backdrop-blur-md"
+        className="relative z-10 -mx-1 flex flex-wrap gap-2 rounded-xl border border-[var(--card-border)]/80 bg-[var(--bg-primary)]/90 px-2 py-2 backdrop-blur-md"
         aria-label="Groei-tabs"
       >
         {TABS.map((tab) => {
