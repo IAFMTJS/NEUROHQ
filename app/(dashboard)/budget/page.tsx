@@ -764,13 +764,14 @@ async function BudgetContent({ searchParams }: Props) {
           </div>
         ) : (
           <div className="container page page-wide dashboard-page dashboard-cinematic relative z-10 space-y-4 pb-10">
-            <SciFiPanel variant="glass" className={hudStyles.focusSecondary} bodyClassName="p-4 md:p-5">
+            <SciFiPanel variant="glass" className={hudStyles.focusSecondary} bodyClassName="p-4 md:p-5" topAccent={false}>
               <CornerNode corner="top-left" />
               <CornerNode corner="top-right" />
               <HQPageHeader
                 title="Budget"
                 subtitle="Cyclus, logging en signalen op één plek — zoals Growth en Strategy, met HUD-cards en duidelijke tabs."
                 backHref="/dashboard"
+                glowTitle={false}
               />
               {!isHistoryView && (
                 <section className="mascot-hero mascot-hero-top mascot-hero-sharp mt-2" data-mascot-page="budget" aria-hidden>
@@ -788,7 +789,7 @@ async function BudgetContent({ searchParams }: Props) {
               )}
             </SciFiPanel>
 
-            <SciFiPanel variant="glass" className={hudStyles.focusSecondary} bodyClassName="p-4 md:p-6">
+            <SciFiPanel variant="glass" className={hudStyles.focusSecondary} bodyClassName="p-4 md:p-6" topAccent={false}>
               <CornerNode corner="top-left" />
               <CornerNode corner="top-right" />
               {!historyMode && (

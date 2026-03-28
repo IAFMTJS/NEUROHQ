@@ -10,9 +10,11 @@ type Props = {
   backHref?: string;
   /** Geen grote paginatitel: alleen terug + modus-badge (bijv. profiel/engine). */
   compact?: boolean;
+  /** When false, no cyan neon text-shadow on the title (calmer dashboard pages). Default true. */
+  glowTitle?: boolean;
 };
 
-export function HQPageHeader({ title, subtitle, backHref, compact = false }: Props) {
+export function HQPageHeader({ title, subtitle, backHref, compact = false, glowTitle = true }: Props) {
   const mode = useHQStore((s) => s.gameState?.mode?.current ?? "focus");
   const showBackLink = backHref != null && backHref !== "";
   const modeLabel =
@@ -50,7 +52,15 @@ export function HQPageHeader({ title, subtitle, backHref, compact = false }: Pro
         </Link>
       )}
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <h1 className="page-title-glow">{title}</h1>
+        <h1
+          className={
+            glowTitle
+              ? "page-title-glow"
+              : "text-2xl font-bold tracking-tight text-[var(--text-primary)] sm:text-3xl"
+          }
+        >
+          {title}
+        </h1>
         <span className="inline-flex items-center gap-1 rounded-full border border-[rgba(var(--mode-rgb),0.2)] bg-[rgba(var(--mode-rgb-deep),0.15)] px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wide text-[var(--accent-focus)]">
           {modeLabel}
         </span>

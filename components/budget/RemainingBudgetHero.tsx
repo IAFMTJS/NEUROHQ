@@ -18,6 +18,7 @@ import {
   usePendingBudgetSnapshot,
 } from "@/lib/client-pending-budget";
 import { useSettings } from "@/lib/settings-context";
+import { CornerNode } from "@/components/hud-test/CornerNode";
 
 type Props = {
   /** Total budget for the current cycle (month/week) in cents. */
@@ -97,6 +98,16 @@ export function RemainingBudgetHero({
   const hasSettings = effectiveBudgetCents > 0 || effectiveSavingsCents > 0;
   const spentPct = spendableCents > 0 ? Math.min(100, (expensesCents / spendableCents) * 100) : 0;
 
+  const commandStatus = (() => {
+    if (!hasSettings) return { label: "Geen budget", pill: "border-slate-500/35 bg-slate-900/50 text-slate-300" };
+    if (isOverBudget) return { label: "Over budget", pill: "border-red-500/45 bg-red-950/55 text-red-100 shadow-[0_0_20px_rgba(220,38,38,0.25)]" };
+    const p = remainingPctForMeter;
+    if (p <= 12) return { label: "Kritiek laag", pill: "border-amber-400/45 bg-amber-950/40 text-amber-100" };
+    if (p <= 35) return { label: "Onder druk", pill: "border-orange-400/35 bg-orange-950/30 text-orange-100" };
+    if (p <= 60) return { label: "Gecontroleerd", pill: "border-cyan-400/35 bg-cyan-950/25 text-cyan-100" };
+    return { label: "Ruim", pill: "border-emerald-400/40 bg-emerald-950/35 text-emerald-100 shadow-[0_0_18px_rgba(16,185,129,0.2)]" };
+  })();
+
   useEffect(() => {
     if (!showEdit) return;
     setBudgetInput(String(Math.max(0, effectiveBudgetCents) / 100));
@@ -154,7 +165,7 @@ export function RemainingBudgetHero({
     toast.custom(
       (id) => (
         <div
-          className="relative w-[min(100vw-2rem,22rem)] max-h-[min(85vh,520px)] overflow-y-auto rounded-2xl border border-[var(--card-border)]/90 bg-[var(--bg-elevated)]/98 px-3 py-3 pr-9 text-left shadow-xl backdrop-blur-md"
+          className="relative w-[min(100vw-2rem,22rem)] max-h-[min(85vh,520px)] overflow-y-auto rounded-2xl border border-emerald-500/25 bg-[linear-gradient(165deg,rgba(6,24,20,0.97),rgba(15,23,42,0.98))] px-3 py-3 pr-9 text-left shadow-[0_0_36px_rgba(16,185,129,0.15),0_12px_40px_rgba(0,0,0,0.45)] backdrop-blur-md"
           role="dialog"
           aria-label="Quick log"
         >
@@ -194,92 +205,138 @@ export function RemainingBudgetHero({
   return (
     <>
       <section
-        className="card-simple overflow-hidden p-0"
+        className="card-simple-accent relative overflow-hidden rounded-2xl p-0 ring-1 ring-emerald-400/20 shadow-[0_0_32px_rgba(16,185,129,0.12)]"
         aria-label="Remaining budget overview"
         data-tutorial="budget-hero"
       >
-        <div className="border-b border-[var(--card-border)] px-4 py-3 md:px-5">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-emerald-200">Budget command</p>
-          <p className="mt-0.5 text-xs text-[var(--text-muted)]">
-            {effectiveBudgetPeriod === "weekly" ? "Week" : "Maand"} · resterend vs spendable (na reserveringen)
-          </p>
-        </div>
-        <div className="relative flex flex-col gap-6 px-4 py-5 md:flex-row md:items-start md:justify-between md:px-5 md:py-6">
-          <div className="flex flex-col items-center gap-5 sm:flex-row sm:items-start sm:gap-8">
-            <BudgetRemainingStatusCircle
-              arcPercent={remainingPctForMeter}
-              remainingRatioDisplay={remainingPctDisplay}
-              amountLine={hasSettings ? formatCents(remainingCents, effectiveCurrency) : "—"}
-              hasSpendable={spendableCents > 0}
-              isOverBudget={isOverBudget}
-            />
+        <CornerNode corner="top-left" />
+        <CornerNode corner="top-right" />
+        <CornerNode corner="bottom-left" />
+        <CornerNode corner="bottom-right" />
 
-            <div className="w-full min-w-0 flex-1 space-y-3 text-center sm:text-left">
-              {paydayLine && (
-                <div className="rounded-xl border border-[var(--card-border)]/80 bg-[var(--bg-surface)]/60 px-3 py-2">
-                  <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--text-muted)]">Tot loon</p>
-                  <p className="mt-0.5 text-sm font-medium text-[var(--text-primary)]">{paydayLine}</p>
-                  {nextPaydayShortLabel && (
-                    <p className="text-[11px] text-[var(--text-secondary)]">{nextPaydayShortLabel}</p>
-                  )}
-                </div>
-              )}
-              {hasSettings ? (
-                <p className="text-xs leading-relaxed text-[var(--text-secondary)]">
-                  {formatCents(spendableCents, effectiveCurrency)} spendable · {formatCents(expensesCents, effectiveCurrency)}{" "}
-                  uitgegeven
-                </p>
-              ) : (
-                <p className="max-w-md text-sm text-[var(--text-muted)]">
-                  Stel je {effectiveBudgetPeriod === "weekly" ? "week" : "maand"}budget en spaarreserve in om de ring en
-                  tempo te zien.
-                </p>
+        <div className="relative border-b border-[var(--card-border)]/90 bg-[linear-gradient(105deg,rgba(16,185,129,0.16)_0%,rgba(34,211,238,0.06)_42%,rgba(15,23,42,0.2)_100%)] px-4 py-3.5 md:px-6">
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div>
+              <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-emerald-200/95">Budget command</p>
+              <p className="mt-1 max-w-xl text-xs leading-snug text-[var(--text-secondary)]">
+                {effectiveBudgetPeriod === "weekly" ? "Weekcyclus" : "Maandcyclus"} · resterend t.o.v. spendable (na
+                spaarreserve)
+              </p>
+            </div>
+            <span
+              className={`shrink-0 rounded-full border px-3 py-1 text-[10px] font-bold uppercase tracking-[0.14em] ${commandStatus.pill}`}
+            >
+              {commandStatus.label}
+            </span>
+          </div>
+        </div>
+
+        <div className="relative">
+          <div
+            className="pointer-events-none absolute inset-0 bg-[linear-gradient(rgba(148,163,184,0.05)_1px,transparent_1px),linear-gradient(90deg,rgba(148,163,184,0.05)_1px,transparent_1px)] opacity-[0.55] [background-size:20px_20px]"
+            aria-hidden
+          />
+          <div className="relative z-10 flex flex-col gap-6 px-4 py-6 md:flex-row md:items-stretch md:justify-between md:px-6 md:py-7">
+            <div className="flex flex-col items-center gap-6 sm:flex-row sm:items-center sm:gap-10">
+              <BudgetRemainingStatusCircle
+                arcPercent={remainingPctForMeter}
+                remainingRatioDisplay={remainingPctDisplay}
+                amountLine={hasSettings ? formatCents(remainingCents, effectiveCurrency) : "—"}
+                hasSpendable={spendableCents > 0}
+                isOverBudget={isOverBudget}
+              />
+
+              <div className="w-full min-w-0 flex-1 space-y-4 text-center sm:max-w-md sm:text-left">
+                {paydayLine && (
+                  <div className="relative overflow-hidden rounded-xl border border-emerald-500/20 bg-[linear-gradient(135deg,rgba(6,78,59,0.35),rgba(15,23,42,0.65))] px-4 py-3 text-left shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]">
+                    <span
+                      className="absolute left-0 top-0 h-full w-1 rounded-l-xl bg-gradient-to-b from-emerald-400/90 to-cyan-500/50"
+                      aria-hidden
+                    />
+                    <p className="pl-2 text-[10px] font-bold uppercase tracking-[0.18em] text-emerald-200/90">Tot loon</p>
+                    <p className="mt-1 pl-2 text-base font-semibold tracking-tight text-[var(--text-primary)]">{paydayLine}</p>
+                    {nextPaydayShortLabel && (
+                      <p className="mt-0.5 pl-2 font-mono text-[12px] text-cyan-200/80">{nextPaydayShortLabel}</p>
+                    )}
+                  </div>
+                )}
+                {hasSettings ? (
+                  <div className="space-y-2 rounded-xl border border-[var(--card-border)]/50 bg-black/20 px-4 py-3 backdrop-blur-sm">
+                    <div className="flex flex-wrap items-baseline justify-between gap-2 gap-y-1">
+                      <span className="text-[11px] font-medium uppercase tracking-wide text-[var(--text-muted)]">Spendable</span>
+                      <span className="text-sm font-semibold tabular-nums text-[var(--text-primary)]">
+                        {formatCents(spendableCents, effectiveCurrency)}
+                      </span>
+                    </div>
+                    <div className="flex flex-wrap items-baseline justify-between gap-2 gap-y-1">
+                      <span className="text-[11px] font-medium uppercase tracking-wide text-[var(--text-muted)]">
+                        Uitgegeven {periodLabel}
+                      </span>
+                      <span className="text-sm font-semibold tabular-nums text-[var(--accent-focus)]">
+                        {formatCents(expensesCents, effectiveCurrency)}
+                      </span>
+                    </div>
+                  </div>
+                ) : (
+                  <p className="text-sm leading-relaxed text-[var(--text-muted)]">
+                    Stel je {effectiveBudgetPeriod === "weekly" ? "week" : "maand"}budget en spaarreserve in voor de command
+                    ring en tempo.
+                  </p>
+                )}
+              </div>
+            </div>
+
+            <div className="flex w-full flex-col justify-center gap-3 md:w-[min(100%,220px)] md:shrink-0">
+              <div className="flex w-full flex-col gap-2.5">
+                <button
+                  type="button"
+                  onClick={() => setShowDetails(true)}
+                  className="btn-primary inline-flex h-auto min-h-[46px] w-full items-center justify-center rounded-xl px-4 py-3 text-sm font-bold uppercase tracking-[0.08em]"
+                >
+                  Details
+                </button>
+                {!historyMode && (
+                  <button
+                    type="button"
+                    onClick={openQuickLogToast}
+                    className="inline-flex h-auto min-h-[44px] w-full items-center justify-center rounded-xl border border-emerald-400/45 bg-[linear-gradient(180deg,rgba(6,78,59,0.55),rgba(6,24,20,0.85))] px-4 py-2.5 text-sm font-semibold text-emerald-50 shadow-[0_0_22px_rgba(16,185,129,0.18)] transition hover:border-emerald-300/60 hover:shadow-[0_0_28px_rgba(16,185,129,0.28)]"
+                  >
+                    Quick log
+                  </button>
+                )}
+                {!historyMode && (
+                  <button
+                    type="button"
+                    onClick={() => setShowEdit(true)}
+                    className="inline-flex h-auto min-h-[44px] w-full items-center justify-center rounded-xl border border-[var(--card-border)] bg-[var(--bg-surface)]/75 px-4 py-2.5 text-sm font-semibold text-[var(--text-primary)] backdrop-blur-sm transition hover:border-[var(--accent-focus)]/50"
+                  >
+                    Budget bewerken
+                  </button>
+                )}
+              </div>
+              <p className="text-center text-[10px] leading-snug text-[var(--text-muted)] md:text-right">
+                budget − spaarreserve − uitgaven = restant
+              </p>
+              {pendingActive && (
+                <p className="text-center text-[11px] text-[var(--accent-focus)] md:text-right">Bijwerken… tijdelijke waarden actief.</p>
               )}
             </div>
           </div>
-
-          <div className="flex w-full flex-col items-stretch gap-2 md:w-auto md:min-w-[200px] md:items-end">
-            <div className="flex w-full flex-col gap-2 md:w-auto md:flex-row md:flex-wrap md:justify-end">
-              {!historyMode && (
-                <button
-                  type="button"
-                  onClick={openQuickLogToast}
-                  className="dashboard-mini-btn inline-flex w-full items-center justify-center rounded-lg px-4 py-2.5 text-sm font-semibold md:w-auto"
-                >
-                  Quick log
-                </button>
-              )}
-              {!historyMode && (
-                <button
-                  type="button"
-                  onClick={() => setShowEdit(true)}
-                  className="inline-flex w-full items-center justify-center rounded-lg border border-[var(--card-border)] bg-[var(--bg-surface)]/80 px-4 py-2.5 text-sm font-semibold text-[var(--text-primary)] transition hover:border-[var(--accent-focus)]/80 md:w-auto"
-                >
-                  Budget bewerken
-                </button>
-              )}
-              <button
-                type="button"
-                onClick={() => setShowDetails(true)}
-                className="btn-primary inline-flex h-auto w-full items-center justify-center rounded-lg px-4 py-2.5 text-sm font-semibold md:w-auto"
-              >
-                Details
-              </button>
-            </div>
-            <p className="text-[11px] text-[var(--text-muted)] md:text-right">
-              budget − spaarreserve − uitgaven = restant
-            </p>
-            {pendingActive && (
-              <p className="text-[11px] text-[var(--accent-focus)] md:text-right">Bijwerken… tijdelijke waarden actief.</p>
-            )}
-          </div>
         </div>
+
         {!historyMode && spendableCents > 0 && (
-          <div className="border-t border-[var(--card-border)]/60 px-4 pb-4 pt-3 md:px-5">
-            <p className="mb-1 text-xs font-medium text-[var(--text-muted)]">Spendable gebruikt</p>
-            <div className="h-2.5 w-full overflow-hidden rounded-full bg-[var(--card-border)]">
+          <div className="relative z-10 border-t border-[var(--card-border)]/60 bg-black/15 px-4 pb-4 pt-3 md:px-6">
+            <div className="mb-2 flex items-center justify-between gap-2">
+              <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-[var(--text-muted)]">Spendable gebruikt</p>
+              <p className="font-mono text-[11px] tabular-nums text-[var(--text-secondary)]">{Math.round(Math.min(100, spentPct))}%</p>
+            </div>
+            <div className="h-3 w-full overflow-hidden rounded-full border border-white/5 bg-[var(--card-border)]/40 shadow-inner">
               <div
-                className={`h-full rounded-full transition-all duration-300 ${spentPct >= 100 ? "bg-amber-500" : "bg-[var(--accent-focus)]"}`}
+                className={`h-full rounded-full bg-gradient-to-r transition-all duration-500 ${
+                  spentPct >= 100
+                    ? "from-amber-600 to-orange-500 shadow-[0_0_12px_rgba(245,158,11,0.45)]"
+                    : "from-emerald-500 via-cyan-500 to-[var(--accent-focus)] shadow-[0_0_14px_rgba(34,211,238,0.25)]"
+                }`}
                 style={{ width: `${Math.min(100, spentPct)}%` }}
               />
             </div>

@@ -453,6 +453,11 @@
   opacity: 0.72;
 }
 
+/** Panels zonder top-accent (bijv. budget — rustiger, minder “witte lijn”) */
+.panelBodyNoTopAccent::before {
+  display: none;
+}
+
 .panelBody::after {
   content: "";
   position: absolute;

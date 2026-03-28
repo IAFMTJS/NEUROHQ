@@ -8,6 +8,8 @@ export type SciFiPanelProps = {
   className?: string;
   bodyClassName?: string;
   variant?: "command" | "glass" | "tactical" | "minimal";
+  /** When false, hides the horizontal top glow line inside the panel body (calmer HUD). Default true. */
+  topAccent?: boolean;
   children: React.ReactNode;
 };
 
@@ -21,6 +23,7 @@ export function SciFiPanel({
   className = "",
   bodyClassName = "",
   variant = "command",
+  topAccent = true,
   children,
 }: SciFiPanelProps) {
   const { gameState } = useDCICGameState();
@@ -33,7 +36,7 @@ export function SciFiPanel({
         : ({ "--mode-rgb": "0, 212, 255", "--mode-rgb-deep": "0, 136, 255" } as React.CSSProperties);
 
   const frameClass = `${styles.panelFrame} ${className}`.trim();
-  const bodyClass = `${styles.panelBody} ${bodyClassName}`.trim();
+  const bodyClass = `${styles.panelBody} ${!topAccent ? styles.panelBodyNoTopAccent : ""} ${bodyClassName}`.trim();
 
   return (
     <div className={styles.panelShell} style={modeVars}>
