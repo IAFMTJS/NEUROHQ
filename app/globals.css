@@ -1815,10 +1815,6 @@ html[data-light-ui="true"] body {
 .mascot-hero .commander-mascot-pedestal .commander-mascot-pedestal-arc .commander-orbit-arc-path * {
   pointer-events: none;
 }
-.mascot-hero .commander-mascot-pedestal .commander-mascot-pedestal-arc .commander-orbit-hit,
-.mascot-hero .commander-mascot-pedestal .commander-mascot-pedestal-arc .commander-orbit-hit * {
-  pointer-events: auto;
-}
 .mascot-hero .commander-mascot-pedestal .mascot-hero-mascot-stack,
 .mascot-hero .commander-mascot-pedestal .mascot-hero-mascot-stack * {
   pointer-events: none;
