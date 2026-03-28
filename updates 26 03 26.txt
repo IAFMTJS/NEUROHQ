@@ -1,0 +1,75 @@
+Neurohq
+
+A. Dashboard
+
+COMMAND Dashboard System Overview moet icoontjes bevatten die als je er op drukt bepaalde cards openen in een toast modal. En de icoontjes moeten er zijn voor : Level & voortgang
+Expand
+
+Commander status (DCIC)
+
+Expand
+
+Vandaag door de app bepaald
+
+Expand
+
+Systeem modus
+
+Brain status & hoe voel je je vandaag
+
+Expand
+
+Zodat dashboard enkel maar command dashboard system overview heeft
+
+Brainstatus update modal werkt nu enkel maar als brainstatus in de normale card al is upgedate
+Stabiliseer je budget eerst bij next best action, wanneer duwen op open budget guardrail, opent dat gewoon de budget pagina. Dat zou moeten een toast modal openen die de nodige dingen kan aanpassen en dan doorvoert naar de budgetpagina naar de nodige cards
+
+
+
+
+B. Mission page 
+
+Routine tab : Routines bewerken of routine toevoegen knop werkt niet
+
+
+
+
+C. Budget page
+
+Status tab mag eigenlijk echt maar een command overview card hebben met de info en een quick log button al de rest moet naar de juiste tab verplaatst worden 
+Execute tab : verwijder WEEKLY TACTICAL PLAN of verplaats het naar een andere tab
+Execute tab : Entries & frozen moet een ingeklapte card zijn 
+Intelligence tab :  Weekly Budget Reviewmoet verplaatst worden naar optimisation
+Budget lock nooduitgave toast modal heeft niet opgeslagen
+
+
+D. Growth page
+
+Nog te veel inhoud van de vorige setup
+Ziet er te ingewikkeld uit voor de doorsnee gebruiker 
+
+
+E.  XP page
+
+Missie xp lijst is niet nodig op de pagina
+XP verdienen is half logisch en half te veel werk
+Moet ook een soort command center zijn. Zoals de bridge van een spaceship. Daar kies je in welke modus je het leven wilt spelen. Xp updates. Streak info. 
+Daily possible challenges toevoegen m, 3 challenges maar die minder als een taak aanvoelen  met xp waarde 10% van de totale waarde dat ze nodig hebben om volgend level te halen
+Multiplier week actie, double or nothing, alles door de app bepaald doen = dubbele xp. Nog maar 1 iets niet doen en je krijgt helemaal geen xp die week
+
+
+F. NAV Bar
+
+Van links naar rechts : missies-budget-dashboard(dat icoontje iets groter dan de rest en mag er beetje uitsteken) - growth - strategie - Profiel
+
+
+G. System
+
+Rechts vanboven moet er een settings knopje of icoontje komen die je naar de settings pagina brengt
+Nieuwe pagina maken Profiel of gebruiker en die combineert de insights pagina met de settings cards van gebruiker specifieke settings ( de personalisatie ) 
+Op de gebruiker pagina dan ook toevoegen om bepaalde visuals aan te passen, zoals bv hey zegt altijd good evening commander, om daar eventueel de mogelijkheid te hebben dat aan te passen naar Princess of zoiets. En nog zo’n dingen maar de huidige dingen blijven wel de default
+
+
+H. Settingspagina
+
+Heeft geen snelkoppelingen card nodig

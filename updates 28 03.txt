@@ -1,0 +1,733 @@
+B. System
+
+Alles nieuwe dingen moeten ook in supabase opgeslagen worden indien nodig
+Snapshot bijwerken
+
+
+
+
+
+
+E. Mission page
+
+Ik heb bv pagina’s lezen uit boek al 6 dagen verwijderd : systeem moet vragen waarom en zich dan aanpassen op de input
+Missions tab redesign : todays energy banner dan de main missie taak van dat moment breedte van card.  
+• Naam (vb. Grote kuis)
+
+• XP (reward) 
+
+• Tijd (realistisch kader) 
+
+• Start knop (dominant)
+
+De andere taken zet je ook er op maar er onder met 2 naast elkaar en kleiner of in een soort slider
+
+
+
+Alle andere info van de taak moet zichtbaar worden wanneer je op de taak duwt
+
+En dan daaronder de add missie knop
+
+
+
+
+
+B. Systeem : Het weer toevoegen
+🧠 DOEL (hou dit in je hoofd)
+
+
+
+
+
+Je app moet:
+
+→ weer ophalen
+
+→ vertalen naar simpele states
+
+→ beslissen wat iemand moet doen
+
+→ automissies aanpassen
+
+
+
+Dus: weer → betekenis → actie
+
+
+
+
+
+
+
+
+
+⚙️ STAP 1: Haal weerdata binnen (de saaie fundering)
+
+
+
+
+
+Gebruik gewoon een API zoals
+
+OpenWeatherMap
+
+
+
+Wat je Cursor laat doen:
+
+
+
+API key toevoegen
+Data ophalen voor locatie (stad of GPS)
+Enkel deze dingen bewaren:
+temperatuur
+regen
+zon / bewolking
+wind
+
+
+
+
+
+👉 Belangrijk: niet elke seconde ophalen
+
+
+
+1x per dag is meer dan genoeg (Het weer/temperatuur van de dag, niet dat moment) 
+cache het
+
+
+
+
+
+
+
+
+
+
+🧠 STAP 2: Vertaal naar “menselijke categorieën”
+
+
+
+
+
+Geen cijfers tonen. Niemand geeft om “17.3°C”.
+
+
+
+Maak dit systeem:
+
+
+
+temperatuur → koud / mild / warm / heet
+zon → weinig / gemiddeld / veel
+regen → geen / licht / zwaar
+wind → weinig / gemiddeld / veel
+
+
+
+
+👉 Cursor opdracht:
+
+“Maak een functie die ruwe weerdata omzet naar simpele labels”
+
+
+
+Dit is letterlijk de brug tussen data en gedrag.
+
+
+
+
+
+
+
+
+
+⚖️ STAP 3: Maak 1 simpele ‘weer score’
+
+
+
+
+
+Je wil niet 20 regels logica. Je wil 1 oordeel.
+
+
+
+Dus:
+
+
+
+goed weer → score omhoog
+slecht weer → score omlaag
+
+
+
+
+Resultaat:
+
+
+
+goed → naar buiten
+meh → flexibel
+slecht → binnen blijven
+
+
+
+
+👉 Cursor opdracht:
+
+“Maak een score systeem dat weer vertaalt naar 4 niveaus:
+
+perfect / ok / neutraal / slecht”
+
+
+
+
+
+
+
+
+
+🎯 STAP 4: Koppel weer aan gedrag (hier wordt je app slim)
+
+
+
+
+
+Nu zeg je tegen Cursor:
+
+
+
+“Maak regels die bepalen welke automissies toegestaan zijn”
+
+
+
+
+
+Voorbeeld regels:
+
+
+
+
+
+slecht weer → geen wandelingen
+goed weer → verplicht buiten activiteit
+veel zon → minder huishouden
+slecht weer → meer binnen taken
+
+
+
+
+👉 Denk zo:
+
+Je app moet soms keuzes afpakken van de gebruiker
+
+Dat is net de kracht.
+
+
+
+
+
+
+
+
+
+🧬 STAP 5: Combineer met mood (jouw geheime wapen)
+
+
+
+
+
+Hier wordt het echt interessant.
+
+
+
+Laat Cursor dit bouwen:
+
+
+
+slecht weer + slechte mood → comfort taken
+goed weer + slechte mood → kleine push naar buiten
+goed weer + goede mood → actieve dag
+
+
+
+
+👉 Cursor opdracht:
+
+“Combineer weather state + mood state om taken te kiezen”
+
+
+
+
+
+
+
+
+
+🔁 STAP 6: Automissies laten reageren (niet statisch laten)
+
+
+
+
+
+Elke dag of bij refresh:
+
+
+
+check weer
+bereken state + score
+pas automissies aan
+
+
+
+
+Dus:
+
+
+
+dingen toevoegen
+dingen blokkeren
+prioriteiten aanpassen
+
+
+
+
+👉 Cursor opdracht:
+
+“Maak een engine die dagelijks automissies herberekent op basis van weer”
+
+
+
+
+
+
+
+
+
+🎨 STAP 7: Toon het subtiel (niet als een weer-app uit 2010)
+
+
+
+
+
+Je UI moet niet schreeuwen “WEER!!!”
+
+
+
+Hou het zo:
+
+
+
+klein label:
+“Perfect weer → ga naar buiten”
+“Slecht weer → binnenmodus”
+
+icoon (zon / regen)
+lichte kleur shift in achtergrond
+
+
+
+
+👉 Jij hebt mascottes → gebruik ze
+
+Dat is gratis dopamine.
+
+
+
+
+
+
+
+
+
+⚠️ STAP 8: Dingen die je anders gegarandeerd verpest
+
+
+
+
+
+❌ Te veel data tonen → niemand boeit dat
+❌ Geen duidelijke beslissingen → systeem voelt dom
+❌ Geen fallback → API faalt = app kapot
+❌ Te vaak refreshen → performance naar de klote
+
+
+
+
+
+
+
+
+
+
+🧠 Hoe je dit aan Cursor uitlegt (copy-paste stijl)
+
+
+
+
+
+Gebruik dit letterlijk:
+
+I want to integrate weather into my app as a behavioral system.
+
+
+
+Step 1: Fetch weather data (temperature, rain, cloudiness, wind)
+
+Step 2: Convert it into simple states (cold/warm, sunny/cloudy, etc.)
+
+Step 3: Calculate a simple weather score (good vs bad conditions)
+
+Step 4: Use that score to influence daily tasks (automissions)
+
+
+
+Rules:
+
+- No outdoor tasks in heavy rain or strong wind
+
+- Encourage outdoor tasks in good weather
+
+- Reduce indoor chores when it's sunny
+
+- Combine with mood state to adjust difficulty
+
+
+
+The system should run automatically and update tasks daily.
+
+
+
+🧠 DE REGEL DIE JE SYSTEEM DRAAGT
+
+
+
+
+
+👉 Weer wordt 1x per dag opgehaald en daarna overal gebruikt in de app
+
+
+
+Niet telkens opnieuw fetchen. Niet slim proberen doen. Gewoon:
+
+→ ophalen
+
+→ opslaan
+
+→ hergebruiken
+
+
+
+
+
+
+
+
+
+⚙️ STAP 1: 1x per dag weer ophalen
+
+
+
+
+
+Vertel tegen Cursor:
+
+Fetch weather data once per day (e.g. in the morning).
+
+Store it locally (state, database, or cache).
+
+Do not refetch multiple times per day.
+
+👉 Best moment:
+
+
+
+ochtend (tussen 6u–9u)
+of bij eerste app open van de dag
+
+
+
+
+
+
+
+
+
+
+🗄 STAP 2: Opslaan als “dag-context”
+
+
+
+
+
+Je wil dit:
+
+{
+
+  "weatherState": {
+
+    "temperature": "mild",
+
+    "sun": "high",
+
+    "rain": "none",
+
+    "wind": "low"
+
+  },
+
+  "weatherScore": 3,
+
+  "weatherType": "perfect_outdoor"
+
+}
+
+👉 Dit wordt:
+
+de context van de dag
+
+
+
+Alles in je app moet hiernaar kijken.
+
+
+
+
+
+
+
+
+
+🧠 STAP 3: Cursor laten snappen dat dit GLOBAL is
+
+
+
+
+
+Dit is waar jij streng moet zijn.
+
+
+
+Zeg letterlijk:
+
+The weather system is global.
+
+
+
+It should be accessible across:
+
+- automissions
+
+- routines
+
+- mood system
+
+- UI components
+
+
+
+Every decision that depends on context should consider the weather state.
+
+👉 Anders krijg je:
+
+
+
+3 verschillende systemen
+die elkaar tegenspreken
+en jij die kwaad wordt (terecht)
+
+
+
+
+
+
+
+
+
+
+🎯 STAP 4: Integratie overal (dit is de echte opdracht)
+
+
+
+
+
+Niet “ergens gebruiken”. Nee. OVERAL WAAR HET LOGISCH IS.
+
+
+
+
+
+🔹 Automissions
+
+
+
+
+
+geen wandeling bij slecht weer
+extra outdoor bij goed weer
+prioriteiten aanpassen
+
+
+
+
+
+
+
+
+
+
+🔹 Routines
+
+
+
+
+
+ochtend routine aanpassen:
+goed weer → buiten starten
+slecht weer → binnen blijven
+
+
+
+
+
+
+
+
+
+
+
+🔹 Mood system
+
+
+
+
+
+slecht weer → lagere energie taken
+goed weer → activatie push
+
+
+
+
+
+
+
+
+
+
+🔹 UI / feedback
+
+
+
+
+
+kleine status:
+“Perfect weer vandaag”
+“Binnenmodus aanbevolen”
+
+
+
+
+
+
+
+
+
+👉 Cursor opdracht:
+
+Integrate the weather system into all relevant parts of the app:
+
+
+
+- Automissions should adapt based on weather
+
+- Routines should adjust their structure
+
+- Mood-based suggestions should consider weather
+
+- UI should reflect the current weather context subtly
+
+
+
+Weather should influence decisions, not just be displayed.
+
+
+
+
+
+
+
+
+
+🔁 STAP 5: Dagelijkse refresh (niet random)
+
+
+
+
+
+bij eerste app open → check:
+“is dit vandaag al opgehaald?”
+ja → gebruik data
+nee → fetch
+
+
+
+
+
+
+👉 Cursor opdracht:
+
+Check once per day if weather data is already fetched.
+
+If not, fetch and store it.
+
+If yes, reuse existing data.
+
+
+
+
+
+
+
+
+
+⚠️ Dingen die je anders weer gaat verkloten
+
+
+
+
+
+❌ meerdere fetches per dag → nutteloos + inefficiënt
+❌ weer enkel tonen → compleet gemiste kans
+❌ geen centrale state → chaos
+❌ logica verspreid → bugs waar je later op vloekt
+
+
+
+
+
+
+
+
+
+
+🧠 Wat je eigenlijk aan het bouwen bent
+
+
+
+
+
+Niet:
+
+→ “weer integratie”
+
+
+
+Maar:
+
+→ context engine
+
+
+
+Weer is gewoon 1 van de inputs (naast mood, energie, etc.)
+

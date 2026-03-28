@@ -1,0 +1,44 @@
+Neurohq
+
+A. Dashboard
+
+1. De 2 knoppen Daily quote en claim xp staan te dicht bij elkaar
+2. Energy budget card moet samengevoegd aan systeem en modus
+3. Vandaag door de app bepaald moet ook een overzicht van active missions bevatten, zo kan de aparte active missions card ook verwijderd worden
+4. Dashboard system overview card, brain status button moet rechtstreeks de brainstatus update popup openen
+5. Brain status update moet eigenlijk een toast model worden door op de card command dashboard system overview op brainstatus te klikken
+
+
+B. Mission page 
+
+1. Heb al verschillende dagen de x aantal pagina’s lezen taak verwijderd ma die komt er 10min later gewoon weer op. 
+2. Een taak snoozen moet ook anders werken
+3. Routine tab moet betere cards hebben, gedetailleerder input en edit cards, 1 routine add ding
+4. Voltooi 1 missie voor +70 XP knop, brengt je gewoon naar de missie pagina, maar daardoor een taak voltooien geeft je geen extra xp ofso
+
+
+C. Budget page
+
+1. Budget lock moet op alle cards zichtbaar zijn dat nodig is, of gewoon over de hele site en nooduitgave toevoegen link, moet ook effectief werken en een pop up openen om in te geven
+2. Lock heeft al een icoontje, moet gewoon een eigen tab worden op die pagina en alles te maken met budget lock naar die pagina verplaatsen + een modal die een actieplan toelaat en als het actie plan goed is, de lock opgeeft, er moet dan wel een goeie logica in zitten die met de hele pagina communiceert als dat mogelijk is
+3. Er zitten teveel cards in die eigenlijk hetzelfde doen of zeggen doorheen alle tabs op de budget pagina
+
+
+D. Growth page
+
+1. Protocollen inhoud moet ook aangepast kunnen worden in de site zelf
+
+
+E.  XP page
+
+1. XP pagina voelt niet meer passend bij de rest van de site qua looks en setup
+
+
+F. Settings page 
+
+1. Het user specifieke gedeelte moet uitgebreid worden zodat de engine beter kan werken ook. De engine is data driven, de ingegeven data van de user en de verzamelde data van de site te gebruiken
+
+
+G. Brain engine
+1. We moeten de engine nog slimmer maken, meer suggesties laten maken, overal uit kunnen leren (dus uit gedrag en app gebruik EN input) 
+2. Ik wil een geavanceerde brain engine maar ik weet niet momenteel hoe ik die adaptiever en geavanceerder kan maken
