@@ -4,8 +4,7 @@ import { sendPushToUser } from "@/lib/push";
 import type { PushPayload } from "@/lib/push";
 import { getQuoteByDayNumber, prepareQuoteForPersonalityPush } from "@/lib/quotes";
 import { getConfiguredReleaseVersion, getReleaseNotesLines, formatReleaseNotesForPushBody } from "@/lib/app-release";
-import { getDayOfYearFromDateString } from "@/lib/utils/timezone";
-import { getLocalDateHour } from "@/lib/utils/timezone";
+import { getDayOfYearFromDateString, getLocalDateHour, todayDateString } from "@/lib/utils/timezone";
 import {
   getMorningEmailData,
   getEveningEmailData,
@@ -405,7 +404,7 @@ export async function GET(request: Request) {
         const baseFreeze = {
           title: "NEUROHQ — Frozen purchase",
           body: '"New headphones" is ready. Confirm or cancel in Budget.',
-          tag: "freeze-reminder",
+          tag: `freeze-reminder-${todayDateString()}`,
           url: "/budget",
           priority: "high" as const,
         };

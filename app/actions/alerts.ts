@@ -189,6 +189,51 @@ function severityForUnifiedDecision(d: UnifiedDecision): UserAlertSeverity {
   return "info";
 }
 
+/**
+ * Pending rows from previous days share the same logical alert but different push_tag values, so
+ * sendPushToUser tag-dedupe does not apply and hourly dispatch can fire several pushes in one run.
+ * Close stale pending dashboard inbox rows so only today's canonical tags stay deliverable.
+ */
+async function supersedeStalePendingHqInboxRows(
+  db: AnyDb,
+  userId: string,
+  candidates: { pushTag: string }[]
+): Promise<void> {
+  if (!candidates.length) return;
+  const canonical = new Set(candidates.map((c) => c.pushTag));
+  const hasUnified = candidates.some((c) => c.pushTag.startsWith("hq-inbox-unified-"));
+  const hasStreak = candidates.some((c) => c.pushTag.startsWith("hq-inbox-streak-"));
+  const hasBurnout = candidates.some((c) => c.pushTag.startsWith("hq-inbox-burnout-"));
+  if (!hasUnified && !hasStreak && !hasBurnout) return;
+
+  const { data: rows } = await db
+    .from("user_alerts")
+    .select("id, push_tag")
+    .eq("user_id", userId)
+    .is("read_at", null)
+    .is("push_sent_at", null);
+
+  const staleIds: string[] = [];
+  for (const r of rows ?? []) {
+    const tag = (r as { id: string; push_tag: string | null }).push_tag;
+    if (!tag || canonical.has(tag)) continue;
+    if (hasUnified && tag.startsWith("hq-inbox-unified-")) {
+      staleIds.push((r as { id: string }).id);
+      continue;
+    }
+    if (hasStreak && tag.startsWith("hq-inbox-streak-")) {
+      staleIds.push((r as { id: string }).id);
+      continue;
+    }
+    if (hasBurnout && tag.startsWith("hq-inbox-burnout-")) {
+      staleIds.push((r as { id: string }).id);
+    }
+  }
+  if (!staleIds.length) return;
+  const now = new Date().toISOString();
+  await db.from("user_alerts").update({ read_at: now, push_sent_at: now }).in("id", staleIds);
+}
+
 async function ensureInboxAlertIfNew(
   supabase: Awaited<ReturnType<typeof createClient>>,
   userId: string,
@@ -227,6 +272,8 @@ export async function syncInboxAlertsFromDashboardCritical(critical: DashboardCr
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) return;
+
+  const db = supabase as unknown as AnyDb;
 
   const candidates: {
     pushTag: string;
@@ -269,6 +316,8 @@ export async function syncInboxAlertsFromDashboardCritical(critical: DashboardCr
       linkPath: "/dashboard",
     });
   }
+
+  await supersedeStalePendingHqInboxRows(db, user.id, candidates);
 
   for (const c of candidates) {
     await ensureInboxAlertIfNew(supabase, user.id, c);

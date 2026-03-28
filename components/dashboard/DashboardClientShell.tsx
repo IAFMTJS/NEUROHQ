@@ -412,12 +412,18 @@ export function DashboardClientShell() {
     if (nextDecisionType !== "budget_guardrail") return;
     const u = critical?.unifiedDecision;
     if (!u?.title) return;
-    const key = `neurohq-budget-guardrail-nudge-${dateStr}-${u.decisionId ?? "default"}`;
+    // decisionId includes task counts / reason codes and changes often; toast would repeat every refresh.
+    const key = `neurohq-budget-guardrail-toast-${dateStr}`;
     try {
-      if (sessionStorage.getItem(key) === "1") return;
-      sessionStorage.setItem(key, "1");
+      if (localStorage.getItem(key) === "1") return;
+      localStorage.setItem(key, "1");
     } catch {
-      return;
+      try {
+        if (sessionStorage.getItem(key) === "1") return;
+        sessionStorage.setItem(key, "1");
+      } catch {
+        return;
+      }
     }
     neuroToast.warning(u.title, {
       description: u.description,

@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { getDayOfYear } from "date-fns";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { sendPushToUser } from "@/lib/push";
-import { getLocalDateHour, isInQuietHours } from "@/lib/utils/timezone";
+import { getLocalDateHour, isInQuietHours, utcStartOfLocalDayIso } from "@/lib/utils/timezone";
 import { isHighSensoryDayForUser } from "@/lib/mode-admin";
 import { xpToNextLevel } from "@/lib/xp";
 import { buildBehavioralNotificationForContext } from "@/lib/behavioral-notifications";
@@ -175,6 +175,34 @@ export async function GET(request: Request) {
       const meta = userMetaById.get(userId);
       const local = meta?.timezone ? getLocalDateHour(meta.timezone) : { date: todayStr, hour: utcHour };
       if (isInQuietHours(local.hour, meta?.quietStart ?? null, meta?.quietEnd ?? null)) continue;
+      const tz = meta?.timezone?.trim() || null;
+      const startOfUserDayIso =
+        tz && tz.length > 0 ? utcStartOfLocalDayIso(tz, local.date) : `${local.date}T00:00:00.000Z`;
+      const { data: sendsToday } = await supabase
+        .from("push_sends_log")
+        .select("trigger_type")
+        .eq("user_id", userId)
+        .gte("sent_at", startOfUserDayIso)
+        .limit(120);
+      const hadBudgetInboxPushToday = (sendsToday ?? []).some(
+        (r) =>
+          typeof (r as { trigger_type?: string }).trigger_type === "string" &&
+          (r as { trigger_type: string }).trigger_type.startsWith("hq-inbox-unified-") &&
+          (r as { trigger_type: string }).trigger_type.endsWith("-budget_guardrail")
+      );
+      if (hadBudgetInboxPushToday) {
+        continue;
+      }
+      const freezeTag = `freeze-reminder-${local.date}`;
+      const { count: freezeAlreadyToday } = await supabase
+        .from("push_sends_log")
+        .select("*", { count: "exact", head: true })
+        .eq("user_id", userId)
+        .eq("trigger_type", freezeTag)
+        .gte("sent_at", startOfUserDayIso);
+      if ((freezeAlreadyToday ?? 0) > 0) {
+        continue;
+      }
       try {
         const ctx = await loadUserNotificationContextForUser(supabase, userId);
         const basePayload = {
@@ -182,7 +210,7 @@ export async function GET(request: Request) {
           body: entries.length === 1
             ? `"${entries[0].note || "Purchase"}" is ready. Confirm or cancel in Budget.`
             : `${entries.length} frozen purchase(s) ready to confirm or cancel.`,
-          tag: "freeze-reminder",
+          tag: freezeTag,
           url: "/budget",
           priority: "high" as const,
         };
