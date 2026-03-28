@@ -1807,20 +1807,42 @@ html[data-light-ui="true"] body {
   /* Mascot visuals should never block clicks on buttons or inputs in front of them. */
   pointer-events: none;
 }
-/* Commander orbit: boog-paden niet klikbaar; <a> in SVG wel. Mascotte niet klikbaar. */
-.mascot-hero .commander-mascot-pedestal .commander-mascot-pedestal-arc-wrap {
+/* Commander platform: SVG niet interactief; mascotte niet; zwevende kaarten wél */
+.mascot-hero .commander-mascot-pedestal .commander-mascot-pedestal-arc-wrap,
+.mascot-hero .commander-mascot-pedestal .commander-mascot-pedestal-arc,
+.mascot-hero .commander-mascot-pedestal .commander-mascot-pedestal-arc * {
   pointer-events: none;
 }
-.mascot-hero .commander-mascot-pedestal .commander-mascot-pedestal-arc .commander-orbit-arc-path,
-.mascot-hero .commander-mascot-pedestal .commander-mascot-pedestal-arc .commander-orbit-arc-path * {
+.mascot-hero .commander-mascot-pedestal .commander-mascot-pedestal-mascot,
+.mascot-hero .commander-mascot-pedestal .commander-mascot-pedestal-mascot * {
   pointer-events: none;
 }
-.mascot-hero .commander-mascot-pedestal .mascot-hero-mascot-stack,
-.mascot-hero .commander-mascot-pedestal .mascot-hero-mascot-stack * {
-  pointer-events: none;
+.mascot-hero .commander-mascot-pedestal .commander-mascot-pedestal-cards,
+.mascot-hero .commander-mascot-pedestal .commander-mascot-pedestal-cards a {
+  pointer-events: auto;
 }
 .mascot-hero[data-commander-orbit="true"].mascot-hero-top {
   margin-bottom: -40px;
+}
+
+/* Commander segment ring: vloeiende vulling + load-pulse bij stijging */
+.commander-segment-fill {
+  transition: stroke-dasharray 0.85s cubic-bezier(0.4, 0, 0.2, 1);
+}
+@keyframes commander-load-pulse-glow {
+  0%,
+  100% {
+    filter: drop-shadow(0 0 6px rgba(251, 146, 60, 0.4));
+  }
+  50% {
+    filter: drop-shadow(0 0 18px rgba(251, 146, 60, 0.9));
+  }
+}
+.commander-segment-load {
+  filter: drop-shadow(0 0 6px rgba(251, 146, 60, 0.35));
+}
+.commander-segment-load-pulse {
+  animation: commander-load-pulse-glow 0.55s ease-in-out 2;
 }
 /* Wrapper for heroLarge image: big PNG, centered, overflow so “square” is minimal */
 .mascot-hero-img-wrap {

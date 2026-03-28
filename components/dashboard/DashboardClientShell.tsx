@@ -677,6 +677,9 @@ export function DashboardClientShell() {
                         displayLevel: dcicLevel,
                         budgetRemainingCents: badgeBudgetRemainingCents ?? 0,
                         currency: badgeCurrency,
+                        energyPct: heroEnergyPct,
+                        focusPct: heroFocusPct,
+                        loadPct: heroLoadPct,
                       }}
                     />
                   </div>

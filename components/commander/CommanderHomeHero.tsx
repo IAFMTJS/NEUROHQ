@@ -30,7 +30,7 @@ type Props = {
   hideBuiltInTitle?: boolean;
   /** Dashboard bridge: tekst/links blijven links; mascot + stat-rings gecentreerd; icon-rail overlay rechts. */
   bridgeLayout?: boolean;
-  /** Halve statusboog onder de mascotte: links level/XP, rechts budget (dashboard). */
+  /** Platform + segment-ring (resources + brain; brain wordt gemerged met store-check-in). */
   pedestalStats?: CommanderMascotPedestalStats | null;
 };
 
@@ -107,7 +107,28 @@ export function CommanderHomeHero({
         data-focus-low={focusLow || undefined}
         data-streak-at-risk={streakAtRisk || undefined}
       >
-        {pedestalStats ? <CommanderMascotPedestal stats={pedestalStats}>{mascotStack}</CommanderMascotPedestal> : mascotStack}
+        {pedestalStats ? (
+          <CommanderMascotPedestal
+            stats={{
+              ...pedestalStats,
+              energyPct: effectiveEnergyPct,
+              focusPct: effectiveFocusPct,
+              loadPct: effectiveLoadPct,
+              energy1to10:
+                typeof todayDailyState?.energy === "number" ? (todayDailyState.energy as number) : undefined,
+              focus1to10:
+                typeof todayDailyState?.focus === "number" ? (todayDailyState.focus as number) : undefined,
+              load1to10:
+                typeof todayDailyState?.sensory_load === "number"
+                  ? (todayDailyState.sensory_load as number)
+                  : undefined,
+            }}
+          >
+            {mascotStack}
+          </CommanderMascotPedestal>
+        ) : (
+          mascotStack
+        )}
       </section>
 
       {singleGoalLabel && (
