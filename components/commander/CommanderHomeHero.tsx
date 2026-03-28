@@ -75,6 +75,22 @@ export function CommanderHomeHero({
       .catch(() => {});
   };
 
+  const mascotStack = (
+    <div className="mascot-hero-mascot-stack relative mx-auto flex w-full justify-center">
+      <img
+        src={getMascotSrcForPage("dashboard")}
+        alt=""
+        className="mascot-img"
+        aria-hidden
+      />
+      {statusBadge && (
+        <span className="pointer-events-none absolute bottom-2 left-1/2 z-[1] -translate-x-1/2 rounded-full bg-amber-500/20 px-2.5 py-1 text-[10px] font-medium text-amber-200">
+          {statusBadge}
+        </span>
+      )}
+    </div>
+  );
+
   const inner = (
     <>
       {!hideBuiltInTitle && (
@@ -85,25 +101,13 @@ export function CommanderHomeHero({
       )}
 
       <section
-        className="mascot-hero mascot-hero-top relative flex w-full flex-col items-center"
+        className={`mascot-hero mascot-hero-top relative w-full overflow-visible ${pedestalStats ? "" : "flex flex-col items-center"}`}
+        data-commander-orbit={pedestalStats ? "true" : undefined}
         data-energy-low={energyLow || undefined}
         data-focus-low={focusLow || undefined}
         data-streak-at-risk={streakAtRisk || undefined}
       >
-        <div className="mascot-hero-mascot-stack relative mx-auto flex w-full justify-center">
-          <img
-            src={getMascotSrcForPage("dashboard")}
-            alt=""
-            className="mascot-img"
-            aria-hidden
-          />
-          {statusBadge && (
-            <span className="pointer-events-none absolute bottom-2 left-1/2 z-[1] -translate-x-1/2 rounded-full bg-amber-500/20 px-2.5 py-1 text-[10px] font-medium text-amber-200">
-              {statusBadge}
-            </span>
-          )}
-        </div>
-        {pedestalStats ? <CommanderMascotPedestal stats={pedestalStats} /> : null}
+        {pedestalStats ? <CommanderMascotPedestal stats={pedestalStats}>{mascotStack}</CommanderMascotPedestal> : mascotStack}
       </section>
 
       {singleGoalLabel && (
