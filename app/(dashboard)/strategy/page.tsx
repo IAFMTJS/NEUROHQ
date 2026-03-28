@@ -28,24 +28,38 @@ import { getUserPreferencesOrDefaults } from "@/app/actions/preferences";
 import { neuroStrategyBudgetHint } from "@/lib/neuro-copy";
 import { SimplifiedPageShell } from "@/components/layout/SimplifiedPageShell";
 import { SIMPLIFIED_VIEWPORT_WRAPPER } from "@/lib/simplified-page-layout";
+import { SciFiPanel } from "@/components/hud-test/SciFiPanel";
+import { CornerNode } from "@/components/hud-test/CornerNode";
+import hudStyles from "@/components/hud-test/hud.module.css";
+import { StrategyEnginePaceHint } from "@/components/strategy/StrategyEnginePaceHint";
 
 /** Force dynamic: strategy uses cookies (auth) and live data. */
 export const dynamic = "force-dynamic";
 
-function StrategyShell() {
+function StrategyIntroPanel() {
   return (
-    <>
+    <SciFiPanel variant="glass" className={hudStyles.focusSecondary} bodyClassName="p-4 md:p-5">
+      <CornerNode corner="top-left" />
+      <CornerNode corner="top-right" />
       <HQPageHeader
-        title="🧠 Strategy"
-        subtitle="Missions, budget en growth in één strategische stack — daarna thesis, allocatie en alignment"
+        title="Strategy"
+        subtitle="Command center voor je kwartaal: thesis, domeinfocus, alignment en weekreview — verbonden met missies, budget en Growth."
         backHref="/dashboard"
       />
-      <section className="mascot-hero mascot-hero-top mascot-hero-sharp" data-mascot-page="strategy" aria-hidden>
+      <section className="mascot-hero mascot-hero-top mascot-hero-sharp mt-2" data-mascot-page="strategy" aria-hidden>
         <div className="mascot-hero-inner mx-auto">
           <HeroMascotImage page="strategy" className="mascot-img" heroLarge />
         </div>
       </section>
-    </>
+      <p className="mt-4 text-xs text-[var(--text-muted)]">
+        Tabs hieronder: overzicht, allocatie, momentum en review. Engine-instellingen staan onderaan in het tweede paneel.
+      </p>
+      <Suspense fallback={null}>
+        <div className="mt-4">
+          <StrategyEnginePaceHint variant="both" />
+        </div>
+      </Suspense>
+    </SciFiPanel>
   );
 }
 
@@ -114,9 +128,6 @@ async function StrategyContent({ simplifiedLayout = false }: { simplifiedLayout?
     console.error("Strategy page data load failed (check Supabase env and migrations):", e);
     return (
       <>
-        {!simplifiedLayout && (
-          <HQPageHeader title="🧠 Strategy" subtitle="Kon strategie niet laden." backHref="/dashboard" />
-        )}
         <div className="rounded-xl border border-amber-500/40 bg-amber-500/10 px-4 py-3 text-sm text-[var(--text-primary)]">
           <p className="font-medium">Er is iets misgegaan</p>
           <p className="mt-1 text-[var(--text-muted)]">
@@ -131,10 +142,13 @@ async function StrategyContent({ simplifiedLayout = false }: { simplifiedLayout?
   if (!strategy) {
     return (
       <>
-        <div className="flex flex-wrap items-center justify-end gap-3">
+        <div className="flex flex-wrap items-center justify-end gap-2">
           <XPBadge totalXp={xp.total_xp} level={xp.level} compact href="/xp" />
-          <Link href="/report" className="link-glow-hover inline-flex items-center rounded-lg border border-[var(--card-border)] bg-[var(--bg-elevated)] px-4 py-2 text-sm font-medium text-[var(--text-primary)] transition-all duration-200 hover:border-[var(--accent-focus)] hover:text-[var(--accent-focus)]">
-            Reality report →
+          <Link
+            href="/report"
+            className="inline-flex items-center justify-center rounded-lg border border-[rgba(var(--mode-rgb),0.2)] bg-[var(--bg-elevated)]/50 px-3 py-2 text-sm font-medium text-[var(--text-primary)] shadow-[inset_0_1px_0_rgba(255,255,255,0.03)] transition-colors hover:border-[var(--accent-focus)]/50 hover:text-[var(--accent-focus)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[rgba(var(--mode-rgb),0.35)] focus-visible:ring-offset-0"
+          >
+            Insights →
           </Link>
         </div>
         <StrategyThesisForm />
@@ -193,13 +207,13 @@ async function StrategyContent({ simplifiedLayout = false }: { simplifiedLayout?
 
   return (
     <div data-tutorial="strategy-content" className="space-y-6">
-      <div className="flex flex-wrap items-center justify-end gap-3">
+      <div className="flex flex-wrap items-center justify-end gap-2">
         <XPBadge totalXp={xp.total_xp} level={xp.level} compact href="/xp" />
         <Link
           href="/report"
-          className="link-glow-hover inline-flex items-center rounded-lg border border-[var(--card-border)] bg-[var(--bg-elevated)] px-4 py-2 text-sm font-medium text-[var(--text-primary)] transition-all duration-200 hover:border-[var(--accent-focus)] hover:text-[var(--accent-focus)]"
+          className="inline-flex items-center justify-center rounded-lg border border-[rgba(var(--mode-rgb),0.2)] bg-[var(--bg-elevated)]/50 px-3 py-2 text-sm font-medium text-[var(--text-primary)] shadow-[inset_0_1px_0_rgba(255,255,255,0.03)] transition-colors hover:border-[var(--accent-focus)]/50 hover:text-[var(--accent-focus)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[rgba(var(--mode-rgb),0.35)] focus-visible:ring-offset-0"
         >
-          Reality report →
+          Insights →
         </Link>
       </div>
       <StrategyTabsShell
@@ -277,6 +291,11 @@ export default async function StrategyPage() {
             { href: "/report", label: "Insights" },
             { href: "/budget", label: "Budget" },
           ]}
+          topSlot={
+            <Suspense fallback={null}>
+              <StrategyEnginePaceHint variant="both" />
+            </Suspense>
+          }
         >
           <div className="space-y-6">
             <Suspense fallback={<div className="min-h-[200px] animate-pulse rounded-2xl bg-[var(--bg-elevated)]/30" aria-hidden />}>
@@ -292,14 +311,28 @@ export default async function StrategyPage() {
   }
 
   return (
-    <div className="container page space-y-6">
-      <StrategyShell />
-      <Suspense fallback={<div className="min-h-[200px] animate-pulse rounded-2xl bg-[var(--bg-elevated)]/30" aria-hidden />}>
-        <StrategyContent />
-      </Suspense>
-      <Suspense fallback={<div className="min-h-[200px] animate-pulse rounded-2xl bg-[var(--bg-elevated)]/30" aria-hidden />}>
-        <StrategyEngineSettingsSection />
-      </Suspense>
+    <div className={`relative min-h-screen overflow-hidden ${hudStyles.cinematicBackdrop}`}>
+      <div className={hudStyles.spaceMist} aria-hidden />
+      <div className={hudStyles.starLayerFar} aria-hidden />
+      <div className={hudStyles.starLayerNear} aria-hidden />
+      <div className={hudStyles.backgroundAtmosphere} aria-hidden />
+      <div className={hudStyles.colorBlend} aria-hidden />
+      <div className={hudStyles.spaceNoise} aria-hidden />
+      <div className="container page page-wide dashboard-page dashboard-cinematic relative z-10 space-y-4 pb-10">
+        <StrategyIntroPanel />
+        <SciFiPanel variant="glass" className={hudStyles.focusSecondary} bodyClassName="p-4 md:p-6">
+          <CornerNode corner="top-left" />
+          <CornerNode corner="top-right" />
+          <Suspense fallback={<div className="min-h-[200px] animate-pulse rounded-2xl bg-[var(--bg-elevated)]/30" aria-hidden />}>
+            <StrategyContent />
+          </Suspense>
+          <Suspense fallback={<div className="min-h-[200px] animate-pulse rounded-2xl bg-[var(--bg-elevated)]/30" aria-hidden />}>
+            <div className="mt-8 border-t border-[rgba(var(--mode-rgb),0.1)] pt-8">
+              <StrategyEngineSettingsSection />
+            </div>
+          </Suspense>
+        </SciFiPanel>
+      </div>
     </div>
   );
 }

@@ -1045,10 +1045,6 @@ export function TaskList({
             {limitMessage ? <p className="mt-1 text-xs text-[var(--text-muted)]">{limitMessage}</p> : null}
           </section>
         )}
-        {missionsHeroLayout && limitMessage && !isWarMode && (
-          <p className="mb-3 rounded-lg border border-amber-500/20 bg-amber-500/5 px-3 py-2 text-xs text-[var(--text-muted)]">{limitMessage}</p>
-        )}
-
         {showAvoidance && (
           <p className="mb-3 rounded-xl border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-sm text-amber-200">{carryOverCount} tasks carried over. Pick one to focus on.</p>
         )}
@@ -1097,6 +1093,9 @@ export function TaskList({
             {energyCap ? (
               <EnergyCapBar used={energyCap.used} cap={energyCap.cap} remaining={energyCap.remaining} planned={energyCap.planned} />
             ) : null}
+            {limitMessage && !isWarMode && (
+              <p className="rounded-lg border border-amber-500/20 bg-amber-500/5 px-3 py-2 text-xs text-[var(--text-muted)]">{limitMessage}</p>
+            )}
             {missionsContextBelowHero}
           </div>
         )}
@@ -1185,6 +1184,9 @@ export function TaskList({
                 {energyCap ? (
                   <EnergyCapBar used={energyCap.used} cap={energyCap.cap} remaining={energyCap.remaining} planned={energyCap.planned} />
                 ) : null}
+                {limitMessage && !isWarMode && (
+                  <p className="rounded-lg border border-amber-500/20 bg-amber-500/5 px-3 py-2 text-xs text-[var(--text-muted)]">{limitMessage}</p>
+                )}
                 {missionsContextBelowHero}
               </div>
 

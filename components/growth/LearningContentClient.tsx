@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
+import Link from "next/link";
 import type { LearningState } from "@/app/actions/learning-state";
 import type { ProtocolLibraryRow } from "@/app/actions/protocol-library";
 import type { ProtocolProgressState } from "@/app/actions/protocol-progress";
@@ -11,19 +12,14 @@ import { GrowthStreamsList } from "@/components/growth/GrowthStreamsList";
 import { GrowthReflectionCard } from "@/components/growth/GrowthReflectionCard";
 import { MonthlyBookCard } from "@/components/growth/MonthlyBookCard";
 import { AddLearningStreamCard } from "@/components/growth/AddLearningStreamCard";
-import { UserGoalMissionGeneratorCard } from "@/components/growth/UserGoalMissionGeneratorCard";
-import { GrowthAdaptiveHint } from "@/components/growth/GrowthAdaptiveHint";
-import { GrowthProtocolLibrary } from "@/components/growth/GrowthProtocolLibrary";
 import { GrowthCommandCenter } from "@/components/growth/GrowthCommandCenter";
 import { GrowthProtocolViewerModal } from "@/components/growth/GrowthProtocolViewerModal";
-import { GrowthSystemLoop } from "@/components/growth/GrowthSystemLoop";
 import { GrowthTabsShell } from "@/components/growth/GrowthTabsShell";
 import { CollapsibleDashboardCard } from "@/components/dashboard/CollapsibleDashboardCard";
 import { weeklyDifficultyFromBrain } from "@/lib/growth/adaptive-engine";
 import { progressKey } from "@/lib/growth/resolve-focus-protocol";
 import { useHQStore } from "@/lib/hq-store";
 import { XPBadge } from "@/components/XPBadge";
-import Link from "next/link";
 
 type XPIdentityPayload = {
   total_xp: number;
@@ -42,6 +38,9 @@ type Props = {
   progressMap: Record<string, ProtocolProgressState>;
   /** Opgeslagen focus-protocol (user_preferences). */
   growthFocus: GrowthFocusState;
+  simplified?: boolean;
+  /** Full layout: content between tabs and panels (mascot, pace hint from server page). */
+  heroSlot?: ReactNode;
 };
 
 export function LearningContentClient({
@@ -51,6 +50,8 @@ export function LearningContentClient({
   protocols,
   progressMap,
   growthFocus,
+  simplified = false,
+  heroSlot,
 }: Props) {
   const [viewerProtocol, setViewerProtocol] = useState<ProtocolLibraryRow | null>(null);
   const learning: LearningState = fallback;
@@ -58,8 +59,6 @@ export function LearningContentClient({
 
   const level = gameState?.level ?? xpIdentity.level;
   const totalXp = xpIdentity.total_xp;
-  const streak = gameState?.streak.current ?? xpIdentity.streak.current;
-  const mode = gameState?.mode?.current ?? "focus";
   const energyAvg = gameState?.stats.energy ?? null;
   const focusAvg = gameState?.stats.focus ?? null;
   const brainLogged = energyAvg != null && focusAvg != null;
@@ -70,29 +69,35 @@ export function LearningContentClient({
   });
 
   const currentBook = learning.streams.find((s) => s.type === "book") ?? null;
-  const streamsCount = learning.streams.length;
-  const sessionsThisWeek = learning.streams.reduce(
-    (sum, stream) => sum + Math.max(0, stream.sessionsThisWeek || 0),
-    0,
-  );
-  const activeStreams = learning.streams.filter(
-    (stream) =>
-      (stream.sessionsThisWeek ?? 0) > 0 ||
-      (stream.type === "book" && (stream.pagesRead ?? 0) > 0),
-  ).length;
-  const completionRatio = Math.max(0, Math.min(1, learning.consistency.completionRatio));
-  const consistencyStatus =
-    completionRatio >= 1
-      ? "Excellent momentum"
-      : completionRatio >= 0.75
-        ? "On track"
-        : completionRatio >= 0.4
-          ? "Needs tightening"
-          : "At risk";
+
+  const headerActions = !simplified ? (
+    <>
+      <XPBadge totalXp={totalXp} level={level} compact href="/xp" />
+      <Link
+        href="/learning/analytics"
+        className="link-glow-hover inline-flex items-center rounded-lg border border-[var(--card-border)] bg-[var(--bg-elevated)] px-4 py-2 text-sm font-medium text-[var(--text-primary)] transition-all duration-200 hover:border-[var(--accent-focus)] hover:text-[var(--accent-focus)]"
+      >
+        Analytics →
+      </Link>
+    </>
+  ) : null;
 
   return (
     <div className="space-y-6" data-tutorial="growth-content">
-      <GrowthTabsShell>
+      <GrowthTabsShell
+        centeredPageHeader={
+          !simplified
+            ? {
+                title: "Growth",
+                subtitle:
+                  "Simpel command center voor groei: kies focus, plan je leerpad, voer uit — zoals Budget en Strategy: tabs, duidelijke acties.",
+                backHref: "/dashboard",
+                actions: headerActions,
+              }
+            : undefined
+        }
+        belowTabsSlot={!simplified ? heroSlot : undefined}
+      >
         {(activeTab) => (
           <>
             {activeTab === "command" && (
