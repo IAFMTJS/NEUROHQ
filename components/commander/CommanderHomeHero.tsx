@@ -57,15 +57,6 @@ export function CommanderHomeHero({
   const statusBadge =
     energyLow ? "Slaap of rust eerst" : focusLow ? "Neem een korte pauze" : streakAtRisk ? "Streak in gevaar" : null;
 
-  const handleOpenBrainStatus = () => {
-    window.dispatchEvent(new CustomEvent("neurohq-open-brain-status", { detail: { source: "commander-home-hero" } }));
-    void import("sonner")
-      .then(({ toast }) => {
-        toast.message("Brain Status check-in geopend.");
-      })
-      .catch(() => {});
-  };
-
   const mascotStack = (
     <div className="mascot-hero-mascot-stack relative mx-auto flex w-full justify-center">
       <img
@@ -166,15 +157,6 @@ export function CommanderHomeHero({
       >
         {missionLabel}
       </ClientCTALink>
-
-      <button
-        type="button"
-        onClick={handleOpenBrainStatus}
-        className={`mt-2 block w-full rounded-lg border border-white/10 py-2 text-sm text-[var(--text-muted)] transition-colors no-underline hover:bg-white/5 hover:text-[var(--text-secondary)] ${bridgeLayout ? "px-1 text-left" : "text-center"}`}
-        style={{ borderColor: "rgba(var(--mode-rgb, 0, 212, 255), 0.28)" }}
-      >
-        Brain Status
-      </button>
     </>
   );
 

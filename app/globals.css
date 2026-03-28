@@ -1945,8 +1945,8 @@ html[data-light-ui="true"] body {
     inset 0 1px 0 rgba(255, 255, 255, 0.06);
 }
 .commander-pedestal-band-card {
-  font-size: 0.7rem;
-  line-height: 1.2;
+  font-size: 0.82rem;
+  line-height: 1.25;
 }
 
 /* Commander segment ring: vloeiende vulling + load-pulse bij stijging */

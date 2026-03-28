@@ -14,6 +14,8 @@ export type EnergyRingMode =
 export type EnergyRingProps = {
   size?: number;
   progress: number;
+  /** Arc fill 0–100; defaults to `progress`. Use 100 for a full ring while keeping `value` for the real stat. */
+  arcFillPct?: number;
   label?: string;
   value?: string;
   mode?: EnergyRingMode;
@@ -42,6 +44,7 @@ export type EnergyRingProps = {
 export function EnergyRing({
   size = 260,
   progress,
+  arcFillPct,
   label = "BUDGET",
   value = "€2,430",
   mode = "default",
@@ -55,8 +58,8 @@ export function EnergyRing({
   const strokeWidth = 10;
   const radius = (size - strokeWidth) / 2;
   const circumference = 2 * Math.PI * radius;
-  const clamped = Math.max(0, Math.min(100, progress));
-  const offset = circumference - (clamped / 100) * circumference;
+  const arcClamp = Math.max(0, Math.min(100, arcFillPct ?? progress));
+  const offset = circumference - (arcClamp / 100) * circumference;
   const center = size / 2;
   const baseValuePx = Math.round(size * 0.125);
   const defaultValueSize = Math.max(15, Math.round(size * 0.16));

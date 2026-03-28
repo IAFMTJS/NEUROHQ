@@ -109,9 +109,9 @@ const RIM_STROKE = 7;
 
 const pathLen = 100;
 
-/** Straal voor XP/Budget op de band */
+/** Straal voor XP/Budget op de band (kleiner = hoger op de boog, dichter bij de mascotte) */
 function bandLabelRadiusXp() {
-  return R_INNER + (R_OUTER - R_INNER) * 0.22;
+  return R_INNER + (R_OUTER - R_INNER) * 0.13;
 }
 
 /** HTML-overlay: zelfde meetkunde als SVG-groep met verticale squash */
@@ -122,7 +122,7 @@ function bandLabelPct(theta: number, r: number, squash: number) {
 }
 
 const cardClass =
-  "commander-pedestal-hud-card commander-pedestal-band-card pointer-events-auto max-w-[min(48%,7.25rem)] rounded-md border px-1.5 py-1 backdrop-blur-md no-underline outline-none transition-transform hover:scale-[1.02] focus-visible:ring-2 focus-visible:ring-[var(--accent-focus)]/55 sm:max-w-[8.5rem] sm:rounded-lg sm:px-2 sm:py-1.5";
+  "commander-pedestal-hud-card commander-pedestal-band-card pointer-events-auto max-w-[min(52%,8.5rem)] rounded-lg border px-2 py-1.5 backdrop-blur-md no-underline outline-none transition-transform hover:scale-[1.02] focus-visible:ring-2 focus-visible:ring-[var(--accent-focus)]/55 sm:max-w-[10rem] sm:rounded-xl sm:px-2.5 sm:py-2";
 
 function clampPct(n: number) {
   return Math.min(100, Math.max(0, n));
@@ -287,26 +287,30 @@ export function CommanderMascotPedestal({ stats, children }: Props) {
               </svg>
 
                 <div
-                  className="commander-mascot-pedestal-cards pointer-events-none absolute z-[12] flex w-[min(92%,17rem)] max-w-none justify-between gap-1 px-0.5 sm:gap-2"
-                  style={{ left: posXp.left, top: posXp.top, transform: "translate(-50%, -50%)" }}
+                  className="commander-mascot-pedestal-cards pointer-events-none absolute z-[12] flex w-[min(96%,19rem)] max-w-none justify-between gap-1.5 px-0.5 sm:gap-2.5"
+                  style={{
+                    left: posXp.left,
+                    top: posXp.top,
+                    transform: "translate(-50%, calc(-50% - clamp(0.65rem, 3vw, 1.1rem)))",
+                  }}
                 >
                   <Link href="/xp" className={`${cardClass} text-left`}>
-                    <span className="block text-[7px] font-semibold uppercase tracking-[0.12em] text-[var(--text-muted)] sm:text-[8px]">XP</span>
-                    <span className="mt-0.5 block text-[11px] font-bold tabular-nums text-[var(--text-primary)] sm:text-xs">
+                    <span className="block text-[8px] font-semibold uppercase tracking-[0.12em] text-[var(--text-muted)] sm:text-[9px]">XP</span>
+                    <span className="mt-0.5 block text-[13px] font-bold tabular-nums leading-tight text-[var(--text-primary)] sm:text-sm">
                       Lv {displayLevel}
                     </span>
-                    <span className="mt-0.5 block text-[9px] tabular-nums text-[var(--text-secondary)] sm:text-[10px]">
+                    <span className="mt-0.5 block text-[10px] tabular-nums text-[var(--text-secondary)] sm:text-[11px]">
                       {current}/{needed}
                     </span>
                   </Link>
                   <Link href="/budget" className={`${cardClass} text-right`}>
-                    <span className="block text-[7px] font-semibold uppercase tracking-[0.1em] text-[var(--text-muted)] sm:text-[8px]">Budget</span>
-                    <span className="mt-0.5 block text-[11px] font-bold tabular-nums text-[var(--text-primary)] sm:text-xs">
+                    <span className="block text-[8px] font-semibold uppercase tracking-[0.1em] text-[var(--text-muted)] sm:text-[9px]">Budget</span>
+                    <span className="mt-0.5 block text-[13px] font-bold tabular-nums leading-tight text-[var(--text-primary)] sm:text-sm">
                       {isNegative && "−"}
                       {symbol}
                       {amount.toFixed(0)}
                     </span>
-                    <span className="mt-0.5 block text-[9px] text-[var(--text-secondary)] sm:text-[10px]">
+                    <span className="mt-0.5 block text-[10px] text-[var(--text-secondary)] sm:text-[11px]">
                       {isNegative ? "over" : "rest"}
                     </span>
                   </Link>
