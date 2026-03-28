@@ -257,6 +257,9 @@ export function BudgetTabsShell({
   const budgetHeaderShell =
     "relative overflow-hidden rounded-[var(--hq-card-radius,18px)] border border-[var(--card-border)] bg-gradient-to-b from-[var(--bg-elevated)]/35 via-[var(--bg-primary)]/40 to-[var(--bg-primary)]/55 shadow-[0_8px_32px_rgba(0,0,0,0.22)]";
 
+  /** Simplified command card: dividers follow mode accent — avoids flat “white” card-border lines. */
+  const simplifiedDivider = "border-[rgba(var(--mode-rgb),0.1)]";
+
   const tabPillClass = (tab: TabId) =>
     activeTab === tab
       ? "rounded-full border border-[var(--card-border)] bg-[var(--bg-elevated)]/80 px-3.5 py-2 text-sm font-semibold text-[var(--text-primary)] sm:px-4"
@@ -301,34 +304,43 @@ export function BudgetTabsShell({
           >
             <CornerNode corner="top-left" />
             <CornerNode corner="top-right" />
-            <div className="relative shrink-0 border-b border-[var(--card-border)]/50 px-4 py-4 text-center">
+            <div
+              className={`relative shrink-0 border-b ${simplifiedDivider} bg-gradient-to-b from-[rgba(var(--mode-rgb-deep),0.22)] via-[var(--bg-elevated)]/12 to-[var(--bg-primary)]/35 px-4 pb-5 pt-4 text-center shadow-[inset_0_-1px_0_rgba(var(--mode-rgb),0.06)]`}
+            >
               <Link
                 href="/dashboard"
                 className="absolute left-4 top-4 text-[11px] font-semibold uppercase tracking-wide text-[var(--accent-focus)] underline-offset-2 hover:underline"
               >
                 ← HQ
               </Link>
-              <span className="absolute right-4 top-3.5 inline-flex items-center rounded-full border border-[var(--card-border)] bg-[var(--bg-elevated)]/60 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wide text-[var(--accent-focus)]">
+              <span className="absolute right-4 top-3.5 inline-flex items-center rounded-full border border-[rgba(var(--mode-rgb),0.2)] bg-[var(--bg-elevated)]/55 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wide text-[var(--accent-focus)] shadow-[0_0_20px_rgba(var(--mode-rgb),0.08)]">
                 {modeLabel}
               </span>
-              <h2 className="mx-auto max-w-md text-2xl font-bold tracking-tight text-[var(--text-primary)] sm:text-3xl">
+              <h2 className="mx-auto mt-1 max-w-lg text-3xl font-bold tracking-tight text-[var(--text-primary)] sm:text-4xl md:text-[2.5rem] md:leading-tight">
                 Budget
               </h2>
             </div>
-            {simplifiedTopSlot ? (
-              <div className="shrink-0 border-b border-[var(--card-border)]/30 px-3 py-2">{simplifiedTopSlot}</div>
-            ) : null}
+            {/* No wrapper: slot may be toast-only (returns null) — a bordered row looked empty. */}
+            {simplifiedTopSlot}
             <BudgetLockStrip historyMode={historyMode} lockPanelHref={lockPanelHref} embedded />
-            <div className="shrink-0 border-b border-[var(--card-border)]/50 bg-[var(--bg-surface)]/70 px-2 py-2.5 sm:px-3">
+            <div
+              className={`shrink-0 border-b ${simplifiedDivider} bg-[rgba(var(--mode-rgb),0.05)] px-2 py-2.5 sm:px-3`}
+            >
               {renderTabButtonsPills()}
             </div>
             {headerRight ? (
-              <div className="shrink-0 border-b border-[var(--card-border)]/30 px-2 py-2">{headerRight}</div>
+              <div
+                className={`shrink-0 border-b ${simplifiedDivider} bg-[rgba(var(--mode-rgb),0.04)] px-3 py-2.5 sm:px-4`}
+              >
+                <div className="flex flex-wrap items-center justify-center gap-2 sm:justify-between sm:gap-3">
+                  {headerRight}
+                </div>
+              </div>
             ) : null}
             <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-2 py-2 [-webkit-overflow-scrolling:touch] sm:px-3">
               {panels}
             </div>
-            <p className="shrink-0 border-t border-[var(--card-border)]/40 px-4 py-2 text-center text-[11px] text-[var(--text-muted)]">
+            <p className={`shrink-0 border-t ${simplifiedDivider} px-4 py-2 text-center text-[11px] text-[var(--text-muted)]`}>
               <Link href="/tasks" className="text-[var(--accent-focus)] underline-offset-2 hover:underline">
                 Missions
               </Link>

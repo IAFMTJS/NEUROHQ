@@ -30,7 +30,7 @@ export function BudgetHistorySelector({ currentMonth }: { currentMonth?: string 
       <select
         value={currentMonth ?? ""}
         onChange={handleChange}
-        className="rounded-lg border border-[var(--card-border)] bg-[var(--bg-primary)] px-3 py-2 text-sm text-[var(--text-primary)] focus:border-[var(--accent-focus)] focus:outline-none focus:ring-2 focus:ring-[var(--accent-focus)]/30"
+        className="rounded-[var(--hq-btn-radius,14px)] border border-[rgba(var(--mode-rgb),0.22)] bg-[var(--bg-elevated)]/50 px-3 py-2 text-sm text-[var(--text-primary)] shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] focus:border-[rgba(var(--mode-rgb),0.45)] focus:outline-none focus:ring-2 focus:ring-[rgba(var(--mode-rgb),0.22)]"
         aria-label="Select budget period to view"
       >
         {options.map((o) => (

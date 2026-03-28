@@ -64,7 +64,7 @@ export function SimplifiedPageShell({
           </div>
         )}
         {topSlot ? (
-          <div className="shrink-0 border-b border-[var(--card-border)]/30 px-3 py-2">{topSlot}</div>
+          <div className="shrink-0 border-b border-[rgba(var(--mode-rgb),0.1)] bg-[rgba(var(--mode-rgb),0.04)] px-3 py-2">{topSlot}</div>
         ) : null}
         <div
           data-hq-simplified-scroll="1"
@@ -72,7 +72,7 @@ export function SimplifiedPageShell({
         >
           {children}
         </div>
-        <p className="shrink-0 border-t border-[var(--card-border)]/40 px-4 py-2 text-center text-[11px] text-[var(--text-muted)]">
+        <p className="shrink-0 border-t border-[rgba(var(--mode-rgb),0.1)] px-4 py-2 text-center text-[11px] text-[var(--text-muted)]">
           {links.map((l, i) => (
             <span key={l.href}>
               {i > 0 ? " · " : null}
