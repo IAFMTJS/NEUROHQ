@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import type { BehaviorProfile } from "@/types/behavior-profile.types";
 import type { StudyPlan, AccountabilitySettings } from "@/app/actions/behavior";
@@ -12,6 +13,8 @@ import {
   DISCIPLINE_LEVEL_LABELS_NL,
   ENERGY_PATTERN_LABELS_NL,
 } from "@/lib/behavior-ui-nl";
+import { Modal } from "@/components/Modal";
+import { ProfileEngineCategoryTile } from "@/components/profile/ProfileEngineCategoryTile";
 
 type Props = {
   behaviorProfile: BehaviorProfile;
@@ -21,6 +24,8 @@ type Props = {
   initialDaysOff: number[] | null;
   initialDayOffMode: "soft" | "hard";
 };
+
+type PanelId = "checklist" | "core" | "motor" | "calendar";
 
 function behaviorReadinessChecks(
   profile: BehaviorProfile,
@@ -66,34 +71,6 @@ function MetaChip({ children, className = "" }: { children: React.ReactNode; cla
   );
 }
 
-function EnginePanel({
-  headingId,
-  title,
-  subtitle,
-  children,
-}: {
-  headingId: string;
-  title: string;
-  subtitle: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <section
-      className="rounded-2xl border border-[var(--card-border)]/85 border-t-[rgba(var(--mode-rgb),0.22)] bg-gradient-to-b from-[rgba(var(--mode-rgb-deep),0.1)] to-[var(--bg-surface)]/20 shadow-[0_0_28px_rgba(var(--mode-rgb),0.06)]"
-      aria-labelledby={headingId}
-    >
-      <header className="border-b border-[var(--card-border)]/50 px-4 py-3 sm:px-5">
-        <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-[var(--semantic-accent)]">Engine</p>
-        <h2 id={headingId} className="mt-1 text-base font-bold tracking-tight text-[var(--text-primary)] sm:text-lg">
-          {title}
-        </h2>
-        <p className="mt-1 text-xs leading-relaxed text-[var(--text-muted)]">{subtitle}</p>
-      </header>
-      <div className="p-4 sm:p-5">{children}</div>
-    </section>
-  );
-}
-
 export function ProfileEngineBehaviorTab({
   behaviorProfile,
   initialAutoMasterMissions,
@@ -102,10 +79,17 @@ export function ProfileEngineBehaviorTab({
   initialDaysOff,
   initialDayOffMode,
 }: Props) {
+  const [open, setOpen] = useState<PanelId | null>(null);
   const daysOffArr = initialDaysOff ?? [];
   const checks = behaviorReadinessChecks(behaviorProfile, initialStudyPlan, daysOffArr);
   const doneCount = checks.filter((c) => c.done).length;
   const pct = Math.round((doneCount / checks.length) * 100);
+
+  const weekLabel = behaviorProfile.weekTheme
+    ? WEEK_THEME_LABELS_NL[behaviorProfile.weekTheme]
+    : "Geen weekthema";
+  const motorTrait = `${initialStudyPlan.dailyGoalMinutes} min/dag · accountability ${initialAccountability.enabled ? "aan" : "uit"}`;
+  const calTrait = `${daysOffArr.length} vrije dag(en) · ${initialDayOffMode === "hard" ? "harde" : "zachte"} modus`;
 
   return (
     <div className="space-y-5">
@@ -127,8 +111,11 @@ export function ProfileEngineBehaviorTab({
               Gedrag &amp; motor
             </h2>
             <p className="mt-2 max-w-2xl text-sm leading-relaxed text-[var(--text-secondary)]">
-              Dit stuurt missies, confrontaties en tempo op het dashboard. HQ‑persoon en emotie stel je in op{" "}
-              <Link href={profileEngineHref("identity")} className="font-semibold text-[var(--accent-focus)] hover:underline">
+              Kies een onderwerp om te bewerken. HQ‑persoon en emotie staan onder{" "}
+              <Link
+                href={profileEngineHref("identity")}
+                className="font-semibold text-[var(--accent-focus)] underline-offset-2 hover:underline"
+              >
                 Identiteit
               </Link>
               .
@@ -150,66 +137,115 @@ export function ProfileEngineBehaviorTab({
             )}
           </div>
 
-          <div className="rounded-xl border border-[rgba(var(--mode-rgb),0.22)] bg-[rgba(var(--mode-rgb-deep),0.1)] px-4 py-3">
-            <div className="flex flex-wrap items-end justify-between gap-3">
+          <div className="rounded-xl border border-[rgba(var(--mode-rgb),0.18)] bg-[rgba(var(--mode-rgb-deep),0.1)] px-4 py-3">
+            <div className="flex flex-wrap items-center justify-between gap-3">
               <div>
                 <p className="text-[10px] font-bold uppercase tracking-wider text-[var(--text-muted)]">Gedrag‑anker</p>
                 <p className="mt-1 text-sm font-semibold text-[var(--text-primary)]">
-                  {doneCount}/{checks.length} richtlijnen · scherpere engine‑input
+                  {doneCount}/{checks.length} richtlijnen · {pct}%
                 </p>
               </div>
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-[var(--semantic-accent)]/35 bg-[var(--bg-primary)]/50 text-sm font-bold tabular-nums text-[var(--semantic-accent)]">
-                {pct}%
+              <div className="flex items-center gap-2">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-[var(--semantic-accent)]/35 bg-[var(--bg-primary)]/50 text-sm font-bold tabular-nums text-[var(--semantic-accent)]">
+                  {pct}%
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setOpen("checklist")}
+                  className="rounded-lg border border-[rgba(var(--mode-rgb),0.22)] bg-[var(--bg-primary)]/40 px-3 py-2 text-[11px] font-semibold text-[var(--semantic-accent)] transition hover:bg-[rgba(var(--mode-rgb-deep),0.15)] outline-none focus-visible:ring-2 focus-visible:ring-[rgba(var(--mode-rgb),0.45)] focus-visible:ring-offset-0"
+                >
+                  Stappen
+                </button>
               </div>
             </div>
-            <ul className="mt-3 grid gap-2 sm:grid-cols-2" aria-label="Checklist gedrag">
-              {checks.map((c) => (
-                <li
-                  key={c.id}
-                  className={`flex items-start gap-2 rounded-lg border px-2.5 py-2 text-xs ${
-                    c.done
-                      ? "border-emerald-500/30 bg-emerald-500/[0.07] text-[var(--text-primary)]"
-                      : "border-[var(--card-border)]/60 bg-[var(--bg-primary)]/30 text-[var(--text-secondary)]"
-                  }`}
-                >
-                  <span className="mt-0.5 shrink-0" aria-hidden>
-                    {c.done ? "✓" : "○"}
-                  </span>
-                  <span>{c.hint}</span>
-                </li>
-              ))}
-            </ul>
+          </div>
+
+          <div className="grid gap-2 sm:grid-cols-1">
+            <ProfileEngineCategoryTile
+              icon="🧠"
+              title="Gedrag kern"
+              trait={`${weekLabel} · ${ENERGY_PATTERN_LABELS_NL[behaviorProfile.energyPattern]} · neuro, vermijding, huisdier, hobby`}
+              onOpen={() => setOpen("core")}
+            />
+            <ProfileEngineCategoryTile
+              icon="⚙️"
+              title="Motor & verantwoording"
+              trait={motorTrait}
+              onOpen={() => setOpen("motor")}
+            />
+            <ProfileEngineCategoryTile
+              icon="📅"
+              title="Kalender & vrije dagen"
+              trait={calTrait}
+              onOpen={() => setOpen("calendar")}
+            />
           </div>
         </div>
       </section>
 
-      <EnginePanel
-        headingId="engine-behavior-core"
-        title="Gedrag kern"
-        subtitle="Weekthema, identiteit, neuroprofiel, energie, vermijding, huisdier en hobby-gewicht — opgeslagen als één profiel."
+      <Modal
+        open={open === "checklist"}
+        onClose={() => setOpen(null)}
+        title="Gedrag‑checklist"
+        subtitle="Aanbevolen invulling voor scherpere engine-input."
+        size="lg"
       >
-        <BehaviorProfileSettings initial={behaviorProfile} initialAutoMasterMissions={initialAutoMasterMissions} engineLayout />
-      </EnginePanel>
+        <ul className="grid gap-2 sm:grid-cols-2" aria-label="Checklist gedrag">
+          {checks.map((c) => (
+            <li
+              key={c.id}
+              className={`flex items-start gap-2 rounded-lg border px-2.5 py-2 text-xs ${
+                c.done
+                  ? "border-emerald-500/30 bg-emerald-500/[0.07] text-[var(--text-primary)]"
+                  : "border-[var(--card-border)]/60 bg-[var(--bg-primary)]/30 text-[var(--text-secondary)]"
+              }`}
+            >
+              <span className="mt-0.5 shrink-0" aria-hidden>
+                {c.done ? "✓" : "○"}
+              </span>
+              <span>{c.hint}</span>
+            </li>
+          ))}
+        </ul>
+      </Modal>
 
-      <EnginePanel
-        headingId="engine-behavior-motor"
+      <Modal
+        open={open === "core"}
+        onClose={() => setOpen(null)}
+        title="Gedrag kern"
+        subtitle="Weekthema, identiteit, neuroprofiel, energie, vermijding, huisdier en hobby — één profiel."
+        size="xl"
+      >
+        <BehaviorProfileSettings
+          initial={behaviorProfile}
+          initialAutoMasterMissions={initialAutoMasterMissions}
+          engineLayout
+        />
+      </Modal>
+
+      <Modal
+        open={open === "motor"}
+        onClose={() => setOpen(null)}
         title="Motor & verantwoording"
-        subtitle="Leerdoelen per dag, reminders en accountability (XP, streak-freeze)."
+        subtitle="Leerdoelen, reminders en accountability."
+        size="xl"
       >
         <SettingsEngineProfile
           initialStudyPlan={initialStudyPlan}
           initialAccountability={initialAccountability}
           engineLayout
         />
-      </EnginePanel>
+      </Modal>
 
-      <EnginePanel
-        headingId="engine-behavior-calendar"
+      <Modal
+        open={open === "calendar"}
+        onClose={() => setOpen(null)}
         title="Kalender & vrije dagen"
-        subtitle="Bias voor herstel- en huishoudmissies op vaste vrije dagen. Direct opgeslagen bij elke tik."
+        subtitle="Bias voor herstel- en huishoudmissies. Opslaan bij elke wijziging."
+        size="lg"
       >
         <SettingsDaysOff initialDaysOff={initialDaysOff} initialMode={initialDayOffMode} engineLayout />
-      </EnginePanel>
+      </Modal>
     </div>
   );
 }

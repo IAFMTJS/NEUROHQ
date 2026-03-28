@@ -20,9 +20,18 @@ type Props = {
   /** Extra classes on the scrollable body (padding, max-width). */
   bodyClassName?: string;
   footerLinks?: SimplifiedFooterLink[];
+  /** Verberg de grote titelbalk; behoud sr-only titel voor toegankelijkheid. */
+  hideTitleBar?: boolean;
 };
 
-export function SimplifiedPageShell({ title, children, topSlot, bodyClassName, footerLinks }: Props) {
+export function SimplifiedPageShell({
+  title,
+  children,
+  topSlot,
+  bodyClassName,
+  footerLinks,
+  hideTitleBar = false,
+}: Props) {
   const links = footerLinks ?? DEFAULT_FOOTER;
   return (
     <div className="flex min-h-0 w-full max-w-none flex-1 flex-col">
@@ -33,15 +42,27 @@ export function SimplifiedPageShell({ title, children, topSlot, bodyClassName, f
       >
         <CornerNode corner="top-left" />
         <CornerNode corner="top-right" />
-        <div className="flex shrink-0 items-start justify-between gap-3 border-b border-[var(--card-border)]/40 px-4 py-3">
-          <h2 className="hq-h2 min-w-0 flex-1 text-[var(--text-primary)]">{title}</h2>
-          <Link
-            href="/dashboard"
-            className="shrink-0 pt-0.5 text-[11px] font-semibold uppercase tracking-wide text-[var(--accent-focus)] underline-offset-2 hover:underline"
-          >
-            HQ
-          </Link>
-        </div>
+        {hideTitleBar ? (
+          <div className="flex shrink-0 items-center justify-end gap-2 border-b border-[rgba(var(--mode-rgb),0.12)] px-3 py-2">
+            <h2 className="sr-only">{title}</h2>
+            <Link
+              href="/dashboard"
+              className="text-[11px] font-semibold uppercase tracking-wide text-[var(--accent-focus)] underline-offset-2 hover:underline focus:outline-none focus-visible:ring-2 focus-visible:ring-[rgba(var(--mode-rgb),0.45)] focus-visible:ring-offset-0 rounded-sm"
+            >
+              HQ
+            </Link>
+          </div>
+        ) : (
+          <div className="flex shrink-0 items-start justify-between gap-3 border-b border-[rgba(var(--mode-rgb),0.12)] px-4 py-3">
+            <h2 className="hq-h2 min-w-0 flex-1 text-[var(--text-primary)]">{title}</h2>
+            <Link
+              href="/dashboard"
+              className="shrink-0 pt-0.5 text-[11px] font-semibold uppercase tracking-wide text-[var(--accent-focus)] underline-offset-2 hover:underline focus:outline-none focus-visible:ring-2 focus-visible:ring-[rgba(var(--mode-rgb),0.45)] focus-visible:ring-offset-0 rounded-sm"
+            >
+              HQ
+            </Link>
+          </div>
+        )}
         {topSlot ? (
           <div className="shrink-0 border-b border-[var(--card-border)]/30 px-3 py-2">{topSlot}</div>
         ) : null}

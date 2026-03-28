@@ -19,6 +19,8 @@ export type EnergyRingProps = {
   mode?: EnergyRingMode;
   /** Use toned-down glow for compact stat rings. */
   softGlow?: boolean;
+  /** Profiel-home orbit: stillere animatie, zachtere schaduw, HUD-tekst via theme tokens. */
+  profileOrbit?: boolean;
 };
 
 /**
@@ -40,7 +42,9 @@ export function EnergyRing({
   value = "€2,430",
   mode = "default",
   softGlow = false,
+  profileOrbit = false,
 }: EnergyRingProps) {
+  const soft = softGlow || profileOrbit;
   const modeRgb = "var(--mode-rgb, 0, 212, 255)";
   const strokeWidth = 10;
   const radius = (size - strokeWidth) / 2;
@@ -86,22 +90,22 @@ export function EnergyRing({
           ? "rgba(0,232,118,0.14)"
       : `rgba(${modeRgb},0.14)`;
   const ringHalo = isHighAlert
-    ? softGlow
+    ? soft
       ? "rgba(185,28,28,0.28)"
       : "rgba(185,28,28,0.42)"
     : isAlert
-      ? softGlow
+      ? soft
         ? "rgba(255,154,60,0.24)"
         : "rgba(255,154,60,0.45)"
       : isGreenPeak
-        ? softGlow
+        ? soft
           ? "rgba(0,255,136,0.34)"
           : "rgba(0,255,136,0.62)"
         : isGreen
-          ? softGlow
+          ? soft
             ? "rgba(0,232,118,0.26)"
             : "rgba(0,232,118,0.44)"
-      : softGlow
+      : soft
         ? `rgba(${modeRgb},0.24)`
         : `rgba(${modeRgb},0.45)`;
 
@@ -116,21 +120,23 @@ export function EnergyRing({
 
   return (
     <div
-      className={styles.energyRingWrapper}
+      className={`${styles.energyRingWrapper}${profileOrbit ? ` ${styles.energyRingProfileOrbit}` : ""}`}
       data-mode={mode}
       style={
-        softGlow
+        soft
           ? {
               width: size,
               height: size,
               animation: "none",
-              boxShadow: isHighAlert
-                ? "0 0 7px rgba(185,28,28,0.24), 0 0 14px rgba(185,28,28,0.06)"
-                : isGreenPeak
-                  ? "0 0 7px rgba(0,255,136,0.2), 0 0 14px rgba(0,255,136,0.06)"
-                  : isGreen
-                    ? "0 0 6px rgba(0,232,118,0.18), 0 0 12px rgba(0,232,118,0.06)"
-                    : "0 0 6px rgba(0,229,255,0.18), 0 0 12px rgba(0,229,255,0.06)",
+              boxShadow: profileOrbit
+                ? undefined
+                : isHighAlert
+                  ? "0 0 7px rgba(185,28,28,0.24), 0 0 14px rgba(185,28,28,0.06)"
+                  : isGreenPeak
+                    ? "0 0 7px rgba(0,255,136,0.2), 0 0 14px rgba(0,255,136,0.06)"
+                    : isGreen
+                      ? "0 0 6px rgba(0,232,118,0.18), 0 0 12px rgba(0,232,118,0.06)"
+                      : "0 0 6px rgba(0,229,255,0.18), 0 0 12px rgba(0,229,255,0.06)",
             }
           : { width: size, height: size }
       }
@@ -143,7 +149,7 @@ export function EnergyRing({
           </linearGradient>
 
           <filter id={glowId} x="-50%" y="-50%" width="200%" height="200%">
-            <feGaussianBlur stdDeviation={softGlow ? 1.6 : 4} result="blur" />
+            <feGaussianBlur stdDeviation={soft ? 1.6 : 4} result="blur" />
             <feMerge>
               <feMergeNode in="blur" />
               <feMergeNode in="SourceGraphic" />
@@ -155,15 +161,15 @@ export function EnergyRing({
         <circle
           cx={center}
           cy={center}
-          r={softGlow ? radius + 10 : radius + 18}
-          fill={softGlow ? ringHalo.replace(/0\.\d+\)/, "0.08)") : ringHalo.replace("0.45", "0.1")}
+          r={soft ? radius + 10 : radius + 18}
+          fill={soft ? ringHalo.replace(/0\.\d+\)/, "0.08)") : ringHalo.replace("0.45", "0.1")}
         />
 
         {/* Base track */}
         <circle
           stroke={ringTrack}
           fill="transparent"
-          strokeWidth={softGlow ? Math.max(4, strokeWidth - 3) : strokeWidth}
+          strokeWidth={soft ? Math.max(4, strokeWidth - 3) : strokeWidth}
           r={radius}
           cx={center}
           cy={center}
@@ -181,10 +187,10 @@ export function EnergyRing({
           strokeDashoffset={offset}
           strokeLinecap="round"
           filter={`url(#${glowId})`}
-          className={!isLocked && !softGlow ? styles.energyArcGlow : ""}
+          className={!isLocked && !soft ? styles.energyArcGlow : ""}
           style={{
             transition: "stroke-dashoffset 900ms cubic-bezier(0.4,0,0.2,1)",
-            opacity: isLocked ? 0.6 : softGlow ? 0.78 : 1,
+            opacity: isLocked ? 0.6 : soft ? 0.78 : 1,
           }}
         />
 
@@ -208,14 +214,14 @@ export function EnergyRing({
         <circle
           stroke={ringHalo}
           fill="transparent"
-          strokeWidth={softGlow ? 1.2 : 2}
-          r={softGlow ? radius + 2 : radius + 3}
+          strokeWidth={soft ? 1.2 : 2}
+          r={soft ? radius + 2 : radius + 3}
           cx={center}
           cy={center}
           strokeDasharray={circumference}
           strokeDashoffset={offset * 1.02}
           strokeLinecap="round"
-          className={softGlow ? "" : styles.energyArcOuter}
+          className={soft ? "" : styles.energyArcOuter}
         />
 
         {/* Micro tick marks – round cx/cy to avoid SSR/client float hydration mismatch */}
@@ -237,7 +243,7 @@ export function EnergyRing({
       </svg>
 
       {/* Floating dust particles */}
-      {!isLocked && !softGlow &&
+      {!isLocked && !soft &&
         dust.map((p, i) => (
           <span
             key={`dust-${i}`}
@@ -272,10 +278,12 @@ export function EnergyRing({
         ))}
 
       {/* Inner core vignette + value */}
-      <div className={styles.energyRingCenter}>
-        {label ? <div className={styles.energyRingLabel}>{label}</div> : null}
+      <div className={`${styles.energyRingCenter}${profileOrbit ? ` ${styles.energyRingCenterProfile}` : ""}`}>
+        {label ? (
+          <div className={`${styles.energyRingLabel}${profileOrbit ? ` ${styles.energyRingLabelProfile}` : ""}`}>{label}</div>
+        ) : null}
         <div
-          className={styles.energyRingValue}
+          className={`${styles.energyRingValue}${profileOrbit ? ` ${styles.energyRingValueProfile}` : ""}`}
           style={{ fontSize: `${valueFontSize}px`, marginTop: label ? 4 : 0, lineHeight: 1 }}
         >
           {value}

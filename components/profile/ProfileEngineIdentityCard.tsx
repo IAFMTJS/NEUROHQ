@@ -3,7 +3,9 @@
 import Link from "next/link";
 import { useEffect, useState, useTransition } from "react";
 import type { BehaviorProfile } from "@/types/behavior-profile.types";
-import { WEEK_THEME_LABELS_NL } from "@/lib/behavior-ui-nl";
+import { WEEK_THEME_LABELS_NL, IDENTITY_TARGET_LABELS_NL } from "@/lib/behavior-ui-nl";
+import { Modal } from "@/components/Modal";
+import { ProfileEngineCategoryTile } from "@/components/profile/ProfileEngineCategoryTile";
 import type { EmotionKey, GreetingLocale, PushPersonalityMode, ThemeId } from "@/types/preferences.types";
 import { UserCallsignCard } from "@/components/settings/UserCallsignCard";
 import { profileEngineHref } from "@/lib/profile-routes";
@@ -141,6 +143,7 @@ export function ProfileEngineIdentityCard({
   const [prefsPending, startPrefsTransition] = useTransition();
   const [emotionUi, setEmotionUi] = useState<EmotionKey | null>(selectedEmotion);
   const [pushUi, setPushUi] = useState<NonNullable<PushPersonalityMode>>(pushPersonalityMode ?? "auto");
+  const [open, setOpen] = useState<null | "checklist" | "stem" | "anchors" | "hq">(null);
 
   useEffect(() => {
     setEmotionUi(selectedEmotion);
@@ -163,6 +166,27 @@ export function ProfileEngineIdentityCard({
   const pct = Math.round((doneCount / checks.length) * 100);
 
   const firstTargets = behaviorProfile.identityTargets.slice(0, 3);
+
+  const stemTrait = `Commander v2 · ${emotionUi ? EMOTION_LABEL_NL[emotionUi] : "Geen emotie"} · push: ${PUSH_PILL_LABEL_NL[pushUi]}`;
+  const anchorTrait = (() => {
+    const wt = behaviorProfile.weekTheme ? WEEK_THEME_LABELS_NL[behaviorProfile.weekTheme] : null;
+    const n = behaviorProfile.identityTargets.length;
+    const sample = behaviorProfile.identityTargets
+      .slice(0, 2)
+      .map((id) => IDENTITY_TARGET_LABELS_NL[id] ?? id)
+      .join(", ");
+    if (wt && n) return `${wt} · ${n} doel(en)${sample ? `: ${sample}` : ""}`;
+    if (wt) return `${wt} · nog geen identiteitsdoelen`;
+    if (n) return `${n} doel(en)${sample ? ` · ${sample}` : ""} · geen weekthema`;
+    return "Nog leeg — stel weekthema/doelen in onder Gedrag";
+  })();
+  const hqTrait = (() => {
+    const cs = (displayCallsign ?? "").trim();
+    const hl = (hqHeadline ?? "").trim();
+    if (!cs && !hl) return "Roepnaam en kopregel nog leeg";
+    if (cs && hl) return `${cs} — ${hl.length > 42 ? `${hl.slice(0, 42)}…` : hl}`;
+    return cs || hl;
+  })();
 
   function persistEmotion(next: EmotionKey | null) {
     startPrefsTransition(async () => {
@@ -211,11 +235,11 @@ export function ProfileEngineIdentityCard({
             Identiteit &amp; HQ‑persoon
           </h2>
           <p className="mt-2 max-w-2xl text-sm leading-relaxed text-[var(--text-secondary)]">
-            Dit voedt begroeting, copy en ritme op het dashboard. Pas hieronder emotie en push-stem aan; koppel gedrag via{" "}
+            Open een categorie om te bewerken. Gedragsankers vul je onder{" "}
             <Link href={profileEngineHref("behavior")} className="font-semibold text-[var(--accent-focus)] hover:underline">
               Gedrag
             </Link>
-            . Overige voorkeuren:{" "}
+            ; overige site-voorkeuren onder{" "}
             <Link href="/settings" className="font-semibold text-[var(--accent-focus)] hover:underline">
               Instellingen
             </Link>
@@ -226,38 +250,85 @@ export function ProfileEngineIdentityCard({
           </p>
         </header>
 
-        <div className="rounded-xl border border-[rgba(var(--mode-rgb),0.22)] bg-[rgba(var(--mode-rgb-deep),0.1)] px-4 py-3">
-          <div className="flex flex-wrap items-end justify-between gap-3">
+        <div className="rounded-xl border border-[rgba(var(--mode-rgb),0.18)] bg-[rgba(var(--mode-rgb-deep),0.1)] px-4 py-3">
+          <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
               <p className="text-[10px] font-bold uppercase tracking-wider text-[var(--text-muted)]">Profiel‑volwassenheid</p>
               <p className="mt-1 text-sm font-semibold text-[var(--text-primary)]">
-                {doneCount}/{checks.length} stappen · sterker anker voor de engine
+                {doneCount}/{checks.length} stappen · {pct}%
               </p>
             </div>
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-[var(--semantic-accent)]/35 bg-[var(--bg-primary)]/50 text-sm font-bold tabular-nums text-[var(--semantic-accent)]">
-              {pct}%
+            <div className="flex items-center gap-2">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-[var(--semantic-accent)]/35 bg-[var(--bg-primary)]/50 text-sm font-bold tabular-nums text-[var(--semantic-accent)]">
+                {pct}%
+              </div>
+              <button
+                type="button"
+                onClick={() => setOpen("checklist")}
+                className="rounded-lg border border-[rgba(var(--mode-rgb),0.22)] bg-[var(--bg-primary)]/40 px-3 py-2 text-[11px] font-semibold text-[var(--semantic-accent)] transition hover:bg-[rgba(var(--mode-rgb-deep),0.15)] outline-none focus-visible:ring-2 focus-visible:ring-[rgba(var(--mode-rgb),0.45)] focus-visible:ring-offset-0"
+              >
+                Stappen
+              </button>
             </div>
           </div>
-          <ul className="mt-3 grid gap-2 sm:grid-cols-2" aria-label="Checklist identiteit">
-            {checks.map((c) => (
-              <li
-                key={c.id}
-                className={`flex items-start gap-2 rounded-lg border px-2.5 py-2 text-xs ${
-                  c.done
-                    ? "border-emerald-500/30 bg-emerald-500/[0.07] text-[var(--text-primary)]"
-                    : "border-[var(--card-border)]/60 bg-[var(--bg-primary)]/30 text-[var(--text-secondary)]"
-                }`}
-              >
-                <span className="mt-0.5 shrink-0" aria-hidden>
-                  {c.done ? "✓" : "○"}
-                </span>
-                <span>{c.hint}</span>
-              </li>
-            ))}
-          </ul>
         </div>
 
-        <div className="grid gap-4 lg:grid-cols-3">
+        <div className="grid gap-2">
+          <ProfileEngineCategoryTile
+            icon="🎛️"
+            title="Stem, emotie & push"
+            trait={stemTrait}
+            onOpen={() => setOpen("stem")}
+          />
+          <ProfileEngineCategoryTile
+            icon="⚓"
+            title="Gedragsankers (samenvatting)"
+            trait={anchorTrait}
+            onOpen={() => setOpen("anchors")}
+          />
+          <ProfileEngineCategoryTile
+            icon="💬"
+            title="HQ begroeting"
+            trait={hqTrait}
+            onOpen={() => setOpen("hq")}
+          />
+        </div>
+      </div>
+
+      <Modal
+        open={open === "checklist"}
+        onClose={() => setOpen(null)}
+        title="Profiel‑checklist"
+        subtitle="Aanbevolen stappen voor een sterker HQ‑anker."
+        size="lg"
+      >
+        <ul className="grid gap-2 sm:grid-cols-2" aria-label="Checklist identiteit">
+          {checks.map((c) => (
+            <li
+              key={c.id}
+              className={`flex items-start gap-2 rounded-lg border px-2.5 py-2 text-xs ${
+                c.done
+                  ? "border-emerald-500/30 bg-emerald-500/[0.07] text-[var(--text-primary)]"
+                  : "border-[var(--card-border)]/60 bg-[var(--bg-primary)]/30 text-[var(--text-secondary)]"
+              }`}
+            >
+              <span className="mt-0.5 shrink-0" aria-hidden>
+                {c.done ? "✓" : "○"}
+              </span>
+              <span>{c.hint}</span>
+            </li>
+          ))}
+        </ul>
+      </Modal>
+
+      <Modal
+        open={open === "stem"}
+        onClose={() => setOpen(null)}
+        title="Stem, emotie & push"
+        subtitle="Commander v2-interface; emotie stuurt accenten. Push-stem geldt voor alle pushberichten."
+        size="xl"
+      >
+        <div className="space-y-6">
           <div className="rounded-xl border border-[var(--card-border)]/70 bg-[var(--bg-primary)]/35 p-4">
             <p className="text-[10px] font-bold uppercase tracking-wider text-[var(--text-muted)]">Visuele stem</p>
             <div className="mt-2 flex flex-wrap items-center gap-2">
@@ -335,54 +406,55 @@ export function ProfileEngineIdentityCard({
             <p className="mt-1 text-[11px] font-semibold text-[var(--text-primary)]">{PUSH_PERSONALITY_NL[pushUi]}</p>
             <Link
               href="/settings#tijd-notificaties"
-              className="mt-2 inline-flex text-[11px] font-semibold text-[var(--accent-focus)] hover:underline"
+              className="mt-2 inline-flex text-[11px] font-semibold text-[var(--accent-focus)] underline-offset-2 hover:underline"
             >
               Tijden, stilte &amp; push koppelen →
             </Link>
           </div>
-
-          <div className="rounded-xl border border-[var(--card-border)]/70 bg-[var(--bg-primary)]/35 p-4 lg:col-span-1">
-            <p className="text-[10px] font-bold uppercase tracking-wider text-[var(--text-muted)]">Gedragsankers</p>
-            <p className="mt-2 text-sm font-semibold text-[var(--text-primary)]">
-              {behaviorProfile.weekTheme ? WEEK_THEME_LABELS_NL[behaviorProfile.weekTheme] : "Geen weekthema gekozen"}
-            </p>
-            <p className="mt-1 text-xs text-[var(--text-muted)]">{DISCIPLINE_NL[behaviorProfile.disciplineLevel]}</p>
-            {firstTargets.length > 0 ? (
-              <ul className="mt-2 list-inside list-disc space-y-0.5 text-xs text-[var(--text-secondary)]">
-                {firstTargets.map((t) => (
-                  <li key={t}>{t}</li>
-                ))}
-              </ul>
-            ) : (
-              <p className="mt-2 text-xs text-[var(--text-muted)]">Nog geen identiteitsdoelen — voeg streepjes toe in Gedrag.</p>
-            )}
-            <p className="mt-2 text-[11px] leading-snug text-[var(--text-muted)]">
-              Neuro-profieltags in Gedrag beïnvloeden o.a. budget- en strategie-copy — vul ze in voor strakkere hints.
-            </p>
-            <Link
-              href={profileEngineHref("behavior")}
-              className="mt-2 inline-flex text-xs font-semibold text-[var(--accent-focus)] hover:underline"
-            >
-              Tab Gedrag openen →
-            </Link>
-          </div>
         </div>
+      </Modal>
 
-        <div className="rounded-xl border border-[var(--card-border)]/80 bg-[var(--bg-elevated)]/15 p-4">
-          <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-[var(--semantic-accent)]">HQ begroeting</p>
-          <p className="mt-1 text-xs text-[var(--text-muted)]">
-            Kopregel, roepnaam en taal voor &quot;Goedemorgen, …&quot; — opgeslagen op je account.
+      <Modal
+        open={open === "anchors"}
+        onClose={() => setOpen(null)}
+        title="Gedragsankers"
+        subtitle="Samenvatting van je gedragsprofiel. Bewerken doe je in de tab Gedrag."
+        size="lg"
+      >
+        <div className="space-y-3 text-sm text-[var(--text-secondary)]">
+          <p className="font-semibold text-[var(--text-primary)]">
+            {behaviorProfile.weekTheme ? WEEK_THEME_LABELS_NL[behaviorProfile.weekTheme] : "Geen weekthema gekozen"}
           </p>
-          <div className="mt-4">
-            <UserCallsignCard
-              embedded
-              initialDisplayCallsign={displayCallsign}
-              initialHqHeadline={hqHeadline}
-              initialGreetingLocale={greetingLocale ?? "en"}
-            />
-          </div>
+          <p className="text-xs text-[var(--text-muted)]">{DISCIPLINE_NL[behaviorProfile.disciplineLevel]}</p>
+          {firstTargets.length > 0 ? (
+            <ul className="list-inside list-disc space-y-0.5 text-xs">
+              {firstTargets.map((t) => (
+                <li key={t}>{IDENTITY_TARGET_LABELS_NL[t] ?? t}</li>
+              ))}
+            </ul>
+          ) : (
+            <p className="text-xs text-[var(--text-muted)]">Nog geen identiteitsdoelen — stel ze in onder Gedrag.</p>
+          )}
+          <p className="text-[11px] leading-snug text-[var(--text-muted)]">
+            Neuro-profieltags en vermijding vul je in Gedrag; die voeden o.a. budget- en strategie-copy.
+          </p>
+          <Link
+            href={profileEngineHref("behavior")}
+            className="inline-flex text-sm font-semibold text-[var(--accent-focus)] underline-offset-2 hover:underline"
+          >
+            Tab Gedrag openen →
+          </Link>
         </div>
-      </div>
+      </Modal>
+
+      <Modal open={open === "hq"} onClose={() => setOpen(null)} title="HQ begroeting" subtitle="Roepnaam, kopregel en taal." size="lg">
+        <UserCallsignCard
+          embedded
+          initialDisplayCallsign={displayCallsign}
+          initialHqHeadline={hqHeadline}
+          initialGreetingLocale={greetingLocale ?? "en"}
+        />
+      </Modal>
     </section>
   );
 }

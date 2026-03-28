@@ -4,7 +4,7 @@ import { useEffect, useRef, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import Image from "next/image";
 
-export type ModalSize = "sm" | "md" | "lg";
+export type ModalSize = "sm" | "md" | "lg" | "xl";
 
 type Props = {
   open: boolean;
@@ -30,6 +30,7 @@ const sizeClasses: Record<ModalSize, string> = {
   sm: "max-w-[min(360px,94vw)]",
   md: "max-w-[min(440px,94vw)]",
   lg: "max-w-[min(560px,94vw)]",
+  xl: "max-w-[min(720px,96vw)]",
 };
 
 export function Modal({

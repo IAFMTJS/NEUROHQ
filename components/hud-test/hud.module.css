@@ -542,6 +542,51 @@
   animation: none;
 }
 
+/** Profiel-orbit: minder pulse, zachtere gloed, geen interactieve scale. */
+.energyRingProfileOrbit {
+  animation: none !important;
+  box-shadow: 0 0 22px rgba(var(--mode-rgb), 0.16), 0 10px 40px rgba(0, 0, 0, 0.38) !important;
+}
+.energyRingProfileOrbit:hover,
+.energyRingProfileOrbit:active {
+  transform: none !important;
+  box-shadow: 0 0 26px rgba(var(--mode-rgb), 0.2), 0 12px 44px rgba(0, 0, 0, 0.4) !important;
+}
+.energyRingProfileOrbit[data-mode="alert"] {
+  box-shadow: 0 0 24px rgba(255, 154, 60, 0.2), 0 10px 36px rgba(0, 0, 0, 0.38) !important;
+}
+.energyRingProfileOrbit[data-mode="green"] {
+  box-shadow: 0 0 22px rgba(0, 232, 118, 0.18), 0 10px 38px rgba(0, 0, 0, 0.38) !important;
+}
+.energyRingProfileOrbit[data-mode="green-peak"] {
+  box-shadow: 0 0 28px rgba(0, 255, 136, 0.22), 0 10px 40px rgba(0, 0, 0, 0.38) !important;
+}
+
+.energyRingCenterProfile {
+  inset: 17%;
+  background: radial-gradient(
+    circle at 50% 40%,
+    rgba(var(--mode-rgb), 0.1) 0%,
+    rgba(var(--mode-rgb-deep, 0, 136, 255), 0.2) 48%,
+    rgba(0, 0, 0, 0.9) 100%
+  );
+}
+.energyRingCenterProfile::before {
+  inset: 9%;
+  background: radial-gradient(circle at 50% 58%, rgba(0, 0, 0, 0.42), transparent 68%);
+}
+
+.energyRingLabelProfile {
+  font-size: 12px;
+  letter-spacing: 0.14em;
+  color: var(--text-muted);
+}
+
+.energyRingValueProfile {
+  color: var(--semantic-accent);
+  text-shadow: 0 0 20px rgba(var(--mode-rgb), 0.4), 0 0 40px rgba(var(--mode-rgb), 0.12);
+}
+
 .energyArcGlow {
   stroke-dasharray: 16 10;
   animation: ringShimmer 4s linear infinite;

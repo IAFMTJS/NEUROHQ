@@ -25,7 +25,10 @@ const ProfileEngineBehaviorTab = nextDynamic(
   () => import("@/components/profile/ProfileEngineBehaviorTab").then((m) => ({ default: m.ProfileEngineBehaviorTab })),
   { loading: () => null },
 );
-const SettingsSimplifiedContent = nextDynamic(() => import("@/components/settings/SettingsSimplifiedContent").then((m) => ({ default: m.SettingsSimplifiedContent })), { loading: () => null });
+const ProfileEngineModesTab = nextDynamic(
+  () => import("@/components/profile/ProfileEngineModesTab").then((m) => ({ default: m.ProfileEngineModesTab })),
+  { loading: () => null },
+);
 
 export const dynamic = "force-dynamic";
 
@@ -36,16 +39,18 @@ const ENGINE_NAV: { id: ProfileEngineTabId; label: string }[] = [
 ];
 
 function MainTabNav({ active }: { active: "home" | "engine" }) {
-  const c =
-    "rounded-lg border px-3 py-2 text-center text-[11px] font-semibold uppercase tracking-wide transition min-h-[44px] flex flex-1 items-center justify-center sm:flex-none";
-  const on = "border-[var(--semantic-ring)]/60 bg-[var(--semantic-accent)]/20 text-[var(--semantic-accent)]";
-  const off = "border-[var(--card-border)]/60 bg-[var(--bg-surface)]/20 text-[var(--text-muted)] hover:border-[var(--semantic-ring)]/40 hover:text-[var(--text-primary)]";
+  const base =
+    "rounded-xl px-3 py-2.5 text-center text-[11px] font-semibold uppercase tracking-wide transition min-h-[44px] flex flex-1 items-center justify-center sm:flex-none outline-none focus-visible:ring-2 focus-visible:ring-[rgba(var(--mode-rgb),0.45)] focus-visible:ring-offset-0";
+  const on =
+    "border border-[rgba(var(--mode-rgb),0.28)] bg-[rgba(var(--mode-rgb-deep),0.22)] text-[var(--semantic-accent)] shadow-[inset_0_1px_0_rgba(var(--mode-rgb),0.12)]";
+  const off =
+    "border border-transparent bg-[var(--bg-surface)]/20 text-[var(--text-muted)] hover:bg-[var(--bg-hover)]/35 hover:text-[var(--text-primary)]";
   return (
     <nav className="flex flex-wrap gap-2" aria-label="Profiel navigatie">
-      <Link href={profileHomeHref()} aria-current={active === "home" ? "page" : undefined} className={`${c} ${active === "home" ? on : off}`}>
+      <Link href={profileHomeHref()} aria-current={active === "home" ? "page" : undefined} className={`${base} ${active === "home" ? on : off}`}>
         Profiel
       </Link>
-      <Link href={profileEngineHref("identity")} aria-current={active === "engine" ? "page" : undefined} className={`${c} ${active === "engine" ? on : off}`}>
+      <Link href={profileEngineHref("identity")} aria-current={active === "engine" ? "page" : undefined} className={`${base} ${active === "engine" ? on : off}`}>
         Engine
       </Link>
     </nav>
@@ -53,14 +58,15 @@ function MainTabNav({ active }: { active: "home" | "engine" }) {
 }
 
 function EngineTabNav({ active }: { active: ProfileEngineTabId }) {
-  const c =
-    "rounded-lg border px-2.5 py-1.5 text-[10px] font-semibold uppercase tracking-wide transition whitespace-nowrap";
-  const on = "border-[var(--semantic-ring)]/60 bg-[var(--semantic-accent)]/15 text-[var(--semantic-accent)]";
-  const off = "border-transparent text-[var(--text-muted)] hover:bg-[var(--bg-hover)]/35 hover:text-[var(--text-primary)]";
+  const base =
+    "rounded-lg px-2.5 py-1.5 text-[10px] font-semibold uppercase tracking-wide transition whitespace-nowrap outline-none focus-visible:ring-2 focus-visible:ring-[rgba(var(--mode-rgb),0.45)] focus-visible:ring-offset-0";
+  const on =
+    "border border-[rgba(var(--mode-rgb),0.26)] bg-[rgba(var(--mode-rgb-deep),0.18)] text-[var(--semantic-accent)]";
+  const off = "border border-transparent text-[var(--text-muted)] hover:bg-[var(--bg-hover)]/35 hover:text-[var(--text-primary)]";
   return (
     <nav className="sticky top-[calc(env(safe-area-inset-top,0px)+4px)] z-20 -mx-1 flex gap-1 overflow-x-auto pb-1" aria-label="Engine">
       {ENGINE_NAV.map(({ id, label }) => (
-        <Link key={id} href={profileEngineHref(id)} aria-current={active === id ? "page" : undefined} className={`${c} ${active === id ? on : off}`}>
+        <Link key={id} href={profileEngineHref(id)} aria-current={active === id ? "page" : undefined} className={`${base} ${active === id ? on : off}`}>
           {label}
         </Link>
       ))}
@@ -116,6 +122,7 @@ export default async function ProfilePage({ searchParams }: { searchParams: Prom
         <div className={SIMPLIFIED_VIEWPORT_WRAPPER}>
           <SimplifiedPageShell
             title="Profiel"
+            hideTitleBar
             footerLinks={[
               { href: profileEngineHref("identity"), label: "Engine" },
               { href: "/settings", label: "Instellingen" },
@@ -133,7 +140,7 @@ export default async function ProfilePage({ searchParams }: { searchParams: Prom
 
     return (
       <div className="container page page-wide space-y-5 pb-10">
-        <HQPageHeader title="Profiel" subtitle="Identiteit en status." backHref="/dashboard" />
+        <HQPageHeader title="Profiel" backHref="/dashboard" compact />
         <MainTabNav active="home" />
         <section className="mascot-hero mascot-hero-top mascot-hero-sharp" data-mascot-page="profile" aria-hidden>
           <div className="mascot-hero-inner mx-auto">
@@ -159,11 +166,17 @@ export default async function ProfilePage({ searchParams }: { searchParams: Prom
       <MainTabNav active="engine" />
       <p className="text-xs text-[var(--text-muted)]">
         Thema, push, budget en meer:{" "}
-        <a href="/settings" className="font-medium text-[var(--accent-focus)] hover:underline">
+        <a
+          href="/settings"
+          className="font-medium text-[var(--accent-focus)] underline-offset-2 hover:underline rounded-sm outline-none focus-visible:ring-2 focus-visible:ring-[rgba(var(--mode-rgb),0.45)] focus-visible:ring-offset-0"
+        >
           Instellingen
         </a>
         . Insights:{" "}
-        <a href={reportInsightsHref("overview")} className="font-medium text-[var(--accent-focus)] hover:underline">
+        <a
+          href={reportInsightsHref("overview")}
+          className="font-medium text-[var(--accent-focus)] underline-offset-2 hover:underline rounded-sm outline-none focus-visible:ring-2 focus-visible:ring-[rgba(var(--mode-rgb),0.45)] focus-visible:ring-offset-0"
+        >
           Rapport
         </a>
         .
@@ -200,19 +213,7 @@ export default async function ProfilePage({ searchParams }: { searchParams: Prom
       )}
 
       {engineTab === "modes" && (
-        <div className="space-y-4">
-          <div className="rounded-xl border border-[var(--card-border)]/70 bg-[var(--bg-surface)]/15 px-3 py-2.5 text-xs text-[var(--text-secondary)]">
-            <p className="font-medium text-[var(--text-primary)]">Gebruikersmodus</p>
-            <p className="mt-1">
-              Dit stuurt hoeveel uitleg en shortcut-toasts je ziet. Voor thema&apos;s, push en apparaat zie{" "}
-              <a href="/settings" className="text-[var(--accent-focus)] hover:underline">
-                Instellingen
-              </a>
-              .
-            </p>
-          </div>
-          <SettingsSimplifiedContent initialSimplifiedContent={prefs.simplified_content} />
-        </div>
+        <ProfileEngineModesTab initialSimplifiedContent={prefs.simplified_content} />
       )}
     </>
   );
@@ -222,6 +223,7 @@ export default async function ProfilePage({ searchParams }: { searchParams: Prom
       <div className={SIMPLIFIED_VIEWPORT_WRAPPER}>
         <SimplifiedPageShell
           title="Engine"
+          hideTitleBar
           footerLinks={[
             { href: profileHomeHref(), label: "Profiel" },
             { href: "/settings", label: "Instellingen" },
@@ -239,11 +241,7 @@ export default async function ProfilePage({ searchParams }: { searchParams: Prom
 
   return (
     <div className="container page page-wide space-y-5 pb-10">
-      <HQPageHeader
-        title="Engine"
-        subtitle="Persona en planning die de missie-engine voeden. Site-instellingen staan onder Instellingen."
-        backHref="/dashboard"
-      />
+      <HQPageHeader title="Engine" backHref="/dashboard" compact />
       {engineNavAndHint}
       <section className="mascot-hero mascot-hero-top mascot-hero-sharp" data-mascot-page="profile" aria-hidden>
         <div className="mascot-hero-inner mx-auto">

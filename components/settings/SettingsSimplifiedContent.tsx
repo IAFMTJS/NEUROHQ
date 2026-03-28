@@ -4,10 +4,14 @@ import { useState, useTransition } from "react";
 import { updateUserPreferences } from "@/app/actions/preferences";
 import { useSettings } from "@/lib/settings-context";
 
-type Props = { initialSimplifiedContent: boolean };
+type Props = {
+  initialSimplifiedContent: boolean;
+  /** Geen dubbele kaart-rand (bijv. in Engine-modi modal). */
+  embedded?: boolean;
+};
 
 /** Minder secundaire tekst en geen growth shortcut-toast; zelfde thema’s en componenten. */
-export function SettingsSimplifiedContent({ initialSimplifiedContent }: Props) {
+export function SettingsSimplifiedContent({ initialSimplifiedContent, embedded = false }: Props) {
   const [on, setOn] = useState(initialSimplifiedContent);
   const [pending, startTransition] = useTransition();
   const { invalidate } = useSettings();
@@ -21,15 +25,23 @@ export function SettingsSimplifiedContent({ initialSimplifiedContent }: Props) {
     });
   };
 
-  return (
-    <div className="card-simple overflow-hidden p-0">
-      <div className="border-b border-[var(--card-border)] px-4 py-3">
-        <h2 className="text-base font-semibold text-[var(--text-primary)]">Eenvoudige modus</h2>
-        <p className="mt-0.5 text-xs text-[var(--text-muted)]">
-          Kortere tekst op kaarten en minder snackbars voor snelkoppelingen (navigatie blijft in de balk). Geen andere stijl.
+  const body = (
+    <>
+      {embedded ? (
+        <p className="text-xs text-[var(--text-muted)]">
+          Kortere tekst op kaarten en minder snackbars voor snelkoppelingen (navigatie blijft in de balk). Geen andere
+          stijl.
         </p>
-      </div>
-      <div className="flex items-center justify-between p-4">
+      ) : (
+        <div className="border-b border-[var(--card-border)] px-4 py-3">
+          <h2 className="text-base font-semibold text-[var(--text-primary)]">Eenvoudige modus</h2>
+          <p className="mt-0.5 text-xs text-[var(--text-muted)]">
+            Kortere tekst op kaarten en minder snackbars voor snelkoppelingen (navigatie blijft in de balk). Geen andere
+            stijl.
+          </p>
+        </div>
+      )}
+      <div className={`flex items-center justify-between ${embedded ? "pt-2" : "p-4"}`}>
         <span className="text-sm text-[var(--text-secondary)]">{on ? "Aan" : "Uit"}</span>
         <button
           type="button"
@@ -47,6 +59,12 @@ export function SettingsSimplifiedContent({ initialSimplifiedContent }: Props) {
           />
         </button>
       </div>
-    </div>
+    </>
   );
+
+  if (embedded) {
+    return <div className="space-y-1">{body}</div>;
+  }
+
+  return <div className="card-simple overflow-hidden p-0">{body}</div>;
 }

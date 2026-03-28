@@ -30,7 +30,7 @@ function ringModeFromProfile(
 }
 
 const tileShell =
-  "rounded-xl border border-[rgba(var(--mode-rgb),0.1)] bg-[rgba(var(--mode-rgb-deep),0.08)] px-3 py-2.5 transition-colors";
+  "rounded-xl border border-[rgba(var(--mode-rgb),0.07)] bg-[rgba(var(--mode-rgb-deep),0.08)] px-3 py-2.5 transition-colors";
 
 function OrbitTile({
   title,
@@ -45,7 +45,7 @@ function OrbitTile({
 }) {
   const body = (
     <div
-      className={`${tileShell} hover:border-[rgba(var(--mode-rgb),0.22)] hover:bg-[rgba(var(--mode-rgb-deep),0.12)] ${href ? "cursor-pointer" : ""} ${className}`}
+      className={`${tileShell} hover:border-[rgba(var(--mode-rgb),0.16)] hover:bg-[rgba(var(--mode-rgb-deep),0.12)] ${href ? "cursor-pointer" : ""} ${className}`}
     >
       <p className="text-[9px] font-bold uppercase tracking-[0.14em] text-[var(--text-muted)]">{title}</p>
       <div className="mt-1.5 text-sm font-semibold leading-snug text-[var(--text-primary)]">{children}</div>
@@ -53,7 +53,10 @@ function OrbitTile({
   );
   if (href) {
     return (
-      <Link href={href} className="block min-w-0 rounded-xl focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-focus)]/70">
+      <Link
+        href={href}
+        className="block min-w-0 rounded-xl outline-none focus-visible:ring-2 focus-visible:ring-[rgba(var(--mode-rgb),0.45)] focus-visible:ring-offset-0"
+      >
         {body}
       </Link>
     );
@@ -80,7 +83,7 @@ export function ProfileHomeCompact({ identity, insightState }: Props) {
 
   return (
     <section
-      className="relative overflow-hidden rounded-[var(--hq-card-radius,18px)] border border-[rgba(var(--mode-rgb),0.12)] bg-gradient-to-b from-[rgba(var(--mode-rgb-deep),0.22)] via-[var(--bg-elevated)]/12 to-[var(--bg-primary)]/28 px-4 py-5 shadow-[0_12px_48px_rgba(0,0,0,0.4),0_0_32px_rgba(var(--mode-rgb),0.06)] backdrop-blur-xl sm:px-6"
+      className="relative overflow-hidden rounded-[var(--hq-card-radius,18px)] border border-[rgba(var(--mode-rgb),0.09)] bg-gradient-to-b from-[rgba(var(--mode-rgb-deep),0.22)] via-[var(--bg-elevated)]/12 to-[var(--bg-primary)]/28 px-4 py-5 shadow-[0_12px_48px_rgba(0,0,0,0.4),0_0_28px_rgba(var(--mode-rgb),0.05)] backdrop-blur-xl sm:px-6"
       data-tutorial="profile-home-orbit"
     >
       <div
@@ -110,6 +113,7 @@ export function ProfileHomeCompact({ identity, insightState }: Props) {
             />
             <div className="relative drop-shadow-[0_16px_44px_rgba(0,0,0,0.5)]">
               <EnergyRing
+                profileOrbit
                 size={ringSize}
                 progress={barPct}
                 label={`Level ${identity.level}`}
@@ -125,7 +129,10 @@ export function ProfileHomeCompact({ identity, insightState }: Props) {
             naar {nextTarget} · {identity.total_xp.toLocaleString()} totaal
           </p>
           <p className="mt-1.5 text-center">
-            <Link href="/xp" className="text-[11px] font-semibold text-[var(--accent-focus)] hover:underline">
+            <Link
+              href="/xp"
+              className="text-[11px] font-semibold text-[var(--accent-focus)] underline-offset-2 hover:underline rounded-sm outline-none focus-visible:ring-2 focus-visible:ring-[rgba(var(--mode-rgb),0.45)] focus-visible:ring-offset-0"
+            >
               XP-bridge
             </Link>
           </p>
@@ -161,13 +168,19 @@ export function ProfileHomeCompact({ identity, insightState }: Props) {
         <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-[var(--semantic-accent)]/90">Insight</p>
         <p className="mt-2 line-clamp-4 text-sm leading-relaxed text-[var(--text-primary)]">{insightOneLiner}</p>
         <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] font-semibold">
-          <Link href={reportInsightsHref("overview")} className="text-[var(--accent-focus)] hover:underline">
+          <Link
+            href={reportInsightsHref("overview")}
+            className="rounded-sm text-[var(--accent-focus)] underline-offset-2 hover:underline outline-none focus-visible:ring-2 focus-visible:ring-[rgba(var(--mode-rgb),0.45)] focus-visible:ring-offset-0"
+          >
             Volledige insights
           </Link>
           <span className="text-[var(--text-muted)]" aria-hidden>
             ·
           </span>
-          <Link href="/xp" className="text-[var(--text-muted)] hover:text-[var(--accent-focus)] hover:underline">
+          <Link
+            href="/xp"
+            className="rounded-sm text-[var(--text-muted)] underline-offset-2 hover:text-[var(--accent-focus)] hover:underline outline-none focus-visible:ring-2 focus-visible:ring-[rgba(var(--mode-rgb),0.45)] focus-visible:ring-offset-0"
+          >
             Voorspelling
           </Link>
         </div>
