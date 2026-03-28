@@ -655,6 +655,88 @@
   text-shadow: 0 0 14px rgba(248, 113, 113, 0.38), 0 1px 2px rgba(0, 0, 0, 0.65);
 }
 
+/* Budget command hub: binnencircle volgt ringstatus (groen → amber → rood). */
+.energyRingWrapper[data-mode="alert"] .energyRingCenterProfile.energyRingCenterBudget {
+  background: radial-gradient(
+    circle at 50% 38%,
+    rgba(255, 180, 100, 0.28) 0%,
+    rgba(200, 90, 30, 0.22) 42%,
+    rgba(0, 0, 0, 0.9) 100%
+  );
+}
+.energyRingWrapper[data-mode="alert"] .energyRingCenterProfile.energyRingCenterBudget::before {
+  background: radial-gradient(circle at 50% 58%, rgba(60, 25, 0, 0.5), transparent 68%);
+}
+
+.energyRingWrapper[data-mode="high-alert"] .energyRingCenterProfile.energyRingCenterBudget {
+  background: radial-gradient(
+    circle at 50% 38%,
+    rgba(252, 165, 165, 0.32) 0%,
+    rgba(153, 27, 27, 0.38) 45%,
+    rgba(0, 0, 0, 0.94) 100%
+  );
+}
+.energyRingWrapper[data-mode="high-alert"] .energyRingCenterProfile.energyRingCenterBudget::before {
+  background: radial-gradient(circle at 50% 58%, rgba(40, 0, 0, 0.55), transparent 68%);
+}
+
+.energyRingWrapper[data-mode="green"] .energyRingCenterProfile.energyRingCenterBudget {
+  background: radial-gradient(
+    circle at 50% 38%,
+    rgba(110, 255, 180, 0.22) 0%,
+    rgba(0, 140, 72, 0.2) 46%,
+    rgba(0, 0, 0, 0.9) 100%
+  );
+}
+.energyRingWrapper[data-mode="green"] .energyRingCenterProfile.energyRingCenterBudget::before {
+  background: radial-gradient(circle at 50% 58%, rgba(0, 40, 20, 0.42), transparent 68%);
+}
+
+.energyRingWrapper[data-mode="green-peak"] .energyRingCenterProfile.energyRingCenterBudget {
+  background: radial-gradient(
+    circle at 50% 36%,
+    rgba(140, 255, 200, 0.34) 0%,
+    rgba(0, 180, 96, 0.26) 44%,
+    rgba(0, 0, 0, 0.88) 100%
+  );
+}
+.energyRingWrapper[data-mode="green-peak"] .energyRingCenterProfile.energyRingCenterBudget::before {
+  background: radial-gradient(circle at 50% 58%, rgba(0, 55, 28, 0.38), transparent 68%);
+}
+
+.energyRingWrapper[data-mode="locked"] .energyRingCenterProfile.energyRingCenterBudget {
+  background: radial-gradient(
+    circle at 50% 42%,
+    rgba(148, 163, 184, 0.14) 0%,
+    rgba(51, 65, 85, 0.28) 48%,
+    rgba(0, 0, 0, 0.92) 100%
+  );
+}
+.energyRingWrapper[data-mode="locked"] .energyRingCenterProfile.energyRingCenterBudget::before {
+  background: radial-gradient(circle at 50% 58%, rgba(0, 0, 0, 0.5), transparent 70%);
+}
+
+.energyRingWrapper[data-mode="alert"] .energyRingLabelProfile.energyRingLabelBudget {
+  color: rgba(255, 200, 150, 0.85);
+}
+.energyRingWrapper[data-mode="green"] .energyRingLabelProfile.energyRingLabelBudget,
+.energyRingWrapper[data-mode="green-peak"] .energyRingLabelProfile.energyRingLabelBudget {
+  color: rgba(180, 255, 210, 0.88);
+}
+.energyRingWrapper[data-mode="green"] .energyRingValueProfile.energyRingValueBudget,
+.energyRingWrapper[data-mode="green-peak"] .energyRingValueProfile.energyRingValueBudget {
+  color: #bbf7d0;
+  text-shadow: 0 0 14px rgba(0, 232, 118, 0.35), 0 1px 2px rgba(0, 0, 0, 0.55);
+}
+.energyRingWrapper[data-mode="green-peak"] .energyRingValueProfile.energyRingValueBudget {
+  color: #d1fae5;
+  text-shadow: 0 0 16px rgba(0, 255, 136, 0.42), 0 1px 2px rgba(0, 0, 0, 0.5);
+}
+.energyRingWrapper[data-mode="alert"] .energyRingValueProfile.energyRingValueBudget {
+  color: #fed7aa;
+  text-shadow: 0 0 14px rgba(255, 154, 60, 0.38), 0 1px 2px rgba(0, 0, 0, 0.6);
+}
+
 .energyArcGlow {
   stroke-dasharray: 16 10;
   animation: ringShimmer 4s linear infinite;

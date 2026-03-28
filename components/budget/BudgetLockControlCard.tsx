@@ -12,9 +12,20 @@ type Props = {
   lockUntil: string | null;
   lockUntilAt: string | null;
   currency: string;
+  /** Open the emergency modal on mount (e.g. deep link via BudgetLockHub). */
+  initialEmergencyOpen?: boolean;
+  /** Omit outer card chrome when embedded in a toast shell. */
+  embedded?: boolean;
 };
 
-export function BudgetLockControlCard({ lockActive, lockUntil, lockUntilAt, currency }: Props) {
+export function BudgetLockControlCard({
+  lockActive,
+  lockUntil,
+  lockUntilAt,
+  currency,
+  initialEmergencyOpen = false,
+  embedded = false,
+}: Props) {
   const [pending, startTransition] = useTransition();
   const [days, setDays] = useState(2);
   const [endTime, setEndTime] = useState("23:59");
@@ -25,24 +36,18 @@ export function BudgetLockControlCard({ lockActive, lockUntil, lockUntilAt, curr
   const [message, setMessage] = useState<string | null>(null);
 
   useEffect(() => {
-    const openIfHash = () => {
-      if (typeof window === "undefined") return;
-      if (window.location.hash === "#budget-lock-emergency") {
-        setEmergencyOpen(true);
-        window.history.replaceState(null, "", `${window.location.pathname}${window.location.search}#budget-lock-control`);
-      }
-    };
-    openIfHash();
-    window.addEventListener("hashchange", openIfHash);
-    return () => window.removeEventListener("hashchange", openIfHash);
-  }, []);
+    if (initialEmergencyOpen) setEmergencyOpen(true);
+  }, [initialEmergencyOpen]);
 
   const normalizedEmergencyAmount = emergencyAmount.replace(",", ".").trim();
   const parsedEmergencyAmount = Number(normalizedEmergencyAmount);
   const hasValidEmergencyAmount = Number.isFinite(parsedEmergencyAmount) && parsedEmergencyAmount > 0;
 
   return (
-    <section id="budget-lock-control" className="card-simple space-y-3">
+    <section
+      id="budget-lock-control"
+      className={embedded ? "space-y-3" : "card-simple space-y-3"}
+    >
       <h3 className="text-sm font-semibold text-[var(--text-primary)]">Budget lock / no-spend</h3>
       <p className="text-xs text-[var(--text-muted)]">
         Active lock:{" "}

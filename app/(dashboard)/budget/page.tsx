@@ -52,20 +52,14 @@ import { BudgetSnapshotProvider } from "@/components/budget/BudgetSnapshotProvid
 import { BudgetSnapshotFallback } from "@/components/budget/BudgetSnapshotFallback";
 import { PaydayPlannerCard } from "@/components/budget/PaydayPlannerCard";
 import { GroceryMissionPlannerCard } from "@/components/budget/GroceryMissionPlannerCard";
-import { BudgetLockControlCard } from "@/components/budget/BudgetLockControlCard";
-import { BudgetPaydaySurveyCard } from "@/components/budget/BudgetPaydaySurveyCard";
-import { BudgetOptimizationCard } from "@/components/budget/BudgetOptimizationCard";
+import { BudgetLockHub } from "@/components/budget/BudgetLockHub";
+import { BudgetOptimizationHub } from "@/components/budget/BudgetOptimizationHub";
 import { StrategyEnginePaceHint } from "@/components/strategy/StrategyEnginePaceHint";
 import hudStyles from "@/components/hud-test/hud.module.css";
 
 const BudgetHistorySelector = nextDynamic(() => import("@/components/BudgetHistorySelector").then((m) => ({ default: m.BudgetHistorySelector })), { loading: () => null });
 const ExportBudgetCsvButton = nextDynamic(() => import("@/components/ExportBudgetCsvButton").then((m) => ({ default: m.ExportBudgetCsvButton })), { loading: () => null });
 const BudgetPlanCard = nextDynamic(() => import("@/components/budget/BudgetPlanCard").then((m) => ({ default: m.BudgetPlanCard })), { loading: () => <div className="min-h-[120px] animate-pulse rounded-xl bg-white/5" aria-hidden /> });
-const BudgetWeeklyReviewCard = nextDynamic(
-  () => import("@/components/budget/BudgetWeeklyReviewCard").then((m) => ({ default: m.BudgetWeeklyReviewCard })),
-  { loading: () => null }
-);
-
 // Temporary gate for UX reset rollout; keep experimental cards disabled by default.
 const ENABLE_BUDGET_UX_EXPERIMENTS = false;
 const ENABLE_BUDGET_BEHAVIOR_REIMAGINING = false;
@@ -424,32 +418,25 @@ async function BudgetContent({ searchParams }: Props) {
   const goalsSection = null;
 
   const optimizationSection = (
-    <div className="space-y-4">
-      {!historyMode && <BudgetPaydaySurveyCard required={budgetControlState.needsPaydaySurvey} />}
-      {!historyMode && <BudgetWeeklyReviewCard completedThisWeek={weeklyReviewStatus.completed} />}
-      <BudgetOptimizationCard
-        lockPanelHref={lockPanelHref}
-        summary={optimization.summary}
-        suggestions={optimization.suggestions}
-        challenges={optimization.challenges}
-      />
-    </div>
+    <BudgetOptimizationHub
+      historyMode={historyMode}
+      needsPaydaySurvey={budgetControlState.needsPaydaySurvey}
+      weeklyReviewCompleted={weeklyReviewStatus.completed}
+      lockPanelHref={lockPanelHref}
+      summary={optimization.summary}
+      suggestions={optimization.suggestions}
+      challenges={optimization.challenges}
+    />
   );
 
   const lockSection = (
-    <div className="card-simple p-4 md:p-5">
-      <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-amber-200">No-spend lock</p>
-      <div className="mt-3">
-        {!historyMode && (
-          <BudgetLockControlCard
-            lockActive={budgetControlState.lockActive}
-            lockUntil={budgetControlState.lockUntil}
-            lockUntilAt={budgetControlState.lockUntilAt}
-            currency={currency}
-          />
-        )}
-      </div>
-    </div>
+    <BudgetLockHub
+      historyMode={historyMode}
+      lockActive={budgetControlState.lockActive}
+      lockUntil={budgetControlState.lockUntil}
+      lockUntilAt={budgetControlState.lockUntilAt}
+      currency={currency}
+    />
   );
 
   const budgetTabsShell = (
