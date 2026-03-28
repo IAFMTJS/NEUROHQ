@@ -140,6 +140,7 @@ export function EnergyRing({
     <div
       className={`${styles.energyRingWrapper}${profileOrbit ? ` ${styles.energyRingProfileOrbit}` : ""}`}
       data-mode={mode}
+      data-budget-hub={budgetHub ? "true" : undefined}
       style={
         soft
           ? {

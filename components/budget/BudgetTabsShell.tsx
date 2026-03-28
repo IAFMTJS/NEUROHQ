@@ -324,8 +324,8 @@ export function BudgetTabsShell({
               {renderTabButtonsPills()}
             </div>
             {headerRight ? (
-              <div className={`shrink-0 border-b ${simplifiedDivider} bg-[rgba(var(--mode-rgb),0.03)] px-2 py-1 sm:px-3`}>
-                <div className="flex flex-wrap items-center justify-center gap-1.5 sm:justify-between">
+              <div className={`shrink-0 border-b ${simplifiedDivider} bg-[rgba(var(--mode-rgb),0.03)] px-2 py-0.5 sm:px-3`}>
+                <div className="flex flex-wrap items-center justify-center gap-1 sm:justify-between">
                   {headerRight}
                 </div>
               </div>
