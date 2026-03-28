@@ -1825,30 +1825,21 @@ html[data-light-ui="true"] body {
   margin-bottom: -40px;
 }
 
-/* Commander pedestal: halve cirkel als één HUD-kom (info binnen de boog) */
-.commander-mascot-pedestal .commander-mascot-pedestal-arc-wrap {
-  border-radius: 0 0 1.35rem 1.35rem;
-  border: 1px solid rgba(var(--mode-rgb, 0, 212, 255), 0.14);
-  border-top-color: transparent;
-  background: linear-gradient(
-    185deg,
-    rgba(var(--mode-rgb, 0, 212, 255), 0.05) 0%,
-    rgba(0, 0, 0, 0.14) 42%,
-    rgba(0, 0, 0, 0.22) 100%
-  );
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.05),
-    inset 0 -18px 36px rgba(0, 0, 0, 0.2),
-    0 16px 42px rgba(0, 0, 0, 0.28);
+/* Donut-perspectief: schuin van boven, scharnier onderaan */
+.commander-mascot-pedestal-donut-tilt {
+  display: flex;
+  width: 100%;
+  justify-content: center;
+  perspective: 920px;
+  perspective-origin: 50% 92%;
 }
-.commander-mascot-pedestal .commander-mascot-pedestal-bowl-overlay {
-  background: radial-gradient(
-    ellipse 72% 58% at 50% 56%,
-    rgba(var(--mode-rgb, 0, 212, 255), 0.11) 0%,
-    rgba(15, 23, 42, 0.18) 45%,
-    transparent 72%
-  );
+.commander-mascot-pedestal .commander-mascot-pedestal-donut-ring {
+  transform: rotateX(46deg);
+  transform-origin: center bottom;
+  transform-style: preserve-3d;
 }
+
+/* Commander pedestal: HUD-kaarten in de band */
 .commander-mascot-pedestal .commander-pedestal-hud-card {
   border-color: rgba(var(--mode-rgb, 0, 212, 255), 0.22);
   background: linear-gradient(
@@ -1862,6 +1853,10 @@ html[data-light-ui="true"] body {
 }
 .commander-mascot-pedestal .commander-pedestal-stat-pill {
   text-shadow: 0 1px 3px rgba(0, 0, 0, 0.45);
+}
+.commander-mascot-pedestal .commander-pedestal-band-card {
+  font-size: 0.7rem;
+  line-height: 1.2;
 }
 
 /* Commander segment ring: vloeiende vulling + load-pulse bij stijging */
