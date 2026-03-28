@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition, useEffect, useMemo, useCallback, useRef } from "react";
+import { useState, useTransition, useEffect, useMemo, useCallback, useRef, type ReactNode } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { createTask, deleteTask, duplicateTask, restoreTask, snoozeTask, uncompleteTask, skipNextOccurrence, rescheduleTask } from "@/app/actions/tasks";
 import { trackEvent } from "@/app/actions/analytics-events";
@@ -79,6 +79,8 @@ type Props = {
   energyCap?: { used: number; cap: number; remaining: number; planned: number } | null;
   /** Optional one-liner under the hero (e.g. neuro hint from server). */
   neuroHint?: string | null;
+  /** Mode / consequence bars (e.g. druk, recovery) — shown under main task + energy when missionsHeroLayout. */
+  missionsContextBelowHero?: ReactNode;
 };
 
 function isRoutineTask(task: ExtendedTask): boolean {
@@ -153,6 +155,7 @@ export function TaskList({
   missionsHeroLayout = false,
   energyCap = null,
   neuroHint = null,
+  missionsContextBelowHero = null,
 }: Props) {
   const router = useRouter();
   const { gameState } = useDCICGameState();
@@ -1001,11 +1004,6 @@ export function TaskList({
         </div>
       )}
       <div className={missionsHeroLayout ? "space-y-4" : "p-4"}>
-        {missionsHeroLayout && energyCap && (
-          <div className="mb-4">
-            <EnergyCapBar used={energyCap.used} cap={energyCap.cap} remaining={energyCap.remaining} planned={energyCap.planned} />
-          </div>
-        )}
         {topRecommendedTask && !isWarMode && !missionsHeroLayout && (
           <section className="mb-3 rounded-xl border border-[var(--accent-focus)]/35 bg-[var(--accent-focus)]/10 p-3">
             <p className="text-[10px] font-semibold uppercase tracking-wider text-[var(--accent-focus)]">Suggested mission now</p>
@@ -1094,6 +1092,15 @@ export function TaskList({
           </div>
         )}
 
+        {missionsHeroLayout && effectiveViewMode !== "focus" && (
+          <div className="space-y-3">
+            {energyCap ? (
+              <EnergyCapBar used={energyCap.used} cap={energyCap.cap} remaining={energyCap.remaining} planned={energyCap.planned} />
+            ) : null}
+            {missionsContextBelowHero}
+          </div>
+        )}
+
         {effectiveViewMode === "plan" && filteredTasks.length > 0 && (
           <div className="mb-3 flex flex-wrap gap-2">
             {(["all", "active", "aanbevolen", "nieuw", "work", "personal", "recurring"] as const).map((f) => (
@@ -1173,6 +1180,13 @@ export function TaskList({
                   </p>
                 </div>
               )}
+
+              <div className="space-y-3">
+                {energyCap ? (
+                  <EnergyCapBar used={energyCap.used} cap={energyCap.cap} remaining={energyCap.remaining} planned={energyCap.planned} />
+                ) : null}
+                {missionsContextBelowHero}
+              </div>
 
               {restMissionTasks.length > 0 && (
                 <div>

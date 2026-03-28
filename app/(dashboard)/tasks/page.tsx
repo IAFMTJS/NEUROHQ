@@ -363,22 +363,14 @@ async function MissionsSectionAsync({
         >
           <CornerNode corner="top-left" />
           <CornerNode corner="top-right" />
-          <div className="flex shrink-0 items-start justify-between gap-3">
-            <h2 className="hq-h2 min-w-0 flex-1 text-[var(--text-primary)]">Vandaag</h2>
+          <div className="flex shrink-0 justify-end">
             <Link
               href="/dashboard"
-              className="shrink-0 pt-0.5 text-[11px] font-semibold uppercase tracking-wide text-[var(--accent-focus)] underline-offset-2 hover:underline"
+              className="text-[11px] font-semibold uppercase tracking-wide text-[var(--accent-focus)] underline-offset-2 hover:underline"
             >
               HQ
             </Link>
           </div>
-          <Divider1px className="my-1 shrink-0" />
-          <ConsequenceBanner
-            energyDepleted={(energyBudget as { consequence?: { energyDepleted?: boolean } }).consequence?.energyDepleted}
-            recoveryOnly={decisionBlocks.recoveryOnly}
-            recoveryProtocol={decisionBlocks.recoveryProtocol}
-            daysSinceLastCompletion={decisionBlocks.daysSinceLastCompletion}
-          />
           <div
             className="min-h-0 flex-1 overflow-y-auto overscroll-contain [-webkit-overflow-scrolling:touch] pb-1"
             data-tutorial="tasks-list"
@@ -433,6 +425,14 @@ async function MissionsSectionAsync({
                   ? [neuroLine, decisionBlocks.dataMaturityHintNl].filter(Boolean).join(" — ") || null
                   : null
               }
+              missionsContextBelowHero={
+                <ConsequenceBanner
+                  energyDepleted={(energyBudget as { consequence?: { energyDepleted?: boolean } }).consequence?.energyDepleted}
+                  recoveryOnly={decisionBlocks.recoveryOnly}
+                  recoveryProtocol={decisionBlocks.recoveryProtocol}
+                  daysSinceLastCompletion={decisionBlocks.daysSinceLastCompletion}
+                />
+              }
             />
           </div>
           <p className="shrink-0 pt-1 text-center text-[11px] text-[var(--text-muted)]">
@@ -455,13 +455,6 @@ async function MissionsSectionAsync({
       <CornerNode corner="top-left" />
       <CornerNode corner="top-right" />
       <GrowthMissionsRibbon snap={growthSnap} fromGrowthPage={growthFromGrowthPage} />
-      <ModeBanner mode={mode} />
-      <ConsequenceBanner
-        energyDepleted={(energyBudget as { consequence?: { energyDepleted?: boolean } }).consequence?.energyDepleted}
-        recoveryOnly={decisionBlocks.recoveryOnly}
-        recoveryProtocol={decisionBlocks.recoveryProtocol}
-        daysSinceLastCompletion={decisionBlocks.daysSinceLastCompletion}
-      />
       <details className="tasks-war-hide rounded-xl border border-[var(--card-border)] bg-[var(--bg-surface)]/35 p-3">
         <summary className="cursor-pointer text-xs font-semibold uppercase tracking-wider text-[var(--text-muted)]">Diagnostics</summary>
         <div className="mt-3 space-y-3">
@@ -534,6 +527,17 @@ async function MissionsSectionAsync({
           !allMissionsDoneToday
             ? [neuroLine, decisionBlocks.dataMaturityHintNl].filter(Boolean).join(" — ") || null
             : null
+        }
+        missionsContextBelowHero={
+          <>
+            <ModeBanner mode={mode} />
+            <ConsequenceBanner
+              energyDepleted={(energyBudget as { consequence?: { energyDepleted?: boolean } }).consequence?.energyDepleted}
+              recoveryOnly={decisionBlocks.recoveryOnly}
+              recoveryProtocol={decisionBlocks.recoveryProtocol}
+              daysSinceLastCompletion={decisionBlocks.daysSinceLastCompletion}
+            />
+          </>
         }
       />
       </div>
