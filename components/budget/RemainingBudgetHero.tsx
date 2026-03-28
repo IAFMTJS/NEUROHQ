@@ -261,25 +261,23 @@ export function RemainingBudgetHero({
         <div className="relative z-[1] mt-5 flex flex-col gap-6 lg:flex-row lg:items-stretch lg:justify-between lg:gap-8">
           <div className="flex flex-col items-center gap-5 lg:flex-row lg:items-center lg:gap-10">
             <div className="flex shrink-0 flex-col items-center">
-              <div className="w-full max-w-[min(100%,300px)] rounded-2xl border border-white/[0.08] border-t-[rgba(var(--mode-rgb),0.22)] bg-[rgba(var(--mode-rgb-deep),0.18)] p-5 shadow-[0_-2px_0_0_rgba(var(--mode-rgb),0.08)] backdrop-blur-xl sm:max-w-[min(100%,320px)] sm:p-6">
-                <div className="relative flex justify-center">
-                  <div
-                    className="pointer-events-none absolute left-1/2 top-1/2 h-[108%] w-[108%] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[radial-gradient(circle,rgba(var(--mode-rgb),0.1)_0%,transparent_65%)] blur-md"
-                    aria-hidden
+              <div className="relative">
+                <div
+                  className="absolute left-1/2 top-1/2 h-[118%] w-[118%] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[radial-gradient(circle,rgba(var(--mode-rgb),0.16)_0%,transparent_62%)] blur-md sm:h-[120%] sm:w-[120%]"
+                  aria-hidden
+                />
+                <div className="relative drop-shadow-[0_16px_44px_rgba(0,0,0,0.5)]">
+                  <EnergyRing
+                    softGlow
+                    profileOrbit
+                    budgetHub
+                    centerTag={hasSettings ? "Resterend" : undefined}
+                    size={236}
+                    progress={ringProgress}
+                    label={hasSettings ? `${remainingPctDisplay}%` : "Geen budget"}
+                    value={ringValue}
+                    mode={ringMode}
                   />
-                  <div className="relative">
-                    <EnergyRing
-                      softGlow
-                      profileOrbit
-                      budgetHub
-                      centerTag={hasSettings ? "Resterend" : undefined}
-                      size={220}
-                      progress={ringProgress}
-                      label={hasSettings ? `${remainingPctDisplay}%` : "Geen budget"}
-                      value={ringValue}
-                      mode={ringMode}
-                    />
-                  </div>
                 </div>
               </div>
               <p className="mt-3 max-w-[280px] text-center text-[11px] leading-relaxed text-[var(--text-muted)]">
