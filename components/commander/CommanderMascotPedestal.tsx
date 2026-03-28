@@ -1,7 +1,6 @@
 "use client";
 
 import type { ReactNode } from "react";
-import Link from "next/link";
 import { getCurrencySymbol } from "@/lib/utils/currency";
 import { xpProgressInLevel, xpRangeForNextLevel } from "@/lib/xp";
 
@@ -26,13 +25,11 @@ function budgetArcRatio(cents: number): number {
   return Math.min(1, cents / BUDGET_ARC_CAP_CENTS);
 }
 
-/** Wide viewBox: boog bijna rand-tot-rand (breder). */
 const VB_W = 1000;
 const VB_MIN_Y = -275;
 const VB_VIEW_H = 548;
 const CX = 500;
 const CY = 242;
-/** ~499px radius → eindpunten op x≈1 en x≈999 */
 const R = 499;
 const LX = CX - R;
 const RX = CX + R;
@@ -43,8 +40,9 @@ const STROKE_TRACK = 28;
 const STROKE_FILL = 24;
 const pathLen = 100;
 
-const labelBox =
-  "max-w-[min(46%,11.5rem)] rounded-lg border border-[var(--card-border)]/45 bg-[var(--bg-surface)]/82 px-2 py-1.5 shadow-sm backdrop-blur-md";
+/** Text stroke for contrast on busy background (viewBox units). */
+const TEXT_STROKE = "rgba(15, 23, 42, 0.5)";
+const TEXT_STROKE_W = 5;
 
 export function CommanderMascotPedestal({ stats, children }: Props) {
   const { totalXP, displayLevel, budgetRemainingCents, currency } = stats;
@@ -56,14 +54,16 @@ export function CommanderMascotPedestal({ stats, children }: Props) {
   const amount = Math.abs(budgetRemainingCents) / 100;
   const isNegative = budgetRemainingCents < 0;
 
+  const budgetLine1 = `${isNegative ? "−" : ""}${symbol}${amount.toFixed(0)}`;
+  const budgetLine2 = isNegative ? "over" : "rest";
+
   return (
     <div
       className="commander-mascot-pedestal commander-mascot-orbit relative w-full max-w-none overflow-visible"
       role="group"
-      aria-label={`Level ${displayLevel}, ${current} van ${needed} XP. Budget: ${isNegative ? "−" : ""}${symbol}${amount.toFixed(0)} ${isNegative ? "over" : "rest"}.`}
+      aria-label={`Level ${displayLevel}, ${current} van ${needed} XP. Budget: ${budgetLine1} ${budgetLine2}.`}
     >
       <div className="relative isolate w-full overflow-visible">
-        {/* Boog + labels op de boog (zelfde vlak, breder dan voorheen) */}
         <div
           className="commander-mascot-pedestal-arc-wrap pointer-events-none absolute left-1/2 z-0 w-[calc(100%+12px)] min-w-full max-w-none -translate-x-1/2"
           style={{
@@ -76,75 +76,111 @@ export function CommanderMascotPedestal({ stats, children }: Props) {
             className="commander-mascot-pedestal-arc absolute inset-0 h-full w-full"
             viewBox={`0 ${VB_MIN_Y} ${VB_W} ${VB_VIEW_H}`}
             preserveAspectRatio="none"
-            fill="none"
             aria-hidden
           >
-            <path
-              d={leftArcD}
-              stroke="rgba(var(--mode-rgb, 0, 212, 255), 0.14)"
-              strokeWidth={STROKE_TRACK}
-              strokeLinecap="round"
-            />
-            <path
-              d={rightArcD}
-              stroke="rgba(var(--mode-rgb, 0, 212, 255), 0.14)"
-              strokeWidth={STROKE_TRACK}
-              strokeLinecap="round"
-            />
-            <path
-              d={leftArcD}
-              stroke="rgba(var(--mode-rgb, 0, 212, 255), 0.92)"
-              strokeWidth={STROKE_FILL}
-              strokeLinecap="round"
-              pathLength={pathLen}
-              strokeDasharray={`${Math.max(0.25, xpPct * pathLen)} ${pathLen}`}
-            />
-            <path
-              d={rightArcD}
-              stroke={isNegative ? "rgba(248, 113, 113, 0.92)" : "rgba(167, 139, 250, 0.92)"}
-              strokeWidth={STROKE_FILL}
-              strokeLinecap="round"
-              pathLength={pathLen}
-              strokeDasharray={`${Math.max(0.25, budgetPct * pathLen)} ${pathLen}`}
-            />
-          </svg>
+            <defs>
+              <style>{`
+                .commander-orbit-arc-path { pointer-events: none; }
+                .commander-orbit-hit { pointer-events: auto; cursor: pointer; }
+                .commander-orbit-hit:focus { outline: none; }
+                .commander-orbit-hit:focus rect { stroke: rgba(var(--mode-rgb, 0, 212, 255), 0.6); stroke-width: 2; }
+              `}</style>
+            </defs>
 
-          <div className="commander-mascot-pedestal-labels pointer-events-none absolute inset-0 flex items-end justify-between gap-1 px-1 pb-[10%] pt-6 sm:gap-2 sm:px-2 sm:pb-[11%]">
-            <Link
-              href="/xp"
-              className={`${labelBox} pointer-events-auto text-left no-underline transition-opacity hover:opacity-95`}
-            >
-              <p className="text-[8px] font-semibold uppercase tracking-[0.1em] text-[var(--text-muted)]">Level & XP</p>
-              <span className="mt-0.5 block text-[var(--text-secondary)]">
-                <span className="block text-xs font-bold tabular-nums text-[var(--text-primary)] sm:text-sm">Lv {displayLevel}</span>
-                <span className="text-[10px] tabular-nums text-[var(--text-secondary)] sm:text-xs">
-                  {current}/{needed} XP
-                </span>
-              </span>
-              <p className="mt-1 text-[9px] leading-tight text-[var(--text-muted)] sm:text-[10px]">
-                Linkerhelft = voortgang naar volgend level.
-              </p>
-            </Link>
-            <Link
-              href="/budget"
-              className={`${labelBox} pointer-events-auto text-right no-underline transition-opacity hover:opacity-95`}
-            >
-              <p className="text-[8px] font-semibold uppercase tracking-[0.1em] text-[var(--text-muted)]">Budget</p>
-              <span className="mt-0.5 block text-[var(--text-secondary)]">
-                <span className="block text-xs font-bold tabular-nums text-[var(--text-primary)] sm:text-sm">
-                  {isNegative && "−"}
-                  {symbol}
-                  {amount.toFixed(0)}
-                </span>
-                <span className="text-[10px] text-[var(--text-secondary)] sm:text-xs">
-                  {isNegative ? "over budget" : "resterend"}
-                </span>
-              </span>
-              <p className="mt-1 text-[9px] leading-tight text-[var(--text-muted)] sm:text-[10px]">
-                Rechterhelft = restant (indicatie). Details op budget.
-              </p>
-            </Link>
-          </div>
+            <g className="commander-orbit-arc-path" fill="none">
+              <path
+                d={leftArcD}
+                stroke="rgba(var(--mode-rgb, 0, 212, 255), 0.14)"
+                strokeWidth={STROKE_TRACK}
+                strokeLinecap="round"
+              />
+              <path
+                d={rightArcD}
+                stroke="rgba(var(--mode-rgb, 0, 212, 255), 0.14)"
+                strokeWidth={STROKE_TRACK}
+                strokeLinecap="round"
+              />
+              <path
+                d={leftArcD}
+                stroke="rgba(var(--mode-rgb, 0, 212, 255), 0.92)"
+                strokeWidth={STROKE_FILL}
+                strokeLinecap="round"
+                pathLength={pathLen}
+                strokeDasharray={`${Math.max(0.25, xpPct * pathLen)} ${pathLen}`}
+              />
+              <path
+                d={rightArcD}
+                stroke={isNegative ? "rgba(248, 113, 113, 0.92)" : "rgba(167, 139, 250, 0.92)"}
+                strokeWidth={STROKE_FILL}
+                strokeLinecap="round"
+                pathLength={pathLen}
+                strokeDasharray={`${Math.max(0.25, budgetPct * pathLen)} ${pathLen}`}
+              />
+            </g>
+
+            {/* Waarden in de boog; geen aparte uitlegteksten */}
+            <a href="/xp" className="commander-orbit-hit" aria-label={`Level ${displayLevel}, ${current} van ${needed} XP`}>
+              <rect x={LX - 4} y={CY - 88} width={290} height={102} fill="transparent" rx={8} />
+              <text
+                x={LX + 26}
+                y={CY - 22}
+                fill="var(--text-primary)"
+                fontSize={44}
+                fontWeight={700}
+                fontFamily="var(--font-sans), system-ui, sans-serif"
+                stroke={TEXT_STROKE}
+                strokeWidth={TEXT_STROKE_W}
+                paintOrder="stroke fill"
+              >
+                {`Lv ${displayLevel}`}
+              </text>
+              <text
+                x={LX + 26}
+                y={CY + 18}
+                fill="var(--text-secondary)"
+                fontSize={28}
+                fontWeight={600}
+                fontFamily="var(--font-sans), ui-monospace, monospace"
+                stroke={TEXT_STROKE}
+                strokeWidth={3}
+                paintOrder="stroke fill"
+              >
+                {`${current}/${needed}`}
+              </text>
+            </a>
+
+            <a href="/budget" className="commander-orbit-hit" aria-label={`Budget ${budgetLine1} ${budgetLine2}`}>
+              <rect x={RX - 286} y={CY - 88} width={290} height={102} fill="transparent" rx={8} />
+              <text
+                textAnchor="end"
+                x={RX - 26}
+                y={CY - 22}
+                fill="var(--text-primary)"
+                fontSize={44}
+                fontWeight={700}
+                fontFamily="var(--font-sans), system-ui, sans-serif"
+                stroke={TEXT_STROKE}
+                strokeWidth={TEXT_STROKE_W}
+                paintOrder="stroke fill"
+              >
+                {budgetLine1}
+              </text>
+              <text
+                textAnchor="end"
+                x={RX - 26}
+                y={CY + 18}
+                fill="var(--text-secondary)"
+                fontSize={28}
+                fontWeight={600}
+                fontFamily="var(--font-sans), system-ui, sans-serif"
+                stroke={TEXT_STROKE}
+                strokeWidth={3}
+                paintOrder="stroke fill"
+              >
+                {budgetLine2}
+              </text>
+            </a>
+          </svg>
         </div>
 
         <div className="relative z-[5] w-full">{children}</div>
