@@ -1,10 +1,12 @@
 "use client";
 
 import Link from "next/link";
-import { useState, type ReactNode } from "react";
+import { useCallback, useEffect, useState, type ReactNode } from "react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { BudgetLockProvider, useBudgetLock } from "@/components/budget/BudgetLockContext";
 import { BudgetLockTabBanner } from "@/components/budget/BudgetLockTabBanner";
 import { BudgetLockCountdown } from "@/components/budget/BudgetLockCountdown";
+import { BudgetTabSurface } from "@/components/budget/BudgetTabSurface";
 import { formatLockEndShort } from "@/lib/budget-lock-display";
 import { SciFiPanel } from "@/components/hud-test/SciFiPanel";
 import { CornerNode } from "@/components/hud-test/CornerNode";
@@ -34,6 +36,21 @@ type Props = {
   /** Renders under title row (e.g. payday urgency toast). */
   simplifiedTopSlot?: ReactNode;
 };
+
+function normalizeLegacyTab(tab: LegacyTabId): TabId {
+  if (tab === "tactical" || tab === "goals") return "execute";
+  return tab;
+}
+
+function tabFromSearchParam(raw: string | null, historyMode: boolean): TabId {
+  if (raw === "execute" || raw === "tactical" || raw === "goals") {
+    return historyMode ? "overview" : "execute";
+  }
+  if (raw === "analysis") return "analysis";
+  if (raw === "optimization") return "optimization";
+  if (raw === "lock") return historyMode ? "overview" : "lock";
+  return "overview";
+}
 
 function BudgetLockStrip({
   historyMode,
@@ -99,41 +116,79 @@ export function BudgetTabsShell({
   simplifiedLayout = false,
   simplifiedTopSlot,
 }: Props) {
-  const normalizeInitialTab = (tab: LegacyTabId): TabId => {
-    if (tab === "tactical" || tab === "goals") return "execute";
-    return tab;
-  };
-  const [activeTab, setActiveTab] = useState<TabId>(normalizeInitialTab(initialTab));
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+
+  const [activeTab, setActiveTab] = useState<TabId>(() => {
+    const raw = searchParams.get("tab");
+    if (raw) return tabFromSearchParam(raw, historyMode);
+    return normalizeLegacyTab(initialTab);
+  });
+
+  useEffect(() => {
+    const next = tabFromSearchParam(searchParams.get("tab"), historyMode);
+    setActiveTab((prev) => (prev === next ? prev : next));
+  }, [historyMode, searchParams]);
+
+  const setTabWithUrl = useCallback(
+    (nextTab: TabId) => {
+      if (nextTab === "execute" && historyMode) return;
+      if (nextTab === "lock" && historyMode) return;
+      setActiveTab(nextTab);
+      const params = new URLSearchParams(searchParams.toString());
+      if (nextTab === "overview") {
+        params.delete("tab");
+      } else {
+        params.set("tab", nextTab);
+      }
+      const query = params.toString();
+      router.replace(query ? `${pathname}?${query}` : pathname, { scroll: false });
+    },
+    [historyMode, pathname, router, searchParams],
+  );
+
   const tabs: Array<{ id: TabId; label: string; hidden?: boolean }> = [
     { id: "overview", label: "Status" },
     { id: "execute", label: "Execute", hidden: historyMode },
-    { id: "analysis", label: "Intelligence" },
-    { id: "optimization", label: "Optimization" },
+    { id: "analysis", label: "Inzicht" },
+    { id: "optimization", label: "Optimalisatie" },
     { id: "lock", label: "Lock", hidden: historyMode },
   ];
 
-  const setTab = (tab: TabId) => {
-    if (tab === "execute" && historyMode) return;
-    setActiveTab(tab);
-  };
-
-  const tabClass = (tab: TabId) =>
+  const tabClassSimplified = (tab: TabId) =>
     `dashboard-mini-btn ${
       activeTab === tab ? "dashboard-mini-btn-primary" : "dashboard-mini-btn-secondary"
     }`;
 
+  const tabClassCinematic = (tab: TabId) =>
+    `rounded-lg px-2.5 py-2 text-[11px] font-semibold uppercase tracking-[0.12em] transition-all sm:px-3 sm:text-xs ${
+      activeTab === tab
+        ? "bg-[var(--accent-focus)]/22 text-[var(--text-primary)] shadow-[inset_0_0_0_1px_rgba(255,255,255,0.07)]"
+        : "text-[var(--text-muted)] hover:bg-[var(--bg-primary)]/55 hover:text-[var(--text-primary)]"
+    }`;
+
   const tabTrack = (
-    <div className="dashboard-top-strip-track" role="tablist" aria-label="Budget views">
+    <div
+      className={
+        simplifiedLayout
+          ? "dashboard-top-strip-track flex flex-wrap items-center gap-1.5"
+          : "flex flex-wrap items-center gap-1.5 rounded-xl border border-[var(--card-border)]/55 bg-[var(--bg-surface)]/40 p-1.5 backdrop-blur-md supports-[backdrop-filter]:bg-[var(--bg-surface)]/28"
+      }
+      role="tablist"
+      aria-label="Budget views"
+    >
       {tabs.map((tab) =>
         tab.hidden ? null : (
           <button
             key={tab.id}
             type="button"
             role="tab"
+            id={`budget-tab-btn-${tab.id}`}
             aria-selected={activeTab === tab.id}
-            className={tabClass(tab.id)}
+            className={simplifiedLayout ? tabClassSimplified(tab.id) : tabClassCinematic(tab.id)}
             aria-current={activeTab === tab.id ? "page" : undefined}
-            onClick={() => setTab(tab.id)}
+            onClick={() => setTabWithUrl(tab.id)}
           >
             {tab.label}
           </button>
@@ -148,7 +203,11 @@ export function BudgetTabsShell({
           Lock
         </span>
       )}
-      <span className="dashboard-mini-strip-label">View</span>
+      <span
+        className={`${simplifiedLayout ? "dashboard-mini-strip-label" : "ml-auto hidden text-[10px] font-bold uppercase tracking-[0.2em] text-[var(--text-muted)]/80 sm:inline"}`}
+      >
+        {simplifiedLayout ? "View" : "Modus"}
+      </span>
     </div>
   );
 
@@ -157,31 +216,35 @@ export function BudgetTabsShell({
       {activeTab === "overview" && (
         <div key="panel-overview" className="space-y-4">
           <BudgetLockTabBanner context="overview" lockPanelHref={lockPanelHref} />
-          {overview}
+          <BudgetTabSurface tabId="overview">{overview}</BudgetTabSurface>
         </div>
       )}
       {activeTab === "execute" && !historyMode && (
         <div key="panel-execute" className="space-y-4">
           <BudgetLockTabBanner context="execute" lockPanelHref={lockPanelHref} />
-          {tactical}
-          {goals}
+          <BudgetTabSurface tabId="execute">
+            <div className="space-y-4">
+              {tactical}
+              {goals}
+            </div>
+          </BudgetTabSurface>
         </div>
       )}
       {activeTab === "analysis" && (
         <div key="panel-analysis" className="space-y-4">
           <BudgetLockTabBanner context="analysis" lockPanelHref={lockPanelHref} />
-          {analysis}
+          <BudgetTabSurface tabId="analysis">{analysis}</BudgetTabSurface>
         </div>
       )}
       {activeTab === "optimization" && (
         <div key="panel-optimization" className="space-y-4">
           <BudgetLockTabBanner context="optimization" lockPanelHref={lockPanelHref} />
-          {optimization}
+          <BudgetTabSurface tabId="optimization">{optimization}</BudgetTabSurface>
         </div>
       )}
       {activeTab === "lock" && !historyMode && (
         <div key="panel-lock" className="space-y-4">
-          {lock}
+          <BudgetTabSurface tabId="lock">{lock}</BudgetTabSurface>
         </div>
       )}
     </>
@@ -199,7 +262,7 @@ export function BudgetTabsShell({
             <CornerNode corner="top-left" />
             <CornerNode corner="top-right" />
             <div className="flex shrink-0 items-start justify-between gap-3 border-b border-[var(--card-border)]/40 px-4 py-3">
-              <h2 className="hq-h2 min-w-0 flex-1 text-[var(--text-primary)]">Budget</h2>
+              <h2 className="hq-h2 min-w-0 flex-1 text-[var(--text-primary)]">Budget command</h2>
               <Link
                 href="/dashboard"
                 className="shrink-0 pt-0.5 text-[11px] font-semibold uppercase tracking-wide text-[var(--accent-focus)] underline-offset-2 hover:underline"
@@ -214,7 +277,9 @@ export function BudgetTabsShell({
             <div className="dashboard-top-strip sticky top-0 z-20 shrink-0 border-b border-[var(--card-border)]/50 bg-[var(--bg-surface)]/85 px-1 py-2 backdrop-blur-md supports-[backdrop-filter]:bg-[var(--bg-surface)]/70 sm:px-2">
               {tabTrack}
             </div>
-            {headerRight ? <div className="shrink-0 border-b border-[var(--card-border)]/30 px-2 py-2">{headerRight}</div> : null}
+            {headerRight ? (
+              <div className="shrink-0 border-b border-[var(--card-border)]/30 px-2 py-2">{headerRight}</div>
+            ) : null}
             <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-2 py-2 [-webkit-overflow-scrolling:touch] sm:px-3">
               {panels}
             </div>
@@ -234,16 +299,14 @@ export function BudgetTabsShell({
           </SciFiPanel>
         </div>
       ) : (
-        <>
-          <div className="space-y-3">
-            <div className="dashboard-top-strip">{tabTrack}</div>
-            {headerRight}
-          </div>
-
+        <div className="space-y-4">
           <BudgetLockStrip historyMode={historyMode} lockPanelHref={lockPanelHref} />
-
-          <div className="mt-4">{panels}</div>
-        </>
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+            <div className="min-w-0 flex-1">{tabTrack}</div>
+            {headerRight ? <div className="shrink-0 sm:pt-0.5">{headerRight}</div> : null}
+          </div>
+          <div className="pt-1">{panels}</div>
+        </div>
       )}
     </BudgetLockProvider>
   );
