@@ -185,7 +185,7 @@ export function BudgetTabsShell({
 
   const lockBadge = !historyMode && lockActive && (
     <span
-      className="inline-flex items-center gap-1.5 rounded-full border border-amber-400/55 bg-amber-500/25 px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.12em] text-amber-100 shadow-sm"
+      className="inline-flex items-center gap-1 rounded-full border border-amber-400/55 bg-amber-500/25 px-2 py-0.5 text-[9px] font-bold uppercase tracking-[0.12em] text-amber-100 shadow-sm"
       title="No-spend lock staat aan"
     >
       <span aria-hidden>🔒</span>
@@ -254,21 +254,22 @@ export function BudgetTabsShell({
     </>
   );
 
-  const budgetHeaderShell =
-    "relative overflow-hidden rounded-[var(--hq-card-radius,18px)] border border-[var(--card-border)] bg-gradient-to-b from-[var(--bg-elevated)]/35 via-[var(--bg-primary)]/40 to-[var(--bg-primary)]/55 shadow-[0_8px_32px_rgba(0,0,0,0.22)]";
-
   /** Simplified command card: dividers follow mode accent — avoids flat “white” card-border lines. */
   const simplifiedDivider = "border-[rgba(var(--mode-rgb),0.1)]";
 
+  /** Compact page title: caps + mode-colored glow (no large headline card). */
+  const budgetTitleGlowClass =
+    "text-sm font-bold uppercase tracking-[0.2em] text-[var(--text-primary)] [text-shadow:0_0_12px_rgba(var(--mode-rgb),0.38),0_0_26px_rgba(var(--mode-rgb),0.16)] sm:text-[0.9375rem]";
+
   const tabPillClass = (tab: TabId) =>
     activeTab === tab
-      ? "rounded-full border border-[var(--card-border)] bg-[var(--bg-elevated)]/80 px-3.5 py-2 text-sm font-semibold text-[var(--text-primary)] sm:px-4"
-      : "rounded-full border border-transparent px-3.5 py-2 text-sm font-medium text-[var(--text-muted)] transition-colors hover:border-[var(--card-border)]/80 hover:bg-[var(--bg-elevated)]/50 hover:text-[var(--text-primary)] sm:px-4";
+      ? "rounded-full border border-[rgba(var(--mode-rgb),0.28)] bg-[var(--bg-elevated)]/75 px-2.5 py-1.5 text-xs font-semibold text-[var(--text-primary)] sm:px-3"
+      : "rounded-full border border-transparent px-2.5 py-1.5 text-xs font-medium text-[var(--text-muted)] transition-colors hover:border-[rgba(var(--mode-rgb),0.15)] hover:bg-[var(--bg-elevated)]/45 hover:text-[var(--text-primary)] sm:px-3";
 
   function renderTabButtonsPills(className?: string) {
     return (
       <div
-        className={className ?? "flex flex-wrap items-center justify-center gap-2"}
+        className={className ?? "flex flex-wrap items-center justify-center gap-1.5"}
         role="tablist"
         aria-label="Budget views"
       >
@@ -304,28 +305,22 @@ export function BudgetTabsShell({
           >
             <CornerNode corner="top-left" />
             <CornerNode corner="top-right" />
-            <div
-              className={`relative shrink-0 border-b ${simplifiedDivider} bg-gradient-to-b from-[rgba(var(--mode-rgb-deep),0.22)] via-[var(--bg-elevated)]/12 to-[var(--bg-primary)]/35 px-4 pb-5 pt-4 text-center shadow-[inset_0_-1px_0_rgba(var(--mode-rgb),0.06)]`}
-            >
+            <div className={`relative flex shrink-0 items-center gap-2 border-b ${simplifiedDivider} px-3 py-2`}>
               <Link
                 href="/dashboard"
-                className="absolute left-4 top-4 text-[11px] font-semibold uppercase tracking-wide text-[var(--accent-focus)] underline-offset-2 hover:underline"
+                className="shrink-0 text-[10px] font-semibold uppercase tracking-wide text-[var(--accent-focus)] underline-offset-2 hover:underline"
               >
                 ← HQ
               </Link>
-              <span className="absolute right-4 top-3.5 inline-flex items-center rounded-full border border-[rgba(var(--mode-rgb),0.2)] bg-[var(--bg-elevated)]/55 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wide text-[var(--accent-focus)] shadow-[0_0_20px_rgba(var(--mode-rgb),0.08)]">
+              <h2 className={`min-w-0 flex-1 truncate text-center ${budgetTitleGlowClass}`}>Budget</h2>
+              <span className="inline-flex shrink-0 items-center rounded-full border border-[rgba(var(--mode-rgb),0.18)] bg-[var(--bg-elevated)]/35 px-2 py-0.5 text-[9px] font-semibold uppercase tracking-wide text-[var(--accent-focus)]">
                 {modeLabel}
               </span>
-              <h2 className="mx-auto mt-1 max-w-lg text-3xl font-bold tracking-tight text-[var(--text-primary)] sm:text-4xl md:text-[2.5rem] md:leading-tight">
-                Budget
-              </h2>
             </div>
             {/* No wrapper: slot may be toast-only (returns null) — a bordered row looked empty. */}
             {simplifiedTopSlot}
             <BudgetLockStrip historyMode={historyMode} lockPanelHref={lockPanelHref} embedded />
-            <div
-              className={`shrink-0 border-b ${simplifiedDivider} bg-[rgba(var(--mode-rgb),0.05)] px-2 py-2.5 sm:px-3`}
-            >
+            <div className={`shrink-0 border-b ${simplifiedDivider} px-2 py-1.5 sm:px-3`}>
               {renderTabButtonsPills()}
             </div>
             {headerRight ? (
@@ -357,38 +352,34 @@ export function BudgetTabsShell({
         </div>
       ) : centeredPageHeader ? (
         <div className="space-y-4">
-          <section className={budgetHeaderShell} aria-label="Budget navigatie">
-            <div className="relative px-4 pb-5 pt-4 md:px-6 md:pb-6 md:pt-5">
-              <div className="flex items-start justify-between gap-3">
-                {centeredPageHeader.backHref ? (
-                  <Link
-                    href={centeredPageHeader.backHref}
-                    className="shrink-0 text-sm font-semibold text-[var(--text-secondary)] transition hover:text-[var(--text-primary)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[rgba(var(--mode-rgb),0.45)] focus-visible:ring-offset-0 rounded-md"
-                  >
-                    ← HQ
-                  </Link>
-                ) : (
-                  <span className="w-14 shrink-0" aria-hidden />
-                )}
-                <span className="inline-flex shrink-0 items-center rounded-full border border-[var(--card-border)] bg-[var(--bg-elevated)]/60 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wide text-[var(--accent-focus)]">
-                  {modeLabel}
-                </span>
-              </div>
-              <h1 className="mt-5 text-center text-3xl font-bold tracking-tight text-[var(--text-primary)] sm:text-4xl md:text-[2.5rem] md:leading-tight">
-                {centeredPageHeader.title}
-              </h1>
-              {centeredPageHeader.subtitle != null && (
-                <p className="mx-auto mt-3 max-w-xl text-center text-sm leading-relaxed text-[var(--text-muted)]">
-                  {typeof centeredPageHeader.subtitle === "string" ? centeredPageHeader.subtitle : centeredPageHeader.subtitle}
-                </p>
+          <section className="space-y-2" aria-label="Budget navigatie">
+            <div className="flex items-center justify-between gap-2 px-3 pt-2 md:px-4">
+              {centeredPageHeader.backHref ? (
+                <Link
+                  href={centeredPageHeader.backHref}
+                  className="shrink-0 text-xs font-semibold text-[var(--text-secondary)] transition hover:text-[var(--text-primary)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[rgba(var(--mode-rgb),0.45)] focus-visible:ring-offset-0 rounded-md"
+                >
+                  ← HQ
+                </Link>
+              ) : (
+                <span className="w-10 shrink-0" aria-hidden />
               )}
-              {centeredPageHeader.actions != null && (
-                <div className="mt-5 flex flex-wrap items-center justify-center gap-2 sm:gap-3">
-                  {centeredPageHeader.actions}
-                </div>
-              )}
-              <div className="mt-6 pt-1">{renderTabButtonsPills()}</div>
+              <span className="inline-flex shrink-0 items-center rounded-full border border-[rgba(var(--mode-rgb),0.18)] bg-[var(--bg-elevated)]/35 px-2 py-0.5 text-[9px] font-semibold uppercase tracking-wide text-[var(--accent-focus)]">
+                {modeLabel}
+              </span>
             </div>
+            <h1 className={`px-3 text-center md:px-4 ${budgetTitleGlowClass}`}>{centeredPageHeader.title}</h1>
+            {centeredPageHeader.subtitle != null && (
+              <p className="mx-auto max-w-xl px-3 text-center text-xs leading-relaxed text-[var(--text-muted)] md:px-4">
+                {typeof centeredPageHeader.subtitle === "string" ? centeredPageHeader.subtitle : centeredPageHeader.subtitle}
+              </p>
+            )}
+            {centeredPageHeader.actions != null && (
+              <div className="flex flex-wrap items-center justify-center gap-2 px-3 md:px-4">
+                {centeredPageHeader.actions}
+              </div>
+            )}
+            <div className={`border-b ${simplifiedDivider} px-2 py-1.5 md:px-3`}>{renderTabButtonsPills()}</div>
           </section>
           {belowTabsSlot != null ? <div className="space-y-4">{belowTabsSlot}</div> : null}
           <BudgetLockStrip historyMode={historyMode} lockPanelHref={lockPanelHref} stickyToViewport={false} />
