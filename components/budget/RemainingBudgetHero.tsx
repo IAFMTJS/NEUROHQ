@@ -7,7 +7,7 @@ import { HQModal } from "@/components/hq";
 import { Modal } from "@/components/Modal";
 import { AddBudgetEntryForm } from "@/components/AddBudgetEntryForm";
 import { BudgetLockHeaderBadge } from "@/components/budget/BudgetLockHeaderBadge";
-import { BudgetRemainingStatusCircle } from "@/components/budget/BudgetRemainingStatusCircle";
+import { EnergyRing, type EnergyRingMode } from "@/components/hud-test/EnergyRing";
 import { updateBudgetSettings } from "@/app/actions/budget";
 import { formatCents } from "@/lib/utils/currency";
 import {
@@ -18,7 +18,30 @@ import {
   usePendingBudgetSnapshot,
 } from "@/lib/client-pending-budget";
 import { useSettings } from "@/lib/settings-context";
-import { CornerNode } from "@/components/hud-test/CornerNode";
+/** Zelfde tile-shell als ProfileHomeCompact / profiel-orbit */
+const orbitTileShell =
+  "rounded-xl border border-[rgba(var(--mode-rgb),0.07)] bg-[rgba(var(--mode-rgb-deep),0.08)] px-3 py-2.5 transition-colors hover:border-[rgba(var(--mode-rgb),0.16)] hover:bg-[rgba(var(--mode-rgb-deep),0.12)]";
+
+function budgetRingMode(
+  hasSettings: boolean,
+  spendableCents: number,
+  isOverBudget: boolean,
+  remainingPctClamped: number
+): EnergyRingMode {
+  if (!hasSettings) return "locked";
+  if (isOverBudget) return "high-alert";
+  if (spendableCents <= 0) return "locked";
+  if (remainingPctClamped <= 12) return "alert";
+  if (remainingPctClamped <= 38) return "default";
+  if (remainingPctClamped <= 68) return "green";
+  return "green-peak";
+}
+
+/** Volle boog bij over budget (crisis); anders resterend % van spendable. */
+function budgetRingProgress(isOverBudget: boolean, remainingPctForMeter: number): number {
+  if (isOverBudget) return 100;
+  return remainingPctForMeter;
+}
 
 type Props = {
   /** Total budget for the current cycle (month/week) in cents. */
@@ -107,6 +130,13 @@ export function RemainingBudgetHero({
     if (p <= 60) return { label: "Gecontroleerd", pill: "border-cyan-400/35 bg-cyan-950/25 text-cyan-100" };
     return { label: "Ruim", pill: "border-emerald-400/40 bg-emerald-950/35 text-emerald-100 shadow-[0_0_18px_rgba(16,185,129,0.2)]" };
   })();
+
+  const ringMode = budgetRingMode(hasSettings, spendableCents, isOverBudget, remainingPctForMeter);
+  const ringProgress = budgetRingProgress(isOverBudget, remainingPctForMeter);
+  const ringLabel = hasSettings
+    ? `Resterend · ${remainingPctDisplay}%`
+    : "Geen budget ingesteld";
+  const ringValue = hasSettings ? formatCents(remainingCents, effectiveCurrency) : "—";
 
   useEffect(() => {
     if (!showEdit) return;
@@ -205,19 +235,19 @@ export function RemainingBudgetHero({
   return (
     <>
       <section
-        className="card-simple-accent relative overflow-hidden !rounded-[var(--panel-radius)] p-0 ring-1 ring-emerald-400/20 shadow-[0_0_32px_rgba(16,185,129,0.12)]"
+        className="relative overflow-hidden rounded-[var(--hq-card-radius,18px)] border border-[rgba(var(--mode-rgb),0.09)] bg-gradient-to-b from-[rgba(var(--mode-rgb-deep),0.22)] via-[var(--bg-elevated)]/12 to-[var(--bg-primary)]/28 px-4 py-5 shadow-[0_12px_48px_rgba(0,0,0,0.4),0_0_28px_rgba(var(--mode-rgb),0.05)] backdrop-blur-xl sm:px-6"
         aria-label="Remaining budget overview"
         data-tutorial="budget-hero"
       >
-        <CornerNode corner="top-left" />
-        <CornerNode corner="top-right" />
-        <CornerNode corner="bottom-left" />
-        <CornerNode corner="bottom-right" />
+        <div
+          className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_75%_55%_at_50%_0%,rgba(var(--mode-rgb),0.14),transparent_58%)]"
+          aria-hidden
+        />
 
-        <div className="relative rounded-t-[var(--panel-radius)] border-b border-[var(--card-border)]/90 bg-[linear-gradient(105deg,rgba(16,185,129,0.16)_0%,rgba(34,211,238,0.06)_42%,rgba(15,23,42,0.2)_100%)] px-4 py-3.5 md:px-6">
+        <div className="relative z-[1] border-b border-[rgba(var(--mode-rgb),0.1)] pb-4">
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div>
-              <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-emerald-200/95">Budget command</p>
+              <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--mode-text-soft)]">Budget command</p>
               <p className="mt-1 max-w-xl text-xs leading-snug text-[var(--text-secondary)]">
                 {effectiveBudgetPeriod === "weekly" ? "Weekcyclus" : "Maandcyclus"} · resterend t.o.v. spendable (na
                 spaarreserve)
@@ -231,62 +261,79 @@ export function RemainingBudgetHero({
           </div>
         </div>
 
-        <div className="relative">
-          <div
-            className="pointer-events-none absolute inset-0 bg-[linear-gradient(rgba(148,163,184,0.05)_1px,transparent_1px),linear-gradient(90deg,rgba(148,163,184,0.05)_1px,transparent_1px)] opacity-[0.55] [background-size:20px_20px]"
-            aria-hidden
-          />
-          <div className="relative z-10 flex flex-col gap-6 px-4 py-6 md:flex-row md:items-stretch md:justify-between md:px-6 md:py-7">
-            <div className="flex flex-col items-center gap-6 sm:flex-row sm:items-center sm:gap-10">
-              <BudgetRemainingStatusCircle
-                arcPercent={remainingPctForMeter}
-                remainingRatioDisplay={remainingPctDisplay}
-                amountLine={hasSettings ? formatCents(remainingCents, effectiveCurrency) : "—"}
-                hasSpendable={spendableCents > 0}
-                isOverBudget={isOverBudget}
-              />
-
-              <div className="w-full min-w-0 flex-1 space-y-4 text-center sm:max-w-md sm:text-left">
-                {paydayLine && (
-                  <div className="relative overflow-hidden rounded-2xl border border-emerald-500/20 bg-[linear-gradient(135deg,rgba(6,78,59,0.35),rgba(15,23,42,0.65))] px-4 py-3 text-left shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]">
-                    <span
-                      className="absolute left-0 top-0 h-full w-1 rounded-l-2xl bg-gradient-to-b from-emerald-400/90 to-cyan-500/50"
-                      aria-hidden
-                    />
-                    <p className="pl-2 text-[10px] font-bold uppercase tracking-[0.18em] text-emerald-200/90">Tot loon</p>
-                    <p className="mt-1 pl-2 text-base font-semibold tracking-tight text-[var(--text-primary)]">{paydayLine}</p>
-                    {nextPaydayShortLabel && (
-                      <p className="mt-0.5 pl-2 font-mono text-[12px] text-cyan-200/80">{nextPaydayShortLabel}</p>
-                    )}
-                  </div>
-                )}
-                {hasSettings ? (
-                  <div className="space-y-2 rounded-2xl border border-[var(--card-border)]/50 bg-black/20 px-4 py-3 backdrop-blur-sm">
-                    <div className="flex flex-wrap items-baseline justify-between gap-2 gap-y-1">
-                      <span className="text-[11px] font-medium uppercase tracking-wide text-[var(--text-muted)]">Spendable</span>
-                      <span className="text-sm font-semibold tabular-nums text-[var(--text-primary)]">
-                        {formatCents(spendableCents, effectiveCurrency)}
-                      </span>
-                    </div>
-                    <div className="flex flex-wrap items-baseline justify-between gap-2 gap-y-1">
-                      <span className="text-[11px] font-medium uppercase tracking-wide text-[var(--text-muted)]">
-                        Uitgegeven {periodLabel}
-                      </span>
-                      <span className="text-sm font-semibold tabular-nums text-[var(--accent-focus)]">
-                        {formatCents(expensesCents, effectiveCurrency)}
-                      </span>
-                    </div>
-                  </div>
-                ) : (
-                  <p className="text-sm leading-relaxed text-[var(--text-muted)]">
-                    Stel je {effectiveBudgetPeriod === "weekly" ? "week" : "maand"}budget en spaarreserve in voor de command
-                    ring en tempo.
-                  </p>
-                )}
+        <div className="relative z-[1] mt-5 flex flex-col gap-6 lg:flex-row lg:items-stretch lg:justify-between lg:gap-8">
+          <div className="flex flex-col items-center gap-5 lg:flex-row lg:items-center lg:gap-10">
+            <div className="flex shrink-0 flex-col items-center">
+              <div className="relative">
+                <div
+                  className="absolute left-1/2 top-1/2 h-[118%] w-[118%] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[radial-gradient(circle,rgba(var(--mode-rgb),0.16)_0%,transparent_62%)] blur-md sm:h-[120%] sm:w-[120%]"
+                  aria-hidden
+                />
+                <div className="relative drop-shadow-[0_16px_44px_rgba(0,0,0,0.5)]">
+                  <EnergyRing
+                    profileOrbit
+                    size={236}
+                    progress={ringProgress}
+                    label={ringLabel}
+                    value={ringValue}
+                    mode={ringMode}
+                  />
+                </div>
               </div>
+              <p className="mt-3 max-w-[280px] text-center text-[11px] leading-relaxed text-[var(--text-muted)]">
+                {hasSettings ? (
+                  <>
+                    <span className="tabular-nums text-[var(--text-secondary)]">
+                      {formatCents(spendableCents, effectiveCurrency)} spendable
+                    </span>
+                    {" · "}
+                    <span className="tabular-nums text-[var(--text-secondary)]">
+                      {formatCents(expensesCents, effectiveCurrency)} uitgegeven
+                    </span>
+                  </>
+                ) : (
+                  <>Stel budget en spaarreserve in om de ring te activeren.</>
+                )}
+              </p>
             </div>
 
-            <div className="flex w-full flex-col justify-center gap-3 md:w-[min(100%,240px)] md:shrink-0">
+            <div className="w-full min-w-0 flex-1 space-y-3 text-center sm:max-w-md sm:text-left lg:pt-1">
+              {paydayLine && (
+                <div className={`${orbitTileShell} text-left`}>
+                  <p className="text-[9px] font-bold uppercase tracking-[0.14em] text-[var(--text-muted)]">Tot loon</p>
+                  <p className="mt-1.5 text-sm font-semibold leading-snug text-[var(--text-primary)]">{paydayLine}</p>
+                  {nextPaydayShortLabel && (
+                    <p className="mt-1 font-mono text-[11px] text-[var(--text-secondary)]">{nextPaydayShortLabel}</p>
+                  )}
+                </div>
+              )}
+              {hasSettings ? (
+                <div className={`${orbitTileShell} space-y-2 text-left`}>
+                  <div className="flex flex-wrap items-baseline justify-between gap-2 gap-y-1">
+                    <span className="text-[9px] font-bold uppercase tracking-[0.14em] text-[var(--text-muted)]">Spendable</span>
+                    <span className="text-sm font-semibold tabular-nums text-[var(--text-primary)]">
+                      {formatCents(spendableCents, effectiveCurrency)}
+                    </span>
+                  </div>
+                  <div className="flex flex-wrap items-baseline justify-between gap-2 gap-y-1">
+                    <span className="text-[9px] font-bold uppercase tracking-[0.14em] text-[var(--text-muted)]">
+                      Uitgegeven {periodLabel}
+                    </span>
+                    <span className="text-sm font-semibold tabular-nums text-[var(--semantic-accent)]">
+                      {formatCents(expensesCents, effectiveCurrency)}
+                    </span>
+                  </div>
+                </div>
+              ) : (
+                <p className="text-sm leading-relaxed text-[var(--text-muted)]">
+                  Stel je {effectiveBudgetPeriod === "weekly" ? "week" : "maand"}budget en spaarreserve in voor tempo en
+                  signalen.
+                </p>
+              )}
+            </div>
+          </div>
+
+            <div className="flex w-full flex-col justify-center gap-3 lg:w-[min(100%,240px)] lg:shrink-0">
               <div className="flex w-full flex-col gap-2">
                 <button
                   type="button"
@@ -321,11 +368,10 @@ export function RemainingBudgetHero({
                 <p className="text-center text-[11px] text-[var(--accent-focus)] md:text-right">Bijwerken… tijdelijke waarden actief.</p>
               )}
             </div>
-          </div>
         </div>
 
         {!historyMode && spendableCents > 0 && (
-          <div className="relative z-10 rounded-b-[var(--panel-radius)] border-t border-[var(--card-border)]/60 bg-black/15 px-4 pb-4 pt-3 md:px-6">
+          <div className="relative z-[1] mt-5 rounded-b-[var(--hq-card-radius,18px)] border-t border-[rgba(var(--mode-rgb),0.1)] bg-black/10 px-0 pb-1 pt-4">
             <div className="mb-2 flex items-center justify-between gap-2">
               <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-[var(--text-muted)]">Spendable gebruikt</p>
               <p className="font-mono text-[11px] tabular-nums text-[var(--text-secondary)]">{Math.round(Math.min(100, spentPct))}%</p>
