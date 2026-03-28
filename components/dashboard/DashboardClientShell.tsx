@@ -106,8 +106,8 @@ export function DashboardClientShell() {
     }
     if (dcicMode === "overdrive") {
       return {
-        "--mode-rgb": "56, 189, 248",
-        "--mode-rgb-deep": "14, 116, 144",
+        "--mode-rgb": "168, 85, 247",
+        "--mode-rgb-deep": "91, 33, 182",
       } as CSSProperties;
     }
     return {

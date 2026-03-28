@@ -48,47 +48,47 @@ export function OverdriveBanner({ lockedUntil, overdriveSessionStart }: Props) {
 
   return (
     <div
-      className="overdrive-banner relative z-20 mb-2 overflow-hidden rounded-2xl border border-cyan-400/35 bg-gradient-to-r from-cyan-950/80 via-sky-950/70 to-blue-950/80 px-4 py-3 shadow-[0_0_28px_rgba(56,189,248,0.22)]"
+      className="overdrive-banner relative z-20 mb-2 overflow-hidden rounded-2xl border border-fuchsia-500/40 bg-gradient-to-r from-violet-950/90 via-purple-950/85 to-fuchsia-950/80 px-4 py-3 shadow-[0_0_32px_rgba(168,85,247,0.35),0_0_60px_rgba(192,38,211,0.12)]"
       role="status"
       aria-live="polite"
     >
       <div
-        className="pointer-events-none absolute inset-0 opacity-[0.12]"
+        className="pointer-events-none absolute inset-0 opacity-[0.14]"
         aria-hidden
         style={{
           backgroundImage:
-            "radial-gradient(circle at 20% 50%, rgba(56,189,248,0.5), transparent 45%), radial-gradient(circle at 80% 30%, rgba(125,211,252,0.35), transparent 40%)",
+            "radial-gradient(circle at 18% 45%, rgba(168,85,247,0.55), transparent 42%), radial-gradient(circle at 82% 28%, rgba(236,72,153,0.2), transparent 38%), radial-gradient(circle at 50% 100%, rgba(190,242,100,0.08), transparent 50%)",
         }}
       />
       <div className="relative flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-sky-200/95">
+          <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-fuchsia-200/95">
             Overdrive active — all XP ×2
           </p>
-          <p className="mt-1 text-sm font-medium text-sky-50/95">{tagline}</p>
+          <p className="mt-1 text-sm font-medium text-violet-50/95">{tagline}</p>
         </div>
         <div className="flex flex-wrap items-center gap-3 sm:justify-end">
           {lockedUntil ? (
-            <div className="rounded-lg border border-cyan-400/30 bg-black/25 px-3 py-1.5 text-center tabular-nums">
-              <div className="text-[9px] font-semibold uppercase tracking-wider text-sky-200/80">
+            <div className="rounded-lg border border-violet-400/35 bg-black/30 px-3 py-1.5 text-center tabular-nums">
+              <div className="text-[9px] font-semibold uppercase tracking-wider text-fuchsia-200/85">
                 Ends in
               </div>
-              <div className="text-lg font-bold text-sky-100">{formatRemaining(remainingMs)}</div>
+              <div className="text-lg font-bold text-violet-100">{formatRemaining(remainingMs)}</div>
             </div>
           ) : null}
-          <div className="rounded-lg border border-cyan-400/25 bg-black/20 px-3 py-1.5">
-            <div className="text-[9px] font-semibold uppercase tracking-wider text-sky-200/75">
+          <div className="rounded-lg border border-fuchsia-500/30 bg-black/25 px-3 py-1.5">
+            <div className="text-[9px] font-semibold uppercase tracking-wider text-fuchsia-200/80">
               XP efficiency
             </div>
-            <div className="text-sm font-semibold text-sky-100">{heatPct}%</div>
-            <div className="mt-1 h-1.5 w-full max-w-[120px] overflow-hidden rounded-full bg-black/40">
+            <div className="text-sm font-semibold text-violet-100">{heatPct}%</div>
+            <div className="mt-1 h-1.5 w-full max-w-[120px] overflow-hidden rounded-full bg-black/45">
               <div
-                className="h-full rounded-full bg-gradient-to-r from-sky-400 to-cyan-300 transition-[width] duration-500"
+                className="h-full rounded-full bg-gradient-to-r from-violet-500 via-fuchsia-500 to-lime-300 transition-[width] duration-500"
                 style={{ width: `${heatPct}%` }}
               />
             </div>
             {heat < 1 ? (
-              <p className="mt-1 text-[10px] text-sky-200/70">
+              <p className="mt-1 text-[10px] text-fuchsia-200/75">
                 Overheat: long grind = lower XP gain. Take a break; come back sharp.
               </p>
             ) : null}

@@ -167,8 +167,8 @@ export function CommanderMascotPedestal({ stats, children }: Props) {
     };
   }, [loadPct]);
 
-  /** Foreshortening: cirkel → ellips (donut van schuin boven); midden blijft (CX,CY). */
-  const donutSquash = 0.56;
+  /** Foreshortening: cirkel → ellips; iets minder squash = onderkant band reikt lager, (CX,CY) boven blijft anker. */
+  const donutSquash = 0.6;
 
   const rXpBudget = bandLabelRadiusXp();
   const posXp = bandLabelPct(SEG_MID_FOCUS_RAD, rXpBudget, donutSquash);
@@ -179,23 +179,24 @@ export function CommanderMascotPedestal({ stats, children }: Props) {
       role="group"
       aria-label={`Resourceband: arcering Energy ${ePct}%, Focus ${fPct}%, Load ${lPct}%. Level ${displayLevel}, ${current} van ${needed} XP. Budget ${isNegative ? "−" : ""}${symbol}${amount.toFixed(0)}. Gedetailleerde stats op de brain circles.`}
     >
-      <div className="commander-mascot-pedestal-donut-stage relative mx-auto w-full min-h-[min(300px,78vw)] pb-[min(4.25rem,14vw)] sm:min-h-[min(340px,64vw)] sm:pb-[min(5rem,13vw)]">
+      <div className="commander-mascot-pedestal-donut-stage relative mx-auto w-full min-h-[min(300px,78vw)] overflow-visible pb-[min(5rem,16vw)] sm:min-h-[min(340px,64vw)] sm:pb-[min(5.5rem,15vw)]">
         {/* Mascotte eerst (gat van de donut); ring eronder/erachter via z-index */}
         <div className="commander-mascot-pedestal-mascot relative z-[14] -mb-12 mx-auto w-full max-w-[min(320px,88vw)] shrink-0 px-1 sm:-mb-14 lg:-mb-[4.5rem]">
           {children}
         </div>
 
-        {/* Ring op het voetstuk (bottom-0); geen translate-Y — uitrekken via maxHeight/breedte + CSS-tilt, niet omhoog trekken */}
+        {/* Ring op voetstuk: verticaal uitrekken via inner scaleY (origin top) — bovenrand/boog vast, onderkant lager */}
         <div className="absolute bottom-0 left-1/2 z-[1] flex w-full max-w-none -translate-x-1/2 justify-center">
           <div className="commander-mascot-pedestal-donut-tilt">
             <div
-              className="commander-mascot-pedestal-arc-wrap commander-mascot-pedestal-donut-ring relative shrink-0"
+              className="commander-mascot-pedestal-arc-wrap commander-mascot-pedestal-donut-ring relative shrink-0 overflow-visible"
               style={{
                 width: platformWidth,
                 aspectRatio: `${VB_W} / ${VB_H}`,
-                maxHeight: "min(17rem, 56vw)",
+                maxHeight: "min(19rem, 60vw)",
               }}
             >
+              <div className="commander-mascot-pedestal-donut-vert-stretch relative h-full min-h-0 w-full">
               <svg
                 className="commander-mascot-pedestal-arc commander-mascot-platform-svg absolute inset-0 block h-full w-full overflow-visible"
                 viewBox={`0 0 ${VB_W} ${VB_H}`}
@@ -288,32 +289,33 @@ export function CommanderMascotPedestal({ stats, children }: Props) {
                 </g>
               </svg>
 
-          {/* XP / Budget op de band — Energy/Focus/Load alleen via brain circles */}
-          <div
-            className="commander-mascot-pedestal-cards pointer-events-none absolute z-[12] flex w-[min(92%,17rem)] max-w-none justify-between gap-1 px-0.5 sm:gap-2"
-            style={{ left: posXp.left, top: posXp.top, transform: "translate(-50%, -50%)" }}
-          >
-            <Link href="/xp" className={`${cardClass} text-left`}>
-              <span className="block text-[7px] font-semibold uppercase tracking-[0.12em] text-[var(--text-muted)] sm:text-[8px]">XP</span>
-              <span className="mt-0.5 block text-[11px] font-bold tabular-nums text-[var(--text-primary)] sm:text-xs">
-                Lv {displayLevel}
-              </span>
-              <span className="mt-0.5 block text-[9px] tabular-nums text-[var(--text-secondary)] sm:text-[10px]">
-                {current}/{needed}
-              </span>
-            </Link>
-            <Link href="/budget" className={`${cardClass} text-right`}>
-              <span className="block text-[7px] font-semibold uppercase tracking-[0.1em] text-[var(--text-muted)] sm:text-[8px]">Budget</span>
-              <span className="mt-0.5 block text-[11px] font-bold tabular-nums text-[var(--text-primary)] sm:text-xs">
-                {isNegative && "−"}
-                {symbol}
-                {amount.toFixed(0)}
-              </span>
-              <span className="mt-0.5 block text-[9px] text-[var(--text-secondary)] sm:text-[10px]">
-                {isNegative ? "over" : "rest"}
-              </span>
-            </Link>
-          </div>
+                {/* XP / Budget — mee met vert-stretch zodat positie op de band klopt */}
+                <div
+                  className="commander-mascot-pedestal-cards pointer-events-none absolute z-[12] flex w-[min(92%,17rem)] max-w-none justify-between gap-1 px-0.5 sm:gap-2"
+                  style={{ left: posXp.left, top: posXp.top, transform: "translate(-50%, -50%)" }}
+                >
+                  <Link href="/xp" className={`${cardClass} text-left`}>
+                    <span className="block text-[7px] font-semibold uppercase tracking-[0.12em] text-[var(--text-muted)] sm:text-[8px]">XP</span>
+                    <span className="mt-0.5 block text-[11px] font-bold tabular-nums text-[var(--text-primary)] sm:text-xs">
+                      Lv {displayLevel}
+                    </span>
+                    <span className="mt-0.5 block text-[9px] tabular-nums text-[var(--text-secondary)] sm:text-[10px]">
+                      {current}/{needed}
+                    </span>
+                  </Link>
+                  <Link href="/budget" className={`${cardClass} text-right`}>
+                    <span className="block text-[7px] font-semibold uppercase tracking-[0.1em] text-[var(--text-muted)] sm:text-[8px]">Budget</span>
+                    <span className="mt-0.5 block text-[11px] font-bold tabular-nums text-[var(--text-primary)] sm:text-xs">
+                      {isNegative && "−"}
+                      {symbol}
+                      {amount.toFixed(0)}
+                    </span>
+                    <span className="mt-0.5 block text-[9px] text-[var(--text-secondary)] sm:text-[10px]">
+                      {isNegative ? "over" : "rest"}
+                    </span>
+                  </Link>
+                </div>
+              </div>
             </div>
           </div>
         </div>
