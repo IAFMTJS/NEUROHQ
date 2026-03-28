@@ -21,6 +21,10 @@ export type EnergyRingProps = {
   softGlow?: boolean;
   /** Profiel-home orbit: stillere animatie, zachtere schaduw, HUD-tekst via theme tokens. */
   profileOrbit?: boolean;
+  /** Budget command hub: groter binnenvlak, gecentreerde tekst, schaal voor lange bedragen. */
+  budgetHub?: boolean;
+  /** Extra regel boven label (bijv. "Resterend"). */
+  centerTag?: string;
 };
 
 /**
@@ -43,6 +47,8 @@ export function EnergyRing({
   mode = "default",
   softGlow = false,
   profileOrbit = false,
+  budgetHub = false,
+  centerTag,
 }: EnergyRingProps) {
   const soft = softGlow || profileOrbit;
   const modeRgb = "var(--mode-rgb, 0, 212, 255)";
@@ -52,7 +58,19 @@ export function EnergyRing({
   const clamped = Math.max(0, Math.min(100, progress));
   const offset = circumference - (clamped / 100) * circumference;
   const center = size / 2;
-  const valueFontSize = Math.max(15, Math.round(size * 0.16));
+  const baseValuePx = Math.round(size * 0.125);
+  const defaultValueSize = Math.max(15, Math.round(size * 0.16));
+  const valueFontSize = (() => {
+    if (!budgetHub) return defaultValueSize;
+    const len = value.length;
+    let fs = baseValuePx;
+    if (len > 20) fs = Math.max(11, baseValuePx - 12);
+    else if (len > 16) fs = Math.max(12, baseValuePx - 9);
+    else if (len > 12) fs = Math.max(13, baseValuePx - 6);
+    else if (len > 8) fs = Math.max(14, baseValuePx - 3);
+    else fs = Math.max(15, baseValuePx);
+    return Math.min(fs, Math.round(size * 0.148));
+  })();
   const ticks = 12;
   const gradientId = React.useId();
   const glowId = React.useId();
@@ -278,13 +296,24 @@ export function EnergyRing({
         ))}
 
       {/* Inner core vignette + value */}
-      <div className={`${styles.energyRingCenter}${profileOrbit ? ` ${styles.energyRingCenterProfile}` : ""}`}>
+      <div
+        className={`${styles.energyRingCenter}${profileOrbit ? ` ${styles.energyRingCenterProfile}` : ""}${budgetHub && profileOrbit ? ` ${styles.energyRingCenterBudget}` : ""}`}
+      >
+        {centerTag ? <span className={styles.energyRingCenterTag}>{centerTag}</span> : null}
         {label ? (
-          <div className={`${styles.energyRingLabel}${profileOrbit ? ` ${styles.energyRingLabelProfile}` : ""}`}>{label}</div>
+          <div
+            className={`${styles.energyRingLabel}${profileOrbit ? ` ${styles.energyRingLabelProfile}` : ""}${budgetHub ? ` ${styles.energyRingLabelBudget}` : ""}`}
+          >
+            {label}
+          </div>
         ) : null}
         <div
-          className={`${styles.energyRingValue}${profileOrbit ? ` ${styles.energyRingValueProfile}` : ""}`}
-          style={{ fontSize: `${valueFontSize}px`, marginTop: label ? 4 : 0, lineHeight: 1 }}
+          className={`${styles.energyRingValue}${profileOrbit ? ` ${styles.energyRingValueProfile}` : ""}${budgetHub ? ` ${styles.energyRingValueBudget}` : ""}`}
+          style={{
+            fontSize: `${valueFontSize}px`,
+            marginTop: budgetHub ? 0 : label ? 4 : 0,
+            lineHeight: budgetHub ? 1.12 : 1,
+          }}
         >
           {value}
         </div>

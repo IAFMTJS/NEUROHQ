@@ -12,9 +12,11 @@ type Props = {
   compact?: boolean;
   /** When false, no cyan neon text-shadow on the title (calmer dashboard pages). Default true. */
   glowTitle?: boolean;
+  /** Row under subtitle (e.g. export, period selector) — matches Strategy-adjacent pages. */
+  actions?: ReactNode;
 };
 
-export function HQPageHeader({ title, subtitle, backHref, compact = false, glowTitle = true }: Props) {
+export function HQPageHeader({ title, subtitle, backHref, compact = false, glowTitle = true, actions }: Props) {
   const mode = useHQStore((s) => s.gameState?.mode?.current ?? "focus");
   const showBackLink = backHref != null && backHref !== "";
   const modeLabel =
@@ -66,10 +68,13 @@ export function HQPageHeader({ title, subtitle, backHref, compact = false, glowT
         </span>
       </div>
       {subtitle != null && (
-        <p className="text-soft">
+        <p className="mt-1 max-w-3xl text-sm leading-relaxed text-[var(--text-muted)]">
           {typeof subtitle === "string" ? subtitle : subtitle}
         </p>
       )}
+      {actions != null ? (
+        <div className="mt-4 flex flex-wrap items-center gap-2 sm:gap-3">{actions}</div>
+      ) : null}
     </header>
   );
 }

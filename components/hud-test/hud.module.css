@@ -596,6 +596,65 @@
   text-shadow: 0 0 20px rgba(var(--mode-rgb), 0.4), 0 0 40px rgba(var(--mode-rgb), 0.12);
 }
 
+/** Budget command + profile orbit: groter midden, strak gecentreerd, langere bedragen */
+.energyRingCenterProfile.energyRingCenterBudget {
+  inset: 12.5%;
+  padding: 8px 14px;
+  box-sizing: border-box;
+  gap: 3px;
+}
+
+.energyRingCenterTag {
+  position: relative;
+  z-index: 1;
+  flex-shrink: 0;
+  width: 100%;
+  max-width: 11rem;
+  margin: 0 auto;
+  text-align: center;
+  font-size: 8px;
+  font-weight: 700;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  line-height: 1.25;
+}
+
+.energyRingLabelBudget {
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  line-height: 1.2;
+  width: 100%;
+  max-width: 100%;
+  flex-shrink: 0;
+  margin: 0;
+  padding: 0 4px;
+  text-align: center;
+  text-wrap: balance;
+}
+
+.energyRingValueBudget {
+  width: 100%;
+  max-width: 100%;
+  flex: 0 1 auto;
+  min-height: 0;
+  margin-top: 0;
+  padding: 1px 6px 0;
+  text-align: center;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  font-weight: 700;
+}
+
+.energyRingValueProfile.energyRingValueBudget {
+  text-shadow: 0 0 14px rgba(var(--mode-rgb), 0.32), 0 1px 2px rgba(0, 0, 0, 0.55);
+}
+
+.energyRingWrapper[data-mode="high-alert"] .energyRingValueProfile.energyRingValueBudget {
+  color: #fecaca;
+  text-shadow: 0 0 14px rgba(248, 113, 113, 0.38), 0 1px 2px rgba(0, 0, 0, 0.65);
+}
+
 .energyArcGlow {
   stroke-dasharray: 16 10;
   animation: ringShimmer 4s linear infinite;

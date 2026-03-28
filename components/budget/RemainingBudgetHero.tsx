@@ -133,9 +133,6 @@ export function RemainingBudgetHero({
 
   const ringMode = budgetRingMode(hasSettings, spendableCents, isOverBudget, remainingPctForMeter);
   const ringProgress = budgetRingProgress(isOverBudget, remainingPctForMeter);
-  const ringLabel = hasSettings
-    ? `Resterend · ${remainingPctDisplay}%`
-    : "Geen budget ingesteld";
   const ringValue = hasSettings ? formatCents(remainingCents, effectiveCurrency) : "—";
 
   useEffect(() => {
@@ -272,9 +269,11 @@ export function RemainingBudgetHero({
                 <div className="relative drop-shadow-[0_16px_44px_rgba(0,0,0,0.5)]">
                   <EnergyRing
                     profileOrbit
+                    budgetHub
+                    centerTag={hasSettings ? "Resterend" : undefined}
                     size={236}
                     progress={ringProgress}
-                    label={ringLabel}
+                    label={hasSettings ? `${remainingPctDisplay}%` : "Geen budget"}
                     value={ringValue}
                     mode={ringMode}
                   />
@@ -338,7 +337,7 @@ export function RemainingBudgetHero({
                 <button
                   type="button"
                   onClick={() => setShowDetails(true)}
-                  className="btn-primary inline-flex min-h-[44px] w-full items-center justify-center rounded-lg px-4 py-2.5 text-sm font-semibold"
+                  className="btn-primary w-full rounded-lg px-4 py-2.5 text-sm font-medium focus:outline-none focus-visible:ring-2 focus-visible:ring-[rgba(var(--mode-rgb),0.45)] focus-visible:ring-offset-0"
                 >
                   Details
                 </button>
@@ -346,7 +345,7 @@ export function RemainingBudgetHero({
                   <button
                     type="button"
                     onClick={openQuickLogToast}
-                    className="btn-secondary inline-flex min-h-[44px] w-full items-center justify-center rounded-lg px-4 py-2.5 text-sm font-semibold text-[var(--text-primary)] shadow-[inset_4px_0_0_0_rgba(16,185,129,0.55)]"
+                    className="btn-secondary w-full rounded-lg px-4 py-2.5 text-sm font-medium focus:outline-none focus-visible:ring-2 focus-visible:ring-[rgba(var(--mode-rgb),0.45)] focus-visible:ring-offset-0"
                   >
                     Quick log
                   </button>
@@ -355,7 +354,7 @@ export function RemainingBudgetHero({
                   <button
                     type="button"
                     onClick={() => setShowEdit(true)}
-                    className="btn-secondary inline-flex min-h-[44px] w-full items-center justify-center rounded-lg px-4 py-2.5 text-sm font-semibold text-[var(--text-primary)]"
+                    className="btn-secondary w-full rounded-lg px-4 py-2.5 text-sm font-medium focus:outline-none focus-visible:ring-2 focus-visible:ring-[rgba(var(--mode-rgb),0.45)] focus-visible:ring-offset-0"
                   >
                     Budget bewerken
                   </button>

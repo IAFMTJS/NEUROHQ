@@ -29,6 +29,12 @@ type Props = {
 
 const FORMULA_TOOLTIP = "Spendable = budget minus savings. Remaining = spendable minus expenses.";
 
+const budgetInsightShell =
+  "relative overflow-hidden rounded-[var(--hq-card-radius,18px)] border border-[rgba(var(--mode-rgb),0.09)] bg-gradient-to-b from-[rgba(var(--mode-rgb-deep),0.22)] via-[var(--bg-elevated)]/12 to-[var(--bg-primary)]/28 shadow-[0_12px_48px_rgba(0,0,0,0.35),0_0_28px_rgba(var(--mode-rgb),0.05)] backdrop-blur-xl";
+
+const statTileShell =
+  "rounded-xl border border-[rgba(var(--mode-rgb),0.08)] bg-[rgba(var(--mode-rgb-deep),0.08)] px-3 py-2.5";
+
 export function BudgetSummaryCard({
   monthlyBudgetCents,
   monthlySavingsCents,
@@ -127,10 +133,25 @@ export function BudgetSummaryCard({
 
   return (
     <>
-      <section className="card-simple-accent overflow-hidden p-0">
-        <div className="border-b border-[var(--card-border)]/80 px-4 py-3">
-          <div className="flex items-center justify-between">
-            <h2 className="text-base font-semibold text-[var(--text-primary)]">Your budget {periodLabel}</h2>
+      <section className={budgetInsightShell} aria-label="Budgetoverzicht">
+        <div
+          className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_75%_55%_at_50%_0%,rgba(var(--mode-rgb),0.12),transparent_58%)]"
+          aria-hidden
+        />
+        <div className="relative z-[1] border-b border-[rgba(var(--mode-rgb),0.1)] px-4 py-3 sm:px-5">
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div className="min-w-0">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--mode-text-soft)]">Budgetoverzicht</p>
+              <h2 className="mt-1 text-lg font-semibold tracking-tight text-[var(--text-primary)]">
+                Jouw budget · <span className="text-[var(--text-secondary)]">{periodLabel}</span>
+              </h2>
+              <p className="mt-1 max-w-xl text-xs leading-snug text-[var(--text-muted)]" title={FORMULA_TOOLTIP}>
+                Budget − sparen − uitgaven = resterend (spendable).
+              </p>
+              {pendingActive && (
+                <p className="mt-2 text-xs font-medium text-[var(--accent-focus)]">Bijwerken… tijdelijke waarden actief.</p>
+              )}
+            </div>
             <button
               type="button"
               onClick={() => {
@@ -140,94 +161,97 @@ export function BudgetSummaryCard({
                 setError(null);
                 setShowModal(true);
               }}
-              className="text-sm font-medium text-[var(--accent-focus)] hover:underline"
-              aria-label={hasSettings ? "Edit budget and savings" : "Set budget and savings"}
+              className="shrink-0 rounded-lg border border-[var(--card-border)] bg-[var(--bg-elevated)]/70 px-3 py-2 text-xs font-semibold text-[var(--text-primary)] transition-colors hover:border-[rgba(var(--mode-rgb),0.35)] hover:bg-[var(--bg-elevated)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[rgba(var(--mode-rgb),0.45)]"
+              aria-label={hasSettings ? "Budget en sparen bewerken" : "Budget instellen"}
             >
-              {hasSettings ? "Edit" : "Set budget"}
+              {hasSettings ? "Bewerken" : "Instellen"}
             </button>
           </div>
-          <p className="mt-0.5 text-xs text-[var(--text-muted)]" title={FORMULA_TOOLTIP}>
-            Budget − savings − expenses = remaining to spend.
-          </p>
-          {pendingActive && (
-            <p className="mt-1 text-xs text-[var(--accent-focus)]">
-              Bijwerken... tijdelijke waarden actief.
-            </p>
-          )}
         </div>
-        <div className="p-5">
+        <div className="relative z-[1] p-4 sm:p-5">
           {!hasSettings ? (
-            <p className="text-sm text-[var(--text-muted)]">
-              Set your total {effectiveBudgetPeriod === "weekly" ? "weekly" : "monthly"} amount and how much you want to save. Expenses below will reduce your remaining spendable amount.
+            <p className="text-sm leading-relaxed text-[var(--text-muted)]">
+              Stel je totale {effectiveBudgetPeriod === "weekly" ? "week" : "maand"}bedrag en spaarreserve in. Uitgaven
+              hieronder verlagen je resterend spendable.
             </p>
           ) : (
             <>
-              <div className="grid gap-4 sm:grid-cols-2">
-                <div>
-                  <p className="text-xs font-medium text-[var(--text-muted)]">Budget (total)</p>
-                  <p className="text-xl font-bold tabular-nums text-[var(--text-primary)]">
-                    {symbol}{(budgetCents / 100).toFixed(2)}
+              <div className="grid gap-3 sm:grid-cols-2">
+                <div className={statTileShell}>
+                  <p className="text-[9px] font-bold uppercase tracking-[0.14em] text-[var(--text-muted)]">Totaal budget</p>
+                  <p className="mt-1.5 text-lg font-bold tabular-nums text-[var(--text-primary)] sm:text-xl">
+                    {symbol}
+                    {(budgetCents / 100).toFixed(2)}
                   </p>
                 </div>
-                <div>
-                  <p className="text-xs font-medium text-[var(--text-muted)]">Saving {periodLabel}</p>
-                  <p className="text-xl font-bold tabular-nums text-[var(--accent-focus)]">
-                    {symbol}{(savingsCents / 100).toFixed(2)}
+                <div className={statTileShell}>
+                  <p className="text-[9px] font-bold uppercase tracking-[0.14em] text-[var(--text-muted)]">Sparen {periodLabel}</p>
+                  <p className="mt-1.5 text-lg font-bold tabular-nums text-[var(--accent-focus)] sm:text-xl">
+                    {symbol}
+                    {(savingsCents / 100).toFixed(2)}
                   </p>
                 </div>
                 {incomeCents > 0 && (
-                  <div>
-                    <p className="text-xs font-medium text-[var(--text-muted)]">Income {periodLabel}</p>
-                    <p className="text-xl font-bold tabular-nums text-green-400">
+                  <div className={statTileShell}>
+                    <p className="text-[9px] font-bold uppercase tracking-[0.14em] text-[var(--text-muted)]">Inkomsten {periodLabel}</p>
+                    <p className="mt-1.5 text-lg font-bold tabular-nums text-emerald-300/95 sm:text-xl">
                       {formatCents(incomeCents, effectiveCurrency)}
                     </p>
                   </div>
                 )}
-                <div>
-                  <p className="text-xs font-medium text-[var(--text-muted)]">Spent {periodLabel}</p>
-                  <p className="text-xl font-bold tabular-nums text-[var(--text-primary)]">
-                    {symbol}{(expensesCents / 100).toFixed(2)}
+                <div className={statTileShell}>
+                  <p className="text-[9px] font-bold uppercase tracking-[0.14em] text-[var(--text-muted)]">Uitgegeven {periodLabel}</p>
+                  <p className="mt-1.5 text-lg font-bold tabular-nums text-[var(--semantic-accent)] sm:text-xl">
+                    {symbol}
+                    {(expensesCents / 100).toFixed(2)}
                   </p>
                 </div>
                 {!historyMode && (
-                  <div>
-                    <p className="text-xs font-medium text-[var(--text-muted)]">Remaining (to spend)</p>
-                    <p className={`text-xl font-bold tabular-nums ${!isOverBudget ? "text-green-400" : "text-amber-400"}`}>
-                      {symbol}{(remainingCents / 100).toFixed(2)}
+                  <div className={`${statTileShell} sm:col-span-2`}>
+                    <p className="text-[9px] font-bold uppercase tracking-[0.14em] text-[var(--text-muted)]">Resterend</p>
+                    <p
+                      className={`mt-1.5 text-lg font-bold tabular-nums sm:text-xl ${
+                        !isOverBudget ? "text-emerald-200" : "text-amber-300"
+                      }`}
+                    >
+                      {symbol}
+                      {(remainingCents / 100).toFixed(2)}
                     </p>
                     {isOverBudget && (
-                      <p className="mt-0.5 text-xs text-amber-400">Over budget {periodLabel}</p>
+                      <p className="mt-1 text-xs font-medium text-amber-400/95">Boven budget deze periode</p>
                     )}
                   </div>
                 )}
               </div>
               {!historyMode && spendableCents > 0 && (
                 <div className="mt-4">
-                  <p className="text-xs font-medium text-[var(--text-muted)] mb-1">Spendable used</p>
-                  <div className="h-2.5 w-full overflow-hidden rounded-full bg-[var(--card-border)]">
+                  <p className="mb-1.5 text-[9px] font-bold uppercase tracking-[0.14em] text-[var(--text-muted)]">Spendable gebruikt</p>
+                  <div className="h-2 w-full overflow-hidden rounded-full bg-[rgba(var(--mode-rgb),0.12)]">
                     <div
-                      className={`h-full rounded-full transition-all duration-300 ${spentPct >= 100 ? "bg-amber-500" : "bg-[var(--accent-focus)]"}`}
+                      className={`h-full rounded-full transition-all duration-300 ${
+                        spentPct >= 100 ? "bg-amber-500" : "bg-[var(--accent-focus)]"
+                      }`}
                       style={{ width: `${Math.min(100, spentPct)}%` }}
                     />
                   </div>
                 </div>
               )}
               {!historyMode && forecastProjectedBalanceCents != null && (
-                <div className="mt-4 rounded-lg border border-[var(--card-border)] bg-[var(--bg-primary)]/35 px-3 py-2.5">
+                <div className="mt-4 rounded-xl border border-[rgba(var(--mode-rgb),0.1)] bg-[rgba(var(--mode-rgb-deep),0.06)] px-3 py-2.5">
                   <p className="text-xs text-[var(--text-muted)]">
                     Forecast eindsaldo cyclus:{" "}
                     <span
                       className={
                         forecastProjectedBalanceCents < 0
-                          ? "font-medium text-amber-300"
-                          : "font-medium text-[var(--text-primary)]"
+                          ? "font-semibold text-amber-300"
+                          : "font-semibold text-[var(--text-primary)]"
                       }
                     >
                       {formatCents(forecastProjectedBalanceCents, effectiveCurrency)}
                     </span>
                   </p>
                   {(forecastOverspendCents ?? 0) > 0 && (
-                    <p className="mt-1 text-xs text-amber-300">
+                    <p className="mt-1 text-xs text-amber-300/95">
                       Verwacht tekort: {formatCents(forecastOverspendCents ?? 0, effectiveCurrency)}
                     </p>
                   )}

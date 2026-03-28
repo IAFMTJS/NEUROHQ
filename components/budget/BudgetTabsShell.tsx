@@ -160,7 +160,24 @@ export function BudgetTabsShell({
       activeTab === tab ? "dashboard-mini-btn-primary" : "dashboard-mini-btn-secondary"
     }`;
 
-  const tabTrackInner = (
+  const tabBtnClassFull = (tab: TabId) =>
+    `rounded-t-lg px-3 py-2 text-sm font-medium transition-colors ${
+      activeTab === tab
+        ? "border border-b-0 border-[var(--card-border)] bg-[var(--bg-elevated)] text-[var(--text-primary)]"
+        : "text-[var(--text-muted)] hover:text-[var(--text-primary)]"
+    }`;
+
+  const lockBadge = !historyMode && lockActive && (
+    <span
+      className="inline-flex items-center gap-1.5 rounded-full border border-amber-400/55 bg-amber-500/25 px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.12em] text-amber-100 shadow-sm"
+      title="No-spend lock staat aan"
+    >
+      <span aria-hidden>🔒</span>
+      Lock
+    </span>
+  );
+
+  const tabTrackSimplified = (
     <div className="dashboard-top-strip-track" role="tablist" aria-label="Budget views">
       {tabs.map((tab) =>
         tab.hidden ? null : (
@@ -170,13 +187,7 @@ export function BudgetTabsShell({
             role="tab"
             id={`budget-tab-btn-${tab.id}`}
             aria-selected={activeTab === tab.id}
-            className={
-              simplifiedLayout
-                ? tabClassSimplified(tab.id)
-                : `dashboard-mini-btn ${
-                    activeTab === tab.id ? "dashboard-mini-btn-primary" : "dashboard-mini-btn-secondary"
-                  }`
-            }
+            className={tabClassSimplified(tab.id)}
             aria-current={activeTab === tab.id ? "page" : undefined}
             onClick={() => setTabWithUrl(tab.id)}
           >
@@ -184,16 +195,34 @@ export function BudgetTabsShell({
           </button>
         ),
       )}
-      {!historyMode && lockActive && (
-        <span
-          className="inline-flex items-center gap-1.5 rounded-full border border-amber-400/55 bg-amber-500/25 px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.12em] text-amber-100 shadow-sm"
-          title="No-spend lock staat aan"
-        >
-          <span aria-hidden>🔒</span>
-          Lock
-        </span>
+      {lockBadge}
+      <span className="dashboard-mini-strip-label">View</span>
+    </div>
+  );
+
+  const tabTrackFull = (
+    <div
+      className="flex flex-wrap items-center gap-2 border-b border-[var(--card-border)] pb-2"
+      role="tablist"
+      aria-label="Budget views"
+    >
+      {tabs.map((tab) =>
+        tab.hidden ? null : (
+          <button
+            key={tab.id}
+            type="button"
+            role="tab"
+            id={`budget-tab-btn-${tab.id}`}
+            aria-selected={activeTab === tab.id}
+            className={tabBtnClassFull(tab.id)}
+            aria-current={activeTab === tab.id ? "page" : undefined}
+            onClick={() => setTabWithUrl(tab.id)}
+          >
+            {tab.label}
+          </button>
+        ),
       )}
-      <span className="dashboard-mini-strip-label">{simplifiedLayout ? "View" : "Weergave"}</span>
+      {lockBadge}
     </div>
   );
 
@@ -257,7 +286,7 @@ export function BudgetTabsShell({
             ) : null}
             <BudgetLockStrip historyMode={historyMode} lockPanelHref={lockPanelHref} embedded />
             <div className="dashboard-top-strip sticky top-0 z-20 shrink-0 border-b border-[var(--card-border)]/50 bg-[var(--bg-surface)]/85 px-1 py-2 backdrop-blur-md supports-[backdrop-filter]:bg-[var(--bg-surface)]/70 sm:px-2">
-              {tabTrackInner}
+              {tabTrackSimplified}
             </div>
             {headerRight ? (
               <div className="shrink-0 border-b border-[var(--card-border)]/30 px-2 py-2">{headerRight}</div>
@@ -281,13 +310,10 @@ export function BudgetTabsShell({
           </SciFiPanel>
         </div>
       ) : (
-        <div className="space-y-3">
+        <div className="space-y-4">
           <BudgetLockStrip historyMode={historyMode} lockPanelHref={lockPanelHref} />
-          <div className="dashboard-top-strip">
-            {tabTrackInner}
-          </div>
-          {headerRight}
-          <div className="mt-4">{panels}</div>
+          {tabTrackFull}
+          <div className="min-h-[120px] space-y-4">{panels}</div>
         </div>
       )}
     </BudgetLockProvider>

@@ -27,7 +27,7 @@ export function ExportBudgetCsvButton() {
       type="button"
       onClick={handleClick}
       disabled={pending}
-      className="dashboard-mini-btn dashboard-mini-btn-secondary text-sm disabled:opacity-50"
+      className="btn-secondary inline-flex items-center justify-center rounded-lg px-3 py-2 text-sm font-medium focus:outline-none focus-visible:ring-2 focus-visible:ring-[rgba(var(--mode-rgb),0.45)] focus-visible:ring-offset-0 disabled:opacity-50"
       aria-label="Export budget as CSV"
     >
       {pending ? "Exporting…" : "Export CSV"}
