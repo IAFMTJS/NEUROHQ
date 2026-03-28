@@ -266,12 +266,12 @@ async function BudgetContent({ searchParams }: Props) {
       : { title: "Stable", tone: "text-emerald-200", border: "border-emerald-400/30 bg-emerald-400/10" };
 
   const headerRight = (
-    <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+    <div className="flex flex-wrap items-center gap-1.5">
       <BudgetHistorySelector currentMonth={monthParam} />
       <ExportBudgetCsvButton />
       <Link
         href="/strategy"
-        className="btn-secondary inline-flex items-center justify-center rounded-lg px-3 py-2 text-sm font-medium focus:outline-none focus-visible:ring-2 focus-visible:ring-[rgba(var(--mode-rgb),0.45)] focus-visible:ring-offset-0"
+        className="inline-flex items-center justify-center rounded-md border border-[rgba(var(--mode-rgb),0.22)] bg-[var(--bg-elevated)]/45 px-2 py-1 text-[11px] font-medium text-[var(--text-primary)] shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[rgba(var(--mode-rgb),0.35)] focus-visible:ring-offset-0"
       >
         Strategy
       </Link>
