@@ -55,12 +55,29 @@ function urlWithClickTracking(url: string | undefined, tag: string | undefined):
  * - Logs send to push_sends_log for re-engagement backoff.
  * - Appends from_push & tag to payload.url for click tracking.
  */
+/** Skip re-sending the same tagged push within this window (duplicate cron / double routes). */
+const SAME_TAG_DEDUPE_MS = 50 * 60 * 1000;
+
 export async function sendPushToUser(
   supabase: SupabaseClient,
   userId: string,
   payload: PushPayload
 ): Promise<boolean> {
   ensureVapid();
+
+  const tagKey = payload.tag?.trim() || null;
+  if (tagKey) {
+    const since = new Date(Date.now() - SAME_TAG_DEDUPE_MS).toISOString();
+    const { count } = await supabase
+      .from("push_sends_log")
+      .select("*", { count: "exact", head: true })
+      .eq("user_id", userId)
+      .eq("trigger_type", tagKey)
+      .gte("sent_at", since);
+    if ((count ?? 0) > 0) {
+      return true;
+    }
+  }
 
   const { data: user } = await supabase
     .from("users")

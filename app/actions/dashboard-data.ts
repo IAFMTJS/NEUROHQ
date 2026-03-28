@@ -217,10 +217,6 @@ async function buildCriticalPayload(ctx: TodayContext): Promise<DashboardCritica
         ? [`Voltooi 1 missie (±${estimatedXP} XP)`, "Start missie", "Volgende stap", `Pak je volgende missie`]
         : ["Start Mission", "Start missie", "Volgende stap"];
   const missionLabel = ctaVariants[quoteDay % ctaVariants.length];
-  const missionSubtext =
-    todaysTasks.length > 0
-      ? `Ga naar je missies en kies de volgende taak. XP-waarde is een indicatie (tot ongeveer ${estimatedXP}).`
-      : "Praat met de assistant om een taak toe te voegen.";
   const learningNeeded = weeklyLearningMinutes < weeklyLearningTarget;
   const emptyMissionMessage = learningNeeded
     ? `${weeklyLearningTarget} min this week to stay on track. Log time on Growth.`
@@ -343,7 +339,6 @@ async function buildCriticalPayload(ctx: TodayContext): Promise<DashboardCritica
     topQuickActions,
     missionLabel,
     singleGoalLabel,
-    missionSubtext,
     emptyMissionMessage,
     emptyMissionHref,
     dailyQuoteText: quoteToday?.quote_text ?? null,

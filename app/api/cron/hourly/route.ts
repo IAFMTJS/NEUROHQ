@@ -1,7 +1,14 @@
 import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { sendPushToUser } from "@/lib/push";
-import { getLocalDateTimeParts, yesterdayDate, getDayOfYearFromDateString, isInQuietHours, utcStartOfLocalDayIso } from "@/lib/utils/timezone";
+import {
+  getLocalDateTimeParts,
+  yesterdayDate,
+  getDayOfYearFromDateString,
+  isInQuietHours,
+  utcStartOfLocalDayIso,
+  todayDateString,
+} from "@/lib/utils/timezone";
 import { isHighSensoryDayForUser } from "@/lib/mode-admin";
 import { getQuoteByDayNumber, prepareQuoteForPersonalityPush } from "@/lib/quotes";
 import { isAppEmailConfigured, sendReminderToUser } from "@/lib/email";
@@ -247,6 +254,8 @@ export async function GET(request: Request) {
     .not("timezone", "is", null);
   if (userIdFilter) usersQuery = usersQuery.eq("id", userIdFilter);
   const { data: users } = await usersQuery;
+  /** Aligns with `saveDailyState` / dashboard (`todayDateString`, Europe/Amsterdam). User-local `todayStr` can differ near timezone boundaries. */
+  const appToday = todayDateString();
 
   const prefsByUser = new Map<
     string,
@@ -502,7 +511,7 @@ export async function GET(request: Request) {
       if (!highSensory) {
         try {
           const currentUserId = u.id;
-          const data = await getMorningEmailData(supabase, currentUserId, todayStr);
+          const data = await getMorningEmailData(supabase, currentUserId, todayStr, appToday);
           const html = buildMorningEmailHtml(data);
           const sent = await sendReminderToUser(supabase, currentUserId, {
             subject: "NEUROHQ — Good morning",
@@ -529,7 +538,7 @@ export async function GET(request: Request) {
             .from("daily_state")
             .select("energy, focus")
             .eq("user_id", u.id as string)
-            .eq("date", todayStr)
+            .eq("date", appToday)
             .maybeSingle();
           const brainStatusDone = !!(
             dailyState && (dailyState.energy != null || dailyState.focus != null)
@@ -542,7 +551,10 @@ export async function GET(request: Request) {
               new Date()
             );
             if (canSend) {
-              const ctx = await loadUserNotificationContextForUser(supabase, u.id as string, { dateStr: todayStr });
+              const ctx = await loadUserNotificationContextForUser(supabase, u.id as string, {
+                dateStr: todayStr,
+                dailyStateDate: appToday,
+              });
               const result = buildBehavioralNotificationForContext(ctx, {
                 type: "brain_status_missing",
               });
@@ -596,7 +608,7 @@ export async function GET(request: Request) {
       if (!highSensory) {
         try {
           const currentUserId = u.id;
-          const data = await getEveningEmailData(supabase, currentUserId, todayStr);
+          const data = await getEveningEmailData(supabase, currentUserId, todayStr, appToday);
           const html = buildEveningEmailHtml(data);
           const sent = await sendReminderToUser(supabase, currentUserId, {
             subject: "NEUROHQ — Evening check-in",
@@ -622,7 +634,7 @@ export async function GET(request: Request) {
         try {
           const alreadySentEvening = await hasSentTriggerToday(supabase, u.id, "evening-reminder", tz, todayStr);
           if (!alreadySentEvening) {
-            const data = await getEveningEmailData(supabase, u.id, todayStr);
+            const data = await getEveningEmailData(supabase, u.id, todayStr, appToday);
             const basePayload = buildEveningPushPayload(data);
             const payload = applyPersonalityToPayload(
               basePayload,
@@ -646,7 +658,10 @@ export async function GET(request: Request) {
             todayStr
           );
           if (!alreadySentAchievement) {
-            const ctx = await loadUserNotificationContextForUser(supabase, u.id, { dateStr: todayStr });
+            const ctx = await loadUserNotificationContextForUser(supabase, u.id, {
+              dateStr: todayStr,
+              dailyStateDate: appToday,
+            });
             const [
               totalTasks,
               incompleteTasks,

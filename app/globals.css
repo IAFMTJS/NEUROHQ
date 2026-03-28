@@ -320,6 +320,41 @@
   --mode-bg-main: #0c0618;
   --mode-bg-elevated: #150a24;
   --mode-bg-surface: #10081c;
+
+  /* Full-page stack: html/body backgrounds read these from :root; override so Overdrive tints the whole app */
+  --cinematic-navy: #0a0612;
+  --cinematic-navy-mid: #0e0a18;
+  --cinematic-navy-bottom: #120c1e;
+  --cinematic-vignette: radial-gradient(
+    ellipse 80% 80% at 50% 50%,
+    transparent 30%,
+    rgba(18, 8, 32, 0.52) 70%,
+    rgba(10, 4, 20, 0.88) 100%
+  );
+  --cinematic-nebula: radial-gradient(ellipse 140% 90% at 50% 15%, rgba(var(--mode-rgb), 0.2), transparent 45%),
+    radial-gradient(ellipse 120% 70% at 75% 55%, rgba(var(--mode-rgb-deep), 0.14), transparent 50%),
+    radial-gradient(ellipse 90% 120% at 25% 65%, rgba(236, 72, 153, 0.12), transparent 45%),
+    radial-gradient(ellipse 80% 60% at 50% 85%, rgba(var(--mode-rgb-deep), 0.09), transparent 40%);
+  --cinematic-radial-top: radial-gradient(ellipse 110% 70% at 50% 0%, rgba(var(--mode-rgb-deep), 0.22), transparent 48%);
+  --cinematic-radial-mid: radial-gradient(ellipse 90% 60% at 50% 50%, rgba(192, 38, 211, 0.08), transparent 52%);
+  --cinematic-radial-bottom: radial-gradient(ellipse 110% 50% at 50% 100%, rgba(var(--mode-rgb-deep), 0.14), transparent 48%);
+  --cinematic-glow-cyan: rgba(var(--mode-rgb), 0.32);
+  --galaxy-band: linear-gradient(
+    105deg,
+    transparent 0%,
+    transparent 35%,
+    rgba(var(--mode-rgb-deep), 0.08) 48%,
+    rgba(236, 72, 153, 0.12) 50%,
+    rgba(var(--mode-rgb-deep), 0.08) 52%,
+    transparent 65%,
+    transparent 100%
+  );
+  --galaxy-core: radial-gradient(ellipse 80% 40% at 50% 8%, rgba(var(--mode-rgb), 0.16), transparent 50%),
+    radial-gradient(ellipse 60% 80% at 85% 60%, rgba(var(--mode-rgb-deep), 0.09), transparent 45%),
+    radial-gradient(ellipse 50% 60% at 15% 70%, rgba(var(--mode-rgb-deep), 0.07), transparent 40%);
+  --galaxy-dust: radial-gradient(ellipse 100% 50% at 50% 20%, rgba(var(--mode-rgb-deep), 0.1), transparent 55%);
+  --semantic-accent: #c084fc;
+  --semantic-ring: #f0abfc;
 }
 
 /* Semantic accents (A.6): prefer var(--semantic-*) in new/updated UI; follows DCIC data-mode on <html>. */
@@ -338,10 +373,6 @@
 [data-mode="recovery"] {
   --semantic-accent: var(--accent-primary);
   --semantic-ring: #4ade80;
-}
-[data-mode="overdrive"] {
-  --semantic-accent: #c084fc;
-  --semantic-ring: #f0abfc;
 }
 
 @keyframes overdriveAmbient {
@@ -1872,10 +1903,6 @@ html[data-light-ui="true"] body {
 .mascot-hero .commander-mascot-pedestal .commander-mascot-pedestal-mascot * {
   pointer-events: none;
 }
-.mascot-hero .commander-mascot-pedestal .commander-mascot-pedestal-cards,
-.mascot-hero .commander-mascot-pedestal .commander-mascot-pedestal-cards a {
-  pointer-events: auto;
-}
 .mascot-hero[data-commander-orbit="true"].mascot-hero-top {
   /* Band reikt hoger onder mascotte; iets strakkere aansluiting op content eronder */
   margin-bottom: -52px;
@@ -1895,8 +1922,14 @@ html[data-light-ui="true"] body {
   transform-style: preserve-3d;
 }
 
-/* Commander pedestal: HUD-kaarten in de band */
-.commander-mascot-pedestal .commander-pedestal-hud-card {
+/* Verticaal uitrekken vanaf bovenkant arc-vlak: bovenste punten vast, onderkant band lager */
+.commander-mascot-pedestal .commander-mascot-pedestal-donut-vert-stretch {
+  transform: scaleY(1.16);
+  transform-origin: top center;
+}
+
+/* Commander HUD-cellen (onder mascotte: XP / midden / budget) */
+.commander-pedestal-hud-card {
   border-color: rgba(var(--mode-rgb, 0, 212, 255), 0.22);
   background: linear-gradient(
     165deg,
@@ -1907,7 +1940,7 @@ html[data-light-ui="true"] body {
     0 2px 12px rgba(0, 0, 0, 0.35),
     inset 0 1px 0 rgba(255, 255, 255, 0.06);
 }
-.commander-mascot-pedestal .commander-pedestal-band-card {
+.commander-pedestal-band-card {
   font-size: 0.7rem;
   line-height: 1.2;
 }
@@ -2206,6 +2239,28 @@ header h1 { margin: 0; }
   display: flex;
   justify-content: space-between;
   margin-top: 8px;
+}
+
+/* Dashboard bridge: grotere status-rings (alleen zonder pedestal), gelijk verdeeld */
+.bridge-layout-hero .commander-bridge-stats {
+  justify-content: center;
+  gap: clamp(0.75rem, 3.5vw, 1.35rem);
+  margin-top: 12px;
+  width: 100%;
+  max-width: 22rem;
+  margin-left: auto;
+  margin-right: auto;
+}
+@media (min-width: 640px) {
+  .bridge-layout-hero .commander-bridge-stats {
+    max-width: 24rem;
+    gap: 1.25rem;
+  }
+}
+
+.bridge-layout-hero .commander-status-strip {
+  margin-left: auto;
+  margin-right: auto;
 }
 
 /* 7. MISSION GRID */

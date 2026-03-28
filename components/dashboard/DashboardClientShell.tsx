@@ -256,7 +256,6 @@ export function DashboardClientShell() {
     topQuickActions: [],
     missionLabel: "Klaar om te starten",
     singleGoalLabel: null,
-    missionSubtext: "",
     emptyMissionMessage: "Geen taken geladen.",
     emptyMissionHref: "/tasks",
     dailyQuoteText: null,
@@ -273,7 +272,6 @@ export function DashboardClientShell() {
     copyVariant: undefined,
     accountabilitySettings: undefined,
     learningStreak: 0,
-    autoSuggestions: [],
     burnout: false,
   };
 
@@ -289,8 +287,6 @@ export function DashboardClientShell() {
     economy,
     missionLabel,
     singleGoalLabel,
-    missionSubtext,
-    autoSuggestions = [],
     emptyMissionMessage,
     emptyMissionHref,
     dailyQuoteText,
@@ -643,12 +639,10 @@ export function DashboardClientShell() {
                       missionHref="/tasks"
                       missionLabel={missionLabel}
                       singleGoalLabel={singleGoalLabel}
-                      missionSubtext={missionSubtext}
                       exportDate={dateStr}
                       streakAtRisk={streakAtRisk}
                       dailyQuoteText={dailyQuoteText}
                       dailyQuoteAuthor={dailyQuoteAuthor}
-                      autoSuggestions={autoSuggestions}
                       pedestalStats={{
                         totalXP: typeof xp.total_xp === "number" ? xp.total_xp : 0,
                         displayLevel: dcicLevel,

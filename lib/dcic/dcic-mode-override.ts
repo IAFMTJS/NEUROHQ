@@ -1,6 +1,7 @@
 "use client";
 
 import { getTodayKey } from "@/lib/daily-date";
+import { useHQStore } from "@/lib/hq-store";
 import type { GameState } from "./types";
 import { switchMode } from "./mode-engine";
 
@@ -76,8 +77,21 @@ export function applyDCICModeOverrideIfAny(gameState: GameState): void {
   const override = readDCICModeOverride();
   if (override) {
     if (!gameState?.mode) return;
-    if (gameState.mode.current !== override.mode) {
-      switchMode(gameState, override.mode, { forced: true });
+    if (gameState.mode.current === override.mode) return;
+
+    const prev = useHQStore.getState().gameState;
+    const prevLu = prev?.mode?.lockedUntil;
+    const prevOverdriveLockValid =
+      prev?.mode?.current === "overdrive" &&
+      prevLu != null &&
+      !Number.isNaN(Date.parse(prevLu)) &&
+      Date.parse(prevLu) > Date.now();
+
+    switchMode(gameState, override.mode, { forced: true });
+    if (override.mode === "overdrive" && prevOverdriveLockValid) {
+      gameState.mode.lockedUntil = prev!.mode!.lockedUntil;
+      gameState.mode.overdriveSessionStart =
+        prev!.mode!.overdriveSessionStart ?? gameState.mode.overdriveSessionStart;
     }
     return;
   }

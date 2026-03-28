@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useLayoutEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { Modal } from "@/components/Modal";
 import { saveDailyMoodLabel, addMoodInterventionTask } from "@/app/actions/mood-intervention";
@@ -20,17 +20,23 @@ type Props = {
 export function MoodManualPanel({ open, onClose, onMoodSaved, brainStatusHint }: Props) {
   const [picked, setPicked] = useState<MoodLabel | null>(null);
   const [step, setStep] = useState<"pick" | "actions">("pick");
+  /** Mood used for quick actions (ref stays stable if parent re-render resets state). */
+  const actionsMoodRef = useRef<MoodLabel | null>(null);
+  const prevOpenRef = useRef(false);
 
-  useEffect(() => {
-    if (open) {
+  useLayoutEffect(() => {
+    if (open && !prevOpenRef.current) {
       setPicked(null);
       setStep("pick");
+      actionsMoodRef.current = null;
     }
+    prevOpenRef.current = open;
   }, [open]);
 
   function reset() {
     setPicked(null);
     setStep("pick");
+    actionsMoodRef.current = null;
   }
 
   function handleClose() {
@@ -45,13 +51,15 @@ export function MoodManualPanel({ open, onClose, onMoodSaved, brainStatusHint }:
       neuroToast.error(r.error ?? "Kon mood niet opslaan.");
       return;
     }
-    onMoodSaved?.(m);
     if (m === "good") {
+      onMoodSaved?.(m);
       neuroToast.success("Mood opgeslagen.");
       handleClose();
       return;
     }
+    actionsMoodRef.current = m;
     setStep("actions");
+    queueMicrotask(() => onMoodSaved?.(m));
   }
 
   async function addTask(title: string) {
@@ -64,7 +72,9 @@ export function MoodManualPanel({ open, onClose, onMoodSaved, brainStatusHint }:
     }
   }
 
-  const actions = picked && picked !== "good" ? MOOD_QUICK_ACTIONS[picked] : [];
+  const actionsMood = picked && picked !== "good" ? picked : actionsMoodRef.current;
+  const actions =
+    actionsMood && actionsMood !== "good" ? MOOD_QUICK_ACTIONS[actionsMood] : [];
 
   return (
     <Modal
@@ -107,7 +117,7 @@ export function MoodManualPanel({ open, onClose, onMoodSaved, brainStatusHint }:
           </div>
         )}
 
-        {step === "actions" && picked && picked !== "good" && (
+        {step === "actions" && actionsMood && actionsMood !== "good" && (
           <div className="space-y-3">
             <p className="text-xs font-semibold uppercase tracking-wide text-violet-200/90">Snel iets voor jezelf</p>
             <div className="flex flex-col gap-2">

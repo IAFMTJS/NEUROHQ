@@ -4,6 +4,11 @@
  * DCIC Game State Client
  * - Reads cached gameState from IndexedDB for instant UI.
  * - Fetches fresh gameState from API and updates cache (stale-while-revalidate).
+ *
+ * Bootstrap runs once per full page load (module flag). Multiple components call
+ * `useDCICGameState()`; without this, each remount (e.g. dashboard shell) would
+ * re-run load(), clobber in-memory Overdrive locks with stale IndexedDB, and reset
+ * the countdown.
  */
 
 import { useEffect } from "react";
@@ -11,6 +16,44 @@ import type { GameState } from "./types";
 import { getCachedGameState, setCachedGameState } from "./game-state-cache";
 import { useHQStore } from "@/lib/hq-store";
 import { applyDCICModeOverrideIfAny } from "./dcic-mode-override";
+
+let dcicGameStateBootstrapDone = false;
+
+/** Call on sign-out so the next session runs a full bootstrap again. */
+export function resetDcicGameStateBootstrap(): void {
+  dcicGameStateBootstrapDone = false;
+}
+
+/**
+ * If IndexedDB lags behind the in-memory store (e.g. cache write failed), prefer the
+ * active Overdrive lock from memory so the UI timer does not jump.
+ */
+function mergePreferValidOverdriveLock(
+  memory: GameState | null,
+  incoming: GameState
+): GameState {
+  const m = memory?.mode;
+  const lu = m?.lockedUntil;
+  if (
+    m?.current === "overdrive" &&
+    lu != null &&
+    !Number.isNaN(Date.parse(lu)) &&
+    Date.parse(lu) > Date.now() &&
+    incoming.mode?.current !== "overdrive"
+  ) {
+    return {
+      ...incoming,
+      mode: {
+        ...incoming.mode,
+        current: "overdrive",
+        lockedUntil: m.lockedUntil,
+        overdriveSessionStart:
+          m.overdriveSessionStart ?? incoming.mode.overdriveSessionStart,
+      },
+    };
+  }
+  return incoming;
+}
 
 export function useDCICGameState() {
   const gameState = useHQStore((s) => s.gameState);
@@ -24,16 +67,29 @@ export function useDCICGameState() {
     let cancelled = false;
 
     const load = async () => {
+      if (dcicGameStateBootstrapDone) {
+        return;
+      }
+
+      const memoryBeforeLoad = useHQStore.getState().gameState;
+
       setGameStateStatus("loading");
       setGameStateError(null);
 
+      let hadCached = false;
+
       // 1. Try local cache first for instant UI
       try {
-        const cached = await getCachedGameState();
-        if (!cancelled && cached) {
+        const cachedRaw = await getCachedGameState();
+        if (!cancelled && cachedRaw) {
+          const cached = mergePreferValidOverdriveLock(
+            memoryBeforeLoad,
+            cachedRaw
+          );
           applyDCICModeOverrideIfAny(cached);
           setGameState(cached);
           setGameStateStatus("ready");
+          hadCached = true;
         }
       } catch {
         // Ignore cache errors; we'll still try network
@@ -54,6 +110,7 @@ export function useDCICGameState() {
                 : `Game state ${res.status}`;
             setGameStateError(msg);
             setGameStateStatus("error");
+            dcicGameStateBootstrapDone = true;
           }
           return;
         }
@@ -62,15 +119,21 @@ export function useDCICGameState() {
           applyDCICModeOverrideIfAny(fresh);
           setGameState(fresh);
           setGameStateStatus("ready");
+          setCachedGameState(fresh).catch(() => {});
         }
-        // 3. Update cache in background
-        setCachedGameState(fresh).catch(() => {});
+        if (!cancelled) {
+          dcicGameStateBootstrapDone = true;
+        }
       } catch (err) {
-        if (!cancelled && !gameState) {
+        if (!cancelled && !useHQStore.getState().gameState) {
           setGameStateStatus("error");
           setGameStateError(
             err instanceof Error ? err.message : "Failed to load game state"
           );
+        }
+        if (!cancelled) {
+          dcicGameStateBootstrapDone =
+            hadCached || useHQStore.getState().gameState != null;
         }
       }
     };

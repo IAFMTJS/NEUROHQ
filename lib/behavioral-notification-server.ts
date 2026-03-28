@@ -39,11 +39,12 @@ async function computeConsistencyScore(
 /**
  * Server-side helper for cron/admin: load UserNotificationContext for a given user id.
  * When options.dateStr is provided, also loads rich context (daily_state, task/calendar count, mode, streak, weekly missions).
+ * Use options.dailyStateDate when daily_state rows are keyed by app day (Europe/Amsterdam via todayDateString) but tasks/calendar use the user's local calendar day (dateStr).
  */
 export async function loadUserNotificationContextForUser(
   supabase: SupabaseClient,
   userId: string,
-  options?: { dateStr?: string }
+  options?: { dateStr?: string; dailyStateDate?: string }
 ): Promise<UserNotificationContext> {
   const [{ data: prefs }, { data: sfRow }] = await Promise.all([
     supabase
@@ -76,12 +77,14 @@ export async function loadUserNotificationContextForUser(
   const dateStr = options?.dateStr;
   if (!dateStr) return base;
 
+  const dailyStateDate = options?.dailyStateDate ?? dateStr;
+
   const [dailyState, taskCount, calendarCount, streakRow, weekMissions] = await Promise.all([
     supabase
       .from("daily_state")
       .select("energy, focus, sensory_load")
       .eq("user_id", userId)
-      .eq("date", dateStr)
+      .eq("date", dailyStateDate)
       .maybeSingle(),
     supabase
       .from("tasks")

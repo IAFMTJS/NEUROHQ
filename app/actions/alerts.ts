@@ -45,6 +45,7 @@ export async function emitUserAlert(input: {
 
   const severity = input.severity ?? "info";
   const linkPath = input.linkPath?.trim() || null;
+  const tag = input.pushTag?.slice(0, 120) ?? null;
 
   const { data: inserted, error } = await db
     .from("user_alerts")
@@ -54,13 +55,47 @@ export async function emitUserAlert(input: {
       body: input.body?.slice(0, 2000) ?? null,
       severity,
       link_path: linkPath,
-      push_tag: input.pushTag?.slice(0, 120) ?? null,
+      push_tag: tag,
     })
     .select("id")
     .single();
 
-  if (error) throw new Error(error.message);
-  const id = String((inserted as { id: string }).id);
+  let id: string;
+  if (error) {
+    if ((error as { code?: string }).code === "23505" || String(error.message ?? "").includes("duplicate key")) {
+      if (!tag) throw new Error(error.message);
+      const { data: row } = await db
+        .from("user_alerts")
+        .select("id, push_sent_at")
+        .eq("user_id", user.id)
+        .eq("push_tag", tag)
+        .maybeSingle();
+      if (!row) throw new Error(error.message);
+      id = String((row as { id: string }).id);
+      if (input.sendPush && !(row as { push_sent_at?: string | null }).push_sent_at) {
+        const prefs = await getUserPreferencesOrDefaults();
+        if (prefs.push_reminders_enabled) {
+          const path = linkPath && linkPath.startsWith("/") ? linkPath : linkPath ? `/${linkPath}` : "/dashboard";
+          const delivered = await sendPushToUser(supabase, user.id, {
+            title: input.title.slice(0, 120),
+            body: input.body?.slice(0, 280),
+            url: path,
+            tag: tag ?? `hq-alert-${id}`,
+            priority: severity === "urgent" ? "high" : "normal",
+          });
+          if (delivered) {
+            await db.from("user_alerts").update({ push_sent_at: new Date().toISOString() }).eq("id", id);
+          }
+        }
+      }
+      revalidatePath("/dashboard");
+      revalidatePath("/profile");
+      return { id };
+    }
+    throw new Error(error.message);
+  }
+
+  id = String((inserted as { id: string }).id);
 
   if (input.sendPush) {
     const prefs = await getUserPreferencesOrDefaults();
@@ -70,7 +105,7 @@ export async function emitUserAlert(input: {
         title: input.title.slice(0, 120),
         body: input.body?.slice(0, 280),
         url: path,
-        tag: input.pushTag ?? `hq-alert-${id}`,
+        tag: tag ?? `hq-alert-${id}`,
         priority: severity === "urgent" ? "high" : "normal",
       });
       if (delivered) {
@@ -142,15 +177,6 @@ async function ensureInboxAlertIfNew(
 ): Promise<void> {
   const db = supabase as unknown as AnyDb;
   const tag = input.pushTag.slice(0, 120);
-  const { data: existing } = await db
-    .from("user_alerts")
-    .select("id")
-    .eq("user_id", userId)
-    .eq("push_tag", tag)
-    .is("read_at", null)
-    .maybeSingle();
-  if (existing) return;
-
   const { error } = await db.from("user_alerts").insert({
     user_id: userId,
     title: input.title.slice(0, 200),
@@ -159,13 +185,15 @@ async function ensureInboxAlertIfNew(
     link_path: input.linkPath,
     push_tag: tag,
   });
-  if (error) {
-    console.error("[ensureInboxAlertIfNew]", error.message);
+  if (!error) return;
+  if (error.code === "23505" || String(error.message ?? "").includes("duplicate key")) {
+    return;
   }
+  console.error("[ensureInboxAlertIfNew]", error.message);
 }
 
 /**
- * Upserts dashboard-driven inbox rows (deduped by push_tag per unread row).
+ * Upserts dashboard-driven inbox rows (deduped by unique user_id + push_tag).
  * Called from buildCriticalPayload so meldingen vullen bij elke dashboard/bootstrap load.
  */
 export async function syncInboxAlertsFromDashboardCritical(critical: DashboardCritical): Promise<void> {

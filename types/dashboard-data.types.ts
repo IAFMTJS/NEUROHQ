@@ -19,7 +19,6 @@ export interface DashboardCritical {
   topQuickActions: { key: string; label: string; href: string }[];
   missionLabel: string;
   singleGoalLabel: string | null;
-  missionSubtext: string;
   emptyMissionMessage: string;
   emptyMissionHref: string;
   dailyQuoteText: string | null;

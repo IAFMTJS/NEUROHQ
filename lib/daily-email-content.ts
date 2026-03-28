@@ -52,14 +52,17 @@ export type ReminderPushPayload = {
   priority: "normal";
 };
 
-/** Fetch data needed for the morning email (quote, brain state, tasks, calendar for today). All data scoped to userId only. */
+/** Fetch data needed for the morning email (quote, brain state, tasks, calendar for today). All data scoped to userId only.
+ * `localDayStr` is the user's calendar day for tasks/calendar; `dailyStateDate` matches `daily_state.date` (app day, Europe/Amsterdam via todayDateString when saving). */
 export async function getMorningEmailData(
   supabase: SupabaseClient,
   userId: string,
-  todayStr: string
+  localDayStr: string,
+  dailyStateDate?: string
 ): Promise<MorningEmailData> {
   assertSingleUserId(userId);
-  const dayOfYear = Math.max(1, Math.min(365, getDayOfYearFromDateString(todayStr)));
+  const dsDate = dailyStateDate ?? localDayStr;
+  const dayOfYear = Math.max(1, Math.min(365, getDayOfYearFromDateString(localDayStr)));
   const quoteRow = getQuoteByDayNumber(dayOfYear);
   const quote = quoteRow?.quote_text ?? "Your daily focus.";
 
@@ -68,13 +71,13 @@ export async function getMorningEmailData(
       .from("daily_state")
       .select("energy, focus")
       .eq("user_id", userId)
-      .eq("date", todayStr)
+      .eq("date", dsDate)
       .maybeSingle(),
     supabase
       .from("tasks")
       .select("title")
       .eq("user_id", userId)
-      .eq("due_date", todayStr)
+      .eq("due_date", localDayStr)
       .is("deleted_at", null)
       .order("created_at", { ascending: true })
       .limit(15),
@@ -82,8 +85,8 @@ export async function getMorningEmailData(
       .from("calendar_events")
       .select("title, start_at")
       .eq("user_id", userId)
-      .gte("start_at", `${todayStr}T00:00:00`)
-      .lte("start_at", `${todayStr}T23:59:59`)
+      .gte("start_at", `${localDayStr}T00:00:00`)
+      .lte("start_at", `${localDayStr}T23:59:59`)
       .order("start_at", { ascending: true })
       .limit(10),
     supabase
@@ -163,15 +166,18 @@ export function buildMorningPushPayload(data: MorningEmailData): ReminderPushPay
   };
 }
 
-/** Fetch data needed for the evening email (tasks completed, expenses, brain state). All data scoped to userId only. */
+/** Fetch data needed for the evening email (tasks completed, expenses, brain state). All data scoped to userId only.
+ * `localDayStr` is the user's calendar day for tasks/analytics/budget rows; `dailyStateDate` matches `daily_state.date` when it differs (app Amsterdam day). */
 export async function getEveningEmailData(
   supabase: SupabaseClient,
   userId: string,
-  todayStr: string
+  localDayStr: string,
+  dailyStateDate?: string
 ): Promise<EveningEmailData> {
   assertSingleUserId(userId);
-  const dayStart = `${todayStr}T00:00:00.000Z`;
-  const dayEnd = `${todayStr}T23:59:59.999Z`;
+  const dsDate = dailyStateDate ?? localDayStr;
+  const dayStart = `${localDayStr}T00:00:00.000Z`;
+  const dayEnd = `${localDayStr}T23:59:59.999Z`;
 
   const now = new Date();
   const { start: weekStart, end: weekEnd } = getWeekBounds(now);
@@ -181,13 +187,13 @@ export async function getEveningEmailData(
       .from("daily_state")
       .select("energy, focus")
       .eq("user_id", userId)
-      .eq("date", todayStr)
+      .eq("date", dsDate)
       .maybeSingle(),
     supabase
       .from("tasks")
       .select("id", { count: "exact", head: true })
       .eq("user_id", userId)
-      .eq("due_date", todayStr)
+      .eq("due_date", localDayStr)
       .is("deleted_at", null),
     supabase
       .from("tasks")
@@ -200,12 +206,12 @@ export async function getEveningEmailData(
       .from("budget_entries")
       .select("id", { count: "exact", head: true })
       .eq("user_id", userId)
-      .eq("date", todayStr),
+      .eq("date", localDayStr),
     supabase
       .from("user_analytics_daily")
       .select("learning_minutes")
       .eq("user_id", userId)
-      .eq("date", todayStr)
+      .eq("date", localDayStr)
       .maybeSingle(),
     supabase
       .from("user_analytics_daily")

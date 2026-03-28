@@ -2,6 +2,7 @@
 
 import { getMascotSrcForPage } from "@/lib/mascots";
 import { CommanderMascotPedestal, type CommanderMascotPedestalStats } from "./CommanderMascotPedestal";
+import { CommanderStatusStrip } from "./CommanderStatusStrip";
 import { CommanderStatRing } from "./CommanderStatRing";
 import { ClientCTALink } from "./ClientCTALink";
 import { useHQStore } from "@/lib/hq-store";
@@ -15,8 +16,6 @@ type Props = {
   missionLabel: string;
   /** Single measurable goal: "wat moet ik nu doen?" (e.g. first incomplete task + XP). */
   singleGoalLabel?: string | null;
-  /** Micro-copy under CTA: gevolg van klikken (minder verrassingen → meer vertrouwen). */
-  missionSubtext?: string | null;
   /** For export CSV (default: today). */
   exportDate?: string | null;
   /** When true, show streak-at-risk status (mascot variant). */
@@ -24,8 +23,6 @@ type Props = {
   /** Daily quote shown under the rings and above CTA. */
   dailyQuoteText?: string | null;
   dailyQuoteAuthor?: string | null;
-  /** Fase 4: 1–3 auto-suggestions (capacity + day + history). */
-  autoSuggestions?: { text: string; type: string }[];
   /** When true, skip the inner "Dashboard / System Overview" title (e.g. when HQHeader is shown above). */
   hideBuiltInTitle?: boolean;
   /** Dashboard bridge: tekst/links blijven links; mascot + stat-rings gecentreerd; icon-rail overlay rechts. */
@@ -41,12 +38,10 @@ export function CommanderHomeHero({
   missionHref,
   missionLabel,
   singleGoalLabel,
-  missionSubtext,
   exportDate,
   streakAtRisk,
   dailyQuoteText,
   dailyQuoteAuthor,
-  autoSuggestions = [],
   hideBuiltInTitle = false,
   bridgeLayout = false,
   pedestalStats = null,
@@ -67,7 +62,7 @@ export function CommanderHomeHero({
     energyLow ? "Slaap of rust eerst" : focusLow ? "Neem een korte pauze" : streakAtRisk ? "Streak in gevaar" : null;
 
   const handleOpenBrainStatus = () => {
-    window.dispatchEvent(new CustomEvent("neurohq-open-brain-status", { detail: { source: "commander-system-overview" } }));
+    window.dispatchEvent(new CustomEvent("neurohq-open-brain-status", { detail: { source: "commander-home-hero" } }));
     void import("sonner")
       .then(({ toast }) => {
         toast.message("Brain Status check-in geopend.");
@@ -136,19 +131,22 @@ export function CommanderHomeHero({
           {singleGoalLabel}
         </p>
       )}
-      {autoSuggestions.length > 0 && (
-        <ul className="mt-2 space-y-1 text-sm text-[var(--text-secondary)] rounded-lg border border-[var(--card-border)] bg-[var(--bg-surface)]/30 px-3 py-2" aria-label="Suggesties">
-          {autoSuggestions.map((s, i) => (
-            <li key={i}>{s.text}</li>
-          ))}
-        </ul>
+      {pedestalStats && bridgeLayout ? (
+        <CommanderStatusStrip
+          stats={{
+            ...pedestalStats,
+            energyPct: effectiveEnergyPct,
+            focusPct: effectiveFocusPct,
+            loadPct: effectiveLoadPct,
+          }}
+        />
+      ) : (
+        <section className={`stats${bridgeLayout ? " commander-bridge-stats" : ""}`}>
+          <CommanderStatRing value={effectiveEnergyPct} variant="energy" size={bridgeLayout ? 120 : 102} />
+          <CommanderStatRing value={effectiveFocusPct} variant="focus" size={bridgeLayout ? 120 : 102} />
+          <CommanderStatRing value={effectiveLoadPct} variant="load" size={bridgeLayout ? 120 : 102} />
+        </section>
       )}
-
-      <section className={`stats${bridgeLayout ? " !justify-center gap-3 md:gap-4" : ""}`}>
-        <CommanderStatRing value={effectiveEnergyPct} variant="energy" />
-        <CommanderStatRing value={effectiveFocusPct} variant="focus" />
-        <CommanderStatRing value={effectiveLoadPct} variant="load" />
-      </section>
       {dailyQuoteText && (
         <div
           className={`w-full max-w-[520px] rounded-xl px-3 py-2.5 ${bridgeLayout ? "mx-0 text-left" : "mx-auto text-center"}`}
@@ -188,16 +186,11 @@ export function CommanderHomeHero({
       >
         {missionLabel}
       </ClientCTALink>
-      {missionSubtext && (
-        <p className={`mt-1.5 text-xs text-[var(--text-muted)] ${bridgeLayout ? "text-left" : "text-center"}`}>
-          {missionSubtext}
-        </p>
-      )}
 
       <button
         type="button"
         onClick={handleOpenBrainStatus}
-        className={`block w-full mt-2 py-2 text-sm text-[var(--text-muted)] hover:text-[var(--text-secondary)] transition-colors no-underline rounded-lg border border-white/10 hover:bg-white/5 ${bridgeLayout ? "text-left px-1" : "text-center"}`}
+        className={`mt-2 block w-full rounded-lg border border-white/10 py-2 text-sm text-[var(--text-muted)] transition-colors no-underline hover:bg-white/5 hover:text-[var(--text-secondary)] ${bridgeLayout ? "px-1 text-left" : "text-center"}`}
         style={{ borderColor: "rgba(var(--mode-rgb, 0, 212, 255), 0.28)" }}
       >
         Brain Status

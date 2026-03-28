@@ -43,6 +43,18 @@ export async function dispatchPendingUserAlertPushes(supabase: SupabaseClient): 
       continue;
     }
 
+    const claimedAt = new Date().toISOString();
+    const { data: claimed } = await db
+      .from("user_alerts")
+      .update({ push_sent_at: claimedAt })
+      .eq("id", raw.id)
+      .is("push_sent_at", null)
+      .select("id")
+      .maybeSingle();
+    if (!claimed) {
+      continue;
+    }
+
     const path = raw.link_path?.trim() || "/dashboard";
     const url = path.startsWith("/") ? path : `/${path}`;
     const ok = await sendPushToUser(supabase, raw.user_id, {
@@ -53,8 +65,9 @@ export async function dispatchPendingUserAlertPushes(supabase: SupabaseClient): 
       priority: raw.severity === "urgent" ? "high" : "normal",
     });
     if (ok) {
-      await db.from("user_alerts").update({ push_sent_at: new Date().toISOString() }).eq("id", raw.id);
       sent++;
+    } else {
+      await db.from("user_alerts").update({ push_sent_at: null }).eq("id", raw.id);
     }
   }
   return sent;

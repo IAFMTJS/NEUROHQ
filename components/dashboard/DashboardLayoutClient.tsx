@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useLayoutEffect } from "react";
 import Link from "next/link";
 import BottomNavigation from "@/components/ui/BottomNavigation";
 import { KeyboardShortcuts } from "@/components/KeyboardShortcuts";
@@ -46,12 +46,15 @@ export function DashboardLayoutClient({
   const { gameState: dcicGameState } = useDCICGameState();
   const mode = dcicGameState?.mode?.current ?? hqMode;
 
-  // Important: some cinematic CSS (e.g. `body::before`) reads CSS variables that we
-  // only set via `[data-mode="war"|"recovery"]` selectors. To make sure those vars
-  // are visible to the `body` pseudo-element, mirror `data-mode` on <html>.
-  useEffect(() => {
+  // Mirror DCIC mode on <html> so :root-level tokens (--spotlight, --mode-rgb, cinematic
+  // layers) apply to html/body for the whole app shell — same as war/recovery.
+  // useLayoutEffect runs before paint so the first painted frame matches the active mode.
+  useLayoutEffect(() => {
     try {
       document.documentElement.dataset.mode = mode;
+      if (typeof document !== "undefined" && document.body) {
+        document.body.dataset.mode = mode;
+      }
     } catch {
       // best-effort; ignore DOM/SSR issues
     }

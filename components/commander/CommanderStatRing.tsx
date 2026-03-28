@@ -13,9 +13,11 @@ const LOW_VALUE_HINT: Record<Variant, string> = {
 type Props = {
   value: number;
   variant: Variant;
+  /** Default 102; bridge dashboard gebruikt grotere ringen. */
+  size?: number;
 };
 
-export function CommanderStatRing({ value, variant }: Props) {
+export function CommanderStatRing({ value, variant, size = 102 }: Props) {
   const pct = Math.min(100, Math.max(0, value));
   const absolute = (pct / 10).toFixed(1);
   const isLow = variant === "load" ? pct >= 80 : pct <= 20;
@@ -34,7 +36,7 @@ export function CommanderStatRing({ value, variant }: Props) {
 
   return (
     <div className="flex flex-col items-center gap-1">
-      <EnergyRing progress={pct} size={102} label={label} value={`${pct}%`} mode={mode} softGlow />
+      <EnergyRing progress={pct} size={size} label={label} value={`${pct}%`} mode={mode} softGlow />
       <span className="text-[10px] tabular-nums text-[var(--text-muted)]" aria-hidden>
         {absolute}/10
       </span>
