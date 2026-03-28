@@ -4,7 +4,7 @@ import { sendPushToUser } from "@/lib/push";
 import type { PushPayload } from "@/lib/push";
 import { getQuoteByDayNumber, prepareQuoteForPersonalityPush } from "@/lib/quotes";
 import { getConfiguredReleaseVersion, getReleaseNotesLines, formatReleaseNotesForPushBody } from "@/lib/app-release";
-import { getDayOfYearFromDateString, getLocalDateHour, todayDateString } from "@/lib/utils/timezone";
+import { getDayOfYearFromDateString, getLocalDateHour } from "@/lib/utils/timezone";
 import {
   getMorningEmailData,
   getEveningEmailData,
@@ -31,7 +31,6 @@ const PUSH_TYPES = [
   "weekly-learning",
   "savings-alert",
   "shutdown-reminder",
-  "freeze-reminder",
   "avoidance-alert",
   "reengage",
   "streak-growth",
@@ -386,29 +385,6 @@ export async function GET(request: Request) {
           url: "/dashboard",
           priority: "high",
         };
-        const limitState = await getPushLimitState(supabase, userRecord, payload.priority);
-        if (limitState.blockedBy !== "none") {
-          return NextResponse.json({
-            ok: false,
-            type: typeParam,
-            userId,
-            message: "Send blocked by push limits.",
-            reason: limitState.blockedBy,
-            limitState,
-          });
-        }
-        ok = await sendPushToUser(supabase, userId, payload);
-        break;
-      }
-      case "freeze-reminder": {
-        const baseFreeze = {
-          title: "NEUROHQ — Frozen purchase",
-          body: '"New headphones" is ready. Confirm or cancel in Budget.',
-          tag: `freeze-reminder-${todayDateString()}`,
-          url: "/budget",
-          priority: "high" as const,
-        };
-        const payload = applyPersonalityToPayload(baseFreeze, ctx.personalityMode, "freeze_reminder");
         const limitState = await getPushLimitState(supabase, userRecord, payload.priority);
         if (limitState.blockedBy !== "none") {
           return NextResponse.json({

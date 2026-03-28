@@ -408,34 +408,6 @@ export function DashboardClientShell() {
   const nextActionDecisionMeta = critical?.unifiedDecision ?? null;
 
   useEffect(() => {
-    if (typeof window === "undefined") return;
-    if (nextDecisionType !== "budget_guardrail") return;
-    const u = critical?.unifiedDecision;
-    if (!u?.title) return;
-    // decisionId includes task counts / reason codes and changes often; toast would repeat every refresh.
-    const key = `neurohq-budget-guardrail-toast-${dateStr}`;
-    try {
-      if (localStorage.getItem(key) === "1") return;
-      localStorage.setItem(key, "1");
-    } catch {
-      try {
-        if (sessionStorage.getItem(key) === "1") return;
-        sessionStorage.setItem(key, "1");
-      } catch {
-        return;
-      }
-    }
-    neuroToast.warning(u.title, {
-      description: u.description,
-      duration: 22_000,
-      action: {
-        label: u.cta ?? "Open guardrail",
-        onClick: () => setBudgetGuardrailOpen(true),
-      },
-    });
-  }, [critical?.unifiedDecision, dateStr, nextDecisionType]);
-
-  useEffect(() => {
     try {
       if (typeof sessionStorage !== "undefined" && sessionStorage.getItem(`neurohq-next-best-dismissed-${dateStr}`) === "1") {
         setNextBestDismissed(true);

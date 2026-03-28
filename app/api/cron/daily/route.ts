@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { getDayOfYear } from "date-fns";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { sendPushToUser } from "@/lib/push";
-import { getLocalDateHour, isInQuietHours, utcStartOfLocalDayIso } from "@/lib/utils/timezone";
+import { getLocalDateHour, isInQuietHours } from "@/lib/utils/timezone";
 import { isHighSensoryDayForUser } from "@/lib/mode-admin";
 import { xpToNextLevel } from "@/lib/xp";
 import { buildBehavioralNotificationForContext } from "@/lib/behavioral-notifications";
@@ -22,7 +22,7 @@ import { runReleaseNotesPush } from "@/lib/release-notes-push";
 /**
  * Vercel Cron: runs daily at 00:00 UTC.
  * - Task rollover + quote: only for users with no timezone (UTC users). Users with timezone get rollover/quote from hourly cron.
- * - Freeze reminder, avoidance alert: for all users.
+ * - Avoidance alert: for all users.
  */
 export async function GET(request: Request) {
   const authHeader = request.headers.get("authorization");
@@ -88,9 +88,7 @@ export async function GET(request: Request) {
       },
     ])
   );
-  const nowIso = today.toISOString();
   let pushSent = 0;
-  let freezeReminderSent = 0;
   let avoidanceSent = 0;
   let reEngagementSent = 0;
   let streakGrowthSent = 0;
@@ -149,82 +147,6 @@ export async function GET(request: Request) {
           pushSent++;
           if (pushDedupe.dirty) {
             await supabase.from("user_preferences").update({ push_copy_history: pushDedupe.getHistory() }).eq("user_id", u.id);
-          }
-        }
-      } catch {
-        // skip
-      }
-    }
-
-    // 24h freeze reminder: entries where freeze_until <= now and reminder not sent
-    let readyEntriesQuery = supabase
-      .from("budget_entries")
-      .select("id, user_id, amount_cents, note")
-      .not("freeze_until", "is", null)
-      .lte("freeze_until", nowIso)
-      .eq("freeze_reminder_sent", false);
-    if (userIdFilter) readyEntriesQuery = readyEntriesQuery.eq("user_id", userIdFilter);
-    const { data: readyEntries } = await readyEntriesQuery;
-    const byUser = new Map<string, { id: string; amount_cents: number; note: string | null }[]>();
-    for (const e of readyEntries ?? []) {
-      const list = byUser.get(e.user_id) ?? [];
-      list.push({ id: e.id, amount_cents: e.amount_cents, note: e.note ?? null });
-      byUser.set(e.user_id, list);
-    }
-    for (const [userId, entries] of byUser) {
-      const meta = userMetaById.get(userId);
-      const local = meta?.timezone ? getLocalDateHour(meta.timezone) : { date: todayStr, hour: utcHour };
-      if (isInQuietHours(local.hour, meta?.quietStart ?? null, meta?.quietEnd ?? null)) continue;
-      const tz = meta?.timezone?.trim() || null;
-      const startOfUserDayIso =
-        tz && tz.length > 0 ? utcStartOfLocalDayIso(tz, local.date) : `${local.date}T00:00:00.000Z`;
-      const { data: sendsToday } = await supabase
-        .from("push_sends_log")
-        .select("trigger_type")
-        .eq("user_id", userId)
-        .gte("sent_at", startOfUserDayIso)
-        .limit(120);
-      const hadBudgetInboxPushToday = (sendsToday ?? []).some(
-        (r) =>
-          typeof (r as { trigger_type?: string }).trigger_type === "string" &&
-          (r as { trigger_type: string }).trigger_type.startsWith("hq-inbox-unified-") &&
-          (r as { trigger_type: string }).trigger_type.endsWith("-budget_guardrail")
-      );
-      if (hadBudgetInboxPushToday) {
-        continue;
-      }
-      const freezeTag = `freeze-reminder-${local.date}`;
-      const { count: freezeAlreadyToday } = await supabase
-        .from("push_sends_log")
-        .select("*", { count: "exact", head: true })
-        .eq("user_id", userId)
-        .eq("trigger_type", freezeTag)
-        .gte("sent_at", startOfUserDayIso);
-      if ((freezeAlreadyToday ?? 0) > 0) {
-        continue;
-      }
-      try {
-        const ctx = await loadUserNotificationContextForUser(supabase, userId);
-        const basePayload = {
-          title: "NEUROHQ — Frozen purchase",
-          body: entries.length === 1
-            ? `"${entries[0].note || "Purchase"}" is ready. Confirm or cancel in Budget.`
-            : `${entries.length} frozen purchase(s) ready to confirm or cancel.`,
-          tag: freezeTag,
-          url: "/budget",
-          priority: "high" as const,
-        };
-        const payload = applyPersonalityToPayload(
-          basePayload,
-          ctx.personalityMode,
-          "freeze_reminder",
-          `${userId}:${local.date}`
-        );
-        const ok = await sendPushToUser(supabase, userId, payload);
-        if (ok) {
-          freezeReminderSent++;
-          for (const e of entries) {
-            await supabase.from("budget_entries").update({ freeze_reminder_sent: true }).eq("id", e.id);
           }
         }
       } catch {
@@ -501,7 +423,7 @@ export async function GET(request: Request) {
     users: users.length,
     ...(userIdFilter && { userId: userIdFilter }),
     pushSent,
-    freezeReminderSent,
+    freezeReminderSent: 0,
     avoidanceSent,
     reEngagementSent,
     streakGrowthSent,

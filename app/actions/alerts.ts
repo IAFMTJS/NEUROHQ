@@ -189,46 +189,81 @@ function severityForUnifiedDecision(d: UnifiedDecision): UserAlertSeverity {
   return "info";
 }
 
-/**
- * Pending rows from previous days share the same logical alert but different push_tag values, so
- * sendPushToUser tag-dedupe does not apply and hourly dispatch can fire several pushes in one run.
- * Close stale pending dashboard inbox rows so only today's canonical tags stay deliverable.
- */
-async function supersedeStalePendingHqInboxRows(
-  db: AnyDb,
-  userId: string,
-  candidates: { pushTag: string }[]
-): Promise<void> {
-  if (!candidates.length) return;
-  const canonical = new Set(candidates.map((c) => c.pushTag));
-  const hasUnified = candidates.some((c) => c.pushTag.startsWith("hq-inbox-unified-"));
-  const hasStreak = candidates.some((c) => c.pushTag.startsWith("hq-inbox-streak-"));
-  const hasBurnout = candidates.some((c) => c.pushTag.startsWith("hq-inbox-burnout-"));
-  if (!hasUnified && !hasStreak && !hasBurnout) return;
+function parseUnifiedInboxPushTag(pushTag: string): { date: string; decisionType: string } | null {
+  const prefix = "hq-inbox-unified-";
+  if (!pushTag.startsWith(prefix)) return null;
+  const rest = pushTag.slice(prefix.length);
+  const m = rest.match(/^(\d{4}-\d{2}-\d{2})-(.+)$/);
+  if (!m) return null;
+  return { date: m[1], decisionType: m[2] };
+}
 
+/**
+ * Close dashboard-sourced inbox rows that no longer match today's critical payload so they do not
+ * linger unread or keep retrying push (same class of bug as stale unified check_in).
+ */
+async function dismissObsoleteDashboardInboxAlerts(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  userId: string,
+  critical: DashboardCritical
+): Promise<void> {
+  const appDateStr = critical.dateStr;
+  const activeUnifiedType = critical.unifiedDecision?.decisionType ?? null;
+  const streakCoveredByUnified = critical.unifiedDecision?.decisionType === "streak_rescue";
+  const streakInboxActive = Boolean(critical.streakAtRisk && !streakCoveredByUnified);
+  const burnoutInboxActive = critical.burnout === true;
+
+  const db = supabase as unknown as AnyDb;
   const { data: rows } = await db
     .from("user_alerts")
     .select("id, push_tag")
     .eq("user_id", userId)
-    .is("read_at", null)
-    .is("push_sent_at", null);
+    .is("read_at", null);
 
   const staleIds: string[] = [];
   for (const r of rows ?? []) {
-    const tag = (r as { id: string; push_tag: string | null }).push_tag;
-    if (!tag || canonical.has(tag)) continue;
-    if (hasUnified && tag.startsWith("hq-inbox-unified-")) {
-      staleIds.push((r as { id: string }).id);
+    const id = (r as { id: string }).id;
+    const tag = (r as { push_tag: string | null }).push_tag;
+    if (!tag) continue;
+
+    const parsedUnified = parseUnifiedInboxPushTag(tag);
+    if (parsedUnified) {
+      if (parsedUnified.decisionType === "budget_guardrail") {
+        staleIds.push(id);
+        continue;
+      }
+      if (parsedUnified.date < appDateStr) {
+        staleIds.push(id);
+        continue;
+      }
+      if (
+        parsedUnified.date === appDateStr &&
+        activeUnifiedType != null &&
+        parsedUnified.decisionType !== activeUnifiedType
+      ) {
+        staleIds.push(id);
+      }
       continue;
     }
-    if (hasStreak && tag.startsWith("hq-inbox-streak-")) {
-      staleIds.push((r as { id: string }).id);
+
+    const streakM = tag.match(/^hq-inbox-streak-(\d{4}-\d{2}-\d{2})$/);
+    if (streakM) {
+      const d = streakM[1];
+      if (d < appDateStr || (d === appDateStr && !streakInboxActive)) {
+        staleIds.push(id);
+      }
       continue;
     }
-    if (hasBurnout && tag.startsWith("hq-inbox-burnout-")) {
-      staleIds.push((r as { id: string }).id);
+
+    const burnM = tag.match(/^hq-inbox-burnout-(\d{4}-\d{2}-\d{2})$/);
+    if (burnM) {
+      const d = burnM[1];
+      if (d < appDateStr || (d === appDateStr && !burnoutInboxActive)) {
+        staleIds.push(id);
+      }
     }
   }
+
   if (!staleIds.length) return;
   const now = new Date().toISOString();
   await db.from("user_alerts").update({ read_at: now, push_sent_at: now }).in("id", staleIds);
@@ -273,7 +308,7 @@ export async function syncInboxAlertsFromDashboardCritical(critical: DashboardCr
   } = await supabase.auth.getUser();
   if (!user) return;
 
-  const db = supabase as unknown as AnyDb;
+  await dismissObsoleteDashboardInboxAlerts(supabase, user.id, critical);
 
   const candidates: {
     pushTag: string;
@@ -285,15 +320,17 @@ export async function syncInboxAlertsFromDashboardCritical(critical: DashboardCr
 
   if (critical.unifiedDecision) {
     const u = critical.unifiedDecision;
-    // Stable per (day, decision type): decisionId changes when task count / ranking shifts,
-    // which would mint endless duplicate inbox rows + pushes if used as push_tag.
-    candidates.push({
-      pushTag: `hq-inbox-unified-${critical.dateStr}-${u.decisionType}`,
-      title: u.title.slice(0, 200),
-      body: u.description ? u.description.slice(0, 2000) : null,
-      severity: severityForUnifiedDecision(u),
-      linkPath: normalizeInboxLinkPath(u.href),
-    });
+    if (u.decisionType !== "budget_guardrail") {
+      // Stable per (day, decision type): decisionId changes when task count / ranking shifts,
+      // which would mint endless duplicate inbox rows + pushes if used as push_tag.
+      candidates.push({
+        pushTag: `hq-inbox-unified-${critical.dateStr}-${u.decisionType}`,
+        title: u.title.slice(0, 200),
+        body: u.description ? u.description.slice(0, 2000) : null,
+        severity: severityForUnifiedDecision(u),
+        linkPath: normalizeInboxLinkPath(u.href),
+      });
+    }
   }
 
   const streakCoveredByUnified = critical.unifiedDecision?.decisionType === "streak_rescue";
@@ -316,8 +353,6 @@ export async function syncInboxAlertsFromDashboardCritical(critical: DashboardCr
       linkPath: "/dashboard",
     });
   }
-
-  await supersedeStalePendingHqInboxRows(db, user.id, candidates);
 
   for (const c of candidates) {
     await ensureInboxAlertIfNew(supabase, user.id, c);

@@ -1,5 +1,18 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { sendPushToUser } from "@/lib/push";
+import { todayDateString } from "@/lib/utils/timezone";
+
+/** YYYY-MM-DD embedded in dashboard-synced inbox tags, if any. */
+function embeddedDateInDashboardPushTag(pushTag: string | null): string | null {
+  if (!pushTag) return null;
+  const unified = pushTag.match(/^hq-inbox-unified-(\d{4}-\d{2}-\d{2})-/);
+  if (unified) return unified[1];
+  const streak = pushTag.match(/^hq-inbox-streak-(\d{4}-\d{2}-\d{2})$/);
+  if (streak) return streak[1];
+  const burnout = pushTag.match(/^hq-inbox-burnout-(\d{4}-\d{2}-\d{2})$/);
+  if (burnout) return burnout[1];
+  return null;
+}
 
 type PendingRow = {
   id: string;
@@ -32,8 +45,16 @@ export async function dispatchPendingUserAlertPushes(supabase: SupabaseClient): 
 
   if (error || !rows?.length) return 0;
 
+  const appToday = todayDateString();
   let sent = 0;
   for (const raw of rows as PendingRow[]) {
+    const embedded = embeddedDateInDashboardPushTag(raw.push_tag);
+    if (embedded && embedded < appToday) {
+      const now = new Date().toISOString();
+      await db.from("user_alerts").update({ read_at: now, push_sent_at: now }).eq("id", raw.id);
+      continue;
+    }
+
     const { data: prefRow } = await supabase
       .from("user_preferences")
       .select("push_reminders_enabled")
