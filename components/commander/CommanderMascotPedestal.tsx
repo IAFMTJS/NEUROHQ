@@ -14,7 +14,7 @@ export type CommanderMascotPedestalStats = {
 
 type Props = {
   stats: CommanderMascotPedestalStats;
-  /** Mascotte + badge; wordt boven de footer en vóór de boog getekend. */
+  /** Mascotte + badge; boven de booglaag. */
   children: ReactNode;
 };
 
@@ -26,22 +26,25 @@ function budgetArcRatio(cents: number): number {
   return Math.min(1, cents / BUDGET_ARC_CAP_CENTS);
 }
 
-/** Wide viewBox: shallow “orbit” behind the mascot, stretched to card width. */
+/** Wide viewBox: boog bijna rand-tot-rand (breder). */
 const VB_W = 1000;
-/** Include negative Y so the full semicircle is drawable (not clipped). */
-const VB_MIN_Y = -235;
-const VB_VIEW_H = 485;
+const VB_MIN_Y = -275;
+const VB_VIEW_H = 548;
 const CX = 500;
-const CY = 235;
-const R = 455;
+const CY = 242;
+/** ~499px radius → eindpunten op x≈1 en x≈999 */
+const R = 499;
 const LX = CX - R;
 const RX = CX + R;
 const TY = CY - R;
 const leftArcD = `M ${LX} ${CY} A ${R} ${R} 0 0 1 ${CX} ${TY}`;
 const rightArcD = `M ${CX} ${TY} A ${R} ${R} 0 0 1 ${RX} ${CY}`;
-const STROKE_TRACK = 26;
-const STROKE_FILL = 22;
+const STROKE_TRACK = 28;
+const STROKE_FILL = 24;
 const pathLen = 100;
+
+const labelBox =
+  "max-w-[min(46%,11.5rem)] rounded-lg border border-[var(--card-border)]/45 bg-[var(--bg-surface)]/82 px-2 py-1.5 shadow-sm backdrop-blur-md";
 
 export function CommanderMascotPedestal({ stats, children }: Props) {
   const { totalXP, displayLevel, budgetRemainingCents, currency } = stats;
@@ -60,87 +63,91 @@ export function CommanderMascotPedestal({ stats, children }: Props) {
       aria-label={`Level ${displayLevel}, ${current} van ${needed} XP. Budget: ${isNegative ? "−" : ""}${symbol}${amount.toFixed(0)} ${isNegative ? "over" : "rest"}.`}
     >
       <div className="relative isolate w-full overflow-visible">
-        {/* Platte brede boog achter de mascotte; volle kaartbreedte */}
-        <svg
-          className="commander-mascot-pedestal-arc pointer-events-none absolute left-1/2 z-0 w-[calc(100%+2px)] min-w-full max-w-none -translate-x-1/2"
+        {/* Boog + labels op de boog (zelfde vlak, breder dan voorheen) */}
+        <div
+          className="commander-mascot-pedestal-arc-wrap pointer-events-none absolute left-1/2 z-0 w-[calc(100%+12px)] min-w-full max-w-none -translate-x-1/2"
           style={{
-            bottom: "6%",
-            height: "min(13.5rem, 52vw)",
-            minHeight: "7.5rem",
+            bottom: "5%",
+            height: "min(16.5rem, 58vw)",
+            minHeight: "8.5rem",
           }}
-          viewBox={`0 ${VB_MIN_Y} ${VB_W} ${VB_VIEW_H}`}
-          preserveAspectRatio="none"
-          fill="none"
-          aria-hidden
         >
-          <path
-            d={leftArcD}
-            stroke="rgba(var(--mode-rgb, 0, 212, 255), 0.14)"
-            strokeWidth={STROKE_TRACK}
-            strokeLinecap="round"
-          />
-          <path
-            d={rightArcD}
-            stroke="rgba(var(--mode-rgb, 0, 212, 255), 0.14)"
-            strokeWidth={STROKE_TRACK}
-            strokeLinecap="round"
-          />
-          <path
-            d={leftArcD}
-            stroke="rgba(var(--mode-rgb, 0, 212, 255), 0.92)"
-            strokeWidth={STROKE_FILL}
-            strokeLinecap="round"
-            pathLength={pathLen}
-            strokeDasharray={`${Math.max(0.25, xpPct * pathLen)} ${pathLen}`}
-          />
-          <path
-            d={rightArcD}
-            stroke={isNegative ? "rgba(248, 113, 113, 0.92)" : "rgba(167, 139, 250, 0.92)"}
-            strokeWidth={STROKE_FILL}
-            strokeLinecap="round"
-            pathLength={pathLen}
-            strokeDasharray={`${Math.max(0.25, budgetPct * pathLen)} ${pathLen}`}
-          />
-        </svg>
+          <svg
+            className="commander-mascot-pedestal-arc absolute inset-0 h-full w-full"
+            viewBox={`0 ${VB_MIN_Y} ${VB_W} ${VB_VIEW_H}`}
+            preserveAspectRatio="none"
+            fill="none"
+            aria-hidden
+          >
+            <path
+              d={leftArcD}
+              stroke="rgba(var(--mode-rgb, 0, 212, 255), 0.14)"
+              strokeWidth={STROKE_TRACK}
+              strokeLinecap="round"
+            />
+            <path
+              d={rightArcD}
+              stroke="rgba(var(--mode-rgb, 0, 212, 255), 0.14)"
+              strokeWidth={STROKE_TRACK}
+              strokeLinecap="round"
+            />
+            <path
+              d={leftArcD}
+              stroke="rgba(var(--mode-rgb, 0, 212, 255), 0.92)"
+              strokeWidth={STROKE_FILL}
+              strokeLinecap="round"
+              pathLength={pathLen}
+              strokeDasharray={`${Math.max(0.25, xpPct * pathLen)} ${pathLen}`}
+            />
+            <path
+              d={rightArcD}
+              stroke={isNegative ? "rgba(248, 113, 113, 0.92)" : "rgba(167, 139, 250, 0.92)"}
+              strokeWidth={STROKE_FILL}
+              strokeLinecap="round"
+              pathLength={pathLen}
+              strokeDasharray={`${Math.max(0.25, budgetPct * pathLen)} ${pathLen}`}
+            />
+          </svg>
 
-        <div className="relative z-[5] w-full">{children}</div>
-      </div>
-
-      <div className="commander-mascot-pedestal-footer relative z-10 mt-1 w-full px-0.5 sm:px-1">
-        <div className="flex items-start justify-between gap-3 border-t border-[var(--card-border)]/35 pt-2.5">
-          <div className="min-w-0 flex-1 text-left">
-            <p className="text-[9px] font-semibold uppercase tracking-[0.12em] text-[var(--text-muted)]">Level & XP</p>
+          <div className="commander-mascot-pedestal-labels pointer-events-none absolute inset-0 flex items-end justify-between gap-1 px-1 pb-[10%] pt-6 sm:gap-2 sm:px-2 sm:pb-[11%]">
             <Link
               href="/xp"
-              className="mt-0.5 block text-[var(--text-secondary)] transition-colors hover:text-[var(--text-primary)]"
+              className={`${labelBox} pointer-events-auto text-left no-underline transition-opacity hover:opacity-95`}
             >
-              <span className="block text-sm font-semibold tabular-nums text-[var(--text-primary)]">Lv {displayLevel}</span>
-              <span className="text-xs tabular-nums text-[var(--text-secondary)]">
-                {current} / {needed} XP
+              <p className="text-[8px] font-semibold uppercase tracking-[0.1em] text-[var(--text-muted)]">Level & XP</p>
+              <span className="mt-0.5 block text-[var(--text-secondary)]">
+                <span className="block text-xs font-bold tabular-nums text-[var(--text-primary)] sm:text-sm">Lv {displayLevel}</span>
+                <span className="text-[10px] tabular-nums text-[var(--text-secondary)] sm:text-xs">
+                  {current}/{needed} XP
+                </span>
               </span>
+              <p className="mt-1 text-[9px] leading-tight text-[var(--text-muted)] sm:text-[10px]">
+                Linkerhelft = voortgang naar volgend level.
+              </p>
             </Link>
-            <p className="mt-1 max-w-[14rem] text-[10px] leading-snug text-[var(--text-muted)]">
-              Linker boog: voortgang naar je volgende level. Tik voor XP-overzicht.
-            </p>
-          </div>
-          <div className="min-w-0 max-w-[48%] shrink-0 text-right">
-            <p className="text-[9px] font-semibold uppercase tracking-[0.12em] text-[var(--text-muted)]">Budget</p>
             <Link
               href="/budget"
-              className="mt-0.5 block text-[var(--text-secondary)] transition-colors hover:text-[var(--text-primary)]"
+              className={`${labelBox} pointer-events-auto text-right no-underline transition-opacity hover:opacity-95`}
             >
-              <span className="block text-sm font-semibold tabular-nums text-[var(--text-primary)]">
-                {isNegative && "−"}
-                {symbol}
-                {amount.toFixed(0)}
+              <p className="text-[8px] font-semibold uppercase tracking-[0.1em] text-[var(--text-muted)]">Budget</p>
+              <span className="mt-0.5 block text-[var(--text-secondary)]">
+                <span className="block text-xs font-bold tabular-nums text-[var(--text-primary)] sm:text-sm">
+                  {isNegative && "−"}
+                  {symbol}
+                  {amount.toFixed(0)}
+                </span>
+                <span className="text-[10px] text-[var(--text-secondary)] sm:text-xs">
+                  {isNegative ? "over budget" : "resterend"}
+                </span>
               </span>
-              <span className="text-xs text-[var(--text-secondary)]">{isNegative ? "over budget" : "resterend"}</span>
+              <p className="mt-1 text-[9px] leading-tight text-[var(--text-muted)] sm:text-[10px]">
+                Rechterhelft = restant (indicatie). Details op budget.
+              </p>
             </Link>
-            <p className="mt-1 ml-auto max-w-[14rem] text-[10px] leading-snug text-[var(--text-muted)]">
-              Rechter boog: resterend bedrag (indicatie; vol totaal op de budgetpagina). Tik om bij te werken.
-            </p>
           </div>
         </div>
+
+        <div className="relative z-[5] w-full">{children}</div>
       </div>
     </div>
   );

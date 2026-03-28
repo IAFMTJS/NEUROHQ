@@ -1807,15 +1807,15 @@ html[data-light-ui="true"] body {
   /* Mascot visuals should never block clicks on buttons or inputs in front of them. */
   pointer-events: none;
 }
-/* Commander orbit: alleen footer-links klikbaar; boog + mascotte blijven doorschijnend voor clicks */
+/* Commander orbit: labels op de boog (links klikbaar); boog-SVG + wrap + mascotte niet */
+.mascot-hero .commander-mascot-pedestal .commander-mascot-pedestal-arc-wrap,
 .mascot-hero .commander-mascot-pedestal .commander-mascot-pedestal-arc,
 .mascot-hero .commander-mascot-pedestal .commander-mascot-pedestal-arc *,
 .mascot-hero .commander-mascot-pedestal .mascot-hero-mascot-stack,
 .mascot-hero .commander-mascot-pedestal .mascot-hero-mascot-stack * {
   pointer-events: none;
 }
-.mascot-hero .commander-mascot-pedestal .commander-mascot-pedestal-footer,
-.mascot-hero .commander-mascot-pedestal .commander-mascot-pedestal-footer a {
+.mascot-hero .commander-mascot-pedestal .commander-mascot-pedestal-labels a {
   pointer-events: auto;
 }
 .mascot-hero[data-commander-orbit="true"].mascot-hero-top {
