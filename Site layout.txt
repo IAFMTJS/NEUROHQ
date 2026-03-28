@@ -62,24 +62,22 @@ Mission page (/tasks)
 Budget page (/budget)
 	Hoofdniveau: tab-shell Status | Execute | Inzicht | Optimalisatie | Lock (Execute + Lock verborgen in historiek-maandweergave)
 		Laat zien: één plek voor “nu”, “doen”, “inzicht”, “bijsturen”, “harde rem”; klik op tab schrijft `?tab=` in de URL (overview laat `tab` weg); bij actieve lock een amber strip met countdown en link naar Lock.
-	Per-tab oppervlak (BudgetTabSurface)
-		Laat zien: boven elke tab-inhoud een mission-achtige hero (kicker, titel, korte uitleg) en onderaan een gestippelde “Roadmap — nog toe te voegen” met concrete ideeën per tab (geen extra data-fetch).
-	Shell rond de tabs
-		Standaard: één SciFi-panel (glass): HQ-header “Budget command”, payday-urgency toast, daarna dashboard-bento met tab-strip + acties (historiek, export, Strategy), mascotte onderaan (niet in historiek).
-		Vereenvoudigde modus (voorkeur simplified content): één “command”-kaart met titel Budget command, HQ-link, optionele payday-toast, zelfde tab-logica + scrollbaar paneel + footer-links (Missions, Strategy, Turn off simplified).
+	Shell (cinematic): zoals Growth/Strategy — twee SciFi-panelen (glass)
+		Eerste panel: HQPageHeader Budget, mascotte-hero, StrategyEnginePaceHint (budget).
+		Tweede panel: payday-urgency toast (live), dashboard-bento met tab-strip in `dashboard-top-strip`/`dashboard-top-strip-track` (zelfde HUD-rail als andere dashboard-pagina’s), daarna tab-inhoud met `card-simple`-kaarten.
+		Vereenvoudigde modus: één command SciFi-panel met titel Budget, HQ-link, payday-toast, zelfde tab-rail + scroll + footer-links.
 		Header rechts (boven tabs): maand/historiek-selector, export CSV, link Strategy.
 			Laat zien: welke periode je bekijkt; ruwe data-export; doorlink naar strategie waar geld en prioriteiten samenkomen.
 		Technisch: snapshot-provider rond de pagina; canonieke signalen (remaining, safe daily, top insight) gedeeld door kaarten.
 		Code-flags (nu standaard uit): ENABLE_BUDGET_UX_EXPERIMENTS en ENABLE_BUDGET_BEHAVIOR_REIMAGINING — wisselen tussen oudere vs gecombineerde intelligence-kaarten en tonen van allocation + archetype/trigger/reflectie-blokken.
 
 	Tab Status (overview)
-		Inhoud staat binnen BudgetTabSurface “Command status”; quick log-link behoudt `month=` in de URL waar van toepassing.
+		Quick log-link behoudt `month=` in de URL waar van toepassing.
 		Lock-gate op overzicht: bij actieve no-spend lock wordt het resterend-budget-blok vervangen door uitleg + nood/emergency-links (geen “cheat” vanuit Status).
 		Card 1 — Dagelijkse regie
 			BudgetDailyControlToast (live alleen)
 				Laat zien: korte waarschuwing of herinnering als vandaag tempo of logging risico geeft.
-			StrategyEnginePaceHint (variant budget, live)
-				Laat zien: of je uitgaven-tempo nog past bij strategie/duurzaamheid — één zin context.
+		(Strategy-tempo staat in het eerste SciFi-panel boven de tabs, niet dubbel in deze tab.)
 		Card 2 — Situatie
 			BudgetSyncStatus + command badge (Stable / Guarded / Critical / History snapshot)
 				Laat zien: of de boekhouding “vers” aanvoelt; hoe strak je buffer aanvoelt t.o.v. drempels.
@@ -92,7 +90,7 @@ Budget page (/budget)
 				Laat zien: één tik naar invoer zonder eerst door Execute te zoeken.
 
 	Tab Execute (tactical + goals op één tab)
-		Eén BudgetTabSurface “Run the cycle”: bullets 1–3 (cycle, optioneel allocation, execution queue) plus sectie 4 Goals & basis daaronder met visuele scheidingslijn.
+		Secties 1–3 (cycle, optioneel allocation, execution queue) plus sectie 4 Goals & basis met scheidingslijn — zonder extra tab-hero.
 		BudgetLockTabBanner: herinnert aan lock-regels per context.
 		Card 1 — Cycle status
 			PaydayCard (dagen tot inkomen, bronnen, “vandaag loon gehad”, cyclusgrenzen)
@@ -115,7 +113,7 @@ Budget page (/budget)
 				Laat zien: vorige boekingen ter controle na loonroll.
 
 	Tab Inzicht (analysis)
-		BudgetTabSurface “Signals & coach”; fasen Detect / Interpret / Intervene als subtiele regels (geen lege accent-omlijning meer alleen voor koppen).
+		Fasen Detect / Interpret / Intervene als subtiele regels (geen lege accent-omlijning alleen voor koppen).
 		BudgetLockTabBanner.
 		Card 1 — Kernmetrics (live)
 			BudgetSummaryCard, DisciplineIndexCard, FinancialStatusCard
@@ -151,7 +149,7 @@ Budget page (/budget)
 		Historiek-maand: read-only boodschap; forecast/live gedrag verborgen; overige archiefzicht waar van toepassing.
 
 	Tab Optimalisatie (optimization)
-		BudgetTabSurface “Calibratie & verbetering”.
+		Alleen de bestaande optimalisatie- en survey-kaarten.
 		BudgetPaydaySurveyCard (als survey nodig)
 			Laat zien: korte kalibratie van loon/inkomen als de app twijfelt.
 		BudgetWeeklyReviewCard
@@ -160,7 +158,7 @@ Budget page (/budget)
 			Laat zien: concrete micro-stappen en optimalisatie; deur naar no-spend lock.
 
 	Tab Lock
-		BudgetTabSurface “Hard brake”; alleen lock-control (geen dubbele lock-banner in deze tab).
+		Alleen lock-control (geen dubbele lock-banner in deze tab).
 		BudgetLockControlCard (timer, status, emergency-paden waar van toepassing)
 			Laat zien: tot wanneer lock loopt; hoe lang nog; hoe je netjes of via nood verder werkt zonder het systeem te breken.
 

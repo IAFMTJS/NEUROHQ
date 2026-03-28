@@ -317,11 +317,6 @@ async function BudgetContent({ searchParams }: Props) {
     <div className="space-y-4">
       {!historyMode && <BudgetDailyControlToast />}
       {!historyMode && (
-        <Suspense fallback={null}>
-          <StrategyEnginePaceHint variant="budget" />
-        </Suspense>
-      )}
-      {!historyMode && (
         <>
           <div className="flex flex-wrap items-center justify-end gap-2">
             <div className="flex items-center gap-2">
@@ -762,36 +757,43 @@ async function BudgetContent({ searchParams }: Props) {
             {budgetTabsShell}
           </div>
         ) : (
-          <div className="container page page-wide dashboard-page dashboard-cinematic relative z-10 pb-10">
-            <div className="space-y-4">
-              <SciFiPanel variant="glass" className={`${hudStyles.focusSecondary} hq-card-enter`} bodyClassName="p-4 md:p-6">
-                <CornerNode corner="top-left" />
-                <CornerNode corner="top-right" />
-                <div className="[&>*+*]:mt-0">
-                  <HQPageHeader
-                    title="Budget command"
-                    subtitle="Zelfde HUD-stijl als HQ: periode kiezen, tabs volgen de URL, roadmap per tab. Plan, log en blijf binnen je cyclus."
-                    backHref="/dashboard"
-                  />
-                </div>
-                {!historyMode && (
-                  <div className="mt-4">
-                    <BudgetPrePaydayUrgencyToast
-                      daysToPayday={budgetControlState.daysToPayday}
-                      needsPaydaySurvey={budgetControlState.needsPaydaySurvey}
-                      hasRecentSurvey={budgetControlState.hasRecentSurvey}
-                    />
-                  </div>
-                )}
-                <div className="dashboard-bento mt-4 md:mt-5">{budgetTabsShell}</div>
-              </SciFiPanel>
-
+          <div className="container page page-wide dashboard-page dashboard-cinematic relative z-10 space-y-4 pb-10">
+            <SciFiPanel variant="glass" className={hudStyles.focusSecondary} bodyClassName="p-4 md:p-5">
+              <CornerNode corner="top-left" />
+              <CornerNode corner="top-right" />
+              <HQPageHeader
+                title="Budget"
+                subtitle="Cyclus, logging en signalen op één plek — zoals Growth en Strategy, met HUD-cards en duidelijke tabs."
+                backHref="/dashboard"
+              />
               {!isHistoryView && (
-                <section className="mascot-hero-inner mx-auto" aria-hidden>
-                  <HeroMascotImage page="budget" className="mascot-img" />
+                <section className="mascot-hero mascot-hero-top mascot-hero-sharp mt-2" data-mascot-page="budget" aria-hidden>
+                  <div className="mascot-hero-inner mx-auto">
+                    <HeroMascotImage page="budget" className="mascot-img" heroLarge />
+                  </div>
                 </section>
               )}
-            </div>
+              {!historyMode && (
+                <Suspense fallback={null}>
+                  <div className="mt-3">
+                    <StrategyEnginePaceHint variant="budget" />
+                  </div>
+                </Suspense>
+              )}
+            </SciFiPanel>
+
+            <SciFiPanel variant="glass" className={hudStyles.focusSecondary} bodyClassName="p-4 md:p-6">
+              <CornerNode corner="top-left" />
+              <CornerNode corner="top-right" />
+              {!historyMode && (
+                <BudgetPrePaydayUrgencyToast
+                  daysToPayday={budgetControlState.daysToPayday}
+                  needsPaydaySurvey={budgetControlState.needsPaydaySurvey}
+                  hasRecentSurvey={budgetControlState.hasRecentSurvey}
+                />
+              )}
+              <div className={`dashboard-bento ${!historyMode ? "mt-4" : ""}`}>{budgetTabsShell}</div>
+            </SciFiPanel>
           </div>
         )}
       </main>
