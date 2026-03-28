@@ -45,18 +45,12 @@ import { getBehaviorProfile } from "@/app/actions/behavior-profile";
 import { neuroNextMoveHint } from "@/lib/neuro-copy";
 import { GrowthMissionsRibbon } from "@/components/growth/GrowthMissionsRibbon";
 import { profileEngineHref } from "@/lib/profile-routes";
-import { defaultTimeWindow } from "@/lib/dashboard-utils";
-
 /** Tasks page must always run on the server so latest data is rendered after refresh. */
 export const dynamic = "force-dynamic";
 
 const ModeBanner = nextDynamic(
   () => import("@/components/ModeBanner").then((m) => ({ default: m.ModeBanner })),
   { loading: () => <div className="min-h-[44px]" aria-hidden /> }
-);
-const EnergyCapBar = nextDynamic(
-  () => import("@/components/missions/EnergyCapBar").then((m) => ({ default: m.EnergyCapBar })),
-  { loading: () => <div className="h-10 animate-pulse rounded-lg bg-white/5" aria-hidden /> }
 );
 const SmartSuggestionBanner = nextDynamic(
   () => import("@/components/missions/SmartSuggestionBanner").then((m) => ({ default: m.SmartSuggestionBanner })),
@@ -360,19 +354,6 @@ async function MissionsSectionAsync({
   const neuroLine = neuroNextMoveHint(behaviorProfile.neuroProfileTags);
 
   if (simplifiedContent) {
-    const simpleTitle = allMissionsDoneToday
-      ? "Alles gedaan voor vandaag"
-      : (decisionBlocks.topRecommendation?.title ??
-        (tasksNormal.length > 0 ? "Je taken vandaag" : "Nog geen taken vandaag"));
-    const simpleSubtitle = allMissionsDoneToday
-      ? "Geen open taken meer. Rust, of bekijk Agenda voor extra of geplande dingen."
-      : decisionBlocks.topRecommendation
-        ? "Werk de lijst hieronder af — één ding tegelijk."
-        : tasksNormal.length > 0
-          ? "Kies waar je mee start in de lijst."
-          : "Voeg een kleine taak toe om momentum op te bouwen.";
-    const { window: timeWindow, isActive: isTimeWindowActive } = defaultTimeWindow();
-
     return (
       <div className="flex min-h-0 w-full max-w-none flex-1 flex-col">
         <SciFiPanel
@@ -383,7 +364,7 @@ async function MissionsSectionAsync({
           <CornerNode corner="top-left" />
           <CornerNode corner="top-right" />
           <div className="flex shrink-0 items-start justify-between gap-3">
-            <h2 className="hq-h2 min-w-0 flex-1 text-[var(--text-primary)]">Today&apos;s missions</h2>
+            <h2 className="hq-h2 min-w-0 flex-1 text-[var(--text-primary)]">Vandaag</h2>
             <Link
               href="/dashboard"
               className="shrink-0 pt-0.5 text-[11px] font-semibold uppercase tracking-wide text-[var(--accent-focus)] underline-offset-2 hover:underline"
@@ -392,25 +373,12 @@ async function MissionsSectionAsync({
             </Link>
           </div>
           <Divider1px className="my-1 shrink-0" />
-          <EnergyCapBar used={energyCap.used} cap={energyCap.cap} remaining={energyCap.remaining} planned={energyCap.planned} />
           <ConsequenceBanner
             energyDepleted={(energyBudget as { consequence?: { energyDepleted?: boolean } }).consequence?.energyDepleted}
             recoveryOnly={decisionBlocks.recoveryOnly}
             recoveryProtocol={decisionBlocks.recoveryProtocol}
             daysSinceLastCompletion={decisionBlocks.daysSinceLastCompletion}
           />
-          <section className="shrink-0 space-y-1 rounded-xl border border-[var(--accent-focus)]/35 bg-[var(--bg-surface)]/35 p-3">
-            <h3 className="text-base font-semibold text-[var(--text-primary)]">{simpleTitle}</h3>
-            <p className="text-sm text-[var(--text-muted)]">{simpleSubtitle}</p>
-            {neuroLine && !allMissionsDoneToday && (
-              <p className="mt-2 text-xs text-[var(--text-secondary)]">{neuroLine}</p>
-            )}
-          </section>
-          <p
-            className={`shrink-0 text-xs tracking-widest uppercase ${isTimeWindowActive ? "text-[var(--accent-focus)]" : "text-[var(--text-muted)]"}`}
-          >
-            Optimal time frame: {timeWindow.replace("–", " – ")}
-          </p>
           <div
             className="min-h-0 flex-1 overflow-y-auto overscroll-contain [-webkit-overflow-scrolling:touch] pb-1"
             data-tutorial="tasks-list"
@@ -453,6 +421,18 @@ async function MissionsSectionAsync({
               identityReputation={identityEngine.reputation ?? null}
               blockedReasonByTaskId={blockedReasonByTaskId as Record<string, string>}
               neuroSelfReportOptIn={behaviorProfile.neuroSelfReportOptIn}
+              missionsHeroLayout
+              energyCap={{
+                used: energyCap.used,
+                cap: energyCap.cap,
+                remaining: energyCap.remaining,
+                planned: energyCap.planned,
+              }}
+              neuroHint={
+                !allMissionsDoneToday
+                  ? [neuroLine, decisionBlocks.dataMaturityHintNl].filter(Boolean).join(" — ") || null
+                  : null
+              }
             />
           </div>
           <p className="shrink-0 pt-1 text-center text-[11px] text-[var(--text-muted)]">
@@ -502,7 +482,8 @@ async function MissionsSectionAsync({
       {smartSuggestion.text && !decisionBlocks.topRecommendation ? (
         <SmartSuggestionBanner text={smartSuggestion.text} type={smartSuggestion.type} />
       ) : null}
-      <div data-tutorial="tasks-today" className="tasks-war-hide">
+      <div data-tutorial="tasks-today">
+      <div className="tasks-war-hide">
       <TodayMissionsGridFromStore dateStr={dateStr}>
         {missionCards.length > 0 && tasks.length === 0 && (
           <section className="mission-grid">
@@ -521,6 +502,7 @@ async function MissionsSectionAsync({
           </section>
         )}
       </TodayMissionsGridFromStore>
+      </div>
       <div data-tutorial="tasks-list" id="tasks-list">
       <TaskList
         date={dateStr}
@@ -556,7 +538,7 @@ async function MissionsSectionAsync({
       />
       </div>
       </div>
-      <details className="tasks-war-hide rounded-xl border border-[var(--card-border)] bg-[var(--bg-surface)]/35 p-3">
+      <details className="tasks-war-hide mt-4 rounded-xl border border-[var(--card-border)] bg-[var(--bg-surface)]/35 p-3">
         <summary className="cursor-pointer text-xs font-semibold uppercase tracking-wider text-[var(--text-muted)]">
           Meta (30d), Data-spiegel (30d), Weekly behavior summary
         </summary>

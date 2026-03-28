@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition, useEffect, useMemo, useCallback } from "react";
+import { useState, useTransition, useEffect, useMemo, useCallback, useRef } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { createTask, deleteTask, duplicateTask, restoreTask, snoozeTask, uncompleteTask, skipNextOccurrence, rescheduleTask } from "@/app/actions/tasks";
 import { trackEvent } from "@/app/actions/analytics-events";
@@ -19,6 +19,7 @@ import {
   FocusModal,
 } from "@/components/missions";
 import { EnergyCapBar } from "@/components/missions/EnergyCapBar";
+import { CornerNode } from "@/components/hud-test/CornerNode";
 import { neuroToast } from "@/lib/ui/neuro-toast";
 import { Modal } from "@/components/Modal";
 import { ErrorWithNextStep } from "@/components/ui/ErrorWithNextStep";
@@ -174,6 +175,13 @@ export function TaskList({
   const upsertTask = useHQStore(selectUpsertTask);
   const removeTask = useHQStore(selectRemoveTask);
   useTasksBootstrap(date);
+  /** Missions tab: start in Focus so hero + grid show (Plan hides them). */
+  const missionsHeroInitialFocus = useRef(false);
+  useEffect(() => {
+    if (!missionsHeroLayout || missionsHeroInitialFocus.current) return;
+    missionsHeroInitialFocus.current = true;
+    setViewMode("focus");
+  }, [missionsHeroLayout]);
   const [pending, startTransition] = useTransition();
   const [addError, setAddError] = useState<string | null>(null);
   const [subtaskError, setSubtaskError] = useState<string | null>(null);
@@ -692,12 +700,25 @@ export function TaskList({
     const blockReason = blockedReasonByTaskId?.[task.id];
     const xp = expectedXpForMission(task, strategicByTaskId?.[task.id]);
     const timeFrame = formatMissionTimeFrame(task);
+    function openDetails() {
+      setFocusTask(null);
+      setDetailsTask(task);
+    }
     return (
       <div
-        className={`flex min-h-[4.5rem] flex-col rounded-xl border p-2.5 transition-colors ${
+        role="button"
+        tabIndex={0}
+        onClick={openDetails}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            openDetails();
+          }
+        }}
+        className={`flex min-h-[5rem] cursor-pointer flex-col rounded-xl border p-2.5 text-left outline-none transition-colors ring-offset-2 ring-offset-[var(--bg-primary)] focus-visible:ring-2 focus-visible:ring-[var(--accent-focus)] ${
           blockReason
             ? "border-[var(--card-border)] bg-[var(--bg-surface)]/30 opacity-85"
-            : "border-[var(--card-border)]/80 bg-[var(--bg-surface)]/35 hover:border-[var(--accent-focus)]/40"
+            : "border-[rgba(var(--mode-rgb),0.22)] bg-[var(--bg-surface)]/40 hover:border-[rgba(var(--mode-rgb),0.45)] hover:bg-[rgba(var(--mode-rgb),0.06)]"
         }`}
       >
         <div className="flex gap-2">
@@ -717,14 +738,7 @@ export function TaskList({
           >
             {task.completed && <span className="text-[10px]">✓</span>}
           </button>
-          <button
-            type="button"
-            onClick={() => {
-              setFocusTask(null);
-              setDetailsTask(task);
-            }}
-            className="min-w-0 flex-1 rounded-lg text-left outline-none ring-offset-2 ring-offset-[var(--bg-primary)] focus-visible:ring-2 focus-visible:ring-[var(--accent-focus)]"
-          >
+          <div className="min-w-0 flex-1">
             <p className="line-clamp-2 text-[11px] font-semibold leading-snug text-[var(--text-primary)]">{task.title}</p>
             <p className="mt-1 text-[10px] tabular-nums text-[var(--text-muted)]">
               <span className="text-[var(--accent-focus)]">+{xp} XP</span>
@@ -734,7 +748,7 @@ export function TaskList({
             {blockReason && (
               <p className="mt-1 line-clamp-2 text-[9px] text-amber-200/90">{blockReason}</p>
             )}
-          </button>
+          </div>
         </div>
       </div>
     );
@@ -1023,9 +1037,9 @@ export function TaskList({
           </section>
         )}
 
-        {!isWarMode && (
+        {!missionsHeroLayout && !isWarMode && (
           <section
-            className={`mb-3 rounded-xl border border-[var(--card-border)] bg-[var(--bg-surface)]/45 p-3 ${missionsHeroLayout ? "py-2" : ""}`}
+            className="mb-3 rounded-xl border border-[var(--card-border)] bg-[var(--bg-surface)]/45 p-3"
             aria-label="Slots envelope"
           >
             <p className="text-[10px] font-semibold uppercase tracking-wider text-[var(--text-muted)]">Slots envelope</p>
@@ -1036,12 +1050,35 @@ export function TaskList({
             {limitMessage ? <p className="mt-1 text-xs text-[var(--text-muted)]">{limitMessage}</p> : null}
           </section>
         )}
+        {missionsHeroLayout && limitMessage && !isWarMode && (
+          <p className="mb-3 rounded-lg border border-amber-500/20 bg-amber-500/5 px-3 py-2 text-xs text-[var(--text-muted)]">{limitMessage}</p>
+        )}
 
         {showAvoidance && (
           <p className="mb-3 rounded-xl border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-sm text-amber-200">{carryOverCount} tasks carried over. Pick one to focus on.</p>
         )}
 
-        {!isWarMode && (
+        {!isWarMode && missionsHeroLayout && (
+          <div className="mb-3 flex flex-wrap items-center justify-center gap-1.5 sm:justify-start" role="tablist" aria-label="Missieweergave">
+            {(["focus", "plan", "backlog"] as const).map((m) => (
+              <button
+                key={m}
+                type="button"
+                role="tab"
+                aria-selected={viewMode === m}
+                onClick={() => setViewMode(m)}
+                className={`rounded-full border px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.08em] transition-colors ${
+                  viewMode === m
+                    ? "border-[rgba(var(--mode-rgb),0.35)] bg-[rgba(var(--mode-rgb),0.12)] text-[var(--accent-focus)] shadow-[0_0_12px_rgba(var(--mode-rgb),0.2)]"
+                    : "border-transparent text-[var(--text-muted)] hover:border-[var(--card-border)] hover:bg-[var(--bg-surface)]/60 hover:text-[var(--text-primary)]"
+                }`}
+              >
+                {m === "focus" ? "Vandaag" : m}
+              </button>
+            ))}
+          </div>
+        )}
+        {!isWarMode && !missionsHeroLayout && (
           <div className="mb-3 flex flex-wrap gap-2">
             {(["focus", "plan", "backlog"] as const).map((m) => (
               <button
@@ -1082,11 +1119,18 @@ export function TaskList({
             <div className="space-y-4">
               {heroMissionTask ? (
                 <section
-                  className="rounded-2xl border border-[var(--accent-focus)]/45 bg-gradient-to-b from-[var(--accent-focus)]/14 to-[var(--bg-surface)]/30 p-4 sm:p-5 shadow-[0_0_28px_rgba(var(--mode-rgb),0.1)]"
+                  className="missions-hero-card relative overflow-hidden rounded-2xl border border-[rgba(var(--mode-rgb),0.45)] bg-gradient-to-b from-[rgba(var(--mode-rgb),0.14)] to-[var(--bg-surface)]/25 shadow-[0_0_36px_rgba(var(--mode-rgb),0.18)]"
                   aria-label="Hoofdmissie"
                 >
-                  <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--accent-focus)]">Hoofdmissie nu</p>
-                  <h3 className="mt-1 text-lg font-semibold leading-snug text-[var(--text-primary)] sm:text-xl">{heroMissionTask.title}</h3>
+                  <CornerNode corner="top-left" />
+                  <CornerNode corner="top-right" />
+                  <div className="relative z-10 space-y-3 p-4 sm:p-6">
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--accent-focus)] [text-shadow:0_0_12px_rgba(var(--mode-rgb),0.35)]">
+                    Hoofdmissie nu
+                  </p>
+                  <h3 className="hq-h2 mt-0.5 text-xl font-semibold leading-snug text-[var(--text-primary)] sm:text-2xl [text-shadow:0_0_20px_rgba(var(--mode-rgb),0.12)]">
+                    {heroMissionTask.title}
+                  </h3>
                   <div className="mt-3 flex flex-wrap gap-2 sm:gap-3">
                     <span className="inline-flex items-center gap-1.5 rounded-full border border-[var(--card-border)]/80 bg-[var(--bg-surface)]/55 px-3 py-1.5 text-xs text-[var(--text-secondary)]">
                       <span className="text-[var(--text-muted)]">XP</span>
@@ -1118,6 +1162,7 @@ export function TaskList({
                   {blockedReasonByTaskId?.[heroMissionTask.id] && (
                     <p className="mt-2 text-xs text-amber-200/90">{blockedReasonByTaskId[heroMissionTask.id]}</p>
                   )}
+                  </div>
                 </section>
               ) : (
                 <div className="rounded-2xl border border-dashed border-[var(--card-border)]/55 bg-[var(--bg-surface)]/25 px-4 py-8 text-center">
