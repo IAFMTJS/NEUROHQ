@@ -1903,6 +1903,10 @@ html[data-light-ui="true"] body {
 .mascot-hero .commander-mascot-pedestal .commander-mascot-pedestal-mascot * {
   pointer-events: none;
 }
+.mascot-hero .commander-mascot-pedestal .commander-mascot-pedestal-cards,
+.mascot-hero .commander-mascot-pedestal .commander-mascot-pedestal-cards a {
+  pointer-events: auto;
+}
 .mascot-hero[data-commander-orbit="true"].mascot-hero-top {
   /* Band reikt hoger onder mascotte; iets strakkere aansluiting op content eronder */
   margin-bottom: -52px;
@@ -2256,11 +2260,6 @@ header h1 { margin: 0; }
     max-width: 24rem;
     gap: 1.25rem;
   }
-}
-
-.bridge-layout-hero .commander-status-strip {
-  margin-left: auto;
-  margin-right: auto;
 }
 
 /* 7. MISSION GRID */
@@ -3746,11 +3745,13 @@ header h1 { margin: 0; }
 
 [data-mode="overdrive"] .card,
 [data-mode="overdrive"] .card-simple,
+[data-mode="overdrive"] .card-simple-accent,
 [data-mode="overdrive"] .glass-panel,
 [data-mode="overdrive"] .glass-card,
 [data-mode="overdrive"] .hq-card,
 [data-mode="overdrive"] .glass-card-3d {
   border-color: rgba(167, 139, 250, 0.32);
+  background: linear-gradient(165deg, rgba(50, 20, 72, 0.68) 0%, rgba(18, 8, 32, 0.55) 100%) !important;
   box-shadow:
     0 0 0 1px rgba(168, 85, 247, 0.18),
     0 0 22px rgba(192, 38, 211, 0.12),

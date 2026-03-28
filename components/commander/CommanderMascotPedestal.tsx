@@ -2,6 +2,7 @@
 
 import type { ReactNode } from "react";
 import { useEffect, useRef, useState } from "react";
+import Link from "next/link";
 import { getCurrencySymbol } from "@/lib/utils/currency";
 import { xpRangeForNextLevel } from "@/lib/xp";
 
@@ -36,6 +37,9 @@ const R_OUTER = R_MID + 24;
 const SIDE_ALPHA = Math.PI / 14;
 /** Onderlangs: π+α → … → −α (45° | 90° | 45° + zij-opwaarts) */
 const ANGLES = [Math.PI + SIDE_ALPHA, (3 * Math.PI) / 4, Math.PI / 4, -SIDE_ALPHA] as const;
+
+/** Middenhoek Focus-segment (XP/Budget op de band) */
+const SEG_MID_FOCUS_RAD = (ANGLES[1] + ANGLES[2]) / 2;
 
 function polar(cx: number, cy: number, r: number, t: number) {
   return { x: cx + r * Math.cos(t), y: cy + r * Math.sin(t) };
@@ -105,6 +109,21 @@ const RIM_STROKE = 7;
 
 const pathLen = 100;
 
+/** Straal voor XP/Budget op de band */
+function bandLabelRadiusXp() {
+  return R_INNER + (R_OUTER - R_INNER) * 0.22;
+}
+
+/** HTML-overlay: zelfde meetkunde als SVG-groep met verticale squash */
+function bandLabelPct(theta: number, r: number, squash: number) {
+  const x = CX + r * Math.cos(theta);
+  const ySquashed = CY + r * Math.sin(theta) * squash;
+  return { left: `${(x / VB_W) * 100}%`, top: `${(ySquashed / VB_H) * 100}%` };
+}
+
+const cardClass =
+  "commander-pedestal-hud-card commander-pedestal-band-card pointer-events-auto max-w-[min(48%,7.25rem)] rounded-md border px-1.5 py-1 backdrop-blur-md no-underline outline-none transition-transform hover:scale-[1.02] focus-visible:ring-2 focus-visible:ring-[var(--accent-focus)]/55 sm:max-w-[8.5rem] sm:rounded-lg sm:px-2 sm:py-1.5";
+
 function clampPct(n: number) {
   return Math.min(100, Math.max(0, n));
 }
@@ -148,11 +167,14 @@ export function CommanderMascotPedestal({ stats, children }: Props) {
   /** Foreshortening: cirkel → ellips; iets minder squash = onderkant band reikt lager, (CX,CY) boven blijft anker. */
   const donutSquash = 0.6;
 
+  const rXpBudget = bandLabelRadiusXp();
+  const posXp = bandLabelPct(SEG_MID_FOCUS_RAD, rXpBudget, donutSquash);
+
   return (
     <div
       className="commander-mascot-pedestal commander-mascot-platform relative mx-auto w-full overflow-visible pb-6 sm:pb-8"
       role="group"
-      aria-label={`Resourceband: arcering Energy ${ePct}%, Focus ${fPct}%, Load ${lPct}%. XP level ${displayLevel}, ${current} van ${needed}. Budget ${isNegative ? "−" : ""}${symbol}${amount.toFixed(0)} — ook onder de mascotte. Brain-cirkels voor detail.`}
+      aria-label={`Resourceband: arcering Energy ${ePct}%, Focus ${fPct}%, Load ${lPct}%. XP level ${displayLevel}, ${current} van ${needed}. Budget ${isNegative ? "−" : ""}${symbol}${amount.toFixed(0)}. Brain status-cirkels onder de mascotte.`}
     >
       <div className="commander-mascot-pedestal-donut-stage relative mx-auto w-full min-h-[min(300px,78vw)] overflow-visible pb-[min(5rem,16vw)] sm:min-h-[min(340px,64vw)] sm:pb-[min(5.5rem,15vw)]">
         {/* Mascotte eerst (gat van de donut); ring eronder/erachter via z-index */}
@@ -263,6 +285,32 @@ export function CommanderMascotPedestal({ stats, children }: Props) {
                   </g>
                 </g>
               </svg>
+
+                <div
+                  className="commander-mascot-pedestal-cards pointer-events-none absolute z-[12] flex w-[min(92%,17rem)] max-w-none justify-between gap-1 px-0.5 sm:gap-2"
+                  style={{ left: posXp.left, top: posXp.top, transform: "translate(-50%, -50%)" }}
+                >
+                  <Link href="/xp" className={`${cardClass} text-left`}>
+                    <span className="block text-[7px] font-semibold uppercase tracking-[0.12em] text-[var(--text-muted)] sm:text-[8px]">XP</span>
+                    <span className="mt-0.5 block text-[11px] font-bold tabular-nums text-[var(--text-primary)] sm:text-xs">
+                      Lv {displayLevel}
+                    </span>
+                    <span className="mt-0.5 block text-[9px] tabular-nums text-[var(--text-secondary)] sm:text-[10px]">
+                      {current}/{needed}
+                    </span>
+                  </Link>
+                  <Link href="/budget" className={`${cardClass} text-right`}>
+                    <span className="block text-[7px] font-semibold uppercase tracking-[0.1em] text-[var(--text-muted)] sm:text-[8px]">Budget</span>
+                    <span className="mt-0.5 block text-[11px] font-bold tabular-nums text-[var(--text-primary)] sm:text-xs">
+                      {isNegative && "−"}
+                      {symbol}
+                      {amount.toFixed(0)}
+                    </span>
+                    <span className="mt-0.5 block text-[9px] text-[var(--text-secondary)] sm:text-[10px]">
+                      {isNegative ? "over" : "rest"}
+                    </span>
+                  </Link>
+                </div>
               </div>
             </div>
           </div>

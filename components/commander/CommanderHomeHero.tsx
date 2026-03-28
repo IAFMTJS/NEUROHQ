@@ -2,7 +2,6 @@
 
 import { getMascotSrcForPage } from "@/lib/mascots";
 import { CommanderMascotPedestal, type CommanderMascotPedestalStats } from "./CommanderMascotPedestal";
-import { CommanderStatusStrip } from "./CommanderStatusStrip";
 import { CommanderStatRing } from "./CommanderStatRing";
 import { ClientCTALink } from "./ClientCTALink";
 import { useHQStore } from "@/lib/hq-store";
@@ -14,8 +13,6 @@ type Props = {
   loadPct: number;
   missionHref: string;
   missionLabel: string;
-  /** Single measurable goal: "wat moet ik nu doen?" (e.g. first incomplete task + XP). */
-  singleGoalLabel?: string | null;
   /** For export CSV (default: today). */
   exportDate?: string | null;
   /** When true, show streak-at-risk status (mascot variant). */
@@ -37,7 +34,6 @@ export function CommanderHomeHero({
   loadPct,
   missionHref,
   missionLabel,
-  singleGoalLabel,
   exportDate,
   streakAtRisk,
   dailyQuoteText,
@@ -126,27 +122,11 @@ export function CommanderHomeHero({
         )}
       </section>
 
-      {singleGoalLabel && (
-        <p className="text-sm font-medium text-[var(--text-primary)] rounded-lg border border-[var(--card-border)] bg-[var(--bg-surface)]/50 px-3 py-2" aria-label="Wat nu">
-          {singleGoalLabel}
-        </p>
-      )}
-      {pedestalStats && bridgeLayout ? (
-        <CommanderStatusStrip
-          stats={{
-            ...pedestalStats,
-            energyPct: effectiveEnergyPct,
-            focusPct: effectiveFocusPct,
-            loadPct: effectiveLoadPct,
-          }}
-        />
-      ) : (
-        <section className={`stats${bridgeLayout ? " commander-bridge-stats" : ""}`}>
-          <CommanderStatRing value={effectiveEnergyPct} variant="energy" size={bridgeLayout ? 120 : 102} />
-          <CommanderStatRing value={effectiveFocusPct} variant="focus" size={bridgeLayout ? 120 : 102} />
-          <CommanderStatRing value={effectiveLoadPct} variant="load" size={bridgeLayout ? 120 : 102} />
-        </section>
-      )}
+      <section className={`stats${bridgeLayout ? " commander-bridge-stats" : ""}`}>
+        <CommanderStatRing value={effectiveEnergyPct} variant="energy" size={bridgeLayout ? 120 : 102} />
+        <CommanderStatRing value={effectiveFocusPct} variant="focus" size={bridgeLayout ? 120 : 102} />
+        <CommanderStatRing value={effectiveLoadPct} variant="load" size={bridgeLayout ? 120 : 102} />
+      </section>
       {dailyQuoteText && (
         <div
           className={`w-full max-w-[520px] rounded-xl px-3 py-2.5 ${bridgeLayout ? "mx-0 text-left" : "mx-auto text-center"}`}

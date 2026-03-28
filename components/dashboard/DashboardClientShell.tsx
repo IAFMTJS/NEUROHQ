@@ -286,7 +286,6 @@ export function DashboardClientShell() {
     xp,
     economy,
     missionLabel,
-    singleGoalLabel,
     emptyMissionMessage,
     emptyMissionHref,
     dailyQuoteText,
@@ -638,7 +637,6 @@ export function DashboardClientShell() {
                       loadPct={heroLoadPct}
                       missionHref="/tasks"
                       missionLabel={missionLabel}
-                      singleGoalLabel={singleGoalLabel}
                       exportDate={dateStr}
                       streakAtRisk={streakAtRisk}
                       dailyQuoteText={dailyQuoteText}
