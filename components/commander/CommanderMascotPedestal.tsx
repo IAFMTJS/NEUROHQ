@@ -38,12 +38,8 @@ const SIDE_ALPHA = Math.PI / 14;
 /** Onderlangs: π+α → … → −α (45° | 90° | 45° + zij-opwaarts) */
 const ANGLES = [Math.PI + SIDE_ALPHA, (3 * Math.PI) / 4, Math.PI / 4, -SIDE_ALPHA] as const;
 
-/** Middenhoek per segment (lineair in θ): Energy | Focus | Load */
-const SEG_MID_RAD: readonly [number, number, number] = [
-  (ANGLES[0] + ANGLES[1]) / 2,
-  (ANGLES[1] + ANGLES[2]) / 2,
-  (ANGLES[2] + ANGLES[3]) / 2,
-];
+/** Middenhoek Focus-segment (XP/Budget-label in de band) */
+const SEG_MID_FOCUS_RAD = (ANGLES[1] + ANGLES[2]) / 2;
 
 function polar(cx: number, cy: number, r: number, t: number) {
   return { x: cx + r * Math.cos(t), y: cy + r * Math.sin(t) };
@@ -115,11 +111,7 @@ const RIM_STROKE = 7;
 
 const pathLen = 100;
 
-/** Straal voor labels: iets tussen binnen- en buitenrand (naar gat) */
-function bandLabelRadiusMain() {
-  return R_INNER + (R_OUTER - R_INNER) * 0.4;
-}
-
+/** Straal voor XP/Budget in de band */
 function bandLabelRadiusXp() {
   return R_INNER + (R_OUTER - R_INNER) * 0.22;
 }
@@ -135,16 +127,8 @@ function bandLabelPct(theta: number, r: number, squash: number) {
 const cardClass =
   "commander-pedestal-hud-card commander-pedestal-band-card pointer-events-auto max-w-[min(48%,7.25rem)] rounded-md border px-1.5 py-1 backdrop-blur-md no-underline outline-none transition-transform hover:scale-[1.02] focus-visible:ring-2 focus-visible:ring-[var(--accent-focus)]/55 sm:max-w-[8.5rem] sm:rounded-lg sm:px-2 sm:py-1.5";
 
-const bandStatClass =
-  "commander-pedestal-stat-pill commander-pedestal-band-stat pointer-events-none max-w-[min(30%,5.75rem)] sm:max-w-[6.25rem]";
-
 function clampPct(n: number) {
   return Math.min(100, Math.max(0, n));
-}
-
-function format1(v: number | undefined, pct: number) {
-  if (typeof v === "number" && Number.isFinite(v)) return `${Math.min(10, Math.max(0, v)).toFixed(1)}/10`;
-  return `${(clampPct(pct) / 10).toFixed(1)}/10`;
 }
 
 export function CommanderMascotPedestal({ stats, children }: Props) {
@@ -156,9 +140,6 @@ export function CommanderMascotPedestal({ stats, children }: Props) {
     energyPct,
     focusPct,
     loadPct,
-    energy1to10,
-    focus1to10,
-    load1to10,
   } = stats;
 
   const { current, needed } = xpRangeForNextLevel(totalXP);
@@ -189,36 +170,30 @@ export function CommanderMascotPedestal({ stats, children }: Props) {
   /** Foreshortening: cirkel → ellips (donut van schuin boven); midden blijft (CX,CY). */
   const donutSquash = 0.56;
 
-  const rE = bandLabelRadiusMain();
-  const rF = bandLabelRadiusMain();
-  const rL = bandLabelRadiusMain();
   const rXpBudget = bandLabelRadiusXp();
-  const posE = bandLabelPct(SEG_MID_RAD[0], rE, donutSquash);
-  const posF = bandLabelPct(SEG_MID_RAD[1], rF, donutSquash);
-  const posL = bandLabelPct(SEG_MID_RAD[2], rL, donutSquash);
-  const posXp = bandLabelPct(SEG_MID_RAD[1], rXpBudget, donutSquash);
+  const posXp = bandLabelPct(SEG_MID_FOCUS_RAD, rXpBudget, donutSquash);
 
   return (
     <div
       className="commander-mascot-pedestal commander-mascot-platform relative mx-auto w-full overflow-visible pb-6 sm:pb-8"
       role="group"
-      aria-label={`Energy ${ePct} procent, Focus ${fPct} procent, Belasting ${lPct} procent. Level ${displayLevel}, ${current} van ${needed} XP. Budget: ${isNegative ? "−" : ""}${symbol}${amount.toFixed(0)}.`}
+      aria-label={`Resourceband: arcering Energy ${ePct}%, Focus ${fPct}%, Load ${lPct}%. Level ${displayLevel}, ${current} van ${needed} XP. Budget ${isNegative ? "−" : ""}${symbol}${amount.toFixed(0)}. Gedetailleerde stats op de brain circles.`}
     >
-      <div className="commander-mascot-pedestal-donut-stage relative mx-auto w-full min-h-[min(260px,72vw)] pb-[min(5.5rem,18vw)] sm:min-h-[min(300px,58vw)] sm:pb-[min(6.5rem,14vw)]">
+      <div className="commander-mascot-pedestal-donut-stage relative mx-auto w-full min-h-[min(300px,78vw)] pb-[min(4.25rem,14vw)] sm:min-h-[min(340px,64vw)] sm:pb-[min(5rem,13vw)]">
         {/* Mascotte eerst (gat van de donut); ring eronder/erachter via z-index */}
-        <div className="commander-mascot-pedestal-mascot relative z-[14] -mb-7 mx-auto w-full max-w-[min(320px,88vw)] shrink-0 px-1 sm:-mb-9">
+        <div className="commander-mascot-pedestal-mascot relative z-[14] -mb-12 mx-auto w-full max-w-[min(320px,88vw)] shrink-0 px-1 sm:-mb-14 lg:-mb-[4.5rem]">
           {children}
         </div>
 
-        {/* Ring achter mascotte: lager + donut-perspectief */}
-        <div className="absolute bottom-0 left-1/2 z-[1] flex w-full max-w-none -translate-x-1/2 translate-y-5 justify-center sm:translate-y-7">
+        {/* Ring omhoog tot ~heup / onder brain: negatieve translate + hogere maxHeight */}
+        <div className="absolute bottom-0 left-1/2 z-[1] flex w-full max-w-none -translate-x-1/2 -translate-y-[min(38%,9.75rem)] justify-center sm:-translate-y-[min(42%,11rem)] lg:-translate-y-[min(44%,11.5rem)]">
           <div className="commander-mascot-pedestal-donut-tilt">
             <div
               className="commander-mascot-pedestal-arc-wrap commander-mascot-pedestal-donut-ring relative shrink-0"
               style={{
                 width: platformWidth,
                 aspectRatio: `${VB_W} / ${VB_H}`,
-                maxHeight: "min(14.25rem, 48vw)",
+                maxHeight: "min(17rem, 56vw)",
               }}
             >
               <svg
@@ -313,33 +288,7 @@ export function CommanderMascotPedestal({ stats, children }: Props) {
                 </g>
               </svg>
 
-          {/* Stats + labels in de band (pool-geometrie) */}
-          <div
-            className={`${bandStatClass} absolute z-[6] text-left`}
-            style={{ ...posE, transform: "translate(-50%, -50%)" }}
-          >
-            <p className="text-[7px] font-semibold uppercase tracking-[0.12em] text-cyan-200/95 sm:text-[8px]">Energy</p>
-            <p className="text-xs font-bold tabular-nums text-cyan-50 sm:text-sm">{ePct}%</p>
-            <p className="text-[8px] tabular-nums text-cyan-100/80 sm:text-[9px]">{format1(energy1to10, ePct)}</p>
-          </div>
-          <div
-            className={`${bandStatClass} absolute z-[6] text-center`}
-            style={{ ...posF, transform: "translate(-50%, -50%)" }}
-          >
-            <p className="text-[7px] font-semibold uppercase tracking-[0.12em] text-sky-200 sm:text-[8px]">Focus</p>
-            <p className="text-sm font-bold tabular-nums text-sky-50 sm:text-base">{fPct}%</p>
-            <p className="text-[8px] tabular-nums text-sky-100/80 sm:text-[9px]">{format1(focus1to10, fPct)}</p>
-          </div>
-          <div
-            className={`${bandStatClass} absolute z-[6] text-right`}
-            style={{ ...posL, transform: "translate(-50%, -50%)" }}
-          >
-            <p className="text-[7px] font-semibold uppercase tracking-[0.12em] text-orange-200/95 sm:text-[8px]">Load</p>
-            <p className="text-xs font-bold tabular-nums text-orange-50 sm:text-sm">{lPct}%</p>
-            <p className="text-[8px] tabular-nums text-orange-100/75 sm:text-[9px]">{format1(load1to10, lPct)}</p>
-          </div>
-
-          {/* XP / Budget in de Focus-band (dieper in het gat) */}
+          {/* XP / Budget op de band — Energy/Focus/Load alleen via brain circles */}
           <div
             className="commander-mascot-pedestal-cards pointer-events-none absolute z-[12] flex w-[min(92%,17rem)] max-w-none justify-between gap-1 px-0.5 sm:gap-2"
             style={{ left: posXp.left, top: posXp.top, transform: "translate(-50%, -50%)" }}

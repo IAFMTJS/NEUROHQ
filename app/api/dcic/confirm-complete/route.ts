@@ -10,7 +10,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ success: false, error: "Missing missionId" }, { status: 400 });
     }
 
-    const validModes = ["focus", "war", "recovery"] as const;
+    const validModes = ["focus", "war", "recovery", "overdrive"] as const;
     const modeOverride = modeOverrideRaw && validModes.includes(modeOverrideRaw as any)
       ? (modeOverrideRaw as (typeof validModes)[number])
       : null;

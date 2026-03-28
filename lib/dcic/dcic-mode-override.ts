@@ -6,7 +6,7 @@ import { switchMode } from "./mode-engine";
 
 const BRAIN_SOFT_APPLY_KEY = "neurohq-brain-dcic-soft-v1";
 
-export type DCICModeOverride = "war" | "recovery" | "focus";
+export type DCICModeOverride = "war" | "recovery" | "overdrive" | "focus";
 
 const STORAGE_KEY = "neurohq-dcic-mode-override-v1";
 
@@ -23,7 +23,13 @@ function safeParseStoredOverride(raw: string | null): StoredOverride | null {
     if (!parsed || typeof parsed !== "object") return null;
     if (typeof parsed.dateKey !== "string") return null;
     if (parsed.dateKey !== getTodayKey()) return null;
-    if (parsed.mode !== "war" && parsed.mode !== "recovery" && parsed.mode !== "focus") return null;
+    if (
+      parsed.mode !== "war" &&
+      parsed.mode !== "recovery" &&
+      parsed.mode !== "overdrive" &&
+      parsed.mode !== "focus"
+    )
+      return null;
     if (typeof parsed.setAt !== "number" || !Number.isFinite(parsed.setAt)) return null;
     return parsed as StoredOverride;
   } catch {

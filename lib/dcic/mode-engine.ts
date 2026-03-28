@@ -1,6 +1,8 @@
 import type { GameState, Mission } from "./types";
 
 const NINETY_MINUTES_MS = 90 * 60 * 1000;
+/** Overdrive double-XP window (timer shown in UI). */
+const OVERDRIVE_DURATION_MS = 6 * 60 * 60 * 1000;
 
 type ModeKey = GameState["mode"]["current"];
 
@@ -66,6 +68,19 @@ const MODE_CONFIG: Record<ModeKey, BaseModeConfig> = {
     integrityImpact: 0.5,
     lockable: false,
   },
+  overdrive: {
+    xpMultiplier: 2.0,
+    penaltyMultiplier: 1.0,
+    maxActiveMissions: 5,
+    allowAllMissions: true,
+    allowDeepWork: true,
+    energyDrainMultiplier: 1.05,
+    energyRegenMultiplier: 1.0,
+    focusRegenMultiplier: 1.0,
+    integrityImpact: 1.0,
+    lockable: true,
+    duration: OVERDRIVE_DURATION_MS,
+  },
 };
 
 const WAR_STAGE_CONFIG: Record<WarStage, WarStageConfig> = {
@@ -94,12 +109,40 @@ export type EffectiveModeConfig = BaseModeConfig & {
   warStageConfig: WarStageConfig;
 };
 
+/**
+ * Overheat: long continuous Overdrive reduces XP efficiency (not a burnout simulator).
+ * Returns 0–1 multiplier applied on top of the ×2 base.
+ */
+export function getOverdriveHeatEfficiency(
+  sessionStartIso: string | null | undefined,
+  nowMs: number = Date.now()
+): number {
+  if (!sessionStartIso) return 1;
+  const start = Date.parse(sessionStartIso);
+  if (Number.isNaN(start)) return 1;
+  const elapsedMin = (nowMs - start) / 60_000;
+  if (elapsedMin < 45) return 1;
+  if (elapsedMin < 90) return 0.88;
+  if (elapsedMin < 150) return 0.72;
+  return 0.55;
+}
+
 export function getModeConfig(gameState: GameState): EffectiveModeConfig {
   const modeKey = gameState.mode?.current ?? "focus";
   const base = MODE_CONFIG[modeKey];
   const warStage = gameState.mode?.warStage ?? 1;
   const warStageConfig =
     modeKey === "war" ? WAR_STAGE_CONFIG[warStage] : WAR_STAGE_CONFIG[1];
+
+  if (modeKey === "overdrive") {
+    const heat = getOverdriveHeatEfficiency(gameState.mode?.overdriveSessionStart, Date.now());
+    return {
+      ...base,
+      xpMultiplier: base.xpMultiplier * heat,
+      warStage: 1,
+      warStageConfig: WAR_STAGE_CONFIG[1],
+    };
+  }
 
   if (modeKey !== "war") {
     return {
@@ -134,7 +177,10 @@ export function canSwitchMode(
   if (gameState.mode.current === newMode) return false;
   if (isModeLocked(gameState, now)) return false;
   const config = MODE_CONFIG[gameState.mode.current];
-  if (config.lockable && gameState.mode.current === "war") {
+  if (
+    config.lockable &&
+    (gameState.mode.current === "war" || gameState.mode.current === "overdrive")
+  ) {
     return false;
   }
   return true;
@@ -160,9 +206,14 @@ export function switchMode(
 
   if (newMode === "war") {
     gameState.mode.warStage = 1;
+    gameState.mode.overdriveSessionStart = null;
+  } else if (newMode === "overdrive") {
+    gameState.mode.warStage = 1;
+    gameState.mode.overdriveSessionStart = nowIso;
   } else {
     gameState.mode.warStage = 1;
     gameState.mode.nextWarBonus = gameState.mode.nextWarBonus ?? null;
+    gameState.mode.overdriveSessionStart = null;
   }
 
   if (config.lockable && config.duration != null) {
@@ -193,27 +244,30 @@ export function updateWarStage(gameState: GameState, warStartedAt: string | null
 }
 
 export function autoModeCheck(gameState: GameState): void {
-  const avg = gameState.mode.brainStatusAveragePercent;
-
-  if (avg != null) {
-    if (avg < 25 && gameState.mode.current !== "recovery") {
-      switchMode(gameState, "recovery", { forced: true });
-      return;
-    }
-    if (avg > 75 && gameState.mode.current !== "war") {
-      switchMode(gameState, "war", { forced: true });
-      return;
-    }
+  if (gameState.mode.current === "overdrive") {
+    return;
   }
 
-  const { energy, focus, load } = gameState.stats;
+  const avg = gameState.mode.brainStatusAveragePercent;
 
-  if (avg == null && (energy < 25 || load > 80)) {
+  /** Geen brain check-in vandaag (energy/focus ontbreken in daily_state): recovery tot check-in; daarna is focus de norm tussen de war/recovery-drempels. */
+  if (avg == null) {
     if (gameState.mode.current !== "recovery") {
       switchMode(gameState, "recovery", { forced: true });
     }
     return;
   }
+
+  if (avg < 25 && gameState.mode.current !== "recovery") {
+    switchMode(gameState, "recovery", { forced: true });
+    return;
+  }
+  if (avg > 75 && gameState.mode.current !== "war") {
+    switchMode(gameState, "war", { forced: true });
+    return;
+  }
+
+  const { energy, focus } = gameState.stats;
 
   if (focus > 70 && energy > 60) {
     if (!gameState.mode.suggested) {

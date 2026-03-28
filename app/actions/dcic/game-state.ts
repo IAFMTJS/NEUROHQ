@@ -10,11 +10,16 @@ import { revalidatePath } from "next/cache";
 import type { GameState, Mission } from "@/lib/dcic/types";
 import { applyBrainLayerToGameState } from "@/lib/dcic/brain-game-state";
 import { countWarTierDays, type DailyRowForBrain } from "@/lib/dcic/brain-status-average";
-import { autoModeCheck, passiveRecoveryTick } from "@/lib/dcic/mode-engine";
+import { autoModeCheck, passiveRecoveryTick, switchMode } from "@/lib/dcic/mode-engine";
 import { updateDifficulty, generateDailyMissions } from "@/lib/dcic/difficulty-engine";
 import { rankFromLevel } from "@/lib/rank-ladder";
 
-const DCIC_MODE_VALUES: GameState["mode"]["current"][] = ["focus", "war", "recovery"];
+const DCIC_MODE_VALUES: GameState["mode"]["current"][] = [
+  "focus",
+  "war",
+  "recovery",
+  "overdrive",
+];
 
 function parseLockedDcicMode(raw: unknown): GameState["mode"]["current"] | null {
   if (typeof raw !== "string") return null;
@@ -76,7 +81,7 @@ export async function getGameState(
     supabase
       .from("daily_state")
       .select(
-        "energy, focus, sensory_load, load, mental_battery, physical_health, sleep_hours, dcic_mode"
+        "energy, focus, sensory_load, load, mental_battery, physical_health, sleep_hours, dcic_mode, dcic_locked_until, dcic_overdrive_session_start"
       )
       .eq("user_id", user.id)
       .eq("date", today)
@@ -88,6 +93,32 @@ export async function getGameState(
       .gte("date", weekStartStr)
       .lte("date", today),
   ]);
+
+  let ds = dailyState as Record<string, unknown> | null | undefined;
+  if (ds?.dcic_mode === "overdrive" && ds.dcic_locked_until) {
+    const lu = Date.parse(String(ds.dcic_locked_until));
+    if (!Number.isNaN(lu) && lu <= Date.now()) {
+      const { error: expireErr } = await supabase
+        .from("daily_state")
+        .update({
+          dcic_mode: "focus",
+          dcic_locked_until: null,
+          dcic_overdrive_session_start: null,
+        })
+        .eq("user_id", user.id)
+        .eq("date", today);
+      if (expireErr) {
+        console.error("expire overdrive:", expireErr);
+      } else {
+        ds = {
+          ...ds,
+          dcic_mode: "focus",
+          dcic_locked_until: null,
+          dcic_overdrive_session_start: null,
+        };
+      }
+    }
+  }
 
   const warTierDaysLast7 = countWarTierDays((dailyStateWeek ?? []) as DailyRowForBrain[]);
 
@@ -143,9 +174,9 @@ export async function getGameState(
     currentXP: totalXP,
     xpToNextLevel: calculateXPForLevel(level),
     stats: {
-      energy: (dailyState?.energy as number) ?? 50,
-      focus: (dailyState?.focus as number) ?? 50,
-      load: (dailyState?.sensory_load as number) ?? 30,
+      energy: (ds?.energy as number) ?? 50,
+      focus: (ds?.focus as number) ?? 50,
+      load: (ds?.sensory_load as number) ?? 30,
     },
     missions,
     skills,
@@ -158,6 +189,7 @@ export async function getGameState(
       current: "focus",
       lockedUntil: null,
       lastSwitch: null,
+      overdriveSessionStart: null,
       warStage: 1,
       suggested: null,
       nextWarBonus: null,
@@ -187,13 +219,18 @@ export async function getGameState(
     },
   };
 
-  applyBrainLayerToGameState(gameState, dailyState as Parameters<typeof applyBrainLayerToGameState>[1], {
+  applyBrainLayerToGameState(gameState, ds as Parameters<typeof applyBrainLayerToGameState>[1], {
     warTierDaysLast7,
   });
 
-  const lockedMode = parseLockedDcicMode(dailyState?.dcic_mode);
+  const lockedMode = parseLockedDcicMode(ds?.dcic_mode);
   if (lockedMode) {
     gameState.mode.current = lockedMode;
+    gameState.mode.lockedUntil = (ds?.dcic_locked_until as string | null) ?? null;
+    gameState.mode.overdriveSessionStart =
+      lockedMode === "overdrive"
+        ? (ds?.dcic_overdrive_session_start as string | null) ?? null
+        : null;
     passiveRecoveryTick(gameState);
   } else {
     autoModeCheck(gameState);
@@ -276,6 +313,11 @@ export async function saveGameState(gameState: GameState): Promise<boolean> {
       focus: gameState.stats.focus,
       sensory_load: gameState.stats.load,
       dcic_mode: gameState.mode.current,
+      dcic_locked_until: gameState.mode.lockedUntil,
+      dcic_overdrive_session_start:
+        gameState.mode.current === "overdrive"
+          ? gameState.mode.overdriveSessionStart
+          : null,
     });
 
     revalidatePath("/dashboard");
@@ -285,6 +327,19 @@ export async function saveGameState(gameState: GameState): Promise<boolean> {
     console.error("Error saving gameState:", error);
     return false;
   }
+}
+
+/**
+ * Persists operational DCIC mode for today (e.g. Overdrive activation from settings).
+ */
+export async function persistDcicOperationalMode(
+  newMode: GameState["mode"]["current"]
+): Promise<{ ok: boolean; error?: string }> {
+  const gameState = await getGameState({ includeFinance: false });
+  if (!gameState) return { ok: false, error: "Geen game state" };
+  switchMode(gameState, newMode, { forced: true });
+  const ok = await saveGameState(gameState);
+  return ok ? { ok: true } : { ok: false, error: "Opslaan mislukt" };
 }
 
 /**

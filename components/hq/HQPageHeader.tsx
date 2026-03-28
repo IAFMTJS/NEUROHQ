@@ -20,7 +20,13 @@ export function HQPageHeader({ title, subtitle, backHref, compact = false, glowT
   const mode = useHQStore((s) => s.gameState?.mode?.current ?? "focus");
   const showBackLink = backHref != null && backHref !== "";
   const modeLabel =
-    mode === "war" ? "War mode" : mode === "recovery" ? "Recovery mode" : "Focus mode";
+    mode === "war"
+      ? "War mode"
+      : mode === "recovery"
+        ? "Recovery mode"
+        : mode === "overdrive"
+          ? "Overdrive mode"
+          : "Focus mode";
 
   if (compact) {
     return (

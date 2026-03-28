@@ -40,6 +40,10 @@ export function DcicModeHelpContent({
           focus/energie — je kunt het activeren in je missie-flow.
         </li>
         <li>
+          <strong className="text-[var(--text-primary)]">Overdrive</strong> is een tijdelijke dubbele-XP-modus (alles telt
+          harder), met timer en overheat als je te lang achter elkaar blijft grinden.
+        </li>
+        <li>
           <strong className="text-[var(--text-primary)]">Focus</strong> is de standaard. Je kunt waar de app het toestaat een{" "}
           <strong>handmatige override</strong> gebruiken (bijv. test in Instellingen).
         </li>

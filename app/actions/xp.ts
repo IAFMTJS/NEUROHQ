@@ -84,6 +84,26 @@ export async function addXP(
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return undefined;
+
+  const today = new Date().toISOString().slice(0, 10);
+  const { data: odRow } = await supabase
+    .from("daily_state")
+    .select("dcic_mode, dcic_locked_until, dcic_overdrive_session_start")
+    .eq("user_id", user.id)
+    .eq("date", today)
+    .maybeSingle();
+  let overdriveFactor = 1;
+  if (
+    odRow &&
+    odRow.dcic_mode === "overdrive" &&
+    (!odRow.dcic_locked_until || Date.parse(odRow.dcic_locked_until) > Date.now())
+  ) {
+    const { getOverdriveHeatEfficiency } = await import("@/lib/dcic/mode-engine");
+    const heat = getOverdriveHeatEfficiency(odRow.dcic_overdrive_session_start ?? null);
+    overdriveFactor = 2 * heat;
+  }
+  const adjustedPoints = Math.max(1, Math.floor(points * overdriveFactor));
+
   const { data: existing } = await supabase
     .from("user_xp")
     .select("total_xp")
@@ -91,7 +111,7 @@ export async function addXP(
     .single();
   const current = (existing?.total_xp as number | undefined) ?? 0;
   const levelBefore = levelFromTotalXP(current);
-  const newTotal = current + points;
+  const newTotal = current + adjustedPoints;
   const { error } = await supabase
     .from("user_xp")
     .upsert(
@@ -105,7 +125,7 @@ export async function addXP(
   if (!error && options?.source_type) {
     await supabase.from("xp_events").insert({
       user_id: user.id,
-      amount: points,
+      amount: adjustedPoints,
       source_type: options.source_type,
       task_id: options.task_id ?? null,
     });

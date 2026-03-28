@@ -11,13 +11,11 @@ import { usePendingBudgetSnapshot } from "@/lib/client-pending-budget";
 import { useHQStore } from "@/lib/hq-store";
 import { HQHeader, BrainStatusCard, ActiveMissionCard } from "@/components/hq";
 import { ModeBanner, ModeExplanationModal } from "@/components/dashboard/DashboardClientOnly";
+import { OverdriveBanner } from "@/components/dashboard/OverdriveBanner";
 import { DashboardContextCard } from "@/components/dashboard/DashboardContextCard";
 import { DashboardQuickBudgetLog } from "@/components/dashboard/DashboardQuickBudgetLog";
 import { SystemOverviewCard } from "@/components/dashboard/SystemOverviewCard";
-import { BudgetBadge } from "@/components/dashboard/BudgetBadge";
-import { DashboardActionsTrigger } from "@/components/dashboard/DashboardActionsTrigger";
 import { CommanderHomeHero } from "@/components/commander";
-import { HudLinkButton } from "@/components/hud-test/HudLinkButton";
 import { SciFiPanel } from "@/components/hud-test/SciFiPanel";
 import { CornerNode } from "@/components/hud-test/CornerNode";
 import hudStyles from "@/components/hud-test/hud.module.css";
@@ -103,6 +101,12 @@ export function DashboardClientShell() {
       return {
         "--mode-rgb": "34, 197, 94",
         "--mode-rgb-deep": "22, 101, 52",
+      } as CSSProperties;
+    }
+    if (dcicMode === "overdrive") {
+      return {
+        "--mode-rgb": "56, 189, 248",
+        "--mode-rgb-deep": "14, 116, 144",
       } as CSSProperties;
     }
     return {
@@ -282,8 +286,6 @@ export function DashboardClientShell() {
     currency,
     xp,
     economy,
-    actionsCount,
-    topQuickActions,
     missionLabel,
     singleGoalLabel,
     missionSubtext,
@@ -520,43 +522,6 @@ export function DashboardClientShell() {
     blended: "border-fuchsia-500/40 bg-fuchsia-500/10 text-fuchsia-200",
   };
 
-  const dashboardHudStripTrack = (
-    <div className="dashboard-top-strip-track">
-      <BudgetBadge budgetRemainingCents={badgeBudgetRemainingCents ?? 0} currency={badgeCurrency} />
-      <HudLinkButton
-        href="/xp"
-        className="dashboard-hud-chip shrink-0 whitespace-nowrap rounded-[10px] px-2 text-[9px] font-semibold normal-case tracking-[0.03em]"
-        style={{
-          height: "26px",
-          minHeight: "26px",
-          paddingTop: 0,
-          paddingBottom: 0,
-          paddingLeft: "6px",
-          paddingRight: "6px",
-        }}
-        aria-label={`XP en niveau: level ${dcicLevel}`}
-      >
-        <span className="tabular-nums">Lv {dcicLevel}</span>
-        <span className="text-[var(--text-muted)]">XP</span>
-      </HudLinkButton>
-      <DashboardActionsTrigger count={actionsCount}>
-        {topQuickActions.length === 0 ? (
-          <p className="py-2 text-sm text-[var(--text-muted)]">Geen snelle acties vandaag.</p>
-        ) : (
-          topQuickActions.map((action) => (
-            <Link
-              key={action.key}
-              href={action.href}
-              className="block rounded-lg border border-[var(--card-border)] px-3 py-2.5 text-sm font-medium text-[var(--text-primary)] transition-colors hover:bg-[var(--bg-hover)]"
-            >
-              {action.label}
-            </Link>
-          ))
-        )}
-      </DashboardActionsTrigger>
-    </div>
-  );
-
   return (
     <div
       className={`relative min-h-screen overflow-x-hidden ${!skipCinematicLayers ? hudStyles.cinematicBackdrop : ""} ${isMinimalUI ? "minimal-ui" : ""}`}
@@ -584,9 +549,6 @@ export function DashboardClientShell() {
                 <HQHeader energyPct={energyPct} focusPct={focusPct} loadPct={loadPct} copyVariant={copyVariant} />
               </div>
             </header>
-            <div className="dashboard-cinematic w-full px-2">
-              <div className="dashboard-top-strip relative z-10 mt-1">{dashboardHudStripTrack}</div>
-            </div>
             <BrainStatusCard
               date={dateStr}
               initial={{ energy: state?.energy ?? null, focus: state?.focus ?? null, sensory_load: state?.sensory_load ?? null, sleep_hours: state?.sleep_hours ?? null, social_load: state?.social_load ?? null, physical_health: (state as { physical_health?: number | null })?.physical_health ?? null, mental_battery: (state as { mental_battery?: number | null })?.mental_battery ?? null, is_rest_day: (state as { is_rest_day?: boolean | null })?.is_rest_day ?? null }}
@@ -594,6 +556,14 @@ export function DashboardClientShell() {
               brainMode={effectiveEnergyBudget.brainMode as BrainMode}
               suggestedTaskCount={(effectiveEnergyBudget.suggestedTaskCount as number) ?? 3}
             />
+            {dcicMode === "overdrive" && gameState?.mode && (
+              <div className="px-2">
+                <OverdriveBanner
+                  lockedUntil={gameState.mode.lockedUntil}
+                  overdriveSessionStart={gameState.mode.overdriveSessionStart}
+                />
+              </div>
+            )}
             <ConfrontationBanner />
             <ConsequenceBanner
               energyDepleted={(effectiveEnergyBudget.consequence as { energyDepleted?: boolean } | undefined)?.energyDepleted}
@@ -643,7 +613,12 @@ export function DashboardClientShell() {
         {!isMinimalUI && (
           <>
             <div className="space-y-3 px-1 pt-2 md:pt-3">
-              <div className="dashboard-top-strip relative z-10">{dashboardHudStripTrack}</div>
+              {dcicMode === "overdrive" && gameState?.mode && (
+                <OverdriveBanner
+                  lockedUntil={gameState.mode.lockedUntil}
+                  overdriveSessionStart={gameState.mode.overdriveSessionStart}
+                />
+              )}
               <SciFiPanel
                 className={`dashboard-bridge-frame idle-breathing ${hudStyles.focusPrimary}`}
                 bodyClassName={`dashboard-bridge-body flex flex-col gap-3 [-webkit-overflow-scrolling:touch] ${skipCinematicLayers ? "light-ui-defer-paint" : ""}`}

@@ -17,6 +17,9 @@ export function applyIdentityEffect(gameState: GameState, mode: GameState["mode"
     increaseTrait(gameState, "discipline", 0.2);
   } else if (mode === "recovery") {
     increaseTrait(gameState, "resilience", 0.2);
+  } else if (mode === "overdrive") {
+    increaseTrait(gameState, "discipline", 0.12);
+    increaseTrait(gameState, "consistency", 0.12);
   } else if (mode === "focus") {
     increaseTrait(gameState, "consistency", 0.1);
   }

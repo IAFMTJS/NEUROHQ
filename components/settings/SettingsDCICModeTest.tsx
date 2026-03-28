@@ -2,17 +2,20 @@
 
 import { useMemo, useState } from "react";
 import { useDCICGameState } from "@/lib/dcic/game-state-client";
-import { switchMode } from "@/lib/dcic/mode-engine";
 import { setCachedGameState } from "@/lib/dcic/game-state-cache";
 import { useHQStore } from "@/lib/hq-store";
 import { clearDCICModeOverride, setDCICModeOverride } from "@/lib/dcic/dcic-mode-override";
+import { persistDcicOperationalMode } from "@/app/actions/dcic/game-state";
+import type { GameState } from "@/lib/dcic/types";
 
-type ModeKey = "war" | "recovery" | "focus";
+type ModeKey = "war" | "recovery" | "overdrive" | "focus";
 
-function cloneGameState<T>(state: T): T {
-  // structuredClone is supported in modern browsers; fallback for older runtimes.
-  if (typeof structuredClone === "function") return structuredClone(state);
-  return JSON.parse(JSON.stringify(state)) as T;
+async function refreshGameStateFromServer(setGameState: (s: GameState | null) => void) {
+  const res = await fetch("/api/dcic/game-state", { credentials: "include", cache: "no-store" });
+  if (!res.ok) return;
+  const fresh = (await res.json()) as GameState;
+  setGameState(fresh);
+  await setCachedGameState(fresh);
 }
 
 export function SettingsDCICModeTest() {
@@ -34,19 +37,14 @@ export function SettingsDCICModeTest() {
 
     try {
       setBusy(true);
-
-      // Persist as "mode of the day" so periodic bootstrap / server refetch won't revert us.
+      const res = await persistDcicOperationalMode(mode);
+      if (!res.ok) {
+        setLastResult(res.error ?? "Server mislukt.");
+        return;
+      }
       setDCICModeOverride(mode);
-
-      // switchMode mutates input; clone first to avoid mutating zustand state in-place.
-      const next = cloneGameState(gameState);
-      switchMode(next, mode, { forced: true });
-
-      setGameState(next);
-      await setCachedGameState(next); // keep IndexedDB cache in sync for reloads
-
-      const locked = next.mode.lockedUntil ? ` (locked tot ${next.mode.lockedUntil})` : "";
-      setLastResult(`Mode gezet naar ${mode.toUpperCase()}${locked}`);
+      await refreshGameStateFromServer(setGameState);
+      setLastResult(`Mode gezet naar ${mode.toUpperCase()} (server opgeslagen).`);
     } catch (e) {
       setLastResult(e instanceof Error ? e.message : "Mode switch mislukt.");
     } finally {
@@ -64,15 +62,13 @@ export function SettingsDCICModeTest() {
 
     try {
       setBusy(true);
-
-      clearDCICModeOverride(); // back to autoModeCheck behaviour
-
-      const next = cloneGameState(gameState);
-      switchMode(next, "focus", { forced: true });
-
-      setGameState(next);
-      await setCachedGameState(next);
-
+      const res = await persistDcicOperationalMode("focus");
+      if (!res.ok) {
+        setLastResult(res.error ?? "Server mislukt.");
+        return;
+      }
+      clearDCICModeOverride();
+      await refreshGameStateFromServer(setGameState);
       setLastResult("Mode teruggezet naar FOCUS/AUTO.");
     } catch (e) {
       setLastResult(e instanceof Error ? e.message : "Reset mislukt.");
@@ -89,7 +85,7 @@ export function SettingsDCICModeTest() {
         <div>
           <h2 className="text-base font-semibold text-[var(--text-primary)]">DCIC test knoppen</h2>
           <p className="mt-1 text-xs text-[var(--text-muted)]">
-            Tijdelijke debug: zet alleen de lokale DCIC mode (war/recovery) en update ook de lokale cache. Niet bedoeld voor productie.
+            Zet de DCIC-modus voor vandaag op de server (inclusief Overdrive) en ververs de lokale cache.
           </p>
         </div>
         <div className="text-right">
@@ -118,6 +114,14 @@ export function SettingsDCICModeTest() {
           </button>
           <button
             type="button"
+            onClick={() => void triggerMode("overdrive")}
+            disabled={!isReady || busy}
+            className="rounded-lg border border-[var(--accent-neutral)] bg-transparent px-3 py-2 text-sm font-medium text-[var(--text-primary)] hover:bg-white/5 disabled:opacity-50 disabled:hover:bg-transparent"
+          >
+            {busy ? "Bezig…" : "Trigger OVERDRIVE"}
+          </button>
+          <button
+            type="button"
             onClick={() => void triggerFocus()}
             disabled={!isReady || busy}
             className="rounded-lg border border-[var(--accent-neutral)] bg-transparent px-3 py-2 text-sm font-medium text-[var(--text-primary)] hover:bg-white/5 disabled:opacity-50 disabled:hover:bg-transparent"
@@ -135,4 +139,3 @@ export function SettingsDCICModeTest() {
     </div>
   );
 }
-

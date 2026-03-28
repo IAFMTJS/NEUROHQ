@@ -138,7 +138,13 @@ export function BudgetTabsShell({
   const searchParams = useSearchParams();
   const mode = useHQStore((s) => s.gameState?.mode?.current ?? "focus");
   const modeLabel =
-    mode === "war" ? "War mode" : mode === "recovery" ? "Recovery mode" : "Focus mode";
+    mode === "war"
+      ? "War mode"
+      : mode === "recovery"
+        ? "Recovery mode"
+        : mode === "overdrive"
+          ? "Overdrive mode"
+          : "Focus mode";
 
   const [activeTab, setActiveTab] = useState<TabId>(() => {
     const raw = searchParams.get("tab");

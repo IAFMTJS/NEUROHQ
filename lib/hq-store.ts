@@ -88,6 +88,7 @@ function normalizePersistedState(persisted: unknown): unknown {
         current: "focus",
         lockedUntil: null,
         lastSwitch: null,
+        overdriveSessionStart: null,
         warStage: 1,
       },
     },

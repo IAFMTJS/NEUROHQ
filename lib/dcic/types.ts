@@ -154,13 +154,15 @@ export interface GameState {
   achievements: Record<string, boolean>;
   finance?: FinanceState; // Integrated finance state
   difficultyEngine: DifficultyEngine;
-  /** Global mode system: wraps existing Focus behaviour and adds War/Recovery. */
+  /** Global mode system: wraps existing Focus behaviour and adds War/Recovery/Overdrive. */
   mode: {
-    current: "focus" | "war" | "recovery";
+    current: "focus" | "war" | "recovery" | "overdrive";
     /** ISO timestamp until which mode cannot be changed (war lock). */
     lockedUntil: string | null;
     /** Last time a mode switch occurred (ISO). */
     lastSwitch: string | null;
+    /** When current mode is overdrive, session start for XP overheat (ISO). */
+    overdriveSessionStart: string | null;
     /** Escalation stage for war mode (1–3). */
     warStage: 1 | 2 | 3;
     /** Optional suggestion from auto-mode/authority layer (not enforced). */

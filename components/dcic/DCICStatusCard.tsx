@@ -146,7 +146,9 @@ export function DCICStatusCard({ gameState, status, brainStateMissing }: Props) 
                 ? "War"
                 : gameState.mode.current === "recovery"
                   ? "Recovery"
-                  : "Focus"}
+                  : gameState.mode.current === "overdrive"
+                    ? "Overdrive"
+                    : "Focus"}
             </strong>
             <button
               type="button"
@@ -175,7 +177,7 @@ export function DCICStatusCard({ gameState, status, brainStateMissing }: Props) 
           ) : null}
         </div>
       )}
-      <Modal open={modeHelpOpen} onClose={() => setModeHelpOpen(false)} title="Focus, War en Recovery">
+      <Modal open={modeHelpOpen} onClose={() => setModeHelpOpen(false)} title="Focus, War, Recovery en Overdrive">
         <DcicModeHelpContent
           brainStateMissing={brainStateMissing}
           manualOverrideActive={manualOverrideActive}

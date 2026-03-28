@@ -976,7 +976,9 @@ export type Database = {
           auto_master_missions_generated: boolean
           created_at: string
           date: string
+          dcic_locked_until: string | null
           dcic_mode: string | null
+          dcic_overdrive_session_start: string | null
           emotional_state: string | null
           energy: number | null
           focus: number | null
@@ -1000,7 +1002,9 @@ export type Database = {
           auto_master_missions_generated?: boolean
           created_at?: string
           date: string
+          dcic_locked_until?: string | null
           dcic_mode?: string | null
+          dcic_overdrive_session_start?: string | null
           emotional_state?: string | null
           energy?: number | null
           focus?: number | null
@@ -1024,7 +1028,9 @@ export type Database = {
           auto_master_missions_generated?: boolean
           created_at?: string
           date?: string
+          dcic_locked_until?: string | null
           dcic_mode?: string | null
+          dcic_overdrive_session_start?: string | null
           emotional_state?: string | null
           energy?: number | null
           focus?: number | null
