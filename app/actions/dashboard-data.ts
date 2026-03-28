@@ -45,6 +45,7 @@ import { getBehaviorProfile } from "@/app/actions/behavior-profile";
 import { getFinancialInsightsSafe } from "@/app/actions/dcic/finance-state";
 import { applyZeroCompletionRollover } from "@/app/actions/daily-obligation";
 import { deriveUnifiedDecision } from "@/lib/unified-decision-engine";
+import { syncInboxAlertsFromDashboardCritical } from "@/app/actions/alerts";
 import type { EnergyBudget } from "@/app/actions/energy";
 import type { TodayEngineResult } from "@/app/actions/dcic/today-engine";
 import type { DashboardCritical } from "@/types/dashboard-data.types";
@@ -323,7 +324,7 @@ async function buildCriticalPayload(ctx: TodayContext): Promise<DashboardCritica
     },
   });
 
-  return {
+  const critical: DashboardCritical = {
     dateStr: ctx.dateStr,
     isMinimalUI,
     lightUi: prefs.light_ui,
@@ -363,6 +364,14 @@ async function buildCriticalPayload(ctx: TodayContext): Promise<DashboardCritica
     burnout: (consequenceState as { burnout?: boolean })?.burnout ?? false,
     unifiedDecision,
   };
+
+  try {
+    await syncInboxAlertsFromDashboardCritical(critical);
+  } catch (err) {
+    console.error("[syncInboxAlertsFromDashboardCritical]", err);
+  }
+
+  return critical;
 }
 
 async function buildSecondaryPayload(ctx: TodayContext): Promise<DashboardSecondary> {

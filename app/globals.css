@@ -1807,6 +1807,10 @@ html[data-light-ui="true"] body {
   /* Mascot visuals should never block clicks on buttons or inputs in front of them. */
   pointer-events: none;
 }
+.mascot-hero .commander-mascot-pedestal,
+.mascot-hero .commander-mascot-pedestal * {
+  pointer-events: auto;
+}
 /* Wrapper for heroLarge image: big PNG, centered, overflow so “square” is minimal */
 .mascot-hero-img-wrap {
   position: absolute;
@@ -1869,7 +1873,8 @@ html[data-light-ui="true"] body {
   object-fit: contain;
   object-position: center 0%;
 }
-.mascot-hero > img.mascot-img {
+.mascot-hero > img.mascot-img,
+.mascot-hero .mascot-hero-mascot-stack .mascot-img {
   width: auto !important;
   max-width: min(320px, 88vw) !important;
   height: auto !important;

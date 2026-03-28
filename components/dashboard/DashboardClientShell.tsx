@@ -672,6 +672,12 @@ export function DashboardClientShell() {
                       dailyQuoteText={dailyQuoteText}
                       dailyQuoteAuthor={dailyQuoteAuthor}
                       autoSuggestions={autoSuggestions}
+                      pedestalStats={{
+                        totalXP: typeof xp.total_xp === "number" ? xp.total_xp : 0,
+                        displayLevel: dcicLevel,
+                        budgetRemainingCents: badgeBudgetRemainingCents ?? 0,
+                        currency: badgeCurrency,
+                      }}
                     />
                   </div>
                   <div className="pointer-events-none absolute right-0 top-[5%] z-30 sm:top-[8%]">

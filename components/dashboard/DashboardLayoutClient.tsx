@@ -121,7 +121,7 @@ export function DashboardLayoutClient({
               <AlertsBell />
               <Link
                 href="/settings"
-                className="fixed right-3 top-3 z-[70] rounded-full border border-[var(--card-border)] bg-[var(--bg-surface)]/80 px-2.5 py-1.5 text-sm font-semibold text-[var(--text-primary)] backdrop-blur hover:bg-[var(--bg-hover)]"
+                className="fixed right-[max(0.75rem,env(safe-area-inset-right))] top-[calc(env(safe-area-inset-top,0px)+1.25rem)] z-[70] rounded-full border border-[var(--card-border)] bg-[var(--bg-surface)]/80 px-2.5 py-1.5 text-sm font-semibold text-[var(--text-primary)] backdrop-blur hover:bg-[var(--bg-hover)]"
                 aria-label="Open settings"
                 title="Settings"
               >

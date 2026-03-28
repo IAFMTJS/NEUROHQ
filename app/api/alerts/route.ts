@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { listUserAlertsForApi, markUserAlertRead } from "@/app/actions/alerts";
+import { listUserAlertsForApi, markAllUserAlertsRead, markUserAlertRead } from "@/app/actions/alerts";
 
 export async function GET() {
   const items = await listUserAlertsForApi(40);
@@ -8,7 +8,11 @@ export async function GET() {
 
 export async function PATCH(request: Request) {
   try {
-    const body = (await request.json()) as { id?: string; read?: boolean };
+    const body = (await request.json()) as { id?: string; read?: boolean; readAll?: boolean };
+    if (body.readAll === true) {
+      await markAllUserAlertsRead();
+      return NextResponse.json({ ok: true });
+    }
     if (!body.id || body.read !== true) {
       return NextResponse.json({ error: "Invalid body" }, { status: 400 });
     }

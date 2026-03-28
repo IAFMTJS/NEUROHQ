@@ -16,17 +16,26 @@ export function AlertsBell() {
   const [open, setOpen] = useState(false);
   const [items, setItems] = useState<AlertItem[]>([]);
   const [loading, setLoading] = useState(false);
+  const [fetchError, setFetchError] = useState<string | null>(null);
   const panelRef = useRef<HTMLDivElement>(null);
 
   const unread = items.filter((a) => !a.read_at).length;
 
   const refresh = useCallback(async () => {
     setLoading(true);
+    setFetchError(null);
     try {
       const res = await fetch("/api/alerts", { credentials: "include", cache: "no-store" });
-      if (!res.ok) return;
+      if (!res.ok) {
+        setFetchError(res.status === 401 ? "Log in om meldingen te zien." : "Meldingen laden mislukt.");
+        setItems([]);
+        return;
+      }
       const data = (await res.json()) as { items?: AlertItem[] };
       setItems(data.items ?? []);
+    } catch {
+      setFetchError("Geen verbinding. Probeer opnieuw.");
+      setItems([]);
     } finally {
       setLoading(false);
     }
@@ -39,6 +48,12 @@ export function AlertsBell() {
   }, [refresh]);
 
   useEffect(() => {
+    const onSnap = () => void refresh();
+    window.addEventListener("neurohq-daily-snapshot-updated", onSnap);
+    return () => window.removeEventListener("neurohq-daily-snapshot-updated", onSnap);
+  }, [refresh]);
+
+  useEffect(() => {
     if (!open) return;
     const onDoc = (e: MouseEvent) => {
       if (panelRef.current && !panelRef.current.contains(e.target as Node)) setOpen(false);
@@ -48,17 +63,42 @@ export function AlertsBell() {
   }, [open]);
 
   const markRead = async (id: string) => {
-    await fetch("/api/alerts", {
-      method: "PATCH",
-      credentials: "include",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ id, read: true }),
-    });
-    setItems((prev) => prev.map((a) => (a.id === id ? { ...a, read_at: new Date().toISOString() } : a)));
+    try {
+      const res = await fetch("/api/alerts", {
+        method: "PATCH",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id, read: true }),
+      });
+      if (!res.ok) return;
+    } catch {
+      return;
+    }
+    const now = new Date().toISOString();
+    setItems((prev) => prev.map((a) => (a.id === id ? { ...a, read_at: now } : a)));
+  };
+
+  const markAllRead = async () => {
+    try {
+      const res = await fetch("/api/alerts", {
+        method: "PATCH",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ readAll: true }),
+      });
+      if (!res.ok) return;
+    } catch {
+      return;
+    }
+    const now = new Date().toISOString();
+    setItems((prev) => prev.map((a) => ({ ...a, read_at: a.read_at ?? now })));
   };
 
   return (
-    <div ref={panelRef} className="fixed right-[4.25rem] top-3 z-[70]">
+    <div
+      ref={panelRef}
+      className="fixed right-[4.25rem] top-[calc(env(safe-area-inset-top,0px)+1.25rem)] z-[70]"
+    >
       <button
         type="button"
         aria-expanded={open}
@@ -78,11 +118,39 @@ export function AlertsBell() {
       </button>
       {open ? (
         <div className="absolute right-0 mt-2 w-[min(calc(100vw-2rem),19rem)] rounded-xl border border-[var(--card-border)] bg-[var(--bg-elevated)]/97 p-2 shadow-xl backdrop-blur-md">
-          <p className="px-2 py-1 text-[10px] font-semibold uppercase tracking-wide text-[var(--text-muted)]">Meldingen</p>
-          {loading && items.length === 0 ? (
+          <div className="flex items-center justify-between gap-2 px-2 py-1">
+            <p className="text-[10px] font-semibold uppercase tracking-wide text-[var(--text-muted)]">Meldingen</p>
+            {unread > 0 ? (
+              <button
+                type="button"
+                className="text-[10px] font-medium text-[var(--accent-focus)] hover:underline"
+                onClick={() => void markAllRead()}
+              >
+                Alles gelezen
+              </button>
+            ) : null}
+          </div>
+          {fetchError ? (
+            <div className="px-2 py-3">
+              <p className="text-xs text-amber-200/95">{fetchError}</p>
+              <button
+                type="button"
+                className="mt-2 text-[11px] font-medium text-[var(--accent-focus)] hover:underline"
+                onClick={() => void refresh()}
+              >
+                Opnieuw proberen
+              </button>
+            </div>
+          ) : loading && items.length === 0 ? (
             <p className="px-2 py-4 text-xs text-[var(--text-muted)]">Laden…</p>
           ) : items.length === 0 ? (
-            <p className="px-2 py-4 text-xs text-[var(--text-muted)]">Geen meldingen.</p>
+            <div className="space-y-2 px-2 py-3">
+              <p className="text-xs text-[var(--text-muted)]">Geen meldingen in je inbox.</p>
+              <p className="text-[11px] leading-snug text-[var(--text-secondary)]">
+                Belangrijke tips (volgende actie, streak, overload) verschijnen hier zodra je dashboard ze heeft berekend —
+                open het dashboard of ververs na je check-in.
+              </p>
+            </div>
           ) : (
             <ul className="max-h-[min(60vh,20rem)] overflow-y-auto">
               {items.map((a) => (
@@ -114,13 +182,22 @@ export function AlertsBell() {
               ))}
             </ul>
           )}
-          <Link
-            href="/settings"
-            className="mt-1 block px-2 py-1.5 text-center text-[11px] font-medium text-[var(--accent-focus)] hover:underline"
-            onClick={() => setOpen(false)}
-          >
-            Instellingen
-          </Link>
+          <div className="mt-1 flex flex-col gap-0.5 border-t border-[var(--card-border)]/50 pt-2">
+            <Link
+              href="/settings#tijd-notificaties"
+              className="block px-2 py-1 text-center text-[11px] font-medium text-[var(--accent-focus)] hover:underline"
+              onClick={() => setOpen(false)}
+            >
+              Tijd &amp; notificaties
+            </Link>
+            <Link
+              href="/settings"
+              className="block px-2 py-0.5 text-center text-[10px] text-[var(--text-muted)] hover:text-[var(--text-secondary)]"
+              onClick={() => setOpen(false)}
+            >
+              Alle instellingen
+            </Link>
+          </div>
         </div>
       ) : null}
     </div>

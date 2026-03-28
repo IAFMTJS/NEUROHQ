@@ -1,6 +1,7 @@
 "use client";
 
 import { getMascotSrcForPage } from "@/lib/mascots";
+import { CommanderMascotPedestal, type CommanderMascotPedestalStats } from "./CommanderMascotPedestal";
 import { CommanderStatRing } from "./CommanderStatRing";
 import { ClientCTALink } from "./ClientCTALink";
 import { useHQStore } from "@/lib/hq-store";
@@ -29,6 +30,8 @@ type Props = {
   hideBuiltInTitle?: boolean;
   /** Dashboard bridge: tekst/links blijven links; mascot + stat-rings gecentreerd; icon-rail overlay rechts. */
   bridgeLayout?: boolean;
+  /** Halve statusboog onder de mascotte: links level/XP, rechts budget (dashboard). */
+  pedestalStats?: CommanderMascotPedestalStats | null;
 };
 
 export function CommanderHomeHero({
@@ -46,6 +49,7 @@ export function CommanderHomeHero({
   autoSuggestions = [],
   hideBuiltInTitle = false,
   bridgeLayout = false,
+  pedestalStats = null,
 }: Props) {
   const todayDailyState = useHQStore((s) => s.todayDailyState);
   const effectiveEnergyPct =
@@ -81,22 +85,25 @@ export function CommanderHomeHero({
       )}
 
       <section
-        className="mascot-hero mascot-hero-top relative w-full"
-        aria-hidden
+        className="mascot-hero mascot-hero-top relative flex w-full flex-col items-center"
         data-energy-low={energyLow || undefined}
         data-focus-low={focusLow || undefined}
         data-streak-at-risk={streakAtRisk || undefined}
       >
-        <img
-          src={getMascotSrcForPage("dashboard")}
-          alt=""
-          className="mascot-img"
-        />
-        {statusBadge && (
-          <span className="absolute bottom-2 left-1/2 -translate-x-1/2 rounded-full bg-amber-500/20 px-2.5 py-1 text-[10px] font-medium text-amber-200">
-            {statusBadge}
-          </span>
-        )}
+        <div className="mascot-hero-mascot-stack relative mx-auto flex w-full justify-center">
+          <img
+            src={getMascotSrcForPage("dashboard")}
+            alt=""
+            className="mascot-img"
+            aria-hidden
+          />
+          {statusBadge && (
+            <span className="pointer-events-none absolute bottom-2 left-1/2 z-[1] -translate-x-1/2 rounded-full bg-amber-500/20 px-2.5 py-1 text-[10px] font-medium text-amber-200">
+              {statusBadge}
+            </span>
+          )}
+        </div>
+        {pedestalStats ? <CommanderMascotPedestal stats={pedestalStats} /> : null}
       </section>
 
       {singleGoalLabel && (
