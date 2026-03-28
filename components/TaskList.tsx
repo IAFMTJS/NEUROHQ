@@ -955,28 +955,17 @@ export function TaskList({
   }
 
   return (
-    <div
-      className={`card-simple overflow-hidden p-0 ${missionsHeroLayout ? "card-simple-accent" : ""}`}
-    >
+    <div className={missionsHeroLayout ? "w-full space-y-4" : "card-simple overflow-hidden p-0"}>
+      {!missionsHeroLayout && (
       <div className="border-b border-[var(--card-border)] px-4 py-3">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
             <h2 className="text-base font-semibold text-[var(--text-primary)]">
-              {missionsHeroLayout ? (
-                "Vandaag"
-              ) : (
-                <>
-                  Today&apos;s missions <span className="font-medium text-[var(--accent-focus)]">· Commander</span>
-                </>
-              )}
+              Today&apos;s missions <span className="font-medium text-[var(--accent-focus)]">· Commander</span>
             </h2>
-            <p className="mt-0.5 text-xs text-[var(--text-muted)]">
-              {missionsHeroLayout
-                ? "Energie, hoofdmissie, rest in het rooster — tik op een taak voor alle details."
-                : "Volledige taakformulier · XP per missie"}
-            </p>
+            <p className="mt-0.5 text-xs text-[var(--text-muted)]">Volledige taakformulier · XP per missie</p>
           </div>
-          {!isWarMode && !missionsHeroLayout ? (
+          {!isWarMode ? (
             <div className="flex flex-wrap items-center gap-2">
               <button
                 type="button"
@@ -1003,7 +992,15 @@ export function TaskList({
           )}
         </div>
       </div>
-      <div className="p-4">
+      )}
+      {missionsHeroLayout && isWarMode && (
+        <div className="flex justify-center sm:justify-start">
+          <span className="rounded-full border border-[var(--accent-focus)]/40 bg-[var(--accent-focus)]/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.08em] text-[var(--accent-focus)]">
+            War tunnel
+          </span>
+        </div>
+      )}
+      <div className={missionsHeroLayout ? "space-y-4" : "p-4"}>
         {missionsHeroLayout && energyCap && (
           <div className="mb-4">
             <EnergyCapBar used={energyCap.used} cap={energyCap.cap} remaining={energyCap.remaining} planned={energyCap.planned} />
