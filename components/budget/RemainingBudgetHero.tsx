@@ -205,7 +205,7 @@ export function RemainingBudgetHero({
   return (
     <>
       <section
-        className="card-simple-accent relative overflow-hidden rounded-2xl p-0 ring-1 ring-emerald-400/20 shadow-[0_0_32px_rgba(16,185,129,0.12)]"
+        className="card-simple-accent relative overflow-hidden !rounded-[var(--panel-radius)] p-0 ring-1 ring-emerald-400/20 shadow-[0_0_32px_rgba(16,185,129,0.12)]"
         aria-label="Remaining budget overview"
         data-tutorial="budget-hero"
       >
@@ -214,7 +214,7 @@ export function RemainingBudgetHero({
         <CornerNode corner="bottom-left" />
         <CornerNode corner="bottom-right" />
 
-        <div className="relative border-b border-[var(--card-border)]/90 bg-[linear-gradient(105deg,rgba(16,185,129,0.16)_0%,rgba(34,211,238,0.06)_42%,rgba(15,23,42,0.2)_100%)] px-4 py-3.5 md:px-6">
+        <div className="relative rounded-t-[var(--panel-radius)] border-b border-[var(--card-border)]/90 bg-[linear-gradient(105deg,rgba(16,185,129,0.16)_0%,rgba(34,211,238,0.06)_42%,rgba(15,23,42,0.2)_100%)] px-4 py-3.5 md:px-6">
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div>
               <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-emerald-200/95">Budget command</p>
@@ -248,9 +248,9 @@ export function RemainingBudgetHero({
 
               <div className="w-full min-w-0 flex-1 space-y-4 text-center sm:max-w-md sm:text-left">
                 {paydayLine && (
-                  <div className="relative overflow-hidden rounded-xl border border-emerald-500/20 bg-[linear-gradient(135deg,rgba(6,78,59,0.35),rgba(15,23,42,0.65))] px-4 py-3 text-left shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]">
+                  <div className="relative overflow-hidden rounded-2xl border border-emerald-500/20 bg-[linear-gradient(135deg,rgba(6,78,59,0.35),rgba(15,23,42,0.65))] px-4 py-3 text-left shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]">
                     <span
-                      className="absolute left-0 top-0 h-full w-1 rounded-l-xl bg-gradient-to-b from-emerald-400/90 to-cyan-500/50"
+                      className="absolute left-0 top-0 h-full w-1 rounded-l-2xl bg-gradient-to-b from-emerald-400/90 to-cyan-500/50"
                       aria-hidden
                     />
                     <p className="pl-2 text-[10px] font-bold uppercase tracking-[0.18em] text-emerald-200/90">Tot loon</p>
@@ -261,7 +261,7 @@ export function RemainingBudgetHero({
                   </div>
                 )}
                 {hasSettings ? (
-                  <div className="space-y-2 rounded-xl border border-[var(--card-border)]/50 bg-black/20 px-4 py-3 backdrop-blur-sm">
+                  <div className="space-y-2 rounded-2xl border border-[var(--card-border)]/50 bg-black/20 px-4 py-3 backdrop-blur-sm">
                     <div className="flex flex-wrap items-baseline justify-between gap-2 gap-y-1">
                       <span className="text-[11px] font-medium uppercase tracking-wide text-[var(--text-muted)]">Spendable</span>
                       <span className="text-sm font-semibold tabular-nums text-[var(--text-primary)]">
@@ -286,12 +286,12 @@ export function RemainingBudgetHero({
               </div>
             </div>
 
-            <div className="flex w-full flex-col justify-center gap-3 md:w-[min(100%,220px)] md:shrink-0">
-              <div className="flex w-full flex-col gap-2.5">
+            <div className="flex w-full flex-col justify-center gap-3 md:w-[min(100%,240px)] md:shrink-0">
+              <div className="flex w-full flex-col gap-2">
                 <button
                   type="button"
                   onClick={() => setShowDetails(true)}
-                  className="btn-primary inline-flex h-auto min-h-[46px] w-full items-center justify-center rounded-xl px-4 py-3 text-sm font-bold uppercase tracking-[0.08em]"
+                  className="btn-primary inline-flex min-h-[44px] w-full items-center justify-center rounded-lg px-4 py-2.5 text-sm font-semibold"
                 >
                   Details
                 </button>
@@ -299,7 +299,7 @@ export function RemainingBudgetHero({
                   <button
                     type="button"
                     onClick={openQuickLogToast}
-                    className="inline-flex h-auto min-h-[44px] w-full items-center justify-center rounded-xl border border-emerald-400/45 bg-[linear-gradient(180deg,rgba(6,78,59,0.55),rgba(6,24,20,0.85))] px-4 py-2.5 text-sm font-semibold text-emerald-50 shadow-[0_0_22px_rgba(16,185,129,0.18)] transition hover:border-emerald-300/60 hover:shadow-[0_0_28px_rgba(16,185,129,0.28)]"
+                    className="btn-secondary inline-flex min-h-[44px] w-full items-center justify-center rounded-lg px-4 py-2.5 text-sm font-semibold text-[var(--text-primary)] shadow-[inset_4px_0_0_0_rgba(16,185,129,0.55)]"
                   >
                     Quick log
                   </button>
@@ -308,7 +308,7 @@ export function RemainingBudgetHero({
                   <button
                     type="button"
                     onClick={() => setShowEdit(true)}
-                    className="inline-flex h-auto min-h-[44px] w-full items-center justify-center rounded-xl border border-[var(--card-border)] bg-[var(--bg-surface)]/75 px-4 py-2.5 text-sm font-semibold text-[var(--text-primary)] backdrop-blur-sm transition hover:border-[var(--accent-focus)]/50"
+                    className="btn-secondary inline-flex min-h-[44px] w-full items-center justify-center rounded-lg px-4 py-2.5 text-sm font-semibold text-[var(--text-primary)]"
                   >
                     Budget bewerken
                   </button>
@@ -325,7 +325,7 @@ export function RemainingBudgetHero({
         </div>
 
         {!historyMode && spendableCents > 0 && (
-          <div className="relative z-10 border-t border-[var(--card-border)]/60 bg-black/15 px-4 pb-4 pt-3 md:px-6">
+          <div className="relative z-10 rounded-b-[var(--panel-radius)] border-t border-[var(--card-border)]/60 bg-black/15 px-4 pb-4 pt-3 md:px-6">
             <div className="mb-2 flex items-center justify-between gap-2">
               <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-[var(--text-muted)]">Spendable gebruikt</p>
               <p className="font-mono text-[11px] tabular-nums text-[var(--text-secondary)]">{Math.round(Math.min(100, spentPct))}%</p>
