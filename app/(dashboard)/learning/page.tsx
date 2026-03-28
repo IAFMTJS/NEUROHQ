@@ -7,6 +7,7 @@ import { getProtocolLibrary } from "@/app/actions/protocol-library";
 import { getProtocolProgressMap } from "@/app/actions/protocol-progress";
 import { getGrowthFocus } from "@/app/actions/growth-focus";
 import { LearningContentClient } from "@/components/growth/LearningContentClient";
+import { GrowthPageCommandShell } from "@/components/growth/GrowthPageCommandShell";
 import { StrategyEnginePaceHint } from "@/components/strategy/StrategyEnginePaceHint";
 import { SimplifiedPageShell } from "@/components/layout/SimplifiedPageShell";
 import { SIMPLIFIED_VIEWPORT_WRAPPER } from "@/lib/simplified-page-layout";
@@ -28,6 +29,7 @@ export default async function LearningPage({ searchParams }: Props) {
     getGrowthFocus(),
   ]);
   const simplified = prefs.simplified_content === true;
+  const lightUi = prefs.light_ui === true;
 
   const learningBody = (
     <LearningContentClient
@@ -80,9 +82,5 @@ export default async function LearningPage({ searchParams }: Props) {
     );
   }
 
-  return (
-    <main className="relative min-h-screen">
-      <div className="container page page-wide dashboard-cinematic relative z-10 pb-10">{learningBody}</div>
-    </main>
-  );
+  return <GrowthPageCommandShell lightUi={lightUi}>{learningBody}</GrowthPageCommandShell>;
 }

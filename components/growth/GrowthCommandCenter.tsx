@@ -8,17 +8,22 @@ import type { ProtocolProgressState } from "@/app/actions/protocol-progress";
 import { commitProtocolWeekToMissions } from "@/app/actions/protocol-missions";
 import { setGrowthFocusProtocol } from "@/app/actions/growth-focus";
 import type { GrowthFocusState } from "@/app/actions/growth-focus";
-import {
-  parseProtocolDefinition,
-  maxWeekIndex,
-  phaseForWeek,
-  weekForIndex,
-  getScaledTask,
-} from "@/lib/growth/protocol-definition";
+import { parseProtocolDefinition, maxWeekIndex, phaseForWeek, weekForIndex } from "@/lib/growth/protocol-definition";
 import type { DifficultyTier } from "@/lib/growth/adaptive-engine";
 import { progressKey, resolveFocusProtocol } from "@/lib/growth/resolve-focus-protocol";
 import { tierLabelNl } from "@/lib/growth/tier-labels";
 import { neuroToast } from "@/lib/ui/neuro-toast";
+import { EnergyRing, type EnergyRingMode } from "@/components/hud-test/EnergyRing";
+
+const RING_SIZE = 152;
+
+function weekProgressRingMode(pct: number, totalTasks: number): EnergyRingMode {
+  if (totalTasks === 0) return "default";
+  if (pct >= 100) return "green-peak";
+  if (pct >= 70) return "green";
+  if (pct >= 40) return "alert";
+  return "high-alert";
+}
 
 type Props = {
   protocols: ProtocolLibraryRow[];
@@ -78,220 +83,260 @@ export function GrowthCommandCenter({
   const doneInWeek = week ? week.tasks.filter((t) => completed.has(t.id)).length : 0;
   const totalInWeek = week?.tasks.length ?? 0;
   const weekPct = totalInWeek > 0 ? Math.round((doneInWeek / totalInWeek) * 100) : 0;
+  const ringMode = weekProgressRingMode(weekPct, totalInWeek);
+
+  const previewTasks = week?.tasks.slice(0, 3) ?? [];
+
+  const commitWeek = () =>
+    startTransition(async () => {
+      try {
+        const r = await commitProtocolWeekToMissions({
+          protocol_slug: safeActive.slug,
+          locale: safeActive.locale,
+        });
+        neuroToast.success(
+          r.created > 0
+            ? `${r.created} taken op Missions${r.skipped ? ` (${r.skipped} al gepland)` : ""}.`
+            : `Geen nieuwe taken — ${r.skipped} stonden al op vandaag.`,
+        );
+        router.refresh();
+      } catch (e) {
+        neuroToast.error(e instanceof Error ? e.message : "Mislukt.");
+      }
+    });
 
   return (
     <section
       id="growth-command"
-      className="scroll-mt-28 overflow-hidden rounded-2xl border border-[var(--semantic-accent)]/40 bg-gradient-to-br from-[var(--semantic-accent)]/14 via-[var(--bg-elevated)]/70 to-[var(--bg-primary)]/90 shadow-[0_0_56px_rgba(var(--mode-rgb),0.12)]"
+      className="scroll-mt-28 overflow-hidden rounded-2xl border border-[rgba(var(--mode-rgb),0.22)] bg-gradient-to-br from-[rgba(var(--mode-rgb-deep),0.38)] via-[rgba(var(--mode-rgb),0.12)] to-[var(--bg-primary)]/95 shadow-[0_0_0_1px_rgba(var(--mode-rgb),0.08),0_0_40px_rgba(var(--mode-rgb),0.1),0_24px_56px_rgba(0,0,0,0.45)] backdrop-blur-md"
     >
-      <div className="border-b border-[var(--card-border)]/80 bg-[var(--bg-elevated)]/35 px-4 py-3 sm:px-5">
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-          <div>
-            <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-[var(--semantic-accent)]">
-              Growth command center
-            </p>
-            <h2 className="mt-1 text-xl font-bold tracking-tight text-[var(--text-primary)] sm:text-2xl">
+      {/* Top: title + focus subtitle + medium ring */}
+      <div className="border-b border-[rgba(var(--mode-rgb),0.14)] px-5 py-5 sm:px-6">
+        <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
+          <div className="min-w-0 flex-1 space-y-2">
+            <h2 className="text-xl font-bold leading-tight tracking-tight text-[var(--text-primary)] [text-shadow:0_0_20px_rgba(var(--mode-rgb),0.2)] sm:text-2xl">
               {safeActive.title}
             </h2>
-            <p className="mt-1 text-xs text-[var(--text-muted)]">
-              <span className="font-mono text-[10px] uppercase">{safeActive.slug}</span>
+            <p className="text-xs leading-snug text-[var(--text-muted)]">
+              {phase?.title ? (
+                <>
+                  <span className="font-medium text-[var(--text-secondary)]">{phase.title}</span>
+                  <span className="text-[var(--text-muted)]"> · focus-protocol</span>
+                </>
+              ) : (
+                <span>Focus-protocol</span>
+              )}
               {growthFocus.slug ? (
-                <span className="ml-2 rounded-full bg-emerald-500/15 px-2 py-0.5 text-[10px] font-semibold text-emerald-200/90">
+                <span className="ml-2 inline-block rounded-full border border-emerald-500/35 bg-emerald-500/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-emerald-200/90">
                   Jouw focus
                 </span>
               ) : (
-                <span className="ml-2 rounded-full bg-[var(--bg-soft)] px-2 py-0.5 text-[10px] text-[var(--text-muted)]">
-                  Suggestie (geen focus ingesteld)
+                <span className="ml-2 inline-block rounded-full border border-[var(--card-border)] bg-[var(--bg-soft)] px-2 py-0.5 text-[10px] text-[var(--text-muted)]">
+                  Geen focus ingesteld
                 </span>
               )}
             </p>
-          </div>
-          <label className="flex min-w-[min(100%,240px)] flex-col gap-1 text-left">
-            <span className="text-[10px] font-semibold uppercase tracking-wide text-[var(--text-muted)]">Focus-protocol</span>
-            <select
-              className="rounded-lg border border-[var(--card-border)] bg-[var(--bg-primary)] px-3 py-2 text-sm text-[var(--text-primary)]"
-              disabled={pending}
-              value={focusSelectValue}
-              onChange={(e) => {
-                const id = e.target.value;
-                startTransition(async () => {
-                  try {
-                    if (!id) {
-                      await setGrowthFocusProtocol({ slug: null });
-                      neuroToast.success("Focus gewist.");
-                    } else {
-                      const p = protocols.find((x) => x.id === id);
-                      if (!p) return;
-                      await setGrowthFocusProtocol({ slug: p.slug, locale: p.locale });
-                      neuroToast.success("Focus-protocol bijgewerkt.");
+            <label className="mt-3 block max-w-md">
+              <span className="mb-1 block text-[10px] font-semibold uppercase tracking-wide text-[var(--text-muted)]">
+                Kies traject
+              </span>
+              <select
+                className="w-full rounded-lg border border-[rgba(var(--mode-rgb),0.2)] bg-[var(--bg-primary)]/80 px-3 py-2 text-sm text-[var(--text-primary)] shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]"
+                disabled={pending}
+                value={focusSelectValue}
+                onChange={(e) => {
+                  const id = e.target.value;
+                  startTransition(async () => {
+                    try {
+                      if (!id) {
+                        await setGrowthFocusProtocol({ slug: null });
+                        neuroToast.success("Focus gewist.");
+                      } else {
+                        const p = protocols.find((x) => x.id === id);
+                        if (!p) return;
+                        await setGrowthFocusProtocol({ slug: p.slug, locale: p.locale });
+                        neuroToast.success("Focus-protocol bijgewerkt.");
+                      }
+                      router.refresh();
+                    } catch (err) {
+                      neuroToast.error(err instanceof Error ? err.message : "Mislukt.");
                     }
-                    router.refresh();
-                  } catch (err) {
-                    neuroToast.error(err instanceof Error ? err.message : "Mislukt.");
-                  }
-                });
-              }}
+                  });
+                }}
+              >
+                <option value="">— Geen vaste focus —</option>
+                {protocols.map((p) => (
+                  <option key={p.id} value={p.id}>
+                    {p.title}
+                  </option>
+                ))}
+              </select>
+            </label>
+          </div>
+
+          <div className="flex shrink-0 justify-center lg:justify-end lg:pt-1">
+            <div
+              className="relative"
+              role="img"
+              aria-label={`Weekvoortgang ${weekPct} procent, week ${weekIndex} van ${maxW}`}
             >
-              <option value="">— Geen vaste focus —</option>
-              {protocols.map((p) => (
-                <option key={p.id} value={p.id}>
-                  {p.title}
-                </option>
-              ))}
-            </select>
-          </label>
+              <div
+                className="absolute left-1/2 top-1/2 h-[115%] w-[115%] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[radial-gradient(circle,rgba(var(--mode-rgb),0.2)_0%,transparent_65%)] blur-md"
+                aria-hidden
+              />
+              <div className="relative drop-shadow-[0_16px_40px_rgba(0,0,0,0.5)]" aria-hidden>
+                <EnergyRing
+                  size={RING_SIZE}
+                  progress={weekPct}
+                  label="Week"
+                  value={`${weekIndex}/${maxW}`}
+                  mode={ringMode}
+                  softGlow
+                />
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 
-      <div className="grid gap-4 p-4 sm:p-5 lg:grid-cols-[1fr_minmax(0,280px)]">
-        <div className="space-y-4">
-          {def && week && phase && (
-            <>
-              <div className="flex flex-wrap items-start justify-between gap-3">
-                <div>
-                  <p className="text-[10px] font-bold uppercase tracking-wide text-[var(--semantic-accent)]">{phase.title}</p>
-                  <p className="mt-0.5 text-lg font-semibold text-[var(--text-primary)]">{week.title}</p>
-                  <p className="mt-1 text-sm text-[var(--text-secondary)]">{week.objective}</p>
-                  {week.week_intent && (
-                    <p className="mt-2 text-xs leading-relaxed text-[var(--text-muted)]">
-                      <span className="font-semibold text-[var(--semantic-accent)]">Intentie: </span>
-                      {week.week_intent}
-                    </p>
-                  )}
-                  {week.execution_flow && (
-                    <div className="mt-2 grid gap-1 rounded-lg border border-[var(--card-border)]/70 bg-[var(--bg-soft)]/60 px-2.5 py-2 text-[11px] text-[var(--text-secondary)]">
-                      <p>
-                        <span className="font-semibold text-[var(--text-muted)]">Micro: </span>
-                        {week.execution_flow.micro}
-                      </p>
-                      <p>
-                        <span className="font-semibold text-[var(--text-muted)]">Meso: </span>
-                        {week.execution_flow.meso}
-                      </p>
-                      <p>
-                        <span className="font-semibold text-[var(--text-muted)]">Macro: </span>
-                        {week.execution_flow.macro}
-                      </p>
-                    </div>
-                  )}
-                </div>
-                <div className="rounded-xl border border-[var(--card-border)] bg-[var(--bg-soft)] px-3 py-2 text-right">
-                  <p className="text-[10px] uppercase text-[var(--text-muted)]">Week</p>
-                  <p className="text-lg font-bold tabular-nums text-[var(--text-primary)]">
-                    {weekIndex} / {maxW}
-                  </p>
-                </div>
-              </div>
-
+      {/* Middle: week bar + tasks */}
+      <div className="space-y-5 px-5 py-6 sm:px-6">
+        {def && week ? (
+          <>
+            <div className="flex flex-wrap items-end justify-between gap-2">
               <div>
-                <div className="mb-1 flex justify-between text-[11px] text-[var(--text-muted)]">
-                  <span>Voortgang deze week (afgevinkt)</span>
-                  <span className="tabular-nums">
-                    {doneInWeek}/{totalInWeek} · {weekPct}%
-                  </span>
-                </div>
-                <div className="h-2.5 overflow-hidden rounded-full bg-[var(--bg-soft)]">
-                  <div
-                    className="h-full rounded-full bg-gradient-to-r from-[var(--semantic-accent)] to-[var(--semantic-ring)]/90 transition-[width]"
-                    style={{ width: `${weekPct}%` }}
-                  />
-                </div>
+                <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-[var(--text-muted)]">Week-indicator</p>
+                <p className="mt-0.5 text-lg font-semibold tabular-nums text-[var(--text-primary)]">
+                  Week {weekIndex} <span className="text-[var(--text-muted)]">/</span> {maxW}
+                </p>
               </div>
+              <p className="text-sm font-semibold tabular-nums text-[var(--accent-focus)] [text-shadow:0_0_12px_rgba(var(--mode-rgb),0.35)]">
+                {weekPct}%
+              </p>
+            </div>
 
-              <div className="flex flex-wrap gap-2">
-                <span className="rounded-full border border-[var(--card-border)] bg-[var(--bg-soft)] px-2.5 py-1 text-[11px] text-[var(--text-secondary)]">
-                  Protocol-tier: <strong className="text-[var(--text-primary)]">{tierLabelNl(tier)}</strong>
-                </span>
-                {engineTier != null && (
-                  <span className="rounded-full border border-[var(--card-border)] bg-[var(--bg-soft)] px-2.5 py-1 text-[11px] text-[var(--text-secondary)]">
-                    Engine: <strong className="text-[var(--text-primary)]">{tierLabelNl(engineTier)}</strong>
-                  </span>
-                )}
+            <div>
+              <div className="sr-only" aria-live="polite">
+                Voortgang deze week: {doneInWeek} van {totalInWeek} taken, {weekPct} procent
               </div>
+              <div className="h-3.5 w-full overflow-hidden rounded-full bg-black/25 ring-1 ring-[rgba(var(--mode-rgb),0.18)]">
+                <div
+                  className="h-full rounded-full bg-gradient-to-r from-[rgb(var(--mode-rgb-deep))] via-[rgb(var(--mode-rgb))] to-[rgb(var(--mode-rgb-deep))] shadow-[0_0_16px_rgba(var(--mode-rgb),0.55),0_0_28px_rgba(var(--mode-rgb),0.2)] transition-[width] duration-500 ease-out"
+                  style={{ width: `${weekPct}%` }}
+                />
+              </div>
+            </div>
+
+            {week.title ? (
+              <p className="text-xs text-[var(--text-secondary)] line-clamp-2">{week.title}</p>
+            ) : null}
+
+            {previewTasks.length > 0 ? (
+              <div>
+                <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-[var(--text-muted)]">Deze week</p>
+                <ul className="mt-2 space-y-2">
+                  {previewTasks.map((task) => {
+                    const done = completed.has(task.id);
+                    return (
+                      <li
+                        key={task.id}
+                        className={`flex items-center gap-3 rounded-xl border px-4 py-2.5 ${
+                          done
+                            ? "border-emerald-500/35 bg-emerald-500/[0.07]"
+                            : "border-[rgba(var(--mode-rgb),0.12)] bg-[var(--bg-surface)]/35"
+                        }`}
+                      >
+                        <span
+                          className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs font-bold ${
+                            done ? "bg-emerald-500/25 text-emerald-200" : "bg-[var(--bg-soft)] text-[var(--text-muted)]"
+                          }`}
+                          aria-hidden
+                        >
+                          {done ? "✓" : "○"}
+                        </span>
+                        <span className="min-w-0 text-sm font-medium leading-snug text-[var(--text-primary)]">
+                          {task.title}
+                        </span>
+                      </li>
+                    );
+                  })}
+                </ul>
+                {week.tasks.length > 3 ? (
+                  <p className="mt-2 text-[11px] text-[var(--text-muted)]">+{week.tasks.length - 3} extra in het traject</p>
+                ) : null}
+              </div>
+            ) : (
+              <p className="text-sm text-[var(--text-muted)]">Geen taken voor deze week in het protocol.</p>
+            )}
+          </>
+        ) : (
+          <p className="text-sm text-[var(--text-secondary)]">
+            Dit protocol heeft nog geen structured definition — open het traject voor details of werk de seed bij.
+          </p>
+        )}
+
+        <p className="text-[10px] text-[var(--text-muted)]">
+          Tier <span className="font-medium text-[var(--text-secondary)]">{tierLabelNl(tier)}</span>
+          {engineTier != null ? (
+            <>
+              {" "}
+              · engine <span className="font-medium text-[var(--text-secondary)]">{tierLabelNl(engineTier)}</span>
             </>
-          )}
+          ) : null}
+        </p>
+      </div>
 
-          {!def && (
-            <p className="text-sm text-[var(--text-secondary)]">
-              Dit protocol heeft nog geen structured definition — open het volledige traject voor markdown of werk de seed bij.
-            </p>
-          )}
-        </div>
-
-        <div className="flex flex-col justify-center gap-2 rounded-xl border border-[var(--card-border)]/90 bg-[var(--bg-primary)]/50 p-4">
-          <p className="text-[10px] font-bold uppercase tracking-wide text-[var(--text-muted)]">Acties</p>
-          <button
-            type="button"
-            disabled={pending}
-            className="rounded-lg bg-[var(--semantic-accent)] px-4 py-2.5 text-sm font-semibold text-black hover:opacity-95 disabled:opacity-50"
-            onClick={() => onOpenProtocol(safeActive)}
-          >
-            Open volledig traject
-          </button>
-          {def && week && (
+      {/* Bottom: one primary + two quiet secondaries */}
+      <div className="border-t border-[rgba(var(--mode-rgb),0.12)] bg-black/10 px-5 py-5 sm:px-6">
+        {def && week ? (
+          <>
             <button
               type="button"
               disabled={pending}
-              className="rounded-lg border border-[var(--semantic-accent)]/50 bg-[var(--semantic-accent)]/10 px-4 py-2.5 text-sm font-semibold text-[var(--semantic-accent)] hover:bg-[var(--semantic-accent)]/20 disabled:opacity-50"
-              onClick={() =>
-                startTransition(async () => {
-                  try {
-                    const r = await commitProtocolWeekToMissions({
-                      protocol_slug: safeActive.slug,
-                      locale: safeActive.locale,
-                    });
-                    neuroToast.success(
-                      r.created > 0
-                        ? `${r.created} taken op Missions${r.skipped ? ` (${r.skipped} al gepland)` : ""}.`
-                        : `Geen nieuwe taken — ${r.skipped} stonden al op vandaag.`,
-                    );
-                    router.refresh();
-                  } catch (e) {
-                    neuroToast.error(e instanceof Error ? e.message : "Mislukt.");
-                  }
-                })
-              }
+              className="primary-btn !min-h-[56px] w-full disabled:pointer-events-none disabled:opacity-45"
+              onClick={commitWeek}
             >
-              {pending ? "Bezig…" : "Zet deze week op Missions"}
+              {pending ? "Bezig…" : "START WEEK"}
             </button>
-          )}
-          <Link
-            href="/tasks?growth=1"
-            className="inline-flex items-center justify-center rounded-lg border border-[var(--card-border)] px-4 py-2.5 text-sm font-medium text-[var(--text-secondary)] hover:border-[var(--semantic-accent)]/50 hover:text-[var(--semantic-accent)]"
-          >
-            Naar Missions-bord →
-          </Link>
-          <p className="text-[10px] leading-relaxed text-[var(--text-muted)]">
-            Protocoltaken krijgen tags <span className="font-mono">growth, protocol</span> en een vaste plek op je bord voor vandaag.
-          </p>
-        </div>
+            <div className="mt-4 flex flex-wrap items-center justify-center gap-x-8 gap-y-2">
+              <button
+                type="button"
+                disabled={pending}
+                className="text-xs font-medium text-[var(--text-muted)] underline-offset-4 transition hover:text-[var(--accent-focus)] hover:underline disabled:opacity-50"
+                onClick={() => onOpenProtocol(safeActive)}
+              >
+                Open traject
+              </button>
+              <Link
+                href="/tasks?growth=1"
+                className="text-xs font-medium text-[var(--text-muted)] underline-offset-4 transition hover:text-[var(--accent-focus)] hover:underline"
+              >
+                Naar missions
+              </Link>
+            </div>
+            <p className="mt-3 text-center text-[10px] text-[var(--text-muted)]/80">
+              Missions vandaag · <span className="font-mono">growth</span> · <span className="font-mono">protocol</span>
+            </p>
+          </>
+        ) : (
+          <div className="space-y-4">
+            <button
+              type="button"
+              disabled={pending}
+              className="text-xs font-medium text-[var(--text-muted)] underline-offset-4 transition hover:text-[var(--accent-focus)] hover:underline"
+              onClick={() => onOpenProtocol(safeActive)}
+            >
+              Open traject
+            </button>
+            <Link
+              href="/tasks?growth=1"
+              className="ml-6 text-xs font-medium text-[var(--text-muted)] underline-offset-4 transition hover:text-[var(--accent-focus)] hover:underline"
+            >
+              Naar missions
+            </Link>
+          </div>
+        )}
       </div>
-
-      {def && week && week.tasks.length > 0 && (
-        <div className="border-t border-[var(--card-border)]/70 px-4 py-3 sm:px-5">
-          <p className="text-[10px] font-bold uppercase tracking-wide text-[var(--text-muted)]">Preview week (ingestelde tier)</p>
-          <ul className="mt-2 grid gap-2 sm:grid-cols-2">
-            {week.tasks.slice(0, 4).map((task) => {
-              const scaled = getScaledTask(task, tier);
-              const done = completed.has(task.id);
-              return (
-                <li
-                  key={task.id}
-                  className={`rounded-lg border px-3 py-2 text-xs ${
-                    done ? "border-emerald-500/30 bg-emerald-500/5" : "border-[var(--card-border)] bg-[var(--bg-soft)]/80"
-                  }`}
-                >
-                  <span className="font-semibold text-[var(--text-primary)]">{task.title}</span>
-                  <span className="mt-1 block line-clamp-2 text-[var(--text-secondary)]">{scaled.concrete}</span>
-                </li>
-              );
-            })}
-          </ul>
-          {week.tasks.length > 4 && (
-            <p className="mt-2 text-[11px] text-[var(--text-muted)]">+ {week.tasks.length - 4} meer in het volledige traject…</p>
-          )}
-        </div>
-      )}
     </section>
   );
 }

@@ -1,0 +1,20 @@
+---
+description: Growth / learning hub UI — scanbare command layout, main card dominant, HUD-stijl
+globs:
+  - components/growth/**/*
+  - app/(dashboard)/learning/**/*
+alwaysApply: false
+---
+
+# Growth hub (Commandocentrum & learning route)
+
+When editing Growth / `/learning` UI, preserve this product intent (reduces noise, keeps parity with Dashboard/Budget HUD):
+
+1. **Geen lange tekstblokken** — max. één korte zin per sectie waar uitleg nodig is; gebruik `line-clamp` waar variabele content lang kan zijn.
+2. **Alles scanbaar** — duidelijke kopregels (uppercase micro-labels), lijsten, tabellen of rijen; geen dichte paragrafen.
+3. **Focus op actie, niet uitleg** — primaire CTA’s prominent (`primary-btn` / neon-stijl); secundair als stille text-links of ghost; uitleg alleen als micro-copy of in modal/traject.
+4. **Visuele feedback** — waar het past: **progress rings** (`EnergyRing`, zelfde familie als budget) en **progress bars** (mode-gradient + glow); niet alleen percentages als tekst.
+5. **Spacing, kleuren, glow** — tokens `rgba(var(--mode-rgb)…)`, `rgba(var(--mode-rgb-deep)…)`, `dashboard-cinematic` / `glass-card` / gradient borders consistent met andere hub-pagina’s; geen ad-hoc kleurenpalet.
+6. **Main card domineert** — `GrowthCommandCenter` blijft het zwaarste visuele blok (sterkere shadow, grotere ring); subkaarten (`GrowthBottomHubCards`, status strip) bewust lichter (kleinere glow, lagere contrast-vulling).
+
+Bij twijfel: kortere copy, meer witruimte, minder secundaire knoppen die concurreren met één primary.

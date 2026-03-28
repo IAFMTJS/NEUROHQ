@@ -13,9 +13,12 @@ import { GrowthReflectionCard } from "@/components/growth/GrowthReflectionCard";
 import { MonthlyBookCard } from "@/components/growth/MonthlyBookCard";
 import { AddLearningStreamCard } from "@/components/growth/AddLearningStreamCard";
 import { GrowthCommandCenter } from "@/components/growth/GrowthCommandCenter";
+import { GrowthBottomHubCards } from "@/components/growth/GrowthBottomHubCards";
 import { GrowthProtocolViewerModal } from "@/components/growth/GrowthProtocolViewerModal";
 import { GrowthTabsShell } from "@/components/growth/GrowthTabsShell";
 import { CollapsibleDashboardCard } from "@/components/dashboard/CollapsibleDashboardCard";
+import { computeGrowthCommandMetrics } from "@/lib/growth/growth-command-metrics";
+import { growthStatusCardMessage } from "@/lib/growth/growth-status-card-copy";
 import { weeklyDifficultyFromBrain } from "@/lib/growth/adaptive-engine";
 import { progressKey } from "@/lib/growth/resolve-focus-protocol";
 import { useHQStore } from "@/lib/hq-store";
@@ -69,6 +72,8 @@ export function LearningContentClient({
   });
 
   const currentBook = learning.streams.find((s) => s.type === "book") ?? null;
+  const growthMetrics = computeGrowthCommandMetrics(learning);
+  const statusCardLine = growthStatusCardMessage(growthMetrics);
 
   const headerActions = !simplified ? (
     <>
@@ -85,14 +90,17 @@ export function LearningContentClient({
   return (
     <div className="space-y-6" data-tutorial="growth-content">
       <GrowthTabsShell
-        centeredPageHeader={
+        commandPageHeader={
           !simplified
             ? {
-                title: "Growth",
-                subtitle:
-                  "Simpel command center voor groei: kies focus, plan je leerpad, voer uit — zoals Budget en Strategy: tabs, duidelijke acties.",
                 backHref: "/dashboard",
+                statusLine: growthMetrics.statusLine,
+                ringProgress: growthMetrics.ringProgress,
+                ringValue: growthMetrics.ringValue,
+                ringLabel: growthMetrics.ringLabel,
+                ringMode: growthMetrics.ringMode,
                 actions: headerActions,
+                statusCardMessage: statusCardLine,
               }
             : undefined
         }
@@ -101,13 +109,21 @@ export function LearningContentClient({
         {(activeTab) => (
           <>
             {activeTab === "command" && (
-              <GrowthCommandCenter
-                protocols={protocols}
-                progressMap={progressMap}
-                engineTier={engineTier}
-                growthFocus={growthFocus}
-                onOpenProtocol={setViewerProtocol}
-              />
+              <div className="space-y-6">
+                <GrowthCommandCenter
+                  protocols={protocols}
+                  progressMap={progressMap}
+                  engineTier={engineTier}
+                  growthFocus={growthFocus}
+                  onOpenProtocol={setViewerProtocol}
+                />
+                <GrowthBottomHubCards
+                  protocols={protocols}
+                  progressMap={progressMap}
+                  growthFocus={growthFocus}
+                  onOpenProtocol={setViewerProtocol}
+                />
+              </div>
             )}
 
             {activeTab === "path" && (
