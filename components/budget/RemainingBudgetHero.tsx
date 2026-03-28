@@ -2,11 +2,14 @@
 
 import { useEffect, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { HQModal, RadialMeter } from "@/components/hq";
+import { toast } from "sonner";
+import { HQModal } from "@/components/hq";
 import { Modal } from "@/components/Modal";
+import { AddBudgetEntryForm } from "@/components/AddBudgetEntryForm";
 import { BudgetLockHeaderBadge } from "@/components/budget/BudgetLockHeaderBadge";
+import { BudgetRemainingStatusCircle } from "@/components/budget/BudgetRemainingStatusCircle";
 import { updateBudgetSettings } from "@/app/actions/budget";
-import { formatCents, getCurrencySymbol } from "@/lib/utils/currency";
+import { formatCents } from "@/lib/utils/currency";
 import {
   clearPendingBudgetSnapshot,
   derivePendingBudgetRemaining,
@@ -27,6 +30,12 @@ type Props = {
   periodLabel: string;
   budgetPeriod: "monthly" | "weekly";
   historyMode?: boolean;
+  /** YYYY-MM-DD for quick log default date */
+  logDate: string;
+  /** Days until next payday; null if unknown */
+  daysUntilNextIncome?: number | null;
+  /** Short label for next payday (e.g. "28 mrt") */
+  nextPaydayShortLabel?: string | null;
 };
 
 export function RemainingBudgetHero({
@@ -37,6 +46,9 @@ export function RemainingBudgetHero({
   periodLabel,
   budgetPeriod,
   historyMode = false,
+  logDate,
+  daysUntilNextIncome = null,
+  nextPaydayShortLabel = null,
 }: Props) {
   const pendingBudget = usePendingBudgetSnapshot();
   const pendingActive = pendingBudget != null && pendingBudget.synced !== true;
@@ -56,7 +68,6 @@ export function RemainingBudgetHero({
     pendingActive && pendingBudget?.monthlySavingsCents !== undefined ? pendingBudget.monthlySavingsCents ?? 0 : savingsCents;
   const effectiveCurrency = pendingActive ? pendingBudget?.currency ?? currency : currency;
   const effectiveBudgetPeriod = pendingActive ? pendingBudget?.budgetPeriod ?? budgetPeriod : budgetPeriod;
-  const symbol = getCurrencySymbol(effectiveCurrency);
   const spendableCents = Math.max(0, effectiveBudgetCents - effectiveSavingsCents);
   const remainingCents =
     pendingActive && pendingBudget?.budgetRemainingCents != null
@@ -80,11 +91,8 @@ export function RemainingBudgetHero({
       ? Math.min(100, Math.max(0, remainingRatio))
       : 0;
 
-  // Text: show real percentage, including negatives when overspent.
-  const remainingPctDisplay =
-    spendableCents > 0 ? Math.round(remainingRatio) : 0;
-
-  const variant = isOverBudget ? "warning" : "focus";
+  // Text: show real percentage, including negatives when overspent (also when spendable is 0 but there are expenses).
+  const remainingPctDisplay = Math.round(remainingRatio);
 
   const hasSettings = effectiveBudgetCents > 0 || effectiveSavingsCents > 0;
   const spentPct = spendableCents > 0 ? Math.min(100, (expensesCents / spendableCents) * 100) : 0;
@@ -142,97 +150,133 @@ export function RemainingBudgetHero({
     });
   }
 
+  function openQuickLogToast() {
+    toast.custom(
+      (id) => (
+        <div
+          className="relative w-[min(100vw-2rem,22rem)] max-h-[min(85vh,520px)] overflow-y-auto rounded-2xl border border-[var(--card-border)]/90 bg-[var(--bg-elevated)]/98 px-3 py-3 pr-9 text-left shadow-xl backdrop-blur-md"
+          role="dialog"
+          aria-label="Quick log"
+        >
+          <button
+            type="button"
+            className="absolute right-2 top-2 z-10 rounded-lg p-1.5 text-[var(--text-muted)] hover:bg-[var(--bg-surface)] hover:text-[var(--text-primary)]"
+            aria-label="Sluiten"
+            onClick={() => toast.dismiss(id)}
+          >
+            ✕
+          </button>
+          <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-emerald-200">Quick log</p>
+          <p className="mt-0.5 text-[11px] text-[var(--text-muted)]">Korte entry — sluit automatisch na opslaan.</p>
+          <div className="mt-3">
+            <AddBudgetEntryForm
+              date={logDate}
+              currency={effectiveCurrency}
+              mode="quick"
+              onSuccess={() => toast.dismiss(id)}
+            />
+          </div>
+        </div>
+      ),
+      { duration: 120_000 }
+    );
+  }
+
+  const paydayLine =
+    typeof daysUntilNextIncome === "number"
+      ? daysUntilNextIncome <= 0
+        ? "Loon vandaag of binnen 24u"
+        : daysUntilNextIncome === 1
+          ? "Nog 1 dag tot loon"
+          : `Nog ${daysUntilNextIncome} dagen tot loon`
+      : null;
+
   return (
     <>
       <section
-        className="card-simple-accent relative overflow-hidden rounded-[24px] p-0"
+        className="card-simple overflow-hidden p-0"
         aria-label="Remaining budget overview"
         data-tutorial="budget-hero"
       >
-        <div className="border-b border-[var(--card-border)] px-5 py-3 sm:px-7">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--mode-text-soft)]">Budget Command Hero</p>
+        <div className="border-b border-[var(--card-border)] px-4 py-3 md:px-5">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-emerald-200">Budget command</p>
+          <p className="mt-0.5 text-xs text-[var(--text-muted)]">
+            {effectiveBudgetPeriod === "weekly" ? "Week" : "Maand"} · resterend vs spendable (na reserveringen)
+          </p>
         </div>
-        <div className="relative flex flex-col items-center gap-6 px-5 py-6 sm:flex-row sm:items-stretch sm:justify-between sm:px-7 sm:py-7">
-          <div className="flex items-center gap-6 sm:gap-8">
-            <RadialMeter
-              value={remainingPctForMeter}
-              displayValue={remainingPctDisplay}
-              label={spendableCents > 0 ? "Remaining budget" : "No budget set"}
-              description={
-                spendableCents > 0
-                  ? effectiveBudgetPeriod === "weekly"
-                    ? "Of your spendable budget for this week."
-                    : "Of your spendable budget for this month."
-                  : undefined
-              }
-              variant={variant}
+        <div className="relative flex flex-col gap-6 px-4 py-5 md:flex-row md:items-start md:justify-between md:px-5 md:py-6">
+          <div className="flex flex-col items-center gap-5 sm:flex-row sm:items-start sm:gap-8">
+            <BudgetRemainingStatusCircle
+              arcPercent={remainingPctForMeter}
+              remainingRatioDisplay={remainingPctDisplay}
+              amountLine={hasSettings ? formatCents(remainingCents, effectiveCurrency) : "—"}
+              hasSpendable={spendableCents > 0}
+              isOverBudget={isOverBudget}
             />
 
-            <div className="space-y-1 sm:space-y-2">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[var(--text-muted)]">
-                Remaining {periodLabel}
-              </p>
+            <div className="w-full min-w-0 flex-1 space-y-3 text-center sm:text-left">
+              {paydayLine && (
+                <div className="rounded-xl border border-[var(--card-border)]/80 bg-[var(--bg-surface)]/60 px-3 py-2">
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--text-muted)]">Tot loon</p>
+                  <p className="mt-0.5 text-sm font-medium text-[var(--text-primary)]">{paydayLine}</p>
+                  {nextPaydayShortLabel && (
+                    <p className="text-[11px] text-[var(--text-secondary)]">{nextPaydayShortLabel}</p>
+                  )}
+                </div>
+              )}
               {hasSettings ? (
-                <>
-                  <p
-                    className="text-4xl font-bold tabular-nums text-[var(--text-primary)] sm:text-5xl"
-                    style={{
-                      textShadow:
-                        "0 0 16px rgba(0,229,255,0.55), 0 0 4px rgba(148,163,184,0.45), 0 1px 2px rgba(0,0,0,0.8)",
-                    }}
-                  >
-                    {formatCents(remainingCents, effectiveCurrency)}
-                  </p>
-                  <p className="text-xs text-[var(--text-secondary)] sm:text-sm">
-                    {formatCents(spendableCents, effectiveCurrency)} spendable •{" "}
-                    {formatCents(expensesCents, effectiveCurrency)} spent •{" "}
-                    <span className="text-[var(--accent-focus)]">
-                      {remainingPctDisplay}%
-                    </span>{" "}
-                    left
-                  </p>
-                </>
+                <p className="text-xs leading-relaxed text-[var(--text-secondary)]">
+                  {formatCents(spendableCents, effectiveCurrency)} spendable · {formatCents(expensesCents, effectiveCurrency)}{" "}
+                  uitgegeven
+                </p>
               ) : (
-                <p className="max-w-xs text-sm text-[var(--text-muted)]">
-                  Set your {effectiveBudgetPeriod === "weekly" ? "weekly" : "monthly"} budget and savings to
-                  see remaining amount and burn rate.
+                <p className="max-w-md text-sm text-[var(--text-muted)]">
+                  Stel je {effectiveBudgetPeriod === "weekly" ? "week" : "maand"}budget en spaarreserve in om de ring en
+                  tempo te zien.
                 </p>
               )}
             </div>
           </div>
 
-          <div className="flex w-full flex-col items-stretch gap-2 sm:w-auto sm:items-end">
-            <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:justify-end">
+          <div className="flex w-full flex-col items-stretch gap-2 md:w-auto md:min-w-[200px] md:items-end">
+            <div className="flex w-full flex-col gap-2 md:w-auto md:flex-row md:flex-wrap md:justify-end">
+              {!historyMode && (
+                <button
+                  type="button"
+                  onClick={openQuickLogToast}
+                  className="dashboard-mini-btn inline-flex w-full items-center justify-center rounded-lg px-4 py-2.5 text-sm font-semibold md:w-auto"
+                >
+                  Quick log
+                </button>
+              )}
               {!historyMode && (
                 <button
                   type="button"
                   onClick={() => setShowEdit(true)}
-                  className="inline-flex w-full items-center justify-center rounded-[999px] border border-[var(--card-border)] bg-[rgba(11,30,46,0.68)] px-4 py-2.5 text-sm font-semibold text-[var(--text-primary)] transition hover:border-[var(--accent-focus)] sm:w-auto"
+                  className="inline-flex w-full items-center justify-center rounded-lg border border-[var(--card-border)] bg-[var(--bg-surface)]/80 px-4 py-2.5 text-sm font-semibold text-[var(--text-primary)] transition hover:border-[var(--accent-focus)]/80 md:w-auto"
                 >
-                  Edit budget
+                  Budget bewerken
                 </button>
               )}
               <button
                 type="button"
                 onClick={() => setShowDetails(true)}
-                className="btn-primary inline-flex h-auto w-full items-center justify-center rounded-[999px] px-4 py-2.5 text-sm font-semibold sm:w-auto"
+                className="btn-primary inline-flex h-auto w-full items-center justify-center rounded-lg px-4 py-2.5 text-sm font-semibold md:w-auto"
               >
-                View details
+                Details
               </button>
             </div>
-            <p className="text-[11px] text-[var(--text-muted)]">
-              Formula: budget − savings − expenses = remaining to spend.
+            <p className="text-[11px] text-[var(--text-muted)] md:text-right">
+              budget − spaarreserve − uitgaven = restant
             </p>
             {pendingActive && (
-              <p className="text-[11px] text-[var(--accent-focus)]">
-                Bijwerken... tijdelijke waarden actief.
-              </p>
+              <p className="text-[11px] text-[var(--accent-focus)] md:text-right">Bijwerken… tijdelijke waarden actief.</p>
             )}
           </div>
         </div>
         {!historyMode && spendableCents > 0 && (
-          <div className="relative mt-5">
-            <p className="mb-1 text-xs font-medium text-[var(--text-muted)]">Spendable used</p>
+          <div className="border-t border-[var(--card-border)]/60 px-4 pb-4 pt-3 md:px-5">
+            <p className="mb-1 text-xs font-medium text-[var(--text-muted)]">Spendable gebruikt</p>
             <div className="h-2.5 w-full overflow-hidden rounded-full bg-[var(--card-border)]">
               <div
                 className={`h-full rounded-full transition-all duration-300 ${spentPct >= 100 ? "bg-amber-500" : "bg-[var(--accent-focus)]"}`}

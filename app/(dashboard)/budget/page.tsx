@@ -178,6 +178,9 @@ async function BudgetContent({ searchParams }: Props) {
   const nextPaydayLabel = financialInsights
     ? `Volgende loondag: ${format(addDays(new Date(), financialInsights.daysUntilNextIncome), "d MMMM", { locale: nl })}`
     : "Stel loondag in om te zien hoeveel dagen nog.";
+  const nextPaydayShortLabel = financialInsights
+    ? format(addDays(new Date(), financialInsights.daysUntilNextIncome), "d MMM", { locale: nl })
+    : null;
   const contributedByGoal = (contributions as { goal_id: string; amount_cents: number }[]).reduce((acc, c) => {
     acc[c.goal_id] = (acc[c.goal_id] || 0) + c.amount_cents;
     return acc;
@@ -334,6 +337,9 @@ async function BudgetContent({ searchParams }: Props) {
             periodLabel={periodLabel}
             budgetPeriod={budgetSettings.budget_period}
             historyMode={historyMode}
+            logDate={today}
+            daysUntilNextIncome={financialInsights?.daysUntilNextIncome ?? null}
+            nextPaydayShortLabel={nextPaydayShortLabel}
           />
           {previousPeriodRemaining != null && (
             <p className="text-sm text-[var(--text-muted)]">
