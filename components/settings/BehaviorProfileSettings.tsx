@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useTransition, useEffect } from "react";
-import type { BehaviorProfile } from "@/types/behavior-profile.types";
+import { useState, useTransition, useEffect, type ReactNode } from "react";
+import type { BehaviorProfile, WeekTheme } from "@/types/behavior-profile.types";
 import { updateBehaviorProfile } from "@/app/actions/behavior-profile";
 import { updateUserPreferences } from "@/app/actions/preferences";
 import {
@@ -10,58 +10,86 @@ import {
   NEURO_PROFILE_SETTINGS_INTRO_NL,
 } from "@/lib/neuro-profile";
 import type { NeuroProfileTagId } from "@/lib/neuro-profile";
+import { useSettings } from "@/lib/settings-context";
+import { neuroToast } from "@/lib/ui/neuro-toast";
+import {
+  WEEK_THEME_LABELS_NL,
+  IDENTITY_TARGET_LABELS_NL,
+  ENERGY_PATTERN_LABELS_NL,
+  DISCIPLINE_LEVEL_LABELS_NL,
+  CONFRONTATION_MODE_LABELS_NL,
+  CONFRONTATION_MODE_HINTS_NL,
+  PET_TYPE_LABELS_NL,
+  PET_ATTACHMENT_LABELS_NL,
+  AVOIDANCE_ZONE_LABELS_NL,
+  AVOIDANCE_EMOTION_LABELS_NL,
+  HOBBY_LABELS_NL,
+} from "@/lib/behavior-ui-nl";
 
 type Props = {
   initial: BehaviorProfile;
   initialAutoMasterMissions: boolean;
+  /** Gebruikt door Engine → Gedrag: compacte subsecties zonder dubbele pagina-titel. */
+  engineLayout?: boolean;
 };
 
-const IDENTITY_OPTIONS = [
-  { value: "fit_person", label: "Fit person" },
-  { value: "disciplined", label: "Disciplined" },
-  { value: "good_dog_owner", label: "Good dog owner" },
-  { value: "financial_control", label: "Financial control" },
+const IDENTITY_VALUES = ["fit_person", "disciplined", "good_dog_owner", "financial_control"] as const;
+
+const WEEK_THEME_VALUES: WeekTheme[] = [
+  "environment_reset",
+  "self_discipline",
+  "health_body",
+  "courage",
 ];
 
-const AVOIDANCE_TAGS = [
-  { value: "household", label: "Household" },
-  { value: "administration", label: "Administration" },
-  { value: "social", label: "Social" },
-];
+const AVOIDANCE_TAG_KEYS = ["household", "administration", "social"] as const;
 
-const CONFRONTATION_MODE_OPTIONS: { value: BehaviorProfile["confrontationMode"]; label: string; hint: string }[] = [
-  {
-    value: "mild",
-    label: "Mild",
-    hint: "Later escaleren, vooral micro‑confrontaties.",
-  },
-  {
-    value: "standard",
-    label: "Standard",
-    hint: "Huidige standaard-gedrag voor confrontaties.",
-  },
-  {
-    value: "strong",
-    label: "Strong",
-    hint: "Sneller escaleren, hogere levels.",
-  },
-];
+const ENERGY_VALUES = ["morning_low", "stable", "evening_crash"] as const satisfies readonly BehaviorProfile["energyPattern"][];
 
-const WEEK_THEME_OPTIONS = [
-  { value: "environment_reset", label: "Environment Reset" },
-  { value: "self_discipline", label: "Self‑Discipline" },
-  { value: "health_body", label: "Health & Body" },
-  { value: "courage", label: "Courage" },
-];
+const DISCIPLINE_VALUES = ["low", "medium", "high"] as const satisfies readonly BehaviorProfile["disciplineLevel"][];
 
-export function BehaviorProfileSettings({ initial, initialAutoMasterMissions }: Props) {
+const CONFRONTATION_VALUES = ["mild", "standard", "strong"] as const satisfies readonly BehaviorProfile["confrontationMode"][];
+
+const PET_TYPES = ["none", "dog", "cat", "other"] as const satisfies readonly BehaviorProfile["petType"][];
+
+const AVOIDANCE_EMOTIONS = ["", "overwhelm", "anxiety", "avoidance"] as const;
+
+function subBlock(
+  title: string,
+  description: string | null,
+  body: ReactNode,
+  engineLayout: boolean,
+) {
+  const wrap = engineLayout
+    ? "rounded-xl border border-[var(--card-border)]/70 bg-[var(--bg-primary)]/35 p-4 space-y-3"
+    : "space-y-3";
+  return (
+    <div className={wrap}>
+      <div>
+        <p className="text-[10px] font-bold uppercase tracking-wider text-[var(--text-muted)]">{title}</p>
+        {description ? <p className="mt-1 text-xs leading-relaxed text-[var(--text-secondary)]">{description}</p> : null}
+      </div>
+      {body}
+    </div>
+  );
+}
+
+const pillOff =
+  "border-[var(--card-border)] bg-[var(--bg-primary)] text-[var(--text-muted)] hover:border-[var(--semantic-ring)]/30";
+const pillOn = "border-[var(--accent-focus)]/70 bg-[var(--accent-focus)]/10 text-[var(--text-primary)]";
+
+export function BehaviorProfileSettings({
+  initial,
+  initialAutoMasterMissions,
+  engineLayout = false,
+}: Props) {
   const [profile, setProfileState] = useState<BehaviorProfile>(initial);
   const [pending, startTransition] = useTransition();
   const [prefPending, startPrefTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
   const [autoMasterMissions, setAutoMasterMissions] = useState(initialAutoMasterMissions);
+  const { invalidate: invalidateSettings } = useSettings();
 
-  // Sync local state when server data changes (e.g. after save + refresh or other tab).
   useEffect(() => {
     setProfileState(initial);
   }, [initial]);
@@ -101,62 +129,87 @@ export function BehaviorProfileSettings({ initial, initialAutoMasterMissions }: 
     startTransition(async () => {
       try {
         await updateBehaviorProfile(profile);
+        await invalidateSettings();
+        neuroToast.success("Gedragsprofiel opgeslagen.");
       } catch (e) {
         const msg = e instanceof Error ? e.message : "Kon gedrag-profiel niet opslaan.";
         setError(msg);
+        neuroToast.error(msg);
       }
     });
   };
 
-  return (
-    <section className="space-y-3">
-      <h2 className="text-xs font-semibold uppercase tracking-wide text-[var(--text-muted)]">
-        Brain & gedrag (beta)
-      </h2>
-      <div className="card-simple space-y-4">
-        <div>
-          <p className="text-xs font-medium text-[var(--text-secondary)]">Identity targets</p>
-          <p className="mt-0.5 text-[11px] text-[var(--text-muted)]">
-            Bepaalt welke identity-missies en confrontaties je op een doorsnee dag vaker ziet.
-          </p>
-          <div className="mt-2 flex flex-wrap gap-2">
-            {IDENTITY_OPTIONS.map((opt) => (
-              <button
-                key={opt.value}
-                type="button"
-                onClick={() => toggleIdentityTarget(opt.value)}
-                className={`rounded-full px-3 py-1 text-xs ${
-                  profile.identityTargets.includes(opt.value)
-                    ? "bg-[var(--accent-focus)]/20 text-[var(--accent-focus)] border border-[var(--accent-focus)]/60"
-                    : "bg-[var(--bg-surface)] text-[var(--text-muted)] border border-[var(--card-border)]"
-                }`}
-              >
-                {opt.label}
-              </button>
-            ))}
-          </div>
-        </div>
+  const rootClass = engineLayout ? "space-y-5" : "space-y-4";
 
-        <div>
-          <p className="text-xs font-medium text-[var(--text-secondary)]">Neuroprofiel (optioneel)</p>
-          <p className="mt-0.5 text-[11px] text-[var(--text-muted)]">{NEURO_PROFILE_SETTINGS_INTRO_NL}</p>
-          <div className="mt-2 flex flex-wrap gap-2">
-            {NEURO_PROFILE_TAG_IDS.map((id) => (
-              <button
-                key={id}
-                type="button"
-                onClick={() => toggleNeuroTag(id)}
-                className={`rounded-full px-3 py-1 text-xs ${
-                  profile.neuroProfileTags.includes(id)
-                    ? "bg-[var(--semantic-accent)]/20 text-[var(--semantic-accent)] border border-[var(--semantic-accent)]/60"
-                    : "bg-[var(--bg-surface)] text-[var(--text-muted)] border border-[var(--card-border)]"
-                }`}
-              >
-                {NEURO_PROFILE_TAG_LABELS_NL[id]}
-              </button>
-            ))}
+  return (
+    <div className={rootClass}>
+      {subBlock(
+        "Weekthema & identiteit",
+        "Eén thema prioriteert de missiepool; identiteitsdoelen sturen welke rollen vaker terugkomen.",
+        <>
+          <div className="flex flex-wrap gap-2">
+            {WEEK_THEME_VALUES.map((value) => {
+              const active = profile.weekTheme === value;
+              return (
+                <button
+                  key={value}
+                  type="button"
+                  onClick={() =>
+                    setProfile({
+                      weekTheme: active ? null : value,
+                    })
+                  }
+                  className={`rounded-full border px-3 py-1.5 text-xs font-medium transition ${active ? pillOn : pillOff}`}
+                >
+                  {WEEK_THEME_LABELS_NL[value]}
+                </button>
+              );
+            })}
           </div>
-          <label className="mt-3 flex cursor-pointer items-start gap-2 text-[11px] text-[var(--text-secondary)]">
+          <p className="text-[11px] text-[var(--text-muted)]">Tik opnieuw op een actief thema om het te wissen.</p>
+          <div className="flex flex-wrap gap-2">
+            {IDENTITY_VALUES.map((value) => {
+              const active = profile.identityTargets.includes(value);
+              return (
+                <button
+                  key={value}
+                  type="button"
+                  onClick={() => toggleIdentityTarget(value)}
+                  className={`rounded-full border px-3 py-1.5 text-xs font-medium transition ${active ? pillOn : pillOff}`}
+                >
+                  {IDENTITY_TARGET_LABELS_NL[value] ?? value}
+                </button>
+              );
+            })}
+          </div>
+        </>,
+        engineLayout,
+      )}
+
+      {subBlock(
+        "Neuroprofiel",
+        NEURO_PROFILE_SETTINGS_INTRO_NL,
+        <>
+          <div className="flex flex-wrap gap-2">
+            {NEURO_PROFILE_TAG_IDS.map((id) => {
+              const active = profile.neuroProfileTags.includes(id);
+              return (
+                <button
+                  key={id}
+                  type="button"
+                  onClick={() => toggleNeuroTag(id)}
+                  className={`rounded-full border px-3 py-1.5 text-xs font-medium transition ${
+                    active
+                      ? "border-[var(--semantic-accent)]/60 bg-[var(--semantic-accent)]/15 text-[var(--semantic-accent)]"
+                      : pillOff
+                  }`}
+                >
+                  {NEURO_PROFILE_TAG_LABELS_NL[id]}
+                </button>
+              );
+            })}
+          </div>
+          <label className="flex cursor-pointer items-start gap-2 text-xs text-[var(--text-secondary)]">
             <input
               type="checkbox"
               checked={profile.neuroSelfReportOptIn}
@@ -164,256 +217,247 @@ export function BehaviorProfileSettings({ initial, initialAutoMasterMissions }: 
               className="mt-0.5 rounded border-[var(--card-border)]"
             />
             <span>
-              Snelle mini-vragen in de missie-flow (bijv. waarom gestopt) — kort, geen formulier. Helpt patronen te herkennen.
+              Snelle mini-vragen in de missie-flow (bijv. waarom gestopt) — kort, geen formulier. Helpt patronen te
+              herkennen.
             </span>
           </label>
-        </div>
+        </>,
+        engineLayout,
+      )}
 
-        <div>
-          <p className="text-xs font-medium text-[var(--text-secondary)]">Avoidance patterns</p>
-          <p className="mt-0.5 text-[11px] text-[var(--text-muted)]">
-            Waar je structureel op vastloopt; bepaalt welke confronterende missies NEUROHQ naar voren schuift.
-          </p>
-          <div className="mt-2 grid grid-cols-1 gap-2 sm:grid-cols-3">
-            {AVOIDANCE_TAGS.map((tag) => {
-              const current = profile.avoidancePatterns.find((p) => p.tag === tag.value)?.emotion ?? "";
+      {subBlock(
+        "Vermijding & confrontatie",
+        "Waar je vastloopt en hoe snel zwaardere confrontatiemissies mogen komen (huishouden, administratie, sociaal).",
+        <>
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+            {AVOIDANCE_TAG_KEYS.map((tag) => {
+              const current = profile.avoidancePatterns.find((p) => p.tag === tag)?.emotion ?? "";
               return (
-                <div key={tag.value} className="space-y-1">
-                  <p className="text-[11px] text-[var(--text-muted)]">{tag.label}</p>
+                <div key={tag} className="space-y-1">
+                  <p className="text-[11px] font-medium text-[var(--text-muted)]">{AVOIDANCE_ZONE_LABELS_NL[tag]}</p>
                   <select
                     value={current}
-                    onChange={(e) => setAvoidance(tag.value, e.target.value)}
-                    className="w-full rounded-lg border border-[var(--card-border)] bg-[var(--bg-primary)] px-2 py-1.5 text-xs text-[var(--text-primary)]"
+                    onChange={(e) => setAvoidance(tag, e.target.value)}
+                    className="w-full rounded-lg border border-[var(--card-border)] bg-[var(--bg-primary)] px-2 py-2 text-xs text-[var(--text-primary)]"
                   >
-                    <option value="">Geen</option>
-                    <option value="overwhelm">Overwhelm</option>
-                    <option value="anxiety">Anxiety</option>
-                    <option value="avoidance">Avoidance</option>
+                    {AVOIDANCE_EMOTIONS.map((em) => (
+                      <option key={em || "none"} value={em}>
+                        {em === "" ? "Geen patroon" : AVOIDANCE_EMOTION_LABELS_NL[em] ?? em}
+                      </option>
+                    ))}
                   </select>
                 </div>
               );
             })}
           </div>
-        </div>
-
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           <div>
-            <p className="text-xs font-medium text-[var(--text-secondary)]">Energy pattern</p>
-            <select
-              value={profile.energyPattern}
-              onChange={(e) =>
-                setProfile({ energyPattern: e.target.value as BehaviorProfile["energyPattern"] })
-              }
-              className="mt-1 w-full rounded-lg border border-[var(--card-border)] bg-[var(--bg-primary)] px-2 py-1.5 text-xs text-[var(--text-primary)]"
-            >
-              <option value="morning_low">Morning low</option>
-              <option value="stable">Stable</option>
-              <option value="evening_crash">Evening crash</option>
-            </select>
+            <p className="text-[11px] font-medium text-[var(--text-muted)]">Confrontatie-intensiteit</p>
+            <div className="mt-2 flex flex-wrap gap-2">
+              {CONFRONTATION_VALUES.map((value) => {
+                const active = profile.confrontationMode === value;
+                return (
+                  <button
+                    key={value}
+                    type="button"
+                    onClick={() => setProfile({ confrontationMode: value })}
+                    className={`rounded-full border px-3 py-1.5 text-xs font-medium transition ${active ? pillOn : pillOff}`}
+                  >
+                    {CONFRONTATION_MODE_LABELS_NL[value]}
+                  </button>
+                );
+              })}
+            </div>
+            <p className="mt-2 text-[11px] text-[var(--text-muted)]">{CONFRONTATION_MODE_HINTS_NL[profile.confrontationMode]}</p>
           </div>
-          <div>
-            <p className="text-xs font-medium text-[var(--text-secondary)]">Discipline level</p>
-            <select
-              value={profile.disciplineLevel}
-              onChange={(e) =>
-                setProfile({ disciplineLevel: e.target.value as BehaviorProfile["disciplineLevel"] })
-              }
-              className="mt-1 w-full rounded-lg border border-[var(--card-border)] bg-[var(--bg-primary)] px-2 py-1.5 text-xs text-[var(--text-primary)]"
-            >
-              <option value="low">Low</option>
-              <option value="medium">Medium</option>
-              <option value="high">High</option>
-            </select>
-          </div>
-        </div>
+        </>,
+        engineLayout,
+      )}
 
-        <div>
-          <p className="text-xs font-medium text-[var(--text-secondary)]">Confrontatie-intensiteit</p>
-          <p className="mt-0.5 text-[11px] text-[var(--text-muted)]">
-            Hoe snel NEUROHQ in je dag naar zwaardere confronterende missies opschaalt bij huishouden, administratie en sociaal.
-          </p>
-          <div className="mt-2 flex flex-wrap gap-2">
-            {CONFRONTATION_MODE_OPTIONS.map((opt) => {
-              const active = profile.confrontationMode === opt.value;
-              return (
-                <button
-                  key={opt.value}
-                  type="button"
-                  onClick={() => setProfile({ confrontationMode: opt.value })}
-                  className={`rounded-full px-3 py-1 text-xs border ${
-                    active
-                      ? "bg-[var(--accent-focus)]/20 text-[var(--accent-focus)] border-[var(--accent-focus)]/60"
-                      : "bg-[var(--bg-surface)] text-[var(--text-muted)] border-[var(--card-border)]"
-                  }`}
-                >
-                  {opt.label}
-                </button>
-              );
-            })}
-          </div>
-          <p className="mt-1 text-[11px] text-[var(--text-muted)]">
-            {profile.confrontationMode === "mild"
-              ? "Mild: later escaleren, meer micro‑confrontaties en zachtere druk."
-              : profile.confrontationMode === "strong"
-                ? "Strong: sneller escaleren, vaker hogere levels als je blijft uitstellen."
-                : "Standard: huidige balans tussen comfort en confrontatie."}
-          </p>
-        </div>
-
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+      {subBlock(
+        "Energie & discipline",
+        "Vertelt de engine wanneer je zwaarder of lichter mag duwen.",
+        <>
           <div>
-            <p className="text-xs font-medium text-[var(--text-secondary)]">Pet</p>
-            <select
-              value={profile.petType}
-              onChange={(e) =>
-                setProfile({ petType: e.target.value as BehaviorProfile["petType"] })
-              }
-              className="mt-1 w-full rounded-lg border border-[var(--card-border)] bg-[var(--bg-primary)] px-2 py-1.5 text-xs text-[var(--text-primary)]"
-            >
-              <option value="none">None</option>
-              <option value="dog">Dog</option>
-              <option value="cat">Cat</option>
-              <option value="other">Other</option>
-            </select>
-            <select
-              value={profile.petAttachmentLevel}
-              onChange={(e) =>
-                setProfile({ petAttachmentLevel: Number(e.target.value) as 0 | 1 | 2 })
-              }
-              className="mt-2 w-full rounded-lg border border-[var(--card-border)] bg-[var(--bg-primary)] px-2 py-1.5 text-xs text-[var(--text-primary)]"
-            >
-              <option value={0}>Attachment: Low</option>
-              <option value={1}>Attachment: Medium</option>
-              <option value={2}>Attachment: High</option>
-            </select>
-          </div>
-
-          <div>
-            <p className="text-xs font-medium text-[var(--text-secondary)]">Hobby commitment</p>
-            <p className="mt-0.5 text-[11px] text-[var(--text-muted)]">
-              0–1 schaal. Bepaal hoe belangrijk elke hobby is voor je missies.
-            </p>
-            <div className="mt-2 space-y-2">
-              {(["fitness", "music", "language", "creative"] as const).map((key) => (
-                <div key={key} className="flex items-center gap-2">
-                  <span className="w-16 text-[11px] text-[var(--text-muted)] capitalize">{key}</span>
-                  <input
-                    type="range"
-                    min={0}
-                    max={1}
-                    step={0.1}
-                    value={profile.hobbyCommitment[key] ?? 0}
-                    onChange={(e) => setHobbyCommitment(key, Number(e.target.value))}
-                    className="flex-1"
-                  />
-                  <span className="w-8 text-right text-[11px] text-[var(--text-secondary)]">
-                    {(profile.hobbyCommitment[key] ?? 0).toFixed(1)}
-                  </span>
-                </div>
-              ))}
+            <p className="text-[11px] font-medium text-[var(--text-muted)]">Energiepatroon</p>
+            <div className="mt-2 flex flex-wrap gap-2">
+              {ENERGY_VALUES.map((value) => {
+                const active = profile.energyPattern === value;
+                return (
+                  <button
+                    key={value}
+                    type="button"
+                    onClick={() => setProfile({ energyPattern: value })}
+                    className={`rounded-full border px-3 py-1.5 text-xs font-medium transition ${active ? pillOn : pillOff}`}
+                  >
+                    {ENERGY_PATTERN_LABELS_NL[value]}
+                  </button>
+                );
+              })}
             </div>
           </div>
-        </div>
-
-        <div>
-          <p className="text-xs font-medium text-[var(--text-secondary)]">Minimal Integrity drempel</p>
-          <p className="mt-0.5 text-[11px] text-[var(--text-muted)]">
-            Na hoeveel dagen zonder voltooide missie NEUROHQ een Minimal Integrity‑hint in je dag laat verschijnen.
-          </p>
-          <div className="mt-2 flex items-center gap-3">
-            <input
-              type="range"
-              min={2}
-              max={5}
-              step={1}
-              value={profile.minimalIntegrityThresholdDays}
-              onChange={(e) =>
-                setProfile({
-                  minimalIntegrityThresholdDays: Number(e.target.value) as BehaviorProfile["minimalIntegrityThresholdDays"],
-                })
-              }
-              className="flex-1"
-            />
-            <span className="w-32 text-right text-[11px] text-[var(--text-secondary)]">
-              {profile.minimalIntegrityThresholdDays} dagen inactiviteit
-            </span>
+          <div>
+            <p className="text-[11px] font-medium text-[var(--text-muted)]">Discipline-instelling</p>
+            <div className="mt-2 flex flex-wrap gap-2">
+              {DISCIPLINE_VALUES.map((value) => {
+                const active = profile.disciplineLevel === value;
+                return (
+                  <button
+                    key={value}
+                    type="button"
+                    onClick={() => setProfile({ disciplineLevel: value })}
+                    className={`rounded-full border px-3 py-1.5 text-xs font-medium transition ${active ? pillOn : pillOff}`}
+                  >
+                    {DISCIPLINE_LEVEL_LABELS_NL[value]}
+                  </button>
+                );
+              })}
+            </div>
           </div>
-        </div>
+        </>,
+        engineLayout,
+      )}
 
-        <div className="mt-2 border-t border-[var(--card-border)] pt-3">
-          <div className="flex items-start justify-between gap-3">
+      {subBlock(
+        "Huisdier & hobby-gewicht",
+        "Optioneel: gewicht voor hobby-missies (0–1). Huisdier beïnvloedt o.a. identity-missies.",
+        <>
+          <div className="grid gap-4 sm:grid-cols-2">
             <div>
-              <p className="text-xs font-medium text-[var(--text-secondary)]">Auto-missies uit Master Pool</p>
-              <p className="mt-0.5 text-[11px] text-[var(--text-muted)]">
-                Bepaalt of NEUROHQ automatisch extra structuur- en identity-missies uit de Master Pool toevoegt aan je dag.
-              </p>
+              <p className="text-[11px] font-medium text-[var(--text-muted)]">Huisdier</p>
+              <div className="mt-2 flex flex-wrap gap-2">
+                {PET_TYPES.map((value) => {
+                  const active = profile.petType === value;
+                  return (
+                    <button
+                      key={value}
+                      type="button"
+                      onClick={() => setProfile({ petType: value })}
+                      className={`rounded-full border px-3 py-1.5 text-xs font-medium transition ${active ? pillOn : pillOff}`}
+                    >
+                      {PET_TYPE_LABELS_NL[value]}
+                    </button>
+                  );
+                })}
+              </div>
+              <p className="mt-3 text-[11px] font-medium text-[var(--text-muted)]">Hechting</p>
+              <div className="mt-2 flex flex-wrap gap-2">
+                {([0, 1, 2] as const).map((level) => {
+                  const active = profile.petAttachmentLevel === level;
+                  return (
+                    <button
+                      key={level}
+                      type="button"
+                      onClick={() => setProfile({ petAttachmentLevel: level })}
+                      className={`rounded-full border px-3 py-1.5 text-xs font-medium transition ${active ? pillOn : pillOff}`}
+                    >
+                      {PET_ATTACHMENT_LABELS_NL[level]}
+                    </button>
+                  );
+                })}
+              </div>
             </div>
-            <button
-              type="button"
-              role="switch"
-              aria-checked={autoMasterMissions}
-              disabled={prefPending}
-              onClick={() => {
-                const next = !autoMasterMissions;
-                setAutoMasterMissions(next);
-                startPrefTransition(async () => {
-                  await updateUserPreferences({ auto_master_missions: next });
-                });
-              }}
-              className="relative mt-1 h-7 w-12 shrink-0 rounded-full bg-[var(--input-bg)] transition-colors focus:outline-none focus:ring-2 focus:ring-[var(--focus-ring)] disabled:opacity-60 data-[state=on]:bg-[var(--accent)]"
-              data-state={autoMasterMissions ? "on" : "off"}
-            >
-              <span
-                className="absolute left-0.5 top-0.5 h-6 w-6 rounded-full bg-white shadow transition-transform data-[state=on]:translate-x-5"
-                data-state={autoMasterMissions ? "on" : "off"}
-                style={{ transform: autoMasterMissions ? "translateX(20px)" : "translateX(2px)" }}
-              />
-            </button>
+            <div>
+              <p className="text-[11px] font-medium text-[var(--text-muted)]">Hobby-commitment (0–1)</p>
+              <div className="mt-2 space-y-2">
+                {(["fitness", "music", "language", "creative"] as const).map((key) => (
+                  <div key={key} className="flex items-center gap-2">
+                    <span className="w-20 shrink-0 text-[11px] text-[var(--text-secondary)]">{HOBBY_LABELS_NL[key] ?? key}</span>
+                    <input
+                      type="range"
+                      min={0}
+                      max={1}
+                      step={0.1}
+                      value={profile.hobbyCommitment[key] ?? 0}
+                      onChange={(e) => setHobbyCommitment(key, Number(e.target.value))}
+                      className="min-w-0 flex-1"
+                    />
+                    <span className="w-8 shrink-0 text-right text-[11px] text-[var(--text-secondary)] tabular-nums">
+                      {(profile.hobbyCommitment[key] ?? 0).toFixed(1)}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
-        </div>
+        </>,
+        engineLayout,
+      )}
 
-        <div>
-          <p className="text-xs font-medium text-[var(--text-secondary)]">Week theme</p>
-          <p className="mt-0.5 text-[11px] text-[var(--text-muted)]">
-            Eén overkoepelend thema dat de Mission Pool prioriteert (Environment Reset, Self‑Discipline, Health & Body, Courage).
+      {subBlock(
+        "Minimal integrity",
+        "Na hoeveel dagen zonder voltooide missie een Minimal Integrity-hint in je dag mag verschijnen (2–5 dagen).",
+        <div className="flex items-center gap-3">
+          <input
+            type="range"
+            min={2}
+            max={5}
+            step={1}
+            value={profile.minimalIntegrityThresholdDays}
+            onChange={(e) =>
+              setProfile({
+                minimalIntegrityThresholdDays: Number(e.target.value) as BehaviorProfile["minimalIntegrityThresholdDays"],
+              })
+            }
+            className="min-w-0 flex-1"
+          />
+          <span className="w-36 shrink-0 text-right text-xs text-[var(--text-secondary)] tabular-nums">
+            {profile.minimalIntegrityThresholdDays} dagen inactiviteit
+          </span>
+        </div>,
+        engineLayout,
+      )}
+
+      {subBlock(
+        "Auto-missies (Master Pool)",
+        "Automatisch extra structuur- en identity-missies uit de Master Pool toevoegen aan je dag.",
+        <div className="flex items-start justify-between gap-3">
+          <p className="text-[11px] text-[var(--text-muted)] pr-2">
+            Staat los van het grote opslaan-knopje hieronder: wijzigingen gaan direct naar je voorkeuren.
           </p>
-          <div className="mt-2 flex flex-wrap gap-2">
-            {WEEK_THEME_OPTIONS.map((opt) => {
-              const active = profile.weekTheme === opt.value;
-              return (
-                <button
-                  key={opt.value}
-                  type="button"
-                  onClick={() =>
-                    setProfile({
-                      weekTheme: active ? null : (opt.value as BehaviorProfile["weekTheme"]),
-                    })
-                  }
-                  className={`rounded-full px-3 py-1 text-xs border ${
-                    active
-                      ? "bg-[var(--accent-focus)]/20 text-[var(--accent-focus)] border-[var(--accent-focus)]/60"
-                      : "bg-[var(--bg-surface)] text-[var(--text-muted)] border-[var(--card-border)]"
-                  }`}
-                >
-                  {opt.label}
-                </button>
-              );
-            })}
-          </div>
-        </div>
+          <button
+            type="button"
+            role="switch"
+            aria-checked={autoMasterMissions}
+            disabled={prefPending}
+            onClick={() => {
+              const next = !autoMasterMissions;
+              setAutoMasterMissions(next);
+              startPrefTransition(async () => {
+                try {
+                  await updateUserPreferences({ auto_master_missions: next });
+                  await invalidateSettings();
+                  neuroToast.success(next ? "Auto-missies uit Master Pool aan." : "Auto-missies uit Master Pool uit.");
+                } catch (e) {
+                  setAutoMasterMissions(!next);
+                  neuroToast.error(e instanceof Error ? e.message : "Opslaan mislukt.");
+                }
+              });
+            }}
+            className="relative mt-0.5 h-7 w-12 shrink-0 rounded-full bg-[var(--input-bg)] transition-colors focus:outline-none focus:ring-2 focus:ring-[var(--focus-ring)] disabled:opacity-60"
+            data-state={autoMasterMissions ? "on" : "off"}
+          >
+            <span
+              className="absolute left-0.5 top-0.5 h-6 w-6 rounded-full bg-white shadow transition-transform"
+              style={{ transform: autoMasterMissions ? "translateX(20px)" : "translateX(2px)" }}
+            />
+          </button>
+        </div>,
+        engineLayout,
+      )}
 
-        {error && <p className="text-xs text-red-400">{error}</p>}
+      {error ? <p className="text-xs text-red-400">{error}</p> : null}
 
+      <div className="flex flex-wrap items-center gap-3 pt-1">
         <button
           type="button"
           onClick={handleSave}
           disabled={pending}
-          className="mt-2 inline-flex items-center rounded-lg bg-[var(--accent-focus)] px-3 py-1.5 text-xs font-medium text-black disabled:opacity-50"
+          className="inline-flex items-center rounded-xl bg-[var(--accent-focus)] px-4 py-2 text-sm font-semibold text-black shadow-sm transition hover:opacity-95 disabled:opacity-50"
         >
-          {pending ? "Opslaan…" : "Gedrag-profiel opslaan"}
+          {pending ? "Opslaan…" : "Gedragsprofiel opslaan"}
         </button>
+        <p className="text-[11px] text-[var(--text-muted)]">Master Pool-toggle hierboven slaat direct op; de rest met deze knop.</p>
       </div>
-    </section>
+    </div>
   );
 }
-

@@ -17,6 +17,7 @@ import {
  * PNG for each tab: default `/nav/<pngFile>` (see public/nav/README.md).
  * `iconSrc` overrides when the asset lives elsewhere (e.g. public/Icons/).
  */
+/** Order is fixed: globals.css `.bottom-nav-items` bow uses nth-child(1..7) — keep Dashboard at index 4. */
 const navLinks = [
   { href: "/tasks", label: "Missions", Icon: IconMissions, pngFile: "Missions.png" },
   { href: "/budget", label: "Budget", Icon: IconBudget, pngFile: "Budget.png" },

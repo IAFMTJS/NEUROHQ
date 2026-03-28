@@ -1,10 +1,16 @@
 "use client";
 
 import Link from "next/link";
-import type { BehaviorProfile, WeekTheme } from "@/types/behavior-profile.types";
+import { useEffect, useState, useTransition } from "react";
+import type { BehaviorProfile } from "@/types/behavior-profile.types";
+import { WEEK_THEME_LABELS_NL } from "@/lib/behavior-ui-nl";
 import type { EmotionKey, GreetingLocale, PushPersonalityMode, ThemeId } from "@/types/preferences.types";
 import { UserCallsignCard } from "@/components/settings/UserCallsignCard";
 import { profileEngineHref } from "@/lib/profile-routes";
+import { updateUserPreferences, getUserPreferencesOrDefaults } from "@/app/actions/preferences";
+import { useTheme } from "@/components/providers/ThemeProvider";
+import { useSettings } from "@/lib/settings-context";
+import { neuroToast } from "@/lib/ui/neuro-toast";
 
 const EMOTION_LABEL_NL: Record<EmotionKey, string> = {
   drained: "Mentale leegte",
@@ -27,17 +33,35 @@ const PUSH_PERSONALITY_NL: Record<NonNullable<PushPersonalityMode>, string> = {
   chaos: "Chaos",
 };
 
-const WEEK_THEME_NL: Record<WeekTheme, string> = {
-  environment_reset: "Omgeving reset",
-  self_discipline: "Zelfdiscipline",
-  health_body: "Health & body",
-  courage: "Moed / confrontatie",
-};
+/** Volgorde gelijk aan ThemeProvider (emotie-assets / accent). */
+const EMOTION_ORDER: EmotionKey[] = [
+  "drained",
+  "sleepy",
+  "questioning",
+  "motivated",
+  "excited",
+  "angry",
+  "neon",
+  "hyped",
+  "evil",
+];
 
-const THEME_LABEL_NL: Record<ThemeId, string> = {
-  normal: "Commander",
-  girly: "Girly",
-  industrial: "Industrial",
+const PUSH_MODE_ORDER: NonNullable<PushPersonalityMode>[] = [
+  "auto",
+  "friendly",
+  "coach",
+  "stoic",
+  "drill",
+  "chaos",
+];
+
+const PUSH_PILL_LABEL_NL: Record<NonNullable<PushPersonalityMode>, string> = {
+  auto: "Auto",
+  friendly: "Vriendelijk",
+  coach: "Coach",
+  stoic: "Stoïcijns",
+  drill: "Drill",
+  chaos: "Chaos",
 };
 
 const DISCIPLINE_NL: Record<BehaviorProfile["disciplineLevel"], string> = {
@@ -112,21 +136,63 @@ export function ProfileEngineIdentityCard({
   pushPersonalityMode,
   themeId,
 }: Props) {
+  const { hydrate } = useTheme();
+  const { invalidate: invalidateSettings } = useSettings();
+  const [prefsPending, startPrefsTransition] = useTransition();
+  const [emotionUi, setEmotionUi] = useState<EmotionKey | null>(selectedEmotion);
+  const [pushUi, setPushUi] = useState<NonNullable<PushPersonalityMode>>(pushPersonalityMode ?? "auto");
+
+  useEffect(() => {
+    setEmotionUi(selectedEmotion);
+  }, [selectedEmotion]);
+  useEffect(() => {
+    setPushUi(pushPersonalityMode ?? "auto");
+  }, [pushPersonalityMode]);
+
   const checks = readinessChecks({
     userEmail,
     behaviorProfile,
     displayCallsign,
     hqHeadline,
     greetingLocale,
-    selectedEmotion,
-    pushPersonalityMode,
+    selectedEmotion: emotionUi,
+    pushPersonalityMode: pushUi,
     themeId,
   });
   const doneCount = checks.filter((c) => c.done).length;
   const pct = Math.round((doneCount / checks.length) * 100);
 
-  const pushMode = pushPersonalityMode ?? "auto";
   const firstTargets = behaviorProfile.identityTargets.slice(0, 3);
+
+  function persistEmotion(next: EmotionKey | null) {
+    startPrefsTransition(async () => {
+      try {
+        await updateUserPreferences({ selected_emotion: next });
+        setEmotionUi(next);
+        const prefs = await getUserPreferencesOrDefaults();
+        hydrate(prefs);
+        await invalidateSettings();
+        neuroToast.success(next == null ? "Emotie gewist." : "Emotie opgeslagen.");
+      } catch (e) {
+        neuroToast.error(e instanceof Error ? e.message : "Opslaan mislukt.");
+      }
+    });
+  }
+
+  function persistPushMode(next: NonNullable<PushPersonalityMode>) {
+    startPrefsTransition(async () => {
+      try {
+        await updateUserPreferences({ push_personality_mode: next });
+        setPushUi(next);
+        const prefs = await getUserPreferencesOrDefaults();
+        hydrate(prefs);
+        await invalidateSettings();
+        neuroToast.success("Push-stem opgeslagen.");
+      } catch (e) {
+        neuroToast.error(e instanceof Error ? e.message : "Opslaan mislukt.");
+      }
+    });
+  }
 
   return (
     <section
@@ -145,15 +211,15 @@ export function ProfileEngineIdentityCard({
             Identiteit &amp; HQ‑persoon
           </h2>
           <p className="mt-2 max-w-2xl text-sm leading-relaxed text-[var(--text-secondary)]">
-            Dit voedt begroeting, copy en ritme op het dashboard. Koppel het aan{" "}
+            Dit voedt begroeting, copy en ritme op het dashboard. Pas hieronder emotie en push-stem aan; koppel gedrag via{" "}
             <Link href={profileEngineHref("behavior")} className="font-semibold text-[var(--accent-focus)] hover:underline">
               Gedrag
-            </Link>{" "}
-            (weekthema, doelen) en aan{" "}
+            </Link>
+            . Overige voorkeuren:{" "}
             <Link href="/settings" className="font-semibold text-[var(--accent-focus)] hover:underline">
               Instellingen
-            </Link>{" "}
-            (thema, push).
+            </Link>
+            .
           </p>
           <p className="mt-2 text-[11px] text-[var(--text-muted)]">
             Account: <span className="break-all font-mono text-[var(--text-secondary)]">{userEmail}</span>
@@ -194,43 +260,91 @@ export function ProfileEngineIdentityCard({
         <div className="grid gap-4 lg:grid-cols-3">
           <div className="rounded-xl border border-[var(--card-border)]/70 bg-[var(--bg-primary)]/35 p-4">
             <p className="text-[10px] font-bold uppercase tracking-wider text-[var(--text-muted)]">Visuele stem</p>
-            <div className="mt-2 flex flex-wrap gap-2">
-              <MetaChip>{THEME_LABEL_NL[themeId]}</MetaChip>
-              {selectedEmotion ? (
-                <MetaChip>{EMOTION_LABEL_NL[selectedEmotion]}</MetaChip>
-              ) : (
-                <MetaChip className="text-amber-200/90">Geen emotie</MetaChip>
-              )}
+            <div className="mt-2 flex flex-wrap items-center gap-2">
+              <MetaChip>Commander v2</MetaChip>
+              {themeId !== "normal" ? (
+                <span className="text-[10px] text-[var(--text-muted)]" title="Opgeslagen op account; interface gebruikt Commander v2.">
+                  ({themeId})
+                </span>
+              ) : null}
             </div>
-            <p className="mt-3 text-xs text-[var(--text-muted)]">
-              Thema&apos;s en emotie bepalen assets en accenten. Pas aan onder Instellingen.
+            <p className="mt-2 text-xs text-[var(--text-muted)]">
+              Emotie stuurt mascot/accenten. Kies er een of wis voor neutraal.
             </p>
-            <Link
-              href="/settings"
-              className="mt-2 inline-flex text-xs font-semibold text-[var(--accent-focus)] hover:underline"
-            >
-              Naar thema &amp; emotie →
-            </Link>
+            <div className="mt-2 flex flex-wrap gap-2">
+              <button
+                type="button"
+                disabled={prefsPending}
+                onClick={() => persistEmotion(null)}
+                className={`rounded-full border px-2.5 py-1 text-[11px] font-medium transition disabled:opacity-50 ${
+                  emotionUi == null
+                    ? "border-[var(--accent-focus)]/70 bg-[var(--accent-focus)]/10 text-[var(--text-primary)]"
+                    : "border-[var(--card-border)] bg-[var(--bg-primary)] text-[var(--text-muted)]"
+                }`}
+              >
+                Geen
+              </button>
+              {EMOTION_ORDER.map((key) => {
+                const active = emotionUi === key;
+                return (
+                  <button
+                    key={key}
+                    type="button"
+                    disabled={prefsPending}
+                    title={EMOTION_LABEL_NL[key]}
+                    onClick={() => persistEmotion(key)}
+                    className={`rounded-full border px-2.5 py-1 text-[11px] font-medium transition disabled:opacity-50 ${
+                      active
+                        ? "border-[var(--accent-focus)]/70 bg-[var(--accent-focus)]/10 text-[var(--text-primary)]"
+                        : "border-[var(--card-border)] bg-[var(--bg-primary)] text-[var(--text-muted)]"
+                    }`}
+                  >
+                    {EMOTION_LABEL_NL[key]}
+                  </button>
+                );
+              })}
+            </div>
           </div>
 
           <div className="rounded-xl border border-[var(--card-border)]/70 bg-[var(--bg-primary)]/35 p-4">
             <p className="text-[10px] font-bold uppercase tracking-wider text-[var(--text-muted)]">Notificatie‑persoonlijkheid</p>
-            <p className="mt-2 text-sm font-semibold text-[var(--text-primary)]">{PUSH_PERSONALITY_NL[pushMode]}</p>
             <p className="mt-2 text-xs text-[var(--text-muted)]">
-              Hoe pushes je aanspreken naast HQ-begroeting. Auto wisselt op context; een vaste modus geeft consistente stem.
+              Toon van pushberichten (quote, herinneringen, tips). Auto = contextafhankelijk; anders vaste stijl.
             </p>
+            <div className="mt-2 flex flex-wrap gap-2">
+              {PUSH_MODE_ORDER.map((mode) => {
+                const active = pushUi === mode;
+                return (
+                  <button
+                    key={mode}
+                    type="button"
+                    disabled={prefsPending}
+                    title={PUSH_PERSONALITY_NL[mode]}
+                    onClick={() => persistPushMode(mode)}
+                    className={`rounded-full border px-3 py-1.5 text-xs font-medium transition disabled:opacity-50 ${
+                      active
+                        ? "border-[var(--accent-focus)]/70 bg-[var(--accent-focus)]/10 text-[var(--text-primary)]"
+                        : "border-[var(--card-border)] bg-[var(--bg-primary)] text-[var(--text-muted)]"
+                    }`}
+                  >
+                    {PUSH_PILL_LABEL_NL[mode]}
+                  </button>
+                );
+              })}
+            </div>
+            <p className="mt-1 text-[11px] font-semibold text-[var(--text-primary)]">{PUSH_PERSONALITY_NL[pushUi]}</p>
             <Link
               href="/settings#tijd-notificaties"
-              className="mt-2 inline-flex text-xs font-semibold text-[var(--accent-focus)] hover:underline"
+              className="mt-2 inline-flex text-[11px] font-semibold text-[var(--accent-focus)] hover:underline"
             >
-              Push &amp; stem finetunen →
+              Tijden, stilte &amp; push koppelen →
             </Link>
           </div>
 
           <div className="rounded-xl border border-[var(--card-border)]/70 bg-[var(--bg-primary)]/35 p-4 lg:col-span-1">
             <p className="text-[10px] font-bold uppercase tracking-wider text-[var(--text-muted)]">Gedragsankers</p>
             <p className="mt-2 text-sm font-semibold text-[var(--text-primary)]">
-              {behaviorProfile.weekTheme ? WEEK_THEME_NL[behaviorProfile.weekTheme] : "Geen weekthema gekozen"}
+              {behaviorProfile.weekTheme ? WEEK_THEME_LABELS_NL[behaviorProfile.weekTheme] : "Geen weekthema gekozen"}
             </p>
             <p className="mt-1 text-xs text-[var(--text-muted)]">{DISCIPLINE_NL[behaviorProfile.disciplineLevel]}</p>
             {firstTargets.length > 0 ? (

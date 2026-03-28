@@ -9,7 +9,6 @@ import { getBehaviorProfile } from "@/app/actions/behavior-profile";
 import { getStudyPlan, getAccountabilitySettings } from "@/app/actions/behavior";
 import { getXPFullContext } from "@/app/actions/xp-context";
 import { ProfileEngineIdentityCard } from "@/components/profile/ProfileEngineIdentityCard";
-import { ProfileCategory } from "@/components/profile/ProfileSection";
 import { ProfileHomeCompact } from "@/components/profile/ProfileHomeCompact";
 import {
   parseProfileMainView,
@@ -22,9 +21,10 @@ import {
 import { SimplifiedPageShell } from "@/components/layout/SimplifiedPageShell";
 import { SIMPLIFIED_VIEWPORT_WRAPPER } from "@/lib/simplified-page-layout";
 
-const BehaviorProfileSettings = nextDynamic(() => import("@/components/settings/BehaviorProfileSettings").then((m) => ({ default: m.BehaviorProfileSettings })), { loading: () => null });
-const SettingsEngineProfile = nextDynamic(() => import("@/components/settings/SettingsEngineProfile").then((m) => ({ default: m.SettingsEngineProfile })), { loading: () => null });
-const SettingsDaysOff = nextDynamic(() => import("@/components/settings/SettingsDaysOff").then((m) => ({ default: m.SettingsDaysOff })), { loading: () => null });
+const ProfileEngineBehaviorTab = nextDynamic(
+  () => import("@/components/profile/ProfileEngineBehaviorTab").then((m) => ({ default: m.ProfileEngineBehaviorTab })),
+  { loading: () => null },
+);
 const SettingsSimplifiedContent = nextDynamic(() => import("@/components/settings/SettingsSimplifiedContent").then((m) => ({ default: m.SettingsSimplifiedContent })), { loading: () => null });
 
 export const dynamic = "force-dynamic";
@@ -189,17 +189,14 @@ export default async function ProfilePage({ searchParams }: { searchParams: Prom
       )}
 
       {engineTab === "behavior" && (
-        <div className="space-y-4">
-          <ProfileCategory title="Gedragsprofiel" subtitle="Identiteit, weekthema, avoidance" defaultOpen>
-            <BehaviorProfileSettings initial={behaviorProfile} initialAutoMasterMissions={prefs.auto_master_missions} />
-          </ProfileCategory>
-          <ProfileCategory title="Motor &amp; verantwoording" subtitle="Study plan en accountability" defaultOpen={false}>
-            <SettingsEngineProfile initialStudyPlan={studyPlan} initialAccountability={accountabilitySettings} />
-          </ProfileCategory>
-          <ProfileCategory title="Vrije dagen" subtitle="Welke dagen je meestal vrij neemt" defaultOpen={false}>
-            <SettingsDaysOff initialDaysOff={prefs.usual_days_off ?? null} initialMode={prefs.day_off_mode ?? "soft"} />
-          </ProfileCategory>
-        </div>
+        <ProfileEngineBehaviorTab
+          behaviorProfile={behaviorProfile}
+          initialAutoMasterMissions={prefs.auto_master_missions}
+          initialStudyPlan={studyPlan}
+          initialAccountability={accountabilitySettings}
+          initialDaysOff={prefs.usual_days_off ?? null}
+          initialDayOffMode={prefs.day_off_mode === "hard" ? "hard" : "soft"}
+        />
       )}
 
       {engineTab === "modes" && (

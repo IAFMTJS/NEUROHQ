@@ -29,6 +29,9 @@ function ringModeFromProfile(
   return "default";
 }
 
+const tileShell =
+  "rounded-xl border border-[rgba(var(--mode-rgb),0.1)] bg-[rgba(var(--mode-rgb-deep),0.08)] px-3 py-2.5 transition-colors";
+
 function OrbitTile({
   title,
   children,
@@ -42,7 +45,7 @@ function OrbitTile({
 }) {
   const body = (
     <div
-      className={`rounded-xl border border-[var(--card-border)]/65 bg-[var(--bg-primary)]/45 px-3 py-2.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.05)] backdrop-blur-sm transition-colors hover:border-[rgba(var(--mode-rgb),0.35)] ${href ? "cursor-pointer hover:bg-[var(--bg-elevated)]/25" : ""} ${className}`}
+      className={`${tileShell} hover:border-[rgba(var(--mode-rgb),0.22)] hover:bg-[rgba(var(--mode-rgb-deep),0.12)] ${href ? "cursor-pointer" : ""} ${className}`}
     >
       <p className="text-[9px] font-bold uppercase tracking-[0.14em] text-[var(--text-muted)]">{title}</p>
       <div className="mt-1.5 text-sm font-semibold leading-snug text-[var(--text-primary)]">{children}</div>
@@ -50,7 +53,7 @@ function OrbitTile({
   );
   if (href) {
     return (
-      <Link href={href} className="block min-w-0 rounded-xl focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-focus)]">
+      <Link href={href} className="block min-w-0 rounded-xl focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-focus)]/70">
         {body}
       </Link>
     );
@@ -72,33 +75,29 @@ export function ProfileHomeCompact({ identity, insightState }: Props) {
   const momentumLabel = insightState
     ? `${insightState.momentum.score} · ${insightState.momentum.band === "high" ? "Sterk" : insightState.momentum.band === "medium" ? "Stabiel" : "Opbouw"}`
     : "—";
-  const nextTarget =
-    identity.level >= 100 ? `Cap ${identity.level}` : `Level ${identity.level + 1}`;
+  const nextTarget = identity.level >= 100 ? `Cap ${identity.level}` : `Level ${identity.level + 1}`;
   const ringSize = 236;
 
   return (
     <section
-      className="relative overflow-hidden rounded-2xl border border-[var(--card-border)]/80 border-t-[rgba(var(--mode-rgb),0.26)] bg-gradient-to-b from-[rgba(var(--mode-rgb-deep),0.16)] via-[var(--bg-surface)]/20 to-[var(--bg-primary)]/35 px-4 py-6 shadow-[0_0_40px_rgba(var(--mode-rgb),0.08)] backdrop-blur-xl sm:px-6"
+      className="relative overflow-hidden rounded-[var(--hq-card-radius,18px)] border border-[rgba(var(--mode-rgb),0.12)] bg-gradient-to-b from-[rgba(var(--mode-rgb-deep),0.22)] via-[var(--bg-elevated)]/12 to-[var(--bg-primary)]/28 px-4 py-5 shadow-[0_12px_48px_rgba(0,0,0,0.4),0_0_32px_rgba(var(--mode-rgb),0.06)] backdrop-blur-xl sm:px-6"
       data-tutorial="profile-home-orbit"
     >
       <div
-        className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_80%_50%_at_50%_-20%,rgba(var(--mode-rgb),0.18),transparent_55%)]"
+        className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_75%_55%_at_50%_0%,rgba(var(--mode-rgb),0.14),transparent_58%)]"
         aria-hidden
       />
 
-      <header className="relative z-[1] mb-5 text-center">
-        <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-[var(--semantic-accent)]">Command status</p>
-        <h2 className="mt-1 text-lg font-bold tracking-tight text-[var(--text-primary)] sm:text-xl">{identity.rank}</h2>
-        <p className="mt-0.5 text-xs text-[var(--text-muted)]">
-          {identity.total_xp.toLocaleString()} totaal XP · {nextTarget}: {curXp} / {spanXp} in deze level
-        </p>
-      </header>
-
       <div className="relative z-[1] mx-auto grid max-w-3xl grid-cols-1 gap-5 md:grid-cols-[1fr_minmax(0,280px)_1fr] md:items-center md:gap-4">
         <div className="order-2 hidden flex-col justify-center gap-3 md:order-1 md:flex">
+          <OrbitTile title="Rang">
+            <span className="line-clamp-2 text-[13px] leading-snug" title={identity.rank}>
+              {identity.rank}
+            </span>
+          </OrbitTile>
           <OrbitTile title="Streak actief">{identity.streak.current} dagen</OrbitTile>
           <OrbitTile title="Langste reeks">{identity.streak.longest} dagen</OrbitTile>
-          <OrbitTile title="Momentum" className="border-[rgba(var(--mode-rgb),0.22)] bg-[rgba(var(--mode-rgb-deep),0.12)]">
+          <OrbitTile title="Momentum" className="bg-[rgba(var(--mode-rgb-deep),0.1)]">
             {momentumLabel}
           </OrbitTile>
         </div>
@@ -106,22 +105,27 @@ export function ProfileHomeCompact({ identity, insightState }: Props) {
         <div className="order-1 flex flex-col items-center justify-center md:order-2">
           <div className="relative">
             <div
-              className="absolute left-1/2 top-1/2 h-[118%] w-[118%] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[radial-gradient(circle,rgba(var(--mode-rgb),0.2)_0%,transparent_62%)] blur-md sm:h-[120%] sm:w-[120%]"
+              className="absolute left-1/2 top-1/2 h-[118%] w-[118%] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[radial-gradient(circle,rgba(var(--mode-rgb),0.16)_0%,transparent_62%)] blur-md sm:h-[120%] sm:w-[120%]"
               aria-hidden
             />
-            <div className="relative drop-shadow-[0_12px_40px_rgba(0,0,0,0.45)]">
+            <div className="relative drop-shadow-[0_16px_44px_rgba(0,0,0,0.5)]">
               <EnergyRing
                 size={ringSize}
                 progress={barPct}
-                label="LEVEL"
-                value={String(identity.level)}
+                label={`Level ${identity.level}`}
+                value={`${barPct}%`}
                 mode={ringMode}
               />
             </div>
           </div>
-          <p className="mt-3 max-w-[240px] text-center text-[11px] leading-relaxed text-[var(--text-secondary)]">
-            Ring toont voortgang naar {nextTarget}.{" "}
-            <Link href="/xp" className="font-semibold text-[var(--accent-focus)] hover:underline">
+          <p className="mt-3 max-w-[260px] text-center text-[11px] leading-relaxed text-[var(--text-muted)]">
+            <span className="tabular-nums text-[var(--text-secondary)]">
+              {curXp.toLocaleString()} / {spanXp.toLocaleString()} XP
+            </span>{" "}
+            naar {nextTarget} · {identity.total_xp.toLocaleString()} totaal
+          </p>
+          <p className="mt-1.5 text-center">
+            <Link href="/xp" className="text-[11px] font-semibold text-[var(--accent-focus)] hover:underline">
               XP-bridge
             </Link>
           </p>
@@ -132,22 +136,29 @@ export function ProfileHomeCompact({ identity, insightState }: Props) {
           <OrbitTile title="XP tot unlock" href="/xp">
             Nog {identity.next_unlock.xpNeeded.toLocaleString()} XP
           </OrbitTile>
-          <OrbitTile title="In deze level" href="/xp">
-            {curXp} / {spanXp} XP · {barPct}%
+          <OrbitTile title="Totaal XP" href="/xp">
+            {identity.total_xp.toLocaleString()}
           </OrbitTile>
         </div>
 
         <div className="order-4 flex flex-wrap justify-center gap-2 md:col-span-3 md:hidden">
+          <OrbitTile title="Rang">
+            <span className="max-w-[100px] truncate text-xs" title={identity.rank}>
+              {identity.rank}
+            </span>
+          </OrbitTile>
           <OrbitTile title="Streak">{identity.streak.current}d</OrbitTile>
           <OrbitTile title="Unlock" href="/xp">
             {identity.next_unlock.xpNeeded} XP
           </OrbitTile>
-          <OrbitTile title="Mom">{insightState ? insightState.momentum.score : "—"}</OrbitTile>
+          <OrbitTile title="XP %">{barPct}%</OrbitTile>
         </div>
       </div>
 
-      <div className="relative z-[1] mt-6 rounded-xl border border-[rgba(var(--mode-rgb),0.22)] bg-[rgba(var(--mode-rgb-deep),0.14)] px-4 py-3.5 sm:px-5">
-        <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-[var(--text-muted)]">Insight</p>
+      <div
+        className={`relative z-[1] mt-5 ${tileShell} border-[rgba(var(--mode-rgb),0.1)] bg-[rgba(var(--mode-rgb-deep),0.07)] px-4 py-3.5 sm:px-5`}
+      >
+        <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-[var(--semantic-accent)]/90">Insight</p>
         <p className="mt-2 line-clamp-4 text-sm leading-relaxed text-[var(--text-primary)]">{insightOneLiner}</p>
         <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] font-semibold">
           <Link href={reportInsightsHref("overview")} className="text-[var(--accent-focus)] hover:underline">

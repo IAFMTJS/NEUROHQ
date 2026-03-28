@@ -2,10 +2,13 @@
 
 import { useEffect, useState, useTransition } from "react";
 import { updateUserPreferences } from "@/app/actions/preferences";
+import { useSettings } from "@/lib/settings-context";
+import { neuroToast } from "@/lib/ui/neuro-toast";
 
 type Props = {
   initialDaysOff: number[] | null | undefined;
   initialMode: "soft" | "hard" | null | undefined;
+  engineLayout?: boolean;
 };
 
 const ISO_WEEKDAY_LABELS: Record<number, string> = {
@@ -18,14 +21,16 @@ const ISO_WEEKDAY_LABELS: Record<number, string> = {
   7: "Zo",
 };
 
-export function SettingsDaysOff({ initialDaysOff, initialMode }: Props) {
+const pillOff =
+  "border-[var(--card-border)] bg-[var(--bg-primary)] text-[var(--text-muted)] hover:border-[var(--semantic-ring)]/30";
+const pillOn = "border-[var(--accent-focus)]/70 bg-[var(--accent-focus)]/10 text-[var(--text-primary)]";
+
+export function SettingsDaysOff({ initialDaysOff, initialMode, engineLayout = false }: Props) {
   const [pending, startTransition] = useTransition();
   const [daysOff, setDaysOff] = useState<number[]>(initialDaysOff ?? []);
-  const [mode, setModeState] = useState<"soft" | "hard">(
-    initialMode === "hard" ? "hard" : "soft",
-  );
+  const [mode, setModeState] = useState<"soft" | "hard">(initialMode === "hard" ? "hard" : "soft");
+  const { invalidate: invalidateSettings } = useSettings();
 
-  // Keep local state in sync if server props change after a refresh.
   useEffect(() => {
     setDaysOff(initialDaysOff ?? []);
   }, [initialDaysOff]);
@@ -35,99 +40,110 @@ export function SettingsDaysOff({ initialDaysOff, initialMode }: Props) {
   }, [initialMode]);
 
   function toggleDay(d: number) {
-    setDaysOff((prev) => {
-      const next = new Set(prev);
-      if (next.has(d)) next.delete(d);
-      else next.add(d);
-      const sorted = Array.from(next).sort((a, b) => a - b);
-      startTransition(async () => {
+    const prev = [...daysOff];
+    const next = new Set(prev);
+    if (next.has(d)) next.delete(d);
+    else next.add(d);
+    const sorted = Array.from(next).sort((a, b) => a - b);
+    setDaysOff(sorted);
+    startTransition(async () => {
+      try {
         await updateUserPreferences({
           usual_days_off: sorted.length ? sorted : null,
         });
-      });
-      return sorted;
+        await invalidateSettings();
+        neuroToast.success("Vrije dagen bijgewerkt.");
+      } catch (e) {
+        setDaysOff(prev);
+        neuroToast.error(e instanceof Error ? e.message : "Opslaan mislukt.");
+      }
     });
   }
 
   function setMode(next: "soft" | "hard") {
+    const prev = mode;
     setModeState(next);
     startTransition(async () => {
-      await updateUserPreferences({
-        day_off_mode: next,
-      });
+      try {
+        await updateUserPreferences({
+          day_off_mode: next,
+        });
+        await invalidateSettings();
+        neuroToast.success(next === "hard" ? "Dag-vrije modus: hard." : "Dag-vrije modus: soft.");
+      } catch (e) {
+        setModeState(prev);
+        neuroToast.error(e instanceof Error ? e.message : "Opslaan mislukt.");
+      }
     });
   }
 
   const daysOffSet = new Set(daysOff);
 
+  const inner = (
+    <>
+      <p className="text-xs leading-relaxed text-[var(--text-secondary)]">
+        Dagen waarop je meestal vrij bent van werk. NEUROHQ gebruikt dit om meer herstel- en huishoudmissies voor te
+        stellen zonder rigide regels.
+      </p>
+      <div className="flex flex-wrap gap-2">
+        {[1, 2, 3, 4, 5, 6, 7].map((d) => {
+          const active = daysOffSet.has(d);
+          return (
+            <button
+              key={d}
+              type="button"
+              onClick={() => toggleDay(d)}
+              disabled={pending}
+              className={`rounded-full border px-3 py-1.5 text-xs font-medium transition disabled:opacity-50 ${
+                active ? pillOn : pillOff
+              }`}
+            >
+              {ISO_WEEKDAY_LABELS[d]}
+            </button>
+          );
+        })}
+      </div>
+      <div className="space-y-2">
+        <p className="text-[10px] font-bold uppercase tracking-wider text-[var(--text-muted)]">Dag-vrije modus</p>
+        <div className="flex flex-wrap gap-2">
+          <button
+            type="button"
+            onClick={() => setMode("soft")}
+            disabled={pending}
+            className={`rounded-full border px-3 py-1.5 text-xs font-medium transition disabled:opacity-50 ${
+              mode === "soft" ? pillOn : pillOff
+            }`}
+          >
+            Soft
+          </button>
+          <button
+            type="button"
+            onClick={() => setMode("hard")}
+            disabled={pending}
+            className={`rounded-full border px-3 py-1.5 text-xs font-medium transition disabled:opacity-50 ${
+              mode === "hard" ? pillOn : pillOff
+            }`}
+          >
+            Hard
+          </button>
+        </div>
+        <p className="text-[11px] leading-snug text-[var(--text-muted)]">
+          Soft = vooral bias (meer herstel/huishouden). Hard = vermijd werk-achtige missies op deze dagen tenzij je ze
+          expliciet toevoegt.
+        </p>
+      </div>
+      {pending ? <p className="text-[11px] text-[var(--text-muted)]">Opslaan…</p> : null}
+    </>
+  );
+
+  if (engineLayout) {
+    return <div className="space-y-4">{inner}</div>;
+  }
+
   return (
     <section className="space-y-3">
-      <h2 className="text-xs font-semibold uppercase tracking-wide text-[var(--text-muted)]">
-        Typische vrije dagen
-      </h2>
-      <div className="card-simple space-y-3">
-        <p className="text-xs text-[var(--text-muted)]">
-          Dagen waarop je meestal vrij bent van werk. NEUROHQ gebruikt dit om meer herstel- en
-          huishouden-missies voor te stellen zonder rigide regels.
-        </p>
-        <div className="flex flex-wrap gap-2">
-          {[1, 2, 3, 4, 5, 6, 7].map((d) => {
-            const active = daysOffSet.has(d);
-            return (
-              <button
-                key={d}
-                type="button"
-                onClick={() => toggleDay(d)}
-                disabled={pending}
-                className={`rounded-full px-3 py-1 text-xs border ${
-                  active
-                    ? "bg-[var(--accent-focus)]/20 text-[var(--accent-focus)] border-[var(--accent-focus)]/60"
-                    : "bg-[var(--bg-surface)] text-[var(--text-muted)] border-[var(--card-border)]"
-                }`}
-              >
-                {ISO_WEEKDAY_LABELS[d]}
-              </button>
-            );
-          })}
-        </div>
-        <div className="space-y-1">
-          <p className="text-xs font-medium text-[var(--text-secondary)]">Dag-vrije modus</p>
-          <div className="flex flex-wrap gap-2 text-[11px]">
-            <button
-              type="button"
-              onClick={() => setMode("soft")}
-              disabled={pending}
-              className={`rounded-full px-3 py-1 border ${
-                mode === "soft"
-                  ? "bg-[var(--accent-focus)]/20 text-[var(--accent-focus)] border-[var(--accent-focus)]/60"
-                  : "bg-[var(--bg-surface)] text-[var(--text-muted)] border-[var(--card-border)]"
-              }`}
-            >
-              Soft
-            </button>
-            <button
-              type="button"
-              onClick={() => setMode("hard")}
-              disabled={pending}
-              className={`rounded-full px-3 py-1 border ${
-                mode === "hard"
-                  ? "bg-[var(--accent-focus)]/20 text-[var(--accent-focus)] border-[var(--accent-focus)]/60"
-                  : "bg-[var(--bg-surface)] text-[var(--text-muted)] border-[var(--card-border)]"
-              }`}
-            >
-              Hard
-            </button>
-          </div>
-          <p className="text-[11px] text-[var(--text-muted)]">
-            Soft = vooral bias (meer herstel/huishouden). Hard = vermijd werk-achtige missies op
-            deze dagen tenzij je ze expliciet toevoegt.
-          </p>
-        </div>
-        {pending && (
-          <p className="text-[11px] text-[var(--text-muted)]">Opslaan…</p>
-        )}
-      </div>
+      <h2 className="text-xs font-semibold uppercase tracking-wide text-[var(--text-muted)]">Typische vrije dagen</h2>
+      <div className="card-simple space-y-3">{inner}</div>
     </section>
   );
 }
-
