@@ -1,0 +1,350 @@
+Site layout 
+
+Globale shell (onderaan)
+	Bottom navigation: Missions, Budget, Growth, Dashboard (centraal), Strategy, User (Profiel), Settings
+		Laat zien: vaste snelkoppelingen naar de belangrijkste plekken; het actieve item licht meestal op zodat je weet waar je bent.
+	Fixed: settings-icoon rechtsboven; alerts-bel indien actief; help/onboarding floating waar van toepassing
+		Laat zien: snel naar instellingen; eventueel aantal/openstaande alerts; hulp of rondleiding zonder de pagina te verlaten.
+
+Dashboard page (/dashboard)
+	Bovenste bar met korte knopjes voor resterend budget, level/xp info knop, en acties knop
+		Laat zien: hoeveel budget er óók volgens de app nog over is (periode); je huidige level/XP met link naar meer detail; een lijst “doe dit nu even”-acties die de app vandaag prioriteit geeft.
+	Command system overview card met : 
+		1. Brainstatus circles
+			Laat zien: je energy-, focus- en mentale belasting vandaag als drie ringen — een snelle blik of je hoofd/meesterschap op “vol”, “half” of “leeg” staat.
+		2. Daily Quote
+			Laat zien: één inspirerende of scherpe zin vandaag, plus auteur; bedoeld als ritueel, niet als instructie.
+		3. Volgende stap knop
+			Laat zien: primaire actie die de app het meest logisch vindt (meestal doorlinken naar missies); de tekst vertelt wat je gaat doen.
+		4. Brain status bar (Die als je er opduwt voorlopig niets doet)
+			Laat zien: visuele plaats voor “brain status” onder de hoofdactie; placeholder tot er echt gedrag op zit.
+		5. Icoontjes met cards toasts : Level&Vooruitgang, Commander status (DCIC), Vandaag door de app bepaald, Systeem modus
+			Laat zien per icoon na tikken: uitklapbare/detailvenster met — je identiteit/streak/niveau en momentum; je commandantmodus en spelstatus; hoe de app vandaag buckets/risico/XP ziet; je check-in (energie/focus/load) en energy-budget/systeemmodus. Kortom: diepgang per thema zonder het hoofdscherm vol te gooien.
+	Eventueel: Growth dashboard strip boven de shell (indien aanwezig)
+		Laat zien: korte samenvatting van growth-xp-system en/of relevante growth-CTA bovenaan de dag.
+	Minimal UI-variant: compacte HQ-header, brain status-kaart, weekly mirror, budget/energy-banners, active mission-kaart, mode
+		Laat zien: dezelfde informatie-structuren als standaard, maar met minder cosmetische lagen — sneller scannen, minder “cinema”.
+
+Mission page (/tasks)
+	Hometab (Called missions) 
+		With following cards :
+			1. Protocol missions card
+				Laat zien: welk growth-protocol actief is (of dat er geen is), week/tier, link naar command center; je ziet of protocollen en brain-log nodig zijn.
+			2. Energy vandaag bar
+				Laat zien: hoeveel energie-cap je vandaag al verbruikt hebt t.o.v. je plafond — of je nog ruimte hebt voor extra missies.
+			3. Your next move
+				Laat zien: de missie die de app nu het meest aanbeveelt (of “alles gedaan”), korte uitleg waarom + knop om de lijst in te duiken; soms links naar Learning/Strategy.
+			4. Diagnostics
+				Laat zien: weerstand/recovery/emotie-correlatie-berichten als die er zijn; anders dat er nog te weinig data is — geen schuldgevoel, wel eerlijkheid.
+			5. Today's missions
+				Laat zien: rooster/kaarten van missies + uitgebreide takenlijst met voltooien/uitstellen/blokkers volgens engine-regels.
+			6. Meta (30D), data-spiegel, weekly behavior summary card
+				Laat zien: sabotagepatronen en sterke types op 30 dagen; spiegel over focus/discipline op 30 dagen; ruwe tellingen started/completed/skipped van de week — trend, geen rechter.
+			7. Backlog & Toekomst card
+				Laat zien: open taken uit het verleden (binnen horizon) en geplande toekomstige taken — om te plukken als je nog puf hebt.
+		Extra context (rond de kaarten): mode banner, consequence banner, growth missions ribbon, smart suggestion banner, commander mission cards/grid wanneer van toepassing, TaskList
+			Laat zien: welke “dagmodus” je engine gebruikt; of energy/recovery je beperkt; protocol-context; extra zin-voor-sturing; visuele commander-kaarten als de store nog geen lijst heeft; de echte werkbare missielijst.
+
+	Calendar tab
+		Tab-navigatie: Missions | Calendar | Routine
+			Laat zien: welke “hoofdweergave” van taken je kiest — vandaag, kalender, of vaste routines.
+		Strip boven inhoud: gisteren/reflectie, XP-badge, vandaag-indicator (hero mascotte in layout)
+			Laat zien: snel checken wat gisteren stond; je level/XP; welke dag “vandaag” is in de app; mascotte als sfeer, niet als data.
+		Sub-weergave (query calView): Today | Calendar | Routines | Overdue
+			Laat zien: — vandaag-gefocust rooster; maandgrid met gekozen dag; routine-overlay; of alleen achteregebleven/overdue — afhankelijk van wat je kiest.
+		Maandselector en dagselectie; kalender-grid; taken per dag; backlog-koppeling waar relevant
+			Laat zien: welke maand je bekijkt, welke dag je uitlicht, en welke taken op welke dag hangen; soms koppeling naar backlog-items.
+
+	Routine tab
+		Routine takenlijst met suggesties (dagen, plannen); add/plan flow vanuit routine-context
+			Laat zien: terugkerende patronen die je zelf hebt neergezet of die de app voorstelt — niet dezelfde chaos als “alles vandaag”.
+
+Budget page (/budget)
+	Hoofdniveau: tab-shell Status | Execute | Intelligence | Optimization | Lock (Execute + Lock verborgen in historiek-maandweergave)
+		Laat zien: één plek voor “nu”, “doen”, “inzicht”, “bijsturen”, “harde rem”; URL-tab + sticky strip; bij actieve lock een amber strip met countdown en link naar Lock.
+	Shell rond de tabs
+		Standaard: dubbele SciFi-panelen (HQ-header + bento met tabs), payday-urgency toast boven de bento, mascotte onderaan (niet in historiek).
+		Vereenvoudigde modus (voorkeur simplified content): één “command”-kaart met titel Budget, HQ-link, optionele payday-toast, zelfde tab-strip + scrollbaar paneel + footer-links (Missions, Strategy, Turn off simplified).
+		Header rechts (boven tabs): maand/historiek-selector, export CSV, link Strategy.
+			Laat zien: welke periode je bekijkt; ruwe data-export; doorlink naar strategie waar geld en prioriteiten samenkomen.
+		Technisch: snapshot-provider rond de pagina; canonieke signalen (remaining, safe daily, top insight) gedeeld door kaarten.
+		Code-flags (nu standaard uit): ENABLE_BUDGET_UX_EXPERIMENTS en ENABLE_BUDGET_BEHAVIOR_REIMAGINING — wisselen tussen oudere vs gecombineerde intelligence-kaarten en tonen van allocation + archetype/trigger/reflectie-blokken.
+
+	Tab Status (overview)
+		Lock-gate op overzicht: bij actieve no-spend lock wordt het resterend-budget-blok vervangen door uitleg + nood/emergency-links (geen “cheat” vanuit Status).
+		Card 1 — Dagelijkse regie
+			BudgetDailyControlToast (live alleen)
+				Laat zien: korte waarschuwing of herinnering als vandaag tempo of logging risico geeft.
+			StrategyEnginePaceHint (variant budget, live)
+				Laat zien: of je uitgaven-tempo nog past bij strategie/duurzaamheid — één zin context.
+		Card 2 — Situatie
+			BudgetSyncStatus + command badge (Stable / Guarded / Critical / History snapshot)
+				Laat zien: of de boekhouding “vers” aanvoelt; hoe strak je buffer aanvoelt t.o.v. drempels.
+			RemainingBudgetHero (periode-label week of maand/looncyclus, valuta)
+				Laat zien: het hoofdgetal: wat je in deze periode nog mag uitgeven na reserveringen.
+			Eventueel: vorige periode resterend (looncyclus)
+				Laat zien: hoe de vorige ronde afliep — vergelijkingsanker.
+		Card 3 — Actie
+			CTA “Quick log openen” → Execute + anker entries-frozen
+				Laat zien: één tik naar invoer zonder eerst door Execute te zoeken.
+
+	Tab Execute (tactical + goals op één tab)
+		BudgetLockTabBanner: herinnert aan lock-regels per context.
+		Card 1 — Cycle status
+			PaydayCard (dagen tot inkomen, bronnen, “vandaag loon gehad”, cyclusgrenzen)
+				Laat zien: wanneer inkomen verwacht wordt, welke bronnen meetellen, en of je de periode hebt doorgezet.
+		Card 2 — Allocation plan (alleen als ENABLE_BUDGET_BEHAVIOR_REIMAGINING aan)
+			PaydayPlannerCard, GroceryMissionPlannerCard, BudgetPlanCard (targets vs spent per categorie)
+				Laat zien: gewenste verdeling van budget/sparen; boodschappen als mini-missie; plan versus werkelijke uitgaven per bucket.
+		Card 3 — Execution queue
+			Details “Entries & frozen”: AddBudgetEntryForm, BudgetEntryList, FrozenPurchaseCard
+				Laat zien: alle uitgaven van de periode; bevroren/uitgestelde aankopen; lege staat met duidelijke copy.
+			BudgetQuickLogCard (quick-add; uit onder UX-experimenten-flag)
+				Laat zien: snelle bedragen voor luie momenten.
+		Card 4 — Goals-blok (onder tactical op dezelfde tab)
+			Savings goals + AddSavingsGoalForm + SavingsGoalCard(s), compact BudgetAchievementsCard
+				Laat zien: spaardoelen, wekelijkse benodigdheid, bijdrage deze periode; lege staat met instructie.
+			RecurringBudgetCard
+				Laat zien: vaste terugkerende posten als basis van de maand.
+			Info-regel: ledger staat onder Entries & frozen; link terug naar anker.
+			Optioneel payday-cyclus: inklap “Toon vorige periode” met LastMonthExpensesTrigger
+				Laat zien: vorige boekingen ter controle na loonroll.
+
+	Tab Intelligence (analysis)
+		BudgetLockTabBanner.
+		Card 1 — Kernmetrics (live)
+			BudgetSummaryCard, DisciplineIndexCard, FinancialStatusCard
+				Laat zien: inkomsten/uitgaven/rest; discipline-score met “inputs ready”; status in mensentaal (pace, buffer, interpretatie).
+			Weekperformance: WeeklyPerformanceCard (standaard) of BudgetStabilityRiskCard (UX-experimenten)
+				Laat zien: dagen onder budget deze week + discipline-XP; of uitgebreider risico/stabiliteit.
+			BudgetRiskInsightCard
+				Laat zien: samenvatting van risico-insights uit de finance-engine.
+		Card 2 — Ongepland
+			Banner unplanned weekly summary (als count > 0)
+				Laat zien: hoeveel ongeplande uitgaven en bedrag — helder signaal, geen schaamte-copy.
+		Card 3 — Detect (sectiekop + uitleg)
+			UX-experimenten aan: BudgetForecastAndReviewCard + BudgetInsightsAndSpendingCard
+				Laat zien: forecast vs review-status, safe pace, burn, categorie+impulsvenster in één stroom.
+			UX-experimenten uit: BudgetPerformanceSummaryCard, BudgetCognitiveLoadTrendCard, BudgetPatternDetectionCard
+				Laat zien: performance-samenvatting; cognitieve “load” over tijd; patronen en impulsvensters.
+		Card 4 — Interpret + intervene (alleen flag behavior reimagining)
+			ArchetypeRiskLensCard, ImpulseTriggerMapCard; ReflectionEngineCard
+				Laat zien: archetype met reden en één actie; top categorieën + impulsvenster; korte reflectie-commit voor volgende cyclus.
+		Card 5 — Engine & visualen
+			Emergency-mode banner (als finance emergency actief)
+				Laat zien: expliciete waarschuwing met redenen uit de engine.
+			FinancialInsightsCard (als insights er zijn en UX-experimenten uit)
+				Laat zien: regels-gebaseerde inzichten in tekstvorm.
+			ExpenseDistributionChart, SavingsTipsCard (standaard pad zonder UX-experimenten)
+				Laat zien: verdeling per categorie; concrete spaartips uit patronen.
+		Card 6 — Alternatieven
+			AlternativesList (als er suggesties zijn)
+				Laat zien: goedkopere routes of keuzes passend bij eerdere input.
+		Card 7 — Archief & toekomst (inklap, live)
+			LastMonthExpensesTrigger + NextMonthExpensesTrigger
+				Laat zien: vorige periode/maand en toekomstige datums buiten “nu”.
+		Historiek-maand: read-only boodschap; forecast/live gedrag verborgen; overige archiefzicht waar van toepassing.
+
+	Tab Optimization
+		BudgetPaydaySurveyCard (als survey nodig)
+			Laat zien: korte kalibratie van loon/inkomen als de app twijfelt.
+		BudgetWeeklyReviewCard
+			Laat zien: of de weekreview af is en wat er nog mist (ritme met Intelligence).
+		BudgetOptimizationCard (samenvatting, suggesties, challenges, link naar lock)
+			Laat zien: concrete micro-stappen en optimalisatie; deur naar no-spend lock.
+
+	Tab Lock
+		BudgetLockControlCard (timer, status, emergency-paden waar van toepassing)
+			Laat zien: tot wanneer lock loopt; hoe lang nog; hoe je netjes of via nood verder werkt zonder het systeem te breken.
+
+	Wat er nog bij kan horen voor een “af” budgetssysteem (roadmap / nieuwe kaarten — nu grotendeels niet in UI)
+		Undo of tijdvenster-correctie op laatste boekingen (minder angst om fout te loggen).
+		Logging-ritme: “streak” of data-zekerheid — zichtbaar wanneer cijfers betrouwbaar genoeg zijn voor harde adviezen.
+		Abonnementen & vaste lasten-kalender (los van alleen recurring templates): herinnering vóór afschrijving, “bill shock”-detectie.
+		Splitsing / huis-houd: gedeelde categorieën of percentage per persoon (handmatig eerst).
+		Regels & herkenning: vaste merchant → categorie, of “altijd planned” voor bekende posten.
+		Koppeling Strategy ↔ Budget: expliciete kaart “focusdomeinen vs top-uitgaven” (nu vooral hint + aparte Strategy-pagina).
+		Accountability: optioneel buddy-signaal bij lock of bij weekreview (aansluiten op profiel-accountability).
+		Buffer vs fun money: aparte “noodbuffer-runway” en “vrije spend” zodat één getal niet alles verbergt.
+		Notificaties: payday, lock-einde, “nog geen log vandaag”, weekreview — afgestemd op quiet hours uit instellingen.
+		Import of half-automatische sync (CSV/bank) wanneer product dat ondersteunt — tot die tijd: export al aanwezig als uitweg.
+		(Wanneer flags aan) één consistente Intelligence-stack i.p.v. parallelle experiment/legacy-paden, zodat gebruikers niet twee waarheden zien.
+
+Growth page (/learning)
+	Twee SciFi-panelen: hero (header, mascotte, korte uitleg, strategy pace hint) + content
+		Laat zien: sfeer + wat Growth ís (command center voor leren); hint of je strategie-tempo nog klopt met leren.
+	Tab Commandocentrum (tab=command)
+		Growth command center: focus-protocol kiezen, week/tier voortgang, taken van de week, commit week naar missions, protocol openen in modal
+			Laat zien: welk traject je volgt, waar je in de week zit, wat af moet; knop om die week als echte missies op je bord te zetten; volledige protocoltekst in modal.
+	Tab Leerpad (tab=path)
+		Tweepunts layout: Intent card, Consistency card, inklapbare Weekreflectie + GrowthReflectionCard
+			Rechterkolom: inklapbare Maandboek + MonthlyBookCard, Add learning stream card
+			Laat zien: waarom je nu leert (intent); hoe constant je bent; korte reflectie op de week; welk boek je leest en pagina’s; knop om nieuwe leerthread toe te voegen.
+	Tab Stromen (tab=streams)
+		GrowthStreamsList (alle leerstromen)
+			Laat zien: elke leerlijn (cursus, boek, …) met voortgang en sessies — je portfolio, niet één protocol.
+	Modal: GrowthProtocolViewerModal bij openen protocol
+		Laat zien: volledige protocol-inhoud (weken/taken/uitleg) zonder de tab te verlaten.
+	Sub-route (/learning/analytics): trend summary, velocity chart, topic/focus uitsplitsingen (Growth analytics)
+		Laat zien: gaat je leertempo omhoog of omlaag; grafiek over weken; waar je tijd naartoe gaat.
+
+Strategy page (/strategy)
+	Header + mascotte; XP-badge + link naar Insights/Reality report
+		Laat zien: context dat strategie XP en rapporten raakt; snel naar diepere cijfers.
+	Review-banner indien weekreview open staat
+		Laat zien: harde reminder: zonder review schuift je week niet goed door — actie verwachte.
+	Tab Overview
+		Strategy integrated overview (suspense)
+			Laat zien: hoog-niveau plaatje van thesis + uitvoering + alignment in één oogopslag.
+		Strategy thesis hero (druk, zone, deadline, target)
+			Laat zien: jouw “waarom en tot wanneer”; hoe strak de deadline voelt; comfort/healthy/risk zone; hoofd-KPI.
+	Tab Focus & budget
+		Strategy focus multipliers (domeinen)
+			Laat zien: welke levensgebieden nu extra gewicht krijgen in beslissingen.
+		Allocation sliders (weekly allocation + neuro hint)
+			Laat zien: hoe je je weektijd/geld mentaal verdeelt over domeinen; hint op basis van je neuro-profiel.
+	Tab Alignment & momentum
+		Alignment graph (planned vs actual, log-trend)
+			Laat zien: of je echt deed wat je van plan was per domein; lijn over tijd.
+		Momentum per domein
+			Laat zien: waar je vooruit rolt en waar niet.
+		Drift alert indien van toepassing
+			Laat zien: “je wijkt X% af van plan” — vroeg signaal, geen moreel oordeel.
+	Tab Review & archief
+		Fase-indicator
+			Laat zien: in welke fase van je strategie-cyclus je zit (denk: opstart, uitvoering, evaluatie).
+		Weekly review CTA
+			Laat zien: knop om de vaste weekreview af te ronden zodat volgende week actief blijft.
+		Archive CTA + archive history
+			Laat zien: oudere strategieën en besluiten teruglezen — geheugen van jezelf.
+	Onderaan pagina: Strategy engine settings section (los van tabs)
+		Laat zien: technisch/strategische parameters die je engine voeden (fijnafstelling).
+
+Profiel (/profile)
+	Hoofdniveau: Profiel | Engine (view query)
+		Laat zien: — alleen wie je bent en hoe het gaat (home), versus hoe de motor onder de motorkap staat (engine).
+	View Profiel (home)
+		Compact home: identiteit + insight state (callsign/headline via engine indien gezet)
+			Laat zien: je game-identiteit (level, streak, vibes) en korte insight — dashboard-kaart van jezelf.
+	View Engine (?view=engine&engineTab=…)
+		Linkteksten naar Instellingen en Rapport (Insights)
+			Laat zien: waar apparaat dingen zitten vs waar persona/gedrag zit.
+		Subtab Identiteit
+			Account referentie (email)
+				Laat zien: welk account dit is (alleen ter referentie).
+			UserCallsignCard (display callsign, HQ headline, greeting locale)
+				Laat zien: hoe de app je noemt, je zin onder de naam, welke taal voor begroetingen.
+		Subtab Gedrag
+			Gedragsprofiel (behavior profile settings, auto master missions)
+				Laat zien: welke neuro/persoonlijkheids-tags je gebruikt om copy en missies te sturen; automatische master-missies aan/uit.
+			Motor & verantwoording (study plan, accountability)
+				Laat zien: hoe je leerplan eruitziet; wie/wat je verantwoordelijk houdt (buddy/reminders).
+			Vrije dagen (usual days off, day off mode)
+				Laat zien: welke dagen je zacht of hard “vrij” wil hebben in planning.
+		Subtab Modi
+			Uitleg gebruikersmodus vs Instellingen
+				Laat zien: verschil tussen “hoeveel uitleg/toast” en “thema/push op apparaat”.
+			Simplified content voorkeur
+				Laat zien: minder tekst/stappen in UI voor overprikkelde dagen.
+
+Instellingen (/settings)
+	Geen tabs; accordion-categorieën
+	Categorie Gebruiker · Account
+		Email; link naar Profiel → Engine voor persona
+			Laat zien: login-identiteit; waar je callsign/persona beheert.
+	Categorie Systeem
+		Thema, compact UI, reduced motion, light UI
+			Laat zien: kleurschema; minder dicht op elkaar; minder animatie; minder “space”-achtergrond.
+		XP-badge
+			Laat zien: je level inline terwijl je aan display zit.
+		DCIC-modus uitleg + test (dev/uitgebreid)
+			Laat zien: wat focus/war/recovery betekent; soms testknoppen voor ontwikkelaars.
+		Clear cache, refresh snapshot
+			Laat zien: manueel opschonen als iets “vast” zit; dagelijkse snapshot opnieuw binnenhalen.
+	Categorie Netwerk
+		Tijdzone
+			Laat zien: welke klok de app gebruikt voor “vandaag” en meldingen.
+		Push (quote time, quiet hours, subscription, reminder toggles, personality mode)
+			Laat zien: wanneer quote-push; stilte-uren; of je push aan staat; welke soorten reminders; toon grappig vs neutraal.
+		E-mail reminders
+			Laat zien: of je ook per mail wordt herinnerd (ochtend/avond/etc.).
+		Apple Calendar, Google Calendar
+			Laat zien: koppeling met je echte agenda zodat taken/agenda-impact kloppen.
+	Categorie Budget
+		Valuta, impulse drempels, budgetperiode, quick-add, risicocategorieën
+			Laat zien: euro vs dollar; vanaf welk bedrag de app “impuls” piept; looncyclus vs kalermaand; snelbedragen; categorieën die extra gevaar zijn.
+	Categorie Toestel
+		Quick links, export, delete account, help/onboarding, waar wat configureren, about/version
+			Laat zien: springplanken; data-export; harde “wegwezen”; rondleiding; kaartje “waar zit X”; versienummer build.
+
+Insights / Rapport (/report)
+	Header Insights + mascotte; introductietekst
+		Laat zien: dit is je “waarom gaat het zo”-pagina, niet je takenlijst.
+	XP-badge strip; optioneel data maturity banner
+		Laat zien: level ter context; banner als er nog te weinig data is om hard te adviseren.
+	Tab Overview
+		Key numbers strip (XP, missies, velocity, completion, streak, beste dag)
+			Laat zien: harde cijfers laatste dagen: tempo, betrouwbaarheid, ritme.
+		Momentum hero, risk forecast, behavior card
+			Laat zien: één momentum-score met uitleg; schatting level/streak-risico; op welke dag je meestal scoort.
+		Inklapbaar: aanbevolen strategie (coach recommendations max 3)
+			Laat zien: max drie concrete adviezen — uitvoerbaar, niet een essay.
+	Tab Performance
+		XP/insight grafiek (14d)
+			Laat zien: op en neer in XP en/of output over twee weken.
+		Inklapbaar: 30d trend + weekvergelijking
+			Laat zien: langere curve; deze week vs vorige week.
+		XP bronnen 30d + recent ranks
+			Laat zien: waar XP vandaan kwam (taken, brain, learning…); laatste missies met moeilijkheids-/rank-info.
+	Tab Patterns
+		Pattern signals (drop-off, correlation, comparative, friction)
+			Laat zien: waar mensen/meestal jij afhaken; wat correleert; hoe je tegen anderen/het ideaal zit; wrijving rond 40/60%-momenten.
+		Uur-heatmap + consistency map
+			Laat zien: op welk uur je het beste presteert; welke dagen strak zijn.
+		Inklapbaar: diepte 30d (radar, trend-samenvatting energie/focus, heatmap, meta/domein/mirror bullets)
+			Laat zien: radarsterktes; gemiddelde brain-check-ins; langere heatmap; tekstpatronen uit meta en spiegel.
+	Tab Diagnostics
+		Missie-funnel 7d (view → start → complete)
+			Laat zien: hoeveel mensen de funnel ingaan versus afmaken — lekdiagnose.
+		Diagnostics popup (grafiek + analytics events raw summary)
+			Laat zien: diepere technische samenvatting voor wie het wil — nog steeds in mensentaal waar mogelijk.
+		Inklapbaar: wat betekenen deze insights
+			Laat zien: woordenlijst-waarde: uitleg per term (momentum, velocity, execution score, …).
+		Inklapbaar: weekrapport en archief (week selector, ReportAnalysis, RealityReportCard, …)
+			Laat zien: narratief van die week (taken, learning, sparen), en “reality check” kaart per gekozen week.
+
+XP Command Bridge (/xp)
+	Pagina-header XP Command Bridge
+		Laat zien: dit is je cockpit voor XP en levensmodus, niet alleen een statistiekpagina.
+	Sectie mascot + XPBadge
+		Laat zien: mascotte reageert op modus; badge herhaalt level voor oriëntatie.
+	Command bridge hero: level/rank, Focus↔Command toggle, total XP / velocity / streak, level progress ring, “meeste XP nu” hint
+		Laat zien: wie je bent in het spel; rustige vs command-styling; groei per dag; hoever het niveau gevuld is; concrete zin “doe nu X voor meeste XP”.
+	Inner toggle: Levensmodus | XP updates (geen URL-tab, UI-state)
+		Laat zien: — stuur en plannen vs. lezen wat er voor XP gebeurd is.
+	Levensmodus-paneel: bridge protocol, daily challenges van templates, forecast widget, heatmap, chart, missie-templates toevoegen (met slot/limiet regels), XP by source, …
+		Laat zien: ritual/challenge voor vandaag; verwachte XP-kansen; weekbeeld; grafiek; kant-en-klare missies om toe te voegen als je slots vrij hebt; verdeling waar je punten vandaan haalt.
+	XP updates-paneel: nadere uitleg updates/logs (inhoud uit XPPageContent)
+		Laat zien: meer narratief over boosts, multipliers en recente XP-gebeurtenissen — minder knoppen, meer uitleg.
+
+Help (/help)
+	Quick start stappen, quick links naar routes
+		Laat zien: drie-stappen “hoe start ik”; klikbare route-lijst.
+	Groepen: Start Here, Core Systems, Reference
+		Laat zien: inhoudsopgave-stijl — van onboarding tot diepere systemen tot verwijzingen.
+	Per sectie: accordion met uitleg (FAQ-achtige blokken); hash routing naar onderwerpen; legacy hash redirects
+		Laat zien: antwoord op “wat doet dit?” per onderwerp; oude links blijven werken via redirects.
+
+Overige routes (niet in bottom nav)
+	/analytics — admin/role: platform analytics (funnels, telemetry, etc.)
+		Laat zien: hoe het product het doet voor alle gebruikers — niet je persoonlijke dashboard.
+	/assistant — optioneel; kan via env verborgen zijn in productie
+		Laat zien: chat/assistent als die aan staat.
+	/xp — zie XP Command Bridge
+	/dashboard — zie Dashboard page
+
+Notities voor documentatie
+	Deep links: /learning?tab=command | #growth-command | #growth-path | #growth-streams
+	Strategy: /strategy?tab=overview|focus|alignment|review
+	Insights: /report?tab=overview|performance|patterns|diagnostics&weekStart=…
+	Budget: /budget?tab=overview|execute|analysis|optimization|lock&month=YYYY-MM
