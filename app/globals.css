@@ -1825,16 +1825,16 @@ html[data-light-ui="true"] body {
   margin-bottom: -40px;
 }
 
-/* Donut-perspectief: schuin van boven, scharnier onderaan */
+/* Donut-perspectief: schuin van boven + lichte skew: zijkanten ogen omhoog schuin */
 .commander-mascot-pedestal-donut-tilt {
   display: flex;
   width: 100%;
   justify-content: center;
-  perspective: 920px;
-  perspective-origin: 50% 92%;
+  perspective: 980px;
+  perspective-origin: 48% 90%;
 }
 .commander-mascot-pedestal .commander-mascot-pedestal-donut-ring {
-  transform: rotateX(46deg);
+  transform: rotateX(50deg) rotateZ(-5deg) skewX(-5deg);
   transform-origin: center bottom;
   transform-style: preserve-3d;
 }

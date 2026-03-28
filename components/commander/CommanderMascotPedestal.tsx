@@ -30,11 +30,20 @@ const CX = 200;
 const CY = 0;
 /** Referentie midden van de band (centerline boog) */
 const R_MID = 204;
-/** Asymmetrische band: boven (naar gat) smaller, onder (naar kijker) breder */
-const R_INNER = R_MID - 9;
-const R_OUTER = R_MID + 17;
-/** 180° onderlangs: π → 3π/4 → π/4 → 0 (45° | 90° | 45°), boog naar beneden */
-const ANGLES = [Math.PI, (3 * Math.PI) / 4, Math.PI / 4, 0] as const;
+/** Asymmetrische band: boven smaller, onder breder — iets dikker totaal */
+const R_INNER = R_MID - 12;
+const R_OUTER = R_MID + 24;
+/** Eindpunten iets omhoog langs de cirkel (schuin naar boven aan de zijkanten) */
+const SIDE_ALPHA = Math.PI / 14;
+/** Onderlangs: π+α → … → −α (45° | 90° | 45° + zij-opwaarts) */
+const ANGLES = [Math.PI + SIDE_ALPHA, (3 * Math.PI) / 4, Math.PI / 4, -SIDE_ALPHA] as const;
+
+/** Middenhoek per segment (lineair in θ): Energy | Focus | Load */
+const SEG_MID_RAD: readonly [number, number, number] = [
+  (ANGLES[0] + ANGLES[1]) / 2,
+  (ANGLES[1] + ANGLES[2]) / 2,
+  (ANGLES[2] + ANGLES[3]) / 2,
+];
 
 function polar(cx: number, cy: number, r: number, t: number) {
   return { x: cx + r * Math.cos(t), y: cy + r * Math.sin(t) };
@@ -86,24 +95,25 @@ const SEG_PATHS = [0, 1, 2].map((i) => {
   return `M ${a.x} ${a.y} A ${R_MID} ${R_MID} 0 0 ${sweepLower} ${b.x} ${b.y}`;
 });
 
-const pRimL = polar(CX, CY, R_OUTER, Math.PI);
-const pRimR = polar(CX, CY, R_OUTER, 0);
-const OUTER_RIM_D = `M ${pRimL.x} ${pRimL.y} A ${R_OUTER} ${R_OUTER} 0 0 ${sweepLower} ${pRimR.x} ${pRimR.y}`;
+const OUTER_RIM_D = [0, 1, 2]
+  .map((i) => {
+    const a = polar(CX, CY, R_OUTER, ANGLES[i]);
+    const b = polar(CX, CY, R_OUTER, ANGLES[i + 1]);
+    return `M ${a.x} ${a.y} A ${R_OUTER} ${R_OUTER} 0 0 ${sweepLower} ${b.x} ${b.y}`;
+  })
+  .join(" ");
 
 const VB_W = 400;
 const VB_H = 200;
 
 /** Visuele “dikte” voor dash-strokes op centerline (track + fill lagen) */
-const W_TRACK_SIDE = 34;
-const W_TRACK_CENTER = 46;
-const W_FILL_SIDE = 32;
-const W_FILL_CENTER = 42;
-const RIM_STROKE = 6;
+const W_TRACK_SIDE = 38;
+const W_TRACK_CENTER = 50;
+const W_FILL_SIDE = 36;
+const W_FILL_CENTER = 46;
+const RIM_STROKE = 7;
 
 const pathLen = 100;
-
-/** Middenhoek per segment (rad): Energy | Focus | Load — ondere boog */
-const SEG_MID_RAD = [(7 * Math.PI) / 8, Math.PI / 2, Math.PI / 8] as const;
 
 /** Straal voor labels: iets tussen binnen- en buitenrand (naar gat) */
 function bandLabelRadiusMain() {
@@ -208,7 +218,7 @@ export function CommanderMascotPedestal({ stats, children }: Props) {
               style={{
                 width: platformWidth,
                 aspectRatio: `${VB_W} / ${VB_H}`,
-                maxHeight: "min(13.5rem, 46vw)",
+                maxHeight: "min(14.25rem, 48vw)",
               }}
             >
               <svg
