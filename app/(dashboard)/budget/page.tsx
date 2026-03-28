@@ -3,7 +3,6 @@ import { Suspense } from "react";
 import Link from "next/link";
 import { addDays, format } from "date-fns";
 import { nl } from "date-fns/locale";
-import { HQPageHeader } from "@/components/hq";
 import { HeroMascotImage } from "@/components/HeroMascotImage";
 import { getSavingsGoals, getSavingsContributions } from "@/app/actions/savings";
 import {
@@ -474,6 +473,42 @@ async function BudgetContent({ searchParams }: Props) {
           />
         ) : undefined
       }
+      centeredPageHeader={
+        simplifiedBudget
+          ? undefined
+          : {
+              title: "Budget",
+              subtitle:
+                "Cyclus, logging en signalen op één plek — zoals Strategy: tabs, kaarten en duidelijke acties.",
+              backHref: "/dashboard",
+              actions: headerRight,
+            }
+      }
+      belowTabsSlot={
+        simplifiedBudget ? undefined : (
+          <>
+            {!isHistoryView && (
+              <section className="mascot-hero mascot-hero-top mascot-hero-sharp" data-mascot-page="budget" aria-hidden>
+                <div className="mascot-hero-inner mx-auto">
+                  <HeroMascotImage page="budget" className="mascot-img" heroLarge />
+                </div>
+              </section>
+            )}
+            {!historyMode && (
+              <Suspense fallback={null}>
+                <StrategyEnginePaceHint variant="budget" />
+              </Suspense>
+            )}
+            {!historyMode && (
+              <BudgetPrePaydayUrgencyToast
+                daysToPayday={budgetControlState.daysToPayday}
+                needsPaydaySurvey={budgetControlState.needsPaydaySurvey}
+                hasRecentSurvey={budgetControlState.hasRecentSurvey}
+              />
+            )}
+          </>
+        )
+      }
       overview={
         <BudgetOverviewLockGate
           lockPanelHref={lockPanelHref}
@@ -517,34 +552,8 @@ async function BudgetContent({ searchParams }: Props) {
             {budgetTabsShell}
           </div>
         ) : (
-          <div className="container page page-wide dashboard-cinematic relative z-10 space-y-5 pb-10">
-            <HQPageHeader
-              title="Budget"
-              subtitle="Cyclus, logging en signalen op één plek — zoals Strategy: tabs, kaarten en duidelijke acties."
-              backHref="/dashboard"
-              glowTitle={false}
-              actions={headerRight}
-            />
-            {!isHistoryView && (
-              <section className="mascot-hero mascot-hero-top mascot-hero-sharp" data-mascot-page="budget" aria-hidden>
-                <div className="mascot-hero-inner mx-auto">
-                  <HeroMascotImage page="budget" className="mascot-img" heroLarge />
-                </div>
-              </section>
-            )}
-            {!historyMode && (
-              <Suspense fallback={null}>
-                <StrategyEnginePaceHint variant="budget" />
-              </Suspense>
-            )}
-            {!historyMode && (
-              <BudgetPrePaydayUrgencyToast
-                daysToPayday={budgetControlState.daysToPayday}
-                needsPaydaySurvey={budgetControlState.needsPaydaySurvey}
-                hasRecentSurvey={budgetControlState.hasRecentSurvey}
-              />
-            )}
-            <div className="space-y-4">{budgetTabsShell}</div>
+          <div className="container page page-wide dashboard-cinematic relative z-10 pb-10">
+            {budgetTabsShell}
           </div>
         )}
       </main>

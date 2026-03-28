@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useCallback, useEffect, useState, type ReactNode } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { useHQStore } from "@/lib/hq-store";
 import { BudgetLockProvider, useBudgetLock } from "@/components/budget/BudgetLockContext";
 import { BudgetLockTabBanner } from "@/components/budget/BudgetLockTabBanner";
 import { BudgetLockCountdown } from "@/components/budget/BudgetLockCountdown";
@@ -13,6 +14,13 @@ import { profileEngineHref } from "@/lib/profile-routes";
 
 type TabId = "overview" | "execute" | "analysis" | "optimization" | "lock";
 type LegacyTabId = TabId | "tactical" | "goals";
+
+export type BudgetCenteredPageHeader = {
+  title: string;
+  subtitle?: ReactNode;
+  backHref?: string;
+  actions?: ReactNode;
+};
 
 type Props = {
   initialTab: LegacyTabId;
@@ -34,6 +42,10 @@ type Props = {
   simplifiedLayout?: boolean;
   /** Renders under title row (e.g. payday urgency toast). */
   simplifiedTopSlot?: ReactNode;
+  /** Full layout: centered title + pill tabs in one shell; back, mode badge, actions. */
+  centeredPageHeader?: BudgetCenteredPageHeader;
+  /** Full layout: content between tab row and tab panels (e.g. mascot, hints). */
+  belowTabsSlot?: ReactNode;
 };
 
 function normalizeLegacyTab(tab: LegacyTabId): TabId {
@@ -114,10 +126,15 @@ export function BudgetTabsShell({
   lockUntilAt,
   simplifiedLayout = false,
   simplifiedTopSlot,
+  centeredPageHeader,
+  belowTabsSlot,
 }: Props) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
+  const mode = useHQStore((s) => s.gameState?.mode?.current ?? "focus");
+  const modeLabel =
+    mode === "war" ? "War mode" : mode === "recovery" ? "Recovery mode" : "Focus mode";
 
   const [activeTab, setActiveTab] = useState<TabId>(() => {
     const raw = searchParams.get("tab");
@@ -155,11 +172,6 @@ export function BudgetTabsShell({
     { id: "lock", label: "Lock", hidden: historyMode },
   ];
 
-  const tabClassSimplified = (tab: TabId) =>
-    `dashboard-mini-btn ${
-      activeTab === tab ? "dashboard-mini-btn-primary" : "dashboard-mini-btn-secondary"
-    }`;
-
   const tabBtnClassFull = (tab: TabId) =>
     `rounded-t-lg px-3 py-2 text-sm font-medium transition-colors ${
       activeTab === tab
@@ -175,29 +187,6 @@ export function BudgetTabsShell({
       <span aria-hidden>🔒</span>
       Lock
     </span>
-  );
-
-  const tabTrackSimplified = (
-    <div className="dashboard-top-strip-track" role="tablist" aria-label="Budget views">
-      {tabs.map((tab) =>
-        tab.hidden ? null : (
-          <button
-            key={tab.id}
-            type="button"
-            role="tab"
-            id={`budget-tab-btn-${tab.id}`}
-            aria-selected={activeTab === tab.id}
-            className={tabClassSimplified(tab.id)}
-            aria-current={activeTab === tab.id ? "page" : undefined}
-            onClick={() => setTabWithUrl(tab.id)}
-          >
-            {tab.label}
-          </button>
-        ),
-      )}
-      {lockBadge}
-      <span className="dashboard-mini-strip-label">View</span>
-    </div>
   );
 
   const tabTrackFull = (
@@ -261,6 +250,42 @@ export function BudgetTabsShell({
     </>
   );
 
+  const budgetHeaderShell =
+    "relative overflow-hidden rounded-[var(--hq-card-radius,18px)] border border-[rgba(var(--mode-rgb),0.09)] bg-gradient-to-b from-[rgba(var(--mode-rgb-deep),0.2)] via-[var(--bg-elevated)]/10 to-[var(--bg-primary)]/26 shadow-[0_12px_48px_rgba(0,0,0,0.28),0_0_24px_rgba(var(--mode-rgb),0.05)] backdrop-blur-xl";
+
+  const tabPillClass = (tab: TabId) =>
+    activeTab === tab
+      ? "rounded-full border border-[rgba(var(--mode-rgb),0.28)] bg-[rgba(var(--mode-rgb-deep),0.22)] px-3.5 py-2 text-sm font-semibold text-[var(--text-primary)] shadow-[0_0_22px_rgba(var(--mode-rgb),0.08)] sm:px-4"
+      : "rounded-full border border-transparent px-3.5 py-2 text-sm font-medium text-[var(--text-muted)] transition-colors hover:border-[rgba(var(--mode-rgb),0.14)] hover:bg-[rgba(var(--mode-rgb-deep),0.08)] hover:text-[var(--text-primary)] sm:px-4";
+
+  function renderTabButtonsPills(className?: string) {
+    return (
+      <div
+        className={className ?? "flex flex-wrap items-center justify-center gap-2"}
+        role="tablist"
+        aria-label="Budget views"
+      >
+        {tabs.map((tab) =>
+          tab.hidden ? null : (
+            <button
+              key={tab.id}
+              type="button"
+              role="tab"
+              id={`budget-tab-btn-${tab.id}`}
+              aria-selected={activeTab === tab.id}
+              className={tabPillClass(tab.id)}
+              aria-current={activeTab === tab.id ? "page" : undefined}
+              onClick={() => setTabWithUrl(tab.id)}
+            >
+              {tab.label}
+            </button>
+          ),
+        )}
+        {lockBadge}
+      </div>
+    );
+  }
+
   return (
     <BudgetLockProvider value={{ lockActive: lockActive && !historyMode, lockUntil, lockUntilAt }}>
       {simplifiedLayout ? (
@@ -272,21 +297,26 @@ export function BudgetTabsShell({
           >
             <CornerNode corner="top-left" />
             <CornerNode corner="top-right" />
-            <div className="flex shrink-0 items-start justify-between gap-3 border-b border-[var(--card-border)]/40 px-4 py-3">
-              <h2 className="hq-h2 min-w-0 flex-1 text-[var(--text-primary)]">Budget</h2>
+            <div className="relative shrink-0 border-b border-[rgba(var(--mode-rgb),0.1)] px-4 py-4 text-center">
               <Link
                 href="/dashboard"
-                className="shrink-0 pt-0.5 text-[11px] font-semibold uppercase tracking-wide text-[var(--accent-focus)] underline-offset-2 hover:underline"
+                className="absolute left-4 top-4 text-[11px] font-semibold uppercase tracking-wide text-[var(--accent-focus)] underline-offset-2 hover:underline"
               >
-                HQ
+                ← HQ
               </Link>
+              <span className="absolute right-4 top-3.5 inline-flex items-center rounded-full border border-[rgba(var(--mode-rgb),0.2)] bg-[rgba(var(--mode-rgb-deep),0.15)] px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wide text-[var(--accent-focus)]">
+                {modeLabel}
+              </span>
+              <h2 className="page-title-glow mx-auto max-w-md text-2xl font-bold tracking-tight text-[var(--text-primary)] sm:text-3xl">
+                Budget
+              </h2>
             </div>
             {simplifiedTopSlot ? (
               <div className="shrink-0 border-b border-[var(--card-border)]/30 px-3 py-2">{simplifiedTopSlot}</div>
             ) : null}
             <BudgetLockStrip historyMode={historyMode} lockPanelHref={lockPanelHref} embedded />
-            <div className="dashboard-top-strip sticky top-0 z-20 shrink-0 border-b border-[var(--card-border)]/50 bg-[var(--bg-surface)]/85 px-1 py-2 backdrop-blur-md supports-[backdrop-filter]:bg-[var(--bg-surface)]/70 sm:px-2">
-              {tabTrackSimplified}
+            <div className="sticky top-0 z-20 shrink-0 border-b border-[rgba(var(--mode-rgb),0.1)] bg-[var(--bg-surface)]/88 px-2 py-2.5 backdrop-blur-md supports-[backdrop-filter]:bg-[var(--bg-surface)]/75 sm:px-3">
+              {renderTabButtonsPills()}
             </div>
             {headerRight ? (
               <div className="shrink-0 border-b border-[var(--card-border)]/30 px-2 py-2">{headerRight}</div>
@@ -308,6 +338,49 @@ export function BudgetTabsShell({
               </Link>
             </p>
           </SciFiPanel>
+        </div>
+      ) : centeredPageHeader ? (
+        <div className="space-y-4">
+          <section className={budgetHeaderShell} aria-label="Budget navigatie">
+            <div
+              className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_75%_55%_at_50%_0%,rgba(var(--mode-rgb),0.12),transparent_58%)]"
+              aria-hidden
+            />
+            <div className="relative px-4 pb-5 pt-4 md:px-6 md:pb-6 md:pt-5">
+              <div className="flex items-start justify-between gap-3">
+                {centeredPageHeader.backHref ? (
+                  <Link
+                    href={centeredPageHeader.backHref}
+                    className="shrink-0 text-sm font-semibold text-[var(--text-secondary)] transition hover:text-[var(--text-primary)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[rgba(var(--mode-rgb),0.45)] focus-visible:ring-offset-0 rounded-md"
+                  >
+                    ← HQ
+                  </Link>
+                ) : (
+                  <span className="w-14 shrink-0" aria-hidden />
+                )}
+                <span className="inline-flex shrink-0 items-center rounded-full border border-[rgba(var(--mode-rgb),0.2)] bg-[rgba(var(--mode-rgb-deep),0.15)] px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wide text-[var(--accent-focus)]">
+                  {modeLabel}
+                </span>
+              </div>
+              <h1 className="page-title-glow mt-5 text-center text-3xl font-bold tracking-tight text-[var(--text-primary)] sm:text-4xl md:text-[2.5rem] md:leading-tight">
+                {centeredPageHeader.title}
+              </h1>
+              {centeredPageHeader.subtitle != null && (
+                <p className="mx-auto mt-3 max-w-xl text-center text-sm leading-relaxed text-[var(--text-muted)]">
+                  {typeof centeredPageHeader.subtitle === "string" ? centeredPageHeader.subtitle : centeredPageHeader.subtitle}
+                </p>
+              )}
+              {centeredPageHeader.actions != null && (
+                <div className="mt-5 flex flex-wrap items-center justify-center gap-2 sm:gap-3">
+                  {centeredPageHeader.actions}
+                </div>
+              )}
+              <div className="mt-6 border-t border-[rgba(var(--mode-rgb),0.12)] pt-5">{renderTabButtonsPills()}</div>
+            </div>
+          </section>
+          {belowTabsSlot != null ? <div className="space-y-4">{belowTabsSlot}</div> : null}
+          <BudgetLockStrip historyMode={historyMode} lockPanelHref={lockPanelHref} />
+          <div className="min-h-[120px] space-y-4">{panels}</div>
         </div>
       ) : (
         <div className="space-y-4">
