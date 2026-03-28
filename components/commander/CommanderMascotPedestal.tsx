@@ -53,8 +53,9 @@ const W_FILL_CENTER = 17;
 
 const pathLen = 100;
 
+/** HUD-kaarten: styling in globals (.commander-pedestal-hud-card) */
 const cardClass =
-  "pointer-events-auto max-w-[min(46%,10.5rem)] rounded-xl border border-[var(--card-border)]/55 bg-[var(--bg-surface)]/92 px-2.5 py-2 shadow-lg backdrop-blur-md no-underline outline-none transition-transform hover:scale-[1.02] focus-visible:ring-2 focus-visible:ring-[var(--accent-focus)]/55 sm:max-w-[11rem] sm:px-3";
+  "commander-pedestal-hud-card pointer-events-auto max-w-[min(44%,9.5rem)] rounded-lg border px-2 py-1.5 backdrop-blur-md no-underline outline-none transition-transform hover:scale-[1.02] focus-visible:ring-2 focus-visible:ring-[var(--accent-focus)]/55 sm:max-w-[10rem] sm:rounded-xl sm:px-2.5 sm:py-2";
 
 function clampPct(n: number) {
   return Math.min(100, Math.max(0, n));
@@ -106,38 +107,12 @@ export function CommanderMascotPedestal({ stats, children }: Props) {
 
   return (
     <div
-      className="commander-mascot-pedestal commander-mascot-platform relative mx-auto w-full overflow-visible pb-7 sm:pb-8"
+      className="commander-mascot-pedestal commander-mascot-platform relative mx-auto w-full overflow-visible pb-5 sm:pb-6"
       role="group"
       aria-label={`Energy ${ePct} procent, Focus ${fPct} procent, Belasting ${lPct} procent. Level ${displayLevel}, ${current} van ${needed} XP. Budget: ${isNegative ? "−" : ""}${symbol}${amount.toFixed(0)}.`}
     >
       <div className="relative mx-auto flex w-full flex-col items-center">
         <div className="commander-mascot-pedestal-mascot relative z-10 mx-auto w-full max-w-[min(320px,88vw)] shrink-0">
-          {/* Zwevende XP / Budget bóven de ring (niet in de boog) */}
-          <div
-            className="commander-mascot-pedestal-cards pointer-events-none absolute left-1/2 top-full z-20 mt-1 flex max-w-none -translate-x-1/2 justify-between gap-2 px-0.5 sm:mt-2 sm:gap-3 sm:px-1"
-            style={{ width: platformWidth }}
-          >
-            <Link href="/xp" className={`${cardClass} text-left`}>
-              <span className="block text-[9px] font-semibold uppercase tracking-[0.1em] text-[var(--text-muted)]">XP</span>
-              <span className="mt-0.5 block text-sm font-bold tabular-nums text-[var(--text-primary)] sm:text-base">
-                Lv {displayLevel}
-              </span>
-              <span className="mt-0.5 block text-[11px] tabular-nums text-[var(--text-secondary)] sm:text-xs">
-                {current}/{needed}
-              </span>
-            </Link>
-            <Link href="/budget" className={`${cardClass} text-right`}>
-              <span className="block text-[9px] font-semibold uppercase tracking-[0.1em] text-[var(--text-muted)]">Budget</span>
-              <span className="mt-0.5 block text-sm font-bold tabular-nums text-[var(--text-primary)] sm:text-base">
-                {isNegative && "−"}
-                {symbol}
-                {amount.toFixed(0)}
-              </span>
-              <span className="mt-0.5 block text-[11px] text-[var(--text-secondary)] sm:text-xs">
-                {isNegative ? "over" : "rest"}
-              </span>
-            </Link>
-          </div>
           {children}
         </div>
 
@@ -146,7 +121,7 @@ export function CommanderMascotPedestal({ stats, children }: Props) {
           style={{
             width: platformWidth,
             aspectRatio: `${VB_W} / ${VB_H}`,
-            maxHeight: "min(10.5rem, 34vw)",
+            maxHeight: "min(11rem, 36vw)",
           }}
         >
           <svg
@@ -156,30 +131,39 @@ export function CommanderMascotPedestal({ stats, children }: Props) {
             aria-hidden
           >
             <defs>
-              <linearGradient id="commander-platform-floor" x1="0%" y1="0%" x2="0%" y2="100%">
-                <stop offset="0%" stopColor="rgba(var(--mode-rgb, 0, 212, 255), 0.22)" />
-                <stop offset="100%" stopColor="rgba(var(--mode-rgb, 0, 212, 255), 0.04)" />
-              </linearGradient>
+              <radialGradient id="commander-bowl-floor" cx="50%" cy="100%" r="78%" fx="50%" fy="100%">
+                <stop offset="0%" stopColor="rgba(var(--mode-rgb, 0, 212, 255), 0.2)" />
+                <stop offset="42%" stopColor="rgba(var(--mode-rgb, 0, 212, 255), 0.07)" />
+                <stop offset="100%" stopColor="rgba(0, 0, 0, 0.28)" />
+              </radialGradient>
             </defs>
 
-            <ellipse cx={CX} cy={CY + 5} rx={R - 10} ry={20} fill="url(#commander-platform-floor)" opacity={0.85} />
+            <ellipse cx={CX} cy={CY + 4} rx={R - 9} ry={21} fill="url(#commander-bowl-floor)" opacity={0.92} />
 
             <g className="commander-orbit-arc-path" fill="none">
-              {/* Basis-ring: volledige 180° container */}
+              {/* Basis-ring: zachte groef + randlicht (HUD) */}
               <path
                 d={FULL_BASE_D}
-                stroke="rgba(var(--mode-rgb, 0, 212, 255), 0.1)"
-                strokeWidth={22}
+                stroke="rgba(var(--mode-rgb, 0, 212, 255), 0.14)"
+                strokeWidth={23}
                 strokeLinecap="round"
                 style={{
-                  filter: "drop-shadow(0 8px 20px rgba(0, 0, 0, 0.35)) drop-shadow(0 0 12px rgba(56, 189, 248, 0.12))",
+                  filter: "drop-shadow(0 4px 14px rgba(0, 0, 0, 0.28)) drop-shadow(0 0 10px rgba(56, 189, 248, 0.1))",
                 }}
               />
+              <path
+                d={FULL_BASE_D}
+                stroke="rgba(186, 230, 253, 0.28)"
+                strokeWidth={4}
+                strokeLinecap="round"
+                opacity={0.55}
+                transform="translate(0 -1.5)"
+              />
 
-              {/* Segment tracks */}
-              <path d={SEG_PATHS[0]} stroke="rgba(34, 211, 238, 0.2)" strokeWidth={W_TRACK_SIDE} strokeLinecap="round" />
-              <path d={SEG_PATHS[1]} stroke="rgba(56, 189, 248, 0.28)" strokeWidth={W_TRACK_CENTER} strokeLinecap="round" />
-              <path d={SEG_PATHS[2]} stroke="rgba(251, 146, 60, 0.22)" strokeWidth={W_TRACK_SIDE} strokeLinecap="round" />
+              {/* Segment tracks — iets dieper voor contrast met vulling */}
+              <path d={SEG_PATHS[0]} stroke="rgba(34, 211, 238, 0.14)" strokeWidth={W_TRACK_SIDE} strokeLinecap="round" />
+              <path d={SEG_PATHS[1]} stroke="rgba(56, 189, 248, 0.2)" strokeWidth={W_TRACK_CENTER} strokeLinecap="round" />
+              <path d={SEG_PATHS[2]} stroke="rgba(251, 146, 60, 0.16)" strokeWidth={W_TRACK_SIDE} strokeLinecap="round" />
 
               {/* Energy fill — cyan */}
               <path
@@ -220,22 +204,51 @@ export function CommanderMascotPedestal({ stats, children }: Props) {
             </g>
           </svg>
 
-          {/* Stat-labels op de ring (geen XP/budget) */}
-          <div className="pointer-events-none absolute inset-0 z-[5] flex items-end justify-between px-[7%] pb-[15%] pt-10 sm:px-[8%] sm:pb-[16%]">
-            <div className="max-w-[30%] text-left">
-              <p className="text-[8px] font-semibold uppercase tracking-[0.12em] text-cyan-200/90">Energy</p>
-              <p className="text-sm font-bold tabular-nums text-cyan-100 sm:text-base">{ePct}%</p>
-              <p className="text-[9px] tabular-nums text-[var(--text-muted)] sm:text-[10px]">{format1(energy1to10, ePct)}</p>
+          {/* Leesbaarheid + diepte in het midden van de kom */}
+          <div className="commander-mascot-pedestal-bowl-overlay pointer-events-none absolute inset-0 z-[4]" aria-hidden />
+
+          {/* XP / Budget in het binnengebied van de halve cirkel (niet onder de mascot) */}
+          <div
+            className="commander-mascot-pedestal-cards pointer-events-none absolute left-1/2 top-[53%] z-[12] flex w-[min(92%,18rem)] max-w-none -translate-x-1/2 -translate-y-1/2 justify-between gap-1.5 px-0.5 sm:top-[54%] sm:gap-2.5 sm:px-1"
+          >
+            <Link href="/xp" className={`${cardClass} text-left`}>
+              <span className="block text-[8px] font-semibold uppercase tracking-[0.1em] text-[var(--text-muted)] sm:text-[9px]">XP</span>
+              <span className="mt-0.5 block text-xs font-bold tabular-nums text-[var(--text-primary)] sm:text-sm">
+                Lv {displayLevel}
+              </span>
+              <span className="mt-0.5 block text-[10px] tabular-nums text-[var(--text-secondary)] sm:text-[11px]">
+                {current}/{needed}
+              </span>
+            </Link>
+            <Link href="/budget" className={`${cardClass} text-right`}>
+              <span className="block text-[8px] font-semibold uppercase tracking-[0.1em] text-[var(--text-muted)] sm:text-[9px]">Budget</span>
+              <span className="mt-0.5 block text-xs font-bold tabular-nums text-[var(--text-primary)] sm:text-sm">
+                {isNegative && "−"}
+                {symbol}
+                {amount.toFixed(0)}
+              </span>
+              <span className="mt-0.5 block text-[10px] text-[var(--text-secondary)] sm:text-[11px]">
+                {isNegative ? "over" : "rest"}
+              </span>
+            </Link>
+          </div>
+
+          {/* Stat-labels: in de boog, HUD-leesbaarheid */}
+          <div className="pointer-events-none absolute inset-0 z-[5] flex items-end justify-between px-[12%] pb-[17%] pt-10 sm:px-[15%] sm:pb-[18%]">
+            <div className="commander-pedestal-stat-pill max-w-[28%] text-left">
+              <p className="text-[8px] font-semibold uppercase tracking-[0.12em] text-cyan-200/95">Energy</p>
+              <p className="text-sm font-bold tabular-nums text-cyan-50 sm:text-base">{ePct}%</p>
+              <p className="text-[9px] tabular-nums text-cyan-100/75 sm:text-[10px]">{format1(energy1to10, ePct)}</p>
             </div>
-            <div className="absolute bottom-[52%] left-1/2 max-w-[38%] -translate-x-1/2 text-center">
+            <div className="commander-pedestal-stat-pill absolute bottom-[50%] left-1/2 max-w-[36%] -translate-x-1/2 text-center">
               <p className="text-[8px] font-semibold uppercase tracking-[0.12em] text-sky-200">Focus</p>
-              <p className="text-base font-bold tabular-nums text-sky-100 sm:text-lg">{fPct}%</p>
-              <p className="text-[9px] tabular-nums text-[var(--text-muted)] sm:text-[10px]">{format1(focus1to10, fPct)}</p>
+              <p className="text-base font-bold tabular-nums text-sky-50 sm:text-lg">{fPct}%</p>
+              <p className="text-[9px] tabular-nums text-sky-100/80 sm:text-[10px]">{format1(focus1to10, fPct)}</p>
             </div>
-            <div className="max-w-[30%] text-right">
-              <p className="text-[8px] font-semibold uppercase tracking-[0.12em] text-orange-200/90">Load</p>
-              <p className="text-sm font-bold tabular-nums text-orange-100 sm:text-base">{lPct}%</p>
-              <p className="text-[9px] tabular-nums text-[var(--text-muted)] sm:text-[10px]">{format1(load1to10, lPct)}</p>
+            <div className="commander-pedestal-stat-pill max-w-[28%] text-right">
+              <p className="text-[8px] font-semibold uppercase tracking-[0.12em] text-orange-200/95">Load</p>
+              <p className="text-sm font-bold tabular-nums text-orange-50 sm:text-base">{lPct}%</p>
+              <p className="text-[9px] tabular-nums text-orange-100/75 sm:text-[10px]">{format1(load1to10, lPct)}</p>
             </div>
           </div>
         </div>
