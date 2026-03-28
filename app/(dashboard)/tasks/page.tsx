@@ -476,79 +476,12 @@ async function MissionsSectionAsync({
       <CornerNode corner="top-right" />
       <GrowthMissionsRibbon snap={growthSnap} fromGrowthPage={growthFromGrowthPage} />
       <ModeBanner mode={mode} />
-      <EnergyCapBar used={energyCap.used} cap={energyCap.cap} remaining={energyCap.remaining} planned={energyCap.planned} />
       <ConsequenceBanner
         energyDepleted={(energyBudget as { consequence?: { energyDepleted?: boolean } }).consequence?.energyDepleted}
         recoveryOnly={decisionBlocks.recoveryOnly}
         recoveryProtocol={decisionBlocks.recoveryProtocol}
         daysSinceLastCompletion={decisionBlocks.daysSinceLastCompletion}
       />
-      <section className="space-y-2" aria-label="Command center">
-        <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--text-muted)]">Your next move</p>
-        <div className="rounded-2xl border border-[var(--accent-focus)]/40 bg-[var(--bg-surface)]/35 p-4">
-          <h2 className="text-xl font-semibold text-[var(--text-primary)]">
-            {allMissionsDoneToday
-              ? "Alles gedaan voor vandaag"
-              : decisionBlocks.topRecommendation?.title ?? "Selecteer je volgende missie"}
-          </h2>
-          <p className="mt-2 text-sm text-[var(--text-muted)]">
-            {allMissionsDoneToday
-              ? "Geen open missies meer — top. Rust, vier het, of pak iets uit je backlog als je nog energie hebt."
-              : decisionBlocks.topRecommendation
-                ? `Must-do omdat deze missie vandaag de beste match heeft op strategie, energie en impact (UMS ${Math.round(
-                    decisionBlocks.topRecommendation.umsBreakdown.ums * 100
-                  )}%).`
-                : tasksNormal.length > 0
-                  ? "Geen aparte top-pick nu — kies een missie in de lijst hieronder, of verdiep je context op Learning of Strategy."
-                  : "Geen harde must-do gevonden, start met een korte missie om momentum op te bouwen."}
-          </p>
-          {!allMissionsDoneToday && !decisionBlocks.topRecommendation && tasksNormal.length > 0 && (
-            <p className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-[var(--text-secondary)]">
-              <Link
-                href="/learning"
-                className="font-medium text-[var(--accent-focus)] underline-offset-2 hover:underline"
-              >
-                Learning
-              </Link>
-              <span className="text-[var(--text-muted)]" aria-hidden>
-                ·
-              </span>
-              <Link
-                href="/strategy"
-                className="font-medium text-[var(--accent-focus)] underline-offset-2 hover:underline"
-              >
-                Strategy
-              </Link>
-            </p>
-          )}
-          {neuroLine && !allMissionsDoneToday && (
-            <p className="mt-2 rounded-lg border border-[var(--card-border)]/60 bg-[var(--bg-surface)]/40 px-3 py-2 text-xs text-[var(--text-secondary)]">
-              {neuroLine}
-            </p>
-          )}
-          {decisionBlocks.dataMaturityHintNl && !allMissionsDoneToday && (
-            <p className="mt-2 text-xs text-[var(--text-muted)]">{decisionBlocks.dataMaturityHintNl}</p>
-          )}
-          {(decisionBlocks.alignmentFix.length > 0 || decisionBlocks.recovery.length > 0) && (
-            <ul className="mt-3 space-y-1 text-xs text-[var(--text-secondary)]">
-              {decisionBlocks.alignmentFix.slice(0, 2).map((task) => (
-                <li key={`align-${task.id}`}>Alignment suggestie: {(task.title ?? "Taak")}</li>
-              ))}
-              {decisionBlocks.recovery.slice(0, 1).map((task) => (
-                <li key={`recovery-${task.id}`}>Recovery suggestie: {(task.title ?? "Taak")}</li>
-              ))}
-            </ul>
-          )}
-          <div className="mt-3">
-            <Link
-              href="/tasks#tasks-list"
-              className="inline-flex items-center justify-center rounded-full bg-[var(--accent-focus)] px-5 py-2.5 text-xs font-semibold uppercase tracking-[0.1em] text-white hover:opacity-90"
-            >
-              Start
-            </Link>
-          </div>
-        </div>
-      </section>
       <details className="tasks-war-hide rounded-xl border border-[var(--card-border)] bg-[var(--bg-surface)]/35 p-3">
         <summary className="cursor-pointer text-xs font-semibold uppercase tracking-wider text-[var(--text-muted)]">Diagnostics</summary>
         <div className="mt-3 space-y-3">
@@ -608,6 +541,18 @@ async function MissionsSectionAsync({
         identityReputation={identityEngine.reputation ?? null}
         blockedReasonByTaskId={blockedReasonByTaskId}
         neuroSelfReportOptIn={behaviorProfile.neuroSelfReportOptIn}
+        missionsHeroLayout
+        energyCap={{
+          used: energyCap.used,
+          cap: energyCap.cap,
+          remaining: energyCap.remaining,
+          planned: energyCap.planned,
+        }}
+        neuroHint={
+          !allMissionsDoneToday
+            ? [neuroLine, decisionBlocks.dataMaturityHintNl].filter(Boolean).join(" — ") || null
+            : null
+        }
       />
       </div>
       </div>

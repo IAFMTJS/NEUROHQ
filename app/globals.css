@@ -1928,7 +1928,7 @@ html[data-light-ui="true"] body {
 
 /* Verticaal uitrekken vanaf bovenkant arc-vlak: bovenste punten vast, onderkant band lager */
 .commander-mascot-pedestal .commander-mascot-pedestal-donut-vert-stretch {
-  transform: scaleY(1.16);
+  transform: scaleY(1.24);
   transform-origin: top center;
 }
 

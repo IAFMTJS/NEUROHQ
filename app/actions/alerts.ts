@@ -148,6 +148,31 @@ export async function markAllUserAlertsRead(): Promise<void> {
   revalidatePath("/profile");
 }
 
+export async function deleteUserAlert(alertId: string): Promise<void> {
+  const supabase = await createClient();
+  const db = supabase as unknown as AnyDb;
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) throw new Error("Not authenticated");
+  await db.from("user_alerts").delete().eq("id", alertId).eq("user_id", user.id);
+  revalidatePath("/dashboard");
+  revalidatePath("/profile");
+}
+
+/** Removes every inbox row for the current user. */
+export async function deleteAllUserAlerts(): Promise<void> {
+  const supabase = await createClient();
+  const db = supabase as unknown as AnyDb;
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) throw new Error("Not authenticated");
+  await db.from("user_alerts").delete().eq("user_id", user.id);
+  revalidatePath("/dashboard");
+  revalidatePath("/profile");
+}
+
 function normalizeInboxLinkPath(href: string): string {
   const t = href.trim();
   if (!t) return "/dashboard";
@@ -213,8 +238,10 @@ export async function syncInboxAlertsFromDashboardCritical(critical: DashboardCr
 
   if (critical.unifiedDecision) {
     const u = critical.unifiedDecision;
+    // Stable per (day, decision type): decisionId changes when task count / ranking shifts,
+    // which would mint endless duplicate inbox rows + pushes if used as push_tag.
     candidates.push({
-      pushTag: `hq-inbox-${u.decisionId}`,
+      pushTag: `hq-inbox-unified-${critical.dateStr}-${u.decisionType}`,
       title: u.title.slice(0, 200),
       body: u.description ? u.description.slice(0, 2000) : null,
       severity: severityForUnifiedDecision(u),

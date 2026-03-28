@@ -18,6 +18,7 @@ import {
   type StrategicPreview,
   FocusModal,
 } from "@/components/missions";
+import { EnergyCapBar } from "@/components/missions/EnergyCapBar";
 import { neuroToast } from "@/lib/ui/neuro-toast";
 import { Modal } from "@/components/Modal";
 import { ErrorWithNextStep } from "@/components/ui/ErrorWithNextStep";
@@ -72,6 +73,11 @@ type Props = {
   blockedReasonByTaskId?: Record<string, string>;
   /** Settings: show optional micro-report bar after skip/snooze (server also enforces opt-in). */
   neuroSelfReportOptIn?: boolean;
+  /** Missions tab: energy bar + full-width hero task + compact grid; details on tap. */
+  missionsHeroLayout?: boolean;
+  energyCap?: { used: number; cap: number; remaining: number; planned: number } | null;
+  /** Optional one-liner under the hero (e.g. neuro hint from server). */
+  neuroHint?: string | null;
 };
 
 function isRoutineTask(task: ExtendedTask): boolean {
@@ -101,6 +107,32 @@ function groupByCategory(tasks: ExtendedTask[]): { work: ExtendedTask[]; persona
   return { work, personal, other };
 }
 
+function expectedXpForMission(task: ExtendedTask, strategic?: StrategicPreview | null): number {
+  if (strategic?.expectedXP != null) return strategic.expectedXP;
+  const bx = (task as { base_xp?: number | null }).base_xp;
+  if (bx != null && bx > 0) return bx;
+  const impact = task.impact ?? 2;
+  return Math.max(10, Math.min(100, impact * 35)) || 50;
+}
+
+/** Realistic time hint when duration_minutes is missing (energy-based bracket). */
+function formatMissionTimeFrame(task: ExtendedTask): string {
+  const dm = (task as { duration_minutes?: number | null }).duration_minutes;
+  if (dm != null && dm > 0) {
+    if (dm < 60) return `±${dm} min`;
+    const h = Math.floor(dm / 60);
+    const m = dm % 60;
+    return m > 0 ? `±${h}u ${m}m` : `±${h} u`;
+  }
+  const e = task.energy_required;
+  if (e != null) {
+    if (e <= 2) return "±10–20 min";
+    if (e <= 4) return "±20–45 min";
+    return "±45–90 min";
+  }
+  return "±15–45 min";
+}
+
 export function TaskList({
   date,
   tasks: initialTasks,
@@ -117,6 +149,9 @@ export function TaskList({
   brainMode,
   blockedReasonByTaskId,
   neuroSelfReportOptIn = false,
+  missionsHeroLayout = false,
+  energyCap = null,
+  neuroHint = null,
 }: Props) {
   const router = useRouter();
   const { gameState } = useDCICGameState();
@@ -212,6 +247,20 @@ export function TaskList({
     () => extendedTasks.filter((t) => !t.completed && !optimisticCompleteIds.includes(t.id)),
     [extendedTasks, optimisticCompleteIds]
   );
+
+  const heroMissionTask = useMemo(() => {
+    if (!missionsHeroLayout) return null;
+    if (incompleteTasksForDisplay.length === 0) return null;
+    if (isWarMode) return incompleteTasksForDisplay[0] ?? null;
+    const unblocked = incompleteTasksForDisplay.find((t) => !blockedReasonByTaskId?.[t.id]);
+    return unblocked ?? incompleteTasksForDisplay[0] ?? null;
+  }, [missionsHeroLayout, incompleteTasksForDisplay, blockedReasonByTaskId, isWarMode]);
+
+  const restMissionTasks = useMemo(() => {
+    if (!missionsHeroLayout || !heroMissionTask) return [];
+    return incompleteTasksForDisplay.filter((t) => t.id !== heroMissionTask.id);
+  }, [missionsHeroLayout, incompleteTasksForDisplay, heroMissionTask]);
+
   const completedForDisplay = useMemo(
     () => {
       const merged = [
@@ -639,6 +688,58 @@ export function TaskList({
     return "Next: " + next.map(formatShortDate).join(", ");
   }
 
+  function renderCompactMissionCard(task: ExtendedTask) {
+    const blockReason = blockedReasonByTaskId?.[task.id];
+    const xp = expectedXpForMission(task, strategicByTaskId?.[task.id]);
+    const timeFrame = formatMissionTimeFrame(task);
+    return (
+      <div
+        className={`flex min-h-[4.5rem] flex-col rounded-xl border p-2.5 transition-colors ${
+          blockReason
+            ? "border-[var(--card-border)] bg-[var(--bg-surface)]/30 opacity-85"
+            : "border-[var(--card-border)]/80 bg-[var(--bg-surface)]/35 hover:border-[var(--accent-focus)]/40"
+        }`}
+      >
+        <div className="flex gap-2">
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              if (!task.completed) handleComplete(task.id);
+            }}
+            disabled={task.completed || completingIds.has(task.id) || !!blockReason}
+            className={`mt-0.5 h-5 w-5 shrink-0 rounded-md border-2 flex items-center justify-center ${
+              task.completed
+                ? "border-green-500 bg-green-500/20 text-green-400"
+                : "border-neutral-500 bg-transparent hover:border-[var(--accent-focus)]"
+            } disabled:opacity-50`}
+            aria-label={task.completed ? "Voltooid" : completingIds.has(task.id) ? "Bezig…" : blockReason ? "Geblokkeerd" : "Voltooien"}
+          >
+            {task.completed && <span className="text-[10px]">✓</span>}
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              setFocusTask(null);
+              setDetailsTask(task);
+            }}
+            className="min-w-0 flex-1 rounded-lg text-left outline-none ring-offset-2 ring-offset-[var(--bg-primary)] focus-visible:ring-2 focus-visible:ring-[var(--accent-focus)]"
+          >
+            <p className="line-clamp-2 text-[11px] font-semibold leading-snug text-[var(--text-primary)]">{task.title}</p>
+            <p className="mt-1 text-[10px] tabular-nums text-[var(--text-muted)]">
+              <span className="text-[var(--accent-focus)]">+{xp} XP</span>
+              <span className="mx-1 text-[var(--text-muted)]/60">·</span>
+              <span>{timeFrame}</span>
+            </p>
+            {blockReason && (
+              <p className="mt-1 line-clamp-2 text-[9px] text-amber-200/90">{blockReason}</p>
+            )}
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   function renderTask(task: ExtendedTask, isFirstIncomplete: boolean) {
     const subtasks = localSubtasksByParent[task.id] ?? [];
     const preview = recurrencePreview(task);
@@ -840,16 +941,28 @@ export function TaskList({
   }
 
   return (
-    <div className="card-simple overflow-hidden p-0">
+    <div
+      className={`card-simple overflow-hidden p-0 ${missionsHeroLayout ? "card-simple-accent" : ""}`}
+    >
       <div className="border-b border-[var(--card-border)] px-4 py-3">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
             <h2 className="text-base font-semibold text-[var(--text-primary)]">
-              Today&apos;s missions <span className="font-medium text-[var(--accent-focus)]">· Commander</span>
+              {missionsHeroLayout ? (
+                "Vandaag"
+              ) : (
+                <>
+                  Today&apos;s missions <span className="font-medium text-[var(--accent-focus)]">· Commander</span>
+                </>
+              )}
             </h2>
-            <p className="mt-0.5 text-xs text-[var(--text-muted)]">Volledige taakformulier · XP per missie</p>
+            <p className="mt-0.5 text-xs text-[var(--text-muted)]">
+              {missionsHeroLayout
+                ? "Energie, hoofdmissie, rest in het rooster — tik op een taak voor alle details."
+                : "Volledige taakformulier · XP per missie"}
+            </p>
           </div>
-          {!isWarMode ? (
+          {!isWarMode && !missionsHeroLayout ? (
             <div className="flex flex-wrap items-center gap-2">
               <button
                 type="button"
@@ -877,7 +990,12 @@ export function TaskList({
         </div>
       </div>
       <div className="p-4">
-        {topRecommendedTask && !isWarMode && (
+        {missionsHeroLayout && energyCap && (
+          <div className="mb-4">
+            <EnergyCapBar used={energyCap.used} cap={energyCap.cap} remaining={energyCap.remaining} planned={energyCap.planned} />
+          </div>
+        )}
+        {topRecommendedTask && !isWarMode && !missionsHeroLayout && (
           <section className="mb-3 rounded-xl border border-[var(--accent-focus)]/35 bg-[var(--accent-focus)]/10 p-3">
             <p className="text-[10px] font-semibold uppercase tracking-wider text-[var(--accent-focus)]">Suggested mission now</p>
             <p className="mt-1 text-sm font-semibold text-[var(--text-primary)]">{topRecommendedTask.title}</p>
@@ -906,7 +1024,10 @@ export function TaskList({
         )}
 
         {!isWarMode && (
-          <section className="mb-3 rounded-xl border border-[var(--card-border)] bg-[var(--bg-surface)]/45 p-3" aria-label="Slots envelope">
+          <section
+            className={`mb-3 rounded-xl border border-[var(--card-border)] bg-[var(--bg-surface)]/45 p-3 ${missionsHeroLayout ? "py-2" : ""}`}
+            aria-label="Slots envelope"
+          >
             <p className="text-[10px] font-semibold uppercase tracking-wider text-[var(--text-muted)]">Slots envelope</p>
             <p className="mt-1 text-xs text-[var(--text-secondary)]">
               Active: <strong>{activeCount}</strong> · Suggested: <strong>{suggestedTaskCount}</strong>
@@ -957,7 +1078,80 @@ export function TaskList({
         )}
 
         {effectiveViewMode === "focus" ? (
-          (isWarMode ? warModeTasks : focusModeTasks).length === 0 ? (
+          missionsHeroLayout ? (
+            <div className="space-y-4">
+              {heroMissionTask ? (
+                <section
+                  className="rounded-2xl border border-[var(--accent-focus)]/45 bg-gradient-to-b from-[var(--accent-focus)]/14 to-[var(--bg-surface)]/30 p-4 sm:p-5 shadow-[0_0_28px_rgba(var(--mode-rgb),0.1)]"
+                  aria-label="Hoofdmissie"
+                >
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--accent-focus)]">Hoofdmissie nu</p>
+                  <h3 className="mt-1 text-lg font-semibold leading-snug text-[var(--text-primary)] sm:text-xl">{heroMissionTask.title}</h3>
+                  <div className="mt-3 flex flex-wrap gap-2 sm:gap-3">
+                    <span className="inline-flex items-center gap-1.5 rounded-full border border-[var(--card-border)]/80 bg-[var(--bg-surface)]/55 px-3 py-1.5 text-xs text-[var(--text-secondary)]">
+                      <span className="text-[var(--text-muted)]">XP</span>
+                      <span className="font-semibold tabular-nums text-[var(--accent-focus)]">
+                        +{expectedXpForMission(heroMissionTask, strategicByTaskId?.[heroMissionTask.id])}
+                      </span>
+                    </span>
+                    <span className="inline-flex items-center gap-1.5 rounded-full border border-[var(--card-border)]/80 bg-[var(--bg-surface)]/55 px-3 py-1.5 text-xs text-[var(--text-secondary)]">
+                      <span className="text-[var(--text-muted)]">Tijd</span>
+                      <span className="font-medium">{formatMissionTimeFrame(heroMissionTask)}</span>
+                    </span>
+                  </div>
+                  {neuroHint && (
+                    <p className="mt-2 text-xs leading-relaxed text-[var(--text-secondary)]">{neuroHint}</p>
+                  )}
+                  <div className="mt-4">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setDetailsTask(null);
+                        setFocusTask(heroMissionTask);
+                      }}
+                      disabled={!!blockedReasonByTaskId?.[heroMissionTask.id]}
+                      className="mission-cta-button w-full min-h-[52px] rounded-full bg-[var(--accent-focus)] px-6 py-3.5 text-sm font-semibold uppercase tracking-[0.1em] text-white shadow-[0_0_20px_rgba(var(--mode-rgb),0.38)] transition hover:opacity-95 disabled:cursor-not-allowed disabled:opacity-45"
+                    >
+                      Start
+                    </button>
+                  </div>
+                  {blockedReasonByTaskId?.[heroMissionTask.id] && (
+                    <p className="mt-2 text-xs text-amber-200/90">{blockedReasonByTaskId[heroMissionTask.id]}</p>
+                  )}
+                </section>
+              ) : (
+                <div className="rounded-2xl border border-dashed border-[var(--card-border)]/55 bg-[var(--bg-surface)]/25 px-4 py-8 text-center">
+                  <p className="text-sm font-medium text-[var(--text-primary)]">
+                    {completedForDisplay.length > 0 ? "Alles gedaan voor vandaag" : "Nog geen missies vandaag"}
+                  </p>
+                  <p className="mt-1 text-xs text-[var(--text-muted)]">
+                    {completedForDisplay.length > 0
+                      ? "Rust even — of pluk iets uit je backlog als je nog energie hebt."
+                      : "Voeg hieronder een missie toe om te starten."}
+                  </p>
+                </div>
+              )}
+
+              {restMissionTasks.length > 0 && (
+                <div>
+                  <p className="mb-2 text-[10px] font-semibold uppercase tracking-[0.12em] text-[var(--text-muted)]">Meer vandaag</p>
+                  <div className="flex snap-x snap-mandatory gap-2 overflow-x-auto overflow-y-visible pb-2 [-webkit-overflow-scrolling:touch] sm:grid sm:max-h-[min(70vh,420px)] sm:grid-cols-2 sm:gap-3 sm:overflow-y-auto sm:overscroll-contain sm:pr-0.5">
+                    {restMissionTasks.map((t) => (
+                      <div key={t.id} className="w-[calc(50%-4px)] min-w-[calc(50%-4px)] shrink-0 snap-start sm:min-w-0 sm:w-auto sm:shrink">
+                        {renderCompactMissionCard(t)}
+                      </div>
+                    ))}
+                  </div>
+                  {restMissionTasks.length > 4 && (
+                    <p className="mt-1 text-center text-[10px] text-[var(--text-muted)] sm:hidden">Veeg voor meer missies</p>
+                  )}
+                  {restMissionTasks.length > 6 && (
+                    <p className="mt-1 hidden text-center text-[10px] text-[var(--text-muted)] sm:block">Scroll voor meer — of schakel naar Plan voor de volledige lijst.</p>
+                  )}
+                </div>
+              )}
+            </div>
+          ) : (isWarMode ? warModeTasks : focusModeTasks).length === 0 ? (
             <p className="rounded-lg border border-dashed border-[var(--card-border)]/50 bg-[var(--bg-surface)]/30 px-3 py-4 text-center text-xs text-[var(--text-muted)]">
               Geen focus-missies beschikbaar.
             </p>
@@ -1025,14 +1219,22 @@ export function TaskList({
         )}
 
         {!isWarMode && (
-          <div className="mt-4 flex justify-end">
-          <button
-            type="button"
-            onClick={() => { setDetailsTask(null); setFocusTask(null); setAddFullOpen(true); }}
-            className="rounded-full border border-[var(--accent-focus)]/50 bg-[var(--accent-focus)]/10 px-4 py-2 text-sm font-medium text-[var(--accent-focus)] hover:bg-[var(--accent-focus)]/20"
-          >
-            + Taak toevoegen
-          </button>
+          <div className={`mt-5 flex ${missionsHeroLayout ? "justify-stretch" : "justify-end"}`}>
+            <button
+              type="button"
+              onClick={() => {
+                setDetailsTask(null);
+                setFocusTask(null);
+                setAddFullOpen(true);
+              }}
+              className={
+                missionsHeroLayout
+                  ? "w-full min-h-[48px] rounded-full bg-[var(--accent-focus)] px-6 py-3 text-sm font-semibold text-white shadow-[0_0_18px_rgba(var(--mode-rgb),0.35)] transition hover:opacity-95"
+                  : "rounded-full border border-[var(--accent-focus)]/50 bg-[var(--accent-focus)]/10 px-4 py-2 text-sm font-medium text-[var(--accent-focus)] hover:bg-[var(--accent-focus)]/20"
+              }
+            >
+              {missionsHeroLayout ? "+ Missie toevoegen" : "+ Taak toevoegen"}
+            </button>
           </div>
         )}
 

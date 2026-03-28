@@ -33,8 +33,8 @@ const R_MID = 204;
 /** Asymmetrische band: boven smaller, onder breder — iets dikker totaal */
 const R_INNER = R_MID - 12;
 const R_OUTER = R_MID + 24;
-/** Eindpunten iets omhoog langs de cirkel (schuin naar boven aan de zijkanten) */
-const SIDE_ALPHA = Math.PI / 14;
+/** Eindpunten langs de cirkel; iets smallere α = armen van de boog reiken hoger naar de mascotte */
+const SIDE_ALPHA = Math.PI / 18;
 /** Onderlangs: π+α → … → −α (45° | 90° | 45° + zij-opwaarts) */
 const ANGLES = [Math.PI + SIDE_ALPHA, (3 * Math.PI) / 4, Math.PI / 4, -SIDE_ALPHA] as const;
 
@@ -164,8 +164,8 @@ export function CommanderMascotPedestal({ stats, children }: Props) {
     };
   }, [loadPct]);
 
-  /** Foreshortening: cirkel → ellips; iets minder squash = onderkant band reikt lager, (CX,CY) boven blijft anker. */
-  const donutSquash = 0.6;
+  /** Foreshortening: cirkel → ellips; hogere squash = boog oogt meer uitgestrekt naar boven. */
+  const donutSquash = 0.66;
 
   const rXpBudget = bandLabelRadiusXp();
   const posXp = bandLabelPct(SEG_MID_FOCUS_RAD, rXpBudget, donutSquash);
@@ -182,15 +182,15 @@ export function CommanderMascotPedestal({ stats, children }: Props) {
           {children}
         </div>
 
-        {/* Ring op voetstuk: verticaal uitrekken via inner scaleY (origin top) — bovenrand/boog vast, onderkant lager */}
-        <div className="absolute bottom-0 left-1/2 z-[1] flex w-full max-w-none -translate-x-1/2 justify-center">
+        {/* Ring op voetstuk: vert-stretch + lichte translate omhoog = boog dichter onder mascotte / meer “opening” boven */}
+        <div className="absolute bottom-0 left-1/2 z-[1] flex w-full max-w-none -translate-x-1/2 -translate-y-[min(0.85rem,3.5vw)] justify-center sm:-translate-y-[min(1rem,4vw)]">
           <div className="commander-mascot-pedestal-donut-tilt">
             <div
               className="commander-mascot-pedestal-arc-wrap commander-mascot-pedestal-donut-ring relative shrink-0 overflow-visible"
               style={{
                 width: platformWidth,
                 aspectRatio: `${VB_W} / ${VB_H}`,
-                maxHeight: "min(19rem, 60vw)",
+                maxHeight: "min(20.5rem, 63vw)",
               }}
             >
               <div className="commander-mascot-pedestal-donut-vert-stretch relative h-full min-h-0 w-full">
@@ -237,7 +237,7 @@ export function CommanderMascotPedestal({ stats, children }: Props) {
                     />
                     <path
                       d={SEG_SECTOR_D[1]}
-                      fill="rgba(56, 189, 248, 0.12)"
+                      fill="rgba(167, 139, 250, 0.14)"
                       stroke="none"
                     />
                     <path
@@ -246,6 +246,7 @@ export function CommanderMascotPedestal({ stats, children }: Props) {
                       stroke="none"
                     />
 
+                    {/* Resource-halve boog: elk segment volledig gevuld; midden (Focus) andere kleur dan links/rechts */}
                     <path
                       className="commander-segment-fill"
                       d={SEG_PATHS[0]}
@@ -254,7 +255,7 @@ export function CommanderMascotPedestal({ stats, children }: Props) {
                       strokeWidth={W_FILL_SIDE}
                       strokeLinecap="round"
                       pathLength={pathLen}
-                      strokeDasharray={`${Math.max(0.2, (ePct / 100) * pathLen)} ${pathLen}`}
+                      strokeDasharray={`${pathLen} ${pathLen}`}
                       style={{
                         filter: "drop-shadow(0 0 8px rgba(34, 211, 238, 0.45))",
                       }}
@@ -263,13 +264,13 @@ export function CommanderMascotPedestal({ stats, children }: Props) {
                       className="commander-segment-fill"
                       d={SEG_PATHS[1]}
                       fill="none"
-                      stroke="rgba(56, 189, 248, 1)"
+                      stroke="rgba(167, 139, 250, 0.98)"
                       strokeWidth={W_FILL_CENTER}
                       strokeLinecap="round"
                       pathLength={pathLen}
-                      strokeDasharray={`${Math.max(0.2, (fPct / 100) * pathLen)} ${pathLen}`}
+                      strokeDasharray={`${pathLen} ${pathLen}`}
                       style={{
-                        filter: "drop-shadow(0 0 12px rgba(56, 189, 248, 0.55))",
+                        filter: "drop-shadow(0 0 12px rgba(167, 139, 250, 0.5))",
                       }}
                     />
                     <path
@@ -280,7 +281,7 @@ export function CommanderMascotPedestal({ stats, children }: Props) {
                       strokeWidth={W_FILL_SIDE}
                       strokeLinecap="round"
                       pathLength={pathLen}
-                      strokeDasharray={`${Math.max(0.2, (lPct / 100) * pathLen)} ${pathLen}`}
+                      strokeDasharray={`${pathLen} ${pathLen}`}
                     />
                   </g>
                 </g>

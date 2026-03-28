@@ -23,21 +23,18 @@ export function CommanderStatRing({ value, variant, size = 102 }: Props) {
   const isLow = variant === "load" ? pct >= 80 : pct <= 20;
   const lowHint = LOW_VALUE_HINT[variant];
   const label = variant === "energy" ? "Energy" : variant === "focus" ? "Focus" : "Load";
-  /** Vaste kleur per kolom: links + rechts vol (cyan / groen), midden afwijkend (oranje). Boog altijd 100%. */
-  const columnMode: EnergyRingMode =
-    variant === "energy" ? "default" : variant === "focus" ? "alert" : "green";
+  let mode: EnergyRingMode = "default";
+  if (variant === "load") {
+    if (pct >= 80) mode = "high-alert";
+    else if (pct >= 65) mode = "alert";
+  } else {
+    if (pct <= 20) mode = "high-alert";
+    else if (pct <= 35) mode = "alert";
+  }
 
   return (
     <div className="flex flex-col items-center gap-1">
-      <EnergyRing
-        progress={pct}
-        arcFillPct={100}
-        size={size}
-        label={label}
-        value={`${pct}%`}
-        mode={columnMode}
-        softGlow
-      />
+      <EnergyRing progress={pct} size={size} label={label} value={`${pct}%`} mode={mode} softGlow />
       <span className="text-[10px] tabular-nums text-[var(--text-muted)]" aria-hidden>
         {absolute}/10
       </span>

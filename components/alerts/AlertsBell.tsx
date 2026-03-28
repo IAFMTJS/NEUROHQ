@@ -94,6 +94,37 @@ export function AlertsBell() {
     setItems((prev) => prev.map((a) => ({ ...a, read_at: a.read_at ?? now })));
   };
 
+  const removeAlert = async (id: string) => {
+    try {
+      const res = await fetch("/api/alerts", {
+        method: "DELETE",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id }),
+      });
+      if (!res.ok) return;
+    } catch {
+      return;
+    }
+    setItems((prev) => prev.filter((a) => a.id !== id));
+  };
+
+  const removeAll = async () => {
+    if (!window.confirm("Alle meldingen verwijderen? Dit kun je niet ongedaan maken.")) return;
+    try {
+      const res = await fetch("/api/alerts", {
+        method: "DELETE",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ deleteAll: true }),
+      });
+      if (!res.ok) return;
+    } catch {
+      return;
+    }
+    setItems([]);
+  };
+
   return (
     <div
       ref={panelRef}
@@ -118,17 +149,28 @@ export function AlertsBell() {
       </button>
       {open ? (
         <div className="absolute right-0 mt-2 w-[min(calc(100vw-2rem),19rem)] rounded-xl border border-[var(--card-border)] bg-[var(--bg-elevated)]/97 p-2 shadow-xl backdrop-blur-md">
-          <div className="flex items-center justify-between gap-2 px-2 py-1">
+          <div className="flex flex-wrap items-center justify-between gap-x-2 gap-y-1 px-2 py-1">
             <p className="text-[10px] font-semibold uppercase tracking-wide text-[var(--text-muted)]">Meldingen</p>
-            {unread > 0 ? (
-              <button
-                type="button"
-                className="text-[10px] font-medium text-[var(--accent-focus)] hover:underline"
-                onClick={() => void markAllRead()}
-              >
-                Alles gelezen
-              </button>
-            ) : null}
+            <div className="flex flex-wrap items-center justify-end gap-x-2 gap-y-0.5">
+              {unread > 0 ? (
+                <button
+                  type="button"
+                  className="text-[10px] font-medium text-[var(--accent-focus)] hover:underline"
+                  onClick={() => void markAllRead()}
+                >
+                  Alles gelezen
+                </button>
+              ) : null}
+              {items.length > 0 ? (
+                <button
+                  type="button"
+                  className="text-[10px] font-medium text-[var(--text-muted)] hover:text-[var(--text-secondary)] hover:underline"
+                  onClick={() => void removeAll()}
+                >
+                  Alles wissen
+                </button>
+              ) : null}
+            </div>
           </div>
           {fetchError ? (
             <div className="px-2 py-3">
@@ -154,11 +196,14 @@ export function AlertsBell() {
           ) : (
             <ul className="max-h-[min(60vh,20rem)] overflow-y-auto">
               {items.map((a) => (
-                <li key={a.id} className="border-b border-[var(--card-border)]/60 last:border-0">
+                <li
+                  key={a.id}
+                  className="flex border-b border-[var(--card-border)]/60 last:border-0"
+                >
                   {a.link_path ? (
                     <Link
                       href={a.link_path.startsWith("/") ? a.link_path : `/${a.link_path}`}
-                      className="block px-2 py-2 text-left hover:bg-[var(--bg-hover)]/40"
+                      className="min-w-0 flex-1 px-2 py-2 text-left hover:bg-[var(--bg-hover)]/40"
                       onClick={() => void markRead(a.id)}
                     >
                       <p className={`text-xs font-semibold ${a.read_at ? "text-[var(--text-muted)]" : "text-[var(--text-primary)]"}`}>
@@ -169,7 +214,7 @@ export function AlertsBell() {
                   ) : (
                     <button
                       type="button"
-                      className="w-full px-2 py-2 text-left hover:bg-[var(--bg-hover)]/40"
+                      className="min-w-0 flex-1 px-2 py-2 text-left hover:bg-[var(--bg-hover)]/40"
                       onClick={() => void markRead(a.id)}
                     >
                       <p className={`text-xs font-semibold ${a.read_at ? "text-[var(--text-muted)]" : "text-[var(--text-primary)]"}`}>
@@ -178,6 +223,19 @@ export function AlertsBell() {
                       {a.body ? <p className="mt-0.5 line-clamp-2 text-[11px] text-[var(--text-secondary)]">{a.body}</p> : null}
                     </button>
                   )}
+                  <button
+                    type="button"
+                    className="shrink-0 self-start px-2 py-2 text-[13px] leading-none text-[var(--text-muted)] hover:bg-[var(--bg-hover)]/50 hover:text-[var(--text-primary)]"
+                    aria-label="Melding verwijderen"
+                    title="Verwijderen"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      void removeAlert(a.id);
+                    }}
+                  >
+                    ×
+                  </button>
                 </li>
               ))}
             </ul>
