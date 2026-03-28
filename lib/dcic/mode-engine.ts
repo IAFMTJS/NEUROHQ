@@ -250,24 +250,30 @@ export function autoModeCheck(gameState: GameState): void {
 
   const avg = gameState.mode.brainStatusAveragePercent;
 
-  /** Geen brain check-in vandaag (energy/focus ontbreken in daily_state): recovery tot check-in; daarna is focus de norm tussen de war/recovery-drempels. */
-  if (avg == null) {
+  /** Met geldige brain-composite: harde drempels voor war/recovery. */
+  if (avg != null) {
+    if (avg < 25 && gameState.mode.current !== "recovery") {
+      switchMode(gameState, "recovery", { forced: true });
+      return;
+    }
+    if (avg > 75 && gameState.mode.current !== "war") {
+      switchMode(gameState, "war", { forced: true });
+      return;
+    }
+  }
+
+  const { energy, focus, load } = gameState.stats;
+
+  /**
+   * Zonder brain-composite (geen check-in / ontbrekende velden): niet standaard Recovery forceren.
+   * Alleen bij duidelijke legacy-signalen (resources in gameState.stats, 0–100 schaal).
+   */
+  if (avg == null && (energy < 25 || load > 80)) {
     if (gameState.mode.current !== "recovery") {
       switchMode(gameState, "recovery", { forced: true });
     }
     return;
   }
-
-  if (avg < 25 && gameState.mode.current !== "recovery") {
-    switchMode(gameState, "recovery", { forced: true });
-    return;
-  }
-  if (avg > 75 && gameState.mode.current !== "war") {
-    switchMode(gameState, "war", { forced: true });
-    return;
-  }
-
-  const { energy, focus } = gameState.stats;
 
   if (focus > 70 && energy > 60) {
     if (!gameState.mode.suggested) {

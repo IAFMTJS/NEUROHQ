@@ -989,6 +989,7 @@ export type Database = {
           is_rest_day: boolean | null
           load: number | null
           mental_battery: number | null
+          mood_label: string | null
           mood_note: string | null
           physical_health: number | null
           sensory_load: number | null
@@ -1015,6 +1016,7 @@ export type Database = {
           is_rest_day?: boolean | null
           load?: number | null
           mental_battery?: number | null
+          mood_label?: string | null
           mood_note?: string | null
           physical_health?: number | null
           sensory_load?: number | null
@@ -1041,6 +1043,7 @@ export type Database = {
           is_rest_day?: boolean | null
           load?: number | null
           mental_battery?: number | null
+          mood_label?: string | null
           mood_note?: string | null
           physical_health?: number | null
           sensory_load?: number | null
@@ -3084,6 +3087,7 @@ export type Database = {
           hq_headline: string | null
           last_release_push_version: string | null
           light_ui: boolean
+          mood_intervention_json: Json
           push_copy_history: Json
           push_evening_enabled: boolean
           push_morning_enabled: boolean
@@ -3110,6 +3114,7 @@ export type Database = {
           hq_headline?: string | null
           last_release_push_version?: string | null
           light_ui?: boolean
+          mood_intervention_json?: Json
           push_copy_history?: Json
           push_evening_enabled?: boolean
           push_morning_enabled?: boolean
@@ -3136,6 +3141,7 @@ export type Database = {
           hq_headline?: string | null
           last_release_push_version?: string | null
           light_ui?: boolean
+          mood_intervention_json?: Json
           push_copy_history?: Json
           push_evening_enabled?: boolean
           push_morning_enabled?: boolean

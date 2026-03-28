@@ -3739,3 +3739,21 @@ header h1 { margin: 0; }
 .modal-card-footer {
   border-top: 1px solid var(--modal-border);
 }
+
+/* Mood intervention toast — subtle violet pulse (no heavy motion) */
+@keyframes mood-toast-pulse {
+  0%,
+  100% {
+    box-shadow:
+      0 0 40px rgba(139, 92, 246, 0.18),
+      0 12px 40px rgba(0, 0, 0, 0.5);
+  }
+  50% {
+    box-shadow:
+      0 0 52px rgba(139, 92, 246, 0.26),
+      0 12px 40px rgba(0, 0, 0, 0.5);
+  }
+}
+.mood-toast-shell {
+  animation: mood-toast-pulse 5s ease-in-out infinite;
+}

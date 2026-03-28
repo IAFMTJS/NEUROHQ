@@ -185,8 +185,8 @@ export function CommanderMascotPedestal({ stats, children }: Props) {
           {children}
         </div>
 
-        {/* Ring omhoog tot ~heup / onder brain: negatieve translate + hogere maxHeight */}
-        <div className="absolute bottom-0 left-1/2 z-[1] flex w-full max-w-none -translate-x-1/2 -translate-y-[min(38%,9.75rem)] justify-center sm:-translate-y-[min(42%,11rem)] lg:-translate-y-[min(44%,11.5rem)]">
+        {/* Ring op het voetstuk (bottom-0); geen translate-Y — uitrekken via maxHeight/breedte + CSS-tilt, niet omhoog trekken */}
+        <div className="absolute bottom-0 left-1/2 z-[1] flex w-full max-w-none -translate-x-1/2 justify-center">
           <div className="commander-mascot-pedestal-donut-tilt">
             <div
               className="commander-mascot-pedestal-arc-wrap commander-mascot-pedestal-donut-ring relative shrink-0"

@@ -26,6 +26,7 @@ import { usePeriodicBootstrapRefresh } from "@/lib/daily-bootstrap";
 import { useDCICGameState } from "@/lib/dcic/game-state-client";
 import { AlertsBell } from "@/components/alerts/AlertsBell";
 import { PERIODIC_SNAPSHOT_REFRESH_MINUTES } from "@/lib/client-refresh";
+import { MoodInterventionHost } from "@/components/mood/MoodInterventionHost";
 
 const LAST_ACTIVE_STORAGE_KEY = "neurohq-last-active-date";
 
@@ -102,6 +103,7 @@ export function DashboardLayoutClient({
             <HQStorePersistOnHide />
             <OfflineQueueSync />
             <PendingXpToast />
+            <MoodInterventionHost />
             <PushAutoPrompt />
             <PushClickTracker />
             <div

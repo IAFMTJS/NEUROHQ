@@ -8,6 +8,8 @@ import { getUserPreferencesOrDefaults } from "@/app/actions/preferences";
 import { getBehaviorProfile } from "@/app/actions/behavior-profile";
 import { getStudyPlan, getAccountabilitySettings } from "@/app/actions/behavior";
 import { getXPFullContext } from "@/app/actions/xp-context";
+import { getDailyState } from "@/app/actions/daily-state";
+import { todayDateString } from "@/lib/utils/timezone";
 import { ProfileEngineIdentityCard } from "@/components/profile/ProfileEngineIdentityCard";
 import { ProfileHomeCompact } from "@/components/profile/ProfileHomeCompact";
 import {
@@ -113,8 +115,13 @@ export default async function ProfilePage({ searchParams }: { searchParams: Prom
   const mainView = parseProfileMainView(raw.view);
 
   if (mainView === "home") {
-    const [prefs, xpCtx] = await Promise.all([getUserPreferencesOrDefaults(), getXPFullContext()]);
+    const [prefs, xpCtx, todayDaily] = await Promise.all([
+      getUserPreferencesOrDefaults(),
+      getXPFullContext(),
+      getDailyState(todayDateString()),
+    ]);
     const { identity, insightState } = xpCtx;
+    const moodLabel = (todayDaily as { mood_label?: string | null } | null)?.mood_label ?? null;
     const simplified = prefs.simplified_content === true;
 
     if (simplified) {
@@ -131,7 +138,7 @@ export default async function ProfilePage({ searchParams }: { searchParams: Prom
           >
             <div className="space-y-4">
               <MainTabNav active="home" />
-              <ProfileHomeCompact identity={identity} insightState={insightState} />
+              <ProfileHomeCompact identity={identity} insightState={insightState} initialMoodLabel={moodLabel} />
             </div>
           </SimplifiedPageShell>
         </div>
@@ -147,7 +154,7 @@ export default async function ProfilePage({ searchParams }: { searchParams: Prom
             <HeroMascotImage page="profile" className="mascot-img" heroLarge />
           </div>
         </section>
-        <ProfileHomeCompact identity={identity} insightState={insightState} />
+        <ProfileHomeCompact identity={identity} insightState={insightState} initialMoodLabel={moodLabel} />
       </div>
     );
   }

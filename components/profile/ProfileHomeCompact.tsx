@@ -1,14 +1,19 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import type { XPFullContext } from "@/app/actions/xp-context";
 import { xpProgressInLevel, xpRangeForNextLevel } from "@/lib/xp";
 import { reportInsightsHref } from "@/lib/profile-routes";
 import { EnergyRing, type EnergyRingMode } from "@/components/hud-test/EnergyRing";
+import { MoodManualPanel } from "@/components/mood/MoodManualPanel";
+import { MOOD_LABEL_META, type MoodLabel } from "@/lib/mood-intervention-config";
 
 type Props = {
   identity: XPFullContext["identity"];
   insightState: XPFullContext["insightState"];
+  /** Dag-mood uit daily_state (server). */
+  initialMoodLabel?: string | null;
 };
 
 function bandHint(band: "low" | "medium" | "high"): string {
@@ -64,7 +69,11 @@ function OrbitTile({
   return body;
 }
 
-export function ProfileHomeCompact({ identity, insightState }: Props) {
+export function ProfileHomeCompact({ identity, insightState, initialMoodLabel }: Props) {
+  const [moodOpen, setMoodOpen] = useState(false);
+  const [moodLabel, setMoodLabel] = useState<MoodLabel | null>(
+    (initialMoodLabel as MoodLabel | null) ?? null
+  );
   const barPct = Math.round(xpProgressInLevel(identity.total_xp) * 100);
   const { current: curXp, needed: spanXp } = xpRangeForNextLevel(identity.total_xp);
   const coach = insightState?.coachRecommendations[0]?.body;
@@ -161,6 +170,38 @@ export function ProfileHomeCompact({ identity, insightState }: Props) {
           <OrbitTile title="XP %">{barPct}%</OrbitTile>
         </div>
       </div>
+
+      <div
+        className={`relative z-[1] mt-5 ${tileShell} border-[rgba(var(--mode-rgb),0.1)] bg-[rgba(var(--mode-rgb-deep),0.07)] px-4 py-3.5 sm:px-5`}
+      >
+        <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-violet-300/90">Mood</p>
+        <div className="mt-2 flex flex-wrap items-center gap-3">
+          {moodLabel && MOOD_LABEL_META[moodLabel] ? (
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-violet-500/35 bg-violet-950/35 px-2.5 py-1 text-[11px] font-semibold text-violet-100/95">
+              <span aria-hidden>{MOOD_LABEL_META[moodLabel].emoji}</span>
+              {MOOD_LABEL_META[moodLabel].label}
+            </span>
+          ) : (
+            <span className="text-xs text-[var(--text-muted)]">Nog geen mood vandaag</span>
+          )}
+          <button
+            type="button"
+            onClick={() => setMoodOpen(true)}
+            className="rounded-lg border border-violet-500/40 bg-violet-950/30 px-3 py-1.5 text-[11px] font-semibold text-violet-100/95 hover:border-violet-400/50"
+          >
+            Update mood
+          </button>
+        </div>
+        <p className="mt-2 text-[10px] text-[var(--text-muted)]">
+          Zelfde flow als Brain Status op het dashboard — energie/focus daar, mood hier.
+        </p>
+      </div>
+
+      <MoodManualPanel
+        open={moodOpen}
+        onClose={() => setMoodOpen(false)}
+        onMoodSaved={(label) => setMoodLabel(label)}
+      />
 
       <div
         className={`relative z-[1] mt-5 ${tileShell} border-[rgba(var(--mode-rgb),0.1)] bg-[rgba(var(--mode-rgb-deep),0.07)] px-4 py-3.5 sm:px-5`}

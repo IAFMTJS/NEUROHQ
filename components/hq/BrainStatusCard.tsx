@@ -9,6 +9,9 @@ import { BrainStatusModal } from "./BrainStatusModal";
 import { useDCICGameState } from "@/lib/dcic/game-state-client";
 import { EnergyRing, type EnergyRingMode } from "@/components/hud-test/EnergyRing";
 import { scale1To10ToPct } from "@/lib/dashboard-utils";
+import type { MoodLabel } from "@/lib/mood-intervention-config";
+import { MOOD_LABEL_META } from "@/lib/mood-intervention-config";
+import { MoodManualPanel } from "@/components/mood/MoodManualPanel";
 
 function getRingMode(value: number): EnergyRingMode {
   if (value <= 20) return "high-alert";
@@ -40,9 +43,18 @@ type Props = {
   };
   brainMode?: BrainMode;
   suggestedTaskCount?: number;
+  /** Dag-mood (los van energie/focus sliders). */
+  moodLabel?: MoodLabel | null;
 };
 
-export const BrainStatusCard = memo(function BrainStatusCard({ date, initial, yesterday, brainMode, suggestedTaskCount }: Props) {
+export const BrainStatusCard = memo(function BrainStatusCard({
+  date,
+  initial,
+  yesterday,
+  brainMode,
+  suggestedTaskCount,
+  moodLabel: moodLabelProp,
+}: Props) {
   const { gameState } = useDCICGameState();
   const dcicMode = gameState?.mode?.current ?? "focus";
   const dcicModeVars = useMemo<CSSProperties>(() => {
@@ -55,6 +67,8 @@ export const BrainStatusCard = memo(function BrainStatusCard({ date, initial, ye
     return { "--mode-rgb": "0, 212, 255", "--mode-rgb-deep": "0, 136, 255" } as CSSProperties;
   }, [dcicMode]);
   const [modalOpen, setModalOpen] = useState(false);
+  const [moodOpen, setMoodOpen] = useState(false);
+  const [moodLabel, setMoodLabel] = useState<MoodLabel | null>(moodLabelProp ?? null);
   const [currentInitial, setCurrentInitial] = useState(initial);
   const todayDailyState = useHQStore((s) => s.todayDailyState);
 
@@ -112,6 +126,16 @@ export const BrainStatusCard = memo(function BrainStatusCard({ date, initial, ye
   ]);
 
   useEffect(() => {
+    setMoodLabel(moodLabelProp ?? null);
+  }, [moodLabelProp]);
+
+  useEffect(() => {
+    const openMood = () => setMoodOpen(true);
+    window.addEventListener("neurohq-open-mood-manual", openMood as EventListener);
+    return () => window.removeEventListener("neurohq-open-mood-manual", openMood as EventListener);
+  }, []);
+
+  useEffect(() => {
     const openIfHash = () => {
       if (typeof window !== "undefined" && window.location.hash === "#brain-status-modal") {
         setModalOpen(true);
@@ -150,7 +174,20 @@ export const BrainStatusCard = memo(function BrainStatusCard({ date, initial, ye
         aria-label="Brain Status"
         data-tutorial="brain-status-card"
       >
-        <h3>Brain Status</h3>
+        <div className="flex flex-wrap items-start justify-between gap-2">
+          <h3 className="m-0">Brain Status</h3>
+          {moodLabel && MOOD_LABEL_META[moodLabel] ? (
+            <span
+              className="inline-flex items-center gap-1.5 rounded-full border border-violet-500/35 bg-violet-950/40 px-2.5 py-1 text-[11px] font-semibold text-violet-100/95"
+              data-mood-theme="violet"
+            >
+              <span aria-hidden>{MOOD_LABEL_META[moodLabel].emoji}</span>
+              {MOOD_LABEL_META[moodLabel].label}
+            </span>
+          ) : (
+            <span className="text-[11px] font-medium text-[var(--text-muted)]">Mood: nog niet gezet</span>
+          )}
+        </div>
         <div className="progress" style={{ marginTop: "12px" }}>
           <div
             className="progress-fill"
@@ -237,7 +274,7 @@ export const BrainStatusCard = memo(function BrainStatusCard({ date, initial, ye
           </div>
         </div>
 
-        <div className="mt-6 border-t border-[var(--card-border)] pt-6">
+        <div className="mt-6 space-y-3 border-t border-[var(--card-border)] pt-6">
           <button
             type="button"
             onClick={() => setModalOpen(true)}
@@ -245,8 +282,22 @@ export const BrainStatusCard = memo(function BrainStatusCard({ date, initial, ye
           >
             Update check-in
           </button>
+          <button
+            type="button"
+            onClick={() => setMoodOpen(true)}
+            className="btn-hq-secondary w-full rounded-[var(--hq-btn-radius)] border-violet-500/30 py-2.5 px-4 text-sm text-violet-100/95 hover:border-violet-400/50"
+          >
+            Update mood
+          </button>
         </div>
       </section>
+
+      <MoodManualPanel
+        open={moodOpen}
+        onClose={() => setMoodOpen(false)}
+        brainStatusHint
+        onMoodSaved={(label) => setMoodLabel(label)}
+      />
 
       <BrainStatusModal
         open={modalOpen}

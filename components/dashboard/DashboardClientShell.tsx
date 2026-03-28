@@ -40,6 +40,7 @@ import { useDCICGameState } from "@/lib/dcic/game-state-client";
 import { deriveBrainUI } from "@/lib/brain-ui";
 import { DCICStatusCard } from "@/components/dcic/DCICStatusCard";
 import { neuroToast } from "@/lib/ui/neuro-toast";
+import type { MoodLabel } from "@/lib/mood-intervention-config";
 
 const DCIC_SUGGESTION_TOAST_KEY = "neurohq-dcic-suggestion-education-toast-v1";
 
@@ -555,6 +556,7 @@ export function DashboardClientShell() {
               yesterday={{ energy: yesterdayState?.energy ?? null, focus: yesterdayState?.focus ?? null, sensory_load: yesterdayState?.sensory_load ?? null, sleep_hours: yesterdayState?.sleep_hours ?? null, social_load: yesterdayState?.social_load ?? null, physical_health: (yesterdayState as { physical_health?: number | null })?.physical_health ?? null, mental_battery: (yesterdayState as { mental_battery?: number | null })?.mental_battery ?? null }}
               brainMode={effectiveEnergyBudget.brainMode as BrainMode}
               suggestedTaskCount={(effectiveEnergyBudget.suggestedTaskCount as number) ?? 3}
+              moodLabel={((state as { mood_label?: string | null } | null)?.mood_label as MoodLabel | null) ?? null}
             />
             {dcicMode === "overdrive" && gameState?.mode && (
               <div className="px-2">
@@ -749,6 +751,7 @@ export function DashboardClientShell() {
                               yesterday={{ energy: secYesterdayState?.energy ?? null, focus: secYesterdayState?.focus ?? null, sensory_load: secYesterdayState?.sensory_load ?? null, sleep_hours: secYesterdayState?.sleep_hours ?? null, social_load: secYesterdayState?.social_load ?? null, physical_health: (secYesterdayState as { physical_health?: number | null })?.physical_health ?? null, mental_battery: (secYesterdayState as { mental_battery?: number | null })?.mental_battery ?? null }}
                               brainMode={secEnergyBudget.brainMode as BrainMode}
                               suggestedTaskCount={(secEnergyBudget.suggestedTaskCount as number) ?? 3}
+                              moodLabel={((secState as { mood_label?: string | null } | null)?.mood_label as MoodLabel | null) ?? null}
                             />
                             <DangerousModulesCard embedded />
                             <div data-tutorial="dashboard-energy-bar">
