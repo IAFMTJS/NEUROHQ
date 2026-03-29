@@ -220,6 +220,8 @@ async function runStep(
                 settings: data.budget.settings,
                 currentMonthExpenses: data.budget.currentMonthExpenses ?? null,
                 currentMonthIncome: data.budget.currentMonthIncome ?? null,
+                currentWeekExpenses: data.budget.currentWeekExpenses ?? null,
+                currentWeekIncome: data.budget.currentWeekIncome ?? null,
                 budgetRemainingCents: data.budget.budgetRemainingCents ?? null,
                 currency: data.budget.currency,
                 isWeekly: data.budget.isWeekly,
@@ -236,6 +238,8 @@ async function runStep(
                   count: 0,
                   totalCents: 0,
                 },
+                financeState: data.budget.financeState ?? null,
+                financialInsights: data.budget.financialInsights ?? null,
               }
             : snapshot.budget;
         const learning =
@@ -351,6 +355,7 @@ async function runStep(
           "/tasks",
           "/xp",
           "/report",
+          "/analytics",
           "/strategy",
           "/learning",
           "/learning/analytics",

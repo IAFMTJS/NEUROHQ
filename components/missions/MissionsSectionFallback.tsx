@@ -17,7 +17,7 @@ type SnapshotData = {
 
 function SkeletonLayout() {
   return (
-    <SciFiPanel flatFrame variant="glass" className={hudStyles.focusSecondary} bodyClassName="p-4 md:p-5">
+    <SciFiPanel variant="flat-glass" className={hudStyles.focusSecondary} bodyClassName="p-4 md:p-5">
       <CornerNode corner="top-left" />
       <CornerNode corner="top-right" />
       <div className="min-h-[44px]" aria-hidden />
@@ -63,7 +63,7 @@ function CachedLayout({ snapshot, dateStr }: { snapshot: SnapshotData; dateStr: 
   const incomplete = (snapshot.tasks ?? []).filter((t) => !t.completed);
   const completed = (snapshot.completedToday ?? []).slice(0, 8);
   return (
-    <SciFiPanel flatFrame variant="glass" className={hudStyles.focusSecondary} bodyClassName="p-4 md:p-5">
+    <SciFiPanel variant="flat-glass" className={hudStyles.focusSecondary} bodyClassName="p-4 md:p-5">
       <CornerNode corner="top-left" />
       <CornerNode corner="top-right" />
       <div className="min-h-[44px]" aria-hidden />

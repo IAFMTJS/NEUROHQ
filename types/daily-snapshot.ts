@@ -2,9 +2,10 @@
  * Bump when the persisted snapshot contract changes (new required slices, incompatible shape).
  * v2: DCIC mode is day-locked server-side (`daily_state.dcic_mode`); `dcicGameState` in the snapshot
  * must match bootstrap `getGameState` for that date. Stale v1 snapshots are discarded via `isCompatibleSnapshot`.
- * Prefetch routes / mascot list in `lib/daily-initialize.ts` track current IA (profile, insights) without a version bump.
+ * v3: Budget slice matches `/api/bootstrap/today` (weekly month income/expense, `financeState`, `financialInsights`);
+ * invalidates older caches so first paint uses the full current bootstrap shape.
  */
-export const LATEST_SNAPSHOT_VERSION = 2 as const;
+export const LATEST_SNAPSHOT_VERSION = 3 as const;
 
 export type DailySnapshotVersion = typeof LATEST_SNAPSHOT_VERSION;
 
@@ -80,6 +81,9 @@ export interface BudgetSnapshot {
   settings: Record<string, unknown>;
   currentMonthExpenses: number | null;
   currentMonthIncome: number | null;
+  /** Present when `budget_period` is weekly; mirrors bootstrap `currentWeekExpenses`. */
+  currentWeekExpenses: number | null;
+  currentWeekIncome: number | null;
   budgetRemainingCents: number | null;
   currency: string;
   isWeekly: boolean;
@@ -90,6 +94,9 @@ export interface BudgetSnapshot {
   disciplineCompletedToday: boolean;
   daysUnderBudgetThisWeek: number | null;
   unplannedSummary: { count: number; totalCents: number };
+  /** Same object as bootstrap `budget.financeState` (period, discipline, etc.). */
+  financeState: unknown | null;
+  financialInsights: unknown | null;
 }
 
 /**

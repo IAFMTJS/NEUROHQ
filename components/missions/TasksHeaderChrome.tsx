@@ -63,7 +63,7 @@ export function TasksHeaderChrome({ dateStr, simplified = false, matchCommandDec
   }
 
   return (
-    <SciFiPanel flatFrame variant="glass" className={hudStyles.focusSecondary} bodyClassName="p-4 md:p-5">
+    <SciFiPanel variant="flat-glass" className={hudStyles.focusSecondary} bodyClassName="p-4 md:p-5">
       <CornerNode corner="top-left" />
       <CornerNode corner="top-right" />
       {headerInner}

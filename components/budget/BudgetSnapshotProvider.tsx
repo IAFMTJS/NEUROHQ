@@ -29,6 +29,8 @@ export function BudgetSnapshotProvider({ children }: Props) {
       budgetRemainingCents: budget.budgetRemainingCents,
       date: budget.today,
       currentMonthIncome: budget.currentMonthIncome,
+      currentWeekExpenses: budget.currentWeekExpenses,
+      currentWeekIncome: budget.currentWeekIncome,
       currency: budget.currency,
       isWeekly: budget.isWeekly,
       periodLabel: budget.periodLabel,
@@ -37,6 +39,8 @@ export function BudgetSnapshotProvider({ children }: Props) {
       disciplineCompletedToday: budget.disciplineCompletedToday,
       daysUnderBudgetThisWeek: budget.daysUnderBudgetThisWeek,
       unplannedSummary: budget.unplannedSummary,
+      financeState: budget.financeState,
+      financialInsights: budget.financialInsights,
     });
     setBudgetStatus("ready");
     setBudgetError(null);

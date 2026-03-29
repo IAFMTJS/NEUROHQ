@@ -7,10 +7,11 @@ import { useDCICGameState } from "@/lib/dcic/game-state-client";
 export type SciFiPanelProps = {
   className?: string;
   bodyClassName?: string;
-  variant?: "command" | "glass" | "tactical" | "minimal";
+  /** Standard shell theme: squared frame + subtle glass (use for page / bridge panels). */
+  variant?: "command" | "glass" | "tactical" | "minimal" | "flat-glass";
   /** When false, hides the horizontal top glow line inside the panel body (calmer HUD). Default true. */
   topAccent?: boolean;
-  /** Nearly square corners — hub pages with flat glass (dashboard HQ keeps rounded frames). */
+  /** Nearly square corners — optional; implied when variant is `flat-glass`. */
   flatFrame?: boolean;
   children: React.ReactNode;
 };
@@ -40,8 +41,10 @@ export function SciFiPanel({
           ? ({ "--mode-rgb": "168, 85, 247", "--mode-rgb-deep": "91, 33, 182" } as React.CSSProperties)
           : ({ "--mode-rgb": "0, 212, 255", "--mode-rgb-deep": "0, 136, 255" } as React.CSSProperties);
 
-  const frameClass = `${styles.panelFrame} ${flatFrame ? styles.panelFrameFlat : ""} ${className}`.trim();
-  const bodyClass = `${styles.panelBody} ${flatFrame ? styles.panelBodyFlat : ""} ${!topAccent ? styles.panelBodyNoTopAccent : ""} ${bodyClassName}`.trim();
+  const isFlatGlass = variant === "flat-glass";
+  const useFlatFrame = flatFrame || isFlatGlass;
+  const frameClass = `${styles.panelFrame} ${useFlatFrame ? styles.panelFrameFlat : ""} ${className}`.trim();
+  const bodyClass = `${styles.panelBody} ${useFlatFrame ? styles.panelBodyFlat : ""} ${isFlatGlass ? styles.panelBodyFlatGlass : ""} ${!topAccent ? styles.panelBodyNoTopAccent : ""} ${bodyClassName}`.trim();
 
   return (
     <div className={styles.panelShell} style={modeVars}>

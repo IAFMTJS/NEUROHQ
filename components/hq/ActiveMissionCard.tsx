@@ -27,10 +27,9 @@ export function ActiveMissionCard({
 
   return (
     <SciFiPanel
-      flatFrame
       className="hq-card-enter relative w-full mx-auto overflow-visible dashboard-active-mission"
       bodyClassName="relative z-10 p-6 space-y-4"
-      variant="command"
+      variant="flat-glass"
     >
         <CornerNode corner="top-left" />
         <CornerNode corner="top-right" />

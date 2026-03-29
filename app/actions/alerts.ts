@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { getUserPreferencesOrDefaults } from "@/app/actions/preferences";
+import { isNeurohqInboxAlertsPaused } from "@/lib/alerts-delivery-paused";
 import { sendPushToUser } from "@/lib/push";
 import type { DashboardCritical } from "@/types/dashboard-data.types";
 import type { UnifiedDecision } from "@/lib/unified-decision-engine";
@@ -42,6 +43,10 @@ export async function emitUserAlert(input: {
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) throw new Error("Not authenticated");
+
+  if (isNeurohqInboxAlertsPaused()) {
+    return { id: "00000000-0000-0000-0000-000000000000" };
+  }
 
   const severity = input.severity ?? "info";
   const linkPath = input.linkPath?.trim() || null;
@@ -309,6 +314,8 @@ export async function syncInboxAlertsFromDashboardCritical(critical: DashboardCr
   if (!user) return;
 
   await dismissObsoleteDashboardInboxAlerts(supabase, user.id, critical);
+
+  if (isNeurohqInboxAlertsPaused()) return;
 
   const candidates: {
     pushTag: string;

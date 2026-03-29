@@ -494,9 +494,22 @@
   display: none !important;
 }
 
-/* Squared HUD frame for hub pages — mechanical, mode-accented */
+/* Light UI: flat glass shell — flatter rim than generic panelFrame */
+:global([data-light-ui="true"]) .panelFrame[data-variant="flat-glass"] {
+  background: linear-gradient(
+    165deg,
+    rgba(var(--mode-rgb-deep), 0.44) 0%,
+    rgba(var(--mode-rgb), 0.11) 100%
+  ) !important;
+  border-color: rgba(var(--mode-rgb), 0.2) !important;
+  box-shadow:
+    0 0 0 1px rgba(var(--mode-rgb), 0.1),
+    0 6px 24px rgba(0, 0, 0, 0.4) !important;
+}
+
+/* Squared HUD frame for hub pages — mechanical; radii from globals (--panel-radius-flat) */
 .panelFrameFlat {
-  border-radius: 12px !important;
+  border-radius: var(--panel-radius-flat, 16px) !important;
   padding: 2px !important;
   box-shadow:
     0 0 0 1px rgba(var(--mode-rgb), 0.14),
@@ -505,7 +518,7 @@
 }
 
 .panelBodyFlat {
-  border-radius: 10px !important;
+  border-radius: var(--panel-inner-radius-flat, 14px) !important;
 }
 
 .panelFrame {
@@ -559,6 +572,21 @@
   box-shadow: 0 0 12px rgba(var(--mode-rgb), 0.05);
 }
 
+/** Page / bridge shells: flat glass — flat rim + soft glass (not heavy command chrome). */
+.panelFrame[data-variant="flat-glass"] {
+  background: linear-gradient(
+    165deg,
+    rgba(var(--mode-rgb-deep), 0.42) 0%,
+    rgba(var(--mode-rgb), 0.1) 52%,
+    rgba(var(--mode-rgb-deep), 0.3) 100%
+  );
+  border-color: rgba(var(--mode-rgb), 0.14) !important;
+  box-shadow:
+    0 0 0 1px rgba(0, 0, 0, 0.28),
+    0 0 18px rgba(var(--mode-rgb), 0.06),
+    0 12px 32px rgba(0, 0, 0, 0.44) !important;
+}
+
 .panelBody {
   position: relative;
   border-radius: calc(var(--panel-radius) - 4px);
@@ -575,6 +603,22 @@
     inset 0 1px 0 rgba(255, 255, 255, 0.07),
     inset 0 -10px 28px rgba(0, 0, 0, 0.42),
     inset 0 10px 22px rgba(0, 0, 0, 0.28);
+}
+
+/** Flat-glass shell inner: flatter frosted surface (overrides .panelBody defaults). */
+.panelBody.panelBodyFlatGlass {
+  backdrop-filter: blur(20px) saturate(1.08);
+  -webkit-backdrop-filter: blur(20px) saturate(1.08);
+  background: linear-gradient(
+    188deg,
+    rgba(10, 18, 32, 0.92) 0%,
+    rgba(6, 12, 22, 0.88) 48%,
+    rgba(var(--mode-rgb-deep), 0.11) 100%
+  );
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.06),
+    inset 0 -8px 22px rgba(0, 0, 0, 0.32),
+    inset 0 8px 16px rgba(0, 0, 0, 0.22);
 }
 
 .panelBody::before {

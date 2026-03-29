@@ -22,14 +22,24 @@ export function BudgetSnapshotFallback() {
     );
   }
 
-  const { budgetRemainingCents, currentMonthExpenses, currentMonthIncome, currency, periodLabel, unplannedSummary } = budget;
+  const {
+    budgetRemainingCents,
+    currentMonthExpenses,
+    currentMonthIncome,
+    currentWeekExpenses,
+    currentWeekIncome,
+    currency,
+    periodLabel,
+    unplannedSummary,
+    isWeekly,
+  } = budget;
 
   const remainingLabel =
     budgetRemainingCents != null ? formatCents(budgetRemainingCents, currency) : "—";
-  const expensesLabel =
-    currentMonthExpenses != null ? formatCents(currentMonthExpenses, currency) : "—";
-  const incomeLabel =
-    currentMonthIncome != null ? formatCents(currentMonthIncome, currency) : "—";
+  const expensesCents = isWeekly ? (currentWeekExpenses ?? currentMonthExpenses) : currentMonthExpenses;
+  const incomeCents = isWeekly ? (currentWeekIncome ?? currentMonthIncome) : currentMonthIncome;
+  const expensesLabel = expensesCents != null ? formatCents(expensesCents, currency) : "—";
+  const incomeLabel = incomeCents != null ? formatCents(incomeCents, currency) : "—";
 
   return (
     <div className="space-y-4">

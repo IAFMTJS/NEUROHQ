@@ -53,8 +53,7 @@ export default async function XPPage() {
       <div className="container page page-wide dashboard-cinematic relative z-10 pb-10">
         <div className="space-y-4">
           <SciFiPanel
-            flatFrame
-            variant="glass"
+            variant="flat-glass"
             className={hudStyles.focusSecondary}
             bodyClassName="p-4 md:p-5"
           >
@@ -63,8 +62,7 @@ export default async function XPPage() {
             <XPShell />
           </SciFiPanel>
           <SciFiPanel
-            flatFrame
-            variant="glass"
+            variant="flat-glass"
             className={hudStyles.focusSecondary}
             bodyClassName="p-4 md:p-6"
           >

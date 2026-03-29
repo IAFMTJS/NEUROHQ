@@ -52,10 +52,13 @@ function mapBootstrapBudgetToSnapshot(
     settings: Record<string, unknown>;
     currentMonthExpenses: number | null;
     currentMonthIncome: number | null;
+    currentWeekExpenses: number | null;
+    currentWeekIncome: number | null;
     budgetRemainingCents: number | null;
     currency: string;
     isWeekly: boolean;
     financeState: unknown;
+    financialInsights: unknown;
     disciplineXpThisWeek: number;
     disciplineCompletedToday: boolean;
     unplannedSummary: { count: number; totalCents: number };
@@ -65,6 +68,8 @@ function mapBootstrapBudgetToSnapshot(
     settings: b.settings,
     currentMonthExpenses: b.currentMonthExpenses ?? null,
     currentMonthIncome: b.currentMonthIncome ?? null,
+    currentWeekExpenses: b.currentWeekExpenses ?? null,
+    currentWeekIncome: b.currentWeekIncome ?? null,
     budgetRemainingCents: b.budgetRemainingCents ?? null,
     currency: b.currency,
     isWeekly: b.isWeekly,
@@ -75,6 +80,8 @@ function mapBootstrapBudgetToSnapshot(
     disciplineCompletedToday: b.disciplineCompletedToday ?? false,
     daysUnderBudgetThisWeek: (b.financeState as { safeDaysThisWeek?: number | null })?.safeDaysThisWeek ?? null,
     unplannedSummary: b.unplannedSummary ?? { count: 0, totalCents: 0 },
+    financeState: b.financeState ?? null,
+    financialInsights: b.financialInsights ?? null,
   };
 }
 

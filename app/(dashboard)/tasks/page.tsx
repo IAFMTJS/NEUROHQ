@@ -313,8 +313,7 @@ async function MissionsSectionAsync({
     return (
       <div className="flex min-h-0 w-full max-w-none flex-1 flex-col">
         <SciFiPanel
-          flatFrame
-          variant="command"
+          variant="flat-glass"
           className="hq-card-enter relative flex min-h-0 w-full flex-1 flex-col overflow-hidden dashboard-active-mission"
           bodyClassName="relative z-10 flex min-h-0 flex-1 flex-col gap-3 p-4 sm:p-5 md:p-6"
         >
@@ -485,7 +484,7 @@ async function MissionsSectionAsync({
             planned: energyCap.planned,
           }}
           missionEngineWarnings={missionEngineWarnings}
-          missionsContextBelowHero={<ModeBanner mode={mode} flatFrame />}
+          missionsContextBelowHero={<ModeBanner mode={mode} />}
         />
       </div>
     </div>
@@ -560,7 +559,7 @@ async function MissionsSectionAsync({
   }
 
   return (
-    <SciFiPanel flatFrame variant="glass" className={hudStyles.focusSecondary} bodyClassName="p-4 md:p-5">
+    <SciFiPanel variant="flat-glass" className={hudStyles.focusSecondary} bodyClassName="p-4 md:p-5">
       <CornerNode corner="top-left" />
       <CornerNode corner="top-right" />
       {missionsBody}
@@ -614,8 +613,7 @@ async function RoutineSectionAsync({
     return (
       <div className="flex min-h-0 w-full max-w-none flex-1 flex-col">
         <SciFiPanel
-          flatFrame
-          variant="command"
+          variant="flat-glass"
           className="hq-card-enter relative flex min-h-0 w-full flex-1 flex-col overflow-hidden dashboard-active-mission"
           bodyClassName="relative z-10 flex min-h-0 flex-1 flex-col gap-0 p-0"
         >

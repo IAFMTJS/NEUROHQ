@@ -250,21 +250,28 @@ export function autoModeCheck(gameState: GameState): void {
 
   const avg = gameState.mode.brainStatusAveragePercent;
 
-  /** Met geldige brain-composite: harde drempels voor war/recovery. */
+  /** Met geldige brain-composite: harde drempels voor war/recovery; neutrale band → Focus. */
   if (avg != null) {
-    if (avg < 25 && gameState.mode.current !== "recovery") {
-      switchMode(gameState, "recovery", { forced: true });
+    if (avg < 25) {
+      if (gameState.mode.current !== "recovery") {
+        switchMode(gameState, "recovery", { forced: true });
+      }
       return;
     }
-    if (avg > 75 && gameState.mode.current !== "war") {
-      switchMode(gameState, "war", { forced: true });
+    if (avg > 75) {
+      if (gameState.mode.current !== "war") {
+        switchMode(gameState, "war", { forced: true });
+      }
+      return;
+    }
+    if (gameState.mode.current === "recovery" || gameState.mode.current === "war") {
+      switchMode(gameState, "focus", { forced: true });
       return;
     }
   }
 
   /**
    * Zonder geldige brain-composite: blijf in Focus; geen legacy-forcing uit stats.
-   * (stats zijn 0–100; daily check-in is 1–10 en wordt in getGameState omgezet.)
    */
   if (avg == null) {
     return;

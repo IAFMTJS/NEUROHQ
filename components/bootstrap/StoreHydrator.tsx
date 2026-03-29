@@ -77,6 +77,8 @@ export function StoreHydrator({ snapshot, children }: Props) {
         settings: b.settings,
         currentMonthExpenses: b.currentMonthExpenses,
         currentMonthIncome: b.currentMonthIncome,
+        currentWeekExpenses: b.currentWeekExpenses,
+        currentWeekIncome: b.currentWeekIncome,
         budgetRemainingCents: b.budgetRemainingCents,
         date: b.today,
         currency: b.currency,
@@ -87,6 +89,8 @@ export function StoreHydrator({ snapshot, children }: Props) {
         disciplineCompletedToday: b.disciplineCompletedToday,
         daysUnderBudgetThisWeek: b.daysUnderBudgetThisWeek,
         unplannedSummary: b.unplannedSummary,
+        financeState: b.financeState,
+        financialInsights: b.financialInsights,
       });
       setBudgetStatus("ready");
       setBudgetError(null);

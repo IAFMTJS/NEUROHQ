@@ -59,10 +59,9 @@ export function DashboardHubCommandShell({
           className={`${compactVertical ? "space-y-2 pt-0" : "space-y-3 pt-2 md:pt-3"} ${compactHorizontal ? "px-0" : "px-1"}`}
         >
           <SciFiPanel
-            flatFrame
             className={`dashboard-bridge-frame idle-breathing ${hudStyles.focusPrimary}`}
             bodyClassName={`dashboard-bridge-body flex flex-col gap-4 [-webkit-overflow-scrolling:touch] ${skipCinematic ? "light-ui-defer-paint" : ""}`}
-            variant="command"
+            variant="flat-glass"
           >
             <CornerNode corner="top-left" />
             <CornerNode corner="top-right" />

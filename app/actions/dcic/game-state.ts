@@ -237,7 +237,12 @@ export async function getGameState(
   const hasBrainCheckIn =
     ds != null && ds.energy != null && ds.focus != null;
 
+  const avgPct = gameState.mode.brainStatusAveragePercent;
+
   let lockedMode = parseLockedDcicMode(ds?.dcic_mode);
+  /** DB lock is sticky (RPC uses coalesce); clear when it no longer matches brain rules. */
+  let staleDcicModeInDb = false;
+
   if (
     !hasBrainCheckIn &&
     lockedMode &&
@@ -245,6 +250,16 @@ export async function getGameState(
     lockedMode !== "overdrive"
   ) {
     lockedMode = null;
+    staleDcicModeInDb = true;
+  }
+
+  if (lockedMode === "recovery" && (avgPct == null || avgPct >= 25)) {
+    lockedMode = null;
+    staleDcicModeInDb = true;
+  }
+  if (lockedMode === "war" && (avgPct == null || avgPct <= 75)) {
+    lockedMode = null;
+    staleDcicModeInDb = true;
   }
 
   if (lockedMode) {
@@ -265,6 +280,17 @@ export async function getGameState(
     });
     if (lockErr) {
       console.error("lock_daily_dcic_mode_if_unset:", lockErr);
+    }
+  }
+
+  if (staleDcicModeInDb && ds) {
+    const { error: modeFixErr } = await supabase
+      .from("daily_state")
+      .update({ dcic_mode: gameState.mode.current })
+      .eq("user_id", user.id)
+      .eq("date", today);
+    if (modeFixErr) {
+      console.error("dcic_mode stale lock fix:", modeFixErr);
     }
   }
 

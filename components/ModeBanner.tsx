@@ -1,7 +1,7 @@
 import type { AppMode } from "@/lib/app-mode";
 import { SciFiPanel } from "@/components/hud-test/SciFiPanel";
 
-type Props = { mode: AppMode; flatFrame?: boolean };
+type Props = { mode: AppMode };
 
 const labels: Record<AppMode, string[]> = {
   normal: [],
@@ -31,8 +31,7 @@ export function ModeBanner({ mode, flatFrame = false }: Props) {
   const message = options[idx] ?? options[0];
   return (
     <SciFiPanel
-      flatFrame={flatFrame}
-      variant="minimal"
+      variant="flat-glass"
       className="overflow-hidden"
       bodyClassName="flex items-start gap-3 px-4 py-3.5 text-sm text-[var(--text-primary)]"
     >
