@@ -7,6 +7,7 @@
 
 import { createClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
+import { todayDateString } from "@/lib/utils/timezone";
 import type { GameState, Mission } from "@/lib/dcic/types";
 import { applyBrainLayerToGameState } from "@/lib/dcic/brain-game-state";
 import { countWarTierDays, type DailyRowForBrain } from "@/lib/dcic/brain-status-average";
@@ -47,7 +48,8 @@ export async function getGameState(
   if (!user) return null;
 
   // Fetch all core game data in parallel to avoid a slow waterfall.
-  const today = new Date().toISOString().split("T")[0];
+  // Must match daily_state.date (saveDailyState, dashboard) — not UTC calendar day.
+  const today = todayDateString();
 
   const MISSIONS_SELECT =
     "id, name, xp_reward, energy_cost, completed, active, started_at, completed_at, difficulty_level, focus_requirement, social_intensity, mission_type, category, skill_link, recurrence_type, streak_eligible, mission_intent, expires_at, created_at";
@@ -305,7 +307,7 @@ export async function saveGameState(gameState: GameState): Promise<boolean> {
       .eq("user_id", user.id);
 
     // Update daily state stats
-    const today = new Date().toISOString().split("T")[0];
+    const today = todayDateString();
     await supabase.from("daily_state").upsert({
       user_id: user.id,
       date: today,

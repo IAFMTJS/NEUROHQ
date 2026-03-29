@@ -2,6 +2,7 @@
 
 import { createClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
+import { todayDateString } from "@/lib/utils/timezone";
 import { levelFromTotalXP, xpToNextLevel, rankFromLevel, nextUnlockPreview } from "@/lib/xp";
 import {
   getBrainState,
@@ -85,7 +86,7 @@ export async function addXP(
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return undefined;
 
-  const today = new Date().toISOString().slice(0, 10);
+  const today = todayDateString();
   const { data: odRow } = await supabase
     .from("daily_state")
     .select("dcic_mode, dcic_locked_until, dcic_overdrive_session_start")
