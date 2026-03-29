@@ -14,6 +14,8 @@ import { VisualLabBarsSiteExampleCard } from "@/components/visual-lab/VisualLabB
 import { PolygonHudMeter } from "@/components/visual-lab/VisualLabPolygonMeters";
 import { VisualLabHexMesh } from "@/components/visual-lab/VisualLabHexMesh";
 import { VisualLabShapeEnergyRing } from "@/components/visual-lab/VisualLabShapeEnergyRing";
+import { VisualLabBudgetStatusAlternatives } from "@/components/visual-lab/VisualLabBudgetStatusAlternatives";
+import { VisualLabBudgetStatusTabConcept } from "@/components/visual-lab/VisualLabBudgetStatusTabConcept";
 
 /** Shared mock rows for ring kitchen (circle + polygon outlines). */
 const RING_KITCHEN_SAMPLES = [
@@ -82,7 +84,7 @@ export function VisualLabClient() {
               Visual lab
             </h1>
             <p className="mt-2 max-w-2xl text-sm leading-relaxed text-[var(--text-secondary)]">
-              Mock HUD: rings, split ring, bar card (site copy), polygon meters (trace + fill), hex mesh, lattice, flow diagram, strips, toasts. No live data.
+              Mock HUD: rings, budget status-tab concept + alternatieven, split ring, bar card (site copy), polygon meters (trace + fill), hex mesh, lattice, flow diagram, strips, toasts. No live data.
             </p>
           </header>
 
@@ -312,6 +314,17 @@ export function VisualLabClient() {
                 </div>
               </div>
             </div>
+          </section>
+
+          <section className="relative mb-10 space-y-4 rounded-xl border border-[rgba(var(--mode-rgb),0.12)] bg-[rgba(4,12,22,0.22)] p-4 md:p-5" aria-labelledby="budget-status-lab-heading">
+            <div className="flex flex-wrap items-end justify-between gap-3">
+              <h2 id="budget-status-lab-heading" className="text-[11px] font-bold uppercase tracking-[0.18em] text-[var(--text-muted)]">
+                Budget · statusring (/budget)
+              </h2>
+              <span className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--text-muted)]">RemainingBudgetHero</span>
+            </div>
+            <VisualLabBudgetStatusAlternatives />
+            <VisualLabBudgetStatusTabConcept />
           </section>
 
           <section className="relative mb-10 space-y-5" aria-labelledby="bars-advanced-heading">
