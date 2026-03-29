@@ -39,12 +39,23 @@ export function TasksTabsShell({
 
   const useCommandDeck = commandDeck && !fillViewport;
 
+  /** Segmented rail — matches visual-lab missions concept; avoids legacy micro-pill HUD look. */
+  const deckTabClass = (tab: TasksTabId) => {
+    const active = initialTab === tab;
+    return [
+      "inline-flex min-h-[40px] flex-1 items-center justify-center rounded-lg px-3 py-2 text-center text-[11px] font-semibold uppercase tracking-[0.1em] transition sm:min-h-0 sm:flex-none sm:px-4 sm:text-xs",
+      active
+        ? "border border-[rgba(var(--mode-rgb),0.38)] bg-[rgba(var(--mode-rgb),0.14)] text-[var(--accent-focus)] shadow-[0_0_20px_rgba(var(--mode-rgb),0.18),inset_0_1px_0_rgba(255,255,255,0.06)]"
+        : "border border-transparent text-[var(--text-muted)] hover:border-[rgba(var(--mode-rgb),0.22)] hover:bg-[rgba(6,18,30,0.55)] hover:text-[var(--text-primary)]",
+    ].join(" ");
+  };
+
   const tabsWrapperClass = [
     "dashboard-top-strip",
-    useCommandDeck ? "mt-3" : "mt-0",
+    "mt-0",
     fillViewport ? "shrink-0 px-1 sm:px-2" : "",
     stickyTabs
-      ? "sticky top-0 z-20 border-b border-[var(--card-border)]/50 bg-[var(--bg-surface)]/85 backdrop-blur-md supports-[backdrop-filter]:bg-[var(--bg-surface)]/70"
+      ? "sticky top-0 z-20 border-b border-[rgba(var(--mode-rgb),0.18)] bg-[rgba(4,12,22,0.9)] backdrop-blur-md supports-[backdrop-filter]:bg-[rgba(4,12,22,0.82)]"
       : "",
   ]
     .filter(Boolean)
@@ -56,7 +67,7 @@ export function TasksTabsShell({
       ? "mt-4 space-y-6"
       : "mt-6 space-y-6";
 
-  const tabStrip = (
+  const tabStripLegacy = (
     <div className={tabsWrapperClass}>
       <div className="dashboard-top-strip-track" role="navigation" aria-label="Tasks tabs">
         <Link
@@ -85,6 +96,27 @@ export function TasksTabsShell({
     </div>
   );
 
+  const tabStripDeck = (
+    <div className="mt-4" role="navigation" aria-label="Tasks tabs">
+      <div className="mb-2 flex items-center justify-between gap-2">
+        <span className="text-[10px] font-bold uppercase tracking-[0.16em] text-[var(--text-muted)]">View</span>
+      </div>
+      <div className="flex flex-wrap gap-1 rounded-xl border border-[rgba(var(--mode-rgb),0.2)] bg-[rgba(4,12,22,0.5)] p-1 shadow-[inset_0_1px_0_rgba(255,255,255,0.05)] backdrop-blur-sm">
+        <Link href={missionsHref} className={deckTabClass("missions")} aria-current={initialTab === "missions" ? "page" : undefined}>
+          Missions
+        </Link>
+        <Link href={calendarHref} className={deckTabClass("calendar")} aria-current={initialTab === "calendar" ? "page" : undefined}>
+          Calendar
+        </Link>
+        <Link href={routineHref} className={deckTabClass("routine")} aria-current={initialTab === "routine" ? "page" : undefined}>
+          Routine
+        </Link>
+      </div>
+    </div>
+  );
+
+  const tabStrip = useCommandDeck ? tabStripDeck : tabStripLegacy;
+
   const tabBodies = <div className={bodyClass}>{children}</div>;
 
   const deckTitle =
@@ -92,8 +124,8 @@ export function TasksTabsShell({
 
   const deckInner = (
     <>
-      <header className="flex flex-wrap items-start justify-between gap-3 border-b border-[rgba(var(--mode-rgb),0.12)] pb-3">
-        <div>
+      <header className="flex flex-wrap items-start justify-between gap-3 border-b border-[rgba(var(--mode-rgb),0.18)] pb-4">
+        <div className="min-w-0 border-l-2 border-[rgba(var(--semantic-accent),0.55)] pl-3">
           <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[var(--semantic-accent)]/90">Command</p>
           <h2 className="mt-0.5 text-base font-bold tracking-tight text-[var(--text-primary)] [text-shadow:0_0_14px_rgba(var(--mode-rgb),0.18)] md:text-lg">
             {deckTitle}
@@ -101,7 +133,7 @@ export function TasksTabsShell({
         </div>
         <Link
           href="/dashboard"
-          className="shrink-0 rounded-lg border border-[rgba(var(--mode-rgb),0.2)] bg-[rgba(6,18,30,0.45)] px-3 py-2 text-[10px] font-semibold uppercase tracking-wide text-[var(--text-muted)] transition hover:border-[rgba(var(--mode-rgb),0.35)] hover:text-[var(--text-primary)]"
+          className="shrink-0 rounded-xl border border-[rgba(var(--mode-rgb),0.24)] bg-[rgba(6,18,30,0.55)] px-3 py-2 text-[10px] font-semibold uppercase tracking-wide text-[var(--text-muted)] shadow-[0_0_18px_rgba(var(--mode-rgb),0.1),inset_0_1px_0_rgba(255,255,255,0.06)] transition hover:border-[rgba(var(--mode-rgb),0.4)] hover:bg-[rgba(8,26,42,0.65)] hover:text-[var(--text-primary)]"
         >
           ← HQ
         </Link>
@@ -115,7 +147,7 @@ export function TasksTabsShell({
     <>
       {header}
       {useCommandDeck ? (
-        <div className="dashboard-cinematic relative overflow-hidden rounded-2xl border border-[rgba(var(--mode-rgb),0.28)] bg-gradient-to-br from-[rgba(8,26,42,0.96)] via-[var(--bg-elevated)]/90 to-[rgba(var(--mode-rgb-deep),0.14)] shadow-[0_0_40px_rgba(var(--mode-rgb),0.14),inset_0_1px_0_rgba(255,255,255,0.07)]">
+        <div className="tasks-command-deck dashboard-cinematic relative overflow-hidden rounded-2xl border border-[rgba(var(--mode-rgb),0.32)] bg-gradient-to-br from-[rgba(6,22,38,0.97)] via-[var(--bg-elevated)]/88 to-[rgba(var(--mode-rgb-deep),0.18)] shadow-[0_0_48px_rgba(var(--mode-rgb),0.16),0_12px_40px_rgba(0,0,0,0.35),inset_0_1px_0_rgba(255,255,255,0.08)]">
           <div
             className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_75%_55%_at_50%_0%,rgba(var(--mode-rgb),0.16),transparent_58%)]"
             aria-hidden

@@ -720,7 +720,7 @@ export default async function TasksPage({ searchParams }: Props) {
           className={
             simplifiedTasksFillLayout
               ? "relative z-10 flex min-h-[calc(100svh-7rem)] w-full max-w-none flex-1 flex-col dashboard-cinematic sm:min-h-[calc(100svh-6.5rem)]"
-              : "container page page-wide dashboard-cinematic relative z-10 pt-4 sm:pt-5"
+              : "tasks-page-column container page page-wide relative z-10 pt-4 sm:pt-5"
           }
         >
           <TasksTabsShell
