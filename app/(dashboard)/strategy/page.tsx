@@ -24,6 +24,7 @@ import { StrategyIntegratedOverview } from "@/components/strategy/StrategyIntegr
 import { StrategyTabsShell } from "@/components/strategy/StrategyTabsShell";
 import { getBehaviorProfile } from "@/app/actions/behavior-profile";
 import { getStrategyIntegrationOverview } from "@/app/actions/strategy-integration";
+import { getStrategyPacingHints } from "@/app/actions/strategy-engine-pacing";
 import { getUserPreferencesOrDefaults } from "@/app/actions/preferences";
 import { buildStrategyAnalysisSnapshot } from "@/lib/strategy/build-strategy-analysis-square";
 import { StrategyAnalysisSquare } from "@/components/strategy/StrategyAnalysisSquare";
@@ -174,8 +175,9 @@ async function StrategyContent({ simplifiedLayout = false }: { simplifiedLayout?
 
   let neuroBudgetHint: string | null = null;
   let strategyIntegration: Awaited<ReturnType<typeof getStrategyIntegrationOverview>> = null;
+  let strategyEngineHints: Awaited<ReturnType<typeof getStrategyPacingHints>> = null;
   try {
-    const [p, a, log, mom, drift, review, behaviorProfile, integration] = await Promise.all([
+    const [p, a, log, mom, drift, review, behaviorProfile, integration, engineHints] = await Promise.all([
       getPressureIndex(strategy.id),
       getAlignmentThisWeek(strategy.id),
       getAlignmentLog(strategy.id, 14),
@@ -184,6 +186,7 @@ async function StrategyContent({ simplifiedLayout = false }: { simplifiedLayout?
       getStrategyReviewStatus(strategy.id, strategy.start_date),
       getBehaviorProfile(),
       getStrategyIntegrationOverview(),
+      getStrategyPacingHints(),
     ]);
     pressureData = p ?? pressureData;
     alignmentThisWeek = a ?? alignmentThisWeek;
@@ -193,6 +196,7 @@ async function StrategyContent({ simplifiedLayout = false }: { simplifiedLayout?
     reviewStatus = review ?? reviewStatus;
     neuroBudgetHint = neuroStrategyBudgetHint(behaviorProfile.neuroProfileTags);
     strategyIntegration = integration;
+    strategyEngineHints = engineHints;
   } catch {
     // Fallbacks already set
   }
@@ -201,6 +205,7 @@ async function StrategyContent({ simplifiedLayout = false }: { simplifiedLayout?
     strategyIntegration,
     alignmentThisWeek.alignmentScore,
     reviewStatus.reviewDue,
+    strategyEngineHints,
   );
 
   const alignmentLogTrend = alignmentLog.map((l) => ({

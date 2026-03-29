@@ -99,17 +99,17 @@ export function GrowthTabsShell({ children, commandPageHeader, belowTabsSlot }: 
 
   const simplifiedDivider = "border-[rgba(var(--mode-rgb),0.1)]";
 
-  /** Cinematic hub row: same language as `.dashboard-cinematic .dashboard-mini-btn` (Tasks) — glow + clear active. */
+  /** Compact single-row tabs; glow kept but tighter so three labels fit one line on most phones. */
   const growthHubTabClass = (selected: boolean) =>
     selected
-      ? "min-h-[38px] rounded-full border border-[rgba(var(--mode-rgb),0.58)] bg-gradient-to-b from-[rgba(11,57,90,0.96)] to-[rgba(7,38,58,0.98)] px-3.5 py-2 text-center text-[11px] font-bold uppercase tracking-[0.08em] text-[#e7f8ff] shadow-[0_0_20px_rgba(var(--mode-rgb),0.38),0_0_40px_rgba(var(--mode-rgb),0.12),inset_0_1px_0_rgba(255,255,255,0.14)] [text-shadow:0_0_14px_rgba(var(--mode-rgb),0.5)] ring-1 ring-[rgba(var(--mode-rgb),0.35)] transition-all duration-200 sm:px-4"
-      : "min-h-[38px] rounded-full border border-[rgba(var(--mode-rgb),0.32)] bg-gradient-to-b from-[rgba(10,36,58,0.88)] to-[rgba(6,22,38,0.92)] px-3 py-2 text-center text-[11px] font-semibold uppercase tracking-[0.07em] text-[#c7efff]/90 opacity-[0.92] shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] transition-all duration-200 hover:border-[rgba(var(--mode-rgb),0.5)] hover:text-[#eaf8ff] hover:opacity-100 hover:shadow-[0_0_16px_rgba(var(--mode-rgb),0.22)] sm:px-3.5";
+      ? "h-8 shrink-0 whitespace-nowrap rounded-full border border-[rgba(var(--mode-rgb),0.58)] bg-gradient-to-b from-[rgba(11,57,90,0.96)] to-[rgba(7,38,58,0.98)] px-2.5 py-0 text-center text-[9px] font-bold uppercase leading-8 tracking-[0.05em] text-[#e7f8ff] shadow-[0_0_14px_rgba(var(--mode-rgb),0.32),inset_0_1px_0_rgba(255,255,255,0.12)] [text-shadow:0_0_10px_rgba(var(--mode-rgb),0.45)] ring-1 ring-[rgba(var(--mode-rgb),0.3)] transition-all duration-200 sm:h-8 sm:px-3 sm:text-[10px] sm:tracking-[0.06em]"
+      : "h-8 shrink-0 whitespace-nowrap rounded-full border border-[rgba(var(--mode-rgb),0.28)] bg-gradient-to-b from-[rgba(10,36,58,0.88)] to-[rgba(6,22,38,0.92)] px-2 py-0 text-center text-[9px] font-semibold uppercase leading-8 tracking-[0.05em] text-[#c7efff]/90 opacity-[0.92] shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] transition-all duration-200 hover:border-[rgba(var(--mode-rgb),0.45)] hover:text-[#eaf8ff] hover:opacity-100 hover:shadow-[0_0_12px_rgba(var(--mode-rgb),0.18)] sm:px-2.5 sm:text-[10px]";
 
-  /** Simplified shell: same pill + glow vocabulary, slightly calmer. */
+  /** Simplified shell: match compact one-line strip. */
   const growthCompactTabClass = (selected: boolean) =>
     selected
-      ? "min-h-[36px] rounded-full border border-[rgba(var(--mode-rgb),0.52)] bg-gradient-to-b from-[rgba(11,57,90,0.92)] to-[rgba(7,38,58,0.95)] px-3 py-2 text-[11px] font-bold uppercase tracking-[0.07em] text-[#e7f8ff] shadow-[0_0_16px_rgba(var(--mode-rgb),0.3),inset_0_1px_0_rgba(255,255,255,0.1)] [text-shadow:0_0_10px_rgba(var(--mode-rgb),0.4)] ring-1 ring-[rgba(var(--mode-rgb),0.28)] transition-all duration-200"
-      : "min-h-[36px] rounded-full border border-[rgba(var(--mode-rgb),0.22)] bg-gradient-to-b from-[rgba(10,36,58,0.75)] to-[rgba(6,22,38,0.82)] px-3 py-2 text-[11px] font-semibold uppercase tracking-[0.06em] text-[#c7efff]/80 opacity-90 transition-all duration-200 hover:border-[rgba(var(--mode-rgb),0.42)] hover:text-[#eaf8ff] hover:opacity-100 hover:shadow-[0_0_12px_rgba(var(--mode-rgb),0.16)]";
+      ? "h-8 shrink-0 whitespace-nowrap rounded-full border border-[rgba(var(--mode-rgb),0.52)] bg-gradient-to-b from-[rgba(11,57,90,0.92)] to-[rgba(7,38,58,0.95)] px-2.5 py-0 text-[9px] font-bold uppercase leading-8 tracking-[0.05em] text-[#e7f8ff] shadow-[0_0_12px_rgba(var(--mode-rgb),0.26),inset_0_1px_0_rgba(255,255,255,0.08)] [text-shadow:0_0_8px_rgba(var(--mode-rgb),0.35)] ring-1 ring-[rgba(var(--mode-rgb),0.24)] transition-all duration-200 sm:px-3 sm:text-[10px]"
+      : "h-8 shrink-0 whitespace-nowrap rounded-full border border-[rgba(var(--mode-rgb),0.2)] bg-gradient-to-b from-[rgba(10,36,58,0.75)] to-[rgba(6,22,38,0.82)] px-2 py-0 text-[9px] font-semibold uppercase leading-8 tracking-[0.05em] text-[#c7efff]/80 opacity-90 transition-all duration-200 hover:border-[rgba(var(--mode-rgb),0.38)] hover:text-[#eaf8ff] hover:opacity-100 hover:shadow-[0_0_10px_rgba(var(--mode-rgb),0.14)] sm:px-2.5 sm:text-[10px]";
 
   const setTab = (next: GrowthTabId) => {
     if (next === activeTab) return;
@@ -121,7 +121,7 @@ export function GrowthTabsShell({ children, commandPageHeader, belowTabsSlot }: 
     <div
       role="tablist"
       aria-label="Groei-secties"
-      className={`flex flex-wrap items-center justify-center gap-2 border-b ${simplifiedDivider} bg-[rgba(6,18,30,0.28)] px-2 py-2.5 backdrop-blur-sm sm:gap-2.5`}
+      className={`flex flex-nowrap items-center justify-center gap-1 overflow-x-auto border-b ${simplifiedDivider} bg-[rgba(6,18,30,0.28)] px-1.5 py-1.5 backdrop-blur-sm [scrollbar-width:thin] sm:gap-1.5 sm:px-2`}
     >
       {TABS.map((tab) => {
         const selected = tab.id === activeTab;
@@ -145,7 +145,7 @@ export function GrowthTabsShell({ children, commandPageHeader, belowTabsSlot }: 
 
   const tabButtonsCompact = (
     <nav
-      className="relative z-10 -mx-1 flex flex-wrap gap-2 rounded-xl border border-[rgba(var(--mode-rgb),0.18)] bg-[rgba(6,18,30,0.38)] px-2 py-2 shadow-[0_0_24px_rgba(var(--mode-rgb),0.08)] backdrop-blur-md"
+      className="relative z-10 -mx-1 flex flex-nowrap items-center justify-center gap-1 overflow-x-auto rounded-xl border border-[rgba(var(--mode-rgb),0.18)] bg-[rgba(6,18,30,0.38)] px-1.5 py-1.5 shadow-[0_0_24px_rgba(var(--mode-rgb),0.08)] backdrop-blur-md [scrollbar-width:thin] sm:gap-1.5 sm:px-2"
       aria-label="Groei-tabs"
     >
       {TABS.map((tab) => {

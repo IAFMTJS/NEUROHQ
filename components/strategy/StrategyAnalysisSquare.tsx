@@ -19,6 +19,18 @@ export function StrategyAnalysisSquare({ snapshot }: Props) {
       <div className="relative flex flex-col gap-4 md:flex-row md:items-stretch md:gap-5">
         <div className="min-w-0 flex-1 space-y-3">
           <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[var(--semantic-accent)]/90">Analyse</p>
+          {snapshot.engineReadOnlyActive ? (
+            <div className="space-y-1 rounded-lg border border-[rgba(var(--mode-rgb),0.16)] bg-[rgba(6,18,30,0.5)] px-2.5 py-2 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
+              <p className="text-[9px] font-bold uppercase tracking-[0.14em] text-[var(--accent-focus)]/95">
+                Strategy engine · alleen lezen
+              </p>
+              {snapshot.enginePaceSummary ? (
+                <p className="line-clamp-2 text-[11px] leading-snug text-[var(--text-secondary)]" title={snapshot.enginePaceSummary}>
+                  {snapshot.enginePaceSummary}
+                </p>
+              ) : null}
+            </div>
+          ) : null}
           <p className="line-clamp-2 text-sm font-semibold leading-snug text-[var(--text-primary)] [text-shadow:0_0_12px_rgba(var(--mode-rgb),0.2)]">
             {snapshot.headline}
           </p>

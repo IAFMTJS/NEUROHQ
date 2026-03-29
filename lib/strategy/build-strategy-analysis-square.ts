@@ -1,4 +1,5 @@
 import type { StrategyIntegrationOverview } from "@/app/actions/strategy-integration";
+import type { StrategyPacingHints } from "@/lib/strategy/strategy-pacing-hints";
 import { formatCents } from "@/lib/utils/currency";
 
 export type StrategyAnalysisSnapshot = {
@@ -9,6 +10,10 @@ export type StrategyAnalysisSnapshot = {
   missionsHealth: number;
   budgetWarn: boolean;
   growthWarn: boolean;
+  /** Strategy engine (read-only pacing) is configured for this quarter. */
+  engineReadOnlyActive: boolean;
+  /** One scan line: quarter progress + spaar/leer vs engine-doelen. */
+  enginePaceSummary: string | null;
   ctaLabel: string;
   ctaHref: string;
 };
@@ -161,7 +166,87 @@ function collectIssues(
   return issues.sort((a, b) => b.severity - a.severity);
 }
 
-function neutralBullets(data: StrategyIntegrationOverview): string[] {
+function engineTargetsActive(h: StrategyPacingHints | null): boolean {
+  if (!h) return false;
+  const save = h.savingsTargetCents != null && h.savingsTargetCents > 0;
+  const learn = h.learningTargetPct != null && h.learningTargetPct > 0;
+  return save || learn;
+}
+
+function enginePaceSummaryLine(h: StrategyPacingHints | null): string | null {
+  if (!engineTargetsActive(h)) return null;
+  const hp = h!;
+  const q = Math.round(hp.quarterElapsedFrac * 100);
+  const bits: string[] = [];
+  if (hp.savingsTargetCents != null && hp.savingsTargetCents > 0 && hp.savedThisQuarterCents != null) {
+    bits.push(`${formatCents(hp.savedThisQuarterCents)}/${formatCents(hp.savingsTargetCents)} sparen`);
+  } else if (hp.savingsTargetCents != null && hp.savingsTargetCents > 0) {
+    bits.push(`${formatCents(hp.savingsTargetCents)} spaardoel`);
+  }
+  if (hp.learningTargetPct != null && hp.learningTargetPct > 0 && hp.learningRoughPct != null) {
+    bits.push(`~${hp.learningRoughPct}%/${hp.learningTargetPct}% leer`);
+  } else if (hp.learningTargetPct != null && hp.learningTargetPct > 0) {
+    bits.push(`${hp.learningTargetPct}% leerdoel`);
+  }
+  if (bits.length === 0) return null;
+  return `Kwartaal ${q}% · ${bits.join(" · ")}`;
+}
+
+function collectEngineIssues(hints: StrategyPacingHints | null): Issue[] {
+  if (!hints || !engineTargetsActive(hints)) return [];
+  const issues: Issue[] = [];
+  if (hints.savingsOnTrack === false) {
+    const saved = hints.savedThisQuarterCents;
+    const tgt = hints.savingsTargetCents;
+    const bullet =
+      saved != null && tgt != null
+        ? `Engine: sparen ${formatCents(saved)}/${formatCents(tgt)} (achter)`
+        : "Engine: spaardoel onder tempo";
+    issues.push({
+      id: "engine-savings",
+      severity: 76,
+      headline: "Strategy-engine: spaardoel loopt achter dit kwartaal.",
+      bullet,
+    });
+  }
+  if (hints.learningOnTrack === false) {
+    const r = hints.learningRoughPct;
+    const t = hints.learningTargetPct;
+    const bullet =
+      r != null && t != null ? `Engine: leer ~${r}%/${t}% (achter)` : "Engine: leerdoel onder tempo";
+    issues.push({
+      id: "engine-learning",
+      severity: 70,
+      headline: "Strategy-engine: leerdoel loopt achter dit kwartaal.",
+      bullet,
+    });
+  }
+  return issues;
+}
+
+function engineNeutralBullet(hints: StrategyPacingHints | null): string | null {
+  if (!engineTargetsActive(hints)) return null;
+  const h = hints!;
+  const parts: string[] = [];
+  if (h.savingsTargetCents != null && h.savingsTargetCents > 0) {
+    if (h.savedThisQuarterCents != null) {
+      parts.push(h.savingsOnTrack === false ? "spaar ↓" : h.savingsOnTrack === true ? "spaar OK" : "spaar track");
+    } else {
+      parts.push("spaar log");
+    }
+  }
+  if (h.learningTargetPct != null && h.learningTargetPct > 0) {
+    if (h.learningRoughPct != null) {
+      parts.push(h.learningOnTrack === false ? "leer ↓" : h.learningOnTrack === true ? "leer OK" : `leer ~${h.learningRoughPct}%`);
+    } else {
+      parts.push("leer start");
+    }
+  }
+  if (parts.length === 0) return "Engine: doelen actief";
+  return `Engine: ${parts.join(" · ")}`;
+}
+
+function neutralBullets(data: StrategyIntegrationOverview, hints: StrategyPacingHints | null): string[] {
   const b = data.budget;
   const bullets: string[] = [];
   if (b.hasPlanning && b.plannedBudgetCents != null && b.plannedBudgetCents > 0 && b.remainingCents != null) {
@@ -180,20 +265,31 @@ function neutralBullets(data: StrategyIntegrationOverview): string[] {
     bullets.push("Growth: traject kiezen");
   }
 
-  bullets.push(
-    data.todayOpenMissionCount > 0
-      ? `Missies: ${data.todayOpenMissionCount} open vandaag`
-      : `Missies: ${data.week.totalOpenTasks} deze week`,
-  );
+  const eng = engineNeutralBullet(hints);
+  if (eng) {
+    bullets.push(eng);
+  } else {
+    bullets.push(
+      data.todayOpenMissionCount > 0
+        ? `Missies: ${data.todayOpenMissionCount} open vandaag`
+        : `Missies: ${data.week.totalOpenTasks} deze week`,
+    );
+  }
   return bullets.slice(0, 3);
 }
 
-function pickCta(issues: Issue[], data: StrategyIntegrationOverview): { label: string; href: string } {
+function pickCta(
+  issues: Issue[],
+  data: StrategyIntegrationOverview,
+  engineHints: StrategyPacingHints | null,
+): { label: string; href: string } {
   const top = issues[0];
   if (top?.id === "review") return { label: "Doe weekreview", href: "/strategy?tab=review" };
   if (top?.id === "budget-plan" || top?.id === "budget-neg" || top?.id === "budget-tight") {
     return { label: "Fix budget & focus", href: "/budget" };
   }
+  if (top?.id === "engine-savings") return { label: "Bouw spaar-buffer", href: "/budget" };
+  if (top?.id === "engine-learning") return { label: "Trek Growth recht", href: "/learning?tab=command" };
   if (top?.id === "overload" || top?.id === "overload-1") return { label: "Herbalanceer week", href: "/tasks" };
   if (top?.id === "growth-tier" || top?.id === "growth-brain" || top?.id === "growth-none") {
     return { label: "Sync Growth", href: "/learning?tab=command" };
@@ -207,6 +303,8 @@ function pickCta(issues: Issue[], data: StrategyIntegrationOverview): { label: s
   if (data.growth && !data.growth.brainLogged && data.growth.activeProtocol) {
     return { label: "Brain check-in", href: "/dashboard" };
   }
+  if (engineHints?.savingsOnTrack === false) return { label: "Bouw spaar-buffer", href: "/budget" };
+  if (engineHints?.learningOnTrack === false) return { label: "Trek Growth recht", href: "/learning?tab=command" };
   return { label: "Bekijk alignment", href: "/strategy?tab=alignment" };
 }
 
@@ -217,13 +315,27 @@ export function buildStrategyAnalysisSnapshot(
   data: StrategyIntegrationOverview | null,
   alignmentScore: number,
   reviewDue: boolean,
+  engineHints: StrategyPacingHints | null,
 ): StrategyAnalysisSnapshot | null {
   if (!data) return null;
 
-  const bH = budgetHealthScore(data.budget);
-  const gH = growthHealthScore(data.growth);
+  let bH = budgetHealthScore(data.budget);
+  let gH = growthHealthScore(data.growth);
   const mHealth = missionsHealthScore(data.week, data.todayOpenMissionCount);
-  const issues = collectIssues(data, alignmentScore, reviewDue);
+  const issues = [
+    ...collectIssues(data, alignmentScore, reviewDue),
+    ...collectEngineIssues(engineHints),
+  ].sort((a, b) => b.severity - a.severity);
+
+  if (engineHints?.savingsOnTrack === false) {
+    bH = { score: Math.min(bH.score, 44), stress: true };
+  }
+  if (engineHints?.learningOnTrack === false) {
+    gH = { score: Math.min(gH.score, 42), stress: true };
+  }
+
+  const engineReadOnlyActive = engineTargetsActive(engineHints);
+  const enginePaceSummary = enginePaceSummaryLine(engineHints);
 
   let headline: string;
   let bullets: string[];
@@ -232,7 +344,7 @@ export function buildStrategyAnalysisSnapshot(
     headline = issues[0]!.headline;
     bullets = issues.slice(0, 3).map((i) => i.bullet);
     if (bullets.length < 3) {
-      const fill = neutralBullets(data).filter((line) => !bullets.some((b) => b.startsWith(line.split(":")[0]!)));
+      const fill = neutralBullets(data, engineHints).filter((line) => !bullets.some((b) => b.startsWith(line.split(":")[0]!)));
       for (const f of fill) {
         if (bullets.length >= 3) break;
         if (!bullets.includes(f)) bullets.push(f);
@@ -263,7 +375,7 @@ export function buildStrategyAnalysisSnapshot(
           : "Missies: hoge load",
       );
     }
-    for (const f of neutralBullets(data)) {
+    for (const f of neutralBullets(data, engineHints)) {
       if (bullets.length >= 3) break;
       const prefix = f.split(":")[0];
       if (!prefix || !bullets.some((b) => b.startsWith(prefix))) bullets.push(f);
@@ -271,12 +383,12 @@ export function buildStrategyAnalysisSnapshot(
     bullets = bullets.slice(0, 3);
   } else {
     headline = "Je stack staat op één lijn.";
-    bullets = neutralBullets(data);
+    bullets = neutralBullets(data, engineHints);
   }
 
   bullets = bullets.slice(0, 3);
 
-  const { label, href } = pickCta(issues, data);
+  const { label, href } = pickCta(issues, data, engineHints);
 
   return {
     headline,
@@ -286,6 +398,8 @@ export function buildStrategyAnalysisSnapshot(
     missionsHealth: mHealth.score,
     budgetWarn: bH.stress,
     growthWarn: gH.stress,
+    engineReadOnlyActive,
+    enginePaceSummary,
     ctaLabel: label,
     ctaHref: href,
   };

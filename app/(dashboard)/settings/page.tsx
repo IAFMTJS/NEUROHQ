@@ -39,6 +39,10 @@ const SettingsEmailReminders = nextDynamic(() => import("@/components/settings/S
   loading: () => <div className="min-h-[80px] animate-pulse rounded-xl bg-white/5" aria-hidden />,
 });
 const SettingsHelpOnboarding = nextDynamic(() => import("@/components/settings/SettingsHelpOnboarding").then((m) => ({ default: m.SettingsHelpOnboarding })), { loading: () => null });
+const SettingsAutoMasterMissions = nextDynamic(
+  () => import("@/components/settings/SettingsAutoMasterMissions").then((m) => ({ default: m.SettingsAutoMasterMissions })),
+  { loading: () => <div className="min-h-[88px] animate-pulse rounded-xl bg-white/5" aria-hidden /> },
+);
 
 export const dynamic = "force-dynamic";
 
@@ -118,6 +122,17 @@ async function SettingsContent() {
             </div>
           </div>
         </section>
+      </SettingsCategory>
+
+      <SettingsCategory title="Missies" subtitle="Automatische suggesties op je dag" defaultOpen>
+        <SettingsAutoMasterMissions initialEnabled={prefs.auto_master_missions} />
+        <p className="text-xs text-[var(--text-muted)]">
+          Gedragsprofiel en weekthema:{" "}
+          <a href={profileEngineHref("behavior")} className="font-medium text-[var(--accent-focus)] hover:underline">
+            Profiel → Engine → Gedrag
+          </a>
+          .
+        </p>
       </SettingsCategory>
 
       <SettingsCategory title="Systeem" subtitle="Weergave, modus, DCIC en lokale appcontrole">

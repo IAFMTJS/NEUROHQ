@@ -150,7 +150,7 @@ export function GrowthCommandCenter({
                 Kies traject
               </span>
               <select
-                className="w-full rounded-lg border border-[rgba(var(--mode-rgb),0.2)] bg-[var(--bg-primary)]/80 px-3 py-2 text-sm text-[var(--text-primary)] shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]"
+                className="w-full rounded-lg border border-[rgba(var(--mode-rgb),0.35)] bg-gradient-to-b from-[rgba(var(--mode-rgb-deep),0.52)] to-[rgba(6,18,30,0.96)] px-3 py-2 text-sm font-medium text-[#e8f6ff] shadow-[inset_0_1px_0_rgba(255,255,255,0.07),0_0_16px_rgba(var(--mode-rgb),0.12)] [color-scheme:dark] focus:border-[rgba(var(--mode-rgb),0.55)] focus:outline-none focus:ring-2 focus:ring-[rgba(var(--mode-rgb),0.35)] disabled:opacity-50"
                 disabled={pending}
                 value={focusSelectValue}
                 onChange={(e) => {
@@ -173,9 +173,11 @@ export function GrowthCommandCenter({
                   });
                 }}
               >
-                <option value="">— Geen vaste focus —</option>
+                <option value="" className="bg-[#0a1524] text-[#e8f6ff]">
+                  — Geen vaste focus —
+                </option>
                 {protocols.map((p) => (
-                  <option key={p.id} value={p.id}>
+                  <option key={p.id} value={p.id} className="bg-[#0a1524] text-[#e8f6ff]">
                     {p.title}
                   </option>
                 ))}

@@ -147,11 +147,12 @@ export async function ensureMasterMissionsForToday(dailyStateFromSave?: DailySta
   // Count existing auto-missions first so we can self-heal when flag is set but no tasks exist.
   const { data: allAutoToday } = await db
     .from("tasks")
-    .select("id, title, psychology_label, completed, deleted_at")
+    .select("id, title, psychology_label, completed")
     .eq("user_id", user.id)
     .eq("due_date", dateStr)
     .eq("psychology_label", "MasterPoolAuto")
-    .is("parent_task_id", null);
+    .is("parent_task_id", null)
+    .is("deleted_at", null);
   const allAutoTasks = allAutoToday ?? [];
   const existingAutoCount = allAutoTasks.length;
   const autoMasterTitles = new Set(
@@ -239,7 +240,8 @@ export async function ensureMasterMissionsForToday(dailyStateFromSave?: DailySta
     .eq("psychology_label", "MasterPoolAuto")
     .gte("due_date", fourteenDaysAgoStr)
     .lt("due_date", dateStr)
-    .is("parent_task_id", null);
+    .is("parent_task_id", null)
+    .is("deleted_at", null);
   const recentlyUsedTitles = new Set(
     (recentAuto ?? []).map((r) => (r as { title?: string | null }).title ?? "").filter(Boolean)
   );
