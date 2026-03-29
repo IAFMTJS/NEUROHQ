@@ -128,6 +128,10 @@
   --card-padding: 1.25rem;
   --content-max-width: 72rem;
 
+  /* Command stack page (visual lab preview; tune here then promote to layout / hud) */
+  --command-stack-bg-image: url("/Background12.PNG");
+  --command-stack-inner-max: 64rem;
+
   /* ========== CINEMATIC NEON (full design) ========== */
   --cinematic-navy: #040712;
   --cinematic-navy-mid: #080d1c;
@@ -919,6 +923,13 @@ html[data-light-ui="true"] body {
 [data-light-ui="true"] .dashboard-bg-noise { display: none !important; }
 [data-light-ui="true"] .dashboard-page::before,
 [data-light-ui="true"] .dashboard-page::after { display: none !important; }
+[data-light-ui="true"] .command-stack-page-root {
+  background-image: none !important;
+  background-color: #050c18 !important;
+  background-attachment: scroll !important;
+}
+[data-light-ui="true"] .command-stack-page-root::before,
+[data-light-ui="true"] .command-stack-page-root::after { display: none !important; }
 [data-light-ui="true"] .dashboard-cinematic:not(.tasks-command-deck) {
   background-image: none !important;
 }
@@ -2703,6 +2714,66 @@ header h1 { margin: 0; }
   pointer-events: none;
   z-index: 1;
 }
+
+/* Command stack page root — mirrors hud cinematicBackdrop; same layers as dashboard HQ (mist, stars, grain via hud.module). */
+.command-stack-page-root {
+  position: relative;
+  min-height: 100vh;
+  min-height: 100dvh;
+  isolation: isolate;
+  overflow-x: hidden;
+  background-color: var(--mode-bg-main, #050c18);
+  background-image: var(--command-stack-bg-image);
+  background-position: center center;
+  background-size: cover;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+}
+
+.command-stack-page-root::before {
+  content: "";
+  position: fixed;
+  inset: -20%;
+  pointer-events: none;
+  z-index: 7;
+  background: radial-gradient(
+    circle at 50% 35%,
+    rgba(var(--mode-rgb), 0.12),
+    rgba(var(--mode-rgb-deep), 0.08),
+    transparent 64%
+  );
+}
+
+.command-stack-page-root::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 8;
+  background: none;
+}
+
+@media (min-width: 768px) {
+  .command-stack-page-root::before {
+    background: radial-gradient(
+      circle at 50% 40%,
+      rgba(var(--mode-rgb), 0.11),
+      rgba(var(--mode-rgb-deep), 0.07),
+      transparent 60%
+    );
+  }
+}
+
+/* Inner column: same rhythm as visual-lab / command routes (max width from --command-stack-inner-max). */
+.command-stack-page-inner {
+  width: 100%;
+  max-width: min(var(--command-stack-inner-max), 100%);
+  margin-inline: auto;
+  padding-inline: var(--page-padding-x);
+  padding-top: 2rem;
+  padding-bottom: 3rem;
+}
+
 .dashboard-bridge,
 .dashboard-bridge-frame {
   position: relative;
