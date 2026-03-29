@@ -22,6 +22,123 @@ const MOCK_DOMAINS = [
   { id: "g", label: "Groei", weight: 16, allocation: 20 },
 ] as const;
 
+/** Matcht Overview-splitring: één bron voor KPI-regels + tab Focus. */
+const OVERVIEW_BUDGET_HEALTH = 62;
+const OVERVIEW_GROWTH_HEALTH = 74;
+
+function SplitHealthFirstCard() {
+  return (
+    <article className="relative overflow-hidden rounded-xl border border-[rgba(var(--mode-rgb),0.22)] bg-gradient-to-br from-[rgba(8,26,42,0.94)] via-[var(--bg-elevated)]/88 to-[rgba(var(--mode-rgb-deep),0.14)] p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.06),0_0_28px_rgba(var(--mode-rgb),0.08)] md:p-5">
+      <div
+        className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_50%_0%,rgba(var(--mode-rgb),0.12),transparent_58%)]"
+        aria-hidden
+      />
+      <div className="relative flex flex-col items-stretch gap-4 md:flex-row md:items-center md:gap-6">
+        <div className="flex flex-col items-center justify-center gap-2 md:shrink-0">
+          <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-[var(--semantic-accent)]/95">Split health</p>
+          <StrategyAnalysisSplitRing
+            budgetHealth={OVERVIEW_BUDGET_HEALTH}
+            growthHealth={OVERVIEW_GROWTH_HEALTH}
+            budgetWarn
+            growthWarn={false}
+          />
+        </div>
+        <div className="min-w-0 flex-1 space-y-3 text-center md:text-left">
+          <p className="text-sm font-semibold leading-snug text-[var(--text-primary)] [text-shadow:0_0_12px_rgba(var(--mode-rgb),0.15)]">
+            Budgetdruk vs. groei-speling — eerste signaal op Overview.
+          </p>
+          <div className="flex flex-wrap justify-center gap-2 md:justify-start">
+            <span className="rounded-lg border border-[rgba(var(--hud-amber-500-rgb),0.4)] bg-[rgba(45,30,8,0.35)] px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-[var(--hud-amber-500)]">
+              Budget · {OVERVIEW_BUDGET_HEALTH}%
+            </span>
+            <span className="rounded-lg border border-[rgba(var(--mode-rgb),0.28)] bg-[rgba(var(--mode-rgb-deep),0.12)] px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-[var(--semantic-accent)]">
+              Groei · {OVERVIEW_GROWTH_HEALTH}%
+            </span>
+          </div>
+          <p className="text-[11px] leading-relaxed text-[var(--text-secondary)]">
+            Zelfde component als Strategy → Analyse op productie. Waarschuwing op budgetboog is hier bewust aan (mock).
+          </p>
+        </div>
+      </div>
+    </article>
+  );
+}
+
+function MockStrategyWeekBudgetStrip() {
+  const cap = 420;
+  const spent = 312;
+  const pct = Math.round((spent / cap) * 100);
+  const softCapPct = 85;
+  return (
+    <div className="space-y-3 rounded-xl border border-[rgba(var(--mode-rgb),0.16)] bg-[rgba(6,18,30,0.48)] p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-[var(--semantic-accent)]">Strategisch weekbudget</p>
+          <p className="mt-1 text-xs text-[var(--text-secondary)]">Mock · koppeling naar /budget-gedrag: burn vs. plan, geen live data.</p>
+        </div>
+        <span className="shrink-0 rounded-md border border-[rgba(var(--hud-amber-500-rgb),0.35)] bg-[rgba(45,28,6,0.4)] px-2 py-1 text-[9px] font-bold uppercase tracking-wide text-[var(--hud-amber-500)]">
+          Soft hold
+        </span>
+      </div>
+      <div className="grid grid-cols-3 gap-2 text-center sm:gap-3">
+        <div className="rounded-lg border border-[rgba(var(--mode-rgb),0.1)] bg-black/20 px-2 py-2">
+          <p className="text-[9px] font-bold uppercase tracking-wide text-[var(--text-muted)]">Besteed</p>
+          <p className="mt-1 text-sm font-bold tabular-nums text-[var(--text-primary)]">€{spent}</p>
+        </div>
+        <div className="rounded-lg border border-[rgba(var(--mode-rgb),0.1)] bg-black/20 px-2 py-2">
+          <p className="text-[9px] font-bold uppercase tracking-wide text-[var(--text-muted)]">Resterend</p>
+          <p className="mt-1 text-sm font-bold tabular-nums text-emerald-300">€{cap - spent}</p>
+        </div>
+        <div className="rounded-lg border border-[rgba(var(--mode-rgb),0.1)] bg-black/20 px-2 py-2">
+          <p className="text-[9px] font-bold uppercase tracking-wide text-[var(--text-muted)]">Weekplafond</p>
+          <p className="mt-1 text-sm font-bold tabular-nums text-[var(--text-primary)]">€{cap}</p>
+        </div>
+      </div>
+      <div>
+        <div className="mb-1 flex justify-between text-[9px] font-semibold uppercase tracking-[0.12em] text-[var(--text-muted)]">
+          <span>Week burn</span>
+          <span className="tabular-nums text-[var(--text-secondary)]">
+            {pct}% · reset over 2 d
+          </span>
+        </div>
+        <div className="relative h-2.5 overflow-hidden rounded-full border border-[rgba(var(--mode-rgb),0.15)] bg-[rgba(6,18,30,0.55)] shadow-[inset_0_1px_2px_rgba(0,0,0,0.35)]">
+          <div
+            className="pointer-events-none absolute bottom-0 top-0 w-px bg-[rgba(var(--hud-amber-500-rgb),0.85)] shadow-[0_0_8px_rgba(var(--hud-amber-500-rgb),0.5)]"
+            style={{ left: `calc(${softCapPct}% - 0.5px)` }}
+            title="Soft cap"
+            aria-hidden
+          />
+          <div
+            className="h-full rounded-full bg-gradient-to-r from-[rgba(var(--mode-rgb),0.35)] via-[var(--semantic-accent)] to-[var(--hud-amber-500)] shadow-[0_0_14px_rgba(var(--hud-amber-500-rgb),0.25)]"
+            style={{ width: `${pct}%` }}
+          />
+        </div>
+        <p className="mt-1 text-[10px] text-[var(--text-muted)]">
+          Amber lijn = soft cap ({softCapPct}%). Boven dit punt verhoogt de engine friction op impuls-spend (concept-copy).
+        </p>
+      </div>
+      <ul className="space-y-2 border-t border-[rgba(var(--mode-rgb),0.1)] pt-3">
+        {[
+          { label: "Vaste lasten", sub: "Mock", val: "€ 245" },
+          { label: "Variabel (eten, rit)", sub: "Op trace", val: "€ 52" },
+          { label: "Discretionair / groei", sub: "Side-project risk", val: "€ 15 rest" },
+        ].map((row) => (
+          <li
+            key={row.label}
+            className="flex items-center justify-between gap-2 rounded-lg border border-[rgba(var(--mode-rgb),0.08)] bg-[rgba(4,12,22,0.35)] px-2.5 py-2"
+          >
+            <div className="min-w-0">
+              <p className="text-xs font-medium text-[var(--text-primary)]">{row.label}</p>
+              <p className="text-[10px] text-[var(--text-muted)]">{row.sub}</p>
+            </div>
+            <span className="shrink-0 text-xs font-bold tabular-nums text-[var(--text-secondary)]">{row.val}</span>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
 function MockReviewBanner() {
   return (
     <div className="rounded-xl border border-[rgba(var(--hud-amber-500-rgb),0.45)] bg-gradient-to-r from-[rgba(45,30,8,0.5)] to-[rgba(12,24,42,0.85)] px-3 py-3 shadow-[0_0_24px_rgba(var(--hud-amber-500-rgb),0.12)] md:flex md:items-center md:justify-between md:gap-4 md:px-4">
@@ -40,6 +157,8 @@ function MockReviewBanner() {
 function OverviewPanels() {
   return (
     <div className="space-y-4">
+      <SplitHealthFirstCard />
+
       <article className="relative overflow-hidden rounded-xl border border-[rgba(var(--semantic-accent),0.22)] bg-[rgba(6,18,30,0.5)] shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
         <div className="absolute left-0 top-0 h-full w-1 bg-gradient-to-b from-[var(--semantic-accent)] to-emerald-500/60" aria-hidden />
         <div className="p-4 pl-5 md:p-5 md:pl-6">
@@ -61,48 +180,36 @@ function OverviewPanels() {
         </div>
       </article>
 
-      <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_220px] lg:items-start">
-        <section className="relative overflow-hidden rounded-xl border border-[rgba(var(--mode-rgb),0.2)] bg-gradient-to-br from-[rgba(8,26,42,0.92)] via-[var(--bg-elevated)]/88 to-[rgba(var(--mode-rgb-deep),0.12)] p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.05)] md:p-5">
-          <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[var(--semantic-accent)]/90">Analyse</p>
-          <p className="mt-2 text-sm font-semibold leading-snug text-[var(--text-primary)] [text-shadow:0_0_12px_rgba(var(--mode-rgb),0.2)] md:text-base">
-            Focus wint op herstel — budgetgezondheid zakt licht door side-projects.
-          </p>
-          <ul className="mt-3 space-y-1.5">
-            {[
-              "Werkcluster: 3 missies op trace · 1 risico (inbox)",
-              "Recovery 2× gepland · engine beveelt korte walk vóór 17:00",
-              "Growth: leer-streak actief · geen nieuwe cursus tot quote-run klaar is",
-            ].map((line) => (
-              <li key={line} className="flex gap-2.5 text-xs text-[var(--text-secondary)] md:text-sm">
-                <span
-                  className="mt-[5px] h-1.5 w-1.5 shrink-0 rounded-full bg-[var(--semantic-accent)] shadow-[0_0_8px_rgba(var(--mode-rgb),0.45)]"
-                  aria-hidden
-                />
-                <span className="min-w-0 leading-snug">{line}</span>
-              </li>
-            ))}
-          </ul>
-          <div className="mt-4">
-            <div className="mb-1 flex justify-between text-[9px] font-semibold uppercase tracking-[0.14em] text-[var(--text-muted)]">
-              <span>Missies week</span>
-              <span className="tabular-nums text-[var(--text-secondary)]">71%</span>
-            </div>
-            <div className="h-1.5 overflow-hidden rounded-full border border-[rgba(var(--mode-rgb),0.15)] bg-[rgba(6,18,30,0.55)] shadow-[inset_0_1px_2px_rgba(0,0,0,0.35)]">
-              <div
-                className="h-full w-[71%] rounded-full bg-gradient-to-r from-[rgba(var(--mode-rgb),0.25)] via-[var(--semantic-accent)] to-[#34d399] shadow-[0_0_12px_rgba(var(--mode-rgb),0.35)]"
+      <section className="relative overflow-hidden rounded-xl border border-[rgba(var(--mode-rgb),0.2)] bg-gradient-to-br from-[rgba(8,26,42,0.92)] via-[var(--bg-elevated)]/88 to-[rgba(var(--mode-rgb-deep),0.12)] p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.05)] md:p-5">
+        <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[var(--semantic-accent)]/90">Analyse</p>
+        <p className="mt-2 text-sm font-semibold leading-snug text-[var(--text-primary)] [text-shadow:0_0_12px_rgba(var(--mode-rgb),0.2)] md:text-base">
+          Focus wint op herstel — budgetgezondheid zakt licht door side-projects.
+        </p>
+        <ul className="mt-3 space-y-1.5">
+          {[
+            "Werkcluster: 3 missies op trace · 1 risico (inbox)",
+            "Recovery 2× gepland · engine beveelt korte walk vóór 17:00",
+            "Growth: leer-streak actief · geen nieuwe cursus tot quote-run klaar is",
+          ].map((line) => (
+            <li key={line} className="flex gap-2.5 text-xs text-[var(--text-secondary)] md:text-sm">
+              <span
+                className="mt-[5px] h-1.5 w-1.5 shrink-0 rounded-full bg-[var(--semantic-accent)] shadow-[0_0_8px_rgba(var(--mode-rgb),0.45)]"
+                aria-hidden
               />
-            </div>
+              <span className="min-w-0 leading-snug">{line}</span>
+            </li>
+          ))}
+        </ul>
+        <div className="mt-4">
+          <div className="mb-1 flex justify-between text-[9px] font-semibold uppercase tracking-[0.14em] text-[var(--text-muted)]">
+            <span>Missies week</span>
+            <span className="tabular-nums text-[var(--text-secondary)]">71%</span>
           </div>
-        </section>
-
-        <div className="flex flex-col items-center justify-center gap-2 rounded-xl border border-[rgba(var(--mode-rgb),0.18)] bg-[rgba(4,12,22,0.45)] px-4 py-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
-          <p className="text-[9px] font-bold uppercase tracking-[0.14em] text-[var(--text-muted)]">Split health</p>
-          <StrategyAnalysisSplitRing budgetHealth={62} growthHealth={74} budgetWarn growthWarn={false} />
-          <p className="max-w-[200px] text-center text-[10px] leading-relaxed text-[var(--text-muted)]">
-            Zelfde component als Strategy → Analyse op productie (mock waarden).
-          </p>
+          <div className="h-1.5 overflow-hidden rounded-full border border-[rgba(var(--mode-rgb),0.15)] bg-[rgba(6,18,30,0.55)] shadow-[inset_0_1px_2px_rgba(0,0,0,0.35)]">
+            <div className="h-full w-[71%] rounded-full bg-gradient-to-r from-[rgba(var(--mode-rgb),0.25)] via-[var(--semantic-accent)] to-[#34d399] shadow-[0_0_12px_rgba(var(--mode-rgb),0.35)]" />
+          </div>
         </div>
-      </div>
+      </section>
 
       <div className="grid gap-3 sm:grid-cols-3">
         {[
@@ -127,7 +234,9 @@ function OverviewPanels() {
 function FocusBudgetPanel() {
   return (
     <div className="space-y-4">
-      <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-[var(--text-muted)]">Wekelijkse allocatie (mock)</p>
+      <MockStrategyWeekBudgetStrip />
+
+      <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-[var(--text-muted)]">Tijdsallocatie per domein (mock)</p>
       <div className="flex flex-wrap gap-2">
         {MOCK_DOMAINS.map((d) => (
           <span

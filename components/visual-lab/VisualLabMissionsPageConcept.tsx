@@ -9,6 +9,15 @@ const TABS: { id: TasksTabId; label: string }[] = [
   { id: "routine", label: "Routine" },
 ];
 
+/** UX-pariteit met TaskList `missionsHeroLayout`: Vandaag/plan/backlog + Voltooid-chip. */
+const MOCK_VIEW_MODES = ["focus", "plan", "backlog"] as const;
+
+const MOCK_DONE_TODAY = [
+  { title: "Inbox zero (ochtend)", meta: "~12 min" },
+  { title: "Sync call notities", meta: "Werk" },
+  { title: "Tanden + medicatie", meta: "Routine" },
+] as const;
+
 const SECONDARY_MISSIONS = [
   {
     title: "Inbox: max. 20 items verwerken",
@@ -144,6 +153,8 @@ function MockRoutinePanel() {
  */
 export function VisualLabMissionsPageConcept() {
   const [tab, setTab] = useState<TasksTabId>("missions");
+  const [mockViewMode, setMockViewMode] = useState<(typeof MOCK_VIEW_MODES)[number]>("focus");
+  const [mockDonePanelOpen, setMockDonePanelOpen] = useState(false);
 
   const tabBtn = (id: TasksTabId) =>
     `dashboard-mini-btn ${tab === id ? "dashboard-mini-btn-primary" : "dashboard-mini-btn-secondary"}`;
@@ -159,8 +170,9 @@ export function VisualLabMissionsPageConcept() {
             Missies · paginastyling (concept)
           </h2>
           <p className="mt-1 max-w-2xl text-xs leading-relaxed text-[var(--text-secondary)]">
-            Tab-rail matcht <code className="rounded bg-black/30 px-1 text-[10px]">TasksTabsShell</code>; op Missions staat de hoofdmissie direct onder
-            de tabs. Overige blokken en andere tabs zijn mock.
+            Tab-rail matcht <code className="rounded bg-black/30 px-1 text-[10px]">TasksTabsShell</code>; op Missions: rij zoals{" "}
+            <code className="rounded bg-black/30 px-1 text-[10px]">TaskList</code> (Vandaag/plan/backlog + Voltooid vandaag), hoofdmissie, blokken,{" "}
+            <code className="rounded bg-black/30 px-1 text-[10px]">+ Missie toevoegen</code>. Andere tabs zijn mock.
           </p>
         </div>
         <span className="shrink-0 text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--text-muted)]">Mock</span>
@@ -213,6 +225,64 @@ export function VisualLabMissionsPageConcept() {
           <div className="mt-4 space-y-4">
             {tab === "missions" ? (
               <>
+                {/* Zelfde rij als TaskList (missionsHeroLayout): Play: weergave + Voltooid vandaag */}
+                <div className="flex flex-wrap items-center justify-center gap-1.5 sm:justify-start">
+                  <div className="flex flex-wrap items-center justify-center gap-1.5 sm:justify-start" aria-label="Mock: missieweergave">
+                    {MOCK_VIEW_MODES.map((m) => (
+                      <button
+                        key={m}
+                        type="button"
+                        onClick={() => setMockViewMode(m)}
+                        className={`rounded-full border px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.08em] transition-colors ${
+                          mockViewMode === m
+                            ? "border-[rgba(var(--mode-rgb),0.35)] bg-[rgba(var(--mode-rgb),0.12)] text-[var(--accent-focus)] shadow-[0_0_12px_rgba(var(--mode-rgb),0.2)]"
+                            : "border-transparent text-[var(--text-muted)] hover:border-[var(--card-border)] hover:bg-[var(--bg-surface)]/60 hover:text-[var(--text-primary)]"
+                        }`}
+                      >
+                        {m === "focus" ? "Vandaag" : m}
+                      </button>
+                    ))}
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setMockDonePanelOpen((o) => !o)}
+                    aria-expanded={mockDonePanelOpen}
+                    className="rounded-full border border-[var(--card-border)]/80 bg-[var(--bg-surface)]/40 px-3 py-1.5 text-xs font-medium text-[var(--text-muted)] transition hover:border-[var(--card-border)] hover:bg-[var(--bg-surface)]/70 hover:text-[var(--text-primary)]"
+                  >
+                    Voltooid vandaag ({MOCK_DONE_TODAY.length})
+                  </button>
+                </div>
+
+                {mockDonePanelOpen && (
+                  <div className="rounded-xl border border-[rgba(var(--mode-rgb),0.14)] bg-[rgba(6,18,30,0.45)] p-3">
+                    <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-[var(--text-muted)]">
+                      Gedaan vandaag (mock sheet-inhoud)
+                    </p>
+                    <ul className="mt-2 space-y-2">
+                      {MOCK_DONE_TODAY.map((d) => (
+                        <li
+                          key={d.title}
+                          className="flex items-start gap-3 rounded-lg border border-[rgba(var(--mode-rgb),0.08)] bg-black/20 px-3 py-2"
+                        >
+                          <span
+                            className="mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded border border-emerald-500/50 bg-emerald-500/20 text-[10px] text-emerald-200"
+                            aria-hidden
+                          >
+                            ✓
+                          </span>
+                          <div className="min-w-0 flex-1">
+                            <p className="text-sm font-medium leading-snug text-[var(--text-muted)] line-through">{d.title}</p>
+                            <p className="text-[10px] text-[var(--text-muted)]/90">{d.meta}</p>
+                          </div>
+                        </li>
+                      ))}
+                    </ul>
+                    <p className="mt-2 text-[10px] leading-relaxed text-[var(--text-muted)]">
+                      Op productie opent dit een sheet met undo; hier alleen lab-toggle.
+                    </p>
+                  </div>
+                )}
+
                 <MainMissionHero />
 
                 <div className="flex flex-wrap items-center gap-2 rounded-xl border border-[rgba(var(--mode-rgb),0.12)] bg-[rgba(6,18,30,0.4)] px-3 py-2.5">
@@ -269,6 +339,16 @@ export function VisualLabMissionsPageConcept() {
                     ))}
                   </ul>
                 </div>
+
+                <button
+                  type="button"
+                  className="w-full min-h-[48px] cursor-default rounded-full bg-[var(--accent-focus)] px-6 py-3 text-sm font-semibold text-white shadow-[0_0_18px_rgba(var(--mode-rgb),0.35)] transition hover:opacity-95"
+                >
+                  + Missie toevoegen
+                </button>
+                <p className="text-center text-[10px] text-[var(--text-muted)]">
+                  Zelfde primaire CTA als op /tasks (opent EditMissionModal); hier geen actie.
+                </p>
               </>
             ) : null}
 

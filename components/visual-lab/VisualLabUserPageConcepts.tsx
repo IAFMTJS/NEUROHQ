@@ -1,9 +1,25 @@
 "use client";
 
-import { useState } from "react";
-import { CommanderStatRing } from "@/components/commander/CommanderStatRing";
+import Link from "next/link";
+import { useState, type ReactNode } from "react";
+import { EnergyRing } from "@/components/hud-test/EnergyRing";
+import { MoodManualPanel } from "@/components/mood/MoodManualPanel";
+import { MOOD_LABEL_META, type MoodLabel } from "@/lib/mood-intervention-config";
+import { reportInsightsHref } from "@/lib/profile-routes";
 
 type ProfileMain = "home" | "engine";
+
+const PROFILE_ORBIT_TILE =
+  "rounded-xl border border-[rgba(var(--mode-rgb),0.07)] bg-[rgba(var(--mode-rgb-deep),0.08)] px-3 py-2.5 transition-colors";
+
+function OrbitTile({ title, children, className = "" }: { title: string; children: ReactNode; className?: string }) {
+  return (
+    <div className={`${PROFILE_ORBIT_TILE} ${className}`}>
+      <p className="text-[9px] font-bold uppercase tracking-[0.14em] text-[var(--text-muted)]">{title}</p>
+      <div className="mt-1.5 text-sm font-semibold leading-snug text-[var(--text-primary)]">{children}</div>
+    </div>
+  );
+}
 
 const MOCK_ALERTS = [
   {
@@ -69,6 +85,17 @@ function alertLed(tone: (typeof MOCK_ALERTS)[number]["tone"]) {
  */
 export function VisualLabProfilePageConcept() {
   const [main, setMain] = useState<ProfileMain>("home");
+  const [moodOpen, setMoodOpen] = useState(false);
+  const [moodLabel, setMoodLabel] = useState<MoodLabel | null>("good");
+
+  const ringSize = 200;
+  const barPct = 70;
+  const curXp = 8_420;
+  const spanXp = 12_000;
+  const totalXp = 45_200;
+  const level = 12;
+  const dailyRewardXp = 360;
+  const xpToNext = 3_580;
 
   return (
     <section
@@ -81,8 +108,10 @@ export function VisualLabProfilePageConcept() {
             Profiel · paginastyling (concept)
           </h2>
           <p className="mt-1 max-w-2xl text-xs leading-relaxed text-[var(--text-secondary)]">
-            Cinematic shell zoals missies; hoofdnav matcht productie <span className="text-[var(--text-primary)]">Profiel / Engine</span>. Identiteit,
-            stat rings en XP in één scanbare kolom.
+            Cinematic shell zoals missies; inhoud volgt profiel-home:{" "}
+            <code className="rounded bg-black/30 px-1 text-[10px]">ProfileHomeCompact</code> — level-
+            <code className="rounded bg-black/30 px-1 text-[10px]">EnergyRing</code>-orbit, rang/streak-tegels, dagelijkse challenges, mood en
+            insight. Mock data.
           </p>
         </div>
         <span className="shrink-0 text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--text-muted)]">Mock</span>
@@ -149,38 +178,183 @@ export function VisualLabProfilePageConcept() {
                   </div>
                 </article>
 
-                <div className="flex flex-wrap items-end justify-center gap-6 rounded-xl border border-[rgba(var(--mode-rgb),0.12)] bg-[rgba(4,12,22,0.35)] px-4 py-5">
-                  <CommanderStatRing variant="energy" value={68} size={96} />
-                  <CommanderStatRing variant="focus" value={54} size={96} />
-                  <CommanderStatRing variant="load" value={71} size={96} />
-                </div>
+                <section
+                  className="relative overflow-hidden rounded-xl border border-[rgba(var(--mode-rgb),0.2)] bg-gradient-to-br from-[rgba(8,26,42,0.92)] via-[var(--bg-elevated)]/88 to-[rgba(var(--mode-rgb-deep),0.12)] px-3 py-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.05)] sm:px-5 sm:py-5"
+                  aria-label="Level orbit (concept, zoals profiel home)"
+                >
+                  <div className="relative z-[1] mx-auto grid max-w-3xl grid-cols-1 gap-5 md:grid-cols-[1fr_minmax(0,220px)_1fr] md:items-center md:gap-3">
+                    <div className="order-2 hidden flex-col justify-center gap-3 md:order-1 md:flex">
+                      <OrbitTile title="Rang">
+                        <span className="line-clamp-2 text-[13px] leading-snug" title="Strategist III (mock)">
+                          Strategist III
+                        </span>
+                      </OrbitTile>
+                      <OrbitTile title="Streak actief">4 dagen</OrbitTile>
+                      <OrbitTile title="Langste reeks">21 dagen</OrbitTile>
+                      <OrbitTile title="Momentum" className="bg-[rgba(var(--mode-rgb-deep),0.1)]">
+                        62 · Stabiel
+                      </OrbitTile>
+                    </div>
 
-                <div>
-                  <div className="mb-1 flex justify-between text-[9px] font-semibold uppercase tracking-[0.12em] text-[var(--text-muted)]">
-                    <span>XP naar level 13</span>
-                    <span className="tabular-nums text-[var(--text-secondary)]">8.420 / 12.000</span>
-                  </div>
-                  <div className="h-2 overflow-hidden rounded-full border border-[rgba(var(--mode-rgb),0.15)] bg-[rgba(6,18,30,0.55)] shadow-[inset_0_1px_2px_rgba(0,0,0,0.35)]">
-                    <div
-                      className="h-full w-[70%] rounded-full bg-gradient-to-r from-[rgba(var(--mode-rgb),0.35)] via-[var(--semantic-accent)] to-emerald-400/90 shadow-[0_0_12px_rgba(var(--mode-rgb),0.35)]"
-                    />
-                  </div>
-                  <p className="mt-2 text-[11px] text-[var(--text-muted)]">Level 12 · streak 4 dagen (mock)</p>
-                </div>
+                    <div className="order-1 flex flex-col items-center justify-center md:order-2">
+                      <div className="relative">
+                        <div
+                          className="absolute left-1/2 top-1/2 h-[118%] w-[118%] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[radial-gradient(circle,rgba(var(--mode-rgb),0.16)_0%,transparent_62%)] blur-md"
+                          aria-hidden
+                        />
+                        <div className="relative drop-shadow-[0_16px_44px_rgba(0,0,0,0.5)]">
+                          <EnergyRing
+                            profileOrbit
+                            size={ringSize}
+                            progress={barPct}
+                            label={`Level ${level}`}
+                            value={`${barPct}%`}
+                            mode="green"
+                          />
+                        </div>
+                      </div>
+                      <p className="mt-3 max-w-[260px] text-center text-[11px] leading-relaxed text-[var(--text-muted)]">
+                        <span className="tabular-nums text-[var(--text-secondary)]">
+                          {curXp.toLocaleString()} / {spanXp.toLocaleString()} XP
+                        </span>{" "}
+                        naar Level {level + 1} · {totalXp.toLocaleString()} totaal
+                      </p>
+                      <p className="mt-1.5 text-center">
+                        <Link
+                          href="/xp"
+                          className="text-[11px] font-semibold text-[var(--accent-focus)] underline-offset-2 hover:underline rounded-sm outline-none focus-visible:ring-2 focus-visible:ring-[rgba(var(--mode-rgb),0.45)] focus-visible:ring-offset-0"
+                        >
+                          XP-bridge
+                        </Link>
+                      </p>
+                    </div>
 
-                <div className="grid gap-3 sm:grid-cols-2">
-                  <div className="rounded-xl border border-[rgba(var(--mode-rgb),0.1)] bg-[rgba(6,18,30,0.35)] p-4">
-                    <p className="text-[10px] font-bold uppercase tracking-wide text-[var(--text-muted)]">Dagelijkse missie</p>
-                    <p className="mt-2 text-sm font-semibold text-[var(--text-primary)]">Lees 15 min · geen scherm</p>
-                    <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-black/35">
-                      <div className="h-full w-[40%] rounded-full bg-[var(--semantic-accent)]/80" />
+                    <div className="order-3 hidden flex-col justify-center gap-3 md:flex">
+                      <OrbitTile title="Volgende rang">Architect I</OrbitTile>
+                      <OrbitTile title="XP tot unlock">
+                        Nog {xpToNext.toLocaleString()} XP
+                      </OrbitTile>
+                      <OrbitTile title="Totaal XP">{totalXp.toLocaleString()}</OrbitTile>
+                    </div>
+
+                    <div className="order-4 flex flex-wrap justify-center gap-2 md:col-span-3 md:hidden">
+                      <OrbitTile title="Rang">
+                        <span className="max-w-[100px] truncate text-xs">Strategist III</span>
+                      </OrbitTile>
+                      <OrbitTile title="Streak">4d</OrbitTile>
+                      <OrbitTile title="Unlock">{xpToNext.toLocaleString()} XP</OrbitTile>
+                      <OrbitTile title="XP %">{barPct}%</OrbitTile>
                     </div>
                   </div>
-                  <div className="rounded-xl border border-[rgba(var(--mode-rgb),0.1)] bg-[rgba(6,18,30,0.35)] p-4">
-                    <p className="text-[10px] font-bold uppercase tracking-wide text-[var(--text-muted)]">Gedrag · snapshot</p>
-                    <p className="mt-2 text-sm text-[var(--text-secondary)]">
-                      Impuls-score stabiel. Engine beveelt korte recovery aan vóór 17:00.
-                    </p>
+                </section>
+
+                <section
+                  className="space-y-4 rounded-xl border border-[rgba(var(--mode-rgb),0.1)] bg-[rgba(var(--mode-rgb-deep),0.07)] px-4 py-3.5 sm:px-5"
+                  aria-labelledby="vl-daily-challenges-heading"
+                >
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <div>
+                      <h4 id="vl-daily-challenges-heading" className="text-[10px] font-bold uppercase tracking-[0.16em] text-[var(--semantic-accent)]/90">
+                        Dagelijkse challenges
+                      </h4>
+                      <p className="mt-1 text-[11px] leading-relaxed text-[var(--text-muted)]">
+                        3 lichte challenges, elk ongeveer {dailyRewardXp} XP (
+                        {Math.round((dailyRewardXp / Math.max(1, xpToNext)) * 100)}% richting volgend level).
+                      </p>
+                    </div>
+                    <span
+                      className="pointer-events-none min-w-[10.5rem] rounded-lg border border-[rgba(var(--mode-rgb),0.28)] bg-gradient-to-b from-[rgba(var(--mode-rgb-deep),0.48)] to-[rgba(6,18,30,0.96)] px-2.5 py-1.5 text-center text-sm font-medium text-[var(--text-primary)] shadow-[inset_0_1px_0_rgba(255,255,255,0.07),0_0_14px_rgba(var(--mode-rgb),0.07)] [color-scheme:dark]"
+                      aria-hidden
+                    >
+                      2026-03-29
+                    </span>
+                  </div>
+                  <div className="mt-3 grid gap-2 md:grid-cols-3">
+                    {[
+                      { tone: "Opstart", title: "Inbox: 5 items wegwerken", xp: dailyRewardXp },
+                      { tone: "Momentum", title: "20 min wandeling (ochtend)", xp: dailyRewardXp },
+                      { tone: "Uitdaging", title: "Deep-work: één blok 45 min", xp: dailyRewardXp },
+                    ].map((c) => (
+                      <div
+                        key={c.tone}
+                        className="rounded-xl border border-[rgba(var(--mode-rgb),0.1)] bg-[rgba(var(--mode-rgb-deep),0.06)] p-3"
+                      >
+                        <p className="text-[9px] font-semibold uppercase tracking-[0.12em] text-[var(--text-muted)]">{c.tone}</p>
+                        <p className="mt-1 text-sm font-medium text-[var(--text-primary)]">{c.title}</p>
+                        <p className="mt-1 text-xs text-[var(--accent-focus)]">+{c.xp} XP potentieel</p>
+                        <button
+                          type="button"
+                          className="mt-2 w-full cursor-default rounded-lg border border-[rgba(var(--mode-rgb),0.22)] bg-[rgba(var(--mode-rgb-deep),0.08)] px-2.5 py-1.5 text-[11px] font-semibold text-[var(--text-primary)] opacity-80"
+                          disabled
+                        >
+                          Plan uitdaging (mock)
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                  <p className="mt-1 text-[10px] text-[var(--text-muted)]">
+                    Volledige XP-bridge:{" "}
+                    <Link
+                      href="/xp"
+                      className="font-semibold text-[var(--accent-focus)] underline-offset-2 hover:underline rounded-sm outline-none focus-visible:ring-2 focus-visible:ring-[rgba(var(--mode-rgb),0.45)] focus-visible:ring-offset-0"
+                    >
+                      XP-pagina
+                    </Link>
+                    .
+                  </p>
+                </section>
+
+                <div
+                  className={`${PROFILE_ORBIT_TILE} border-[rgba(var(--mode-rgb),0.1)] bg-[rgba(var(--mode-rgb-deep),0.07)] px-4 py-3.5 sm:px-5`}
+                >
+                  <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-violet-300/90">Mood</p>
+                  <div className="mt-2 flex flex-wrap items-center gap-3">
+                    {moodLabel && MOOD_LABEL_META[moodLabel] ? (
+                      <span className="inline-flex items-center gap-1.5 rounded-full border border-violet-500/35 bg-violet-950/35 px-2.5 py-1 text-[11px] font-semibold text-violet-100/95">
+                        <span aria-hidden>{MOOD_LABEL_META[moodLabel].emoji}</span>
+                        {MOOD_LABEL_META[moodLabel].label}
+                      </span>
+                    ) : (
+                      <span className="text-xs text-[var(--text-muted)]">Nog geen mood vandaag</span>
+                    )}
+                    <button
+                      type="button"
+                      onClick={() => setMoodOpen(true)}
+                      className="rounded-lg border border-violet-500/40 bg-violet-950/30 px-3 py-1.5 text-[11px] font-semibold text-violet-100/95 hover:border-violet-400/50"
+                    >
+                      Update mood
+                    </button>
+                  </div>
+                  <p className="mt-2 text-[10px] text-[var(--text-muted)]">
+                    Zelfde flow als Brain Status op het dashboard — energie/focus daar, mood hier.
+                  </p>
+                </div>
+
+                <MoodManualPanel open={moodOpen} onClose={() => setMoodOpen(false)} onMoodSaved={(label) => setMoodLabel(label)} />
+
+                <div
+                  className={`${PROFILE_ORBIT_TILE} border-[rgba(var(--mode-rgb),0.1)] bg-[rgba(var(--mode-rgb-deep),0.07)] px-4 py-3.5 sm:px-5`}
+                >
+                  <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-[var(--semantic-accent)]/90">Insight</p>
+                  <p className="mt-2 line-clamp-4 text-sm leading-relaxed text-[var(--text-primary)]">
+                    Kleine actie vandaag verzet veel — log een missie om je curve te vullen. (mock coachregel)
+                  </p>
+                  <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] font-semibold">
+                    <Link
+                      href={reportInsightsHref("overview")}
+                      className="rounded-sm text-[var(--accent-focus)] underline-offset-2 hover:underline outline-none focus-visible:ring-2 focus-visible:ring-[rgba(var(--mode-rgb),0.45)] focus-visible:ring-offset-0"
+                    >
+                      Volledige insights
+                    </Link>
+                    <span className="text-[var(--text-muted)]" aria-hidden>
+                      ·
+                    </span>
+                    <Link
+                      href="/xp"
+                      className="rounded-sm text-[var(--text-muted)] underline-offset-2 hover:text-[var(--accent-focus)] hover:underline outline-none focus-visible:ring-2 focus-visible:ring-[rgba(var(--mode-rgb),0.45)] focus-visible:ring-offset-0"
+                    >
+                      Voorspelling
+                    </Link>
                   </div>
                 </div>
               </>
