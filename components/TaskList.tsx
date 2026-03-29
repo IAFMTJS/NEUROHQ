@@ -2,7 +2,17 @@
 
 import { useState, useTransition, useEffect, useMemo, useCallback, useRef, type ReactNode } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { createTask, deleteTask, duplicateTask, restoreTask, snoozeTask, uncompleteTask, skipNextOccurrence, rescheduleTask } from "@/app/actions/tasks";
+import {
+  createTask,
+  deleteTask,
+  duplicateTask,
+  restoreTask,
+  snoozeTask,
+  uncompleteTask,
+  skipNextOccurrence,
+  rescheduleTask,
+  type CompleteTaskResult,
+} from "@/app/actions/tasks";
 import { trackEvent } from "@/app/actions/analytics-events";
 import { useOfflineCompleteTask } from "@/app/hooks/useOfflineCompleteTask";
 import { addToQueue } from "@/lib/offline-queue";
@@ -382,10 +392,8 @@ export function TaskList({
     return () => window.removeEventListener("keydown", onKey);
   }, []);
 
-  function showCompleteToast(
-    taskId: string,
-    result?: { performanceRank?: "S" | "A" | "B" | "C" | null; performanceScore?: number | null; xpAwarded?: number } | null
-  ) {
+  /** Mission voltooid + optioneel level-up / low-synergy — alle paden (lijst, details, focus) moeten dit aanroepen. */
+  function presentCompleteTaskFeedback(taskId: string, result?: CompleteTaskResult | null) {
     const rankLabel = result?.performanceRank ? ` · Prestatie ${result.performanceRank}` : "";
     const desc =
       result?.performanceScore != null
@@ -404,6 +412,34 @@ export function TaskList({
         },
       },
     });
+    if (result?.levelUp && result.newLevel) {
+      const rankPromotion = result.rankPromotion;
+      const newRank = result.newRank;
+      const previousRank = result.previousRank;
+      neuroToast.success(
+        rankPromotion && newRank
+          ? `Rank promotion · ${newRank}`
+          : `Level up · Level ${result.newLevel}`,
+        {
+          description:
+            rankPromotion && newRank
+              ? `Van ${previousRank ?? "?"} naar ${newRank}. Bekijk je nieuwe perks in de level-modal.`
+              : "Je performance-profiel is geüpdatet. Bekijk de details in de level-modal of op de XP-pagina.",
+        }
+      );
+      setLevelUpInfo({
+        level: result.newLevel,
+        reputation: result.reputation ?? identityReputation ?? undefined,
+        ...(rankPromotion ? { rankPromotion: true, newRank, previousRank } : {}),
+      });
+    }
+    if (result?.lowSynergy) {
+      neuroToast.warning(
+        "Low synergy state · XP −25%, lagere kans op afronden. Dit is een beslissing van de engine — beter om deze missie op een ander moment te plannen.",
+        { duration: 7000 }
+      );
+    }
+    appState?.triggerReward();
   }
 
   function handleComplete(id: string) {
@@ -430,36 +466,7 @@ export function TaskList({
     startTransition(async () => {
       try {
         const result = await completeTaskOffline(id);
-        showCompleteToast(id, result ?? undefined);
-        if (result?.levelUp && result.newLevel) {
-          const rankPromotion = (result as { rankPromotion?: boolean; newRank?: string; previousRank?: string }).rankPromotion;
-          const newRank = (result as { newRank?: string }).newRank;
-          const previousRank = (result as { previousRank?: string }).previousRank;
-          neuroToast.success(
-            rankPromotion && newRank
-              ? `Rank promotion · ${newRank}`
-              : `Level up · Level ${result.newLevel}`,
-            {
-              description:
-                rankPromotion && newRank
-                  ? `Van ${previousRank ?? "?"} naar ${newRank}. Bekijk je nieuwe perks in de level-modal.`
-                  : "Je performance-profiel is geüpdatet. Bekijk de details in de level-modal of op de XP-pagina.",
-            }
-          );
-          setLevelUpInfo({
-            level: result.newLevel,
-            reputation: (result as { reputation?: { discipline: number; consistency: number; impact: number } | null })
-              .reputation ?? identityReputation ?? undefined,
-            ...(rankPromotion ? { rankPromotion: true, newRank, previousRank } : {}),
-          });
-        }
-        if (result?.lowSynergy) {
-          neuroToast.warning(
-            "Low synergy state · XP −25%, lagere kans op afronden. Dit is een beslissing van de engine — beter om deze missie op een ander moment te plannen.",
-            { duration: 7000 }
-          );
-        }
-        appState?.triggerReward();
+        presentCompleteTaskFeedback(id, result ?? undefined);
         if (nextCandidateTask) {
           setNextMissionPromptTask(nextCandidateTask);
         }
@@ -950,7 +957,16 @@ export function TaskList({
                       } as Task);
                     }
                     startTransition(() => {
-                      void completeTaskOffline(s.id);
+                      void (async () => {
+                        try {
+                          const subResult = await completeTaskOffline(s.id);
+                          presentCompleteTaskFeedback(s.id, subResult ?? undefined);
+                          void refreshMergedSnapshotFromNetwork();
+                          router.refresh();
+                        } catch {
+                          appState?.triggerError();
+                        }
+                      })();
                     });
                   }}
                   disabled={s.completed}
@@ -1382,7 +1398,7 @@ export function TaskList({
             task={detailsTask}
             subtasks={subtasksByParent[detailsTask.id]}
             strategicPreview={strategicByTaskId?.[detailsTask.id]}
-            onComplete={(res) => showCompleteToast(detailsTask.id, res)}
+            onComplete={(res) => presentCompleteTaskFeedback(detailsTask.id, res)}
             onEdit={() => { setDetailsTask(null); setEditTask(detailsTask); }}
             onDuplicate={() => { handleDuplicate(detailsTask); setDetailsTask(null); }}
             onDelete={() => { setDetailsTask(null); setConfirmDeleteId(detailsTask.id); }}
@@ -1428,7 +1444,10 @@ export function TaskList({
             date={date}
             taskDomain={strategicByTaskId?.[focusTask.id]?.domain ?? (focusTask as { domain?: string | null }).domain ?? null}
             strategyMapping={strategyMapping ?? null}
-            onComplete={() => setFocusTask(null)}
+            onComplete={(res) => {
+              presentCompleteTaskFeedback(focusTask.id, res);
+              setFocusTask(null);
+            }}
             onSnooze={() => {
               const id = focusTask.id;
               setFocusTask(null);

@@ -11,20 +11,23 @@ import { EnergyRing } from "@/components/hud-test/EnergyRing";
 import { CommanderStatRing } from "@/components/commander/CommanderStatRing";
 import { StrategyAnalysisSplitRing } from "@/components/strategy/StrategyAnalysisSplitRing";
 import { ZoneBandBar } from "@/components/visual-lab/VisualLabBars";
-import { VisualLabBarsSiteExampleCard } from "@/components/visual-lab/VisualLabBarsSiteExampleCard";
 import { PolygonHudMeter } from "@/components/visual-lab/VisualLabPolygonMeters";
 import { VisualLabHexMesh } from "@/components/visual-lab/VisualLabHexMesh";
 import { VisualLabShapeEnergyRing } from "@/components/visual-lab/VisualLabShapeEnergyRing";
-import { VisualLabBudgetStatusAlternatives } from "@/components/visual-lab/VisualLabBudgetStatusAlternatives";
-import { VisualLabBudgetStatusTabConcept } from "@/components/visual-lab/VisualLabBudgetStatusTabConcept";
-import { VisualLabSettingsPageConcept } from "@/components/visual-lab/VisualLabSettingsPageConcept";
 import { VisualLabMissionsPageConcept } from "@/components/visual-lab/VisualLabMissionsPageConcept";
+import {
+  VisualLabNotificationsPageConcept,
+  VisualLabProfilePageConcept,
+} from "@/components/visual-lab/VisualLabUserPageConcepts";
+import {
+  VisualLabStrategyCommandScrollPageConcept,
+  VisualLabStrategyHubPageConcept,
+} from "@/components/visual-lab/VisualLabStrategyPageConcepts";
 import {
   VISUAL_LAB_UI_BACKDROP_ORDER,
   VISUAL_LAB_UI_BACKDROP_PRESETS,
   type VisualLabUiBackdropId,
 } from "@/components/visual-lab/visualLabUiBackdropPresets";
-import { VisualLabNavbarIdeas } from "@/components/visual-lab/VisualLabNavbarIdeas";
 
 /** Shared mock rows for ring kitchen (circle + polygon outlines). */
 const RING_KITCHEN_SAMPLES = [
@@ -99,15 +102,9 @@ export function VisualLabClient() {
               Visual lab
             </h1>
             <p className="mt-2 max-w-2xl text-sm leading-relaxed text-[var(--text-secondary)]">
-              Mock HUD: rings,{" "}
-              <a href="#navbar-design-lab" className="font-medium text-[var(--semantic-accent)] underline decoration-[rgba(var(--mode-rgb),0.35)] underline-offset-2 hover:decoration-[var(--semantic-accent)]">
-                navbar-ontwerpen
-              </a>{" "}
-              (zelfde iconen als productie), budget- en settings-concepten, split ring, balken, polygon meters, hex mesh, toasts. Geen live data.
+              Mock HUD: rings, split ring, balken, polygon meters, hex mesh, toasts. Geen live data.
             </p>
           </header>
-
-          <VisualLabNavbarIdeas />
 
           <section className="relative mb-10" aria-labelledby="ui-backdrops-heading">
             <div className="mb-3 flex flex-wrap items-end justify-between gap-2">
@@ -145,6 +142,16 @@ export function VisualLabClient() {
               })}
             </div>
           </section>
+
+          <VisualLabMissionsPageConcept />
+
+          <VisualLabStrategyHubPageConcept />
+
+          <VisualLabStrategyCommandScrollPageConcept />
+
+          <VisualLabProfilePageConcept />
+
+          <VisualLabNotificationsPageConcept />
 
           <section
             className="relative mb-10 w-full space-y-4 md:-mx-4 md:w-[calc(100%+2rem)] md:max-w-[calc(100%+2rem)] md:px-4"
@@ -377,30 +384,15 @@ export function VisualLabClient() {
             </div>
           </section>
 
-          <section className="relative mb-10 space-y-4 rounded-xl border border-[rgba(var(--mode-rgb),0.12)] bg-[rgba(4,12,22,0.22)] p-4 md:p-5" aria-labelledby="budget-status-lab-heading">
-            <div className="flex flex-wrap items-end justify-between gap-3">
-              <h2 id="budget-status-lab-heading" className="text-[11px] font-bold uppercase tracking-[0.18em] text-[var(--text-muted)]">
-                Budget · statusring (/budget)
-              </h2>
-              <span className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--text-muted)]">RemainingBudgetHero</span>
-            </div>
-            <VisualLabBudgetStatusAlternatives />
-            <VisualLabBudgetStatusTabConcept />
-          </section>
-
-          <VisualLabMissionsPageConcept />
-          <VisualLabSettingsPageConcept />
-
           <section className="relative mb-10 space-y-5" aria-labelledby="bars-advanced-heading">
             <div className="flex flex-wrap items-end justify-between gap-3">
               <h2 id="bars-advanced-heading" className="text-[11px] font-bold uppercase tracking-[0.18em] text-[var(--text-muted)]">
                 Bar alternatives
               </h2>
               <span className="max-w-md text-right text-[10px] leading-snug text-[var(--text-muted)]">
-                Echte siteteksten (Growth + Strategische stack · Budget), nieuwe balken
+                Zone-band lab · nieuwe balken
               </span>
             </div>
-            <VisualLabBarsSiteExampleCard />
             <div className="rounded-xl border border-[rgba(var(--mode-rgb),0.14)] bg-[rgba(4,12,22,0.35)] p-4 md:p-5">
               <p className="mb-3 text-[10px] font-bold uppercase tracking-[0.16em] text-[var(--text-muted)]">
                 Lab · zone aan de rand

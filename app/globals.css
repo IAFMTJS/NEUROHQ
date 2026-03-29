@@ -1698,25 +1698,51 @@ a.nav-item-fab-hub::after {
   text-align: center;
 }
 
+/* Light UI: HQ hub — zelfde cyan/navy familie als .bottom-nav-fab-bar, geen wit vlak */
 [data-light-ui="true"] a.nav-item-fab-hub {
-  background: rgba(248, 250, 252, 0.94);
-  border-color: rgba(20, 28, 45, 0.12);
-  color: color-mix(in srgb, var(--semantic-accent, #00d4ff) 90%, rgba(20, 28, 45, 0.85));
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  background: linear-gradient(
+    165deg,
+    color-mix(in srgb, var(--semantic-accent, #00d4ff) 16%, rgba(8, 20, 38, 0.96)) 0%,
+    rgba(5, 12, 24, 0.97) 48%,
+    rgba(4, 10, 20, 0.98) 100%
+  );
+  border-color: color-mix(in srgb, var(--semantic-accent, #00d4ff) 32%, rgba(var(--mode-rgb), 0.28));
+  color: var(--semantic-accent, #00d4ff);
+  box-shadow:
+    0 8px 28px rgba(0, 0, 0, 0.4),
+    0 0 1px color-mix(in srgb, var(--semantic-accent, #00d4ff) 28%, transparent),
+    inset 0 1px 0 rgba(255, 255, 255, 0.07);
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
 }
 
 [data-light-ui="true"] a.nav-item-fab-hub.active {
-  border-color: color-mix(in srgb, var(--semantic-accent, #00d4ff) 50%, rgba(20, 28, 45, 0.2));
+  border-color: color-mix(in srgb, var(--semantic-accent, #00d4ff) 58%, rgba(var(--mode-rgb), 0.25));
+  background: linear-gradient(
+    165deg,
+    color-mix(in srgb, var(--semantic-accent, #00d4ff) 24%, rgba(4, 14, 30, 0.98)) 0%,
+    rgba(3, 8, 18, 0.99) 100%
+  );
+  box-shadow:
+    0 10px 34px rgba(0, 0, 0, 0.48),
+    0 0 28px rgba(var(--mode-rgb), 0.32),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
 }
 
 [data-light-ui="true"] .nav-item-fab-hub-label {
-  color: color-mix(in srgb, var(--semantic-accent, #00d4ff) 88%, rgba(20, 28, 45, 0.9));
+  color: color-mix(in srgb, var(--semantic-accent, #00d4ff) 92%, #e8f6ff);
 }
 
 [data-light-ui="true"] .nav-item-fab-hub-icon img,
 [data-light-ui="true"] .nav-item-fab-hub-icon svg {
-  filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.12))
-    drop-shadow(0 0 10px color-mix(in srgb, var(--semantic-accent, #00d4ff) 35%, transparent));
+  filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.35))
+    drop-shadow(0 0 14px color-mix(in srgb, var(--semantic-accent, #00d4ff) 45%, transparent));
+}
+
+[data-light-ui="true"] .nav-item-fab-hub.active .nav-item-fab-hub-icon img,
+[data-light-ui="true"] .nav-item-fab-hub.active .nav-item-fab-hub-icon svg {
+  filter: drop-shadow(0 3px 10px rgba(0, 0, 0, 0.42))
+    drop-shadow(0 0 18px color-mix(in srgb, var(--semantic-accent, #00d4ff) 65%, transparent));
 }
 
 /* TOAST (LOCKED) */
