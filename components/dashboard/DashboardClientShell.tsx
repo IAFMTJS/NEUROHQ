@@ -496,17 +496,14 @@ export function DashboardClientShell() {
     blended: "border-fuchsia-500/40 bg-fuchsia-500/10 text-fuchsia-200",
   };
 
-  /* Hub shell: frosted plane lives on #app-shell (.hq-app-shell); this wrapper is layout only */
+  /* Hub shell: frosted + dashboard container live on #app-shell in root layout; this wrapper is layout + DCIC mode tokens */
   return (
     <div
       className={`relative min-h-0 w-full min-w-0 overflow-x-hidden ${isMinimalUI ? "minimal-ui" : ""}`}
       data-minimal={isMinimalUI ? "true" : undefined}
+      style={dcicModeVars}
+      data-mode={dcicMode}
     >
-      <div
-        className={`${!isMinimalUI ? "container page page-wide dashboard-page dashboard-cinematic relative z-10 pb-10" : ""}`}
-        style={dcicModeVars}
-        data-mode={dcicMode}
-      >
         {isMinimalUI && (
           <>
             <header className="flex flex-col gap-0 relative pt-14 overflow-visible">
@@ -849,7 +846,6 @@ export function DashboardClientShell() {
             </div>
           </div>
         </Modal>
-      </div>
     </div>
   );
 }

@@ -28,7 +28,7 @@ type Props = {
   children: ReactNode;
 };
 
-/** Scroll shell: global frost is on `#app-shell` (`.hq-app-shell`); `/tasks` adds `tasks-route-shell` on main. */
+/** Scroll shell: hub frost is `#app-shell` (flatGlassPageRoot + dashboard container in root layout); `/tasks` adds `tasks-route-shell` on main. */
 export function DashboardMainContent({ children }: Props) {
   const pathname = usePathname();
   const dashboardHome = isDashboardHome(pathname);

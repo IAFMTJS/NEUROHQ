@@ -166,7 +166,7 @@ export function VisualLabMissionsPageConcept() {
 
   return (
     <section
-      className="relative mb-10 space-y-4 rounded-xl border border-[rgba(var(--mode-rgb),0.12)] bg-[rgba(4,12,22,0.22)] p-4 md:p-6"
+      className="tasks-command-deck-frame relative mb-10 space-y-4"
       aria-labelledby="missions-style-heading"
     >
       <div className="flex flex-wrap items-end justify-between gap-3">

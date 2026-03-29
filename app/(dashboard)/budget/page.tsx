@@ -56,7 +56,6 @@ import { GroceryMissionPlannerCard } from "@/components/budget/GroceryMissionPla
 import { BudgetLockHub } from "@/components/budget/BudgetLockHub";
 import { BudgetOptimizationHub } from "@/components/budget/BudgetOptimizationHub";
 import { StrategyEnginePaceHint } from "@/components/strategy/StrategyEnginePaceHint";
-import hudStyles from "@/components/hud-test/hud.module.css";
 
 const BudgetHistorySelector = nextDynamic(() => import("@/components/BudgetHistorySelector").then((m) => ({ default: m.BudgetHistorySelector })), { loading: () => null });
 const ExportBudgetCsvButton = nextDynamic(() => import("@/components/ExportBudgetCsvButton").then((m) => ({ default: m.ExportBudgetCsvButton })), { loading: () => null });
@@ -513,8 +512,8 @@ async function BudgetContent({ searchParams }: Props) {
       <main
         className={
           simplifiedBudget
-            ? `relative overflow-hidden flex min-h-0 flex-1 flex-col ${hudStyles.flatGlassPageRoot}`
-            : "relative min-h-screen"
+            ? "relative flex min-h-0 flex-1 flex-col overflow-hidden"
+            : "relative min-h-0 flex-1"
         }
       >
         {simplifiedBudget ? (
@@ -522,7 +521,7 @@ async function BudgetContent({ searchParams }: Props) {
             {budgetTabsShell}
           </div>
         ) : (
-          <div className="container page page-wide dashboard-cinematic relative z-10 pb-10">
+          <div className="relative z-10 pb-10">
             {budgetTabsShell}
           </div>
         )}

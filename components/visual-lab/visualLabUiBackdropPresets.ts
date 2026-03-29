@@ -23,7 +23,7 @@ export type VisualLabUiBackdropPreset = {
   radialClass: string | null;
 };
 
-/** Default: aligned with `TasksTabsShell` command deck + strategy panels (2026). */
+/** Strategy / analyse panels — comparable weight to Missies command deck (deck shell: globals `tasks-command-deck`). */
 const STRATEGY_ANALYSIS_SHELL =
   "relative overflow-hidden rounded-2xl border border-[rgba(var(--mode-rgb),0.28)] bg-gradient-to-br from-[rgba(8,26,42,0.96)] via-[var(--bg-elevated)]/90 to-[rgba(var(--mode-rgb-deep),0.14)] shadow-[0_0_40px_rgba(var(--mode-rgb),0.14),inset_0_1px_0_rgba(255,255,255,0.07)]";
 

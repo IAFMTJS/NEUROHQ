@@ -262,18 +262,15 @@ export function autoModeCheck(gameState: GameState): void {
     }
   }
 
-  const { energy, focus, load } = gameState.stats;
-
   /**
-   * Zonder brain-composite (geen check-in / ontbrekende velden): niet standaard Recovery forceren.
-   * Alleen bij duidelijke legacy-signalen (resources in gameState.stats, 0–100 schaal).
+   * Zonder brain-composite (geen check-in / ontbrekende velden): blijf in Focus.
+   * Geen legacy-forcing of war-suggestie uit gameState.stats tot er een volledige check-in is.
    */
-  if (avg == null && (energy < 25 || load > 80)) {
-    if (gameState.mode.current !== "recovery") {
-      switchMode(gameState, "recovery", { forced: true });
-    }
+  if (avg == null) {
     return;
   }
+
+  const { energy, focus } = gameState.stats;
 
   if (focus > 70 && energy > 60) {
     if (!gameState.mode.suggested) {

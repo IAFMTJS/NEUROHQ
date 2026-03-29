@@ -16,6 +16,7 @@ const plusJakarta = Plus_Jakarta_Sans({
 import { ServiceWorkerRegistration } from "@/components/ServiceWorkerRegistration";
 import { DeferredRootComponents } from "@/components/DeferredRootComponents";
 import { DeferredToaster } from "@/components/DeferredToaster";
+import hudStyles from "@/components/hud-test/hud.module.css";
 
 export const metadata: Metadata = {
   title: "NEUROHQ",
@@ -67,15 +68,23 @@ export default function RootLayout({
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
       </head>
       <body className={`min-h-screen antialiased ${plusJakarta.variable} font-sans`}>
-        <div id="app-shell" className="hq-app-shell min-h-screen min-h-dvh">
-          <ServiceWorkerRegistration />
-          <ReactQueryProvider>
-            <DeferredRootComponents />
-            <SettingsProvider>
-              <ThemeProvider>{children}</ThemeProvider>
-            </SettingsProvider>
-            <DeferredToaster />
-          </ReactQueryProvider>
+        {/* Hub UI kit: flatGlassPageRoot + dashboard-page/cinematic + inner (see visual lab “Hub · flat + dashboard”) */}
+        <div
+          id="app-shell"
+          className={`${hudStyles.flatGlassPageRoot} flex min-h-screen min-h-dvh flex-col text-[var(--text-main)]`}
+        >
+          <div className="container page page-wide dashboard-page dashboard-cinematic relative z-10 flex min-h-0 flex-1 flex-col pb-10">
+            <div className="command-stack-page-inner flex min-h-0 min-w-0 flex-1 flex-col">
+              <ServiceWorkerRegistration />
+              <ReactQueryProvider>
+                <DeferredRootComponents />
+                <SettingsProvider>
+                  <ThemeProvider>{children}</ThemeProvider>
+                </SettingsProvider>
+                <DeferredToaster />
+              </ReactQueryProvider>
+            </div>
+          </div>
         </div>
         {isProduction ? <Analytics /> : null}
         {isProduction ? <SpeedInsights /> : null}

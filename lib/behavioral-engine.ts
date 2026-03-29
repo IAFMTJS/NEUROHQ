@@ -260,7 +260,7 @@ export function getBrainStateMultiplier(state: BrainState): number {
   }
 }
 
-/** DCIC war / recovery: server + UI suggest; niet afgedwongen (behalve recovery via autoModeCheck). */
+/** DCIC war / recovery: server + UI suggest; niet afgedwongen (behalve war/recovery via autoModeCheck bij geldige brain-composite). */
 export type DcicModeSuggestion = "war" | "recovery" | null;
 
 /**

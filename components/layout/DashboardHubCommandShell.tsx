@@ -45,16 +45,13 @@ export function DashboardHubCommandShell({
   const skipCinematic = lightUi === true;
 
   return (
-    <main
-      className={`relative min-h-screen overflow-x-hidden ${hudStyles.flatGlassPageRoot}`}
+    <div
+      className="relative min-h-0 w-full overflow-x-hidden"
       style={dcicModeVars}
       data-mode={dcicMode}
+      {...(compactHorizontal ? { "data-hub-compact-x": "true" } : {})}
+      {...(compactVertical ? { "data-hub-compact-y": "true" } : {})}
     >
-      <div
-        className="container page page-wide dashboard-page dashboard-cinematic relative z-10 pb-10"
-        {...(compactHorizontal ? { "data-hub-compact-x": "true" } : {})}
-        {...(compactVertical ? { "data-hub-compact-y": "true" } : {})}
-      >
         <div
           className={`${compactVertical ? "space-y-2 pt-0" : "space-y-3 pt-2 md:pt-3"} ${compactHorizontal ? "px-0" : "px-1"}`}
         >
@@ -74,7 +71,6 @@ export function DashboardHubCommandShell({
             {children}
           </SciFiPanel>
         </div>
-      </div>
-    </main>
+    </div>
   );
 }

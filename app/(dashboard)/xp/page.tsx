@@ -49,31 +49,29 @@ export default async function XPPage() {
   }
 
   return (
-    <main className={`relative min-h-screen overflow-hidden ${hudStyles.flatGlassPageRoot}`}>
-      <div className="container page page-wide dashboard-cinematic relative z-10 pb-10">
-        <div className="space-y-4">
-          <SciFiPanel
-            flatFrame
-            variant="glass"
-            className={hudStyles.focusSecondary}
-            bodyClassName="p-4 md:p-5"
-          >
-            <CornerNode corner="top-left" />
-            <CornerNode corner="top-right" />
-            <XPShell />
-          </SciFiPanel>
-          <SciFiPanel
-            flatFrame
-            variant="glass"
-            className={hudStyles.focusSecondary}
-            bodyClassName="p-4 md:p-6"
-          >
-            <CornerNode corner="top-left" />
-            <CornerNode corner="top-right" />
-            <XPContent />
-          </SciFiPanel>
-        </div>
+    <div className="relative min-h-0 w-full flex-1 overflow-hidden">
+      <div className="space-y-4">
+        <SciFiPanel
+          flatFrame
+          variant="glass"
+          className={hudStyles.focusSecondary}
+          bodyClassName="p-4 md:p-5"
+        >
+          <CornerNode corner="top-left" />
+          <CornerNode corner="top-right" />
+          <XPShell />
+        </SciFiPanel>
+        <SciFiPanel
+          flatFrame
+          variant="glass"
+          className={hudStyles.focusSecondary}
+          bodyClassName="p-4 md:p-6"
+        >
+          <CornerNode corner="top-left" />
+          <CornerNode corner="top-right" />
+          <XPContent />
+        </SciFiPanel>
       </div>
-    </main>
+    </div>
   );
 }

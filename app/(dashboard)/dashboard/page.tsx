@@ -17,11 +17,11 @@ export default async function DashboardPage() {
   // Use layout's DashboardDataProvider (initial from daily snapshot). No duplicate
   // provider so first paint uses snapshot and stays instant for the whole day.
   return (
-    <main className="container page page-wide dashboard-page relative z-10 pb-10">
+    <div className="relative z-10 flex min-h-0 w-full flex-1 flex-col">
       <Suspense fallback={null}>
         <GrowthDashboardStrip />
       </Suspense>
       <DashboardClientShell />
-    </main>
+    </div>
   );
 }
