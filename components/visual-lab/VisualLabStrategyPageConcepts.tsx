@@ -1,19 +1,9 @@
 "use client";
 
+import { VisualLabCommandDeck } from "@/components/visual-lab/VisualLabCommandDeck";
 import { useState, type ReactNode } from "react";
 import { StrategyAnalysisSplitRing } from "@/components/strategy/StrategyAnalysisSplitRing";
-import type { StrategyTabId } from "@/components/strategy/StrategyTabsShell";
-import {
-  dashboardHubTabButtonClass,
-  dashboardHubTabStripClass,
-} from "@/components/layout/dashboardHubTabStyles";
-
-const STRATEGY_TABS: { id: StrategyTabId; label: string }[] = [
-  { id: "overview", label: "Overview" },
-  { id: "focus", label: "Focus & budget" },
-  { id: "alignment", label: "Alignment & momentum" },
-  { id: "review", label: "Review & archief" },
-];
+import { STRATEGY_TAB_ITEMS, type StrategyTabId } from "@/components/strategy/StrategyTabsShell";
 
 const MOCK_DOMAINS = [
   { id: "w", label: "Werk", weight: 42, allocation: 38 },
@@ -381,11 +371,34 @@ function ReviewPanel() {
   );
 }
 
+/** Placeholder voor `belowTabsSlot` op /strategy (mascot + hint). */
+function MockStrategyBelowTabsSlot() {
+  return (
+    <div className="space-y-4">
+      <section
+        className="overflow-hidden rounded-xl border border-[rgba(var(--mode-rgb),0.12)] bg-[rgba(6,18,30,0.35)]"
+        aria-label="Mascot strip (mock)"
+      >
+        <div className="flex min-h-[100px] items-center justify-center px-4 py-6 text-center text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--text-muted)]">
+          Mascot-hero · strategy (zelfde plek als productie onder tabs)
+        </div>
+      </section>
+      <p className="text-center text-xs text-[var(--text-muted)]">
+        Overzicht, allocatie, momentum en review — hieronder tab-inhoud zoals op de hub.
+      </p>
+    </div>
+  );
+}
+
 /**
- * Strategy hub — productie-achtige **Growth/Strategy** tab-rail (rounded pills) binnen cinematic panel.
+ * Strategy command deck — **zelfde opbouw als /strategy**: banner → `dashboard-top-strip` → below-tabs slot → panel (`space-y-6`).
+ * Tab-labels komen uit `STRATEGY_TAB_ITEMS` (geen afwijking t.o.v. productie).
  */
-export function VisualLabStrategyHubPageConcept() {
+export function VisualLabStrategyPageConcept() {
   const [tab, setTab] = useState<StrategyTabId>("overview");
+
+  const tabBtn = (id: StrategyTabId) =>
+    `dashboard-mini-btn ${tab === id ? "dashboard-mini-btn-primary" : "dashboard-mini-btn-secondary"}`;
 
   const panels: Record<StrategyTabId, ReactNode> = {
     overview: <OverviewPanels />,
@@ -397,30 +410,26 @@ export function VisualLabStrategyHubPageConcept() {
   return (
     <section
       className="relative mb-10 space-y-4 rounded-xl border border-[rgba(var(--mode-rgb),0.12)] bg-[rgba(4,12,22,0.22)] p-4 md:p-6"
-      aria-labelledby="strategy-hub-visual-heading"
+      aria-labelledby="strategy-deck-visual-heading"
     >
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h2 id="strategy-hub-visual-heading" className="text-[11px] font-bold uppercase tracking-[0.18em] text-[var(--text-muted)]">
-            Strategie · hub-tabs (concept)
+          <h2 id="strategy-deck-visual-heading" className="text-[11px] font-bold uppercase tracking-[0.18em] text-[var(--text-muted)]">
+            Strategie · command deck (productie-pariteit)
           </h2>
           <p className="mt-1 max-w-2xl text-xs leading-relaxed text-[var(--text-secondary)]">
-            Tab-strip matcht <code className="rounded bg-black/30 px-1 text-[10px]">dashboardHubTab*</code> zoals op /strategy (volledige hub). Mock inhoud per tab.
+            Zelfde rail als <code className="rounded bg-black/30 px-1 text-[10px]">StrategyTabsShell</code>: weekreview-banner, horizontale mini-tabs (
+            <code className="rounded bg-black/30 px-1 text-[10px]">STRATEGY_TAB_ITEMS</code>), mascot-slot, daarna tabpanel. Analyse-vierkant staat op
+            productie boven deze stack; hier alleen het deck.
           </p>
         </div>
         <span className="shrink-0 text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--text-muted)]">Mock</span>
       </div>
 
-      <div className="dashboard-cinematic relative overflow-hidden rounded-2xl border border-[rgba(var(--mode-rgb),0.24)] bg-gradient-to-br from-[rgba(8,26,42,0.96)] via-[var(--bg-elevated)]/90 to-[rgba(var(--mode-rgb-deep),0.14)] shadow-[0_0_36px_rgba(var(--mode-rgb),0.12),inset_0_1px_0_rgba(255,255,255,0.06)]">
-        <div
-          className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_70%_0%,rgba(var(--mode-rgb),0.14),transparent_55%)]"
-          aria-hidden
-        />
-
-        <div className="relative z-[1] flex flex-col gap-0 p-4 md:p-5">
+      <VisualLabCommandDeck>
           <header className="flex flex-wrap items-start justify-between gap-3 border-b border-[rgba(var(--mode-rgb),0.12)] pb-3">
             <div>
-              <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[var(--semantic-accent)]/90">Theater</p>
+              <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[var(--semantic-accent)]/90">Command</p>
               <h3 className="mt-0.5 text-base font-bold tracking-tight text-[var(--text-primary)] [text-shadow:0_0_14px_rgba(var(--mode-rgb),0.18)] md:text-lg">
                 Strategy
               </h3>
@@ -437,118 +446,39 @@ export function VisualLabStrategyHubPageConcept() {
             <MockReviewBanner />
           </div>
 
-          <div role="tablist" aria-label="Strategie-secties (concept)" className={`${dashboardHubTabStripClass()} mt-3 rounded-xl`}>
-            {STRATEGY_TABS.map((t) => (
-              <button
-                key={t.id}
-                type="button"
-                role="tab"
-                aria-selected={tab === t.id}
-                onClick={() => setTab(t.id)}
-                className={dashboardHubTabButtonClass(tab === t.id)}
-              >
-                {t.label}
-              </button>
-            ))}
-          </div>
-
-          <div role="tabpanel" className="mt-4 min-h-[120px] space-y-4" aria-labelledby={`strategy-tab-${tab}`}>
-            {panels[tab]}
-          </div>
-
-          <footer className="mt-6 border-t border-[rgba(var(--mode-rgb),0.1)] pt-4 text-[10px] leading-relaxed text-[var(--text-muted)]">
-            <span className="font-semibold text-[var(--text-secondary)]">Engine-instellingen</span> · onderaan pagina op productie; hier weggelaten voor
-            visuele focus op tabs + inhoud.
-          </footer>
-        </div>
-      </div>
-    </section>
-  );
-}
-
-/**
- * Strategy command-scroll — **mini tab-rail** (sticky-stijl) zoals simplified / missions visual lab.
- */
-export function VisualLabStrategyCommandScrollPageConcept() {
-  const [tab, setTab] = useState<StrategyTabId>("overview");
-
-  const tabBtn = (id: StrategyTabId) =>
-    `dashboard-mini-btn ${tab === id ? "dashboard-mini-btn-primary" : "dashboard-mini-btn-secondary"}`;
-
-  const panels: Record<StrategyTabId, ReactNode> = {
-    overview: <OverviewPanels />,
-    focus: <FocusBudgetPanel />,
-    alignment: <AlignmentPanel />,
-    review: <ReviewPanel />,
-  };
-
-  return (
-    <section
-      className="relative mb-10 space-y-4 rounded-xl border border-[rgba(var(--mode-rgb),0.12)] bg-[rgba(4,12,22,0.22)] p-4 md:p-6"
-      aria-labelledby="strategy-command-visual-heading"
-    >
-      <div className="flex flex-wrap items-end justify-between gap-3">
-        <div>
-          <h2 id="strategy-command-visual-heading" className="text-[11px] font-bold uppercase tracking-[0.18em] text-[var(--text-muted)]">
-            Strategie · command-scroll tabs (concept)
-          </h2>
-          <p className="mt-1 max-w-2xl text-xs leading-relaxed text-[var(--text-secondary)]">
-            Zelfde tab-volgorde als /strategy; chrome matcht <code className="rounded bg-black/30 px-1 text-[10px]">dashboard-mini-btn</code> (tasks /
-            budget / simplified hubs). Inhoud gedeeld met hub-concept hierboven.
-          </p>
-        </div>
-        <span className="shrink-0 text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--text-muted)]">Mock</span>
-      </div>
-
-      <div className="dashboard-cinematic relative overflow-hidden rounded-2xl border border-[rgba(var(--mode-rgb),0.24)] bg-gradient-to-br from-[rgba(8,26,42,0.96)] via-[var(--bg-elevated)]/90 to-[rgba(var(--mode-rgb-deep),0.14)] shadow-[0_0_36px_rgba(var(--mode-rgb),0.12),inset_0_1px_0_rgba(255,255,255,0.06)]">
-        <div
-          className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_30%_100%,rgba(var(--mode-rgb-deep),0.12),transparent_50%)]"
-          aria-hidden
-        />
-
-        <div className="relative z-[1] flex flex-col gap-0 p-4 md:p-5">
-          <header className="flex flex-wrap items-start justify-between gap-3 border-b border-[rgba(var(--mode-rgb),0.12)] pb-3">
-            <div>
-              <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[var(--semantic-accent)]/90">Command</p>
-              <h3 className="mt-0.5 text-base font-bold tracking-tight text-[var(--text-primary)] [text-shadow:0_0_14px_rgba(var(--mode-rgb),0.18)] md:text-lg">
-                Strategy
-              </h3>
-            </div>
-            <button
-              type="button"
-              className="shrink-0 rounded-lg border border-[rgba(var(--mode-rgb),0.2)] bg-[rgba(6,18,30,0.45)] px-3 py-2 text-[10px] font-semibold uppercase tracking-wide text-[var(--text-muted)]"
-            >
-              Rapport
-            </button>
-          </header>
-
           <div className="dashboard-top-strip mt-3">
-            <div className="dashboard-top-strip-track" role="tablist" aria-label="Strategie (command scroll)">
-              {STRATEGY_TABS.map((t) => (
+            <div className="dashboard-top-strip-track" role="tablist" aria-label="Strategie-secties">
+              {STRATEGY_TAB_ITEMS.map((t) => (
                 <button
                   key={t.id}
                   type="button"
                   role="tab"
                   aria-selected={tab === t.id}
+                  aria-label={t.label}
+                  title={t.label}
+                  id={`vl-strategy-tab-${t.id}`}
                   onClick={() => setTab(t.id)}
                   className={tabBtn(t.id)}
                 >
-                  {t.id === "focus" ? "Focus" : t.id === "alignment" ? "Align" : t.id === "review" ? "Review" : "Overview"}
+                  {t.shortLabel}
                 </button>
               ))}
               <span className="dashboard-mini-strip-label">Tabs</span>
             </div>
           </div>
 
-          <div className="mt-4 space-y-3">
-            <MockReviewBanner />
+          <div className="mt-4 space-y-4">
+            <MockStrategyBelowTabsSlot />
           </div>
 
-          <div role="tabpanel" className="mt-2 min-h-[120px] space-y-4" aria-labelledby={`strategy-cmd-tab-${tab}`}>
+          <div
+            role="tabpanel"
+            className="mt-4 min-h-[120px] space-y-6"
+            aria-labelledby={`vl-strategy-tab-${tab}`}
+          >
             {panels[tab]}
           </div>
-        </div>
-      </div>
+      </VisualLabCommandDeck>
     </section>
   );
 }

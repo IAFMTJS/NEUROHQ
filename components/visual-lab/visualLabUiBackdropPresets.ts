@@ -23,12 +23,12 @@ export type VisualLabUiBackdropPreset = {
   radialClass: string | null;
 };
 
-/** Default: same shell as `StrategyAnalysisSquare` + Growth command section. */
+/** Default: aligned with `TasksTabsShell` command deck + strategy panels (2026). */
 const STRATEGY_ANALYSIS_SHELL =
-  "relative overflow-hidden rounded-2xl border border-[rgba(var(--mode-rgb),0.24)] bg-gradient-to-br from-[rgba(8,26,42,0.96)] via-[var(--bg-elevated)]/90 to-[rgba(var(--mode-rgb-deep),0.14)] shadow-[0_0_36px_rgba(var(--mode-rgb),0.12),inset_0_1px_0_rgba(255,255,255,0.06)]";
+  "relative overflow-hidden rounded-2xl border border-[rgba(var(--mode-rgb),0.28)] bg-gradient-to-br from-[rgba(8,26,42,0.96)] via-[var(--bg-elevated)]/90 to-[rgba(var(--mode-rgb-deep),0.14)] shadow-[0_0_40px_rgba(var(--mode-rgb),0.14),inset_0_1px_0_rgba(255,255,255,0.07)]";
 
 const STRATEGY_ANALYSIS_RADIAL =
-  "pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_80%_0%,rgba(var(--mode-rgb),0.14),transparent_55%)]";
+  "pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_75%_55%_at_50%_0%,rgba(var(--mode-rgb),0.16),transparent_58%),radial-gradient(ellipse_at_80%_0%,rgba(var(--mode-rgb),0.1),transparent_55%)]";
 
 export const VISUAL_LAB_UI_BACKDROP_ORDER: VisualLabUiBackdropId[] = [
   "strategyAnalysis",

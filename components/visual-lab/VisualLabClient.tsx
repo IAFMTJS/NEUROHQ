@@ -19,15 +19,13 @@ import {
   VisualLabNotificationsPageConcept,
   VisualLabProfilePageConcept,
 } from "@/components/visual-lab/VisualLabUserPageConcepts";
-import {
-  VisualLabStrategyCommandScrollPageConcept,
-  VisualLabStrategyHubPageConcept,
-} from "@/components/visual-lab/VisualLabStrategyPageConcepts";
+import { VisualLabStrategyPageConcept } from "@/components/visual-lab/VisualLabStrategyPageConcepts";
 import {
   VISUAL_LAB_UI_BACKDROP_ORDER,
   VISUAL_LAB_UI_BACKDROP_PRESETS,
   type VisualLabUiBackdropId,
 } from "@/components/visual-lab/visualLabUiBackdropPresets";
+import hudStyles from "@/components/hud-test/hud.module.css";
 
 /** Shared mock rows for ring kitchen (circle + polygon outlines). */
 const RING_KITCHEN_SAMPLES = [
@@ -83,10 +81,8 @@ export function VisualLabClient() {
   const activeBackdrop = VISUAL_LAB_UI_BACKDROP_PRESETS[uiBackdrop];
 
   return (
-    <div className="min-h-screen bg-[var(--hud-body-bg)] px-[var(--page-padding-x)] py-8 text-[var(--text-main)]">
-      <div className="pointer-events-none fixed inset-0 opacity-[var(--spotlight-opacity)] saturate-[var(--spotlight-saturation)] blur-[var(--spotlight-blur)] [background:var(--spotlight)]" aria-hidden />
-
-      <div className="relative mx-auto max-w-5xl">
+    <div className={`${hudStyles.flatGlassPageRoot} text-[var(--text-main)]`}>
+      <div className="dashboard-page relative z-10 mx-auto max-w-5xl px-[var(--page-padding-x)] py-8 pb-12">
         <article
           className={`${activeBackdrop.shell} p-5 md:p-7`}
           aria-label={`Visual lab panel: ${activeBackdrop.label}`}
@@ -102,7 +98,10 @@ export function VisualLabClient() {
               Visual lab
             </h1>
             <p className="mt-2 max-w-2xl text-sm leading-relaxed text-[var(--text-secondary)]">
-              Mock HUD: rings, split ring, balken, polygon meters, hex mesh, toasts. Geen live data.
+              Zelfde page-chrome als HQ (<code className="rounded bg-black/25 px-1 text-[11px]">flatGlassPageRoot</code> +{" "}
+              <code className="rounded bg-black/25 px-1 text-[11px]">dashboard-page</code>) · command decks via{" "}
+              <code className="rounded bg-black/25 px-1 text-[11px]">VisualLabCommandDeck</code> (matcht <code className="rounded bg-black/25 px-1 text-[11px]">TasksTabsShell</code>
+              ). Daarna lab-ringen, balken, polygon, hex, toasts — mock data.
             </p>
           </header>
 
@@ -143,11 +142,16 @@ export function VisualLabClient() {
             </div>
           </section>
 
+          <div className="relative mb-8 border-b border-[rgba(var(--mode-rgb),0.1)] pb-5">
+            <h2 className="text-[11px] font-bold uppercase tracking-[0.18em] text-[var(--text-muted)]">Pagina-command decks</h2>
+            <p className="mt-1 max-w-2xl text-xs leading-relaxed text-[var(--text-secondary)]">
+              Mock-ups die dezelfde opbouw gebruiken als live dashboard: cinematic kaart, Command-header, HUD-tab rail, inhoud met <code className="rounded bg-black/30 px-1 text-[10px]">space-y-6</code>.
+            </p>
+          </div>
+
           <VisualLabMissionsPageConcept />
 
-          <VisualLabStrategyHubPageConcept />
-
-          <VisualLabStrategyCommandScrollPageConcept />
+          <VisualLabStrategyPageConcept />
 
           <VisualLabProfilePageConcept />
 

@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useState, type ReactNode } from "react";
 import { EnergyRing } from "@/components/hud-test/EnergyRing";
 import { MoodManualPanel } from "@/components/mood/MoodManualPanel";
+import { VisualLabCommandDeck } from "@/components/visual-lab/VisualLabCommandDeck";
 import { MOOD_LABEL_META, type MoodLabel } from "@/lib/mood-intervention-config";
 import { reportInsightsHref } from "@/lib/profile-routes";
 
@@ -47,16 +48,6 @@ const MOCK_ALERTS = [
     unread: false,
   },
 ] as const;
-
-function profileTabClasses(active: boolean) {
-  const base =
-    "rounded-xl px-3 py-2.5 text-center text-[11px] font-semibold uppercase tracking-wide transition min-h-[44px] flex flex-1 items-center justify-center sm:flex-none outline-none focus-visible:ring-2 focus-visible:ring-[rgba(var(--mode-rgb),0.45)] focus-visible:ring-offset-0";
-  const on =
-    "border border-[rgba(var(--mode-rgb),0.28)] bg-[rgba(var(--mode-rgb-deep),0.22)] text-[var(--semantic-accent)] shadow-[inset_0_1px_0_rgba(var(--mode-rgb),0.12)]";
-  const off =
-    "border border-transparent bg-[var(--bg-surface)]/20 text-[var(--text-muted)] hover:bg-[var(--bg-hover)]/35 hover:text-[var(--text-primary)]";
-  return `${base} ${active ? on : off}`;
-}
 
 function alertToneBorder(tone: (typeof MOCK_ALERTS)[number]["tone"]) {
   switch (tone) {
@@ -105,25 +96,18 @@ export function VisualLabProfilePageConcept() {
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
           <h2 id="profile-user-visual-heading" className="text-[11px] font-bold uppercase tracking-[0.18em] text-[var(--text-muted)]">
-            Profiel · paginastyling (concept)
+            Profiel · command deck (concept)
           </h2>
           <p className="mt-1 max-w-2xl text-xs leading-relaxed text-[var(--text-secondary)]">
-            Cinematic shell zoals missies; inhoud volgt profiel-home:{" "}
-            <code className="rounded bg-black/30 px-1 text-[10px]">ProfileHomeCompact</code> — level-
-            <code className="rounded bg-black/30 px-1 text-[10px]">EnergyRing</code>-orbit, rang/streak-tegels, dagelijkse challenges, mood en
-            insight. Mock data.
+            Zelfde command deck + mini-tab rail als /tasks · /strategy. Inhoud volgt profiel-home (
+            <code className="rounded bg-black/30 px-1 text-[10px]">ProfileHomeCompact</code>): level-
+            <code className="rounded bg-black/30 px-1 text-[10px]">EnergyRing</code>-orbit, challenges, mood, insight. Mock data.
           </p>
         </div>
         <span className="shrink-0 text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--text-muted)]">Mock</span>
       </div>
 
-      <div className="dashboard-cinematic relative overflow-hidden rounded-2xl border border-[rgba(var(--mode-rgb),0.24)] bg-gradient-to-br from-[rgba(8,26,42,0.96)] via-[var(--bg-elevated)]/90 to-[rgba(var(--mode-rgb-deep),0.14)] shadow-[0_0_36px_rgba(var(--mode-rgb),0.12),inset_0_1px_0_rgba(255,255,255,0.06)]">
-        <div
-          className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_20%_0%,rgba(var(--mode-rgb),0.14),transparent_55%)]"
-          aria-hidden
-        />
-
-        <div className="relative z-[1] flex flex-col gap-0 p-4 md:p-5">
+      <VisualLabCommandDeck>
           <header className="flex flex-wrap items-start justify-between gap-3 border-b border-[rgba(var(--mode-rgb),0.12)] pb-3">
             <div>
               <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[var(--semantic-accent)]/90">Operator</p>
@@ -139,20 +123,35 @@ export function VisualLabProfilePageConcept() {
             </button>
           </header>
 
-          <nav className="mt-3 flex flex-wrap gap-2" aria-label="Profiel navigatie (concept)">
-            <button type="button" className={profileTabClasses(main === "home")} onClick={() => setMain("home")}>
-              Profiel
-            </button>
-            <button type="button" className={profileTabClasses(main === "engine")} onClick={() => setMain("engine")}>
-              Engine
-            </button>
-          </nav>
+          <div className="dashboard-top-strip mt-3">
+            <div className="dashboard-top-strip-track" role="tablist" aria-label="Profiel navigatie (concept)">
+              <button
+                type="button"
+                role="tab"
+                aria-selected={main === "home"}
+                onClick={() => setMain("home")}
+                className={`dashboard-mini-btn ${main === "home" ? "dashboard-mini-btn-primary" : "dashboard-mini-btn-secondary"}`}
+              >
+                Profiel
+              </button>
+              <button
+                type="button"
+                role="tab"
+                aria-selected={main === "engine"}
+                onClick={() => setMain("engine")}
+                className={`dashboard-mini-btn ${main === "engine" ? "dashboard-mini-btn-primary" : "dashboard-mini-btn-secondary"}`}
+              >
+                Engine
+              </button>
+              <span className="dashboard-mini-strip-label">Weergave</span>
+            </div>
+          </div>
 
-          <div className="mt-4 space-y-4">
+          <div className="mt-4 space-y-6">
             {main === "home" ? (
               <>
                 <section
-                  className="relative overflow-hidden rounded-xl border border-[rgba(var(--mode-rgb),0.2)] bg-gradient-to-br from-[rgba(8,26,42,0.92)] via-[var(--bg-elevated)]/88 to-[rgba(var(--mode-rgb-deep),0.12)] px-3 py-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.05)] sm:px-5 sm:py-5"
+                  className="glass-card !rounded-xl !p-3 !shadow-none sm:!p-5"
                   aria-label="Level orbit (concept, zoals profiel home)"
                 >
                   <div className="relative z-[1] mx-auto grid max-w-3xl grid-cols-1 gap-5 md:grid-cols-[1fr_minmax(0,220px)_1fr] md:items-center md:gap-3">
@@ -222,7 +221,7 @@ export function VisualLabProfilePageConcept() {
                 </section>
 
                 <section
-                  className="space-y-4 rounded-xl border border-[rgba(var(--mode-rgb),0.1)] bg-[rgba(var(--mode-rgb-deep),0.07)] px-4 py-3.5 sm:px-5"
+                  className="glass-card !rounded-xl !space-y-4 !p-4 sm:!p-5 !shadow-none"
                   aria-labelledby="vl-daily-challenges-heading"
                 >
                   <div className="flex flex-wrap items-center justify-between gap-2">
@@ -277,9 +276,7 @@ export function VisualLabProfilePageConcept() {
                   </p>
                 </section>
 
-                <div
-                  className={`${PROFILE_ORBIT_TILE} border-[rgba(var(--mode-rgb),0.1)] bg-[rgba(var(--mode-rgb-deep),0.07)] px-4 py-3.5 sm:px-5`}
-                >
+                <div className="glass-card !rounded-xl !p-4 !shadow-none sm:!p-5">
                   <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-violet-300/90">Mood</p>
                   <div className="mt-2 flex flex-wrap items-center gap-3">
                     {moodLabel && MOOD_LABEL_META[moodLabel] ? (
@@ -305,9 +302,7 @@ export function VisualLabProfilePageConcept() {
 
                 <MoodManualPanel open={moodOpen} onClose={() => setMoodOpen(false)} onMoodSaved={(label) => setMoodLabel(label)} />
 
-                <div
-                  className={`${PROFILE_ORBIT_TILE} border-[rgba(var(--mode-rgb),0.1)] bg-[rgba(var(--mode-rgb-deep),0.07)] px-4 py-3.5 sm:px-5`}
-                >
+                <div className="glass-card !rounded-xl !p-4 !shadow-none sm:!p-5">
                   <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-[var(--semantic-accent)]/90">Insight</p>
                   <p className="mt-2 line-clamp-4 text-sm leading-relaxed text-[var(--text-primary)]">
                     Kleine actie vandaag verzet veel — log een missie om je curve te vullen. (mock coachregel)
@@ -332,7 +327,7 @@ export function VisualLabProfilePageConcept() {
                 </div>
               </>
             ) : (
-              <div className="space-y-3 rounded-xl border border-[rgba(var(--semantic-accent),0.2)] bg-[rgba(6,18,30,0.4)] p-4 md:p-5">
+              <div className="card-simple space-y-3 !rounded-xl p-4 md:p-5">
                 <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-[var(--semantic-accent)]">Engine (stub)</p>
                 <p className="text-sm font-semibold text-[var(--text-primary)]">Identiteit · Gedrag · Modi</p>
                 <p className="text-xs leading-relaxed text-[var(--text-secondary)]">
@@ -355,8 +350,7 @@ export function VisualLabProfilePageConcept() {
               </div>
             )}
           </div>
-        </div>
-      </div>
+      </VisualLabCommandDeck>
     </section>
   );
 }
@@ -375,22 +369,17 @@ export function VisualLabNotificationsPageConcept() {
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
           <h2 id="notifications-user-visual-heading" className="text-[11px] font-bold uppercase tracking-[0.18em] text-[var(--text-muted)]">
-            Meldingen · paginastyling (concept)
+            Meldingen · command deck (concept)
           </h2>
           <p className="mt-1 max-w-2xl text-xs leading-relaxed text-[var(--text-secondary)]">
-            Gebruikerspagina voor alerts en push: tab-rail, LED-accenten per urgentie, compacte voorkeurenstrip — zelfde HUD-diepte als missies.
+            Zelfde command deck + <code className="rounded bg-black/30 px-1 text-[10px]">dashboard-top-strip</code> als andere hubs; LED-accenten per urgentie,
+            voorkeurenstrip — mock inbox.
           </p>
         </div>
         <span className="shrink-0 text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--text-muted)]">Mock</span>
       </div>
 
-      <div className="dashboard-cinematic relative overflow-hidden rounded-2xl border border-[rgba(var(--mode-rgb),0.24)] bg-gradient-to-br from-[rgba(8,26,42,0.96)] via-[var(--bg-elevated)]/90 to-[rgba(var(--mode-rgb-deep),0.14)] shadow-[0_0_36px_rgba(var(--mode-rgb),0.12),inset_0_1px_0_rgba(255,255,255,0.06)]">
-        <div
-          className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_80%_20%,rgba(var(--hud-amber-500-rgb),0.08),transparent_50%)]"
-          aria-hidden
-        />
-
-        <div className="relative z-[1] flex flex-col gap-0 p-4 md:p-5">
+      <VisualLabCommandDeck accentFlareClassName="bg-[radial-gradient(ellipse_at_80%_20%,rgba(var(--hud-amber-500-rgb),0.08),transparent_50%)]">
           <header className="flex flex-wrap items-start justify-between gap-3 border-b border-[rgba(var(--mode-rgb),0.12)] pb-3">
             <div>
               <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[var(--semantic-accent)]/90">Signalen</p>
@@ -430,7 +419,7 @@ export function VisualLabNotificationsPageConcept() {
             </div>
           </div>
 
-          <div className="mt-4 space-y-3">
+          <div className="mt-4 space-y-6">
             {sub === "inbox" ? (
               <ul className="space-y-2">
                 {MOCK_ALERTS.map((a) => (
@@ -489,8 +478,7 @@ export function VisualLabNotificationsPageConcept() {
               </div>
             )}
           </div>
-        </div>
-      </div>
+      </VisualLabCommandDeck>
     </section>
   );
 }

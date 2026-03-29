@@ -5,13 +5,13 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
 export type StrategyTabId = "overview" | "focus" | "alignment" | "review";
 
-/** Volgorde = productie; `shortLabel` past horizontale strip (tasks / budget / hubs). */
-const TABS: { id: StrategyTabId; label: string; shortLabel: string }[] = [
+/** Zelfde volgorde/labels als /strategy — gedeeld met visual lab zodat mocks niet afwijken. */
+export const STRATEGY_TAB_ITEMS: readonly { id: StrategyTabId; label: string; shortLabel: string }[] = [
   { id: "overview", label: "Overview", shortLabel: "Overview" },
   { id: "focus", label: "Focus & budget", shortLabel: "Focus" },
   { id: "alignment", label: "Alignment & momentum", shortLabel: "Align" },
   { id: "review", label: "Review & archief", shortLabel: "Review" },
-];
+] as const;
 
 type Props = {
   overview: React.ReactNode;
@@ -39,14 +39,14 @@ export function StrategyTabsShell({
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const tabFromQuery = searchParams.get("tab");
-  const initialTab = TABS.some((t) => t.id === tabFromQuery)
+  const initialTab = STRATEGY_TAB_ITEMS.some((t) => t.id === tabFromQuery)
     ? (tabFromQuery as StrategyTabId)
     : "overview";
   const [tab, setTab] = useState<StrategyTabId>(initialTab);
 
   useEffect(() => {
     if (!tabFromQuery) return;
-    if (!TABS.some((t) => t.id === tabFromQuery)) return;
+    if (!STRATEGY_TAB_ITEMS.some((t) => t.id === tabFromQuery)) return;
     const next = tabFromQuery as StrategyTabId;
     if (next !== tab) setTab(next);
   }, [tabFromQuery, tab]);
@@ -78,7 +78,7 @@ export function StrategyTabsShell({
       {banner ? <div className={simplifiedLayout ? "shrink-0" : undefined}>{banner}</div> : null}
       <div className={stripOuterClass}>
         <div className="dashboard-top-strip-track" role="tablist" aria-label="Strategie-secties">
-          {TABS.map((t) => {
+          {STRATEGY_TAB_ITEMS.map((t) => {
             const selected = tab === t.id;
             return (
               <button

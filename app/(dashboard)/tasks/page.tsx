@@ -414,6 +414,7 @@ async function MissionsSectionAsync({
               blockedReasonByTaskId={blockedReasonByTaskId as Record<string, string>}
               neuroSelfReportOptIn={behaviorProfile.neuroSelfReportOptIn}
               missionsHeroLayout
+              commandDeckVisuals={commandDeck}
               energyCap={{
                 used: energyCap.used,
                 cap: energyCap.cap,
@@ -504,6 +505,7 @@ async function MissionsSectionAsync({
         blockedReasonByTaskId={blockedReasonByTaskId}
         neuroSelfReportOptIn={behaviorProfile.neuroSelfReportOptIn}
         missionsHeroLayout
+        commandDeckVisuals={commandDeck}
         energyCap={{
           used: energyCap.used,
           cap: energyCap.cap,
@@ -682,7 +684,11 @@ export default async function TasksPage({ searchParams }: Props) {
 
   const headerSection = simplifiedTasksFillLayout ? null : (
     <>
-      <TasksHeaderChrome dateStr={dateStr} simplified={prefs.simplified_content === true} />
+      <TasksHeaderChrome
+        dateStr={dateStr}
+        simplified={prefs.simplified_content === true}
+        matchCommandDeck={tasksCommandDeck}
+      />
       {!prefs.simplified_content && (
         <section className="mascot-hero mascot-hero-top mascot-hero-mission mascot-hero-sharp" data-mascot-page="tasks" aria-hidden>
           <div className="mascot-hero-inner mx-auto">
