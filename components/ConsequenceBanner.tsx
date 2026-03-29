@@ -1,5 +1,7 @@
 "use client";
 
+import { collectMissionEngineWarningLines } from "@/lib/mission-engine-warnings";
+
 /** Neutral friction messages from Resource & Consequence Engine (Fase 2). No guilt. */
 type Props = {
   /** Volgende missie kost 15% meer. */
@@ -23,30 +25,23 @@ export function ConsequenceBanner({
   zeroCompletionPenalty,
   burnout,
 }: Props) {
-  if (!energyDepleted && !recoveryOnly && !recoveryProtocol && !zeroCompletionPenalty && !burnout) return null;
+  const lines = collectMissionEngineWarningLines({
+    limitMessage: null,
+    energyDepleted,
+    recoveryOnly,
+    recoveryProtocol,
+    daysSinceLastCompletion,
+    zeroCompletionPenalty,
+    burnout,
+  });
+  if (lines.length === 0) return null;
 
   return (
     <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm text-amber-200/95">
       <ul className="list-inside list-disc space-y-1">
-        {energyDepleted && (
-          <li>Volgende missie kost 15% meer energie. Geen straf — wel even bewust plannen.</li>
-        )}
-        {(recoveryOnly || burnout) && (
-          <li>
-            {burnout
-              ? "Burnout-signaal: meerdere dagen lage energie en weinig voltooiingen. Alleen recovery-missies — kies iets lichts om op te laden."
-              : "Hoge druk: alleen recovery-missies beschikbaar. Kies iets lichts om te stabiliseren."}
-          </li>
-        )}
-        {recoveryProtocol && (
-          <li>
-            Recovery protocol: {daysSinceLastCompletion} dag{daysSinceLastCompletion !== 1 ? "en" : ""} geen voltooiing.
-            Kies een lichte missie om weer op te starten.
-          </li>
-        )}
-        {zeroCompletionPenalty && (
-          <li>Gisteren geen voltooiing: vandaag +10 druk, -10% energie. Eén missie vandaag houdt je ritme vast.</li>
-        )}
+        {lines.map((line, i) => (
+          <li key={i}>{line}</li>
+        ))}
       </ul>
     </div>
   );

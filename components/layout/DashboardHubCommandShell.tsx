@@ -12,9 +12,16 @@ type Props = {
   hubLabel: string;
   /** When true, skip starfield / mist (matches dashboard light UI). */
   lightUi?: boolean;
+  /** Narrower horizontal bridge padding + full-bleed outer strip (e.g. Growth). */
+  compactHorizontal?: boolean;
 };
 
-export function DashboardHubCommandShell({ children, hubLabel, lightUi = false }: Props) {
+export function DashboardHubCommandShell({
+  children,
+  hubLabel,
+  lightUi = false,
+  compactHorizontal = false,
+}: Props) {
   const dcicMode = useHQStore((s) => s.gameState?.mode?.current ?? "focus");
   const dcicModeVars = useMemo<CSSProperties>(() => {
     if (dcicMode === "war") {
@@ -47,8 +54,11 @@ export function DashboardHubCommandShell({ children, hubLabel, lightUi = false }
           <div className={hudStyles.spaceNoise} aria-hidden />
         </>
       )}
-      <div className="container page page-wide dashboard-page dashboard-cinematic relative z-10 pb-10">
-        <div className="space-y-3 px-1 pt-2 md:pt-3">
+      <div
+        className="container page page-wide dashboard-page dashboard-cinematic relative z-10 pb-10"
+        {...(compactHorizontal ? { "data-hub-compact-x": "true" } : {})}
+      >
+        <div className={`space-y-3 pt-2 md:pt-3 ${compactHorizontal ? "px-0" : "px-1"}`}>
           <SciFiPanel
             className={`dashboard-bridge-frame idle-breathing ${hudStyles.focusPrimary}`}
             bodyClassName={`dashboard-bridge-body flex flex-col gap-4 [-webkit-overflow-scrolling:touch] ${skipCinematic ? "light-ui-defer-paint" : ""}`}

@@ -11,7 +11,7 @@ type Props = {
 
 export function GrowthPageCommandShell({ children, lightUi = false }: Props) {
   return (
-    <DashboardHubCommandShell hubLabel="Growth" lightUi={lightUi}>
+    <DashboardHubCommandShell hubLabel="Growth" lightUi={lightUi} compactHorizontal>
       {children}
     </DashboardHubCommandShell>
   );

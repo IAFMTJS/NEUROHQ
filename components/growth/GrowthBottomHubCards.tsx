@@ -82,7 +82,59 @@ export function GrowthBottomHubCards({ protocols, progressMap, growthFocus, onOp
   if (protocols.length === 0) return null;
 
   return (
-    <div className="grid gap-4 md:grid-cols-2 md:items-stretch">
+    <div className="flex flex-col gap-4">
+      <section className={subCardClass} aria-labelledby="growth-outlook-heading">
+        <h3
+          id="growth-outlook-heading"
+          className="text-[10px] font-bold uppercase tracking-[0.14em] text-[var(--text-muted)] [text-shadow:0_0_10px_rgba(var(--mode-rgb),0.2)]"
+        >
+          Vooruitzicht
+        </h3>
+        {!active ? (
+          <p className="mt-3 text-sm text-[var(--text-secondary)]">Geen actief traject.</p>
+        ) : outlook?.kind === "no_def" ? (
+          <p className="mt-3 text-sm leading-snug text-[var(--text-secondary)]">
+            Geen gestructureerde roadmap voor dit protocol — open het traject voor details.
+          </p>
+        ) : outlook?.kind === "last" ? (
+          <div className="mt-3 space-y-2">
+            <p className="text-sm font-medium text-[var(--text-primary)]">
+              Laatste week ({outlook.weekIndex}/{outlook.maxW}) — afronden of ander traject.
+            </p>
+            {outlook.goal ? (
+              <p className="text-xs text-[var(--text-muted)] line-clamp-2">{outlook.goal}</p>
+            ) : null}
+          </div>
+        ) : outlook?.kind === "next" ? (
+          <div className="mt-3 space-y-2">
+            <p className="text-sm font-medium text-[var(--text-primary)]">
+              Week {outlook.nextWeekIndex}: {outlook.nextTitle}
+            </p>
+            {outlook.nextObjective ? (
+              <p className="text-sm leading-snug text-[var(--text-secondary)] line-clamp-3">{outlook.nextObjective}</p>
+            ) : null}
+            <p className="text-[11px] text-[var(--text-muted)]">
+              Nog {outlook.weeksAfterThis} week{outlook.weeksAfterThis === 1 ? "" : "en"} na deze in het traject.
+            </p>
+            {outlook.goal ? (
+              <p className="text-xs leading-relaxed text-[var(--text-muted)] line-clamp-2 border-t border-[rgba(var(--mode-rgb),0.1)] pt-2">
+                Traject: {outlook.goal}
+              </p>
+            ) : null}
+          </div>
+        ) : (
+          <p className="mt-3 text-sm text-[var(--text-secondary)]">Geen vooruitzicht beschikbaar.</p>
+        )}
+        <p className="mt-4">
+          <Link
+            href="/learning/analytics"
+            className="text-[11px] font-medium text-[var(--text-muted)] underline-offset-2 transition hover:text-[var(--accent-focus)] hover:underline"
+          >
+            Trend & velocity →
+          </Link>
+        </p>
+      </section>
+
       <section className={subCardClass} aria-labelledby="growth-other-tracks-heading">
         <h3
           id="growth-other-tracks-heading"
@@ -149,58 +201,6 @@ export function GrowthBottomHubCards({ protocols, progressMap, growthFocus, onOp
             </div>
           </div>
         )}
-      </section>
-
-      <section className={subCardClass} aria-labelledby="growth-outlook-heading">
-        <h3
-          id="growth-outlook-heading"
-          className="text-[10px] font-bold uppercase tracking-[0.14em] text-[var(--text-muted)] [text-shadow:0_0_10px_rgba(var(--mode-rgb),0.2)]"
-        >
-          Vooruitzicht
-        </h3>
-        {!active ? (
-          <p className="mt-3 text-sm text-[var(--text-secondary)]">Geen actief traject.</p>
-        ) : outlook?.kind === "no_def" ? (
-          <p className="mt-3 text-sm leading-snug text-[var(--text-secondary)]">
-            Geen gestructureerde roadmap voor dit protocol — open het traject voor details.
-          </p>
-        ) : outlook?.kind === "last" ? (
-          <div className="mt-3 space-y-2">
-            <p className="text-sm font-medium text-[var(--text-primary)]">
-              Laatste week ({outlook.weekIndex}/{outlook.maxW}) — afronden of ander traject.
-            </p>
-            {outlook.goal ? (
-              <p className="text-xs text-[var(--text-muted)] line-clamp-2">{outlook.goal}</p>
-            ) : null}
-          </div>
-        ) : outlook?.kind === "next" ? (
-          <div className="mt-3 space-y-2">
-            <p className="text-sm font-medium text-[var(--text-primary)]">
-              Week {outlook.nextWeekIndex}: {outlook.nextTitle}
-            </p>
-            {outlook.nextObjective ? (
-              <p className="text-sm leading-snug text-[var(--text-secondary)] line-clamp-3">{outlook.nextObjective}</p>
-            ) : null}
-            <p className="text-[11px] text-[var(--text-muted)]">
-              Nog {outlook.weeksAfterThis} week{outlook.weeksAfterThis === 1 ? "" : "en"} na deze in het traject.
-            </p>
-            {outlook.goal ? (
-              <p className="text-xs leading-relaxed text-[var(--text-muted)] line-clamp-2 border-t border-[rgba(var(--mode-rgb),0.1)] pt-2">
-                Traject: {outlook.goal}
-              </p>
-            ) : null}
-          </div>
-        ) : (
-          <p className="mt-3 text-sm text-[var(--text-secondary)]">Geen vooruitzicht beschikbaar.</p>
-        )}
-        <p className="mt-4">
-          <Link
-            href="/learning/analytics"
-            className="text-[11px] font-medium text-[var(--text-muted)] underline-offset-2 transition hover:text-[var(--accent-focus)] hover:underline"
-          >
-            Trend & velocity →
-          </Link>
-        </p>
       </section>
     </div>
   );

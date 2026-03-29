@@ -69,11 +69,6 @@ const BacklogAndToekomstTriggers = nextDynamic(
   () => import("@/components/missions/BacklogAndToekomstTriggers").then((m) => ({ default: m.BacklogAndToekomstTriggers })),
   { loading: () => null }
 );
-const ConsequenceBanner = nextDynamic(
-  () => import("@/components/ConsequenceBanner").then((m) => ({ default: m.ConsequenceBanner })),
-  { loading: () => null }
-);
-
 async function ResistanceIndexBannerAsync() {
   return getResistanceIndex();
 }
@@ -347,6 +342,13 @@ async function MissionsSectionAsync({
     return true;
   });
 
+  const missionEngineWarnings = {
+    energyDepleted: (energyBudget as { consequence?: { energyDepleted?: boolean } }).consequence?.energyDepleted,
+    recoveryOnly: decisionBlocks.recoveryOnly,
+    recoveryProtocol: decisionBlocks.recoveryProtocol,
+    daysSinceLastCompletion: decisionBlocks.daysSinceLastCompletion,
+  };
+
   if (simplifiedContent) {
     return (
       <div className="flex min-h-0 w-full max-w-none flex-1 flex-col">
@@ -414,14 +416,8 @@ async function MissionsSectionAsync({
                 remaining: energyCap.remaining,
                 planned: energyCap.planned,
               }}
-              missionsContextBelowHero={
-                <ConsequenceBanner
-                  energyDepleted={(energyBudget as { consequence?: { energyDepleted?: boolean } }).consequence?.energyDepleted}
-                  recoveryOnly={decisionBlocks.recoveryOnly}
-                  recoveryProtocol={decisionBlocks.recoveryProtocol}
-                  daysSinceLastCompletion={decisionBlocks.daysSinceLastCompletion}
-                />
-              }
+              missionEngineWarnings={missionEngineWarnings}
+              missionsContextBelowHero={null}
             />
           </div>
           <p className="shrink-0 pt-1 text-center text-[11px] text-[var(--text-muted)]">
@@ -512,17 +508,8 @@ async function MissionsSectionAsync({
           remaining: energyCap.remaining,
           planned: energyCap.planned,
         }}
-        missionsContextBelowHero={
-          <>
-            <ModeBanner mode={mode} />
-            <ConsequenceBanner
-              energyDepleted={(energyBudget as { consequence?: { energyDepleted?: boolean } }).consequence?.energyDepleted}
-              recoveryOnly={decisionBlocks.recoveryOnly}
-              recoveryProtocol={decisionBlocks.recoveryProtocol}
-              daysSinceLastCompletion={decisionBlocks.daysSinceLastCompletion}
-            />
-          </>
-        }
+        missionEngineWarnings={missionEngineWarnings}
+        missionsContextBelowHero={<ModeBanner mode={mode} />}
       />
       </div>
       </div>

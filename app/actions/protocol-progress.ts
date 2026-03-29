@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import type { Tables } from "@/types/database.types";
 import type { DifficultyTier } from "@/lib/growth/adaptive-engine";
+import { parseProtocolProgressMetaFromTaskTags } from "@/lib/growth/protocol-task-tags";
 
 export type UserProtocolProgressRow = Tables<"user_protocol_progress">;
 
@@ -104,6 +105,7 @@ export async function setProtocolPreferredTier(params: {
     preferred_tier: params.tier,
   });
   revalidatePath("/learning");
+  revalidatePath("/strategy");
 }
 
 export async function setProtocolCurrentWeek(params: {
@@ -122,6 +124,7 @@ export async function setProtocolCurrentWeek(params: {
     current_week_index: Math.max(1, Math.floor(params.week_index)),
   });
   revalidatePath("/learning");
+  revalidatePath("/strategy");
 }
 
 export async function toggleProtocolTaskCompleted(params: {
@@ -158,5 +161,48 @@ export async function toggleProtocolTaskCompleted(params: {
     current_week_index: row?.current_week_index ?? 1,
   });
   revalidatePath("/learning");
+  revalidatePath("/strategy");
   return { completed: !was };
+}
+
+/**
+ * Sync Growth protocol progress when a protocol-linked mission is completed or uncompleted on the Tasks board.
+ */
+export async function applyProtocolProgressFromMissionTags(
+  userId: string,
+  taskTags: string[] | null | undefined,
+  direction: "complete" | "uncomplete",
+): Promise<void> {
+  const meta = parseProtocolProgressMetaFromTaskTags(taskTags);
+  if (!meta) return;
+
+  const supabase = await createClient();
+  const { data: existing } = await supabase
+    .from("user_protocol_progress")
+    .select("*")
+    .eq("user_id", userId)
+    .eq("protocol_slug", meta.protocol_slug)
+    .eq("locale", meta.locale)
+    .maybeSingle();
+
+  const row = existing as UserProtocolProgressRow | null;
+  if (direction === "uncomplete" && !row) return;
+
+  const ids = new Set(parseIds(row?.completed_task_ids));
+  if (direction === "complete") {
+    ids.add(meta.protocol_task_id);
+  } else {
+    ids.delete(meta.protocol_task_id);
+  }
+
+  await upsertProgress(userId, {
+    protocol_slug: meta.protocol_slug,
+    locale: meta.locale,
+    completed_task_ids: Array.from(ids),
+    preferred_tier: parseTier(row?.preferred_tier),
+    current_week_index: row?.current_week_index ?? 1,
+  });
+
+  revalidatePath("/learning");
+  revalidatePath("/strategy");
 }

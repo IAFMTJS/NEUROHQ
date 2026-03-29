@@ -120,7 +120,7 @@ export function GrowthCommandCenter({
       className="scroll-mt-28 overflow-hidden rounded-2xl border border-[rgba(var(--mode-rgb),0.22)] bg-gradient-to-br from-[rgba(var(--mode-rgb-deep),0.38)] via-[rgba(var(--mode-rgb),0.12)] to-[var(--bg-primary)]/95 shadow-[0_0_0_1px_rgba(var(--mode-rgb),0.08),0_0_40px_rgba(var(--mode-rgb),0.1),0_24px_56px_rgba(0,0,0,0.45)] backdrop-blur-md"
     >
       {/* Top: title + focus subtitle + medium ring */}
-      <div className="border-b border-[rgba(var(--mode-rgb),0.14)] px-5 py-5 sm:px-6">
+      <div className="border-b border-[rgba(var(--mode-rgb),0.14)] px-4 py-5 sm:px-5">
         <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
           <div className="min-w-0 flex-1 space-y-2">
             <h2 className="text-xl font-bold leading-tight tracking-tight text-[var(--text-primary)] [text-shadow:0_0_20px_rgba(var(--mode-rgb),0.2)] sm:text-2xl">
@@ -211,7 +211,7 @@ export function GrowthCommandCenter({
       </div>
 
       {quarterPacingLines.length > 0 ? (
-        <div className="border-b border-[rgba(var(--mode-rgb),0.1)] bg-[rgba(var(--mode-rgb),0.05)] px-5 py-3 sm:px-6">
+        <div className="border-b border-[rgba(var(--mode-rgb),0.1)] bg-[rgba(var(--mode-rgb),0.05)] px-4 py-3 sm:px-5">
           <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-[var(--text-muted)]">
             Kwartaal · Strategy-doel
           </p>
@@ -232,7 +232,7 @@ export function GrowthCommandCenter({
       ) : null}
 
       {/* Middle: week bar + tasks */}
-      <div className="space-y-5 px-5 py-6 sm:px-6">
+      <div className="space-y-5 px-4 py-6 sm:px-5">
         {def && week ? (
           <>
             <div className="flex flex-wrap items-end justify-between gap-2">
@@ -319,7 +319,7 @@ export function GrowthCommandCenter({
       </div>
 
       {/* Bottom: one primary + two quiet secondaries */}
-      <div className="border-t border-[rgba(var(--mode-rgb),0.12)] bg-black/10 px-5 py-5 sm:px-6">
+      <div className="border-t border-[rgba(var(--mode-rgb),0.12)] bg-black/10 px-4 py-5 sm:px-5">
         {def && week ? (
           <>
             <button

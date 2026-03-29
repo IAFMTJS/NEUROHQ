@@ -19,6 +19,8 @@ import {
   FocusModal,
 } from "@/components/missions";
 import { EnergyCapBar } from "@/components/missions/EnergyCapBar";
+import { MissionsEngineWarningIcon } from "@/components/missions/MissionsEngineWarningIcon";
+import { collectMissionEngineWarningLines } from "@/lib/mission-engine-warnings";
 import { CornerNode } from "@/components/hud-test/CornerNode";
 import { neuroToast } from "@/lib/ui/neuro-toast";
 import { Modal } from "@/components/Modal";
@@ -77,8 +79,17 @@ type Props = {
   /** Missions tab: energy bar + full-width hero task + compact grid; details on tap. */
   missionsHeroLayout?: boolean;
   energyCap?: { used: number; cap: number; remaining: number; planned: number } | null;
-  /** Mode / consequence bars (e.g. druk, recovery) — shown under main task + energy when missionsHeroLayout. */
+  /** Mode banner etc. Consequence + focus-slot hints are merged into MissionsEngineWarningIcon when missionsHeroLayout. */
   missionsContextBelowHero?: ReactNode;
+  /** Recovery / energy consequence flags (missions page); merged with focus-slot limitMessage in the warning icon. */
+  missionEngineWarnings?: {
+    energyDepleted?: boolean;
+    recoveryOnly?: boolean;
+    recoveryProtocol?: boolean;
+    daysSinceLastCompletion?: number;
+    zeroCompletionPenalty?: boolean;
+    burnout?: boolean;
+  };
 };
 
 function isRoutineTask(task: ExtendedTask): boolean {
@@ -153,6 +164,7 @@ export function TaskList({
   missionsHeroLayout = false,
   energyCap = null,
   missionsContextBelowHero = null,
+  missionEngineWarnings,
 }: Props) {
   const router = useRouter();
   const { gameState } = useDCICGameState();
@@ -342,6 +354,10 @@ export function TaskList({
       : slotsFilled
         ? "Let op: je focus slots zijn vol. Je kunt nog steeds toevoegen; overweeg eerst iets af te ronden of te verplaatsen."
         : null;
+  const engineWarningLines = collectMissionEngineWarningLines({
+    limitMessage: !isWarMode ? limitMessage : null,
+    ...(missionEngineWarnings ?? {}),
+  });
   const topRecommendedTask = useMemo(() => {
     const recommended = incompleteTasksForDisplay.find((t) => recommendedTaskIds?.includes(t.id));
     return recommended ?? incompleteTasksForDisplay[0] ?? null;
@@ -1088,11 +1104,17 @@ export function TaskList({
         {missionsHeroLayout && effectiveViewMode !== "focus" && (
           <div className="space-y-3">
             {energyCap ? (
-              <EnergyCapBar used={energyCap.used} cap={energyCap.cap} remaining={energyCap.remaining} planned={energyCap.planned} />
+              <div className="flex items-start gap-2">
+                <div className="min-w-0 flex-1">
+                  <EnergyCapBar used={energyCap.used} cap={energyCap.cap} remaining={energyCap.remaining} planned={energyCap.planned} />
+                </div>
+                <MissionsEngineWarningIcon lines={engineWarningLines} className="shrink-0 pt-0.5" />
+              </div>
+            ) : engineWarningLines.length > 0 ? (
+              <div className="flex justify-end">
+                <MissionsEngineWarningIcon lines={engineWarningLines} />
+              </div>
             ) : null}
-            {limitMessage && !isWarMode && (
-              <p className="rounded-lg border border-amber-500/20 bg-amber-500/5 px-3 py-2 text-xs text-[var(--text-muted)]">{limitMessage}</p>
-            )}
             {missionsContextBelowHero}
           </div>
         )}
@@ -1181,11 +1203,17 @@ export function TaskList({
 
               <div className="space-y-3">
                 {energyCap ? (
-                  <EnergyCapBar used={energyCap.used} cap={energyCap.cap} remaining={energyCap.remaining} planned={energyCap.planned} />
+                  <div className="flex items-start gap-2">
+                    <div className="min-w-0 flex-1">
+                      <EnergyCapBar used={energyCap.used} cap={energyCap.cap} remaining={energyCap.remaining} planned={energyCap.planned} />
+                    </div>
+                    <MissionsEngineWarningIcon lines={engineWarningLines} className="shrink-0 pt-0.5" />
+                  </div>
+                ) : engineWarningLines.length > 0 ? (
+                  <div className="flex justify-end">
+                    <MissionsEngineWarningIcon lines={engineWarningLines} />
+                  </div>
                 ) : null}
-                {limitMessage && !isWarMode && (
-                  <p className="rounded-lg border border-amber-500/20 bg-amber-500/5 px-3 py-2 text-xs text-[var(--text-muted)]">{limitMessage}</p>
-                )}
                 {missionsContextBelowHero}
               </div>
 

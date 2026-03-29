@@ -175,57 +175,67 @@ export function GrowthTabsShell({ children, commandPageHeader, belowTabsSlot }: 
     return (
       <div className="space-y-4" data-growth-tabs>
         <section className="space-y-3" aria-label="Growth command">
-          <div className="flex items-center justify-between gap-2">
-            {h.backHref ? (
-              <Link
-                href={h.backHref}
-                className="shrink-0 text-xs font-semibold text-[var(--text-secondary)] transition hover:text-[var(--text-primary)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[rgba(var(--mode-rgb),0.45)] focus-visible:ring-offset-0 rounded-md"
+          {/* Balanced grid: title optisch gecentreerd, flanken voor terug + mode/ring */}
+          <div className="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-x-2 gap-y-2 sm:gap-x-3">
+            <div className="flex min-w-0 justify-self-start self-center">
+              {h.backHref ? (
+                <Link
+                  href={h.backHref}
+                  className="inline-flex shrink-0 items-center rounded-lg px-1 py-0.5 text-[11px] font-medium text-[var(--text-secondary)] transition hover:bg-[rgba(var(--mode-rgb),0.08)] hover:text-[#dff6ff] focus:outline-none focus-visible:ring-2 focus-visible:ring-[rgba(var(--mode-rgb),0.45)] focus-visible:ring-offset-0 focus-visible:ring-offset-transparent"
+                >
+                  ← HQ
+                </Link>
+              ) : (
+                <span className="w-9 shrink-0 sm:w-10" aria-hidden />
+              )}
+            </div>
+
+            <h1 className="col-start-2 justify-self-center text-center text-[clamp(0.95rem,3.5vw,1.15rem)] font-semibold uppercase leading-tight tracking-[0.28em] text-[#dff8ff] [text-shadow:0_0_22px_rgba(var(--mode-rgb),0.42),0_1px_0_rgba(0,0,0,0.35)] sm:tracking-[0.32em]">
+              GROWTH
+            </h1>
+
+            <div className="flex min-w-0 items-center justify-end justify-self-end gap-2 self-center sm:gap-2.5">
+              <span className="hidden items-center rounded-full border border-[rgba(var(--mode-rgb),0.28)] bg-[rgba(var(--mode-rgb),0.06)] px-2 py-0.5 text-[8px] font-semibold uppercase tracking-[0.12em] text-[rgba(200,236,255,0.88)] shadow-[inset_0_1px_0_rgba(255,255,255,0.06)] sm:inline-flex sm:text-[9px] sm:tracking-[0.14em]">
+                {modeLabel}
+              </span>
+              <div
+                className="relative shrink-0"
+                role="img"
+                aria-label={`Weekdoel: ${h.ringValue}`}
               >
-                ← HQ
-              </Link>
-            ) : (
-              <span className="w-10 shrink-0" aria-hidden />
-            )}
-            <span className="inline-flex shrink-0 items-center rounded-full border border-[rgba(var(--mode-rgb),0.18)] bg-[var(--bg-elevated)]/35 px-2 py-0.5 text-[9px] font-semibold uppercase tracking-wide text-[var(--accent-focus)]">
-              {modeLabel}
+                <div
+                  className="absolute left-1/2 top-1/2 h-[118%] w-[118%] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[radial-gradient(circle,rgba(var(--mode-rgb),0.18)_0%,transparent_62%)] blur-md"
+                  aria-hidden
+                />
+                <div className="relative drop-shadow-[0_12px_28px_rgba(0,0,0,0.45)]" aria-hidden>
+                  <EnergyRing
+                    size={RING_SIZE}
+                    progress={h.ringProgress}
+                    label={h.ringLabel ?? "Week"}
+                    value={h.ringValue}
+                    mode={ringMode}
+                    softGlow
+                  />
+                </div>
+              </div>
+            </div>
+
+            <span className="col-span-3 -mt-0.5 flex justify-center sm:hidden">
+              <span className="inline-flex items-center rounded-full border border-[rgba(var(--mode-rgb),0.26)] bg-[rgba(var(--mode-rgb),0.07)] px-2 py-0.5 text-[8px] font-semibold uppercase tracking-[0.12em] text-[rgba(200,236,255,0.88)]">
+                {modeLabel}
+              </span>
             </span>
           </div>
 
-          <div className="flex min-w-0 items-center justify-between gap-3">
-            <h1 className="min-w-0 shrink text-lg font-bold uppercase tracking-[0.16em] text-[var(--text-primary)] [text-shadow:0_0_14px_rgba(var(--mode-rgb),0.35),0_0_28px_rgba(var(--mode-rgb),0.12)] sm:text-xl sm:tracking-[0.18em]">
-              GROWTH
-            </h1>
-            <div
-              className="relative shrink-0"
-              role="img"
-              aria-label={`Weekdoel: ${h.ringValue}`}
-            >
-              <div
-                className="absolute left-1/2 top-1/2 h-[118%] w-[118%] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[radial-gradient(circle,rgba(var(--mode-rgb),0.16)_0%,transparent_62%)] blur-md"
-                aria-hidden
-              />
-              <div className="relative drop-shadow-[0_12px_28px_rgba(0,0,0,0.45)]" aria-hidden>
-                <EnergyRing
-                  size={RING_SIZE}
-                  progress={h.ringProgress}
-                  label={h.ringLabel ?? "Week"}
-                  value={h.ringValue}
-                  mode={ringMode}
-                  softGlow
-                />
-              </div>
-            </div>
-          </div>
-
           <p
-            className="min-w-0 truncate text-xs leading-snug text-[var(--text-muted)]"
+            className="min-w-0 truncate text-center text-xs leading-snug text-[rgba(180,210,228,0.82)]"
             title={h.statusLine}
           >
             {h.statusLine}
           </p>
 
           {h.actions != null ? (
-            <div className="flex flex-wrap items-center justify-center gap-2 sm:justify-start">{h.actions}</div>
+            <div className="flex flex-wrap items-center justify-center gap-2">{h.actions}</div>
           ) : null}
         </section>
 

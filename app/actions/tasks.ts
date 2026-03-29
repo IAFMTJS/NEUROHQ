@@ -548,6 +548,13 @@ export async function completeTask(
     }
   }
 
+  try {
+    const { applyProtocolProgressFromMissionTags } = await import("./protocol-progress");
+    await applyProtocolProgressFromMissionTags(user.id, t?.task_tags ?? null, "complete");
+  } catch (err) {
+    console.error("Protocol progress sync on mission complete failed:", err);
+  }
+
   const { logBehaviourEntry } = await import("./dcic/behaviour-log");
   // Map task impact (1–3) to difficulty_level so identity engine impact reputation updates (needs >= 0.7 or xp >= 80).
   const impactToDifficulty = (i: number | null | undefined): number =>
@@ -573,6 +580,8 @@ export async function completeTask(
   revalidatePath("/dashboard");
   revalidatePath("/tasks");
   revalidatePath("/xp");
+  revalidatePath("/learning");
+  revalidatePath("/strategy");
   revalidateTagMax("decision-blocks");
 
   // Snapshot updated Identity Engine reputation for level-up modal.
@@ -604,20 +613,34 @@ export async function uncompleteTask(id: string) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) throw new Error("Not authenticated");
-  const { data: task } = await supabase.from("tasks").select("due_date").eq("id", id).eq("user_id", user.id).single();
+  const { data: task } = await supabase
+    .from("tasks")
+    .select("due_date, task_tags")
+    .eq("id", id)
+    .eq("user_id", user.id)
+    .single();
   const { error } = await supabase
     .from("tasks")
     .update({ completed: false, completed_at: null })
     .eq("id", id)
     .eq("user_id", user.id);
   if (error) throw new Error(error.message);
-  const dateTag = (task as { due_date?: string } | null)?.due_date ?? new Date().toISOString().slice(0, 10);
+  const row = task as { due_date?: string; task_tags?: string[] | null } | null;
+  const dateTag = row?.due_date ?? new Date().toISOString().slice(0, 10);
+  try {
+    const { applyProtocolProgressFromMissionTags } = await import("./protocol-progress");
+    await applyProtocolProgressFromMissionTags(user.id, row?.task_tags ?? null, "uncomplete");
+  } catch (err) {
+    console.error("Protocol progress sync on mission uncomplete failed:", err);
+  }
   revalidateTagMax(`tasks-${user.id}-${dateTag}`);
   const { revalidateDashboardCache } = await import("./dashboard-data");
   revalidateDashboardCache(user.id);
   revalidatePath("/dashboard");
   revalidatePath("/tasks");
   revalidatePath("/xp");
+  revalidatePath("/learning");
+  revalidatePath("/strategy");
   revalidateTagMax("decision-blocks");
 }
 
