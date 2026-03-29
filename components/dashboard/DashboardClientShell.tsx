@@ -586,6 +586,7 @@ export function DashboardClientShell() {
                 />
               )}
               <SciFiPanel
+                flatFrame
                 className={`dashboard-bridge-frame idle-breathing ${hudStyles.focusPrimary}`}
                 bodyClassName={`dashboard-bridge-body flex flex-col gap-3 [-webkit-overflow-scrolling:touch] ${skipCinematicLayers ? "light-ui-defer-paint" : ""}`}
                 variant="command"

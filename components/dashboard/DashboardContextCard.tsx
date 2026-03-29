@@ -47,7 +47,7 @@ export function DashboardContextCard({
   useEffect(() => setMounted(true), []);
 
   return (
-    <SciFiPanel className="overflow-hidden" bodyClassName="p-0">
+    <SciFiPanel flatFrame className="overflow-hidden" bodyClassName="p-0">
       {/* Quote */}
       <section className="border-b border-[var(--card-border)] px-4 py-3">
         <div className="flex items-center justify-between gap-2">

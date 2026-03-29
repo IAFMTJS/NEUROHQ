@@ -4,7 +4,7 @@ import { SciFiPanel } from "@/components/hud-test/SciFiPanel";
 /** Shortcuts-only card for quick navigation. */
 export function DashboardUpdatesCard() {
   return (
-    <SciFiPanel className="overflow-hidden" bodyClassName="p-0" variant="minimal">
+    <SciFiPanel flatFrame className="overflow-hidden" bodyClassName="p-0" variant="minimal">
       <div className="border-b border-[var(--card-border)] px-3 py-2">
         <h2 className="text-sm font-semibold text-[var(--text-primary)]">
           Snelkoppelingen
