@@ -9,6 +9,7 @@ import { getBehaviorProfile } from "@/app/actions/behavior-profile";
 import { getStudyPlan, getAccountabilitySettings } from "@/app/actions/behavior";
 import { getXPFullContext } from "@/app/actions/xp-context";
 import { getDailyState } from "@/app/actions/daily-state";
+import { getProfileDailyChallengeContext } from "@/app/actions/profile-daily-challenges";
 import { todayDateString } from "@/lib/utils/timezone";
 import { ProfileEngineIdentityCard } from "@/components/profile/ProfileEngineIdentityCard";
 import { ProfileHomeCompact } from "@/components/profile/ProfileHomeCompact";
@@ -115,10 +116,12 @@ export default async function ProfilePage({ searchParams }: { searchParams: Prom
   const mainView = parseProfileMainView(raw.view);
 
   if (mainView === "home") {
-    const [prefs, xpCtx, todayDaily] = await Promise.all([
+    const today = todayDateString();
+    const [prefs, xpCtx, todayDaily, dailyChallengeContext] = await Promise.all([
       getUserPreferencesOrDefaults(),
       getXPFullContext(),
-      getDailyState(todayDateString()),
+      getDailyState(today),
+      getProfileDailyChallengeContext(today),
     ]);
     const { identity, insightState } = xpCtx;
     const moodLabel = (todayDaily as { mood_label?: string | null } | null)?.mood_label ?? null;
@@ -138,7 +141,13 @@ export default async function ProfilePage({ searchParams }: { searchParams: Prom
           >
             <div className="space-y-4">
               <MainTabNav active="home" />
-              <ProfileHomeCompact identity={identity} insightState={insightState} initialMoodLabel={moodLabel} />
+              <ProfileHomeCompact
+                identity={identity}
+                insightState={insightState}
+                initialMoodLabel={moodLabel}
+                todayStr={today}
+                dailyChallengeContext={dailyChallengeContext}
+              />
             </div>
           </SimplifiedPageShell>
         </div>
@@ -154,7 +163,13 @@ export default async function ProfilePage({ searchParams }: { searchParams: Prom
             <HeroMascotImage page="profile" className="mascot-img" heroLarge />
           </div>
         </section>
-        <ProfileHomeCompact identity={identity} insightState={insightState} initialMoodLabel={moodLabel} />
+        <ProfileHomeCompact
+          identity={identity}
+          insightState={insightState}
+          initialMoodLabel={moodLabel}
+          todayStr={today}
+          dailyChallengeContext={dailyChallengeContext}
+        />
       </div>
     );
   }

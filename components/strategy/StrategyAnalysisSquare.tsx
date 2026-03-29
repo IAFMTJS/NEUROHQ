@@ -20,14 +20,30 @@ export function StrategyAnalysisSquare({ snapshot }: Props) {
         <div className="min-w-0 flex-1 space-y-3">
           <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[var(--semantic-accent)]/90">Analyse</p>
           {snapshot.engineReadOnlyActive ? (
-            <div className="space-y-1 rounded-lg border border-[rgba(var(--mode-rgb),0.16)] bg-[rgba(6,18,30,0.5)] px-2.5 py-2 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
+            <div className="space-y-3 rounded-xl border border-[rgba(var(--mode-rgb),0.18)] bg-[rgba(6,18,30,0.55)] px-3 py-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.05),0_0_24px_rgba(var(--mode-rgb),0.06)]">
               <p className="text-[9px] font-bold uppercase tracking-[0.14em] text-[var(--accent-focus)]/95">
                 Strategy engine · alleen lezen
               </p>
-              {snapshot.enginePaceSummary ? (
-                <p className="line-clamp-2 text-[11px] leading-snug text-[var(--text-secondary)]" title={snapshot.enginePaceSummary}>
-                  {snapshot.enginePaceSummary}
+              {snapshot.engineQuarterLine ? (
+                <p className="text-[11px] leading-relaxed text-[var(--text-muted)]">{snapshot.engineQuarterLine}</p>
+              ) : null}
+              {snapshot.engineCompactStats && snapshot.engineDetailLines.length === 0 ? (
+                <p className="rounded-md border border-[rgba(var(--mode-rgb),0.12)] bg-[rgba(0,0,0,0.2)] px-2.5 py-2 text-[11px] font-medium leading-snug text-[var(--text-secondary)]">
+                  {snapshot.engineCompactStats}
                 </p>
+              ) : null}
+              {snapshot.engineDetailLines.length > 0 ? (
+                <ul className="space-y-2.5 border-t border-[rgba(var(--mode-rgb),0.1)] pt-3">
+                  {snapshot.engineDetailLines.map((line, i) => (
+                    <li key={i} className="flex gap-2.5 text-[11px] leading-relaxed text-[var(--text-secondary)]">
+                      <span
+                        className="mt-[6px] h-1.5 w-1.5 shrink-0 rounded-full bg-[var(--accent-focus)]/80 shadow-[0_0_10px_rgba(var(--mode-rgb),0.35)]"
+                        aria-hidden
+                      />
+                      <span className="min-w-0">{line}</span>
+                    </li>
+                  ))}
+                </ul>
               ) : null}
             </div>
           ) : null}

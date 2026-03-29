@@ -32,7 +32,6 @@ import { neuroStrategyBudgetHint } from "@/lib/neuro-copy";
 import { SimplifiedPageShell } from "@/components/layout/SimplifiedPageShell";
 import { SIMPLIFIED_VIEWPORT_WRAPPER } from "@/lib/simplified-page-layout";
 import { DashboardHubCommandShell } from "@/components/layout/DashboardHubCommandShell";
-import { StrategyEnginePaceHint } from "@/components/strategy/StrategyEnginePaceHint";
 import { StrategyHubHeader } from "@/components/strategy/StrategyHubHeader";
 
 /** Force dynamic: strategy uses cookies (auth) and live data. */
@@ -247,9 +246,6 @@ async function StrategyContent({ simplifiedLayout = false }: { simplifiedLayout?
               <p className="text-center text-xs text-[var(--text-muted)]">
                 Overzicht, allocatie, momentum en review. Engine-instellingen staan onderaan dit paneel.
               </p>
-              <Suspense fallback={null}>
-                <StrategyEnginePaceHint variant="both" />
-              </Suspense>
             </>
           ) : undefined
         }
@@ -324,11 +320,6 @@ export default async function StrategyPage() {
             { href: "/report", label: "Insights" },
             { href: "/budget", label: "Budget" },
           ]}
-          topSlot={
-            <Suspense fallback={null}>
-              <StrategyEnginePaceHint variant="both" />
-            </Suspense>
-          }
         >
           <div className="space-y-6">
             <Suspense fallback={<div className="min-h-[200px] animate-pulse rounded-2xl bg-[var(--bg-elevated)]/30" aria-hidden />}>

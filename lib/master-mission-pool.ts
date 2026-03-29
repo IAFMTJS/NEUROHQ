@@ -3,6 +3,15 @@ import type { AvoidanceTracker } from "@/app/actions/avoidance-tracker";
 import { MASTER_MISSION_POOL, type MasterMissionTemplate } from "@/lib/mission-templates";
 import { evaluateTemplateAgainstTriggers, resolveMissionTriggers } from "@/lib/mission-triggers";
 
+/** Deterministic 32-bit hash for daily ordering (no Math.random). */
+function djb2Hash(str: string): number {
+  let h = 5381;
+  for (let i = 0; i < str.length; i++) {
+    h = Math.imul(h, 33) ^ str.charCodeAt(i);
+  }
+  return h >>> 0;
+}
+
 /** Round-robin interleave so picks mix structure / energy / focus instead of one subcategory dominating. */
 function diversifyBySubcategoryPrefix(templates: MasterMissionTemplate[]): MasterMissionTemplate[] {
   const buckets: MasterMissionTemplate[][] = [[], [], [], []];
@@ -156,24 +165,37 @@ function pickStructureEnergyFocus(context: PickContext, max: number): PickedMiss
     ? diversified.filter((t) => t.title && !recentlyUsedTitles.has(t.title))
     : diversified;
   const pool = notRecent.length >= max ? notRecent : diversified;
-  const topN = Math.min(8, pool.length);
+  /**
+   * How many score-ranked templates enter the daily shuffle. It used to be 8, so the same ~8
+   * missions (top of sort + weektheme/brain bias) rotated forever despite a 100+ pool.
+   */
+  const topN = Math.min(72, pool.length);
   const takeFrom = pool.slice(0, topN);
 
   let chosen: MasterMissionTemplate[];
-  if (dateStr && takeFrom.length > max) {
-    const daySeed = dateStr.split("-").map(Number).reduce((a, b) => a + b, 0);
-    const start = daySeed % takeFrom.length;
+  if (dateStr && takeFrom.length > 0) {
+    const shuffled = [...takeFrom].sort(
+      (a, b) => djb2Hash(`${dateStr}|${a.id}`) - djb2Hash(`${dateStr}|${b.id}`)
+    );
     chosen = [];
     const seen = new Set<string>();
-    for (let i = 0; chosen.length < max && i < takeFrom.length; i++) {
-      const t = takeFrom[(start + i) % takeFrom.length];
+    for (const t of shuffled) {
+      if (chosen.length >= max) break;
       if (t.title && !seen.has(t.title)) {
         seen.add(t.title);
         chosen.push(t);
       }
     }
   } else {
-    chosen = takeFrom.slice(0, max);
+    chosen = [];
+    const seen = new Set<string>();
+    for (const t of takeFrom) {
+      if (chosen.length >= max) break;
+      if (t.title && !seen.has(t.title)) {
+        seen.add(t.title);
+        chosen.push(t);
+      }
+    }
   }
 
   return chosen.map((t) => ({
@@ -223,7 +245,12 @@ function pickProcrastinationAttack(context: PickContext): PickedMissionTemplate[
   );
   if (candidates.length === 0) return [];
 
-  const t = candidates[0];
+  const ordered = [...candidates].sort((a, b) => a.id.localeCompare(b.id));
+  const idx =
+    context.dateStr && ordered.length > 1
+      ? djb2Hash(`${context.dateStr}|procrastination|${top.tag}`) % ordered.length
+      : 0;
+  const t = ordered[idx]!;
   return [
     {
       ...t,

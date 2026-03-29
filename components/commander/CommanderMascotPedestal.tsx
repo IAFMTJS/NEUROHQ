@@ -295,7 +295,7 @@ export function CommanderMascotPedestal({ stats, children }: Props) {
                     transform: "translate(-50%, calc(-50% - clamp(0.65rem, 3vw, 1.1rem)))",
                   }}
                 >
-                  <Link href="/xp" className={`${cardClass} text-left`}>
+                  <Link href="/profile" className={`${cardClass} text-left`}>
                     <span className="block text-[8px] font-semibold uppercase tracking-[0.12em] text-[var(--text-muted)] sm:text-[9px]">XP</span>
                     <span className="mt-0.5 block text-[13px] font-bold tabular-nums leading-tight text-[var(--text-primary)] sm:text-sm">
                       Lv {displayLevel}

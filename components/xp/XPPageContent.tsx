@@ -1,11 +1,11 @@
 "use client";
 
-import { useState, useMemo, useTransition } from "react";
-import { useRouter } from "next/navigation";
+import { useState, useMemo } from "react";
 import type { HeatmapDay } from "@/app/actions/dcic/heatmap";
 import type { XPForecastItem } from "@/app/actions/dcic/xp-forecast";
 import type { InsightEngineState, XPBySourceItem } from "@/app/actions/dcic/insight-engine";
-import { createTask } from "@/app/actions/tasks";
+import { DailyChallengesPanel } from "@/components/profile/DailyChallengesPanel";
+import { recommendedMissionTemplates } from "@/lib/recommended-mission-templates";
 import { WeeklyHeatmap } from "@/components/dashboard/WeeklyHeatmap";
 import { XPForecastWidget } from "@/components/dashboard/XPForecastWidget";
 import { HQChart } from "@/components/hq/HQChart";
@@ -82,15 +82,11 @@ export default function XPPageContent({
   brainModeToday,
   activeMissionCountToday,
 }: Props) {
-  const router = useRouter();
   const [xpView, setXpView] = useState<"command" | "analytics">("command");
   const [commanderMode, setCommanderMode] = useState(true);
   const [chartDays, setChartDays] = useState<7 | 14>(14);
-  const [pendingAddId, setPendingAddId] = useState<string | null>(null);
-  const [isPending, startTransition] = useTransition();
   const [showAllSources, setShowAllSources] = useState(false);
   const [projectionOpen, setProjectionOpen] = useState(false);
-  const [challengeDate, setChallengeDate] = useState(todayStr);
   const maxSlotsToday = brainModeToday.maxSlots;
   const addBlockedToday = brainModeToday.addBlocked;
 
@@ -99,58 +95,14 @@ export default function XPPageContent({
     [chartData, chartDays]
   );
 
-  const recommendedTemplates = useMemo(() => {
-    let list = missionTemplates;
-    const identityTargets = new Set(behaviorProfile.identityTargets);
-    const fitnessCommitment = behaviorProfile.hobbyCommitment.fitness ?? 0;
-
-    const scoreTemplate = (t: MissionTemplateItem): number => {
-      let score = 0;
-      if (identityTargets.has("fit_person") && t.domain === "health") score += 2;
-      if (identityTargets.has("disciplined") && t.domain === "discipline") score += 2;
-      if (identityTargets.has("financial_control") && t.domain === "business") score += 2;
-      if (fitnessCommitment >= 0.5 && t.domain === "health") score += 1;
-      return score;
-    };
-
-    return [...list].sort((a, b) => scoreTemplate(b) - scoreTemplate(a));
-  }, [missionTemplates, behaviorProfile]);
+  const recommendedTemplates = useMemo(
+    () => recommendedMissionTemplates(missionTemplates, behaviorProfile),
+    [missionTemplates, behaviorProfile]
+  );
 
   const cardClass = commanderMode
     ? "rounded-2xl border-2 border-[var(--accent-focus)]/40 bg-[var(--dc-bg-elevated)] p-4 shadow-lg"
     : "glass-card p-4 rounded-2xl border border-[var(--card-border)]";
-
-  function addMission(template: MissionTemplateItem, dueDate?: string) {
-    const date = dueDate ?? challengeDate ?? todayStr;
-    const slotsFilledToday = activeMissionCountToday >= maxSlotsToday;
-    const limitMessage =
-      addBlockedToday && date === todayStr
-        ? "Mentale belasting te hoog. Vandaag geen nieuwe missies toevoegen; afronden of uit je agenda halen."
-        : slotsFilledToday && date === todayStr
-          ? "Je hebt je focus slots gevuld. Kies één missie om eerst af te maken of te verplaatsen; dan mag er weer één bij."
-          : null;
-    if (limitMessage) {
-      // For now, surface via browser alert to keep UI simple in this context.
-      alert(limitMessage);
-      return;
-    }
-    setPendingAddId(template.id);
-    startTransition(async () => {
-      try {
-        await createTask({
-          title: template.title,
-          due_date: date,
-          domain: template.domain,
-          energy_required: template.energy,
-          category: template.category ?? null,
-          base_xp: template.baseXP ?? undefined,
-        });
-        router.refresh();
-      } finally {
-        setPendingAddId(null);
-      }
-    });
-  }
 
   const ins = insightState;
   const bestDayName = ins?.bestDayOfWeek != null ? DAY_NAMES[ins.bestDayOfWeek] : null;
@@ -179,19 +131,6 @@ export default function XPPageContent({
     recommendedTemplates[2]?.baseXP != null
       ? `Reserveer hoog-XP werk: ${recommendedTemplates[2].title} (+${recommendedTemplates[2].baseXP} XP).`
       : "Plan morgen 1 missie met hogere base-XP — voltooien op Missions levert het meeste.";
-  const dailyChallengeReward = Math.max(10, Math.round(identity.xp_to_next_level * 0.1));
-  const daySeed = new Date(`${todayStr}T12:00:00Z`).getUTCDate();
-  const challengePool = recommendedTemplates.length > 0 ? recommendedTemplates : missionTemplates;
-  const dailyChallenges = Array.from({ length: Math.min(3, challengePool.length) }).map((_, idx) => {
-    const item = challengePool[(daySeed + idx) % challengePool.length];
-    return {
-      id: `${item.id}-${idx}`,
-      title: item.title,
-      template: item,
-      rewardXp: dailyChallengeReward,
-      tone: idx === 0 ? "Opstart" : idx === 1 ? "Momentum" : "Uitdaging",
-    };
-  });
   const multiplierEligible = (ins?.completionRateLast7 ?? 0) >= 0.95 && identity.streak.current >= 7;
 
   return (
@@ -364,39 +303,16 @@ export default function XPPageContent({
           </div>
         </section>
 
-        <section className={`${cardClass} space-y-4`}>
-          <div className="flex flex-wrap items-center justify-between gap-2">
-            <div>
-              <h3 className="text-sm font-semibold text-[var(--text-primary)]">Dagelijkse challenges</h3>
-              <p className="mt-1 text-xs text-[var(--text-muted)]">
-                3 lichte challenges, elk ongeveer {dailyChallengeReward} XP ({Math.round((dailyChallengeReward / Math.max(1, identity.xp_to_next_level)) * 100)}% richting volgend level).
-              </p>
-            </div>
-            <input
-              type="date"
-              value={challengeDate}
-              onChange={(e) => setChallengeDate(e.target.value || todayStr)}
-              className="rounded-lg border border-[var(--card-border)] bg-[var(--bg-primary)] px-2 py-1.5 text-sm text-[var(--text-primary)]"
-            />
-          </div>
-          <div className="grid gap-2 md:grid-cols-3">
-            {dailyChallenges.map((challenge) => (
-              <div key={challenge.id} className="rounded-xl border border-[var(--card-border)] bg-[var(--bg-primary)]/35 p-3">
-                <p className="text-[10px] uppercase tracking-wide text-[var(--text-muted)]">{challenge.tone}</p>
-                <p className="mt-1 text-sm font-medium text-[var(--text-primary)]">{challenge.title}</p>
-                <p className="mt-1 text-xs text-[var(--accent-focus)]">+{challenge.rewardXp} XP potentieel</p>
-                <button
-                  type="button"
-                  onClick={() => addMission(challenge.template)}
-                  disabled={isPending && pendingAddId === challenge.template.id}
-                  className="mt-2 rounded-lg border border-[var(--card-border)] px-2.5 py-1.5 text-xs font-semibold text-[var(--text-primary)] hover:bg-white/10 disabled:opacity-50"
-                >
-                  {pendingAddId === challenge.template.id ? "Toevoegen..." : "Plan uitdaging"}
-                </button>
-              </div>
-            ))}
-          </div>
-        </section>
+        <DailyChallengesPanel
+          variant="xp"
+          className={`${cardClass} space-y-4`}
+          identity={identity}
+          todayStr={todayStr}
+          missionTemplates={missionTemplates}
+          behaviorProfile={behaviorProfile}
+          brainModeToday={brainModeToday}
+          activeMissionCountToday={activeMissionCountToday}
+        />
 
         </>
       )}

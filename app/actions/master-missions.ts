@@ -229,16 +229,16 @@ export async function ensureMasterMissionsForToday(dailyStateFromSave?: DailySta
   const avoidanceTracker = await getAvoidanceTracker();
   const allowHeavyNow = brainMode.mode !== "LowEnergy" && (!isUsualDayOff || dayOffMode === "soft");
 
-  // Recently used auto-mission titles (last 14 days, excluding today) for stronger variety.
-  const fourteenDaysAgo = new Date(dateStr);
-  fourteenDaysAgo.setDate(fourteenDaysAgo.getDate() - 14);
-  const fourteenDaysAgoStr = fourteenDaysAgo.toISOString().slice(0, 10);
+  // Recently used auto-mission titles (last 42 days, excluding today) so the pool avoids repeats longer.
+  const recentHistoryStart = new Date(dateStr);
+  recentHistoryStart.setDate(recentHistoryStart.getDate() - 42);
+  const recentHistoryStartStr = recentHistoryStart.toISOString().slice(0, 10);
   const { data: recentAuto } = await db
     .from("tasks")
     .select("title")
     .eq("user_id", user.id)
     .eq("psychology_label", "MasterPoolAuto")
-    .gte("due_date", fourteenDaysAgoStr)
+    .gte("due_date", recentHistoryStartStr)
     .lt("due_date", dateStr)
     .is("parent_task_id", null)
     .is("deleted_at", null);

@@ -6,7 +6,7 @@ import { getBehaviorProfile } from "@/app/actions/behavior-profile";
 import { getEnergyBudget } from "@/app/actions/energy";
 import { getTodaysTasks } from "@/app/actions/tasks";
 import { xpProgressInLevel, xpRangeForNextLevel } from "@/lib/xp";
-import { MISSION_TEMPLATES } from "@/lib/mission-templates";
+import { missionTemplatesForXpPayload } from "@/lib/mission-templates";
 
 export async function GET(request: Request) {
   try {
@@ -58,16 +58,7 @@ export async function GET(request: Request) {
       xpLast7: effectiveInsight?.xpLast7 ?? 0,
       xpPrevious7: effectiveInsight?.xpPrevious7 ?? 0,
       xpBySource,
-      missionTemplates: MISSION_TEMPLATES.map((t) => ({
-        id: t.id,
-        title: t.title,
-        domain: t.domain,
-        energy: t.energy,
-        category: t.category ?? null,
-        baseXP: t.baseXP ?? null,
-        xpLevel: t.xpLevel,
-        description: t.description,
-      })),
+      missionTemplates: missionTemplatesForXpPayload(),
       behaviorProfile,
       brainModeToday: energyBudget.brainMode,
       activeMissionCountToday: activeCountToday,

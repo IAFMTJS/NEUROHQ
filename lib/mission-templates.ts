@@ -4,6 +4,7 @@
  */
 
 import externalAutomissions from "@/lib/automissions-update-23-pe.normalized.json";
+import type { MissionTemplateItem } from "@/components/xp/XPPageContent";
 
 export type XpLevel = "low" | "normal" | "high";
 
@@ -753,4 +754,18 @@ export function baseXpForLevel(level: XpLevel): number {
 /** Label for base_xp value (Veel XP, Normaal XP, Weinig XP). */
 export function baseXpToLevelLabel(baseXp: number): string {
   return baseXp >= 75 ? "Veel XP" : baseXp >= 40 ? "Normaal XP" : "Weinig XP";
+}
+
+/** Shape used by XP cache API and profile daily challenges. */
+export function missionTemplatesForXpPayload(): MissionTemplateItem[] {
+  return MISSION_TEMPLATES.map((t) => ({
+    id: t.id,
+    title: t.title,
+    domain: t.domain,
+    energy: t.energy,
+    category: t.category ?? null,
+    baseXP: t.baseXP ?? null,
+    xpLevel: t.xpLevel,
+    description: t.description,
+  }));
 }

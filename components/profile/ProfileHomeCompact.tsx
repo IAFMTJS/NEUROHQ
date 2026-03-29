@@ -3,6 +3,8 @@
 import { useState } from "react";
 import Link from "next/link";
 import type { XPFullContext } from "@/app/actions/xp-context";
+import type { ProfileDailyChallengeContext } from "@/app/actions/profile-daily-challenges";
+import { DailyChallengesPanel } from "@/components/profile/DailyChallengesPanel";
 import { xpProgressInLevel, xpRangeForNextLevel } from "@/lib/xp";
 import { reportInsightsHref } from "@/lib/profile-routes";
 import { EnergyRing, type EnergyRingMode } from "@/components/hud-test/EnergyRing";
@@ -14,6 +16,8 @@ type Props = {
   insightState: XPFullContext["insightState"];
   /** Dag-mood uit daily_state (server). */
   initialMoodLabel?: string | null;
+  todayStr: string;
+  dailyChallengeContext: ProfileDailyChallengeContext;
 };
 
 function bandHint(band: "low" | "medium" | "high"): string {
@@ -69,7 +73,13 @@ function OrbitTile({
   return body;
 }
 
-export function ProfileHomeCompact({ identity, insightState, initialMoodLabel }: Props) {
+export function ProfileHomeCompact({
+  identity,
+  insightState,
+  initialMoodLabel,
+  todayStr,
+  dailyChallengeContext,
+}: Props) {
   const [moodOpen, setMoodOpen] = useState(false);
   const [moodLabel, setMoodLabel] = useState<MoodLabel | null>(
     (initialMoodLabel as MoodLabel | null) ?? null
@@ -170,6 +180,17 @@ export function ProfileHomeCompact({ identity, insightState, initialMoodLabel }:
           <OrbitTile title="XP %">{barPct}%</OrbitTile>
         </div>
       </div>
+
+      <DailyChallengesPanel
+        variant="profile"
+        className={`relative z-[1] mt-5 ${tileShell} border-[rgba(var(--mode-rgb),0.1)] bg-[rgba(var(--mode-rgb-deep),0.07)] px-4 py-3.5 sm:px-5 space-y-4`}
+        identity={identity}
+        todayStr={todayStr}
+        missionTemplates={dailyChallengeContext.missionTemplates}
+        behaviorProfile={dailyChallengeContext.behaviorProfile}
+        brainModeToday={dailyChallengeContext.brainModeToday}
+        activeMissionCountToday={dailyChallengeContext.activeMissionCountToday}
+      />
 
       <div
         className={`relative z-[1] mt-5 ${tileShell} border-[rgba(var(--mode-rgb),0.1)] bg-[rgba(var(--mode-rgb-deep),0.07)] px-4 py-3.5 sm:px-5`}

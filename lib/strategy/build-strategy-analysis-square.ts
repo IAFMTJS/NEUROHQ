@@ -1,5 +1,6 @@
 import type { StrategyIntegrationOverview } from "@/app/actions/strategy-integration";
 import type { StrategyPacingHints } from "@/lib/strategy/strategy-pacing-hints";
+import { strategyPaceHintLines } from "@/lib/strategy/format-strategy-pace-hints";
 import { formatCents } from "@/lib/utils/currency";
 
 export type StrategyAnalysisSnapshot = {
@@ -12,8 +13,12 @@ export type StrategyAnalysisSnapshot = {
   growthWarn: boolean;
   /** Strategy engine (read-only pacing) is configured for this quarter. */
   engineReadOnlyActive: boolean;
-  /** One scan line: quarter progress + spaar/leer vs engine-doelen. */
-  enginePaceSummary: string | null;
+  /** Kwartaalcontext + read-only toelichting. */
+  engineQuarterLine: string | null;
+  /** Zelfde uitleg als pace-hints: spaar- en leerregels t.o.v. engine-doelen. */
+  engineDetailLines: string[];
+  /** Korte cijferregel (fallback als er geen detailregels zijn). */
+  engineCompactStats: string | null;
   ctaLabel: string;
   ctaHref: string;
 };
@@ -179,17 +184,31 @@ function enginePaceSummaryLine(h: StrategyPacingHints | null): string | null {
   const q = Math.round(hp.quarterElapsedFrac * 100);
   const bits: string[] = [];
   if (hp.savingsTargetCents != null && hp.savingsTargetCents > 0 && hp.savedThisQuarterCents != null) {
-    bits.push(`${formatCents(hp.savedThisQuarterCents)}/${formatCents(hp.savingsTargetCents)} sparen`);
+    bits.push(`${formatCents(hp.savedThisQuarterCents)} / ${formatCents(hp.savingsTargetCents)} gespaard`);
   } else if (hp.savingsTargetCents != null && hp.savingsTargetCents > 0) {
-    bits.push(`${formatCents(hp.savingsTargetCents)} spaardoel`);
+    bits.push(`Doel ${formatCents(hp.savingsTargetCents)} · nog geen stortingen dit kwartaal`);
   }
   if (hp.learningTargetPct != null && hp.learningTargetPct > 0 && hp.learningRoughPct != null) {
-    bits.push(`~${hp.learningRoughPct}%/${hp.learningTargetPct}% leer`);
+    bits.push(`Leer ~${hp.learningRoughPct}% t.o.v. ${hp.learningTargetPct}% kwartaaldoel`);
   } else if (hp.learningTargetPct != null && hp.learningTargetPct > 0) {
-    bits.push(`${hp.learningTargetPct}% leerdoel`);
+    bits.push(`Leerdoel ${hp.learningTargetPct}% kwartaal`);
   }
   if (bits.length === 0) return null;
-  return `Kwartaal ${q}% · ${bits.join(" · ")}`;
+  return `Kwartaal ${q}% voorbij · ${bits.join(" · ")}`;
+}
+
+function buildEngineQuarterLine(h: StrategyPacingHints | null): string | null {
+  if (!engineTargetsActive(h)) return null;
+  const q = Math.round(h!.quarterElapsedFrac * 100);
+  return `Het kwartaal is ${q}% verstreken. Spaar- en leertraject worden vergeleken met de engine-curve (read-only). Limieten stel je onderaan deze pagina in bij Strategy engine.`;
+}
+
+function buildEngineDetailLines(hints: StrategyPacingHints | null): string[] {
+  if (!engineTargetsActive(hints)) return [];
+  const lines = strategyPaceHintLines("both", hints!);
+  if (lines.length > 0) return lines;
+  const fallback = enginePaceSummaryLine(hints);
+  return fallback ? [fallback] : [];
 }
 
 function collectEngineIssues(hints: StrategyPacingHints | null): Issue[] {
@@ -335,7 +354,9 @@ export function buildStrategyAnalysisSnapshot(
   }
 
   const engineReadOnlyActive = engineTargetsActive(engineHints);
-  const enginePaceSummary = enginePaceSummaryLine(engineHints);
+  const engineQuarterLine = buildEngineQuarterLine(engineHints);
+  const engineDetailLines = buildEngineDetailLines(engineHints);
+  const engineCompactStats = enginePaceSummaryLine(engineHints);
 
   let headline: string;
   let bullets: string[];
@@ -399,7 +420,9 @@ export function buildStrategyAnalysisSnapshot(
     budgetWarn: bH.stress,
     growthWarn: gH.stress,
     engineReadOnlyActive,
-    enginePaceSummary,
+    engineQuarterLine,
+    engineDetailLines,
+    engineCompactStats,
     ctaLabel: label,
     ctaHref: href,
   };
