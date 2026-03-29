@@ -14,9 +14,18 @@ const PREFIX_TASK = "protocol_task:";
 const PREFIX_SLUG = "protocol_slug:";
 const PREFIX_LOCALE = "protocol_locale:";
 
-function extractStringTags(taskTags: unknown): string[] {
+/** Coerce DB/client Json (array, stringified JSON, mixed types) into string tags. */
+export function normalizeTaskTagsArray(taskTags: unknown): string[] {
+  if (taskTags == null) return [];
+  if (typeof taskTags === "string") {
+    try {
+      return normalizeTaskTagsArray(JSON.parse(taskTags));
+    } catch {
+      return [];
+    }
+  }
   if (!Array.isArray(taskTags)) return [];
-  return taskTags.filter((t): t is string => typeof t === "string");
+  return taskTags.map((t) => (typeof t === "string" ? t : String(t)));
 }
 
 function extractPrefixed(tags: string[], prefix: string): string | null {
@@ -37,7 +46,7 @@ function inferSlugLegacy(tags: string[]): string | null {
 }
 
 export function parseProtocolProgressMetaFromTaskTags(taskTags: unknown): ProtocolTaskProgressMeta | null {
-  const tags = extractStringTags(taskTags);
+  const tags = normalizeTaskTagsArray(taskTags);
   const protocol_task_id = extractPrefixed(tags, PREFIX_TASK);
   if (!protocol_task_id) return null;
 

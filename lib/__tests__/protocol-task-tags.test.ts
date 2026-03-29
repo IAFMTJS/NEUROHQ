@@ -1,5 +1,8 @@
 import { describe, expect, it } from "vitest";
-import { parseProtocolProgressMetaFromTaskTags } from "@/lib/growth/protocol-task-tags";
+import {
+  normalizeTaskTagsArray,
+  parseProtocolProgressMetaFromTaskTags,
+} from "@/lib/growth/protocol-task-tags";
 
 describe("parseProtocolProgressMetaFromTaskTags", () => {
   it("parses explicit protocol_slug and locale", () => {
@@ -39,5 +42,25 @@ describe("parseProtocolProgressMetaFromTaskTags", () => {
 
   it("returns null without protocol_task", () => {
     expect(parseProtocolProgressMetaFromTaskTags(["growth", "protocol", "x"])).toBeNull();
+  });
+
+  it("parses JSON string task_tags", () => {
+    const json = JSON.stringify([
+      "growth",
+      "protocol",
+      "p",
+      "protocol_task:z1",
+      "protocol_slug:p",
+      "protocol_locale:nl",
+    ]);
+    expect(parseProtocolProgressMetaFromTaskTags(json)).toEqual({
+      protocol_slug: "p",
+      locale: "nl",
+      protocol_task_id: "z1",
+    });
+  });
+
+  it("normalizeTaskTagsArray coerces non-strings", () => {
+    expect(normalizeTaskTagsArray(["a", 1, true])).toEqual(["a", "1", "true"]);
   });
 });

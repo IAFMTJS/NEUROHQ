@@ -4,7 +4,10 @@ import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import type { Tables } from "@/types/database.types";
 import type { DifficultyTier } from "@/lib/growth/adaptive-engine";
-import { parseProtocolProgressMetaFromTaskTags } from "@/lib/growth/protocol-task-tags";
+import {
+  normalizeTaskTagsArray,
+  parseProtocolProgressMetaFromTaskTags,
+} from "@/lib/growth/protocol-task-tags";
 
 export type UserProtocolProgressRow = Tables<"user_protocol_progress">;
 
@@ -26,6 +29,96 @@ function parseIds(raw: unknown): string[] {
   return raw.filter((x): x is string => typeof x === "string");
 }
 
+function progressKeyFromParts(protocol_slug: string, locale: string) {
+  return `${protocol_slug}::${locale}`;
+}
+
+function parseProgressKey(key: string): { protocol_slug: string; locale: string } {
+  const idx = key.indexOf("::");
+  if (idx <= 0) return { protocol_slug: key, locale: "nl" };
+  return { protocol_slug: key.slice(0, idx), locale: key.slice(idx + 2) };
+}
+
+/**
+ * Merge stored progress with protocol missions on the Tasks board:
+ * completed missions count as done; open missions for the same protocol_task id do not.
+ */
+async function mergeProtocolMissionCompletionsIntoMap(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  userId: string,
+  base: Record<string, ProtocolProgressState>,
+): Promise<Record<string, ProtocolProgressState>> {
+  let missionRows: { completed?: boolean; task_tags?: unknown }[] | null = null;
+  const filtered = await supabase
+    .from("tasks")
+    .select("completed, task_tags")
+    .eq("user_id", userId)
+    .is("deleted_at", null)
+    .contains("task_tags", ["protocol"]);
+  if (filtered.error) {
+    if (process.env.NODE_ENV === "development") {
+      console.warn("protocol mission merge (contains filter):", filtered.error.message);
+    }
+    const fallback = await supabase
+      .from("tasks")
+      .select("completed, task_tags")
+      .eq("user_id", userId)
+      .is("deleted_at", null)
+      .not("task_tags", "is", null);
+    missionRows = (fallback.data ?? []) as { completed?: boolean; task_tags?: unknown }[];
+  } else {
+    missionRows = (filtered.data ?? []) as { completed?: boolean; task_tags?: unknown }[];
+  }
+
+  type Bucket = { done: Set<string>; open: Set<string> };
+  const buckets = new Map<string, Bucket>();
+
+  for (const raw of missionRows ?? []) {
+    const row = raw as { completed?: boolean; task_tags?: unknown };
+    const meta = parseProtocolProgressMetaFromTaskTags(normalizeTaskTagsArray(row.task_tags));
+    if (!meta) continue;
+    const key = progressKeyFromParts(meta.protocol_slug, meta.locale);
+    let b = buckets.get(key);
+    if (!b) {
+      b = { done: new Set(), open: new Set() };
+      buckets.set(key, b);
+    }
+    if (row.completed) b.done.add(meta.protocol_task_id);
+    else b.open.add(meta.protocol_task_id);
+  }
+
+  const keys = new Set<string>([...Object.keys(base), ...buckets.keys()]);
+  const out: Record<string, ProtocolProgressState> = { ...base };
+
+  for (const key of keys) {
+    const { protocol_slug, locale } = parseProgressKey(key);
+    const stored = base[key];
+    const b = buckets.get(key) ?? { done: new Set<string>(), open: new Set<string>() };
+    const S = new Set(stored?.completed_task_ids ?? []);
+
+    const display = new Set<string>();
+    for (const id of S) {
+      if (!b.open.has(id)) display.add(id);
+    }
+    for (const id of b.done) {
+      if (!b.open.has(id)) display.add(id);
+    }
+    const completed_task_ids = [...display];
+
+    if (!stored && completed_task_ids.length === 0) continue;
+
+    out[key] = {
+      protocol_slug,
+      locale,
+      preferred_tier: stored?.preferred_tier ?? "medium",
+      current_week_index: stored?.current_week_index ?? 1,
+      completed_task_ids,
+    };
+  }
+
+  return out;
+}
+
 export async function getProtocolProgressMap(): Promise<Record<string, ProtocolProgressState>> {
   const supabase = await createClient();
   const {
@@ -34,14 +127,14 @@ export async function getProtocolProgressMap(): Promise<Record<string, ProtocolP
   if (!user) return {};
 
   const { data, error } = await supabase.from("user_protocol_progress").select("*").eq("user_id", user.id);
-  if (error || !data?.length) {
-    if (error && process.env.NODE_ENV === "development") console.warn("user_protocol_progress:", error.message);
-    return {};
+  if (error) {
+    if (process.env.NODE_ENV === "development") console.warn("user_protocol_progress:", error.message);
+    return mergeProtocolMissionCompletionsIntoMap(supabase, user.id, {});
   }
 
   const map: Record<string, ProtocolProgressState> = {};
-  for (const row of data as UserProtocolProgressRow[]) {
-    const key = `${row.protocol_slug}::${row.locale}`;
+  for (const row of (data ?? []) as UserProtocolProgressRow[]) {
+    const key = progressKeyFromParts(row.protocol_slug, row.locale);
     map[key] = {
       protocol_slug: row.protocol_slug,
       locale: row.locale,
@@ -50,7 +143,7 @@ export async function getProtocolProgressMap(): Promise<Record<string, ProtocolP
       completed_task_ids: parseIds(row.completed_task_ids),
     };
   }
-  return map;
+  return mergeProtocolMissionCompletionsIntoMap(supabase, user.id, map);
 }
 
 type UpsertInput = {
@@ -173,7 +266,7 @@ export async function applyProtocolProgressFromMissionTags(
   taskTags: string[] | null | undefined,
   direction: "complete" | "uncomplete",
 ): Promise<void> {
-  const meta = parseProtocolProgressMetaFromTaskTags(taskTags);
+  const meta = parseProtocolProgressMetaFromTaskTags(normalizeTaskTagsArray(taskTags));
   if (!meta) return;
 
   const supabase = await createClient();

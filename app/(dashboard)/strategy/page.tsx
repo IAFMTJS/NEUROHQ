@@ -232,6 +232,17 @@ async function StrategyContent({ simplifiedLayout = false }: { simplifiedLayout?
         </div>
       )}
       {analysisSnapshot ? <StrategyAnalysisSquare snapshot={analysisSnapshot} /> : null}
+      <Suspense fallback={<div className="min-h-[120px] animate-pulse rounded-2xl bg-[var(--bg-elevated)]/30" aria-hidden />}>
+        <div
+          className={
+            analysisSnapshot
+              ? "mt-4 border-t border-[rgba(var(--mode-rgb),0.12)] pt-6"
+              : "mt-2 border-t border-[rgba(var(--mode-rgb),0.1)] pt-6"
+          }
+        >
+          <StrategyEngineSettingsSection />
+        </div>
+      </Suspense>
       <StrategyTabsShell
         simplifiedLayout={simplifiedLayout}
         banner={reviewBanner}
@@ -244,7 +255,7 @@ async function StrategyContent({ simplifiedLayout = false }: { simplifiedLayout?
                 </div>
               </section>
               <p className="text-center text-xs text-[var(--text-muted)]">
-                Overzicht, allocatie, momentum en review. Engine-instellingen staan onderaan dit paneel.
+                Overzicht, allocatie, momentum en review — hieronder thesis en stack.
               </p>
             </>
           ) : undefined
@@ -325,9 +336,6 @@ export default async function StrategyPage() {
             <Suspense fallback={<div className="min-h-[200px] animate-pulse rounded-2xl bg-[var(--bg-elevated)]/30" aria-hidden />}>
               <StrategyContent simplifiedLayout />
             </Suspense>
-            <Suspense fallback={<div className="min-h-[200px] animate-pulse rounded-2xl bg-[var(--bg-elevated)]/30" aria-hidden />}>
-              <StrategyEngineSettingsSection />
-            </Suspense>
           </div>
         </SimplifiedPageShell>
       </div>
@@ -338,11 +346,6 @@ export default async function StrategyPage() {
     <DashboardHubCommandShell hubLabel="Strategy" lightUi={lightUi}>
       <Suspense fallback={<div className="min-h-[200px] animate-pulse rounded-2xl bg-[var(--bg-elevated)]/30" aria-hidden />}>
         <StrategyContent />
-      </Suspense>
-      <Suspense fallback={<div className="min-h-[200px] animate-pulse rounded-2xl bg-[var(--bg-elevated)]/30" aria-hidden />}>
-        <div className="mt-2 border-t border-[rgba(var(--mode-rgb),0.12)] pt-6">
-          <StrategyEngineSettingsSection />
-        </div>
       </Suspense>
     </DashboardHubCommandShell>
   );

@@ -19,6 +19,7 @@ import {
   FocusModal,
 } from "@/components/missions";
 import { EnergyCapBar } from "@/components/missions/EnergyCapBar";
+import { DoneTodayToast } from "@/components/missions/DoneTodayToast";
 import { MissionsEngineWarningIcon } from "@/components/missions/MissionsEngineWarningIcon";
 import { collectMissionEngineWarningLines } from "@/lib/mission-engine-warnings";
 import { CornerNode } from "@/components/hud-test/CornerNode";
@@ -225,6 +226,7 @@ export function TaskList({
   const [nextMissionPromptTask, setNextMissionPromptTask] = useState<ExtendedTask | null>(null);
   const [showAllTasksModal, setShowAllTasksModal] = useState(false);
   const [showReasoning, setShowReasoning] = useState(false);
+  const [doneTodayOpen, setDoneTodayOpen] = useState(false);
   const [levelUpInfo, setLevelUpInfo] = useState<{
     level: number;
     reputation?: { discipline: number; consistency: number; impact: number } | null;
@@ -281,23 +283,25 @@ export function TaskList({
     return incompleteTasksForDisplay.filter((t) => t.id !== heroMissionTask.id);
   }, [missionsHeroLayout, incompleteTasksForDisplay, heroMissionTask]);
 
-  const completedForDisplay = useMemo(
-    () => {
-      const merged = [
-        ...(completedToday as ExtendedTask[]),
-        ...extendedTasks
-          .filter((t) => t.completed || optimisticCompleteIds.includes(t.id))
-          .map((t) => ({ ...t, completed: true, completed_at: new Date().toISOString() } as ExtendedTask)),
-      ] as ExtendedTask[];
-      // Avoid duplicate React keys when the same task exists in both server-completed and optimistic/local sets.
-      const byId = new Map<string, ExtendedTask>();
-      for (const task of merged) {
-        byId.set(task.id, task);
+  const completedForDisplay = useMemo(() => {
+    const byId = new Map<string, ExtendedTask>();
+    for (const task of completedToday as ExtendedTask[]) {
+      byId.set(task.id, task);
+    }
+    for (const task of extendedTasks) {
+      const id = task.id;
+      if (task.completed || optimisticCompleteIds.includes(id)) {
+        byId.set(id, {
+          ...task,
+          completed: true,
+          completed_at: task.completed_at ?? new Date().toISOString(),
+        } as ExtendedTask);
+      } else {
+        byId.delete(id);
       }
-      return Array.from(byId.values());
-    },
-    [completedToday, extendedTasks, optimisticCompleteIds]
-  );
+    }
+    return Array.from(byId.values());
+  }, [completedToday, extendedTasks, optimisticCompleteIds]);
 
   const filteredTasks =
     filter === "all"
@@ -1002,18 +1006,42 @@ export function TaskList({
               )}
             </div>
           ) : (
-            <span className="rounded-full border border-[var(--accent-focus)]/40 bg-[var(--accent-focus)]/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.08em] text-[var(--accent-focus)]">
-              War tunnel
-            </span>
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="rounded-full border border-[var(--accent-focus)]/40 bg-[var(--accent-focus)]/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.08em] text-[var(--accent-focus)]">
+                War tunnel
+              </span>
+              {completedForDisplay.length > 0 && (
+                <button
+                  type="button"
+                  aria-expanded={doneTodayOpen}
+                  aria-controls="done-today-toast"
+                  onClick={() => setDoneTodayOpen(true)}
+                  className="rounded-full border border-[var(--card-border)] px-3 py-1.5 text-xs font-medium text-[var(--text-muted)] hover:bg-[var(--bg-surface)] hover:text-[var(--text-primary)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--focus-ring)]"
+                >
+                  Voltooid vandaag ({completedForDisplay.length})
+                </button>
+              )}
+            </div>
           )}
         </div>
       </div>
       )}
       {missionsHeroLayout && isWarMode && (
-        <div className="flex justify-center sm:justify-start">
+        <div className="flex flex-wrap items-center justify-center gap-2 sm:justify-start">
           <span className="rounded-full border border-[var(--accent-focus)]/40 bg-[var(--accent-focus)]/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.08em] text-[var(--accent-focus)]">
             War tunnel
           </span>
+          {completedForDisplay.length > 0 && (
+            <button
+              type="button"
+              aria-expanded={doneTodayOpen}
+              aria-controls="done-today-toast"
+              onClick={() => setDoneTodayOpen(true)}
+              className="rounded-full border border-[var(--card-border)]/80 bg-[var(--bg-surface)]/40 px-3 py-1 text-xs font-medium text-[var(--text-muted)] transition hover:bg-[var(--bg-surface)]/70 hover:text-[var(--text-primary)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--focus-ring)]"
+            >
+              Voltooid vandaag ({completedForDisplay.length})
+            </button>
+          )}
         </div>
       )}
       <div className={missionsHeroLayout ? "space-y-4" : "p-4"}>
@@ -1063,27 +1091,40 @@ export function TaskList({
         )}
 
         {!isWarMode && missionsHeroLayout && (
-          <div className="mb-3 flex flex-wrap items-center justify-center gap-1.5 sm:justify-start" role="tablist" aria-label="Missieweergave">
-            {(["focus", "plan", "backlog"] as const).map((m) => (
+          <div className="mb-3 flex flex-wrap items-center justify-center gap-1.5 sm:justify-start">
+            <div className="flex flex-wrap items-center justify-center gap-1.5 sm:justify-start" role="tablist" aria-label="Missieweergave">
+              {(["focus", "plan", "backlog"] as const).map((m) => (
+                <button
+                  key={m}
+                  type="button"
+                  role="tab"
+                  aria-selected={viewMode === m}
+                  onClick={() => setViewMode(m)}
+                  className={`rounded-full border px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.08em] transition-colors ${
+                    viewMode === m
+                      ? "border-[rgba(var(--mode-rgb),0.35)] bg-[rgba(var(--mode-rgb),0.12)] text-[var(--accent-focus)] shadow-[0_0_12px_rgba(var(--mode-rgb),0.2)]"
+                      : "border-transparent text-[var(--text-muted)] hover:border-[var(--card-border)] hover:bg-[var(--bg-surface)]/60 hover:text-[var(--text-primary)]"
+                  }`}
+                >
+                  {m === "focus" ? "Vandaag" : m}
+                </button>
+              ))}
+            </div>
+            {completedForDisplay.length > 0 && (
               <button
-                key={m}
                 type="button"
-                role="tab"
-                aria-selected={viewMode === m}
-                onClick={() => setViewMode(m)}
-                className={`rounded-full border px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.08em] transition-colors ${
-                  viewMode === m
-                    ? "border-[rgba(var(--mode-rgb),0.35)] bg-[rgba(var(--mode-rgb),0.12)] text-[var(--accent-focus)] shadow-[0_0_12px_rgba(var(--mode-rgb),0.2)]"
-                    : "border-transparent text-[var(--text-muted)] hover:border-[var(--card-border)] hover:bg-[var(--bg-surface)]/60 hover:text-[var(--text-primary)]"
-                }`}
+                aria-expanded={doneTodayOpen}
+                aria-controls="done-today-toast"
+                onClick={() => setDoneTodayOpen(true)}
+                className="rounded-full border border-[var(--card-border)]/80 bg-[var(--bg-surface)]/40 px-3 py-1.5 text-xs font-medium text-[var(--text-muted)] transition hover:border-[var(--card-border)] hover:bg-[var(--bg-surface)]/70 hover:text-[var(--text-primary)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--focus-ring)]"
               >
-                {m === "focus" ? "Vandaag" : m}
+                Voltooid vandaag ({completedForDisplay.length})
               </button>
-            ))}
+            )}
           </div>
         )}
         {!isWarMode && !missionsHeroLayout && (
-          <div className="mb-3 flex flex-wrap gap-2">
+          <div className="mb-3 flex flex-wrap items-center gap-2">
             {(["focus", "plan", "backlog"] as const).map((m) => (
               <button
                 key={m}
@@ -1098,6 +1139,17 @@ export function TaskList({
                 {m}
               </button>
             ))}
+            {completedForDisplay.length > 0 && (
+              <button
+                type="button"
+                aria-expanded={doneTodayOpen}
+                aria-controls="done-today-toast"
+                onClick={() => setDoneTodayOpen(true)}
+                className="rounded-full border border-[var(--card-border)] px-3 py-1.5 text-xs font-medium text-[var(--text-muted)] hover:bg-[var(--bg-surface)] hover:text-[var(--text-primary)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--focus-ring)]"
+              >
+                Voltooid vandaag ({completedForDisplay.length})
+              </button>
+            )}
           </div>
         )}
 
@@ -1506,29 +1558,13 @@ export function TaskList({
           </p>
         </Modal>
 
-        {completedForDisplay.length > 0 && (
-          <div className="mt-6 border-t border-[var(--card-border)] pt-4">
-            <h3 className="mb-2 text-xs font-semibold uppercase tracking-wide text-[var(--text-muted)]">Done today</h3>
-            <ul className="space-y-1">
-              {completedForDisplay.map((t) => (
-                <li key={t.id} className="flex items-center gap-2 rounded-lg border border-[var(--card-border)]/50 bg-[var(--bg-surface)]/30 px-3 py-2 text-sm text-[var(--text-muted)] line-through">
-                  <button
-                    type="button"
-                    onClick={() => handleUncomplete(t.id)}
-                    disabled={pending}
-                    className="h-6 w-6 shrink-0 rounded-lg border-2 border-green-500 bg-green-500/20 flex items-center justify-center text-green-400 hover:bg-green-500/30 hover:border-green-400 disabled:opacity-50"
-                    aria-label="Mark incomplete"
-                    title="Mark incomplete (e.g. if done by accident)"
-                  >
-                    <span className="text-sm">✓</span>
-                  </button>
-                  {t.title}
-                  {t.category && <span className="rounded bg-[var(--bg-surface)] px-1.5 py-0.5 text-[10px]">{t.category}</span>}
-                </li>
-              ))}
-            </ul>
-          </div>
-        )}
+        <DoneTodayToast
+          open={doneTodayOpen}
+          onClose={() => setDoneTodayOpen(false)}
+          tasks={completedForDisplay}
+          onUncomplete={handleUncomplete}
+          pending={pending}
+        />
       </div>
     </div>
   );
