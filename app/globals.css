@@ -1806,6 +1806,13 @@ html[data-light-ui="true"] body {
     0 0 0 1px rgba(239, 68, 68, 0.34),
     0 0 34px rgba(239, 68, 68, 0.32) !important;
 }
+[data-sonner-toaster] [data-sonner-toast].hq-toast-guardrail-warning {
+  border-color: rgba(var(--hud-amber-500-rgb), 0.42) !important;
+  box-shadow:
+    0 10px 30px rgba(0, 0, 0, 0.42),
+    0 0 0 1px rgba(var(--hud-amber-500-rgb), 0.22),
+    0 0 20px rgba(var(--hud-amber-500-rgb), 0.14) !important;
+}
 [data-sonner-toaster] [data-sonner-toast][data-type="success"] {
   border-color: rgba(0, 232, 118, 0.28) !important;
 }

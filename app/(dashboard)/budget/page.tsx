@@ -45,6 +45,7 @@ import { BudgetExecuteHub } from "@/components/budget/BudgetExecuteHub";
 import { BudgetInsightHub } from "@/components/budget/BudgetInsightHub";
 import { BudgetDailyControlToast } from "@/components/budget/BudgetDailyControlToast";
 import { BudgetPrePaydayUrgencyToast } from "@/components/budget/BudgetPrePaydayUrgencyToast";
+import { BudgetWeeklyPaceGuardToast } from "@/components/budget/BudgetWeeklyPaceGuardToast";
 import { BudgetSyncStatus } from "@/components/budget/BudgetSyncStatus";
 import { RemainingBudgetHero } from "@/components/budget/RemainingBudgetHero";
 import { BudgetTabsShell } from "@/components/budget/BudgetTabsShell";
@@ -145,6 +146,10 @@ async function BudgetContent({ searchParams }: Props) {
     return acc;
   }, {} as Record<string, number>);
   const currency = budgetSettings.currency ?? "EUR";
+  const spendableCents = Math.max(
+    0,
+    (budgetSettings.monthly_budget_cents ?? 0) - (budgetSettings.monthly_savings_cents ?? 0)
+  );
   const isWeekly = budgetSettings.budget_period === "weekly";
   const disciplineInputsReady =
     (budgetSettings.monthly_budget_cents ?? 0) > 0 || (entries as EntryRow[]).length > 0;
@@ -281,6 +286,16 @@ async function BudgetContent({ searchParams }: Props) {
   const overviewSection = (
     <div className="space-y-4">
       {!historyMode && <BudgetDailyControlToast />}
+      {!historyMode && (
+        <BudgetWeeklyPaceGuardToast
+          historyMode={historyMode}
+          spendableCents={spendableCents}
+          budgetPeriod={budgetSettings.budget_period}
+          periodStart={periodStart}
+          periodEnd={periodEnd}
+          weekSpentCents={currentWeekExpenses}
+        />
+      )}
       {!historyMode && (
         <>
           <div className="flex flex-wrap items-center justify-end gap-2">

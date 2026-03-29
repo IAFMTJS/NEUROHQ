@@ -1,14 +1,27 @@
 "use client";
 
-import { useCallback } from "react";
-import { toast } from "sonner";
-import { neuroToast } from "@/lib/ui/neuro-toast";
 import { NeuroToastIcon } from "@/components/brand/NeuroToastIcon";
+import {
+  demoToastSnapshotInfoEn,
+  demoToastSpendLockBlockedEn,
+  demoToastWeeklyBurnWarningEn,
+} from "@/lib/ui/budget-guardrail-toasts";
 import { EnergyRing } from "@/components/hud-test/EnergyRing";
 import { CommanderStatRing } from "@/components/commander/CommanderStatRing";
 import { StrategyAnalysisSplitRing } from "@/components/strategy/StrategyAnalysisSplitRing";
-import { SegmentedBar, ZoneBandBar } from "@/components/visual-lab/VisualLabBars";
+import { ZoneBandBar } from "@/components/visual-lab/VisualLabBars";
+import { VisualLabBarsSiteExampleCard } from "@/components/visual-lab/VisualLabBarsSiteExampleCard";
 import { PolygonHudMeter } from "@/components/visual-lab/VisualLabPolygonMeters";
+import { VisualLabHexMesh } from "@/components/visual-lab/VisualLabHexMesh";
+import { VisualLabShapeEnergyRing } from "@/components/visual-lab/VisualLabShapeEnergyRing";
+
+/** Shared mock rows for ring kitchen (circle + polygon outlines). */
+const RING_KITCHEN_SAMPLES = [
+  { size: 88, progress: 84, mode: "green-peak" as const, label: "Peak", value: "84%" },
+  { size: 104, progress: 48, mode: "default" as const, label: "Budget", value: "48%" },
+  { size: 96, progress: 24, mode: "high-alert" as const, label: "Drain", value: "24%" },
+  { size: 92, progress: 100, mode: "locked" as const, label: "Lock", value: "Hold" },
+];
 
 const MOCK_STATUS = [
   { id: "sync", label: "State sync", value: "Live", tone: "ok" as const, pulse: true },
@@ -52,22 +65,6 @@ function ledClasses(tone: (typeof MOCK_STATUS)[number]["tone"]) {
 }
 
 export function VisualLabClient() {
-  const showWarningToast = useCallback(() => {
-    neuroToast.warning("Approaching weekly burn cap — pace discretionary spend.", { duration: 5_000 });
-  }, []);
-
-  const showBlockedToast = useCallback(() => {
-    toast.error("Action blocked: lock window active until 06:00.", {
-      className: "hq-toast hq-toast-prepayday hq-toast-prepayday-critical",
-      icon: <NeuroToastIcon variant="error" />,
-      duration: 6_000,
-    });
-  }, []);
-
-  const showInfoToast = useCallback(() => {
-    neuroToast.info("Snapshot saved to local preview queue (mock).", { duration: 4_000 });
-  }, []);
-
   return (
     <div className="min-h-screen bg-[var(--hud-body-bg)] px-[var(--page-padding-x)] py-8 text-[var(--text-main)]">
       <div className="pointer-events-none fixed inset-0 opacity-[var(--spotlight-opacity)] saturate-[var(--spotlight-saturation)] blur-[var(--spotlight-blur)] [background:var(--spotlight)]" aria-hidden />
@@ -85,7 +82,7 @@ export function VisualLabClient() {
               Visual lab
             </h1>
             <p className="mt-2 max-w-2xl text-sm leading-relaxed text-[var(--text-secondary)]">
-              Mock HUD: rings, split ring, segmented and zone bars, polygon meters (trace + fill), lattice, flow diagram, strips, toasts. No live data.
+              Mock HUD: rings, split ring, bar card (site copy), polygon meters (trace + fill), hex mesh, lattice, flow diagram, strips, toasts. No live data.
             </p>
           </header>
 
@@ -212,32 +209,81 @@ export function VisualLabClient() {
           <section className="relative mb-10 space-y-5" aria-labelledby="ring-kitchen-heading">
             <div className="flex flex-wrap items-end justify-between gap-3">
               <h2 id="ring-kitchen-heading" className="text-[11px] font-bold uppercase tracking-[0.18em] text-[var(--text-muted)]">
-                Ring kitchen (EnergyRing)
+                Ring kitchen
               </h2>
-              <span className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--text-muted)]">Sizes + modes</span>
+              <span className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--text-muted)]">
+                Circle · hex · diamond
+              </span>
             </div>
-            <div className="overflow-x-auto rounded-xl border border-[rgba(var(--mode-rgb),0.16)] bg-[rgba(4,12,22,0.45)] px-4 py-6 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
-              <div className="flex min-w-[min(100%,720px)] flex-wrap items-end justify-center gap-8 md:gap-10">
-                {[
-                  { size: 88, progress: 84, mode: "green-peak" as const, label: "Peak", value: "84%" },
-                  { size: 104, progress: 48, mode: "default" as const, label: "Budget", value: "48%" },
-                  { size: 96, progress: 24, mode: "high-alert" as const, label: "Drain", value: "24%" },
-                  { size: 92, progress: 100, mode: "locked" as const, label: "Lock", value: "Hold" },
-                ].map((r) => (
-                  <div key={r.label} className="flex flex-col items-center gap-2">
-                    <EnergyRing
-                      size={r.size}
-                      progress={r.progress}
-                      label={r.label}
-                      value={r.value}
-                      mode={r.mode}
-                      softGlow
-                    />
-                    <span className="text-[9px] font-semibold uppercase tracking-[0.12em] text-[var(--text-muted)]">
-                      {r.size}px · {r.mode}
-                    </span>
-                  </div>
-                ))}
+
+            <div className="space-y-2">
+              <h3 className="text-[10px] font-bold uppercase tracking-[0.16em] text-[var(--text-muted)]">Circle (EnergyRing)</h3>
+              <div className="overflow-x-auto rounded-xl border border-[rgba(var(--mode-rgb),0.16)] bg-[rgba(4,12,22,0.45)] px-4 py-6 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
+                <div className="flex min-w-[min(100%,720px)] flex-wrap items-end justify-center gap-8 md:gap-10">
+                  {RING_KITCHEN_SAMPLES.map((r) => (
+                    <div key={`circle-${r.label}`} className="flex flex-col items-center gap-2">
+                      <EnergyRing
+                        size={r.size}
+                        progress={r.progress}
+                        label={r.label}
+                        value={r.value}
+                        mode={r.mode}
+                        softGlow
+                      />
+                      <span className="text-[9px] font-semibold uppercase tracking-[0.12em] text-[var(--text-muted)]">
+                        {r.size}px · {r.mode}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <h3 className="text-[10px] font-bold uppercase tracking-[0.16em] text-[var(--text-muted)]">Hex outline</h3>
+              <div className="overflow-x-auto rounded-xl border border-[rgba(var(--mode-rgb),0.16)] bg-[rgba(4,12,22,0.45)] px-4 py-6 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
+                <div className="flex min-w-[min(100%,720px)] flex-wrap items-end justify-center gap-8 md:gap-10">
+                  {RING_KITCHEN_SAMPLES.map((r) => (
+                    <div key={`hex-${r.label}`} className="flex flex-col items-center gap-2">
+                      <VisualLabShapeEnergyRing
+                        shape="hex"
+                        size={r.size}
+                        progress={r.progress}
+                        label={r.label}
+                        value={r.value}
+                        mode={r.mode}
+                        softGlow
+                      />
+                      <span className="text-[9px] font-semibold uppercase tracking-[0.12em] text-[var(--text-muted)]">
+                        {r.size}px · {r.mode}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <h3 className="text-[10px] font-bold uppercase tracking-[0.16em] text-[var(--text-muted)]">Diamond outline</h3>
+              <div className="overflow-x-auto rounded-xl border border-[rgba(var(--mode-rgb),0.16)] bg-[rgba(4,12,22,0.45)] px-4 py-6 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
+                <div className="flex min-w-[min(100%,720px)] flex-wrap items-end justify-center gap-8 md:gap-10">
+                  {RING_KITCHEN_SAMPLES.map((r) => (
+                    <div key={`diamond-${r.label}`} className="flex flex-col items-center gap-2">
+                      <VisualLabShapeEnergyRing
+                        shape="diamond"
+                        size={r.size}
+                        progress={r.progress}
+                        label={r.label}
+                        value={r.value}
+                        mode={r.mode}
+                        softGlow
+                      />
+                      <span className="text-[9px] font-semibold uppercase tracking-[0.12em] text-[var(--text-muted)]">
+                        {r.size}px · {r.mode}
+                      </span>
+                    </div>
+                  ))}
+                </div>
               </div>
             </div>
 
@@ -262,18 +308,27 @@ export function VisualLabClient() {
             </div>
           </section>
 
-          <section className="relative mb-10 space-y-6 rounded-xl border border-[rgba(var(--mode-rgb),0.12)] bg-[rgba(4,12,22,0.25)] p-4 md:p-5" aria-labelledby="bars-advanced-heading">
-            <h2 id="bars-advanced-heading" className="text-[11px] font-bold uppercase tracking-[0.18em] text-[var(--text-muted)]">
-              Bar alternatives
-            </h2>
-            <SegmentedBar
-              label="Segmented · pay-cycle phases"
-              caption="Mock fill per slice"
-              fills={[1, 1, 0.62, 0.15, 0]}
-              segmentLabels={["W1", "W2", "W3", "W4", "Buf"]}
-            />
-            <ZoneBandBar label="Zone band + marker" caption="Reading 72% (mock)" pct={72} />
-            <ZoneBandBar label="Same band, edge reading" caption="Reading 94% (mock)" pct={94} />
+          <section className="relative mb-10 space-y-5" aria-labelledby="bars-advanced-heading">
+            <div className="flex flex-wrap items-end justify-between gap-3">
+              <h2 id="bars-advanced-heading" className="text-[11px] font-bold uppercase tracking-[0.18em] text-[var(--text-muted)]">
+                Bar alternatives
+              </h2>
+              <span className="max-w-md text-right text-[10px] leading-snug text-[var(--text-muted)]">
+                Echte siteteksten (Growth + Strategische stack · Budget), nieuwe balken
+              </span>
+            </div>
+            <VisualLabBarsSiteExampleCard />
+            <div className="rounded-xl border border-[rgba(var(--mode-rgb),0.14)] bg-[rgba(4,12,22,0.35)] p-4 md:p-5">
+              <p className="mb-3 text-[10px] font-bold uppercase tracking-[0.16em] text-[var(--text-muted)]">
+                Lab · zone aan de rand
+              </p>
+              <ZoneBandBar
+                label="Druk-indicator (niet op productie)"
+                caption="94 — lezing in de hoge band"
+                pct={94}
+                bandFootLabels={["Strak", "Doel", "Ruim"]}
+              />
+            </div>
           </section>
 
           <section className="relative mb-10 space-y-5" aria-labelledby="polygon-heading">
@@ -297,9 +352,21 @@ export function VisualLabClient() {
               <div className="grid grid-cols-2 gap-6 sm:grid-cols-4">
                 <PolygonHudMeter variant="square" label="Square" value="Tank A" pct={64} style="fill" />
                 <PolygonHudMeter variant="triangle" label="Triangle" value="Tank B" pct={41} style="fill" />
-                <PolygonHudMeter variant="hex" label="Hex" value="Tank C" pct={91} style="fill" />
+                <PolygonHudMeter variant="hex" label="Hex" value="Tank C" pct={60} style="fill" />
                 <PolygonHudMeter variant="diamond" label="Diamond" value="Tank D" pct={27} style="fill" />
               </div>
+            </div>
+          </section>
+
+          <section className="relative mb-10 space-y-3" aria-labelledby="hex-mesh-heading">
+            <div className="flex flex-wrap items-end justify-between gap-3">
+              <h2 id="hex-mesh-heading" className="text-[11px] font-bold uppercase tracking-[0.18em] text-[var(--text-muted)]">
+                Hex mesh
+              </h2>
+              <span className="text-[10px] text-[var(--text-muted)]">Honeycomb · 60% cells filled</span>
+            </div>
+            <div className="rounded-xl border border-[rgba(var(--mode-rgb),0.16)] bg-[rgba(4,12,22,0.45)] p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
+              <VisualLabHexMesh fillPct={60} />
             </div>
           </section>
 
@@ -307,7 +374,9 @@ export function VisualLabClient() {
             <h2 id="toast-heading" className="text-[11px] font-bold uppercase tracking-[0.18em] text-[var(--text-muted)]">
               Toast previews + live triggers
             </h2>
-            <p className="text-xs text-[var(--text-secondary)]">Static shells mimic Sonner placement; buttons use the real toaster.</p>
+            <p className="text-xs text-[var(--text-secondary)]">
+              Static shells mimic Sonner placement; buttons call the same guardrail helpers used on Budget (English demos here).
+            </p>
 
             <div className="space-y-3">
               <div className="rounded-xl border border-[rgba(var(--hud-amber-500-rgb),0.35)] bg-gradient-to-br from-[rgba(45,30,8,0.55)] to-[rgba(12,20,42,0.92)] p-3 shadow-[0_0_20px_rgba(var(--hud-amber-500-rgb),0.12)]">
@@ -336,13 +405,13 @@ export function VisualLabClient() {
             </div>
 
             <div className="flex flex-wrap gap-3 pt-2">
-              <button type="button" className="primary-btn px-4 py-2.5 text-xs" onClick={showWarningToast}>
+              <button type="button" className="primary-btn px-4 py-2.5 text-xs" onClick={demoToastWeeklyBurnWarningEn}>
                 Fire warning toast
               </button>
-              <button type="button" className="primary-btn px-4 py-2.5 text-xs" onClick={showBlockedToast}>
+              <button type="button" className="primary-btn px-4 py-2.5 text-xs" onClick={demoToastSpendLockBlockedEn}>
                 Fire blocked toast
               </button>
-              <button type="button" className="btn-secondary px-4 py-2.5 text-xs" onClick={showInfoToast}>
+              <button type="button" className="btn-secondary px-4 py-2.5 text-xs" onClick={demoToastSnapshotInfoEn}>
                 Fire info toast
               </button>
             </div>

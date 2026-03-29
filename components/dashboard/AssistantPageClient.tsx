@@ -8,6 +8,7 @@ import { HQPageHeader } from "@/components/hq";
 import { createTask } from "@/app/actions/tasks";
 import { addManualEvent } from "@/app/actions/calendar";
 import { addBudgetEntry } from "@/app/actions/budget";
+import { toastForBudgetEntryError } from "@/lib/ui/budget-guardrail-toasts";
 import { addLearningSession } from "@/app/actions/learning";
 import { trackEvent } from "@/app/actions/analytics-events";
 import type { Intent, SimulationResult } from "@/lib/dcic/types";
@@ -343,7 +344,7 @@ export default function AssistantPageClient() {
           decisionCandidates,
           decisionFeatureSnapshot,
         });
-      } catch {
+      } catch (e) {
         await trackEvent("decision_outcome", {
           decisionId,
           decisionType,
@@ -362,6 +363,10 @@ export default function AssistantPageClient() {
           decisionCandidates,
           decisionFeatureSnapshot,
         });
+        if (action.type === "add_expense") {
+          const msg = e instanceof Error ? e.message : "";
+          if (msg) toastForBudgetEntryError(msg, { fallbackToast: true });
+        }
         setError("Actie uitvoeren mislukt. Probeer het opnieuw.");
       }
     },

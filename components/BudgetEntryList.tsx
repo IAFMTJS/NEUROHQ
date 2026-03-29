@@ -5,6 +5,7 @@ import Link from "next/link";
 import { deleteBudgetEntry, freezePurchase, confirmFreeze, cancelFreeze, updateBudgetEntry } from "@/app/actions/budget";
 import { formatCents } from "@/lib/utils/currency";
 import { Modal } from "@/components/Modal";
+import { toastForBudgetEntryError } from "@/lib/ui/budget-guardrail-toasts";
 
 type Entry = {
   id: string;
@@ -81,13 +82,18 @@ export function BudgetEntryList({
     if (isNaN(amountCents) || amountCents < 0) return;
     const sign = editing.amount_cents >= 0 ? 1 : -1;
     startTransition(async () => {
-      await updateBudgetEntry(editing.id, {
-        amount_cents: sign * amountCents,
-        date: editDate,
-        category: editCategory.trim() || null,
-        note: editNote.trim() || null,
-      });
-      setEditing(null);
+      try {
+        await updateBudgetEntry(editing.id, {
+          amount_cents: sign * amountCents,
+          date: editDate,
+          category: editCategory.trim() || null,
+          note: editNote.trim() || null,
+        });
+        setEditing(null);
+      } catch (e) {
+        const message = e instanceof Error ? e.message : "Kon entry niet opslaan.";
+        toastForBudgetEntryError(message);
+      }
     });
   }
 

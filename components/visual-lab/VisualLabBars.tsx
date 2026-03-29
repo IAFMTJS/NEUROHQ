@@ -41,13 +41,23 @@ type ZoneBandBarProps = {
   caption?: string;
   /** Marker position 0–100. */
   pct: number;
+  /** Optional footer labels under bands (default Low / Target / High). */
+  bandFootLabels?: readonly [string, string, string];
+  className?: string;
 };
 
 /** Background bands: low / target / high — marker shows current reading. */
-export function ZoneBandBar({ label, caption, pct }: ZoneBandBarProps) {
+export function ZoneBandBar({
+  label,
+  caption,
+  pct,
+  bandFootLabels = ["Low", "Target", "High"],
+  className = "",
+}: ZoneBandBarProps) {
   const x = Math.max(0, Math.min(100, pct));
+  const [lowL, midL, highL] = bandFootLabels;
   return (
-    <div className="space-y-2">
+    <div className={className ? `space-y-2 ${className}` : "space-y-2"}>
       <div className="flex flex-wrap items-end justify-between gap-2">
         <span className="text-[10px] font-bold uppercase tracking-[0.18em] text-[var(--text-muted)]">{label}</span>
         {caption ? <span className="text-[10px] tabular-nums text-[var(--text-secondary)]">{caption}</span> : null}
@@ -72,9 +82,9 @@ export function ZoneBandBar({ label, caption, pct }: ZoneBandBarProps) {
           />
         </div>
         <div className="mt-1 flex justify-between text-[9px] font-semibold uppercase tracking-[0.1em] text-[var(--text-muted)]">
-          <span>Low</span>
-          <span>Target</span>
-          <span>High</span>
+          <span>{lowL}</span>
+          <span>{midL}</span>
+          <span>{highL}</span>
         </div>
       </div>
     </div>

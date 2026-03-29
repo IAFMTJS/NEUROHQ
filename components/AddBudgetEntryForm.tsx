@@ -7,6 +7,7 @@ import { Modal } from "@/components/Modal";
 import { getCurrencySymbol } from "@/lib/utils/currency";
 import { getPendingBudgetSnapshot, setPendingBudgetSnapshot } from "@/lib/client-pending-budget";
 import { useBudgetLock } from "@/components/budget/BudgetLockContext";
+import { toastForBudgetEntryError } from "@/lib/ui/budget-guardrail-toasts";
 
 const CATEGORY_PRESETS = ["Eten", "Vervoer", "Abonnementen", "Boodschappen", "Uit eten", "Gezondheid", "Overig"];
 type QuickTag = "planned" | "impulse" | "necessary";
@@ -160,6 +161,7 @@ export function AddBudgetEntryForm({
       } catch (error) {
         const message = error instanceof Error ? error.message : "Something went wrong while saving.";
         setSubmitError(message);
+        toastForBudgetEntryError(message);
       }
     });
   }
