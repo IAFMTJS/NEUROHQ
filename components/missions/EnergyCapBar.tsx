@@ -16,7 +16,7 @@ export function EnergyCapBar({ used, cap, remaining, planned, variant = "card" }
     return (
       <div className="space-y-1" aria-label="Energy vandaag">
         <div className="flex flex-wrap items-center justify-between gap-2 text-[9px] font-semibold uppercase tracking-[0.12em] text-[var(--text-muted)]">
-          <span>Dag-budget</span>
+          <span>Dag-budget (visueel)</span>
           <span className="tabular-nums text-[var(--text-secondary)]">
             {used}/{cap}
             {planned > 0 && <span className="ml-1 font-normal normal-case tracking-normal text-[var(--text-muted)]">(+{planned})</span>}

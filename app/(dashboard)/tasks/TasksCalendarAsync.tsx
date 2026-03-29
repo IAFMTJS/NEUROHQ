@@ -79,6 +79,7 @@ export async function TasksCalendarAsync({
       initialCalView={calendarView}
       overdueTasks={overdueTasksForCalendar}
       simplifiedLayout={simplifiedContent}
+      commandDeckVisuals={commandDeck}
     />
   );
 
@@ -120,7 +121,7 @@ export async function TasksCalendarAsync({
   }
 
   if (commandDeck) {
-    return <div className="overflow-hidden rounded-xl border border-[rgba(var(--mode-rgb),0.1)]">{section}</div>;
+    return <div className="space-y-4">{section}</div>;
   }
 
   return (

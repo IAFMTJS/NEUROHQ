@@ -87,13 +87,16 @@ export function TasksTabsShell({
 
   const tabBodies = <div className={bodyClass}>{children}</div>;
 
+  const deckTitle =
+    initialTab === "calendar" ? "Calendar · agenda" : initialTab === "routine" ? "Routine · ritme" : "Missies · overzicht";
+
   const deckInner = (
     <>
       <header className="flex flex-wrap items-start justify-between gap-3 border-b border-[rgba(var(--mode-rgb),0.12)] pb-3">
         <div>
           <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[var(--semantic-accent)]/90">Command</p>
           <h2 className="mt-0.5 text-base font-bold tracking-tight text-[var(--text-primary)] [text-shadow:0_0_14px_rgba(var(--mode-rgb),0.18)] md:text-lg">
-            Missies · overzicht
+            {deckTitle}
           </h2>
         </div>
         <Link

@@ -7,7 +7,6 @@ import {
   getFutureTasks,
   getRoutineTasksWithSuggestions,
   getSubtasksForTaskIds,
-  getTasksForDate,
   getTodaysTasks,
   type TaskListMode,
 } from "@/app/actions/tasks";
@@ -25,18 +24,14 @@ import { getSmartSuggestion } from "@/app/actions/dcic/smart-suggestion";
 import { getEnergyCapToday } from "@/app/actions/dcic/energy-cap";
 import { getEnergyBudget } from "@/app/actions/energy";
 import { getAnalyticsEventsSummaryLast7 } from "@/app/actions/analytics-events";
-import { todayDateString, yesterdayDate } from "@/lib/utils/timezone";
-import { HeroMascotImage } from "@/components/HeroMascotImage";
-import { getXP, getXPIdentity } from "@/app/actions/xp";
+import { todayDateString } from "@/lib/utils/timezone";
+import { getXPIdentity } from "@/app/actions/xp";
 import { getIdentityEngine } from "@/app/actions/identity-engine";
 import { getUserPreferencesOrDefaults } from "@/app/actions/preferences";
-import { XPBadge } from "@/components/XPBadge";
 import { SciFiPanel } from "@/components/hud-test/SciFiPanel";
 import { CornerNode } from "@/components/hud-test/CornerNode";
-import { Divider1px } from "@/components/hud-test/Divider1px";
 import hudStyles from "@/components/hud-test/hud.module.css";
 import { MissionsProvider, TasksTabsShell, TodayMissionsGridFromStore } from "@/components/missions";
-import { TasksHeaderChrome } from "@/components/missions/TasksHeaderChrome";
 import type { TasksTabId } from "@/components/missions/TasksTabsShell";
 import { TasksDailyBootstrap } from "@/components/missions/TasksDailyBootstrap";
 import { TasksCalendarAsync } from "./TasksCalendarAsync";
@@ -54,10 +49,6 @@ const ModeBanner = nextDynamic(
 const SmartSuggestionBanner = nextDynamic(
   () => import("@/components/missions/SmartSuggestionBanner").then((m) => ({ default: m.SmartSuggestionBanner })),
   { loading: () => null }
-);
-const YesterdayTasksSection = nextDynamic(
-  () => import("@/components/YesterdayTasksSection").then((m) => ({ default: m.YesterdayTasksSection })),
-  { loading: () => <div className="min-h-[40px] min-w-[160px] animate-pulse rounded-full bg-white/5" aria-hidden /> }
 );
 const CommanderMissionCard = nextDynamic(
   () => import("@/components/commander").then((m) => ({ default: m.CommanderMissionCard })),
@@ -159,40 +150,6 @@ function makeTasksHref(
   search.set("calView", nextCalView);
   const query = search.toString();
   return query ? `/tasks?${query}` : "/tasks";
-}
-
-async function TasksHeaderMetaAsync({
-  dateStr,
-  yesterdayStr,
-  simplified = false,
-}: {
-  dateStr: string;
-  yesterdayStr: string;
-  simplified?: boolean;
-}) {
-  const [xp, yesterdayTasksRaw] = await Promise.all([
-    getXP(),
-    simplified ? Promise.resolve([]) : getTasksForDate(yesterdayStr),
-  ]);
-  const yesterdayTasks = (yesterdayTasksRaw ?? []).map((t) => ({
-    id: (t as { id: string }).id,
-    title: (t as { title: string | null }).title ?? null,
-    completed: !!(t as { completed?: boolean }).completed,
-  }));
-
-  return (
-    <div className="mascot-follow-row flex flex-wrap items-center justify-end gap-2">
-      {!simplified && <YesterdayTasksSection yesterdayTasks={yesterdayTasks} todayStr={dateStr} />}
-      <XPBadge totalXp={xp.total_xp} level={xp.level} compact href="/xp" />
-      <div className="glow-pill inline-flex min-w-0 shrink-0 items-center gap-2 rounded-full bg-[var(--dc-bg-elevated)] px-4 py-2 text-sm font-medium text-[var(--dc-text-main)]" title="Vandaag" aria-label="Vandaag">
-        <span
-          className="h-2 w-2 shrink-0 rounded-full bg-[var(--dc-accent-primary)] shadow-[0_0_8px_rgba(var(--mode-rgb),0.6)]"
-          aria-hidden
-        />
-        <span className="truncate">Today</span>
-      </div>
-    </div>
-  );
 }
 
 async function MissionsSectionAsync({
@@ -377,7 +334,7 @@ async function MissionsSectionAsync({
             id="tasks-list"
           >
             <TodayMissionsGridFromStore dateStr={dateStr}>
-              {missionCards.length > 0 && tasks.length === 0 && (
+              {!commandDeck && missionCards.length > 0 && tasks.length === 0 && (
                 <section className="mission-grid mb-3">
                   {missionCards.map((m) => (
                     <CommanderMissionCard
@@ -469,7 +426,7 @@ async function MissionsSectionAsync({
     <div data-tutorial="tasks-today">
       <div className="tasks-war-hide">
         <TodayMissionsGridFromStore dateStr={dateStr}>
-          {missionCards.length > 0 && tasks.length === 0 && (
+          {!commandDeck && missionCards.length > 0 && tasks.length === 0 && (
             <section className="mission-grid">
               {missionCards.map((m) => (
                 <CommanderMissionCard
@@ -614,9 +571,11 @@ async function CalendarSectionAsync({
 async function RoutineSectionAsync({
   dateStr,
   simplifiedContent = false,
+  commandDeck = false,
 }: {
   dateStr: string;
   simplifiedContent?: boolean;
+  commandDeck?: boolean;
 }) {
   const { routineTasks, suggestedDays, suggestedPlans } = await getRoutineTasksWithSuggestions(dateStr);
   const RoutineTaskList = (await import("@/components/missions/RoutineTaskList")).RoutineTaskList;
@@ -670,13 +629,13 @@ async function RoutineSectionAsync({
       suggestedDays={suggestedDays}
       suggestedPlans={suggestedPlans}
       dateStr={dateStr}
+      commandDeckVisuals={commandDeck && !simplifiedContent}
     />
   );
 }
 
 export default async function TasksPage({ searchParams }: Props) {
   const dateStr = todayDateString();
-  const yesterdayStr = yesterdayDate(dateStr);
   const params = await searchParams;
   const growthFromGrowthPage = params.growth === "1";
   const tabParam = params.tab;
@@ -711,30 +670,11 @@ export default async function TasksPage({ searchParams }: Props) {
   /** Visual-lab command deck around tabs + content (standard layout only). */
   const tasksCommandDeck = !simplifiedTasksFillLayout;
 
-  const headerSection = simplifiedTasksFillLayout ? null : (
-    <>
-      <TasksHeaderChrome
-        dateStr={dateStr}
-        simplified={prefs.simplified_content === true}
-        matchCommandDeck={tasksCommandDeck}
-      />
-      {!prefs.simplified_content && (
-        <section className="mascot-hero mascot-hero-top mascot-hero-mission mascot-hero-sharp" data-mascot-page="tasks" aria-hidden>
-          <div className="mascot-hero-inner mx-auto">
-            <HeroMascotImage page="tasks" className="mascot-img" heroLarge />
-          </div>
-        </section>
-      )}
-      <Suspense fallback={null}>
-        <TasksHeaderMetaAsync
-          dateStr={dateStr}
-          yesterdayStr={yesterdayStr}
-          simplified={prefs.simplified_content === true}
-        />
-      </Suspense>
-      {!prefs.simplified_content && <Divider1px />}
-    </>
-  );
+  /**
+   * Missions UI matches visual-lab command deck: no separate HQ header, mascot, or meta strip —
+   * the deck (TasksTabsShell) is the single chrome surface.
+   */
+  const headerSection = null;
 
   return (
     <main
@@ -746,7 +686,7 @@ export default async function TasksPage({ searchParams }: Props) {
           className={
             simplifiedTasksFillLayout
               ? "relative z-10 flex min-h-[calc(100svh-7rem)] w-full max-w-none flex-1 flex-col dashboard-cinematic sm:min-h-[calc(100svh-6.5rem)]"
-              : "container page page-wide dashboard-cinematic relative z-10"
+              : "container page page-wide dashboard-cinematic relative z-10 pt-4 sm:pt-5"
           }
         >
           <TasksTabsShell
@@ -783,7 +723,11 @@ export default async function TasksPage({ searchParams }: Props) {
               </Suspense>
             ) : (
               <Suspense fallback={null}>
-                <RoutineSectionAsync dateStr={dateStr} simplifiedContent={prefs.simplified_content === true} />
+                <RoutineSectionAsync
+                  dateStr={dateStr}
+                  simplifiedContent={prefs.simplified_content === true}
+                  commandDeck={tasksCommandDeck}
+                />
               </Suspense>
             )}
           </TasksTabsShell>

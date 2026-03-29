@@ -158,6 +158,23 @@ function formatMissionTimeFrame(task: ExtendedTask): string {
   return "±15–45 min";
 }
 
+/** One-line engine summary under the main mission title (visual-lab command deck). */
+function missionDeckSubtitle(
+  task: ExtendedTask,
+  strategic: StrategicPreview | null | undefined,
+  enginePick: boolean
+): string {
+  const parts: string[] = [];
+  if (enginePick) parts.push("Aanbevolen door engine");
+  parts.push(formatMissionTimeFrame(task));
+  const roi = strategic?.roi;
+  if (roi != null) {
+    if (roi >= 55) parts.push("hoge impact");
+    else if (roi >= 35) parts.push("solide impact");
+  }
+  return `${parts.join(" · ")} — tik Details voor subtasks en notities.`;
+}
+
 export function TaskList({
   date,
   tasks: initialTasks,
@@ -240,6 +257,10 @@ export function TaskList({
   const [showAllTasksModal, setShowAllTasksModal] = useState(false);
   const [showReasoning, setShowReasoning] = useState(false);
   const [doneTodayOpen, setDoneTodayOpen] = useState(false);
+  const toggleOrOpenDoneToday = useCallback(() => {
+    if (commandDeckVisuals && !isWarMode) setDoneTodayOpen((o) => !o);
+    else setDoneTodayOpen(true);
+  }, [commandDeckVisuals, isWarMode]);
   const [levelUpInfo, setLevelUpInfo] = useState<{
     level: number;
     reputation?: { discipline: number; consistency: number; impact: number } | null;
@@ -315,6 +336,11 @@ export function TaskList({
     }
     return Array.from(byId.values());
   }, [completedToday, extendedTasks, optimisticCompleteIds]);
+
+  useEffect(() => {
+    if (!doneTodayOpen || !commandDeckVisuals || isWarMode) return;
+    if (completedForDisplay.length === 0) setDoneTodayOpen(false);
+  }, [doneTodayOpen, commandDeckVisuals, isWarMode, completedForDisplay.length]);
 
   const filteredTasks =
     filter === "all"
@@ -728,12 +754,79 @@ export function TaskList({
 
   function renderCompactMissionCard(task: ExtendedTask) {
     const blockReason = blockedReasonByTaskId?.[task.id];
-    const xp = expectedXpForMission(task, strategicByTaskId?.[task.id]);
+    const strategic = strategicByTaskId?.[task.id];
+    const xp = expectedXpForMission(task, strategic);
     const timeFrame = formatMissionTimeFrame(task);
     function openDetails() {
       setFocusTask(null);
       setDetailsTask(task);
     }
+    const deckMeta = [strategic?.domain ?? task.category, `+${xp} XP · ${timeFrame}`].filter(Boolean).join(" · ");
+    const deckHint =
+      strategic?.psychologyLabel?.trim() ||
+      (strategic?.difficultyRank ? `Rank ${strategic.difficultyRank}` : null) ||
+      (task.recurrence_rule ? recurrenceLabel(task) : recommendedTaskIds?.includes(task.id) ? "Aanbevolen" : null) ||
+      "Missie";
+
+    if (commandDeckVisuals) {
+      return (
+        <div
+          role="button"
+          tabIndex={0}
+          onClick={openDetails}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" || e.key === " ") {
+              e.preventDefault();
+              openDetails();
+            }
+          }}
+          className={[
+            "card-simple flex w-full cursor-pointer items-start gap-3 !rounded-xl px-3 py-3 text-left outline-none transition-colors ring-offset-2 ring-offset-[var(--bg-primary)] focus-visible:ring-2 focus-visible:ring-[var(--accent-focus)]",
+            blockReason
+              ? "border-[var(--card-border)] bg-[var(--bg-surface)]/30 opacity-90"
+              : "!border-[rgba(var(--mode-rgb),0.1)] bg-[rgba(6,18,30,0.35)] shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] hover:!border-[rgba(var(--mode-rgb),0.22)] hover:bg-[rgba(var(--mode-rgb),0.08)]",
+          ].join(" ")}
+        >
+          <span
+            className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-[var(--semantic-accent)]/70 shadow-[0_0_8px_rgba(var(--mode-rgb),0.35)]"
+            aria-hidden
+          />
+          <div className="min-w-0 flex-1">
+            <p className="text-sm font-semibold leading-snug text-[var(--text-primary)]">{task.title}</p>
+            <p className="mt-0.5 text-[11px] text-[var(--text-muted)]">{deckMeta}</p>
+            {blockReason ? (
+              <p className="mt-1 line-clamp-2 text-[10px] text-amber-200/90">{blockReason}</p>
+            ) : (
+              <p className="mt-1 text-[10px] uppercase tracking-wide text-[var(--text-muted)]/80">{deckHint}</p>
+            )}
+          </div>
+          <div className="flex shrink-0 items-start gap-1">
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                if (!task.completed) handleComplete(task.id);
+              }}
+              disabled={task.completed || completingIds.has(task.id) || !!blockReason}
+              className={`mt-0.5 h-6 w-6 shrink-0 rounded-md border-2 flex items-center justify-center ${
+                task.completed
+                  ? "border-green-500 bg-green-500/20 text-green-400"
+                  : "border-neutral-500 bg-transparent hover:border-[var(--accent-focus)]"
+              } disabled:opacity-50`}
+              aria-label={
+                task.completed ? "Voltooid" : completingIds.has(task.id) ? "Bezig…" : blockReason ? "Geblokkeerd" : "Voltooien"
+              }
+            >
+              {task.completed && <span className="text-[10px]">✓</span>}
+            </button>
+            <span className="mt-1 text-[var(--text-muted)]" aria-hidden>
+              ›
+            </span>
+          </div>
+        </div>
+      );
+    }
+
     return (
       <div
         role="button"
@@ -745,24 +838,12 @@ export function TaskList({
             openDetails();
           }
         }}
-        className={`flex min-h-[5rem] cursor-pointer flex-col rounded-xl border text-left outline-none transition-colors ring-offset-2 ring-offset-[var(--bg-primary)] focus-visible:ring-2 focus-visible:ring-[var(--accent-focus)] ${
-          commandDeckVisuals ? "card-simple w-full !rounded-xl p-3" : "p-2.5"
-        } ${
-          blockReason
-            ? "border-[var(--card-border)] bg-[var(--bg-surface)]/30 opacity-85"
-            : commandDeckVisuals
-              ? "!border-[rgba(var(--mode-rgb),0.1)] bg-[rgba(6,18,30,0.35)] hover:!border-[rgba(var(--mode-rgb),0.22)] hover:bg-[rgba(var(--mode-rgb),0.08)] shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]"
-              : "border-[rgba(var(--mode-rgb),0.22)] bg-[var(--bg-surface)]/40 hover:border-[rgba(var(--mode-rgb),0.45)] hover:bg-[rgba(var(--mode-rgb),0.06)]"
+        className={`flex min-h-[5rem] cursor-pointer flex-col rounded-xl border border-[rgba(var(--mode-rgb),0.22)] bg-[var(--bg-surface)]/40 p-2.5 text-left outline-none transition-colors hover:border-[rgba(var(--mode-rgb),0.45)] hover:bg-[rgba(var(--mode-rgb),0.06)] ring-offset-2 ring-offset-[var(--bg-primary)] focus-visible:ring-2 focus-visible:ring-[var(--accent-focus)] ${
+          blockReason ? "border-[var(--card-border)] bg-[var(--bg-surface)]/30 opacity-85" : ""
         }`}
       >
         <div className="flex w-full items-start gap-1">
           <div className="flex min-w-0 flex-1 gap-2">
-            {commandDeckVisuals && (
-              <span
-                className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-[var(--semantic-accent)]/70 shadow-[0_0_8px_rgba(var(--mode-rgb),0.35)]"
-                aria-hidden
-              />
-            )}
             <button
               type="button"
               onClick={(e) => {
@@ -791,11 +872,6 @@ export function TaskList({
               )}
             </div>
           </div>
-          {commandDeckVisuals && (
-            <span className="mt-1 shrink-0 text-sm text-[var(--text-muted)]" aria-hidden>
-              ›
-            </span>
-          )}
         </div>
       </div>
     );
@@ -1051,7 +1127,7 @@ export function TaskList({
                   type="button"
                   aria-expanded={doneTodayOpen}
                   aria-controls="done-today-toast"
-                  onClick={() => setDoneTodayOpen(true)}
+                  onClick={toggleOrOpenDoneToday}
                   className="rounded-full border border-[var(--card-border)] px-3 py-1.5 text-xs font-medium text-[var(--text-muted)] hover:bg-[var(--bg-surface)] hover:text-[var(--text-primary)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--focus-ring)]"
                 >
                   Voltooid vandaag ({completedForDisplay.length})
@@ -1072,7 +1148,7 @@ export function TaskList({
               type="button"
               aria-expanded={doneTodayOpen}
               aria-controls="done-today-toast"
-              onClick={() => setDoneTodayOpen(true)}
+              onClick={toggleOrOpenDoneToday}
               className="rounded-full border border-[var(--card-border)]/80 bg-[var(--bg-surface)]/40 px-3 py-1 text-xs font-medium text-[var(--text-muted)] transition hover:bg-[var(--bg-surface)]/70 hover:text-[var(--text-primary)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--focus-ring)]"
             >
               Voltooid vandaag ({completedForDisplay.length})
@@ -1127,37 +1203,81 @@ export function TaskList({
         )}
 
         {!isWarMode && missionsHeroLayout && (
-          <div className="mb-3 flex flex-wrap items-center justify-center gap-1.5 sm:justify-start">
-            <div className="flex flex-wrap items-center justify-center gap-1.5 sm:justify-start" role="tablist" aria-label="Missieweergave">
-              {(["focus", "plan", "backlog"] as const).map((m) => (
+          <>
+            <div className="mb-3 flex flex-wrap items-center justify-center gap-1.5 sm:justify-start">
+              <div className="flex flex-wrap items-center justify-center gap-1.5 sm:justify-start" role="tablist" aria-label="Missieweergave">
+                {(["focus", "plan", "backlog"] as const).map((m) => (
+                  <button
+                    key={m}
+                    type="button"
+                    role="tab"
+                    aria-selected={viewMode === m}
+                    onClick={() => setViewMode(m)}
+                    className={`rounded-full border px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.08em] transition-colors ${
+                      viewMode === m
+                        ? "border-[rgba(var(--mode-rgb),0.35)] bg-[rgba(var(--mode-rgb),0.12)] text-[var(--accent-focus)] shadow-[0_0_12px_rgba(var(--mode-rgb),0.2)]"
+                        : "border-transparent text-[var(--text-muted)] hover:border-[var(--card-border)] hover:bg-[var(--bg-surface)]/60 hover:text-[var(--text-primary)]"
+                    }`}
+                  >
+                    {m === "focus" ? "Vandaag" : m}
+                  </button>
+                ))}
+              </div>
+              {completedForDisplay.length > 0 && (
                 <button
-                  key={m}
                   type="button"
-                  role="tab"
-                  aria-selected={viewMode === m}
-                  onClick={() => setViewMode(m)}
-                  className={`rounded-full border px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.08em] transition-colors ${
-                    viewMode === m
-                      ? "border-[rgba(var(--mode-rgb),0.35)] bg-[rgba(var(--mode-rgb),0.12)] text-[var(--accent-focus)] shadow-[0_0_12px_rgba(var(--mode-rgb),0.2)]"
-                      : "border-transparent text-[var(--text-muted)] hover:border-[var(--card-border)] hover:bg-[var(--bg-surface)]/60 hover:text-[var(--text-primary)]"
-                  }`}
+                  aria-expanded={doneTodayOpen}
+                  aria-controls={commandDeckVisuals ? "done-today-inline" : "done-today-toast"}
+                  onClick={toggleOrOpenDoneToday}
+                  className="rounded-full border border-[var(--card-border)]/80 bg-[var(--bg-surface)]/40 px-3 py-1.5 text-xs font-medium text-[var(--text-muted)] transition hover:border-[var(--card-border)] hover:bg-[var(--bg-surface)]/70 hover:text-[var(--text-primary)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--focus-ring)]"
                 >
-                  {m === "focus" ? "Vandaag" : m}
+                  Voltooid vandaag ({completedForDisplay.length})
                 </button>
-              ))}
+              )}
             </div>
-            {completedForDisplay.length > 0 && (
-              <button
-                type="button"
-                aria-expanded={doneTodayOpen}
-                aria-controls="done-today-toast"
-                onClick={() => setDoneTodayOpen(true)}
-                className="rounded-full border border-[var(--card-border)]/80 bg-[var(--bg-surface)]/40 px-3 py-1.5 text-xs font-medium text-[var(--text-muted)] transition hover:border-[var(--card-border)] hover:bg-[var(--bg-surface)]/70 hover:text-[var(--text-primary)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--focus-ring)]"
+            {commandDeckVisuals && doneTodayOpen && completedForDisplay.length > 0 ? (
+              <div
+                className="glass-card mb-3 !rounded-xl !p-3"
+                id="done-today-inline"
+                role="region"
+                aria-label="Voltooid vandaag"
               >
-                Voltooid vandaag ({completedForDisplay.length})
-              </button>
-            )}
-          </div>
+                <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-[var(--text-muted)]">Gedaan vandaag</p>
+                <ul className="mt-2 space-y-2">
+                  {completedForDisplay.map((d) => (
+                    <li
+                      key={d.id}
+                      className="flex items-start gap-3 rounded-lg border border-[rgba(var(--mode-rgb),0.08)] bg-black/20 px-3 py-2"
+                    >
+                      <label className="flex min-w-0 flex-1 cursor-pointer items-start gap-3">
+                        <input
+                          type="checkbox"
+                          checked
+                          disabled={pending}
+                          onChange={(e) => {
+                            if (!e.target.checked) handleUncomplete(d.id);
+                          }}
+                          className="mt-0.5 h-4 w-4 shrink-0 rounded border border-emerald-500/50 bg-emerald-500/20 accent-[var(--semantic-accent)] disabled:opacity-50"
+                          aria-label={`${(d.title ?? "Missie").replace(/"/g, "'")} is voltooid. Vink uit om ongedaan te maken.`}
+                        />
+                        <span className="min-w-0 flex-1">
+                          <span className="block text-sm font-medium leading-snug text-[var(--text-muted)] line-through">
+                            {d.title ?? "Missie"}
+                          </span>
+                          {d.category ? (
+                            <span className="mt-0.5 block text-[10px] text-[var(--text-muted)]">{d.category}</span>
+                          ) : null}
+                        </span>
+                      </label>
+                    </li>
+                  ))}
+                </ul>
+                <p className="mt-2 text-[10px] leading-relaxed text-[var(--text-muted)]">
+                  Vink uit om ongedaan te maken. Tik opnieuw op Voltooid vandaag om dit paneel te sluiten.
+                </p>
+              </div>
+            ) : null}
+          </>
         )}
         {!isWarMode && !missionsHeroLayout && (
           <div className="mb-3 flex flex-wrap items-center gap-2">
@@ -1180,7 +1300,7 @@ export function TaskList({
                 type="button"
                 aria-expanded={doneTodayOpen}
                 aria-controls="done-today-toast"
-                onClick={() => setDoneTodayOpen(true)}
+                onClick={toggleOrOpenDoneToday}
                 className="rounded-full border border-[var(--card-border)] px-3 py-1.5 text-xs font-medium text-[var(--text-muted)] hover:bg-[var(--bg-surface)] hover:text-[var(--text-primary)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--focus-ring)]"
               >
                 Voltooid vandaag ({completedForDisplay.length})
@@ -1268,33 +1388,52 @@ export function TaskList({
                         : "text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--accent-focus)] [text-shadow:0_0_12px_rgba(var(--mode-rgb),0.35)]"
                     }
                   >
-                    {commandDeckVisuals ? "Hoofdmissie" : "Hoofdmissie nu"}
+                    {commandDeckVisuals ? "Main mission" : "Hoofdmissie nu"}
                   </p>
                   <h3
                     className={
                       commandDeckVisuals
-                        ? "mt-0.5 text-base font-bold leading-snug text-[var(--text-primary)] sm:text-lg md:text-xl"
+                        ? "mt-2 text-base font-bold leading-snug text-[var(--text-primary)] md:text-lg"
                         : "hq-h2 mt-0.5 text-xl font-semibold leading-snug text-[var(--text-primary)] sm:text-2xl [text-shadow:0_0_20px_rgba(var(--mode-rgb),0.12)]"
                     }
                   >
                     {heroMissionTask.title}
                   </h3>
-                  <div className="mt-3 flex flex-wrap gap-2 sm:gap-3">
-                    <span className="inline-flex items-center gap-1.5 rounded-full border border-[var(--card-border)]/80 bg-[var(--bg-surface)]/55 px-3 py-1.5 text-xs text-[var(--text-secondary)]">
-                      <span className="text-[var(--text-muted)]">XP</span>
-                      <span className="font-semibold tabular-nums text-[var(--accent-focus)]">
-                        +{expectedXpForMission(heroMissionTask, strategicByTaskId?.[heroMissionTask.id])}
-                      </span>
-                    </span>
-                    <span className="inline-flex items-center gap-1.5 rounded-full border border-[var(--card-border)]/80 bg-[var(--bg-surface)]/55 px-3 py-1.5 text-xs text-[var(--text-secondary)]">
-                      <span className="text-[var(--text-muted)]">Tijd</span>
-                      <span className="font-medium">{formatMissionTimeFrame(heroMissionTask)}</span>
-                    </span>
-                  </div>
-                  {heroMissionTask.notes?.trim() && (
-                    <p className="mt-2 whitespace-pre-wrap text-xs leading-relaxed text-[var(--text-secondary)]">
-                      {heroMissionTask.notes.trim()}
-                    </p>
+                  {commandDeckVisuals ? (
+                    <>
+                      <p className="mt-2 max-w-prose text-[11px] leading-relaxed text-[var(--text-secondary)] md:text-xs">
+                        {missionDeckSubtitle(
+                          heroMissionTask,
+                          strategicByTaskId?.[heroMissionTask.id],
+                          !!recommendedTaskIds?.includes(heroMissionTask.id)
+                        )}
+                      </p>
+                      {heroMissionTask.notes?.trim() ? (
+                        <p className="mt-2 whitespace-pre-wrap text-[11px] leading-relaxed text-[var(--text-secondary)] md:text-xs">
+                          {heroMissionTask.notes.trim()}
+                        </p>
+                      ) : null}
+                    </>
+                  ) : (
+                    <>
+                      <div className="mt-3 flex flex-wrap gap-2 sm:gap-3">
+                        <span className="inline-flex items-center gap-1.5 rounded-full border border-[var(--card-border)]/80 bg-[var(--bg-surface)]/55 px-3 py-1.5 text-xs text-[var(--text-secondary)]">
+                          <span className="text-[var(--text-muted)]">XP</span>
+                          <span className="font-semibold tabular-nums text-[var(--accent-focus)]">
+                            +{expectedXpForMission(heroMissionTask, strategicByTaskId?.[heroMissionTask.id])}
+                          </span>
+                        </span>
+                        <span className="inline-flex items-center gap-1.5 rounded-full border border-[var(--card-border)]/80 bg-[var(--bg-surface)]/55 px-3 py-1.5 text-xs text-[var(--text-secondary)]">
+                          <span className="text-[var(--text-muted)]">Tijd</span>
+                          <span className="font-medium">{formatMissionTimeFrame(heroMissionTask)}</span>
+                        </span>
+                      </div>
+                      {heroMissionTask.notes?.trim() && (
+                        <p className="mt-2 whitespace-pre-wrap text-xs leading-relaxed text-[var(--text-secondary)]">
+                          {heroMissionTask.notes.trim()}
+                        </p>
+                      )}
+                    </>
                   )}
                   <div className={commandDeckVisuals ? "mt-4 flex flex-wrap gap-2" : "mt-4"}>
                     <button
@@ -1371,19 +1510,19 @@ export function TaskList({
                     [
                       { k: "Open", v: String(incompleteTasksForDisplay.length) },
                       {
-                        k: "Vandaag",
+                        k: "Today",
                         v:
                           heroMissionTask != null
-                            ? `${restMissionTasks.length} over`
-                            : `${incompleteTasksForDisplay.length} over`,
+                            ? `${restMissionTasks.length} left`
+                            : `${incompleteTasksForDisplay.length} left`,
                       },
                       {
-                        k: "Modus",
+                        k: "Mode",
                         v:
                           mode === "stabilize"
-                            ? "Stabiliseer"
+                            ? "Stabilise"
                             : mode === "low_energy"
-                              ? "Laag"
+                              ? "Low"
                               : mode === "driven"
                                 ? "Drive"
                                 : "Focus",
@@ -1741,7 +1880,7 @@ export function TaskList({
         </Modal>
 
         <DoneTodayToast
-          open={doneTodayOpen}
+          open={doneTodayOpen && (!commandDeckVisuals || isWarMode)}
           onClose={() => setDoneTodayOpen(false)}
           tasks={completedForDisplay}
           onUncomplete={handleUncomplete}
