@@ -398,7 +398,13 @@ async function MissionsSectionAsync({
   }
 
   const diagnosticsBlock = (
-    <details className="tasks-war-hide rounded-xl border border-[var(--card-border)] bg-[var(--bg-surface)]/35 p-3">
+    <details
+      className={
+        commandDeck
+          ? "tasks-war-hide rounded-xl border border-[rgba(var(--mode-rgb),0.12)] bg-[rgba(6,18,30,0.35)] p-3"
+          : "tasks-war-hide rounded-xl border border-[var(--card-border)] bg-[var(--bg-surface)]/35 p-3"
+      }
+    >
       <summary className="cursor-pointer text-xs font-semibold uppercase tracking-wider text-[var(--text-muted)]">Diagnostics</summary>
       <div className="mt-3 space-y-3">
         {resistanceIndex.message && <p className="text-sm text-[var(--text-primary)]">{resistanceIndex.message}</p>}
@@ -421,6 +427,12 @@ async function MissionsSectionAsync({
     smartSuggestion.text && !decisionBlocks.topRecommendation ? (
       <SmartSuggestionBanner text={smartSuggestion.text} type={smartSuggestion.type} />
     ) : null;
+  const smartSuggestionDeck =
+    commandDeck && smartSuggestionBlock ? (
+      <div className="card-simple !rounded-xl border border-[rgba(var(--mode-rgb),0.1)] p-3">{smartSuggestionBlock}</div>
+    ) : (
+      smartSuggestionBlock
+    );
 
   const tasksTodayBlock = (
     <div data-tutorial="tasks-today">
@@ -480,7 +492,13 @@ async function MissionsSectionAsync({
   );
 
   const metaBlock = (
-    <details className="tasks-war-hide mt-4 rounded-xl border border-[var(--card-border)] bg-[var(--bg-surface)]/35 p-3">
+    <details
+      className={
+        commandDeck
+          ? "tasks-war-hide mt-0 rounded-xl border border-[rgba(var(--mode-rgb),0.12)] bg-[rgba(6,18,30,0.35)] p-3"
+          : "tasks-war-hide mt-4 rounded-xl border border-[var(--card-border)] bg-[var(--bg-surface)]/35 p-3"
+      }
+    >
       <summary className="cursor-pointer text-xs font-semibold uppercase tracking-wider text-[var(--text-muted)]">
         Meta (30d), Data-spiegel (30d), Weekly behavior summary
       </summary>
@@ -498,7 +516,11 @@ async function MissionsSectionAsync({
     </details>
   );
 
-  const backlogBlock = (
+  const backlogBlock = commandDeck ? (
+    <div className="tasks-war-hide card-simple !rounded-xl border border-[rgba(var(--mode-rgb),0.1)] p-4">
+      <BacklogAndToekomstTriggers backlog={backlog} futureTasks={futureTasks} todayDate={dateStr} />
+    </div>
+  ) : (
     <div className="tasks-war-hide">
       <BacklogAndToekomstTriggers backlog={backlog} futureTasks={futureTasks} todayDate={dateStr} />
     </div>
@@ -507,9 +529,17 @@ async function MissionsSectionAsync({
   /** Command deck: hero-first flow like visual-lab missions concept (ribbon + diagnostics after main stack). */
   const missionsBody = commandDeck ? (
     <>
-      {smartSuggestionBlock}
+      {smartSuggestionDeck}
       {tasksTodayBlock}
-      <GrowthMissionsRibbon snap={growthSnap} fromGrowthPage={growthFromGrowthPage} />
+      {growthSnap ? (
+        <div className="card-simple !rounded-xl border border-[rgba(var(--mode-rgb),0.1)] p-3">
+          <GrowthMissionsRibbon
+            snap={growthSnap}
+            fromGrowthPage={growthFromGrowthPage}
+            className="mb-0"
+          />
+        </div>
+      ) : null}
       {diagnosticsBlock}
       {metaBlock}
       {backlogBlock}

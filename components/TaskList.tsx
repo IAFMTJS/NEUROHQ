@@ -770,20 +770,14 @@ export function TaskList({
 
     if (commandDeckVisuals) {
       return (
-        <div
-          role="button"
-          tabIndex={0}
+        <button
+          type="button"
           onClick={openDetails}
-          onKeyDown={(e) => {
-            if (e.key === "Enter" || e.key === " ") {
-              e.preventDefault();
-              openDetails();
-            }
-          }}
+          disabled={!!blockReason}
           className={[
-            "card-simple flex w-full cursor-pointer items-start gap-3 !rounded-xl px-3 py-3 text-left outline-none transition-colors ring-offset-2 ring-offset-[var(--bg-primary)] focus-visible:ring-2 focus-visible:ring-[var(--accent-focus)]",
+            "card-simple flex w-full items-start gap-3 !rounded-xl px-3 py-3 text-left outline-none transition-colors ring-offset-2 ring-offset-[var(--bg-primary)] focus-visible:ring-2 focus-visible:ring-[var(--accent-focus)]",
             blockReason
-              ? "border-[var(--card-border)] bg-[var(--bg-surface)]/30 opacity-90"
+              ? "cursor-not-allowed border-[var(--card-border)] bg-[var(--bg-surface)]/30 opacity-90"
               : "!border-[rgba(var(--mode-rgb),0.1)] bg-[rgba(6,18,30,0.35)] shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] hover:!border-[rgba(var(--mode-rgb),0.22)] hover:bg-[rgba(var(--mode-rgb),0.08)]",
           ].join(" ")}
         >
@@ -792,7 +786,7 @@ export function TaskList({
             aria-hidden
           />
           <div className="min-w-0 flex-1">
-            <p className="text-sm font-semibold leading-snug text-[var(--text-primary)]">{task.title}</p>
+            <p className="text-sm font-semibold text-[var(--text-primary)]">{task.title}</p>
             <p className="mt-0.5 text-[11px] text-[var(--text-muted)]">{deckMeta}</p>
             {blockReason ? (
               <p className="mt-1 line-clamp-2 text-[10px] text-amber-200/90">{blockReason}</p>
@@ -800,30 +794,10 @@ export function TaskList({
               <p className="mt-1 text-[10px] uppercase tracking-wide text-[var(--text-muted)]/80">{deckHint}</p>
             )}
           </div>
-          <div className="flex shrink-0 items-start gap-1">
-            <button
-              type="button"
-              onClick={(e) => {
-                e.stopPropagation();
-                if (!task.completed) handleComplete(task.id);
-              }}
-              disabled={task.completed || completingIds.has(task.id) || !!blockReason}
-              className={`mt-0.5 h-6 w-6 shrink-0 rounded-md border-2 flex items-center justify-center ${
-                task.completed
-                  ? "border-green-500 bg-green-500/20 text-green-400"
-                  : "border-neutral-500 bg-transparent hover:border-[var(--accent-focus)]"
-              } disabled:opacity-50`}
-              aria-label={
-                task.completed ? "Voltooid" : completingIds.has(task.id) ? "Bezig…" : blockReason ? "Geblokkeerd" : "Voltooien"
-              }
-            >
-              {task.completed && <span className="text-[10px]">✓</span>}
-            </button>
-            <span className="mt-1 text-[var(--text-muted)]" aria-hidden>
-              ›
-            </span>
-          </div>
-        </div>
+          <span className="mt-1 shrink-0 text-[var(--text-muted)]" aria-hidden>
+            ›
+          </span>
+        </button>
       );
     }
 
@@ -1401,7 +1375,22 @@ export function TaskList({
                   </h3>
                   {commandDeckVisuals ? (
                     <>
-                      <p className="mt-2 max-w-prose text-[11px] leading-relaxed text-[var(--text-secondary)] md:text-xs">
+                      <p
+                        role="button"
+                        tabIndex={0}
+                        onClick={() => {
+                          setFocusTask(null);
+                          setDetailsTask(heroMissionTask);
+                        }}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter" || e.key === " ") {
+                            e.preventDefault();
+                            setFocusTask(null);
+                            setDetailsTask(heroMissionTask);
+                          }
+                        }}
+                        className="mt-2 max-w-prose cursor-pointer rounded-md text-[11px] leading-relaxed text-[var(--text-secondary)] outline-none transition-colors hover:text-[var(--text-primary)] focus-visible:ring-2 focus-visible:ring-[var(--accent-focus)] md:text-xs"
+                      >
                         {missionDeckSubtitle(
                           heroMissionTask,
                           strategicByTaskId?.[heroMissionTask.id],
@@ -1445,39 +1434,26 @@ export function TaskList({
                       disabled={!!blockedReasonByTaskId?.[heroMissionTask.id]}
                       className={
                         commandDeckVisuals
-                          ? "flex-1 min-w-[8rem] rounded-lg bg-[var(--semantic-accent)] px-4 py-2.5 text-center text-sm font-semibold text-white shadow-[0_0_16px_rgba(var(--mode-rgb),0.25)] transition hover:opacity-95 disabled:cursor-not-allowed disabled:opacity-45 sm:flex-initial sm:min-w-[140px]"
+                          ? "rounded-lg bg-[var(--semantic-accent)]/15 px-3 py-2 text-[11px] font-semibold text-[var(--semantic-accent)] shadow-none transition hover:bg-[var(--semantic-accent)]/25 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--semantic-accent)]/40 disabled:cursor-not-allowed disabled:opacity-45"
                           : "mission-cta-button w-full min-h-[52px] rounded-full bg-[var(--accent-focus)] px-6 py-3.5 text-sm font-semibold uppercase tracking-[0.1em] text-white shadow-[0_0_20px_rgba(var(--mode-rgb),0.38)] transition hover:opacity-95 disabled:cursor-not-allowed disabled:opacity-45"
                       }
                     >
                       Start
                     </button>
                     {commandDeckVisuals && (
-                      <>
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setFocusTask(null);
-                            handleSnooze(heroMissionTask.id);
-                          }}
-                          disabled={
-                            !!blockedReasonByTaskId?.[heroMissionTask.id] || snoozingIds.has(heroMissionTask.id)
-                          }
-                          className="rounded-lg border border-[rgba(var(--mode-rgb),0.18)] bg-transparent px-4 py-2.5 text-[11px] font-medium text-[var(--text-secondary)] transition hover:border-[rgba(var(--mode-rgb),0.3)] hover:bg-[rgba(var(--mode-rgb),0.06)] disabled:cursor-not-allowed disabled:opacity-45"
-                        >
-                          {snoozingIds.has(heroMissionTask.id) ? "…" : "Uitstellen"}
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setFocusTask(null);
-                            setDetailsTask(heroMissionTask);
-                          }}
-                          disabled={!!blockedReasonByTaskId?.[heroMissionTask.id]}
-                          className="rounded-lg border border-[rgba(var(--mode-rgb),0.18)] bg-transparent px-4 py-2.5 text-[11px] font-medium text-[var(--text-secondary)] transition hover:border-[rgba(var(--mode-rgb),0.3)] hover:bg-[rgba(var(--mode-rgb),0.06)] disabled:cursor-not-allowed disabled:opacity-45"
-                        >
-                          Details
-                        </button>
-                      </>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setFocusTask(null);
+                          handleSnooze(heroMissionTask.id);
+                        }}
+                        disabled={
+                          !!blockedReasonByTaskId?.[heroMissionTask.id] || snoozingIds.has(heroMissionTask.id)
+                        }
+                        className="rounded-lg border border-[rgba(var(--mode-rgb),0.18)] px-3 py-2 text-[11px] font-medium text-[var(--text-secondary)] transition hover:border-[rgba(var(--mode-rgb),0.28)] hover:bg-[rgba(var(--mode-rgb),0.06)] disabled:cursor-not-allowed disabled:opacity-45"
+                      >
+                        {snoozingIds.has(heroMissionTask.id) ? "…" : "Uitstellen"}
+                      </button>
                     )}
                   </div>
                   {blockedReasonByTaskId?.[heroMissionTask.id] && (
@@ -1541,7 +1517,7 @@ export function TaskList({
                   ))}
                   {energyCap && energyCap.cap > 0 ? (
                     <span className="ml-auto hidden text-[9px] tabular-nums text-[var(--text-muted)] sm:inline">
-                      Budget · {Math.min(100, Math.round((energyCap.used / energyCap.cap) * 100))}%
+                      Energy budget · {Math.min(100, Math.round((energyCap.used / energyCap.cap) * 100))}%
                     </span>
                   ) : null}
                 </div>
@@ -1690,6 +1666,11 @@ export function TaskList({
             >
               {missionsHeroLayout ? "+ Missie toevoegen" : "+ Taak toevoegen"}
             </button>
+            {missionsHeroLayout && commandDeckVisuals ? (
+              <p className="text-center text-[10px] leading-relaxed text-[var(--text-muted)]">
+                Opent het volledige missieformulier voor XP, duur en subtasks.
+              </p>
+            ) : null}
           </div>
         )}
 

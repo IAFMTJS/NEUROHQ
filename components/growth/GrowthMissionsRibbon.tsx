@@ -6,16 +6,18 @@ type Props = {
   snap: GrowthEngineSnapshot | null;
   /** Deep link from Growth command center (`?growth=1`). */
   fromGrowthPage?: boolean;
+  /** e.g. missions command deck: no outer margin, sits inside a card-simple wrapper. */
+  className?: string;
 };
 
-export function GrowthMissionsRibbon({ snap, fromGrowthPage = false }: Props) {
+export function GrowthMissionsRibbon({ snap, fromGrowthPage = false, className = "" }: Props) {
   if (!snap) return null;
 
   const { activeProtocol, engineTier, tierAligned, brainLogged, hasProtocols } = snap;
 
   if (!hasProtocols) {
     return (
-      <div className="mb-4 rounded-xl border border-dashed border-[var(--card-border)] bg-[var(--bg-surface)]/25 px-4 py-3 text-sm text-[var(--text-muted)]">
+      <div className={`mb-4 rounded-xl border border-dashed border-[var(--card-border)] bg-[var(--bg-surface)]/25 px-4 py-3 text-sm text-[var(--text-muted)] ${className}`}>
         Geen protocollen in de bibliotheek —{" "}
         <Link href="/learning#growth-protocols" className="font-semibold text-[var(--semantic-accent)] hover:underline">
           Growth
@@ -26,7 +28,7 @@ export function GrowthMissionsRibbon({ snap, fromGrowthPage = false }: Props) {
   }
 
   return (
-    <div className="mb-4 overflow-hidden rounded-2xl border border-[var(--semantic-ring)]/35 bg-gradient-to-r from-[var(--semantic-accent)]/10 via-[var(--bg-surface)]/30 to-transparent">
+    <div className={`mb-4 overflow-hidden rounded-2xl border border-[var(--semantic-ring)]/35 bg-gradient-to-r from-[var(--semantic-accent)]/10 via-[var(--bg-surface)]/30 to-transparent ${className}`}>
       <div className="flex flex-col gap-3 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="min-w-0">
           {fromGrowthPage && (
