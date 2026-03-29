@@ -6,9 +6,11 @@ import { usePendingBudgetSnapshot } from "@/lib/client-pending-budget";
 
 type Props = {
   historyMode?: boolean;
+  /** When true, only run sync toasts — no pill (e.g. Budget command header shows status). */
+  suppressChrome?: boolean;
 };
 
-export function BudgetSyncStatus({ historyMode = false }: Props) {
+export function BudgetSyncStatus({ historyMode = false, suppressChrome = false }: Props) {
   const pending = usePendingBudgetSnapshot();
   const lastSeenRef = useRef<number | null>(null);
 
@@ -22,7 +24,7 @@ export function BudgetSyncStatus({ historyMode = false }: Props) {
     });
   }, [historyMode, pending]);
 
-  if (historyMode || !pending) return null;
+  if (suppressChrome || historyMode || !pending) return null;
 
   return (
     <div className="rounded-full border border-[var(--card-border)] bg-[var(--bg-surface)]/60 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.12em] text-[var(--text-muted)]">

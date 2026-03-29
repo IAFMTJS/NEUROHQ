@@ -298,14 +298,7 @@ async function BudgetContent({ searchParams }: Props) {
       )}
       {!historyMode && (
         <>
-          <div className="flex flex-wrap items-center justify-end gap-2">
-            <div className="flex items-center gap-2">
-              <BudgetSyncStatus historyMode={historyMode} />
-              <span className={`rounded-full border px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] ${commandStatus.border} ${commandStatus.tone}`}>
-                {commandStatus.title}
-              </span>
-            </div>
-          </div>
+          <BudgetSyncStatus historyMode={historyMode} suppressChrome />
           <RemainingBudgetHero
             budgetCents={budgetSettings.monthly_budget_cents ?? 0}
             savingsCents={budgetSettings.monthly_savings_cents ?? 0}
@@ -317,23 +310,13 @@ async function BudgetContent({ searchParams }: Props) {
             logDate={today}
             daysUntilNextIncome={financialInsights?.daysUntilNextIncome ?? null}
             nextPaydayShortLabel={nextPaydayShortLabel}
+            safeDailySpendCents={canonicalSafeDailySpendCents}
+            previousPeriodRemaining={previousPeriodRemaining}
+            disciplineXpThisWeek={disciplineXpThisWeek}
+            periodStart={periodStart}
+            periodEnd={periodEnd}
+            executeHref={executeEntriesHref}
           />
-          {previousPeriodRemaining != null && (
-            <p className="text-sm text-[var(--text-muted)]">
-              Vorige periode ({previousPeriodRemaining.label}): resterend{" "}
-              <span className={previousPeriodRemaining.remainingCents < 0 ? "text-amber-400" : "font-medium text-[var(--text-primary)]"}>
-                {formatCents(previousPeriodRemaining.remainingCents, currency)}
-              </span>
-            </p>
-          )}
-          <div className="flex justify-end">
-            <Link
-              href={executeEntriesHref}
-              className="btn-primary inline-flex h-auto w-full items-center justify-center rounded-lg px-4 py-2.5 text-sm font-semibold sm:w-auto"
-            >
-              Quick log openen
-            </Link>
-          </div>
         </>
       )}
     </div>

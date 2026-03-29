@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useState, useTransition } from "react";
+import Link from "next/link";
+import { differenceInCalendarDays } from "date-fns";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { HQModal } from "@/components/hq";
@@ -18,9 +20,6 @@ import {
   usePendingBudgetSnapshot,
 } from "@/lib/client-pending-budget";
 import { useSettings } from "@/lib/settings-context";
-/** Zelfde tile-shell als ProfileHomeCompact / profiel-orbit */
-const orbitTileShell =
-  "rounded-xl border border-[rgba(var(--mode-rgb),0.07)] bg-[rgba(var(--mode-rgb-deep),0.08)] px-3 py-2.5 transition-colors hover:border-[rgba(var(--mode-rgb),0.16)] hover:bg-[rgba(var(--mode-rgb-deep),0.12)]";
 
 function budgetRingMode(
   hasSettings: boolean,
@@ -43,6 +42,47 @@ function budgetRingProgress(isOverBudget: boolean, remainingPctForMeter: number)
   return remainingPctForMeter;
 }
 
+function cycleStripSegments(
+  budgetPeriod: "monthly" | "weekly",
+  periodStart: string | undefined,
+  periodEnd: string | undefined,
+  today: string
+): { key: string; label: string; current: boolean }[] {
+  if (budgetPeriod === "weekly") {
+    return [{ key: "week", label: "Deze week", current: true }];
+  }
+  if (!periodStart || !periodEnd) {
+    return [
+      { key: "w1", label: "W1", current: false },
+      { key: "w2", label: "W2", current: false },
+      { key: "w3", label: "W3", current: false },
+      { key: "w4", label: "W4", current: false },
+    ];
+  }
+  const start = new Date(periodStart + "T12:00:00Z");
+  const end = new Date(periodEnd + "T12:00:00Z");
+  if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) {
+    return [
+      { key: "w1", label: "W1", current: false },
+      { key: "w2", label: "W2", current: false },
+      { key: "w3", label: "W3", current: false },
+      { key: "w4", label: "W4", current: false },
+    ];
+  }
+  const totalDays = Math.max(1, differenceInCalendarDays(end, start) + 1);
+  const slotCount = Math.min(4, Math.max(1, Math.ceil(totalDays / 7)));
+  const dayOffset = Math.max(
+    0,
+    Math.min(totalDays - 1, differenceInCalendarDays(new Date(today + "T12:00:00Z"), start))
+  );
+  const activeIndex = Math.min(slotCount - 1, Math.floor(dayOffset / Math.max(1, totalDays / slotCount)));
+  return Array.from({ length: slotCount }, (_, i) => ({
+    key: `w-${i}`,
+    label: slotCount === 1 ? "Cyclus" : `W${i + 1}`,
+    current: i === activeIndex,
+  }));
+}
+
 type Props = {
   /** Total budget for the current cycle (month/week) in cents. */
   budgetCents: number;
@@ -60,6 +100,15 @@ type Props = {
   daysUntilNextIncome?: number | null;
   /** Short label for next payday (e.g. "28 mrt") */
   nextPaydayShortLabel?: string | null;
+  /** Canonical safe daily spend (remaining / days to income). */
+  safeDailySpendCents?: number | null;
+  /** Previous cycle remainder when computed (payday-aligned months). */
+  previousPeriodRemaining?: { remainingCents: number; label: string } | null;
+  disciplineXpThisWeek?: number;
+  periodStart?: string;
+  periodEnd?: string;
+  /** e.g. `/budget?tab=execute#entries-frozen` */
+  executeHref?: string;
 };
 
 export function RemainingBudgetHero({
@@ -73,6 +122,12 @@ export function RemainingBudgetHero({
   logDate,
   daysUntilNextIncome = null,
   nextPaydayShortLabel = null,
+  safeDailySpendCents = null,
+  previousPeriodRemaining = null,
+  disciplineXpThisWeek = 0,
+  periodStart,
+  periodEnd,
+  executeHref,
 }: Props) {
   const pendingBudget = usePendingBudgetSnapshot();
   const pendingActive = pendingBudget != null && pendingBudget.synced !== true;
@@ -119,7 +174,6 @@ export function RemainingBudgetHero({
   const remainingPctDisplay = Math.round(remainingRatio);
 
   const hasSettings = effectiveBudgetCents > 0 || effectiveSavingsCents > 0;
-  const spentPct = spendableCents > 0 ? Math.min(100, (expensesCents / spendableCents) * 100) : 0;
 
   const commandStatus = (() => {
     if (!hasSettings) return { label: "Geen budget", pill: "border-slate-500/35 bg-slate-900/50 text-slate-300" };
@@ -229,6 +283,21 @@ export function RemainingBudgetHero({
           : `Nog ${daysUntilNextIncome} dagen tot loon`
       : null;
 
+  const syncOk = !pendingActive;
+  const cycleSlots = !historyMode
+    ? cycleStripSegments(effectiveBudgetPeriod, periodStart, periodEnd, logDate)
+    : [];
+
+  const safeDailyLine =
+    hasSettings && typeof safeDailySpendCents === "number" && safeDailySpendCents > 0
+      ? formatCents(safeDailySpendCents, effectiveCurrency)
+      : null;
+
+  const previousTileLabel =
+    previousPeriodRemaining != null
+      ? `${formatCents(previousPeriodRemaining.remainingCents, effectiveCurrency)}${previousPeriodRemaining.remainingCents > 0 ? " +" : ""}`
+      : "—";
+
   return (
     <>
       <section
@@ -241,153 +310,210 @@ export function RemainingBudgetHero({
           aria-hidden
         />
 
-        <div className="relative z-[1] border-b border-[rgba(var(--mode-rgb),0.1)] pb-4">
-          <div className="flex flex-wrap items-start justify-between gap-3">
-            <div>
-              <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--mode-text-soft)]">Budget command</p>
-              <p className="mt-1 max-w-xl text-xs leading-snug text-[var(--text-secondary)]">
-                {effectiveBudgetPeriod === "weekly" ? "Weekcyclus" : "Maandcyclus"} · resterend t.o.v. spendable (na
-                spaarreserve)
-              </p>
-            </div>
+        <div className="relative z-[1] flex flex-wrap items-center justify-between gap-3 border-b border-[rgba(var(--mode-rgb),0.1)] pb-4">
+          <div>
+            <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--mode-text-soft)]">Budget command</p>
+            <p className="mt-1 max-w-xl text-xs leading-snug text-[var(--text-secondary)]">
+              {effectiveBudgetPeriod === "weekly" ? "Weekcyclus" : "Maandcyclus"} · resterend t.o.v. spendable (na
+              spaarreserve)
+            </p>
+          </div>
+          <div className="flex flex-wrap items-center gap-2">
             <span
-              className={`shrink-0 rounded-full border px-3 py-1 text-[10px] font-bold uppercase tracking-[0.14em] ${commandStatus.pill}`}
+              className={`text-[10px] font-medium tabular-nums ${syncOk ? "text-emerald-300/90" : "text-amber-200/95"}`}
+            >
+              {syncOk ? "● Sync OK" : "● Pending sync"}
+            </span>
+            <span
+              className={`shrink-0 rounded-full border px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.12em] ${commandStatus.pill}`}
             >
               {commandStatus.label}
             </span>
           </div>
         </div>
 
-        <div className="relative z-[1] mt-5 flex flex-col gap-6 lg:flex-row lg:items-stretch lg:justify-between lg:gap-8">
-          <div className="flex flex-col items-center gap-5 lg:flex-row lg:items-center lg:gap-10">
-            <div className="flex shrink-0 flex-col items-center">
-              <div className="relative">
-                <div
-                  className="absolute left-1/2 top-1/2 h-[118%] w-[118%] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[radial-gradient(circle,rgba(var(--mode-rgb),0.16)_0%,transparent_62%)] blur-md sm:h-[120%] sm:w-[120%]"
-                  aria-hidden
+        <div className="relative z-[1] mt-5 grid gap-8 lg:grid-cols-[minmax(0,auto)_1fr] lg:items-center lg:gap-10">
+          <div className="flex justify-center lg:justify-start">
+            <div className="relative">
+              <div
+                className="absolute left-1/2 top-1/2 h-[118%] w-[118%] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[radial-gradient(circle,rgba(var(--mode-rgb),0.16)_0%,transparent_62%)] blur-md sm:h-[120%] sm:w-[120%]"
+                aria-hidden
+              />
+              <div className="relative drop-shadow-[0_16px_44px_rgba(0,0,0,0.5)]">
+                <EnergyRing
+                  softGlow
+                  profileOrbit
+                  budgetHub
+                  centerTag={hasSettings ? "Resterend" : undefined}
+                  size={214}
+                  progress={ringProgress}
+                  label={hasSettings ? `${remainingPctDisplay}%` : "Geen budget"}
+                  value={ringValue}
+                  mode={ringMode}
                 />
-                <div className="relative drop-shadow-[0_16px_44px_rgba(0,0,0,0.5)]">
-                  <EnergyRing
-                    softGlow
-                    profileOrbit
-                    budgetHub
-                    centerTag={hasSettings ? "Resterend" : undefined}
-                    size={236}
-                    progress={ringProgress}
-                    label={hasSettings ? `${remainingPctDisplay}%` : "Geen budget"}
-                    value={ringValue}
-                    mode={ringMode}
-                  />
-                </div>
               </div>
-              <p className="mt-3 max-w-[280px] text-center text-[11px] leading-relaxed text-[var(--text-muted)]">
-                {hasSettings ? (
-                  <>
-                    <span className="tabular-nums text-[var(--text-secondary)]">
-                      {formatCents(spendableCents, effectiveCurrency)} spendable
-                    </span>
-                    {" · "}
-                    <span className="tabular-nums text-[var(--text-secondary)]">
-                      {formatCents(expensesCents, effectiveCurrency)} uitgegeven
-                    </span>
-                  </>
-                ) : (
-                  <>Stel budget en spaarreserve in om de ring te activeren.</>
-                )}
-              </p>
-            </div>
-
-            <div className="w-full min-w-0 flex-1 space-y-3 text-center sm:max-w-md sm:text-left lg:pt-1">
-              {paydayLine && (
-                <div className={`${orbitTileShell} text-left`}>
-                  <p className="text-[9px] font-bold uppercase tracking-[0.14em] text-[var(--text-muted)]">Tot loon</p>
-                  <p className="mt-1.5 text-sm font-semibold leading-snug text-[var(--text-primary)]">{paydayLine}</p>
-                  {nextPaydayShortLabel && (
-                    <p className="mt-1 font-mono text-[11px] text-[var(--text-secondary)]">{nextPaydayShortLabel}</p>
-                  )}
-                </div>
-              )}
-              {hasSettings ? (
-                <div className={`${orbitTileShell} space-y-2 text-left`}>
-                  <div className="flex flex-wrap items-baseline justify-between gap-2 gap-y-1">
-                    <span className="text-[9px] font-bold uppercase tracking-[0.14em] text-[var(--text-muted)]">Spendable</span>
-                    <span className="text-sm font-semibold tabular-nums text-[var(--text-primary)]">
-                      {formatCents(spendableCents, effectiveCurrency)}
-                    </span>
-                  </div>
-                  <div className="flex flex-wrap items-baseline justify-between gap-2 gap-y-1">
-                    <span className="text-[9px] font-bold uppercase tracking-[0.14em] text-[var(--text-muted)]">
-                      Uitgegeven {periodLabel}
-                    </span>
-                    <span className="text-sm font-semibold tabular-nums text-[var(--semantic-accent)]">
-                      {formatCents(expensesCents, effectiveCurrency)}
-                    </span>
-                  </div>
-                </div>
-              ) : (
-                <p className="text-sm leading-relaxed text-[var(--text-muted)]">
-                  Stel je {effectiveBudgetPeriod === "weekly" ? "week" : "maand"}budget en spaarreserve in voor tempo en
-                  signalen.
-                </p>
-              )}
             </div>
           </div>
 
-            <div className="flex w-full flex-col justify-center gap-3 lg:w-[min(100%,240px)] lg:shrink-0">
-              <div className="flex w-full flex-col gap-2">
-                <button
-                  type="button"
-                  onClick={() => setShowDetails(true)}
-                  className="btn-primary w-full rounded-lg px-4 py-2.5 text-sm font-medium focus:outline-none focus-visible:ring-2 focus-visible:ring-[rgba(var(--mode-rgb),0.45)] focus-visible:ring-offset-0"
-                >
-                  Details
-                </button>
-                {!historyMode && (
-                  <button
-                    type="button"
-                    onClick={openQuickLogToast}
-                    className="btn-secondary w-full rounded-lg px-4 py-2.5 text-sm font-medium focus:outline-none focus-visible:ring-2 focus-visible:ring-[rgba(var(--mode-rgb),0.45)] focus-visible:ring-offset-0"
-                  >
-                    Quick log
-                  </button>
-                )}
-                {!historyMode && (
-                  <button
-                    type="button"
-                    onClick={() => setShowEdit(true)}
-                    className="btn-secondary w-full rounded-lg px-4 py-2.5 text-sm font-medium focus:outline-none focus-visible:ring-2 focus-visible:ring-[rgba(var(--mode-rgb),0.45)] focus-visible:ring-offset-0"
-                  >
-                    Budget bewerken
-                  </button>
-                )}
-              </div>
-              <p className="text-center text-[10px] leading-snug text-[var(--text-muted)] md:text-right">
-                budget − spaarreserve − uitgaven = restant
-              </p>
-              {pendingActive && (
-                <p className="text-center text-[11px] text-[var(--accent-focus)] md:text-right">Bijwerken… tijdelijke waarden actief.</p>
+          <div className="min-w-0 space-y-4">
+            <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-[var(--text-muted)]">Signalen</p>
+            <ul className="space-y-2">
+              {paydayLine && (
+                <li className="flex items-start gap-3 rounded-xl border border-[rgba(var(--mode-rgb),0.12)] bg-[rgba(6,18,30,0.45)] px-3 py-2.5">
+                  <span className="mt-0.5 text-lg leading-none" aria-hidden>
+                    📍
+                  </span>
+                  <div className="min-w-0">
+                    <p className="text-xs font-semibold text-[var(--text-primary)]">{paydayLine}</p>
+                    {nextPaydayShortLabel && (
+                      <p className="mt-0.5 text-[11px] text-[var(--text-muted)]">
+                        Volgende storting · {nextPaydayShortLabel}
+                      </p>
+                    )}
+                  </div>
+                </li>
               )}
+              {hasSettings && (
+                <li className="flex items-start gap-3 rounded-xl border border-[rgba(var(--mode-rgb),0.12)] bg-[rgba(6,18,30,0.45)] px-3 py-2.5">
+                  <span className="mt-0.5 text-lg leading-none" aria-hidden>
+                    🛡️
+                  </span>
+                  <div className="min-w-0">
+                    <p className="text-xs font-semibold text-[var(--text-primary)]">
+                      {safeDailyLine ? (
+                        <>
+                          Veilige dag · <span className="tabular-nums">{safeDailyLine}</span>
+                        </>
+                      ) : isOverBudget ? (
+                        "Geen veilige dag — je zit over budget"
+                      ) : (
+                        "Veilige dag — stel loondag in voor een dagbedrag"
+                      )}
+                    </p>
+                    <p className="mt-0.5 text-[11px] text-[var(--text-muted)]">
+                      Resterend gedeeld door dagen tot inkomen (zelfde logica als Strategy-stack)
+                    </p>
+                  </div>
+                </li>
+              )}
+              {!historyMode && (
+                <li className="flex items-start gap-3 rounded-xl border border-[rgba(var(--mode-rgb),0.12)] bg-[rgba(6,18,30,0.45)] px-3 py-2.5">
+                  <span className="mt-0.5 text-lg leading-none" aria-hidden>
+                    ⚡
+                  </span>
+                  <div className="min-w-0">
+                    <p className="text-xs font-semibold text-[var(--text-primary)]">
+                      Discipline deze week ·{" "}
+                      <span className="tabular-nums">{disciplineXpThisWeek > 0 ? `+${disciplineXpThisWeek} XP` : "0 XP"}</span>
+                    </p>
+                    <p className="mt-0.5 text-[11px] text-[var(--text-muted)]">
+                      Budget-discipline missies in deze week
+                    </p>
+                  </div>
+                </li>
+              )}
+            </ul>
+
+            <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+              {[
+                ["Spendable", hasSettings ? formatCents(spendableCents, effectiveCurrency) : "—"],
+                ["Uitgegeven", hasSettings ? formatCents(expensesCents, effectiveCurrency) : "—"],
+                ["Vorige periode", previousTileLabel],
+              ].map(([k, v]) => (
+                <div
+                  key={k}
+                  className="rounded-lg border border-[rgba(var(--mode-rgb),0.1)] bg-black/20 px-2.5 py-2 text-center shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]"
+                >
+                  <p className="text-[9px] font-bold uppercase tracking-[0.12em] text-[var(--text-muted)]">{k}</p>
+                  <p className="mt-1 text-sm font-semibold tabular-nums text-[var(--text-primary)]">{v}</p>
+                </div>
+              ))}
             </div>
+
+            {previousPeriodRemaining != null && (
+              <p className="text-[11px] text-[var(--text-muted)]">
+                Vorige periode ({previousPeriodRemaining.label}): resterend{" "}
+                <span
+                  className={`font-medium ${previousPeriodRemaining.remainingCents < 0 ? "text-amber-300" : "text-[var(--text-primary)]"}`}
+                >
+                  {formatCents(previousPeriodRemaining.remainingCents, effectiveCurrency)}
+                </span>
+              </p>
+            )}
+
+            {!hasSettings && (
+              <p className="text-sm leading-relaxed text-[var(--text-muted)]">
+                Stel je {effectiveBudgetPeriod === "weekly" ? "week" : "maand"}budget en spaarreserve in voor tempo en
+                signalen.
+              </p>
+            )}
+          </div>
         </div>
 
-        {!historyMode && spendableCents > 0 && (
-          <div className="relative z-[1] mt-5 rounded-b-[var(--hq-card-radius,18px)] border-t border-[rgba(var(--mode-rgb),0.1)] bg-black/10 px-0 pb-1 pt-4">
-            <div className="mb-2 flex items-center justify-between gap-2">
-              <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-[var(--text-muted)]">Spendable gebruikt</p>
-              <p className="font-mono text-[11px] tabular-nums text-[var(--text-secondary)]">{Math.round(Math.min(100, spentPct))}%</p>
-            </div>
-            <div className="h-3 w-full overflow-hidden rounded-full border border-white/5 bg-[var(--card-border)]/40 shadow-inner">
-              <div
-                className={`h-full rounded-full bg-gradient-to-r transition-all duration-500 ${
-                  spentPct >= 100
-                    ? "from-amber-600 to-orange-500 shadow-[0_0_12px_rgba(245,158,11,0.45)]"
-                    : "from-emerald-500 via-cyan-500 to-[var(--accent-focus)] shadow-[0_0_14px_rgba(34,211,238,0.25)]"
-                }`}
-                style={{ width: `${Math.min(100, spentPct)}%` }}
-              />
+        {!historyMode && cycleSlots.length > 0 && (
+          <div className="relative z-[1] mt-6 border-t border-[rgba(var(--mode-rgb),0.1)] pt-5">
+            <p className="mb-2 text-[10px] font-bold uppercase tracking-[0.16em] text-[var(--text-muted)]">Cyclus</p>
+            <div className="flex gap-1.5 overflow-x-auto pb-1">
+              {cycleSlots.map((w) => (
+                <div
+                  key={w.key}
+                  className={
+                    w.current
+                      ? "min-w-[4.5rem] rounded-lg border border-[rgba(var(--mode-rgb),0.35)] bg-[rgba(var(--mode-rgb-deep),0.3)] px-3 py-2 text-center shadow-[0_0_16px_rgba(var(--mode-rgb),0.2)]"
+                      : "min-w-[4.5rem] rounded-lg border border-[rgba(var(--mode-rgb),0.08)] bg-[rgba(0,0,0,0.2)] px-3 py-2 text-center text-[var(--text-muted)]"
+                  }
+                >
+                  <span className="text-[10px] font-bold uppercase tracking-wide">{w.label}</span>
+                  <span className="mt-0.5 block text-[9px] tabular-nums opacity-80">{w.current ? "nu" : "—"}</span>
+                </div>
+              ))}
             </div>
           </div>
         )}
+
+        <div className="relative z-[1] mt-5 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
+          <button
+            type="button"
+            onClick={() => setShowDetails(true)}
+            className="btn-primary inline-flex flex-1 items-center justify-center rounded-lg px-4 py-2.5 text-sm font-semibold focus:outline-none focus-visible:ring-2 focus-visible:ring-[rgba(var(--mode-rgb),0.45)] focus-visible:ring-offset-0 sm:flex-initial sm:min-w-[140px]"
+          >
+            Details
+          </button>
+          {!historyMode && (
+            <>
+              <button
+                type="button"
+                onClick={openQuickLogToast}
+                className="btn-secondary inline-flex flex-1 items-center justify-center rounded-lg px-4 py-2.5 text-sm font-semibold focus:outline-none focus-visible:ring-2 focus-visible:ring-[rgba(var(--mode-rgb),0.45)] focus-visible:ring-offset-0 sm:flex-initial sm:min-w-[140px]"
+              >
+                Quick log openen
+              </button>
+              <button
+                type="button"
+                onClick={() => setShowEdit(true)}
+                className="btn-secondary inline-flex flex-1 items-center justify-center rounded-lg px-4 py-2.5 text-sm font-semibold focus:outline-none focus-visible:ring-2 focus-visible:ring-[rgba(var(--mode-rgb),0.45)] focus-visible:ring-offset-0 sm:flex-initial sm:min-w-[140px]"
+              >
+                Budget bewerken
+              </button>
+              {executeHref && (
+                <Link
+                  href={executeHref}
+                  className="btn-secondary inline-flex flex-1 items-center justify-center rounded-lg px-4 py-2.5 text-sm font-semibold focus:outline-none focus-visible:ring-2 focus-visible:ring-[rgba(var(--mode-rgb),0.45)] focus-visible:ring-offset-0 sm:flex-initial sm:min-w-[140px]"
+                >
+                  Naar Execute
+                </Link>
+              )}
+            </>
+          )}
+        </div>
+        <p className="relative z-[1] mt-3 text-[10px] leading-snug text-[var(--text-muted)]">
+          budget − spaarreserve − uitgaven = restant
+          {pendingActive && (
+            <span className="mt-1 block text-[11px] text-[var(--accent-focus)]">
+              Bijwerken… tijdelijke waarden actief.
+            </span>
+          )}
+        </p>
       </section>
 
       <HQModal open={showDetails} onClose={() => setShowDetails(false)} width={520}>
