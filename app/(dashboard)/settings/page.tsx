@@ -11,6 +11,8 @@ import { getBudgetSettings } from "@/app/actions/budget";
 import { XPBadge } from "@/components/XPBadge";
 import nextDynamic from "next/dynamic";
 import { SettingsSnapshotFallback } from "@/components/settings/SettingsSnapshotFallback";
+import { SettingsPageLayout } from "@/components/settings/SettingsPageLayout";
+import { SettingsSectionCard } from "@/components/settings/SettingsSectionCard";
 import { profileEngineHref } from "@/lib/profile-routes";
 import { SimplifiedPageShell } from "@/components/layout/SimplifiedPageShell";
 import { SIMPLIFIED_VIEWPORT_WRAPPER } from "@/lib/simplified-page-layout";
@@ -63,28 +65,6 @@ function SettingsShell() {
   );
 }
 
-function SettingsCategory({
-  title,
-  subtitle,
-  defaultOpen = false,
-  children,
-}: {
-  title: string;
-  subtitle: string;
-  defaultOpen?: boolean;
-  children: React.ReactNode;
-}) {
-  return (
-    <details className="card-simple overflow-hidden p-0" open={defaultOpen}>
-      <summary className="cursor-pointer list-none border-b border-[var(--card-border)] px-4 py-3">
-        <p className="text-xs font-semibold uppercase tracking-wide text-[var(--text-muted)]">{title}</p>
-        <p className="mt-0.5 text-xs text-[var(--text-muted)]">{subtitle}</p>
-      </summary>
-      <div className="space-y-4 p-4">{children}</div>
-    </details>
-  );
-}
-
 async function SettingsContent() {
   const supabase = await createClient();
   const {
@@ -105,8 +85,13 @@ async function SettingsContent() {
   const appVersion = process.env.NEXT_PUBLIC_APP_VERSION ?? "1.0.0";
 
   return (
-    <>
-      <SettingsCategory title="Gebruiker" subtitle="Account" defaultOpen>
+    <SettingsPageLayout>
+      <SettingsSectionCard
+        id="settings-section-user"
+        title="Gebruiker"
+        subtitle="Account"
+        searchText="account email profiel persona identity inlog hq"
+      >
         <section className="space-y-3" data-tutorial="settings-account">
           <h2 className="text-xs font-semibold uppercase tracking-wide text-[var(--text-muted)]">Account</h2>
           <div className="card-simple overflow-hidden p-0">
@@ -122,9 +107,14 @@ async function SettingsContent() {
             </div>
           </div>
         </section>
-      </SettingsCategory>
+      </SettingsSectionCard>
 
-      <SettingsCategory title="Missies" subtitle="Automatische suggesties op je dag" defaultOpen>
+      <SettingsSectionCard
+        id="settings-section-missions"
+        title="Missies"
+        subtitle="Automatische suggesties op je dag"
+        searchText="missies master automatisering suggesties gedrag weekthema ochtend"
+      >
         <SettingsAutoMasterMissions initialEnabled={prefs.auto_master_missions} />
         <p className="text-xs text-[var(--text-muted)]">
           Gedragsprofiel en weekthema:{" "}
@@ -133,9 +123,14 @@ async function SettingsContent() {
           </a>
           .
         </p>
-      </SettingsCategory>
+      </SettingsSectionCard>
 
-      <SettingsCategory title="Systeem" subtitle="Weergave, modus, DCIC en lokale appcontrole">
+      <SettingsSectionCard
+        id="settings-section-system"
+        title="Systeem"
+        subtitle="Weergave, modus, DCIC en lokale appcontrole"
+        searchText="thema neuro amber emerald compact ui beweging light dcic modus snapshot cache service worker xp level dark mode"
+      >
         <ThemePicker />
         <SettingsCompactUi initialCompactUi={prefs.compact_ui} />
         <SettingsReducedMotion initialReducedMotion={prefs.reduced_motion} />
@@ -145,9 +140,14 @@ async function SettingsContent() {
         <SettingsDCICModeTest />
         <SettingsClearCache />
         <SettingsRefreshSnapshot />
-      </SettingsCategory>
+      </SettingsSectionCard>
 
-      <SettingsCategory title="Netwerk" subtitle="Notificaties, tijdzone en agenda">
+      <SettingsSectionCard
+        id="settings-section-network"
+        title="Netwerk"
+        subtitle="Notificaties, tijdzone en agenda"
+        searchText="push notificaties tijdzone agenda google apple calendar icloud email herinneringen ochtend avond quote stille uren"
+      >
         <section id="tijd-notificaties" className="space-y-3" data-tutorial="settings-push">
           <SettingsTimezone initialTimezone={userTimezone} />
           <SettingsPush
@@ -164,9 +164,14 @@ async function SettingsContent() {
         </section>
         <SettingsAppleCalendar />
         <SettingsGoogleCalendar hasToken={hasGoogle} />
-      </SettingsCategory>
+      </SettingsSectionCard>
 
-      <SettingsCategory title="Budget" subtitle="Valuta, drempels en snelle acties (app-breed)">
+      <SettingsSectionCard
+        id="settings-section-budget"
+        title="Budget"
+        subtitle="Valuta, drempels en snelle acties (app-breed)"
+        searchText="budget valuta eur usd impuls drempel periode maand week categorie risk quick add"
+      >
         <SettingsBudget
           initialCurrency={budgetSettings.currency}
           initialImpulseThresholdPct={budgetSettings.impulse_threshold_pct}
@@ -174,17 +179,22 @@ async function SettingsContent() {
           initialImpulseQuickAddMinutes={budgetSettings.impulse_quick_add_minutes}
           initialImpulseRiskCategories={budgetSettings.impulse_risk_categories}
         />
-      </SettingsCategory>
+      </SettingsSectionCard>
 
-      <SettingsCategory title="Toestel" subtitle="Export, privacy en uitleg">
+      <SettingsSectionCard
+        id="settings-section-device"
+        title="Toestel"
+        subtitle="Export, privacy en uitleg"
+        searchText="export data download privacy verwijderen account onboarding help snelle links waar configureer versie about"
+      >
         <SettingsQuickLinks />
         <SettingsExport />
         <SettingsDeleteAccount />
         <SettingsHelpOnboarding />
         <SettingsWhereToConfigure />
         <SettingsAbout appVersion={appVersion} />
-      </SettingsCategory>
-    </>
+      </SettingsSectionCard>
+    </SettingsPageLayout>
   );
 }
 
