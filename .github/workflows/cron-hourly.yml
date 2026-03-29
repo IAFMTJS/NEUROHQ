@@ -1,4 +1,6 @@
-# Run hourly cron (morning/evening pushes, rollover, brain status) via GitHub Actions.
+# Run hourly cron (quote, rollover, evening, brain-status reminder, calendar) via GitHub Actions.
+# The route still runs every UTC hour, but skips heavy per-user work when no account is in a
+# rollover/quote/brain/evening local window (see runFullCycle in app/api/cron/hourly/route.ts).
 # Vercel Hobby allows only 1 run/day per cron, so we trigger /api/cron/hourly from here.
 #
 # Required: Repository secrets OR variables (Settings → Secrets and variables → Actions):

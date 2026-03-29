@@ -177,10 +177,9 @@ Run through this after deploy (or locally) to validate core flows.
 
 If you have **CRON_SECRET** and a way to call APIs (e.g. curl or Vercel Cron logs):
 
-- [ ] `GET /api/cron/daily` with `Authorization: Bearer <CRON_SECRET>` returns 200 and JSON (`ok: true`, `job: "daily"`). In Supabase, next day’s date: incomplete tasks from yesterday have moved to today and `carry_over_count` increased.
-- [ ] `GET /api/cron/hourly` with auth: 200 (not scheduled on Hobby; use for manual or Pro). For users with `timezone` set, when it’s 00:00 in that TZ, rollover and quote run (check `users.last_rollover_date` and push logs).
+- [ ] `GET /api/cron/daily` with `Authorization: Bearer <CRON_SECRET>` returns 200 and JSON (`ok: true`, `job: "daily"`). Expect avoidance / hobby decay / acceptance / release-note counts in the body (not task rollover; that runs in hourly).
+- [ ] `GET /api/cron/hourly` with auth: 200 (not scheduled on Hobby; use for manual or Pro). Rollover and quote run at 00:00 / from quote hour in each user’s timezone (or UTC if `timezone` is null); check `users.last_rollover_date` and push logs.
 - [ ] `GET /api/cron/weekly` with auth: 200. `reality_reports` has new rows for last week; learning/savings push sent if conditions met.
-- [ ] `GET /api/cron/evening` with auth: 200. Shutdown reminder push sent (if push enabled).
 
 ---
 
@@ -258,9 +257,9 @@ If the “Cron hourly” workflow keeps failing (302, 404, or 401), follow these
 
 - **From the workflow:** After each run, the log line `Response (200): {...}` shows the JSON body. You should see something like:
   ```json
-  {"ok":true,"job":"hourly","rolled":0,"quoteSent":0,"morningEmailSent":0,"eveningEmailSent":0,"morningPushSent":0,"eveningPushSent":0,"brainStatusRemindersSent":0,"usersChecked":N}
+  {"ok":true,"job":"hourly","rolled":0,"quoteSent":0,"eveningEmailSent":0,"eveningPushSent":0,"brainStatusRemindersSent":0,"calendarReminderSent":0,"achievementPushSent":0,"alertPushSent":0,"usersChecked":N}
   ```
-  `usersChecked` is how many users with a timezone were considered. The other fields are counts of actions taken in that run (rollovers, quote pushes, morning/evening emails and pushes, brain-status reminders). At most hours these will be 0; they increase when it’s e.g. 00:00, 09:00, or 20:00 in a user’s timezone.
+  `usersChecked` is how many users were considered (including those without a timezone; they use UTC for local clock). The other fields are counts of actions taken in that run (rollovers, quote pushes, evening emails and pushes, brain-status reminders, etc.). At most hours these will be 0; they increase when it’s e.g. 00:00, 08:00, or 20:00 in a user’s effective timezone.
 
 - **From your machine (full response):** To see the same JSON when testing locally, use:
   ```bash
@@ -268,11 +267,11 @@ If the “Cron hourly” workflow keeps failing (302, 404, or 401), follow these
   ```
   You should get `{"ok":true,"job":"hourly",...}` with the counts.
 
-- **Trigger sends now (test run):** Call the cron with `?forceHour=9` or `?forceHour=20` (and your `Authorization: Bearer` header) to run as if it were 09:00 or 20:00 in each user’s timezone. That triggers morning or evening emails/pushes for users who have them enabled. Use `forceHour=0` for rollover + quote push, or `forceHour=11` for the brain-status reminder. Example:
+- **Trigger sends now (test run):** Call the cron with `?forceHour=20` (and your `Authorization: Bearer` header) to run as if it were 20:00 in each user’s timezone — evening email/push for users who have them enabled. Use `forceHour=0` for rollover, `forceHour=8` for quote/calendar heads-up, or `forceHour=11` for the brain-status reminder window. Example:
   ```bash
-  curl -s -H "Authorization: Bearer YOUR_CRON_SECRET" "https://neurohq.vercel.app/api/cron/hourly?forceHour=9"
+  curl -s -H "Authorization: Bearer YOUR_CRON_SECRET" "https://neurohq.vercel.app/api/cron/hourly?forceHour=20"
   ```
-  The response will include `"testRun":true,"forceHour":9` so you know it was a test.
+  The response will include `"testRun":true,"forceHour":20` so you know it was a test.
 
 - **In Supabase (optional):** To confirm rollover ran for a user, check `users.last_rollover_date` for today’s date (in that user’s timezone) after 00:00 local. Incomplete tasks from the previous day will have moved to today and `carry_over_count` may have increased.
 

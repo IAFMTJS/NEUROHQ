@@ -14,6 +14,8 @@ import { progressKey, resolveFocusProtocol } from "@/lib/growth/resolve-focus-pr
 import { tierLabelNl } from "@/lib/growth/tier-labels";
 import { neuroToast } from "@/lib/ui/neuro-toast";
 import { EnergyRing, type EnergyRingMode } from "@/components/hud-test/EnergyRing";
+import type { StrategyPacingHints } from "@/lib/strategy/strategy-pacing-hints";
+import { strategyPaceHintLines } from "@/lib/strategy/format-strategy-pace-hints";
 
 const RING_SIZE = 152;
 
@@ -30,6 +32,7 @@ type Props = {
   progressMap: Record<string, ProtocolProgressState>;
   engineTier: DifficultyTier | null;
   growthFocus: GrowthFocusState;
+  strategyPacingHints: StrategyPacingHints | null;
   onOpenProtocol: (p: ProtocolLibraryRow) => void;
 };
 
@@ -38,10 +41,16 @@ export function GrowthCommandCenter({
   progressMap,
   engineTier,
   growthFocus,
+  strategyPacingHints,
   onOpenProtocol,
 }: Props) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
+
+  const quarterPacingLines = useMemo(
+    () => (strategyPacingHints ? strategyPaceHintLines("learning", strategyPacingHints) : []),
+    [strategyPacingHints],
+  );
 
   const active = useMemo(
     () => resolveFocusProtocol(protocols, progressMap, growthFocus),
@@ -198,6 +207,27 @@ export function GrowthCommandCenter({
           </div>
         </div>
       </div>
+
+      {quarterPacingLines.length > 0 ? (
+        <div className="border-b border-[rgba(var(--mode-rgb),0.1)] bg-[rgba(var(--mode-rgb),0.05)] px-5 py-3 sm:px-6">
+          <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-[var(--text-muted)]">
+            Kwartaal · Strategy-doel
+          </p>
+          <ul className="mt-1.5 space-y-1">
+            {quarterPacingLines.map((line) => (
+              <li key={line} className="text-xs leading-snug text-[var(--text-secondary)]">
+                {line}
+              </li>
+            ))}
+          </ul>
+          <Link
+            href="/strategy"
+            className="mt-2 inline-flex text-[11px] font-medium text-[var(--accent-focus)] underline-offset-2 transition hover:underline"
+          >
+            Doelen op Strategy →
+          </Link>
+        </div>
+      ) : null}
 
       {/* Middle: week bar + tasks */}
       <div className="space-y-5 px-5 py-6 sm:px-6">

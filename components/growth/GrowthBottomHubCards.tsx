@@ -95,46 +95,59 @@ export function GrowthBottomHubCards({ protocols, progressMap, growthFocus, onOp
             Geen andere trajecten in de bibliotheek — dit is je enige protocol.
           </p>
         ) : (
-          <ul className="mt-3 space-y-2">
-            {otherProtocols.map((p) => {
-              const pk = progressKey(p.slug, p.locale);
-              const pp = progressMap[pk];
-              const wk = pp?.current_week_index ?? 1;
-              const defP = parseProtocolDefinition(p.definition_json);
-              const maxP = defP ? maxWeekIndex(defP) : null;
-              return (
-                <li key={p.id}>
-                  <div className="flex flex-col gap-2 rounded-lg border border-[rgba(var(--mode-rgb),0.1)] bg-black/15 px-3 py-2.5 sm:flex-row sm:items-center sm:justify-between">
-                    <div className="min-w-0">
-                      <p className="truncate text-sm font-medium text-[var(--text-primary)]">{p.title}</p>
-                      <p className="text-[11px] text-[var(--text-muted)]">
-                        Week {wk}
-                        {maxP != null ? ` / ${maxP}` : null}
-                      </p>
-                    </div>
-                    <div className="flex shrink-0 flex-wrap gap-2">
-                      <button
-                        type="button"
-                        disabled={pending}
-                        className="rounded-md border border-[rgba(var(--mode-rgb),0.25)] bg-[rgba(var(--mode-rgb),0.08)] px-2.5 py-1 text-[11px] font-semibold text-[var(--accent-focus)] transition hover:border-[rgba(var(--mode-rgb),0.4)] hover:bg-[rgba(var(--mode-rgb),0.14)] disabled:opacity-50"
-                        onClick={() => setFocus(p)}
-                      >
-                        Als focus
-                      </button>
-                      <button
-                        type="button"
-                        disabled={pending}
-                        className="text-[11px] font-medium text-[var(--text-muted)] underline-offset-2 hover:text-[var(--accent-focus)] hover:underline disabled:opacity-50"
-                        onClick={() => onOpenProtocol(p)}
-                      >
-                        Open
-                      </button>
-                    </div>
-                  </div>
-                </li>
-              );
-            })}
-          </ul>
+          <div className="mt-3 flex min-h-0 flex-col">
+            {otherProtocols.length > 3 ? (
+              <p className="mb-2 text-[10px] text-[var(--text-muted)]">
+                {otherProtocols.length} trajecten — scroll in het vak
+              </p>
+            ) : null}
+            <div
+              className="max-h-52 overflow-y-auto overscroll-contain rounded-lg border border-[rgba(var(--mode-rgb),0.12)] bg-black/25 py-2 pl-2 pr-1 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] [-webkit-overflow-scrolling:touch] sm:max-h-56"
+              role="region"
+              aria-label="Lijst met andere protocollen"
+            >
+              <ul className="space-y-2 pr-1">
+                {otherProtocols.map((p) => {
+                  const pk = progressKey(p.slug, p.locale);
+                  const pp = progressMap[pk];
+                  const wk = pp?.current_week_index ?? 1;
+                  const defP = parseProtocolDefinition(p.definition_json);
+                  const maxP = defP ? maxWeekIndex(defP) : null;
+                  return (
+                    <li key={p.id}>
+                      <div className="flex flex-col gap-2 rounded-lg border border-[rgba(var(--mode-rgb),0.1)] bg-[var(--bg-primary)]/35 px-3 py-2 sm:flex-row sm:items-center sm:justify-between">
+                        <div className="min-w-0">
+                          <p className="truncate text-sm font-medium text-[var(--text-primary)]">{p.title}</p>
+                          <p className="text-[11px] text-[var(--text-muted)]">
+                            Week {wk}
+                            {maxP != null ? ` / ${maxP}` : null}
+                          </p>
+                        </div>
+                        <div className="flex shrink-0 flex-wrap gap-2">
+                          <button
+                            type="button"
+                            disabled={pending}
+                            className="rounded-md border border-[rgba(var(--mode-rgb),0.25)] bg-[rgba(var(--mode-rgb),0.08)] px-2.5 py-1 text-[11px] font-semibold text-[var(--accent-focus)] transition hover:border-[rgba(var(--mode-rgb),0.4)] hover:bg-[rgba(var(--mode-rgb),0.14)] disabled:opacity-50"
+                            onClick={() => setFocus(p)}
+                          >
+                            Als focus
+                          </button>
+                          <button
+                            type="button"
+                            disabled={pending}
+                            className="text-[11px] font-medium text-[var(--text-muted)] underline-offset-2 hover:text-[var(--accent-focus)] hover:underline disabled:opacity-50"
+                            onClick={() => onOpenProtocol(p)}
+                          >
+                            Open
+                          </button>
+                        </div>
+                      </div>
+                    </li>
+                  );
+                })}
+              </ul>
+            </div>
+          </div>
         )}
       </section>
 

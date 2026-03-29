@@ -3,7 +3,6 @@ import Link from "next/link";
 import { Suspense } from "react";
 import { HeroMascotImage } from "@/components/HeroMascotImage";
 import { getXP } from "@/app/actions/xp";
-import { HQPageHeader } from "@/components/hq";
 import { XPBadge } from "@/components/XPBadge";
 import {
   getActiveStrategyFocus,
@@ -24,42 +23,31 @@ import { StrategyEngineSettingsSection } from "@/components/strategy/StrategyEng
 import { StrategyIntegratedOverview } from "@/components/strategy/StrategyIntegratedOverview";
 import { StrategyTabsShell } from "@/components/strategy/StrategyTabsShell";
 import { getBehaviorProfile } from "@/app/actions/behavior-profile";
+import { getStrategyIntegrationOverview } from "@/app/actions/strategy-integration";
 import { getUserPreferencesOrDefaults } from "@/app/actions/preferences";
+import { buildStrategyAnalysisSnapshot } from "@/lib/strategy/build-strategy-analysis-square";
+import { StrategyAnalysisSquare } from "@/components/strategy/StrategyAnalysisSquare";
 import { neuroStrategyBudgetHint } from "@/lib/neuro-copy";
 import { SimplifiedPageShell } from "@/components/layout/SimplifiedPageShell";
 import { SIMPLIFIED_VIEWPORT_WRAPPER } from "@/lib/simplified-page-layout";
-import { SciFiPanel } from "@/components/hud-test/SciFiPanel";
-import { CornerNode } from "@/components/hud-test/CornerNode";
-import hudStyles from "@/components/hud-test/hud.module.css";
+import { DashboardHubCommandShell } from "@/components/layout/DashboardHubCommandShell";
 import { StrategyEnginePaceHint } from "@/components/strategy/StrategyEnginePaceHint";
+import { StrategyHubHeader } from "@/components/strategy/StrategyHubHeader";
 
 /** Force dynamic: strategy uses cookies (auth) and live data. */
 export const dynamic = "force-dynamic";
 
-function StrategyIntroPanel() {
+const insightsLinkClass =
+  "link-glow-hover inline-flex items-center rounded-lg border border-[var(--card-border)] bg-[var(--bg-elevated)] px-4 py-2 text-sm font-medium text-[var(--text-primary)] transition-all duration-200 hover:border-[var(--accent-focus)] hover:text-[var(--accent-focus)]";
+
+function StrategyHeaderActions({ totalXp, level }: { totalXp: number; level: number }) {
   return (
-    <SciFiPanel variant="glass" className={hudStyles.focusSecondary} bodyClassName="p-4 md:p-5">
-      <CornerNode corner="top-left" />
-      <CornerNode corner="top-right" />
-      <HQPageHeader
-        title="Strategy"
-        subtitle="Command center voor je kwartaal: thesis, domeinfocus, alignment en weekreview — verbonden met missies, budget en Growth."
-        backHref="/dashboard"
-      />
-      <section className="mascot-hero mascot-hero-top mascot-hero-sharp mt-2" data-mascot-page="strategy" aria-hidden>
-        <div className="mascot-hero-inner mx-auto">
-          <HeroMascotImage page="strategy" className="mascot-img" heroLarge />
-        </div>
-      </section>
-      <p className="mt-4 text-xs text-[var(--text-muted)]">
-        Tabs hieronder: overzicht, allocatie, momentum en review. Engine-instellingen staan onderaan in het tweede paneel.
-      </p>
-      <Suspense fallback={null}>
-        <div className="mt-4">
-          <StrategyEnginePaceHint variant="both" />
-        </div>
-      </Suspense>
-    </SciFiPanel>
+    <>
+      <XPBadge totalXp={totalXp} level={level} compact href="/xp" />
+      <Link href="/report" className={insightsLinkClass}>
+        Insights →
+      </Link>
+    </>
   );
 }
 
@@ -111,6 +99,8 @@ const StrategyArchiveCTA = nextDynamic(
 );
 
 async function StrategyContent({ simplifiedLayout = false }: { simplifiedLayout?: boolean }) {
+  const hubStatusLine =
+    "Thesis, focus, alignment en weekreview — gekoppeld aan missies, budget en Growth.";
   let strategy: Awaited<ReturnType<typeof getActiveStrategyFocus>> = null;
   let past: Awaited<ReturnType<typeof getPastStrategyFocus>> = [];
   let xp: Awaited<ReturnType<typeof getXP>> = { total_xp: 0, level: 1 };
@@ -128,6 +118,16 @@ async function StrategyContent({ simplifiedLayout = false }: { simplifiedLayout?
     console.error("Strategy page data load failed (check Supabase env and migrations):", e);
     return (
       <>
+        {!simplifiedLayout ? (
+          <StrategyHubHeader
+            statusLine="Data laadt niet — check Supabase env en migraties (zie DEPLOY.md)."
+            actions={<StrategyHeaderActions totalXp={xp.total_xp} level={xp.level} />}
+          />
+        ) : (
+          <div className="flex flex-wrap items-center justify-end gap-2">
+            <StrategyHeaderActions totalXp={xp.total_xp} level={xp.level} />
+          </div>
+        )}
         <div className="rounded-xl border border-amber-500/40 bg-amber-500/10 px-4 py-3 text-sm text-[var(--text-primary)]">
           <p className="font-medium">Er is iets misgegaan</p>
           <p className="mt-1 text-[var(--text-muted)]">
@@ -142,15 +142,16 @@ async function StrategyContent({ simplifiedLayout = false }: { simplifiedLayout?
   if (!strategy) {
     return (
       <>
-        <div className="flex flex-wrap items-center justify-end gap-2">
-          <XPBadge totalXp={xp.total_xp} level={xp.level} compact href="/xp" />
-          <Link
-            href="/report"
-            className="inline-flex items-center justify-center rounded-lg border border-[rgba(var(--mode-rgb),0.2)] bg-[var(--bg-elevated)]/50 px-3 py-2 text-sm font-medium text-[var(--text-primary)] shadow-[inset_0_1px_0_rgba(255,255,255,0.03)] transition-colors hover:border-[var(--accent-focus)]/50 hover:text-[var(--accent-focus)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[rgba(var(--mode-rgb),0.35)] focus-visible:ring-offset-0"
-          >
-            Insights →
-          </Link>
-        </div>
+        {!simplifiedLayout ? (
+          <StrategyHubHeader
+            statusLine="Start met een thesis om focus, alignment en reviews te koppelen aan je stack."
+            actions={<StrategyHeaderActions totalXp={xp.total_xp} level={xp.level} />}
+          />
+        ) : (
+          <div className="flex flex-wrap items-center justify-end gap-2">
+            <StrategyHeaderActions totalXp={xp.total_xp} level={xp.level} />
+          </div>
+        )}
         <StrategyThesisForm />
         <StrategyArchiveHistory past={past} />
       </>
@@ -172,8 +173,9 @@ async function StrategyContent({ simplifiedLayout = false }: { simplifiedLayout?
   let reviewStatus = { reviewDue: false, weekNumber: 0, weekStart: "", lastReview: null as null | unknown };
 
   let neuroBudgetHint: string | null = null;
+  let strategyIntegration: Awaited<ReturnType<typeof getStrategyIntegrationOverview>> = null;
   try {
-    const [p, a, log, mom, drift, review, behaviorProfile] = await Promise.all([
+    const [p, a, log, mom, drift, review, behaviorProfile, integration] = await Promise.all([
       getPressureIndex(strategy.id),
       getAlignmentThisWeek(strategy.id),
       getAlignmentLog(strategy.id, 14),
@@ -181,6 +183,7 @@ async function StrategyContent({ simplifiedLayout = false }: { simplifiedLayout?
       getDriftAlert(strategy.id),
       getStrategyReviewStatus(strategy.id, strategy.start_date),
       getBehaviorProfile(),
+      getStrategyIntegrationOverview(),
     ]);
     pressureData = p ?? pressureData;
     alignmentThisWeek = a ?? alignmentThisWeek;
@@ -189,9 +192,16 @@ async function StrategyContent({ simplifiedLayout = false }: { simplifiedLayout?
     driftAlert = drift ?? null;
     reviewStatus = review ?? reviewStatus;
     neuroBudgetHint = neuroStrategyBudgetHint(behaviorProfile.neuroProfileTags);
+    strategyIntegration = integration;
   } catch {
     // Fallbacks already set
   }
+
+  const analysisSnapshot = buildStrategyAnalysisSnapshot(
+    strategyIntegration,
+    alignmentThisWeek.alignmentScore,
+    reviewStatus.reviewDue,
+  );
 
   const alignmentLogTrend = alignmentLog.map((l) => ({
     date: l.date,
@@ -206,24 +216,41 @@ async function StrategyContent({ simplifiedLayout = false }: { simplifiedLayout?
     ) : null;
 
   return (
-    <div data-tutorial="strategy-content" className="space-y-6">
-      <div className="flex flex-wrap items-center justify-end gap-2">
-        <XPBadge totalXp={xp.total_xp} level={xp.level} compact href="/xp" />
-        <Link
-          href="/report"
-          className="inline-flex items-center justify-center rounded-lg border border-[rgba(var(--mode-rgb),0.2)] bg-[var(--bg-elevated)]/50 px-3 py-2 text-sm font-medium text-[var(--text-primary)] shadow-[inset_0_1px_0_rgba(255,255,255,0.03)] transition-colors hover:border-[var(--accent-focus)]/50 hover:text-[var(--accent-focus)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[rgba(var(--mode-rgb),0.35)] focus-visible:ring-offset-0"
-        >
-          Insights →
-        </Link>
-      </div>
+    <div data-tutorial="strategy-content" className={simplifiedLayout ? "space-y-6" : "space-y-4"}>
+      {!simplifiedLayout ? (
+        <StrategyHubHeader
+          statusLine={hubStatusLine}
+          actions={<StrategyHeaderActions totalXp={xp.total_xp} level={xp.level} />}
+        />
+      ) : (
+        <div className="flex flex-wrap items-center justify-end gap-2">
+          <StrategyHeaderActions totalXp={xp.total_xp} level={xp.level} />
+        </div>
+      )}
+      {analysisSnapshot ? <StrategyAnalysisSquare snapshot={analysisSnapshot} /> : null}
       <StrategyTabsShell
         simplifiedLayout={simplifiedLayout}
         banner={reviewBanner}
+        belowTabsSlot={
+          !simplifiedLayout ? (
+            <>
+              <section className="mascot-hero mascot-hero-top mascot-hero-sharp" data-mascot-page="strategy" aria-hidden>
+                <div className="mascot-hero-inner mx-auto">
+                  <HeroMascotImage page="strategy" className="mascot-img" heroLarge />
+                </div>
+              </section>
+              <p className="text-center text-xs text-[var(--text-muted)]">
+                Overzicht, allocatie, momentum en review. Engine-instellingen staan onderaan dit paneel.
+              </p>
+              <Suspense fallback={null}>
+                <StrategyEnginePaceHint variant="both" />
+              </Suspense>
+            </>
+          ) : undefined
+        }
         overview={
           <>
-            <Suspense fallback={<div className="h-24 animate-pulse rounded-xl bg-[var(--bg-elevated)]/40" aria-hidden />}>
-              <StrategyIntegratedOverview />
-            </Suspense>
+            <StrategyIntegratedOverview integrationData={strategyIntegration} />
             <StrategyThesisHero
               thesis={strategy.thesis}
               thesisWhy={strategy.thesis_why}
@@ -280,6 +307,7 @@ async function StrategyContent({ simplifiedLayout = false }: { simplifiedLayout?
 export default async function StrategyPage() {
   const prefs = await getUserPreferencesOrDefaults();
   const simplified = prefs.simplified_content === true;
+  const lightUi = prefs.light_ui === true;
 
   if (simplified) {
     return (
@@ -311,28 +339,15 @@ export default async function StrategyPage() {
   }
 
   return (
-    <div className={`relative min-h-screen overflow-hidden ${hudStyles.cinematicBackdrop}`}>
-      <div className={hudStyles.spaceMist} aria-hidden />
-      <div className={hudStyles.starLayerFar} aria-hidden />
-      <div className={hudStyles.starLayerNear} aria-hidden />
-      <div className={hudStyles.backgroundAtmosphere} aria-hidden />
-      <div className={hudStyles.colorBlend} aria-hidden />
-      <div className={hudStyles.spaceNoise} aria-hidden />
-      <div className="container page page-wide dashboard-page dashboard-cinematic relative z-10 space-y-4 pb-10">
-        <StrategyIntroPanel />
-        <SciFiPanel variant="glass" className={hudStyles.focusSecondary} bodyClassName="p-4 md:p-6">
-          <CornerNode corner="top-left" />
-          <CornerNode corner="top-right" />
-          <Suspense fallback={<div className="min-h-[200px] animate-pulse rounded-2xl bg-[var(--bg-elevated)]/30" aria-hidden />}>
-            <StrategyContent />
-          </Suspense>
-          <Suspense fallback={<div className="min-h-[200px] animate-pulse rounded-2xl bg-[var(--bg-elevated)]/30" aria-hidden />}>
-            <div className="mt-8 border-t border-[rgba(var(--mode-rgb),0.1)] pt-8">
-              <StrategyEngineSettingsSection />
-            </div>
-          </Suspense>
-        </SciFiPanel>
-      </div>
-    </div>
+    <DashboardHubCommandShell hubLabel="Strategy" lightUi={lightUi}>
+      <Suspense fallback={<div className="min-h-[200px] animate-pulse rounded-2xl bg-[var(--bg-elevated)]/30" aria-hidden />}>
+        <StrategyContent />
+      </Suspense>
+      <Suspense fallback={<div className="min-h-[200px] animate-pulse rounded-2xl bg-[var(--bg-elevated)]/30" aria-hidden />}>
+        <div className="mt-2 border-t border-[rgba(var(--mode-rgb),0.12)] pt-6">
+          <StrategyEngineSettingsSection />
+        </div>
+      </Suspense>
+    </DashboardHubCommandShell>
   );
 }

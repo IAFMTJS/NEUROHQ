@@ -20,6 +20,7 @@ export type StrategyIntegrationOverview = {
   };
   budget: {
     hasPlanning: boolean;
+    plannedBudgetCents: number | null;
     remainingCents: number | null;
     safeDailyCents: number | null;
     daysUntilIncome: number | null;
@@ -110,6 +111,7 @@ export async function getStrategyIntegrationOverview(): Promise<StrategyIntegrat
     },
     budget: {
       hasPlanning,
+      plannedBudgetCents: planning?.plannedBudgetCents ?? null,
       remainingCents: planning?.plannedRemainingCents ?? null,
       safeDailyCents,
       daysUntilIncome: finance?.cycle?.daysUntilNextIncome ?? null,

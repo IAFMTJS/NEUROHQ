@@ -42,7 +42,6 @@ import { TasksDailyBootstrap } from "@/components/missions/TasksDailyBootstrap";
 import { TasksCalendarAsync } from "./TasksCalendarAsync";
 import { getGrowthEngineSnapshot } from "@/app/actions/growth-snapshot";
 import { getBehaviorProfile } from "@/app/actions/behavior-profile";
-import { neuroNextMoveHint } from "@/lib/neuro-copy";
 import { GrowthMissionsRibbon } from "@/components/growth/GrowthMissionsRibbon";
 import { profileEngineHref } from "@/lib/profile-routes";
 /** Tasks page must always run on the server so latest data is rendered after refresh. */
@@ -348,11 +347,6 @@ async function MissionsSectionAsync({
     return true;
   });
 
-  const allMissionsDoneToday =
-    tasksNormal.length === 0 && Array.isArray(completedToday) && completedToday.length > 0;
-
-  const neuroLine = neuroNextMoveHint(behaviorProfile.neuroProfileTags);
-
   if (simplifiedContent) {
     return (
       <div className="flex min-h-0 w-full max-w-none flex-1 flex-col">
@@ -420,11 +414,6 @@ async function MissionsSectionAsync({
                 remaining: energyCap.remaining,
                 planned: energyCap.planned,
               }}
-              neuroHint={
-                !allMissionsDoneToday
-                  ? [neuroLine, decisionBlocks.dataMaturityHintNl].filter(Boolean).join(" — ") || null
-                  : null
-              }
               missionsContextBelowHero={
                 <ConsequenceBanner
                   energyDepleted={(energyBudget as { consequence?: { energyDepleted?: boolean } }).consequence?.energyDepleted}
@@ -523,11 +512,6 @@ async function MissionsSectionAsync({
           remaining: energyCap.remaining,
           planned: energyCap.planned,
         }}
-        neuroHint={
-          !allMissionsDoneToday
-            ? [neuroLine, decisionBlocks.dataMaturityHintNl].filter(Boolean).join(" — ") || null
-            : null
-        }
         missionsContextBelowHero={
           <>
             <ModeBanner mode={mode} />

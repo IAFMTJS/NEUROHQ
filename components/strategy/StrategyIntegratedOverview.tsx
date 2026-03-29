@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { getStrategyIntegrationOverview } from "@/app/actions/strategy-integration";
+import type { StrategyIntegrationOverview } from "@/app/actions/strategy-integration";
 import { DOMAINS, domainLabel, type StrategyDomain } from "@/lib/strategyDomains";
 import { formatCents } from "@/lib/utils/currency";
 import { tierLabelNl } from "@/lib/growth/tier-labels";
@@ -32,13 +32,12 @@ function DomainFocusVsMissions(args: {
   );
 }
 
-export async function StrategyIntegratedOverview() {
-  let data: Awaited<ReturnType<typeof getStrategyIntegrationOverview>>;
-  try {
-    data = await getStrategyIntegrationOverview();
-  } catch {
-    return null;
-  }
+export function StrategyIntegratedOverview({
+  integrationData,
+}: {
+  integrationData: StrategyIntegrationOverview | null;
+}) {
+  const data = integrationData;
   if (!data) return null;
 
   const { week, budget, growth, strategy } = data;

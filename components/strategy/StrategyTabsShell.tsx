@@ -1,7 +1,11 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import {
+  dashboardHubTabButtonClass,
+  dashboardHubTabStripClass,
+} from "@/components/layout/dashboardHubTabStyles";
 
 export type StrategyTabId = "overview" | "focus" | "alignment" | "review";
 
@@ -19,11 +23,21 @@ type Props = {
   review: React.ReactNode;
   /** e.g. review-due banner */
   banner?: React.ReactNode;
+  /** Between tab row and panels (mascot, pace hint) — full hub layout only. */
+  belowTabsSlot?: ReactNode;
   /** Sticky tab strip inside simplified command scroll (matches budget/tasks). */
   simplifiedLayout?: boolean;
 };
 
-export function StrategyTabsShell({ overview, focusBudget, alignment, review, banner, simplifiedLayout = false }: Props) {
+export function StrategyTabsShell({
+  overview,
+  focusBudget,
+  alignment,
+  review,
+  banner,
+  belowTabsSlot,
+  simplifiedLayout = false,
+}: Props) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -55,24 +69,17 @@ export function StrategyTabsShell({ overview, focusBudget, alignment, review, ba
     router.replace(query ? `${pathname}?${query}` : pathname, { scroll: false });
   };
 
-  const dividerClass = "border-[rgba(var(--mode-rgb),0.1)]";
-
   const tabListClass = simplifiedLayout
     ? "dashboard-top-strip sticky top-0 z-20 flex flex-wrap gap-2 border-b border-[var(--card-border)]/50 bg-[var(--bg-surface)]/85 px-1 py-2 backdrop-blur-md supports-[backdrop-filter]:bg-[var(--bg-surface)]/70 sm:px-2"
-    : `flex flex-wrap items-center justify-center gap-1.5 border-b ${dividerClass} pb-3`;
-
-  const tabPillClass = (selected: boolean) =>
-    selected
-      ? "rounded-full border border-[rgba(var(--mode-rgb),0.28)] bg-[var(--bg-elevated)]/75 px-2.5 py-1.5 text-xs font-semibold text-[var(--text-primary)] sm:px-3"
-      : "rounded-full border border-transparent px-2.5 py-1.5 text-xs font-medium text-[var(--text-muted)] transition-colors hover:border-[rgba(var(--mode-rgb),0.15)] hover:bg-[var(--bg-elevated)]/45 hover:text-[var(--text-primary)] sm:px-3";
+    : dashboardHubTabStripClass();
 
   const tabBtnClass = (selected: boolean) =>
     simplifiedLayout
       ? `dashboard-mini-btn ${selected ? "dashboard-mini-btn-primary" : "dashboard-mini-btn-secondary"}`
-      : tabPillClass(selected);
+      : dashboardHubTabButtonClass(selected);
 
   return (
-    <div className={simplifiedLayout ? "flex min-h-0 flex-1 flex-col gap-0" : "space-y-5"} data-strategy-tabs>
+    <div className={simplifiedLayout ? "flex min-h-0 flex-1 flex-col gap-0" : "space-y-4"} data-strategy-tabs>
       {banner ? <div className={simplifiedLayout ? "shrink-0" : undefined}>{banner}</div> : null}
       <div role="tablist" aria-label="Strategie-secties" className={tabListClass}>
         {TABS.map((t) => {
@@ -92,6 +99,9 @@ export function StrategyTabsShell({ overview, focusBudget, alignment, review, ba
           );
         })}
       </div>
+      {!simplifiedLayout && belowTabsSlot != null ? (
+        <div className="space-y-4">{belowTabsSlot}</div>
+      ) : null}
       <div
         role="tabpanel"
         className={simplifiedLayout ? "min-h-0 flex-1 space-y-6 pb-2 pt-3" : "min-h-[120px] space-y-6"}

@@ -1,54 +1,18 @@
 import Link from "next/link";
 import { getStrategyPacingHints } from "@/app/actions/strategy-engine-pacing";
-import { formatCents } from "@/lib/utils/currency";
+import { strategyPaceHintLines, type StrategyPaceHintVariant } from "@/lib/strategy/format-strategy-pace-hints";
 
-type Variant = "budget" | "learning" | "both";
+type Variant = StrategyPaceHintVariant;
 
 /**
  * Read-only strip: compares Strategy engine quarterly targets to actuals (no writes — no conflicting data stream).
+ * On Growth, the same lines are shown inside the protocol command card instead of this block.
  */
 export async function StrategyEnginePaceHint({ variant = "both" }: { variant?: Variant }) {
   const hints = await getStrategyPacingHints();
   if (!hints) return null;
 
-  const showSave =
-    (variant === "budget" || variant === "both") &&
-    hints.savingsTargetCents != null &&
-    hints.savingsTargetCents > 0;
-  const showLearn =
-    (variant === "learning" || variant === "both") &&
-    hints.learningTargetPct != null &&
-    hints.learningTargetPct > 0;
-
-  if (!showSave && !showLearn) return null;
-
-  const saveLine =
-    showSave && hints.savedThisQuarterCents != null
-      ? `Sparen kwartaal: ${formatCents(hints.savedThisQuarterCents)} van ${formatCents(hints.savingsTargetCents!)}${
-          hints.savingsOnTrack === false
-            ? " — iets onder tempo t.o.v. het kwartaal; zie Budget."
-            : hints.savingsOnTrack === true
-              ? " — op schema richting je strategy-doel."
-              : ""
-        }`
-      : showSave
-        ? `Strategy-doel: ${formatCents(hints.savingsTargetCents!)} sparen dit kwartaal — log stortingen op Budget.`
-        : null;
-
-  const learnLine =
-    showLearn && hints.learningRoughPct != null
-      ? `Leerprogress (ruw): ~${hints.learningRoughPct}% t.o.v. ${hints.learningTargetPct}% kwartaaldoel${
-          hints.learningOnTrack === false
-            ? " — onder tempo; open Growth."
-            : hints.learningOnTrack === true
-              ? " — op schema."
-              : ""
-        }`
-      : showLearn
-        ? `Strategy-doel: ${hints.learningTargetPct}% leerprogress dit kwartaal — volg je traject op Growth.`
-        : null;
-
-  const lines = [saveLine, learnLine].filter(Boolean);
+  const lines = strategyPaceHintLines(variant, hints);
   if (lines.length === 0) return null;
 
   return (

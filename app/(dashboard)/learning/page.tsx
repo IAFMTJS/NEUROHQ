@@ -1,4 +1,3 @@
-import { Suspense } from "react";
 import { HeroMascotImage } from "@/components/HeroMascotImage";
 import { getUserPreferencesOrDefaults } from "@/app/actions/preferences";
 import { getLearningState } from "@/app/actions/learning-state";
@@ -6,9 +5,9 @@ import { getXPIdentity } from "@/app/actions/xp";
 import { getProtocolLibrary } from "@/app/actions/protocol-library";
 import { getProtocolProgressMap } from "@/app/actions/protocol-progress";
 import { getGrowthFocus } from "@/app/actions/growth-focus";
+import { getStrategyPacingHints } from "@/app/actions/strategy-engine-pacing";
 import { LearningContentClient } from "@/components/growth/LearningContentClient";
 import { GrowthPageCommandShell } from "@/components/growth/GrowthPageCommandShell";
-import { StrategyEnginePaceHint } from "@/components/strategy/StrategyEnginePaceHint";
 import { SimplifiedPageShell } from "@/components/layout/SimplifiedPageShell";
 import { SIMPLIFIED_VIEWPORT_WRAPPER } from "@/lib/simplified-page-layout";
 
@@ -20,13 +19,14 @@ export default async function LearningPage({ searchParams }: Props) {
   void searchParams;
   const today = new Date();
   const todayStr = today.toISOString().slice(0, 10);
-  const [prefs, learningState, xpIdentity, protocols, progressMap, growthFocus] = await Promise.all([
+  const [prefs, learningState, xpIdentity, protocols, progressMap, growthFocus, strategyPacingHints] = await Promise.all([
     getUserPreferencesOrDefaults(),
     getLearningState(),
     getXPIdentity(),
     getProtocolLibrary("nl"),
     getProtocolProgressMap(),
     getGrowthFocus(),
+    getStrategyPacingHints(),
   ]);
   const simplified = prefs.simplified_content === true;
   const lightUi = prefs.light_ui === true;
@@ -39,6 +39,7 @@ export default async function LearningPage({ searchParams }: Props) {
       protocols={protocols}
       progressMap={progressMap}
       growthFocus={growthFocus}
+      strategyPacingHints={strategyPacingHints}
       simplified={simplified}
       heroSlot={
         !simplified ? (
@@ -48,9 +49,6 @@ export default async function LearningPage({ searchParams }: Props) {
                 <HeroMascotImage page="learning" className="mascot-img" heroLarge />
               </div>
             </section>
-            <Suspense fallback={null}>
-              <StrategyEnginePaceHint variant="learning" />
-            </Suspense>
             <p className="text-center text-xs text-[var(--text-muted)]">
               Minder tabs, meer uitvoeren: focus op command center en je actieve leerpad.
             </p>
@@ -70,11 +68,6 @@ export default async function LearningPage({ searchParams }: Props) {
             { href: "/dashboard", label: "HQ" },
             { href: "/budget", label: "Budget" },
           ]}
-          topSlot={
-            <Suspense fallback={null}>
-              <StrategyEnginePaceHint variant="learning" />
-            </Suspense>
-          }
         >
           {learningBody}
         </SimplifiedPageShell>

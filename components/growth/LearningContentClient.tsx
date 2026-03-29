@@ -6,6 +6,7 @@ import type { LearningState } from "@/app/actions/learning-state";
 import type { ProtocolLibraryRow } from "@/app/actions/protocol-library";
 import type { ProtocolProgressState } from "@/app/actions/protocol-progress";
 import type { GrowthFocusState } from "@/app/actions/growth-focus";
+import type { StrategyPacingHints } from "@/lib/strategy/strategy-pacing-hints";
 import { GrowthIntentCard } from "@/components/growth/GrowthIntentCard";
 import { GrowthConsistencyCard } from "@/components/growth/GrowthConsistencyCard";
 import { GrowthStreamsList } from "@/components/growth/GrowthStreamsList";
@@ -41,6 +42,8 @@ type Props = {
   progressMap: Record<string, ProtocolProgressState>;
   /** Opgeslagen focus-protocol (user_preferences). */
   growthFocus: GrowthFocusState;
+  /** Read-only Strategy kwartaal-hint; wordt in de protocolkaart getoond. */
+  strategyPacingHints: StrategyPacingHints | null;
   simplified?: boolean;
   /** Full layout: content between tabs and panels (mascot, pace hint from server page). */
   heroSlot?: ReactNode;
@@ -53,6 +56,7 @@ export function LearningContentClient({
   protocols,
   progressMap,
   growthFocus,
+  strategyPacingHints,
   simplified = false,
   heroSlot,
 }: Props) {
@@ -115,6 +119,7 @@ export function LearningContentClient({
                   progressMap={progressMap}
                   engineTier={engineTier}
                   growthFocus={growthFocus}
+                  strategyPacingHints={strategyPacingHints}
                   onOpenProtocol={setViewerProtocol}
                 />
                 <GrowthBottomHubCards

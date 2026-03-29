@@ -77,8 +77,6 @@ type Props = {
   /** Missions tab: energy bar + full-width hero task + compact grid; details on tap. */
   missionsHeroLayout?: boolean;
   energyCap?: { used: number; cap: number; remaining: number; planned: number } | null;
-  /** Optional one-liner under the hero (e.g. neuro hint from server). */
-  neuroHint?: string | null;
   /** Mode / consequence bars (e.g. druk, recovery) — shown under main task + energy when missionsHeroLayout. */
   missionsContextBelowHero?: ReactNode;
 };
@@ -154,7 +152,6 @@ export function TaskList({
   neuroSelfReportOptIn = false,
   missionsHeroLayout = false,
   energyCap = null,
-  neuroHint = null,
   missionsContextBelowHero = null,
 }: Props) {
   const router = useRouter();
@@ -1146,8 +1143,10 @@ export function TaskList({
                       <span className="font-medium">{formatMissionTimeFrame(heroMissionTask)}</span>
                     </span>
                   </div>
-                  {neuroHint && (
-                    <p className="mt-2 text-xs leading-relaxed text-[var(--text-secondary)]">{neuroHint}</p>
+                  {heroMissionTask.notes?.trim() && (
+                    <p className="mt-2 whitespace-pre-wrap text-xs leading-relaxed text-[var(--text-secondary)]">
+                      {heroMissionTask.notes.trim()}
+                    </p>
                   )}
                   <div className="mt-4">
                     <button

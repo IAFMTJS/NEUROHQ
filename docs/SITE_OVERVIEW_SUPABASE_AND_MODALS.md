@@ -106,7 +106,7 @@ So dashboard data is loaded **twice** (server + client).
 ### 2.7 API routes
 
 - **`/api/dashboard/data`** – `getDashboardPayload()` (as above).
-- **Cron routes** (e.g. daily, weekly, quarterly, evening) – users, tasks, budget_entries, user_streak, etc., depending on cron.
+- **Cron routes** (e.g. daily, hourly, weekly, quarterly, strategy-growth) – users, tasks, budget_entries, user_streak, etc., depending on cron.
 
 ---
 

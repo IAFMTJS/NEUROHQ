@@ -283,7 +283,7 @@ BUDGET/STRATEGY/XP/ANALYTICS:
 CRON/JOBS:
 - /api/cron/hourly
 - /api/cron/daily
-- /api/cron/evening
+- (removed) /api/cron/evening — wind-down push was merged into hourly evening window behaviour where applicable
 - /api/cron/weekly
 - /api/cron/quarterly
 

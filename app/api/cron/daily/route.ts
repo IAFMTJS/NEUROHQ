@@ -1,28 +1,18 @@
 import { NextResponse } from "next/server";
-import { getDayOfYear } from "date-fns";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { sendPushToUser } from "@/lib/push";
 import { getLocalDateHour, isInQuietHours } from "@/lib/utils/timezone";
 import { isHighSensoryDayForUser } from "@/lib/mode-admin";
-import { xpToNextLevel } from "@/lib/xp";
-import { buildBehavioralNotificationForContext } from "@/lib/behavioral-notifications";
-import {
-  loadUserNotificationContextForUser,
-  canSendBehavioralNotification,
-  markBehavioralNotificationSent,
-  getReengagementSendsInLast7Days,
-} from "@/lib/behavioral-notification-server";
+import { loadUserNotificationContextForUser } from "@/lib/behavioral-notification-server";
 import { runDailyHobbyCommitmentDecay } from "@/app/actions/hobby-commitment-decay";
-import { getQuoteByDayNumber, prepareQuoteForPersonalityPush } from "@/lib/quotes";
 import { applyPersonalityToPayload } from "@/lib/push-personality";
-import { PushCopyDedupe, parsePushCopyHistory } from "@/lib/push-copy-dedupe";
 import { evaluateAcceptanceRulesForUser } from "@/lib/acceptance-rules-evaluator";
 import { runReleaseNotesPush } from "@/lib/release-notes-push";
 
 /**
- * Vercel Cron: runs daily at 00:00 UTC.
- * - Task rollover + quote: only for users with no timezone (UTC users). Users with timezone get rollover/quote from hourly cron.
- * - Avoidance alert: for all users.
+ * Daily at 00:00 UTC (GitHub): avoidance push (high carry-over), hobby decay, acceptance rules, release notes.
+ * Task rollover, daily quote, brain-status reminder, morning pushes, evening, and behavioral achievement-style
+ * pushes run in /api/cron/hourly (all users, including no timezone = UTC clock).
  */
 export async function GET(request: Request) {
   const authHeader = request.headers.get("authorization");
@@ -37,36 +27,8 @@ export async function GET(request: Request) {
 
   const supabase = createAdminClient();
   const today = new Date();
-  const yesterday = new Date(today);
-  yesterday.setUTCDate(yesterday.getUTCDate() - 1);
-  const yesterdayStr = yesterday.toISOString().slice(0, 10);
   const todayStr = today.toISOString().slice(0, 10);
-
-  let usersUtcQuery = supabase.from("users").select("id").is("timezone", null);
-  if (userIdFilter) usersUtcQuery = usersUtcQuery.eq("id", userIdFilter);
-  const { data: usersUtc } = await usersUtcQuery;
-  const usersForRollover = usersUtc ?? [];
-
-  let totalRolled = 0;
-  for (const { id: userId } of usersForRollover) {
-    const { data: tasks } = await supabase
-      .from("tasks")
-      .select("id, carry_over_count")
-      .eq("user_id", userId)
-      .eq("due_date", yesterdayStr)
-      .eq("completed", false);
-
-    for (const t of tasks ?? []) {
-      const { error } = await supabase
-        .from("tasks")
-        .update({
-          due_date: todayStr,
-          carry_over_count: (t.carry_over_count ?? 0) + 1,
-        })
-        .eq("id", t.id);
-      if (!error) totalRolled++;
-    }
-  }
+  const utcHour = today.getUTCHours();
 
   let usersAllQuery = supabase
     .from("users")
@@ -88,73 +50,9 @@ export async function GET(request: Request) {
       },
     ])
   );
-  let pushSent = 0;
+
   let avoidanceSent = 0;
-  let reEngagementSent = 0;
-  let streakGrowthSent = 0;
-  let streakProtectionSent = 0;
-  let highMomentumSent = 0;
-  let hobbyDecayUsers = 0;
   if (process.env.VAPID_PRIVATE_KEY && process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY) {
-    const dayOfYear = Math.max(1, Math.min(365, getDayOfYear(today)));
-    const quoteRow = getQuoteByDayNumber(dayOfYear);
-    const { quoteText, author: quoteAuthor, combinedBody } = prepareQuoteForPersonalityPush(quoteRow);
-    const utcHour = today.getUTCHours();
-    let pushUsersQuery = supabase
-      .from("users")
-      .select("id, push_quiet_hours_start, push_quiet_hours_end")
-      .is("timezone", null)
-      .not("push_subscription_json", "is", null)
-      .or("push_quote_enabled.is.null,push_quote_enabled.eq.true");
-    if (userIdFilter) pushUsersQuery = pushUsersQuery.eq("id", userIdFilter);
-    const { data: pushUsers } = await pushUsersQuery;
-
-    for (const u of pushUsers ?? []) {
-      const quietStart = u.push_quiet_hours_start ? String(u.push_quiet_hours_start).slice(0, 5) : null;
-      const quietEnd = u.push_quiet_hours_end ? String(u.push_quiet_hours_end).slice(0, 5) : null;
-      if (isInQuietHours(utcHour, quietStart, quietEnd)) continue;
-
-      // HIGH_SENSORY: skip non-critical quote push on high sensory days
-      const highSensory = await isHighSensoryDayForUser(supabase, u.id, todayStr);
-      if (highSensory) continue;
-
-      try {
-        const ctx = await loadUserNotificationContextForUser(supabase, u.id);
-        const { data: prefRow } = await supabase
-          .from("user_preferences")
-          .select("push_copy_history")
-          .eq("user_id", u.id)
-          .maybeSingle();
-        const pushDedupe = new PushCopyDedupe(
-          todayStr,
-          parsePushCopyHistory((prefRow as { push_copy_history?: unknown } | null)?.push_copy_history),
-          7
-        );
-        const basePayload = {
-          title: "NEUROHQ",
-          body: combinedBody,
-          tag: "daily-quote",
-          url: "/dashboard",
-          priority: "low" as const,
-          quoteText,
-          quoteAuthor,
-        };
-        const payload = applyPersonalityToPayload(basePayload, ctx.personalityMode, "quote", `${u.id}:${todayStr}`, {
-          dedupe: pushDedupe,
-        });
-        const ok = await sendPushToUser(supabase, u.id, payload);
-        if (ok) {
-          pushSent++;
-          if (pushDedupe.dirty) {
-            await supabase.from("user_preferences").update({ push_copy_history: pushDedupe.getHistory() }).eq("user_id", u.id);
-          }
-        }
-      } catch {
-        // skip
-      }
-    }
-
-    // Avoidance alert: users with carry_over >= 3 on today's incomplete tasks
     for (const { id: uid } of users) {
       const meta = userMetaById.get(uid);
       const local = meta?.timezone ? getLocalDateHour(meta.timezone) : { date: todayStr, hour: utcHour };
@@ -182,6 +80,8 @@ export async function GET(request: Request) {
             "avoidance_alert",
             `${uid}:${local.date}`
           );
+          const highSensory = await isHighSensoryDayForUser(supabase, uid, local.date);
+          if (highSensory) continue;
           const ok = await sendPushToUser(supabase, uid, payload);
           if (ok) avoidanceSent++;
         } catch {
@@ -189,201 +89,9 @@ export async function GET(request: Request) {
         }
       }
     }
-
-    // Re-engagement / inactivity recovery: gedrag-gestuurd (Minimal Integrity / Recovery / dichtbij level‑up)
-    const { data: streakRows } = await supabase
-      .from("user_streak")
-      .select("user_id, current_streak, longest_streak, last_completion_date");
-
-    let pushUserRowsQuery = supabase
-      .from("users")
-      .select("id")
-      .not("push_subscription_json", "is", null);
-    if (userIdFilter) pushUserRowsQuery = pushUserRowsQuery.eq("id", userIdFilter);
-    const { data: pushUserRows } = await pushUserRowsQuery;
-
-    const pushSet = new Set((pushUserRows ?? []).map((r) => (r as { id: string }).id));
-
-    const candidateIds = Array.from(
-      new Set(
-        (streakRows ?? [])
-          .map((r) => (r as { user_id: string }).user_id)
-          .filter((id) => pushSet.has(id))
-      )
-    );
-
-    const xpByUser = new Map<string, number>();
-    if (candidateIds.length > 0) {
-      const { data: xpRows } = await supabase
-        .from("user_xp")
-        .select("user_id, total_xp")
-        .in("user_id", candidateIds);
-      for (const r of xpRows ?? []) {
-        xpByUser.set(
-          (r as { user_id: string }).user_id,
-          ((r as { total_xp?: number | null }).total_xp ?? 0)
-        );
-      }
-    }
-
-    // Momentum / high productivity: missions_completed yesterday per user.
-    const missionsByUser = new Map<string, number>();
-    const { data: analyticsRows } = await supabase
-      .from("user_analytics_daily")
-      .select("user_id, missions_completed")
-      .eq("date", yesterdayStr);
-    for (const row of analyticsRows ?? []) {
-      const uid = (row as { user_id: string }).user_id;
-      const missions = (row as { missions_completed?: number | null }).missions_completed ?? 0;
-      if (missions > 0) missionsByUser.set(uid, missions);
-    }
-
-    for (const row of streakRows ?? []) {
-      const userId = (row as { user_id: string }).user_id;
-      if (!pushSet.has(userId)) continue;
-      const meta = userMetaById.get(userId);
-      const local = meta?.timezone ? getLocalDateHour(meta.timezone) : { date: todayStr, hour: utcHour };
-      if (isInQuietHours(local.hour, meta?.quietStart ?? null, meta?.quietEnd ?? null)) continue;
-
-      const last = (row as { last_completion_date?: string | null }).last_completion_date;
-      if (!last) continue;
-
-      const lastDate = new Date(last);
-      const daysInactive = Math.floor(
-        (today.getTime() - lastDate.getTime()) / (24 * 60 * 60 * 1000)
-      );
-
-      const totalXp = xpByUser.get(userId) ?? 0;
-      const xpGap = xpToNextLevel(totalXp);
-      const currentStreak =
-        (row as { current_streak?: number | null }).current_streak ?? 0;
-      const longestStreak =
-        (row as { longest_streak?: number | null }).longest_streak ?? 0;
-
-      try {
-        const ctx = await loadUserNotificationContextForUser(supabase, userId, { dateStr: todayStr });
-
-        // 1) Inactivity / recovery window (re-engagement) — max 2 per week (backoff).
-        if (daysInactive >= 1) {
-          const reengagementSendsLast7d = await getReengagementSendsInLast7Days(supabase, userId);
-          if (reengagementSendsLast7d >= 2) {
-            // Skip this user's re-engagement this run.
-          } else {
-            const triggerKey: "inactivity_24h" | "inactivity_3d" | "inactivity_7d" | "inactivity_14d" =
-              daysInactive >= 14
-                ? "inactivity_14d"
-                : daysInactive >= 7
-                  ? "inactivity_7d"
-                  : daysInactive >= 3
-                    ? "inactivity_3d"
-                    : "inactivity_24h";
-
-            const { canSend } = await canSendBehavioralNotification(
-              supabase,
-              userId,
-              triggerKey,
-              today
-            );
-            if (canSend) {
-              const reengage = buildBehavioralNotificationForContext(ctx, {
-                type: "inactivity_window",
-                daysInactive,
-              });
-              if (reengage) {
-                const ok = await sendPushToUser(supabase, userId, reengage.payload);
-                if (ok) {
-                  await markBehavioralNotificationSent(supabase, userId, triggerKey);
-                  reEngagementSent++;
-                }
-              }
-            }
-          }
-        }
-
-        // 2) Streak growth celebration (when current_streak reaches longest_streak)
-        if (currentStreak > 0 && currentStreak >= longestStreak) {
-          const streakGrowth = buildBehavioralNotificationForContext(ctx, {
-            type: "streak_growth",
-            newStreak: currentStreak,
-          });
-          if (streakGrowth) {
-            const { canSend } = await canSendBehavioralNotification(
-              supabase,
-              userId,
-              streakGrowth.trigger,
-              today
-            );
-            if (canSend) {
-              const ok = await sendPushToUser(supabase, userId, streakGrowth.payload);
-              if (ok) {
-                await markBehavioralNotificationSent(supabase, userId, streakGrowth.trigger);
-                streakGrowthSent++;
-              }
-            }
-          }
-        }
-
-        // 3) Streak protection: active streak + early inactivity window.
-        if (currentStreak > 0 && daysInactive >= 1 && daysInactive <= 2) {
-          const { canSend } = await canSendBehavioralNotification(
-            supabase,
-            userId,
-            "streak_protection",
-            today
-          );
-          if (canSend) {
-            const protection = buildBehavioralNotificationForContext(ctx, {
-              type: "streak_risk",
-              currentStreak,
-            });
-            if (protection) {
-              const ok = await sendPushToUser(supabase, userId, protection.payload);
-              if (ok) {
-                await markBehavioralNotificationSent(supabase, userId, "streak_protection");
-                streakProtectionSent++;
-              }
-            }
-          }
-        }
-
-        // 4) Momentum / high productivity: multiple missions completed yesterday.
-        const missionsYesterday = missionsByUser.get(userId) ?? 0;
-        if (missionsYesterday >= 3) {
-          const momentumEvent =
-            missionsYesterday >= 5
-              ? ({
-                  type: "productivity_session",
-                  actionsInWindow: missionsYesterday,
-                  windowMinutes: 30,
-                } as const)
-              : ({
-                  type: "mission_completed",
-                  missionsInWindow: missionsYesterday,
-                  windowMinutes: 45,
-                } as const);
-          const momentumResult = buildBehavioralNotificationForContext(ctx, momentumEvent);
-          if (momentumResult) {
-            const { canSend } = await canSendBehavioralNotification(
-              supabase,
-              userId,
-              momentumResult.trigger,
-              today
-            );
-            if (canSend) {
-              const ok = await sendPushToUser(supabase, userId, momentumResult.payload);
-              if (ok) {
-                await markBehavioralNotificationSent(supabase, userId, momentumResult.trigger);
-                highMomentumSent++;
-              }
-            }
-          }
-        }
-      } catch {
-        // skip
-      }
-    }
   }
 
+  let hobbyDecayUsers = 0;
   try {
     const result = await runDailyHobbyCommitmentDecay();
     hobbyDecayUsers = result.usersUpdated;
@@ -418,23 +126,14 @@ export async function GET(request: Request) {
   return NextResponse.json({
     ok: true,
     job: "daily",
-    rolled: totalRolled,
-    usersUtc: usersForRollover.length,
     users: users.length,
     ...(userIdFilter && { userId: userIdFilter }),
-    pushSent,
-    freezeReminderSent: 0,
     avoidanceSent,
-    reEngagementSent,
-    streakGrowthSent,
-    streakProtectionSent,
-    highMomentumSent,
     hobbyDecayUsers,
     acceptanceRulesUsers,
     acceptanceGatesOpened,
     releaseNotesSent,
     ...(releaseNotesSkip && { releaseNotesSkip }),
-    from: yesterdayStr,
-    to: todayStr,
+    date: todayStr,
   });
 }

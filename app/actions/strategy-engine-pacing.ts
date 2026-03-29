@@ -8,21 +8,12 @@ import { getProtocolLibrary } from "@/app/actions/protocol-library";
 import { progressKey, resolveFocusProtocol } from "@/lib/growth/resolve-focus-protocol";
 import { calendarQuarterBounds } from "@/lib/strategy/engine-params";
 import { todayDateString } from "@/lib/utils/timezone";
+import type { StrategyPacingHints } from "@/lib/strategy/strategy-pacing-hints";
+
+export type { StrategyPacingHints } from "@/lib/strategy/strategy-pacing-hints";
 
 /** Rough week count for progress % when definition total weeks unavailable. */
 const ASSUMED_PROTOCOL_WEEKS = 12;
-
-export type StrategyPacingHints = {
-  /** Elapsed fraction of current calendar quarter (0–1). */
-  quarterElapsedFrac: number;
-  savingsTargetCents: number | null;
-  savedThisQuarterCents: number | null;
-  /** null = unknown / no target */
-  savingsOnTrack: boolean | null;
-  learningTargetPct: number | null;
-  learningRoughPct: number | null;
-  learningOnTrack: boolean | null;
-};
 
 function quarterElapsedFraction(todayStr: string, start: string, end: string): number {
   const startMs = new Date(start + "T12:00:00Z").getTime();

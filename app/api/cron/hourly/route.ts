@@ -13,9 +13,6 @@ import { isHighSensoryDayForUser } from "@/lib/mode-admin";
 import { getQuoteByDayNumber, prepareQuoteForPersonalityPush } from "@/lib/quotes";
 import { isAppEmailConfigured, sendReminderToUser } from "@/lib/email";
 import {
-  getMorningEmailData,
-  buildMorningEmailHtml,
-  buildMorningPushPayload,
   getEveningEmailData,
   buildEveningEmailHtml,
   buildEveningPushPayload,
@@ -37,20 +34,124 @@ import { dispatchPendingUserAlertPushes } from "@/lib/pending-alerts-push";
 /**
  * Hourly scheduler: on Vercel Hobby, invoke via GitHub Actions (`.github/workflows/cron-hourly.yml`), not `vercel.json`
  * (Hobby allows at most one run per day per cron path). The route is unchanged; only the trigger moves off Vercel.
- * For users with timezone set:
- * - 00:00 local: task rollover only.
- * - 08:00 local: daily quote push + morning calendar heads-up.
- * - 09:00 local: morning email (quote, brain state reminder, today’s tasks & calendar) if email_reminders_enabled.
- * - 20:00 local: evening email (check-in: tasks done, expenses logged, brain status) if email_reminders_enabled.
- * Users without timezone: local date/hour use UTC; quote dedupe uses UTC midnight; they should set timezone (see TimezoneSyncBanner).
+ * All users are included; if `timezone` is null, local date/hour use UTC (quote, rollover, brain window, evening).
+ * - 00:00 local: task rollover.
+ * - From quote hour (default 08:00): daily quote push (catch-up same local day); 08:00: calendar heads-up for today.
+ * - 20:00 local: evening email if email_reminders_enabled; 20:00–23:59: evening push + achievement loop.
+ * - 08:00–12:59 local: brain-status missing push (first eligible hour ≥ 08, outside quiet hours, max once/day).
+ *
+ * Still invoked every UTC hour (GitHub Actions) so each timezone can hit local midnight for rollover.
+ * When no user is in a “heavy job” local window, we skip rollover/quote/brain/evening work and only run
+ * the sliding calendar reminder + pending user alerts — less CPU per invocation.
  */
-const ALLOWED_FORCE_HOURS = [0, 8, 9, 11, 20] as const;
+const ALLOWED_FORCE_HOURS = [0, 8, 10, 11, 12, 20] as const;
 
 /** Default local hour for daily quote push (08:00). */
 const DEFAULT_QUOTE_HOUR = 8;
 
+/** Earliest local hour for the “brain status not logged” push; quiet hours can defer it later the same day. */
+const BRAIN_STATUS_REMINDER_MIN_LOCAL_HOUR = 8;
+/** Latest local hour we still attempt that reminder (inclusive). Morning-only window. */
+const BRAIN_STATUS_REMINDER_MAX_LOCAL_HOUR = 12;
+
 /** Look for calendar events starting in the next 0–60 minutes so hourly cron can send one reminder per user. */
 const CALENDAR_REMINDER_WINDOW_MINUTES = 60;
+
+type HourlyUserRow = {
+  id: string;
+  timezone: string | null;
+  last_rollover_date?: string | null;
+  push_quiet_hours_start?: string | null;
+  push_quiet_hours_end?: string | null;
+  push_quote_enabled?: boolean | null;
+  push_quote_time?: string | null;
+  push_subscription_json?: unknown;
+};
+
+function getQuoteHourForUser(u: HourlyUserRow): number {
+  const quoteTimeStr = u.push_quote_time;
+  if (quoteTimeStr && /^\d{1,2}:\d{2}/.test(quoteTimeStr)) {
+    return parseInt(quoteTimeStr.slice(0, quoteTimeStr.indexOf(":")), 10);
+  }
+  return DEFAULT_QUOTE_HOUR;
+}
+
+/**
+ * True if this user might need rollover / quote / brain / evening / morning calendar heads-up this run.
+ * When false for every user, we only run the sliding calendar window + pending alerts (cheaper).
+ * Conservative (does not query DB for “already sent today”) so we never skip needed work.
+ */
+function userNeedsFullHourlyCycle(
+  u: HourlyUserRow,
+  hour: number,
+  todayStr: string,
+  localMinute: number,
+  userPrefs: {
+    emailRemindersEnabled: boolean;
+    pushRemindersEnabled: boolean;
+    pushMorningEnabled: boolean;
+    pushEveningEnabled: boolean;
+  },
+  quietStart: string | null,
+  quietEnd: string | null
+): boolean {
+  if (hour === 0 && u.last_rollover_date !== todayStr) {
+    return true;
+  }
+
+  const inQuiet = isInQuietHours(hour, quietStart, quietEnd, localMinute);
+  const quoteHour = getQuoteHourForUser(u);
+  const pushQuoteEnabled = u.push_quote_enabled !== false;
+  const hasPushSub = !!(u as { push_subscription_json?: unknown }).push_subscription_json;
+  const vapidOk = !!(process.env.VAPID_PRIVATE_KEY && process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY);
+
+  if (
+    vapidOk &&
+    userPrefs.pushRemindersEnabled &&
+    pushQuoteEnabled &&
+    hour >= quoteHour &&
+    !inQuiet
+  ) {
+    return true;
+  }
+
+  if (
+    vapidOk &&
+    userPrefs.pushRemindersEnabled &&
+    hasPushSub &&
+    hour === DEFAULT_QUOTE_HOUR &&
+    !inQuiet
+  ) {
+    return true;
+  }
+
+  if (
+    vapidOk &&
+    userPrefs.pushRemindersEnabled &&
+    hour >= BRAIN_STATUS_REMINDER_MIN_LOCAL_HOUR &&
+    hour <= BRAIN_STATUS_REMINDER_MAX_LOCAL_HOUR &&
+    !inQuiet
+  ) {
+    return true;
+  }
+
+  if (hour === 20 && userPrefs.emailRemindersEnabled && isAppEmailConfigured()) {
+    return true;
+  }
+
+  if (
+    vapidOk &&
+    hour >= 20 &&
+    hour <= 23 &&
+    userPrefs.pushRemindersEnabled &&
+    userPrefs.pushEveningEnabled &&
+    !inQuiet
+  ) {
+    return true;
+  }
+
+  return false;
+}
 
 function getWeekStartUtc(dateStr: string): string {
   const d = new Date(`${dateStr}T12:00:00Z`);
@@ -250,8 +351,7 @@ export async function GET(request: Request) {
   const supabase = createAdminClient();
   let usersQuery = supabase
     .from("users")
-    .select("id, timezone, last_rollover_date, push_quiet_hours_start, push_quiet_hours_end, push_quote_enabled, push_quote_time, push_subscription_json")
-    .not("timezone", "is", null);
+    .select("id, timezone, last_rollover_date, push_quiet_hours_start, push_quiet_hours_end, push_quote_enabled, push_quote_time, push_subscription_json");
   if (userIdFilter) usersQuery = usersQuery.eq("id", userIdFilter);
   const { data: users } = await usersQuery;
   /** Aligns with `saveDailyState` / dashboard (`todayDateString`, Europe/Amsterdam). User-local `todayStr` can differ near timezone boundaries. */
@@ -300,6 +400,41 @@ export async function GET(request: Request) {
   let calendarReminderSent = 0;
   let achievementPushSent = 0;
 
+  const defaultUserPrefsForCycle = {
+    emailRemindersEnabled: true,
+    pushRemindersEnabled: true,
+    pushMorningEnabled: true,
+    pushEveningEnabled: true,
+  };
+  const nowForFullCycle = new Date();
+  const runFullCycle =
+    forceHour !== undefined ||
+    userIdFilter != null ||
+    (users ?? []).some((u) => {
+      const tzRaw = (u.timezone as string | null) ?? null;
+      const tz = tzRaw && tzRaw.trim() ? tzRaw : null;
+      const localNow = tz
+        ? getLocalDateTimeParts(tz, nowForFullCycle)
+        : {
+            date: nowForFullCycle.toISOString().slice(0, 10),
+            hour: nowForFullCycle.getUTCHours(),
+            minute: nowForFullCycle.getUTCMinutes(),
+          };
+      const h = forceHour !== undefined ? forceHour : localNow.hour;
+      const p = prefsByUser.get(u.id) ?? defaultUserPrefsForCycle;
+      const quietStart = u.push_quiet_hours_start ? String(u.push_quiet_hours_start).slice(0, 5) : null;
+      const quietEnd = u.push_quiet_hours_end ? String(u.push_quiet_hours_end).slice(0, 5) : null;
+      return userNeedsFullHourlyCycle(
+        u as HourlyUserRow,
+        h,
+        localNow.date,
+        localNow.minute,
+        p,
+        quietStart,
+        quietEnd
+      );
+    });
+
   for (const u of users ?? []) {
     const tzRaw = (u.timezone as string | null) ?? null;
     const tz = tzRaw && tzRaw.trim() ? tzRaw : null;
@@ -321,6 +456,7 @@ export async function GET(request: Request) {
 
     const pushDedupe = new PushCopyDedupe(todayStr, parsePushCopyHistory(pushCopyHistoryByUser.get(u.id)), 7);
 
+    if (runFullCycle) {
     if (hour === 0 && u.last_rollover_date !== todayStr) {
       const yesterdayStr = yesterdayDate(todayStr);
       const { data: tasks } = await supabase
@@ -348,11 +484,7 @@ export async function GET(request: Request) {
     }
 
     // Daily quote at 08:00 local (or user's push_quote_time hour if set)
-    const quoteTimeStr = (u as { push_quote_time?: string | null }).push_quote_time;
-    const quoteHour =
-      quoteTimeStr && /^\d{1,2}:\d{2}/.test(quoteTimeStr)
-        ? parseInt(quoteTimeStr.slice(0, quoteTimeStr.indexOf(":")), 10)
-        : DEFAULT_QUOTE_HOUR;
+    const quoteHour = getQuoteHourForUser(u as HourlyUserRow);
 
     // Catch-up rule: if cron/app was down at the intended hour, still send later the same
     // local day as soon as we notice (hour >= quoteHour), but never more than once per day.
@@ -457,6 +589,7 @@ export async function GET(request: Request) {
         // skip
       }
     }
+    }
 
     // Calendar reminder: events starting in the next CALENDAR_REMINDER_WINDOW_MINUTES
     if (
@@ -506,26 +639,12 @@ export async function GET(request: Request) {
       }
     }
 
-    if (hour === 9 && userPrefs.emailRemindersEnabled && isAppEmailConfigured()) {
-      const highSensory = await isHighSensoryDayForUser(supabase, u.id, todayStr);
-      if (!highSensory) {
-        try {
-          const currentUserId = u.id;
-          const data = await getMorningEmailData(supabase, currentUserId, todayStr, appToday);
-          const html = buildMorningEmailHtml(data);
-          const sent = await sendReminderToUser(supabase, currentUserId, {
-            subject: "NEUROHQ — Good morning",
-            html,
-          });
-          if (sent) morningEmailSent++;
-        } catch {
-          // skip
-        }
-      }
-    }
-    // Brain status reminder: if brain status not set by ~11:00 local time.
+    if (runFullCycle) {
+    // Brain status reminder: not before 08:00 local; respect quiet hours (try again a later hour);
+    // at most one `brain_status_reminder` push per local calendar day.
     if (
-      hour === 11 &&
+      hour >= BRAIN_STATUS_REMINDER_MIN_LOCAL_HOUR &&
+      hour <= BRAIN_STATUS_REMINDER_MAX_LOCAL_HOUR &&
       userPrefs.pushRemindersEnabled &&
       process.env.VAPID_PRIVATE_KEY &&
       process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY &&
@@ -534,69 +653,47 @@ export async function GET(request: Request) {
       const highSensory = await isHighSensoryDayForUser(supabase, u.id as string, todayStr);
       if (!highSensory) {
         try {
-          const { data: dailyState } = await supabase
-            .from("daily_state")
-            .select("energy, focus")
-            .eq("user_id", u.id as string)
-            .eq("date", appToday)
-            .maybeSingle();
-          const brainStatusDone = !!(
-            dailyState && (dailyState.energy != null || dailyState.focus != null)
+          const alreadySentBrainStatusReminder = await hasSentTriggerToday(
+            supabase,
+            u.id as string,
+            "brain_status_reminder",
+            tz,
+            todayStr
           );
-          if (!brainStatusDone) {
-            const { canSend } = await canSendBehavioralNotification(
-              supabase,
-              u.id as string,
-              "brain_status_reminder",
-              new Date()
+          if (!alreadySentBrainStatusReminder) {
+            const { data: dailyState } = await supabase
+              .from("daily_state")
+              .select("energy, focus")
+              .eq("user_id", u.id as string)
+              .eq("date", appToday)
+              .maybeSingle();
+            const brainStatusDone = !!(
+              dailyState && (dailyState.energy != null || dailyState.focus != null)
             );
-            if (canSend) {
-              const ctx = await loadUserNotificationContextForUser(supabase, u.id as string, {
-                dateStr: todayStr,
-                dailyStateDate: appToday,
-              });
-              const result = buildBehavioralNotificationForContext(ctx, {
-                type: "brain_status_missing",
-              });
-              if (result) {
-                const ok = await sendPushToUser(supabase, u.id as string, result.payload);
-                if (ok) {
-                  await markBehavioralNotificationSent(supabase, u.id as string, "brain_status_reminder");
-                  brainStatusRemindersSent++;
+            if (!brainStatusDone) {
+              const { canSend } = await canSendBehavioralNotification(
+                supabase,
+                u.id as string,
+                "brain_status_reminder",
+                new Date()
+              );
+              if (canSend) {
+                const ctx = await loadUserNotificationContextForUser(supabase, u.id as string, {
+                  dateStr: todayStr,
+                  dailyStateDate: appToday,
+                });
+                const result = buildBehavioralNotificationForContext(ctx, {
+                  type: "brain_status_missing",
+                });
+                if (result) {
+                  const ok = await sendPushToUser(supabase, u.id as string, result.payload);
+                  if (ok) {
+                    await markBehavioralNotificationSent(supabase, u.id as string, "brain_status_reminder");
+                    brainStatusRemindersSent++;
+                  }
                 }
               }
             }
-          }
-        } catch {
-          // skip
-        }
-      }
-    }
-    if (
-      hour >= 9 &&
-      hour < 13 &&
-      userPrefs.pushRemindersEnabled &&
-      userPrefs.pushMorningEnabled &&
-      process.env.VAPID_PRIVATE_KEY &&
-      process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY &&
-      !isInQuietHours(hour, quietStart, quietEnd, localNow.minute)
-    ) {
-      const highSensory = await isHighSensoryDayForUser(supabase, u.id, todayStr);
-      if (!highSensory) {
-        try {
-          const alreadySentMorning = await hasSentTriggerToday(supabase, u.id, "morning-reminder", tz, todayStr);
-          if (!alreadySentMorning) {
-            const data = await getMorningEmailData(supabase, u.id, todayStr);
-            const basePayload = buildMorningPushPayload(data);
-            const payload = applyPersonalityToPayload(
-              basePayload,
-              userPrefs.personalityMode,
-              "morning",
-              `${u.id}:${todayStr}`,
-              { dedupe: pushDedupe }
-            );
-            const sent = await sendPushToUser(supabase, u.id, payload);
-            if (sent) morningPushSent++;
           }
         } catch {
           // skip
@@ -801,6 +898,7 @@ export async function GET(request: Request) {
         }
       }
     }
+    }
 
     if (pushDedupe.dirty) {
       await supabase.from("user_preferences").update({ push_copy_history: pushDedupe.getHistory() }).eq("user_id", u.id);
@@ -821,14 +919,13 @@ export async function GET(request: Request) {
     ...(userIdFilter && { userId: userIdFilter }),
     rolled,
     quoteSent,
-    morningEmailSent,
     eveningEmailSent,
-    morningPushSent,
     eveningPushSent,
     brainStatusRemindersSent,
     calendarReminderSent,
     achievementPushSent,
     alertPushSent,
     usersChecked: users?.length ?? 0,
+    runFullCycle,
   });
 }
