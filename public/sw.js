@@ -1,9 +1,9 @@
 // NEUROHQ Service Worker – offline-first PWA (hele site)
 // Wat blijft staan op het apparaat (zodat minder opnieuw geladen hoeft):
 // - STATIC_CACHE (install): /offline, manifest, app-icon, core HUD visuals
-// - DYNAMIC_CACHE (per dag): HTML/API vallen terug op cache als offline; assets kunnen direct uit cache laden
+// - DYNAMIC_CACHE (per dag): HTML/API offline fallback; _next/static JS/CSS = network-first, daarna cache voor offline
 // - IndexedDB (neurohq-offline): offline mutaties (POST/PUT etc.) → gesynchroniseerd zodra er weer netwerk is
-const CACHE_VERSION = "v14";
+const CACHE_VERSION = "v15";
 const STATIC_CACHE = `neurohq-static-${CACHE_VERSION}`;
 const OFFLINE_PAGE = "/offline";
 
@@ -337,7 +337,7 @@ self.addEventListener("activate", function (event) {
   );
 });
 
-// Fetch: network-first for JS/CSS (voorkomt unstyled page op mobile door oude/corrupte cache), cache fallback alleen offline
+// Fetch: Next.js bundles = network-first so deploys show new CSS/JS immediately; cache only for offline replay
 self.addEventListener("fetch", function (event) {
   const url = new URL(event.request.url);
 
@@ -346,28 +346,22 @@ self.addEventListener("fetch", function (event) {
     return;
   }
 
-  // JS/CSS: cache-first for today – serve from cache immediately on reopen, revalidate in background
+  // JS/CSS (_next/static): network-first — stale cache was making Light UI / global style updates invisible after ship
   if (url.pathname.startsWith("/_next/static/") && (url.pathname.endsWith(".js") || url.pathname.endsWith(".css"))) {
     safeRespondWith(event, function () {
       return caches.open(getDynamicCacheName()).then(function (cache) {
-        return cache.match(event.request).then(function (cached) {
-          var revalidate = fetch(event.request).then(function (response) {
+        return fetch(event.request)
+          .then(function (response) {
             if (response.ok && event.request.method === "GET") {
-              var clone = response.clone();
-              safeCachePut(cache, event.request, clone);
+              safeCachePut(cache, event.request, response.clone());
             }
             return response;
-          });
-          if (cached) {
-            revalidate.catch(function () {});
-            return cached;
-          }
-          return revalidate.catch(function () {
+          })
+          .catch(function () {
             return cache.match(event.request).then(function (c) {
               return c || new Response("Offline", { status: 503 });
             });
           });
-        });
       });
     });
     return;

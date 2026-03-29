@@ -22,7 +22,7 @@ import { getAdaptiveSuggestions } from "@/app/actions/adaptive";
 import { yesterdayDate, getDayOfYearFromDateString, todayDateString } from "@/lib/utils/timezone";
 import { getWeekBounds } from "@/lib/utils/learning";
 import {
-  scale1To10ToPct,
+  brainCirclePcts,
   defaultTimeWindow,
   defaultInsight,
   defaultSuggestion,
@@ -193,9 +193,7 @@ async function buildCriticalPayload(ctx: TodayContext): Promise<DashboardCritica
   );
   const budgetRemainingCents =
     budgetSettings.monthly_budget_cents != null ? spendableCents - currentMonthExpenses : null;
-  const energyPct = scale1To10ToPct(state?.energy ?? null);
-  const focusPct = scale1To10ToPct(state?.focus ?? null);
-  const loadPct = scale1To10ToPct(state?.sensory_load ?? null);
+  const { energyPct, focusPct, loadPct } = brainCirclePcts(state ?? null);
   const todaysTasks = (tasks ?? []).map((t) => ({
     id: (t as { id: string }).id,
     title: (t as { title: string }).title,
@@ -254,7 +252,7 @@ async function buildCriticalPayload(ctx: TodayContext): Promise<DashboardCritica
 
   const unifiedDecision = deriveUnifiedDecision({
     dateStr: ctx.dateStr,
-    hasBrainCheckIn: state?.energy != null && state?.focus != null && state?.sensory_load != null,
+    hasBrainCheckIn: state?.energy != null && state?.focus != null,
     tasksCount: todaysTasks.length,
     carryOverCount,
     streakAtRisk,
@@ -427,9 +425,7 @@ async function buildSecondaryPayload(ctx: TodayContext): Promise<DashboardSecond
   ]);
   const quotesResult = [quotesPrev, quoteCurrent, quotesNext];
 
-  const energyPct = scale1To10ToPct(ctx.state?.energy ?? null);
-  const focusPct = scale1To10ToPct(ctx.state?.focus ?? null);
-  const loadPct = scale1To10ToPct(ctx.state?.sensory_load ?? null);
+  const { energyPct, focusPct, loadPct } = brainCirclePcts(ctx.state ?? null);
   const insight = defaultInsight(energyPct, focusPct, loadPct);
   const patternSuggestion = defaultSuggestion(energyPct, focusPct, loadPct);
   const spendableCents = Math.max(0, (budgetSettings.monthly_budget_cents ?? 0) - (budgetSettings.monthly_savings_cents ?? 0));

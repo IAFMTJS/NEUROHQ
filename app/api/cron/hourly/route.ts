@@ -30,6 +30,11 @@ import {
 import { applyPersonalityToPayload } from "@/lib/push-personality";
 import { PushCopyDedupe, parsePushCopyHistory } from "@/lib/push-copy-dedupe";
 import { dispatchPendingUserAlertPushes } from "@/lib/pending-alerts-push";
+import {
+  cleanupStaleDailyPushClaim,
+  deleteDailyPushClaim,
+  tryClaimDailyPushSend,
+} from "@/lib/push-daily-claim";
 
 /**
  * Hourly scheduler: on Vercel Hobby, invoke via GitHub Actions (`.github/workflows/cron-hourly.yml`), not `vercel.json`
@@ -514,30 +519,36 @@ export async function GET(request: Request) {
         if (!quoteAlreadySent) {
           const highSensory = await isHighSensoryDayForUser(supabase, u.id, todayStr);
           if (!highSensory) {
-            const dayOfYear = Math.max(1, Math.min(365, getDayOfYearFromDateString(todayStr)));
-            const quoteRow = getQuoteByDayNumber(dayOfYear);
-            const { quoteText, author, combinedBody } = prepareQuoteForPersonalityPush(quoteRow);
-            try {
-              const basePayload = {
-                title: "NEUROHQ",
-                body: combinedBody,
-                tag: "daily-quote",
-                url: "/dashboard",
-                priority: "low" as const,
-                quoteText,
-                quoteAuthor: author,
-              };
-              const payload = applyPersonalityToPayload(
-                basePayload,
-                userPrefs.personalityMode,
-                "quote",
-                `${u.id}:${todayStr}`,
-                { dedupe: pushDedupe }
-              );
-              const ok = await sendPushToUser(supabase, u.id, payload);
-              if (ok) quoteSent++;
-            } catch {
-              // skip
+            await cleanupStaleDailyPushClaim(supabase, u.id, "daily-quote", todayStr, tz);
+            const quoteClaimed = await tryClaimDailyPushSend(supabase, u.id, "daily-quote", todayStr);
+            if (quoteClaimed) {
+              const dayOfYear = Math.max(1, Math.min(365, getDayOfYearFromDateString(todayStr)));
+              const quoteRow = getQuoteByDayNumber(dayOfYear);
+              const { quoteText, author, combinedBody } = prepareQuoteForPersonalityPush(quoteRow);
+              try {
+                const basePayload = {
+                  title: "NEUROHQ",
+                  body: combinedBody,
+                  tag: "daily-quote",
+                  url: "/dashboard",
+                  priority: "low" as const,
+                  quoteText,
+                  quoteAuthor: author,
+                };
+                const payload = applyPersonalityToPayload(
+                  basePayload,
+                  userPrefs.personalityMode,
+                  "quote",
+                  `${u.id}:${todayStr}`,
+                  { dedupe: pushDedupe }
+                );
+                const ok = await sendPushToUser(supabase, u.id, payload);
+                if (ok) quoteSent++;
+              } catch {
+                // skip
+              } finally {
+                await deleteDailyPushClaim(supabase, u.id, "daily-quote", todayStr);
+              }
             }
           }
         }
@@ -661,6 +672,13 @@ export async function GET(request: Request) {
             todayStr
           );
           if (!alreadySentBrainStatusReminder) {
+            await cleanupStaleDailyPushClaim(
+              supabase,
+              u.id as string,
+              "brain_status_reminder",
+              todayStr,
+              tz
+            );
             const { data: dailyState } = await supabase
               .from("daily_state")
               .select("energy, focus")
@@ -686,10 +704,31 @@ export async function GET(request: Request) {
                   type: "brain_status_missing",
                 });
                 if (result) {
-                  const ok = await sendPushToUser(supabase, u.id as string, result.payload);
-                  if (ok) {
-                    await markBehavioralNotificationSent(supabase, u.id as string, "brain_status_reminder");
-                    brainStatusRemindersSent++;
+                  const brainClaimed = await tryClaimDailyPushSend(
+                    supabase,
+                    u.id as string,
+                    "brain_status_reminder",
+                    todayStr
+                  );
+                  if (brainClaimed) {
+                    try {
+                      const ok = await sendPushToUser(supabase, u.id as string, result.payload);
+                      if (ok) {
+                        await markBehavioralNotificationSent(
+                          supabase,
+                          u.id as string,
+                          "brain_status_reminder"
+                        );
+                        brainStatusRemindersSent++;
+                      }
+                    } finally {
+                      await deleteDailyPushClaim(
+                        supabase,
+                        u.id as string,
+                        "brain_status_reminder",
+                        todayStr
+                      );
+                    }
                   }
                 }
               }
@@ -731,17 +770,30 @@ export async function GET(request: Request) {
         try {
           const alreadySentEvening = await hasSentTriggerToday(supabase, u.id, "evening-reminder", tz, todayStr);
           if (!alreadySentEvening) {
-            const data = await getEveningEmailData(supabase, u.id, todayStr, appToday);
-            const basePayload = buildEveningPushPayload(data);
-            const payload = applyPersonalityToPayload(
-              basePayload,
-              userPrefs.personalityMode,
-              "evening",
-              `${u.id}:${todayStr}`,
-              { dedupe: pushDedupe }
+            await cleanupStaleDailyPushClaim(supabase, u.id, "evening-reminder", todayStr, tz);
+            const eveningClaimed = await tryClaimDailyPushSend(
+              supabase,
+              u.id,
+              "evening-reminder",
+              todayStr
             );
-            const sent = await sendPushToUser(supabase, u.id, payload);
-            if (sent) eveningPushSent++;
+            if (eveningClaimed) {
+              try {
+                const data = await getEveningEmailData(supabase, u.id, todayStr, appToday);
+                const basePayload = buildEveningPushPayload(data);
+                const payload = applyPersonalityToPayload(
+                  basePayload,
+                  userPrefs.personalityMode,
+                  "evening",
+                  `${u.id}:${todayStr}`,
+                  { dedupe: pushDedupe }
+                );
+                const sent = await sendPushToUser(supabase, u.id, payload);
+                if (sent) eveningPushSent++;
+              } finally {
+                await deleteDailyPushClaim(supabase, u.id, "evening-reminder", todayStr);
+              }
+            }
           }
         } catch {
           // skip

@@ -200,6 +200,13 @@ export function DashboardClientShell() {
   }, [critical, setTodayDailyState, setTodayDate, setTodayEnergyBudget, setTodayMode]);
 
   const heroState = useMemo(() => {
+    const raw = critical?.state as {
+      energy?: number | null;
+      focus?: number | null;
+      sensory_load?: number | null;
+    } | null;
+    const serverSaved = raw != null && raw.energy != null && raw.focus != null;
+    if (!serverSaved) return null;
     if (pendingDailyForHero) {
       return {
         energy: pendingDailyForHero.energy,
@@ -222,7 +229,7 @@ export function DashboardClientShell() {
       }
     }
     return null;
-  }, [pendingDailyForHero, todayDailyState]);
+  }, [critical?.state, pendingDailyForHero, todayDailyState]);
 
   if (error) {
     return (
@@ -245,9 +252,9 @@ export function DashboardClientShell() {
     dateStr: fallbackDateStr,
     isMinimalUI: false,
     lightUi: false,
-    energyPct: 0,
-    focusPct: 0,
-    loadPct: 0,
+    energyPct: 50,
+    focusPct: 50,
+    loadPct: 50,
     budgetRemainingCents: null,
     currency: "€",
     xp: { total_xp: 0, level: 1 },
@@ -384,8 +391,8 @@ export function DashboardClientShell() {
     pendingBudget?.budgetRemainingCents ?? snapshotBudgetRemainingCents ?? budgetRemainingCents;
   const badgeCurrency = pendingBudget?.currency ?? snapshotCurrency ?? currency;
   const hasBrainCheckIn =
-    (state?.energy != null && state?.focus != null && state?.sensory_load != null) ||
-    (secState?.energy != null && secState?.focus != null && secState?.sensory_load != null);
+    (state?.energy != null && state?.focus != null) ||
+    (secState?.energy != null && secState?.focus != null);
   const hasMissionsToday = (todaysTasks?.length ?? 0) > 0;
   const brainUI = deriveBrainUI({
     hasBrainCheckIn,

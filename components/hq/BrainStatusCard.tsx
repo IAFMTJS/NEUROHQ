@@ -8,7 +8,7 @@ import { useHQStore } from "@/lib/hq-store";
 import { BrainStatusModal } from "./BrainStatusModal";
 import { useDCICGameState } from "@/lib/dcic/game-state-client";
 import { EnergyRing, type EnergyRingMode } from "@/components/hud-test/EnergyRing";
-import { scale1To10ToPct } from "@/lib/dashboard-utils";
+import { brainCirclePcts, hasCommittedBrainCheckIn } from "@/lib/dashboard-utils";
 import type { MoodLabel } from "@/lib/mood-intervention-config";
 import { MOOD_LABEL_META } from "@/lib/mood-intervention-config";
 import { MoodManualPanel } from "@/components/mood/MoodManualPanel";
@@ -74,6 +74,11 @@ export const BrainStatusCard = memo(function BrainStatusCard({
 
   // Keep modal seed in sync with freshest available state for this date.
   useEffect(() => {
+    if (!hasCommittedBrainCheckIn(initial)) {
+      setCurrentInitial(initial);
+      return;
+    }
+
     const pending = getPendingDailyState(date);
     if (pending) {
       setCurrentInitial({
@@ -154,14 +159,12 @@ export const BrainStatusCard = memo(function BrainStatusCard({
     };
   }, []);
 
-  const energyPct = scale1To10ToPct(currentInitial.energy);
-  const focusPct = scale1To10ToPct(currentInitial.focus);
-  const loadPct = scale1To10ToPct(currentInitial.sensory_load);
+  const { energyPct, focusPct, loadPct } = brainCirclePcts(currentInitial);
 
   let xpEnergyLabel: string | null = null;
-  if (energyPct > 75) {
+  if (hasCommittedBrainCheckIn(currentInitial) && energyPct > 75) {
     xpEnergyLabel = "XP‑bonus: +10–15% bij high‑energy dag.";
-  } else if (energyPct < 30) {
+  } else if (hasCommittedBrainCheckIn(currentInitial) && energyPct < 30) {
     xpEnergyLabel = "XP‑penalty: −25% bij very low‑energy (niet slim, maar toegestaan).";
   }
 

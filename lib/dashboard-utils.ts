@@ -4,6 +4,27 @@ export function scale1To10ToPct(value: number | null): number {
   return Math.round((value / 10) * 100);
 }
 
+/** True after the user has saved a brain check-in with energy + focus (1–10). */
+export function hasCommittedBrainCheckIn(
+  daily: { energy?: number | null; focus?: number | null } | null | undefined
+): boolean {
+  return daily != null && daily.energy != null && daily.focus != null;
+}
+
+/** Energy / focus / load ring percentages: neutral 50% until a check-in is committed. */
+export function brainCirclePcts(
+  daily: { energy?: number | null; focus?: number | null; sensory_load?: number | null } | null | undefined
+): { energyPct: number; focusPct: number; loadPct: number } {
+  if (!hasCommittedBrainCheckIn(daily)) {
+    return { energyPct: 50, focusPct: 50, loadPct: 50 };
+  }
+  return {
+    energyPct: scale1To10ToPct(daily?.energy ?? null),
+    focusPct: scale1To10ToPct(daily?.focus ?? null),
+    loadPct: scale1To10ToPct(daily?.sensory_load ?? null),
+  };
+}
+
 export function defaultTimeWindow(): { window: string; isActive: boolean } {
   const now = new Date();
   const h = now.getHours();
