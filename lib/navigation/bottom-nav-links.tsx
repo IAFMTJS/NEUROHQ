@@ -11,7 +11,7 @@ import {
 } from "@/components/hq/NavIcons";
 
 /**
- * Order is fixed: globals.css `.bottom-nav-items` bow uses nth-child(1..7) — keep Dashboard at index 4.
+ * Order is fixed: Dashboard stays at index 3 — FAB layout uses left (0–2) · hub (3) · right (4–6).
  * PNGs under `public/nav/` (see public/nav/README.md); `iconSrc` overrides path.
  */
 export const BOTTOM_NAV_LINKS = [
@@ -25,3 +25,7 @@ export const BOTTOM_NAV_LINKS = [
 ] as const;
 
 export type BottomNavLink = (typeof BOTTOM_NAV_LINKS)[number];
+
+export const BOTTOM_NAV_LEFT = BOTTOM_NAV_LINKS.slice(0, 3);
+export const BOTTOM_NAV_HUB = BOTTOM_NAV_LINKS[3]!;
+export const BOTTOM_NAV_RIGHT = BOTTOM_NAV_LINKS.slice(4);

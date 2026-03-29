@@ -2,11 +2,14 @@
 
 import { useState } from "react";
 import { BottomNavIcon } from "@/components/ui/BottomNavIcon";
-import { BOTTOM_NAV_LINKS, type BottomNavLink } from "@/lib/navigation/bottom-nav-links";
+import {
+  BOTTOM_NAV_LINKS,
+  BOTTOM_NAV_HUB,
+  BOTTOM_NAV_LEFT,
+  BOTTOM_NAV_RIGHT,
+  type BottomNavLink,
+} from "@/lib/navigation/bottom-nav-links";
 
-const NAV_LEFT = BOTTOM_NAV_LINKS.slice(0, 3);
-const NAV_HUB = BOTTOM_NAV_LINKS[3]!;
-const NAV_RIGHT = BOTTOM_NAV_LINKS.slice(4);
 const NAV_ROW1 = BOTTOM_NAV_LINKS.slice(0, 4);
 const NAV_ROW2 = BOTTOM_NAV_LINKS.slice(4);
 
@@ -282,7 +285,7 @@ export function VisualLabNavbarIdeas() {
         <div className="rounded-2xl border border-[rgba(var(--mode-rgb),0.18)] bg-[rgba(3,10,22,0.75)] px-2 py-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
           <div className="flex items-end justify-between gap-1 sm:gap-2">
             <div className="flex min-w-0 flex-1 justify-start gap-0.5 sm:gap-1">
-              {NAV_LEFT.map((link) => {
+              {BOTTOM_NAV_LEFT.map((link) => {
                 const active = demoHref === link.href;
                 return (
                   <button
@@ -313,7 +316,7 @@ export function VisualLabNavbarIdeas() {
 
             <div className="relative flex shrink-0 flex-col items-center px-1">
               {(() => {
-                const link = NAV_HUB;
+                const link = BOTTOM_NAV_HUB;
                 const active = demoHref === link.href;
                 return (
                   <button
@@ -343,7 +346,7 @@ export function VisualLabNavbarIdeas() {
             </div>
 
             <div className="flex min-w-0 flex-1 justify-end gap-0.5 sm:gap-1">
-              {NAV_RIGHT.map((link) => {
+              {BOTTOM_NAV_RIGHT.map((link) => {
                 const active = demoHref === link.href;
                 return (
                   <button
@@ -388,7 +391,7 @@ export function VisualLabNavbarIdeas() {
               aria-hidden
             />
             <div className="relative flex items-end justify-between gap-0.5">
-              {NAV_LEFT.map((link) => {
+              {BOTTOM_NAV_LEFT.map((link) => {
                 const active = demoHref === link.href;
                 return (
                   <button
@@ -418,7 +421,7 @@ export function VisualLabNavbarIdeas() {
 
               <div className="relative flex w-[4.25rem] shrink-0 justify-center sm:w-[4.75rem]">
                 {(() => {
-                  const link = NAV_HUB;
+                  const link = BOTTOM_NAV_HUB;
                   const active = demoHref === link.href;
                   return (
                     <button
@@ -443,7 +446,7 @@ export function VisualLabNavbarIdeas() {
                 })()}
               </div>
 
-              {NAV_RIGHT.map((link) => {
+              {BOTTOM_NAV_RIGHT.map((link) => {
                 const active = demoHref === link.href;
                 return (
                   <button
