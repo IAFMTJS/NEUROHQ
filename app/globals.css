@@ -104,6 +104,10 @@
   /* Center spotlight – focus hierarchy */
   --spotlight: radial-gradient(circle at 50% 25%, rgba(var(--mode-rgb-deep),0.15), transparent 60%);
   --spotlight-opacity: 0.65;
+  /** Multiplier on body spotlight (routes e.g. /tasks lower this so layered panels read clearly) */
+  --ui-shell-spotlight-mult: 1;
+  /** Film grain on body::after — adaptive per `html[data-shell-route]` */
+  --ui-shell-grain-opacity: 0.03;
   --spotlight-saturation: 1;
   --spotlight-blur: 0px;
   --spotlight-animation: none;
@@ -196,6 +200,12 @@
   --hud-intensity-card: 0.3;
   --hud-intensity-border: 0.15;
   --hud-intensity-bg: 0.05;
+}
+
+/* Route-level shell tuning (set `data-shell-route` on `<html>` from dashboard client) */
+html[data-shell-route="tasks"] {
+  --ui-shell-spotlight-mult: 0.52;
+  --ui-shell-grain-opacity: 0.016;
 }
 
 /* Mode-specific accents (applied anywhere inside the dashboard shell via data-mode) */
@@ -909,7 +919,9 @@ html[data-light-ui="true"] body {
 [data-light-ui="true"] .dashboard-bg-noise { display: none !important; }
 [data-light-ui="true"] .dashboard-page::before,
 [data-light-ui="true"] .dashboard-page::after { display: none !important; }
-[data-light-ui="true"] .dashboard-cinematic { background-image: none !important; }
+[data-light-ui="true"] .dashboard-cinematic:not(.tasks-command-deck) {
+  background-image: none !important;
+}
 
 /* Light UI: no backdrop-filter or filter:blur – huge GPU/perf win, use solid backgrounds */
 [data-light-ui="true"] .card,
@@ -920,9 +932,9 @@ html[data-light-ui="true"] body {
 [data-light-ui="true"] .hq-card,
 [data-light-ui="true"] .dashboard-bridge,
 [data-light-ui="true"] .dashboard-bridge-frame,
-[data-light-ui="true"] .dashboard-cinematic .glass-card,
-[data-light-ui="true"] .dashboard-cinematic .card-simple,
-[data-light-ui="true"] .dashboard-cinematic .card-simple-accent,
+[data-light-ui="true"] .dashboard-cinematic:not(.tasks-command-deck) .glass-card,
+[data-light-ui="true"] .dashboard-cinematic:not(.tasks-command-deck) .card-simple,
+[data-light-ui="true"] .dashboard-cinematic:not(.tasks-command-deck) .card-simple-accent,
 [data-light-ui="true"] .dashboard-hud-sheet.modal-card,
 [data-light-ui="true"] .glass-card-3d,
 [data-light-ui="true"] .modal-card,
@@ -937,6 +949,25 @@ html[data-light-ui="true"] body {
     rgba(var(--mode-rgb), 0.12) 100%
   ) !important;
 }
+
+/* Light UI + /tasks command deck: allow glass + gradient (generic rule above would flatten these) */
+[data-light-ui="true"] [data-route-tasks="true"] .tasks-command-deck .glass-card,
+[data-light-ui="true"] [data-route-tasks="true"] .tasks-command-deck .card-simple,
+[data-light-ui="true"] [data-route-tasks="true"] .tasks-command-deck .card-simple-accent {
+  backdrop-filter: blur(16px) saturate(1.08) !important;
+  -webkit-backdrop-filter: blur(16px) saturate(1.08) !important;
+  background: linear-gradient(
+    165deg,
+    rgba(var(--mode-rgb-deep), 0.34) 0%,
+    rgba(10, 18, 32, 0.96) 55%,
+    rgba(var(--mode-rgb), 0.16) 100%
+  ) !important;
+  box-shadow:
+    0 10px 34px rgba(0, 0, 0, 0.45),
+    0 0 0 1px rgba(var(--mode-rgb), 0.12),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08) !important;
+}
+
 [data-light-ui="true"] .modal-overlay { background: rgba(0, 0, 0, 0.7) !important; }
 [data-light-ui="true"] .dashboard-bridge-body {
   backdrop-filter: none !important;
@@ -1025,11 +1056,11 @@ html[data-light-ui="true"] body {
 
 /* Light UI: dashboard mini strip buttons – lighter hover */
 [data-light-ui="true"] .dashboard-mini-btn,
-[data-light-ui="true"] .dashboard-cinematic .dashboard-mini-btn {
+[data-light-ui="true"] .dashboard-cinematic:not(.tasks-command-deck) .dashboard-mini-btn {
   filter: none !important;
 }
 [data-light-ui="true"] .dashboard-mini-btn:hover,
-[data-light-ui="true"] .dashboard-cinematic .dashboard-mini-btn:hover {
+[data-light-ui="true"] .dashboard-cinematic:not(.tasks-command-deck) .dashboard-mini-btn:hover {
   filter: none !important;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2) !important;
 }
@@ -1040,23 +1071,23 @@ html[data-light-ui="true"] body {
 }
 
 /* Light UI: cinematic glass cards and primary buttons – solid bg already applied; simplify shadow */
-[data-light-ui="true"] .dashboard-cinematic .glass-card,
-[data-light-ui="true"] .dashboard-cinematic .card-simple,
-[data-light-ui="true"] .dashboard-cinematic .card-simple-accent {
+[data-light-ui="true"] .dashboard-cinematic:not(.tasks-command-deck) .glass-card,
+[data-light-ui="true"] .dashboard-cinematic:not(.tasks-command-deck) .card-simple,
+[data-light-ui="true"] .dashboard-cinematic:not(.tasks-command-deck) .card-simple-accent {
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.35), 0 0 0 1px rgba(255, 255, 255, 0.06) !important;
 }
-[data-light-ui="true"] .dashboard-cinematic .primary-btn,
-[data-light-ui="true"] .dashboard-cinematic .btn-primary,
-[data-light-ui="true"] .dashboard-cinematic .mission-hdr-wrap {
+[data-light-ui="true"] .dashboard-cinematic:not(.tasks-command-deck) .primary-btn,
+[data-light-ui="true"] .dashboard-cinematic:not(.tasks-command-deck) .btn-primary,
+[data-light-ui="true"] .dashboard-cinematic:not(.tasks-command-deck) .mission-hdr-wrap {
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.1) !important;
 }
 
 /* Light UI: HUD chips and mini strip – no glow shadow */
-[data-light-ui="true"] .dashboard-cinematic .dashboard-hud-chip,
-[data-light-ui="true"] .dashboard-cinematic .dashboard-hud-trigger {
+[data-light-ui="true"] .dashboard-cinematic:not(.tasks-command-deck) .dashboard-hud-chip,
+[data-light-ui="true"] .dashboard-cinematic:not(.tasks-command-deck) .dashboard-hud-trigger {
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25), 0 0 0 1px rgba(255, 255, 255, 0.06) !important;
 }
-[data-light-ui="true"] .dashboard-cinematic .dashboard-mini-strip {
+[data-light-ui="true"] .dashboard-cinematic:not(.tasks-command-deck) .dashboard-mini-strip {
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2) !important;
 }
 
@@ -2261,8 +2292,9 @@ main#main-content.hq-flat-glass-main.tasks-route-shell {
     radial-gradient(ellipse 100% 58% at 50% -16%, rgba(var(--mode-rgb), 0.14), transparent 56%),
     linear-gradient(to bottom, rgba(0, 0, 0, 0.58) 0%, transparent 30%, transparent 64%, rgba(0, 0, 0, 0.75) 100%),
     linear-gradient(180deg, rgba(5, 12, 22, 0.98) 0%, rgba(3, 8, 16, 1) 100%);
-  backdrop-filter: none !important;
-  -webkit-backdrop-filter: none !important;
+  /* Lighter blur than full frosted main — enough depth for command deck without heavy GPU cost */
+  backdrop-filter: blur(18px) saturate(1.08) !important;
+  -webkit-backdrop-filter: blur(18px) saturate(1.08) !important;
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.055);
 }
 
@@ -2330,7 +2362,7 @@ body::after {
   inset: 0;
   z-index: 0;
   pointer-events: none;
-  opacity: 0.03;
+  opacity: var(--ui-shell-grain-opacity, 0.03);
   background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
   background-repeat: repeat;
 }
@@ -2341,7 +2373,7 @@ body::before {
   background: var(--spotlight);
   pointer-events: none;
   z-index: 0;
-  opacity: var(--spotlight-opacity, 0.65);
+  opacity: calc(var(--spotlight-opacity, 0.65) * var(--ui-shell-spotlight-mult, 1));
   mix-blend-mode: screen;
   filter: saturate(var(--spotlight-saturation, 1)) blur(var(--spotlight-blur, 0px));
   animation: var(--spotlight-animation, none);

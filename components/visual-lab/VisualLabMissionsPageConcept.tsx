@@ -1,6 +1,8 @@
 "use client";
 
+import Link from "next/link";
 import type { TasksTabId } from "@/components/missions/TasksTabsShell";
+import { tasksDeckTabClass } from "@/components/missions/tasksDeckTabClass";
 import { VisualLabCommandDeck } from "@/components/visual-lab/VisualLabCommandDeck";
 import { useState } from "react";
 
@@ -148,17 +150,19 @@ function MockRoutinePanel() {
   );
 }
 
+const code = (s: string) => (
+  <code className="rounded bg-black/30 px-1 text-[10px]">{s}</code>
+);
+
 /**
- * Alternatieve shell voor /tasks (missies): strategy-achtige kaart, tab-strip zoals TasksTabsShell,
- * hoofdmissie direct onder tabs, daarna pulse + budget + stapel — mock, alleen visual lab.
+ * Parity preview: zelfde `VisualLabCommandDeck` + segmented tab rail (`tasksDeckTabClass`) als productie
+ * `TasksTabsShell` met `commandDeck`. Missions-body volgt `TaskList` (Vandaag/plan/backlog, Voltooid,
+ * hoofdmissie, stats, budget, Daarna/parallel, + Missie toevoegen). Calendar/Routine = mock.
  */
 export function VisualLabMissionsPageConcept() {
   const [tab, setTab] = useState<TasksTabId>("missions");
   const [mockViewMode, setMockViewMode] = useState<(typeof MOCK_VIEW_MODES)[number]>("focus");
   const [mockDonePanelOpen, setMockDonePanelOpen] = useState(false);
-
-  const tabBtn = (id: TasksTabId) =>
-    `dashboard-mini-btn ${tab === id ? "dashboard-mini-btn-primary" : "dashboard-mini-btn-secondary"}`;
 
   return (
     <section
@@ -171,191 +175,187 @@ export function VisualLabMissionsPageConcept() {
             Missies · command deck (concept)
           </h2>
           <p className="mt-1 max-w-2xl text-xs leading-relaxed text-[var(--text-secondary)]">
-            Zelfde <code className="rounded bg-black/30 px-1 text-[10px]">dashboard-cinematic</code> deck +{" "}
-            <code className="rounded bg-black/30 px-1 text-[10px]">dashboard-top-strip</code> als /tasks (
-            <code className="rounded bg-black/30 px-1 text-[10px]">commandDeck</code>). Missions: rij zoals{" "}
-            <code className="rounded bg-black/30 px-1 text-[10px]">TaskList</code> (Vandaag/plan/backlog + Voltooid vandaag), hoofdmissie, stapel, primaire CTA.
-            Calendar/Routine = mock.
+            Zelfde deck + segmented tabs als {code("/tasks")} ({code("TasksTabsShell")} + {code("commandDeck")}). Missies
+            = {code("TaskList")}: weergave + Voltooid, hoofdmissie, stats, budget, stapel, CTA. Calendar/Routine = mock.
           </p>
         </div>
         <span className="shrink-0 text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--text-muted)]">Mock</span>
       </div>
 
       <VisualLabCommandDeck>
-          {/* Top bar — onder de hero op missions mist context; hier compact zodat tab+hero het canvas domineren */}
-          <header className="flex flex-wrap items-start justify-between gap-3 border-b border-[rgba(var(--mode-rgb),0.12)] pb-3">
-            <div>
-              <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[var(--semantic-accent)]/90">Command</p>
-              <h3 className="mt-0.5 text-base font-bold tracking-tight text-[var(--text-primary)] [text-shadow:0_0_14px_rgba(var(--mode-rgb),0.18)] md:text-lg">
-                Missies · overzicht
-              </h3>
-            </div>
-            <button
-              type="button"
-              className="shrink-0 rounded-lg border border-[rgba(var(--mode-rgb),0.2)] bg-[rgba(6,18,30,0.45)] px-3 py-2 text-[10px] font-semibold uppercase tracking-wide text-[var(--text-muted)]"
-            >
-              ← HQ
-            </button>
-          </header>
-
-          {/* Tabs — zelfde track als productie */}
-          <div className="dashboard-top-strip mt-3">
-            <div className="dashboard-top-strip-track" role="tablist" aria-label="Tasks view">
-              {TABS.map((t) => (
-                <button
-                  key={t.id}
-                  type="button"
-                  role="tab"
-                  aria-selected={tab === t.id}
-                  onClick={() => setTab(t.id)}
-                  className={tabBtn(t.id)}
-                >
-                  {t.label}
-                </button>
-              ))}
-              <span className="dashboard-mini-strip-label">View</span>
-            </div>
+        <header className="flex flex-wrap items-start justify-between gap-3 border-b border-[rgba(var(--mode-rgb),0.18)] pb-4">
+          <div className="min-w-0 border-l-2 border-[rgba(var(--semantic-accent),0.55)] pl-3">
+            <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[var(--semantic-accent)]/90">Command</p>
+            <h3 className="mt-0.5 text-base font-bold tracking-tight text-[var(--text-primary)] [text-shadow:0_0_14px_rgba(var(--mode-rgb),0.18)] md:text-lg">
+              Missies · overzicht
+            </h3>
           </div>
+          <Link
+            href="/dashboard"
+            className="shrink-0 rounded-xl border border-[rgba(var(--mode-rgb),0.24)] bg-[rgba(6,18,30,0.55)] px-3 py-2 text-[10px] font-semibold uppercase tracking-wide text-[var(--text-muted)] shadow-[0_0_18px_rgba(var(--mode-rgb),0.1),inset_0_1px_0_rgba(255,255,255,0.06)] transition hover:border-[rgba(var(--mode-rgb),0.4)] hover:bg-[rgba(8,26,42,0.65)] hover:text-[var(--text-primary)]"
+          >
+            ← HQ
+          </Link>
+        </header>
 
-          <div className="mt-4 space-y-6">
-            {tab === "missions" ? (
-              <>
-                {/* Zelfde rij als TaskList (missionsHeroLayout): Play: weergave + Voltooid vandaag */}
-                <div className="flex flex-wrap items-center justify-center gap-1.5 sm:justify-start">
-                  <div className="flex flex-wrap items-center justify-center gap-1.5 sm:justify-start" aria-label="Mock: missieweergave">
-                    {MOCK_VIEW_MODES.map((m) => (
-                      <button
-                        key={m}
-                        type="button"
-                        onClick={() => setMockViewMode(m)}
-                        className={`rounded-full border px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.08em] transition-colors ${
-                          mockViewMode === m
-                            ? "border-[rgba(var(--mode-rgb),0.35)] bg-[rgba(var(--mode-rgb),0.12)] text-[var(--accent-focus)] shadow-[0_0_12px_rgba(var(--mode-rgb),0.2)]"
-                            : "border-transparent text-[var(--text-muted)] hover:border-[var(--card-border)] hover:bg-[var(--bg-surface)]/60 hover:text-[var(--text-primary)]"
-                        }`}
-                      >
-                        {m === "focus" ? "Vandaag" : m}
-                      </button>
-                    ))}
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => setMockDonePanelOpen((o) => !o)}
-                    aria-expanded={mockDonePanelOpen}
-                    className="rounded-full border border-[var(--card-border)]/80 bg-[var(--bg-surface)]/40 px-3 py-1.5 text-xs font-medium text-[var(--text-muted)] transition hover:border-[var(--card-border)] hover:bg-[var(--bg-surface)]/70 hover:text-[var(--text-primary)]"
-                  >
-                    Voltooid vandaag ({MOCK_DONE_TODAY.length})
-                  </button>
-                </div>
+        <div className="mt-4" role="navigation" aria-label="Tasks tabs">
+          <div className="mb-2 flex items-center justify-between gap-2">
+            <span className="text-[10px] font-bold uppercase tracking-[0.16em] text-[var(--text-muted)]">View</span>
+          </div>
+          <div className="flex flex-wrap gap-1 rounded-xl border border-[rgba(var(--mode-rgb),0.2)] bg-[rgba(4,12,22,0.5)] p-1 shadow-[inset_0_1px_0_rgba(255,255,255,0.05)] backdrop-blur-sm">
+            {TABS.map((t) => (
+              <button
+                key={t.id}
+                type="button"
+                role="tab"
+                aria-selected={tab === t.id}
+                onClick={() => setTab(t.id)}
+                className={tasksDeckTabClass(tab === t.id)}
+              >
+                {t.label}
+              </button>
+            ))}
+          </div>
+        </div>
 
-                {mockDonePanelOpen && (
-                  <div className="glass-card !rounded-xl !p-3">
-                    <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-[var(--text-muted)]">
-                      Gedaan vandaag (mock sheet-inhoud)
-                    </p>
-                    <ul className="mt-2 space-y-2">
-                      {MOCK_DONE_TODAY.map((d) => (
-                        <li
-                          key={d.title}
-                          className="flex items-start gap-3 rounded-lg border border-[rgba(var(--mode-rgb),0.08)] bg-black/20 px-3 py-2"
-                        >
-                          <span
-                            className="mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded border border-emerald-500/50 bg-emerald-500/20 text-[10px] text-emerald-200"
-                            aria-hidden
-                          >
-                            ✓
-                          </span>
-                          <div className="min-w-0 flex-1">
-                            <p className="text-sm font-medium leading-snug text-[var(--text-muted)] line-through">{d.title}</p>
-                            <p className="text-[10px] text-[var(--text-muted)]/90">{d.meta}</p>
-                          </div>
-                        </li>
-                      ))}
-                    </ul>
-                    <p className="mt-2 text-[10px] leading-relaxed text-[var(--text-muted)]">
-                      Op productie opent dit een sheet met undo; hier alleen lab-toggle.
-                    </p>
-                  </div>
-                )}
-
-                <MainMissionHero />
-
-                <div className="card-simple flex flex-wrap items-center gap-2 !rounded-xl px-3 py-2.5">
-                  {[
-                    { k: "Open", v: "3" },
-                    { k: "Today", v: "2 left" },
-                    { k: "Mode", v: "Focus" },
-                  ].map((s, i) => (
-                    <div key={s.k} className="flex items-center gap-2">
-                      {i > 0 ? <span className="text-[var(--text-muted)]/40" aria-hidden>|</span> : null}
-                      <span className="text-[9px] font-bold uppercase tracking-[0.14em] text-[var(--text-muted)]">{s.k}</span>
-                      <span className="text-xs font-semibold tabular-nums text-[var(--text-primary)]">{s.v}</span>
-                    </div>
+        <div className="mt-4 space-y-6">
+          {tab === "missions" ? (
+            <>
+              <div className="flex flex-wrap items-center justify-center gap-1.5 sm:justify-start">
+                <div className="flex flex-wrap items-center justify-center gap-1.5 sm:justify-start" aria-label="Mock: missieweergave">
+                  {MOCK_VIEW_MODES.map((m) => (
+                    <button
+                      key={m}
+                      type="button"
+                      onClick={() => setMockViewMode(m)}
+                      className={`rounded-full border px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.08em] transition-colors ${
+                        mockViewMode === m
+                          ? "border-[rgba(var(--mode-rgb),0.35)] bg-[rgba(var(--mode-rgb),0.12)] text-[var(--accent-focus)] shadow-[0_0_12px_rgba(var(--mode-rgb),0.2)]"
+                          : "border-transparent text-[var(--text-muted)] hover:border-[var(--card-border)] hover:bg-[var(--bg-surface)]/60 hover:text-[var(--text-primary)]"
+                      }`}
+                    >
+                      {m === "focus" ? "Vandaag" : m}
+                    </button>
                   ))}
-                  <span className="ml-auto hidden text-[9px] text-[var(--text-muted)] sm:inline">Energy budget mock · 62%</span>
                 </div>
+                <button
+                  type="button"
+                  onClick={() => setMockDonePanelOpen((o) => !o)}
+                  aria-expanded={mockDonePanelOpen}
+                  className="rounded-full border border-[var(--card-border)]/80 bg-[var(--bg-surface)]/40 px-3 py-1.5 text-xs font-medium text-[var(--text-muted)] transition hover:border-[var(--card-border)] hover:bg-[var(--bg-surface)]/70 hover:text-[var(--text-primary)]"
+                >
+                  Voltooid vandaag ({MOCK_DONE_TODAY.length})
+                </button>
+              </div>
 
-                <div>
-                  <div className="mb-1 flex justify-between text-[9px] font-semibold uppercase tracking-[0.12em] text-[var(--text-muted)]">
-                    <span>Dag-budget (visueel)</span>
-                    <span className="tabular-nums text-[var(--text-secondary)]">62%</span>
-                  </div>
-                  <div className="h-2 overflow-hidden rounded-full border border-[rgba(var(--mode-rgb),0.15)] bg-[rgba(6,18,30,0.55)] shadow-[inset_0_1px_2px_rgba(0,0,0,0.35)]">
-                    <div
-                      className="h-full rounded-full bg-gradient-to-r from-[rgba(var(--mode-rgb),0.35)] via-[var(--semantic-accent)] to-emerald-400/90 shadow-[0_0_12px_rgba(var(--mode-rgb),0.35)]"
-                      style={{ width: "62%" }}
-                    />
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-[var(--text-muted)]">Daarna / parallel</p>
-                  <ul className="space-y-2">
-                    {SECONDARY_MISSIONS.map((m) => (
-                      <li key={m.title}>
-                        <button
-                          type="button"
-                          className="card-simple flex w-full items-start gap-3 !rounded-xl px-3 py-3 text-left"
+              {mockDonePanelOpen && (
+                <div className="glass-card !rounded-xl !p-3">
+                  <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-[var(--text-muted)]">
+                    Gedaan vandaag (mock sheet-inhoud)
+                  </p>
+                  <ul className="mt-2 space-y-2">
+                    {MOCK_DONE_TODAY.map((d) => (
+                      <li
+                        key={d.title}
+                        className="flex items-start gap-3 rounded-lg border border-[rgba(var(--mode-rgb),0.08)] bg-black/20 px-3 py-2"
+                      >
+                        <span
+                          className="mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded border border-emerald-500/50 bg-emerald-500/20 text-[10px] text-emerald-200"
+                          aria-hidden
                         >
-                          <span
-                            className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-[var(--semantic-accent)]/70 shadow-[0_0_8px_rgba(var(--mode-rgb),0.35)]"
-                            aria-hidden
-                          />
-                          <div className="min-w-0 flex-1">
-                            <p className="text-sm font-semibold text-[var(--text-primary)]">{m.title}</p>
-                            <p className="mt-0.5 text-[11px] text-[var(--text-muted)]">{m.meta}</p>
-                            <p className="mt-1 text-[10px] uppercase tracking-wide text-[var(--text-muted)]/80">{m.hint}</p>
-                          </div>
-                          <span className="shrink-0 text-[var(--text-muted)]" aria-hidden>
-                            ›
-                          </span>
-                        </button>
+                          ✓
+                        </span>
+                        <div className="min-w-0 flex-1">
+                          <p className="text-sm font-medium leading-snug text-[var(--text-muted)] line-through">{d.title}</p>
+                          <p className="text-[10px] text-[var(--text-muted)]/90">{d.meta}</p>
+                        </div>
                       </li>
                     ))}
                   </ul>
+                  <p className="mt-2 text-[10px] leading-relaxed text-[var(--text-muted)]">
+                    Op productie opent dit een sheet met undo; hier alleen lab-toggle.
+                  </p>
                 </div>
+              )}
 
-                <button type="button" className="primary-btn w-full min-h-[48px] cursor-default px-6 py-3 text-sm shadow-[0_0_18px_rgba(var(--mode-rgb),0.35)]">
-                  + Missie toevoegen
-                </button>
-                <p className="text-center text-[10px] text-[var(--text-muted)]">
-                  Zelfde primaire CTA als op /tasks (opent EditMissionModal); hier geen actie.
-                </p>
-              </>
-            ) : null}
+              <MainMissionHero />
 
-            {tab === "calendar" ? (
-              <div className="card-simple !rounded-xl p-4">
-                <MockCalendarPanel />
+              <div className="card-simple flex flex-wrap items-center gap-2 !rounded-xl px-3 py-2.5">
+                {[
+                  { k: "Open", v: "3" },
+                  { k: "Today", v: "2 left" },
+                  { k: "Mode", v: "Focus" },
+                ].map((s, i) => (
+                  <div key={s.k} className="flex items-center gap-2">
+                    {i > 0 ? <span className="text-[var(--text-muted)]/40" aria-hidden>|</span> : null}
+                    <span className="text-[9px] font-bold uppercase tracking-[0.14em] text-[var(--text-muted)]">{s.k}</span>
+                    <span className="text-xs font-semibold tabular-nums text-[var(--text-primary)]">{s.v}</span>
+                  </div>
+                ))}
+                <span className="ml-auto hidden text-[9px] text-[var(--text-muted)] sm:inline">Energy budget mock · 62%</span>
               </div>
-            ) : null}
 
-            {tab === "routine" ? (
-              <div className="card-simple !rounded-xl p-4">
-                <MockRoutinePanel />
+              <div>
+                <div className="mb-1 flex justify-between text-[9px] font-semibold uppercase tracking-[0.12em] text-[var(--text-muted)]">
+                  <span>Dag-budget (visueel)</span>
+                  <span className="tabular-nums text-[var(--text-secondary)]">62%</span>
+                </div>
+                <div className="h-2 overflow-hidden rounded-full border border-[rgba(var(--mode-rgb),0.15)] bg-[rgba(6,18,30,0.55)] shadow-[inset_0_1px_2px_rgba(0,0,0,0.35)]">
+                  <div
+                    className="h-full rounded-full bg-gradient-to-r from-[rgba(var(--mode-rgb),0.35)] via-[var(--semantic-accent)] to-emerald-400/90 shadow-[0_0_12px_rgba(var(--mode-rgb),0.35)]"
+                    style={{ width: "62%" }}
+                  />
+                </div>
               </div>
-            ) : null}
-          </div>
+
+              <div className="space-y-2">
+                <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-[var(--text-muted)]">Daarna / parallel</p>
+                <ul className="space-y-2">
+                  {SECONDARY_MISSIONS.map((m) => (
+                    <li key={m.title}>
+                      <button
+                        type="button"
+                        className="card-simple flex w-full items-start gap-3 !rounded-xl px-3 py-3 text-left"
+                      >
+                        <span
+                          className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-[var(--semantic-accent)]/70 shadow-[0_0_8px_rgba(var(--mode-rgb),0.35)]"
+                          aria-hidden
+                        />
+                        <div className="min-w-0 flex-1">
+                          <p className="text-sm font-semibold text-[var(--text-primary)]">{m.title}</p>
+                          <p className="mt-0.5 text-[11px] text-[var(--text-muted)]">{m.meta}</p>
+                          <p className="mt-1 text-[10px] uppercase tracking-wide text-[var(--text-muted)]/80">{m.hint}</p>
+                        </div>
+                        <span className="shrink-0 text-[var(--text-muted)]" aria-hidden>
+                          ›
+                        </span>
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+
+              <button type="button" className="primary-btn w-full min-h-[48px] cursor-default px-6 py-3 text-sm shadow-[0_0_18px_rgba(var(--mode-rgb),0.35)]">
+                + Missie toevoegen
+              </button>
+              <p className="text-center text-[10px] text-[var(--text-muted)]">
+                Zelfde primaire CTA als op /tasks (opent EditMissionModal); hier geen actie.
+              </p>
+            </>
+          ) : null}
+
+          {tab === "calendar" ? (
+            <div className="card-simple !rounded-xl p-4">
+              <MockCalendarPanel />
+            </div>
+          ) : null}
+
+          {tab === "routine" ? (
+            <div className="card-simple !rounded-xl p-4">
+              <MockRoutinePanel />
+            </div>
+          ) : null}
+        </div>
       </VisualLabCommandDeck>
     </section>
   );

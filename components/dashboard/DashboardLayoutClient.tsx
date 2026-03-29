@@ -59,14 +59,17 @@ export function DashboardLayoutClient({
   // useLayoutEffect runs before paint so the first painted frame matches the active mode.
   useLayoutEffect(() => {
     try {
-      document.documentElement.dataset.mode = mode;
+      const el = document.documentElement;
+      el.dataset.mode = mode;
+      if (tasksRoute) el.setAttribute("data-shell-route", "tasks");
+      else el.removeAttribute("data-shell-route");
       if (typeof document !== "undefined" && document.body) {
         document.body.dataset.mode = mode;
       }
     } catch {
       // best-effort; ignore DOM/SSR issues
     }
-  }, [mode]);
+  }, [mode, tasksRoute]);
 
   // Hydrate HQ store from DailySnapshot (single source of truth); no duplicate /api/bootstrap/today fetch.
   useEffect(() => {

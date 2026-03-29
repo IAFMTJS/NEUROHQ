@@ -710,6 +710,51 @@ export default async function TasksPage({ searchParams }: Props) {
    */
   const headerSection = null;
 
+  const tabsShell = (
+    <TasksTabsShell
+      initialTab={activeTab}
+      missionsHref={missionsHref}
+      calendarHref={calendarHref}
+      routineHref={routineHref}
+      header={headerSection}
+      fillViewport={simplifiedTasksFillLayout}
+      stickyTabs={simplifiedTasksFillLayout}
+      commandDeck={tasksCommandDeck}
+    >
+      {activeTab === "missions" ? (
+        <Suspense fallback={null}>
+          <MissionsSectionAsync
+            dateStr={dateStr}
+            backlog={backlog}
+            growthFromGrowthPage={growthFromGrowthPage}
+            simplifiedContent={prefs.simplified_content === true}
+            commandDeck={tasksCommandDeck}
+          />
+        </Suspense>
+      ) : activeTab === "calendar" ? (
+        <Suspense fallback={null}>
+          <CalendarSectionAsync
+            dateStr={dateStr}
+            monthParam={monthParam}
+            selectedCalendarDay={selectedCalendarDay}
+            calendarView={calendarView}
+            backlog={backlog}
+            simplifiedContent={prefs.simplified_content === true}
+            commandDeck={tasksCommandDeck}
+          />
+        </Suspense>
+      ) : (
+        <Suspense fallback={null}>
+          <RoutineSectionAsync
+            dateStr={dateStr}
+            simplifiedContent={prefs.simplified_content === true}
+            commandDeck={tasksCommandDeck}
+          />
+        </Suspense>
+      )}
+    </TasksTabsShell>
+  );
+
   return (
     <main
       className={`tasks-page-root relative isolate overflow-x-hidden ${simplifiedTasksFillLayout ? "flex min-h-0 flex-1 flex-col" : "min-h-screen min-h-[100dvh]"}`}
@@ -723,48 +768,13 @@ export default async function TasksPage({ searchParams }: Props) {
               : "tasks-page-column container page page-wide relative z-10 pt-4 sm:pt-5"
           }
         >
-          <TasksTabsShell
-            initialTab={activeTab}
-            missionsHref={missionsHref}
-            calendarHref={calendarHref}
-            routineHref={routineHref}
-            header={headerSection}
-            fillViewport={simplifiedTasksFillLayout}
-            stickyTabs={simplifiedTasksFillLayout}
-            commandDeck={tasksCommandDeck}
-          >
-            {activeTab === "missions" ? (
-              <Suspense fallback={null}>
-                <MissionsSectionAsync
-                  dateStr={dateStr}
-                  backlog={backlog}
-                  growthFromGrowthPage={growthFromGrowthPage}
-                  simplifiedContent={prefs.simplified_content === true}
-                  commandDeck={tasksCommandDeck}
-                />
-              </Suspense>
-            ) : activeTab === "calendar" ? (
-              <Suspense fallback={null}>
-                <CalendarSectionAsync
-                  dateStr={dateStr}
-                  monthParam={monthParam}
-                  selectedCalendarDay={selectedCalendarDay}
-                  calendarView={calendarView}
-                  backlog={backlog}
-                  simplifiedContent={prefs.simplified_content === true}
-                  commandDeck={tasksCommandDeck}
-                />
-              </Suspense>
-            ) : (
-              <Suspense fallback={null}>
-                <RoutineSectionAsync
-                  dateStr={dateStr}
-                  simplifiedContent={prefs.simplified_content === true}
-                  commandDeck={tasksCommandDeck}
-                />
-              </Suspense>
-            )}
-          </TasksTabsShell>
+          {tasksCommandDeck ? (
+            <div className="rounded-xl border border-[rgba(var(--mode-rgb),0.12)] bg-[rgba(4,12,22,0.22)] p-3 sm:p-4 md:p-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
+              {tabsShell}
+            </div>
+          ) : (
+            tabsShell
+          )}
         </div>
       </MissionsProvider>
     </main>
