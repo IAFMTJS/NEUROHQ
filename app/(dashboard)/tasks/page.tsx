@@ -440,102 +440,131 @@ async function MissionsSectionAsync({
     );
   }
 
-  const missionsBody = (
-    <>
-      <GrowthMissionsRibbon snap={growthSnap} fromGrowthPage={growthFromGrowthPage} />
-      <details className="tasks-war-hide rounded-xl border border-[var(--card-border)] bg-[var(--bg-surface)]/35 p-3">
-        <summary className="cursor-pointer text-xs font-semibold uppercase tracking-wider text-[var(--text-muted)]">Diagnostics</summary>
-        <div className="mt-3 space-y-3">
-          {resistanceIndex.message && <p className="text-sm text-[var(--text-primary)]">{resistanceIndex.message}</p>}
-          {recoveryCampaign.needed && (
-            <p className="text-sm text-[var(--text-primary)]">
-              Recovery-campagne actief: {recoveryCampaign.daysInactive} dagen zonder completion.
-            </p>
-          )}
-          {emotionalCorrelation.message && <p className="text-sm text-[var(--text-primary)]">{emotionalCorrelation.message}</p>}
-          {!resistanceIndex.message && !recoveryCampaign.needed && !emotionalCorrelation.message && (
-            <p className="text-sm text-[var(--text-muted)]">
-              Nog geen diagnostische signalen beschikbaar. Voltooi en log enkele missies om patroonanalyse te activeren.
-            </p>
-          )}
-        </div>
-      </details>
-      {smartSuggestion.text && !decisionBlocks.topRecommendation ? (
-        <SmartSuggestionBanner text={smartSuggestion.text} type={smartSuggestion.type} />
-      ) : null}
-      <div data-tutorial="tasks-today">
-      <div className="tasks-war-hide">
-      <TodayMissionsGridFromStore dateStr={dateStr}>
-        {missionCards.length > 0 && tasks.length === 0 && (
-          <section className="mission-grid">
-            {missionCards.map((m) => (
-              <CommanderMissionCard
-                key={m.id}
-                id={m.id}
-                title={m.title}
-                subtitle={m.subtitle}
-                description={"description" in m ? (m as { description?: string | null }).description : null}
-                state={m.state}
-                progressPct={m.progressPct}
-                href={m.href}
-              />
-            ))}
-          </section>
+  const diagnosticsBlock = (
+    <details className="tasks-war-hide rounded-xl border border-[var(--card-border)] bg-[var(--bg-surface)]/35 p-3">
+      <summary className="cursor-pointer text-xs font-semibold uppercase tracking-wider text-[var(--text-muted)]">Diagnostics</summary>
+      <div className="mt-3 space-y-3">
+        {resistanceIndex.message && <p className="text-sm text-[var(--text-primary)]">{resistanceIndex.message}</p>}
+        {recoveryCampaign.needed && (
+          <p className="text-sm text-[var(--text-primary)]">
+            Recovery-campagne actief: {recoveryCampaign.daysInactive} dagen zonder completion.
+          </p>
         )}
-      </TodayMissionsGridFromStore>
+        {emotionalCorrelation.message && <p className="text-sm text-[var(--text-primary)]">{emotionalCorrelation.message}</p>}
+        {!resistanceIndex.message && !recoveryCampaign.needed && !emotionalCorrelation.message && (
+          <p className="text-sm text-[var(--text-muted)]">
+            Nog geen diagnostische signalen beschikbaar. Voltooi en log enkele missies om patroonanalyse te activeren.
+          </p>
+        )}
+      </div>
+    </details>
+  );
+
+  const smartSuggestionBlock =
+    smartSuggestion.text && !decisionBlocks.topRecommendation ? (
+      <SmartSuggestionBanner text={smartSuggestion.text} type={smartSuggestion.type} />
+    ) : null;
+
+  const tasksTodayBlock = (
+    <div data-tutorial="tasks-today">
+      <div className="tasks-war-hide">
+        <TodayMissionsGridFromStore dateStr={dateStr}>
+          {missionCards.length > 0 && tasks.length === 0 && (
+            <section className="mission-grid">
+              {missionCards.map((m) => (
+                <CommanderMissionCard
+                  key={m.id}
+                  id={m.id}
+                  title={m.title}
+                  subtitle={m.subtitle}
+                  description={"description" in m ? (m as { description?: string | null }).description : null}
+                  state={m.state}
+                  progressPct={m.progressPct}
+                  href={m.href}
+                />
+              ))}
+            </section>
+          )}
+        </TodayMissionsGridFromStore>
       </div>
       <div data-tutorial="tasks-list" id="tasks-list">
-      <TaskList
-        date={dateStr}
-        tasks={tasks as import("@/types/database.types").Task[]}
-        completedToday={completedToday as import("@/types/database.types").Task[]}
-        mode={taskMode}
-        carryOverCount={carryOverCount}
-        subtasksByParent={subtasksByParent}
-        suggestedTaskCount={energyBudget.suggestedTaskCount}
-        brainMode={energyBudget.brainMode}
-        strategicByTaskId={strategicByTaskId}
-        strategyMapping={decisionBlocks.strategyMapping}
-        recommendedTaskIds={[
-          ...(decisionBlocks.topRecommendation?.id ? [decisionBlocks.topRecommendation.id] : []),
-          ...(decisionBlocks.alignmentFix?.map((t) => t.id) ?? []),
-        ]}
-        identityLevel={identity.level}
-        identityReputation={identityEngine.reputation ?? null}
-        blockedReasonByTaskId={blockedReasonByTaskId}
-        neuroSelfReportOptIn={behaviorProfile.neuroSelfReportOptIn}
-        missionsHeroLayout
-        commandDeckVisuals={commandDeck}
-        energyCap={{
-          used: energyCap.used,
-          cap: energyCap.cap,
-          remaining: energyCap.remaining,
-          planned: energyCap.planned,
-        }}
-        missionEngineWarnings={missionEngineWarnings}
-        missionsContextBelowHero={<ModeBanner mode={mode} flatFrame />}
-      />
+        <TaskList
+          date={dateStr}
+          tasks={tasks as import("@/types/database.types").Task[]}
+          completedToday={completedToday as import("@/types/database.types").Task[]}
+          mode={taskMode}
+          carryOverCount={carryOverCount}
+          subtasksByParent={subtasksByParent}
+          suggestedTaskCount={energyBudget.suggestedTaskCount}
+          brainMode={energyBudget.brainMode}
+          strategicByTaskId={strategicByTaskId}
+          strategyMapping={decisionBlocks.strategyMapping}
+          recommendedTaskIds={[
+            ...(decisionBlocks.topRecommendation?.id ? [decisionBlocks.topRecommendation.id] : []),
+            ...(decisionBlocks.alignmentFix?.map((t) => t.id) ?? []),
+          ]}
+          identityLevel={identity.level}
+          identityReputation={identityEngine.reputation ?? null}
+          blockedReasonByTaskId={blockedReasonByTaskId}
+          neuroSelfReportOptIn={behaviorProfile.neuroSelfReportOptIn}
+          missionsHeroLayout
+          commandDeckVisuals={commandDeck}
+          energyCap={{
+            used: energyCap.used,
+            cap: energyCap.cap,
+            remaining: energyCap.remaining,
+            planned: energyCap.planned,
+          }}
+          missionEngineWarnings={missionEngineWarnings}
+          missionsContextBelowHero={<ModeBanner mode={mode} flatFrame />}
+        />
       </div>
+    </div>
+  );
+
+  const metaBlock = (
+    <details className="tasks-war-hide mt-4 rounded-xl border border-[var(--card-border)] bg-[var(--bg-surface)]/35 p-3">
+      <summary className="cursor-pointer text-xs font-semibold uppercase tracking-wider text-[var(--text-muted)]">
+        Meta (30d), Data-spiegel (30d), Weekly behavior summary
+      </summary>
+      <div className="mt-3 space-y-3">
+        <Suspense fallback={null}>
+          <MetaInsights30BannerAsync />
+        </Suspense>
+        <Suspense fallback={null}>
+          <ThirtyDayMirrorBannerAsync />
+        </Suspense>
+        <Suspense fallback={null}>
+          <WeeklyBehaviorSummaryCardAsync />
+        </Suspense>
       </div>
-      <details className="tasks-war-hide mt-4 rounded-xl border border-[var(--card-border)] bg-[var(--bg-surface)]/35 p-3">
-        <summary className="cursor-pointer text-xs font-semibold uppercase tracking-wider text-[var(--text-muted)]">
-          Meta (30d), Data-spiegel (30d), Weekly behavior summary
-        </summary>
-        <div className="mt-3 space-y-3">
-          <Suspense fallback={null}>
-            <MetaInsights30BannerAsync />
-          </Suspense>
-          <Suspense fallback={null}>
-            <ThirtyDayMirrorBannerAsync />
-          </Suspense>
-          <Suspense fallback={null}>
-            <WeeklyBehaviorSummaryCardAsync />
-          </Suspense>
-        </div>
-      </details>
-      <div className="tasks-war-hide">
-        <BacklogAndToekomstTriggers backlog={backlog} futureTasks={futureTasks} todayDate={dateStr} />
-      </div>
+    </details>
+  );
+
+  const backlogBlock = (
+    <div className="tasks-war-hide">
+      <BacklogAndToekomstTriggers backlog={backlog} futureTasks={futureTasks} todayDate={dateStr} />
+    </div>
+  );
+
+  /** Command deck: hero-first flow like visual-lab missions concept (ribbon + diagnostics after main stack). */
+  const missionsBody = commandDeck ? (
+    <>
+      {smartSuggestionBlock}
+      {tasksTodayBlock}
+      <GrowthMissionsRibbon snap={growthSnap} fromGrowthPage={growthFromGrowthPage} />
+      {diagnosticsBlock}
+      {metaBlock}
+      {backlogBlock}
+    </>
+  ) : (
+    <>
+      <GrowthMissionsRibbon snap={growthSnap} fromGrowthPage={growthFromGrowthPage} />
+      {diagnosticsBlock}
+      {smartSuggestionBlock}
+      {tasksTodayBlock}
+      {metaBlock}
+      {backlogBlock}
     </>
   );
 

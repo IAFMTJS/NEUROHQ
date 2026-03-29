@@ -746,12 +746,12 @@ export function TaskList({
           }
         }}
         className={`flex min-h-[5rem] cursor-pointer flex-col rounded-xl border text-left outline-none transition-colors ring-offset-2 ring-offset-[var(--bg-primary)] focus-visible:ring-2 focus-visible:ring-[var(--accent-focus)] ${
-          commandDeckVisuals ? "p-3" : "p-2.5"
+          commandDeckVisuals ? "card-simple w-full !rounded-xl p-3" : "p-2.5"
         } ${
           blockReason
             ? "border-[var(--card-border)] bg-[var(--bg-surface)]/30 opacity-85"
             : commandDeckVisuals
-              ? "border-[rgba(var(--mode-rgb),0.1)] bg-[rgba(6,18,30,0.35)] hover:border-[rgba(var(--mode-rgb),0.22)] hover:bg-[rgba(var(--mode-rgb),0.08)] shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]"
+              ? "!border-[rgba(var(--mode-rgb),0.1)] bg-[rgba(6,18,30,0.35)] hover:!border-[rgba(var(--mode-rgb),0.22)] hover:bg-[rgba(var(--mode-rgb),0.08)] shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]"
               : "border-[rgba(var(--mode-rgb),0.22)] bg-[var(--bg-surface)]/40 hover:border-[rgba(var(--mode-rgb),0.45)] hover:bg-[rgba(var(--mode-rgb),0.06)]"
         }`}
       >
@@ -1194,7 +1194,13 @@ export function TaskList({
             {energyCap ? (
               <div className="flex items-start gap-2">
                 <div className="min-w-0 flex-1">
-                  <EnergyCapBar used={energyCap.used} cap={energyCap.cap} remaining={energyCap.remaining} planned={energyCap.planned} />
+                  <EnergyCapBar
+                    used={energyCap.used}
+                    cap={energyCap.cap}
+                    remaining={energyCap.remaining}
+                    planned={energyCap.planned}
+                    variant={commandDeckVisuals ? "commandDeckStrip" : "card"}
+                  />
                 </div>
                 <MissionsEngineWarningIcon lines={engineWarningLines} className="shrink-0 pt-0.5" />
               </div>
@@ -1231,14 +1237,14 @@ export function TaskList({
                <section
                   className={
                     commandDeckVisuals
-                      ? "relative overflow-hidden rounded-xl border border-[rgba(var(--semantic-accent),0.28)] bg-[rgba(4,12,22,0.55)] shadow-[0_0_24px_rgba(var(--mode-rgb),0.12)]"
+                      ? "glass-card relative !rounded-xl !p-0"
                       : "missions-hero-card relative overflow-hidden rounded-2xl border border-[rgba(var(--mode-rgb),0.45)] bg-gradient-to-b from-[rgba(var(--mode-rgb),0.14)] to-[var(--bg-surface)]/25 shadow-[0_0_36px_rgba(var(--mode-rgb),0.18)]"
                   }
                   aria-label="Hoofdmissie"
                 >
                   {commandDeckVisuals && (
                     <div
-                      className="absolute left-0 top-0 h-full w-1 bg-gradient-to-b from-[var(--semantic-accent)] to-emerald-500/70"
+                      className="absolute left-0 top-0 z-[1] h-full w-1 bg-gradient-to-b from-[var(--semantic-accent)] to-emerald-500/70"
                       aria-hidden
                     />
                   )}
@@ -1307,17 +1313,32 @@ export function TaskList({
                       Start
                     </button>
                     {commandDeckVisuals && (
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setFocusTask(null);
-                          setDetailsTask(heroMissionTask);
-                        }}
-                        disabled={!!blockedReasonByTaskId?.[heroMissionTask.id]}
-                        className="rounded-lg border border-[rgba(var(--mode-rgb),0.22)] bg-transparent px-4 py-2.5 text-sm font-medium text-[var(--text-secondary)] transition hover:border-[rgba(var(--mode-rgb),0.35)] hover:bg-[rgba(var(--mode-rgb),0.06)] disabled:cursor-not-allowed disabled:opacity-45"
-                      >
-                        Details
-                      </button>
+                      <>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setFocusTask(null);
+                            handleSnooze(heroMissionTask.id);
+                          }}
+                          disabled={
+                            !!blockedReasonByTaskId?.[heroMissionTask.id] || snoozingIds.has(heroMissionTask.id)
+                          }
+                          className="rounded-lg border border-[rgba(var(--mode-rgb),0.18)] bg-transparent px-4 py-2.5 text-[11px] font-medium text-[var(--text-secondary)] transition hover:border-[rgba(var(--mode-rgb),0.3)] hover:bg-[rgba(var(--mode-rgb),0.06)] disabled:cursor-not-allowed disabled:opacity-45"
+                        >
+                          {snoozingIds.has(heroMissionTask.id) ? "…" : "Uitstellen"}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setFocusTask(null);
+                            setDetailsTask(heroMissionTask);
+                          }}
+                          disabled={!!blockedReasonByTaskId?.[heroMissionTask.id]}
+                          className="rounded-lg border border-[rgba(var(--mode-rgb),0.18)] bg-transparent px-4 py-2.5 text-[11px] font-medium text-[var(--text-secondary)] transition hover:border-[rgba(var(--mode-rgb),0.3)] hover:bg-[rgba(var(--mode-rgb),0.06)] disabled:cursor-not-allowed disabled:opacity-45"
+                        >
+                          Details
+                        </button>
+                      </>
                     )}
                   </div>
                   {blockedReasonByTaskId?.[heroMissionTask.id] && (
@@ -1344,11 +1365,60 @@ export function TaskList({
                 </div>
               )}
 
+              {commandDeckVisuals && !isWarMode && (
+                <div className="card-simple flex flex-wrap items-center gap-2 !rounded-xl px-3 py-2.5">
+                  {(
+                    [
+                      { k: "Open", v: String(incompleteTasksForDisplay.length) },
+                      {
+                        k: "Vandaag",
+                        v:
+                          heroMissionTask != null
+                            ? `${restMissionTasks.length} over`
+                            : `${incompleteTasksForDisplay.length} over`,
+                      },
+                      {
+                        k: "Modus",
+                        v:
+                          mode === "stabilize"
+                            ? "Stabiliseer"
+                            : mode === "low_energy"
+                              ? "Laag"
+                              : mode === "driven"
+                                ? "Drive"
+                                : "Focus",
+                      },
+                    ] as const
+                  ).map((s, i) => (
+                    <div key={s.k} className="flex items-center gap-2">
+                      {i > 0 ? (
+                        <span className="text-[var(--text-muted)]/40" aria-hidden>
+                          |
+                        </span>
+                      ) : null}
+                      <span className="text-[9px] font-bold uppercase tracking-[0.14em] text-[var(--text-muted)]">{s.k}</span>
+                      <span className="text-xs font-semibold tabular-nums text-[var(--text-primary)]">{s.v}</span>
+                    </div>
+                  ))}
+                  {energyCap && energyCap.cap > 0 ? (
+                    <span className="ml-auto hidden text-[9px] tabular-nums text-[var(--text-muted)] sm:inline">
+                      Budget · {Math.min(100, Math.round((energyCap.used / energyCap.cap) * 100))}%
+                    </span>
+                  ) : null}
+                </div>
+              )}
+
               <div className="space-y-3">
                 {energyCap ? (
                   <div className="flex items-start gap-2">
                     <div className="min-w-0 flex-1">
-                      <EnergyCapBar used={energyCap.used} cap={energyCap.cap} remaining={energyCap.remaining} planned={energyCap.planned} />
+                      <EnergyCapBar
+                        used={energyCap.used}
+                        cap={energyCap.cap}
+                        remaining={energyCap.remaining}
+                        planned={energyCap.planned}
+                        variant={commandDeckVisuals ? "commandDeckStrip" : "card"}
+                      />
                     </div>
                     <MissionsEngineWarningIcon lines={engineWarningLines} className="shrink-0 pt-0.5" />
                   </div>
@@ -1363,20 +1433,34 @@ export function TaskList({
               {restMissionTasks.length > 0 && (
                 <div>
                   <p className="mb-2 text-[10px] font-bold uppercase tracking-[0.14em] text-[var(--text-muted)]">
-                    {commandDeckVisuals ? "Daarna · vandaag" : "Meer vandaag"}
+                    {commandDeckVisuals ? "Daarna / parallel" : "Meer vandaag"}
                   </p>
-                  <div className="flex snap-x snap-mandatory gap-2 overflow-x-auto overflow-y-visible pb-2 [-webkit-overflow-scrolling:touch] sm:grid sm:max-h-[min(70vh,420px)] sm:grid-cols-2 sm:gap-3 sm:overflow-y-auto sm:overscroll-contain sm:pr-0.5">
-                    {restMissionTasks.map((t) => (
-                      <div key={t.id} className="w-[calc(50%-4px)] min-w-[calc(50%-4px)] shrink-0 snap-start sm:min-w-0 sm:w-auto sm:shrink">
-                        {renderCompactMissionCard(t)}
+                  {commandDeckVisuals ? (
+                    <ul className="space-y-2">
+                      {restMissionTasks.map((t) => (
+                        <li key={t.id} className="w-full">
+                          {renderCompactMissionCard(t)}
+                        </li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <>
+                      <div className="flex snap-x snap-mandatory gap-2 overflow-x-auto overflow-y-visible pb-2 [-webkit-overflow-scrolling:touch] sm:grid sm:max-h-[min(70vh,420px)] sm:grid-cols-2 sm:gap-3 sm:overflow-y-auto sm:overscroll-contain sm:pr-0.5">
+                        {restMissionTasks.map((t) => (
+                          <div key={t.id} className="w-[calc(50%-4px)] min-w-[calc(50%-4px)] shrink-0 snap-start sm:min-w-0 sm:w-auto sm:shrink">
+                            {renderCompactMissionCard(t)}
+                          </div>
+                        ))}
                       </div>
-                    ))}
-                  </div>
-                  {restMissionTasks.length > 4 && (
-                    <p className="mt-1 text-center text-[10px] text-[var(--text-muted)] sm:hidden">Veeg voor meer missies</p>
-                  )}
-                  {restMissionTasks.length > 6 && (
-                    <p className="mt-1 hidden text-center text-[10px] text-[var(--text-muted)] sm:block">Scroll voor meer — of schakel naar Plan voor de volledige lijst.</p>
+                      {restMissionTasks.length > 4 && (
+                        <p className="mt-1 text-center text-[10px] text-[var(--text-muted)] sm:hidden">Veeg voor meer missies</p>
+                      )}
+                      {restMissionTasks.length > 6 && (
+                        <p className="mt-1 hidden text-center text-[10px] text-[var(--text-muted)] sm:block">
+                          Scroll voor meer — of schakel naar Plan voor de volledige lijst.
+                        </p>
+                      )}
+                    </>
                   )}
                 </div>
               )}
@@ -1459,7 +1543,7 @@ export function TaskList({
               }}
               className={
                 missionsHeroLayout && commandDeckVisuals
-                  ? "w-full min-h-[48px] rounded-full bg-[var(--accent-focus)] px-6 py-3 text-sm font-semibold text-white shadow-[0_0_20px_rgba(var(--mode-rgb),0.32),inset_0_1px_0_rgba(255,255,255,0.12)] transition hover:opacity-95"
+                  ? "primary-btn min-h-[48px] !normal-case !tracking-normal shadow-[0_0_18px_rgba(var(--mode-rgb),0.35)]"
                   : missionsHeroLayout
                     ? "w-full min-h-[48px] rounded-full bg-[var(--accent-focus)] px-6 py-3 text-sm font-semibold text-white shadow-[0_0_18px_rgba(var(--mode-rgb),0.35)] transition hover:opacity-95"
                     : "rounded-full border border-[var(--accent-focus)]/50 bg-[var(--accent-focus)]/10 px-4 py-2 text-sm font-medium text-[var(--accent-focus)] hover:bg-[var(--accent-focus)]/20"

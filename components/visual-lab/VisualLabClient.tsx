@@ -82,7 +82,7 @@ export function VisualLabClient() {
 
   return (
     <div className={`${hudStyles.flatGlassPageRoot} text-[var(--text-main)]`}>
-      <div className="dashboard-page relative z-10 mx-auto max-w-5xl px-[var(--page-padding-x)] py-8 pb-12">
+      <div className="relative isolate z-10 mx-auto max-w-5xl px-[var(--page-padding-x)] py-8 pb-12">
         <article
           className={`${activeBackdrop.shell} p-5 md:p-7`}
           aria-label={`Visual lab panel: ${activeBackdrop.label}`}
@@ -98,8 +98,8 @@ export function VisualLabClient() {
               Visual lab
             </h1>
             <p className="mt-2 max-w-2xl text-sm leading-relaxed text-[var(--text-secondary)]">
-              Zelfde page-chrome als HQ (<code className="rounded bg-black/25 px-1 text-[11px]">flatGlassPageRoot</code> +{" "}
-              <code className="rounded bg-black/25 px-1 text-[11px]">dashboard-page</code>) · command decks via{" "}
+              Zelfde basislaag als HQ (<code className="rounded bg-black/25 px-1 text-[11px]">flatGlassPageRoot</code>), zonder{" "}
+              <code className="rounded bg-black/25 px-1 text-[11px]">dashboard-page</code> randvignet · command decks via{" "}
               <code className="rounded bg-black/25 px-1 text-[11px]">VisualLabCommandDeck</code> (matcht <code className="rounded bg-black/25 px-1 text-[11px]">TasksTabsShell</code>
               ). Daarna lab-ringen, balken, polygon, hex, toasts — mock data.
             </p>
