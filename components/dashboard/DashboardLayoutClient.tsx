@@ -2,6 +2,7 @@
 
 import { useEffect, useLayoutEffect } from "react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import BottomNavigation from "@/components/ui/BottomNavigation";
 import { KeyboardShortcuts } from "@/components/KeyboardShortcuts";
 import { ThemeHydrate } from "@/components/providers/ThemeHydrate";
@@ -36,10 +37,17 @@ type Props = {
 };
 
 /** Wraps server-rendered <main> with providers and shell. Children = the <main> element from the server layout. */
+function isTasksRoute(pathname: string) {
+  const p = pathname.replace(/\/$/, "") || "/";
+  return p === "/tasks" || p.startsWith("/tasks/");
+}
+
 export function DashboardLayoutClient({
   children,
   initialDashboardSnapshot: initialDashboardSnapshotProp,
 }: Props) {
+  const pathname = usePathname();
+  const tasksRoute = isTasksRoute(pathname);
   const dailySnapshot = useDailySnapshot();
   const setTodayDate = useHQStore((s) => s.setTodayDate);
   const hqMode = useHQStore((s) => s.gameState?.mode?.current ?? "focus");
@@ -113,6 +121,7 @@ export function DashboardLayoutClient({
               className="relative flex min-h-screen max-h-[100dvh] w-full max-w-[100vw] flex-col overflow-x-hidden bg-transparent"
               data-ui="dark-commander"
               data-mode={mode}
+              data-route-tasks={tasksRoute ? "true" : undefined}
             >
               <ThemeHydrate />
               <ActiveTimeTracker />
@@ -126,7 +135,11 @@ export function DashboardLayoutClient({
               <AlertsBell />
               <Link
                 href="/settings"
-                className="fixed right-[max(0.75rem,env(safe-area-inset-right))] top-[calc(env(safe-area-inset-top,0px)+1.25rem)] z-[70] rounded-full border border-[var(--card-border)] bg-[var(--bg-surface)]/80 px-2.5 py-1.5 text-sm font-semibold text-[var(--text-primary)] backdrop-blur hover:bg-[var(--bg-hover)]"
+                className={
+                  tasksRoute
+                    ? "fixed right-[max(0.75rem,env(safe-area-inset-right))] top-[calc(env(safe-area-inset-top,0px)+1.25rem)] z-[70] rounded-xl border border-[rgba(var(--mode-rgb),0.22)] bg-[rgba(6,18,30,0.55)] px-2.5 py-1.5 text-sm font-semibold text-[var(--text-primary)] shadow-[0_0_20px_rgba(var(--mode-rgb),0.12),inset_0_1px_0_rgba(255,255,255,0.08)] backdrop-blur-md hover:border-[rgba(var(--mode-rgb),0.38)] hover:bg-[rgba(8,26,42,0.65)]"
+                    : "fixed right-[max(0.75rem,env(safe-area-inset-right))] top-[calc(env(safe-area-inset-top,0px)+1.25rem)] z-[70] rounded-full border border-[var(--card-border)] bg-[var(--bg-surface)]/80 px-2.5 py-1.5 text-sm font-semibold text-[var(--text-primary)] backdrop-blur hover:bg-[var(--bg-hover)]"
+                }
                 aria-label="Open settings"
                 title="Settings"
               >

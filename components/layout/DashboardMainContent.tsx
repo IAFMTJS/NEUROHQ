@@ -11,6 +11,11 @@ function isDashboardHome(pathname: string) {
   return p === "/dashboard";
 }
 
+function isTasksRoute(pathname: string) {
+  const p = pathname.replace(/\/$/, "") || "/";
+  return p === "/tasks" || p.startsWith("/tasks/");
+}
+
 const mainPaddingStyle = {
   paddingLeft: "var(--hq-padding-x)",
   paddingRight: "var(--hq-padding-x)",
@@ -27,14 +32,16 @@ type Props = {
 export function DashboardMainContent({ children }: Props) {
   const pathname = usePathname();
   const flat = !isDashboardHome(pathname);
+  const tasksShell = flat && isTasksRoute(pathname);
 
   return (
     <main
       id="main-content"
       data-page-surface={flat ? "flat-glass" : "dashboard-home"}
+      data-page-route={tasksShell ? "tasks" : undefined}
       className={`scrollbar-hide relative z-10 min-h-0 flex-1 overflow-auto ${
         flat ? "hq-flat-glass-main" : "bg-transparent"
-      }`}
+      } ${tasksShell ? "tasks-route-shell" : ""}`}
       style={mainPaddingStyle}
       tabIndex={-1}
     >

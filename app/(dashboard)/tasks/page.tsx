@@ -712,7 +712,7 @@ export default async function TasksPage({ searchParams }: Props) {
 
   return (
     <main
-      className={`relative overflow-hidden ${simplifiedTasksFillLayout ? "flex min-h-0 flex-1 flex-col" : "min-h-screen"} ${hudStyles.flatGlassPageRoot}`}
+      className={`tasks-page-root relative isolate overflow-x-hidden ${simplifiedTasksFillLayout ? "flex min-h-0 flex-1 flex-col" : "min-h-screen min-h-[100dvh]"}`}
     >
       <MissionsProvider dateStr={dateStr}>
         <TasksDailyBootstrap dateStr={dateStr} enabled={activeTab === "missions"} />

@@ -2246,6 +2246,83 @@ main#main-content.hq-flat-glass-main {
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
 }
 
+/* /tasks: command-deck ambient scroll shell (avoids double-frost with .tasks-page-root) */
+main#main-content.hq-flat-glass-main.tasks-route-shell {
+  background:
+    radial-gradient(ellipse 92% 50% at 50% -14%, rgba(var(--mode-rgb), 0.2), transparent 58%),
+    radial-gradient(ellipse 55% 38% at 100% 0%, rgba(var(--mode-rgb), 0.12), transparent 52%),
+    linear-gradient(to bottom, rgba(2, 10, 22, 0.82) 0%, rgba(5, 14, 26, 0.58) 45%, rgba(2, 8, 18, 0.88) 100%);
+  backdrop-filter: blur(28px) saturate(1.12);
+  -webkit-backdrop-filter: blur(28px) saturate(1.12);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+[data-light-ui="true"] main#main-content.hq-flat-glass-main.tasks-route-shell {
+  background:
+    radial-gradient(ellipse 100% 58% at 50% -16%, rgba(var(--mode-rgb), 0.14), transparent 56%),
+    linear-gradient(to bottom, rgba(0, 0, 0, 0.58) 0%, transparent 30%, transparent 64%, rgba(0, 0, 0, 0.75) 100%),
+    linear-gradient(180deg, rgba(5, 12, 22, 0.98) 0%, rgba(3, 8, 16, 1) 100%);
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.055);
+}
+
+main.tasks-page-root {
+  background: transparent !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  box-shadow: none !important;
+}
+
+/* /tasks shell: dock + inset cards align with command deck */
+[data-route-tasks="true"] .bottom-nav-fab-bar {
+  border-color: rgba(var(--mode-rgb), 0.24);
+  background: linear-gradient(180deg, rgba(6, 22, 38, 0.95) 0%, rgba(3, 10, 20, 0.98) 100%);
+  box-shadow:
+    0 -14px 44px rgba(0, 0, 0, 0.5),
+    0 0 0 1px color-mix(in srgb, var(--semantic-accent, #00d4ff) 16%, transparent),
+    inset 0 1px 0 rgba(255, 255, 255, 0.07);
+  backdrop-filter: blur(22px) saturate(1.18);
+  -webkit-backdrop-filter: blur(22px) saturate(1.18);
+}
+
+[data-route-tasks="true"] .dashboard-cinematic .glass-card,
+[data-route-tasks="true"] .dashboard-cinematic .card-simple,
+[data-route-tasks="true"] .dashboard-cinematic .card-simple-accent {
+  border: 1px solid rgba(var(--mode-rgb), 0.26) !important;
+  background: linear-gradient(
+    165deg,
+    rgba(4, 18, 32, 0.72) 0%,
+    rgba(var(--mode-rgb-deep), 0.38) 42%,
+    rgba(var(--mode-rgb), 0.2) 100%
+  ) !important;
+  backdrop-filter: blur(18px) saturate(1.08);
+  -webkit-backdrop-filter: blur(18px) saturate(1.08);
+  box-shadow:
+    0 0 0 1px rgba(var(--mode-rgb), 0.12),
+    0 0 22px rgba(var(--mode-rgb), 0.1),
+    0 12px 40px rgba(0, 0, 0, 0.52),
+    inset 0 1px 0 rgba(255, 255, 255, 0.09) !important;
+}
+
+[data-route-tasks="true"] .dashboard-cinematic .dashboard-top-strip {
+  border-top-color: rgba(var(--mode-rgb), 0.24);
+  border-bottom-color: rgba(var(--mode-rgb), 0.22);
+  background: rgba(4, 14, 26, 0.55);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+[data-route-tasks="true"] .dashboard-cinematic .dashboard-mini-btn {
+  border-color: rgba(var(--mode-rgb), 0.34);
+  background: linear-gradient(180deg, rgba(8, 32, 52, 0.9), rgba(5, 20, 36, 0.94));
+}
+
+[data-route-tasks="true"] .dashboard-cinematic .dashboard-mini-btn-primary {
+  border-color: rgba(var(--mode-rgb), 0.52);
+  background: linear-gradient(180deg, rgba(10, 52, 82, 0.96), rgba(8, 38, 60, 0.98));
+  box-shadow: 0 0 14px rgba(var(--mode-rgb), 0.22);
+}
+
 /* Subtle film grain overlay for cinematic finesse (very low opacity) */
 body::after {
   content: "";
