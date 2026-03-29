@@ -2774,6 +2774,43 @@ header h1 { margin: 0; }
   padding-bottom: 3rem;
 }
 
+/* Visual Lab: nebula-only page shell (no PNG hero — gradient tokens only) */
+.visual-lab-shell-nebula-root {
+  position: relative;
+  min-height: 100vh;
+  min-height: 100dvh;
+  isolation: isolate;
+  overflow-x: hidden;
+  background-color: var(--mode-bg-main);
+  background-image: var(--cinematic-nebula),
+    linear-gradient(180deg, var(--hud-dark-1) 0%, var(--hud-dark-3) 100%);
+  background-size: cover, cover;
+  background-position: center -15%, center;
+  background-repeat: no-repeat, no-repeat;
+}
+
+.visual-lab-shell-nebula-root::before {
+  content: "";
+  position: fixed;
+  inset: -15%;
+  pointer-events: none;
+  z-index: 6;
+  background: radial-gradient(
+    circle at 50% 28%,
+    rgba(var(--mode-rgb), 0.14),
+    rgba(var(--mode-rgb-deep), 0.08),
+    transparent 58%
+  );
+}
+
+[data-light-ui="true"] .visual-lab-shell-nebula-root {
+  background-image: none !important;
+  background-color: #050c18 !important;
+}
+[data-light-ui="true"] .visual-lab-shell-nebula-root::before {
+  display: none !important;
+}
+
 .dashboard-bridge,
 .dashboard-bridge-frame {
   position: relative;
