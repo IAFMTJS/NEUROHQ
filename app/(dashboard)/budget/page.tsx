@@ -270,9 +270,8 @@ async function BudgetContent({ searchParams }: Props) {
       ? { title: "Guarded", tone: "text-[var(--mode-text-soft)]", border: "border-[var(--semantic-ring)]/30 bg-[var(--semantic-accent)]/10" }
       : { title: "Stable", tone: "text-emerald-200", border: "border-emerald-400/30 bg-emerald-400/10" };
 
-  const headerRight = (
-    <div className="flex flex-wrap items-center gap-1">
-      <BudgetHistorySelector currentMonth={monthParam} />
+  const budgetCommandToolbar = (
+    <>
       <ExportBudgetCsvButton />
       <Link
         href="/strategy"
@@ -280,11 +279,17 @@ async function BudgetContent({ searchParams }: Props) {
       >
         Strategy
       </Link>
-    </div>
+    </>
   );
 
   const overviewSection = (
     <div className="space-y-4">
+      {historyMode && (
+        <div className="flex flex-wrap items-center justify-end gap-2">
+          <BudgetHistorySelector currentMonth={monthParam} />
+          {budgetCommandToolbar}
+        </div>
+      )}
       {!historyMode && <BudgetDailyControlToast />}
       {!historyMode && (
         <BudgetWeeklyPaceGuardToast
@@ -316,6 +321,8 @@ async function BudgetContent({ searchParams }: Props) {
             periodStart={periodStart}
             periodEnd={periodEnd}
             executeHref={executeEntriesHref}
+            historyMonthParam={monthParam}
+            commandToolbar={budgetCommandToolbar}
           />
         </>
       )}
@@ -447,7 +454,7 @@ async function BudgetContent({ searchParams }: Props) {
       lockUntil={budgetControlState.lockUntil}
       lockUntilAt={budgetControlState.lockUntilAt}
       lockPanelHref={lockPanelHref}
-      headerRight={simplifiedBudget ? headerRight : null}
+      headerRight={null}
       simplifiedLayout={simplifiedBudget}
       simplifiedTopSlot={
         simplifiedBudget && !historyMode ? (
@@ -457,17 +464,6 @@ async function BudgetContent({ searchParams }: Props) {
             hasRecentSurvey={budgetControlState.hasRecentSurvey}
           />
         ) : undefined
-      }
-      centeredPageHeader={
-        simplifiedBudget
-          ? undefined
-          : {
-              title: "Budget",
-              subtitle:
-                "Cyclus, logging en signalen op één plek — zoals Strategy: tabs, kaarten en duidelijke acties.",
-              backHref: "/dashboard",
-              actions: headerRight,
-            }
       }
       belowTabsSlot={
         simplifiedBudget ? undefined : (

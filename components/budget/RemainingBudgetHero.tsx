@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useTransition } from "react";
+import { useEffect, useState, useTransition, type ReactNode } from "react";
 import Link from "next/link";
 import { differenceInCalendarDays } from "date-fns";
 import { useRouter } from "next/navigation";
@@ -20,6 +20,7 @@ import {
   usePendingBudgetSnapshot,
 } from "@/lib/client-pending-budget";
 import { useSettings } from "@/lib/settings-context";
+import { BudgetHistorySelector } from "@/components/BudgetHistorySelector";
 
 function budgetRingMode(
   hasSettings: boolean,
@@ -109,6 +110,10 @@ type Props = {
   periodEnd?: string;
   /** e.g. `/budget?tab=execute#entries-frozen` */
   executeHref?: string;
+  /** Aligns with `/budget?month=` when viewing history; omit on live view. */
+  historyMonthParam?: string;
+  /** Export + Strategy links (or other compact actions) next to period picker. */
+  commandToolbar?: ReactNode;
 };
 
 export function RemainingBudgetHero({
@@ -128,6 +133,8 @@ export function RemainingBudgetHero({
   periodStart,
   periodEnd,
   executeHref,
+  historyMonthParam,
+  commandToolbar,
 }: Props) {
   const pendingBudget = usePendingBudgetSnapshot();
   const pendingActive = pendingBudget != null && pendingBudget.synced !== true;
@@ -301,34 +308,40 @@ export function RemainingBudgetHero({
   return (
     <>
       <section
-        className="relative overflow-hidden rounded-[var(--hq-card-radius,18px)] border border-[rgba(var(--mode-rgb),0.09)] bg-gradient-to-b from-[rgba(var(--mode-rgb-deep),0.22)] via-[var(--bg-elevated)]/12 to-[var(--bg-primary)]/28 px-4 py-5 shadow-[0_12px_48px_rgba(0,0,0,0.4),0_0_28px_rgba(var(--mode-rgb),0.05)] backdrop-blur-xl sm:px-6"
+        className="relative overflow-hidden rounded-[var(--hq-card-radius,18px)] border border-[rgba(var(--mode-rgb),0.24)] bg-gradient-to-br from-[rgba(8,26,42,0.96)] via-[var(--bg-elevated)]/90 to-[rgba(var(--mode-rgb-deep),0.14)] px-4 py-5 shadow-[0_0_36px_rgba(var(--mode-rgb),0.12),inset_0_1px_0_rgba(255,255,255,0.06)] sm:px-6"
         aria-label="Remaining budget overview"
         data-tutorial="budget-hero"
       >
         <div
-          className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_75%_55%_at_50%_0%,rgba(var(--mode-rgb),0.14),transparent_58%)]"
+          className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_80%_0%,rgba(var(--mode-rgb),0.14),transparent_55%)]"
           aria-hidden
         />
 
-        <div className="relative z-[1] flex flex-wrap items-center justify-between gap-3 border-b border-[rgba(var(--mode-rgb),0.1)] pb-4">
-          <div>
+        <div className="relative z-[1] flex flex-col gap-3 border-b border-[rgba(var(--mode-rgb),0.1)] pb-4 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
+          <div className="min-w-0">
             <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--mode-text-soft)]">Budget command</p>
             <p className="mt-1 max-w-xl text-xs leading-snug text-[var(--text-secondary)]">
               {effectiveBudgetPeriod === "weekly" ? "Weekcyclus" : "Maandcyclus"} · resterend t.o.v. spendable (na
               spaarreserve)
             </p>
           </div>
-          <div className="flex flex-wrap items-center gap-2">
-            <span
-              className={`text-[10px] font-medium tabular-nums ${syncOk ? "text-emerald-300/90" : "text-amber-200/95"}`}
-            >
-              {syncOk ? "● Sync OK" : "● Pending sync"}
-            </span>
-            <span
-              className={`shrink-0 rounded-full border px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.12em] ${commandStatus.pill}`}
-            >
-              {commandStatus.label}
-            </span>
+          <div className="flex w-full min-w-0 flex-col gap-2 sm:w-auto sm:shrink-0 sm:items-end">
+            <div className="flex flex-wrap items-center justify-end gap-x-2 gap-y-1.5">
+              <BudgetHistorySelector currentMonth={historyMonthParam} />
+              {commandToolbar}
+            </div>
+            <div className="flex flex-wrap items-center justify-end gap-2">
+              <span
+                className={`text-[10px] font-medium tabular-nums ${syncOk ? "text-emerald-300/90" : "text-amber-200/95"}`}
+              >
+                {syncOk ? "● Sync OK" : "● Pending sync"}
+              </span>
+              <span
+                className={`shrink-0 rounded-full border px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.12em] ${commandStatus.pill}`}
+              >
+                {commandStatus.label}
+              </span>
+            </div>
           </div>
         </div>
 
@@ -336,16 +349,16 @@ export function RemainingBudgetHero({
           <div className="flex justify-center lg:justify-start">
             <div className="relative">
               <div
-                className="absolute left-1/2 top-1/2 h-[118%] w-[118%] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[radial-gradient(circle,rgba(var(--mode-rgb),0.16)_0%,transparent_62%)] blur-md sm:h-[120%] sm:w-[120%]"
+                className="absolute left-1/2 top-1/2 h-[128%] w-[128%] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[radial-gradient(circle,rgba(var(--mode-rgb),0.34)_0%,rgba(var(--mode-rgb),0.12)_38%,transparent_68%)] blur-lg sm:h-[132%] sm:w-[132%]"
                 aria-hidden
               />
-              <div className="relative drop-shadow-[0_16px_44px_rgba(0,0,0,0.5)]">
+              <div className="relative drop-shadow-[0_12px_40px_rgba(0,0,0,0.55),0_0_48px_rgba(var(--mode-rgb),0.2)]">
                 <EnergyRing
                   softGlow
                   profileOrbit
                   budgetHub
                   centerTag={hasSettings ? "Resterend" : undefined}
-                  size={214}
+                  size={268}
                   progress={ringProgress}
                   label={hasSettings ? `${remainingPctDisplay}%` : "Geen budget"}
                   value={ringValue}

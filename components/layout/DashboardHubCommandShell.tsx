@@ -10,6 +10,8 @@ type Props = {
   children: ReactNode;
   /** Shown in the bridge chrome (e.g. Strategy, Growth). */
   hubLabel: string;
+  /** When false, omit the top bridge title strip (hub chrome only). */
+  showBridgeLabel?: boolean;
   /** When true, skip starfield / mist (matches dashboard light UI). */
   lightUi?: boolean;
   /** Narrower horizontal bridge padding + full-bleed outer strip (e.g. Growth). */
@@ -19,6 +21,7 @@ type Props = {
 export function DashboardHubCommandShell({
   children,
   hubLabel,
+  showBridgeLabel = true,
   lightUi = false,
   compactHorizontal = false,
 }: Props) {
@@ -66,9 +69,11 @@ export function DashboardHubCommandShell({
           >
             <CornerNode corner="top-left" />
             <CornerNode corner="top-right" />
-            <span className="dashboard-bridge-label shrink-0" aria-hidden>
-              {hubLabel}
-            </span>
+            {showBridgeLabel ? (
+              <span className="dashboard-bridge-label shrink-0" aria-hidden>
+                {hubLabel}
+              </span>
+            ) : null}
             {children}
           </SciFiPanel>
         </div>

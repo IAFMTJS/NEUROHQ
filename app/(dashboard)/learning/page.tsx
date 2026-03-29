@@ -63,6 +63,7 @@ export default async function LearningPage({ searchParams }: Props) {
       <div className={SIMPLIFIED_VIEWPORT_WRAPPER}>
         <SimplifiedPageShell
           title="Growth"
+          hideTitleBar
           footerLinks={[
             { href: "/tasks", label: "Missions" },
             { href: "/dashboard", label: "HQ" },

@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { NeuroToastIcon } from "@/components/brand/NeuroToastIcon";
 import {
   demoToastSnapshotInfoEn,
@@ -16,6 +17,12 @@ import { VisualLabHexMesh } from "@/components/visual-lab/VisualLabHexMesh";
 import { VisualLabShapeEnergyRing } from "@/components/visual-lab/VisualLabShapeEnergyRing";
 import { VisualLabBudgetStatusAlternatives } from "@/components/visual-lab/VisualLabBudgetStatusAlternatives";
 import { VisualLabBudgetStatusTabConcept } from "@/components/visual-lab/VisualLabBudgetStatusTabConcept";
+import { VisualLabSettingsPageConcept } from "@/components/visual-lab/VisualLabSettingsPageConcept";
+import {
+  VISUAL_LAB_UI_BACKDROP_ORDER,
+  VISUAL_LAB_UI_BACKDROP_PRESETS,
+  type VisualLabUiBackdropId,
+} from "@/components/visual-lab/visualLabUiBackdropPresets";
 
 /** Shared mock rows for ring kitchen (circle + polygon outlines). */
 const RING_KITCHEN_SAMPLES = [
@@ -67,16 +74,21 @@ function ledClasses(tone: (typeof MOCK_STATUS)[number]["tone"]) {
 }
 
 export function VisualLabClient() {
+  const [uiBackdrop, setUiBackdrop] = useState<VisualLabUiBackdropId>("strategyAnalysis");
+  const activeBackdrop = VISUAL_LAB_UI_BACKDROP_PRESETS[uiBackdrop];
+
   return (
     <div className="min-h-screen bg-[var(--hud-body-bg)] px-[var(--page-padding-x)] py-8 text-[var(--text-main)]">
       <div className="pointer-events-none fixed inset-0 opacity-[var(--spotlight-opacity)] saturate-[var(--spotlight-saturation)] blur-[var(--spotlight-blur)] [background:var(--spotlight)]" aria-hidden />
 
       <div className="relative mx-auto max-w-5xl">
-        <article className="relative overflow-hidden rounded-2xl border border-[rgba(var(--mode-rgb),0.28)] bg-gradient-to-br from-[rgba(8,26,42,0.96)] via-[var(--bg-elevated)]/95 to-[rgba(var(--mode-rgb-deep),0.12)] p-5 shadow-[var(--hud-elevation-panel),0_0_40px_rgba(var(--mode-rgb),0.1),inset_0_1px_0_rgba(255,255,255,0.06)] md:p-7">
-          <div
-            className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_50%_0%,rgba(var(--mode-rgb),0.16),transparent_55%)]"
-            aria-hidden
-          />
+        <article
+          className={`${activeBackdrop.shell} p-5 md:p-7`}
+          aria-label={`Visual lab panel: ${activeBackdrop.label}`}
+        >
+          {activeBackdrop.radialClass ? (
+            <div className={activeBackdrop.radialClass} aria-hidden />
+          ) : null}
 
           <header className="relative mb-8 border-b border-[rgba(var(--mode-rgb),0.14)] pb-6">
             <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-[var(--semantic-accent)]/90">Sandbox</p>
@@ -84,9 +96,46 @@ export function VisualLabClient() {
               Visual lab
             </h1>
             <p className="mt-2 max-w-2xl text-sm leading-relaxed text-[var(--text-secondary)]">
-              Mock HUD: rings, budget status-tab concept + alternatieven, split ring, bar card (site copy), polygon meters (trace + fill), hex mesh, lattice, flow diagram, strips, toasts. No live data.
+              Mock HUD: rings, budget & settings page concepts, split ring, bar card (site copy), polygon meters (trace + fill), hex mesh, lattice, flow diagram, strips, toasts. No live data.
             </p>
           </header>
+
+          <section className="relative mb-10" aria-labelledby="ui-backdrops-heading">
+            <div className="mb-3 flex flex-wrap items-end justify-between gap-2">
+              <h2 id="ui-backdrops-heading" className="text-[11px] font-bold uppercase tracking-[0.18em] text-[var(--text-muted)]">
+                UI panel shells
+              </h2>
+              <span className="max-w-xs text-right text-[10px] leading-snug text-[var(--text-muted)]">
+                Achtergrond van dit artikel — default = Strategy Analyse-kaart
+              </span>
+            </div>
+            <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-6">
+              {VISUAL_LAB_UI_BACKDROP_ORDER.map((id) => {
+                const p = VISUAL_LAB_UI_BACKDROP_PRESETS[id];
+                const selected = uiBackdrop === id;
+                return (
+                  <button
+                    key={id}
+                    type="button"
+                    onClick={() => setUiBackdrop(id)}
+                    className={[
+                      "group relative h-[5.5rem] overflow-hidden rounded-xl border text-left transition focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--semantic-accent)]/55 focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--hud-body-bg)]",
+                      selected
+                        ? "border-[color:color-mix(in_oklch,var(--semantic-accent),transparent_35%)] ring-2 ring-[rgba(var(--mode-rgb),0.22)]"
+                        : "border-[rgba(var(--mode-rgb),0.16)] hover:border-[rgba(var(--mode-rgb),0.26)]",
+                    ].join(" ")}
+                  >
+                    <span className={`${p.shell} absolute inset-0`} aria-hidden />
+                    {p.radialClass ? <span className={`${p.radialClass} absolute inset-0`} aria-hidden /> : null}
+                    <span className="relative z-[1] flex h-full flex-col justify-end bg-gradient-to-t from-[rgba(4,10,18,0.92)] via-[rgba(4,10,18,0.45)] to-transparent p-2.5">
+                      <span className="text-[10px] font-bold leading-tight text-[var(--text-primary)]">{p.label}</span>
+                      <span className="mt-0.5 line-clamp-2 text-[9px] leading-snug text-[var(--text-muted)]">{p.source}</span>
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          </section>
 
           <section className="relative mb-10 space-y-4" aria-labelledby="status-lattice-heading">
             <div className="flex items-end justify-between gap-3">
@@ -326,6 +375,8 @@ export function VisualLabClient() {
             <VisualLabBudgetStatusAlternatives />
             <VisualLabBudgetStatusTabConcept />
           </section>
+
+          <VisualLabSettingsPageConcept />
 
           <section className="relative mb-10 space-y-5" aria-labelledby="bars-advanced-heading">
             <div className="flex flex-wrap items-end justify-between gap-3">

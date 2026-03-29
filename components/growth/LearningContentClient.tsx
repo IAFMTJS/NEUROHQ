@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, type ReactNode } from "react";
-import Link from "next/link";
 import type { LearningState } from "@/app/actions/learning-state";
 import type { ProtocolLibraryRow } from "@/app/actions/protocol-library";
 import type { ProtocolProgressState } from "@/app/actions/protocol-progress";
@@ -18,12 +17,9 @@ import { GrowthBottomHubCards } from "@/components/growth/GrowthBottomHubCards";
 import { GrowthProtocolViewerModal } from "@/components/growth/GrowthProtocolViewerModal";
 import { GrowthTabsShell } from "@/components/growth/GrowthTabsShell";
 import { CollapsibleDashboardCard } from "@/components/dashboard/CollapsibleDashboardCard";
-import { computeGrowthCommandMetrics } from "@/lib/growth/growth-command-metrics";
-import { growthStatusCardMessage } from "@/lib/growth/growth-status-card-copy";
 import { weeklyDifficultyFromBrain } from "@/lib/growth/adaptive-engine";
 import { progressKey } from "@/lib/growth/resolve-focus-protocol";
 import { useHQStore } from "@/lib/hq-store";
-import { XPBadge } from "@/components/XPBadge";
 
 type XPIdentityPayload = {
   total_xp: number;
@@ -64,8 +60,6 @@ export function LearningContentClient({
   const learning: LearningState = fallback;
   const gameState = useHQStore((s) => s.gameState);
 
-  const level = gameState?.level ?? xpIdentity.level;
-  const totalXp = xpIdentity.total_xp;
   const energyAvg = gameState?.stats.energy ?? null;
   const focusAvg = gameState?.stats.focus ?? null;
   const brainLogged = energyAvg != null && focusAvg != null;
@@ -76,40 +70,10 @@ export function LearningContentClient({
   });
 
   const currentBook = learning.streams.find((s) => s.type === "book") ?? null;
-  const growthMetrics = computeGrowthCommandMetrics(learning);
-  const statusCardLine = growthStatusCardMessage(growthMetrics);
-
-  const headerActions = !simplified ? (
-    <>
-      <XPBadge totalXp={totalXp} level={level} compact href="/xp" />
-      <Link
-        href="/learning/analytics"
-        className="link-glow-hover inline-flex items-center rounded-lg border border-[var(--card-border)] bg-[var(--bg-elevated)] px-4 py-2 text-sm font-medium text-[var(--text-primary)] transition-all duration-200 hover:border-[var(--accent-focus)] hover:text-[var(--accent-focus)]"
-      >
-        Analytics →
-      </Link>
-    </>
-  ) : null;
 
   return (
     <div className="space-y-6" data-tutorial="growth-content">
-      <GrowthTabsShell
-        commandPageHeader={
-          !simplified
-            ? {
-                backHref: "/dashboard",
-                statusLine: growthMetrics.statusLine,
-                ringProgress: growthMetrics.ringProgress,
-                ringValue: growthMetrics.ringValue,
-                ringLabel: growthMetrics.ringLabel,
-                ringMode: growthMetrics.ringMode,
-                actions: headerActions,
-                statusCardMessage: statusCardLine,
-              }
-            : undefined
-        }
-        belowTabsSlot={!simplified ? heroSlot : undefined}
-      >
+      <GrowthTabsShell belowTabsSlot={!simplified ? heroSlot : undefined}>
         {(activeTab) => (
           <>
             {activeTab === "command" && (

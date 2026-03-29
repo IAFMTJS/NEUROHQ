@@ -183,7 +183,7 @@ export function BudgetTabsShell({
   ];
 
   const tabBtnClassFull = (tab: TabId) =>
-    `rounded-t-lg px-3 py-2 text-sm font-medium transition-colors ${
+    `shrink-0 rounded-t-lg px-2 py-1.5 text-[11px] font-medium transition-colors sm:px-2.5 sm:text-xs ${
       activeTab === tab
         ? "border border-b-0 border-[var(--card-border)] bg-[var(--bg-elevated)] text-[var(--text-primary)]"
         : "text-[var(--text-muted)] hover:text-[var(--text-primary)]"
@@ -191,7 +191,7 @@ export function BudgetTabsShell({
 
   const lockBadge = !historyMode && lockActive && (
     <span
-      className="inline-flex items-center gap-1 rounded-full border border-amber-400/55 bg-amber-500/25 px-2 py-0.5 text-[9px] font-bold uppercase tracking-[0.12em] text-amber-100 shadow-sm"
+      className="inline-flex shrink-0 items-center gap-0.5 rounded-full border border-amber-400/55 bg-amber-500/25 px-1.5 py-0.5 text-[8px] font-bold uppercase tracking-[0.1em] text-amber-100 shadow-sm sm:gap-1 sm:px-2 sm:text-[9px]"
       title="No-spend lock staat aan"
     >
       <span aria-hidden>🔒</span>
@@ -201,7 +201,7 @@ export function BudgetTabsShell({
 
   const tabTrackFull = (
     <div
-      className="flex flex-wrap items-center gap-2 border-b border-[var(--card-border)] pb-2"
+      className="flex flex-nowrap items-center gap-1 overflow-x-auto border-b border-[var(--card-border)] pb-2 [-webkit-overflow-scrolling:touch] [scrollbar-width:thin] sm:gap-1.5"
       role="tablist"
       aria-label="Budget views"
     >
@@ -269,13 +269,16 @@ export function BudgetTabsShell({
 
   const tabPillClass = (tab: TabId) =>
     activeTab === tab
-      ? "rounded-full border border-[rgba(var(--mode-rgb),0.28)] bg-[var(--bg-elevated)]/75 px-2.5 py-1.5 text-xs font-semibold text-[var(--text-primary)] sm:px-3"
-      : "rounded-full border border-transparent px-2.5 py-1.5 text-xs font-medium text-[var(--text-muted)] transition-colors hover:border-[rgba(var(--mode-rgb),0.15)] hover:bg-[var(--bg-elevated)]/45 hover:text-[var(--text-primary)] sm:px-3";
+      ? "shrink-0 rounded-full border border-[rgba(var(--mode-rgb),0.28)] bg-[var(--bg-elevated)]/75 px-1.5 py-0.5 text-[10px] font-semibold leading-tight text-[var(--text-primary)] sm:px-2 sm:py-1 sm:text-[11px]"
+      : "shrink-0 rounded-full border border-transparent px-1.5 py-0.5 text-[10px] font-medium leading-tight text-[var(--text-muted)] transition-colors hover:border-[rgba(var(--mode-rgb),0.15)] hover:bg-[var(--bg-elevated)]/45 hover:text-[var(--text-primary)] sm:px-2 sm:py-1 sm:text-[11px]";
 
   function renderTabButtonsPills(className?: string) {
     return (
       <div
-        className={className ?? "flex flex-wrap items-center justify-center gap-1.5"}
+        className={
+          className ??
+          "flex flex-nowrap items-center justify-center gap-1 overflow-x-auto pb-0.5 [-webkit-overflow-scrolling:touch] [scrollbar-width:thin]"
+        }
         role="tablist"
         aria-label="Budget views"
       >
@@ -311,14 +314,14 @@ export function BudgetTabsShell({
           >
             <CornerNode corner="top-left" />
             <CornerNode corner="top-right" />
-            <div className={`relative flex shrink-0 items-center gap-2 border-b ${simplifiedDivider} px-3 py-2`}>
+            <div className={`relative flex shrink-0 items-center justify-between gap-2 border-b ${simplifiedDivider} px-3 py-2`}>
               <Link
                 href="/dashboard"
                 className="shrink-0 text-[10px] font-semibold uppercase tracking-wide text-[var(--accent-focus)] underline-offset-2 hover:underline"
               >
                 ← HQ
               </Link>
-              <h2 className={`min-w-0 flex-1 truncate text-center ${budgetTitleGlowClass}`}>Budget</h2>
+              <h2 className="sr-only">Budget</h2>
               <span className="inline-flex shrink-0 items-center rounded-full border border-[rgba(var(--mode-rgb),0.18)] bg-[var(--bg-elevated)]/35 px-2 py-0.5 text-[9px] font-semibold uppercase tracking-wide text-[var(--accent-focus)]">
                 {modeLabel}
               </span>

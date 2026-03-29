@@ -53,9 +53,11 @@ export function EnergyRing({
   budgetHub = false,
   centerTag,
 }: EnergyRingProps) {
-  const soft = softGlow || profileOrbit;
+  /** Profile/soft preset dims glow; budget hub opts out so the command ring reads clearly in the panel. */
+  const dampedGlow = (softGlow || profileOrbit) && !budgetHub;
   const modeRgb = "var(--mode-rgb, 0, 212, 255)";
-  const strokeWidth = 10;
+  /** Budget command hero: thicker arc so the status ring reads as the primary instrument. */
+  const strokeWidth = budgetHub ? 18 : 10;
   const radius = (size - strokeWidth) / 2;
   const circumference = 2 * Math.PI * radius;
   const arcClamp = Math.max(0, Math.min(100, arcFillPct ?? progress));
@@ -111,22 +113,22 @@ export function EnergyRing({
           ? "rgba(0,232,118,0.14)"
       : `rgba(${modeRgb},0.14)`;
   const ringHalo = isHighAlert
-    ? soft
+    ? dampedGlow
       ? "rgba(185,28,28,0.28)"
       : "rgba(185,28,28,0.42)"
     : isAlert
-      ? soft
+      ? dampedGlow
         ? "rgba(255,154,60,0.24)"
         : "rgba(255,154,60,0.45)"
       : isGreenPeak
-        ? soft
+        ? dampedGlow
           ? "rgba(0,255,136,0.34)"
           : "rgba(0,255,136,0.62)"
         : isGreen
-          ? soft
+          ? dampedGlow
             ? "rgba(0,232,118,0.26)"
             : "rgba(0,232,118,0.44)"
-      : soft
+      : dampedGlow
         ? `rgba(${modeRgb},0.24)`
         : `rgba(${modeRgb},0.45)`;
 
@@ -145,7 +147,7 @@ export function EnergyRing({
       data-mode={mode}
       data-budget-hub={budgetHub ? "true" : undefined}
       style={
-        soft
+        dampedGlow
           ? {
               width: size,
               height: size,
@@ -171,7 +173,7 @@ export function EnergyRing({
           </linearGradient>
 
           <filter id={glowId} x="-50%" y="-50%" width="200%" height="200%">
-            <feGaussianBlur stdDeviation={soft ? 1.6 : 4} result="blur" />
+            <feGaussianBlur stdDeviation={dampedGlow ? 1.6 : 4} result="blur" />
             <feMerge>
               <feMergeNode in="blur" />
               <feMergeNode in="SourceGraphic" />
@@ -183,15 +185,15 @@ export function EnergyRing({
         <circle
           cx={center}
           cy={center}
-          r={soft ? radius + 10 : radius + 18}
-          fill={soft ? ringHalo.replace(/0\.\d+\)/, "0.08)") : ringHalo.replace("0.45", "0.1")}
+          r={dampedGlow ? radius + 10 : radius + 18}
+          fill={dampedGlow ? ringHalo.replace(/0\.\d+\)/, "0.08)") : ringHalo.replace(/0\.\d+\)/, "0.15)")}
         />
 
         {/* Base track */}
         <circle
           stroke={ringTrack}
           fill="transparent"
-          strokeWidth={soft ? Math.max(4, strokeWidth - 3) : strokeWidth}
+          strokeWidth={dampedGlow ? Math.max(4, strokeWidth - 3) : strokeWidth}
           r={radius}
           cx={center}
           cy={center}
@@ -209,10 +211,10 @@ export function EnergyRing({
           strokeDashoffset={offset}
           strokeLinecap="round"
           filter={`url(#${glowId})`}
-          className={!isLocked && !soft ? styles.energyArcGlow : ""}
+          className={!isLocked && !dampedGlow ? styles.energyArcGlow : ""}
           style={{
             transition: "stroke-dashoffset 900ms cubic-bezier(0.4,0,0.2,1)",
-            opacity: isLocked ? 0.6 : soft ? 0.78 : 1,
+            opacity: isLocked ? 0.6 : dampedGlow ? 0.78 : 1,
           }}
         />
 
@@ -236,21 +238,22 @@ export function EnergyRing({
         <circle
           stroke={ringHalo}
           fill="transparent"
-          strokeWidth={soft ? 1.2 : 2}
-          r={soft ? radius + 2 : radius + 3}
+          strokeWidth={dampedGlow ? 1.2 : budgetHub ? 3 : 2}
+          r={dampedGlow ? radius + 2 : budgetHub ? radius + 5 : radius + 3}
           cx={center}
           cy={center}
           strokeDasharray={circumference}
           strokeDashoffset={offset * 1.02}
           strokeLinecap="round"
-          className={soft ? "" : styles.energyArcOuter}
+          className={dampedGlow ? "" : styles.energyArcOuter}
         />
 
         {/* Micro tick marks – round cx/cy to avoid SSR/client float hydration mismatch */}
         {Array.from({ length: ticks }).map((_, i) => {
           const angle = (i / ticks) * Math.PI * 2 - Math.PI / 2;
-          const x = Math.round((center + Math.cos(angle) * (radius + 8)) * 100) / 100;
-          const y = Math.round((center + Math.sin(angle) * (radius + 8)) * 100) / 100;
+          const tickRadius = radius + (budgetHub ? 12 : 8);
+          const x = Math.round((center + Math.cos(angle) * tickRadius) * 100) / 100;
+          const y = Math.round((center + Math.sin(angle) * tickRadius) * 100) / 100;
           const tickFill = isHighAlert
             ? "rgba(255,64,64,0.24)"
             : isAlert
@@ -265,7 +268,7 @@ export function EnergyRing({
       </svg>
 
       {/* Floating dust particles */}
-      {!isLocked && !soft &&
+      {!isLocked && !dampedGlow &&
         dust.map((p, i) => (
           <span
             key={`dust-${i}`}

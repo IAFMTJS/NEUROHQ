@@ -1,9 +1,6 @@
 import nextDynamic from "next/dynamic";
-import Link from "next/link";
 import { Suspense } from "react";
 import { HeroMascotImage } from "@/components/HeroMascotImage";
-import { getXP } from "@/app/actions/xp";
-import { XPBadge } from "@/components/XPBadge";
 import {
   getActiveStrategyFocus,
   getPastStrategyFocus,
@@ -32,24 +29,9 @@ import { neuroStrategyBudgetHint } from "@/lib/neuro-copy";
 import { SimplifiedPageShell } from "@/components/layout/SimplifiedPageShell";
 import { SIMPLIFIED_VIEWPORT_WRAPPER } from "@/lib/simplified-page-layout";
 import { DashboardHubCommandShell } from "@/components/layout/DashboardHubCommandShell";
-import { StrategyHubHeader } from "@/components/strategy/StrategyHubHeader";
 
 /** Force dynamic: strategy uses cookies (auth) and live data. */
 export const dynamic = "force-dynamic";
-
-const insightsLinkClass =
-  "link-glow-hover inline-flex items-center rounded-lg border border-[var(--card-border)] bg-[var(--bg-elevated)] px-4 py-2 text-sm font-medium text-[var(--text-primary)] transition-all duration-200 hover:border-[var(--accent-focus)] hover:text-[var(--accent-focus)]";
-
-function StrategyHeaderActions({ totalXp, level }: { totalXp: number; level: number }) {
-  return (
-    <>
-      <XPBadge totalXp={totalXp} level={level} compact href="/xp" />
-      <Link href="/report" className={insightsLinkClass}>
-        Insights →
-      </Link>
-    </>
-  );
-}
 
 const StrategyThesisForm = nextDynamic(
   () => import("@/components/strategy/StrategyThesisForm").then((m) => ({ default: m.StrategyThesisForm })),
@@ -99,35 +81,17 @@ const StrategyArchiveCTA = nextDynamic(
 );
 
 async function StrategyContent({ simplifiedLayout = false }: { simplifiedLayout?: boolean }) {
-  const hubStatusLine =
-    "Thesis, focus, alignment en weekreview — gekoppeld aan missies, budget en Growth.";
   let strategy: Awaited<ReturnType<typeof getActiveStrategyFocus>> = null;
   let past: Awaited<ReturnType<typeof getPastStrategyFocus>> = [];
-  let xp: Awaited<ReturnType<typeof getXP>> = { total_xp: 0, level: 1 };
 
   try {
-    const result = await Promise.all([
-      getActiveStrategyFocus(),
-      getPastStrategyFocus(6),
-      getXP(),
-    ]);
+    const result = await Promise.all([getActiveStrategyFocus(), getPastStrategyFocus(6)]);
     strategy = result[0];
     past = result[1];
-    xp = result[2];
   } catch (e) {
     console.error("Strategy page data load failed (check Supabase env and migrations):", e);
     return (
       <>
-        {!simplifiedLayout ? (
-          <StrategyHubHeader
-            statusLine="Data laadt niet — check Supabase env en migraties (zie DEPLOY.md)."
-            actions={<StrategyHeaderActions totalXp={xp.total_xp} level={xp.level} />}
-          />
-        ) : (
-          <div className="flex flex-wrap items-center justify-end gap-2">
-            <StrategyHeaderActions totalXp={xp.total_xp} level={xp.level} />
-          </div>
-        )}
         <div className="rounded-xl border border-amber-500/40 bg-amber-500/10 px-4 py-3 text-sm text-[var(--text-primary)]">
           <p className="font-medium">Er is iets misgegaan</p>
           <p className="mt-1 text-[var(--text-muted)]">
@@ -142,16 +106,6 @@ async function StrategyContent({ simplifiedLayout = false }: { simplifiedLayout?
   if (!strategy) {
     return (
       <>
-        {!simplifiedLayout ? (
-          <StrategyHubHeader
-            statusLine="Start met een thesis om focus, alignment en reviews te koppelen aan je stack."
-            actions={<StrategyHeaderActions totalXp={xp.total_xp} level={xp.level} />}
-          />
-        ) : (
-          <div className="flex flex-wrap items-center justify-end gap-2">
-            <StrategyHeaderActions totalXp={xp.total_xp} level={xp.level} />
-          </div>
-        )}
         <StrategyThesisForm />
         <StrategyArchiveHistory past={past} />
       </>
@@ -221,16 +175,6 @@ async function StrategyContent({ simplifiedLayout = false }: { simplifiedLayout?
 
   return (
     <div data-tutorial="strategy-content" className={simplifiedLayout ? "space-y-6" : "space-y-4"}>
-      {!simplifiedLayout ? (
-        <StrategyHubHeader
-          statusLine={hubStatusLine}
-          actions={<StrategyHeaderActions totalXp={xp.total_xp} level={xp.level} />}
-        />
-      ) : (
-        <div className="flex flex-wrap items-center justify-end gap-2">
-          <StrategyHeaderActions totalXp={xp.total_xp} level={xp.level} />
-        </div>
-      )}
       {analysisSnapshot ? <StrategyAnalysisSquare snapshot={analysisSnapshot} /> : null}
       <Suspense fallback={<div className="min-h-[120px] animate-pulse rounded-2xl bg-[var(--bg-elevated)]/30" aria-hidden />}>
         <div
@@ -326,6 +270,7 @@ export default async function StrategyPage() {
       <div className={SIMPLIFIED_VIEWPORT_WRAPPER}>
         <SimplifiedPageShell
           title="Strategy"
+          hideTitleBar
           footerLinks={[
             { href: "/tasks", label: "Missions" },
             { href: "/report", label: "Insights" },
@@ -343,7 +288,7 @@ export default async function StrategyPage() {
   }
 
   return (
-    <DashboardHubCommandShell hubLabel="Strategy" lightUi={lightUi}>
+    <DashboardHubCommandShell hubLabel="Strategy" showBridgeLabel={false} lightUi={lightUi}>
       <Suspense fallback={<div className="min-h-[200px] animate-pulse rounded-2xl bg-[var(--bg-elevated)]/30" aria-hidden />}>
         <StrategyContent />
       </Suspense>

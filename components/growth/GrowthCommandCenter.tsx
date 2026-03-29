@@ -90,14 +90,18 @@ export function GrowthCommandCenter({
     return (
       <section
         id="growth-command"
-        className="scroll-mt-28 rounded-2xl border border-dashed border-[var(--semantic-ring)]/40 bg-[var(--bg-elevated)]/30 p-6 text-center"
+        className="relative scroll-mt-28 overflow-hidden rounded-2xl border border-dashed border-[rgba(var(--mode-rgb),0.35)] bg-gradient-to-br from-[rgba(8,26,42,0.96)] via-[var(--bg-elevated)]/90 to-[rgba(var(--mode-rgb-deep),0.14)] p-6 text-center shadow-[0_0_36px_rgba(var(--mode-rgb),0.12),inset_0_1px_0_rgba(255,255,255,0.06)]"
       >
-        <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[var(--semantic-accent)]/90">
-          Growth command center
-        </p>
-        <p className="mt-2 text-sm text-[var(--text-secondary)]">
-          Geen protocollen in de bibliotheek — importeer seed (migration 090 + <code className="text-xs">npm run import-protocols</code>).
-        </p>
+        <div
+          className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_80%_0%,rgba(var(--mode-rgb),0.14),transparent_55%)]"
+          aria-hidden
+        />
+        <div className="relative z-[1]">
+          <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[var(--semantic-accent)]/90">Growth command center</p>
+          <p className="mt-2 text-sm text-[var(--text-secondary)]">
+            Geen protocollen in de bibliotheek — importeer seed (migration 090 + <code className="text-xs">npm run import-protocols</code>).
+          </p>
+        </div>
       </section>
     );
   }
@@ -164,10 +168,14 @@ export function GrowthCommandCenter({
   return (
     <section
       id="growth-command"
-      className="scroll-mt-28 overflow-hidden rounded-2xl border border-[rgba(var(--mode-rgb),0.22)] bg-gradient-to-br from-[rgba(var(--mode-rgb-deep),0.38)] via-[rgba(var(--mode-rgb),0.12)] to-[var(--bg-primary)]/95 shadow-[0_0_0_1px_rgba(var(--mode-rgb),0.08),0_0_40px_rgba(var(--mode-rgb),0.1),0_24px_56px_rgba(0,0,0,0.35)] backdrop-blur-md"
+      className="scroll-mt-28 relative overflow-hidden rounded-2xl border border-[rgba(var(--mode-rgb),0.24)] bg-gradient-to-br from-[rgba(8,26,42,0.96)] via-[var(--bg-elevated)]/90 to-[rgba(var(--mode-rgb-deep),0.14)] shadow-[0_0_36px_rgba(var(--mode-rgb),0.12),inset_0_1px_0_rgba(255,255,255,0.06)]"
     >
+      <div
+        className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_80%_0%,rgba(var(--mode-rgb),0.14),transparent_55%)]"
+        aria-hidden
+      />
       {/* Top: Visual Lab–aligned header + title + focus + ring */}
-      <div className="border-b border-[rgba(var(--mode-rgb),0.14)] px-4 py-4 sm:px-5">
+      <div className="relative z-[1] border-b border-[rgba(var(--mode-rgb),0.14)] px-4 py-4 sm:px-5">
         <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
           <div className="min-w-0 flex-1 space-y-2">
             <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[var(--semantic-accent)]/90">
@@ -261,7 +269,7 @@ export function GrowthCommandCenter({
       </div>
 
       {quarterPacingLines.length > 0 ? (
-        <div className="border-b border-[rgba(var(--mode-rgb),0.1)] bg-[rgba(var(--mode-rgb),0.05)] px-4 py-3 sm:px-5">
+        <div className="relative z-[1] border-b border-[rgba(var(--mode-rgb),0.1)] bg-[rgba(var(--mode-rgb),0.05)] px-4 py-3 sm:px-5">
           <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-[var(--text-muted)]">
             Kwartaal · Strategy-doel
           </p>
@@ -282,7 +290,7 @@ export function GrowthCommandCenter({
       ) : null}
 
       {/* Middle: week bar + tasks */}
-      <div className="space-y-5 px-4 py-6 sm:px-5">
+      <div className="relative z-[1] space-y-5 px-4 py-6 sm:px-5">
         {def && week ? (
           <>
             <div className="flex flex-wrap items-end justify-between gap-2">
@@ -382,7 +390,7 @@ export function GrowthCommandCenter({
       </div>
 
       {/* Bottom: one primary + two quiet secondaries */}
-      <div className="border-t border-[rgba(var(--mode-rgb),0.12)] bg-black/10 px-4 py-5 sm:px-5">
+      <div className="relative z-[1] border-t border-[rgba(var(--mode-rgb),0.12)] bg-black/10 px-4 py-5 sm:px-5">
         {def && week ? (
           <>
             <button
