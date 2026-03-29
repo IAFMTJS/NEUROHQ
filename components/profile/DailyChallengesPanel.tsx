@@ -110,10 +110,11 @@ export function DailyChallengesPanel({
       ? "mt-2 rounded-lg border border-[var(--card-border)] px-2.5 py-1.5 text-xs font-semibold text-[var(--text-primary)] hover:bg-white/10 disabled:opacity-50"
       : "mt-2 rounded-lg border border-[rgba(var(--mode-rgb),0.22)] bg-[rgba(var(--mode-rgb-deep),0.08)] px-2.5 py-1.5 text-[11px] font-semibold text-[var(--text-primary)] hover:bg-[rgba(var(--mode-rgb-deep),0.14)] disabled:opacity-50 outline-none focus-visible:ring-2 focus-visible:ring-[rgba(var(--mode-rgb),0.45)] focus-visible:ring-offset-0";
 
+  /** Native date input defaults to light chrome; color-scheme + gradient match HQ dark UI. */
   const dateInputClass =
     variant === "xp"
-      ? "rounded-lg border border-[var(--card-border)] bg-[var(--bg-primary)] px-2 py-1.5 text-sm text-[var(--text-primary)]"
-      : "rounded-lg border border-[rgba(var(--mode-rgb),0.2)] bg-[var(--bg-primary)]/35 px-2 py-1.5 text-sm text-[var(--text-primary)] outline-none focus-visible:ring-2 focus-visible:ring-[rgba(var(--mode-rgb),0.45)] focus-visible:ring-offset-0";
+      ? "min-w-[10.5rem] rounded-lg border border-[var(--card-border)] bg-gradient-to-b from-[rgba(var(--mode-rgb-deep),0.42)] to-[rgba(6,18,30,0.94)] px-2.5 py-1.5 text-sm font-medium text-[var(--text-primary)] shadow-[inset_0_1px_0_rgba(255,255,255,0.06)] [color-scheme:dark] outline-none focus-visible:border-[rgba(var(--mode-rgb),0.4)] focus-visible:ring-2 focus-visible:ring-[rgba(var(--mode-rgb),0.32)] focus-visible:ring-offset-0 [&::-webkit-calendar-picker-indicator]:cursor-pointer [&::-webkit-calendar-picker-indicator]:opacity-80"
+      : "min-w-[10.5rem] rounded-lg border border-[rgba(var(--mode-rgb),0.28)] bg-gradient-to-b from-[rgba(var(--mode-rgb-deep),0.48)] to-[rgba(6,18,30,0.96)] px-2.5 py-1.5 text-sm font-medium text-[var(--text-primary)] shadow-[inset_0_1px_0_rgba(255,255,255,0.07),0_0_14px_rgba(var(--mode-rgb),0.07)] [color-scheme:dark] outline-none focus-visible:border-[rgba(var(--mode-rgb),0.45)] focus-visible:ring-2 focus-visible:ring-[rgba(var(--mode-rgb),0.38)] focus-visible:ring-offset-0 [&::-webkit-calendar-picker-indicator]:cursor-pointer [&::-webkit-calendar-picker-indicator]:opacity-80";
 
   const headingClass =
     variant === "xp"

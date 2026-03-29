@@ -56,8 +56,15 @@ export function EnergyRing({
   /** Profile/soft preset dims glow; budget hub opts out so the command ring reads clearly in the panel. */
   const dampedGlow = (softGlow || profileOrbit) && !budgetHub;
   const modeRgb = "var(--mode-rgb, 0, 212, 255)";
-  /** Budget command hero: thicker arc so the status ring reads as the primary instrument. */
-  const strokeWidth = budgetHub ? 18 : 10;
+  /** Budget command hero: thicker arc. Profile home: extra-wide status band. */
+  const strokeWidth = budgetHub ? 18 : profileOrbit ? 30 : 10;
+  const trackStrokeWidth =
+    dampedGlow && profileOrbit && !budgetHub
+      ? Math.max(12, strokeWidth - 10)
+      : dampedGlow
+        ? Math.max(4, strokeWidth - 3)
+        : strokeWidth;
+  const tickPad = profileOrbit && !budgetHub ? Math.round(strokeWidth * 0.42) + 8 : budgetHub ? 12 : 8;
   const radius = (size - strokeWidth) / 2;
   const circumference = 2 * Math.PI * radius;
   const arcClamp = Math.max(0, Math.min(100, arcFillPct ?? progress));
@@ -151,7 +158,7 @@ export function EnergyRing({
           ? {
               width: size,
               height: size,
-              animation: "none",
+              ...(profileOrbit && !budgetHub ? {} : { animation: "none" }),
               boxShadow: profileOrbit
                 ? undefined
                 : isHighAlert
@@ -173,7 +180,7 @@ export function EnergyRing({
           </linearGradient>
 
           <filter id={glowId} x="-50%" y="-50%" width="200%" height="200%">
-            <feGaussianBlur stdDeviation={dampedGlow ? 1.6 : 4} result="blur" />
+            <feGaussianBlur stdDeviation={dampedGlow ? (profileOrbit && !budgetHub ? 2.5 : 1.6) : 4} result="blur" />
             <feMerge>
               <feMergeNode in="blur" />
               <feMergeNode in="SourceGraphic" />
@@ -185,7 +192,7 @@ export function EnergyRing({
         <circle
           cx={center}
           cy={center}
-          r={dampedGlow ? radius + 10 : radius + 18}
+          r={dampedGlow ? radius + (profileOrbit && !budgetHub ? 16 : 10) : radius + 18}
           fill={dampedGlow ? ringHalo.replace(/0\.\d+\)/, "0.08)") : ringHalo.replace(/0\.\d+\)/, "0.15)")}
         />
 
@@ -193,7 +200,7 @@ export function EnergyRing({
         <circle
           stroke={ringTrack}
           fill="transparent"
-          strokeWidth={dampedGlow ? Math.max(4, strokeWidth - 3) : strokeWidth}
+          strokeWidth={trackStrokeWidth}
           r={radius}
           cx={center}
           cy={center}
@@ -211,10 +218,17 @@ export function EnergyRing({
           strokeDashoffset={offset}
           strokeLinecap="round"
           filter={`url(#${glowId})`}
-          className={!isLocked && !dampedGlow ? styles.energyArcGlow : ""}
+          className={
+            !isLocked && !dampedGlow
+              ? styles.energyArcGlow
+              : !isLocked && dampedGlow && profileOrbit && !budgetHub
+                ? styles.energyArcProfileBandPulse
+                : ""
+          }
           style={{
             transition: "stroke-dashoffset 900ms cubic-bezier(0.4,0,0.2,1)",
-            opacity: isLocked ? 0.6 : dampedGlow ? 0.78 : 1,
+            opacity:
+              isLocked ? 0.6 : dampedGlow && profileOrbit && !budgetHub ? undefined : dampedGlow ? 0.78 : 1,
           }}
         />
 
@@ -251,7 +265,7 @@ export function EnergyRing({
         {/* Micro tick marks – round cx/cy to avoid SSR/client float hydration mismatch */}
         {Array.from({ length: ticks }).map((_, i) => {
           const angle = (i / ticks) * Math.PI * 2 - Math.PI / 2;
-          const tickRadius = radius + (budgetHub ? 12 : 8);
+          const tickRadius = radius + tickPad;
           const x = Math.round((center + Math.cos(angle) * tickRadius) * 100) / 100;
           const y = Math.round((center + Math.sin(angle) * tickRadius) * 100) / 100;
           const tickFill = isHighAlert

@@ -169,6 +169,81 @@
   }
 }
 
+/** Profiel-home orbit: gloed rond de hele ring */
+@keyframes profileOrbitPulse {
+  0%,
+  100% {
+    box-shadow: 0 0 28px rgba(var(--mode-rgb), 0.22), 0 0 52px rgba(var(--mode-rgb), 0.08), 0 10px 40px rgba(0, 0, 0, 0.38);
+    filter: brightness(1);
+  }
+  50% {
+    box-shadow:
+      0 0 48px rgba(var(--mode-rgb), 0.44),
+      0 0 96px rgba(var(--mode-rgb), 0.16),
+      0 12px 48px rgba(0, 0, 0, 0.42);
+    filter: brightness(1.07);
+  }
+}
+
+@keyframes profileOrbitPulseAlert {
+  0%,
+  100% {
+    box-shadow: 0 0 26px rgba(255, 154, 60, 0.26), 0 10px 36px rgba(0, 0, 0, 0.38);
+    filter: brightness(1);
+  }
+  50% {
+    box-shadow: 0 0 44px rgba(255, 154, 60, 0.48), 0 0 84px rgba(255, 154, 60, 0.14), 0 12px 42px rgba(0, 0, 0, 0.42);
+    filter: brightness(1.06);
+  }
+}
+
+@keyframes profileOrbitPulseHighAlert {
+  0%,
+  100% {
+    box-shadow: 0 0 30px rgba(220, 38, 38, 0.34), 0 10px 42px rgba(0, 0, 0, 0.42);
+    filter: brightness(1);
+  }
+  50% {
+    box-shadow: 0 0 48px rgba(220, 38, 38, 0.52), 0 0 92px rgba(255, 64, 64, 0.18), 0 14px 46px rgba(0, 0, 0, 0.46);
+    filter: brightness(1.08);
+  }
+}
+
+@keyframes profileOrbitPulseGreen {
+  0%,
+  100% {
+    box-shadow: 0 0 26px rgba(0, 232, 118, 0.24), 0 10px 38px rgba(0, 0, 0, 0.38);
+    filter: brightness(1);
+  }
+  50% {
+    box-shadow: 0 0 42px rgba(0, 232, 118, 0.42), 0 0 82px rgba(0, 232, 118, 0.12), 0 12px 42px rgba(0, 0, 0, 0.42);
+    filter: brightness(1.06);
+  }
+}
+
+@keyframes profileOrbitPulseGreenPeak {
+  0%,
+  100% {
+    box-shadow: 0 0 32px rgba(0, 255, 136, 0.28), 0 10px 40px rgba(0, 0, 0, 0.38);
+    filter: brightness(1);
+  }
+  50% {
+    box-shadow: 0 0 52px rgba(0, 255, 136, 0.52), 0 0 104px rgba(0, 255, 136, 0.2), 0 14px 46px rgba(0, 0, 0, 0.44);
+    filter: brightness(1.08);
+  }
+}
+
+/** Actieve boog: ademend opacity / gloed op profiel-ring */
+@keyframes profileRingBandPulse {
+  0%,
+  100% {
+    opacity: 0.72;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
 @keyframes glassPulse {
   0% {
     filter: brightness(1);
@@ -574,28 +649,43 @@
   animation: none;
 }
 
-/** Profiel-orbit: minder pulse, zachtere gloed, geen interactieve scale. */
+/**
+ * Profiel-home orbit: brede band (EnergyRing), zachte pulse op de hele ring,
+ * geen interactieve scale. Budget + profileOrbit overrides hieronder.
+ */
 .energyRingProfileOrbit {
-  animation: none !important;
-  box-shadow: 0 0 22px rgba(var(--mode-rgb), 0.16), 0 10px 40px rgba(0, 0, 0, 0.38) !important;
+  animation: profileOrbitPulse 3.1s ease-in-out infinite !important;
+  box-shadow: 0 0 28px rgba(var(--mode-rgb), 0.22), 0 0 52px rgba(var(--mode-rgb), 0.08), 0 10px 40px rgba(0, 0, 0, 0.38) !important;
 }
 .energyRingProfileOrbit:hover,
 .energyRingProfileOrbit:active {
   transform: none !important;
-  box-shadow: 0 0 26px rgba(var(--mode-rgb), 0.2), 0 12px 44px rgba(0, 0, 0, 0.4) !important;
 }
 .energyRingProfileOrbit[data-mode="alert"] {
-  box-shadow: 0 0 24px rgba(255, 154, 60, 0.2), 0 10px 36px rgba(0, 0, 0, 0.38) !important;
+  animation: profileOrbitPulseAlert 2.85s ease-in-out infinite !important;
+  box-shadow: 0 0 26px rgba(255, 154, 60, 0.26), 0 10px 36px rgba(0, 0, 0, 0.38) !important;
 }
 .energyRingProfileOrbit[data-mode="green"] {
-  box-shadow: 0 0 22px rgba(0, 232, 118, 0.18), 0 10px 38px rgba(0, 0, 0, 0.38) !important;
+  animation: profileOrbitPulseGreen 2.95s ease-in-out infinite !important;
+  box-shadow: 0 0 26px rgba(0, 232, 118, 0.24), 0 10px 38px rgba(0, 0, 0, 0.38) !important;
 }
 .energyRingProfileOrbit[data-mode="green-peak"] {
-  box-shadow: 0 0 28px rgba(0, 255, 136, 0.22), 0 10px 40px rgba(0, 0, 0, 0.38) !important;
+  animation: profileOrbitPulseGreenPeak 2.7s ease-in-out infinite !important;
+  box-shadow: 0 0 32px rgba(0, 255, 136, 0.28), 0 10px 40px rgba(0, 0, 0, 0.38) !important;
 }
 
 .energyRingProfileOrbit[data-mode="high-alert"] {
-  box-shadow: 0 0 28px rgba(220, 38, 38, 0.32), 0 10px 42px rgba(0, 0, 0, 0.42) !important;
+  animation: profileOrbitPulseHighAlert 2.4s ease-in-out infinite !important;
+  box-shadow: 0 0 30px rgba(220, 38, 38, 0.34), 0 10px 42px rgba(0, 0, 0, 0.42) !important;
+}
+
+.energyRingProfileOrbit[data-mode="locked"] {
+  animation: none !important;
+  box-shadow: 0 0 20px rgba(148, 163, 184, 0.16), 0 10px 36px rgba(0, 0, 0, 0.36) !important;
+}
+
+.energyArcProfileBandPulse {
+  animation: profileRingBandPulse 2.75s ease-in-out infinite;
 }
 
 /* Budget command: stronger rim bloom + pulse so the hero reads as primary focus (still inside frosted panel) */

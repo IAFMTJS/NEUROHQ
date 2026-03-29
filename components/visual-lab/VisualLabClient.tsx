@@ -18,13 +18,13 @@ import { VisualLabShapeEnergyRing } from "@/components/visual-lab/VisualLabShape
 import { VisualLabBudgetStatusAlternatives } from "@/components/visual-lab/VisualLabBudgetStatusAlternatives";
 import { VisualLabBudgetStatusTabConcept } from "@/components/visual-lab/VisualLabBudgetStatusTabConcept";
 import { VisualLabSettingsPageConcept } from "@/components/visual-lab/VisualLabSettingsPageConcept";
+import { VisualLabMissionsPageConcept } from "@/components/visual-lab/VisualLabMissionsPageConcept";
 import {
   VISUAL_LAB_UI_BACKDROP_ORDER,
   VISUAL_LAB_UI_BACKDROP_PRESETS,
   type VisualLabUiBackdropId,
 } from "@/components/visual-lab/visualLabUiBackdropPresets";
 import { VisualLabNavbarIdeas } from "@/components/visual-lab/VisualLabNavbarIdeas";
-import BottomNavigation from "@/components/ui/BottomNavigation";
 
 /** Shared mock rows for ring kitchen (circle + polygon outlines). */
 const RING_KITCHEN_SAMPLES = [
@@ -388,6 +388,7 @@ export function VisualLabClient() {
             <VisualLabBudgetStatusTabConcept />
           </section>
 
+          <VisualLabMissionsPageConcept />
           <VisualLabSettingsPageConcept />
 
           <section className="relative mb-10 space-y-5" aria-labelledby="bars-advanced-heading">
@@ -512,12 +513,7 @@ export function VisualLabClient() {
           </footer>
           </div>
         </article>
-
-        <div className="bottom-nav-page-spacer" aria-hidden />
       </div>
-
-      <div className="bottom-nav-underlay" aria-hidden />
-      <BottomNavigation />
     </div>
   );
 }
