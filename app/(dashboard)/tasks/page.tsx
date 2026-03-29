@@ -371,7 +371,7 @@ async function MissionsSectionAsync({
               blockedReasonByTaskId={blockedReasonByTaskId as Record<string, string>}
               neuroSelfReportOptIn={behaviorProfile.neuroSelfReportOptIn}
               missionsHeroLayout
-              commandDeckVisuals={commandDeck}
+              commandDeckVisuals
               energyCap={{
                 used: energyCap.used,
                 cap: energyCap.cap,
@@ -477,7 +477,7 @@ async function MissionsSectionAsync({
           blockedReasonByTaskId={blockedReasonByTaskId}
           neuroSelfReportOptIn={behaviorProfile.neuroSelfReportOptIn}
           missionsHeroLayout
-          commandDeckVisuals={commandDeck}
+          commandDeckVisuals
           energyCap={{
             used: energyCap.used,
             cap: energyCap.cap,
@@ -695,9 +695,13 @@ export default async function TasksPage({ searchParams }: Props) {
     activeTab,
     { tab: "routine" }
   );
-  /** Simplified mode: no missions page chrome; tabs + one full-height column for all task tabs. */
+  /** Simplified mode: full-height tab column (tabs still show; inner missions may use SciFiPanel). */
   const simplifiedTasksFillLayout = prefs.simplified_content === true;
-  /** Visual-lab command deck around tabs + content (standard layout only). */
+  /**
+   * Frosted command deck around tabs + tab bodies when not in simplified mode.
+   * Note: `commandDeckVisuals` on TaskList is independent — see MissionsSectionAsync — so missions
+   * still get visual-lab styling when simplified content is ON (only the outer deck shell is off).
+   */
   const tasksCommandDeck = !simplifiedTasksFillLayout;
 
   /**
