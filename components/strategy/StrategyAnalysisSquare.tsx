@@ -6,6 +6,38 @@ type Props = {
   snapshot: StrategyAnalysisSnapshot;
 };
 
+function EngineReadOnlyBlock({ snapshot }: { snapshot: StrategyAnalysisSnapshot }) {
+  if (!snapshot.engineReadOnlyActive) return null;
+  return (
+    <div className="space-y-3 rounded-xl border border-[rgba(var(--mode-rgb),0.18)] bg-[rgba(6,18,30,0.55)] px-3 py-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.05),0_0_24px_rgba(var(--mode-rgb),0.06)] md:px-4 md:py-4">
+      <p className="text-[9px] font-bold uppercase tracking-[0.14em] text-[var(--accent-focus)]/95">
+        Strategy engine · alleen lezen
+      </p>
+      {snapshot.engineQuarterLine ? (
+        <p className="text-[11px] leading-relaxed text-[var(--text-muted)] md:text-xs">{snapshot.engineQuarterLine}</p>
+      ) : null}
+      {snapshot.engineCompactStats && snapshot.engineDetailLines.length === 0 ? (
+        <p className="rounded-md border border-[rgba(var(--mode-rgb),0.12)] bg-[rgba(0,0,0,0.2)] px-2.5 py-2 text-[11px] font-medium leading-snug text-[var(--text-secondary)] md:text-xs">
+          {snapshot.engineCompactStats}
+        </p>
+      ) : null}
+      {snapshot.engineDetailLines.length > 0 ? (
+        <ul className="space-y-2.5 border-t border-[rgba(var(--mode-rgb),0.1)] pt-3">
+          {snapshot.engineDetailLines.map((line, i) => (
+            <li key={i} className="flex gap-2.5 text-[11px] leading-relaxed text-[var(--text-secondary)] md:text-xs">
+              <span
+                className="mt-[6px] h-1.5 w-1.5 shrink-0 rounded-full bg-[var(--accent-focus)]/80 shadow-[0_0_10px_rgba(var(--mode-rgb),0.35)]"
+                aria-hidden
+              />
+              <span className="min-w-0">{line}</span>
+            </li>
+          ))}
+        </ul>
+      ) : null}
+    </div>
+  );
+}
+
 export function StrategyAnalysisSquare({ snapshot }: Props) {
   const mPct = Math.max(0, Math.min(100, snapshot.missionsHealth));
 
@@ -16,43 +48,15 @@ export function StrategyAnalysisSquare({ snapshot }: Props) {
     >
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_80%_0%,rgba(var(--mode-rgb),0.14),transparent_55%)]" aria-hidden />
 
-      <div className="relative flex flex-col gap-4 md:flex-row md:items-stretch md:gap-5">
-        <div className="min-w-0 flex-1 space-y-3">
+      <div className="relative space-y-4">
+        <div className="space-y-3">
           <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[var(--semantic-accent)]/90">Analyse</p>
-          {snapshot.engineReadOnlyActive ? (
-            <div className="space-y-3 rounded-xl border border-[rgba(var(--mode-rgb),0.18)] bg-[rgba(6,18,30,0.55)] px-3 py-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.05),0_0_24px_rgba(var(--mode-rgb),0.06)]">
-              <p className="text-[9px] font-bold uppercase tracking-[0.14em] text-[var(--accent-focus)]/95">
-                Strategy engine · alleen lezen
-              </p>
-              {snapshot.engineQuarterLine ? (
-                <p className="text-[11px] leading-relaxed text-[var(--text-muted)]">{snapshot.engineQuarterLine}</p>
-              ) : null}
-              {snapshot.engineCompactStats && snapshot.engineDetailLines.length === 0 ? (
-                <p className="rounded-md border border-[rgba(var(--mode-rgb),0.12)] bg-[rgba(0,0,0,0.2)] px-2.5 py-2 text-[11px] font-medium leading-snug text-[var(--text-secondary)]">
-                  {snapshot.engineCompactStats}
-                </p>
-              ) : null}
-              {snapshot.engineDetailLines.length > 0 ? (
-                <ul className="space-y-2.5 border-t border-[rgba(var(--mode-rgb),0.1)] pt-3">
-                  {snapshot.engineDetailLines.map((line, i) => (
-                    <li key={i} className="flex gap-2.5 text-[11px] leading-relaxed text-[var(--text-secondary)]">
-                      <span
-                        className="mt-[6px] h-1.5 w-1.5 shrink-0 rounded-full bg-[var(--accent-focus)]/80 shadow-[0_0_10px_rgba(var(--mode-rgb),0.35)]"
-                        aria-hidden
-                      />
-                      <span className="min-w-0">{line}</span>
-                    </li>
-                  ))}
-                </ul>
-              ) : null}
-            </div>
-          ) : null}
-          <p className="line-clamp-2 text-sm font-semibold leading-snug text-[var(--text-primary)] [text-shadow:0_0_12px_rgba(var(--mode-rgb),0.2)]">
+          <p className="line-clamp-2 text-sm font-semibold leading-snug text-[var(--text-primary)] [text-shadow:0_0_12px_rgba(var(--mode-rgb),0.2)] md:text-base">
             {snapshot.headline}
           </p>
           <ul className="space-y-1.5">
             {snapshot.bullets.map((line, i) => (
-              <li key={`${i}-${line}`} className="flex gap-2.5 text-xs text-[var(--text-secondary)]">
+              <li key={`${i}-${line}`} className="flex gap-2.5 text-xs text-[var(--text-secondary)] md:text-sm">
                 <span
                   className="mt-[5px] h-1.5 w-1.5 shrink-0 rounded-full bg-[var(--semantic-accent)] shadow-[0_0_8px_rgba(var(--mode-rgb),0.45)]"
                   aria-hidden
@@ -79,7 +83,7 @@ export function StrategyAnalysisSquare({ snapshot }: Props) {
           </div>
         </div>
 
-        <div className="flex shrink-0 items-center justify-center md:flex-col md:justify-between">
+        <div className="flex justify-center py-2 md:py-4">
           <StrategyAnalysisSplitRing
             budgetHealth={snapshot.budgetHealth}
             growthHealth={snapshot.growthHealth}
@@ -87,12 +91,14 @@ export function StrategyAnalysisSquare({ snapshot }: Props) {
             growthWarn={snapshot.growthWarn}
           />
         </div>
-      </div>
 
-      <div className="relative mt-4 border-t border-[rgba(var(--mode-rgb),0.12)] pt-4">
-        <Link href={snapshot.ctaHref} className="primary-btn flex w-full items-center justify-center px-4 py-3 text-center text-sm font-semibold">
-          {snapshot.ctaLabel}
-        </Link>
+        <EngineReadOnlyBlock snapshot={snapshot} />
+
+        <div className="relative border-t border-[rgba(var(--mode-rgb),0.12)] pt-4">
+          <Link href={snapshot.ctaHref} className="primary-btn flex w-full items-center justify-center px-4 py-3 text-center text-sm font-semibold">
+            {snapshot.ctaLabel}
+          </Link>
+        </div>
       </div>
     </section>
   );

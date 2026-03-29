@@ -48,15 +48,22 @@ export function PolygonHudMeter({ label, value, pct, variant, style = "ring" }: 
   const gid = useId().replace(/:/g, "");
   const p = clampPct(pct);
   const d = pathForVariant(variant);
+  const isHex = variant === "hex";
 
   const gradId = `vl-poly-grad-${gid}`;
   const trackStroke = "rgba(255,255,255,0.08)";
   const glow = variant === "triangle" ? "drop-shadow(0 0 8px rgba(0,212,255,0.35))" : "drop-shadow(0 0 10px rgba(0,212,255,0.3))";
+  const hexGlow =
+    "drop-shadow(0 0 4px rgba(34,211,238,0.95)) drop-shadow(0 0 14px rgba(0,184,230,0.55)) drop-shadow(0 0 22px rgba(0,212,255,0.35))";
+
+  /** Hex trace: heavier bezel + neon stack (matches “thick line” HUD). */
+  const ringTrackW = isHex ? 6.5 : 5;
+  const ringNeonW = isHex ? 6 : 5;
 
   if (style === "fill") {
     return (
       <div className="flex flex-col items-center gap-2 text-center">
-        <div className="relative h-[100px] w-[100px]" aria-hidden>
+        <div className={`relative ${isHex ? "h-[112px] w-[112px]" : "h-[100px] w-[100px]"}`} aria-hidden>
           <svg viewBox="0 0 100 100" className="h-full w-full overflow-visible">
             <defs>
               <linearGradient id={`${gradId}-fill`} x1="0%" y1="100%" x2="0%" y2="0%">
@@ -64,15 +71,72 @@ export function PolygonHudMeter({ label, value, pct, variant, style = "ring" }: 
                 <stop offset="55%" stopColor="rgba(56,189,248,0.5)" />
                 <stop offset="100%" stopColor="rgba(52,211,153,0.35)" />
               </linearGradient>
+              <linearGradient id={`${gradId}-edge`} x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stopColor="#5eead4" />
+                <stop offset="45%" stopColor="#22d3ee" />
+                <stop offset="100%" stopColor="#00b8e6" />
+              </linearGradient>
+              <filter id={`${gradId}-bloom`} x="-35%" y="-35%" width="170%" height="170%">
+                <feGaussianBlur stdDeviation="1.8" result="b" />
+                <feMerge>
+                  <feMergeNode in="b" />
+                  <feMergeNode in="SourceGraphic" />
+                </feMerge>
+              </filter>
               <clipPath id={`${gradId}-clip`}>
                 <path d={d} />
               </clipPath>
             </defs>
-            <path d={d} fill="rgba(6,18,30,0.85)" stroke="rgba(0,212,255,0.35)" strokeWidth="1.5" />
+            <path
+              d={d}
+              fill="rgba(6,18,30,0.9)"
+              stroke={isHex ? "rgba(0,212,255,0.2)" : "rgba(0,212,255,0.35)"}
+              strokeWidth={isHex ? 2 : 1.5}
+              strokeLinejoin="round"
+            />
             <g clipPath={`url(#${gradId}-clip)`}>
               <rect x="0" y={100 - p} width="100" height="100" fill={`url(#${gradId}-fill)`} opacity={0.92} />
             </g>
-            <path d={d} fill="none" stroke="rgba(0,212,255,0.45)" strokeWidth="1.2" />
+            {isHex ? (
+              <>
+                <path
+                  d={d}
+                  fill="none"
+                  stroke="rgba(255,255,255,0.07)"
+                  strokeWidth={8}
+                  strokeLinejoin="round"
+                  strokeLinecap="round"
+                />
+                <path
+                  d={d}
+                  fill="none"
+                  stroke={`url(#${gradId}-edge)`}
+                  strokeWidth={5.5}
+                  strokeLinejoin="round"
+                  strokeLinecap="round"
+                  filter={`url(#${gradId}-bloom)`}
+                />
+                <path
+                  d={d}
+                  fill="none"
+                  stroke={`url(#${gradId}-edge)`}
+                  strokeWidth={4}
+                  strokeLinejoin="round"
+                  strokeLinecap="round"
+                  style={{ filter: hexGlow }}
+                />
+                <path
+                  d={d}
+                  fill="none"
+                  stroke="rgba(255,255,255,0.2)"
+                  strokeWidth={1.25}
+                  strokeLinejoin="round"
+                  strokeLinecap="round"
+                />
+              </>
+            ) : (
+              <path d={d} fill="none" stroke="rgba(0,212,255,0.45)" strokeWidth="1.2" />
+            )}
           </svg>
         </div>
         <div>
@@ -86,33 +150,57 @@ export function PolygonHudMeter({ label, value, pct, variant, style = "ring" }: 
 
   return (
     <div className="flex flex-col items-center gap-2 text-center">
-      <div className="relative h-[100px] w-[100px]" aria-hidden>
+      <div className={`relative ${isHex ? "h-[112px] w-[112px]" : "h-[100px] w-[100px]"}`} aria-hidden>
         <svg viewBox="0 0 100 100" className="h-full w-full overflow-visible">
           <defs>
             <linearGradient id={gradId} x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stopColor="#22d3ee" />
+              <stop offset="0%" stopColor="#5eead4" />
+              <stop offset="50%" stopColor="#22d3ee" />
               <stop offset="100%" stopColor="#00b8e6" />
             </linearGradient>
+            {isHex ? (
+              <filter id={`${gradId}-ringbloom`} x="-40%" y="-40%" width="180%" height="180%">
+                <feGaussianBlur stdDeviation="2" result="b" />
+                <feMerge>
+                  <feMergeNode in="b" />
+                  <feMergeNode in="SourceGraphic" />
+                </feMerge>
+              </filter>
+            ) : null}
           </defs>
           <path
             d={d}
             fill="none"
             stroke={trackStroke}
-            strokeWidth="5"
+            strokeWidth={ringTrackW}
             strokeLinejoin="round"
             strokeLinecap="round"
             pathLength={100}
           />
+          {isHex ? (
+            <path
+              d={d}
+              fill="none"
+              stroke={`url(#${gradId})`}
+              strokeWidth={ringNeonW}
+              strokeLinejoin="round"
+              strokeLinecap="round"
+              pathLength={100}
+              strokeDasharray={`${p} ${100 - p + 0.001}`}
+              filter={`url(#${gradId}-ringbloom)`}
+              style={{ opacity: 0.88 }}
+            />
+          ) : null}
           <path
             d={d}
             fill="none"
             stroke={`url(#${gradId})`}
-            strokeWidth={5}
+            strokeWidth={ringNeonW}
             strokeLinejoin="round"
             strokeLinecap="round"
             pathLength={100}
             strokeDasharray={`${p} ${100 - p + 0.001}`}
-            style={{ filter: glow }}
+            style={{ filter: isHex ? hexGlow : glow }}
           />
         </svg>
       </div>

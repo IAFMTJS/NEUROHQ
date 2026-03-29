@@ -6,18 +6,23 @@ type SegmentedBarProps = {
   /** 0–1 fill per segment (mock). */
   fills: number[];
   segmentLabels?: string[];
+  className?: string;
 };
 
-export function SegmentedBar({ label, caption, fills, segmentLabels }: SegmentedBarProps) {
+export function SegmentedBar({ label, caption, fills, segmentLabels, className = "" }: SegmentedBarProps) {
   return (
-    <div className="space-y-2">
+    <div className={className ? `space-y-2 ${className}` : "space-y-2"}>
       <div className="flex flex-wrap items-end justify-between gap-2">
         <span className="text-[10px] font-bold uppercase tracking-[0.14em] text-[var(--text-muted)]">{label}</span>
         {caption ? <span className="text-[10px] text-[var(--text-secondary)]">{caption}</span> : null}
       </div>
-      <div className="flex gap-1.5" role="img" aria-label={`${label}: ${fills.map((f) => `${Math.round(f * 100)}%`).join(", ")}`}>
+      <div
+        className="flex gap-1.5"
+        role="img"
+        aria-label={`${label}: ${fills.map((f) => `${Math.round(f * 100)}%`).join(", ")}`}
+      >
         {fills.map((fill, i) => (
-          <div key={i} className="min-w-0 flex-1">
+          <div key={i} className="min-w-[22px] flex-1 sm:min-w-[26px]">
             {segmentLabels?.[i] ? (
               <span className="mb-1 block truncate text-[9px] font-semibold uppercase tracking-[0.08em] text-[var(--text-muted)]">
                 {segmentLabels[i]}

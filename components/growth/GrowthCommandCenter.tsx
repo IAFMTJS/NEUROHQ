@@ -14,6 +14,7 @@ import { progressKey, resolveFocusProtocol } from "@/lib/growth/resolve-focus-pr
 import { tierLabelNl } from "@/lib/growth/tier-labels";
 import { neuroToast } from "@/lib/ui/neuro-toast";
 import { EnergyRing, type EnergyRingMode } from "@/components/hud-test/EnergyRing";
+import { SegmentedBar } from "@/components/visual-lab/VisualLabBars";
 import type { StrategyPacingHints } from "@/lib/strategy/strategy-pacing-hints";
 import { strategyPaceHintLines } from "@/lib/strategy/format-strategy-pace-hints";
 
@@ -25,6 +26,26 @@ function weekProgressRingMode(pct: number, totalTasks: number): EnergyRingMode {
   if (pct >= 70) return "green";
   if (pct >= 40) return "alert";
   return "high-alert";
+}
+
+/** Caption under SegmentedBar — mirrors Visual Lab Growth command center copy. */
+function protocolWeekSegmentCaption(fills: number[], weekIndex: number, weekPct: number): string {
+  const n = fills.length;
+  if (n === 0) return "";
+  const parts: string[] = [];
+  if (weekIndex > 1) {
+    const priors = fills.slice(0, weekIndex - 1);
+    if (priors.length > 0 && priors.every((f) => f >= 0.995)) {
+      parts.push(priors.length === 1 ? "W1 afgerond" : `W1–W${weekIndex - 1} afgerond`);
+    } else if (priors.some((f) => f > 0.01)) {
+      parts.push(`Tot W${weekIndex - 1}: deels voltooid`);
+    }
+  }
+  parts.push(`W${weekIndex} bezig (${weekPct}%)`);
+  if (weekIndex < n) {
+    parts.push(n - weekIndex === 1 ? "Laatste week nog open" : `W${weekIndex + 1}–W${n} nog open`);
+  }
+  return parts.join(" · ");
 }
 
 type Props = {
@@ -71,7 +92,9 @@ export function GrowthCommandCenter({
         id="growth-command"
         className="scroll-mt-28 rounded-2xl border border-dashed border-[var(--semantic-ring)]/40 bg-[var(--bg-elevated)]/30 p-6 text-center"
       >
-        <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[var(--semantic-accent)]">Growth command center</p>
+        <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[var(--semantic-accent)]/90">
+          Growth command center
+        </p>
         <p className="mt-2 text-sm text-[var(--text-secondary)]">
           Geen protocollen in de bibliotheek — importeer seed (migration 090 + <code className="text-xs">npm run import-protocols</code>).
         </p>
@@ -96,6 +119,30 @@ export function GrowthCommandCenter({
 
   const previewTasks = week?.tasks.slice(0, 3) ?? [];
 
+  const { protocolWeekFills, protocolWeekLabels, protocolWeekCaption } = useMemo(() => {
+    if (!def || maxW < 1) {
+      return { protocolWeekFills: [] as number[], protocolWeekLabels: [] as string[], protocolWeekCaption: "" };
+    }
+    const doneIds = new Set(prog?.completed_task_ids ?? []);
+    const fills: number[] = [];
+    const labels: string[] = [];
+    for (let wi = 1; wi <= maxW; wi++) {
+      labels.push(`W${wi}`);
+      const wk = weekForIndex(def, wi);
+      if (!wk || wk.tasks.length === 0) {
+        fills.push(0);
+        continue;
+      }
+      const doneC = wk.tasks.filter((t) => doneIds.has(t.id)).length;
+      fills.push(doneC / wk.tasks.length);
+    }
+    return {
+      protocolWeekFills: fills,
+      protocolWeekLabels: labels,
+      protocolWeekCaption: protocolWeekSegmentCaption(fills, weekIndex, weekPct),
+    };
+  }, [def, maxW, weekIndex, weekPct, prog?.completed_task_ids]);
+
   const commitWeek = () =>
     startTransition(async () => {
       try {
@@ -117,12 +164,15 @@ export function GrowthCommandCenter({
   return (
     <section
       id="growth-command"
-      className="scroll-mt-28 overflow-hidden rounded-2xl border border-[rgba(var(--mode-rgb),0.22)] bg-gradient-to-br from-[rgba(var(--mode-rgb-deep),0.38)] via-[rgba(var(--mode-rgb),0.12)] to-[var(--bg-primary)]/95 shadow-[0_0_0_1px_rgba(var(--mode-rgb),0.08),0_0_40px_rgba(var(--mode-rgb),0.1),0_24px_56px_rgba(0,0,0,0.45)] backdrop-blur-md"
+      className="scroll-mt-28 overflow-hidden rounded-2xl border border-[rgba(var(--mode-rgb),0.22)] bg-gradient-to-br from-[rgba(var(--mode-rgb-deep),0.38)] via-[rgba(var(--mode-rgb),0.12)] to-[var(--bg-primary)]/95 shadow-[0_0_0_1px_rgba(var(--mode-rgb),0.08),0_0_40px_rgba(var(--mode-rgb),0.1),0_24px_56px_rgba(0,0,0,0.35)] backdrop-blur-md"
     >
-      {/* Top: title + focus subtitle + medium ring */}
-      <div className="border-b border-[rgba(var(--mode-rgb),0.14)] px-4 py-5 sm:px-5">
+      {/* Top: Visual Lab–aligned header + title + focus + ring */}
+      <div className="border-b border-[rgba(var(--mode-rgb),0.14)] px-4 py-4 sm:px-5">
         <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
           <div className="min-w-0 flex-1 space-y-2">
+            <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[var(--semantic-accent)]/90">
+              Growth command center
+            </p>
             <h2 className="text-xl font-bold leading-tight tracking-tight text-[var(--text-primary)] [text-shadow:0_0_20px_rgba(var(--mode-rgb),0.2)] sm:text-2xl">
               {safeActive.title}
             </h2>
@@ -251,13 +301,26 @@ export function GrowthCommandCenter({
               <div className="sr-only" aria-live="polite">
                 Voortgang deze week: {doneInWeek} van {totalInWeek} taken, {weekPct} procent
               </div>
-              <div className="h-3.5 w-full overflow-hidden rounded-full bg-black/25 ring-1 ring-[rgba(var(--mode-rgb),0.18)]">
-                <div
-                  className="h-full rounded-full bg-gradient-to-r from-[rgb(var(--mode-rgb-deep))] via-[rgb(var(--mode-rgb))] to-[rgb(var(--mode-rgb-deep))] shadow-[0_0_16px_rgba(var(--mode-rgb),0.55),0_0_28px_rgba(var(--mode-rgb),0.2)] transition-[width] duration-500 ease-out"
-                  style={{ width: `${weekPct}%` }}
-                />
-              </div>
+              <p className="text-xs leading-snug text-[var(--text-secondary)]">
+                Voortgang deze week: <span className="font-medium text-[var(--text-primary)]">{doneInWeek}</span> van{" "}
+                <span className="font-medium text-[var(--text-primary)]">{totalInWeek}</span> taken,{" "}
+                <span className="tabular-nums">{weekPct}</span>% — hieronder één segment per protocolweek.
+              </p>
             </div>
+
+            {protocolWeekFills.length > 0 ? (
+              <div className="-mx-1 overflow-x-auto pb-1 [scrollbar-width:thin]">
+                <div className="min-w-min px-1">
+                  <SegmentedBar
+                    label="Protocolweken · voltooid per week"
+                    caption={protocolWeekCaption}
+                    fills={protocolWeekFills}
+                    segmentLabels={protocolWeekLabels}
+                    className={maxW > 14 ? "min-w-[min(100%,28rem)]" : undefined}
+                  />
+                </div>
+              </div>
+            ) : null}
 
             {week.title ? (
               <p className="text-xs text-[var(--text-secondary)] line-clamp-2">{week.title}</p>
