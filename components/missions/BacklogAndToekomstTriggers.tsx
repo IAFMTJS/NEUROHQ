@@ -79,7 +79,7 @@ export function BacklogAndToekomstTriggers({ backlog, futureTasks, todayDate }: 
 
   return (
     <section>
-      <SciFiPanel variant="glass" className={hudStyles.focusSecondary} bodyClassName="p-0">
+      <SciFiPanel flatFrame variant="glass" className={hudStyles.focusSecondary} bodyClassName="p-0">
         <CornerNode corner="top-left" />
         <CornerNode corner="top-right" />
         <div className="px-4 py-3">

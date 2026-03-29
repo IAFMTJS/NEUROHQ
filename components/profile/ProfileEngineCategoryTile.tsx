@@ -15,7 +15,7 @@ export function ProfileEngineCategoryTile({ icon, title, trait, onOpen, badge }:
     <button
       type="button"
       onClick={onOpen}
-      className="group flex w-full items-start gap-3 rounded-2xl border border-[rgba(var(--mode-rgb),0.12)] bg-[rgba(var(--mode-rgb-deep),0.07)] p-3.5 text-left transition hover:border-[rgba(var(--mode-rgb),0.24)] hover:bg-[rgba(var(--mode-rgb-deep),0.12)] outline-none focus-visible:ring-2 focus-visible:ring-[rgba(var(--mode-rgb),0.45)] focus-visible:ring-offset-0 sm:gap-4 sm:p-4"
+      className="group flex w-full items-start gap-3 rounded-md border border-[rgba(var(--mode-rgb),0.12)] bg-[rgba(var(--mode-rgb-deep),0.07)] p-3.5 text-left transition hover:border-[rgba(var(--mode-rgb),0.24)] hover:bg-[rgba(var(--mode-rgb-deep),0.12)] outline-none focus-visible:ring-2 focus-visible:ring-[rgba(var(--mode-rgb),0.45)] focus-visible:ring-offset-0 sm:gap-4 sm:p-4"
     >
       <span
         className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-[rgba(var(--mode-rgb),0.18)] bg-[var(--bg-primary)]/35 text-[1.35rem] leading-none sm:h-12 sm:w-12"

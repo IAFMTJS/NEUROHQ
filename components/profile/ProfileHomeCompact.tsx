@@ -102,14 +102,9 @@ export function ProfileHomeCompact({
 
   return (
     <section
-      className="relative overflow-hidden rounded-[var(--hq-card-radius,18px)] border border-[rgba(var(--mode-rgb),0.24)] bg-gradient-to-br from-[rgba(8,26,42,0.96)] via-[var(--bg-elevated)]/90 to-[rgba(var(--mode-rgb-deep),0.14)] px-4 py-5 shadow-[0_0_36px_rgba(var(--mode-rgb),0.12),inset_0_1px_0_rgba(255,255,255,0.06)] sm:px-6"
+      className="relative overflow-hidden rounded-md border border-[rgba(var(--mode-rgb),0.2)] bg-gradient-to-br from-[rgba(8,26,42,0.92)] via-[var(--bg-elevated)]/88 to-[rgba(var(--mode-rgb-deep),0.12)] px-4 py-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.05)] sm:px-6"
       data-tutorial="profile-home-orbit"
     >
-      <div
-        className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_80%_0%,rgba(var(--mode-rgb),0.14),transparent_55%)]"
-        aria-hidden
-      />
-
       <div className="relative z-[1] mx-auto grid max-w-3xl grid-cols-1 gap-5 md:grid-cols-[1fr_minmax(0,280px)_1fr] md:items-center md:gap-4">
         <div className="order-2 hidden flex-col justify-center gap-3 md:order-1 md:flex">
           <OrbitTile title="Rang">

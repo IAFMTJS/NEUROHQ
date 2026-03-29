@@ -94,13 +94,9 @@ export function ProfileEngineBehaviorTab({
   return (
     <div className="space-y-5">
       <section
-        className="relative overflow-hidden rounded-2xl border border-[var(--card-border)]/85 border-t-[rgba(var(--mode-rgb),0.28)] bg-gradient-to-b from-[rgba(var(--mode-rgb-deep),0.12)] to-[var(--bg-surface)]/25 shadow-[0_0_36px_rgba(var(--mode-rgb),0.07)]"
+        className="relative overflow-hidden rounded-md border border-[var(--card-border)]/80 border-t-[rgba(var(--mode-rgb),0.22)] bg-gradient-to-b from-[rgba(var(--mode-rgb-deep),0.1)] to-[var(--bg-surface)]/22 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]"
         aria-labelledby="engine-behavior-hero-heading"
       >
-        <div
-          className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_70%_45%_at_50%_-10%,rgba(var(--mode-rgb),0.12),transparent_55%)]"
-          aria-hidden
-        />
         <div className="relative z-[1] space-y-4 p-4 sm:p-5">
           <header>
             <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[var(--semantic-accent)]">Engine</p>

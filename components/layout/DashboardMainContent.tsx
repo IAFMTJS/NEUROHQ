@@ -1,0 +1,48 @@
+"use client";
+
+import { usePathname } from "next/navigation";
+import { TimezoneSyncBanner } from "@/components/TimezoneSyncBanner";
+import { AcceptanceGateLayer } from "@/components/acceptance/AcceptanceGateLayer";
+import { PageMascot } from "@/components/PageMascot";
+import type { ReactNode } from "react";
+
+function isDashboardHome(pathname: string) {
+  const p = (pathname.replace(/\/$/, "") || "/") as string;
+  return p === "/dashboard";
+}
+
+const mainPaddingStyle = {
+  paddingLeft: "var(--hq-padding-x)",
+  paddingRight: "var(--hq-padding-x)",
+  paddingTop: "calc(env(safe-area-inset-top, 0px) + var(--main-padding-top, 40px))",
+  paddingBottom:
+    "calc(var(--footer-height, 58px) + var(--bottom-nav-arch, 28px) + env(safe-area-inset-bottom) + var(--main-padding-bottom, 16px))",
+} as const;
+
+type Props = {
+  children: ReactNode;
+};
+
+/** Scroll shell: flat frosted plane everywhere except `/dashboard` (HQ stays cinematic). */
+export function DashboardMainContent({ children }: Props) {
+  const pathname = usePathname();
+  const flat = !isDashboardHome(pathname);
+
+  return (
+    <main
+      id="main-content"
+      data-page-surface={flat ? "flat-glass" : "dashboard-home"}
+      className={`scrollbar-hide relative z-10 min-h-0 flex-1 overflow-auto ${
+        flat ? "hq-flat-glass-main" : "bg-transparent"
+      }`}
+      style={mainPaddingStyle}
+      tabIndex={-1}
+    >
+      <TimezoneSyncBanner />
+      <AcceptanceGateLayer />
+      <PageMascot />
+      {children}
+      <div className="bottom-nav-page-spacer" aria-hidden />
+    </main>
+  );
+}

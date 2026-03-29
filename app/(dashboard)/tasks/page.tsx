@@ -353,6 +353,7 @@ async function MissionsSectionAsync({
     return (
       <div className="flex min-h-0 w-full max-w-none flex-1 flex-col">
         <SciFiPanel
+          flatFrame
           variant="command"
           className="hq-card-enter relative flex min-h-0 w-full flex-1 flex-col overflow-hidden dashboard-active-mission"
           bodyClassName="relative z-10 flex min-h-0 flex-1 flex-col gap-3 p-4 sm:p-5 md:p-6"
@@ -436,7 +437,7 @@ async function MissionsSectionAsync({
   }
 
   return (
-    <SciFiPanel variant="glass" className={hudStyles.focusSecondary} bodyClassName="p-4 md:p-5">
+    <SciFiPanel flatFrame variant="glass" className={hudStyles.focusSecondary} bodyClassName="p-4 md:p-5">
       <CornerNode corner="top-left" />
       <CornerNode corner="top-right" />
       <GrowthMissionsRibbon snap={growthSnap} fromGrowthPage={growthFromGrowthPage} />
@@ -509,7 +510,7 @@ async function MissionsSectionAsync({
           planned: energyCap.planned,
         }}
         missionEngineWarnings={missionEngineWarnings}
-        missionsContextBelowHero={<ModeBanner mode={mode} />}
+        missionsContextBelowHero={<ModeBanner mode={mode} flatFrame />}
       />
       </div>
       </div>
@@ -577,6 +578,7 @@ async function RoutineSectionAsync({
     return (
       <div className="flex min-h-0 w-full max-w-none flex-1 flex-col">
         <SciFiPanel
+          flatFrame
           variant="command"
           className="hq-card-enter relative flex min-h-0 w-full flex-1 flex-col overflow-hidden dashboard-active-mission"
           bodyClassName="relative z-10 flex min-h-0 flex-1 flex-col gap-0 p-0"
@@ -657,7 +659,6 @@ export default async function TasksPage({ searchParams }: Props) {
     activeTab,
     { tab: "routine" }
   );
-  const skipCinematicLayers = prefs.light_ui === true || prefs.simplified_content === true;
   /** Simplified mode: no missions page chrome; tabs + one full-height column for all task tabs. */
   const simplifiedTasksFillLayout = prefs.simplified_content === true;
 
@@ -684,18 +685,8 @@ export default async function TasksPage({ searchParams }: Props) {
 
   return (
     <main
-      className={`relative overflow-hidden ${simplifiedTasksFillLayout ? "flex min-h-0 flex-1 flex-col" : "min-h-screen"} ${!skipCinematicLayers ? hudStyles.cinematicBackdrop : ""}`}
+      className={`relative overflow-hidden ${simplifiedTasksFillLayout ? "flex min-h-0 flex-1 flex-col" : "min-h-screen"} ${hudStyles.flatGlassPageRoot}`}
     >
-      {!skipCinematicLayers && (
-        <>
-          <div className={hudStyles.spaceMist} aria-hidden />
-          <div className={hudStyles.starLayerFar} aria-hidden />
-          <div className={hudStyles.starLayerNear} aria-hidden />
-          <div className={hudStyles.backgroundAtmosphere} aria-hidden />
-          <div className={hudStyles.colorBlend} aria-hidden />
-          <div className={hudStyles.spaceNoise} aria-hidden />
-        </>
-      )}
       <MissionsProvider dateStr={dateStr}>
         <TasksDailyBootstrap dateStr={dateStr} enabled={activeTab === "missions"} />
         <div

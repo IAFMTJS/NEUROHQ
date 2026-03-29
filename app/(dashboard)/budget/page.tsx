@@ -91,7 +91,6 @@ async function BudgetContent({ searchParams }: Props) {
   await syncBudgetDisciplineFromDataForToday();
   const prefs = await getUserPreferencesOrDefaults();
   const simplifiedBudget = prefs.simplified_content === true;
-  const skipBudgetCinematic = prefs.light_ui === true || simplifiedBudget;
   const periodBounds = await getBudgetPeriodBounds();
   const { periodStart, periodEnd, isPaydayCycle } = periodBounds;
   const { nextMonthStart, nextMonthEnd, prevMonthStart, prevMonthEnd } = getBudgetAdjacentMonths();
@@ -514,20 +513,10 @@ async function BudgetContent({ searchParams }: Props) {
       <main
         className={
           simplifiedBudget
-            ? `relative overflow-hidden flex min-h-0 flex-1 flex-col ${!skipBudgetCinematic ? hudStyles.cinematicBackdrop : ""}`
+            ? `relative overflow-hidden flex min-h-0 flex-1 flex-col ${hudStyles.flatGlassPageRoot}`
             : "relative min-h-screen"
         }
       >
-        {!skipBudgetCinematic && simplifiedBudget && (
-          <>
-            <div className={hudStyles.spaceMist} aria-hidden />
-            <div className={hudStyles.starLayerFar} aria-hidden />
-            <div className={hudStyles.starLayerNear} aria-hidden />
-            <div className={hudStyles.backgroundAtmosphere} aria-hidden />
-            <div className={hudStyles.colorBlend} aria-hidden />
-            <div className={hudStyles.spaceNoise} aria-hidden />
-          </>
-        )}
         {simplifiedBudget ? (
           <div className="relative z-10 flex min-h-[calc(100svh-7rem)] w-full max-w-none flex-1 flex-col pb-6 sm:min-h-[calc(100svh-6.5rem)] dashboard-cinematic">
             {budgetTabsShell}

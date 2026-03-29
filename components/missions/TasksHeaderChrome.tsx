@@ -24,7 +24,7 @@ export function TasksHeaderChrome({ dateStr, simplified = false }: Props) {
   const dcicMode = gameState?.mode?.current ?? "focus";
 
   return (
-    <SciFiPanel variant="glass" className={hudStyles.focusSecondary} bodyClassName="p-4 md:p-5">
+    <SciFiPanel flatFrame variant="glass" className={hudStyles.focusSecondary} bodyClassName="p-4 md:p-5">
       <CornerNode corner="top-left" />
       <CornerNode corner="top-right" />
       <div className="[&>*+*]:mt-0">

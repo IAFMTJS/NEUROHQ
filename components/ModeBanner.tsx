@@ -1,7 +1,7 @@
 import type { AppMode } from "@/lib/app-mode";
 import { SciFiPanel } from "@/components/hud-test/SciFiPanel";
 
-type Props = { mode: AppMode };
+type Props = { mode: AppMode; flatFrame?: boolean };
 
 const labels: Record<AppMode, string[]> = {
   normal: [],
@@ -24,13 +24,18 @@ const labels: Record<AppMode, string[]> = {
   ],
 };
 
-export function ModeBanner({ mode }: Props) {
+export function ModeBanner({ mode, flatFrame = false }: Props) {
   if (mode === "normal" || !labels[mode]) return null;
   const options = labels[mode] as string[];
   const idx = new Date().getDay() % options.length;
   const message = options[idx] ?? options[0];
   return (
-    <SciFiPanel variant="minimal" className="overflow-hidden" bodyClassName="flex items-start gap-3 px-4 py-3.5 text-sm text-[var(--text-primary)]">
+    <SciFiPanel
+      flatFrame={flatFrame}
+      variant="minimal"
+      className="overflow-hidden"
+      bodyClassName="flex items-start gap-3 px-4 py-3.5 text-sm text-[var(--text-primary)]"
+    >
       <span className="mt-0.5 h-2 w-2 shrink-0 rounded-full bg-[var(--accent-focus)]" aria-hidden />
       <span>{message}</span>
     </SciFiPanel>

@@ -308,15 +308,10 @@ export function RemainingBudgetHero({
   return (
     <>
       <section
-        className="relative overflow-hidden rounded-[var(--hq-card-radius,18px)] border border-[rgba(var(--mode-rgb),0.24)] bg-gradient-to-br from-[rgba(8,26,42,0.96)] via-[var(--bg-elevated)]/90 to-[rgba(var(--mode-rgb-deep),0.14)] px-4 py-5 shadow-[0_0_36px_rgba(var(--mode-rgb),0.12),inset_0_1px_0_rgba(255,255,255,0.06)] sm:px-6"
+        className="relative overflow-hidden rounded-md border border-[rgba(var(--mode-rgb),0.2)] bg-gradient-to-br from-[rgba(8,26,42,0.92)] via-[var(--bg-elevated)]/88 to-[rgba(var(--mode-rgb-deep),0.12)] px-4 py-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.05)] sm:px-6"
         aria-label="Remaining budget overview"
         data-tutorial="budget-hero"
       >
-        <div
-          className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_80%_0%,rgba(var(--mode-rgb),0.14),transparent_55%)]"
-          aria-hidden
-        />
-
         <div className="relative z-[1] flex flex-col gap-3 border-b border-[rgba(var(--mode-rgb),0.1)] pb-4 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
           <div className="min-w-0">
             <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--mode-text-soft)]">Budget command</p>

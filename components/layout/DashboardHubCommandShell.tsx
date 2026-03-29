@@ -43,26 +43,17 @@ export function DashboardHubCommandShell({
 
   return (
     <main
-      className={`relative min-h-screen overflow-x-hidden ${!skipCinematic ? hudStyles.cinematicBackdrop : ""}`}
+      className={`relative min-h-screen overflow-x-hidden ${hudStyles.flatGlassPageRoot}`}
       style={dcicModeVars}
       data-mode={dcicMode}
     >
-      {!skipCinematic && (
-        <>
-          <div className={hudStyles.spaceMist} aria-hidden />
-          <div className={hudStyles.starLayerFar} aria-hidden />
-          <div className={hudStyles.starLayerNear} aria-hidden />
-          <div className={hudStyles.backgroundAtmosphere} aria-hidden />
-          <div className={hudStyles.colorBlend} aria-hidden />
-          <div className={hudStyles.spaceNoise} aria-hidden />
-        </>
-      )}
       <div
         className="container page page-wide dashboard-page dashboard-cinematic relative z-10 pb-10"
         {...(compactHorizontal ? { "data-hub-compact-x": "true" } : {})}
       >
         <div className={`space-y-3 pt-2 md:pt-3 ${compactHorizontal ? "px-0" : "px-1"}`}>
           <SciFiPanel
+            flatFrame
             className={`dashboard-bridge-frame idle-breathing ${hudStyles.focusPrimary}`}
             bodyClassName={`dashboard-bridge-body flex flex-col gap-4 [-webkit-overflow-scrolling:touch] ${skipCinematic ? "light-ui-defer-paint" : ""}`}
             variant="command"

@@ -308,6 +308,7 @@ export function BudgetTabsShell({
       {simplifiedLayout ? (
         <div className="flex min-h-0 w-full max-w-none flex-1 flex-col">
           <SciFiPanel
+            flatFrame
             variant="command"
             className="hq-card-enter relative flex min-h-0 w-full flex-1 flex-col overflow-hidden dashboard-active-mission"
             bodyClassName="relative z-10 flex min-h-0 flex-1 flex-col gap-0 p-0"

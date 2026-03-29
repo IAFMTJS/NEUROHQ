@@ -1,10 +1,8 @@
 import { DashboardLayoutClient } from "@/components/dashboard/DashboardLayoutClient";
-import { PageMascot } from "@/components/PageMascot";
 import { BootstrapGate } from "@/components/bootstrap/BootstrapGate";
-import { TimezoneSyncBanner } from "@/components/TimezoneSyncBanner";
-import { AcceptanceGateLayer } from "@/components/acceptance/AcceptanceGateLayer";
+import { DashboardMainContent } from "@/components/layout/DashboardMainContent";
 
-/** Auth enforced by proxy. Server renders <main> so client layout hydration matches (no Suspense vs main mismatch). */
+/** Auth enforced by proxy. Client main shell applies flat glass on all routes except `/dashboard`. */
 export default function DashboardLayout({
   children,
 }: {
@@ -13,25 +11,7 @@ export default function DashboardLayout({
   return (
     <BootstrapGate>
       <DashboardLayoutClient>
-        <main
-          id="main-content"
-          className="scrollbar-hide relative z-10 min-h-0 flex-1 overflow-auto bg-transparent"
-          style={{
-            paddingLeft: "var(--hq-padding-x)",
-            paddingRight: "var(--hq-padding-x)",
-            paddingTop:
-              "calc(env(safe-area-inset-top, 0px) + var(--main-padding-top, 40px))",
-            paddingBottom:
-              "calc(var(--footer-height, 58px) + var(--bottom-nav-arch, 28px) + env(safe-area-inset-bottom) + var(--main-padding-bottom, 16px))",
-          }}
-          tabIndex={-1}
-        >
-          <TimezoneSyncBanner />
-          <AcceptanceGateLayer />
-          <PageMascot />
-          {children}
-          <div className="bottom-nav-page-spacer" aria-hidden />
-        </main>
+        <DashboardMainContent>{children}</DashboardMainContent>
       </DashboardLayoutClient>
     </BootstrapGate>
   );

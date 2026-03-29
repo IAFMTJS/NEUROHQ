@@ -90,12 +90,8 @@ export function GrowthCommandCenter({
     return (
       <section
         id="growth-command"
-        className="relative scroll-mt-28 overflow-hidden rounded-2xl border border-dashed border-[rgba(var(--mode-rgb),0.35)] bg-gradient-to-br from-[rgba(8,26,42,0.96)] via-[var(--bg-elevated)]/90 to-[rgba(var(--mode-rgb-deep),0.14)] p-6 text-center shadow-[0_0_36px_rgba(var(--mode-rgb),0.12),inset_0_1px_0_rgba(255,255,255,0.06)]"
+        className="relative scroll-mt-28 overflow-hidden rounded-md border border-dashed border-[rgba(var(--mode-rgb),0.32)] bg-gradient-to-br from-[rgba(8,26,42,0.92)] via-[var(--bg-elevated)]/88 to-[rgba(var(--mode-rgb-deep),0.12)] p-6 text-center shadow-[inset_0_1px_0_rgba(255,255,255,0.05)]"
       >
-        <div
-          className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_80%_0%,rgba(var(--mode-rgb),0.14),transparent_55%)]"
-          aria-hidden
-        />
         <div className="relative z-[1]">
           <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[var(--semantic-accent)]/90">Growth command center</p>
           <p className="mt-2 text-sm text-[var(--text-secondary)]">
@@ -168,12 +164,8 @@ export function GrowthCommandCenter({
   return (
     <section
       id="growth-command"
-      className="scroll-mt-28 relative overflow-hidden rounded-2xl border border-[rgba(var(--mode-rgb),0.24)] bg-gradient-to-br from-[rgba(8,26,42,0.96)] via-[var(--bg-elevated)]/90 to-[rgba(var(--mode-rgb-deep),0.14)] shadow-[0_0_36px_rgba(var(--mode-rgb),0.12),inset_0_1px_0_rgba(255,255,255,0.06)]"
+      className="scroll-mt-28 relative overflow-hidden rounded-md border border-[rgba(var(--mode-rgb),0.2)] bg-gradient-to-br from-[rgba(8,26,42,0.92)] via-[var(--bg-elevated)]/88 to-[rgba(var(--mode-rgb-deep),0.12)] shadow-[inset_0_1px_0_rgba(255,255,255,0.05)]"
     >
-      <div
-        className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_80%_0%,rgba(var(--mode-rgb),0.14),transparent_55%)]"
-        aria-hidden
-      />
       {/* Top: Visual Lab–aligned header + title + focus + ring */}
       <div className="relative z-[1] border-b border-[rgba(var(--mode-rgb),0.14)] px-4 py-4 sm:px-5">
         <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
