@@ -225,19 +225,7 @@ export async function getGameState(
     warTierDaysLast7,
   });
 
-  const hasBrainCheckIn =
-    ds != null && ds.energy != null && ds.focus != null;
-
-  let lockedMode = parseLockedDcicMode(ds?.dcic_mode);
-  if (
-    !hasBrainCheckIn &&
-    lockedMode &&
-    lockedMode !== "focus" &&
-    lockedMode !== "overdrive"
-  ) {
-    lockedMode = null;
-  }
-
+  const lockedMode = parseLockedDcicMode(ds?.dcic_mode);
   if (lockedMode) {
     gameState.mode.current = lockedMode;
     gameState.mode.lockedUntil = (ds?.dcic_locked_until as string | null) ?? null;

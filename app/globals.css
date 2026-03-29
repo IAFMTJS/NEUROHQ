@@ -130,8 +130,7 @@
 
   /* Command stack page (visual lab preview; tune here then promote to layout / hud) */
   --command-stack-bg-image: url("/Background12.PNG");
-  /* Full width within hub container; visual lab can narrow via override */
-  --command-stack-inner-max: 100%;
+  --command-stack-inner-max: 64rem;
 
   /* ========== CINEMATIC NEON (full design) ========== */
   --cinematic-navy: #040712;
@@ -2203,7 +2202,7 @@ header:has(+ .mascot-hero) {
     drop-shadow(0 0 12px rgba(var(--mode-rgb), 0.3));
 }
 
-/* ========== Hub shell base (html/body) — calm gradient; frost + blur on #app-shell (.flatGlassPageRoot in app/layout) ========== */
+/* ========== Hub shell base (html/body) — calm gradient; frost + blur live on #app-shell (.hq-app-shell) ========== */
 html {
   min-height: 100%;
   min-height: 100dvh;
@@ -2243,11 +2242,23 @@ body {
   background-attachment: scroll;
 }
 
+/* Global frosted plane — wraps all routes in app/layout.tsx */
+.hq-app-shell {
+  position: relative;
+  z-index: 1;
+  isolation: isolate;
+  background:
+    linear-gradient(to bottom, rgba(0, 0, 0, 0.2) 0%, transparent 32%, transparent 62%, rgba(0, 0, 0, 0.45) 100%),
+    rgba(8, 16, 28, 0.52);
+  backdrop-filter: blur(22px) saturate(1.14);
+  -webkit-backdrop-filter: blur(22px) saturate(1.14);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.055);
+}
+
 /**
- * Light UI: same dark HQ shell as former .hq-app-shell — no heavy backdrop-blur (perf).
- * Overrides hud.module .flatGlassPageRoot on #app-shell (module class is hashed).
+ * Light UI: same dark HQ hue on app shell, no heavy backdrop-blur (perf).
  */
-[data-light-ui="true"] #app-shell {
+[data-light-ui="true"] .hq-app-shell {
   background:
     radial-gradient(ellipse 100% 72% at 50% -18%, rgba(var(--mode-rgb), 0.14), transparent 58%),
     radial-gradient(ellipse 96% 56% at 50% 118%, rgba(var(--mode-rgb-deep), 0.11), transparent 55%),
@@ -2258,7 +2269,7 @@ body {
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
 }
 
-/* /tasks: command-deck ambient scroll shell (layer on #main-content over hub flat glass) */
+/* /tasks: command-deck ambient scroll shell (layer on #main-content over .hq-app-shell) */
 main#main-content.tasks-route-shell {
   background:
     radial-gradient(ellipse 92% 50% at 50% -14%, rgba(var(--mode-rgb), 0.2), transparent 58%),
@@ -2283,101 +2294,6 @@ main.tasks-page-root {
   backdrop-filter: none !important;
   -webkit-backdrop-filter: none !important;
   box-shadow: none !important;
-}
-
-/**
- * Missies — command deck (hub kit: nested glass on flat shell; no cinematic PNG).
- * Parity: VisualLabMissionsPageConcept + TasksTabsShell commandDeck + VisualLabCommandDeck.
- */
-.tasks-command-deck-frame {
-  border-radius: 0.75rem;
-  border: 1px solid rgba(var(--mode-rgb), 0.12);
-  background: rgba(4, 12, 22, 0.22);
-  padding: 0.75rem;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
-}
-
-@media (min-width: 640px) {
-  .tasks-command-deck-frame {
-    padding: 1rem;
-  }
-}
-
-@media (min-width: 768px) {
-  .tasks-command-deck-frame {
-    padding: 1.25rem;
-  }
-}
-
-.tasks-command-deck.dashboard-cinematic {
-  position: relative;
-  isolation: isolate;
-  border-radius: 1rem;
-  border: 1px solid rgba(var(--mode-rgb), 0.14);
-  background-color: rgba(6, 14, 24, 0.38);
-  background-image: linear-gradient(
-    165deg,
-    rgba(8, 22, 40, 0.78) 0%,
-    rgba(6, 16, 30, 0.5) 48%,
-    rgba(var(--mode-rgb-deep), 0.11) 100%
-  );
-  backdrop-filter: blur(18px) saturate(1.08);
-  -webkit-backdrop-filter: blur(18px) saturate(1.08);
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.06),
-    0 4px 28px rgba(0, 0, 0, 0.22),
-    0 0 0 1px rgba(var(--mode-rgb), 0.05);
-  overflow: hidden;
-}
-
-.tasks-command-deck.dashboard-cinematic::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  z-index: 0;
-  border-radius: inherit;
-  background: radial-gradient(
-    ellipse 75% 55% at 50% 0%,
-    rgba(var(--mode-rgb), 0.11),
-    transparent 58%
-  );
-}
-
-.tasks-command-deck.dashboard-cinematic::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  z-index: 0;
-  border-radius: inherit;
-  background: radial-gradient(
-    ellipse 55% 40% at 80% 0%,
-    rgba(var(--mode-rgb), 0.06),
-    transparent 55%
-  );
-}
-
-[data-light-ui="true"] .tasks-command-deck.dashboard-cinematic {
-  background-color: rgba(5, 12, 22, 0.94);
-  background-image: linear-gradient(
-    165deg,
-    rgba(8, 16, 28, 0.97) 0%,
-    rgba(4, 10, 18, 0.92) 100%
-  );
-  backdrop-filter: blur(12px) saturate(1.06);
-  -webkit-backdrop-filter: blur(12px) saturate(1.06);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.055);
-}
-
-[data-light-ui="true"] .tasks-command-deck.dashboard-cinematic::before,
-[data-light-ui="true"] .tasks-command-deck.dashboard-cinematic::after {
-  opacity: 0.85;
-}
-
-.tasks-command-deck-inner {
-  position: relative;
-  z-index: 2;
 }
 
 /* /tasks shell: dock + inset cards align with command deck */
@@ -2828,14 +2744,14 @@ header h1 { margin: 0; }
   }
 }
 
-/* Inner column: hub kit padding + optional max-width via --command-stack-inner-max */
+/* Inner column: same rhythm as visual-lab / command routes (max width from --command-stack-inner-max). */
 .command-stack-page-inner {
   width: 100%;
   max-width: min(var(--command-stack-inner-max), 100%);
   margin-inline: auto;
   padding-inline: var(--page-padding-x);
-  padding-top: 0;
-  padding-bottom: 0;
+  padding-top: 2rem;
+  padding-bottom: 3rem;
 }
 
 /* Visual Lab: nebula-only page shell (no PNG hero — gradient tokens only) */

@@ -41,8 +41,14 @@ export function VisualLabPageShell({ variant, children }: Props) {
       );
 
     case "hubFlatDashboard":
-      /* Same stack as root layout (#app-shell): no extra wrapper — avoids double container/inner */
-      return <>{children}</>;
+      /* Matches app: frost is global #app-shell; only container + inner here */
+      return (
+        <div className="relative min-h-screen w-full text-[var(--text-main)]">
+          <div className="container page page-wide dashboard-page dashboard-cinematic relative z-10 pb-10">
+            <div className="command-stack-page-inner">{children}</div>
+          </div>
+        </div>
+      );
 
     case "nebulaTokensOnly":
       return (
