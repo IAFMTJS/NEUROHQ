@@ -22,7 +22,8 @@ export function DeferredToaster() {
   if (!mounted) return null;
   return (
     <Toaster
-      richColors
+      theme="dark"
+      richColors={false}
       position="bottom-center"
       closeButton
       offset="var(--toast-offset-bottom)"
