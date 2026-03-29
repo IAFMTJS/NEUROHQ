@@ -16,6 +16,8 @@ type Props = {
   lightUi?: boolean;
   /** Narrower horizontal bridge padding + full-bleed outer strip (e.g. Growth). */
   compactHorizontal?: boolean;
+  /** Less top padding so primary chrome (e.g. tab bar) sits higher — Growth /learning. */
+  compactVertical?: boolean;
 };
 
 export function DashboardHubCommandShell({
@@ -24,6 +26,7 @@ export function DashboardHubCommandShell({
   showBridgeLabel = true,
   lightUi = false,
   compactHorizontal = false,
+  compactVertical = false,
 }: Props) {
   const dcicMode = useHQStore((s) => s.gameState?.mode?.current ?? "focus");
   const dcicModeVars = useMemo<CSSProperties>(() => {
@@ -50,8 +53,11 @@ export function DashboardHubCommandShell({
       <div
         className="container page page-wide dashboard-page dashboard-cinematic relative z-10 pb-10"
         {...(compactHorizontal ? { "data-hub-compact-x": "true" } : {})}
+        {...(compactVertical ? { "data-hub-compact-y": "true" } : {})}
       >
-        <div className={`space-y-3 pt-2 md:pt-3 ${compactHorizontal ? "px-0" : "px-1"}`}>
+        <div
+          className={`${compactVertical ? "space-y-2 pt-0" : "space-y-3 pt-2 md:pt-3"} ${compactHorizontal ? "px-0" : "px-1"}`}
+        >
           <SciFiPanel
             flatFrame
             className={`dashboard-bridge-frame idle-breathing ${hudStyles.focusPrimary}`}

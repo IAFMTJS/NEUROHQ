@@ -72,7 +72,7 @@ export function LearningContentClient({
   const currentBook = learning.streams.find((s) => s.type === "book") ?? null;
 
   return (
-    <div className="space-y-6" data-tutorial="growth-content">
+    <div className="space-y-4 sm:space-y-6" data-tutorial="growth-content">
       <GrowthTabsShell belowTabsSlot={!simplified ? heroSlot : undefined}>
         {(activeTab) => (
           <>

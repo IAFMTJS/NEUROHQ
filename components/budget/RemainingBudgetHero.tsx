@@ -327,9 +327,13 @@ export function RemainingBudgetHero({
             </div>
             <div className="flex flex-wrap items-center justify-end gap-2">
               <span
-                className={`text-[10px] font-medium tabular-nums ${syncOk ? "text-emerald-300/90" : "text-amber-200/95"}`}
+                className={`inline-flex items-center gap-2 text-[10px] font-medium tabular-nums ${syncOk ? "text-emerald-300/90" : "text-amber-200/95"}`}
               >
-                {syncOk ? "● Sync OK" : "● Pending sync"}
+                <span
+                  className={`h-3 w-3 shrink-0 rounded-full ${syncOk ? "bg-emerald-400 shadow-[0_0_10px_rgba(16,185,129,0.55)]" : "bg-amber-400 shadow-[0_0_10px_rgba(251,191,36,0.5)]"}`}
+                  aria-hidden
+                />
+                {syncOk ? "Sync OK" : "Pending sync"}
               </span>
               <span
                 className={`shrink-0 rounded-full border px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.12em] ${commandStatus.pill}`}
@@ -461,18 +465,28 @@ export function RemainingBudgetHero({
         {!historyMode && cycleSlots.length > 0 && (
           <div className="relative z-[1] mt-6 border-t border-[rgba(var(--mode-rgb),0.1)] pt-5">
             <p className="mb-2 text-[10px] font-bold uppercase tracking-[0.16em] text-[var(--text-muted)]">Cyclus</p>
-            <div className="flex gap-1.5 overflow-x-auto pb-1">
+            <div className="flex gap-2 overflow-x-auto pb-1">
               {cycleSlots.map((w) => (
                 <div
                   key={w.key}
                   className={
                     w.current
-                      ? "min-w-[4.5rem] rounded-lg border border-[rgba(var(--mode-rgb),0.35)] bg-[rgba(var(--mode-rgb-deep),0.3)] px-3 py-2 text-center shadow-[0_0_16px_rgba(var(--mode-rgb),0.2)]"
-                      : "min-w-[4.5rem] rounded-lg border border-[rgba(var(--mode-rgb),0.08)] bg-[rgba(0,0,0,0.2)] px-3 py-2 text-center text-[var(--text-muted)]"
+                      ? "min-w-[5.5rem] rounded-lg border border-[rgba(var(--mode-rgb),0.35)] bg-[rgba(var(--mode-rgb-deep),0.3)] px-3.5 py-2.5 text-center shadow-[0_0_16px_rgba(var(--mode-rgb),0.2)]"
+                      : "min-w-[5.5rem] rounded-lg border border-[rgba(var(--mode-rgb),0.08)] bg-[rgba(0,0,0,0.2)] px-3.5 py-2.5 text-center text-[var(--text-muted)]"
                   }
                 >
-                  <span className="text-[10px] font-bold uppercase tracking-wide">{w.label}</span>
-                  <span className="mt-0.5 block text-[9px] tabular-nums opacity-80">{w.current ? "nu" : "—"}</span>
+                  <div className="flex items-center justify-center gap-1.5">
+                    <span
+                      className={
+                        w.current
+                          ? "h-2.5 w-2.5 rounded-full bg-[rgb(var(--mode-rgb))] shadow-[0_0_10px_rgba(var(--mode-rgb),0.55)]"
+                          : "h-2 w-2 rounded-full bg-[var(--text-muted)]/35"
+                      }
+                      aria-hidden
+                    />
+                    <span className="text-[10px] font-bold uppercase tracking-wide">{w.label}</span>
+                  </div>
+                  <span className="mt-1 block text-[9px] tabular-nums opacity-80">{w.current ? "nu" : "—"}</span>
                 </div>
               ))}
             </div>

@@ -109,7 +109,7 @@ export function GrowthTabsShell({ children, belowTabsSlot }: Props) {
   const panel = <section aria-label={`Groei-tab: ${activeLabel}`}>{children(activeTab)}</section>;
 
   return (
-    <div className="space-y-4" data-growth-tabs>
+    <div className="space-y-3 sm:space-y-4" data-growth-tabs>
       {tabButtonsPills}
       {belowTabsSlot != null ? <div className="space-y-4">{belowTabsSlot}</div> : null}
       <div className="min-h-[120px] space-y-4">{panel}</div>

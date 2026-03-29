@@ -18,7 +18,7 @@ import { SegmentedBar } from "@/components/visual-lab/VisualLabBars";
 import type { StrategyPacingHints } from "@/lib/strategy/strategy-pacing-hints";
 import { strategyPaceHintLines } from "@/lib/strategy/format-strategy-pace-hints";
 
-const RING_SIZE = 152;
+const RING_SIZE = 180;
 
 function weekProgressRingMode(pct: number, totalTasks: number): EnergyRingMode {
   if (totalTasks === 0) return "default";

@@ -23,6 +23,8 @@ import {
   VISUAL_LAB_UI_BACKDROP_PRESETS,
   type VisualLabUiBackdropId,
 } from "@/components/visual-lab/visualLabUiBackdropPresets";
+import { VisualLabNavbarIdeas } from "@/components/visual-lab/VisualLabNavbarIdeas";
+import BottomNavigation from "@/components/ui/BottomNavigation";
 
 /** Shared mock rows for ring kitchen (circle + polygon outlines). */
 const RING_KITCHEN_SAMPLES = [
@@ -63,13 +65,13 @@ function toneClasses(tone: (typeof MOCK_STATUS)[number]["tone"]) {
 function ledClasses(tone: (typeof MOCK_STATUS)[number]["tone"]) {
   switch (tone) {
     case "ok":
-      return "bg-emerald-400 shadow-[0_0_10px_rgba(52,211,153,0.7)]";
+      return "bg-emerald-400 shadow-[0_0_16px_rgba(52,211,153,0.85),0_0_6px_rgba(52,211,153,0.55)]";
     case "warn":
-      return "bg-[var(--hud-amber-500)] shadow-[0_0_12px_rgba(var(--hud-amber-500-rgb),0.55)]";
+      return "bg-[var(--hud-amber-500)] shadow-[0_0_16px_rgba(var(--hud-amber-500-rgb),0.65)]";
     case "blocked":
-      return "bg-red-400 shadow-[0_0_12px_rgba(248,113,113,0.65)]";
+      return "bg-red-400 shadow-[0_0_16px_rgba(248,113,113,0.7)]";
     default:
-      return "bg-[var(--semantic-accent)]/80 shadow-[0_0_10px_rgba(var(--mode-rgb),0.4)]";
+      return "bg-[var(--semantic-accent)]/80 shadow-[0_0_14px_rgba(var(--mode-rgb),0.5)]";
   }
 }
 
@@ -90,15 +92,22 @@ export function VisualLabClient() {
             <div className={activeBackdrop.radialClass} aria-hidden />
           ) : null}
 
+          <div className="relative z-[1]">
           <header className="relative mb-8 border-b border-[rgba(var(--mode-rgb),0.14)] pb-6">
             <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-[var(--semantic-accent)]/90">Sandbox</p>
             <h1 className="mt-1 text-xl font-bold tracking-tight text-[var(--text-primary)] [text-shadow:0_0_14px_rgba(var(--mode-rgb),0.2)] md:text-2xl">
               Visual lab
             </h1>
             <p className="mt-2 max-w-2xl text-sm leading-relaxed text-[var(--text-secondary)]">
-              Mock HUD: rings, budget & settings page concepts, split ring, bar card (site copy), polygon meters (trace + fill), hex mesh, lattice, flow diagram, strips, toasts. No live data.
+              Mock HUD: rings,{" "}
+              <a href="#navbar-design-lab" className="font-medium text-[var(--semantic-accent)] underline decoration-[rgba(var(--mode-rgb),0.35)] underline-offset-2 hover:decoration-[var(--semantic-accent)]">
+                navbar-ontwerpen
+              </a>{" "}
+              (zelfde iconen als productie), budget- en settings-concepten, split ring, balken, polygon meters, hex mesh, toasts. Geen live data.
             </p>
           </header>
+
+          <VisualLabNavbarIdeas />
 
           <section className="relative mb-10" aria-labelledby="ui-backdrops-heading">
             <div className="mb-3 flex flex-wrap items-end justify-between gap-2">
@@ -137,28 +146,31 @@ export function VisualLabClient() {
             </div>
           </section>
 
-          <section className="relative mb-10 space-y-4" aria-labelledby="status-lattice-heading">
+          <section
+            className="relative mb-10 w-full space-y-4 md:-mx-4 md:w-[calc(100%+2rem)] md:max-w-[calc(100%+2rem)] md:px-4"
+            aria-labelledby="status-lattice-heading"
+          >
             <div className="flex items-end justify-between gap-3">
               <h2 id="status-lattice-heading" className="text-[11px] font-bold uppercase tracking-[0.18em] text-[var(--text-muted)]">
                 Status lattice
               </h2>
               <span className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--text-muted)]">Mock · 6 tiles</span>
             </div>
-            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6 lg:gap-3">
               {MOCK_STATUS.map((s) => (
                 <div
                   key={s.id}
-                  className={`relative flex min-h-[92px] flex-col justify-between rounded-xl border bg-[rgba(6,18,30,0.55)] p-3 backdrop-blur-sm ${toneClasses(s.tone)}`}
+                  className={`relative flex min-h-[104px] flex-col justify-between rounded-xl border bg-[rgba(6,18,30,0.55)] p-3 backdrop-blur-sm sm:min-h-[108px] ${toneClasses(s.tone)}`}
                 >
                   <div className="flex items-center justify-between gap-2">
                     <span className="text-[10px] font-bold uppercase tracking-[0.12em] text-[var(--text-muted)]">{s.label}</span>
                     <span
-                      className={`h-2 w-2 shrink-0 rounded-full ${ledClasses(s.tone)} ${s.pulse ? "animate-pulse" : ""}`}
+                      className={`h-4 w-4 shrink-0 rounded-full ring-2 ring-black/20 ${ledClasses(s.tone)} ${s.pulse ? "animate-pulse" : ""}`}
                       aria-hidden
                     />
                   </div>
                   <p className="mt-2 text-sm font-semibold tabular-nums text-[var(--text-primary)]">{s.value}</p>
-                  <div className="mt-2 h-1 overflow-hidden rounded-full bg-black/30">
+                  <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-black/30">
                     <div
                       className={
                         s.tone === "blocked"
@@ -498,8 +510,14 @@ export function VisualLabClient() {
           <footer className="relative mt-10 border-t border-[rgba(var(--mode-rgb),0.12)] pt-5 text-center text-[10px] uppercase tracking-[0.16em] text-[var(--text-muted)]">
             Standalone route · /visual-lab
           </footer>
+          </div>
         </article>
+
+        <div className="bottom-nav-page-spacer" aria-hidden />
       </div>
+
+      <div className="bottom-nav-underlay" aria-hidden />
+      <BottomNavigation />
     </div>
   );
 }
