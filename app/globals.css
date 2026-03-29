@@ -897,12 +897,12 @@ html[data-shell-route="profile"] {
 [data-light-ui="true"] .skill-node.unlocked,
 [data-light-ui="true"] .progress-fill-glow,
 [data-light-ui="true"] .link-glow-hover:hover {
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.15), 0 0 0 1px rgba(255, 255, 255, 0.06) !important;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.28), 0 0 0 1px rgba(var(--mode-rgb), 0.12) !important;
 }
-[data-light-ui="true"] .card-simple-accent { border-color: rgba(255, 255, 255, 0.12) !important; }
+[data-light-ui="true"] .card-simple-accent { border-color: rgba(var(--mode-rgb), 0.32) !important; }
 [data-light-ui="true"] .card-simple-accent::before { display: none !important; }
 [data-light-ui="true"] .mission-card.active,
-[data-light-ui="true"] .mission-card.completed { border-color: rgba(255, 255, 255, 0.1) !important; }
+[data-light-ui="true"] .mission-card.completed { border-color: rgba(var(--mode-rgb), 0.28) !important; }
 [data-light-ui="true"] .mission-card.active::before,
 [data-light-ui="true"] .mission-card.completed::after { display: none !important; }
 [data-light-ui="true"] .page-title-glow,
@@ -912,15 +912,16 @@ html[data-shell-route="profile"] {
 [data-light-ui="true"] .stat-ring.focus,
 [data-light-ui="true"] .stat-ring.load { animation: none !important; box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2) !important; }
 
-/* Light UI: mode-tinted mesh on html only (fast — no PNG); body stays clear for shell layers */
+/* Light UI: same base palette as normal hub — only skip heavy galaxy PNG layers (faster paint) */
 html[data-light-ui="true"] {
   background-color: var(--mode-bg-main) !important;
-  background-image:
-    radial-gradient(ellipse 110% 70% at 50% -5%, rgba(var(--mode-rgb), 0.1), transparent 58%),
-    radial-gradient(ellipse 90% 50% at 85% 15%, rgba(var(--mode-rgb-deep), 0.06), transparent 55%),
-    linear-gradient(180deg, rgba(8, 14, 24, 0.995) 0%, rgba(5, 10, 18, 0.998) 52%, rgba(4, 8, 16, 1) 100%),
-    radial-gradient(ellipse 90% 46% at 50% 118%, rgba(var(--mode-rgb), 0.05), transparent 62%) !important;
-  background-size: 100% 100%, 100% 100%, 100% 100%, 100% 100% !important;
+  background-image: linear-gradient(
+    180deg,
+    var(--hud-dark-1) 0%,
+    var(--hud-dark-3) 42%,
+    var(--hud-dark-5) 100%
+  ) !important;
+  background-size: 100% 100% !important;
   background-repeat: no-repeat !important;
   background-attachment: scroll !important;
 }
@@ -943,7 +944,7 @@ html[data-light-ui="true"] body {
 [data-light-ui="true"] .dashboard-page::after { display: none !important; }
 [data-light-ui="true"] .command-stack-page-root {
   background-image: none !important;
-  background-color: #050c18 !important;
+  background-color: var(--mode-bg-main) !important;
   background-attachment: scroll !important;
 }
 [data-light-ui="true"] .command-stack-page-root::before,
@@ -952,7 +953,7 @@ html[data-light-ui="true"] body {
   background-image: none !important;
 }
 
-/* Light UI: no backdrop-filter or filter:blur – huge GPU/perf win, use solid backgrounds */
+/* Light UI: same surfaces as normal — no backdrop blur (perf), same HUD tokens */
 [data-light-ui="true"] .card,
 [data-light-ui="true"] .card-simple,
 [data-light-ui="true"] .card-simple-accent,
@@ -971,34 +972,18 @@ html[data-light-ui="true"] body {
 [data-light-ui="true"] .modal-overlay {
   backdrop-filter: none !important;
   -webkit-backdrop-filter: none !important;
-  background: linear-gradient(
-    165deg,
-    rgba(var(--mode-rgb-deep), 0.32) 0%,
-    rgba(8, 14, 24, 0.985) 55%,
-    rgba(var(--mode-rgb), 0.16) 100%
-  ) !important;
-  box-shadow:
-    0 0 0 1px rgba(var(--mode-rgb), 0.12),
-    0 8px 28px rgba(0, 0, 0, 0.38),
-    inset 0 1px 0 rgba(255, 255, 255, 0.07) !important;
+  background: var(--hud-surface-card) !important;
+  box-shadow: var(--hud-card-rim) !important;
 }
 
-/* Light UI + /tasks command deck: allow glass + gradient (generic rule above would flatten these) */
+/* Light UI + /tasks command deck: same card stack; optional lighter blur for scroll perf */
 [data-light-ui="true"] [data-route-tasks="true"] .tasks-command-deck .glass-card,
 [data-light-ui="true"] [data-route-tasks="true"] .tasks-command-deck .card-simple,
 [data-light-ui="true"] [data-route-tasks="true"] .tasks-command-deck .card-simple-accent {
   backdrop-filter: blur(16px) saturate(1.08) !important;
   -webkit-backdrop-filter: blur(16px) saturate(1.08) !important;
-  background: linear-gradient(
-    165deg,
-    rgba(var(--mode-rgb-deep), 0.34) 0%,
-    rgba(10, 18, 32, 0.96) 55%,
-    rgba(var(--mode-rgb), 0.16) 100%
-  ) !important;
-  box-shadow:
-    0 10px 34px rgba(0, 0, 0, 0.45),
-    0 0 0 1px rgba(var(--mode-rgb), 0.12),
-    inset 0 1px 0 rgba(255, 255, 255, 0.08) !important;
+  background: var(--hud-surface-card) !important;
+  box-shadow: var(--hud-card-rim) !important;
 }
 
 /* Light UI + /profile command deck (same deck shell as /tasks) */
@@ -1007,16 +992,8 @@ html[data-light-ui="true"] body {
 [data-light-ui="true"] [data-route-profile="true"] .tasks-command-deck .card-simple-accent {
   backdrop-filter: blur(16px) saturate(1.08) !important;
   -webkit-backdrop-filter: blur(16px) saturate(1.08) !important;
-  background: linear-gradient(
-    165deg,
-    rgba(var(--mode-rgb-deep), 0.34) 0%,
-    rgba(10, 18, 32, 0.96) 55%,
-    rgba(var(--mode-rgb), 0.16) 100%
-  ) !important;
-  box-shadow:
-    0 10px 34px rgba(0, 0, 0, 0.45),
-    0 0 0 1px rgba(var(--mode-rgb), 0.12),
-    inset 0 1px 0 rgba(255, 255, 255, 0.08) !important;
+  background: var(--hud-surface-card) !important;
+  box-shadow: var(--hud-card-rim) !important;
 }
 
 [data-light-ui="true"] .modal-overlay { background: rgba(0, 0, 0, 0.7) !important; }
@@ -1024,10 +1001,10 @@ html[data-light-ui="true"] body {
   backdrop-filter: none !important;
   -webkit-backdrop-filter: none !important;
   background: linear-gradient(
-    180deg,
-    rgba(var(--mode-rgb-deep), 0.22) 0%,
-    rgba(10, 18, 30, 0.99) 62%,
-    rgba(var(--mode-rgb), 0.12) 100%
+    185deg,
+    rgba(12, 22, 38, 0.94) 0%,
+    rgba(6, 12, 22, 0.92) 45%,
+    rgba(var(--mode-rgb-deep), 0.12) 100%
   ) !important;
 }
 [data-light-ui="true"] .panelBody,
@@ -1118,14 +1095,14 @@ html[data-light-ui="true"] body {
 
 /* Light UI: dashboard mission hero card – flat shadow only */
 [data-light-ui="true"] .dashboard-mission-hero > *:first-child {
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35), 0 0 0 1px rgba(255, 255, 255, 0.06) !important;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35), 0 0 0 1px rgba(var(--mode-rgb), 0.12) !important;
 }
 
 /* Light UI: cinematic glass cards and primary buttons – solid bg already applied; simplify shadow */
 [data-light-ui="true"] .dashboard-cinematic:not(.tasks-command-deck) .glass-card,
 [data-light-ui="true"] .dashboard-cinematic:not(.tasks-command-deck) .card-simple,
 [data-light-ui="true"] .dashboard-cinematic:not(.tasks-command-deck) .card-simple-accent {
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.35), 0 0 0 1px rgba(255, 255, 255, 0.06) !important;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.35), 0 0 0 1px rgba(var(--mode-rgb), 0.12) !important;
 }
 [data-light-ui="true"] .dashboard-cinematic:not(.tasks-command-deck) .primary-btn,
 [data-light-ui="true"] .dashboard-cinematic:not(.tasks-command-deck) .btn-primary,
@@ -1136,7 +1113,7 @@ html[data-light-ui="true"] body {
 /* Light UI: HUD chips and mini strip – no glow shadow */
 [data-light-ui="true"] .dashboard-cinematic:not(.tasks-command-deck) .dashboard-hud-chip,
 [data-light-ui="true"] .dashboard-cinematic:not(.tasks-command-deck) .dashboard-hud-trigger {
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25), 0 0 0 1px rgba(255, 255, 255, 0.06) !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25), 0 0 0 1px rgba(var(--mode-rgb), 0.14) !important;
 }
 [data-light-ui="true"] .dashboard-cinematic:not(.tasks-command-deck) .dashboard-mini-strip {
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2) !important;
@@ -2301,17 +2278,19 @@ body {
 }
 
 /**
- * Light UI: same vocabulary — mode tint + soft depth; skip heavy blur (perf).
+ * Light UI: same frosted stack as .hq-app-shell — only drop backdrop blur (perf).
  */
 [data-light-ui="true"] .hq-app-shell {
   background:
-    radial-gradient(ellipse 100% 72% at 50% -18%, rgba(var(--mode-rgb), 0.16), transparent 58%),
-    radial-gradient(ellipse 96% 56% at 50% 118%, rgba(var(--mode-rgb-deep), 0.12), transparent 55%),
-    linear-gradient(to bottom, rgba(0, 0, 0, 0.48) 0%, transparent 30%, transparent 68%, rgba(0, 0, 0, 0.68) 100%),
-    linear-gradient(180deg, rgba(8, 14, 24, 0.99) 0%, rgba(5, 10, 20, 0.995) 45%, rgba(4, 8, 16, 1) 100%);
+    linear-gradient(180deg, rgba(255, 255, 255, 0.045) 0%, transparent 28%, transparent 72%, rgba(0, 0, 0, 0.42) 100%),
+    radial-gradient(ellipse 100% 85% at 50% -8%, rgba(var(--mode-rgb), 0.14), transparent 58%),
+    radial-gradient(ellipse 80% 55% at 100% 0%, rgba(var(--mode-rgb-deep), 0.08), transparent 52%),
+    rgba(5, 12, 22, 0.48);
   backdrop-filter: none !important;
   -webkit-backdrop-filter: none !important;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.07);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.07),
+    0 0 0 1px rgba(var(--mode-rgb), 0.06);
 }
 
 /* /tasks: command-deck ambient scroll shell (layer on #main-content over .hq-app-shell) */
@@ -2328,13 +2307,14 @@ main#main-content.tasks-route-shell {
 }
 [data-light-ui="true"] main#main-content.tasks-route-shell {
   background:
-    radial-gradient(ellipse 100% 58% at 50% -16%, rgba(var(--mode-rgb), 0.16), transparent 56%),
-    radial-gradient(ellipse 80% 40% at 100% 0%, rgba(var(--mode-rgb-deep), 0.08), transparent 54%),
-    linear-gradient(to bottom, rgba(0, 0, 0, 0.52) 0%, transparent 30%, transparent 64%, rgba(0, 0, 0, 0.72) 100%),
-    linear-gradient(180deg, rgba(5, 12, 22, 0.99) 0%, rgba(3, 8, 16, 1) 100%);
-  backdrop-filter: blur(18px) saturate(1.08) !important;
-  -webkit-backdrop-filter: blur(18px) saturate(1.08) !important;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+    radial-gradient(ellipse 92% 50% at 50% -14%, rgba(var(--mode-rgb), 0.22), transparent 58%),
+    radial-gradient(ellipse 55% 38% at 100% 0%, rgba(var(--mode-rgb-deep), 0.14), transparent 52%),
+    linear-gradient(to bottom, rgba(2, 10, 22, 0.88) 0%, rgba(5, 14, 26, 0.62) 45%, rgba(2, 8, 18, 0.9) 100%);
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.07),
+    0 0 0 1px rgba(var(--mode-rgb), 0.05);
 }
 
 main#main-content.profile-route-shell {
@@ -2348,25 +2328,17 @@ main#main-content.profile-route-shell {
 }
 [data-light-ui="true"] main#main-content.profile-route-shell {
   background:
-    radial-gradient(ellipse 100% 58% at 50% -16%, rgba(var(--mode-rgb), 0.14), transparent 56%),
-    linear-gradient(to bottom, rgba(0, 0, 0, 0.58) 0%, transparent 30%, transparent 64%, rgba(0, 0, 0, 0.75) 100%),
-    linear-gradient(180deg, rgba(5, 12, 22, 0.98) 0%, rgba(3, 8, 16, 1) 100%);
-  backdrop-filter: blur(18px) saturate(1.08) !important;
-  -webkit-backdrop-filter: blur(18px) saturate(1.08) !important;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.055);
+    radial-gradient(ellipse 92% 50% at 50% -14%, rgba(var(--mode-rgb), 0.2), transparent 58%),
+    radial-gradient(ellipse 55% 38% at 100% 0%, rgba(var(--mode-rgb), 0.12), transparent 52%),
+    linear-gradient(to bottom, rgba(2, 10, 22, 0.82) 0%, rgba(5, 14, 26, 0.58) 45%, rgba(2, 8, 18, 0.88) 100%);
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
 }
 
-/** Profile command deck: outer frame (Light UI = slightly lifted glass) */
+/** Profile command deck: outer frame */
 .profile-page-ambient {
   border-color: rgba(var(--mode-rgb), 0.12);
-}
-
-[data-light-ui="true"] .profile-page-ambient {
-  border-color: rgba(var(--mode-rgb), 0.22);
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.055) 0%, rgba(255, 255, 255, 0.02) 100%);
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.1),
-    0 0 0 1px rgba(var(--mode-rgb), 0.06);
 }
 
 main.tasks-page-root {
@@ -2865,7 +2837,7 @@ header h1 { margin: 0; }
 
 [data-light-ui="true"] .visual-lab-shell-nebula-root {
   background-image: none !important;
-  background-color: #050c18 !important;
+  background-color: var(--mode-bg-main) !important;
 }
 [data-light-ui="true"] .visual-lab-shell-nebula-root::before {
   display: none !important;

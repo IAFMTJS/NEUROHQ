@@ -6,7 +6,7 @@ import type { UnifiedDecision } from "@/lib/unified-decision-engine";
 export interface DashboardCritical {
   dateStr: string;
   isMinimalUI: boolean;
-  /** Light version: skip heavy cinematic layers for fast load. */
+  /** Faster UI: skip heavy cinematic layers for fast load. */
   lightUi?: boolean;
   energyPct: number;
   focusPct: number;

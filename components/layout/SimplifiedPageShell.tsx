@@ -34,11 +34,11 @@ export function SimplifiedPageShell({
 }: Props) {
   const links = footerLinks ?? DEFAULT_FOOTER;
   return (
-    <div className="flex min-h-0 w-full max-w-none flex-1 flex-col">
+    <div className="flex w-full flex-col">
       <SciFiPanel
         variant="flat-glass"
-        className="hq-card-enter relative flex min-h-0 w-full flex-1 flex-col overflow-hidden dashboard-active-mission"
-        bodyClassName="relative z-10 flex min-h-0 flex-1 flex-col gap-0 p-0"
+        className="hq-card-enter relative flex w-full flex-col overflow-hidden dashboard-active-mission"
+        bodyClassName="relative z-10 flex flex-col gap-0 p-0"
       >
         <CornerNode corner="top-left" />
         <CornerNode corner="top-right" />
@@ -68,7 +68,7 @@ export function SimplifiedPageShell({
         ) : null}
         <div
           data-hq-simplified-scroll="1"
-          className={`min-h-0 flex-1 overflow-y-auto overscroll-contain [-webkit-overflow-scrolling:touch] ${bodyClassName ?? "px-2 py-2 sm:px-3"}`}
+          className={`${bodyClassName ?? "px-2 py-2 sm:px-3"}`}
         >
           {children}
         </div>

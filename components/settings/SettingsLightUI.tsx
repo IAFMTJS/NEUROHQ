@@ -24,9 +24,9 @@ export function SettingsLightUI({ initialLightUi }: Props) {
   return (
     <div className="card-simple overflow-hidden p-0">
       <div className="border-b border-[var(--card-border)] px-4 py-3">
-        <h2 className="text-base font-semibold text-[var(--text-primary)]">Light version</h2>
+        <h2 className="text-base font-semibold text-[var(--text-primary)]">Snellere weergave</h2>
         <p className="mt-0.5 text-xs text-[var(--text-muted)]">
-          Minder animaties, snellere interface, dezelfde look. Ideaal voor snel gebruik.
+          Zelfde kleuren als normaal; minder blur en animaties voor een vlottere interface.
         </p>
       </div>
       <div className="flex items-center justify-between p-4">

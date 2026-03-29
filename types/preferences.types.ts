@@ -28,7 +28,7 @@ export interface UserPreferences {
   selected_emotion: EmotionKey | null;
   compact_ui: boolean;
   reduced_motion: boolean;
-  /** Light version: same visuals, minimal animations, fast UI. */
+  /** Faster UI: same colors/layout; fewer effects and animations. */
   light_ui: boolean;
   /**
    * Shorter copy on cards, fewer promotional toasts/shortcut strips. Same styling tokens.

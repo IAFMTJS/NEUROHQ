@@ -282,11 +282,11 @@
 
 :global([data-light-ui="true"]) .flatGlassPageRoot {
   background:
-    radial-gradient(ellipse 100% 80% at 50% 0%, rgba(var(--mode-rgb), 0.1), transparent 55%),
-    rgba(8, 14, 24, 0.92);
+    linear-gradient(180deg, rgba(var(--mode-rgb), 0.06) 0%, transparent 42%),
+    rgba(5, 12, 22, 0.42);
   backdrop-filter: none !important;
   -webkit-backdrop-filter: none !important;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
 }
 
 .cinematicBackdrop {
@@ -446,25 +446,40 @@
   }
 }
 
-/* Light UI: panels — mode-tinted mechanical slab (no blur) */
+/* Light UI: same panel fill as default .panelBody — no backdrop blur (perf) */
 :global([data-light-ui="true"]) .panelBody {
   backdrop-filter: none !important;
   -webkit-backdrop-filter: none !important;
   background: linear-gradient(
-    165deg,
-    rgba(var(--mode-rgb-deep), 0.35) 0%,
-    rgba(10, 18, 32, 0.98) 48%,
-    rgba(var(--mode-rgb), 0.14) 100%
+    185deg,
+    rgba(12, 22, 38, 0.94) 0%,
+    rgba(6, 12, 22, 0.92) 45%,
+    rgba(var(--mode-rgb-deep), 0.12) 100%
   ) !important;
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.08),
-    inset 0 -8px 18px rgba(0, 0, 0, 0.35) !important;
+    inset 0 1px 0 rgba(255, 255, 255, 0.07),
+    inset 0 -10px 28px rgba(0, 0, 0, 0.42),
+    inset 0 10px 22px rgba(0, 0, 0, 0.28) !important;
 }
 
-/* Light UI: flat backdrop, no image/blur/animations – fast load */
+/* Flat-glass panels: match default .panelBodyFlatGlass fill — blur off only */
+:global([data-light-ui="true"]) .panelBody.panelBodyFlatGlass {
+  background: linear-gradient(
+    188deg,
+    rgba(10, 18, 32, 0.92) 0%,
+    rgba(6, 12, 22, 0.88) 48%,
+    rgba(var(--mode-rgb-deep), 0.11) 100%
+  ) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.06),
+    inset 0 -8px 22px rgba(0, 0, 0, 0.32),
+    inset 0 8px 16px rgba(0, 0, 0, 0.22) !important;
+}
+
+/* Light UI: same base as cinematic — no image layer (fast load) */
 :global([data-light-ui="true"]) .cinematicBackdrop {
   background-image: none !important;
-  background-color: #050c18 !important;
+  background-color: var(--mode-bg-main) !important;
   background-attachment: scroll !important;
 }
 :global([data-light-ui="true"]) .cinematicBackdrop::before { display: none !important; }

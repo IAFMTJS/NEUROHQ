@@ -166,9 +166,14 @@ export function HelpPageClient({ simplifiedLayout = false }: { simplifiedLayout?
 
   useEffect(() => {
     if (simplifiedLayout) {
-      const scrollEl = document.querySelector("[data-hq-simplified-scroll]");
+      const scrollEl =
+        document.getElementById("main-content") ??
+        document.querySelector("[data-hq-simplified-scroll]");
       if (!scrollEl) return;
-      const onScroll = () => setShowBackToContents(scrollEl.scrollTop > 400);
+      const onScroll = () =>
+        setShowBackToContents(
+          scrollEl instanceof HTMLElement ? scrollEl.scrollTop > 400 : window.scrollY > 400
+        );
       scrollEl.addEventListener("scroll", onScroll, { passive: true });
       onScroll();
       return () => scrollEl.removeEventListener("scroll", onScroll);

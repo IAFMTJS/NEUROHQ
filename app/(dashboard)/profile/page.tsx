@@ -253,8 +253,10 @@ export default async function ProfilePage({ searchParams }: { searchParams: Prom
 
   return (
     <ProfileCommandDeckLayout main="engine">
-      {engineHint}
-      {engineTabsAndPanels}
+      <div className="card-simple space-y-4 !rounded-xl p-4 md:p-5">
+        {engineHint}
+        {engineTabsAndPanels}
+      </div>
     </ProfileCommandDeckLayout>
   );
 }

@@ -129,7 +129,8 @@ export function DailyChallengesPanel({
       : "text-[9px] font-semibold uppercase tracking-[0.12em] text-[var(--text-muted)]";
 
   return (
-    <section
+    <div
+      role="region"
       className={className}
       aria-labelledby="daily-challenges-heading"
       data-tutorial={variant === "profile" ? "profile-daily-challenges" : undefined}
@@ -182,6 +183,6 @@ export function DailyChallengesPanel({
           .
         </p>
       )}
-    </section>
+    </div>
   );
 }
