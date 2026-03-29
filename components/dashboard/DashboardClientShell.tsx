@@ -496,21 +496,12 @@ export function DashboardClientShell() {
     blended: "border-fuchsia-500/40 bg-fuchsia-500/10 text-fuchsia-200",
   };
 
+  /* Hub shell: flatGlassPageRoot + dashboard-page/cinematic container — no cinematic PNG / starfield layers */
   return (
     <div
-      className={`relative min-h-screen overflow-x-hidden ${!skipCinematicLayers ? hudStyles.cinematicBackdrop : ""} ${isMinimalUI ? "minimal-ui" : ""}`}
+      className={`relative min-h-screen overflow-x-hidden ${hudStyles.flatGlassPageRoot} ${isMinimalUI ? "minimal-ui" : ""}`}
       data-minimal={isMinimalUI ? "true" : undefined}
     >
-      {!skipCinematicLayers && (
-        <>
-          <div className={hudStyles.spaceMist} aria-hidden />
-          <div className={hudStyles.starLayerFar} aria-hidden />
-          <div className={hudStyles.starLayerNear} aria-hidden />
-          <div className={hudStyles.backgroundAtmosphere} aria-hidden />
-          <div className={hudStyles.colorBlend} aria-hidden />
-          <div className={hudStyles.spaceNoise} aria-hidden />
-        </>
-      )}
       <div
         className={`${!isMinimalUI ? "container page page-wide dashboard-page dashboard-cinematic relative z-10 pb-10" : ""}`}
         style={dcicModeVars}

@@ -70,17 +70,10 @@ export function BootstrapLoader({ onReady }: Props) {
 
   return (
     <main
-      className={`relative min-h-screen overflow-hidden ${hudStyles.cinematicBackdrop}`}
+      className={`relative min-h-screen overflow-hidden ${hudStyles.flatGlassPageRoot}`}
       aria-busy="true"
       aria-label="Initializing NEUROHQ"
     >
-      <div className={hudStyles.spaceMist} aria-hidden />
-      <div className={hudStyles.starLayerFar} aria-hidden />
-      <div className={hudStyles.starLayerNear} aria-hidden />
-      <div className={hudStyles.backgroundAtmosphere} aria-hidden />
-      <div className={hudStyles.colorBlend} aria-hidden />
-      <div className={hudStyles.spaceNoise} aria-hidden />
-
       <div className="relative z-10 flex min-h-screen items-center justify-center px-4">
         <section className="w-full max-w-md rounded-2xl border border-[var(--card-border)] bg-[var(--bg-surface)]/80 px-6 py-5 shadow-xl backdrop-blur">
           <h1 className="text-xs font-semibold uppercase tracking-[0.28em] text-[var(--text-muted)]">

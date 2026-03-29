@@ -146,7 +146,7 @@ export function VisualLabClient() {
     useState<VisualLabUiBackdropId>("strategyAnalysis");
   const activeBackdrop = VISUAL_LAB_UI_BACKDROP_PRESETS[uiBackdrop];
   const [pageShell, setPageShell] = useState<VisualLabPageShellId>(
-    "commandStackCinematic",
+    "hubFlatDashboard",
   );
 
   return (

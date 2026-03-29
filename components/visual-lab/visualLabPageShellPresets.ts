@@ -46,7 +46,7 @@ export const VISUAL_LAB_PAGE_SHELL_PRESETS: Record<
     label: "Command stack · cinematic",
     description:
       "PNG-base + HUD mist/sterren/grain + dashboard-page vignet + globals inner.",
-    matchesApp: "Dashboard HQ (DashboardClientShell)",
+    matchesApp: "Alleen vergelijken in lab (productie: hub shell)",
     thumbClass:
       "bg-gradient-to-br from-[rgba(8,26,42,0.95)] via-[rgba(12,24,40,0.92)] to-[rgba(4,10,18,0.98)]",
   },
@@ -55,7 +55,7 @@ export const VISUAL_LAB_PAGE_SHELL_PRESETS: Record<
     label: "Hub · flat + dashboard",
     description:
       "flatGlassPageRoot + container dashboard-page/cinematic + inner (geen starfield-lagen).",
-    matchesApp: "DashboardHubCommandShell / Strategy hub",
+    matchesApp: "Dashboard home, bootstrap, DashboardHubCommandShell",
     thumbClass:
       "bg-gradient-to-b from-slate-800/50 to-slate-950/95 [box-shadow:inset_0_0_0_1px_rgba(var(--mode-rgb),0.12)]",
   },
