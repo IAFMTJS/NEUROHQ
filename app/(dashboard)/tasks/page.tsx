@@ -200,11 +200,14 @@ async function MissionsSectionAsync({
   backlog,
   growthFromGrowthPage = false,
   simplifiedContent = false,
+  commandDeck = false,
 }: {
   dateStr: string;
   backlog: Awaited<ReturnType<typeof getBacklogTasks>>;
   growthFromGrowthPage?: boolean;
   simplifiedContent?: boolean;
+  /** Outer SciFiPanel omitted — content sits in TasksTabsShell command deck. */
+  commandDeck?: boolean;
 }) {
   const [
     mode,
@@ -436,10 +439,8 @@ async function MissionsSectionAsync({
     );
   }
 
-  return (
-    <SciFiPanel flatFrame variant="glass" className={hudStyles.focusSecondary} bodyClassName="p-4 md:p-5">
-      <CornerNode corner="top-left" />
-      <CornerNode corner="top-right" />
+  const missionsBody = (
+    <>
       <GrowthMissionsRibbon snap={growthSnap} fromGrowthPage={growthFromGrowthPage} />
       <details className="tasks-war-hide rounded-xl border border-[var(--card-border)] bg-[var(--bg-surface)]/35 p-3">
         <summary className="cursor-pointer text-xs font-semibold uppercase tracking-wider text-[var(--text-muted)]">Diagnostics</summary>
@@ -533,6 +534,18 @@ async function MissionsSectionAsync({
       <div className="tasks-war-hide">
         <BacklogAndToekomstTriggers backlog={backlog} futureTasks={futureTasks} todayDate={dateStr} />
       </div>
+    </>
+  );
+
+  if (commandDeck) {
+    return <div className="space-y-6">{missionsBody}</div>;
+  }
+
+  return (
+    <SciFiPanel flatFrame variant="glass" className={hudStyles.focusSecondary} bodyClassName="p-4 md:p-5">
+      <CornerNode corner="top-left" />
+      <CornerNode corner="top-right" />
+      {missionsBody}
     </SciFiPanel>
   );
 }
@@ -544,6 +557,7 @@ async function CalendarSectionAsync({
   calendarView,
   backlog,
   simplifiedContent = false,
+  commandDeck = false,
 }: {
   dateStr: string;
   monthParam: string;
@@ -551,6 +565,7 @@ async function CalendarSectionAsync({
   calendarView: CalendarView;
   backlog: Awaited<ReturnType<typeof getBacklogTasks>>;
   simplifiedContent?: boolean;
+  commandDeck?: boolean;
 }) {
   return (
     <TasksCalendarAsync
@@ -560,6 +575,7 @@ async function CalendarSectionAsync({
       calendarView={calendarView}
       backlog={(backlog ?? []) as { id: string; title: string | null; due_date: string | null }[]}
       simplifiedContent={simplifiedContent}
+      commandDeck={commandDeck}
     />
   );
 }
@@ -661,6 +677,8 @@ export default async function TasksPage({ searchParams }: Props) {
   );
   /** Simplified mode: no missions page chrome; tabs + one full-height column for all task tabs. */
   const simplifiedTasksFillLayout = prefs.simplified_content === true;
+  /** Visual-lab command deck around tabs + content (standard layout only). */
+  const tasksCommandDeck = !simplifiedTasksFillLayout;
 
   const headerSection = simplifiedTasksFillLayout ? null : (
     <>
@@ -704,6 +722,7 @@ export default async function TasksPage({ searchParams }: Props) {
             header={headerSection}
             fillViewport={simplifiedTasksFillLayout}
             stickyTabs={simplifiedTasksFillLayout}
+            commandDeck={tasksCommandDeck}
           >
             {activeTab === "missions" ? (
               <Suspense fallback={null}>
@@ -712,6 +731,7 @@ export default async function TasksPage({ searchParams }: Props) {
                   backlog={backlog}
                   growthFromGrowthPage={growthFromGrowthPage}
                   simplifiedContent={prefs.simplified_content === true}
+                  commandDeck={tasksCommandDeck}
                 />
               </Suspense>
             ) : activeTab === "calendar" ? (
@@ -723,6 +743,7 @@ export default async function TasksPage({ searchParams }: Props) {
                   calendarView={calendarView}
                   backlog={backlog}
                   simplifiedContent={prefs.simplified_content === true}
+                  commandDeck={tasksCommandDeck}
                 />
               </Suspense>
             ) : (

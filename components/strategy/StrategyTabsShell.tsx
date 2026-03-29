@@ -2,18 +2,15 @@
 
 import { useEffect, useState, type ReactNode } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import {
-  dashboardHubTabButtonClass,
-  dashboardHubTabStripClass,
-} from "@/components/layout/dashboardHubTabStyles";
 
 export type StrategyTabId = "overview" | "focus" | "alignment" | "review";
 
-const TABS: { id: StrategyTabId; label: string }[] = [
-  { id: "overview", label: "Overview" },
-  { id: "focus", label: "Focus & budget" },
-  { id: "alignment", label: "Alignment & momentum" },
-  { id: "review", label: "Review & archief" },
+/** Volgorde = productie; `shortLabel` past horizontale strip (tasks / budget / hubs). */
+const TABS: { id: StrategyTabId; label: string; shortLabel: string }[] = [
+  { id: "overview", label: "Overview", shortLabel: "Overview" },
+  { id: "focus", label: "Focus & budget", shortLabel: "Focus" },
+  { id: "alignment", label: "Alignment & momentum", shortLabel: "Align" },
+  { id: "review", label: "Review & archief", shortLabel: "Review" },
 ];
 
 type Props = {
@@ -25,7 +22,7 @@ type Props = {
   banner?: React.ReactNode;
   /** Between tab row and panels (mascot, pace hint) — full hub layout only. */
   belowTabsSlot?: ReactNode;
-  /** Sticky tab strip inside simplified command scroll (matches budget/tasks). */
+  /** Sticky tab strip in simplified scroll (zelfde rail als volledige hub). */
   simplifiedLayout?: boolean;
 };
 
@@ -69,35 +66,38 @@ export function StrategyTabsShell({
     router.replace(query ? `${pathname}?${query}` : pathname, { scroll: false });
   };
 
-  const tabListClass = simplifiedLayout
-    ? "dashboard-top-strip sticky top-0 z-20 flex flex-wrap gap-2 border-b border-[var(--card-border)]/50 bg-[var(--bg-surface)]/85 px-1 py-2 backdrop-blur-md supports-[backdrop-filter]:bg-[var(--bg-surface)]/70 sm:px-2"
-    : dashboardHubTabStripClass();
+  const stripOuterClass = simplifiedLayout
+    ? "dashboard-top-strip sticky top-0 z-20 border-b border-[var(--card-border)]/50 bg-[var(--bg-surface)]/85 px-1 py-2 backdrop-blur-md supports-[backdrop-filter]:bg-[var(--bg-surface)]/70 sm:px-2"
+    : "dashboard-top-strip mt-3";
 
   const tabBtnClass = (selected: boolean) =>
-    simplifiedLayout
-      ? `dashboard-mini-btn ${selected ? "dashboard-mini-btn-primary" : "dashboard-mini-btn-secondary"}`
-      : dashboardHubTabButtonClass(selected);
+    `dashboard-mini-btn ${selected ? "dashboard-mini-btn-primary" : "dashboard-mini-btn-secondary"}`;
 
   return (
     <div className={simplifiedLayout ? "flex min-h-0 flex-1 flex-col gap-0" : "space-y-4"} data-strategy-tabs>
       {banner ? <div className={simplifiedLayout ? "shrink-0" : undefined}>{banner}</div> : null}
-      <div role="tablist" aria-label="Strategie-secties" className={tabListClass}>
-        {TABS.map((t) => {
-          const selected = tab === t.id;
-          return (
-            <button
-              key={t.id}
-              type="button"
-              role="tab"
-              aria-selected={selected}
-              id={`strategy-tab-${t.id}`}
-              onClick={() => setTabWithUrl(t.id)}
-              className={tabBtnClass(selected)}
-            >
-              {t.label}
-            </button>
-          );
-        })}
+      <div className={stripOuterClass}>
+        <div className="dashboard-top-strip-track" role="tablist" aria-label="Strategie-secties">
+          {TABS.map((t) => {
+            const selected = tab === t.id;
+            return (
+              <button
+                key={t.id}
+                type="button"
+                role="tab"
+                aria-selected={selected}
+                aria-label={t.label}
+                title={t.label}
+                id={`strategy-tab-${t.id}`}
+                onClick={() => setTabWithUrl(t.id)}
+                className={tabBtnClass(selected)}
+              >
+                {t.shortLabel}
+              </button>
+            );
+          })}
+          <span className="dashboard-mini-strip-label">Tabs</span>
+        </div>
       </div>
       {!simplifiedLayout && belowTabsSlot != null ? (
         <div className="space-y-4">{belowTabsSlot}</div>

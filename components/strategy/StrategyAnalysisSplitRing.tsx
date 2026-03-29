@@ -232,34 +232,34 @@ export function StrategyAnalysisSplitRing({ budgetHealth, growthHealth, budgetWa
       </svg>
 
       <div
-        className="pointer-events-none absolute left-1/2 top-1/2 w-[min(280px,46%)] -translate-x-1/2 -translate-y-1/2 rounded-2xl border border-[rgba(255,255,255,0.1)] bg-[rgba(6,18,30,0.72)] px-3 py-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.07),0_0_24px_rgba(0,0,0,0.45)] backdrop-blur-sm sm:px-5 sm:py-4"
+        className="pointer-events-none absolute left-1/2 top-1/2 w-[min(220px,38%)] -translate-x-1/2 -translate-y-1/2 rounded-xl border border-[rgba(255,255,255,0.1)] bg-[rgba(6,18,30,0.72)] px-2 py-2 shadow-[inset_0_1px_0_rgba(255,255,255,0.07),0_0_24px_rgba(0,0,0,0.45)] backdrop-blur-sm sm:w-[min(248px,40%)] sm:px-3 sm:py-2.5"
         aria-hidden
       >
-        <div className="flex items-center justify-between gap-4 sm:gap-8">
+        <div className="flex items-center justify-between gap-2 sm:gap-5">
           <div className="min-w-0 flex-1 text-center">
-            <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-[var(--text-muted)] sm:text-xs">Budget</p>
+            <p className="text-[8px] font-bold uppercase tracking-[0.12em] text-[var(--text-muted)] sm:text-[9px]">Budget</p>
             <p
-              className={`mt-1 text-2xl font-bold tabular-nums leading-none tracking-tight [text-shadow:0_0_18px_rgba(0,0,0,0.5)] sm:text-4xl md:text-5xl ${
+              className={`mt-0.5 text-lg font-bold tabular-nums leading-none tracking-tight [text-shadow:0_0_14px_rgba(0,0,0,0.5)] sm:text-2xl md:text-3xl ${
                 budgetWarn ? "text-amber-200" : "text-emerald-200"
               }`}
             >
               {bPct}
-              <span className="text-sm font-semibold opacity-80 sm:text-lg">%</span>
+              <span className="text-[10px] font-semibold opacity-80 sm:text-xs">%</span>
             </p>
           </div>
           <div
-            className="h-12 w-px shrink-0 bg-gradient-to-b from-transparent via-[rgba(var(--mode-rgb),0.35)] to-transparent sm:h-20"
+            className="h-10 w-px shrink-0 bg-gradient-to-b from-transparent via-[rgba(var(--mode-rgb),0.35)] to-transparent sm:h-14"
             aria-hidden
           />
           <div className="min-w-0 flex-1 text-center">
-            <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-[var(--text-muted)] sm:text-xs">Groei</p>
+            <p className="text-[8px] font-bold uppercase tracking-[0.12em] text-[var(--text-muted)] sm:text-[9px]">Groei</p>
             <p
-              className={`mt-1 text-2xl font-bold tabular-nums leading-none tracking-tight [text-shadow:0_0_18px_rgba(0,0,0,0.5)] sm:text-4xl md:text-5xl ${
+              className={`mt-0.5 text-lg font-bold tabular-nums leading-none tracking-tight [text-shadow:0_0_14px_rgba(0,0,0,0.5)] sm:text-2xl md:text-3xl ${
                 growthWarn ? "text-amber-200" : "text-sky-200"
               }`}
             >
               {gPct}
-              <span className="text-sm font-semibold opacity-80 sm:text-lg">%</span>
+              <span className="text-[10px] font-semibold opacity-80 sm:text-xs">%</span>
             </p>
           </div>
         </div>

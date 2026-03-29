@@ -18,6 +18,8 @@ type TasksCalendarAsyncProps = {
   calendarView: "today" | "calendar" | "routines" | "overdue";
   backlog: { id: string; title: string | null; due_date: string | null }[];
   simplifiedContent?: boolean;
+  /** Skip outer SciFiPanel when nested in TasksTabsShell command deck. */
+  commandDeck?: boolean;
 };
 
 /** Fetches calendar data in a Suspense boundary so the main tasks page doesn't wait on 3‑month task range or 180‑day events. */
@@ -28,6 +30,7 @@ export async function TasksCalendarAsync({
   calendarView,
   backlog,
   simplifiedContent = false,
+  commandDeck = false,
 }: TasksCalendarAsyncProps) {
   const [monthYear, monthNumber] = monthParam.split("-").map((p) => parseInt(p, 10));
   const monthStart = new Date(Date.UTC(monthYear, monthNumber - 1, 1, 12));
@@ -114,6 +117,10 @@ export async function TasksCalendarAsync({
         </SciFiPanel>
       </div>
     );
+  }
+
+  if (commandDeck) {
+    return <div className="overflow-hidden rounded-xl border border-[rgba(var(--mode-rgb),0.1)]">{section}</div>;
   }
 
   return (

@@ -151,33 +151,6 @@ export function VisualLabProfilePageConcept() {
           <div className="mt-4 space-y-4">
             {main === "home" ? (
               <>
-                <article className="relative overflow-hidden rounded-xl border border-[rgba(var(--mode-rgb),0.14)] bg-[rgba(6,18,30,0.45)] shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
-                  <div className="flex flex-col gap-4 p-4 sm:flex-row sm:items-center sm:gap-6 md:p-5">
-                    <div
-                      className="mx-auto flex h-24 w-24 shrink-0 items-center justify-center rounded-2xl border border-[rgba(var(--semantic-accent),0.35)] bg-gradient-to-br from-[rgba(var(--mode-rgb-deep),0.4)] to-[rgba(6,18,30,0.9)] text-2xl font-bold text-[var(--semantic-accent)] shadow-[0_0_28px_rgba(var(--mode-rgb),0.2)] sm:mx-0"
-                      aria-hidden
-                    >
-                      HQ
-                    </div>
-                    <div className="min-w-0 flex-1 text-center sm:text-left">
-                      <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-[var(--semantic-accent)]">Call sign</p>
-                      <p className="mt-1 text-lg font-bold text-[var(--text-primary)] md:text-xl">Commander N.</p>
-                      <p className="mt-1 text-xs text-[var(--text-muted)]">commander@neurohq.app</p>
-                      <p className="mt-2 text-[11px] text-[var(--text-secondary)]">
-                        Lid sinds mrt 2025 · focusmodus <span className="font-semibold text-[var(--text-primary)]">Strategie</span>
-                      </p>
-                    </div>
-                    <div className="flex shrink-0 flex-wrap justify-center gap-3 sm:flex-col sm:justify-center">
-                      <span className="cursor-default rounded-lg bg-[var(--semantic-accent)]/15 px-3 py-2 text-center text-[11px] font-semibold text-[var(--semantic-accent)]">
-                        Bewerk profiel
-                      </span>
-                      <span className="cursor-default rounded-lg border border-[rgba(var(--mode-rgb),0.18)] px-3 py-2 text-center text-[11px] font-medium text-[var(--text-secondary)]">
-                        Rapport · inzichten
-                      </span>
-                    </div>
-                  </div>
-                </article>
-
                 <section
                   className="relative overflow-hidden rounded-xl border border-[rgba(var(--mode-rgb),0.2)] bg-gradient-to-br from-[rgba(8,26,42,0.92)] via-[var(--bg-elevated)]/88 to-[rgba(var(--mode-rgb-deep),0.12)] px-3 py-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.05)] sm:px-5 sm:py-5"
                   aria-label="Level orbit (concept, zoals profiel home)"

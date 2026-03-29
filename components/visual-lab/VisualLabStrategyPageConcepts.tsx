@@ -140,8 +140,19 @@ function MockStrategyWeekBudgetStrip() {
 }
 
 function MockReviewBanner() {
+  const [dismissed, setDismissed] = useState(false);
+  if (dismissed) return null;
+
   return (
-    <div className="rounded-xl border border-[rgba(var(--hud-amber-500-rgb),0.45)] bg-gradient-to-r from-[rgba(45,30,8,0.5)] to-[rgba(12,24,42,0.85)] px-3 py-3 shadow-[0_0_24px_rgba(var(--hud-amber-500-rgb),0.12)] md:flex md:items-center md:justify-between md:gap-4 md:px-4">
+    <div className="relative rounded-xl border border-[rgba(var(--hud-amber-500-rgb),0.45)] bg-gradient-to-r from-[rgba(45,30,8,0.5)] to-[rgba(12,24,42,0.85)] px-3 py-3 pr-11 shadow-[0_0_24px_rgba(var(--hud-amber-500-rgb),0.12)] md:flex md:items-center md:justify-between md:gap-4 md:px-4 md:pr-12">
+      <button
+        type="button"
+        onClick={() => setDismissed(true)}
+        className="absolute right-1.5 top-1.5 flex h-11 w-11 shrink-0 items-center justify-center rounded-lg border border-[rgba(var(--mode-rgb),0.2)] bg-[rgba(6,18,30,0.55)] text-lg font-light leading-none text-[var(--text-secondary)] transition hover:border-[rgba(var(--mode-rgb),0.35)] hover:bg-[rgba(var(--mode-rgb-deep),0.15)] hover:text-[var(--text-primary)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--hud-amber-500)]/55 focus-visible:ring-offset-2 focus-visible:ring-offset-[rgba(12,24,42,0.85)] md:right-2 md:top-2"
+        aria-label="Sluit weekreview-melding (mock)"
+      >
+        <span aria-hidden>×</span>
+      </button>
       <div className="min-w-0">
         <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-[var(--hud-amber-500)]">Weekreview open</p>
         <p className="mt-1 text-sm font-semibold text-[var(--text-primary)]">Rond review af om week 13 te vergrendelen</p>
