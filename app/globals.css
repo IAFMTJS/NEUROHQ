@@ -2202,36 +2202,24 @@ header:has(+ .mascot-hero) {
     drop-shadow(0 0 12px rgba(var(--mode-rgb), 0.3));
 }
 
-/* ========== CINEMATIC NEON – Full background (starfield + nebula + vignette + depth) ========== */
-/* Background extends past viewport so PWA has no white margins; use 120% and fallback color */
+/* ========== Hub shell base (html/body) — calm gradient; frost + blur live on #app-shell (.hq-app-shell) ========== */
 html {
   min-height: 100%;
   min-height: 100dvh;
   min-width: 100%;
   width: 100%;
   overflow-x: hidden;
-  /* Prevent rubber-band overscroll on iOS so PWA doesn’t show white behind the app */
   overscroll-behavior: none;
-  /* Prevent horizontal pan on mobile so the app feels fixed to the screen */
   touch-action: pan-y pinch-zoom;
   -webkit-touch-callout: none;
-  background-color: var(--cinematic-navy);
-  background:
-    var(--cinematic-vignette),
-    var(--galaxy-band),
-    var(--galaxy-core),
-    var(--galaxy-dust),
-    var(--cinematic-nebula),
-    var(--cinematic-radial-top),
-    var(--cinematic-radial-mid),
-    var(--cinematic-radial-bottom),
-    radial-gradient(circle at 50% 35%, var(--cinematic-glow-cyan), transparent 45%),
-    linear-gradient(180deg, var(--cinematic-navy) 0%, var(--cinematic-navy-mid) 38%, var(--cinematic-navy-bottom) 72%, var(--cinematic-navy) 100%),
-    var(--starfield);
-  background-attachment: fixed;
-  background-size: 120% 120%, 120% 120%, 120% 120%, 120% 120%, 120% 120%, 120% 120%, 120% 120%, 120% 120%, 120% 120%, 120% 120%, 120% 120%, 120% 120%, var(--starfield-size, 600px) var(--starfield-size, 600px);
-  background-repeat: no-repeat, no-repeat, no-repeat, no-repeat, no-repeat, no-repeat, no-repeat, no-repeat, no-repeat, no-repeat, no-repeat, no-repeat, repeat;
-  background-position: center, center, center, center, center, center, center, center, center, 50% 35%, center, center, 0 0;
+  background-color: var(--mode-bg-main);
+  background-image: linear-gradient(
+    180deg,
+    var(--hud-dark-1) 0%,
+    var(--hud-dark-2) 52%,
+    var(--hud-dark-3) 100%
+  );
+  background-attachment: scroll;
 }
 body {
   margin: 0;
@@ -2244,26 +2232,21 @@ body {
   overscroll-behavior: none;
   color: var(--text-main);
   font-family: var(--font-sans), Inter, system-ui, sans-serif;
-  background-color: var(--cinematic-navy);
-  background:
-    var(--cinematic-vignette),
-    var(--galaxy-band),
-    var(--galaxy-core),
-    var(--galaxy-dust),
-    var(--cinematic-nebula),
-    var(--cinematic-radial-top),
-    var(--cinematic-radial-mid),
-    var(--cinematic-radial-bottom),
-    radial-gradient(circle at 50% 35%, var(--cinematic-glow-cyan), transparent 45%),
-    linear-gradient(180deg, var(--cinematic-navy) 0%, var(--cinematic-navy-mid) 38%, var(--cinematic-navy-bottom) 72%, var(--cinematic-navy) 100%),
-    var(--starfield);
-  background-attachment: fixed;
-  background-size: 120% 120%, 120% 120%, 120% 120%, 120% 120%, 120% 120%, 120% 120%, 120% 120%, 120% 120%, 120% 120%, 120% 120%, 120% 120%, 120% 120%, var(--starfield-size, 600px) var(--starfield-size, 600px);
-  background-repeat: no-repeat, no-repeat, no-repeat, no-repeat, no-repeat, no-repeat, no-repeat, no-repeat, no-repeat, no-repeat, no-repeat, no-repeat, repeat;
-  background-position: center, center, center, center, center, center, center, center, center, 50% 35%, center, center, 0 0;
+  background-color: var(--mode-bg-main);
+  background-image: linear-gradient(
+    180deg,
+    var(--hud-dark-1) 0%,
+    var(--hud-dark-2) 52%,
+    var(--hud-dark-3) 100%
+  );
+  background-attachment: scroll;
 }
-/* Flat frosted scroll shell — non-dashboard routes (see DashboardMainContent) */
-main#main-content.hq-flat-glass-main {
+
+/* Global frosted plane — wraps all routes in app/layout.tsx */
+.hq-app-shell {
+  position: relative;
+  z-index: 1;
+  isolation: isolate;
   background:
     linear-gradient(to bottom, rgba(0, 0, 0, 0.2) 0%, transparent 32%, transparent 62%, rgba(0, 0, 0, 0.45) 100%),
     rgba(8, 16, 28, 0.52);
@@ -2273,11 +2256,9 @@ main#main-content.hq-flat-glass-main {
 }
 
 /**
- * Light UI: geen bijna-witte main (dat maskeerde body-tint en week uit tegen budget,
- * waar .dashboard-cinematic een eigen --mode-bg-main vult). Zelfde donkere HQ-hue,
- * zonder backdrop-blur i.v.m. perf.
+ * Light UI: same dark HQ hue on app shell, no heavy backdrop-blur (perf).
  */
-[data-light-ui="true"] main#main-content.hq-flat-glass-main {
+[data-light-ui="true"] .hq-app-shell {
   background:
     radial-gradient(ellipse 100% 72% at 50% -18%, rgba(var(--mode-rgb), 0.14), transparent 58%),
     radial-gradient(ellipse 96% 56% at 50% 118%, rgba(var(--mode-rgb-deep), 0.11), transparent 55%),
@@ -2288,8 +2269,8 @@ main#main-content.hq-flat-glass-main {
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
 }
 
-/* /tasks: command-deck ambient scroll shell (avoids double-frost with .tasks-page-root) */
-main#main-content.hq-flat-glass-main.tasks-route-shell {
+/* /tasks: command-deck ambient scroll shell (layer on #main-content over .hq-app-shell) */
+main#main-content.tasks-route-shell {
   background:
     radial-gradient(ellipse 92% 50% at 50% -14%, rgba(var(--mode-rgb), 0.2), transparent 58%),
     radial-gradient(ellipse 55% 38% at 100% 0%, rgba(var(--mode-rgb), 0.12), transparent 52%),
@@ -2298,12 +2279,11 @@ main#main-content.hq-flat-glass-main.tasks-route-shell {
   -webkit-backdrop-filter: blur(28px) saturate(1.12);
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
 }
-[data-light-ui="true"] main#main-content.hq-flat-glass-main.tasks-route-shell {
+[data-light-ui="true"] main#main-content.tasks-route-shell {
   background:
     radial-gradient(ellipse 100% 58% at 50% -16%, rgba(var(--mode-rgb), 0.14), transparent 56%),
     linear-gradient(to bottom, rgba(0, 0, 0, 0.58) 0%, transparent 30%, transparent 64%, rgba(0, 0, 0, 0.75) 100%),
     linear-gradient(180deg, rgba(5, 12, 22, 0.98) 0%, rgba(3, 8, 16, 1) 100%);
-  /* Lighter blur than full frosted main — enough depth for command deck without heavy GPU cost */
   backdrop-filter: blur(18px) saturate(1.08) !important;
   -webkit-backdrop-filter: blur(18px) saturate(1.08) !important;
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.055);

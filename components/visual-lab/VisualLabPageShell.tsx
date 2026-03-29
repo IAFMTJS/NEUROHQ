@@ -41,10 +41,9 @@ export function VisualLabPageShell({ variant, children }: Props) {
       );
 
     case "hubFlatDashboard":
+      /* Matches app: frost is global #app-shell; only container + inner here */
       return (
-        <div
-          className={`${hudStyles.flatGlassPageRoot} text-[var(--text-main)]`}
-        >
+        <div className="relative min-h-screen w-full text-[var(--text-main)]">
           <div className="container page page-wide dashboard-page dashboard-cinematic relative z-10 pb-10">
             <div className="command-stack-page-inner">{children}</div>
           </div>

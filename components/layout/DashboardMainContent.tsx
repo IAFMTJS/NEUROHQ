@@ -28,20 +28,20 @@ type Props = {
   children: ReactNode;
 };
 
-/** Scroll shell: flat frosted plane everywhere except `/dashboard` (HQ stays cinematic). */
+/** Scroll shell: global frost is on `#app-shell` (`.hq-app-shell`); `/tasks` adds `tasks-route-shell` on main. */
 export function DashboardMainContent({ children }: Props) {
   const pathname = usePathname();
-  const flat = !isDashboardHome(pathname);
-  const tasksShell = flat && isTasksRoute(pathname);
+  const dashboardHome = isDashboardHome(pathname);
+  const tasksShell = !dashboardHome && isTasksRoute(pathname);
 
   return (
     <main
       id="main-content"
-      data-page-surface={flat ? "flat-glass" : "dashboard-home"}
+      data-page-surface={dashboardHome ? "dashboard-home" : "flat-glass"}
       data-page-route={tasksShell ? "tasks" : undefined}
       className={`scrollbar-hide relative z-10 min-h-0 flex-1 overflow-auto ${
-        flat ? "hq-flat-glass-main" : "bg-transparent"
-      } ${tasksShell ? "tasks-route-shell" : ""}`}
+        tasksShell ? "tasks-route-shell" : "bg-transparent"
+      }`}
       style={mainPaddingStyle}
       tabIndex={-1}
     >

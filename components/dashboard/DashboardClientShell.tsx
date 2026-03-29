@@ -496,10 +496,10 @@ export function DashboardClientShell() {
     blended: "border-fuchsia-500/40 bg-fuchsia-500/10 text-fuchsia-200",
   };
 
-  /* Hub shell: flatGlassPageRoot + dashboard-page/cinematic container — no cinematic PNG / starfield layers */
+  /* Hub shell: frosted plane lives on #app-shell (.hq-app-shell); this wrapper is layout only */
   return (
     <div
-      className={`relative min-h-screen overflow-x-hidden ${hudStyles.flatGlassPageRoot} ${isMinimalUI ? "minimal-ui" : ""}`}
+      className={`relative min-h-0 w-full min-w-0 overflow-x-hidden ${isMinimalUI ? "minimal-ui" : ""}`}
       data-minimal={isMinimalUI ? "true" : undefined}
     >
       <div

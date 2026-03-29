@@ -7,8 +7,6 @@ import {
   type PreloadProgress,
   type InitializeResult,
 } from "@/lib/daily-initialize";
-import hudStyles from "@/components/hud-test/hud.module.css";
-
 type Props = {
   onReady: (result: InitializeResult) => void;
 };
@@ -70,7 +68,7 @@ export function BootstrapLoader({ onReady }: Props) {
 
   return (
     <main
-      className={`relative min-h-screen overflow-hidden ${hudStyles.flatGlassPageRoot}`}
+      className="relative min-h-screen overflow-hidden bg-transparent"
       aria-busy="true"
       aria-label="Initializing NEUROHQ"
     >

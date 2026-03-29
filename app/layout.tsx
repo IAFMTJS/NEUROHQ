@@ -67,14 +67,16 @@ export default function RootLayout({
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
       </head>
       <body className={`min-h-screen antialiased ${plusJakarta.variable} font-sans`}>
-        <ServiceWorkerRegistration />
-        <ReactQueryProvider>
-          <DeferredRootComponents />
-          <SettingsProvider>
-          <ThemeProvider>{children}</ThemeProvider>
-        </SettingsProvider>
-          <DeferredToaster />
-        </ReactQueryProvider>
+        <div id="app-shell" className="hq-app-shell min-h-screen min-h-dvh">
+          <ServiceWorkerRegistration />
+          <ReactQueryProvider>
+            <DeferredRootComponents />
+            <SettingsProvider>
+              <ThemeProvider>{children}</ThemeProvider>
+            </SettingsProvider>
+            <DeferredToaster />
+          </ReactQueryProvider>
+        </div>
         {isProduction ? <Analytics /> : null}
         {isProduction ? <SpeedInsights /> : null}
       </body>
