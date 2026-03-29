@@ -29,6 +29,15 @@ function parseLockedDcicMode(raw: unknown): GameState["mode"]["current"] | null 
     : null;
 }
 
+/** Brain check-in circles in daily_state are 1–10; gameState.stats use 0–100 for mode-engine / passive ticks. */
+function dailyBrainCircleToStat100(v: unknown, fallback: number): number {
+  if (v == null) return fallback;
+  const n = Number(v);
+  if (!Number.isFinite(n)) return fallback;
+  if (n > 10) return Math.min(100, Math.round(n));
+  return Math.round((n / 10) * 100);
+}
+
 type GetGameStateOptions = {
   includeFinance?: boolean;
 };
@@ -176,9 +185,9 @@ export async function getGameState(
     currentXP: totalXP,
     xpToNextLevel: calculateXPForLevel(level),
     stats: {
-      energy: (ds?.energy as number) ?? 50,
-      focus: (ds?.focus as number) ?? 50,
-      load: (ds?.sensory_load as number) ?? 30,
+      energy: dailyBrainCircleToStat100(ds?.energy, 50),
+      focus: dailyBrainCircleToStat100(ds?.focus, 50),
+      load: dailyBrainCircleToStat100(ds?.sensory_load, 50),
     },
     missions,
     skills,
@@ -225,7 +234,19 @@ export async function getGameState(
     warTierDaysLast7,
   });
 
-  const lockedMode = parseLockedDcicMode(ds?.dcic_mode);
+  const hasBrainCheckIn =
+    ds != null && ds.energy != null && ds.focus != null;
+
+  let lockedMode = parseLockedDcicMode(ds?.dcic_mode);
+  if (
+    !hasBrainCheckIn &&
+    lockedMode &&
+    lockedMode !== "focus" &&
+    lockedMode !== "overdrive"
+  ) {
+    lockedMode = null;
+  }
+
   if (lockedMode) {
     gameState.mode.current = lockedMode;
     gameState.mode.lockedUntil = (ds?.dcic_locked_until as string | null) ?? null;

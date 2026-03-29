@@ -42,12 +42,19 @@ function isTasksRoute(pathname: string) {
   return p === "/tasks" || p.startsWith("/tasks/");
 }
 
+function isProfileRoute(pathname: string) {
+  const p = pathname.replace(/\/$/, "") || "/";
+  return p === "/profile" || p.startsWith("/profile/");
+}
+
 export function DashboardLayoutClient({
   children,
   initialDashboardSnapshot: initialDashboardSnapshotProp,
 }: Props) {
   const pathname = usePathname();
   const tasksRoute = isTasksRoute(pathname);
+  const profileRoute = isProfileRoute(pathname);
+  const deckChromeRoute = tasksRoute || profileRoute;
   const dailySnapshot = useDailySnapshot();
   const setTodayDate = useHQStore((s) => s.setTodayDate);
   const hqMode = useHQStore((s) => s.gameState?.mode?.current ?? "focus");
@@ -62,6 +69,7 @@ export function DashboardLayoutClient({
       const el = document.documentElement;
       el.dataset.mode = mode;
       if (tasksRoute) el.setAttribute("data-shell-route", "tasks");
+      else if (profileRoute) el.setAttribute("data-shell-route", "profile");
       else el.removeAttribute("data-shell-route");
       if (typeof document !== "undefined" && document.body) {
         document.body.dataset.mode = mode;
@@ -69,7 +77,7 @@ export function DashboardLayoutClient({
     } catch {
       // best-effort; ignore DOM/SSR issues
     }
-  }, [mode, tasksRoute]);
+  }, [mode, tasksRoute, profileRoute]);
 
   // Hydrate HQ store from DailySnapshot (single source of truth); no duplicate /api/bootstrap/today fetch.
   useEffect(() => {
@@ -125,6 +133,7 @@ export function DashboardLayoutClient({
               data-ui="dark-commander"
               data-mode={mode}
               data-route-tasks={tasksRoute ? "true" : undefined}
+              data-route-profile={profileRoute ? "true" : undefined}
             >
               <ThemeHydrate />
               <ActiveTimeTracker />
@@ -139,7 +148,7 @@ export function DashboardLayoutClient({
               <Link
                 href="/settings"
                 className={
-                  tasksRoute
+                  deckChromeRoute
                     ? "fixed right-[max(0.75rem,env(safe-area-inset-right))] top-[calc(env(safe-area-inset-top,0px)+1.25rem)] z-[70] rounded-xl border border-[rgba(var(--mode-rgb),0.22)] bg-[rgba(6,18,30,0.55)] px-2.5 py-1.5 text-sm font-semibold text-[var(--text-primary)] shadow-[0_0_20px_rgba(var(--mode-rgb),0.12),inset_0_1px_0_rgba(255,255,255,0.08)] backdrop-blur-md hover:border-[rgba(var(--mode-rgb),0.38)] hover:bg-[rgba(8,26,42,0.65)]"
                     : "fixed right-[max(0.75rem,env(safe-area-inset-right))] top-[calc(env(safe-area-inset-top,0px)+1.25rem)] z-[70] rounded-full border border-[var(--card-border)] bg-[var(--bg-surface)]/80 px-2.5 py-1.5 text-sm font-semibold text-[var(--text-primary)] backdrop-blur hover:bg-[var(--bg-hover)]"
                 }

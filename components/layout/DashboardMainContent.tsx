@@ -16,6 +16,11 @@ function isTasksRoute(pathname: string) {
   return p === "/tasks" || p.startsWith("/tasks/");
 }
 
+function isProfileRoute(pathname: string) {
+  const p = pathname.replace(/\/$/, "") || "/";
+  return p === "/profile" || p.startsWith("/profile/");
+}
+
 const mainPaddingStyle = {
   paddingLeft: "var(--hq-padding-x)",
   paddingRight: "var(--hq-padding-x)",
@@ -33,14 +38,15 @@ export function DashboardMainContent({ children }: Props) {
   const pathname = usePathname();
   const dashboardHome = isDashboardHome(pathname);
   const tasksShell = !dashboardHome && isTasksRoute(pathname);
+  const profileShell = !dashboardHome && isProfileRoute(pathname);
 
   return (
     <main
       id="main-content"
       data-page-surface={dashboardHome ? "dashboard-home" : "flat-glass"}
-      data-page-route={tasksShell ? "tasks" : undefined}
+      data-page-route={tasksShell ? "tasks" : profileShell ? "profile" : undefined}
       className={`scrollbar-hide relative z-10 min-h-0 flex-1 overflow-auto ${
-        tasksShell ? "tasks-route-shell" : "bg-transparent"
+        tasksShell ? "tasks-route-shell" : profileShell ? "profile-route-shell" : "bg-transparent"
       }`}
       style={mainPaddingStyle}
       tabIndex={-1}

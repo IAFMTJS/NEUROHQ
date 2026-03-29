@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useState, type ReactNode } from "react";
 import { EnergyRing } from "@/components/hud-test/EnergyRing";
 import { MoodManualPanel } from "@/components/mood/MoodManualPanel";
+import { tasksDeckTabClass } from "@/components/missions/tasksDeckTabClass";
 import { VisualLabCommandDeck } from "@/components/visual-lab/VisualLabCommandDeck";
 import { MOOD_LABEL_META, type MoodLabel } from "@/lib/mood-intervention-config";
 import { reportInsightsHref } from "@/lib/profile-routes";
@@ -99,7 +100,8 @@ export function VisualLabProfilePageConcept() {
             Profiel · command deck (concept)
           </h2>
           <p className="mt-1 max-w-2xl text-xs leading-relaxed text-[var(--text-secondary)]">
-            Zelfde command deck + mini-tab rail als /tasks · /strategy. Inhoud volgt profiel-home (
+            Zelfde command deck + segmented tab rail als productie <code className="rounded bg-black/30 px-1 text-[10px]">/profile</code> (
+            <code className="rounded bg-black/30 px-1 text-[10px]">ProfileCommandDeckLayout</code>). Inhoud volgt profiel-home (
             <code className="rounded bg-black/30 px-1 text-[10px]">ProfileHomeCompact</code>): level-
             <code className="rounded bg-black/30 px-1 text-[10px]">EnergyRing</code>-orbit, challenges, mood, insight. Mock data.
           </p>
@@ -108,8 +110,8 @@ export function VisualLabProfilePageConcept() {
       </div>
 
       <VisualLabCommandDeck>
-          <header className="flex flex-wrap items-start justify-between gap-3 border-b border-[rgba(var(--mode-rgb),0.12)] pb-3">
-            <div>
+          <header className="flex flex-wrap items-start justify-between gap-3 border-b border-[rgba(var(--mode-rgb),0.18)] pb-4">
+            <div className="min-w-0 border-l-2 border-[rgba(var(--semantic-accent),0.55)] pl-3">
               <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[var(--semantic-accent)]/90">Operator</p>
               <h3 className="mt-0.5 text-base font-bold tracking-tight text-[var(--text-primary)] [text-shadow:0_0_14px_rgba(var(--mode-rgb),0.18)] md:text-lg">
                 Profiel
@@ -117,20 +119,23 @@ export function VisualLabProfilePageConcept() {
             </div>
             <button
               type="button"
-              className="shrink-0 rounded-lg border border-[rgba(var(--mode-rgb),0.2)] bg-[rgba(6,18,30,0.45)] px-3 py-2 text-[10px] font-semibold uppercase tracking-wide text-[var(--text-muted)]"
+              className="shrink-0 rounded-xl border border-[rgba(var(--mode-rgb),0.24)] bg-[rgba(6,18,30,0.55)] px-3 py-2 text-[10px] font-semibold uppercase tracking-wide text-[var(--text-muted)] shadow-[0_0_18px_rgba(var(--mode-rgb),0.1),inset_0_1px_0_rgba(255,255,255,0.06)]"
             >
               ← HQ
             </button>
           </header>
 
-          <div className="dashboard-top-strip mt-3">
-            <div className="dashboard-top-strip-track" role="tablist" aria-label="Profiel navigatie (concept)">
+          <div className="mt-4" role="navigation" aria-label="Profiel navigatie (concept)">
+            <div className="mb-2 flex items-center justify-between gap-2">
+              <span className="text-[10px] font-bold uppercase tracking-[0.16em] text-[var(--text-muted)]">Weergave</span>
+            </div>
+            <div className="flex flex-wrap gap-1 rounded-xl border border-[rgba(var(--mode-rgb),0.2)] bg-[rgba(4,12,22,0.5)] p-1 shadow-[inset_0_1px_0_rgba(255,255,255,0.05)] backdrop-blur-sm">
               <button
                 type="button"
                 role="tab"
                 aria-selected={main === "home"}
                 onClick={() => setMain("home")}
-                className={`dashboard-mini-btn ${main === "home" ? "dashboard-mini-btn-primary" : "dashboard-mini-btn-secondary"}`}
+                className={tasksDeckTabClass(main === "home")}
               >
                 Profiel
               </button>
@@ -139,11 +144,10 @@ export function VisualLabProfilePageConcept() {
                 role="tab"
                 aria-selected={main === "engine"}
                 onClick={() => setMain("engine")}
-                className={`dashboard-mini-btn ${main === "engine" ? "dashboard-mini-btn-primary" : "dashboard-mini-btn-secondary"}`}
+                className={tasksDeckTabClass(main === "engine")}
               >
                 Engine
               </button>
-              <span className="dashboard-mini-strip-label">Weergave</span>
             </div>
           </div>
 

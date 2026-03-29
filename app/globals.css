@@ -212,6 +212,11 @@ html[data-shell-route="tasks"] {
   --ui-shell-grain-opacity: 0.016;
 }
 
+html[data-shell-route="profile"] {
+  --ui-shell-spotlight-mult: 0.52;
+  --ui-shell-grain-opacity: 0.016;
+}
+
 /* Mode-specific accents (applied anywhere inside the dashboard shell via data-mode) */
 [data-mode="war"] {
   --nav-border-accent: rgba(248, 113, 113, 0.5);
@@ -887,28 +892,21 @@ html[data-shell-route="tasks"] {
 [data-light-ui="true"] .stat-ring.focus,
 [data-light-ui="true"] .stat-ring.load { animation: none !important; box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2) !important; }
 
-/* Light UI: flat background – no starfield, nebula, grain or fixed attachment for fast paint */
-html[data-light-ui="true"],
-html[data-light-ui="true"] body {
-  background-image: linear-gradient(
-    180deg,
-    rgba(8, 14, 24, 0.99) 0%,
-    rgba(8, 14, 24, 0.985) 52%,
-    rgba(8, 14, 24, 0.99) 100%
-  ),
-  radial-gradient(
-    ellipse 90% 46% at 50% -20%,
-    rgba(var(--mode-rgb-deep), 0.045),
-    transparent 64%
-  ),
-  radial-gradient(
-    ellipse 90% 46% at 50% 120%,
-    rgba(var(--mode-rgb), 0.04),
-    transparent 62%
-  ) !important;
-  background-size: 100% 100%, 100% 100%, 100% 100% !important;
+/* Light UI: mode-tinted mesh on html only (fast — no PNG); body stays clear for shell layers */
+html[data-light-ui="true"] {
+  background-color: var(--mode-bg-main) !important;
+  background-image:
+    radial-gradient(ellipse 110% 70% at 50% -5%, rgba(var(--mode-rgb), 0.1), transparent 58%),
+    radial-gradient(ellipse 90% 50% at 85% 15%, rgba(var(--mode-rgb-deep), 0.06), transparent 55%),
+    linear-gradient(180deg, rgba(8, 14, 24, 0.995) 0%, rgba(5, 10, 18, 0.998) 52%, rgba(4, 8, 16, 1) 100%),
+    radial-gradient(ellipse 90% 46% at 50% 118%, rgba(var(--mode-rgb), 0.05), transparent 62%) !important;
+  background-size: 100% 100%, 100% 100%, 100% 100%, 100% 100% !important;
   background-repeat: no-repeat !important;
   background-attachment: scroll !important;
+}
+html[data-light-ui="true"] body {
+  background-color: transparent !important;
+  background-image: none !important;
 }
 [data-light-ui="true"] body::after,
 [data-light-ui="true"] body::before { display: none !important; }
@@ -965,6 +963,24 @@ html[data-light-ui="true"] body {
 [data-light-ui="true"] [data-route-tasks="true"] .tasks-command-deck .glass-card,
 [data-light-ui="true"] [data-route-tasks="true"] .tasks-command-deck .card-simple,
 [data-light-ui="true"] [data-route-tasks="true"] .tasks-command-deck .card-simple-accent {
+  backdrop-filter: blur(16px) saturate(1.08) !important;
+  -webkit-backdrop-filter: blur(16px) saturate(1.08) !important;
+  background: linear-gradient(
+    165deg,
+    rgba(var(--mode-rgb-deep), 0.34) 0%,
+    rgba(10, 18, 32, 0.96) 55%,
+    rgba(var(--mode-rgb), 0.16) 100%
+  ) !important;
+  box-shadow:
+    0 10px 34px rgba(0, 0, 0, 0.45),
+    0 0 0 1px rgba(var(--mode-rgb), 0.12),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08) !important;
+}
+
+/* Light UI + /profile command deck (same deck shell as /tasks) */
+[data-light-ui="true"] [data-route-profile="true"] .tasks-command-deck .glass-card,
+[data-light-ui="true"] [data-route-profile="true"] .tasks-command-deck .card-simple,
+[data-light-ui="true"] [data-route-profile="true"] .tasks-command-deck .card-simple-accent {
   backdrop-filter: blur(16px) saturate(1.08) !important;
   -webkit-backdrop-filter: blur(16px) saturate(1.08) !important;
   background: linear-gradient(
@@ -2202,7 +2218,7 @@ header:has(+ .mascot-hero) {
     drop-shadow(0 0 12px rgba(var(--mode-rgb), 0.3));
 }
 
-/* ========== Hub shell base (html/body) — calm gradient; frost + blur live on #app-shell (.hq-app-shell) ========== */
+/* ========== Hub shell base — mode-aware atmosphere (uses --mode-rgb from data-mode); frost on #app-shell ========== */
 html {
   min-height: 100%;
   min-height: 100dvh;
@@ -2213,12 +2229,11 @@ html {
   touch-action: pan-y pinch-zoom;
   -webkit-touch-callout: none;
   background-color: var(--mode-bg-main);
-  background-image: linear-gradient(
-    180deg,
-    var(--hud-dark-1) 0%,
-    var(--hud-dark-2) 52%,
-    var(--hud-dark-3) 100%
-  );
+  background-image:
+    var(--galaxy-dust),
+    var(--galaxy-core),
+    var(--cinematic-nebula),
+    linear-gradient(180deg, var(--hud-dark-1) 0%, var(--hud-dark-3) 42%, var(--hud-dark-5) 100%);
   background-attachment: scroll;
 }
 body {
@@ -2232,45 +2247,66 @@ body {
   overscroll-behavior: none;
   color: var(--text-main);
   font-family: var(--font-sans), Inter, system-ui, sans-serif;
-  background-color: var(--mode-bg-main);
-  background-image: linear-gradient(
-    180deg,
-    var(--hud-dark-1) 0%,
-    var(--hud-dark-2) 52%,
-    var(--hud-dark-3) 100%
-  );
+  background-color: transparent;
+  background-image: none;
   background-attachment: scroll;
 }
 
-/* Global frosted plane — wraps all routes in app/layout.tsx */
+/* Global frosted plane — mode-tinted rim + depth; all DCIC modes pick up --mode-rgb from html[data-mode] */
 .hq-app-shell {
   position: relative;
   z-index: 1;
   isolation: isolate;
   background:
-    linear-gradient(to bottom, rgba(0, 0, 0, 0.2) 0%, transparent 32%, transparent 62%, rgba(0, 0, 0, 0.45) 100%),
-    rgba(8, 16, 28, 0.52);
-  backdrop-filter: blur(22px) saturate(1.14);
-  -webkit-backdrop-filter: blur(22px) saturate(1.14);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.055);
+    linear-gradient(180deg, rgba(255, 255, 255, 0.045) 0%, transparent 28%, transparent 72%, rgba(0, 0, 0, 0.42) 100%),
+    radial-gradient(ellipse 100% 85% at 50% -8%, rgba(var(--mode-rgb), 0.14), transparent 58%),
+    radial-gradient(ellipse 80% 55% at 100% 0%, rgba(var(--mode-rgb-deep), 0.08), transparent 52%),
+    rgba(5, 12, 22, 0.48);
+  backdrop-filter: blur(24px) saturate(1.16);
+  -webkit-backdrop-filter: blur(24px) saturate(1.16);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.07),
+    0 0 0 1px rgba(var(--mode-rgb), 0.06);
 }
 
 /**
- * Light UI: same dark HQ hue on app shell, no heavy backdrop-blur (perf).
+ * Light UI: same vocabulary — mode tint + soft depth; skip heavy blur (perf).
  */
 [data-light-ui="true"] .hq-app-shell {
   background:
-    radial-gradient(ellipse 100% 72% at 50% -18%, rgba(var(--mode-rgb), 0.14), transparent 58%),
-    radial-gradient(ellipse 96% 56% at 50% 118%, rgba(var(--mode-rgb-deep), 0.11), transparent 55%),
-    linear-gradient(to bottom, rgba(0, 0, 0, 0.55) 0%, transparent 28%, transparent 68%, rgba(0, 0, 0, 0.72) 100%),
-    linear-gradient(180deg, rgba(8, 14, 24, 0.98) 0%, rgba(5, 10, 20, 0.99) 45%, rgba(4, 8, 16, 1) 100%);
+    radial-gradient(ellipse 100% 72% at 50% -18%, rgba(var(--mode-rgb), 0.16), transparent 58%),
+    radial-gradient(ellipse 96% 56% at 50% 118%, rgba(var(--mode-rgb-deep), 0.12), transparent 55%),
+    linear-gradient(to bottom, rgba(0, 0, 0, 0.48) 0%, transparent 30%, transparent 68%, rgba(0, 0, 0, 0.68) 100%),
+    linear-gradient(180deg, rgba(8, 14, 24, 0.99) 0%, rgba(5, 10, 20, 0.995) 45%, rgba(4, 8, 16, 1) 100%);
   backdrop-filter: none !important;
   -webkit-backdrop-filter: none !important;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.07);
 }
 
 /* /tasks: command-deck ambient scroll shell (layer on #main-content over .hq-app-shell) */
 main#main-content.tasks-route-shell {
+  background:
+    radial-gradient(ellipse 92% 50% at 50% -14%, rgba(var(--mode-rgb), 0.22), transparent 58%),
+    radial-gradient(ellipse 55% 38% at 100% 0%, rgba(var(--mode-rgb-deep), 0.14), transparent 52%),
+    linear-gradient(to bottom, rgba(2, 10, 22, 0.88) 0%, rgba(5, 14, 26, 0.62) 45%, rgba(2, 8, 18, 0.9) 100%);
+  backdrop-filter: blur(28px) saturate(1.14);
+  -webkit-backdrop-filter: blur(28px) saturate(1.14);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.07),
+    0 0 0 1px rgba(var(--mode-rgb), 0.05);
+}
+[data-light-ui="true"] main#main-content.tasks-route-shell {
+  background:
+    radial-gradient(ellipse 100% 58% at 50% -16%, rgba(var(--mode-rgb), 0.16), transparent 56%),
+    radial-gradient(ellipse 80% 40% at 100% 0%, rgba(var(--mode-rgb-deep), 0.08), transparent 54%),
+    linear-gradient(to bottom, rgba(0, 0, 0, 0.52) 0%, transparent 30%, transparent 64%, rgba(0, 0, 0, 0.72) 100%),
+    linear-gradient(180deg, rgba(5, 12, 22, 0.99) 0%, rgba(3, 8, 16, 1) 100%);
+  backdrop-filter: blur(18px) saturate(1.08) !important;
+  -webkit-backdrop-filter: blur(18px) saturate(1.08) !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+
+main#main-content.profile-route-shell {
   background:
     radial-gradient(ellipse 92% 50% at 50% -14%, rgba(var(--mode-rgb), 0.2), transparent 58%),
     radial-gradient(ellipse 55% 38% at 100% 0%, rgba(var(--mode-rgb), 0.12), transparent 52%),
@@ -2279,7 +2315,7 @@ main#main-content.tasks-route-shell {
   -webkit-backdrop-filter: blur(28px) saturate(1.12);
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
 }
-[data-light-ui="true"] main#main-content.tasks-route-shell {
+[data-light-ui="true"] main#main-content.profile-route-shell {
   background:
     radial-gradient(ellipse 100% 58% at 50% -16%, rgba(var(--mode-rgb), 0.14), transparent 56%),
     linear-gradient(to bottom, rgba(0, 0, 0, 0.58) 0%, transparent 30%, transparent 64%, rgba(0, 0, 0, 0.75) 100%),
@@ -2287,6 +2323,19 @@ main#main-content.tasks-route-shell {
   backdrop-filter: blur(18px) saturate(1.08) !important;
   -webkit-backdrop-filter: blur(18px) saturate(1.08) !important;
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.055);
+}
+
+/** Profile command deck: outer frame (Light UI = slightly lifted glass) */
+.profile-page-ambient {
+  border-color: rgba(var(--mode-rgb), 0.12);
+}
+
+[data-light-ui="true"] .profile-page-ambient {
+  border-color: rgba(var(--mode-rgb), 0.22);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.055) 0%, rgba(255, 255, 255, 0.02) 100%);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.1),
+    0 0 0 1px rgba(var(--mode-rgb), 0.06);
 }
 
 main.tasks-page-root {
@@ -2297,7 +2346,8 @@ main.tasks-page-root {
 }
 
 /* /tasks shell: dock + inset cards align with command deck */
-[data-route-tasks="true"] .bottom-nav-fab-bar {
+[data-route-tasks="true"] .bottom-nav-fab-bar,
+[data-route-profile="true"] .bottom-nav-fab-bar {
   border-color: rgba(var(--mode-rgb), 0.24);
   background: linear-gradient(180deg, rgba(6, 22, 38, 0.95) 0%, rgba(3, 10, 20, 0.98) 100%);
   box-shadow:
@@ -2310,7 +2360,10 @@ main.tasks-page-root {
 
 [data-route-tasks="true"] .dashboard-cinematic .glass-card,
 [data-route-tasks="true"] .dashboard-cinematic .card-simple,
-[data-route-tasks="true"] .dashboard-cinematic .card-simple-accent {
+[data-route-tasks="true"] .dashboard-cinematic .card-simple-accent,
+[data-route-profile="true"] .dashboard-cinematic .glass-card,
+[data-route-profile="true"] .dashboard-cinematic .card-simple,
+[data-route-profile="true"] .dashboard-cinematic .card-simple-accent {
   border: 1px solid rgba(var(--mode-rgb), 0.26) !important;
   background: linear-gradient(
     165deg,

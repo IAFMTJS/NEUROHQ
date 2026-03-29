@@ -2,8 +2,7 @@ import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import nextDynamic from "next/dynamic";
-import { HQPageHeader } from "@/components/hq";
-import { HeroMascotImage } from "@/components/HeroMascotImage";
+import { ProfileCommandDeckLayout } from "@/components/profile/ProfileCommandDeckLayout";
 import { getUserPreferencesOrDefaults } from "@/app/actions/preferences";
 import { getBehaviorProfile } from "@/app/actions/behavior-profile";
 import { getStudyPlan, getAccountabilitySettings } from "@/app/actions/behavior";
@@ -41,7 +40,7 @@ const ENGINE_NAV: { id: ProfileEngineTabId; label: string }[] = [
   { id: "modes", label: "Modi" },
 ];
 
-function MainTabNav({ active }: { active: "home" | "engine" }) {
+function MainTabNavSimplified({ active }: { active: "home" | "engine" }) {
   const base =
     "rounded-xl px-3 py-2.5 text-center text-[11px] font-semibold uppercase tracking-wide transition min-h-[44px] flex flex-1 items-center justify-center sm:flex-none outline-none focus-visible:ring-2 focus-visible:ring-[rgba(var(--mode-rgb),0.45)] focus-visible:ring-offset-0";
   const on =
@@ -140,7 +139,7 @@ export default async function ProfilePage({ searchParams }: { searchParams: Prom
             ]}
           >
             <div className="space-y-4">
-              <MainTabNav active="home" />
+              <MainTabNavSimplified active="home" />
               <ProfileHomeCompact
                 identity={identity}
                 insightState={insightState}
@@ -155,14 +154,7 @@ export default async function ProfilePage({ searchParams }: { searchParams: Prom
     }
 
     return (
-      <div className="container page page-wide space-y-5 pb-10">
-        <HQPageHeader title="Profiel" backHref="/dashboard" compact />
-        <MainTabNav active="home" />
-        <section className="mascot-hero mascot-hero-top mascot-hero-sharp" data-mascot-page="profile" aria-hidden>
-          <div className="mascot-hero-inner mx-auto">
-            <HeroMascotImage page="profile" className="mascot-img" heroLarge />
-          </div>
-        </section>
+      <ProfileCommandDeckLayout main="home">
         <ProfileHomeCompact
           identity={identity}
           insightState={insightState}
@@ -170,7 +162,7 @@ export default async function ProfilePage({ searchParams }: { searchParams: Prom
           todayStr={today}
           dailyChallengeContext={dailyChallengeContext}
         />
-      </div>
+      </ProfileCommandDeckLayout>
     );
   }
 
@@ -183,27 +175,24 @@ export default async function ProfilePage({ searchParams }: { searchParams: Prom
   ]);
   const simplified = prefs.simplified_content === true;
 
-  const engineNavAndHint = (
-    <>
-      <MainTabNav active="engine" />
-      <p className="text-xs text-[var(--text-muted)]">
-        Thema, push, budget en meer:{" "}
-        <a
-          href="/settings"
-          className="font-medium text-[var(--accent-focus)] underline-offset-2 hover:underline rounded-sm outline-none focus-visible:ring-2 focus-visible:ring-[rgba(var(--mode-rgb),0.45)] focus-visible:ring-offset-0"
-        >
-          Instellingen
-        </a>
-        . Insights:{" "}
-        <a
-          href={reportInsightsHref("overview")}
-          className="font-medium text-[var(--accent-focus)] underline-offset-2 hover:underline rounded-sm outline-none focus-visible:ring-2 focus-visible:ring-[rgba(var(--mode-rgb),0.45)] focus-visible:ring-offset-0"
-        >
-          Rapport
-        </a>
-        .
-      </p>
-    </>
+  const engineHint = (
+    <p className="text-xs text-[var(--text-muted)]">
+      Thema, push, budget en meer:{" "}
+      <a
+        href="/settings"
+        className="font-medium text-[var(--accent-focus)] underline-offset-2 hover:underline rounded-sm outline-none focus-visible:ring-2 focus-visible:ring-[rgba(var(--mode-rgb),0.45)] focus-visible:ring-offset-0"
+      >
+        Instellingen
+      </a>
+      . Insights:{" "}
+      <a
+        href={reportInsightsHref("overview")}
+        className="font-medium text-[var(--accent-focus)] underline-offset-2 hover:underline rounded-sm outline-none focus-visible:ring-2 focus-visible:ring-[rgba(var(--mode-rgb),0.45)] focus-visible:ring-offset-0"
+      >
+        Rapport
+      </a>
+      .
+    </p>
   );
 
   const engineTabsAndPanels = (
@@ -253,7 +242,8 @@ export default async function ProfilePage({ searchParams }: { searchParams: Prom
           ]}
         >
           <div className="space-y-5">
-            {engineNavAndHint}
+            <MainTabNavSimplified active="engine" />
+            {engineHint}
             {engineTabsAndPanels}
           </div>
         </SimplifiedPageShell>
@@ -262,15 +252,9 @@ export default async function ProfilePage({ searchParams }: { searchParams: Prom
   }
 
   return (
-    <div className="container page page-wide space-y-5 pb-10">
-      <HQPageHeader title="Engine" backHref="/dashboard" compact />
-      {engineNavAndHint}
-      <section className="mascot-hero mascot-hero-top mascot-hero-sharp" data-mascot-page="profile" aria-hidden>
-        <div className="mascot-hero-inner mx-auto">
-          <HeroMascotImage page="profile" className="mascot-img" heroLarge />
-        </div>
-      </section>
+    <ProfileCommandDeckLayout main="engine">
+      {engineHint}
       {engineTabsAndPanels}
-    </div>
+    </ProfileCommandDeckLayout>
   );
 }

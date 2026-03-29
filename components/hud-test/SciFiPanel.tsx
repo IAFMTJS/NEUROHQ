@@ -36,7 +36,9 @@ export function SciFiPanel({
       ? ({ "--mode-rgb": "220, 38, 38", "--mode-rgb-deep": "127, 29, 29" } as React.CSSProperties)
       : dcicMode === "recovery"
         ? ({ "--mode-rgb": "34, 197, 94", "--mode-rgb-deep": "22, 101, 52" } as React.CSSProperties)
-        : ({ "--mode-rgb": "0, 212, 255", "--mode-rgb-deep": "0, 136, 255" } as React.CSSProperties);
+        : dcicMode === "overdrive"
+          ? ({ "--mode-rgb": "168, 85, 247", "--mode-rgb-deep": "91, 33, 182" } as React.CSSProperties)
+          : ({ "--mode-rgb": "0, 212, 255", "--mode-rgb-deep": "0, 136, 255" } as React.CSSProperties);
 
   const frameClass = `${styles.panelFrame} ${flatFrame ? styles.panelFrameFlat : ""} ${className}`.trim();
   const bodyClass = `${styles.panelBody} ${flatFrame ? styles.panelBodyFlat : ""} ${!topAccent ? styles.panelBodyNoTopAccent : ""} ${bodyClassName}`.trim();
