@@ -297,12 +297,18 @@ export function VisualLabClient() {
             </div>
 
             <div className="space-y-3">
-              <h3 className="text-[10px] font-bold uppercase tracking-[0.16em] text-[var(--text-muted)]">Strategy split ring (mock)</h3>
-              <div className="flex flex-wrap items-center justify-center gap-6 rounded-xl border border-[rgba(var(--mode-rgb),0.14)] bg-[rgba(4,12,22,0.35)] px-4 py-6">
-                <StrategyAnalysisSplitRing budgetHealth={58} growthHealth={79} budgetWarn growthWarn={false} />
-                <StrategyAnalysisSplitRing budgetHealth={82} growthHealth={44} budgetWarn={false} growthWarn />
-                <div className="max-w-[200px] text-[10px] leading-relaxed text-[var(--text-secondary)]">
-                  Left arc = budget health (warms when tight). Right arc = growth. Pair shows how the real strategy card balances two pressures.
+              <h3 className="text-[10px] font-bold uppercase tracking-[0.16em] text-[var(--text-muted)]">Strategy split ring (demo)</h3>
+              <div className="relative flex flex-wrap items-center justify-center gap-6 overflow-hidden rounded-xl border border-[rgba(var(--mode-rgb),0.24)] bg-gradient-to-br from-[rgba(8,26,42,0.96)] via-[var(--bg-elevated)]/90 to-[rgba(var(--mode-rgb-deep),0.14)] px-4 py-6 shadow-[0_0_36px_rgba(var(--mode-rgb),0.12),inset_0_1px_0_rgba(255,255,255,0.06)]">
+                <div
+                  className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_80%_0%,rgba(var(--mode-rgb),0.14),transparent_55%)]"
+                  aria-hidden
+                />
+                <div className="relative flex flex-wrap items-center justify-center gap-6">
+                  <StrategyAnalysisSplitRing budgetHealth={58} growthHealth={79} budgetWarn growthWarn={false} />
+                  <StrategyAnalysisSplitRing budgetHealth={82} growthHealth={44} budgetWarn={false} growthWarn />
+                </div>
+                <div className="relative max-w-[200px] text-[10px] leading-relaxed text-[var(--text-secondary)]">
+                  Same component as Strategy → Analyse. Values and warn flags change arc length and gradients; this strip used to sit on a flat dark panel, which made glows look stronger than on the real card.
                 </div>
               </div>
             </div>
@@ -336,24 +342,32 @@ export function VisualLabClient() {
               <h2 id="polygon-heading" className="text-[11px] font-bold uppercase tracking-[0.18em] text-[var(--text-muted)]">
                 Polygon meters
               </h2>
-              <span className="text-[10px] text-[var(--text-muted)]">Trace = outline dash · Fill = clipped level</span>
+              <span className="text-[10px] text-[var(--text-muted)]">Trace = outline dash · Fill = clipped level · Hex apart</span>
             </div>
             <div className="space-y-2">
               <h3 className="text-[10px] font-bold uppercase tracking-[0.16em] text-[var(--text-muted)]">Outline trace</h3>
-              <div className="grid grid-cols-2 gap-6 sm:grid-cols-4">
+              <div className="grid grid-cols-2 gap-6 sm:grid-cols-3">
                 <PolygonHudMeter variant="square" label="Square" value="Sync" pct={76} style="ring" />
                 <PolygonHudMeter variant="triangle" label="Triangle" value="Yield" pct={52} style="ring" />
-                <PolygonHudMeter variant="hex" label="Hex" value="Mesh" pct={88} style="ring" />
                 <PolygonHudMeter variant="diamond" label="Diamond" value="Pulse" pct={34} style="ring" />
               </div>
             </div>
             <div className="space-y-2 pt-2">
               <h3 className="text-[10px] font-bold uppercase tracking-[0.16em] text-[var(--text-muted)]">Interior fill</h3>
-              <div className="grid grid-cols-2 gap-6 sm:grid-cols-4">
+              <div className="grid grid-cols-2 gap-6 sm:grid-cols-3">
                 <PolygonHudMeter variant="square" label="Square" value="Tank A" pct={64} style="fill" />
                 <PolygonHudMeter variant="triangle" label="Triangle" value="Tank B" pct={41} style="fill" />
-                <PolygonHudMeter variant="hex" label="Hex" value="Tank C" pct={60} style="fill" />
                 <PolygonHudMeter variant="diamond" label="Diamond" value="Tank D" pct={27} style="fill" />
+              </div>
+            </div>
+            <div className="space-y-3 border-t border-[rgba(var(--mode-rgb),0.12)] pt-5">
+              <div className="flex flex-wrap items-end justify-between gap-2">
+                <h3 className="text-[10px] font-bold uppercase tracking-[0.16em] text-[var(--text-muted)]">Hex</h3>
+                <span className="text-[10px] text-[var(--text-secondary)]">Mesh 88% trace · Tank C 60% fill</span>
+              </div>
+              <div className="flex flex-wrap justify-center gap-10 sm:gap-16">
+                <PolygonHudMeter variant="hex" label="Hex" value="Mesh" pct={88} style="ring" />
+                <PolygonHudMeter variant="hex" label="Hex" value="Tank C" pct={60} style="fill" />
               </div>
             </div>
           </section>
