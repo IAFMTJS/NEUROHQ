@@ -197,7 +197,13 @@ export function HelpPageClient({ simplifiedLayout = false }: { simplifiedLayout?
   }, []);
 
   const inner = (
-    <div className={simplifiedLayout ? "help-page mx-auto max-w-5xl pb-8" : "container page help-page mx-auto max-w-5xl pb-24"}>
+    <div
+      className={
+        simplifiedLayout
+          ? "help-page mx-auto max-w-5xl pb-8"
+          : "container page help-page mx-auto max-w-5xl pb-24 dashboard-cinematic hq-frosted-main-shell"
+      }
+    >
       <header className="mb-10 space-y-4">
         {!simplifiedLayout && (
           <Link

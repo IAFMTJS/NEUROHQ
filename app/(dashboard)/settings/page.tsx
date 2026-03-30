@@ -222,11 +222,13 @@ export default async function SettingsPage() {
   }
 
   return (
-    <div className="container page settings-page space-y-6">
-      <SettingsShell />
-      <Suspense fallback={<SettingsSnapshotFallback />}>
-        <SettingsContent />
-      </Suspense>
+    <div className="container page settings-page dashboard-cinematic pb-10">
+      <div className="hq-frosted-main-shell space-y-6">
+        <SettingsShell />
+        <Suspense fallback={<SettingsSnapshotFallback />}>
+          <SettingsContent />
+        </Suspense>
+      </div>
     </div>
   );
 }

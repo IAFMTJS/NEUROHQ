@@ -1,7 +1,7 @@
 import type { AppMode } from "@/lib/app-mode";
 import { SciFiPanel } from "@/components/hud-test/SciFiPanel";
 
-type Props = { mode: AppMode };
+type Props = { mode: AppMode; flatFrame?: boolean };
 
 const labels: Record<AppMode, string[]> = {
   normal: [],

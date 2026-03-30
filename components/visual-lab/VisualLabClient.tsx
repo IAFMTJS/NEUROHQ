@@ -344,6 +344,8 @@ export function VisualLabClient() {
 
           <VisualLabNotificationsPageConcept />
 
+          <VisualLabPedestalHalfRingAlternatives />
+
           <section
             className="relative mb-10 w-full space-y-4 md:-mx-4 md:w-[calc(100%+2rem)] md:max-w-[calc(100%+2rem)] md:px-4"
             aria-labelledby="status-lattice-heading"

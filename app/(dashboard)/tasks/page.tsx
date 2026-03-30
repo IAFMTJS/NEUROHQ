@@ -591,7 +591,7 @@ export default async function TasksPage({ searchParams }: Props) {
           }
         >
           {tasksCommandDeck ? (
-            <div className="rounded-xl border border-[rgba(var(--mode-rgb),0.12)] bg-[rgba(4,12,22,0.22)] p-3 sm:p-4 md:p-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
+            <div className="hq-frosted-main-shell">
               {tabsShell}
             </div>
           ) : (

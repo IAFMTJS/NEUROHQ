@@ -58,20 +58,22 @@ export function DashboardHubCommandShell({
         <div
           className={`${compactVertical ? "space-y-2 pt-0" : "space-y-3 pt-2 md:pt-3"} ${compactHorizontal ? "px-0" : "px-1"}`}
         >
-          <SciFiPanel
-            className={`dashboard-bridge-frame idle-breathing ${hudStyles.focusPrimary}`}
-            bodyClassName={`dashboard-bridge-body flex flex-col gap-4 [-webkit-overflow-scrolling:touch] ${skipCinematic ? "light-ui-defer-paint" : ""}`}
-            variant="flat-glass"
-          >
-            <CornerNode corner="top-left" />
-            <CornerNode corner="top-right" />
-            {showBridgeLabel ? (
-              <span className="dashboard-bridge-label shrink-0" aria-hidden>
-                {hubLabel}
-              </span>
-            ) : null}
-            {children}
-          </SciFiPanel>
+          <div className="hq-frosted-main-shell">
+            <SciFiPanel
+              className={`dashboard-bridge-frame idle-breathing ${hudStyles.focusPrimary}`}
+              bodyClassName={`dashboard-bridge-body flex flex-col gap-4 [-webkit-overflow-scrolling:touch] ${skipCinematic ? "light-ui-defer-paint" : ""}`}
+              variant="flat-glass"
+            >
+              <CornerNode corner="top-left" />
+              <CornerNode corner="top-right" />
+              {showBridgeLabel ? (
+                <span className="dashboard-bridge-label shrink-0" aria-hidden>
+                  {hubLabel}
+                </span>
+              ) : null}
+              {children}
+            </SciFiPanel>
+          </div>
         </div>
       </div>
     </main>

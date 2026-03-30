@@ -102,13 +102,15 @@ export default async function LearningAnalyticsPage(_props: Props) {
   }
 
   return (
-    <div className="container page space-y-6">
-      <HQPageHeader
-        title="Growth analytics"
-        subtitle="Trends in your learning sessions and topic focus."
-        backHref="/learning"
-      />
-      {body}
+    <div className="container page page-wide dashboard-cinematic pb-10">
+      <div className="hq-frosted-main-shell space-y-6">
+        <HQPageHeader
+          title="Growth analytics"
+          subtitle="Trends in your learning sessions and topic focus."
+          backHref="/learning"
+        />
+        {body}
+      </div>
     </div>
   );
 }

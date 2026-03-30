@@ -32,7 +32,8 @@ export default async function MakerAnalyticsPage() {
   const lastFunnelWeeks = funnel.slice(-4);
 
   return (
-    <div className="container page page-wide space-y-6">
+    <div className="container page page-wide dashboard-cinematic pb-10">
+      <div className="hq-frosted-main-shell space-y-6">
       <HQPageHeader
         title="Maker dashboard"
         subtitle="High-level funnel and engine health (admin only)."
@@ -254,6 +255,7 @@ export default async function MakerAnalyticsPage() {
         This page is for internal engine sanity‑checks. Counts for forced confrontations and Minimal
         Integrity missions are based on analytics_events going forward.
       </p>
+      </div>
     </div>
   );
 }

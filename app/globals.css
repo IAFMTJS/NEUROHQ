@@ -2336,9 +2336,26 @@ main#main-content.profile-route-shell {
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
 }
 
-/** Profile command deck: outer frame */
-.profile-page-ambient {
-  border-color: rgba(var(--mode-rgb), 0.12);
+/**
+ * Outer HUD rim (matches /tasks): muted plate before inner deck / SciFi panels.
+ * Use inside `container page page-wide` (or equivalent) with `dashboard-cinematic` on ancestor when available.
+ */
+.hq-frosted-main-shell {
+  border-radius: 0.75rem;
+  border: 1px solid rgba(var(--mode-rgb), 0.12);
+  background: rgba(4, 12, 22, 0.22);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  padding: 0.75rem;
+}
+@media (min-width: 640px) {
+  .hq-frosted-main-shell {
+    padding: 1rem;
+  }
+}
+@media (min-width: 768px) {
+  .hq-frosted-main-shell {
+    padding: 1.25rem;
+  }
 }
 
 main.tasks-page-root {

@@ -54,11 +54,13 @@ export default async function ReportPage({ searchParams }: Props) {
   }
 
   return (
-    <div className="container page page-wide space-y-6">
-      <ReportShell />
-      <Suspense fallback={<ReportSnapshotFallback />}>
-        <ReportInsightsContent searchParams={searchParams} />
-      </Suspense>
+    <div className="container page page-wide dashboard-cinematic pb-10">
+      <div className="hq-frosted-main-shell space-y-6">
+        <ReportShell />
+        <Suspense fallback={<ReportSnapshotFallback />}>
+          <ReportInsightsContent searchParams={searchParams} />
+        </Suspense>
+      </div>
     </div>
   );
 }

@@ -20,7 +20,7 @@ export function ProfileCommandDeckLayout({ main, children }: Props) {
 
   return (
     <div className="profile-page-root container page page-wide pb-10 pt-4 sm:pt-5">
-      <div className="profile-page-ambient rounded-xl border border-[rgba(var(--mode-rgb),0.12)] bg-[rgba(4,12,22,0.22)] p-3 sm:p-4 md:p-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
+      <div className="hq-frosted-main-shell">
         <VisualLabCommandDeck>
           <header className="flex flex-wrap items-start justify-between gap-3 border-b border-[rgba(var(--mode-rgb),0.18)] pb-4">
             <div className="min-w-0 border-l-2 border-[rgba(var(--semantic-accent),0.55)] pl-3">

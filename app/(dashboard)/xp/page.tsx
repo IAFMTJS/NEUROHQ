@@ -51,7 +51,7 @@ export default async function XPPage() {
   return (
     <main className={`relative min-h-screen overflow-hidden ${hudStyles.flatGlassPageRoot}`}>
       <div className="container page page-wide dashboard-cinematic relative z-10 pb-10">
-        <div className="space-y-4">
+        <div className="hq-frosted-main-shell space-y-4">
           <SciFiPanel
             variant="flat-glass"
             className={hudStyles.focusSecondary}

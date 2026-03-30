@@ -18,10 +18,12 @@ export default async function DashboardPage() {
   // provider so first paint uses snapshot and stays instant for the whole day.
   return (
     <main className="container page page-wide dashboard-page relative z-10 pb-10">
-      <Suspense fallback={null}>
-        <GrowthDashboardStrip />
-      </Suspense>
-      <DashboardClientShell />
+      <div className="hq-frosted-main-shell space-y-4">
+        <Suspense fallback={null}>
+          <GrowthDashboardStrip />
+        </Suspense>
+        <DashboardClientShell />
+      </div>
     </main>
   );
 }

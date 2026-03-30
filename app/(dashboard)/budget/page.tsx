@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import nextDynamic from "next/dynamic";
 import Link from "next/link";
 import { addDays, format } from "date-fns";
@@ -517,11 +518,11 @@ export default async function BudgetPage({ searchParams }: Props) {
       >
         {simplifiedBudget ? (
           <div className="relative z-10 flex min-h-[calc(100svh-7rem)] w-full max-w-none flex-1 flex-col pb-6 sm:min-h-[calc(100svh-6.5rem)] dashboard-cinematic">
-            {budgetTabsShell}
+            <div className="hq-frosted-main-shell min-h-0 flex flex-1 flex-col">{budgetTabsShell}</div>
           </div>
         ) : (
           <div className="container page page-wide dashboard-cinematic relative z-10 pb-10">
-            {budgetTabsShell}
+            <div className="hq-frosted-main-shell">{budgetTabsShell}</div>
           </div>
         )}
       </main>
