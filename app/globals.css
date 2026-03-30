@@ -872,6 +872,16 @@ html[data-shell-route="profile"] {
   --hq-duration-normal: 0ms;
   --shadow-button: 0 2px 8px rgba(0, 0, 0, 0.2);
   --neon-btn-shadow: 0 2px 8px rgba(0, 0, 0, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.15);
+  /* Shared frosted stack (Visual Lab / command-deck parity) */
+  --light-ui-glass-blur: blur(22px) saturate(1.12);
+  --light-ui-glass-bg: rgba(4, 14, 26, 0.48);
+  --light-ui-glass-border: rgba(var(--mode-rgb), 0.28);
+  --light-ui-glass-shadow:
+    0 0 0 1px rgba(0, 0, 0, 0.34),
+    0 0 22px rgba(var(--mode-rgb), 0.12),
+    0 14px 42px rgba(0, 0, 0, 0.52),
+    inset 0 1px 0 rgba(255, 255, 255, 0.09),
+    inset 0 -10px 26px rgba(0, 0, 0, 0.36);
 }
 [data-light-ui="true"] *,
 [data-light-ui="true"] *::before,
@@ -886,11 +896,34 @@ html[data-shell-route="profile"] {
 /* Light UI: disable all glow/flicker on buttons and cards */
 [data-light-ui="true"] .btn-primary,
 [data-light-ui="true"] .btn-hq-primary,
-[data-light-ui="true"] .btn-hq-secondary,
-[data-light-ui="true"] .dashboard-mini-btn-primary {
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.08) !important;
+[data-light-ui="true"] .primary-btn {
+  backdrop-filter: blur(14px) saturate(1.1) !important;
+  -webkit-backdrop-filter: blur(14px) saturate(1.1) !important;
+  border-color: rgba(var(--mode-rgb), 0.42) !important;
+  background: linear-gradient(
+    180deg,
+    rgba(var(--mode-rgb), 0.82) 0%,
+    rgba(var(--mode-rgb-deep), 0.88) 48%,
+    rgba(var(--mode-rgb-deep), 0.92) 100%
+  ) !important;
+  box-shadow:
+    0 0 0 1px rgba(0, 0, 0, 0.32),
+    0 0 20px rgba(var(--mode-rgb), 0.22),
+    0 8px 24px rgba(0, 0, 0, 0.48),
+    inset 0 1px 0 rgba(255, 255, 255, 0.22) !important;
 }
-[data-light-ui="true"] .card-simple-accent,
+[data-light-ui="true"] .btn-hq-secondary {
+  backdrop-filter: blur(16px) saturate(1.1) !important;
+  -webkit-backdrop-filter: blur(16px) saturate(1.1) !important;
+  border-color: rgba(var(--mode-rgb), 0.3) !important;
+  background: rgba(6, 18, 30, 0.52) !important;
+  color: var(--text-primary) !important;
+  box-shadow:
+    0 0 0 1px rgba(0, 0, 0, 0.28),
+    0 0 16px rgba(var(--mode-rgb), 0.1),
+    0 6px 20px rgba(0, 0, 0, 0.42),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1) !important;
+}
 [data-light-ui="true"] .mission-card.active,
 [data-light-ui="true"] .mission-card.completed,
 [data-light-ui="true"] .glow-pill,
@@ -899,8 +932,6 @@ html[data-shell-route="profile"] {
 [data-light-ui="true"] .link-glow-hover:hover {
   box-shadow: 0 2px 12px rgba(0, 0, 0, 0.28), 0 0 0 1px rgba(var(--mode-rgb), 0.12) !important;
 }
-[data-light-ui="true"] .card-simple-accent { border-color: rgba(var(--mode-rgb), 0.32) !important; }
-[data-light-ui="true"] .card-simple-accent::before { display: none !important; }
 [data-light-ui="true"] .mission-card.active,
 [data-light-ui="true"] .mission-card.completed { border-color: rgba(var(--mode-rgb), 0.28) !important; }
 [data-light-ui="true"] .mission-card.active::before,
@@ -953,10 +984,12 @@ html[data-light-ui="true"] body {
   background-image: none !important;
 }
 
-/* Light UI: same surfaces as normal — no backdrop blur (perf), same HUD tokens */
+/*
+ * Light UI: full frosted glass (Visual Lab parity) — blur + translucent stack, not flat fills.
+ * Tier 2 (accent / modal / 3D glass) uses elevated HUD gradient + stronger rim.
+ */
 [data-light-ui="true"] .card,
 [data-light-ui="true"] .card-simple,
-[data-light-ui="true"] .card-simple-accent,
 [data-light-ui="true"] .glass-card,
 [data-light-ui="true"] .glass-panel,
 [data-light-ui="true"] .hq-card,
@@ -964,50 +997,78 @@ html[data-light-ui="true"] body {
 [data-light-ui="true"] .dashboard-bridge-frame,
 [data-light-ui="true"] .dashboard-cinematic:not(.tasks-command-deck) .glass-card,
 [data-light-ui="true"] .dashboard-cinematic:not(.tasks-command-deck) .card-simple,
-[data-light-ui="true"] .dashboard-cinematic:not(.tasks-command-deck) .card-simple-accent,
 [data-light-ui="true"] .dashboard-hud-sheet.modal-card,
-[data-light-ui="true"] .glass-card-3d,
-[data-light-ui="true"] .modal-card,
 [data-light-ui="true"] .bottom-nav-plate,
-[data-light-ui="true"] .modal-overlay,
 [data-light-ui="true"] .dashboard-cinematic .hq-frosted-main-shell {
-  backdrop-filter: none !important;
-  -webkit-backdrop-filter: none !important;
-  background: var(--hud-surface-card) !important;
-  box-shadow: var(--hud-card-rim) !important;
-  border-color: rgba(var(--mode-rgb), 0.2) !important;
+  backdrop-filter: var(--light-ui-glass-blur) !important;
+  -webkit-backdrop-filter: var(--light-ui-glass-blur) !important;
+  background: var(--light-ui-glass-bg) !important;
+  box-shadow: var(--light-ui-glass-shadow) !important;
+  border-color: var(--light-ui-glass-border) !important;
+}
+[data-light-ui="true"] .card-simple-accent,
+[data-light-ui="true"] .dashboard-cinematic:not(.tasks-command-deck) .card-simple-accent,
+[data-light-ui="true"] .glass-card-3d,
+[data-light-ui="true"] .modal-card {
+  backdrop-filter: var(--light-ui-glass-blur) !important;
+  -webkit-backdrop-filter: var(--light-ui-glass-blur) !important;
+  background: var(--hud-surface-card-elevated) !important;
+  border-color: rgba(var(--mode-rgb), 0.34) !important;
+  box-shadow:
+    0 0 0 1px rgba(0, 0, 0, 0.34),
+    0 0 22px rgba(var(--mode-rgb), 0.12),
+    0 14px 42px rgba(0, 0, 0, 0.52),
+    inset 0 1px 0 rgba(255, 255, 255, 0.09),
+    inset 0 -10px 26px rgba(0, 0, 0, 0.36) !important;
+}
+[data-light-ui="true"] .modal-overlay {
+  backdrop-filter: blur(8px) saturate(1.05) !important;
+  -webkit-backdrop-filter: blur(8px) saturate(1.05) !important;
+  background: rgba(0, 0, 0, 0.62) !important;
 }
 
-/*
- * Light UI flattens `[data-light-ui] .glass-card` globally; the /dashboard page shell is
- * `.dashboard-cinematic` without `.tasks-command-deck`, so quote/TODAY cards inside the
- * nested command deck still matched and lost blur. `/dashboard` also has no `data-deck-chrome`,
- * so it never received the hub-only deck exception. Restore frosted surfaces on the deck itself.
- */
+/* Command deck: same frosted tokens as global Light UI (full Visual Lab parity). */
 [data-light-ui="true"] .tasks-command-deck.dashboard-cinematic .glass-card,
 [data-light-ui="true"] .tasks-command-deck.dashboard-cinematic .glass-card-3d,
-[data-light-ui="true"] .tasks-command-deck.dashboard-cinematic .card-simple,
+[data-light-ui="true"] .tasks-command-deck.dashboard-cinematic .card-simple {
+  backdrop-filter: var(--light-ui-glass-blur) !important;
+  -webkit-backdrop-filter: var(--light-ui-glass-blur) !important;
+  background: var(--light-ui-glass-bg) !important;
+  border-color: var(--light-ui-glass-border) !important;
+  box-shadow: var(--light-ui-glass-shadow) !important;
+}
 [data-light-ui="true"] .tasks-command-deck.dashboard-cinematic .card-simple-accent {
-  backdrop-filter: blur(20px) saturate(1.1) !important;
-  -webkit-backdrop-filter: blur(20px) saturate(1.1) !important;
-  background: rgba(4, 14, 26, 0.48) !important;
-  border-color: rgba(var(--mode-rgb), 0.28) !important;
+  backdrop-filter: var(--light-ui-glass-blur) !important;
+  -webkit-backdrop-filter: var(--light-ui-glass-blur) !important;
+  background: var(--hud-surface-card-elevated) !important;
+  border-color: rgba(var(--mode-rgb), 0.34) !important;
   box-shadow:
-    0 0 0 1px rgba(0, 0, 0, 0.32),
-    0 0 18px rgba(var(--mode-rgb), 0.12),
-    0 12px 36px rgba(0, 0, 0, 0.48),
+    0 0 0 1px rgba(0, 0, 0, 0.34),
+    0 0 22px rgba(var(--mode-rgb), 0.12),
+    0 14px 42px rgba(0, 0, 0, 0.52),
     inset 0 1px 0 rgba(255, 255, 255, 0.09),
-    inset 0 -10px 24px rgba(0, 0, 0, 0.32) !important;
+    inset 0 -10px 26px rgba(0, 0, 0, 0.36) !important;
 }
 
-/* Light UI + command deck: same card stack; optional lighter blur for scroll perf */
+/* Hub deck chrome: slightly lighter blur for scroll-heavy stacks; still glass. */
 [data-light-ui="true"] [data-deck-chrome="true"] .tasks-command-deck .glass-card,
-[data-light-ui="true"] [data-deck-chrome="true"] .tasks-command-deck .card-simple,
+[data-light-ui="true"] [data-deck-chrome="true"] .tasks-command-deck .glass-card-3d,
+[data-light-ui="true"] [data-deck-chrome="true"] .tasks-command-deck .card-simple {
+  backdrop-filter: blur(18px) saturate(1.1) !important;
+  -webkit-backdrop-filter: blur(18px) saturate(1.1) !important;
+  background: var(--light-ui-glass-bg) !important;
+  box-shadow: var(--light-ui-glass-shadow) !important;
+}
 [data-light-ui="true"] [data-deck-chrome="true"] .tasks-command-deck .card-simple-accent {
-  backdrop-filter: blur(16px) saturate(1.08) !important;
-  -webkit-backdrop-filter: blur(16px) saturate(1.08) !important;
-  background: var(--hud-surface-card) !important;
-  box-shadow: var(--hud-card-rim) !important;
+  backdrop-filter: blur(18px) saturate(1.1) !important;
+  -webkit-backdrop-filter: blur(18px) saturate(1.1) !important;
+  background: var(--hud-surface-card-elevated) !important;
+  box-shadow:
+    0 0 0 1px rgba(0, 0, 0, 0.34),
+    0 0 22px rgba(var(--mode-rgb), 0.12),
+    0 14px 42px rgba(0, 0, 0, 0.52),
+    inset 0 1px 0 rgba(255, 255, 255, 0.09),
+    inset 0 -10px 26px rgba(0, 0, 0, 0.36) !important;
 }
 
 /*
@@ -1157,21 +1218,21 @@ html[data-light-ui="true"] body {
   -webkit-backdrop-filter: blur(10px) saturate(1.08) !important;
 }
 
-[data-light-ui="true"] .modal-overlay { background: rgba(0, 0, 0, 0.7) !important; }
 [data-light-ui="true"] .dashboard-bridge-body {
-  backdrop-filter: none !important;
-  -webkit-backdrop-filter: none !important;
+  backdrop-filter: var(--light-ui-glass-blur) !important;
+  -webkit-backdrop-filter: var(--light-ui-glass-blur) !important;
   background: linear-gradient(
     185deg,
-    rgba(12, 22, 38, 0.94) 0%,
-    rgba(6, 12, 22, 0.92) 45%,
+    rgba(12, 22, 38, 0.72) 0%,
+    rgba(6, 12, 22, 0.68) 45%,
     rgba(var(--mode-rgb-deep), 0.12) 100%
   ) !important;
+  box-shadow: var(--light-ui-glass-shadow) !important;
 }
 [data-light-ui="true"] .panelBody,
 [data-light-ui="true"] [class*="panelBody"] {
-  backdrop-filter: none !important;
-  -webkit-backdrop-filter: none !important;
+  backdrop-filter: blur(18px) saturate(1.1) !important;
+  -webkit-backdrop-filter: blur(18px) saturate(1.1) !important;
 }
 [data-light-ui="true"] .mascot-img,
 [data-light-ui="true"] .mascot-hero-img-wrap .mascot-img,
@@ -1192,49 +1253,103 @@ html[data-light-ui="true"] body {
   contain-intrinsic-size: auto 200px;
 }
 
-/* Light UI: mission pill – no WebGL canvas layer, simple gradient button only */
+/* Light UI: mission CTA – frosted neon stack (no WebGL canvas). */
 [data-light-ui="true"] .mission-hdr-canvas { display: none !important; }
+[data-light-ui="true"] .glass-card .mission-hdr-wrap,
+[data-light-ui="true"] .card .mission-hdr-wrap {
+  backdrop-filter: blur(12px) saturate(1.08) !important;
+  -webkit-backdrop-filter: blur(12px) saturate(1.08) !important;
+  background: linear-gradient(
+    180deg,
+    rgba(var(--mode-rgb-deep), 0.88) 0%,
+    rgba(var(--mode-rgb), 0.82) 52%,
+    rgba(var(--mode-rgb-deep), 0.9) 100%
+  ) !important;
+  box-shadow:
+    0 0 0 1px rgba(0, 0, 0, 0.28),
+    0 0 18px rgba(var(--mode-rgb), 0.24),
+    0 6px 20px rgba(0, 0, 0, 0.42),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2) !important;
+  filter: none !important;
+  transform: none !important;
+}
+[data-light-ui="true"] .glass-card .mission-hdr-wrap:hover,
+[data-light-ui="true"] .card .mission-hdr-wrap:hover {
+  filter: none !important;
+  box-shadow:
+    0 0 0 1px rgba(0, 0, 0, 0.3),
+    0 0 22px rgba(var(--mode-rgb), 0.28),
+    0 8px 24px rgba(0, 0, 0, 0.48),
+    inset 0 1px 0 rgba(255, 255, 255, 0.22) !important;
+}
+[data-light-ui="true"] .glass-card .mission-hdr-wrap:active,
+[data-light-ui="true"] .card .mission-hdr-wrap:active {
+  transform: none !important;
+  box-shadow:
+    0 0 0 1px rgba(0, 0, 0, 0.32),
+    0 0 14px rgba(var(--mode-rgb), 0.2),
+    0 4px 16px rgba(0, 0, 0, 0.45),
+    inset 0 1px 0 rgba(255, 255, 255, 0.14) !important;
+}
 [data-light-ui="true"] .mission-hdr-wrap {
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.12) !important;
+  backdrop-filter: blur(12px) saturate(1.08) !important;
+  -webkit-backdrop-filter: blur(12px) saturate(1.08) !important;
+  box-shadow:
+    0 0 0 1px rgba(0, 0, 0, 0.28),
+    0 0 18px rgba(var(--mode-rgb), 0.22),
+    0 6px 20px rgba(0, 0, 0, 0.42),
+    inset 0 1px 0 rgba(255, 255, 255, 0.18) !important;
   filter: none !important;
   transform: none !important;
 }
 [data-light-ui="true"] .mission-hdr-wrap:hover {
   filter: none !important;
-  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.15) !important;
+  box-shadow:
+    0 0 0 1px rgba(0, 0, 0, 0.32),
+    0 0 22px rgba(var(--mode-rgb), 0.26),
+    0 8px 24px rgba(0, 0, 0, 0.48),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2) !important;
 }
 [data-light-ui="true"] .mission-hdr-wrap:active {
   transform: none !important;
-  box-shadow: 0 1px 6px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.1) !important;
+  box-shadow:
+    0 0 0 1px rgba(0, 0, 0, 0.34),
+    0 0 14px rgba(var(--mode-rgb), 0.2),
+    0 4px 16px rgba(0, 0, 0, 0.45),
+    inset 0 1px 0 rgba(255, 255, 255, 0.12) !important;
 }
 
-/* Light UI: neon-button – flat look, no glow line or heavy shadow */
+/* Light UI: neon-button – glass depth + top highlight line (Visual Lab parity). */
 [data-light-ui="true"] .neon-button {
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.12) !important;
+  backdrop-filter: blur(14px) saturate(1.1) !important;
+  -webkit-backdrop-filter: blur(14px) saturate(1.1) !important;
+  background: linear-gradient(
+    180deg,
+    rgba(var(--mode-rgb), 0.78) 0%,
+    rgba(var(--mode-rgb-deep), 0.86) 100%
+  ) !important;
+  border-color: rgba(var(--mode-rgb), 0.45) !important;
+  box-shadow:
+    0 0 0 1px rgba(0, 0, 0, 0.3),
+    0 0 18px rgba(var(--mode-rgb), 0.2),
+    0 8px 22px rgba(0, 0, 0, 0.45),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2) !important;
   filter: none !important;
 }
 [data-light-ui="true"] .neon-button::before {
-  display: none !important;
+  display: block !important;
+  opacity: 0.95;
 }
 [data-light-ui="true"] .neon-button:hover:not(:disabled) {
-  filter: none !important;
-  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.15) !important;
+  filter: brightness(1.06) !important;
+  box-shadow:
+    0 0 0 1px rgba(0, 0, 0, 0.32),
+    0 0 24px rgba(var(--mode-rgb), 0.28),
+    0 10px 28px rgba(0, 0, 0, 0.5),
+    inset 0 1px 0 rgba(255, 255, 255, 0.24) !important;
 }
 [data-light-ui="true"] .neon-button:active:not(:disabled) {
   transform: none !important;
-}
-
-/* Light UI: glass/card decorative pseudo-elements – remove gradient borders and top highlight */
-[data-light-ui="true"] .glass-panel::before,
-[data-light-ui="true"] .hq-card::before,
-[data-light-ui="true"] .glass-panel::after,
-[data-light-ui="true"] .hq-card::after {
-  display: none !important;
-}
-/* Light UI: keep hero rim/shine on marked cards (Missions main mission = Visual Lab parity) */
-[data-light-ui="true"] .glass-card:not(.glass-preserve-decoration)::before,
-[data-light-ui="true"] .glass-card:not(.glass-preserve-decoration)::after {
-  display: none !important;
 }
 
 /* Light UI: progress bars – simple fill, no glow animation */
@@ -1246,41 +1361,67 @@ html[data-light-ui="true"] body {
   box-shadow: none !important;
 }
 
-/* Light UI: dashboard mini strip buttons – lighter hover */
+/* Light UI: mini controls – frosted pill glass */
 [data-light-ui="true"] .dashboard-mini-btn,
 [data-light-ui="true"] .dashboard-cinematic:not(.tasks-command-deck) .dashboard-mini-btn {
+  backdrop-filter: blur(12px) saturate(1.08) !important;
+  -webkit-backdrop-filter: blur(12px) saturate(1.08) !important;
   filter: none !important;
+}
+[data-light-ui="true"] .dashboard-mini-btn-primary {
+  background: linear-gradient(
+    180deg,
+    rgba(var(--mode-rgb), 0.78) 0%,
+    rgba(var(--mode-rgb-deep), 0.84) 100%
+  ) !important;
+  border-color: rgba(var(--mode-rgb), 0.42) !important;
+  box-shadow:
+    0 0 0 1px rgba(0, 0, 0, 0.28),
+    0 0 16px rgba(var(--mode-rgb), 0.2),
+    0 6px 18px rgba(0, 0, 0, 0.42),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2) !important;
+}
+[data-light-ui="true"] .dashboard-mini-btn-secondary {
+  background: rgba(6, 18, 30, 0.5) !important;
+  border-color: rgba(var(--mode-rgb), 0.26) !important;
+  box-shadow:
+    0 0 0 1px rgba(0, 0, 0, 0.22),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08) !important;
 }
 [data-light-ui="true"] .dashboard-mini-btn:hover,
 [data-light-ui="true"] .dashboard-cinematic:not(.tasks-command-deck) .dashboard-mini-btn:hover {
-  filter: none !important;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2) !important;
+  filter: brightness(1.05) !important;
+  box-shadow:
+    0 0 0 1px rgba(0, 0, 0, 0.3),
+    0 0 18px rgba(var(--mode-rgb), 0.16),
+    0 6px 20px rgba(0, 0, 0, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.12) !important;
 }
 
-/* Light UI: dashboard mission hero card – flat shadow only */
+/* Light UI: hero mission shell – same glass rim as cards */
 [data-light-ui="true"] .dashboard-mission-hero > *:first-child {
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35), 0 0 0 1px rgba(var(--mode-rgb), 0.12) !important;
+  box-shadow: var(--light-ui-glass-shadow) !important;
 }
 
-/* Light UI: cinematic glass cards and primary buttons – solid bg already applied; simplify shadow */
-[data-light-ui="true"] .dashboard-cinematic:not(.tasks-command-deck) .glass-card,
-[data-light-ui="true"] .dashboard-cinematic:not(.tasks-command-deck) .card-simple,
-[data-light-ui="true"] .dashboard-cinematic:not(.tasks-command-deck) .card-simple-accent {
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.35), 0 0 0 1px rgba(var(--mode-rgb), 0.12) !important;
-}
-[data-light-ui="true"] .dashboard-cinematic:not(.tasks-command-deck) .primary-btn,
-[data-light-ui="true"] .dashboard-cinematic:not(.tasks-command-deck) .btn-primary,
-[data-light-ui="true"] .dashboard-cinematic:not(.tasks-command-deck) .mission-hdr-wrap {
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.1) !important;
-}
-
-/* Light UI: HUD chips and mini strip – no glow shadow */
+/* Light UI: HUD chips / triggers – frosted controls */
 [data-light-ui="true"] .dashboard-cinematic:not(.tasks-command-deck) .dashboard-hud-chip,
 [data-light-ui="true"] .dashboard-cinematic:not(.tasks-command-deck) .dashboard-hud-trigger {
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25), 0 0 0 1px rgba(var(--mode-rgb), 0.14) !important;
+  backdrop-filter: blur(12px) saturate(1.06) !important;
+  -webkit-backdrop-filter: blur(12px) saturate(1.06) !important;
+  background: rgba(6, 18, 30, 0.48) !important;
+  box-shadow:
+    0 0 0 1px rgba(0, 0, 0, 0.26),
+    0 0 14px rgba(var(--mode-rgb), 0.1),
+    0 4px 14px rgba(0, 0, 0, 0.38),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08) !important;
 }
 [data-light-ui="true"] .dashboard-cinematic:not(.tasks-command-deck) .dashboard-mini-strip {
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2) !important;
+  backdrop-filter: blur(10px) saturate(1.05) !important;
+  -webkit-backdrop-filter: blur(10px) saturate(1.05) !important;
+  background: rgba(4, 12, 22, 0.4) !important;
+  box-shadow:
+    0 0 0 1px rgba(0, 0, 0, 0.22),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06) !important;
 }
 
 /* Card-simple-accent: emphasis tier — same HUD stack as panels */
@@ -3273,17 +3414,28 @@ header h1 { margin: 0; }
 }
 
 [data-light-ui="true"] .dashboard-cinematic a.commander-cta-glass {
-  backdrop-filter: none !important;
-  -webkit-backdrop-filter: none !important;
-  background: var(--hud-surface-card) !important;
-  border-color: rgba(var(--mode-rgb), 0.28) !important;
-  box-shadow: var(--hud-card-rim) !important;
+  backdrop-filter: var(--light-ui-glass-blur) !important;
+  -webkit-backdrop-filter: var(--light-ui-glass-blur) !important;
+  background: var(--light-ui-glass-bg) !important;
+  border: 1px solid rgba(var(--mode-rgb), 0.34) !important;
+  box-shadow:
+    0 0 0 1px rgba(0, 0, 0, 0.32),
+    0 0 22px rgba(var(--mode-rgb), 0.16),
+    0 10px 32px rgba(0, 0, 0, 0.5),
+    inset 0 1px 0 rgba(255, 255, 255, 0.12),
+    inset 0 -8px 22px rgba(0, 0, 0, 0.28) !important;
   filter: none !important;
 }
 
 [data-light-ui="true"] .dashboard-cinematic a.commander-cta-glass:hover {
-  filter: none !important;
-  border-color: rgba(var(--mode-rgb), 0.4) !important;
+  filter: brightness(1.06) !important;
+  border-color: rgba(var(--mode-rgb), 0.48) !important;
+  box-shadow:
+    0 0 0 1px rgba(0, 0, 0, 0.34),
+    0 0 28px rgba(var(--mode-rgb), 0.26),
+    0 14px 38px rgba(0, 0, 0, 0.55),
+    inset 0 1px 0 rgba(255, 255, 255, 0.15),
+    inset 0 -8px 22px rgba(0, 0, 0, 0.3) !important;
 }
 
 /* Beat Light UI flattening for the hero CTA inside the command deck (see glass-card note above). */

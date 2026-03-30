@@ -8,8 +8,6 @@ import { BudgetLockProvider, useBudgetLock } from "@/components/budget/BudgetLoc
 import { BudgetLockTabBanner } from "@/components/budget/BudgetLockTabBanner";
 import { BudgetLockCountdown } from "@/components/budget/BudgetLockCountdown";
 import { formatLockEndShort } from "@/lib/budget-lock-display";
-import { SciFiPanel } from "@/components/hud-test/SciFiPanel";
-import { CornerNode } from "@/components/hud-test/CornerNode";
 import { profileEngineHref } from "@/lib/profile-routes";
 import { tasksDeckTabClass } from "@/components/missions/tasksDeckTabClass";
 
@@ -48,8 +46,9 @@ type Props = {
   /** Full layout: content between tab row and tab panels (e.g. mascot, hints). */
   belowTabsSlot?: ReactNode;
   /**
-   * When true, shell sits inside `DashboardCommandDeckFrame`: no SciFiPanel / duplicate HQ row,
-   * missions-style segmented tabs, and (full mode) `belowTabsSlot` is rendered after the tab rail.
+   * Full layout only: missions-style tab rail + optional `belowTabsSlot` after tabs.
+   * Default true (budget page is always wrapped in `DashboardCommandDeckFrame`).
+   * Simplified layout never uses the old SciFiPanel / CornerNode card.
    */
   commandDeckLayout?: boolean;
 };
@@ -142,7 +141,7 @@ export function BudgetTabsShell({
   simplifiedTopSlot,
   centeredPageHeader,
   belowTabsSlot,
-  commandDeckLayout = false,
+  commandDeckLayout = true,
 }: Props) {
   const router = useRouter();
   const pathname = usePathname();
@@ -353,7 +352,7 @@ export function BudgetTabsShell({
 
   return (
     <BudgetLockProvider value={{ lockActive: lockActive && !historyMode, lockUntil, lockUntilAt }}>
-      {simplifiedLayout && commandDeckLayout ? (
+      {simplifiedLayout ? (
         <div className="flex min-h-0 w-full max-w-none flex-1 flex-col gap-3">
           <div className="flex shrink-0 justify-end px-0.5">
             <span className="inline-flex shrink-0 items-center rounded-full border border-[rgba(var(--mode-rgb),0.18)] bg-[var(--bg-elevated)]/35 px-2 py-0.5 text-[9px] font-semibold uppercase tracking-wide text-[var(--accent-focus)]">
@@ -384,58 +383,6 @@ export function BudgetTabsShell({
               Turn off simplified
             </Link>
           </p>
-        </div>
-      ) : simplifiedLayout ? (
-        <div className="flex min-h-0 w-full max-w-none flex-1 flex-col">
-          <SciFiPanel
-            variant="flat-glass"
-            className="hq-card-enter relative flex min-h-0 w-full flex-1 flex-col overflow-hidden dashboard-active-mission"
-            bodyClassName="relative z-10 flex min-h-0 flex-1 flex-col gap-0 p-0"
-          >
-            <CornerNode corner="top-left" />
-            <CornerNode corner="top-right" />
-            <div className={`relative flex shrink-0 items-center justify-between gap-2 border-b ${simplifiedDivider} px-3 py-2`}>
-              <Link
-                href="/dashboard"
-                className="shrink-0 text-[10px] font-semibold uppercase tracking-wide text-[var(--accent-focus)] underline-offset-2 hover:underline"
-              >
-                ← HQ
-              </Link>
-              <h2 className="sr-only">Budget</h2>
-              <span className="inline-flex shrink-0 items-center rounded-full border border-[rgba(var(--mode-rgb),0.18)] bg-[var(--bg-elevated)]/35 px-2 py-0.5 text-[9px] font-semibold uppercase tracking-wide text-[var(--accent-focus)]">
-                {modeLabel}
-              </span>
-            </div>
-            {/* No wrapper: slot may be toast-only (returns null) — a bordered row looked empty. */}
-            {simplifiedTopSlot}
-            <BudgetLockStrip historyMode={historyMode} lockPanelHref={lockPanelHref} embedded />
-            <div className={`shrink-0 border-b ${simplifiedDivider} px-2 py-1.5 sm:px-3`}>
-              {renderTabButtonsPills()}
-            </div>
-            {headerRight ? (
-              <div className={`shrink-0 border-b ${simplifiedDivider} bg-[rgba(var(--mode-rgb),0.03)] px-2 py-0.5 sm:px-3`}>
-                <div className="flex flex-wrap items-center justify-center gap-1 sm:justify-between">
-                  {headerRight}
-                </div>
-              </div>
-            ) : null}
-            <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-2 py-2 [-webkit-overflow-scrolling:touch] sm:px-3">
-              {panels}
-            </div>
-            <p className={`shrink-0 border-t ${simplifiedDivider} px-4 py-2 text-center text-[11px] text-[var(--text-muted)]`}>
-              <Link href="/tasks" className="text-[var(--accent-focus)] underline-offset-2 hover:underline">
-                Missions
-              </Link>
-              {" · "}
-              <Link href="/strategy" className="text-[var(--accent-focus)] underline-offset-2 hover:underline">
-                Strategy
-              </Link>
-              {" · "}
-              <Link href={profileEngineHref("modes")} className="text-[var(--accent-focus)] underline-offset-2 hover:underline">
-                Turn off simplified
-              </Link>
-            </p>
-          </SciFiPanel>
         </div>
       ) : centeredPageHeader ? (
         <div className="space-y-4">
