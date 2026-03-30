@@ -16,9 +16,7 @@ import { DashboardContextCard } from "@/components/dashboard/DashboardContextCar
 import { DashboardQuickBudgetLog } from "@/components/dashboard/DashboardQuickBudgetLog";
 import { SystemOverviewCard } from "@/components/dashboard/SystemOverviewCard";
 import { CommanderHomeHero } from "@/components/commander";
-import { SciFiPanel } from "@/components/hud-test/SciFiPanel";
-import { CornerNode } from "@/components/hud-test/CornerNode";
-import hudStyles from "@/components/hud-test/hud.module.css";
+import { DashboardCommandDeckFrame } from "@/components/layout/DashboardCommandDeckFrame";
 import { DelayedFallback } from "@/components/ui/DelayedFallback";
 import { humanizeDecisionType, humanizeReasonCode } from "@/lib/unified-decision-labels";
 import { useDashboardData, fetchAll, type DashboardCritical, type DashboardSecondary } from "@/components/providers/DashboardDataProvider";
@@ -592,14 +590,18 @@ export function DashboardClientShell() {
                   overdriveSessionStart={gameState.mode.overdriveSessionStart}
                 />
               )}
-              <SciFiPanel
-                className={`dashboard-bridge-frame idle-breathing ${hudStyles.focusPrimary}`}
-                bodyClassName={`dashboard-bridge-body flex flex-col gap-3 [-webkit-overflow-scrolling:touch] ${skipCinematicLayers ? "light-ui-defer-paint" : ""}`}
-                variant="flat-glass"
+              <DashboardCommandDeckFrame
+                deckTitle={
+                  <>
+                    <span className="block">Dashboard</span>
+                    <span className="mt-1 block text-[11px] font-normal leading-snug tracking-normal text-[var(--text-muted)] [text-shadow:none] md:text-xs">
+                      System overview
+                    </span>
+                  </>
+                }
+                outerClassName={`idle-breathing ${skipCinematicLayers ? "light-ui-defer-paint" : ""}`.trim()}
+                innerClassName="gap-3 [-webkit-overflow-scrolling:touch]"
               >
-                <CornerNode corner="top-left" />
-                <CornerNode corner="top-right" />
-                <span className="dashboard-bridge-label shrink-0" aria-hidden>Command</span>
                 <div
                   className="dashboard-command-bridge relative mx-auto w-full max-w-lg"
                   data-tutorial="dashboard-command-bridge"
@@ -607,7 +609,7 @@ export function DashboardClientShell() {
                   <div className="relative z-0 w-full">
                     <CommanderHomeHero
                       bridgeLayout
-                      hideBuiltInTitle={false}
+                      hideBuiltInTitle
                       energyPct={heroEnergyPct}
                       focusPct={heroFocusPct}
                       loadPct={heroLoadPct}
@@ -767,7 +769,7 @@ export function DashboardClientShell() {
                     </div>
                   </div>
                 </div>
-              </SciFiPanel>
+              </DashboardCommandDeckFrame>
             </div>
           </>
         )}
