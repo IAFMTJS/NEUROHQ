@@ -2,7 +2,7 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 
 export const dashboardCommandDeckOuterClass =
-  "tasks-command-deck dashboard-cinematic relative overflow-hidden rounded-2xl border border-[rgba(var(--mode-rgb),0.32)] bg-gradient-to-br from-[rgba(6,22,38,0.97)] via-[var(--bg-elevated)]/88 to-[rgba(var(--mode-rgb-deep),0.18)] shadow-[0_0_48px_rgba(var(--mode-rgb),0.16),0_12px_40px_rgba(0,0,0,0.35),inset_0_1px_0_rgba(255,255,255,0.08)]";
+  "tasks-command-deck dashboard-cinematic relative overflow-hidden rounded-2xl border border-[rgba(var(--mode-rgb),0.36)] bg-gradient-to-br from-[rgba(6,22,38,0.88)] via-[var(--bg-elevated)]/76 to-[rgba(var(--mode-rgb-deep),0.22)] shadow-[0_0_56px_rgba(var(--mode-rgb),0.18),0_12px_40px_rgba(0,0,0,0.38),inset_0_1px_0_rgba(255,255,255,0.1)]";
 
 type Props = {
   deckTitle: ReactNode;

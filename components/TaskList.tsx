@@ -1355,7 +1355,7 @@ export function TaskList({
                 >
                   {commandDeckVisuals && (
                     <div
-                      className="absolute left-0 top-0 z-[1] h-full w-1 bg-gradient-to-b from-[var(--semantic-accent)] to-emerald-500/70"
+                      className="deck-hero-energy-rail absolute left-0 top-0 z-[1] h-full w-[3px] bg-gradient-to-b from-[var(--semantic-accent)] via-[var(--semantic-accent)]/85 to-emerald-500/75 shadow-[4px_0_18px_rgba(var(--mode-rgb),0.45),0_0_12px_rgba(var(--semantic-accent),0.35)]"
                       aria-hidden
                     />
                   )}
