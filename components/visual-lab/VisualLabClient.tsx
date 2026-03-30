@@ -15,6 +15,7 @@ import { PolygonHudMeter } from "@/components/visual-lab/VisualLabPolygonMeters"
 import { VisualLabHexMesh } from "@/components/visual-lab/VisualLabHexMesh";
 import { VisualLabShapeEnergyRing } from "@/components/visual-lab/VisualLabShapeEnergyRing";
 import { VisualLabMissionsPageConcept } from "@/components/visual-lab/VisualLabMissionsPageConcept";
+import { VisualLabMissionsSimplifiedConcept } from "@/components/visual-lab/VisualLabMissionsSimplifiedConcept";
 import {
   VisualLabNotificationsPageConcept,
   VisualLabProfilePageConcept,
@@ -327,11 +328,17 @@ export function VisualLabClient() {
               <code className="rounded bg-black/30 px-1 text-[10px]">
                 space-y-6
               </code>
-              .
+              . Daaronder: een tweede blok voor simplified{" "}
+              <code className="rounded bg-black/30 px-1 text-[10px]">/tasks</code> (
+              <code className="rounded bg-black/30 px-1 text-[10px]">dashboard-mini-strip</code> +{" "}
+              <code className="rounded bg-black/30 px-1 text-[10px]">SciFiPanel</code>
+              ).
             </p>
           </div>
 
           <VisualLabMissionsPageConcept />
+
+          <VisualLabMissionsSimplifiedConcept />
 
           <VisualLabStrategyPageConcept />
 
