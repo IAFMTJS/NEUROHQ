@@ -21,6 +21,7 @@ import {
   VisualLabProfilePageConcept,
 } from "@/components/visual-lab/VisualLabUserPageConcepts";
 import { VisualLabDashboardPageConcepts } from "@/components/visual-lab/VisualLabDashboardPageConcepts";
+import { VisualLabDashboardScreenshotIdeas } from "@/components/visual-lab/VisualLabDashboardScreenshotIdeas";
 import { VisualLabPedestalHalfRingAlternatives } from "@/components/visual-lab/VisualLabPedestalHalfRingAlternatives";
 import { VisualLabStrategyPageConcept } from "@/components/visual-lab/VisualLabStrategyPageConcepts";
 import {
@@ -346,6 +347,8 @@ export function VisualLabClient() {
           <VisualLabNotificationsPageConcept />
 
           <VisualLabDashboardPageConcepts />
+
+          <VisualLabDashboardScreenshotIdeas />
 
           <VisualLabPedestalHalfRingAlternatives />
 

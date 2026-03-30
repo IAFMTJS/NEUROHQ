@@ -119,11 +119,7 @@ export function CommanderHomeHero({
         <CommanderStatRing value={effectiveLoadPct} variant="load" size={bridgeLayout ? 120 : 102} />
       </section>
       {dailyQuoteText && (
-        <div
-          className={`glass-card glass-preserve-decoration !rounded-xl !p-3 w-full max-w-[520px] ${
-            bridgeLayout ? "mx-0 text-left" : "mx-auto text-center"
-          }`}
-        >
+        <div className="glass-card glass-preserve-decoration mx-auto !rounded-xl !p-3 w-full max-w-[520px] text-center">
           <p
             className="mb-1 text-[9px] font-semibold uppercase tracking-[0.14em]"
             style={{ color: "rgba(var(--mode-rgb), 0.78)" }}
