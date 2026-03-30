@@ -10,7 +10,12 @@ import {
   type ReactNode,
 } from "react";
 import type { DailySnapshot } from "@/types/daily-snapshot";
-import { loadDailySnapshot, isCurrentSnapshot } from "@/lib/daily-snapshot-storage";
+import {
+  loadDailySnapshot,
+  isCurrentSnapshot,
+  mergeSnapshotKeepBest,
+} from "@/lib/daily-snapshot-storage";
+import { getTodayKey } from "@/lib/daily-date";
 import { BootstrapLoader } from "@/components/bootstrap/BootstrapLoader";
 import { StoreHydrator } from "@/components/bootstrap/StoreHydrator";
 import type { InitializeResult } from "@/lib/daily-initialize";
@@ -82,7 +87,11 @@ export function BootstrapGate({ children }: Props) {
         try {
           const result = await initializeDailySystem();
           if (cancelled) return;
-          setSnapshot(result.snapshot);
+          setSnapshot((prev) => {
+            const today = getTodayKey();
+            if (!prev || prev.date !== result.snapshot.date) return result.snapshot;
+            return mergeSnapshotKeepBest(today, prev, result.snapshot);
+          });
           setReady(true);
         } catch {
           // Best-effort: keep rendering from the stale snapshot until the next successful refresh.

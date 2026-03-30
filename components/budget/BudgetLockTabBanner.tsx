@@ -28,7 +28,7 @@ export function BudgetLockTabBanner({ context, lockPanelHref, className = "" }: 
 
   return (
     <div
-      className={`mb-4 rounded-xl border border-amber-400/55 bg-gradient-to-r from-amber-500/20 to-amber-600/10 px-4 py-3 shadow-[0_0_24px_rgba(245,158,11,0.12)] backdrop-blur-sm ${className}`}
+      className={`mb-4 rounded-xl border border-[rgba(var(--mode-rgb),0.28)] bg-gradient-to-br from-[rgba(var(--mode-rgb),0.12)] via-[rgba(var(--mode-rgb-deep),0.2)] to-[rgba(6,18,30,0.45)] px-4 py-3 shadow-[0_0_24px_rgba(var(--mode-rgb),0.1)] backdrop-blur-sm ${className}`}
       role="status"
       aria-live="polite"
     >
@@ -37,10 +37,12 @@ export function BudgetLockTabBanner({ context, lockPanelHref, className = "" }: 
           🔒
         </span>
         <div className="min-w-0 flex-1 space-y-1">
-          <p className="text-sm font-bold uppercase tracking-[0.14em] text-amber-100">No-spend lock actief</p>
-          {until && <p className="text-xs text-amber-50/95">Tot {until}</p>}
+          <p className="text-sm font-bold uppercase tracking-[0.14em] text-[var(--text-primary)]">
+            No-spend lock actief
+          </p>
+          {until && <p className="text-xs text-[var(--text-secondary)]">Tot {until}</p>}
           {lockUntilAt && (
-            <p className="text-xs text-amber-50/90" aria-hidden>
+            <p className="text-xs text-[var(--semantic-accent)]" aria-hidden>
               <BudgetLockCountdown unlockAtIso={lockUntilAt} />
             </p>
           )}

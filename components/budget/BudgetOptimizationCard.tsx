@@ -32,9 +32,11 @@ export function BudgetOptimizationCard({ lockPanelHref, summary, suggestions, ch
       <h3 className="text-sm font-semibold text-[var(--text-primary)]">Optimalisatie</h3>
 
       {lockActive && (
-        <div className="rounded-lg border border-amber-400/50 bg-amber-500/15 px-3 py-2.5 text-xs text-amber-50">
-          <p className="font-semibold text-amber-100">Lock actief — interventies hieronder staan op pauze</p>
-          {untilLabel && <p className="mt-1 text-amber-50/95">Tot {untilLabel}</p>}
+        <div className="rounded-lg border border-[rgba(var(--mode-rgb),0.28)] bg-[rgba(var(--mode-rgb-deep),0.2)] px-3 py-2.5 text-xs text-[var(--text-primary)]">
+          <p className="font-semibold text-[var(--text-primary)]">
+            Lock actief — interventies hieronder staan op pauze
+          </p>
+          {untilLabel && <p className="mt-1 text-[var(--text-secondary)]">Tot {untilLabel}</p>}
           <p className="mt-1.5 text-[var(--text-secondary)]">{lockSummary}</p>
           <a
             href={lockPanelHref}

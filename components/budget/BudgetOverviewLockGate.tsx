@@ -31,7 +31,7 @@ export function BudgetOverviewLockGate({
   return (
     <div className="space-y-2">
       <div
-        className="sticky top-0 z-20 flex flex-wrap items-center justify-between gap-2 rounded-lg border border-amber-500/50 bg-amber-500/15 px-3 py-2 text-sm text-amber-100 shadow-sm backdrop-blur-sm"
+        className="sticky top-0 z-20 flex flex-wrap items-center justify-between gap-2 rounded-lg border border-[rgba(var(--mode-rgb),0.32)] bg-[rgba(var(--mode-rgb-deep),0.28)] px-3 py-2 text-sm text-[var(--text-primary)] shadow-[0_0_20px_rgba(var(--mode-rgb),0.1)] backdrop-blur-sm"
         role="status"
         aria-live="polite"
       >
@@ -50,14 +50,16 @@ export function BudgetOverviewLockGate({
           {children}
         </div>
         <div
-          className="pointer-events-auto absolute inset-0 z-[5] flex min-h-[180px] items-start justify-center rounded-xl border-2 border-dashed border-amber-500/45 bg-[var(--bg-primary)]/82 pt-6 text-center shadow-[0_0_32px_rgba(245,158,11,0.12)] backdrop-blur-sm sm:pt-10"
+          className="pointer-events-auto absolute inset-0 z-[5] flex min-h-[180px] items-start justify-center rounded-xl border-2 border-dashed border-[rgba(var(--mode-rgb),0.38)] bg-[var(--bg-primary)]/82 pt-6 text-center shadow-[0_0_32px_rgba(var(--mode-rgb),0.14)] backdrop-blur-sm sm:pt-10"
           role="presentation"
         >
           <div className="max-w-sm space-y-2 px-4">
             <p className="text-2xl" aria-hidden>
               🔒
             </p>
-            <p className="text-sm font-bold uppercase tracking-[0.12em] text-amber-200">Overzicht geblokkeerd</p>
+            <p className="text-sm font-bold uppercase tracking-[0.12em] text-[var(--semantic-accent)]">
+              Overzicht geblokkeerd
+            </p>
             <p className="text-xs text-[var(--text-secondary)]">
               Log snel uitgaven en budget-acties hier zijn gepauzeerd. Gebruik het paneel hieronder voor een noodpad.
             </p>

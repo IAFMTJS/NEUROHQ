@@ -5,6 +5,7 @@ import {
   loadDailySnapshot,
   saveDailySnapshot,
   isCurrentSnapshot,
+  mergeSnapshotKeepBest,
 } from "@/lib/daily-snapshot-storage";
 import { getMascotSrcForPage } from "@/lib/mascots";
 import type { DailySnapshot } from "@/types/daily-snapshot";
@@ -15,8 +16,6 @@ export type PreloadStepId =
   | "fetchMissions"
   | "fetchXP"
   | "fetchStrategy"
-  | "fetchLearning"
-  | "fetchBudget"
   | "fetchAnalytics"
   | "fetchSettings"
   | "preloadPages"
@@ -25,8 +24,13 @@ export type PreloadStepId =
 
 export type PreloadProgress = {
   step: PreloadStepId;
-  completedSteps: number;
+  /** Zero-based index of the step currently running or just finished. */
+  stepIndex: number;
   totalSteps: number;
+  /** Steps fully completed (0..totalSteps). */
+  completedSteps: number;
+  /** `start` = about to run this step; `complete` = step finished. */
+  phase: "start" | "complete";
 };
 
 export type InitializeResult = {
@@ -36,30 +40,35 @@ export type InitializeResult = {
 
 const PRELOAD_PAGE_TIMEOUT_MS = 2500;
 
-const ALL_STEPS: PreloadStepId[] = [
+/** Ordered bootstrap work (single source of truth for loader UI + progress). */
+export const DAILY_BOOTSTRAP_STEPS: readonly PreloadStepId[] = [
   "fetchDashboard",
   "fetchMissions",
   "fetchXP",
   "fetchStrategy",
-  "fetchLearning",
-  "fetchBudget",
   "fetchAnalytics",
   "fetchSettings",
   "preloadPages",
   "preloadAssets",
   "prepareCache",
-];
+] as const;
+
+const ALL_STEPS: PreloadStepId[] = [...DAILY_BOOTSTRAP_STEPS];
 
 function emitProgress(
   onProgress: ((p: PreloadProgress) => void) | undefined,
   step: PreloadStepId,
-  index: number
+  index: number,
+  phase: "start" | "complete"
 ) {
   if (!onProgress) return;
+  const completedSteps = phase === "complete" ? index + 1 : index;
   onProgress({
     step,
-    completedSteps: index + 1,
+    stepIndex: index,
     totalSteps: ALL_STEPS.length,
+    completedSteps,
+    phase,
   });
 }
 
@@ -106,21 +115,27 @@ export async function initializeDailySystem(
   try {
     for (let i = 0; i < ALL_STEPS.length; i++) {
       const step = ALL_STEPS[i];
+      emitProgress(onProgress, step, i, "start");
       // eslint-disable-next-line no-await-in-loop
       const before = typeof performance !== "undefined" ? performance.now() : Date.now();
       snapshot = await runStep(snapshot, step);
       const after = typeof performance !== "undefined" ? performance.now() : Date.now();
-      // Lightweight timing log for tuning.
       // eslint-disable-next-line no-console
       console.debug("[daily-initialize]", step, "took", Math.round(after - before), "ms");
-      emitProgress(onProgress, step, i);
+
+      const onDisk = await loadDailySnapshot();
+      snapshot = mergeSnapshotKeepBest(today, onDisk, snapshot);
+      await saveDailySnapshot(snapshot);
+
+      emitProgress(onProgress, step, i, "complete");
     }
   } catch (e) {
     if (fallback) {
+      const merged = mergeSnapshotKeepBest(today, fallback, snapshot);
       const offlineSnapshot: DailySnapshot = {
-        ...fallback,
+        ...merged,
         ui: {
-          ...fallback.ui,
+          ...merged.ui,
           offlineMode: true,
         },
       };
@@ -130,7 +145,6 @@ export async function initializeDailySystem(
     throw e;
   }
 
-  await saveDailySnapshot(snapshot);
   return { kind: "fresh", snapshot };
 }
 
@@ -307,10 +321,6 @@ async function runStep(
         return snapshot;
       }
     }
-    case "fetchLearning":
-    case "fetchBudget":
-      // Reserved for future learning/budget-specific snapshot APIs.
-      return snapshot;
     case "fetchAnalytics": {
       try {
         const res = await fetch("/api/analytics/snapshot?ts=" + Date.now(), {

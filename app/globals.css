@@ -978,6 +978,28 @@ html[data-light-ui="true"] body {
   border-color: rgba(var(--mode-rgb), 0.2) !important;
 }
 
+/*
+ * Light UI flattens `[data-light-ui] .glass-card` globally; the /dashboard page shell is
+ * `.dashboard-cinematic` without `.tasks-command-deck`, so quote/TODAY cards inside the
+ * nested command deck still matched and lost blur. `/dashboard` also has no `data-deck-chrome`,
+ * so it never received the hub-only deck exception. Restore frosted surfaces on the deck itself.
+ */
+[data-light-ui="true"] .tasks-command-deck.dashboard-cinematic .glass-card,
+[data-light-ui="true"] .tasks-command-deck.dashboard-cinematic .glass-card-3d,
+[data-light-ui="true"] .tasks-command-deck.dashboard-cinematic .card-simple,
+[data-light-ui="true"] .tasks-command-deck.dashboard-cinematic .card-simple-accent {
+  backdrop-filter: blur(20px) saturate(1.1) !important;
+  -webkit-backdrop-filter: blur(20px) saturate(1.1) !important;
+  background: rgba(4, 14, 26, 0.48) !important;
+  border-color: rgba(var(--mode-rgb), 0.28) !important;
+  box-shadow:
+    0 0 0 1px rgba(0, 0, 0, 0.32),
+    0 0 18px rgba(var(--mode-rgb), 0.12),
+    0 12px 36px rgba(0, 0, 0, 0.48),
+    inset 0 1px 0 rgba(255, 255, 255, 0.09),
+    inset 0 -10px 24px rgba(0, 0, 0, 0.32) !important;
+}
+
 /* Light UI + command deck: same card stack; optional lighter blur for scroll perf */
 [data-light-ui="true"] [data-deck-chrome="true"] .tasks-command-deck .glass-card,
 [data-light-ui="true"] [data-deck-chrome="true"] .tasks-command-deck .card-simple,
@@ -3190,7 +3212,9 @@ header h1 { margin: 0; }
 }
 
 /* Commander bridge: primary CTA — same glass language as dashboard cards (capsule link). */
-.dashboard-cinematic a.commander-cta-glass {
+.dashboard-cinematic a.commander-cta-glass,
+.tasks-command-deck.dashboard-cinematic a.commander-cta-glass {
+  animation: none !important;
   backdrop-filter: blur(22px) saturate(1.14) !important;
   -webkit-backdrop-filter: blur(22px) saturate(1.14) !important;
   background: rgba(4, 14, 26, 0.38) !important;
@@ -3203,7 +3227,8 @@ header h1 { margin: 0; }
     inset 0 -8px 22px rgba(0, 0, 0, 0.28) !important;
 }
 
-.dashboard-cinematic a.commander-cta-glass:hover {
+.dashboard-cinematic a.commander-cta-glass:hover,
+.tasks-command-deck.dashboard-cinematic a.commander-cta-glass:hover {
   border-color: rgba(var(--mode-rgb), 0.48) !important;
   box-shadow:
     0 0 0 1px rgba(0, 0, 0, 0.34),
@@ -3259,6 +3284,31 @@ header h1 { margin: 0; }
 [data-light-ui="true"] .dashboard-cinematic a.commander-cta-glass:hover {
   filter: none !important;
   border-color: rgba(var(--mode-rgb), 0.4) !important;
+}
+
+/* Beat Light UI flattening for the hero CTA inside the command deck (see glass-card note above). */
+[data-light-ui="true"] .tasks-command-deck.dashboard-cinematic a.commander-cta-glass {
+  backdrop-filter: blur(20px) saturate(1.12) !important;
+  -webkit-backdrop-filter: blur(20px) saturate(1.12) !important;
+  background: rgba(4, 14, 26, 0.42) !important;
+  border: 1px solid rgba(var(--mode-rgb), 0.34) !important;
+  box-shadow:
+    0 0 0 1px rgba(0, 0, 0, 0.32),
+    0 0 22px rgba(var(--mode-rgb), 0.16),
+    0 10px 32px rgba(0, 0, 0, 0.5),
+    inset 0 1px 0 rgba(255, 255, 255, 0.12),
+    inset 0 -8px 22px rgba(0, 0, 0, 0.28) !important;
+}
+
+[data-light-ui="true"] .tasks-command-deck.dashboard-cinematic a.commander-cta-glass:hover {
+  border-color: rgba(var(--mode-rgb), 0.48) !important;
+  box-shadow:
+    0 0 0 1px rgba(0, 0, 0, 0.34),
+    0 0 28px rgba(var(--mode-rgb), 0.26),
+    0 14px 38px rgba(0, 0, 0, 0.55),
+    inset 0 1px 0 rgba(255, 255, 255, 0.15),
+    inset 0 -8px 22px rgba(0, 0, 0, 0.3) !important;
+  filter: brightness(1.06) !important;
 }
 
 [data-mode="war"] .dashboard-cinematic .primary-btn,

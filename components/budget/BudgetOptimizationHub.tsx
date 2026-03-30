@@ -78,7 +78,7 @@ function OptTile({
   return (
     <button type="button" onClick={onClick} className={tileClass}>
       {badge != null && badge > 0 ? (
-        <span className="absolute right-1.5 top-1.5 min-w-[1.25rem] rounded-full bg-amber-500/35 px-1.5 py-0.5 text-[10px] font-bold text-amber-100">
+        <span className="absolute right-1.5 top-1.5 min-w-[1.25rem] rounded-full border border-[rgba(var(--mode-rgb),0.35)] bg-[rgba(var(--mode-rgb-deep),0.45)] px-1.5 py-0.5 text-[10px] font-bold text-[var(--semantic-accent)]">
           {badge > 99 ? "99+" : badge}
         </span>
       ) : null}

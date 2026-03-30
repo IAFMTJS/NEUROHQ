@@ -10,6 +10,46 @@ import {
 const STORAGE_KEY = "neurohq-daily-snapshot-v1";
 
 /**
+ * When re-fetching or stepping through bootstrap, prefer non-null slices from
+ * either side so a failed request never wipes data that was already loaded for today.
+ */
+export function mergeSnapshotKeepBest(
+  today: string,
+  older: DailySnapshot | null,
+  newer: DailySnapshot
+): DailySnapshot {
+  if (!older || older.date !== today) {
+    return { ...newer, version: LATEST_SNAPSHOT_VERSION, date: today };
+  }
+  const pages = [
+    ...(older.ui?.pagesPrefetched ?? []),
+    ...(newer.ui?.pagesPrefetched ?? []),
+  ];
+  return {
+    ...newer,
+    version: LATEST_SNAPSHOT_VERSION,
+    date: today,
+    dashboard: newer.dashboard ?? older.dashboard,
+    missions: newer.missions ?? older.missions,
+    xp: newer.xp ?? older.xp,
+    strategy: newer.strategy ?? older.strategy,
+    learning: newer.learning ?? older.learning,
+    budget: newer.budget ?? older.budget,
+    analytics: newer.analytics ?? older.analytics,
+    settings: newer.settings ?? older.settings ?? null,
+    dcicGameState: newer.dcicGameState ?? older.dcicGameState,
+    ui: {
+      ...older.ui,
+      ...newer.ui,
+      pagesPrefetched: [...new Set(pages)],
+      assetsPrefetched: Boolean(newer.ui?.assetsPrefetched || older.ui?.assetsPrefetched),
+      offlineMode: newer.ui?.offlineMode ?? older.ui?.offlineMode,
+      savedAt: newer.ui?.savedAt ?? older.ui?.savedAt,
+    },
+  };
+}
+
+/**
  * Best-effort load of the persisted DailySnapshot.
  * Uses localStorage for now; can be migrated to IndexedDB while keeping the API stable.
  * We never clear the snapshot on navigation; it is only replaced when we have a new

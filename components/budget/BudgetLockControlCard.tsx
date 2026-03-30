@@ -59,7 +59,7 @@ export function BudgetLockControlCard({
         .
       </p>
       {lockActive && lockUntilAt && (
-        <p className="text-xs text-amber-100/90">
+        <p className="text-xs text-[var(--semantic-accent)]">
           <BudgetLockCountdown unlockAtIso={lockUntilAt} />
         </p>
       )}
