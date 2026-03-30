@@ -15,15 +15,12 @@ import { getMode } from "@/app/actions/mode";
 import {
   getDecisionBlocks,
   getEmotionalStateCorrelations,
-  getMetaInsights30,
   getRecoveryCampaignNeeded,
   getResistanceIndex,
 } from "@/app/actions/missions-performance";
-import { getThirtyDayMirror } from "@/app/actions/thirty-day-mirror";
 import { getSmartSuggestion } from "@/app/actions/dcic/smart-suggestion";
 import { getEnergyCapToday } from "@/app/actions/dcic/energy-cap";
 import { getEnergyBudget } from "@/app/actions/energy";
-import { getAnalyticsEventsSummaryLast7 } from "@/app/actions/analytics-events";
 import { todayDateString } from "@/lib/utils/timezone";
 import { getXPIdentity } from "@/app/actions/xp";
 import { getIdentityEngine } from "@/app/actions/identity-engine";
@@ -70,49 +67,6 @@ async function RecoveryCampaignBannerAsync() {
 
 async function EmotionalStateCorrelationBannerAsync() {
   return getEmotionalStateCorrelations();
-}
-
-async function MetaInsights30BannerAsync() {
-  const data = await getMetaInsights30();
-  const MetaInsights30Banner = (await import("@/components/missions/MetaInsights30Banner")).MetaInsights30Banner;
-  return (
-    <MetaInsights30Banner
-      biggestSabotagePattern={data.biggestSabotagePattern}
-      mostEffectiveType={data.mostEffectiveType}
-      comfortzoneScore={data.comfortzoneScore}
-      growthPerDomain={data.growthPerDomain}
-    />
-  );
-}
-
-async function ThirtyDayMirrorBannerAsync() {
-  const mirror = await getThirtyDayMirror();
-  const ThirtyDayMirrorBanner = (await import("@/components/missions/ThirtyDayMirrorBanner")).ThirtyDayMirrorBanner;
-  return <ThirtyDayMirrorBanner mirror={mirror} />;
-}
-
-async function WeeklyBehaviorSummaryCardAsync() {
-  const rows = await getAnalyticsEventsSummaryLast7();
-  const getCount = (eventName: string) => rows.find((r) => r.event_name === eventName)?.count ?? 0;
-  const started = getCount("mission_started");
-  const completed = getCount("mission_completed");
-  const skipped = getCount("mission_skipped");
-  const aborted = getCount("mission_aborted");
-  const deleted = getCount("mission_deleted");
-  const completionRate = started > 0 ? Math.round((completed / started) * 100) : 0;
-  return (
-    <section className="rounded-xl border border-[var(--card-border)] bg-[var(--bg-surface)]/50 p-4 text-sm" aria-label="Weekly behavior summary">
-      <h3 className="text-xs font-semibold uppercase tracking-wider text-[var(--text-muted)]">Weekly behavior summary</h3>
-      <ul className="mt-2 space-y-1 text-[var(--text-primary)]">
-        <li><span className="text-[var(--text-muted)]">Started: </span>{started}</li>
-        <li><span className="text-[var(--text-muted)]">Completed: </span>{completed}</li>
-        <li><span className="text-[var(--text-muted)]">Completion rate: </span>{completionRate}%</li>
-        <li><span className="text-[var(--text-muted)]">Skipped: </span>{skipped}</li>
-        <li><span className="text-[var(--text-muted)]">Aborted: </span>{aborted}</li>
-        <li><span className="text-[var(--text-muted)]">Deleted: </span>{deleted}</li>
-      </ul>
-    </section>
-  );
 }
 
 type Props = {
@@ -401,36 +355,7 @@ async function MissionsSectionAsync({
     </div>
   );
 
-  const metaBlock = (
-    <details
-      className={
-        commandDeck
-          ? "tasks-war-hide mt-0 rounded-xl border border-[rgba(var(--mode-rgb),0.12)] bg-[rgba(6,18,30,0.35)] p-3"
-          : "tasks-war-hide mt-4 rounded-xl border border-[var(--card-border)] bg-[var(--bg-surface)]/35 p-3"
-      }
-    >
-      <summary className="cursor-pointer text-xs font-semibold uppercase tracking-wider text-[var(--text-muted)]">
-        Meta (30d), Data-spiegel (30d), Weekly behavior summary
-      </summary>
-      <div className="mt-3 space-y-3">
-        <Suspense fallback={null}>
-          <MetaInsights30BannerAsync />
-        </Suspense>
-        <Suspense fallback={null}>
-          <ThirtyDayMirrorBannerAsync />
-        </Suspense>
-        <Suspense fallback={null}>
-          <WeeklyBehaviorSummaryCardAsync />
-        </Suspense>
-      </div>
-    </details>
-  );
-
-  const backlogBlock = commandDeck ? (
-    <div className="tasks-war-hide card-simple !rounded-xl border border-[rgba(var(--mode-rgb),0.1)] p-4">
-      <BacklogAndToekomstTriggers backlog={backlog} futureTasks={futureTasks} todayDate={dateStr} />
-    </div>
-  ) : (
+  const backlogBlock = (
     <div className="tasks-war-hide">
       <BacklogAndToekomstTriggers backlog={backlog} futureTasks={futureTasks} todayDate={dateStr} />
     </div>
@@ -442,16 +367,9 @@ async function MissionsSectionAsync({
       {smartSuggestionDeck}
       {tasksTodayBlock}
       {growthSnap ? (
-        <div className="card-simple !rounded-xl border border-[rgba(var(--mode-rgb),0.1)] p-3">
-          <GrowthMissionsRibbon
-            snap={growthSnap}
-            fromGrowthPage={growthFromGrowthPage}
-            className="mb-0"
-          />
-        </div>
+        <GrowthMissionsRibbon snap={growthSnap} fromGrowthPage={growthFromGrowthPage} />
       ) : null}
       {diagnosticsBlock}
-      {metaBlock}
       {backlogBlock}
     </>
   ) : (
@@ -460,7 +378,6 @@ async function MissionsSectionAsync({
       {diagnosticsBlock}
       {smartSuggestionBlock}
       {tasksTodayBlock}
-      {metaBlock}
       {backlogBlock}
     </>
   );

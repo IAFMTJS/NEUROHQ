@@ -35,30 +35,35 @@ export function RoutineTaskList({
   const [feedback, setFeedback] = useState<string | null>(null);
   const [addRoutineOpen, setAddRoutineOpen] = useState(false);
   const [editTask, setEditTask] = useState<Task | null>(null);
+  /** Routine tab: rows start collapsed; user expands for full planning UI. */
+  const [expandedByTaskId, setExpandedByTaskId] = useState<Record<string, boolean>>({});
+
+  const toggleExpanded = (id: string) => {
+    setExpandedByTaskId((prev) => ({ ...prev, [id]: !prev[id] }));
+  };
 
   if (routineTasks.length === 0) {
+    const emptyHub = commandDeckVisuals
+      ? "card-simple flex flex-wrap items-center justify-between gap-2 !rounded-xl px-2.5 py-2 sm:px-3"
+      : "card-simple flex flex-wrap items-center justify-between gap-2 p-3";
     return (
       <div className={stackGap}>
-        <div className={commandDeckVisuals ? "card-simple !rounded-xl p-4" : "card-simple p-4"}>
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-wide text-[var(--text-muted)]">Routine hub</p>
-              <p className="mt-1 text-sm text-[var(--text-secondary)]">
-                Een centrale plek voor plannen, bijsturen en consistentie.
-              </p>
-            </div>
-            <button
-              type="button"
-              className="rounded-lg border border-[var(--card-border)] bg-[var(--bg-surface)] px-3 py-2 text-sm font-medium text-[var(--text-primary)] hover:bg-[var(--bg-hover)]"
-              onClick={() => setAddRoutineOpen(true)}
-            >
-              + Routine toevoegen
-            </button>
+        <div className={emptyHub}>
+          <div className="min-w-0 flex-1">
+            <p className="text-[9px] font-bold uppercase tracking-[0.14em] text-[var(--text-muted)]">Routine hub</p>
+            <p className="mt-0.5 text-[10px] text-[var(--text-muted)]">Nog geen routines — voeg wekelijks/maandelijks taken toe</p>
           </div>
+          <button
+            type="button"
+            className="shrink-0 rounded-lg border border-[var(--card-border)] bg-[var(--bg-surface)] px-2.5 py-1.5 text-[11px] font-medium text-[var(--text-primary)] hover:bg-[var(--bg-hover)]"
+            onClick={() => setAddRoutineOpen(true)}
+          >
+            + Toevoegen
+          </button>
         </div>
-        <div className={commandDeckVisuals ? "card-simple !rounded-xl p-4" : "card-simple p-4"}>
-          <p className="text-sm text-[var(--text-muted)]">
-            Geen routine-taken. Voeg een taak toe met herhaling &quot;wekelijks&quot; of &quot;maandelijks&quot; om die hier te zien. De app stelt dan de beste dagen voor.
+        <div className={commandDeckVisuals ? "card-simple !rounded-xl px-2.5 py-2 sm:px-3" : "card-simple p-3"}>
+          <p className="text-[11px] leading-relaxed text-[var(--text-muted)]">
+            Herhaling &quot;wekelijks&quot; of &quot;maandelijks&quot; — de app stelt de beste dagen voor.
           </p>
         </div>
         <QuickAddModal
@@ -75,24 +80,26 @@ export function RoutineTaskList({
     );
   }
 
+  const hubRowClass = commandDeckVisuals
+    ? "card-simple flex flex-wrap items-center justify-between gap-2 !rounded-xl px-2.5 py-2 sm:px-3"
+    : "card-simple flex flex-wrap items-center justify-between gap-2 p-3";
+
   return (
     <div className={stackGap}>
-      <div className={commandDeckVisuals ? "card-simple !rounded-xl p-4" : "card-simple p-4"}>
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-wide text-[var(--text-muted)]">Routine hub</p>
-            <p className="mt-1 text-xs text-[var(--text-muted)]">
-              Taken die je ritme dragen. Gebruik high-priority momenten, plan vooruit of sla bewust 1 cyclus over.
-            </p>
-          </div>
-          <button
-            type="button"
-            className="rounded-lg border border-[var(--card-border)] bg-[var(--bg-surface)] px-3 py-2 text-sm font-medium text-[var(--text-primary)] hover:bg-[var(--bg-hover)]"
-            onClick={() => setAddRoutineOpen(true)}
-          >
-            + Routine toevoegen
-          </button>
+      <div className={hubRowClass}>
+        <div className="min-w-0 flex-1">
+          <p className="text-[9px] font-bold uppercase tracking-[0.14em] text-[var(--text-muted)]">Routine hub</p>
+          <p className="mt-0.5 text-[10px] text-[var(--text-muted)]">
+            {routineTasks.length} routine-ta{routineTasks.length !== 1 ? "ken" : "k"} · uitklappen voor plannen
+          </p>
         </div>
+        <button
+          type="button"
+          className="shrink-0 rounded-lg border border-[var(--card-border)] bg-[var(--bg-surface)] px-2.5 py-1.5 text-[11px] font-medium text-[var(--text-primary)] hover:bg-[var(--bg-hover)]"
+          onClick={() => setAddRoutineOpen(true)}
+        >
+          + Toevoegen
+        </button>
       </div>
       <ul className={commandDeckVisuals ? "space-y-2" : "space-y-3"}>
         {routineTasks.map((task) => {
@@ -114,35 +121,64 @@ export function RoutineTaskList({
             priority === "high" ? "text-emerald-300" : priority === "medium" ? "text-[var(--semantic-accent)]" : "text-[var(--text-muted)]";
           const customDateValue = customDateByTask[task.id] ?? "";
           const dueIsToday = dueDate === dateStr;
+          const expanded = expandedByTaskId[task.id] === true;
+          const recurrenceLabel =
+            recurrence === "daily" ? "Dagelijks" : recurrence === "weekly" ? (isBiWeekly ? "2-wekelijks" : "Wekelijks") : "Maandelijks";
           const rowShell = commandDeckVisuals
             ? [
-                "rounded-xl border px-3 py-2.5 transition-colors",
+                "rounded-xl border px-2.5 py-2 transition-colors sm:px-3",
                 dueIsToday
                   ? "border-[rgba(var(--semantic-accent),0.35)] bg-[rgba(var(--semantic-accent),0.08)]"
                   : "border-[rgba(var(--mode-rgb),0.1)] bg-[rgba(6,18,30,0.35)]",
               ].join(" ")
-            : "card-simple p-4";
+            : "card-simple p-3";
           return (
             <li key={task.id} className={rowShell}>
               <div className="flex flex-col gap-2">
-                {commandDeckVisuals ? (
-                  <div className="flex flex-wrap items-start justify-between gap-2">
-                    <div className="min-w-0 flex-1">
-                      <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-[var(--text-muted)]">Routine</p>
-                      <span className="mt-0.5 block text-sm font-medium text-[var(--text-primary)]">{task.title ?? "Taak"}</span>
+                <div className="flex flex-wrap items-center gap-2">
+                  {commandDeckVisuals ? (
+                    <div className="flex min-w-0 flex-1 flex-wrap items-center gap-2">
+                      <div className="min-w-0 flex-1">
+                        <p className="text-[9px] font-bold uppercase tracking-[0.12em] text-[var(--text-muted)]">Routine</p>
+                        <span className="mt-0.5 block truncate text-sm font-medium text-[var(--text-primary)]">{task.title ?? "Taak"}</span>
+                        {!expanded ? (
+                          <span className="mt-0.5 block text-[10px] text-[var(--text-muted)]">
+                            {recurrenceLabel}
+                            {recurrence === "monthly" && monthlyDay != null ? ` · dag ${monthlyDay}` : ""}
+                            {plans.length > 0 ? ` · eerstvolgende: ${nextBestLabel}` : ""}
+                          </span>
+                        ) : null}
+                      </div>
+                      <span
+                        className={[
+                          "shrink-0 rounded-md px-2 py-0.5 text-[9px] font-bold uppercase tracking-wide",
+                          dueIsToday ? "bg-[rgba(var(--semantic-accent),0.2)] text-[var(--semantic-accent)]" : "bg-black/25 text-[var(--text-muted)]",
+                        ].join(" ")}
+                      >
+                        {dueIsToday ? "Today" : "Scheduled"}
+                      </span>
                     </div>
-                    <span
-                      className={[
-                        "shrink-0 rounded-md px-2 py-0.5 text-[9px] font-bold uppercase tracking-wide",
-                        dueIsToday ? "bg-[rgba(var(--semantic-accent),0.2)] text-[var(--semantic-accent)]" : "bg-black/25 text-[var(--text-muted)]",
-                      ].join(" ")}
-                    >
-                      {dueIsToday ? "Today" : "Scheduled"}
-                    </span>
-                  </div>
-                ) : (
-                  <span className="font-medium text-[var(--text-primary)]">{task.title ?? "Taak"}</span>
-                )}
+                  ) : (
+                    <div className="min-w-0 flex-1">
+                      <span className="font-medium text-[var(--text-primary)]">{task.title ?? "Taak"}</span>
+                      {!expanded ? (
+                        <span className="mt-0.5 block text-[10px] text-[var(--text-muted)]">
+                          {recurrenceLabel} · {plans.length > 0 ? nextBestLabel : "—"}
+                        </span>
+                      ) : null}
+                    </div>
+                  )}
+                  <button
+                    type="button"
+                    aria-expanded={expanded}
+                    className="ml-auto shrink-0 rounded-lg border border-[rgba(var(--mode-rgb),0.2)] bg-[rgba(6,18,30,0.45)] px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wide text-[var(--accent-focus)] transition hover:border-[rgba(var(--mode-rgb),0.35)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--focus-ring)]"
+                    onClick={() => toggleExpanded(task.id)}
+                  >
+                    {expanded ? "Inklappen" : "Uitklappen"}
+                  </button>
+                </div>
+                {!expanded ? null : (
+                  <>
                 <div className="flex flex-wrap gap-1.5 text-[10px]">
                   {dueDate && <span className="rounded bg-white/10 px-2 py-0.5 text-[var(--text-secondary)]">Due {dueDate}</span>}
                   {task.energy_required != null && <span className="rounded bg-[var(--accent-energy)]/20 px-2 py-0.5 text-[var(--accent-energy)]">Energy {task.energy_required}</span>}
@@ -256,6 +292,8 @@ export function RoutineTaskList({
                     />
                   ))}
                 </div>
+                  </>
+                )}
               </div>
             </li>
           );

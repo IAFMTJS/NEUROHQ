@@ -16,51 +16,70 @@ export function todayDateString(): string {
   return new Date().toLocaleDateString("en-CA", { timeZone: APP_TIMEZONE });
 }
 
+function utcCalendarParts(at: Date): { date: string; hour: number; minute: number } {
+  return {
+    date: at.toISOString().slice(0, 10),
+    hour: at.getUTCHours(),
+    minute: at.getUTCMinutes(),
+  };
+}
+
 /**
  * Get current date (YYYY-MM-DD) and hour (0-23) in a given IANA timezone.
+ * Invalid `tz` falls back to UTC (same as null timezone in cron).
  */
 export function getLocalDateHour(tz: string): { date: string; hour: number } {
   const now = new Date();
-  const formatter = new Intl.DateTimeFormat("en-CA", {
-    timeZone: tz,
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-    hour: "2-digit",
-    hour12: false,
-  });
-  const parts = formatter.formatToParts(now);
-  const year = parts.find((p) => p.type === "year")?.value ?? "2025";
-  const month = parts.find((p) => p.type === "month")?.value ?? "01";
-  const day = parts.find((p) => p.type === "day")?.value ?? "01";
-  const hour = parseInt(parts.find((p) => p.type === "hour")?.value ?? "0", 10);
-  return { date: `${year}-${month}-${day}`, hour };
+  try {
+    const formatter = new Intl.DateTimeFormat("en-CA", {
+      timeZone: tz,
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+      hour: "2-digit",
+      hour12: false,
+    });
+    const parts = formatter.formatToParts(now);
+    const year = parts.find((p) => p.type === "year")?.value ?? "2025";
+    const month = parts.find((p) => p.type === "month")?.value ?? "01";
+    const day = parts.find((p) => p.type === "day")?.value ?? "01";
+    const hour = parseInt(parts.find((p) => p.type === "hour")?.value ?? "0", 10);
+    return { date: `${year}-${month}-${day}`, hour };
+  } catch {
+    const u = utcCalendarParts(now);
+    return { date: u.date, hour: u.hour };
+  }
 }
 
 /**
  * Get date (YYYY-MM-DD), hour (0-23) and minute (0-59) for a given instant in a timezone.
  * Useful when we need to anchor "start of user's local day" in UTC.
+ * Invalid `tz` falls back to UTC calendar clock for `at` (avoids hourly cron 500s).
  */
 export function getLocalDateTimeParts(
   tz: string,
   at: Date
 ): { date: string; hour: number; minute: number } {
-  const formatter = new Intl.DateTimeFormat("en-CA", {
-    timeZone: tz,
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-    hour: "2-digit",
-    minute: "2-digit",
-    hour12: false,
-  });
-  const parts = formatter.formatToParts(at);
-  const year = parts.find((p) => p.type === "year")?.value ?? "2025";
-  const month = parts.find((p) => p.type === "month")?.value ?? "01";
-  const day = parts.find((p) => p.type === "day")?.value ?? "01";
-  const hour = parseInt(parts.find((p) => p.type === "hour")?.value ?? "0", 10);
-  const minute = parseInt(parts.find((p) => p.type === "minute")?.value ?? "0", 10);
-  return { date: `${year}-${month}-${day}`, hour, minute };
+  try {
+    const formatter = new Intl.DateTimeFormat("en-CA", {
+      timeZone: tz,
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: false,
+    });
+    const parts = formatter.formatToParts(at);
+    const year = parts.find((p) => p.type === "year")?.value ?? "2025";
+    const month = parts.find((p) => p.type === "month")?.value ?? "01";
+    const day = parts.find((p) => p.type === "day")?.value ?? "01";
+    const hour = parseInt(parts.find((p) => p.type === "hour")?.value ?? "0", 10);
+    const minute = parseInt(parts.find((p) => p.type === "minute")?.value ?? "0", 10);
+    return { date: `${year}-${month}-${day}`, hour, minute };
+  } catch {
+    return utcCalendarParts(at);
+  }
 }
 
 /**

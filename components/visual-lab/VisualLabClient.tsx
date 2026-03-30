@@ -20,6 +20,7 @@ import {
   VisualLabNotificationsPageConcept,
   VisualLabProfilePageConcept,
 } from "@/components/visual-lab/VisualLabUserPageConcepts";
+import { VisualLabPedestalHalfRingAlternatives } from "@/components/visual-lab/VisualLabPedestalHalfRingAlternatives";
 import { VisualLabStrategyPageConcept } from "@/components/visual-lab/VisualLabStrategyPageConcepts";
 import {
   VISUAL_LAB_UI_BACKDROP_ORDER,

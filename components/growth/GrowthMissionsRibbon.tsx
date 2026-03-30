@@ -6,68 +6,75 @@ type Props = {
   snap: GrowthEngineSnapshot | null;
   /** Deep link from Growth command center (`?growth=1`). */
   fromGrowthPage?: boolean;
-  /** e.g. missions command deck: no outer margin, sits inside a card-simple wrapper. */
   className?: string;
 };
 
+/** Compact missions-deck strip — protocol context without a large hero card. */
 export function GrowthMissionsRibbon({ snap, fromGrowthPage = false, className = "" }: Props) {
   if (!snap) return null;
 
   const { activeProtocol, engineTier, tierAligned, brainLogged, hasProtocols } = snap;
 
+  const shell = [
+    "card-simple flex flex-wrap items-center justify-between gap-2 !rounded-xl border border-[rgba(var(--mode-rgb),0.12)] px-2.5 py-2 sm:gap-3 sm:px-3",
+    className,
+  ]
+    .filter(Boolean)
+    .join(" ");
+
   if (!hasProtocols) {
     return (
-      <div className={`mb-4 rounded-xl border border-dashed border-[var(--card-border)] bg-[var(--bg-surface)]/25 px-4 py-3 text-sm text-[var(--text-muted)] ${className}`}>
-        Geen protocollen in de bibliotheek —{" "}
-        <Link href="/learning#growth-protocols" className="font-semibold text-[var(--semantic-accent)] hover:underline">
-          Growth
-        </Link>{" "}
-        importeert trajecten.
+      <div className={shell}>
+        <p className="min-w-0 flex-1 text-[10px] leading-snug text-[var(--text-muted)]">
+          Geen protocollen —{" "}
+          <Link href="/learning#growth-protocols" className="font-semibold text-[var(--semantic-accent)] hover:underline">
+            Growth
+          </Link>{" "}
+          importeert trajecten.
+        </p>
       </div>
     );
   }
 
   return (
-    <div className={`mb-4 overflow-hidden rounded-2xl border border-[var(--semantic-ring)]/35 bg-gradient-to-r from-[var(--semantic-accent)]/10 via-[var(--bg-surface)]/30 to-transparent ${className}`}>
-      <div className="flex flex-col gap-3 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
-        <div className="min-w-0">
-          {fromGrowthPage && (
-            <p className="mb-1 text-[10px] font-medium text-[var(--semantic-accent)]">Vanaf Growth — protocoltaken staan hier met je andere missies.</p>
+    <div className={shell}>
+      <div className="min-w-0 flex-1">
+        <p className="text-[9px] font-bold uppercase tracking-[0.14em] text-[var(--semantic-accent)]">Protocol × Missions</p>
+        {fromGrowthPage ? (
+          <p className="mt-0.5 text-[9px] text-[var(--text-muted)]">Vanaf Growth — protocoltaken staan bij je missies.</p>
+        ) : null}
+        <p className="mt-0.5 line-clamp-2 text-[10px] leading-snug text-[var(--text-secondary)]">
+          {activeProtocol ? (
+            <>
+              <span className="font-semibold text-[var(--text-primary)]">{activeProtocol.title}</span>
+              <span className="text-[var(--text-muted)]">
+                {" "}
+                · w{activeProtocol.weekIndex} · {tierLabelNl(activeProtocol.protocolTier)}
+              </span>
+            </>
+          ) : (
+            <span>Geen actief protocol — kies focus op Growth.</span>
           )}
-          <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[var(--semantic-accent)]">
-            Protocol × Missions
-          </p>
-          <p className="mt-1 text-sm text-[var(--text-primary)]">
-            {activeProtocol ? (
-              <>
-                <span className="font-semibold">{activeProtocol.title}</span>
-                <span className="text-[var(--text-muted)]">
-                  {" "}
-                  · week {activeProtocol.weekIndex} · tier {tierLabelNl(activeProtocol.protocolTier)}
-                </span>
-              </>
-            ) : (
-              <span className="text-[var(--text-secondary)]">Kies een focus op Growth — taken krijgen tags growth / protocol.</span>
-            )}
-          </p>
-        </div>
-        <div className="flex flex-wrap items-center gap-2">
-          <span className="rounded-full border border-[var(--card-border)] bg-[var(--bg-primary)]/50 px-2.5 py-1 text-[11px] text-[var(--text-secondary)]">
-            Engine {tierLabelNl(engineTier)}
-            {!brainLogged && <span className="ml-1 text-[var(--text-muted)]">· log brain op dashboard</span>}
+        </p>
+      </div>
+      <div className="flex shrink-0 flex-wrap items-center justify-end gap-1.5">
+        <span className="rounded-md border border-[rgba(var(--mode-rgb),0.14)] bg-[rgba(6,18,30,0.35)] px-1.5 py-0.5 text-[9px] font-semibold tabular-nums text-[var(--text-secondary)]">
+          {tierLabelNl(engineTier)}
+        </span>
+        {!brainLogged ? (
+          <span className="hidden text-[9px] text-[var(--text-muted)] sm:inline">Log brain</span>
+        ) : null}
+        {!tierAligned && activeProtocol ? (
+          <span className="rounded-md border border-amber-400/35 bg-amber-500/10 px-1.5 py-0.5 text-[9px] font-medium text-amber-200/95">
+            Sync tier
           </span>
-          {!tierAligned && activeProtocol && (
-            <span className="rounded-full border border-amber-400/40 bg-amber-500/10 px-2.5 py-1 text-[11px] font-medium text-amber-100">
-              Sync tier op Growth
-            </span>
-          )}
-          <Link
-            href="/learning#growth-command"
-            className="rounded-lg border border-[var(--semantic-accent)]/40 bg-[var(--semantic-accent)]/15 px-3 py-1.5 text-xs font-semibold text-[var(--semantic-accent)] hover:bg-[var(--semantic-accent)]/25"
-          >
-            Command center
-          </Link>
-        </div>
+        ) : null}
+        <Link
+          href="/learning#growth-command"
+          className="rounded-lg border border-[rgba(var(--semantic-accent),0.35)] bg-[var(--semantic-accent)]/12 px-2 py-1 text-[9px] font-semibold uppercase tracking-wide text-[var(--semantic-accent)] transition hover:bg-[var(--semantic-accent)]/20"
+        >
+          Growth
+        </Link>
       </div>
     </div>
   );
