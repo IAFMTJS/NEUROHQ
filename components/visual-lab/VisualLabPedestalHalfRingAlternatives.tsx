@@ -523,7 +523,6 @@ function VariantBeveledTiles({ stats }: RingProps) {
 function VariantHullMantle({ stats }: RingProps) {
   const pcts = pctsOf(stats);
   const paths = segmentPaths(CX, CY, R);
-  const pcts = [e, f, l];
   const fillHue = [
     "rgba(34, 211, 238, 0.2)",
     "rgba(167, 139, 250, 0.22)",
