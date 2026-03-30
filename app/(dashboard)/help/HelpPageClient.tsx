@@ -14,8 +14,7 @@ import {
 } from "@/content/help/sections";
 import { SimplifiedPageShell } from "@/components/layout/SimplifiedPageShell";
 import { SIMPLIFIED_VIEWPORT_WRAPPER } from "@/lib/simplified-page-layout";
-import { VisualLabCommandDeck } from "@/components/visual-lab/VisualLabCommandDeck";
-import { CornerNode } from "@/components/hud-test/CornerNode";
+import { DashboardCommandDeckFrame } from "@/components/layout/DashboardCommandDeckFrame";
 
 const LEGACY_HASH_REDIRECTS: Record<string, string> = {
   intro: "dashboard",
@@ -353,11 +352,9 @@ export function HelpPageClient({ simplifiedLayout = false }: { simplifiedLayout?
   ) : (
     <div className="container page help-page mx-auto max-w-5xl pb-24 dashboard-cinematic">
       <div className="hq-frosted-main-shell">
-        <VisualLabCommandDeck>
-          <CornerNode corner="top-left" />
-          <CornerNode corner="top-right" />
-          {helpMainContent}
-        </VisualLabCommandDeck>
+        <DashboardCommandDeckFrame deckTitle="Help" innerClassName="gap-4">
+          <div className="mt-0 space-y-6">{helpMainContent}</div>
+        </DashboardCommandDeckFrame>
       </div>
     </div>
   );

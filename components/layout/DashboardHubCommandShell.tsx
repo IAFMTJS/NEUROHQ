@@ -1,15 +1,14 @@
 "use client";
 
 import { useMemo, type CSSProperties, type ReactNode } from "react";
-import { CornerNode } from "@/components/hud-test/CornerNode";
-import { VisualLabCommandDeck } from "@/components/visual-lab/VisualLabCommandDeck";
+import { DashboardCommandDeckFrame } from "@/components/layout/DashboardCommandDeckFrame";
 import { useHQStore } from "@/lib/hq-store";
 
 type Props = {
   children: ReactNode;
-  /** Shown in the bridge chrome (e.g. Strategy, Growth). */
+  /** Shown as the command deck title (e.g. Strategy, Growth). */
   hubLabel: string;
-  /** When false, omit the top bridge title strip (hub chrome only). */
+  /** Kept for API compatibility; the deck always shows `hubLabel` in the header. */
   showBridgeLabel?: boolean;
   /** When true, defer heavy paint in inner body (matches previous light-ui bridge hint). */
   lightUi?: boolean;
@@ -20,13 +19,13 @@ type Props = {
 };
 
 /**
- * Hub bridge layout: outer rim + {@link VisualLabCommandDeck} (Missions parity).
+ * Hub layout: container rim + {@link DashboardCommandDeckFrame} (missions parity).
  * Scroll/ambient frost lives on `#main-content`; avoid nested `main` and duplicate `flatGlassPageRoot`.
  */
 export function DashboardHubCommandShell({
   children,
   hubLabel,
-  showBridgeLabel = true,
+  showBridgeLabel: _showBridgeLabel = true,
   lightUi = false,
   compactHorizontal = false,
   compactVertical = false,
@@ -62,19 +61,13 @@ export function DashboardHubCommandShell({
           className={`${compactVertical ? "space-y-2 pt-0" : "space-y-3 pt-2 md:pt-3"} ${compactHorizontal ? "px-0" : "px-1"}`}
         >
           <div className="hq-frosted-main-shell">
-            <VisualLabCommandDeck
-              className={`idle-breathing ${skipCinematic ? "light-ui-defer-paint" : ""}`}
-              contentClassName={compactVertical ? "gap-3 md:gap-4" : "gap-4"}
+            <DashboardCommandDeckFrame
+              deckTitle={hubLabel}
+              outerClassName={`idle-breathing ${skipCinematic ? "light-ui-defer-paint" : ""}`.trim()}
+              innerClassName={compactVertical ? "gap-3 md:gap-4" : "gap-4"}
             >
-              <CornerNode corner="top-left" />
-              <CornerNode corner="top-right" />
-              {showBridgeLabel ? (
-                <span className="dashboard-bridge-label shrink-0" aria-hidden>
-                  {hubLabel}
-                </span>
-              ) : null}
               <div className="flex flex-col gap-4 [-webkit-overflow-scrolling:touch]">{children}</div>
-            </VisualLabCommandDeck>
+            </DashboardCommandDeckFrame>
           </div>
         </div>
       </div>

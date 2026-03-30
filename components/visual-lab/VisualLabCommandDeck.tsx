@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { dashboardCommandDeckOuterClass } from "@/components/layout/DashboardCommandDeckFrame";
 
 type Props = {
   children: ReactNode;
@@ -9,12 +10,13 @@ type Props = {
   accentFlareClassName?: string;
 };
 
-/** Command deck shell — same markup as TasksTabsShell `commandDeck` (dual top flares, border 0.28). */
+/**
+ * Visual-lab / concept previews: same outer shell as production {@link DashboardCommandDeckFrame}
+ * but without the “Command” title row (concepts supply their own chrome).
+ */
 export function VisualLabCommandDeck({ children, className = "", contentClassName = "", accentFlareClassName }: Props) {
   return (
-    <div
-      className={`tasks-command-deck dashboard-cinematic relative overflow-hidden rounded-2xl border border-[rgba(var(--mode-rgb),0.32)] bg-gradient-to-br from-[rgba(6,22,38,0.97)] via-[var(--bg-elevated)]/88 to-[rgba(var(--mode-rgb-deep),0.18)] shadow-[0_0_48px_rgba(var(--mode-rgb),0.16),0_12px_40px_rgba(0,0,0,0.35),inset_0_1px_0_rgba(255,255,255,0.08)] ${className}`}
-    >
+    <div className={`${dashboardCommandDeckOuterClass} ${className}`.trim()}>
       <div
         className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_75%_55%_at_50%_0%,rgba(var(--mode-rgb),0.16),transparent_58%)]"
         aria-hidden

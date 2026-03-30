@@ -10,8 +10,7 @@ import { getAnalyticsFunnel } from "@/app/actions/analytics-funnel";
 import { getWeeklyLearningTarget } from "@/app/actions/learning";
 import { getTelemetryGovernanceSnapshot, getClosedLoopLearningSummary } from "@/app/actions/analytics-events";
 import { humanizeDecisionType } from "@/lib/unified-decision-labels";
-import { VisualLabCommandDeck } from "@/components/visual-lab/VisualLabCommandDeck";
-import { CornerNode } from "@/components/hud-test/CornerNode";
+import { DashboardCommandDeckFrame } from "@/components/layout/DashboardCommandDeckFrame";
 
 function formatMinutes(m: number): string {
   if (m < 60) return `${m} min`;
@@ -25,9 +24,9 @@ function AnalyticsShell() {
     <>
       <div className="flex items-center justify-between gap-3">
         <HQPageHeader
+          compact
           title="Analytics"
           subtitle="Time used, consistency, and mood over time."
-          backHref="/dashboard"
         />
       </div>
       <section className="mascot-hero mascot-hero-top mascot-hero-sharp" data-mascot-page="analytics" aria-hidden>
@@ -377,16 +376,14 @@ export default function AnalyticsPage() {
   return (
     <div className="container page page-wide dashboard-cinematic pb-10">
       <div className="hq-frosted-main-shell">
-        <VisualLabCommandDeck>
-          <CornerNode corner="top-left" />
-          <CornerNode corner="top-right" />
+        <DashboardCommandDeckFrame deckTitle="Analytics" innerClassName="gap-4">
           <div className="space-y-6">
             <AnalyticsShell />
             <Suspense fallback={null}>
               <AnalyticsContent />
             </Suspense>
           </div>
-        </VisualLabCommandDeck>
+        </DashboardCommandDeckFrame>
       </div>
     </div>
   );

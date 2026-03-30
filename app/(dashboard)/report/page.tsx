@@ -6,8 +6,7 @@ import { ReportSnapshotFallback } from "@/components/report/ReportSnapshotFallba
 import { ReportInsightsContent } from "@/components/report/ReportInsightsContent";
 import { SimplifiedPageShell } from "@/components/layout/SimplifiedPageShell";
 import { SIMPLIFIED_VIEWPORT_WRAPPER } from "@/lib/simplified-page-layout";
-import { VisualLabCommandDeck } from "@/components/visual-lab/VisualLabCommandDeck";
-import { CornerNode } from "@/components/hud-test/CornerNode";
+import { DashboardCommandDeckFrame } from "@/components/layout/DashboardCommandDeckFrame";
 
 type Props = { searchParams: Promise<{ weekStart?: string; tab?: string }> };
 
@@ -17,7 +16,7 @@ function ReportShell() {
   return (
     <>
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <HQPageHeader title="Insights" subtitle="Verklaren, voorspellen, sturen." backHref="/dashboard" />
+        <HQPageHeader compact title="Insights" subtitle="Verklaren, voorspellen, sturen." />
         <div className="h-9 w-24 animate-pulse rounded-lg bg-white/10" aria-hidden />
       </div>
       <p className="text-sm text-[var(--text-muted)]">
@@ -58,16 +57,14 @@ export default async function ReportPage({ searchParams }: Props) {
   return (
     <div className="container page page-wide dashboard-cinematic pb-10">
       <div className="hq-frosted-main-shell">
-        <VisualLabCommandDeck>
-          <CornerNode corner="top-left" />
-          <CornerNode corner="top-right" />
+        <DashboardCommandDeckFrame deckTitle="Insights" innerClassName="gap-4">
           <div className="space-y-6">
             <ReportShell />
             <Suspense fallback={<ReportSnapshotFallback />}>
               <ReportInsightsContent searchParams={searchParams} />
             </Suspense>
           </div>
-        </VisualLabCommandDeck>
+        </DashboardCommandDeckFrame>
       </div>
     </div>
   );

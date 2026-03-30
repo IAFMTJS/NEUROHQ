@@ -4,8 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { HQPageHeader } from "@/components/hq";
 import { getAnalyticsFunnel } from "@/app/actions/analytics-funnel";
 import { getMakerWeeklyStats } from "@/app/actions/analytics-maker";
-import { VisualLabCommandDeck } from "@/components/visual-lab/VisualLabCommandDeck";
-import { CornerNode } from "@/components/hud-test/CornerNode";
+import { DashboardCommandDeckFrame } from "@/components/layout/DashboardCommandDeckFrame";
 
 export default async function MakerAnalyticsPage() {
   const supabase = await createClient();
@@ -36,14 +35,12 @@ export default async function MakerAnalyticsPage() {
   return (
     <div className="container page page-wide dashboard-cinematic pb-10">
       <div className="hq-frosted-main-shell">
-        <VisualLabCommandDeck>
-          <CornerNode corner="top-left" />
-          <CornerNode corner="top-right" />
+        <DashboardCommandDeckFrame deckTitle="Maker dashboard" innerClassName="gap-4">
           <div className="space-y-6">
       <HQPageHeader
+        compact
         title="Maker dashboard"
         subtitle="High-level funnel and engine health (admin only)."
-        backHref="/analytics"
       />
 
       <section className="glass-card p-4">
@@ -262,7 +259,7 @@ export default async function MakerAnalyticsPage() {
         Integrity missions are based on analytics_events going forward.
       </p>
           </div>
-        </VisualLabCommandDeck>
+        </DashboardCommandDeckFrame>
       </div>
     </div>
   );

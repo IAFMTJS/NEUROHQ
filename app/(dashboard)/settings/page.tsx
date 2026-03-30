@@ -16,8 +16,7 @@ import { SettingsSectionCard } from "@/components/settings/SettingsSectionCard";
 import { profileEngineHref } from "@/lib/profile-routes";
 import { SimplifiedPageShell } from "@/components/layout/SimplifiedPageShell";
 import { SIMPLIFIED_VIEWPORT_WRAPPER } from "@/lib/simplified-page-layout";
-import { VisualLabCommandDeck } from "@/components/visual-lab/VisualLabCommandDeck";
-import { CornerNode } from "@/components/hud-test/CornerNode";
+import { DashboardCommandDeckFrame } from "@/components/layout/DashboardCommandDeckFrame";
 
 const SettingsExport = nextDynamic(() => import("@/components/SettingsExport").then((m) => ({ default: m.SettingsExport })), { loading: () => null });
 const SettingsPush = nextDynamic(() => import("@/components/SettingsPush").then((m) => ({ default: m.SettingsPush })), {
@@ -54,9 +53,9 @@ function SettingsShell() {
   return (
     <>
       <HQPageHeader
+        compact
         title="Instellingen"
         subtitle="Site en apparaat: account, weergave, netwerk, budget. Engine en persona stuur je onder Profiel → Engine."
-        backHref="/dashboard"
       />
       <section className="mascot-hero mascot-hero-top mascot-hero-sharp" data-mascot-page="settings" aria-hidden>
         <div className="mascot-hero-inner mx-auto">
@@ -226,16 +225,14 @@ export default async function SettingsPage() {
   return (
     <div className="container page settings-page dashboard-cinematic pb-10">
       <div className="hq-frosted-main-shell">
-        <VisualLabCommandDeck>
-          <CornerNode corner="top-left" />
-          <CornerNode corner="top-right" />
+        <DashboardCommandDeckFrame deckTitle="Instellingen" innerClassName="gap-4">
           <div className="space-y-6">
             <SettingsShell />
             <Suspense fallback={<SettingsSnapshotFallback />}>
               <SettingsContent />
             </Suspense>
           </div>
-        </VisualLabCommandDeck>
+        </DashboardCommandDeckFrame>
       </div>
     </div>
   );

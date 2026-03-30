@@ -1,8 +1,5 @@
-"use client";
-
 import Link from "next/link";
-import { SciFiPanel } from "@/components/hud-test/SciFiPanel";
-import { CornerNode } from "@/components/hud-test/CornerNode";
+import { DashboardCommandDeckFrame } from "@/components/layout/DashboardCommandDeckFrame";
 import { profileEngineHref } from "@/lib/profile-routes";
 
 export type SimplifiedFooterLink = { href: string; label: string };
@@ -24,6 +21,7 @@ type Props = {
   hideTitleBar?: boolean;
 };
 
+/** Simplified hub pages: same command-deck chrome as `/tasks` (missions). */
 export function SimplifiedPageShell({
   title,
   children,
@@ -35,58 +33,38 @@ export function SimplifiedPageShell({
   const links = footerLinks ?? DEFAULT_FOOTER;
   return (
     <div className="flex w-full flex-col">
-      <SciFiPanel
-        variant="flat-glass"
-        className="hq-card-enter relative flex w-full flex-col overflow-hidden dashboard-active-mission"
-        bodyClassName="relative z-10 flex flex-col gap-0 p-0"
-      >
-        <CornerNode corner="top-left" />
-        <CornerNode corner="top-right" />
-        {hideTitleBar ? (
-          <div className="flex shrink-0 items-center justify-end gap-2 border-b border-[rgba(var(--mode-rgb),0.12)] px-3 py-2">
-            <h2 className="sr-only">{title}</h2>
-            <Link
-              href="/dashboard"
-              className="text-[11px] font-semibold uppercase tracking-wide text-[var(--accent-focus)] underline-offset-2 hover:underline focus:outline-none focus-visible:ring-2 focus-visible:ring-[rgba(var(--mode-rgb),0.45)] focus-visible:ring-offset-0 rounded-sm"
-            >
-              HQ
-            </Link>
+      <div className="hq-frosted-main-shell">
+        <DashboardCommandDeckFrame deckTitle={title} hideTitleVisually={hideTitleBar}>
+          {topSlot ? (
+            <div className="mt-4 shrink-0 rounded-xl border border-[rgba(var(--mode-rgb),0.18)] bg-[rgba(4,12,22,0.45)] px-3 py-2 backdrop-blur-sm">
+              {topSlot}
+            </div>
+          ) : null}
+          <div
+            data-hq-simplified-scroll="1"
+            className={`mt-4 space-y-6 ${bodyClassName ?? "px-2 py-2 sm:px-3"}`}
+          >
+            {children}
           </div>
-        ) : (
-          <div className="flex shrink-0 items-start justify-between gap-3 border-b border-[rgba(var(--mode-rgb),0.12)] px-4 py-3">
-            <h2 className="hq-h2 min-w-0 flex-1 text-[var(--text-primary)]">{title}</h2>
+          <p className="mt-4 shrink-0 border-t border-[rgba(var(--mode-rgb),0.14)] pt-3 text-center text-[11px] text-[var(--text-muted)]">
+            {links.map((l, i) => (
+              <span key={l.href}>
+                {i > 0 ? " · " : null}
+                <Link href={l.href} className="text-[var(--accent-focus)] underline-offset-2 hover:underline">
+                  {l.label}
+                </Link>
+              </span>
+            ))}
+            {" · "}
             <Link
-              href="/dashboard"
-              className="shrink-0 pt-0.5 text-[11px] font-semibold uppercase tracking-wide text-[var(--accent-focus)] underline-offset-2 hover:underline focus:outline-none focus-visible:ring-2 focus-visible:ring-[rgba(var(--mode-rgb),0.45)] focus-visible:ring-offset-0 rounded-sm"
+              href={profileEngineHref("modes")}
+              className="text-[var(--accent-focus)] underline-offset-2 hover:underline"
             >
-              HQ
+              Turn off simplified
             </Link>
-          </div>
-        )}
-        {topSlot ? (
-          <div className="shrink-0 border-b border-[rgba(var(--mode-rgb),0.1)] bg-[rgba(var(--mode-rgb),0.04)] px-3 py-2">{topSlot}</div>
-        ) : null}
-        <div
-          data-hq-simplified-scroll="1"
-          className={`${bodyClassName ?? "px-2 py-2 sm:px-3"}`}
-        >
-          {children}
-        </div>
-        <p className="shrink-0 border-t border-[rgba(var(--mode-rgb),0.1)] px-4 py-2 text-center text-[11px] text-[var(--text-muted)]">
-          {links.map((l, i) => (
-            <span key={l.href}>
-              {i > 0 ? " · " : null}
-              <Link href={l.href} className="text-[var(--accent-focus)] underline-offset-2 hover:underline">
-                {l.label}
-              </Link>
-            </span>
-          ))}
-          {" · "}
-          <Link href={profileEngineHref("modes")} className="text-[var(--accent-focus)] underline-offset-2 hover:underline">
-            Turn off simplified
-          </Link>
-        </p>
-      </SciFiPanel>
+          </p>
+        </DashboardCommandDeckFrame>
+      </div>
     </div>
   );
 }

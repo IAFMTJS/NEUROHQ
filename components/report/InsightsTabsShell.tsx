@@ -27,7 +27,7 @@ type Props = {
   children: React.ReactNode;
   /** When set (e.g. profile embed), tab links use this instead of `/report?tab=`. */
   resolveTabHref?: (tab: InsightsTabId) => string;
-  /** Inside SimplifiedPageShell: sticky strip matches budget tab row. */
+  /** Inside simplified command deck: sticky strip matches budget tab row. */
   simplifiedLayout?: boolean;
 };
 

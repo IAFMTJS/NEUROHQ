@@ -55,8 +55,7 @@ import { GroceryMissionPlannerCard } from "@/components/budget/GroceryMissionPla
 import { BudgetLockHub } from "@/components/budget/BudgetLockHub";
 import { BudgetOptimizationHub } from "@/components/budget/BudgetOptimizationHub";
 import { StrategyEnginePaceHint } from "@/components/strategy/StrategyEnginePaceHint";
-import { VisualLabCommandDeck } from "@/components/visual-lab/VisualLabCommandDeck";
-import { CornerNode } from "@/components/hud-test/CornerNode";
+import { DashboardCommandDeckFrame } from "@/components/layout/DashboardCommandDeckFrame";
 
 const BudgetHistorySelector = nextDynamic(() => import("@/components/BudgetHistorySelector").then((m) => ({ default: m.BudgetHistorySelector })), { loading: () => null });
 const ExportBudgetCsvButton = nextDynamic(() => import("@/components/ExportBudgetCsvButton").then((m) => ({ default: m.ExportBudgetCsvButton })), { loading: () => null });
@@ -520,21 +519,22 @@ export default async function BudgetPage({ searchParams }: Props) {
         {simplifiedBudget ? (
           <div className="relative z-10 flex min-h-[calc(100svh-7rem)] w-full max-w-none flex-1 flex-col pb-6 sm:min-h-[calc(100svh-6.5rem)] dashboard-cinematic">
             <div className="hq-frosted-main-shell flex min-h-0 flex-1 flex-col">
-              <VisualLabCommandDeck contentClassName="min-h-0 flex-1" className="flex min-h-0 flex-1 flex-col">
-                <CornerNode corner="top-left" />
-                <CornerNode corner="top-right" />
+              <DashboardCommandDeckFrame
+                deckTitle="Budget"
+                fillViewport
+                outerClassName="flex min-h-0 flex-1 flex-col"
+                innerClassName="min-h-0 flex-1 gap-0"
+              >
                 <div className="flex min-h-0 flex-1 flex-col">{budgetTabsShell}</div>
-              </VisualLabCommandDeck>
+              </DashboardCommandDeckFrame>
             </div>
           </div>
         ) : (
           <div className="container page page-wide dashboard-cinematic relative z-10 pb-10">
             <div className="hq-frosted-main-shell">
-              <VisualLabCommandDeck>
-                <CornerNode corner="top-left" />
-                <CornerNode corner="top-right" />
+              <DashboardCommandDeckFrame deckTitle="Budget" innerClassName="gap-4">
                 {budgetTabsShell}
-              </VisualLabCommandDeck>
+              </DashboardCommandDeckFrame>
             </div>
           </div>
         )}

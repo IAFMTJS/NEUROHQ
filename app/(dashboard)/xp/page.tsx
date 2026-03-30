@@ -1,24 +1,11 @@
 import { XPPageClient } from "@/components/xp/XPPageClient";
-import { HQPageHeader } from "@/components/hq";
 import { SciFiPanel } from "@/components/hud-test/SciFiPanel";
 import { CornerNode } from "@/components/hud-test/CornerNode";
 import hudStyles from "@/components/hud-test/hud.module.css";
-import { VisualLabCommandDeck } from "@/components/visual-lab/VisualLabCommandDeck";
+import { DashboardCommandDeckFrame } from "@/components/layout/DashboardCommandDeckFrame";
 import { getUserPreferencesOrDefaults } from "@/app/actions/preferences";
 import { SimplifiedPageShell } from "@/components/layout/SimplifiedPageShell";
 import { SIMPLIFIED_VIEWPORT_WRAPPER } from "@/lib/simplified-page-layout";
-
-function XPShell() {
-  return (
-    <div className="flex flex-wrap items-center justify-between gap-2">
-      <HQPageHeader
-        title="XP Command Bridge"
-        subtitle="Kies je levensmodus, volg streaks en stuur je XP-richting."
-        backHref="/dashboard"
-      />
-    </div>
-  );
-}
 
 async function XPContent() {
   const today = new Date().toISOString().slice(0, 10);
@@ -53,30 +40,20 @@ export default async function XPPage() {
     <div className="hq-page-surface-clear relative w-full overflow-x-hidden">
       <div className="container page page-wide dashboard-cinematic relative z-10 pb-10">
         <div className="hq-frosted-main-shell space-y-4">
-          <VisualLabCommandDeck>
-            <CornerNode corner="top-left" />
-            <CornerNode corner="top-right" />
-            <div className="space-y-4">
-              <SciFiPanel
-                variant="flat-glass"
-                className={hudStyles.focusSecondary}
-                bodyClassName="p-4 md:p-5"
-              >
-                <CornerNode corner="top-left" />
-                <CornerNode corner="top-right" />
-                <XPShell />
-              </SciFiPanel>
-              <SciFiPanel
-                variant="flat-glass"
-                className={hudStyles.focusSecondary}
-                bodyClassName="p-4 md:p-6"
-              >
-                <CornerNode corner="top-left" />
-                <CornerNode corner="top-right" />
-                <XPContent />
-              </SciFiPanel>
-            </div>
-          </VisualLabCommandDeck>
+          <DashboardCommandDeckFrame deckTitle="XP · command bridge" innerClassName="gap-4">
+            <p className="text-sm leading-relaxed text-[var(--text-muted)]">
+              Kies je levensmodus, volg streaks en stuur je XP-richting.
+            </p>
+            <SciFiPanel
+              variant="flat-glass"
+              className={hudStyles.focusSecondary}
+              bodyClassName="p-4 md:p-6"
+            >
+              <CornerNode corner="top-left" />
+              <CornerNode corner="top-right" />
+              <XPContent />
+            </SciFiPanel>
+          </DashboardCommandDeckFrame>
         </div>
       </div>
     </div>
