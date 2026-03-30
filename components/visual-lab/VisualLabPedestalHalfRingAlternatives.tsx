@@ -15,7 +15,7 @@ export const VISUAL_LAB_PEDESTAL_MOCK: CommanderMascotPedestalStats = {
   loadPct: 38,
 };
 
-/** Zelfde hoeken als `CommanderMascotPedestal` (onderste boog · Energy | Focus | Load). */
+/** Zelfde hoeken als `CommanderMascotPedestal` — Energy | Focus | Load */
 const ANGLES = [
   Math.PI + Math.PI / 18,
   (3 * Math.PI) / 4,
@@ -26,7 +26,14 @@ const ANGLES = [
 const SWEEP: 0 | 1 = 0;
 const CX = 200;
 const CY = 8;
+/** Centerline radius */
 const R = 162;
+/** Brede band: dikke annulus rond centerline */
+const BAND_INNER = R - 40;
+const BAND_OUTER = R + 32;
+/** Dikke “trede” voor stroke-gebaseerde vulling op centerline */
+const BAND_STROKE = 56;
+const MID_STROKE = 50;
 
 function polar(cx: number, cy: number, r: number, t: number) {
   return { x: cx + r * Math.cos(t), y: cy + r * Math.sin(t) };
@@ -41,22 +48,84 @@ function segmentPaths(cx: number, cy: number, r: number): string[] {
   });
 }
 
+function annularSlice(
+  cx: number,
+  cy: number,
+  rIn: number,
+  rOut: number,
+  t0: number,
+  t1: number,
+): string {
+  const p1o = polar(cx, cy, rOut, t0);
+  const p2o = polar(cx, cy, rOut, t1);
+  const p2i = polar(cx, cy, rIn, t1);
+  const p1i = polar(cx, cy, rIn, t0);
+  const innerSweep = (1 - SWEEP) as 0 | 1;
+  return [
+    `M ${p1o.x} ${p1o.y}`,
+    `A ${rOut} ${rOut} 0 0 ${SWEEP} ${p2o.x} ${p2o.y}`,
+    `L ${p2i.x} ${p2i.y}`,
+    `A ${rIn} ${rIn} 0 0 ${innerSweep} ${p1i.x} ${p1i.y}`,
+    "Z",
+  ].join(" ");
+}
+
+/** Scheiding tussen de 3 segmenten (hoeken 1 en 2 op de polylijn). */
+function SegmentDividers({
+  rIn,
+  rOut,
+  stroke,
+  strokeWidth,
+  opacity = 1,
+}: {
+  rIn: number;
+  rOut: number;
+  stroke: string;
+  strokeWidth: number;
+  opacity?: number;
+}) {
+  const thetas: number[] = [ANGLES[1], ANGLES[2]];
+  return (
+    <>
+      {thetas.map((theta) => {
+        const a = polar(CX, CY, rIn, theta);
+        const b = polar(CX, CY, rOut, theta);
+        return (
+          <line
+            key={theta}
+            x1={a.x}
+            y1={a.y}
+            x2={b.x}
+            y2={b.y}
+            stroke={stroke}
+            strokeWidth={strokeWidth}
+            strokeLinecap="square"
+            opacity={opacity}
+          />
+        );
+      })}
+    </>
+  );
+}
+
 function clampPct(n: number) {
   return Math.min(100, Math.max(0, n));
 }
 
 const PATH_LEN = 100;
-const E_COLOR = "rgba(34, 211, 238, 0.95)";
-const F_COLOR = "rgba(167, 139, 250, 0.96)";
-const L_COLOR = "rgba(251, 146, 60, 0.94)";
+const E_COLOR = "rgba(34, 211, 238, 0.96)";
+const F_COLOR = "rgba(167, 139, 250, 0.97)";
+const L_COLOR = "rgba(251, 146, 60, 0.95)";
+
+const squash = { transformOrigin: "200px 64px" as const };
+const squashTrans = "translate(0,0) scale(1 0.58)";
 
 /**
- * Mascotte staat op de boog: voeten raken het middensegment (Focus), ring in de laag erachter.
- * `ringOverlapClass` tune per variant (dikte van de band verschilt).
+ * Mascotte hoger op het podium; brede band eronder.
  */
 function MascotStandingOnRing({
   ring,
-  ringOverlapClass = "-mb-[min(5.25rem,30vw)] sm:-mb-[5.75rem]",
+  ringOverlapClass = "-mb-[min(6rem,34vw)] sm:-mb-[6.65rem]",
 }: {
   ring: ReactNode;
   ringOverlapClass?: string;
@@ -66,19 +135,15 @@ function MascotStandingOnRing({
       className="relative mx-auto w-full max-w-[min(300px,92vw)] select-none"
       aria-hidden
     >
-      <div
-        className={`relative z-[1] w-full ${ringOverlapClass}`}
-      >
-        {ring}
-      </div>
-      <div className="pointer-events-none absolute inset-x-0 bottom-[min(1.35rem,7vw)] z-[2] flex justify-center sm:bottom-[min(1.5rem,6vw)]">
+      <div className={`relative z-[1] w-full ${ringOverlapClass}`}>{ring}</div>
+      <div className="pointer-events-none absolute inset-x-0 bottom-[min(2.45rem,12.5vw)] z-[2] flex justify-center sm:bottom-[min(2.75rem,11vw)]">
         <img
           src={getMascotSrcForPage("dashboard")}
           alt=""
-          className="h-[min(8.75rem,34vw)] max-h-[140px] w-auto max-w-[min(240px,78%)] object-contain object-bottom sm:h-[min(9.5rem,32vw)] sm:max-h-[152px]"
+          className="h-[min(9rem,36vw)] max-h-[148px] w-auto max-w-[min(248px,82%)] object-contain object-bottom sm:h-[min(9.75rem,34vw)] sm:max-h-[162px]"
           style={{
             filter:
-              "drop-shadow(0 16px 28px rgba(0,0,0,0.55)) drop-shadow(0 0 24px rgba(var(--mode-rgb),0.12))",
+              "drop-shadow(0 18px 32px rgba(0,0,0,0.58)) drop-shadow(0 0 28px rgba(var(--mode-rgb),0.14))",
           }}
         />
       </div>
@@ -126,9 +191,7 @@ function LabCard({
         <h3 className="text-[11px] font-bold uppercase tracking-[0.14em] text-[var(--text-primary)]">
           {title}
         </h3>
-        <p className="mt-1 text-[10px] leading-snug text-[var(--text-secondary)]">
-          {subtitle}
-        </p>
+        <p className="mt-1 text-[10px] leading-snug text-[var(--text-secondary)]">{subtitle}</p>
       </div>
       <div className="relative">{children}</div>
     </div>
@@ -145,85 +208,66 @@ function pctsOf(stats: CommanderMascotPedestalStats) {
   ] as const;
 }
 
-/** 01 — Glazen podium: gevulde band + mode-rgb rand (dicht bij productie, compacter) */
-function VariantGlassPodium({ stats, uid }: RingProps) {
+/** 01 — Drie blokken: brede gevulde wijzers + harde scheiding */
+function VariantTriBlock({ stats, uid }: RingProps) {
   const [e, f, l] = pctsOf(stats);
   const paths = segmentPaths(CX, CY, R);
-  const inner = R - 20;
-  const outer = R + 14;
-  const fills = [
-    `rgba(var(--mode-rgb),${0.07 + e * 0.0004})`,
-    `rgba(var(--mode-rgb-deep),${0.09 + f * 0.00035})`,
-    `rgba(var(--hud-amber-500-rgb),${0.08 + l * 0.0003})`,
+  const base = [
+    `rgba(var(--mode-rgb),0.14)`,
+    `rgba(var(--mode-rgb-deep),0.16)`,
+    `rgba(var(--hud-amber-500-rgb),0.13)`,
   ];
+  const stroke = [E_COLOR, F_COLOR, L_COLOR];
+  const pcts = [e, f, l];
   return (
     <MascotStandingOnRing
-      ringOverlapClass="-mb-[min(5rem,29vw)] sm:-mb-[5.5rem]"
       ring={
-        <svg
-          viewBox="0 0 400 190"
-          className="mx-auto block w-full overflow-visible"
-        >
+        <svg viewBox="0 0 400 198" className="mx-auto block w-full overflow-visible">
           <defs>
-            <filter id={`${uid}-soft`} x="-20%" y="-20%" width="140%" height="140%">
-              <feGaussianBlur stdDeviation="3" result="b" />
+            <filter id={`${uid}-blk`} x="-25%" y="-25%" width="150%" height="150%">
+              <feGaussianBlur stdDeviation="2.4" result="b" />
               <feMerge>
                 <feMergeNode in="b" />
                 <feMergeNode in="SourceGraphic" />
               </feMerge>
             </filter>
           </defs>
-          <g transform="translate(0,0) scale(1 0.58)" style={{ transformOrigin: "200px 64px" }}>
-            {[0, 1, 2].map((i) => {
-              const d = annularSlice(CX, CY, inner, outer, ANGLES[i], ANGLES[i + 1]);
-              return (
-                <path
-                  key={`b-${i}`}
-                  d={d}
-                  fill={fills[i]}
-                  stroke="rgba(var(--mode-rgb),0.12)"
-                  strokeWidth={1}
-                  filter={`url(#${uid}-soft)`}
-                />
-              );
-            })}
-            {paths.map((d, i) => {
-              const pct = [e, f, l][i];
-              const stroke = i === 0 ? E_COLOR : i === 1 ? F_COLOR : L_COLOR;
-              const w = i === 1 ? 40 : 32;
-              return (
-                <path
-                  key={`s-${i}`}
-                  d={d}
-                  fill="none"
-                  stroke={stroke}
-                  strokeWidth={w}
-                  strokeLinecap="round"
-                  pathLength={PATH_LEN}
-                  strokeDasharray={`${(pct / 100) * PATH_LEN} ${PATH_LEN}`}
-                  style={{
-                    filter:
-                      i === 1
-                        ? "drop-shadow(0 0 10px rgba(var(--mode-rgb),0.45)) drop-shadow(0 0 18px rgba(var(--mode-rgb),0.2))"
-                        : "drop-shadow(0 0 8px rgba(0,0,0,0.35))",
-                  }}
-                />
-              );
-            })}
-            <path
-              d={[0, 1, 2]
-                .map((i) => {
-                  const a = polar(CX, CY, outer, ANGLES[i]);
-                  const b = polar(CX, CY, outer, ANGLES[i + 1]);
-                  return `M ${a.x} ${a.y} A ${outer} ${outer} 0 0 ${SWEEP} ${b.x} ${b.y}`;
-                })
-                .join(" ")}
-              fill="none"
-              stroke="rgba(var(--mode-rgb),0.35)"
-              strokeWidth={5}
-              strokeLinecap="round"
-              opacity={0.65}
+          <g transform={squashTrans} style={squash}>
+            {[0, 1, 2].map((i) => (
+              <path
+                key={`z-${i}`}
+                d={annularSlice(CX, CY, BAND_INNER, BAND_OUTER, ANGLES[i], ANGLES[i + 1])}
+                fill={base[i]}
+                stroke="rgba(0,0,0,0.35)"
+                strokeWidth={1}
+              />
+            ))}
+            <SegmentDividers
+              rIn={BAND_INNER + 2}
+              rOut={BAND_OUTER - 2}
+              stroke="rgba(0,0,0,0.65)"
+              strokeWidth={4}
             />
+            <SegmentDividers
+              rIn={BAND_INNER + 2}
+              rOut={BAND_OUTER - 2}
+              stroke="rgba(var(--mode-rgb),0.5)"
+              strokeWidth={1.25}
+              opacity={0.9}
+            />
+            {paths.map((d, i) => (
+              <path
+                key={`p-${i}`}
+                d={d}
+                fill="none"
+                stroke={stroke[i]}
+                strokeWidth={BAND_STROKE}
+                strokeLinecap="butt"
+                pathLength={PATH_LEN}
+                strokeDasharray={`${(pcts[i] / 100) * PATH_LEN} ${PATH_LEN}`}
+                filter={`url(#${uid}-blk)`}
+              />
+            ))}
           </g>
         </svg>
       }
@@ -231,82 +275,131 @@ function VariantGlassPodium({ stats, uid }: RingProps) {
   );
 }
 
-function annularSlice(
-  cx: number,
-  cy: number,
-  rIn: number,
-  rOut: number,
-  t0: number,
-  t1: number,
-): string {
-  const p1o = polar(cx, cy, rOut, t0);
-  const p2o = polar(cx, cy, rOut, t1);
-  const p2i = polar(cx, cy, rIn, t1);
-  const p1i = polar(cx, cy, rIn, t0);
-  const innerSweep = (1 - SWEEP) as 0 | 1;
-  return [
-    `M ${p1o.x} ${p1o.y}`,
-    `A ${rOut} ${rOut} 0 0 ${SWEEP} ${p2o.x} ${p2o.y}`,
-    `L ${p2i.x} ${p2i.y}`,
-    `A ${rIn} ${rIn} 0 0 ${innerSweep} ${p1i.x} ${p1i.y}`,
-    "Z",
-  ].join(" ");
+/** 02 — Gleuf + slot: donkere kloof tussen de drie banen */
+function VariantSlottedLanes({ stats }: RingProps) {
+  const pcts = pctsOf(stats);
+  const gapRad = 0.055;
+  const inner = BAND_INNER + 6;
+  const outer = BAND_OUTER - 4;
+  const trimEnds = (t0: number, t1: number) => {
+    if (t0 > t1) return [t0 - gapRad, t1 + gapRad] as const;
+    return [t0 + gapRad, t1 - gapRad] as const;
+  };
+  const colors = [E_COLOR, F_COLOR, L_COLOR];
+  return (
+    <MascotStandingOnRing
+      ringOverlapClass="-mb-[min(5.95rem,33.5vw)] sm:-mb-[6.5rem]"
+      ring={
+        <svg viewBox="0 0 400 198" className="mx-auto block w-full overflow-visible">
+          <g transform={squashTrans} style={squash}>
+            <path
+              d={[0, 1, 2]
+                .map((i) => annularSlice(CX, CY, inner - 4, outer + 6, ANGLES[i], ANGLES[i + 1]))
+                .join(" ")}
+              fill="rgba(0,0,0,0.32)"
+              stroke="none"
+            />
+            {[0, 1, 2].map((i) => {
+              const [a0, a1] = trimEnds(ANGLES[i], ANGLES[i + 1]);
+              const d = annularSlice(CX, CY, inner, outer, a0, a1);
+              const pct = pcts[i];
+              const arcR = (inner + outer) / 2;
+              const p0 = polar(CX, CY, arcR, a0);
+              const p1 = polar(CX, CY, arcR, a1);
+              const track = `M ${p0.x} ${p0.y} A ${arcR} ${arcR} 0 0 ${SWEEP} ${p1.x} ${p1.y}`;
+              const midAng = (a0 + a1) / 2;
+              const label = polar(CX, CY, arcR - 8, midAng);
+              return (
+                <g key={i}>
+                  <path d={d} fill="rgba(var(--hud-dark-3-rgb),0.55)" stroke="none" />
+                  <path
+                    d={track}
+                    fill="none"
+                    stroke={colors[i]}
+                    strokeWidth={MID_STROKE}
+                    strokeLinecap="round"
+                    pathLength={PATH_LEN}
+                    strokeDasharray={`${(pct / 100) * PATH_LEN} ${PATH_LEN}`}
+                    opacity={0.95}
+                  />
+                  <text
+                    x={label.x}
+                    y={label.y + 4}
+                    textAnchor="middle"
+                    fill="rgba(255,255,255,0.35)"
+                    fontSize={9}
+                    fontWeight={700}
+                  >
+                    {i === 0 ? "E" : i === 1 ? "F" : "L"}
+                  </text>
+                </g>
+              );
+            })}
+          </g>
+        </svg>
+      }
+    />
+  );
 }
 
-/** 02 — Command neon: scherpe dubbele rand, HUD-glow */
-function VariantCommandNeon({ stats, uid }: RingProps) {
+/** 03 — Commander-strip: productie-achtig, brede annulus per derde + rand */
+function VariantCommanderStrip({ stats }: RingProps) {
   const [e, f, l] = pctsOf(stats);
   const paths = segmentPaths(CX, CY, R);
+  const tint = [
+    "rgba(34, 211, 238, 0.11)",
+    "rgba(167, 139, 250, 0.13)",
+    "rgba(251, 146, 60, 0.1)",
+  ];
+  const pcts = [e, f, l];
+  const stroke = [E_COLOR, F_COLOR, L_COLOR];
   return (
     <MascotStandingOnRing
       ring={
-        <svg viewBox="0 0 400 190" className="mx-auto block w-full overflow-visible">
-          <defs>
-            <linearGradient id={`${uid}-nx`} x1="0%" y1="100%" x2="100%" y2="100%">
-              <stop offset="0%" stopColor="rgb(var(--mode-rgb))" stopOpacity={0.55} />
-              <stop offset="50%" stopColor="rgb(var(--mode-rgb-deep))" stopOpacity={0.7} />
-              <stop offset="100%" stopColor="rgb(var(--mode-rgb))" stopOpacity={0.5} />
-            </linearGradient>
-          </defs>
-          <g transform="translate(0,0) scale(1 0.58)" style={{ transformOrigin: "200px 64px" }}>
+        <svg viewBox="0 0 400 198" className="mx-auto block w-full overflow-visible">
+          <g transform={squashTrans} style={squash}>
+            {[0, 1, 2].map((i) => (
+              <path
+                key={`a-${i}`}
+                d={annularSlice(CX, CY, BAND_INNER, BAND_OUTER, ANGLES[i], ANGLES[i + 1])}
+                fill={tint[i]}
+              />
+            ))}
+            <SegmentDividers
+              rIn={BAND_INNER}
+              rOut={BAND_OUTER}
+              stroke="rgba(0,0,0,0.5)"
+              strokeWidth={2}
+            />
             <path
-              d={paths.join(" ")}
+              d={[0, 1, 2]
+                .map((i) => {
+                  const a = polar(CX, CY, BAND_OUTER, ANGLES[i]);
+                  const b = polar(CX, CY, BAND_OUTER, ANGLES[i + 1]);
+                  return `M ${a.x} ${a.y} A ${BAND_OUTER} ${BAND_OUTER} 0 0 ${SWEEP} ${b.x} ${b.y}`;
+                })
+                .join(" ")}
               fill="none"
-              stroke={`url(#${uid}-nx)`}
-              strokeWidth={26}
+              stroke="rgba(var(--mode-rgb),0.38)"
+              strokeWidth={6}
               strokeLinecap="round"
-              strokeLinejoin="round"
-              opacity={0.22}
             />
             {paths.map((d, i) => (
               <path
                 key={i}
                 d={d}
                 fill="none"
-                stroke="rgba(0,0,0,0.55)"
-                strokeWidth={18}
+                stroke={stroke[i]}
+                strokeWidth={i === 1 ? BAND_STROKE - 6 : BAND_STROKE - 10}
                 strokeLinecap="round"
+                pathLength={PATH_LEN}
+                strokeDasharray={`${(pcts[i] / 100) * PATH_LEN} ${PATH_LEN}`}
+                style={{
+                  filter:
+                    "drop-shadow(0 0 10px rgba(var(--mode-rgb),0.35)) drop-shadow(0 0 20px rgba(0,0,0,0.35))",
+                }}
               />
             ))}
-            {paths.map((d, i) => {
-              const pct = [e, f, l][i];
-              const stroke = i === 0 ? E_COLOR : i === 1 ? F_COLOR : L_COLOR;
-              return (
-                <path
-                  key={`f-${i}`}
-                  d={d}
-                  fill="none"
-                  stroke={stroke}
-                  strokeWidth={11}
-                  strokeLinecap="round"
-                  pathLength={PATH_LEN}
-                  strokeDasharray={`${(pct / 100) * PATH_LEN} ${PATH_LEN}`}
-                  style={{
-                    filter: "drop-shadow(0 0 8px rgba(var(--mode-rgb),0.4)) drop-shadow(0 0 16px rgba(var(--mode-rgb),0.15))",
-                  }}
-                />
-              );
-            })}
           </g>
         </svg>
       }
@@ -314,138 +407,61 @@ function VariantCommandNeon({ stats, uid }: RingProps) {
   );
 }
 
-/** 03 — Inset deck: diepte + inner shadow (gegraveerde boog) */
-function VariantInsetDeck({ stats }: RingProps) {
+/** 04 — Meridian gloed: smalle lichtscheiding + drie donkere vakken */
+function VariantMeridianGlow({ stats, uid }: RingProps) {
   const [e, f, l] = pctsOf(stats);
   const paths = segmentPaths(CX, CY, R);
-  return (
-    <MascotStandingOnRing
-      ringOverlapClass="-mb-[min(5.1rem,29vw)] sm:-mb-[5.6rem]"
-      ring={
-        <div
-          className="mx-auto rounded-[var(--hud-radius-lg)] pt-2"
-          style={{ boxShadow: "var(--hud-depth-inset)" }}
-        >
-          <svg viewBox="0 0 400 176" className="mx-auto block w-full overflow-visible">
-            <g transform="translate(0,0) scale(1 0.56)" style={{ transformOrigin: "200px 60px" }}>
-              <path
-                d={paths.join(" ")}
-                fill="none"
-                stroke="rgba(var(--hud-dark-3-rgb),0.9)"
-                strokeWidth={44}
-                strokeLinecap="round"
-              />
-              {paths.map((d, i) => {
-                const pct = [e, f, l][i];
-                const stroke = i === 0 ? E_COLOR : i === 1 ? F_COLOR : L_COLOR;
-                return (
-                  <path
-                    key={i}
-                    d={d}
-                    fill="none"
-                    stroke={stroke}
-                    strokeWidth={15}
-                    strokeLinecap="round"
-                    pathLength={PATH_LEN}
-                    strokeDasharray={`${(pct / 100) * PATH_LEN} ${PATH_LEN}`}
-                    opacity={0.88}
-                  />
-                );
-              })}
-            </g>
-          </svg>
-        </div>
-      }
-    />
-  );
-}
-
-/** 04 — Spotlight: zachte vlek onder voeten + subtiele boog */
-function VariantSpotlit({ stats, uid }: RingProps) {
-  const [e, f, l] = pctsOf(stats);
-  const paths = segmentPaths(CX, CY, R);
+  const pcts = [e, f, l];
   return (
     <MascotStandingOnRing
       ring={
-        <svg viewBox="0 0 400 200" className="mx-auto block w-full overflow-visible">
+        <svg viewBox="0 0 400 198" className="mx-auto block w-full overflow-visible">
           <defs>
-            <radialGradient id={`${uid}-spot`} cx="50%" cy="42%" r="55%">
-              <stop offset="0%" stopColor="rgba(var(--mode-rgb),0.35)" />
-              <stop offset="55%" stopColor="rgba(var(--mode-rgb-deep),0.08)" />
-              <stop offset="100%" stopColor="transparent" />
-            </radialGradient>
+            <filter id={`${uid}-glow`} x="-40%" y="-40%" width="180%" height="180%">
+              <feGaussianBlur stdDeviation="3" result="x" />
+              <feMerge>
+                <feMergeNode in="x" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
           </defs>
-          <ellipse cx={200} cy={118} rx={138} ry={36} fill={`url(#${uid}-spot)`} opacity={0.85} />
-          <g transform="translate(0,0) scale(1 0.58)" style={{ transformOrigin: "200px 70px" }}>
-            {paths.map((d, i) => (
+          <g transform={squashTrans} style={squash}>
+            {[0, 1, 2].map((i) => (
               <path
-                key={`g-${i}`}
-                d={d}
-                fill="none"
-                stroke="rgba(var(--mode-rgb),0.15)"
-                strokeWidth={28}
-                strokeLinecap="round"
+                key={`v-${i}`}
+                d={annularSlice(CX, CY, BAND_INNER, BAND_OUTER, ANGLES[i], ANGLES[i + 1])}
+                fill="rgba(var(--hud-dark-2-rgb),0.75)"
+                stroke="rgba(var(--mode-rgb),0.08)"
+                strokeWidth={1}
               />
             ))}
-            {paths.map((d, i) => {
-              const pct = [e, f, l][i];
-              const stroke = i === 0 ? E_COLOR : i === 1 ? F_COLOR : L_COLOR;
-              return (
-                <path
-                  key={i}
-                  d={d}
-                  fill="none"
-                  stroke={stroke}
-                  strokeWidth={12}
-                  strokeLinecap="round"
-                  pathLength={PATH_LEN}
-                  strokeDasharray={`${(pct / 100) * PATH_LEN} ${PATH_LEN}`}
-                  opacity={0.92}
-                />
-              );
-            })}
-          </g>
-        </svg>
-      }
-    />
-  );
-}
-
-/** 05 — Ultra-minimaal: één band, mode-rgb alleen in middenaccent */
-function VariantMinimalTread({ stats }: RingProps) {
-  const [e, f, l] = pctsOf(stats);
-  const paths = segmentPaths(CX, CY, R);
-  return (
-    <MascotStandingOnRing
-      ringOverlapClass="-mb-[min(4.85rem,28vw)] sm:-mb-[5.35rem]"
-      ring={
-        <svg viewBox="0 0 400 184" className="mx-auto block w-full overflow-visible">
-          <g transform="translate(0,0) scale(1 0.56)" style={{ transformOrigin: "200px 62px" }}>
-            <path
-              d={paths.join(" ")}
-              fill="none"
-              stroke="rgba(var(--mode-rgb),0.2)"
-              strokeWidth={8}
-              strokeLinecap="round"
+            <SegmentDividers
+              rIn={BAND_INNER + 3}
+              rOut={BAND_OUTER - 3}
+              stroke="rgb(var(--mode-rgb))"
+              strokeWidth={2}
+              opacity={0.85}
             />
-            {paths.map((d, i) => {
-              const pct = [e, f, l][i];
-              const stroke =
-                i === 1 ? "rgb(var(--mode-rgb))" : i === 0 ? E_COLOR : L_COLOR;
-              return (
-                <path
-                  key={i}
-                  d={d}
-                  fill="none"
-                  stroke={stroke}
-                  strokeWidth={5}
-                  strokeLinecap="round"
-                  pathLength={PATH_LEN}
-                  strokeDasharray={`${(pct / 100) * PATH_LEN} ${PATH_LEN}`}
-                  opacity={i === 1 ? 1 : 0.85}
-                />
-              );
-            })}
+            <SegmentDividers
+              rIn={BAND_INNER + 3}
+              rOut={BAND_OUTER - 3}
+              stroke="white"
+              strokeWidth={0.75}
+              opacity={0.35}
+            />
+            {paths.map((d, i) => (
+              <path
+                key={i}
+                d={d}
+                fill="none"
+                stroke={i === 0 ? E_COLOR : i === 1 ? F_COLOR : L_COLOR}
+                strokeWidth={BAND_STROKE - 8}
+                strokeLinecap="round"
+                pathLength={PATH_LEN}
+                strokeDasharray={`${(pcts[i] / 100) * PATH_LEN} ${PATH_LEN}`}
+                filter={`url(#${uid}-glow)`}
+              />
+            ))}
           </g>
         </svg>
       }
@@ -453,59 +469,121 @@ function VariantMinimalTread({ stats }: RingProps) {
   );
 }
 
-/** 06 — Elevated plate: elliptisch platform + boog als opstaande rand */
-function VariantElevatedPlate({ stats, uid }: RingProps) {
+/** 05 — Tegels: elk derde licht randje (ingelijste tegel) */
+function VariantBeveledTiles({ stats }: RingProps) {
   const [e, f, l] = pctsOf(stats);
   const paths = segmentPaths(CX, CY, R);
-  const gid = `${uid}-plate`;
+  const pcts = [e, f, l];
+  const hi = [
+    "rgba(255,255,255,0.12)",
+    "rgba(167, 139, 250, 0.1)",
+    "rgba(255,255,255,0.08)",
+  ];
+  return (
+    <MascotStandingOnRing
+      ringOverlapClass="-mb-[min(5.9rem,33vw)] sm:-mb-[6.45rem]"
+      ring={
+        <svg viewBox="0 0 400 198" className="mx-auto block w-full overflow-visible">
+          <g transform={squashTrans} style={squash}>
+            {[0, 1, 2].map((i) => (
+              <path
+                key={`t-${i}`}
+                d={annularSlice(CX, CY, BAND_INNER, BAND_OUTER, ANGLES[i], ANGLES[i + 1])}
+                fill="rgba(var(--hud-dark-4-rgb),0.88)"
+                stroke={hi[i]}
+                strokeWidth={1.5}
+              />
+            ))}
+            <SegmentDividers
+              rIn={BAND_INNER + 1}
+              rOut={BAND_OUTER - 1}
+              stroke="rgba(0,0,0,0.55)"
+              strokeWidth={5}
+            />
+            {paths.map((d, i) => (
+              <path
+                key={i}
+                d={d}
+                fill="none"
+                stroke={i === 0 ? E_COLOR : i === 1 ? F_COLOR : L_COLOR}
+                strokeWidth={MID_STROKE}
+                strokeLinecap="round"
+                pathLength={PATH_LEN}
+                strokeDasharray={`${(pcts[i] / 100) * PATH_LEN} ${PATH_LEN}`}
+              />
+            ))}
+          </g>
+        </svg>
+      }
+    />
+  );
+}
+
+/** 06 — Omhullende mantel: één buitenrand, binnen drie harde kleurvlakken */
+function VariantHullMantle({ stats }: RingProps) {
+  const pcts = pctsOf(stats);
+  const paths = segmentPaths(CX, CY, R);
+  const pcts = [e, f, l];
+  const fillHue = [
+    "rgba(34, 211, 238, 0.2)",
+    "rgba(167, 139, 250, 0.22)",
+    "rgba(251, 146, 60, 0.18)",
+  ];
   return (
     <MascotStandingOnRing
       ring={
-        <svg viewBox="0 0 400 210" className="mx-auto block w-full overflow-visible">
-          <defs>
-            <linearGradient id={gid} x1="50%" y1="0%" x2="50%" y2="100%">
-              <stop offset="0%" stopColor="rgba(var(--mode-rgb),0.18)" />
-              <stop offset="100%" stopColor="rgb(var(--hud-dark-4-rgb))" stopOpacity={0.85} />
-            </linearGradient>
-          </defs>
-          <ellipse
-            cx={200}
-            cy={138}
-            rx={152}
-            ry={28}
-            fill={`url(#${gid})`}
-            stroke="rgba(var(--mode-rgb),0.22)"
-            strokeWidth={1}
-            style={{ filter: "var(--hud-glow-subtle)" }}
-          />
-          <g transform="translate(0,6) scale(1 0.58)" style={{ transformOrigin: "200px 64px" }}>
-            {paths.map((d, i) => (
+        <svg viewBox="0 0 400 198" className="mx-auto block w-full overflow-visible">
+          <g transform={squashTrans} style={squash}>
+            {[0, 1, 2].map((i) => (
               <path
-                key={`bk-${i}`}
-                d={d}
-                fill="none"
-                stroke="rgba(0,0,0,0.4)"
-                strokeWidth={22}
-                strokeLinecap="round"
-                opacity={0.6}
+                key={`h-${i}`}
+                d={annularSlice(CX, CY, BAND_INNER + 8, BAND_OUTER - 2, ANGLES[i], ANGLES[i + 1])}
+                fill={fillHue[i]}
               />
             ))}
-            {paths.map((d, i) => {
-              const pct = [e, f, l][i];
-              const stroke = i === 0 ? E_COLOR : i === 1 ? F_COLOR : L_COLOR;
-              return (
-                <path
-                  key={`fr-${i}`}
-                  d={d}
-                  fill="none"
-                  stroke={stroke}
-                  strokeWidth={10}
-                  strokeLinecap="round"
-                  pathLength={PATH_LEN}
-                  strokeDasharray={`${(pct / 100) * PATH_LEN} ${PATH_LEN}`}
-                />
-              );
-            })}
+            <SegmentDividers
+              rIn={BAND_INNER + 10}
+              rOut={BAND_OUTER - 4}
+              stroke="rgba(0,0,0,0.45)"
+              strokeWidth={3}
+            />
+            <path
+              d={[0, 1, 2]
+                .map((i) => {
+                  const a = polar(CX, CY, BAND_OUTER - 2, ANGLES[i]);
+                  const b = polar(CX, CY, BAND_OUTER - 2, ANGLES[i + 1]);
+                  return `M ${a.x} ${a.y} A ${BAND_OUTER - 2} ${BAND_OUTER - 2} 0 0 ${SWEEP} ${b.x} ${b.y}`;
+                })
+                .join(" ")}
+              fill="none"
+              stroke="rgba(var(--mode-rgb),0.45)"
+              strokeWidth={7}
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+            {paths.map((d, i) => (
+              <path
+                key={i}
+                d={d}
+                fill="none"
+                stroke="white"
+                strokeWidth={10}
+                strokeLinecap="round"
+                opacity={0.12}
+              />
+            ))}
+            {paths.map((d, i) => (
+              <path
+                key={`m-${i}`}
+                d={d}
+                fill="none"
+                stroke={i === 0 ? E_COLOR : i === 1 ? F_COLOR : L_COLOR}
+                strokeWidth={BAND_STROKE - 12}
+                strokeLinecap="round"
+                pathLength={PATH_LEN}
+                strokeDasharray={`${(pcts[i] / 100) * PATH_LEN} ${PATH_LEN}`}
+              />
+            ))}
           </g>
         </svg>
       }
@@ -519,34 +597,34 @@ const VARIANTS: Array<{
   Cmp: (p: RingProps) => ReactNode;
 }> = [
   {
-    title: "01 · Glass podium",
-    subtitle: "HUD-glas, mode-rgb basis, voeten op het middensegment.",
-    Cmp: VariantGlassPodium,
+    title: "01 · Tri-block",
+    subtitle: "Drie brede vakken, harde scheiding, dikke vooruitgang.",
+    Cmp: VariantTriBlock,
   },
   {
-    title: "02 · Command neon",
-    subtitle: "Dubbele rand + stack-glow, strak commander‑hub.",
-    Cmp: VariantCommandNeon,
+    title: "02 · Slotted lanes",
+    subtitle: "Zichtbare spleten tussen E / F / L; smalle curve per lane.",
+    Cmp: VariantSlottedLanes,
   },
   {
-    title: "03 · Inset deck",
-    subtitle: "Diepte-inzet; boog als gleuf in het paneel.",
-    Cmp: VariantInsetDeck,
+    title: "03 · Commander strip",
+    subtitle: "Dicht bij live pedestal: getint per derde + brede strokes.",
+    Cmp: VariantCommanderStrip,
   },
   {
-    title: "04 · Spotlight",
-    subtitle: "Zachte nebula-vlek onder de mascotte, cinema‑HUD.",
-    Cmp: VariantSpotlit,
+    title: "04 · Meridian glow",
+    subtitle: "Lichtlijst op de twee grenzen; HUD‑achtige scheiding.",
+    Cmp: VariantMeridianGlow,
   },
   {
-    title: "05 · Minimal tread",
-    subtitle: "Dunne mode-rgb contour; rustig dashboard.",
-    Cmp: VariantMinimalTread,
+    title: "05 · Beveled tiles",
+    subtitle: "Elk derde als ingelijste tegel met schaduw tussenstuk.",
+    Cmp: VariantBeveledTiles,
   },
   {
-    title: "06 · Elevated plate",
-    subtitle: "Elliptisch voetstuk + boog als rand — letterlijk ‘op de ring’.",
-    Cmp: VariantElevatedPlate,
+    title: "06 · Hull mantle",
+    subtitle: "Één buitenmantel; binnen drie homogene zones + kernstrip.",
+    Cmp: VariantHullMantle,
   },
 ];
 
@@ -567,17 +645,13 @@ export function VisualLabPedestalHalfRingAlternatives() {
             Dashboard · half-ring onder mascotte
           </h2>
           <p className="mt-1 max-w-2xl text-xs leading-relaxed text-[var(--text-secondary)]">
-            Nieuwe richting: de mascotte{" "}
-            <span className="font-semibold text-[var(--text-primary)]">staat op</span>{" "}
-            de boog — voeten op het middensegment (Focus), Energy links, Load
-            rechts. Styling sluit aan bij HUD-tokens (
-            <code className="rounded bg-black/30 px-1 text-[10px]">--hud-surface-card</code>,{" "}
-            <code className="rounded bg-black/30 px-1 text-[10px]">--mode-rgb</code>, rims).
-            Mock: {e}% / {f}% / {l}%.
+            Mascotte hoger; <span className="font-semibold text-[var(--text-primary)]">brede band</span>{" "}
+            met duidelijke <span className="font-semibold text-[var(--text-primary)]">driedeling</span>{" "}
+            (Energy · Focus · Load). Mock: {e}% / {f}% / {l}%.
           </p>
         </div>
         <span className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--text-muted)]">
-          6 variants · stand-on-ring
+          6 variants · 3-way + wide
         </span>
       </div>
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">

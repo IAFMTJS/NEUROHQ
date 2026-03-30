@@ -3,7 +3,6 @@
 import { useState, useEffect } from "react";
 import type { Quote } from "@/types/database.types";
 import type { AppMode } from "@/lib/app-mode";
-import { SciFiPanel } from "@/components/hud-test/SciFiPanel";
 
 type QuoteWithDay = { quote: Quote | null; day: number };
 
@@ -47,7 +46,10 @@ export function DashboardContextCard({
   useEffect(() => setMounted(true), []);
 
   return (
-    <SciFiPanel variant="flat-glass" className="overflow-hidden" bodyClassName="p-0">
+    <section
+      className="glass-card glass-preserve-decoration relative overflow-hidden !rounded-2xl !p-0"
+      aria-label="Dagelijkse quote en context"
+    >
       {/* Quote */}
       <section className="border-b border-[var(--card-border)] px-4 py-3">
         <div className="flex items-center justify-between gap-2">
@@ -111,6 +113,6 @@ export function DashboardContextCard({
           </p>
         </section>
       )}
-    </SciFiPanel>
+    </section>
   );
 }

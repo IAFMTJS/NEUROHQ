@@ -30,9 +30,9 @@ const CX = 200;
 const CY = 0;
 /** Referentie midden van de band (centerline boog) */
 const R_MID = 204;
-/** Asymmetrische band: boven smaller, onder breder — iets dikker totaal */
-const R_INNER = R_MID - 12;
-const R_OUTER = R_MID + 24;
+/** Brede driedelige band (Energy | Focus | Load), aligned met visual-lab “commander strip” */
+const R_INNER = R_MID - 38;
+const R_OUTER = R_MID + 30;
 /** Eindpunten langs de cirkel; iets smallere α = armen van de boog reiken hoger naar de mascotte */
 const SIDE_ALPHA = Math.PI / 18;
 /** Onderlangs: π+α → … → −α (45° | 90° | 45° + zij-opwaarts) */
@@ -81,9 +81,6 @@ const SEG_SECTOR_D = [0, 1, 2].map((i) =>
   annularSectorD(CX, CY, R_INNER, R_OUTER, ANGLES[i], ANGLES[i + 1], sweepLower),
 );
 
-/** Eén pad voor basis-gloed: drie sectoren naast elkaar */
-const FULL_BASE_D = SEG_SECTOR_D.join(" ");
-
 /** Stroke-paden op centerline voor dash-vulling */
 const SEG_PATHS = [0, 1, 2].map((i) => {
   const a = PTS[i];
@@ -102,10 +99,50 @@ const OUTER_RIM_D = [0, 1, 2]
 const VB_W = 400;
 const VB_H = 200;
 
-/** Visuele “dikte” voor dash-strokes op centerline (fill) */
-const W_FILL_SIDE = 36;
-const W_FILL_CENTER = 46;
-const RIM_STROKE = 7;
+/** Visuele “dikte” voor dash-strokes op centerline (vulling = %) */
+const W_FILL_SIDE = 44;
+const W_FILL_CENTER = 52;
+const RIM_STROKE = 6;
+const DIVIDER_STROKE_DARK = 3.5;
+const DIVIDER_STROKE_ACCENT = 1.25;
+
+/** Radiale scheiding tussen de drie segmenten */
+function SegmentDividers({
+  rIn,
+  rOut,
+  stroke,
+  strokeWidth,
+  opacity = 1,
+}: {
+  rIn: number;
+  rOut: number;
+  stroke: string;
+  strokeWidth: number;
+  opacity?: number;
+}) {
+  const splitAngles: number[] = [ANGLES[1], ANGLES[2]];
+  return (
+    <>
+      {splitAngles.map((theta) => {
+        const a = polar(CX, CY, rIn, theta);
+        const b = polar(CX, CY, rOut, theta);
+        return (
+          <line
+            key={theta}
+            x1={a.x}
+            y1={a.y}
+            x2={b.x}
+            y2={b.y}
+            stroke={stroke}
+            strokeWidth={strokeWidth}
+            strokeLinecap="square"
+            opacity={opacity}
+          />
+        );
+      })}
+    </>
+  );
+}
 
 const pathLen = 100;
 
@@ -178,12 +215,12 @@ export function CommanderMascotPedestal({ stats, children }: Props) {
     >
       <div className="commander-mascot-pedestal-donut-stage relative mx-auto w-full min-h-[min(300px,78vw)] overflow-visible pb-[min(5rem,16vw)] sm:min-h-[min(340px,64vw)] sm:pb-[min(5.5rem,15vw)]">
         {/* Mascotte eerst (gat van de donut); ring eronder/erachter via z-index */}
-        <div className="commander-mascot-pedestal-mascot relative z-[14] -mb-12 mx-auto w-full max-w-[min(320px,88vw)] shrink-0 px-1 sm:-mb-14 lg:-mb-[4.5rem]">
+        <div className="commander-mascot-pedestal-mascot relative z-[14] -mb-10 mx-auto w-full max-w-[min(320px,88vw)] shrink-0 px-1 sm:-mb-12 lg:-mb-[3.85rem]">
           {children}
         </div>
 
-        {/* Ring op voetstuk: vert-stretch + lichte translate omhoog = boog dichter onder mascotte / meer “opening” boven */}
-        <div className="absolute bottom-0 left-1/2 z-[1] flex w-full max-w-none -translate-x-1/2 -translate-y-[min(0.85rem,3.5vw)] justify-center sm:-translate-y-[min(1rem,4vw)]">
+        {/* Ring: iets hogere mascotte + bredere band onder de voeten */}
+        <div className="absolute bottom-0 left-1/2 z-[1] flex w-full max-w-none -translate-x-1/2 -translate-y-[min(0.65rem,3vw)] justify-center sm:-translate-y-[min(0.8rem,3.5vw)]">
           <div className="commander-mascot-pedestal-donut-tilt">
             <div
               className="commander-mascot-pedestal-arc-wrap commander-mascot-pedestal-donut-ring relative shrink-0 overflow-visible"
@@ -209,44 +246,57 @@ export function CommanderMascotPedestal({ stats, children }: Props) {
                 </defs>
 
                 <g transform={`translate(${CX} ${CY}) scale(1 ${donutSquash}) translate(${-CX} ${-CY})`}>
-                  <ellipse cx={CX} cy={198} rx={R_MID - 6} ry={22} fill="url(#commander-bowl-floor)" opacity={0.18} />
+                  <ellipse cx={CX} cy={198} rx={R_MID - 6} ry={22} fill="url(#commander-bowl-floor)" opacity={0.16} />
 
                   <g className="commander-orbit-arc-path">
-                    {/* Basis-band: gevulde annulus (onder breder dan boven) */}
-                    <path
-                      d={FULL_BASE_D}
-                      fill="rgba(var(--mode-rgb, 0, 212, 255), 0.14)"
-                      stroke="none"
-                      style={{
-                        filter: "drop-shadow(0 4px 14px rgba(0, 0, 0, 0.28)) drop-shadow(0 0 10px rgba(56, 189, 248, 0.1))",
-                      }}
-                    />
-                    <path
-                      d={OUTER_RIM_D}
-                      fill="none"
-                      stroke="rgba(186, 230, 253, 0.28)"
-                      strokeWidth={RIM_STROKE}
-                      strokeLinecap="round"
-                      opacity={0.55}
-                    />
-
+                    {/* Drie getinte annulus-sectoren */}
                     <path
                       d={SEG_SECTOR_D[0]}
-                      fill="rgba(34, 211, 238, 0.1)"
-                      stroke="none"
+                      fill="rgba(34, 211, 238, 0.12)"
+                      stroke="rgba(0,0,0,0.22)"
+                      strokeWidth={0.75}
                     />
                     <path
                       d={SEG_SECTOR_D[1]}
                       fill="rgba(167, 139, 250, 0.14)"
-                      stroke="none"
+                      stroke="rgba(0,0,0,0.22)"
+                      strokeWidth={0.75}
                     />
                     <path
                       d={SEG_SECTOR_D[2]}
-                      fill="rgba(251, 146, 60, 0.09)"
-                      stroke="none"
+                      fill="rgba(251, 146, 60, 0.1)"
+                      stroke="rgba(0,0,0,0.22)"
+                      strokeWidth={0.75}
                     />
 
-                    {/* Resource-halve boog: elk segment volledig gevuld; midden (Focus) andere kleur dan links/rechts */}
+                    <SegmentDividers
+                      rIn={R_INNER + 2}
+                      rOut={R_OUTER - 2}
+                      stroke="rgba(0,0,0,0.55)"
+                      strokeWidth={DIVIDER_STROKE_DARK}
+                    />
+                    <SegmentDividers
+                      rIn={R_INNER + 2}
+                      rOut={R_OUTER - 2}
+                      stroke="rgba(var(--mode-rgb, 0, 212, 255), 0.45)"
+                      strokeWidth={DIVIDER_STROKE_ACCENT}
+                      opacity={0.95}
+                    />
+
+                    <path
+                      d={OUTER_RIM_D}
+                      fill="none"
+                      stroke="rgba(var(--mode-rgb, 0, 212, 255), 0.38)"
+                      strokeWidth={RIM_STROKE}
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      opacity={0.72}
+                      style={{
+                        filter: "drop-shadow(0 2px 10px rgba(0, 0, 0, 0.35))",
+                      }}
+                    />
+
+                    {/* Per-segment vulling = % (transition via .commander-segment-fill) */}
                     <path
                       className="commander-segment-fill"
                       d={SEG_PATHS[0]}
@@ -255,9 +305,9 @@ export function CommanderMascotPedestal({ stats, children }: Props) {
                       strokeWidth={W_FILL_SIDE}
                       strokeLinecap="round"
                       pathLength={pathLen}
-                      strokeDasharray={`${pathLen} ${pathLen}`}
+                      strokeDasharray={`${Math.max(0.35, (ePct / 100) * pathLen)} ${pathLen}`}
                       style={{
-                        filter: "drop-shadow(0 0 8px rgba(34, 211, 238, 0.45))",
+                        filter: "drop-shadow(0 0 10px rgba(34, 211, 238, 0.42))",
                       }}
                     />
                     <path
@@ -268,9 +318,9 @@ export function CommanderMascotPedestal({ stats, children }: Props) {
                       strokeWidth={W_FILL_CENTER}
                       strokeLinecap="round"
                       pathLength={pathLen}
-                      strokeDasharray={`${pathLen} ${pathLen}`}
+                      strokeDasharray={`${Math.max(0.35, (fPct / 100) * pathLen)} ${pathLen}`}
                       style={{
-                        filter: "drop-shadow(0 0 12px rgba(167, 139, 250, 0.5))",
+                        filter: "drop-shadow(0 0 14px rgba(167, 139, 250, 0.48))",
                       }}
                     />
                     <path
@@ -281,7 +331,7 @@ export function CommanderMascotPedestal({ stats, children }: Props) {
                       strokeWidth={W_FILL_SIDE}
                       strokeLinecap="round"
                       pathLength={pathLen}
-                      strokeDasharray={`${pathLen} ${pathLen}`}
+                      strokeDasharray={`${Math.max(0.35, (lPct / 100) * pathLen)} ${pathLen}`}
                     />
                   </g>
                 </g>

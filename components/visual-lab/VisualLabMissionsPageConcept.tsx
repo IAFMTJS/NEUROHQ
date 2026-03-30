@@ -166,7 +166,7 @@ export function VisualLabMissionsPageConcept() {
 
   return (
     <section
-      className="relative mb-10 space-y-4 rounded-xl border border-[rgba(var(--mode-rgb),0.12)] bg-[rgba(4,12,22,0.22)] p-4 md:p-6"
+      className="visual-lab-missions-deck dashboard-cinematic relative mb-10 space-y-4 rounded-xl border border-[rgba(var(--mode-rgb),0.12)] bg-[rgba(4,12,22,0.22)] p-4 md:p-6"
       aria-labelledby="missions-style-heading"
     >
       <div className="flex flex-wrap items-end justify-between gap-3">
@@ -202,7 +202,7 @@ export function VisualLabMissionsPageConcept() {
           <div className="mb-2 flex items-center justify-between gap-2">
             <span className="text-[10px] font-bold uppercase tracking-[0.16em] text-[var(--text-muted)]">View</span>
           </div>
-          <div className="flex flex-wrap gap-1 rounded-xl border border-[rgba(var(--mode-rgb),0.2)] bg-[rgba(4,12,22,0.5)] p-1 shadow-[inset_0_1px_0_rgba(255,255,255,0.05)] backdrop-blur-sm">
+          <div className="vl-deck-segmented-rail flex flex-wrap gap-1 rounded-xl border border-[rgba(var(--mode-rgb),0.2)] bg-[rgba(4,12,22,0.5)] p-1 shadow-[inset_0_1px_0_rgba(255,255,255,0.05)] backdrop-blur-sm">
             {TABS.map((t) => (
               <button
                 key={t.id}
@@ -228,9 +228,9 @@ export function VisualLabMissionsPageConcept() {
                       key={m}
                       type="button"
                       onClick={() => setMockViewMode(m)}
-                      className={`rounded-full border px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.08em] transition-colors ${
+                      className={`vl-deck-pill rounded-full border px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.08em] transition-colors ${
                         mockViewMode === m
-                          ? "border-[rgba(var(--mode-rgb),0.35)] bg-[rgba(var(--mode-rgb),0.12)] text-[var(--accent-focus)] shadow-[0_0_12px_rgba(var(--mode-rgb),0.2)]"
+                          ? "vl-deck-pill-active border-[rgba(var(--mode-rgb),0.35)] bg-[rgba(var(--mode-rgb),0.12)] text-[var(--accent-focus)] shadow-[0_0_12px_rgba(var(--mode-rgb),0.2)]"
                           : "border-transparent text-[var(--text-muted)] hover:border-[var(--card-border)] hover:bg-[var(--bg-surface)]/60 hover:text-[var(--text-primary)]"
                       }`}
                     >
@@ -242,7 +242,7 @@ export function VisualLabMissionsPageConcept() {
                   type="button"
                   onClick={() => setMockDonePanelOpen((o) => !o)}
                   aria-expanded={mockDonePanelOpen}
-                  className="rounded-full border border-[var(--card-border)]/80 bg-[var(--bg-surface)]/40 px-3 py-1.5 text-xs font-medium text-[var(--text-muted)] transition hover:border-[var(--card-border)] hover:bg-[var(--bg-surface)]/70 hover:text-[var(--text-primary)]"
+                  className="vl-deck-chip rounded-full border border-[var(--card-border)]/80 bg-[var(--bg-surface)]/40 px-3 py-1.5 text-xs font-medium text-[var(--text-muted)] transition hover:border-[var(--card-border)] hover:bg-[var(--bg-surface)]/70 hover:text-[var(--text-primary)]"
                 >
                   Voltooid vandaag ({MOCK_DONE_TODAY.length})
                 </button>

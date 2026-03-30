@@ -969,11 +969,13 @@ html[data-light-ui="true"] body {
 [data-light-ui="true"] .glass-card-3d,
 [data-light-ui="true"] .modal-card,
 [data-light-ui="true"] .bottom-nav-plate,
-[data-light-ui="true"] .modal-overlay {
+[data-light-ui="true"] .modal-overlay,
+[data-light-ui="true"] .dashboard-cinematic .hq-frosted-main-shell {
   backdrop-filter: none !important;
   -webkit-backdrop-filter: none !important;
   background: var(--hud-surface-card) !important;
   box-shadow: var(--hud-card-rim) !important;
+  border-color: rgba(var(--mode-rgb), 0.2) !important;
 }
 
 /* Light UI + command deck: same card stack; optional lighter blur for scroll perf */
@@ -984,6 +986,153 @@ html[data-light-ui="true"] body {
   -webkit-backdrop-filter: blur(16px) saturate(1.08) !important;
   background: var(--hud-surface-card) !important;
   box-shadow: var(--hud-card-rim) !important;
+}
+
+/*
+ * Visual lab /visual-lab is outside dashboard `data-deck-chrome`; Light UI otherwise flattens
+ * `.glass-card` / `.card-simple`. Force production-style dark glass for missions deck mocks.
+ */
+[data-light-ui="true"] .visual-lab-missions-deck.dashboard-cinematic .tasks-command-deck .glass-card,
+[data-light-ui="true"] .visual-lab-missions-deck.dashboard-cinematic .tasks-command-deck .card-simple,
+[data-light-ui="true"] .visual-lab-missions-deck.dashboard-cinematic .tasks-command-deck .card-simple-accent {
+  backdrop-filter: blur(22px) saturate(1.12) !important;
+  -webkit-backdrop-filter: blur(22px) saturate(1.12) !important;
+  background: var(--hud-surface-card-elevated) !important;
+  box-shadow:
+    0 0 0 1px rgba(0, 0, 0, 0.34),
+    0 0 22px rgba(var(--mode-rgb), 0.12),
+    0 14px 42px rgba(0, 0, 0, 0.52),
+    inset 0 1px 0 rgba(255, 255, 255, 0.09),
+    inset 0 -10px 26px rgba(0, 0, 0, 0.36) !important;
+}
+
+[data-light-ui="true"] .visual-lab-missions-deck.dashboard-cinematic .tasks-command-deck .glass-card::before,
+[data-light-ui="true"] .visual-lab-missions-deck.dashboard-cinematic .tasks-command-deck .glass-card::after {
+  display: block !important;
+}
+
+[data-light-ui="true"] .visual-lab-missions-deck .vl-deck-segmented-rail {
+  background: rgba(4, 12, 22, 0.5) !important;
+  border-color: rgba(var(--mode-rgb), 0.22) !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05) !important;
+  backdrop-filter: blur(12px) saturate(1.1) !important;
+  -webkit-backdrop-filter: blur(12px) saturate(1.1) !important;
+}
+
+[data-light-ui="true"] .visual-lab-missions-deck .vl-deck-segmented-rail button[aria-selected="true"] {
+  border-color: rgba(var(--mode-rgb), 0.38) !important;
+  background: rgba(var(--mode-rgb), 0.14) !important;
+  color: var(--accent-focus) !important;
+  box-shadow: 0 0 20px rgba(var(--mode-rgb), 0.18), inset 0 1px 0 rgba(255, 255, 255, 0.06) !important;
+}
+
+[data-light-ui="true"] .visual-lab-missions-deck .vl-deck-segmented-rail button[aria-selected="false"] {
+  color: var(--text-muted) !important;
+}
+
+[data-light-ui="true"] .visual-lab-missions-deck .vl-deck-segmented-rail button[aria-selected="false"]:hover {
+  border-color: rgba(var(--mode-rgb), 0.22) !important;
+  background: rgba(6, 18, 30, 0.55) !important;
+  color: var(--text-primary) !important;
+}
+
+[data-light-ui="true"] .visual-lab-missions-deck .vl-deck-pill:not(.vl-deck-pill-active) {
+  border-color: transparent !important;
+  color: var(--text-muted) !important;
+}
+
+[data-light-ui="true"] .visual-lab-missions-deck .vl-deck-pill:not(.vl-deck-pill-active):hover {
+  border-color: rgba(var(--mode-rgb), 0.2) !important;
+  background: rgba(6, 18, 30, 0.5) !important;
+  color: var(--text-primary) !important;
+}
+
+[data-light-ui="true"] .visual-lab-missions-deck .vl-deck-pill.vl-deck-pill-active {
+  border-color: rgba(var(--mode-rgb), 0.38) !important;
+  background: rgba(var(--mode-rgb), 0.14) !important;
+  color: var(--accent-focus) !important;
+  box-shadow: 0 0 20px rgba(var(--mode-rgb), 0.18), inset 0 1px 0 rgba(255, 255, 255, 0.06) !important;
+}
+
+[data-light-ui="true"] .visual-lab-missions-deck .vl-deck-chip {
+  border-color: rgba(var(--mode-rgb), 0.22) !important;
+  background: rgba(6, 18, 30, 0.42) !important;
+  color: var(--text-secondary) !important;
+  backdrop-filter: blur(10px) saturate(1.08) !important;
+  -webkit-backdrop-filter: blur(10px) saturate(1.08) !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04) !important;
+}
+
+[data-light-ui="true"] .visual-lab-missions-deck .vl-deck-chip:hover {
+  border-color: rgba(var(--mode-rgb), 0.32) !important;
+  background: rgba(8, 26, 42, 0.58) !important;
+  color: var(--text-primary) !important;
+}
+
+/* Simplified missions mock: SciFi panels + strip (no tasks-command-deck) */
+[data-light-ui="true"] .visual-lab-missions-simplified .dashboard-active-mission .glass-card,
+[data-light-ui="true"] .visual-lab-missions-simplified .dashboard-active-mission .card-simple {
+  backdrop-filter: blur(22px) saturate(1.12) !important;
+  -webkit-backdrop-filter: blur(22px) saturate(1.12) !important;
+  background: var(--hud-surface-card-elevated) !important;
+  box-shadow:
+    0 0 0 1px rgba(0, 0, 0, 0.34),
+    0 0 22px rgba(var(--mode-rgb), 0.12),
+    0 14px 42px rgba(0, 0, 0, 0.52),
+    inset 0 1px 0 rgba(255, 255, 255, 0.09),
+    inset 0 -10px 26px rgba(0, 0, 0, 0.36) !important;
+}
+
+[data-light-ui="true"] .visual-lab-missions-simplified .dashboard-active-mission .glass-card::before,
+[data-light-ui="true"] .visual-lab-missions-simplified .dashboard-active-mission .glass-card::after {
+  display: block !important;
+}
+
+[data-light-ui="true"] .visual-lab-missions-simplified .dashboard-top-strip {
+  border-top-color: rgba(var(--mode-rgb), 0.24) !important;
+  border-bottom-color: rgba(var(--mode-rgb), 0.22) !important;
+  background: rgba(4, 14, 26, 0.55) !important;
+  backdrop-filter: blur(12px) saturate(1.08) !important;
+  -webkit-backdrop-filter: blur(12px) saturate(1.08) !important;
+}
+
+[data-light-ui="true"] .visual-lab-missions-simplified .dashboard-mini-btn-secondary {
+  border-color: rgba(var(--mode-rgb), 0.34) !important;
+  background: linear-gradient(180deg, rgba(8, 32, 52, 0.9), rgba(5, 20, 36, 0.94)) !important;
+  color: var(--text-muted) !important;
+}
+
+[data-light-ui="true"] .visual-lab-missions-simplified .dashboard-mini-btn-primary {
+  border-color: rgba(var(--mode-rgb), 0.52) !important;
+  background: linear-gradient(180deg, rgba(10, 52, 82, 0.96), rgba(8, 38, 60, 0.98)) !important;
+  color: var(--accent-focus) !important;
+  box-shadow: 0 0 14px rgba(var(--mode-rgb), 0.22) !important;
+}
+
+[data-light-ui="true"] .visual-lab-missions-simplified .vl-deck-pill:not(.vl-deck-pill-active) {
+  border-color: transparent !important;
+  color: var(--text-muted) !important;
+}
+
+[data-light-ui="true"] .visual-lab-missions-simplified .vl-deck-pill:not(.vl-deck-pill-active):hover {
+  border-color: rgba(var(--mode-rgb), 0.2) !important;
+  background: rgba(6, 18, 30, 0.5) !important;
+  color: var(--text-primary) !important;
+}
+
+[data-light-ui="true"] .visual-lab-missions-simplified .vl-deck-pill.vl-deck-pill-active {
+  border-color: rgba(var(--mode-rgb), 0.38) !important;
+  background: rgba(var(--mode-rgb), 0.14) !important;
+  color: var(--accent-focus) !important;
+  box-shadow: 0 0 12px rgba(var(--mode-rgb), 0.2) !important;
+}
+
+[data-light-ui="true"] .visual-lab-missions-simplified .vl-deck-chip {
+  border-color: rgba(var(--mode-rgb), 0.22) !important;
+  background: rgba(6, 18, 30, 0.42) !important;
+  color: var(--text-secondary) !important;
+  backdrop-filter: blur(10px) saturate(1.08) !important;
+  -webkit-backdrop-filter: blur(10px) saturate(1.08) !important;
 }
 
 [data-light-ui="true"] .modal-overlay { background: rgba(0, 0, 0, 0.7) !important; }
@@ -2332,6 +2481,54 @@ main#main-content.hq-deck-ambient-shell {
   }
 }
 
+/* Dashboard home: main content stack matches elevated glass cards (blur + mode rim). */
+.dashboard-cinematic .hq-frosted-main-shell {
+  border-radius: var(--hq-card-radius, 20px);
+  border: 1px solid rgba(var(--mode-rgb), 0.22);
+  background: var(--hud-surface-card-elevated);
+  backdrop-filter: blur(22px) saturate(1.12);
+  -webkit-backdrop-filter: blur(22px) saturate(1.12);
+  box-shadow:
+    0 0 0 1px rgba(0, 0, 0, 0.28),
+    0 0 20px rgba(var(--mode-rgb), 0.1),
+    0 14px 40px rgba(0, 0, 0, 0.45),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08),
+    inset 0 -12px 28px rgba(0, 0, 0, 0.28);
+}
+
+[data-mode="war"] .dashboard-cinematic .hq-frosted-main-shell {
+  border-color: rgba(220, 38, 38, 0.24);
+  background: linear-gradient(165deg, rgba(74, 0, 12, 0.55) 0%, rgba(26, 0, 6, 0.48) 100%);
+  box-shadow:
+    0 0 0 1px rgba(220, 38, 38, 0.14),
+    0 0 18px rgba(220, 38, 38, 0.1),
+    0 14px 40px rgba(0, 0, 0, 0.46),
+    inset 0 1px 0 rgba(255, 255, 255, 0.07),
+    inset 0 -12px 28px rgba(0, 0, 0, 0.3);
+}
+
+[data-mode="recovery"] .dashboard-cinematic .hq-frosted-main-shell {
+  border-color: rgba(34, 197, 94, 0.24);
+  background: linear-gradient(165deg, rgba(0, 55, 18, 0.55) 0%, rgba(0, 24, 10, 0.48) 100%);
+  box-shadow:
+    0 0 0 1px rgba(34, 197, 94, 0.14),
+    0 0 18px rgba(34, 197, 94, 0.1),
+    0 14px 40px rgba(0, 0, 0, 0.46),
+    inset 0 1px 0 rgba(255, 255, 255, 0.07),
+    inset 0 -12px 28px rgba(0, 0, 0, 0.3);
+}
+
+[data-mode="overdrive"] .dashboard-cinematic .hq-frosted-main-shell {
+  border-color: rgba(167, 139, 250, 0.3);
+  background: linear-gradient(165deg, rgba(50, 20, 72, 0.62) 0%, rgba(18, 8, 32, 0.5) 100%);
+  box-shadow:
+    0 0 0 1px rgba(168, 85, 247, 0.18),
+    0 0 22px rgba(192, 38, 211, 0.1),
+    0 14px 40px rgba(0, 0, 0, 0.46),
+    inset 0 1px 0 rgba(255, 255, 255, 0.07),
+    inset 0 -12px 28px rgba(0, 0, 0, 0.3);
+}
+
 main.tasks-page-root {
   background: transparent !important;
   backdrop-filter: none !important;
@@ -2990,6 +3187,78 @@ header h1 { margin: 0; }
     0 0 22px rgba(var(--mode-rgb-deep), 0.16),
     0 6px 22px rgba(0, 0, 0, 0.45),
     inset 0 1px 0 rgba(255, 255, 255, 0.18) !important;
+}
+
+/* Commander bridge: primary CTA — same glass language as dashboard cards (capsule link). */
+.dashboard-cinematic a.commander-cta-glass {
+  backdrop-filter: blur(22px) saturate(1.14) !important;
+  -webkit-backdrop-filter: blur(22px) saturate(1.14) !important;
+  background: rgba(4, 14, 26, 0.38) !important;
+  border: 1px solid rgba(var(--mode-rgb), 0.34) !important;
+  box-shadow:
+    0 0 0 1px rgba(0, 0, 0, 0.32),
+    0 0 22px rgba(var(--mode-rgb), 0.16),
+    0 10px 32px rgba(0, 0, 0, 0.5),
+    inset 0 1px 0 rgba(255, 255, 255, 0.12),
+    inset 0 -8px 22px rgba(0, 0, 0, 0.28) !important;
+}
+
+.dashboard-cinematic a.commander-cta-glass:hover {
+  border-color: rgba(var(--mode-rgb), 0.48) !important;
+  box-shadow:
+    0 0 0 1px rgba(0, 0, 0, 0.34),
+    0 0 28px rgba(var(--mode-rgb), 0.26),
+    0 14px 38px rgba(0, 0, 0, 0.55),
+    inset 0 1px 0 rgba(255, 255, 255, 0.15),
+    inset 0 -8px 22px rgba(0, 0, 0, 0.3) !important;
+  filter: brightness(1.06);
+}
+
+[data-mode="war"] .dashboard-cinematic a.commander-cta-glass {
+  border-color: rgba(220, 38, 38, 0.38) !important;
+  background: rgba(40, 4, 10, 0.45) !important;
+  box-shadow:
+    0 0 0 1px rgba(220, 38, 38, 0.2),
+    0 0 24px rgba(220, 38, 38, 0.14),
+    0 10px 32px rgba(0, 0, 0, 0.52),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1),
+    inset 0 -8px 22px rgba(0, 0, 0, 0.32) !important;
+}
+
+[data-mode="recovery"] .dashboard-cinematic a.commander-cta-glass {
+  border-color: rgba(34, 197, 94, 0.36) !important;
+  background: rgba(0, 36, 14, 0.45) !important;
+  box-shadow:
+    0 0 0 1px rgba(34, 197, 94, 0.18),
+    0 0 24px rgba(34, 197, 94, 0.12),
+    0 10px 32px rgba(0, 0, 0, 0.52),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1),
+    inset 0 -8px 22px rgba(0, 0, 0, 0.32) !important;
+}
+
+[data-mode="overdrive"] .dashboard-cinematic a.commander-cta-glass {
+  border-color: rgba(167, 139, 250, 0.42) !important;
+  background: rgba(36, 12, 52, 0.48) !important;
+  box-shadow:
+    0 0 0 1px rgba(168, 85, 247, 0.22),
+    0 0 26px rgba(192, 38, 211, 0.14),
+    0 10px 32px rgba(0, 0, 0, 0.52),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1),
+    inset 0 -8px 22px rgba(0, 0, 0, 0.32) !important;
+}
+
+[data-light-ui="true"] .dashboard-cinematic a.commander-cta-glass {
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  background: var(--hud-surface-card) !important;
+  border-color: rgba(var(--mode-rgb), 0.28) !important;
+  box-shadow: var(--hud-card-rim) !important;
+  filter: none !important;
+}
+
+[data-light-ui="true"] .dashboard-cinematic a.commander-cta-glass:hover {
+  filter: none !important;
+  border-color: rgba(var(--mode-rgb), 0.4) !important;
 }
 
 [data-mode="war"] .dashboard-cinematic .primary-btn,

@@ -120,17 +120,13 @@ export function CommanderHomeHero({
       </section>
       {dailyQuoteText && (
         <div
-          className={`w-full max-w-[520px] rounded-xl px-3 py-2.5 ${bridgeLayout ? "mx-0 text-left" : "mx-auto text-center"}`}
-          style={{
-            border: "1px solid rgba(var(--mode-rgb, 0, 212, 255), 0.35)",
-            background:
-              "linear-gradient(180deg, rgba(var(--mode-rgb-deep, 0, 136, 255), 0.55), rgba(var(--mode-rgb, 0, 212, 255), 0.16))",
-            boxShadow: "0 0 14px rgba(var(--mode-rgb, 0, 212, 255), 0.18)",
-          }}
+          className={`glass-card glass-preserve-decoration !rounded-xl !p-3 w-full max-w-[520px] ${
+            bridgeLayout ? "mx-0 text-left" : "mx-auto text-center"
+          }`}
         >
           <p
             className="mb-1 text-[9px] font-semibold uppercase tracking-[0.14em]"
-            style={{ color: "rgba(var(--mode-rgb, 0, 212, 255), 0.78)" }}
+            style={{ color: "rgba(var(--mode-rgb), 0.78)" }}
           >
             Daily Quote
           </p>
@@ -138,10 +134,7 @@ export function CommanderHomeHero({
             &ldquo;{dailyQuoteText}&rdquo;
           </p>
           {dailyQuoteAuthor && (
-            <p
-              className="mt-1 text-[10px]"
-              style={{ color: "rgba(var(--mode-rgb, 0, 212, 255), 0.7)" }}
-            >
+            <p className="mt-1 text-[10px]" style={{ color: "rgba(var(--mode-rgb), 0.7)" }}>
               — {dailyQuoteAuthor}
             </p>
           )}

@@ -139,7 +139,7 @@ export function VisualLabMissionsSimplifiedConcept() {
 
   return (
     <section
-      className="relative mb-10 space-y-4 rounded-xl border border-[rgba(var(--mode-rgb),0.12)] bg-[rgba(4,12,22,0.22)] p-4 md:p-6"
+      className="visual-lab-missions-simplified dashboard-cinematic relative mb-10 space-y-4 rounded-xl border border-[rgba(var(--mode-rgb),0.12)] bg-[rgba(4,12,22,0.22)] p-4 md:p-6"
       aria-labelledby="missions-simplified-heading"
     >
       <div className="flex flex-wrap items-end justify-between gap-3">
@@ -224,9 +224,9 @@ export function VisualLabMissionsSimplifiedConcept() {
                             role="tab"
                             aria-selected={mockViewMode === m}
                             onClick={() => setMockViewMode(m)}
-                            className={`rounded-full border px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.08em] transition-colors ${
+                            className={`vl-deck-pill rounded-full border px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.08em] transition-colors ${
                               mockViewMode === m
-                                ? "border-[rgba(var(--mode-rgb),0.35)] bg-[rgba(var(--mode-rgb),0.12)] text-[var(--accent-focus)] shadow-[0_0_12px_rgba(var(--mode-rgb),0.2)]"
+                                ? "vl-deck-pill-active border-[rgba(var(--mode-rgb),0.35)] bg-[rgba(var(--mode-rgb),0.12)] text-[var(--accent-focus)] shadow-[0_0_12px_rgba(var(--mode-rgb),0.2)]"
                                 : "border-transparent text-[var(--text-muted)] hover:border-[var(--card-border)] hover:bg-[var(--bg-surface)]/60 hover:text-[var(--text-primary)]"
                             }`}
                           >
@@ -238,7 +238,7 @@ export function VisualLabMissionsSimplifiedConcept() {
                         type="button"
                         aria-expanded={mockDoneOpen}
                         onClick={() => setMockDoneOpen((o) => !o)}
-                        className="rounded-full border border-[var(--card-border)]/80 bg-[var(--bg-surface)]/40 px-3 py-1.5 text-xs font-medium text-[var(--text-muted)] transition hover:border-[var(--card-border)] hover:bg-[var(--bg-surface)]/70 hover:text-[var(--text-primary)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--focus-ring)]"
+                        className="vl-deck-chip rounded-full border border-[var(--card-border)]/80 bg-[var(--bg-surface)]/40 px-3 py-1.5 text-xs font-medium text-[var(--text-muted)] transition hover:border-[var(--card-border)] hover:bg-[var(--bg-surface)]/70 hover:text-[var(--text-primary)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--focus-ring)]"
                       >
                         Voltooid vandaag ({MOCK_DONE_TODAY.length})
                       </button>

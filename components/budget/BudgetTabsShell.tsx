@@ -11,6 +11,7 @@ import { formatLockEndShort } from "@/lib/budget-lock-display";
 import { SciFiPanel } from "@/components/hud-test/SciFiPanel";
 import { CornerNode } from "@/components/hud-test/CornerNode";
 import { profileEngineHref } from "@/lib/profile-routes";
+import { tasksDeckTabClass } from "@/components/missions/tasksDeckTabClass";
 
 type TabId = "overview" | "execute" | "analysis" | "optimization" | "lock";
 type LegacyTabId = TabId | "tactical" | "goals";
@@ -46,6 +47,11 @@ type Props = {
   centeredPageHeader?: BudgetCenteredPageHeader;
   /** Full layout: content between tab row and tab panels (e.g. mascot, hints). */
   belowTabsSlot?: ReactNode;
+  /**
+   * When true, shell sits inside `DashboardCommandDeckFrame`: no SciFiPanel / duplicate HQ row,
+   * missions-style segmented tabs, and (full mode) `belowTabsSlot` is rendered after the tab rail.
+   */
+  commandDeckLayout?: boolean;
 };
 
 function normalizeLegacyTab(tab: LegacyTabId): TabId {
@@ -132,6 +138,7 @@ export function BudgetTabsShell({
   simplifiedTopSlot,
   centeredPageHeader,
   belowTabsSlot,
+  commandDeckLayout = false,
 }: Props) {
   const router = useRouter();
   const pathname = usePathname();
@@ -303,9 +310,78 @@ export function BudgetTabsShell({
     );
   }
 
+  /** Missions `/tasks` command-deck tab rail (segmented pills in bordered track). */
+  function renderTabButtonsDeck(outerClassName?: string) {
+    return (
+      <div
+        className={outerClassName ?? "mt-4 shrink-0"}
+        role="navigation"
+        aria-label="Budget views"
+      >
+        <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
+          <span className="text-[10px] font-bold uppercase tracking-[0.16em] text-[var(--text-muted)]">View</span>
+          {lockBadge ? <div className="flex shrink-0 flex-wrap justify-end gap-1">{lockBadge}</div> : null}
+        </div>
+        <div
+          className="flex flex-wrap gap-1 rounded-xl border border-[rgba(var(--mode-rgb),0.2)] bg-[rgba(4,12,22,0.5)] p-1 shadow-[inset_0_1px_0_rgba(255,255,255,0.05)] backdrop-blur-sm"
+          role="tablist"
+        >
+          {tabs.map((tab) =>
+            tab.hidden ? null : (
+              <button
+                key={tab.id}
+                type="button"
+                role="tab"
+                id={`budget-tab-btn-${tab.id}`}
+                aria-selected={activeTab === tab.id}
+                className={tasksDeckTabClass(activeTab === tab.id)}
+                aria-current={activeTab === tab.id ? "page" : undefined}
+                onClick={() => setTabWithUrl(tab.id)}
+              >
+                {tab.label}
+              </button>
+            ),
+          )}
+        </div>
+      </div>
+    );
+  }
+
   return (
     <BudgetLockProvider value={{ lockActive: lockActive && !historyMode, lockUntil, lockUntilAt }}>
-      {simplifiedLayout ? (
+      {simplifiedLayout && commandDeckLayout ? (
+        <div className="flex min-h-0 w-full max-w-none flex-1 flex-col gap-3">
+          <div className="flex shrink-0 justify-end px-0.5">
+            <span className="inline-flex shrink-0 items-center rounded-full border border-[rgba(var(--mode-rgb),0.18)] bg-[var(--bg-elevated)]/35 px-2 py-0.5 text-[9px] font-semibold uppercase tracking-wide text-[var(--accent-focus)]">
+              {modeLabel}
+            </span>
+          </div>
+          {simplifiedTopSlot}
+          <BudgetLockStrip historyMode={historyMode} lockPanelHref={lockPanelHref} embedded />
+          {renderTabButtonsDeck("shrink-0")}
+          {headerRight ? (
+            <div className={`shrink-0 border-b ${simplifiedDivider} bg-[rgba(var(--mode-rgb),0.03)] px-2 py-1.5 sm:px-3`}>
+              <div className="flex flex-wrap items-center justify-center gap-1 sm:justify-between">{headerRight}</div>
+            </div>
+          ) : null}
+          <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-0.5 py-1 [-webkit-overflow-scrolling:touch] sm:px-1">
+            {panels}
+          </div>
+          <p className={`shrink-0 border-t ${simplifiedDivider} px-2 py-2 text-center text-[11px] text-[var(--text-muted)] sm:px-4`}>
+            <Link href="/tasks" className="text-[var(--accent-focus)] underline-offset-2 hover:underline">
+              Missions
+            </Link>
+            {" · "}
+            <Link href="/strategy" className="text-[var(--accent-focus)] underline-offset-2 hover:underline">
+              Strategy
+            </Link>
+            {" · "}
+            <Link href={profileEngineHref("modes")} className="text-[var(--accent-focus)] underline-offset-2 hover:underline">
+              Turn off simplified
+            </Link>
+          </p>
+        </div>
+      ) : simplifiedLayout ? (
         <div className="flex min-h-0 w-full max-w-none flex-1 flex-col">
           <SciFiPanel
             variant="flat-glass"
@@ -390,6 +466,13 @@ export function BudgetTabsShell({
           </section>
           {belowTabsSlot != null ? <div className="space-y-4">{belowTabsSlot}</div> : null}
           <BudgetLockStrip historyMode={historyMode} lockPanelHref={lockPanelHref} stickyToViewport={false} />
+          <div className="min-h-[120px] space-y-4">{panels}</div>
+        </div>
+      ) : commandDeckLayout ? (
+        <div className="space-y-4">
+          <BudgetLockStrip historyMode={historyMode} lockPanelHref={lockPanelHref} />
+          {renderTabButtonsDeck()}
+          {belowTabsSlot != null ? <div className="space-y-4">{belowTabsSlot}</div> : null}
           <div className="min-h-[120px] space-y-4">{panels}</div>
         </div>
       ) : (

@@ -453,6 +453,7 @@ export default async function BudgetPage({ searchParams }: Props) {
       lockUntilAt={budgetControlState.lockUntilAt}
       lockPanelHref={lockPanelHref}
       headerRight={null}
+      commandDeckLayout
       simplifiedLayout={simplifiedBudget}
       simplifiedTopSlot={
         simplifiedBudget && !historyMode ? (
