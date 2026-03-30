@@ -156,13 +156,11 @@ async function MissionsSectionAsync({
   dateStr,
   backlog,
   growthFromGrowthPage = false,
-  simplifiedContent = false,
   commandDeck = false,
 }: {
   dateStr: string;
   backlog: Awaited<ReturnType<typeof getBacklogTasks>>;
   growthFromGrowthPage?: boolean;
-  simplifiedContent?: boolean;
   /** Outer SciFiPanel omitted — content sits in TasksTabsShell command deck. */
   commandDeck?: boolean;
 }) {
@@ -308,93 +306,6 @@ async function MissionsSectionAsync({
     recoveryProtocol: decisionBlocks.recoveryProtocol,
     daysSinceLastCompletion: decisionBlocks.daysSinceLastCompletion,
   };
-
-  if (simplifiedContent) {
-    return (
-      <div className="flex min-h-0 w-full max-w-none flex-1 flex-col">
-        <SciFiPanel
-          variant="flat-glass"
-          className="hq-card-enter relative flex min-h-0 w-full flex-1 flex-col overflow-hidden dashboard-active-mission"
-          bodyClassName="relative z-10 flex min-h-0 flex-1 flex-col gap-3 p-4 sm:p-5 md:p-6"
-        >
-          <CornerNode corner="top-left" />
-          <CornerNode corner="top-right" />
-          <div className="flex shrink-0 justify-end">
-            <Link
-              href="/dashboard"
-              className="text-[11px] font-semibold uppercase tracking-wide text-[var(--accent-focus)] underline-offset-2 hover:underline"
-            >
-              HQ
-            </Link>
-          </div>
-          <div
-            className="min-h-0 flex-1 overflow-y-auto overscroll-contain [-webkit-overflow-scrolling:touch] pb-1"
-            data-tutorial="tasks-list"
-            id="tasks-list"
-          >
-            <TodayMissionsGridFromStore dateStr={dateStr}>
-              {!commandDeck && missionCards.length > 0 && tasks.length === 0 && (
-                <section className="mission-grid mb-3">
-                  {missionCards.map((m) => (
-                    <CommanderMissionCard
-                      key={m.id}
-                      id={m.id}
-                      title={m.title}
-                      subtitle={m.subtitle}
-                      description={"description" in m ? (m as { description?: string | null }).description : null}
-                      state={m.state}
-                      progressPct={m.progressPct}
-                      href={m.href}
-                    />
-                  ))}
-                </section>
-              )}
-            </TodayMissionsGridFromStore>
-            <TaskList
-              date={dateStr}
-              tasks={tasks as import("@/types/database.types").Task[]}
-              completedToday={completedToday as import("@/types/database.types").Task[]}
-              mode={taskMode}
-              carryOverCount={carryOverCount}
-              subtasksByParent={subtasksByParent}
-              suggestedTaskCount={energyBudget.suggestedTaskCount}
-              brainMode={energyBudget.brainMode}
-              strategicByTaskId={strategicByTaskId}
-              strategyMapping={decisionBlocks.strategyMapping}
-              recommendedTaskIds={[
-                ...(decisionBlocks.topRecommendation?.id ? [decisionBlocks.topRecommendation.id] : []),
-                ...(decisionBlocks.alignmentFix?.map((t) => t.id) ?? []),
-              ]}
-              identityLevel={identity.level}
-              identityReputation={identityEngine.reputation ?? null}
-              blockedReasonByTaskId={blockedReasonByTaskId as Record<string, string>}
-              neuroSelfReportOptIn={behaviorProfile.neuroSelfReportOptIn}
-              missionsHeroLayout
-              commandDeckVisuals
-              energyCap={{
-                used: energyCap.used,
-                cap: energyCap.cap,
-                remaining: energyCap.remaining,
-                planned: energyCap.planned,
-              }}
-              missionEngineWarnings={missionEngineWarnings}
-              missionsContextBelowHero={null}
-            />
-          </div>
-          <p className="shrink-0 pt-1 text-center text-[11px] text-[var(--text-muted)]">
-            <Link href="/tasks?tab=calendar" className="text-[var(--accent-focus)] underline-offset-2 hover:underline">
-              Calendar, routine &amp; backlog
-            </Link>
-            {" · "}
-            <Link href={profileEngineHref("modes")} className="text-[var(--accent-focus)] underline-offset-2 hover:underline">
-              Turn off simplified
-            </Link>
-          </p>
-          <p className="pb-0.5 text-center text-xs text-[var(--text-muted)]">All systems active</p>
-        </SciFiPanel>
-      </div>
-    );
-  }
 
   const diagnosticsBlock = (
     <details
@@ -609,7 +520,7 @@ async function RoutineSectionAsync({
   const { routineTasks, suggestedDays, suggestedPlans } = await getRoutineTasksWithSuggestions(dateStr);
   const RoutineTaskList = (await import("@/components/missions/RoutineTaskList")).RoutineTaskList;
 
-  if (simplifiedContent) {
+  if (simplifiedContent && !commandDeck) {
     return (
       <div className="flex min-h-0 w-full max-w-none flex-1 flex-col">
         <SciFiPanel
@@ -657,7 +568,8 @@ async function RoutineSectionAsync({
       suggestedDays={suggestedDays}
       suggestedPlans={suggestedPlans}
       dateStr={dateStr}
-      commandDeckVisuals={commandDeck && !simplifiedContent}
+      commandDeckVisuals={commandDeck}
+      simplifiedLayout={simplifiedContent && !commandDeck}
     />
   );
 }
@@ -693,14 +605,10 @@ export default async function TasksPage({ searchParams }: Props) {
     activeTab,
     { tab: "routine" }
   );
-  /** Simplified mode: full-height tab column (tabs still show; inner missions may use SciFiPanel). */
+  /** Simplified /tasks: full-height column + scroll contract; same command-deck chrome as standard. */
   const simplifiedTasksFillLayout = prefs.simplified_content === true;
-  /**
-   * Frosted command deck around tabs + tab bodies when not in simplified mode.
-   * Note: `commandDeckVisuals` on TaskList is independent — see MissionsSectionAsync — so missions
-   * still get visual-lab styling when simplified content is ON (only the outer deck shell is off).
-   */
-  const tasksCommandDeck = !simplifiedTasksFillLayout;
+  /** Frosted command deck (Visual Lab parity) for all users; simplified only changes viewport/scroll layout. */
+  const tasksCommandDeck = true;
 
   /**
    * Missions UI matches visual-lab command deck: no separate HQ header, mascot, or meta strip —
@@ -725,7 +633,6 @@ export default async function TasksPage({ searchParams }: Props) {
             dateStr={dateStr}
             backlog={backlog}
             growthFromGrowthPage={growthFromGrowthPage}
-            simplifiedContent={prefs.simplified_content === true}
             commandDeck={tasksCommandDeck}
           />
         </Suspense>

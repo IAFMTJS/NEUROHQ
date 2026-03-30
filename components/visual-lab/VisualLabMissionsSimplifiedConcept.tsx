@@ -45,7 +45,7 @@ function SimplifiedMainMissionHero() {
           Brain dump (mock)
         </h3>
         <p className="mt-2 max-w-prose text-[11px] leading-relaxed text-[var(--text-secondary)] md:text-xs">
-          Aanbevolen door engine · ±5 min · hoge impact — lab: zelfde oppervlak als simplified{" "}
+          Aanbevolen door engine Â· Â±5 min Â· hoge impact â€” lab: zelfde oppervlak als simplified{" "}
           <code className="rounded bg-black/30 px-1 text-[10px]">/tasks</code>.
         </p>
         <div className="mt-4 flex flex-wrap gap-2">
@@ -130,8 +130,7 @@ function SimplifiedMockRoutine() {
 }
 
 /**
- * Preview of **simplified** `/tasks` (`simplified_content` + `TasksTabsShell` met `fillViewport`, zonder
- * `tasks-command-deck`): legacy `dashboard-mini-strip` tabs + `SciFiPanel` flat-glass met `CornerNode`.
+ * Archived reference layout (pre–command-deck unification): legacy top-strip tabs + SciFiPanel per tab.
  */
 export function VisualLabMissionsSimplifiedConcept() {
   const [topTab, setTopTab] = useState<TasksTabId>("missions");
@@ -146,13 +145,13 @@ export function VisualLabMissionsSimplifiedConcept() {
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
           <h2 id="missions-simplified-heading" className="text-[11px] font-bold uppercase tracking-[0.18em] text-[var(--text-muted)]">
-            Missies · simplified (mock)
+            Missies Â· simplified (mock)
           </h2>
           <p className="mt-1 max-w-2xl text-xs leading-relaxed text-[var(--text-secondary)]">
-            Zelfde structuur als live <code className="rounded bg-black/30 px-1 text-[10px]">/tasks</code> met{" "}
-            <code className="rounded bg-black/30 px-1 text-[10px]">simplified_content</code>: geen frosted command deck,
-            wel <code className="rounded bg-black/30 px-1 text-[10px]">dashboard-top-strip</code> tabs en per tab vaak{" "}
-            <code className="rounded bg-black/30 px-1 text-[10px]">SciFiPanel</code> + hoeknodes.
+            Referentie voor de eerdere simplified-layout: <code className="rounded bg-black/30 px-1 text-[10px]">dashboard-top-strip</code>{" "}
+            + per tab <code className="rounded bg-black/30 px-1 text-[10px]">SciFiPanel</code> met hoeknodes. Live{" "}
+            <code className="rounded bg-black/30 px-1 text-[10px]">/tasks</code> gebruikt nu dezelfde command deck als standaard,
+            ook met simplified preference (alleen viewport/scroll verschilt).
           </p>
         </div>
         <span className="shrink-0 text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--text-muted)]">Mock</span>
@@ -257,7 +256,7 @@ export function VisualLabMissionsSimplifiedConcept() {
                                 className="mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded border border-emerald-500/50 bg-emerald-500/20 text-[10px] text-emerald-200"
                                 aria-hidden
                               >
-                                ✓
+                                âœ“
                               </span>
                               <div className="min-w-0 flex-1">
                                 <p className="text-sm font-medium leading-snug text-[var(--text-muted)] line-through">{d.title}</p>
@@ -290,7 +289,7 @@ export function VisualLabMissionsSimplifiedConcept() {
                         <span className="text-[9px] font-bold uppercase tracking-[0.14em] text-[var(--text-muted)]">Mode</span>
                         <span className="text-xs font-semibold tabular-nums text-[var(--text-primary)]">Focus</span>
                       </div>
-                      <span className="ml-auto hidden text-[9px] tabular-nums text-[var(--text-muted)] sm:inline">Energy budget · 62%</span>
+                      <span className="ml-auto hidden text-[9px] tabular-nums text-[var(--text-muted)] sm:inline">Energy budget Â· 62%</span>
                     </div>
 
                     <div className="space-y-1" aria-label="Energy vandaag (mock)">
@@ -318,7 +317,7 @@ export function VisualLabMissionsSimplifiedConcept() {
                   <Link href="/tasks?tab=calendar" className="text-[var(--accent-focus)] underline-offset-2 hover:underline">
                     Calendar, routine &amp; backlog
                   </Link>
-                  {" · "}
+                  {" Â· "}
                   <Link href={profileEngineHref("modes")} className="text-[var(--accent-focus)] underline-offset-2 hover:underline">
                     Turn off simplified
                   </Link>
@@ -351,7 +350,7 @@ export function VisualLabMissionsSimplifiedConcept() {
                   <Link href="/tasks?tab=missions" className="text-[var(--accent-focus)] underline-offset-2 hover:underline">
                     Missions
                   </Link>
-                  {" · "}
+                  {" Â· "}
                   <Link href={profileEngineHref("modes")} className="text-[var(--accent-focus)] underline-offset-2 hover:underline">
                     Turn off simplified
                   </Link>
@@ -383,7 +382,7 @@ export function VisualLabMissionsSimplifiedConcept() {
                   <Link href="/tasks?tab=missions" className="text-[var(--accent-focus)] underline-offset-2 hover:underline">
                     Missions
                   </Link>
-                  {" · "}
+                  {" Â· "}
                   <Link href={profileEngineHref("modes")} className="text-[var(--accent-focus)] underline-offset-2 hover:underline">
                     Turn off simplified
                   </Link>
@@ -396,9 +395,3 @@ export function VisualLabMissionsSimplifiedConcept() {
     </section>
   );
 }
-
-</think>
-
-
-<｜tool▁calls▁begin｜><｜tool▁call▁begin｜>
-Read

@@ -16,8 +16,8 @@ type Props = {
   /** Keep tab row visible while scrolling. */
   stickyTabs?: boolean;
   /**
-   * Strategy / visual-lab style: frosted command card around tab rail + tab bodies
-   * (standard /tasks only; not used with fillViewport).
+   * Strategy / visual-lab style: frosted command card around tab rail + tab bodies.
+   * Can combine with fillViewport (simplified /tasks): deck flexes and tab body scrolls.
    */
   commandDeck?: boolean;
 };
@@ -38,7 +38,7 @@ export function TasksTabsShell({
       initialTab === tab ? "dashboard-mini-btn-primary" : "dashboard-mini-btn-secondary"
     }`;
 
-  const useCommandDeck = commandDeck && !fillViewport;
+  const useCommandDeck = commandDeck;
 
   const tabsWrapperClass = [
     "dashboard-top-strip",
@@ -51,11 +51,14 @@ export function TasksTabsShell({
     .filter(Boolean)
     .join(" ");
 
-  const bodyClass = fillViewport
-    ? "mt-2 flex min-h-0 flex-1 flex-col gap-0 px-0 sm:px-1"
-    : useCommandDeck
-      ? "mt-4 space-y-6"
-      : "mt-6 space-y-6";
+  const bodyClass =
+    fillViewport && useCommandDeck
+      ? "mt-4 flex min-h-0 flex-1 flex-col gap-0 overflow-y-auto overscroll-contain [-webkit-overflow-scrolling:touch]"
+      : fillViewport
+        ? "mt-2 flex min-h-0 flex-1 flex-col gap-0 px-0 sm:px-1"
+        : useCommandDeck
+          ? "mt-4 space-y-6"
+          : "mt-6 space-y-6";
 
   const tabStripLegacy = (
     <div className={tabsWrapperClass}>
@@ -87,7 +90,7 @@ export function TasksTabsShell({
   );
 
   const tabStripDeck = (
-    <div className="mt-4" role="navigation" aria-label="Tasks tabs">
+    <div className={fillViewport ? "mt-4 shrink-0" : "mt-4"} role="navigation" aria-label="Tasks tabs">
       <div className="mb-2 flex items-center justify-between gap-2">
         <span className="text-[10px] font-bold uppercase tracking-[0.16em] text-[var(--text-muted)]">View</span>
       </div>
@@ -114,7 +117,7 @@ export function TasksTabsShell({
 
   const deckInner = (
     <>
-      <header className="flex flex-wrap items-start justify-between gap-3 border-b border-[rgba(var(--mode-rgb),0.18)] pb-4">
+      <header className="flex shrink-0 flex-wrap items-start justify-between gap-3 border-b border-[rgba(var(--mode-rgb),0.18)] pb-4">
         <div className="min-w-0 border-l-2 border-[rgba(var(--semantic-accent),0.55)] pl-3">
           <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[var(--semantic-accent)]/90">Command</p>
           <h2 className="mt-0.5 text-base font-bold tracking-tight text-[var(--text-primary)] [text-shadow:0_0_14px_rgba(var(--mode-rgb),0.18)] md:text-lg">
@@ -137,7 +140,9 @@ export function TasksTabsShell({
     <>
       {header}
       {useCommandDeck ? (
-        <div className="tasks-command-deck dashboard-cinematic relative overflow-hidden rounded-2xl border border-[rgba(var(--mode-rgb),0.32)] bg-gradient-to-br from-[rgba(6,22,38,0.97)] via-[var(--bg-elevated)]/88 to-[rgba(var(--mode-rgb-deep),0.18)] shadow-[0_0_48px_rgba(var(--mode-rgb),0.16),0_12px_40px_rgba(0,0,0,0.35),inset_0_1px_0_rgba(255,255,255,0.08)]">
+        <div
+          className={`tasks-command-deck dashboard-cinematic relative overflow-hidden rounded-2xl border border-[rgba(var(--mode-rgb),0.32)] bg-gradient-to-br from-[rgba(6,22,38,0.97)] via-[var(--bg-elevated)]/88 to-[rgba(var(--mode-rgb-deep),0.18)] shadow-[0_0_48px_rgba(var(--mode-rgb),0.16),0_12px_40px_rgba(0,0,0,0.35),inset_0_1px_0_rgba(255,255,255,0.08)] ${fillViewport ? "flex min-h-0 flex-1 flex-col" : ""}`}
+        >
           <div
             className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_75%_55%_at_50%_0%,rgba(var(--mode-rgb),0.16),transparent_58%)]"
             aria-hidden
@@ -146,7 +151,11 @@ export function TasksTabsShell({
             className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_80%_0%,rgba(var(--mode-rgb),0.1),transparent_55%)]"
             aria-hidden
           />
-          <div className="relative z-[1] flex flex-col gap-0 p-4 md:p-5">{deckInner}</div>
+          <div
+            className={`relative z-[1] flex flex-col gap-0 p-4 md:p-5 ${fillViewport ? "min-h-0 flex-1" : ""}`}
+          >
+            {deckInner}
+          </div>
         </div>
       ) : (
         <>

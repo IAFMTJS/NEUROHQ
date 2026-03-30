@@ -328,11 +328,8 @@ export function VisualLabClient() {
               <code className="rounded bg-black/30 px-1 text-[10px]">
                 space-y-6
               </code>
-              . Daaronder: een tweede blok voor simplified{" "}
-              <code className="rounded bg-black/30 px-1 text-[10px]">/tasks</code> (
-              <code className="rounded bg-black/30 px-1 text-[10px]">dashboard-mini-strip</code> +{" "}
-              <code className="rounded bg-black/30 px-1 text-[10px]">SciFiPanel</code>
-              ).
+              . Daaronder: archived reference van de oude simplified-shell (mini-strip + SciFiPanel); productie{" "}
+              <code className="rounded bg-black/30 px-1 text-[10px]">/tasks</code> volgt het command deck hierboven.
             </p>
           </div>
 
