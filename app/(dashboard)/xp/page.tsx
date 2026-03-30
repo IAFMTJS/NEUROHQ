@@ -3,6 +3,7 @@ import { HQPageHeader } from "@/components/hq";
 import { SciFiPanel } from "@/components/hud-test/SciFiPanel";
 import { CornerNode } from "@/components/hud-test/CornerNode";
 import hudStyles from "@/components/hud-test/hud.module.css";
+import { VisualLabCommandDeck } from "@/components/visual-lab/VisualLabCommandDeck";
 import { getUserPreferencesOrDefaults } from "@/app/actions/preferences";
 import { SimplifiedPageShell } from "@/components/layout/SimplifiedPageShell";
 import { SIMPLIFIED_VIEWPORT_WRAPPER } from "@/lib/simplified-page-layout";
@@ -31,7 +32,7 @@ export default async function XPPage() {
 
   if (simplified) {
     return (
-      <main className="flex min-h-0 flex-1 flex-col">
+      <div className="flex min-h-0 flex-1 flex-col">
         <div className={SIMPLIFIED_VIEWPORT_WRAPPER}>
           <SimplifiedPageShell
             title="XP"
@@ -44,34 +45,40 @@ export default async function XPPage() {
             <XPPageClient todayStr={todayStr} />
           </SimplifiedPageShell>
         </div>
-      </main>
+      </div>
     );
   }
 
   return (
-    <main className={`relative min-h-screen overflow-hidden ${hudStyles.flatGlassPageRoot}`}>
+    <div className="hq-page-surface-clear relative w-full overflow-x-hidden">
       <div className="container page page-wide dashboard-cinematic relative z-10 pb-10">
         <div className="hq-frosted-main-shell space-y-4">
-          <SciFiPanel
-            variant="flat-glass"
-            className={hudStyles.focusSecondary}
-            bodyClassName="p-4 md:p-5"
-          >
+          <VisualLabCommandDeck>
             <CornerNode corner="top-left" />
             <CornerNode corner="top-right" />
-            <XPShell />
-          </SciFiPanel>
-          <SciFiPanel
-            variant="flat-glass"
-            className={hudStyles.focusSecondary}
-            bodyClassName="p-4 md:p-6"
-          >
-            <CornerNode corner="top-left" />
-            <CornerNode corner="top-right" />
-            <XPContent />
-          </SciFiPanel>
+            <div className="space-y-4">
+              <SciFiPanel
+                variant="flat-glass"
+                className={hudStyles.focusSecondary}
+                bodyClassName="p-4 md:p-5"
+              >
+                <CornerNode corner="top-left" />
+                <CornerNode corner="top-right" />
+                <XPShell />
+              </SciFiPanel>
+              <SciFiPanel
+                variant="flat-glass"
+                className={hudStyles.focusSecondary}
+                bodyClassName="p-4 md:p-6"
+              >
+                <CornerNode corner="top-left" />
+                <CornerNode corner="top-right" />
+                <XPContent />
+              </SciFiPanel>
+            </div>
+          </VisualLabCommandDeck>
         </div>
       </div>
-    </main>
+    </div>
   );
 }

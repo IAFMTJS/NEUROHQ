@@ -1,9 +1,8 @@
 "use client";
 
 import { useMemo, type CSSProperties, type ReactNode } from "react";
-import { SciFiPanel } from "@/components/hud-test/SciFiPanel";
 import { CornerNode } from "@/components/hud-test/CornerNode";
-import hudStyles from "@/components/hud-test/hud.module.css";
+import { VisualLabCommandDeck } from "@/components/visual-lab/VisualLabCommandDeck";
 import { useHQStore } from "@/lib/hq-store";
 
 type Props = {
@@ -12,7 +11,7 @@ type Props = {
   hubLabel: string;
   /** When false, omit the top bridge title strip (hub chrome only). */
   showBridgeLabel?: boolean;
-  /** When true, skip starfield / mist (matches dashboard light UI). */
+  /** When true, defer heavy paint in inner body (matches previous light-ui bridge hint). */
   lightUi?: boolean;
   /** Narrower horizontal bridge padding + full-bleed outer strip (e.g. Growth). */
   compactHorizontal?: boolean;
@@ -20,6 +19,10 @@ type Props = {
   compactVertical?: boolean;
 };
 
+/**
+ * Hub bridge layout: outer rim + {@link VisualLabCommandDeck} (Missions parity).
+ * Scroll/ambient frost lives on `#main-content`; avoid nested `main` and duplicate `flatGlassPageRoot`.
+ */
 export function DashboardHubCommandShell({
   children,
   hubLabel,
@@ -45,8 +48,8 @@ export function DashboardHubCommandShell({
   const skipCinematic = lightUi === true;
 
   return (
-    <main
-      className={`relative min-h-screen overflow-x-hidden ${hudStyles.flatGlassPageRoot}`}
+    <div
+      className={`relative w-full overflow-x-hidden ${skipCinematic ? "light-ui-defer-paint" : ""}`}
       style={dcicModeVars}
       data-mode={dcicMode}
     >
@@ -59,10 +62,9 @@ export function DashboardHubCommandShell({
           className={`${compactVertical ? "space-y-2 pt-0" : "space-y-3 pt-2 md:pt-3"} ${compactHorizontal ? "px-0" : "px-1"}`}
         >
           <div className="hq-frosted-main-shell">
-            <SciFiPanel
-              className={`dashboard-bridge-frame idle-breathing ${hudStyles.focusPrimary}`}
-              bodyClassName={`dashboard-bridge-body flex flex-col gap-4 [-webkit-overflow-scrolling:touch] ${skipCinematic ? "light-ui-defer-paint" : ""}`}
-              variant="flat-glass"
+            <VisualLabCommandDeck
+              className={`idle-breathing ${skipCinematic ? "light-ui-defer-paint" : ""}`}
+              contentClassName={compactVertical ? "gap-3 md:gap-4" : "gap-4"}
             >
               <CornerNode corner="top-left" />
               <CornerNode corner="top-right" />
@@ -71,11 +73,11 @@ export function DashboardHubCommandShell({
                   {hubLabel}
                 </span>
               ) : null}
-              {children}
-            </SciFiPanel>
+              <div className="flex flex-col gap-4 [-webkit-overflow-scrolling:touch]">{children}</div>
+            </VisualLabCommandDeck>
           </div>
         </div>
       </div>
-    </main>
+    </div>
   );
 }

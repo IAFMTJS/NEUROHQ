@@ -976,20 +976,10 @@ html[data-light-ui="true"] body {
   box-shadow: var(--hud-card-rim) !important;
 }
 
-/* Light UI + /tasks command deck: same card stack; optional lighter blur for scroll perf */
-[data-light-ui="true"] [data-route-tasks="true"] .tasks-command-deck .glass-card,
-[data-light-ui="true"] [data-route-tasks="true"] .tasks-command-deck .card-simple,
-[data-light-ui="true"] [data-route-tasks="true"] .tasks-command-deck .card-simple-accent {
-  backdrop-filter: blur(16px) saturate(1.08) !important;
-  -webkit-backdrop-filter: blur(16px) saturate(1.08) !important;
-  background: var(--hud-surface-card) !important;
-  box-shadow: var(--hud-card-rim) !important;
-}
-
-/* Light UI + /profile command deck (same deck shell as /tasks) */
-[data-light-ui="true"] [data-route-profile="true"] .tasks-command-deck .glass-card,
-[data-light-ui="true"] [data-route-profile="true"] .tasks-command-deck .card-simple,
-[data-light-ui="true"] [data-route-profile="true"] .tasks-command-deck .card-simple-accent {
+/* Light UI + command deck: same card stack; optional lighter blur for scroll perf */
+[data-light-ui="true"] [data-deck-chrome="true"] .tasks-command-deck .glass-card,
+[data-light-ui="true"] [data-deck-chrome="true"] .tasks-command-deck .card-simple,
+[data-light-ui="true"] [data-deck-chrome="true"] .tasks-command-deck .card-simple-accent {
   backdrop-filter: blur(16px) saturate(1.08) !important;
   -webkit-backdrop-filter: blur(16px) saturate(1.08) !important;
   background: var(--hud-surface-card) !important;
@@ -1065,11 +1055,14 @@ html[data-light-ui="true"] body {
 
 /* Light UI: glass/card decorative pseudo-elements – remove gradient borders and top highlight */
 [data-light-ui="true"] .glass-panel::before,
-[data-light-ui="true"] .glass-card::before,
 [data-light-ui="true"] .hq-card::before,
 [data-light-ui="true"] .glass-panel::after,
-[data-light-ui="true"] .glass-card::after,
 [data-light-ui="true"] .hq-card::after {
+  display: none !important;
+}
+/* Light UI: keep hero rim/shine on marked cards (Missions main mission = Visual Lab parity) */
+[data-light-ui="true"] .glass-card:not(.glass-preserve-decoration)::before,
+[data-light-ui="true"] .glass-card:not(.glass-preserve-decoration)::after {
   display: none !important;
 }
 
@@ -2293,8 +2286,8 @@ body {
     0 0 0 1px rgba(var(--mode-rgb), 0.06);
 }
 
-/* /tasks: command-deck ambient scroll shell (layer on #main-content over .hq-app-shell) */
-main#main-content.tasks-route-shell {
+/* Hub pages (all except /dashboard): same ambient scroll shell as Missions */
+main#main-content.hq-deck-ambient-shell {
   background:
     radial-gradient(ellipse 92% 50% at 50% -14%, rgba(var(--mode-rgb), 0.22), transparent 58%),
     radial-gradient(ellipse 55% 38% at 100% 0%, rgba(var(--mode-rgb-deep), 0.14), transparent 52%),
@@ -2305,7 +2298,7 @@ main#main-content.tasks-route-shell {
     inset 0 1px 0 rgba(255, 255, 255, 0.07),
     0 0 0 1px rgba(var(--mode-rgb), 0.05);
 }
-[data-light-ui="true"] main#main-content.tasks-route-shell {
+[data-light-ui="true"] main#main-content.hq-deck-ambient-shell {
   background:
     radial-gradient(ellipse 92% 50% at 50% -14%, rgba(var(--mode-rgb), 0.22), transparent 58%),
     radial-gradient(ellipse 55% 38% at 100% 0%, rgba(var(--mode-rgb-deep), 0.14), transparent 52%),
@@ -2315,25 +2308,6 @@ main#main-content.tasks-route-shell {
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.07),
     0 0 0 1px rgba(var(--mode-rgb), 0.05);
-}
-
-main#main-content.profile-route-shell {
-  background:
-    radial-gradient(ellipse 92% 50% at 50% -14%, rgba(var(--mode-rgb), 0.2), transparent 58%),
-    radial-gradient(ellipse 55% 38% at 100% 0%, rgba(var(--mode-rgb), 0.12), transparent 52%),
-    linear-gradient(to bottom, rgba(2, 10, 22, 0.82) 0%, rgba(5, 14, 26, 0.58) 45%, rgba(2, 8, 18, 0.88) 100%);
-  backdrop-filter: blur(28px) saturate(1.12);
-  -webkit-backdrop-filter: blur(28px) saturate(1.12);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
-}
-[data-light-ui="true"] main#main-content.profile-route-shell {
-  background:
-    radial-gradient(ellipse 92% 50% at 50% -14%, rgba(var(--mode-rgb), 0.2), transparent 58%),
-    radial-gradient(ellipse 55% 38% at 100% 0%, rgba(var(--mode-rgb), 0.12), transparent 52%),
-    linear-gradient(to bottom, rgba(2, 10, 22, 0.82) 0%, rgba(5, 14, 26, 0.58) 45%, rgba(2, 8, 18, 0.88) 100%);
-  backdrop-filter: none !important;
-  -webkit-backdrop-filter: none !important;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
 }
 
 /**
@@ -2365,9 +2339,15 @@ main.tasks-page-root {
   box-shadow: none !important;
 }
 
-/* /tasks shell: dock + inset cards align with command deck */
-[data-route-tasks="true"] .bottom-nav-fab-bar,
-[data-route-profile="true"] .bottom-nav-fab-bar {
+.hq-page-surface-clear {
+  background: transparent !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  box-shadow: none !important;
+}
+
+/* Deck chrome: bottom dock + elevated cards (hub pages; `/dashboard` home uses default dock) */
+[data-deck-chrome="true"] .bottom-nav-fab-bar {
   border-color: rgba(var(--mode-rgb), 0.24);
   background: linear-gradient(180deg, rgba(6, 22, 38, 0.95) 0%, rgba(3, 10, 20, 0.98) 100%);
   box-shadow:
@@ -2378,12 +2358,9 @@ main.tasks-page-root {
   -webkit-backdrop-filter: blur(22px) saturate(1.18);
 }
 
-[data-route-tasks="true"] .dashboard-cinematic .glass-card,
-[data-route-tasks="true"] .dashboard-cinematic .card-simple,
-[data-route-tasks="true"] .dashboard-cinematic .card-simple-accent,
-[data-route-profile="true"] .dashboard-cinematic .glass-card,
-[data-route-profile="true"] .dashboard-cinematic .card-simple,
-[data-route-profile="true"] .dashboard-cinematic .card-simple-accent {
+[data-deck-chrome="true"] .dashboard-cinematic .glass-card,
+[data-deck-chrome="true"] .dashboard-cinematic .card-simple,
+[data-deck-chrome="true"] .dashboard-cinematic .card-simple-accent {
   border: 1px solid rgba(var(--mode-rgb), 0.28) !important;
   background: var(--hud-surface-card-elevated) !important;
   backdrop-filter: blur(22px) saturate(1.12);
@@ -2396,7 +2373,7 @@ main.tasks-page-root {
     inset 0 -10px 26px rgba(0, 0, 0, 0.36) !important;
 }
 
-[data-route-tasks="true"] .dashboard-cinematic .dashboard-top-strip {
+[data-deck-chrome="true"] .dashboard-cinematic .dashboard-top-strip {
   border-top-color: rgba(var(--mode-rgb), 0.24);
   border-bottom-color: rgba(var(--mode-rgb), 0.22);
   background: rgba(4, 14, 26, 0.55);
@@ -2404,12 +2381,12 @@ main.tasks-page-root {
   -webkit-backdrop-filter: blur(12px);
 }
 
-[data-route-tasks="true"] .dashboard-cinematic .dashboard-mini-btn {
+[data-deck-chrome="true"] .dashboard-cinematic .dashboard-mini-btn {
   border-color: rgba(var(--mode-rgb), 0.34);
   background: linear-gradient(180deg, rgba(8, 32, 52, 0.9), rgba(5, 20, 36, 0.94));
 }
 
-[data-route-tasks="true"] .dashboard-cinematic .dashboard-mini-btn-primary {
+[data-deck-chrome="true"] .dashboard-cinematic .dashboard-mini-btn-primary {
   border-color: rgba(var(--mode-rgb), 0.52);
   background: linear-gradient(180deg, rgba(10, 52, 82, 0.96), rgba(8, 38, 60, 0.98));
   box-shadow: 0 0 14px rgba(var(--mode-rgb), 0.22);

@@ -19,7 +19,7 @@ export function ProfileCommandDeckLayout({ main, children }: Props) {
   const deckTitle = main === "engine" ? "Engine" : "Profiel";
 
   return (
-    <div className="profile-page-root container page page-wide pb-10 pt-4 sm:pt-5">
+    <div className="profile-page-root container page page-wide dashboard-cinematic pb-10 pt-4 sm:pt-5">
       <div className="hq-frosted-main-shell">
         <VisualLabCommandDeck>
           <header className="flex flex-wrap items-start justify-between gap-3 border-b border-[rgba(var(--mode-rgb),0.18)] pb-4">

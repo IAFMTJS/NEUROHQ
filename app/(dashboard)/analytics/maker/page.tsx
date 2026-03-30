@@ -4,6 +4,8 @@ import { createClient } from "@/lib/supabase/server";
 import { HQPageHeader } from "@/components/hq";
 import { getAnalyticsFunnel } from "@/app/actions/analytics-funnel";
 import { getMakerWeeklyStats } from "@/app/actions/analytics-maker";
+import { VisualLabCommandDeck } from "@/components/visual-lab/VisualLabCommandDeck";
+import { CornerNode } from "@/components/hud-test/CornerNode";
 
 export default async function MakerAnalyticsPage() {
   const supabase = await createClient();
@@ -33,7 +35,11 @@ export default async function MakerAnalyticsPage() {
 
   return (
     <div className="container page page-wide dashboard-cinematic pb-10">
-      <div className="hq-frosted-main-shell space-y-6">
+      <div className="hq-frosted-main-shell">
+        <VisualLabCommandDeck>
+          <CornerNode corner="top-left" />
+          <CornerNode corner="top-right" />
+          <div className="space-y-6">
       <HQPageHeader
         title="Maker dashboard"
         subtitle="High-level funnel and engine health (admin only)."
@@ -255,6 +261,8 @@ export default async function MakerAnalyticsPage() {
         This page is for internal engine sanity‑checks. Counts for forced confrontations and Minimal
         Integrity missions are based on analytics_events going forward.
       </p>
+          </div>
+        </VisualLabCommandDeck>
       </div>
     </div>
   );

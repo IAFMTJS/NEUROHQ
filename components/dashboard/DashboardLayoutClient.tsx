@@ -52,6 +52,9 @@ export function DashboardLayoutClient({
   initialDashboardSnapshot: initialDashboardSnapshotProp,
 }: Props) {
   const pathname = usePathname();
+  const normalizedPath = pathname.replace(/\/$/, "") || "/";
+  const dashboardHomeRoute = normalizedPath === "/dashboard";
+  const deckChrome = !dashboardHomeRoute;
   const tasksRoute = isTasksRoute(pathname);
   const profileRoute = isProfileRoute(pathname);
   const deckChromeRoute = tasksRoute || profileRoute;
@@ -132,6 +135,7 @@ export function DashboardLayoutClient({
               className="relative flex min-h-screen max-h-[100dvh] w-full max-w-[100vw] flex-col overflow-x-hidden bg-transparent"
               data-ui="dark-commander"
               data-mode={mode}
+              data-deck-chrome={deckChrome ? "true" : undefined}
               data-route-tasks={tasksRoute ? "true" : undefined}
               data-route-profile={profileRoute ? "true" : undefined}
             >

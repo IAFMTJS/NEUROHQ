@@ -55,7 +55,8 @@ import { GroceryMissionPlannerCard } from "@/components/budget/GroceryMissionPla
 import { BudgetLockHub } from "@/components/budget/BudgetLockHub";
 import { BudgetOptimizationHub } from "@/components/budget/BudgetOptimizationHub";
 import { StrategyEnginePaceHint } from "@/components/strategy/StrategyEnginePaceHint";
-import hudStyles from "@/components/hud-test/hud.module.css";
+import { VisualLabCommandDeck } from "@/components/visual-lab/VisualLabCommandDeck";
+import { CornerNode } from "@/components/hud-test/CornerNode";
 
 const BudgetHistorySelector = nextDynamic(() => import("@/components/BudgetHistorySelector").then((m) => ({ default: m.BudgetHistorySelector })), { loading: () => null });
 const ExportBudgetCsvButton = nextDynamic(() => import("@/components/ExportBudgetCsvButton").then((m) => ({ default: m.ExportBudgetCsvButton })), { loading: () => null });
@@ -509,23 +510,35 @@ export default async function BudgetPage({ searchParams }: Props) {
 
   return (
     <BudgetSnapshotProvider>
-      <main
+      <div
         className={
           simplifiedBudget
-            ? `relative overflow-hidden flex min-h-0 flex-1 flex-col ${hudStyles.flatGlassPageRoot}`
-            : "relative min-h-screen"
+            ? "hq-page-surface-clear relative flex min-h-0 flex-1 flex-col overflow-hidden"
+            : "hq-page-surface-clear relative w-full min-h-0"
         }
       >
         {simplifiedBudget ? (
           <div className="relative z-10 flex min-h-[calc(100svh-7rem)] w-full max-w-none flex-1 flex-col pb-6 sm:min-h-[calc(100svh-6.5rem)] dashboard-cinematic">
-            <div className="hq-frosted-main-shell min-h-0 flex flex-1 flex-col">{budgetTabsShell}</div>
+            <div className="hq-frosted-main-shell flex min-h-0 flex-1 flex-col">
+              <VisualLabCommandDeck contentClassName="min-h-0 flex-1" className="flex min-h-0 flex-1 flex-col">
+                <CornerNode corner="top-left" />
+                <CornerNode corner="top-right" />
+                <div className="flex min-h-0 flex-1 flex-col">{budgetTabsShell}</div>
+              </VisualLabCommandDeck>
+            </div>
           </div>
         ) : (
           <div className="container page page-wide dashboard-cinematic relative z-10 pb-10">
-            <div className="hq-frosted-main-shell">{budgetTabsShell}</div>
+            <div className="hq-frosted-main-shell">
+              <VisualLabCommandDeck>
+                <CornerNode corner="top-left" />
+                <CornerNode corner="top-right" />
+                {budgetTabsShell}
+              </VisualLabCommandDeck>
+            </div>
           </div>
         )}
-      </main>
+      </div>
     </BudgetSnapshotProvider>
   );
 }

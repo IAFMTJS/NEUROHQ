@@ -57,7 +57,7 @@ const MOCK_ROUTINE_BLOCKS = [
 
 function MainMissionHero() {
   return (
-    <article className="glass-card relative !rounded-xl !p-0">
+    <article className="glass-card glass-preserve-decoration relative !rounded-xl !p-0">
       <div className="absolute left-0 top-0 z-[1] h-full w-1 bg-gradient-to-b from-[var(--semantic-accent)] to-emerald-500/70" aria-hidden />
       <div className="relative p-4 pl-5 md:p-5 md:pl-6">
         <p className="text-[9px] font-bold uppercase tracking-[0.16em] text-[var(--semantic-accent)]">Main mission</p>

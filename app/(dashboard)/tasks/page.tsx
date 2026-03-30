@@ -53,10 +53,6 @@ const CommanderMissionCard = nextDynamic(
 );
 /** Imported directly (not dynamic) to avoid HMR breaking server-action refs (Turbopack "module factory not available"). */
 import { TaskList } from "@/components/TaskList";
-const BacklogAndToekomstTriggers = nextDynamic(
-  () => import("@/components/missions/BacklogAndToekomstTriggers").then((m) => ({ default: m.BacklogAndToekomstTriggers })),
-  { loading: () => null }
-);
 async function ResistanceIndexBannerAsync() {
   return getResistanceIndex();
 }
@@ -350,14 +346,9 @@ async function MissionsSectionAsync({
           }}
           missionEngineWarnings={missionEngineWarnings}
           missionsContextBelowHero={<ModeBanner mode={mode} />}
+          missionsBacklogShelf={{ backlog, futureTasks, todayDate: dateStr }}
         />
       </div>
-    </div>
-  );
-
-  const backlogBlock = (
-    <div className="tasks-war-hide">
-      <BacklogAndToekomstTriggers backlog={backlog} futureTasks={futureTasks} todayDate={dateStr} />
     </div>
   );
 
@@ -370,7 +361,6 @@ async function MissionsSectionAsync({
         <GrowthMissionsRibbon snap={growthSnap} fromGrowthPage={growthFromGrowthPage} />
       ) : null}
       {diagnosticsBlock}
-      {backlogBlock}
     </>
   ) : (
     <>
@@ -378,7 +368,6 @@ async function MissionsSectionAsync({
       {diagnosticsBlock}
       {smartSuggestionBlock}
       {tasksTodayBlock}
-      {backlogBlock}
     </>
   );
 

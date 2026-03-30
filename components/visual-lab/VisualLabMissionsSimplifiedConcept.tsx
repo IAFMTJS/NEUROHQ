@@ -34,7 +34,7 @@ const MOCK_ROUTINE_BLOCKS = [
 
 function SimplifiedMainMissionHero() {
   return (
-    <section className="glass-card relative !rounded-xl !p-0" aria-label="Hoofdmissie (mock)">
+    <section className="glass-card glass-preserve-decoration relative !rounded-xl !p-0" aria-label="Hoofdmissie (mock)">
       <div
         className="absolute left-0 top-0 z-[1] h-full w-1 bg-gradient-to-b from-[var(--semantic-accent)] to-emerald-500/70"
         aria-hidden

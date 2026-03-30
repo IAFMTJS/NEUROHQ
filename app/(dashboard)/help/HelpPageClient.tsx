@@ -14,6 +14,8 @@ import {
 } from "@/content/help/sections";
 import { SimplifiedPageShell } from "@/components/layout/SimplifiedPageShell";
 import { SIMPLIFIED_VIEWPORT_WRAPPER } from "@/lib/simplified-page-layout";
+import { VisualLabCommandDeck } from "@/components/visual-lab/VisualLabCommandDeck";
+import { CornerNode } from "@/components/hud-test/CornerNode";
 
 const LEGACY_HASH_REDIRECTS: Record<string, string> = {
   intro: "dashboard",
@@ -196,14 +198,8 @@ export function HelpPageClient({ simplifiedLayout = false }: { simplifiedLayout?
     setTimeout(() => el.scrollIntoView({ behavior: "smooth", block: "start" }), 0);
   }, []);
 
-  const inner = (
-    <div
-      className={
-        simplifiedLayout
-          ? "help-page mx-auto max-w-5xl pb-8"
-          : "container page help-page mx-auto max-w-5xl pb-24 dashboard-cinematic hq-frosted-main-shell"
-      }
-    >
+  const helpMainContent = (
+    <>
       <header className="mb-10 space-y-4">
         {!simplifiedLayout && (
           <Link
@@ -349,6 +345,20 @@ export function HelpPageClient({ simplifiedLayout = false }: { simplifiedLayout?
           ^ Contents
         </button>
       )}
+    </>
+  );
+
+  const inner = simplifiedLayout ? (
+    <div className="help-page mx-auto max-w-5xl pb-8">{helpMainContent}</div>
+  ) : (
+    <div className="container page help-page mx-auto max-w-5xl pb-24 dashboard-cinematic">
+      <div className="hq-frosted-main-shell">
+        <VisualLabCommandDeck>
+          <CornerNode corner="top-left" />
+          <CornerNode corner="top-right" />
+          {helpMainContent}
+        </VisualLabCommandDeck>
+      </div>
     </div>
   );
 

@@ -33,12 +33,13 @@ type Props = {
   children: ReactNode;
 };
 
-/** Scroll shell: global frost is on `#app-shell` (`.hq-app-shell`); `/tasks` adds `tasks-route-shell` on main. */
+/** Scroll shell: global frost is on `#app-shell`; hub pages (all except `/dashboard`) get `hq-deck-ambient-shell` like Missions. */
 export function DashboardMainContent({ children }: Props) {
   const pathname = usePathname();
   const dashboardHome = isDashboardHome(pathname);
   const tasksShell = !dashboardHome && isTasksRoute(pathname);
   const profileShell = !dashboardHome && isProfileRoute(pathname);
+  const deckAmbient = !dashboardHome;
 
   return (
     <main
@@ -46,7 +47,7 @@ export function DashboardMainContent({ children }: Props) {
       data-page-surface={dashboardHome ? "dashboard-home" : "flat-glass"}
       data-page-route={tasksShell ? "tasks" : profileShell ? "profile" : undefined}
       className={`scrollbar-hide relative z-10 min-h-0 flex-1 overflow-auto ${
-        tasksShell ? "tasks-route-shell" : profileShell ? "profile-route-shell" : "bg-transparent"
+        deckAmbient ? "hq-deck-ambient-shell" : "bg-transparent"
       }`}
       style={mainPaddingStyle}
       tabIndex={-1}

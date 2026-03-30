@@ -61,8 +61,15 @@ export async function tryClaimDailyPushSend(
     trigger_type: triggerType,
   });
   if (!error) return true;
+  // Unique violation: another worker or prior claim for this (user, day, trigger).
   if ((error as { code?: string }).code === "23505") return false;
-  throw new Error((error as { message?: string }).message ?? "push daily claim insert failed");
+  // Missing migration, RLS, or transient DB errors — do not fail the whole hourly cron.
+  console.error(
+    "[push-daily-claim] insert failed",
+    (error as { code?: string }).code,
+    (error as { message?: string }).message
+  );
+  return false;
 }
 
 /** Release claim so another hour can retry (send failed) or drop after success (row no longer needed). */

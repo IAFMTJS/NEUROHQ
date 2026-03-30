@@ -44,6 +44,7 @@ import { refreshMergedSnapshotFromNetwork } from "@/lib/daily-bootstrap";
 import { parseMissionProgressionFromTaskTags } from "@/lib/mission-progression";
 import { useDCICGameState } from "@/lib/dcic/game-state-client";
 import { NeuroMicroReportBar } from "@/components/missions/NeuroMicroReportBar";
+import { BacklogAndToekomstTriggers } from "@/components/missions/BacklogAndToekomstTriggers";
 
 const WEEKDAY_LABELS: Record<number, string> = { 1: "Mon", 2: "Tue", 3: "Wed", 4: "Thu", 5: "Fri", 6: "Sat", 7: "Sun" };
 
@@ -94,6 +95,12 @@ type Props = {
   energyCap?: { used: number; cap: number; remaining: number; planned: number } | null;
   /** Mode banner etc. Consequence + focus-slot hints are merged into MissionsEngineWarningIcon when missionsHeroLayout. */
   missionsContextBelowHero?: ReactNode;
+  /** Backlog / Toekomst uitklap — shown only on the missions "backlog" subtab when set. */
+  missionsBacklogShelf?: {
+    backlog: { id: string; title: string | null; due_date: string | null; category?: string | null }[];
+    futureTasks: { id: string; title: string | null; due_date: string | null; category?: string | null }[];
+    todayDate: string;
+  } | null;
   /** Recovery / energy consequence flags (missions page); merged with focus-slot limitMessage in the warning icon. */
   missionEngineWarnings?: {
     energyDepleted?: boolean;
@@ -195,6 +202,7 @@ export function TaskList({
   commandDeckVisuals = false,
   energyCap = null,
   missionsContextBelowHero = null,
+  missionsBacklogShelf = null,
   missionEngineWarnings,
 }: Props) {
   const router = useRouter();
@@ -1251,6 +1259,15 @@ export function TaskList({
                 </p>
               </div>
             ) : null}
+            {effectiveViewMode === "backlog" && missionsBacklogShelf ? (
+              <div className="tasks-war-hide mb-3 w-full">
+                <BacklogAndToekomstTriggers
+                  backlog={missionsBacklogShelf.backlog}
+                  futureTasks={missionsBacklogShelf.futureTasks}
+                  todayDate={missionsBacklogShelf.todayDate}
+                />
+              </div>
+            ) : null}
           </>
         )}
         {!isWarMode && !missionsHeroLayout && (
@@ -1331,7 +1348,7 @@ export function TaskList({
                <section
                   className={
                     commandDeckVisuals
-                      ? "glass-card relative !rounded-xl !p-0"
+                      ? "glass-card glass-preserve-decoration relative !rounded-xl !p-0"
                       : "missions-hero-card relative overflow-hidden rounded-2xl border border-[rgba(var(--mode-rgb),0.45)] bg-gradient-to-b from-[rgba(var(--mode-rgb),0.14)] to-[var(--bg-surface)]/25 shadow-[0_0_36px_rgba(var(--mode-rgb),0.18)]"
                   }
                   aria-label="Hoofdmissie"

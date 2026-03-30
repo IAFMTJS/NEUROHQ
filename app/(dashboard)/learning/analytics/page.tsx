@@ -4,6 +4,8 @@ import { getUserPreferencesOrDefaults } from "@/app/actions/preferences";
 import { getLearningAnalytics } from "@/app/actions/learning-analytics";
 import { SimplifiedPageShell } from "@/components/layout/SimplifiedPageShell";
 import { SIMPLIFIED_VIEWPORT_WRAPPER } from "@/lib/simplified-page-layout";
+import { VisualLabCommandDeck } from "@/components/visual-lab/VisualLabCommandDeck";
+import { CornerNode } from "@/components/hud-test/CornerNode";
 
 const LearningVelocityChart = dynamic(
   () => import("@/components/learning/LearningVelocityChart").then((m) => ({ default: m.LearningVelocityChart })),
@@ -103,13 +105,19 @@ export default async function LearningAnalyticsPage(_props: Props) {
 
   return (
     <div className="container page page-wide dashboard-cinematic pb-10">
-      <div className="hq-frosted-main-shell space-y-6">
-        <HQPageHeader
-          title="Growth analytics"
-          subtitle="Trends in your learning sessions and topic focus."
-          backHref="/learning"
-        />
-        {body}
+      <div className="hq-frosted-main-shell">
+        <VisualLabCommandDeck>
+          <CornerNode corner="top-left" />
+          <CornerNode corner="top-right" />
+          <div className="space-y-6">
+            <HQPageHeader
+              title="Growth analytics"
+              subtitle="Trends in your learning sessions and topic focus."
+              backHref="/learning"
+            />
+            {body}
+          </div>
+        </VisualLabCommandDeck>
       </div>
     </div>
   );

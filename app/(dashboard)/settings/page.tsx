@@ -16,6 +16,8 @@ import { SettingsSectionCard } from "@/components/settings/SettingsSectionCard";
 import { profileEngineHref } from "@/lib/profile-routes";
 import { SimplifiedPageShell } from "@/components/layout/SimplifiedPageShell";
 import { SIMPLIFIED_VIEWPORT_WRAPPER } from "@/lib/simplified-page-layout";
+import { VisualLabCommandDeck } from "@/components/visual-lab/VisualLabCommandDeck";
+import { CornerNode } from "@/components/hud-test/CornerNode";
 
 const SettingsExport = nextDynamic(() => import("@/components/SettingsExport").then((m) => ({ default: m.SettingsExport })), { loading: () => null });
 const SettingsPush = nextDynamic(() => import("@/components/SettingsPush").then((m) => ({ default: m.SettingsPush })), {
@@ -223,11 +225,17 @@ export default async function SettingsPage() {
 
   return (
     <div className="container page settings-page dashboard-cinematic pb-10">
-      <div className="hq-frosted-main-shell space-y-6">
-        <SettingsShell />
-        <Suspense fallback={<SettingsSnapshotFallback />}>
-          <SettingsContent />
-        </Suspense>
+      <div className="hq-frosted-main-shell">
+        <VisualLabCommandDeck>
+          <CornerNode corner="top-left" />
+          <CornerNode corner="top-right" />
+          <div className="space-y-6">
+            <SettingsShell />
+            <Suspense fallback={<SettingsSnapshotFallback />}>
+              <SettingsContent />
+            </Suspense>
+          </div>
+        </VisualLabCommandDeck>
       </div>
     </div>
   );

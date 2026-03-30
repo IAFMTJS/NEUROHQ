@@ -6,6 +6,8 @@ import { ReportSnapshotFallback } from "@/components/report/ReportSnapshotFallba
 import { ReportInsightsContent } from "@/components/report/ReportInsightsContent";
 import { SimplifiedPageShell } from "@/components/layout/SimplifiedPageShell";
 import { SIMPLIFIED_VIEWPORT_WRAPPER } from "@/lib/simplified-page-layout";
+import { VisualLabCommandDeck } from "@/components/visual-lab/VisualLabCommandDeck";
+import { CornerNode } from "@/components/hud-test/CornerNode";
 
 type Props = { searchParams: Promise<{ weekStart?: string; tab?: string }> };
 
@@ -55,11 +57,17 @@ export default async function ReportPage({ searchParams }: Props) {
 
   return (
     <div className="container page page-wide dashboard-cinematic pb-10">
-      <div className="hq-frosted-main-shell space-y-6">
-        <ReportShell />
-        <Suspense fallback={<ReportSnapshotFallback />}>
-          <ReportInsightsContent searchParams={searchParams} />
-        </Suspense>
+      <div className="hq-frosted-main-shell">
+        <VisualLabCommandDeck>
+          <CornerNode corner="top-left" />
+          <CornerNode corner="top-right" />
+          <div className="space-y-6">
+            <ReportShell />
+            <Suspense fallback={<ReportSnapshotFallback />}>
+              <ReportInsightsContent searchParams={searchParams} />
+            </Suspense>
+          </div>
+        </VisualLabCommandDeck>
       </div>
     </div>
   );
