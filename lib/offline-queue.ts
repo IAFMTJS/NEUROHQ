@@ -3,8 +3,8 @@
  * Store: neurohq-pending with { id, action, payload, createdAt }.
  */
 
-const DB_NAME = "neurohq-offline";
-const STORE_NAME = "pending";
+const DB_NAME = "neurohq-offline-actions";
+const STORE_NAME = "pendingActions";
 const DB_VERSION = 1;
 
 export type QueuedEntry = {

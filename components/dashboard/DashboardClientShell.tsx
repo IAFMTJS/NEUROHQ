@@ -588,6 +588,8 @@ export function DashboardClientShell() {
                 <OverdriveBanner
                   lockedUntil={gameState.mode.lockedUntil}
                   overdriveSessionStart={gameState.mode.overdriveSessionStart}
+                  autoTriggered={gameState.mode.overdriveAutoTriggered === true}
+                  triggerReason={gameState.mode.overdriveTriggerReason ?? null}
                 />
               )}
               <DashboardCommandDeckFrame

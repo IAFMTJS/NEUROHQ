@@ -9,6 +9,21 @@ export function ServiceWorkerRegistration() {
   useEffect(() => {
     if (typeof window === "undefined" || !("serviceWorker" in navigator)) return;
 
+    const isAuthenticatedWarmupRoute = () => {
+      const p = window.location.pathname.replace(/\/$/, "") || "/";
+      return (
+        p === "/dashboard" ||
+        p === "/tasks" ||
+        p === "/budget" ||
+        p === "/xp" ||
+        p === "/strategy" ||
+        p === "/analytics" ||
+        p === "/report" ||
+        p === "/settings" ||
+        p.startsWith("/learning")
+      );
+    };
+
     const onControllerChange = () => window.location.reload();
     navigator.serviceWorker.addEventListener("controllerchange", onControllerChange);
 
@@ -24,7 +39,10 @@ export function ServiceWorkerRegistration() {
       .then((registration) => {
         navigator.serviceWorker.ready
           .then((readyRegistration) => {
-            readyRegistration.active?.postMessage({ type: "WARMUP_BACKGROUND_CACHE" });
+            // Avoid caching unauthenticated HTML into the day cache; only warmup auth pages when we're on an auth surface.
+            const includeAuth = isAuthenticatedWarmupRoute();
+            const today = new Date().toISOString().slice(0, 10);
+            readyRegistration.active?.postMessage({ type: "WARMUP_BACKGROUND_CACHE", includeAuth, today });
             if (navigator.onLine) {
               readyRegistration.active?.postMessage({ type: "SYNC_OFFLINE_QUEUE" });
             }

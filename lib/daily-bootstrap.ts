@@ -69,8 +69,16 @@ export function usePeriodicBootstrapRefresh(intervalMinutes = PERIODIC_SNAPSHOT_
     if (typeof window === "undefined") return;
     let timer: number | undefined;
     let stopped = false;
+    let inFlight = false;
+    let lastRunAt = 0;
 
     const runOnce = async () => {
+      if (stopped || inFlight) return;
+      const now = Date.now();
+      // Avoid rapid repeat (focus + visibility + online can fire together).
+      if (now - lastRunAt < 25_000) return;
+      inFlight = true;
+      lastRunAt = now;
       try {
         const bootstrap = await mergeDailySnapshotFromNetwork();
         if (stopped || !bootstrap) return;
@@ -95,6 +103,8 @@ export function usePeriodicBootstrapRefresh(intervalMinutes = PERIODIC_SNAPSHOT_
         if (bootstrap.learning) setLearningSnapshot(bootstrap.learning as any);
       } catch {
         // ignore periodic errors; will try again on next tick
+      } finally {
+        inFlight = false;
       }
     };
 
@@ -107,9 +117,26 @@ export function usePeriodicBootstrapRefresh(intervalMinutes = PERIODIC_SNAPSHOT_
       }, ms);
     };
 
+    // Keep the day snappy: run soon after mount (but not synchronously during first paint).
+    const kickoffId = window.setTimeout(() => void runOnce(), 4_000);
+
+    const onVisible = () => {
+      if (document.visibilityState === "visible") void runOnce();
+    };
+    const onFocus = () => void runOnce();
+    const onOnline = () => void runOnce();
+
+    document.addEventListener("visibilitychange", onVisible);
+    window.addEventListener("focus", onFocus);
+    window.addEventListener("online", onOnline);
+
     schedule();
     return () => {
       stopped = true;
+      window.clearTimeout(kickoffId);
+      document.removeEventListener("visibilitychange", onVisible);
+      window.removeEventListener("focus", onFocus);
+      window.removeEventListener("online", onOnline);
       if (timer !== undefined) {
         window.clearTimeout(timer);
       }

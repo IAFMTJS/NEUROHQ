@@ -11,9 +11,11 @@ import { todayDateString } from "@/lib/utils/timezone";
 import type { GameState, Mission } from "@/lib/dcic/types";
 import { applyBrainLayerToGameState } from "@/lib/dcic/brain-game-state";
 import { countWarTierDays, type DailyRowForBrain } from "@/lib/dcic/brain-status-average";
-import { autoModeCheck, passiveRecoveryTick, switchMode } from "@/lib/dcic/mode-engine";
+import { autoModeCheck, isModeLocked, passiveRecoveryTick, switchMode } from "@/lib/dcic/mode-engine";
+import { maybeAutoTriggerOverdrive } from "@/lib/dcic/overdrive-auto";
 import { updateDifficulty, generateDailyMissions } from "@/lib/dcic/difficulty-engine";
 import { rankFromLevel } from "@/lib/rank-ladder";
+import { yesterdayDate } from "@/lib/utils/timezone";
 
 const DCIC_MODE_VALUES: GameState["mode"]["current"][] = [
   "focus",
@@ -92,7 +94,7 @@ export async function getGameState(
     supabase
       .from("daily_state")
       .select(
-        "energy, focus, sensory_load, load, mental_battery, physical_health, sleep_hours, dcic_mode, dcic_locked_until, dcic_overdrive_session_start"
+        "energy, focus, sensory_load, load, mental_battery, physical_health, sleep_hours, dcic_mode, dcic_locked_until, dcic_overdrive_session_start, dcic_overdrive_auto_triggered, dcic_overdrive_trigger_reason, dcic_overdrive_triggered_at"
       )
       .eq("user_id", user.id)
       .eq("date", today)
@@ -201,6 +203,9 @@ export async function getGameState(
       lockedUntil: null,
       lastSwitch: null,
       overdriveSessionStart: null,
+      overdriveAutoTriggered: false,
+      overdriveTriggerReason: null,
+      overdriveTriggeredAt: null,
       warStage: 1,
       suggested: null,
       nextWarBonus: null,
@@ -269,17 +274,120 @@ export async function getGameState(
       lockedMode === "overdrive"
         ? (ds?.dcic_overdrive_session_start as string | null) ?? null
         : null;
+    gameState.mode.overdriveAutoTriggered = Boolean(ds?.dcic_overdrive_auto_triggered);
+    gameState.mode.overdriveTriggerReason =
+      (ds?.dcic_overdrive_trigger_reason as string | null | undefined) ?? null;
+    gameState.mode.overdriveTriggeredAt =
+      (ds?.dcic_overdrive_triggered_at as string | null | undefined) ?? null;
     passiveRecoveryTick(gameState);
   } else {
     autoModeCheck(gameState);
     passiveRecoveryTick(gameState);
-    const { error: lockErr } = await supabase.rpc("lock_daily_dcic_mode_if_unset", {
-      p_user_id: user.id,
-      p_date: today,
-      p_mode: gameState.mode.current,
+    gameState.mode.overdriveAutoTriggered = Boolean(ds?.dcic_overdrive_auto_triggered);
+    gameState.mode.overdriveTriggerReason =
+      (ds?.dcic_overdrive_trigger_reason as string | null | undefined) ?? null;
+    gameState.mode.overdriveTriggeredAt =
+      (ds?.dcic_overdrive_triggered_at as string | null | undefined) ?? null;
+
+    // Auto-trigger Overdrive (mixed rules: momentum combo + streak rescue) when safe.
+    const alreadyTriggeredToday = Boolean(ds?.dcic_overdrive_auto_triggered);
+    const modeLocked = isModeLocked(gameState);
+    const localHour = new Date().getHours();
+
+    let completionsInLast45m = 0;
+    let completionsToday = 0;
+    let streakAtRisk = false;
+
+    const lastCompletionDate = gameState.streak.lastCompletionDate;
+    if (gameState.streak.current > 0 && lastCompletionDate) {
+      streakAtRisk = lastCompletionDate === yesterdayDate(today);
+    }
+
+    // Only compute expensive completion windows when Overdrive could plausibly trigger.
+    if (
+      !alreadyTriggeredToday &&
+      !modeLocked &&
+      gameState.mode.current === "focus" &&
+      gameState.mode.brainStatusAveragePercent != null &&
+      ds?.energy != null &&
+      ds?.focus != null
+    ) {
+      const nowMs = Date.now();
+      const windowStartIso = new Date(nowMs - 45 * 60 * 1000).toISOString();
+      const dayStartIso = `${today}T00:00:00`;
+      const dayEndIso = `${today}T23:59:59.999`;
+
+      const [tasks45, missions45, tasksToday, missionsToday] = await Promise.all([
+        supabase
+          .from("tasks")
+          .select("id", { count: "exact", head: true })
+          .eq("user_id", user.id)
+          .eq("completed", true)
+          .gte("completed_at", windowStartIso),
+        supabase
+          .from("behaviour_log")
+          .select("id", { count: "exact", head: true })
+          .eq("user_id", user.id)
+          .not("mission_completed_at", "is", null)
+          .gte("mission_completed_at", windowStartIso),
+        supabase
+          .from("tasks")
+          .select("id", { count: "exact", head: true })
+          .eq("user_id", user.id)
+          .eq("completed", true)
+          .gte("completed_at", dayStartIso)
+          .lte("completed_at", dayEndIso),
+        supabase
+          .from("behaviour_log")
+          .select("id", { count: "exact", head: true })
+          .eq("user_id", user.id)
+          .not("mission_completed_at", "is", null)
+          .gte("mission_completed_at", dayStartIso)
+          .lte("mission_completed_at", dayEndIso),
+      ]);
+
+      completionsInLast45m = (tasks45.count ?? 0) + (missions45.count ?? 0);
+      completionsToday = (tasksToday.count ?? 0) + (missionsToday.count ?? 0);
+    }
+
+    const odDecision = maybeAutoTriggerOverdrive(gameState, {
+      nowMs: Date.now(),
+      localHour,
+      alreadyTriggeredToday,
+      modeLocked,
+      completionsInLast45m,
+      completionsToday,
+      streakAtRisk,
     });
-    if (lockErr) {
-      console.error("lock_daily_dcic_mode_if_unset:", lockErr);
+
+    if (odDecision.shouldTrigger) {
+      switchMode(gameState, "overdrive", { forced: true });
+      const nowIso = new Date().toISOString();
+      const { error: odErr } = await supabase.from("daily_state").upsert(
+        {
+          user_id: user.id,
+          date: today,
+          dcic_mode: "overdrive",
+          dcic_locked_until: gameState.mode.lockedUntil,
+          dcic_overdrive_session_start: gameState.mode.overdriveSessionStart,
+          dcic_overdrive_auto_triggered: true,
+          dcic_overdrive_trigger_reason: odDecision.reason,
+          dcic_overdrive_triggered_at: nowIso,
+        },
+        { onConflict: "user_id,date" }
+      );
+      if (odErr) {
+        console.error("auto-trigger overdrive:", odErr);
+      }
+    } else {
+      const { error: lockErr } = await supabase.rpc("lock_daily_dcic_mode_if_unset", {
+        p_user_id: user.id,
+        p_date: today,
+        p_mode: gameState.mode.current,
+      });
+      if (lockErr) {
+        console.error("lock_daily_dcic_mode_if_unset:", lockErr);
+      }
     }
   }
 

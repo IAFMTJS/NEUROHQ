@@ -163,6 +163,12 @@ export interface GameState {
     lastSwitch: string | null;
     /** When current mode is overdrive, session start for XP overheat (ISO). */
     overdriveSessionStart: string | null;
+    /** True when Overdrive was auto-triggered for this day (server-authoritative). */
+    overdriveAutoTriggered?: boolean;
+    /** Machine-readable reason for Overdrive auto trigger (if any). */
+    overdriveTriggerReason?: string | null;
+    /** ISO timestamp when Overdrive auto-triggered (if any). */
+    overdriveTriggeredAt?: string | null;
     /** Escalation stage for war mode (1–3). */
     warStage: 1 | 2 | 3;
     /** Optional suggestion from auto-mode/authority layer (not enforced). */

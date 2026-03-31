@@ -4,6 +4,7 @@ import { usePathname } from "next/navigation";
 import { TimezoneSyncBanner } from "@/components/TimezoneSyncBanner";
 import { AcceptanceGateLayer } from "@/components/acceptance/AcceptanceGateLayer";
 import { PageMascot } from "@/components/PageMascot";
+import { PwaStatusChip } from "@/components/PwaStatusChip";
 import type { ReactNode } from "react";
 
 function isDashboardHome(pathname: string) {
@@ -53,6 +54,7 @@ export function DashboardMainContent({ children }: Props) {
       tabIndex={-1}
     >
       <TimezoneSyncBanner />
+      <PwaStatusChip />
       <AcceptanceGateLayer />
       <PageMascot />
       {children}

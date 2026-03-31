@@ -6,6 +6,8 @@ import { getOverdriveHeatEfficiency } from "@/lib/dcic/mode-engine";
 type Props = {
   lockedUntil: string | null;
   overdriveSessionStart: string | null;
+  autoTriggered?: boolean;
+  triggerReason?: string | null;
 };
 
 const taglines = [
@@ -24,7 +26,19 @@ function formatRemaining(ms: number): string {
   return `${m}:${String(s).padStart(2, "0")}`;
 }
 
-export function OverdriveBanner({ lockedUntil, overdriveSessionStart }: Props) {
+function reasonLabel(reason: string | null | undefined): string | null {
+  if (!reason) return null;
+  if (reason === "momentum_combo") return "Auto-trigger: momentum combo";
+  if (reason === "streak_rescue") return "Auto-trigger: streak rescue";
+  return `Auto-trigger: ${reason}`;
+}
+
+export function OverdriveBanner({
+  lockedUntil,
+  overdriveSessionStart,
+  autoTriggered,
+  triggerReason,
+}: Props) {
   const [now, setNow] = useState(() => Date.now());
 
   useEffect(() => {
@@ -46,6 +60,11 @@ export function OverdriveBanner({ lockedUntil, overdriveSessionStart }: Props) {
   const heatPct = Math.round(heat * 100);
   const tagline = taglines[new Date().getDate() % taglines.length];
 
+  const autoReason = useMemo(
+    () => (autoTriggered ? reasonLabel(triggerReason) : null),
+    [autoTriggered, triggerReason]
+  );
+
   return (
     <div
       className="overdrive-banner relative z-20 mb-2 overflow-hidden rounded-2xl border border-fuchsia-500/40 bg-gradient-to-r from-violet-950/90 via-purple-950/85 to-fuchsia-950/80 px-4 py-3 shadow-[0_0_32px_rgba(168,85,247,0.35),0_0_60px_rgba(192,38,211,0.12)]"
@@ -66,6 +85,9 @@ export function OverdriveBanner({ lockedUntil, overdriveSessionStart }: Props) {
             Overdrive active — all XP ×2
           </p>
           <p className="mt-1 text-sm font-medium text-violet-50/95">{tagline}</p>
+          {autoReason ? (
+            <p className="mt-1 text-[11px] text-fuchsia-200/80">{autoReason}</p>
+          ) : null}
         </div>
         <div className="flex flex-wrap items-center gap-3 sm:justify-end">
           {lockedUntil ? (

@@ -25,6 +25,36 @@ function getDynamicCacheName() {
   return "neurohq-dynamic-" + CACHE_VERSION + "-" + getTodayDateString();
 }
 
+function isAuthenticatedAppRoutePath(pathname) {
+  // Daytime-critical authenticated surfaces: allow offline open + SWR HTML caching.
+  return (
+    pathname === "/dashboard" ||
+    pathname === "/tasks" ||
+    pathname === "/budget" ||
+    pathname === "/xp" ||
+    pathname === "/strategy" ||
+    pathname === "/analytics" ||
+    pathname === "/report" ||
+    pathname === "/settings" ||
+    // nested analytics / learning pages should behave the same once visited
+    pathname.startsWith("/learning")
+  );
+}
+
+function isSnapshotApiRequest(url) {
+  if (!url || !url.pathname) return false;
+  const p = url.pathname;
+  if (p === "/api/bootstrap/today") return true;
+  if (p === "/api/dashboard/data") return true;
+  if (p === "/api/xp/context") return true;
+  if (p === "/api/settings") return true;
+  if (p === "/api/strategy/snapshot") return true;
+  if (p === "/api/analytics/snapshot") return true;
+  if (p === "/api/tasks") return true;
+  if (p === "/api/budget/context") return true;
+  return false;
+}
+
 /** Never let fetch handler reject — prevents "FetchEvent.respondWith received an error: Load failed" after PWA resume. */
 function offlineFallbackResponse() {
   return caches.match(OFFLINE_PAGE).then(function (offline) {
@@ -43,8 +73,9 @@ function safeRespondWith(event, getPromise) {
 }
 
 // Offline mutation queue (IndexedDB) for API writes
-const OFFLINE_DB_NAME = "neurohq-offline";
-const OFFLINE_STORE_NAME = "pending";
+// NOTE: Keep separate from the app's action-queue (`lib/offline-queue.ts`) to avoid shape collisions.
+const OFFLINE_DB_NAME = "neurohq-sw-offline";
+const OFFLINE_STORE_NAME = "pendingHttp";
 const OFFLINE_DB_VERSION = 1;
 
 function openOfflineDB() {
@@ -196,9 +227,40 @@ const PUBLIC_ROUTES_TO_PREFETCH = [
   "/forgot-password",
 ];
 
-function warmupBackgroundCaches() {
+const AUTH_ROUTES_TO_PREFETCH = [
+  "/dashboard",
+  "/tasks",
+  "/budget",
+  "/xp",
+  "/strategy",
+  "/analytics",
+  "/report",
+  "/settings",
+];
+
+function getSnapshotEndpointsToPrefetch(today) {
+  var t = today || getTodayDateString();
+  // Keep URLs stable so CacheStorage hits; only include the params that are required.
+  return [
+    "/api/bootstrap/today",
+    "/api/dashboard/data?part=all",
+    "/api/xp/context?date=" + encodeURIComponent(t),
+    "/api/settings",
+    "/api/strategy/snapshot",
+    "/api/analytics/snapshot",
+    "/api/tasks?date=" + encodeURIComponent(t),
+    "/api/budget/context",
+  ];
+}
+
+function warmupBackgroundCaches(opts) {
+  var options = opts || {};
+  var includeAuth = options.includeAuth === true;
+  var today = options.today || getTodayDateString();
   return caches.open(getDynamicCacheName()).then(function (cache) {
-    const routesToPrefetch = PUBLIC_ROUTES_TO_PREFETCH;
+    const routesToPrefetch = includeAuth
+      ? PUBLIC_ROUTES_TO_PREFETCH.concat(AUTH_ROUTES_TO_PREFETCH, getSnapshotEndpointsToPrefetch(today))
+      : PUBLIC_ROUTES_TO_PREFETCH;
     return Promise.all(
       routesToPrefetch.map(function (route) {
         const request = new Request(route, { method: "GET" });
@@ -243,10 +305,12 @@ self.addEventListener("message", function (event) {
     return;
   }
   if (event.data.type === "WARMUP_BACKGROUND_CACHE") {
+    var includeAuth = !!event.data.includeAuth;
+    var today = typeof event.data.today === "string" ? event.data.today : undefined;
     if ("waitUntil" in event) {
-      event.waitUntil(warmupBackgroundCaches());
+      event.waitUntil(warmupBackgroundCaches({ includeAuth: includeAuth, today: today }));
     } else {
-      warmupBackgroundCaches();
+      warmupBackgroundCaches({ includeAuth: includeAuth, today: today });
     }
     return;
   }
@@ -461,7 +525,48 @@ self.addEventListener("fetch", function (event) {
       return;
     }
 
-    // GETs: network-first so fresh server state wins; fall back to cache when offline
+    // GETs: snapshot endpoints = cache-first + background revalidate (keep UI instant all day).
+    if (method === "GET" && isSnapshotApiRequest(url)) {
+      safeRespondWith(event, function () {
+        return caches.open(getDynamicCacheName()).then(function (cache) {
+          return cache.match(event.request).then(function (cached) {
+            if (cached) {
+              // Revalidate in the background; do not block the UI.
+              fetch(event.request)
+                .then(function (response) {
+                  if (response && response.ok) {
+                    safeCachePut(cache, event.request, response.clone());
+                  }
+                })
+                .catch(function () {});
+              return cached;
+            }
+            // No cached snapshot yet: fetch and cache; fallback to cached JSON when offline.
+            return fetch(event.request)
+              .then(function (response) {
+                if (response.ok) {
+                  safeCachePut(cache, event.request, response.clone());
+                }
+                return response;
+              })
+              .catch(function () {
+                return cache.match(event.request).then(function (c) {
+                  return (
+                    c ||
+                    new Response(JSON.stringify({ error: "Offline" }), {
+                      status: 503,
+                      headers: { "Content-Type": "application/json" },
+                    })
+                  );
+                });
+              });
+          });
+        });
+      });
+      return;
+    }
+
+    // Other GETs: network-first so fresh server state wins; fall back to cache when offline
     safeRespondWith(event, function () {
       return caches.open(getDynamicCacheName()).then(function (cache) {
         return fetch(event.request)
@@ -488,7 +593,7 @@ self.addEventListener("fetch", function (event) {
     return;
   }
 
-  // HTML pages: network-first so refresh/navigation reflects server changes immediately
+  // HTML pages: authenticated app routes = cache-first + background revalidate (instant PWA reopen).
   if (event.request.headers.get("accept")?.includes("text/html")) {
     var navRequest = new Request(event.request.url, {
       headers: event.request.headers,
@@ -498,6 +603,49 @@ self.addEventListener("fetch", function (event) {
 
     safeRespondWith(event, function () {
       return caches.open(getDynamicCacheName()).then(function (cache) {
+        const pathname = url.pathname;
+
+        if (isAuthenticatedAppRoutePath(pathname)) {
+          return cache.match(event.request).then(function (cached) {
+            if (cached) {
+              // Revalidate in the background; do not block the UI.
+              (event.preloadResponse || Promise.resolve(null))
+                .then(function (preloadedResponse) {
+                  return preloadedResponse || fetch(navRequest);
+                })
+                .then(function (response) {
+                  if (response && response.ok && event.request.method === "GET") {
+                    safeCachePut(cache, event.request, response.clone());
+                  }
+                })
+                .catch(function () {});
+              return cached;
+            }
+
+            // First visit: use preload/network and cache; fallback to offline page when unavailable.
+            return (event.preloadResponse || Promise.resolve(null))
+              .then(function (preloadedResponse) {
+                if (preloadedResponse) return preloadedResponse;
+                return fetch(navRequest);
+              })
+              .then(function (response) {
+                if (response && response.ok && event.request.method === "GET") {
+                  safeCachePut(cache, event.request, response.clone());
+                }
+                return response;
+              })
+              .catch(function () {
+                return cache.match(event.request).then(function (c) {
+                  if (c) return c;
+                  return caches.match(OFFLINE_PAGE).then(function (offline) {
+                    return offline || new Response("Offline", { status: 503 });
+                  });
+                });
+              });
+          });
+        }
+
+        // Other HTML: keep existing network-first behavior.
         return (event.preloadResponse || Promise.resolve(null))
           .then(function (preloadedResponse) {
             if (preloadedResponse) {

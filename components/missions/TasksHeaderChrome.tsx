@@ -9,6 +9,7 @@ import hudStyles from "@/components/hud-test/hud.module.css";
 function dcicModeLabel(mode: string | undefined): string {
   if (mode === "war") return "War mode";
   if (mode === "recovery") return "Recovery mode";
+  if (mode === "overdrive") return "Overdrive mode";
   return "Focus mode";
 }
 

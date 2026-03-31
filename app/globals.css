@@ -1065,6 +1065,31 @@ html[data-light-ui="true"] body {
     inset 0 1px 0 rgba(255, 255, 255, 0.08) !important;
 }
 
+/* Light UI deck: add specular sheen so cards read "real glass" (Visual Lab parity). */
+[data-light-ui="true"] .tasks-command-deck.dashboard-cinematic .glass-card::before,
+[data-light-ui="true"] .tasks-command-deck.dashboard-cinematic .glass-card-3d::before {
+  height: 46%;
+  background: linear-gradient(
+    118deg,
+    rgba(255, 255, 255, 0) 0%,
+    rgba(255, 255, 255, 0.06) 34%,
+    rgba(var(--mode-rgb), 0.16) 52%,
+    rgba(255, 255, 255, 0.03) 70%,
+    transparent 100%
+  );
+  box-shadow: none;
+  opacity: 0.92;
+}
+[data-light-ui="true"] .tasks-command-deck.dashboard-cinematic .glass-card::after,
+[data-light-ui="true"] .tasks-command-deck.dashboard-cinematic .glass-card-3d::after {
+  background: linear-gradient(
+    148deg,
+    rgba(var(--mode-rgb), 0.26) 0%,
+    rgba(var(--mode-rgb-deep), 0.18) 42%,
+    rgba(var(--mode-rgb), 0.1) 100%
+  );
+}
+
 [data-light-ui="true"] .tasks-command-deck.dashboard-cinematic .card-simple-accent {
   backdrop-filter: var(--light-ui-glass-blur) !important;
   -webkit-backdrop-filter: var(--light-ui-glass-blur) !important;
