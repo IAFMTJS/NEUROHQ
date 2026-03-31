@@ -55,6 +55,15 @@ function isSnapshotApiRequest(url) {
   return false;
 }
 
+function looksLikeJsonResponse(response) {
+  try {
+    const ct = response && response.headers ? response.headers.get("content-type") : null;
+    return typeof ct === "string" && ct.toLowerCase().includes("application/json");
+  } catch {
+    return false;
+  }
+}
+
 function shouldForceRefreshFromNetwork(request) {
   try {
     return request && request.headers && request.headers.get("x-neurohq-refresh") === "1";
@@ -276,7 +285,8 @@ function warmupBackgroundCaches(opts) {
           if (cached) return;
           return fetch(request)
             .then(function (response) {
-              if (response && response.ok) {
+              // Never cache auth-redirect HTML into API cache keys (causes JSON parse failures later).
+              if (response && response.ok && (!request.url.includes("/api/") || looksLikeJsonResponse(response))) {
                 safeCachePut(cache, request, response.clone());
               }
             })
@@ -541,7 +551,7 @@ self.addEventListener("fetch", function (event) {
           if (shouldForceRefreshFromNetwork(event.request)) {
             return fetch(event.request)
               .then(function (response) {
-                if (response && response.ok) {
+                if (response && response.ok && looksLikeJsonResponse(response)) {
                   safeCachePut(cache, event.request, response.clone());
                 }
                 return response;
@@ -563,7 +573,7 @@ self.addEventListener("fetch", function (event) {
               // Revalidate in the background; do not block the UI.
               fetch(event.request)
                 .then(function (response) {
-                  if (response && response.ok) {
+                  if (response && response.ok && looksLikeJsonResponse(response)) {
                     safeCachePut(cache, event.request, response.clone());
                   }
                 })
@@ -573,7 +583,7 @@ self.addEventListener("fetch", function (event) {
             // No cached snapshot yet: fetch and cache; fallback to cached JSON when offline.
             return fetch(event.request)
               .then(function (response) {
-                if (response.ok) {
+                if (response.ok && looksLikeJsonResponse(response)) {
                   safeCachePut(cache, event.request, response.clone());
                 }
                 return response;

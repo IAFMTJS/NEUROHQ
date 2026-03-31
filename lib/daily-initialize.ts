@@ -155,8 +155,9 @@ async function runStep(
   switch (step) {
     case "fetchDashboard": {
       try {
-        const res = await fetch("/api/dashboard/data?part=all", {
+        const res = await fetch(`/api/dashboard/data?part=all&ts=${Date.now()}`, {
           credentials: "include",
+          cache: "no-store",
         });
         if (!res.ok) {
           throw new Error("Dashboard preload failed: " + res.status);
