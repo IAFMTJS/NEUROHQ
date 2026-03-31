@@ -6,10 +6,10 @@ import { createClient, createServiceRoleClient } from "@/lib/supabase/server";
 import { getBehaviorProfile } from "@/app/actions/behavior-profile";
 import { getAvoidanceTracker } from "@/app/actions/avoidance-tracker";
 import { createTask } from "@/app/actions/tasks";
-import { bandFor10Scale, getMissionCountRangeForEnergyBand } from "@/lib/behavioral-engine";
+import { bandFor10Scale, getMissionCountRangeForEnergyBand, missionEquivalentFromEnergyRequired } from "@/lib/behavioral-engine";
 import { getSuggestedTaskCount } from "@/lib/utils/energy";
 import { computeBrainMode } from "@/lib/brain-mode";
-import { pickMissionsForDay, type PickedMissionTemplate } from "@/lib/master-mission-pool";
+import { computeAutoMissionTarget, pickAutoMissionsSmart, type PickedMissionTemplate } from "@/lib/master-mission-pool";
 import { MASTER_MISSION_POOL } from "@/lib/mission-templates";
 import { getUserPreferencesOrDefaults } from "@/app/actions/preferences";
 import { trackEvent } from "@/app/actions/analytics-events";
@@ -166,15 +166,29 @@ export async function ensureMasterMissionsForToday(dailyStateFromSave?: DailySta
   const MIN_AUTO_PER_DAY = missionRange.min;
   const MAX_AUTO_PER_DAY = missionRange.max;
 
-  const skipBecauseAlreadyGenerated =
-    !!stateRow.auto_master_missions_generated && existingAutoCount >= MAX_AUTO_PER_DAY;
-  if (skipBecauseAlreadyGenerated) {
-    if (process.env.NODE_ENV === "development") console.log("[auto-missions] exit: already_generated", { existingAutoCount });
-    return { created: 0, debug: "already_generated", serviceRoleAvailable: !!serviceSupabase };
-  }
-  if (stateRow.auto_master_missions_generated && existingAutoCount < MIN_AUTO_PER_DAY && process.env.NODE_ENV === "development") {
-    console.log("[auto-missions] self-heal: flag was true but only", existingAutoCount, "auto-missions, creating more");
-  }
+  // Smarter target (clamped to band min/max) so we don’t overfill on days with many user tasks.
+  const { data: allOpenToday } = await db
+    .from("tasks")
+    .select("energy_required, psychology_label, completed")
+    .eq("user_id", user.id)
+    .eq("due_date", dateStr)
+    .eq("completed", false)
+    .is("parent_task_id", null)
+    .is("deleted_at", null);
+  const openToday = (allOpenToday ?? []) as Array<{
+    energy_required?: number | null;
+    psychology_label?: string | null;
+    completed?: boolean | null;
+  }>;
+  const nonAutoOpen = openToday.filter(
+    (t) => (t.psychology_label ?? null) !== "MasterPoolAuto" && (t.psychology_label ?? null) !== "MasterPoolBonus"
+  );
+  const existingNonAutoCount = nonAutoOpen.length;
+  const existingNonAutoEquivalents = nonAutoOpen.reduce((sum, t) => {
+    const eq = missionEquivalentFromEnergyRequired(t.energy_required ?? null);
+    return sum + (Number.isFinite(eq) ? eq : 1);
+  }, 0);
+
   const focus = stateRow.focus ?? DEFAULT_SLIDER;
   const sensory_load = stateRow.sensory_load ?? DEFAULT_SLIDER;
   const social_load = stateRow.social_load ?? DEFAULT_SLIDER;
@@ -198,25 +212,8 @@ export async function ensureMasterMissionsForToday(dailyStateFromSave?: DailySta
     progressionStateMap = buildMissionProgressionStateMap([]);
   }
 
-  // Auto-missies: aantal volgens energy-band (laag 1–2 … uiterst 6). Vul tot plafond zolang nog niet gegenereerd.
-  const slotsToAdd = Math.max(0, MAX_AUTO_PER_DAY - existingAutoCount);
-
-  if (slotsToAdd <= 0) {
-    // Mark as generated so we don’t re-run unnecessarily; missions are already assigned.
-    try {
-      await db
-        .from("daily_state")
-        .update({ auto_master_missions_generated: true } as any)
-        .eq("user_id", user.id)
-        .eq("date", dateStr);
-    } catch {
-      // best-effort
-    }
-    if (process.env.NODE_ENV === "development") console.log("[auto-missions] exit: already_enough", { existingAutoCount });
-    return { created: 0, debug: "already_enough" };
-  }
-
-  const remainingSlots = slotsToAdd;
+  // Remaining slots will be computed after we compute the smart target for today.
+  let remainingSlots = 0;
 
   const headroom = 20;
   const brainMode = computeBrainMode({
@@ -246,21 +243,80 @@ export async function ensureMasterMissionsForToday(dailyStateFromSave?: DailySta
     (recentAuto ?? []).map((r) => (r as { title?: string | null }).title ?? "").filter(Boolean)
   );
 
-  const picks = pickMissionsForDay({
-    profile,
-    weekTheme: profile.weekTheme,
-    avoidanceTracker,
-    allowHeavyNow,
-    recentlyUsedTitles,
-    dateStr,
-    energy1To10: energy ?? null,
-    focus1To10: focus ?? null,
-    sensoryLoad1To10: sensory_load ?? null,
-    socialLoad1To10: social_load ?? null,
-    sleepHours: sleep_hours ?? null,
-    brainMode: brainMode.mode,
-    dayType: isUsualDayOff ? (dayOffMode === "hard" ? "off_hard" : "off_soft") : "work",
-  });
+  const recentlyUsedSubcategories = new Set<string>();
+  for (const title of recentlyUsedTitles) {
+    const tpl = MASTER_MISSION_POOL.find((t) => (t.title ?? "").trim() === title);
+    if (tpl?.subcategory) recentlyUsedSubcategories.add(tpl.subcategory);
+  }
+
+  const targetAuto = computeAutoMissionTarget(
+    {
+      profile,
+      weekTheme: profile.weekTheme,
+      avoidanceTracker,
+      allowHeavyNow,
+      recentlyUsedTitles,
+      recentlyUsedSubcategories,
+      dateStr,
+      energy1To10: energy ?? null,
+      focus1To10: focus ?? null,
+      sensoryLoad1To10: sensory_load ?? null,
+      socialLoad1To10: social_load ?? null,
+      sleepHours: sleep_hours ?? null,
+      brainMode: brainMode.mode,
+      dayType: isUsualDayOff ? (dayOffMode === "hard" ? "off_hard" : "off_soft") : "work",
+      existingNonAutoCount,
+      existingNonAutoEquivalents,
+      progressionStateMap,
+    },
+    { min: MIN_AUTO_PER_DAY, max: MAX_AUTO_PER_DAY }
+  );
+
+  const desiredToCreate = Math.max(0, targetAuto - existingAutoCount);
+
+  if (desiredToCreate <= 0) {
+    // Mark as generated so we don’t re-run unnecessarily; missions are already assigned.
+    try {
+      await db
+        .from("daily_state")
+        .update({ auto_master_missions_generated: true } as any)
+        .eq("user_id", user.id)
+        .eq("date", dateStr);
+    } catch {
+      // best-effort
+    }
+    if (process.env.NODE_ENV === "development") console.log("[auto-missions] exit: already_enough", { existingAutoCount, targetAuto });
+    return { created: 0, debug: "already_enough" };
+  }
+
+  if (stateRow.auto_master_missions_generated && existingAutoCount < MIN_AUTO_PER_DAY && process.env.NODE_ENV === "development") {
+    console.log("[auto-missions] self-heal: flag was true but only", existingAutoCount, "auto-missions, creating more");
+  }
+
+  remainingSlots = desiredToCreate;
+
+  const picks = pickAutoMissionsSmart(
+    {
+      profile,
+      weekTheme: profile.weekTheme,
+      avoidanceTracker,
+      allowHeavyNow,
+      recentlyUsedTitles,
+      recentlyUsedSubcategories,
+      dateStr,
+      energy1To10: energy ?? null,
+      focus1To10: focus ?? null,
+      sensoryLoad1To10: sensory_load ?? null,
+      socialLoad1To10: social_load ?? null,
+      sleepHours: sleep_hours ?? null,
+      brainMode: brainMode.mode,
+      dayType: isUsualDayOff ? (dayOffMode === "hard" ? "off_hard" : "off_soft") : "work",
+      existingNonAutoCount,
+      existingNonAutoEquivalents,
+      progressionStateMap,
+    },
+    desiredToCreate
+  );
 
   if (picks.length === 0) {
     if (process.env.NODE_ENV === "development") console.log("[auto-missions] exit: no_picks");
@@ -278,18 +334,10 @@ export async function ensureMasterMissionsForToday(dailyStateFromSave?: DailySta
     });
   }
 
-  // Prefer missions not used in the last 5 days; fall back to any if none left.
+  // Smart picker already avoids repeats; keep final guardrails here.
   let toCreate: PickedMissionTemplate[] = uniqueByTitle(
-    picks.filter(
-      (p) =>
-        p.title &&
-        !autoMasterTitles.has(p.title) &&
-        !recentlyUsedTitles.has(p.title)
-    )
+    picks.filter((p) => p.title && !autoMasterTitles.has(p.title))
   ).slice(0, remainingSlots);
-  if (toCreate.length === 0 && remainingSlots > 0) {
-    toCreate = uniqueByTitle(picks.filter((p) => p.title && !autoMasterTitles.has(p.title))).slice(0, remainingSlots);
-  }
 
   // Als alle gekozen missies al als taak bestaan: kies andere uit de pool (structure/energy/focus), ook met diversity.
   if (toCreate.length === 0 && remainingSlots > 0) {
@@ -342,13 +390,11 @@ export async function ensureMasterMissionsForToday(dailyStateFromSave?: DailySta
     const impactRaw = tpl.baseXP ? Math.round((tpl.baseXP / 10) * 1.5) : 2;
     const impact = Math.min(3, Math.max(1, impactRaw));
     const missionIntent =
-      tpl.tags?.includes("recovery")
+      tpl.tags?.includes("recovery") || tpl.slot === "energy" || (tpl.subcategory?.startsWith("energy_") ?? false)
         ? "recovery"
         : tpl.slot === "procrastination_attack"
           ? "experiment"
-          : tpl.slot === "identity_courage_hobby"
-            ? "discipline"
-            : "discipline";
+          : "discipline";
 
     try {
       const preset = classifyTaskPreset(title);

@@ -19,6 +19,22 @@ const TASK_SELECT_COLUMNS =
 
 export type TaskListMode = "normal" | "low_energy" | "stabilize" | "driven";
 
+function autoSlotRankFromTask(task: unknown): number {
+  const t = task as {
+    psychology_label?: string | null;
+    task_tags?: unknown;
+    avoidance_tag?: string | null;
+    hobby_tag?: string | null;
+  };
+  const tags = Array.isArray(t.task_tags) ? t.task_tags.filter((x): x is string => typeof x === "string") : [];
+  if (tags.includes("procrastination_attack") || t.avoidance_tag) return 2;
+  if (tags.includes("identity") || tags.includes("courage") || tags.includes("hobby") || t.hobby_tag) return 3;
+  if (tags.includes("focus")) return 1;
+  if (tags.includes("energy") || tags.includes("recovery")) return 4;
+  // Default: structure-like.
+  return 0;
+}
+
 /** Request-scoped cache: duplicate getTodaysTasks(date, mode) in the same request return the same result (e.g. dashboard + tasks page). */
 export const getTodaysTasks = cache(async (date: string, mode: TaskListMode): Promise<{ tasks: Task[]; carryOverCount: number }> => {
   const supabase = await createClient();
@@ -58,6 +74,24 @@ export const getTodaysTasks = cache(async (date: string, mode: TaskListMode): Pr
     }
     return new Date((a as { created_at?: string }).created_at ?? 0).getTime() - new Date((b as { created_at?: string }).created_at ?? 0).getTime();
   });
+
+  // Stable grouping: user tasks first, then MasterPoolAuto (ordered by slot priority), then MasterPoolBonus.
+  const userTasks: Task[] = [];
+  const autoTasks: Task[] = [];
+  const bonusTasks: Task[] = [];
+  for (const t of ordered as Task[]) {
+    const label = (t as { psychology_label?: string | null }).psychology_label ?? null;
+    if (label === "MasterPoolAuto") autoTasks.push(t);
+    else if (label === "MasterPoolBonus") bonusTasks.push(t);
+    else userTasks.push(t);
+  }
+  autoTasks.sort((a, b) => {
+    const ra = autoSlotRankFromTask(a);
+    const rb = autoSlotRankFromTask(b);
+    if (ra !== rb) return ra - rb;
+    return 0; // keep original relative order otherwise (stable enough for V8)
+  });
+  ordered = [...userTasks, ...autoTasks, ...bonusTasks];
 
   const maxCarryOver = Math.max(0, ...(tasks ?? []).map((t) => (t as { carry_over_count?: number }).carry_over_count ?? 0));
   return { tasks: ordered as Task[], carryOverCount: maxCarryOver };
