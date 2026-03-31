@@ -2,6 +2,7 @@ import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import nextDynamic from "next/dynamic";
+import { Suspense } from "react";
 import { ProfileCommandDeckLayout } from "@/components/profile/ProfileCommandDeckLayout";
 import { getUserPreferencesOrDefaults } from "@/app/actions/preferences";
 import { getBehaviorProfile } from "@/app/actions/behavior-profile";
@@ -12,6 +13,7 @@ import { getProfileDailyChallengeContext } from "@/app/actions/profile-daily-cha
 import { todayDateString } from "@/lib/utils/timezone";
 import { ProfileEngineIdentityCard } from "@/components/profile/ProfileEngineIdentityCard";
 import { ProfileHomeCompact } from "@/components/profile/ProfileHomeCompact";
+import { ProfileSnapshotFallback } from "@/components/profile/ProfileSnapshotFallback";
 import {
   parseProfileMainView,
   parseProfileEngineTab,
@@ -102,6 +104,72 @@ function redirectLegacyProfileQuery(raw: Search) {
   redirect("/settings");
 }
 
+async function ProfileHomeAsync({ userId }: { userId: string }) {
+  const today = todayDateString();
+  const [prefs, xpCtx, todayDaily, dailyChallengeContext] = await Promise.all([
+    getUserPreferencesOrDefaults(),
+    getXPFullContext(),
+    getDailyState(today),
+    getProfileDailyChallengeContext(today),
+  ]);
+  const { identity, insightState } = xpCtx;
+  const moodLabel = (todayDaily as { mood_label?: string | null } | null)?.mood_label ?? null;
+  const simplified = prefs.simplified_content === true;
+
+  if (simplified) {
+    return (
+      <div className={SIMPLIFIED_VIEWPORT_WRAPPER}>
+        <SimplifiedPageShell
+          title="Profiel"
+          hideTitleBar
+          footerLinks={[
+            { href: profileEngineHref("identity"), label: "Engine" },
+            { href: "/settings", label: "Instellingen" },
+            { href: "/dashboard", label: "HQ" },
+          ]}
+        >
+          <div className="space-y-4">
+            <MainTabNavSimplified active="home" />
+            <ProfileHomeCompact
+              identity={identity}
+              insightState={insightState}
+              initialMoodLabel={moodLabel}
+              todayStr={today}
+              dailyChallengeContext={dailyChallengeContext}
+            />
+          </div>
+        </SimplifiedPageShell>
+      </div>
+    );
+  }
+
+  return (
+    <ProfileCommandDeckLayout main="home">
+      <ProfileHomeCompact
+        identity={identity}
+        insightState={insightState}
+        initialMoodLabel={moodLabel}
+        todayStr={today}
+        dailyChallengeContext={dailyChallengeContext}
+      />
+    </ProfileCommandDeckLayout>
+  );
+}
+
+async function ProfileEngineAsync({
+  userEmail,
+}: {
+  userEmail: string;
+}) {
+  const [rawPrefs, behaviorProfile, studyPlan, accountabilitySettings] = await Promise.all([
+    getUserPreferencesOrDefaults(),
+    getBehaviorProfile(),
+    getStudyPlan(),
+    getAccountabilitySettings(),
+  ]);
+  return { prefs: rawPrefs, behaviorProfile, studyPlan, accountabilitySettings, userEmail };
+}
+
 export default async function ProfilePage({ searchParams }: { searchParams: Promise<Search> }) {
   const raw = await searchParams;
   redirectLegacyProfileQuery(raw);
@@ -115,64 +183,19 @@ export default async function ProfilePage({ searchParams }: { searchParams: Prom
   const mainView = parseProfileMainView(raw.view);
 
   if (mainView === "home") {
-    const today = todayDateString();
-    const [prefs, xpCtx, todayDaily, dailyChallengeContext] = await Promise.all([
-      getUserPreferencesOrDefaults(),
-      getXPFullContext(),
-      getDailyState(today),
-      getProfileDailyChallengeContext(today),
-    ]);
-    const { identity, insightState } = xpCtx;
-    const moodLabel = (todayDaily as { mood_label?: string | null } | null)?.mood_label ?? null;
-    const simplified = prefs.simplified_content === true;
-
-    if (simplified) {
-      return (
-        <div className={SIMPLIFIED_VIEWPORT_WRAPPER}>
-          <SimplifiedPageShell
-            title="Profiel"
-            hideTitleBar
-            footerLinks={[
-              { href: profileEngineHref("identity"), label: "Engine" },
-              { href: "/settings", label: "Instellingen" },
-              { href: "/dashboard", label: "HQ" },
-            ]}
-          >
-            <div className="space-y-4">
-              <MainTabNavSimplified active="home" />
-              <ProfileHomeCompact
-                identity={identity}
-                insightState={insightState}
-                initialMoodLabel={moodLabel}
-                todayStr={today}
-                dailyChallengeContext={dailyChallengeContext}
-              />
-            </div>
-          </SimplifiedPageShell>
-        </div>
-      );
-    }
-
     return (
-      <ProfileCommandDeckLayout main="home">
-        <ProfileHomeCompact
-          identity={identity}
-          insightState={insightState}
-          initialMoodLabel={moodLabel}
-          todayStr={today}
-          dailyChallengeContext={dailyChallengeContext}
-        />
-      </ProfileCommandDeckLayout>
+      <Suspense fallback={<ProfileSnapshotFallback main="home" />}>
+        <ProfileHomeAsync userId={user.id} />
+      </Suspense>
     );
   }
 
   const engineTab = parseProfileEngineTab(raw.engineTab ?? raw.settingsTab);
-  const [prefs, behaviorProfile, studyPlan, accountabilitySettings] = await Promise.all([
-    getUserPreferencesOrDefaults(),
-    getBehaviorProfile(),
-    getStudyPlan(),
-    getAccountabilitySettings(),
-  ]);
+  const engine = await ProfileEngineAsync({ userEmail: user.email ?? "" });
+  const prefs = engine.prefs;
+  const behaviorProfile = engine.behaviorProfile;
+  const studyPlan = engine.studyPlan;
+  const accountabilitySettings = engine.accountabilitySettings;
   const simplified = prefs.simplified_content === true;
 
   const engineHint = (
@@ -201,7 +224,7 @@ export default async function ProfilePage({ searchParams }: { searchParams: Prom
 
       {engineTab === "identity" && (
         <ProfileEngineIdentityCard
-          userEmail={user.email ?? ""}
+          userEmail={engine.userEmail}
           behaviorProfile={behaviorProfile}
           displayCallsign={prefs.display_callsign ?? null}
           hqHeadline={prefs.hq_headline ?? null}
