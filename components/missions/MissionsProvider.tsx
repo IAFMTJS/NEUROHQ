@@ -40,6 +40,7 @@ export function MissionsProvider({ dateStr, children }: Props) {
   const setTasksForDate = useHQStore((s) => s.setTasksForDate);
   const setTasksStatus = useHQStore((s) => s.setTasksStatus);
   const setTasksError = useHQStore((s) => s.setTasksError);
+  const existingTodayCount = useHQStore((s) => (s.tasksByDate[dateStr]?.length ?? 0));
 
   useEffect(() => {
     if (!missions) return;
@@ -52,15 +53,17 @@ export function MissionsProvider({ dateStr, children }: Props) {
       setTodayEnergyBudget(missions.energyBudget);
     }
     for (const [day, tasks] of Object.entries(missions.tasksByDate)) {
-      if (day === todayKey) continue;
       const list = tasks as Task[];
       const withoutDeleted = list.filter((t) => !(t as { deleted_at?: string | null }).deleted_at);
+      // Only hydrate today's tasks when the store doesn't already have them (avoid clobbering fresh client changes).
+      if (day === todayKey && existingTodayCount > 0) continue;
       setTasksForDate(day, withoutDeleted);
     }
     setTasksError(null);
     setTasksStatus("ready");
   }, [
     dateStr,
+    existingTodayCount,
     missions,
     setTasksError,
     setTasksForDate,

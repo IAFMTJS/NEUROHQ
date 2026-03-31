@@ -31,6 +31,7 @@ import hudStyles from "@/components/hud-test/hud.module.css";
 import { MissionsProvider, TasksTabsShell, TodayMissionsGridFromStore } from "@/components/missions";
 import type { TasksTabId } from "@/components/missions/TasksTabsShell";
 import { TasksDailyBootstrap } from "@/components/missions/TasksDailyBootstrap";
+import { TasksMissionsSnapshotFallback } from "@/components/missions/TasksMissionsSnapshotFallback";
 import { TasksCalendarAsync } from "./TasksCalendarAsync";
 import { getGrowthEngineSnapshot } from "@/app/actions/growth-snapshot";
 import { getBehaviorProfile } from "@/app/actions/behavior-profile";
@@ -534,7 +535,7 @@ export default async function TasksPage({ searchParams }: Props) {
       commandDeck={tasksCommandDeck}
     >
       {activeTab === "missions" ? (
-        <Suspense fallback={null}>
+        <Suspense fallback={<TasksMissionsSnapshotFallback dateStr={dateStr} />}>
           <MissionsSectionAsync
             dateStr={dateStr}
             backlog={backlog}

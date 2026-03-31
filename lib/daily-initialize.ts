@@ -72,6 +72,16 @@ function emitProgress(
   });
 }
 
+async function yieldToBrowser(onProgress?: (p: PreloadProgress) => void): Promise<void> {
+  // When steps complete very quickly, React may batch state updates and the loader can look like it
+  // "skips" steps. Yielding gives the browser a chance to paint between step transitions.
+  if (!onProgress) return;
+  await Promise.resolve();
+  if (typeof window !== "undefined" && typeof window.requestAnimationFrame === "function") {
+    await new Promise<void>((resolve) => window.requestAnimationFrame(() => resolve()));
+  }
+}
+
 /**
  * Minimal implementation for now: reuses an existing same-day snapshot when available,
  * otherwise creates an empty shell snapshot and only runs the dashboard fetch step.
@@ -116,6 +126,9 @@ export async function initializeDailySystem(
     for (let i = 0; i < ALL_STEPS.length; i++) {
       const step = ALL_STEPS[i];
       emitProgress(onProgress, step, i, "start");
+      // Allow the loader UI to repaint before doing work.
+      // eslint-disable-next-line no-await-in-loop
+      await yieldToBrowser(onProgress);
       // eslint-disable-next-line no-await-in-loop
       const before = typeof performance !== "undefined" ? performance.now() : Date.now();
       snapshot = await runStep(snapshot, step);
@@ -128,6 +141,8 @@ export async function initializeDailySystem(
       await saveDailySnapshot(snapshot);
 
       emitProgress(onProgress, step, i, "complete");
+      // eslint-disable-next-line no-await-in-loop
+      await yieldToBrowser(onProgress);
     }
   } catch (e) {
     if (fallback) {

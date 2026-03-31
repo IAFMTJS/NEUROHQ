@@ -11,6 +11,7 @@ import { getWeeklyLearningTarget } from "@/app/actions/learning";
 import { getTelemetryGovernanceSnapshot, getClosedLoopLearningSummary } from "@/app/actions/analytics-events";
 import { humanizeDecisionType } from "@/lib/unified-decision-labels";
 import { DashboardCommandDeckFrame } from "@/components/layout/DashboardCommandDeckFrame";
+import { AnalyticsSnapshotFallback } from "@/components/analytics/AnalyticsSnapshotFallback";
 
 function formatMinutes(m: number): string {
   if (m < 60) return `${m} min`;
@@ -379,7 +380,7 @@ export default function AnalyticsPage() {
         <DashboardCommandDeckFrame deckTitle="Analytics" innerClassName="gap-4">
           <div className="space-y-6">
             <AnalyticsShell />
-            <Suspense fallback={null}>
+            <Suspense fallback={<AnalyticsSnapshotFallback />}>
               <AnalyticsContent />
             </Suspense>
           </div>
