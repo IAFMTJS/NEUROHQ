@@ -155,9 +155,8 @@ async function runStep(
   switch (step) {
     case "fetchDashboard": {
       try {
-        const res = await fetch("/api/dashboard/data?part=all&ts=" + Date.now(), {
+        const res = await fetch("/api/dashboard/data?part=all", {
           credentials: "include",
-          cache: "no-store",
         });
         if (!res.ok) {
           throw new Error("Dashboard preload failed: " + res.status);
@@ -181,7 +180,6 @@ async function runStep(
       try {
         const res = await fetch("/api/bootstrap/today", {
           credentials: "include",
-          cache: "no-store",
         });
         if (!res.ok) return snapshot;
         const data = (await res.json()) as {
@@ -284,10 +282,9 @@ async function runStep(
       try {
         const dateStr = snapshot.date || getTodayKey();
         const res = await fetch(
-          `/api/xp/context?date=${encodeURIComponent(dateStr)}&ts=${Date.now()}`,
+          `/api/xp/context?date=${encodeURIComponent(dateStr)}`,
           {
             credentials: "include",
-            cache: "no-store",
           }
         );
         if (!res.ok) return snapshot;
@@ -307,9 +304,8 @@ async function runStep(
     }
     case "fetchStrategy": {
       try {
-        const res = await fetch("/api/strategy/snapshot?ts=" + Date.now(), {
+        const res = await fetch("/api/strategy/snapshot", {
           credentials: "include",
-          cache: "no-store",
         });
         if (!res.ok) return snapshot;
         const data = (await res.json()) as DailySnapshot["strategy"];
@@ -323,9 +319,8 @@ async function runStep(
     }
     case "fetchAnalytics": {
       try {
-        const res = await fetch("/api/analytics/snapshot?ts=" + Date.now(), {
+        const res = await fetch("/api/analytics/snapshot", {
           credentials: "include",
-          cache: "no-store",
         });
         if (!res.ok) return snapshot;
         const data = (await res.json()) as DailySnapshot["analytics"];
@@ -341,7 +336,6 @@ async function runStep(
       try {
         const res = await fetch("/api/settings", {
           credentials: "include",
-          cache: "no-store",
         });
         if (!res.ok) return snapshot;
         const data = (await res.json()) as { preferences?: Record<string, unknown>; payday?: { last_payday_date: string | null; payday_day_of_month: number | null } };
@@ -417,6 +411,16 @@ async function runStep(
     }
     case "prepareCache":
     default:
+      try {
+        // Ask the service worker to warm the authenticated day bundle (HTML + key snapshot endpoints).
+        if (typeof navigator !== "undefined" && "serviceWorker" in navigator) {
+          navigator.serviceWorker.ready
+            .then((reg) => reg.active?.postMessage({ type: "WARMUP_BACKGROUND_CACHE", includeAuth: true, today: snapshot.date }))
+            .catch(() => {});
+        }
+      } catch {
+        // ignore
+      }
       return snapshot;
   }
 }

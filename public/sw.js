@@ -55,6 +55,14 @@ function isSnapshotApiRequest(url) {
   return false;
 }
 
+function shouldForceRefreshFromNetwork(request) {
+  try {
+    return request && request.headers && request.headers.get("x-neurohq-refresh") === "1";
+  } catch {
+    return false;
+  }
+}
+
 /** Never let fetch handler reject — prevents "FetchEvent.respondWith received an error: Load failed" after PWA resume. */
 function offlineFallbackResponse() {
   return caches.match(OFFLINE_PAGE).then(function (offline) {
@@ -526,9 +534,30 @@ self.addEventListener("fetch", function (event) {
     }
 
     // GETs: snapshot endpoints = cache-first + background revalidate (keep UI instant all day).
+    // When the app explicitly forces a refresh (x-neurohq-refresh: 1), do network-first and update cache.
     if (method === "GET" && isSnapshotApiRequest(url)) {
       safeRespondWith(event, function () {
         return caches.open(getDynamicCacheName()).then(function (cache) {
+          if (shouldForceRefreshFromNetwork(event.request)) {
+            return fetch(event.request)
+              .then(function (response) {
+                if (response && response.ok) {
+                  safeCachePut(cache, event.request, response.clone());
+                }
+                return response;
+              })
+              .catch(function () {
+                return cache.match(event.request).then(function (c) {
+                  return (
+                    c ||
+                    new Response(JSON.stringify({ error: "Offline" }), {
+                      status: 503,
+                      headers: { "Content-Type": "application/json" },
+                    })
+                  );
+                });
+              });
+          }
           return cache.match(event.request).then(function (cached) {
             if (cached) {
               // Revalidate in the background; do not block the UI.

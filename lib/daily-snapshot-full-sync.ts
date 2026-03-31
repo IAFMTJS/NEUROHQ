@@ -146,22 +146,22 @@ export async function mergeDailySnapshotFromNetwork(): Promise<BootstrapTodayRes
   const today = getTodayKey();
   const canPersist = existing != null && isCurrentSnapshot(existing);
 
-  const ts = Date.now();
+  const refreshHeaders = { "x-neurohq-refresh": "1" };
   const [bootRes, xpRes, stratRes, analyticsRes, settingsRes] = await Promise.allSettled([
-    fetch("/api/bootstrap/today", { credentials: "include", cache: "no-store" }),
-    fetch(`/api/xp/context?date=${encodeURIComponent(today)}&ts=${ts}`, {
+    fetch("/api/bootstrap/today", { credentials: "include", headers: refreshHeaders }),
+    fetch(`/api/xp/context?date=${encodeURIComponent(today)}`, {
       credentials: "include",
-      cache: "no-store",
+      headers: refreshHeaders,
     }),
-    fetch(`/api/strategy/snapshot?ts=${ts}`, {
+    fetch("/api/strategy/snapshot", {
       credentials: "include",
-      cache: "no-store",
+      headers: refreshHeaders,
     }),
-    fetch(`/api/analytics/snapshot?ts=${ts}`, {
+    fetch("/api/analytics/snapshot", {
       credentials: "include",
-      cache: "no-store",
+      headers: refreshHeaders,
     }),
-    fetch("/api/settings", { credentials: "include", cache: "no-store" }),
+    fetch("/api/settings", { credentials: "include", headers: refreshHeaders }),
   ]);
 
   let bootstrap: BootstrapTodayResponse | null = null;
