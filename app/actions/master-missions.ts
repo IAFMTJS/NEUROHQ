@@ -9,7 +9,7 @@ import { createTask } from "@/app/actions/tasks";
 import { bandFor10Scale, getMissionCountRangeForEnergyBand, missionEquivalentFromEnergyRequired } from "@/lib/behavioral-engine";
 import { getSuggestedTaskCount } from "@/lib/utils/energy";
 import { computeBrainMode } from "@/lib/brain-mode";
-import { computeAutoMissionTarget, pickAutoMissionsSmart, type PickedMissionTemplate } from "@/lib/master-mission-pool";
+import { computeAutoMissionTarget, deriveAutoMissionIntent, pickAutoMissionsSmart, type PickedMissionTemplate } from "@/lib/master-mission-pool";
 import { MASTER_MISSION_POOL } from "@/lib/mission-templates";
 import { getUserPreferencesOrDefaults } from "@/app/actions/preferences";
 import { trackEvent } from "@/app/actions/analytics-events";
@@ -389,12 +389,15 @@ export async function ensureMasterMissionsForToday(dailyStateFromSave?: DailySta
 
     const impactRaw = tpl.baseXP ? Math.round((tpl.baseXP / 10) * 1.5) : 2;
     const impact = Math.min(3, Math.max(1, impactRaw));
-    const missionIntent =
-      tpl.tags?.includes("recovery") || tpl.slot === "energy" || (tpl.subcategory?.startsWith("energy_") ?? false)
-        ? "recovery"
-        : tpl.slot === "procrastination_attack"
-          ? "experiment"
-          : "discipline";
+    const missionIntent = deriveAutoMissionIntent({
+      template: tpl,
+      slot: tpl.slot,
+      dayType: isUsualDayOff ? (dayOffMode === "hard" ? "off_hard" : "off_soft") : "work",
+      brainMode: brainMode.mode,
+      energy1To10: energy ?? null,
+      focus1To10: focus ?? null,
+      sensoryLoad1To10: sensory_load ?? null,
+    });
 
     try {
       const preset = classifyTaskPreset(title);
@@ -413,7 +416,10 @@ export async function ensureMasterMissionsForToday(dailyStateFromSave?: DailySta
       const templateTags = Array.from(
         new Set([...(tpl.tags ?? []), ...(progressionPlan?.taskTags ?? [])])
       );
-      const resolvedDurationMinutes = progressionPlan?.durationMinutes ?? preset.durationMinutes;
+      const resolvedDurationMinutes =
+        progressionPlan?.durationMinutes ??
+        (tpl as { durationMinutes?: number | null }).durationMinutes ??
+        preset.durationMinutes;
       const resolvedBaseXp = Math.max(
         progressionPlan?.baseXP ?? tpl.baseXP ?? 0,
         fallbackBaseXp
@@ -666,13 +672,20 @@ export async function addBonusAutoMissionsForToday(): Promise<EnsureMasterMissio
         avoidance_tag: tpl.avoidance_tag ?? null,
         hobby_tag: tpl.hobby_tag ?? null,
         notes: (tpl as { description?: string }).description?.trim() || "Bonus-missie uit de pool.",
-        mission_intent:
-          tpl.tags?.includes("recovery") || brainMode.mode === "LowEnergy"
-            ? "recovery"
-            : "discipline",
+        mission_intent: deriveAutoMissionIntent({
+          template: tpl,
+          slot: (tpl as any).slot ?? "structure_energy_focus",
+          dayType: "work",
+          brainMode: brainMode.mode,
+          energy1To10: energy ?? null,
+          focus1To10: focus ?? null,
+          sensoryLoad1To10: sensory_load ?? null,
+        }),
         task_type: preset.type,
         intensity: preset.intensity,
-        duration_minutes: preset.durationMinutes,
+        duration_minutes:
+          (tpl as { durationMinutes?: number | null }).durationMinutes ??
+          preset.durationMinutes,
         task_tags: tpl.tags ?? [],
       });
       created++;

@@ -5,6 +5,7 @@ import { evaluateTemplateAgainstTriggers, resolveMissionTriggers } from "@/lib/m
 import { bandFor10Scale, getMissionCountRangeForEnergyBand, missionEquivalentFromEnergyRequired } from "@/lib/behavioral-engine";
 import type { MissionProgressionStateMap } from "@/lib/mission-progression";
 import { deriveProgressionKeyFromTemplate } from "@/lib/mission-progression";
+import type { MissionIntent } from "@/app/actions/tasks";
 
 /** Deterministic 32-bit hash for daily ordering (no Math.random). */
 function djb2Hash(str: string): number {
@@ -84,6 +85,63 @@ export type PickContext = {
 
 function isHeavy(t: MasterMissionTemplate): boolean {
   return (t.energy ?? 0) >= 4;
+}
+
+export function deriveAutoMissionIntent(input: {
+  template: PickedMissionTemplate | MasterMissionTemplate;
+  slot?: AutoMissionSlot | "structure_energy_focus";
+  dayType?: PickContext["dayType"];
+  brainMode?: PickContext["brainMode"];
+  energy1To10?: number | null;
+  focus1To10?: number | null;
+  sensoryLoad1To10?: number | null;
+}): MissionIntent {
+  const tpl = input.template;
+  const tags = tpl.tags ?? [];
+  const subcategory = tpl.subcategory ?? "";
+  const slot = input.slot ?? ("slot" in (tpl as any) ? ((tpl as any).slot as AutoMissionSlot | "structure_energy_focus") : undefined);
+
+  // Hard recovery: explicit recovery tags, recovery subcategories, energy slots on low-energy / high-load days.
+  const load = input.sensoryLoad1To10 ?? null;
+  const energy = input.energy1To10 ?? null;
+  const focus = input.focus1To10 ?? null;
+  const isRecoveryTagged = tags.includes("recovery") || subcategory.startsWith("energy_");
+  const wantsRecoveryFromState =
+    input.dayType === "off_soft" ||
+    input.dayType === "off_hard" ||
+    input.brainMode === "LowEnergy" ||
+    input.brainMode === "Cautious" ||
+    (energy != null && energy <= 4) ||
+    (load != null && load >= 7);
+  if (isRecoveryTagged && wantsRecoveryFromState) return "recovery";
+  if (slot === "energy" && wantsRecoveryFromState) return "recovery";
+
+  // Procrastination attacks are experiments by design: smallest concrete strike against avoidance.
+  if (slot === "procrastination_attack" || tags.includes("procrastination_attack") || subcategory.startsWith("procrastination_")) {
+    return "experiment";
+  }
+
+  // Pressure: explicit push tags or pressure-like templates (high energy + work day + not recovery).
+  const isPush = tags.includes("push");
+  const isPressureLike = (tpl.energy ?? 0) >= 6 && input.dayType === "work" && input.brainMode === "Driven";
+  if (isPush || isPressureLike) return "pressure";
+
+  // Alignment: identity/hobby/growth/reflection/strategy are about staying on-course, not pure discipline reps.
+  const isAlignment =
+    tags.includes("identity") ||
+    tags.includes("hobby") ||
+    tags.includes("growth") ||
+    tags.includes("weekly_reflection") ||
+    subcategory === "identity" ||
+    subcategory === "courage" ||
+    subcategory.startsWith("hobby_") ||
+    subcategory === "weekly_reflection";
+  if (isAlignment) return "alignment";
+
+  // If focus is very low, default away from pressure; keep intent as discipline unless explicitly recovery/alignment/experiment.
+  if (focus != null && focus <= 3) return "discipline";
+
+  return "discipline";
 }
 
 export function computeAutoMissionTarget(context: PickContext, input: { min: number; max: number }): number {

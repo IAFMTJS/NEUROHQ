@@ -163,6 +163,8 @@ export const MISSION_TEMPLATES: MissionTemplate[] = [
 ];
 
 export type MasterMissionTemplate = MissionTemplate & {
+  /** Optional explicit duration for UI + budgeting (minutes). External seeds include this. */
+  durationMinutes?: number | null;
   subcategory?:
     | "structure_micro_cleaning"
     | "structure_deep_cleaning"
@@ -712,6 +714,13 @@ function mergeExternalMasterMissions(
 
     const baseXP = Math.max(10, Math.min(300, Math.round(seed.baseXP)));
     const energy = Math.max(1, Math.min(10, Math.round(seed.energy)));
+    const durationMinutesRaw = seed.durationMinutes;
+    const durationMinutes =
+      durationMinutesRaw == null
+        ? null
+        : Number.isFinite(durationMinutesRaw)
+          ? Math.max(0, Math.min(240, Math.round(durationMinutesRaw)))
+          : null;
     const tags =
       Array.isArray(seed.tags) && seed.tags.length > 0
         ? seed.tags.filter((tag): tag is string => typeof tag === "string" && tag.trim().length > 0)
@@ -726,6 +735,7 @@ function mergeExternalMasterMissions(
       baseXP,
       xpLevel: xpLevelFromBaseXP(baseXP),
       energy,
+      durationMinutes,
       tags,
       description: seed.description?.trim() || "Imported mission template.",
     });

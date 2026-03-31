@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { bandFor10Scale, getMissionCountRangeForEnergyBand } from "@/lib/behavioral-engine";
-import { computeAutoMissionTarget, pickAutoMissionsSmart } from "@/lib/master-mission-pool";
+import { computeAutoMissionTarget, deriveAutoMissionIntent, pickAutoMissionsSmart } from "@/lib/master-mission-pool";
 
 function mockProfile(overrides?: Partial<import("@/types/behavior-profile.types").BehaviorProfile>) {
   return {
@@ -106,6 +106,52 @@ describe("auto-missions smart distribution", () => {
       4
     );
     expect(picks.some((p) => p.slot === "procrastination_attack")).toBe(true);
+  });
+
+  it("derives mission intent from slot/tags/subcategory + context", () => {
+    const picks = pickAutoMissionsSmart(
+      {
+        profile: mockProfile({ identityTargets: ["disciplined"] }),
+        weekTheme: "self_discipline",
+        avoidanceTracker: mockAvoidance({ administration: { skipped: 3, completed: 0 } }),
+        allowHeavyNow: true,
+        dateStr: "2026-03-31",
+        energy1To10: 6,
+        focus1To10: 6,
+        sensoryLoad1To10: 4,
+        dayType: "work",
+        brainMode: "Driven",
+      },
+      4
+    );
+
+    const intents = picks.map((p) =>
+      deriveAutoMissionIntent({
+        template: p,
+        slot: p.slot,
+        dayType: "work",
+        brainMode: "Driven",
+        energy1To10: 6,
+        focus1To10: 6,
+        sensoryLoad1To10: 4,
+      })
+    );
+
+    expect(intents.length).toBeGreaterThan(0);
+    // Procrastination attacks should map to experiment.
+    for (let i = 0; i < picks.length; i++) {
+      if (picks[i]?.slot === "procrastination_attack") {
+        expect(intents[i]).toBe("experiment");
+      }
+    }
+
+    // Identity/hobby/courage should map to alignment if present.
+    for (let i = 0; i < picks.length; i++) {
+      const sc = picks[i]?.subcategory ?? "";
+      if (sc === "identity" || sc === "courage" || sc.startsWith("hobby_")) {
+        expect(intents[i]).toBe("alignment");
+      }
+    }
   });
 });
 
