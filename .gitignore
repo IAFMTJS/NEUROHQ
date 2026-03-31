@@ -44,3 +44,6 @@ coverage
 
 # Supabase local (if used)
 .supabase
+
+# Local scratch / notes (not part of the app)
+CATMISS.txt
