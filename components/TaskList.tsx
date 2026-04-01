@@ -11,8 +11,8 @@ import {
   uncompleteTask,
   skipNextOccurrence,
   rescheduleTask,
-  type CompleteTaskResult,
 } from "@/app/actions/tasks";
+import type { CompleteTaskResult } from "@/app/actions/mission-completion-flow";
 import { trackEvent } from "@/app/actions/analytics-events";
 import { useOfflineCompleteTask } from "@/app/hooks/useOfflineCompleteTask";
 import { addToQueue } from "@/lib/offline-queue";

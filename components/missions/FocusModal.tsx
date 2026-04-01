@@ -30,7 +30,7 @@ type Props = {
   /** Anti-Distraction Guard: show "Dit verlaagt je Alignment Score" when outside primary/secondary. */
   taskDomain?: string | null;
   strategyMapping?: { primaryDomain: string; secondaryDomains: string[] } | null;
-  onComplete?: (result?: import("@/app/actions/tasks").CompleteTaskResult) => void;
+  onComplete?: (result?: import("@/app/actions/mission-completion-flow").CompleteTaskResult) => void;
   onSnooze?: () => void;
   /** Optional 0–1 energy match score from missions engine. */
   energyMatchScore?: number | null;

@@ -12,9 +12,6 @@ import { todayDateString } from "@/lib/utils/timezone";
 import { computeNextRecurrenceDate } from "@/lib/tasks-recurrence";
 import { completeMission } from "@/app/actions/mission-completion-flow";
 
-export type { CompleteTaskResult } from "@/app/actions/mission-completion-flow";
-export { logTaskEvent } from "@/app/actions/task-events";
-
 /** Explicit column list for task reads (avoids select * per SUPABASE_PERFORMANCE_GUIDELINES). */
 const TASK_SELECT_COLUMNS =
   "id, user_id, title, due_date, completed, completed_at, carry_over_count, energy_required, priority, notes, created_at, updated_at, parent_task_id, deleted_at, snooze_until, category, impact, domain, cognitive_load, emotional_resistance, mental_load, social_load, focus_required, recurrence_rule, recurrence_weekdays, difficulty, discipline_weight, strategic_value, psychology_label, mission_intent, mission_chain_id, validation_type, base_xp, avoidance_tag, hobby_tag, fatigue_impact, strategy_key_result_id, urgency, task_type, intensity, duration_minutes, task_tags";

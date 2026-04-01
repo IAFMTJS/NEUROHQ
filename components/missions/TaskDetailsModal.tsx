@@ -3,7 +3,8 @@
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useTransition } from "react";
 import { Modal } from "@/components/Modal";
-import { deleteTask, logTaskEvent, snoozeTask } from "@/app/actions/tasks";
+import { deleteTask, snoozeTask } from "@/app/actions/tasks";
+import { logTaskEvent } from "@/app/actions/task-events";
 import { abandonTaskWithCost } from "@/app/actions/decision-cost";
 import { useOfflineCompleteTask } from "@/app/hooks/useOfflineCompleteTask";
 import type { SubtaskRow } from "@/app/actions/tasks";
@@ -54,7 +55,7 @@ type Props = {
   task: ExtendedTask;
   subtasks?: SubtaskRow[];
   strategicPreview?: StrategicPreview | null;
-  onComplete?: (result?: import("@/app/actions/tasks").CompleteTaskResult) => void;
+  onComplete?: (result?: import("@/app/actions/mission-completion-flow").CompleteTaskResult) => void;
   onSnooze?: () => void;
   onEdit?: () => void;
   onDelete?: () => void;

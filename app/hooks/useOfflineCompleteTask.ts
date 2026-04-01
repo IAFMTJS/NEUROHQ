@@ -2,7 +2,8 @@
 
 import { useCallback } from "react";
 import { addToQueue } from "@/lib/offline-queue";
-import { completeTask, type CompleteTaskResult } from "@/app/actions/tasks";
+import { completeTask } from "@/app/actions/tasks";
+import type { CompleteTaskResult } from "@/app/actions/mission-completion-flow";
 
 /** Call completeTask when online; when offline queue for sync. Returns level-up info when online so UI can show "Level up!" toast. */
 export function useOfflineCompleteTask() {
