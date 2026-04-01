@@ -7,7 +7,7 @@ import { SciFiPanel } from "@/components/hud-test/SciFiPanel";
 import { CornerNode } from "@/components/hud-test/CornerNode";
 import { profileEngineHref } from "@/lib/profile-routes";
 
-/** Matches `TasksTabsShell` `tabClass` when `fillViewport` + no command deck. */
+/** Legacy top-strip tab look (pre–deck); production `/tasks` gebruikt alleen het deck-tabblad in `TasksTabsShell`. */
 function legacyTabClass(active: boolean): string {
   return `dashboard-mini-btn ${
     active ? "dashboard-mini-btn-primary" : "dashboard-mini-btn-secondary"

@@ -1,6 +1,6 @@
 # Commander Design System v2 – Tokens
 
-Single source of truth: **`commander-v2.json`** (zie `New styling idea/Design System Architecture v2 met.md`).
+Single source of truth: **`commander-v2.json`** (architectuurnotities: `New UI Display Idea`-stappen en `app/globals.css`).
 
 ## Lagen
 

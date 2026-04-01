@@ -156,7 +156,7 @@ const code = (s: string) => (
 
 /**
  * Parity preview: zelfde `VisualLabCommandDeck` + segmented tab rail (`tasksDeckTabClass`) als productie
- * `TasksTabsShell` met `commandDeck`. Missions-body volgt `TaskList` (Vandaag/plan/backlog, Voltooid,
+ * `TasksTabsShell` (command deck/tab-rail ingebouwd). Missions-body volgt `TaskList` (Vandaag/plan/backlog, Voltooid,
  * hoofdmissie, stats, budget, Daarna/parallel, + Missie toevoegen). Calendar/Routine = mock.
  */
 export function VisualLabMissionsPageConcept() {
@@ -175,7 +175,7 @@ export function VisualLabMissionsPageConcept() {
             Missies · command deck (concept)
           </h2>
           <p className="mt-1 max-w-2xl text-xs leading-relaxed text-[var(--text-secondary)]">
-            Zelfde deck + segmented tabs als {code("/tasks")} ({code("TasksTabsShell")} + {code("commandDeck")}). Missies
+            Zelfde deck + segmented tabs als {code("/tasks")} ({code("TasksTabsShell")}). Missies
             = {code("TaskList")}: weergave + Voltooid, hoofdmissie, stats, budget, stapel, CTA. Calendar/Routine = mock.
           </p>
         </div>

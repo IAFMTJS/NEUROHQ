@@ -8,13 +8,13 @@
 
 | # | Update | Wat | Bron |
 |---|--------|-----|------|
-| U1 | **Legacy kleurklassen** | Vervang alle `text-neuro-silver`, `text-neuro-muted`, `neuro-border`, `neuro-surface`, `neuro-dark`, `neuro-blue` door CSS-variabelen (`var(--text-primary)`, `var(--text-muted)`, `var(--card-border)`, etc.) in alle componenten. | grep: 26+ bestanden gebruiken nog neuro-* |
+| U1 | **Legacy kleurklassen** | ~~Tailwind `text-neuro-*` / `neuro-*` in TSX~~ — grotendeels gemigreerd; resterend: `tailwind.config` mapping `neuro.*` → CSS-vars en hardcoded copy in docs/audit. Optioneel: mapping verwijderen na grep. | Code audit 2026-04 |
 | U2 | **Auth-pagina’s** | Unify text colours naar design tokens; voeg "Wachtwoord vergeten?"-link toe op login. | VISION_AND_ENHANCEMENT_ROADMAP |
 | U3 | **LOW_ENERGY-spec** | Documenteer en align: spec zegt "hide energy_required ≥ 4"; code gebruikt mogelijk andere drempel. Besluit en implementeer consistent. | VISION, ACTION_PLAN |
 | U4 | **STABILIZE-drempel** | Documenteer: alleen carry_over ≥ 5, of ook sensory ≥ 8 (optioneel). Eén duidelijke regel in code + docs. | VISION |
 | U5 | **Dashboard-datum** | Toon datum in user timezone; controleer of alle date-strings (daily_state, tasks, calendar) TZ-consistent zijn. | VISION |
 | U6 | **Loading states** | Voeg `loading.tsx` toe waar die ontbreekt (dashboard, budget, learning, strategy, report, analytics, settings). | VISION L7 |
-| U7 | **Card-stijlen** | Rest van app: vervang overgebleven `card-modern` / `card-modern-accent` door `card-simple` waar passend (taken, learning, budget, report). | UI_DESIGN_VISIE |
+| U7 | **Card-stijlen** | ~~`card-modern`~~ — niet meer in codebase; unify waar nodig: `glass-card` vs `card-simple` vs `SciFiPanel`. | UI_DESIGN_VISIE |
 | U8 | **Modal-styling** | Modals (EditMission, Schedule, Confirm, Focus, QuickAdd, YesterdayTasks) gebruiken design tokens; geen hardcoded neuro-* in modals. | Consistente UI |
 | U9 | **BacklogList / Agenda** | BacklogList en AgendaOnlyList: card-simple + CSS-variabelen; copy "Backlog & future" / "Agenda" in lijn met design. | Consistente UI |
 | U10 | **Error-pagina’s** | `app/error.tsx` en `not-found.tsx`: zelfde tokens, duidelijke NL-tekst, link terug naar dashboard. | UX |

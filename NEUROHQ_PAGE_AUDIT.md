@@ -12,7 +12,7 @@ NEUROHQ is a **nervous-system-aware personal operating system** — calendar-bas
 | Aspect | Current | Missing / Change / Improve |
 |--------|---------|---------------------------|
 | **Content** | Logo, app icon, tagline “Your daily HQ”, short blurb (“Tasks, energy, learning, finances”), Sign in / Sign up. | **Add:** One line on *who it’s for* (e.g. “Built for focus and energy awareness”) or “ADHD/autism-friendly” if you want to state it. |
-| **Visual** | Dark bg, radial gradient, card, max-width strip. | Align “neuro-silver” / “neuro-muted” with design tokens in `globals.css` (you use both `text-neuro-muted` and design tokens elsewhere). |
+| **Visual** | Dark bg, radial gradient, card, max-width strip. | Gebruik design tokens (`var(--text-primary)`, `var(--text-muted)` of Tailwind `hq.*`); audit verwees naar oude `text-neuro-*` classes die uit productie-TSX zijn. |
 | **UX** | Redirects logged-in users to `/dashboard`. | Consider “Learn more” or “How it works” link to a static page (optional). |
 | **Accessibility** | Images have `alt=""` (decorative). Logo should have `alt="NEUROHQ"` for context. | Add `alt="NEUROHQ"` to logo Image. |
 
@@ -23,7 +23,7 @@ NEUROHQ is a **nervous-system-aware personal operating system** — calendar-bas
 | Aspect | Current | Missing / Change / Improve |
 |--------|---------|---------------------------|
 | **Content** | Email, password, error display, “Back to home”, “Sign up” link. | **Add:** “Forgot password?” link → `/forgot-password` (page not implemented yet). |
-| **Visual** | Card, neuro styling; `text-neutral-300` / `text-neutral-400` on signup vs `text-neuro-silver` / `text-neuro-muted` on login. | **Unify:** Use design tokens (`text-neuro-silver`, `text-neuro-muted`) on both auth pages for consistency. |
+| **Visual** | Card; login/signup mix `text-neutral-*` met token-kleuren. | **Unify:** Zelfde token-gebaseerde tekstkleuren op login en signup (`var(--text-primary)` / `--text-muted` of equivalent). |
 | **Layout** | Auth layout centers content; no header. | Fine; ensure focus order (email → password → submit → sign up link). |
 | **Security** | Client-side sign-in, redirect to `/dashboard`. | Consider rate limiting / messaging for “too many attempts” (backend). |
 
@@ -34,7 +34,7 @@ NEUROHQ is a **nervous-system-aware personal operating system** — calendar-bas
 | Aspect | Current | Missing / Change / Improve |
 |--------|---------|---------------------------|
 | **Content** | Email, password, success state “Check your email”, link back to sign in. | **Add:** Password strength hint or min length in label (“At least 6 characters” is in placeholder only). |
-| **Visual** | Same as login; uses `text-neutral-400` / `text-neutral-300`. | **Unify:** Use `text-neuro-silver` / `text-neuro-muted` everywhere (see Login). |
+| **Visual** | Same as login; uses `text-neutral-400` / `text-neutral-300`. | **Unify:** Zelfde design tokens als login (zie Login). |
 | **UX** | Success message is clear. | Optional: “Resend confirmation” if user didn’t get email. |
 
 ---

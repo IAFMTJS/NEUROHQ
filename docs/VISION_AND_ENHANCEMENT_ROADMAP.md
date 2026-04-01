@@ -78,7 +78,7 @@ NEUROHQ is a **nervous-system-aware personal operating system** — calendar-bas
 
 ### UX & consistency
 
-- **Auth pages:** Unify text colours to design tokens (neuro-silver, neuro-muted); add “Forgot password?” on login.
+- **Auth pages:** Unify text colours to design tokens (`--text-primary` / `--text-muted`); add “Forgot password?” on login.
 - **Home:** Optional “Learn more” / “How it works”; ensure logo has `alt="NEUROHQ"`.
 - **Dashboard:** Date in user timezone (data may be TZ-aware; confirm display).
 - **Loading:** Skeleton loading on dashboard, tasks, budget, learning, strategy, report (some already have loading.tsx).

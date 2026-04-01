@@ -1,6 +1,5 @@
 import nextDynamic from "next/dynamic";
 import { Suspense } from "react";
-import Link from "next/link";
 import {
   getBacklogTasks,
   getCompletedTodayTasks,
@@ -25,9 +24,6 @@ import { todayDateString } from "@/lib/utils/timezone";
 import { getXPIdentity } from "@/app/actions/xp";
 import { getIdentityEngine } from "@/app/actions/identity-engine";
 import { getUserPreferencesOrDefaults } from "@/app/actions/preferences";
-import { SciFiPanel } from "@/components/hud-test/SciFiPanel";
-import { CornerNode } from "@/components/hud-test/CornerNode";
-import hudStyles from "@/components/hud-test/hud.module.css";
 import { MissionsProvider, TasksTabsShell, TodayMissionsGridFromStore } from "@/components/missions";
 import type { TasksTabId } from "@/components/missions/TasksTabsShell";
 import { TasksDailyBootstrap } from "@/components/missions/TasksDailyBootstrap";
@@ -36,7 +32,6 @@ import { TasksCalendarAsync } from "./TasksCalendarAsync";
 import { getGrowthEngineSnapshot } from "@/app/actions/growth-snapshot";
 import { getBehaviorProfile } from "@/app/actions/behavior-profile";
 import { GrowthMissionsRibbon } from "@/components/growth/GrowthMissionsRibbon";
-import { profileEngineHref } from "@/lib/profile-routes";
 /** Tasks page must always run on the server so latest data is rendered after refresh. */
 export const dynamic = "force-dynamic";
 
@@ -47,10 +42,6 @@ const ModeBanner = nextDynamic(
 const SmartSuggestionBanner = nextDynamic(
   () => import("@/components/missions/SmartSuggestionBanner").then((m) => ({ default: m.SmartSuggestionBanner })),
   { loading: () => null }
-);
-const CommanderMissionCard = nextDynamic(
-  () => import("@/components/commander").then((m) => ({ default: m.CommanderMissionCard })),
-  { loading: () => <div className="min-h-[72px] animate-pulse rounded-xl bg-white/5" aria-hidden /> }
 );
 /** Imported directly (not dynamic) to avoid HMR breaking server-action refs (Turbopack "module factory not available"). */
 import { TaskList } from "@/components/TaskList";
@@ -107,13 +98,10 @@ async function MissionsSectionAsync({
   dateStr,
   backlog,
   growthFromGrowthPage = false,
-  commandDeck = false,
 }: {
   dateStr: string;
   backlog: Awaited<ReturnType<typeof getBacklogTasks>>;
   growthFromGrowthPage?: boolean;
-  /** Outer SciFiPanel omitted — content sits in TasksTabsShell command deck. */
-  commandDeck?: boolean;
 }) {
   const [
     mode,
@@ -167,33 +155,6 @@ async function MissionsSectionAsync({
     subtasksByParent[pid].push(s);
   }
 
-  const firstUnblockedIndex = decisionBlocks.tasksSortedByUMS.findIndex((t) => !blockedReasonByTaskId[t.id]);
-  const missionCardsFromUMS = decisionBlocks.tasksSortedByUMS.slice(0, 8).map((t, i) => {
-    const blocked = !!blockedReasonByTaskId[t.id];
-    const isActive =
-      !blocked && firstUnblockedIndex !== -1 && i === firstUnblockedIndex;
-    return {
-      id: t.id,
-      title: t.title ?? "Task",
-      subtitle: blocked
-        ? "Geblokkeerd"
-        : isActive
-          ? "Aanbevolen"
-          : `UMS ${Math.round(t.umsBreakdown.ums * 100)}%`,
-      description: (t as { notes?: string | null }).notes ?? null,
-      state: (blocked ? "locked" : isActive ? "active" : "locked") as "active" | "locked",
-      progressPct: 0,
-      href: blocked ? undefined : "/tasks",
-    };
-  });
-  const missionCardsCompleted = (completedToday as { id: string; title: string | null }[]).slice(0, 4).map((t) => ({
-    id: t.id,
-    title: t.title ?? "Done",
-    subtitle: "Completed",
-    state: "completed" as const,
-    progressPct: 100,
-    href: undefined as string | undefined,
-  }));
   const { getMissionDifficultyRank } = await import("@/lib/mission-difficulty-rank");
   const strategicByTaskId: Record<
     string,
@@ -226,31 +187,6 @@ async function MissionsSectionAsync({
     };
   }
 
-  const missionCardsBase =
-    missionCardsFromUMS.length > 0
-      ? [...missionCardsFromUMS, ...missionCardsCompleted]
-      : tasksNormal.length > 0
-        ? [
-            ...tasks.slice(0, 8).map((t, i) => ({
-              id: (t as { id: string }).id,
-              title: (t as { title: string }).title ?? "Task",
-              subtitle: i === 0 ? "Active" : undefined,
-              description: (t as { notes?: string | null }).notes ?? null,
-              state: (i === 0 ? "active" : "locked") as "active" | "locked",
-              progressPct: 0,
-              href: "/tasks",
-            })),
-            ...missionCardsCompleted,
-          ]
-        : [];
-
-  const seenMissionIds = new Set<string>();
-  const missionCards = missionCardsBase.filter((card) => {
-    if (!card.id || seenMissionIds.has(card.id)) return false;
-    seenMissionIds.add(card.id);
-    return true;
-  });
-
   const missionEngineWarnings = {
     energyDepleted: (energyBudget as { consequence?: { energyDepleted?: boolean } }).consequence?.energyDepleted,
     recoveryOnly: decisionBlocks.recoveryOnly,
@@ -259,13 +195,7 @@ async function MissionsSectionAsync({
   };
 
   const diagnosticsBlock = (
-    <details
-      className={
-        commandDeck
-          ? "tasks-war-hide rounded-xl border border-[rgba(var(--mode-rgb),0.12)] bg-[rgba(6,18,30,0.35)] p-3"
-          : "tasks-war-hide rounded-xl border border-[var(--card-border)] bg-[var(--bg-surface)]/35 p-3"
-      }
-    >
+    <details className="tasks-war-hide rounded-xl border border-[rgba(var(--mode-rgb),0.12)] bg-[rgba(6,18,30,0.35)] p-3">
       <summary className="cursor-pointer text-xs font-semibold uppercase tracking-wider text-[var(--text-muted)]">Diagnostics</summary>
       <div className="mt-3 space-y-3">
         {resistanceIndex.message && <p className="text-sm text-[var(--text-primary)]">{resistanceIndex.message}</p>}
@@ -288,34 +218,14 @@ async function MissionsSectionAsync({
     smartSuggestion.text && !decisionBlocks.topRecommendation ? (
       <SmartSuggestionBanner text={smartSuggestion.text} type={smartSuggestion.type} />
     ) : null;
-  const smartSuggestionDeck =
-    commandDeck && smartSuggestionBlock ? (
-      <div className="card-simple !rounded-xl border border-[rgba(var(--mode-rgb),0.1)] p-3">{smartSuggestionBlock}</div>
-    ) : (
-      smartSuggestionBlock
-    );
+  const smartSuggestionDeck = smartSuggestionBlock ? (
+    <div className="card-simple !rounded-xl border border-[rgba(var(--mode-rgb),0.1)] p-3">{smartSuggestionBlock}</div>
+  ) : null;
 
   const tasksTodayBlock = (
     <div data-tutorial="tasks-today">
       <div className="tasks-war-hide">
-        <TodayMissionsGridFromStore dateStr={dateStr}>
-          {!commandDeck && missionCards.length > 0 && tasks.length === 0 && (
-            <section className="mission-grid">
-              {missionCards.map((m) => (
-                <CommanderMissionCard
-                  key={m.id}
-                  id={m.id}
-                  title={m.title}
-                  subtitle={m.subtitle}
-                  description={"description" in m ? (m as { description?: string | null }).description : null}
-                  state={m.state}
-                  progressPct={m.progressPct}
-                  href={m.href}
-                />
-              ))}
-            </section>
-          )}
-        </TodayMissionsGridFromStore>
+        <TodayMissionsGridFromStore dateStr={dateStr} />
       </div>
       <div data-tutorial="tasks-list" id="tasks-list">
         <TaskList
@@ -353,8 +263,8 @@ async function MissionsSectionAsync({
     </div>
   );
 
-  /** Command deck: hero-first flow like visual-lab missions concept (ribbon + diagnostics after main stack). */
-  const missionsBody = commandDeck ? (
+  /** Hero-first flow: ribbon + diagnostics after main stack. */
+  const missionsBody = (
     <>
       {smartSuggestionDeck}
       {tasksTodayBlock}
@@ -363,26 +273,9 @@ async function MissionsSectionAsync({
       ) : null}
       {diagnosticsBlock}
     </>
-  ) : (
-    <>
-      <GrowthMissionsRibbon snap={growthSnap} fromGrowthPage={growthFromGrowthPage} />
-      {diagnosticsBlock}
-      {smartSuggestionBlock}
-      {tasksTodayBlock}
-    </>
   );
 
-  if (commandDeck) {
-    return <div className="space-y-6">{missionsBody}</div>;
-  }
-
-  return (
-    <SciFiPanel variant="flat-glass" className={hudStyles.focusSecondary} bodyClassName="p-4 md:p-5">
-      <CornerNode corner="top-left" />
-      <CornerNode corner="top-right" />
-      {missionsBody}
-    </SciFiPanel>
-  );
+  return <div className="space-y-6">{missionsBody}</div>;
 }
 
 async function CalendarSectionAsync({
@@ -392,7 +285,6 @@ async function CalendarSectionAsync({
   calendarView,
   backlog,
   simplifiedContent = false,
-  commandDeck = false,
 }: {
   dateStr: string;
   monthParam: string;
@@ -400,7 +292,6 @@ async function CalendarSectionAsync({
   calendarView: CalendarView;
   backlog: Awaited<ReturnType<typeof getBacklogTasks>>;
   simplifiedContent?: boolean;
-  commandDeck?: boolean;
 }) {
   return (
     <TasksCalendarAsync
@@ -410,64 +301,13 @@ async function CalendarSectionAsync({
       calendarView={calendarView}
       backlog={(backlog ?? []) as { id: string; title: string | null; due_date: string | null }[]}
       simplifiedContent={simplifiedContent}
-      commandDeck={commandDeck}
     />
   );
 }
 
-async function RoutineSectionAsync({
-  dateStr,
-  simplifiedContent = false,
-  commandDeck = false,
-}: {
-  dateStr: string;
-  simplifiedContent?: boolean;
-  commandDeck?: boolean;
-}) {
+async function RoutineSectionAsync({ dateStr }: { dateStr: string }) {
   const { routineTasks, suggestedDays, suggestedPlans } = await getRoutineTasksWithSuggestions(dateStr);
   const RoutineTaskList = (await import("@/components/missions/RoutineTaskList")).RoutineTaskList;
-
-  if (simplifiedContent && !commandDeck) {
-    return (
-      <div className="flex min-h-0 w-full max-w-none flex-1 flex-col">
-        <SciFiPanel
-          variant="flat-glass"
-          className="hq-card-enter relative flex min-h-0 w-full flex-1 flex-col overflow-hidden dashboard-active-mission"
-          bodyClassName="relative z-10 flex min-h-0 flex-1 flex-col gap-0 p-0"
-        >
-          <CornerNode corner="top-left" />
-          <CornerNode corner="top-right" />
-          <div className="flex shrink-0 items-start justify-between gap-3 border-b border-[var(--card-border)]/40 px-4 py-3">
-            <h2 className="hq-h2 min-w-0 flex-1 text-[var(--text-primary)]">Routines</h2>
-            <Link
-              href="/dashboard"
-              className="shrink-0 pt-0.5 text-[11px] font-semibold uppercase tracking-wide text-[var(--accent-focus)] underline-offset-2 hover:underline"
-            >
-              HQ
-            </Link>
-          </div>
-          <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-3 py-3 [-webkit-overflow-scrolling:touch]">
-            <RoutineTaskList
-              routineTasks={routineTasks}
-              suggestedDays={suggestedDays}
-              suggestedPlans={suggestedPlans}
-              dateStr={dateStr}
-              simplifiedLayout
-            />
-          </div>
-          <p className="shrink-0 border-t border-[var(--card-border)]/40 px-4 py-2 text-center text-[11px] text-[var(--text-muted)]">
-            <Link href="/tasks?tab=missions" className="text-[var(--accent-focus)] underline-offset-2 hover:underline">
-              Missions
-            </Link>
-            {" · "}
-            <Link href={profileEngineHref("modes")} className="text-[var(--accent-focus)] underline-offset-2 hover:underline">
-              Turn off simplified
-            </Link>
-          </p>
-        </SciFiPanel>
-      </div>
-    );
-  }
 
   return (
     <RoutineTaskList
@@ -475,8 +315,7 @@ async function RoutineSectionAsync({
       suggestedDays={suggestedDays}
       suggestedPlans={suggestedPlans}
       dateStr={dateStr}
-      commandDeckVisuals={commandDeck}
-      simplifiedLayout={simplifiedContent && !commandDeck}
+      commandDeckVisuals
     />
   );
 }
@@ -514,8 +353,6 @@ export default async function TasksPage({ searchParams }: Props) {
   );
   /** Simplified /tasks: full-height column + scroll contract; same command-deck chrome as standard. */
   const simplifiedTasksFillLayout = prefs.simplified_content === true;
-  /** Frosted command deck (Visual Lab parity) for all users; simplified only changes viewport/scroll layout. */
-  const tasksCommandDeck = true;
 
   /**
    * Missions UI matches visual-lab command deck: no separate HQ header, mascot, or meta strip —
@@ -532,16 +369,10 @@ export default async function TasksPage({ searchParams }: Props) {
       header={headerSection}
       fillViewport={simplifiedTasksFillLayout}
       stickyTabs={simplifiedTasksFillLayout}
-      commandDeck={tasksCommandDeck}
     >
       {activeTab === "missions" ? (
         <Suspense fallback={<TasksMissionsSnapshotFallback dateStr={dateStr} />}>
-          <MissionsSectionAsync
-            dateStr={dateStr}
-            backlog={backlog}
-            growthFromGrowthPage={growthFromGrowthPage}
-            commandDeck={tasksCommandDeck}
-          />
+          <MissionsSectionAsync dateStr={dateStr} backlog={backlog} growthFromGrowthPage={growthFromGrowthPage} />
         </Suspense>
       ) : activeTab === "calendar" ? (
         <Suspense fallback={null}>
@@ -552,16 +383,11 @@ export default async function TasksPage({ searchParams }: Props) {
             calendarView={calendarView}
             backlog={backlog}
             simplifiedContent={prefs.simplified_content === true}
-            commandDeck={tasksCommandDeck}
           />
         </Suspense>
       ) : (
         <Suspense fallback={null}>
-          <RoutineSectionAsync
-            dateStr={dateStr}
-            simplifiedContent={prefs.simplified_content === true}
-            commandDeck={tasksCommandDeck}
-          />
+          <RoutineSectionAsync dateStr={dateStr} />
         </Suspense>
       )}
     </TasksTabsShell>
@@ -580,13 +406,7 @@ export default async function TasksPage({ searchParams }: Props) {
               : "tasks-page-column container page page-wide relative z-10 pt-4 sm:pt-5"
           }
         >
-          {tasksCommandDeck ? (
-            <div className="hq-frosted-main-shell">
-              {tabsShell}
-            </div>
-          ) : (
-            tabsShell
-          )}
+          <div className="hq-frosted-main-shell">{tabsShell}</div>
         </div>
       </MissionsProvider>
     </main>
