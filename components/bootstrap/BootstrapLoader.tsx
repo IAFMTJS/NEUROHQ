@@ -14,8 +14,7 @@ type Props = {
 };
 
 const STEP_COPY: Record<PreloadStepId, string> = {
-  fetchDashboard: "Command center & overview",
-  fetchMissions: "Missions, tasks, budget & growth (today)",
+  fetchMissions: "Dashboard, missions, budget & growth (today)",
   fetchXP: "XP, streak & forecasts",
   fetchStrategy: "Strategy focus",
   fetchAnalytics: "Analytics & insights",

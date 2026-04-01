@@ -1,5 +1,6 @@
 "use server";
 
+import { cache } from "react";
 import { createClient } from "@/lib/supabase/server";
 
 export interface FrictionSignal {
@@ -9,8 +10,7 @@ export interface FrictionSignal {
   suggestMicroTask: boolean;
 }
 
-/** Detect resistance: opened but not started, started not completed, postponed. */
-export async function getFrictionSignals(): Promise<FrictionSignal[]> {
+const loadFrictionSignals = cache(async (): Promise<FrictionSignal[]> => {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return [];
@@ -58,6 +58,11 @@ export async function getFrictionSignals(): Promise<FrictionSignal[]> {
   }
 
   return signals;
+});
+
+/** Detect resistance: opened but not started, started not completed, postponed. */
+export async function getFrictionSignals(): Promise<FrictionSignal[]> {
+  return loadFrictionSignals();
 }
 
 /** Record a friction event (call when user opens task but doesn't start, or postpones). */

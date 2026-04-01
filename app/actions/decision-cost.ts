@@ -5,7 +5,7 @@ import { revalidateTagMax } from "@/lib/revalidate";
 import { createClient } from "@/lib/supabase/server";
 import { isHeavyTask } from "@/lib/brain-mode";
 import { trackEvent } from "@/app/actions/analytics-events";
-import { logTaskEvent } from "./tasks";
+import { logTaskEvent } from "./task-events";
 
 const HEAVY_START_FOCUS_COST = 5;
 const ABANDON_LOAD_BUMP = 5;

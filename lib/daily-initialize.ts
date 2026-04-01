@@ -12,7 +12,6 @@ import type { DailySnapshot } from "@/types/daily-snapshot";
 import { LATEST_SNAPSHOT_VERSION } from "@/types/daily-snapshot";
 
 export type PreloadStepId =
-  | "fetchDashboard"
   | "fetchMissions"
   | "fetchXP"
   | "fetchStrategy"
@@ -42,7 +41,6 @@ const PRELOAD_PAGE_TIMEOUT_MS = 2500;
 
 /** Ordered bootstrap work (single source of truth for loader UI + progress). */
 export const DAILY_BOOTSTRAP_STEPS: readonly PreloadStepId[] = [
-  "fetchDashboard",
   "fetchMissions",
   "fetchXP",
   "fetchStrategy",
@@ -168,30 +166,6 @@ async function runStep(
   step: PreloadStepId
 ): Promise<DailySnapshot> {
   switch (step) {
-    case "fetchDashboard": {
-      try {
-        const res = await fetch(`/api/dashboard/data?part=all&ts=${Date.now()}`, {
-          credentials: "include",
-          cache: "no-store",
-        });
-        if (!res.ok) {
-          throw new Error("Dashboard preload failed: " + res.status);
-        }
-        const data = (await res.json()) as {
-          critical: DailySnapshot["dashboard"] extends { critical: infer C } ? C : unknown;
-          secondary: DailySnapshot["dashboard"] extends { secondary: infer S } ? S : unknown;
-        };
-        return {
-          ...snapshot,
-          dashboard: {
-            critical: data.critical as any,
-            secondary: data.secondary as any,
-          },
-        };
-      } catch {
-        throw new Error("Dashboard preload failed");
-      }
-    }
     case "fetchMissions": {
       try {
         const res = await fetch("/api/bootstrap/today", {
@@ -200,6 +174,10 @@ async function runStep(
         if (!res.ok) return snapshot;
         const data = (await res.json()) as {
           date?: string;
+          dashboard?: {
+            critical?: unknown;
+            secondary?: unknown;
+          } | null;
           dcicGameState?: unknown;
           tasks?: Record<string, unknown[]>;
           completedToday?: unknown[];
@@ -283,8 +261,17 @@ async function runStep(
                 reflection: data.learning.reflection,
               }
             : snapshot.learning;
+        let dashboard = snapshot.dashboard;
+        if (data.dashboard?.critical != null && data.dashboard?.secondary != null) {
+          dashboard = {
+            critical: data.dashboard.critical as any,
+            secondary: data.dashboard.secondary as any,
+          };
+        }
+
         return {
           ...snapshot,
+          dashboard,
           missions,
           budget,
           learning,

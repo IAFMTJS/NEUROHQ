@@ -1,12 +1,13 @@
 "use server";
 
+import { cache } from "react";
 import { createClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
 import { getWeekBounds } from "@/lib/utils/learning";
 
 const DEFAULT_WEEKLY_TARGET_MINUTES = 60;
 
-export async function getWeeklyLearningTarget(): Promise<number> {
+const loadWeeklyLearningTarget = cache(async (): Promise<number> => {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return DEFAULT_WEEKLY_TARGET_MINUTES;
@@ -17,6 +18,10 @@ export async function getWeeklyLearningTarget(): Promise<number> {
     .single();
   const v = (data as { weekly_learning_target_minutes?: number | null } | null)?.weekly_learning_target_minutes;
   return v != null && v > 0 ? v : DEFAULT_WEEKLY_TARGET_MINUTES;
+});
+
+export async function getWeeklyLearningTarget(): Promise<number> {
+  return loadWeeklyLearningTarget();
 }
 
 /** Reset skill tree choices (respec). Placeholder: no per-skill state yet; revalidates for future use. */
@@ -249,9 +254,13 @@ export async function deleteLearningSession(id: string) {
   revalidatePath("/dashboard");
 }
 
-export async function getWeeklyMinutes(weekStart: string, weekEnd: string): Promise<number> {
+const loadWeeklyMinutes = cache(async (weekStart: string, weekEnd: string): Promise<number> => {
   const sessions = await getLearningSessions(weekStart, weekEnd);
   return sessions.reduce((sum, s) => sum + (s.minutes ?? 0), 0);
+});
+
+export async function getWeeklyMinutes(weekStart: string, weekEnd: string): Promise<number> {
+  return loadWeeklyMinutes(weekStart, weekEnd);
 }
 
 export async function getLearningStreak(): Promise<number> {

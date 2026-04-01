@@ -9,7 +9,13 @@ import { createTask } from "@/app/actions/tasks";
 import { bandFor10Scale, getMissionCountRangeForEnergyBand, missionEquivalentFromEnergyRequired } from "@/lib/behavioral-engine";
 import { getSuggestedTaskCount } from "@/lib/utils/energy";
 import { computeBrainMode } from "@/lib/brain-mode";
-import { computeAutoMissionTarget, deriveAutoMissionIntent, pickAutoMissionsSmart, type PickedMissionTemplate } from "@/lib/master-mission-pool";
+import {
+  computeAutoMissionTarget,
+  deriveAutoMissionIntent,
+  pickAutoMissionsSmart,
+  pickMissionsForDay,
+  type PickedMissionTemplate,
+} from "@/lib/master-mission-pool";
 import { MASTER_MISSION_POOL } from "@/lib/mission-templates";
 import { getUserPreferencesOrDefaults } from "@/app/actions/preferences";
 import { trackEvent } from "@/app/actions/analytics-events";

@@ -50,6 +50,8 @@ import type { EnergyBudget } from "@/app/actions/energy";
 import type { TodayEngineResult } from "@/app/actions/dcic/today-engine";
 import type { DashboardCritical } from "@/types/dashboard-data.types";
 import type { DashboardSecondary } from "@/types/dashboard-data.types";
+import type { AdaptiveSuggestions } from "@/app/actions/adaptive";
+import type { FrictionSignal } from "@/app/actions/friction";
 
 type TodayContext = {
   dateStr: string;
@@ -62,6 +64,46 @@ type TodayContext = {
   energyBudget: EnergyBudget;
   todayEngine: TodayEngineResult;
 };
+
+/** Single prefetch for reads needed by both critical and secondary (avoids duplicate Supabase work). */
+type DashboardCrossSliceReads = {
+  budgetSettings: Awaited<ReturnType<typeof getBudgetSettings>>;
+  currentMonthExpenses: number;
+  weeklyLearningMinutes: number;
+  weeklyLearningTarget: number;
+  frictionSignals: FrictionSignal[];
+  adaptiveSuggestions: AdaptiveSuggestions;
+};
+
+async function loadDashboardCrossSliceReads(
+  ctx: TodayContext,
+  thisWeekStart: string,
+  thisWeekEnd: string
+): Promise<DashboardCrossSliceReads> {
+  const [
+    budgetSettings,
+    currentMonthExpenses,
+    weeklyLearningMinutes,
+    weeklyLearningTarget,
+    frictionSignals,
+    adaptiveSuggestions,
+  ] = await Promise.all([
+    getBudgetSettings(),
+    getCurrentMonthExpensesCents(),
+    getWeeklyMinutes(thisWeekStart, thisWeekEnd),
+    getWeeklyLearningTarget(),
+    getFrictionSignals(),
+    getAdaptiveSuggestions(ctx.dateStr),
+  ]);
+  return {
+    budgetSettings,
+    currentMonthExpenses,
+    weeklyLearningMinutes,
+    weeklyLearningTarget,
+    frictionSignals,
+    adaptiveSuggestions,
+  };
+}
 
 function serializeEnergyBudget(b: Awaited<ReturnType<typeof getEnergyBudget>>) {
   return {
@@ -120,10 +162,8 @@ async function buildTodayContext(): Promise<TodayContext> {
   };
 }
 
-async function buildCriticalPayload(ctx: TodayContext): Promise<DashboardCritical> {
-  const today = new Date();
+async function buildCriticalPayload(ctx: TodayContext, shared: DashboardCrossSliceReads): Promise<DashboardCritical> {
   const quoteDay = Math.max(1, Math.min(365, getDayOfYearFromDateString(ctx.dateStr)));
-  const { start: thisWeekStart, end: thisWeekEnd } = getWeekBounds(today);
   const todayUtc = new Date(ctx.dateStr + "T12:00:00Z");
   const currentYear = todayUtc.getUTCFullYear();
   const currentMonth = todayUtc.getUTCMonth() + 1;
@@ -131,21 +171,24 @@ async function buildCriticalPayload(ctx: TodayContext): Promise<DashboardCritica
   const prevMonthYear = currentMonth === 1 ? currentYear - 1 : currentYear;
   const isoDay = todayUtc.getUTCDay() === 0 ? 7 : todayUtc.getUTCDay();
 
+  const {
+    budgetSettings,
+    currentMonthExpenses,
+    weeklyLearningMinutes,
+    weeklyLearningTarget,
+    frictionSignals,
+    adaptiveSuggestions,
+  } = shared;
+
   const [
     quoteToday,
     learningStreak,
     prefs,
     xp,
     economy,
-    budgetSettings,
-    currentMonthExpenses,
     accountabilitySettings,
     studyPlan,
     showStrategyCheckIn,
-    frictionSignals,
-    adaptiveSuggestions,
-    weeklyLearningMinutes,
-    weeklyLearningTarget,
     autoSuggestions,
     consequenceState,
     behaviorProfile,
@@ -159,15 +202,9 @@ async function buildCriticalPayload(ctx: TodayContext): Promise<DashboardCritica
     getUserPreferencesOrDefaults(),
     getXP(),
     getUserEconomy(),
-    getBudgetSettings(),
-    getCurrentMonthExpensesCents(),
     getAccountabilitySettings(),
     getStudyPlan(),
     shouldShowStrategyCheckInReminder(),
-    getFrictionSignals(),
-    getAdaptiveSuggestions(ctx.dateStr),
-    getWeeklyMinutes(thisWeekStart, thisWeekEnd),
-    getWeeklyLearningTarget(),
     getAutoSuggestions(ctx.dateStr),
     getConsequenceState(ctx.dateStr),
     getBehaviorProfile(),
@@ -175,12 +212,12 @@ async function buildCriticalPayload(ctx: TodayContext): Promise<DashboardCritica
     getAdaptiveDecisionSignalsLast7(30),
     getFinancialInsightsSafe(),
     (async () => {
-      const [currentMonthExpenses, previousMonthExpenses] = await Promise.all([
+      const [currentMonthExpensesInner, previousMonthExpenses] = await Promise.all([
         getMonthExpensesCents(currentYear, currentMonth),
         getMonthExpensesCents(prevMonthYear, prevMonth),
       ]);
       return {
-        currentMonthExpenses,
+        currentMonthExpenses: currentMonthExpensesInner,
         previousMonthExpenses,
       };
     })(),
@@ -367,11 +404,22 @@ async function buildCriticalPayload(ctx: TodayContext): Promise<DashboardCritica
   return critical;
 }
 
-async function buildSecondaryPayload(ctx: TodayContext): Promise<DashboardSecondary> {
-  const today = new Date();
+async function buildSecondaryPayload(
+  ctx: TodayContext,
+  shared: DashboardCrossSliceReads,
+  today: Date
+): Promise<DashboardSecondary> {
   const lastWeekDate = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000);
   const { start: lastWeekStart, end: lastWeekEnd } = getWeekBounds(lastWeekDate);
   const { start: thisWeekStart, end: thisWeekEnd } = getWeekBounds(today);
+
+  const {
+    budgetSettings,
+    currentMonthExpenses,
+    weeklyLearningMinutes,
+    weeklyLearningTarget,
+    frictionSignals,
+  } = shared;
 
   const [
     identity,
@@ -383,10 +431,6 @@ async function buildSecondaryPayload(ctx: TodayContext): Promise<DashboardSecond
     insightState,
     lastWeekReport,
     strategy,
-    weeklyLearningMinutes,
-    weeklyLearningTarget,
-    budgetSettings,
-    currentMonthExpenses,
     progressionRank,
     primeWindow,
     weeklyBudgetOutcome,
@@ -400,10 +444,6 @@ async function buildSecondaryPayload(ctx: TodayContext): Promise<DashboardSecond
     getInsightEngineState(),
     getRealityReport(lastWeekStart, lastWeekEnd),
     getQuarterlyStrategy(),
-    getWeeklyMinutes(thisWeekStart, thisWeekEnd),
-    getWeeklyLearningTarget(),
-    getBudgetSettings(),
-    getCurrentMonthExpensesCents(),
     getProgressionRankState(),
     getPrimeWindow(),
     getWeeklyBudgetOutcome(),
@@ -411,11 +451,7 @@ async function buildSecondaryPayload(ctx: TodayContext): Promise<DashboardSecond
 
   void upsertDailyAnalytics(ctx.dateStr);
 
-  const [weekSummary, , frictionSignals] = await Promise.all([
-    getWeekSummary(thisWeekStart, thisWeekEnd, weeklyLearningTarget),
-    getAdaptiveSuggestions(ctx.dateStr),
-    getFrictionSignals(),
-  ]);
+  const weekSummary = await getWeekSummary(thisWeekStart, thisWeekEnd, weeklyLearningTarget);
 
   const quoteDay = Math.max(1, Math.min(365, getDayOfYearFromDateString(ctx.dateStr)));
   const [quotesPrev, quoteCurrent, quotesNext] = await Promise.all([
@@ -473,9 +509,12 @@ export async function getDashboardPayload(): Promise<{
   try {
     const ctx = await getDashboardContextForCurrentUser();
     if (!ctx) return null;
+    const today = new Date();
+    const { start: thisWeekStart, end: thisWeekEnd } = getWeekBounds(today);
+    const shared = await loadDashboardCrossSliceReads(ctx, thisWeekStart, thisWeekEnd);
     const [critical, secondary] = await Promise.all([
-      buildCriticalPayload(ctx),
-      buildSecondaryPayload(ctx),
+      buildCriticalPayload(ctx, shared),
+      buildSecondaryPayload(ctx, shared, today),
     ]);
     return { critical, secondary };
   } catch (err) {
@@ -491,7 +530,10 @@ export async function getDashboardCriticalPayload(): Promise<DashboardCritical |
   try {
     const ctx = await getDashboardContextForCurrentUser();
     if (!ctx) return null;
-    return await buildCriticalPayload(ctx);
+    const today = new Date();
+    const { start: thisWeekStart, end: thisWeekEnd } = getWeekBounds(today);
+    const shared = await loadDashboardCrossSliceReads(ctx, thisWeekStart, thisWeekEnd);
+    return await buildCriticalPayload(ctx, shared);
   } catch (err) {
     console.error("[getDashboardCriticalPayload]", err);
     throw new Error(
@@ -504,7 +546,10 @@ export async function getDashboardSecondaryPayload(): Promise<DashboardSecondary
   try {
     const ctx = await getDashboardContextForCurrentUser();
     if (!ctx) return null;
-    return await buildSecondaryPayload(ctx);
+    const today = new Date();
+    const { start: thisWeekStart, end: thisWeekEnd } = getWeekBounds(today);
+    const shared = await loadDashboardCrossSliceReads(ctx, thisWeekStart, thisWeekEnd);
+    return await buildSecondaryPayload(ctx, shared, today);
   } catch (err) {
     console.error("[getDashboardSecondaryPayload]", err);
     throw new Error(

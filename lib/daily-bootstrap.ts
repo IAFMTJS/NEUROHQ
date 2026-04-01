@@ -45,7 +45,7 @@ export async function refreshMergedSnapshotFromNetwork(): Promise<void> {
 
 /**
  * Initial daily bootstrap is handled by the DailySnapshot system:
- * - BootstrapGate runs initializeDailySystem(), which calls /api/bootstrap/today in fetchMissions
+ * - BootstrapGate runs initializeDailySystem(), which calls /api/bootstrap/today in fetchMissions (includes dashboard critical+secondary — no separate dashboard step)
  * - DashboardLayoutClient hydrates todayDate from useDailySnapshot()
  * - MissionsProvider, BudgetSnapshotProvider, and DashboardDataProvider hydrate from snapshot
  *

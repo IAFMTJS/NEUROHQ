@@ -1,5 +1,6 @@
 "use server";
 
+import { cache } from "react";
 import { createClient } from "@/lib/supabase/server";
 import type { Database } from "@/types/database.types";
 import { revalidatePath } from "next/cache";
@@ -45,8 +46,7 @@ const BUDGET_ENTRY_SELECT =
 const RECURRING_TEMPLATE_SELECT =
   "id, user_id, amount_cents, category, note, recurrence_rule, day_of_week, day_of_month, next_generate_date, created_at, updated_at";
 
-/** Get user's budget settings from users table */
-export async function getBudgetSettings(): Promise<{
+type BudgetSettingsResult = {
   monthly_budget_cents: number | null;
   monthly_savings_cents: number | null;
   currency: string;
@@ -56,7 +56,10 @@ export async function getBudgetSettings(): Promise<{
   impulse_risk_categories: string[];
   /** Server row `updated_at` — compare with client persisted payday to avoid stale localStorage overwriting server */
   row_updated_at: string | null;
-}> {
+};
+
+/** Dedupe reads when dashboard critical + secondary (and bootstrap) run in the same request. */
+const loadBudgetSettings = cache(async (): Promise<BudgetSettingsResult> => {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user)
@@ -87,6 +90,11 @@ export async function getBudgetSettings(): Promise<{
     impulse_risk_categories: Array.isArray(riskCat) ? riskCat.filter((c): c is string => typeof c === "string") : [],
     row_updated_at: typeof row.updated_at === "string" ? row.updated_at : null,
   };
+});
+
+/** Get user's budget settings from users table */
+export async function getBudgetSettings(): Promise<BudgetSettingsResult> {
+  return loadBudgetSettings();
 }
 
 /** Update user's budget settings */
@@ -247,8 +255,7 @@ export async function getPaydayDayOfMonth(): Promise<number | null> {
   }
 }
 
-/** Sum of expenses for current budget period (payday cycle if set, else calendar month) */
-export async function getCurrentMonthExpensesCents(): Promise<number> {
+const loadCurrentMonthExpensesCents = cache(async (): Promise<number> => {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return 0;
@@ -262,6 +269,11 @@ export async function getCurrentMonthExpensesCents(): Promise<number> {
     .lte("date", end);
   const total = (data ?? []).reduce((sum, r) => sum + Math.abs(r.amount_cents ?? 0), 0);
   return total;
+});
+
+/** Sum of expenses for current budget period (payday cycle if set, else calendar month) */
+export async function getCurrentMonthExpensesCents(): Promise<number> {
+  return loadCurrentMonthExpensesCents();
 }
 
 /** Sum of income for current budget period (payday cycle if set, else calendar month) */

@@ -1,5 +1,6 @@
 "use server";
 
+import { cache } from "react";
 import { getDailyState } from "./daily-state";
 import { getMode } from "./mode";
 import { getUserPreferences } from "./preferences";
@@ -18,7 +19,7 @@ export type AdaptiveSuggestions = {
   copyVariant: CopyVariant;
 };
 
-export async function getAdaptiveSuggestions(date: string): Promise<AdaptiveSuggestions> {
+const loadAdaptiveSuggestions = cache(async (date: string): Promise<AdaptiveSuggestions> => {
   const [mode, prefs, state, weekSummary] = await Promise.all([
     getMode(date),
     getUserPreferences(),
@@ -62,4 +63,8 @@ export async function getAdaptiveSuggestions(date: string): Promise<AdaptiveSugg
     taskCountSuggestion,
     copyVariant,
   };
+});
+
+export async function getAdaptiveSuggestions(date: string): Promise<AdaptiveSuggestions> {
+  return loadAdaptiveSuggestions(date);
 }

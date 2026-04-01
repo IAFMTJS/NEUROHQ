@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { getDashboardPayload } from "@/app/actions/dashboard-data";
 import { getGameState, saveGameState } from "@/app/actions/dcic/game-state";
@@ -23,7 +23,15 @@ import type { LearningSnapshot } from "@/types/hq-store.types";
 import { updateDynamicMissions } from "@/lib/dcic/dynamic-missions";
 import { triggerRandomEvents } from "@/lib/dcic/event-engine";
 
-export async function GET() {
+/** Default true. Set `includeDashboard=0` to skip `getDashboardPayload()` when the client already fetched `/api/dashboard/data` in the same flow (saves one full dashboard build). */
+function includeDashboardInBootstrap(request: NextRequest): boolean {
+  const v = request.nextUrl.searchParams.get("includeDashboard");
+  if (v == null) return true;
+  const lower = v.toLowerCase();
+  return lower !== "0" && lower !== "false" && lower !== "no";
+}
+
+export async function GET(request: NextRequest) {
   try {
     const supabase = await createClient();
     const {
@@ -34,6 +42,8 @@ export async function GET() {
     }
 
     const dateStr = todayDateString();
+    const loadDashboard = includeDashboardInBootstrap(request);
+    const dashboardPromise = loadDashboard ? getDashboardPayload() : Promise.resolve(null);
 
     const [
       dashboard,
@@ -55,7 +65,7 @@ export async function GET() {
       disciplineCompletedToday,
       unplannedSummary,
     ] = await Promise.all([
-      getDashboardPayload(),
+      dashboardPromise,
       getGameState({ includeFinance: false }),
       getTasksForDate(dateStr),
       getDailyState(dateStr),
@@ -80,7 +90,10 @@ export async function GET() {
       getUnplannedWeeklySummary(),
     ]);
 
-    if (!dashboard || !dcicGameState) {
+    if (!dcicGameState) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+    if (loadDashboard && !dashboard) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
@@ -118,7 +131,7 @@ export async function GET() {
 
     const payload = {
       date: dateStr,
-      dashboard,
+      dashboard: dashboard ?? null,
       dcicGameState,
       tasks: {
         [dateStr]: tasksForDate ?? [],
