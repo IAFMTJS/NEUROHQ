@@ -1,20 +1,23 @@
 "use client";
 
-import { useEffect, useMemo, useRef } from "react";
+import { useEffect, useRef } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { isAssistantEnabled } from "@/lib/feature-flags";
 
-const NEXT_ROUTE_CANDIDATES: Record<string, string[]> = {
-  "/dashboard": ["/tasks", "/assistant"],
-  "/tasks": ["/dashboard", "/assistant"],
-  "/assistant": ["/tasks", "/dashboard"],
-  "/budget": ["/dashboard"],
-  "/learning": ["/dashboard"],
-  "/strategy": ["/dashboard"],
-  "/settings": ["/dashboard"],
-  "/profile": ["/dashboard"],
-  "/xp": ["/dashboard"],
-};
+/**
+ * Bottom-nav destinations (keep aligned with `lib/navigation/bottom-nav-links.tsx`).
+ * `router.prefetch` fills Next.js’s client RSC cache; raw `fetch("/tasks")` from the
+ * daily bootstrap does not, so tab switches were often cold after the first hop.
+ */
+const SHELL_ROUTES = [
+  "/tasks",
+  "/budget",
+  "/learning",
+  "/dashboard",
+  "/strategy",
+  "/profile",
+  "/settings",
+] as const;
 
 function canPrefetchOnConnection(): boolean {
   if (typeof navigator === "undefined") return true;
@@ -28,53 +31,62 @@ function canPrefetchOnConnection(): boolean {
   return connection.effectiveType !== "slow-2g" && connection.effectiveType !== "2g";
 }
 
+function runWhenIdle(fn: () => void): () => void {
+  if (typeof window === "undefined") return () => {};
+  if ("requestIdleCallback" in window) {
+    const id = window.requestIdleCallback(fn, { timeout: 500 });
+    return () => window.cancelIdleCallback(id);
+  }
+  const t = window.setTimeout(fn, 200);
+  return () => window.clearTimeout(t);
+}
+
 /**
- * Prefetches critical routes when idle to improve navigation performance
+ * Warms the App Router flight cache for all main shell routes so bottom-nav hops
+ * stay fast (not only the 1–2 neighbors we used to prefetch after a 3s delay).
  */
 export function RoutePrefetcher() {
   const router = useRouter();
   const pathname = usePathname();
+  const normalized = pathname.replace(/\/$/, "") || "/";
   const prefetchedRoutesRef = useRef<Set<string>>(new Set());
-  const routesToPrefetch = useMemo(() => {
-    const candidates = NEXT_ROUTE_CANDIDATES[pathname] ?? [];
-    return candidates.filter(
-      (route) => route !== pathname && (route !== "/assistant" || isAssistantEnabled())
-    );
-  }, [pathname]);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
-    if (document.visibilityState !== "visible") return;
     if (!canPrefetchOnConnection()) return;
-    if (routesToPrefetch.length === 0) return;
 
-    const prefetchOnIdle = () => {
-      if ("requestIdleCallback" in window) {
-        requestIdleCallback(
-          () => {
-            routesToPrefetch.forEach((route) => {
-              if (prefetchedRoutesRef.current.has(route)) return;
-              prefetchedRoutesRef.current.add(route);
-              router.prefetch(route);
-            });
-          },
-          { timeout: 2000 }
-        );
-      } else {
-        setTimeout(() => {
-          routesToPrefetch.forEach((route) => {
-            if (prefetchedRoutesRef.current.has(route)) return;
-            prefetchedRoutesRef.current.add(route);
-            router.prefetch(route);
-          });
-        }, 2000);
+    const prefetchAll = () => {
+      if (document.visibilityState !== "visible") return;
+
+      const targets: string[] = [...SHELL_ROUTES];
+      if (isAssistantEnabled()) targets.push("/assistant");
+
+      for (const route of targets) {
+        if (route === normalized) continue;
+        if (prefetchedRoutesRef.current.has(route)) continue;
+        prefetchedRoutesRef.current.add(route);
+        try {
+          router.prefetch(route);
+        } catch {
+          prefetchedRoutesRef.current.delete(route);
+        }
       }
     };
 
-    const timeout = setTimeout(prefetchOnIdle, 3000);
+    const cancel = runWhenIdle(prefetchAll);
 
-    return () => clearTimeout(timeout);
-  }, [pathname, router, routesToPrefetch]);
+    const onVisible = () => {
+      if (document.visibilityState === "visible") {
+        runWhenIdle(prefetchAll);
+      }
+    };
+    document.addEventListener("visibilitychange", onVisible);
+
+    return () => {
+      cancel();
+      document.removeEventListener("visibilitychange", onVisible);
+    };
+  }, [normalized, router]);
 
   return null;
 }

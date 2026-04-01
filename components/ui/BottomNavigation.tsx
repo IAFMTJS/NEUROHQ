@@ -34,7 +34,7 @@ export default memo(function BottomNavigation() {
       <Link
         href={link.href}
         className={`nav-item nav-item-fab-rail ${active ? "active" : ""}`}
-        prefetch={false}
+        prefetch
         onMouseEnter={() => prefetchOnIntent(link.href)}
         onFocus={() => prefetchOnIntent(link.href)}
         onTouchStart={() => prefetchOnIntent(link.href)}
@@ -65,7 +65,7 @@ export default memo(function BottomNavigation() {
               <Link
                 href={hubLink.href}
                 className={`nav-item-fab-hub ${hubActive ? "active" : ""}`}
-                prefetch={false}
+                prefetch
                 aria-current={hubActive ? "page" : undefined}
                 onMouseEnter={() => prefetchOnIntent(hubLink.href)}
                 onFocus={() => prefetchOnIntent(hubLink.href)}
