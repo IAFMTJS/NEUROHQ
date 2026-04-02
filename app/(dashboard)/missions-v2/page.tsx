@@ -6,6 +6,7 @@ import { MissionsV2Client } from "@/components/missions-v2/MissionsV2Client";
 import { TasksCalendarAsync } from "@/app/(dashboard)/tasks/TasksCalendarAsync";
 import { getBacklogTasks, getRoutineTasksWithSuggestions } from "@/app/actions/tasks";
 import type { TasksTabId } from "@/components/missions/TasksTabsShell";
+import { Suspense } from "react";
 
 export const dynamic = "force-dynamic";
 
@@ -98,7 +99,29 @@ export default async function MissionsV2Page({ searchParams }: Props) {
       fillViewport={simplifiedFillLayout}
       stickyTabs={simplifiedFillLayout}
     >
-      {activeTab === "missions" ? <MissionsV2Client dateStr={dateStr} /> : activeTab === "calendar" ? <CalendarTabAsync /> : <RoutineTabAsync />}
+      {activeTab === "missions" ? (
+        <MissionsV2Client dateStr={dateStr} />
+      ) : activeTab === "calendar" ? (
+        <Suspense
+          fallback={
+            <div className="rounded-2xl border border-[var(--card-border)] bg-[var(--bg-surface)]/40 p-4 text-sm text-[var(--text-muted)]">
+              Loading calendar…
+            </div>
+          }
+        >
+          <CalendarTabAsync />
+        </Suspense>
+      ) : (
+        <Suspense
+          fallback={
+            <div className="rounded-2xl border border-[var(--card-border)] bg-[var(--bg-surface)]/40 p-4 text-sm text-[var(--text-muted)]">
+              Loading routine…
+            </div>
+          }
+        >
+          <RoutineTabAsync />
+        </Suspense>
+      )}
     </TasksTabsShell>
   );
 

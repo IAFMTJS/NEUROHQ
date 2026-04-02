@@ -16,6 +16,9 @@ import { completeMission } from "@/app/actions/mission-completion-flow";
 const TASK_SELECT_COLUMNS =
   "id, user_id, title, due_date, completed, completed_at, carry_over_count, energy_required, priority, notes, created_at, updated_at, parent_task_id, deleted_at, snooze_until, category, impact, domain, cognitive_load, emotional_resistance, mental_load, social_load, focus_required, recurrence_rule, recurrence_weekdays, difficulty, discipline_weight, strategic_value, psychology_label, mission_intent, mission_chain_id, validation_type, base_xp, avoidance_tag, hobby_tag, fatigue_impact, strategy_key_result_id, urgency, task_type, intensity, duration_minutes, task_tags";
 
+/** Slim column list for calendar range (month grid + selected day list). */
+const TASK_CALENDAR_RANGE_COLUMNS = "id, due_date, title, completed, recurrence_rule";
+
 export type TaskListMode = "normal" | "low_energy" | "stabilize" | "driven";
 
 function autoSlotRankFromTask(task: unknown): number {
@@ -137,7 +140,7 @@ export async function getTasksForDateRange(startDate: string, endDate: string): 
   const nowIso = new Date().toISOString();
   const { data } = await supabase
     .from("tasks")
-    .select(TASK_SELECT_COLUMNS)
+    .select(TASK_CALENDAR_RANGE_COLUMNS)
     .eq("user_id", user.id)
     .gte("due_date", startDate)
     .lte("due_date", endDate)
