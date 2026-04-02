@@ -33,7 +33,7 @@ export const MASCOT_FILE_BY_PAGE: Record<DashboardPage, string> = {
   strategy: "Strategy page.png",
   settings: "Settings page.png",
   profile: "User page.PNG",
-  xp: "XP page.png",
+  xp: "XP page.PNG",
 };
 
 /** State variants for XP page: maps brain mode / momentum to mascot variant. */
@@ -45,11 +45,7 @@ export type XPMascotState = "stable" | "driven" | "lowenergy";
  * Until variant PNGs exist, comment out the page entry here to fall back to the default page image.
  */
 export const MASCOT_STATE_FILE: Partial<Record<DashboardPage, Record<string, string>>> = {
-  xp: {
-    stable: "XP page - stable.png",
-    driven: "XP page - driven.png",
-    lowenergy: "XP page - lowenergy.png",
-  },
+  // XP variants removed: only `XP page.PNG` exists in `public/mascots/` right now.
   // Later: dashboard, tasks: { stable, driven, lowenergy }
 };
 

@@ -4,9 +4,23 @@
 // - DYNAMIC_CACHE (per dag): HTML/API offline fallback; _next/static JS/CSS = network-first, daarna cache voor offline
 // - IndexedDB (neurohq-offline): offline mutaties (POST/PUT etc.) → gesynchroniseerd zodra er weer netwerk is
 // Bump this when UI/layout changes so authenticated HTML cache doesn't keep old shells after refresh.
-const CACHE_VERSION = "v16";
+const CACHE_VERSION = "v17";
 const STATIC_CACHE = `neurohq-static-${CACHE_VERSION}`;
 const OFFLINE_PAGE = "/offline";
+
+function waitUntilIfPossible(event, promise) {
+  try {
+    if (event && typeof event.waitUntil === "function") {
+      event.waitUntil(
+        Promise.resolve(promise).catch(function () {
+          // Never allow waitUntil to throw/reject.
+        })
+      );
+    }
+  } catch {
+    // Ignore; some browsers/platforms may be picky about waitUntil usage.
+  }
+}
 
 function safeCachePut(cache, request, response) {
   return cache.put(request, response).catch(function () {
@@ -227,8 +241,7 @@ const STATIC_ASSETS = [
   "/app-icon.png",
   // Core branding & HUD visuals – pre-cached so first PWA open has them locally
   "/logo-naam.png",
-  "/mascots/commander.png",
-  "/mascots/commander-login.png",
+  // Mascot files are page-specific (see `public/mascots/`). Keep SW pre-cache limited to assets that exist.
   "/icons/hq-tab-dashboard.png",
   "/icons/hq-tab-tasks.png",
   "/icons/hq-tab-budget.png",
@@ -649,16 +662,18 @@ self.addEventListener("fetch", function (event) {
           return cache.match(event.request).then(function (cached) {
             if (cached) {
               // Revalidate in the background; do not block the UI.
-              (event.preloadResponse || Promise.resolve(null))
-                .then(function (preloadedResponse) {
-                  return preloadedResponse || fetch(navRequest);
-                })
-                .then(function (response) {
-                  if (response && response.ok && event.request.method === "GET") {
-                    safeCachePut(cache, event.request, response.clone());
-                  }
-                })
-                .catch(function () {});
+              waitUntilIfPossible(
+                event,
+                (event.preloadResponse || Promise.resolve(null))
+                  .then(function (preloadedResponse) {
+                    return preloadedResponse || fetch(navRequest);
+                  })
+                  .then(function (response) {
+                    if (response && response.ok && event.request.method === "GET") {
+                      safeCachePut(cache, event.request, response.clone());
+                    }
+                  })
+              );
               return cached;
             }
 
