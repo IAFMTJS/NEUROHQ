@@ -41,6 +41,10 @@ next-env.d.ts
 # Test
 coverage
 .nyc_output
+test-results/
+playwright-report/
+
+knip-report*.md
 
 # Supabase local (if used)
 .supabase

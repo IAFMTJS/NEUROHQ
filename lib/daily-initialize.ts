@@ -6,6 +6,7 @@ import {
   saveDailySnapshotWithRetries,
   getStoragePressureFlag,
   isCurrentSnapshot,
+  isDailySnapshotBootstrapComplete,
   mergeSnapshotKeepBest,
 } from "@/lib/daily-snapshot-storage";
 import { preloadShellImagesDecoded } from "@/lib/bootstrap-image-preload";
@@ -101,7 +102,7 @@ export async function initializeDailySystem(
 ): Promise<InitializeResult> {
   // 1. Try existing snapshot
   const existing = await loadDailySnapshot();
-  if (existing && isCurrentSnapshot(existing)) {
+  if (existing && isCurrentSnapshot(existing) && isDailySnapshotBootstrapComplete(existing)) {
     return { kind: "fromCache", snapshot: existing };
   }
 

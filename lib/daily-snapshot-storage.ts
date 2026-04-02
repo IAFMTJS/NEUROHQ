@@ -12,6 +12,31 @@ import {
   isCompatibleSnapshot,
 } from "@/types/daily-snapshot";
 
+/** True when core slices from bootstrap are present (ignores `bootstrapCompletedAt` marker). */
+export function hasAllCoreSnapshotSlices(snapshot: DailySnapshot | null): boolean {
+  if (!snapshot?.date) return false;
+  const d = snapshot.date;
+  if (!snapshot.missions || snapshot.missions.dateStr !== d) return false;
+  if (!Array.isArray(snapshot.missions.tasksByDate?.[d])) return false;
+  if (!snapshot.dashboard?.critical || !snapshot.dashboard?.secondary) return false;
+  if (snapshot.dcicGameState == null) return false;
+  if (!snapshot.xp?.cache) return false;
+  if (!snapshot.settings || typeof snapshot.settings.preferences !== "object") return false;
+  if (!snapshot.budget) return false;
+  if (!snapshot.learning) return false;
+  return true;
+}
+
+/**
+ * Safe to skip full `initializeDailySystem`: either a prior run finished (`bootstrapCompletedAt`)
+ * or every slice needed for the day is already on disk.
+ */
+export function isDailySnapshotBootstrapComplete(snapshot: DailySnapshot | null): boolean {
+  if (!snapshot) return false;
+  if (snapshot.ui?.bootstrapCompletedAt != null && snapshot.ui.bootstrapCompletedAt > 0) return true;
+  return hasAllCoreSnapshotSlices(snapshot);
+}
+
 const STORAGE_KEY = "neurohq-daily-snapshot-v1";
 
 /**

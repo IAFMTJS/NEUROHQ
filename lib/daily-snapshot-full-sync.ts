@@ -14,11 +14,14 @@ import {
   loadDailySnapshot,
   saveDailySnapshotWithRetries,
   isCurrentSnapshot,
+  hasAllCoreSnapshotSlices,
 } from "@/lib/daily-snapshot-storage";
 import { getPendingDailyState } from "@/lib/client-pending-writes";
 import { getPendingBudgetSnapshot } from "@/lib/client-pending-budget";
 import type { DailySnapshot, DashboardSnapshot } from "@/types/daily-snapshot";
 import type { GameState } from "@/lib/dcic/types";
+import type { Task } from "@/types/database.types";
+import { mergeTasksPreferringLocalCompletedWhenServerStale } from "@/lib/merge-tasks-server-response";
 
 export type BootstrapTodayResponse = {
   date?: string;
@@ -85,7 +88,7 @@ function mapBootstrapBudgetToSnapshot(
   };
 }
 
-function applyPendingOverlays(base: DailySnapshot): DailySnapshot {
+export function applyPendingOverlaysToSnapshot(base: DailySnapshot): DailySnapshot {
   const date = base.date;
   let next = base;
 
@@ -191,11 +194,17 @@ export async function mergeDailySnapshotFromNetwork(): Promise<BootstrapTodayRes
     }
     const dateStr = (bootstrap.date as string) ?? next.date;
     const prevTasks = next.missions?.tasksByDate ?? {};
-    const todayTasks = ((bootstrap.tasks ?? {})[dateStr] ?? []) as Array<{ completed?: boolean }>;
-    const completedFromTodayTasks = todayTasks.filter((task) => task.completed === true);
+    const bootTasksRaw = (bootstrap.tasks ?? {}) as Record<string, Task[]>;
+    const bootstrapToday = (bootTasksRaw[dateStr] ?? []) as Task[];
+    const prevToday = (prevTasks[dateStr] ?? []) as Task[];
+    const mergedTodayTasks =
+      prevToday.length > 0 && bootstrapToday.length > 0
+        ? mergeTasksPreferringLocalCompletedWhenServerStale(prevToday, bootstrapToday)
+        : bootstrapToday;
+    const completedFromTodayTasks = mergedTodayTasks.filter((task) => task.completed === true);
     const missions = {
       dateStr,
-      tasksByDate: { ...prevTasks, ...(bootstrap.tasks ?? {}) },
+      tasksByDate: { ...prevTasks, ...bootTasksRaw, [dateStr]: mergedTodayTasks },
       completedToday:
         bootstrap.completedToday ??
         (completedFromTodayTasks.length > 0
@@ -297,12 +306,16 @@ export async function mergeDailySnapshotFromNetwork(): Promise<BootstrapTodayRes
     }
   }
 
-  next = applyPendingOverlays(next);
+  next = applyPendingOverlaysToSnapshot(next);
+  const coreComplete = hasAllCoreSnapshotSlices(next);
   next = {
     ...next,
     ui: {
       ...next.ui,
       savedAt: Date.now(),
+      ...(coreComplete && next.ui?.bootstrapCompletedAt == null
+        ? { bootstrapCompletedAt: Date.now() }
+        : {}),
     },
   };
 

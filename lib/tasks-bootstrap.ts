@@ -5,6 +5,7 @@ import { useHQStore } from "@/lib/hq-store";
 import type { Task } from "@/types/database.types";
 import { useMissionsSnapshot } from "@/components/missions";
 import { getTodayKey } from "@/lib/daily-date";
+import { mergeTasksPreferringLocalCompletedWhenServerStale } from "@/lib/merge-tasks-server-response";
 
 const EMPTY_TASKS: Task[] = [];
 
@@ -64,7 +65,12 @@ export function useTasksBootstrap(date: string) {
       try {
         const tasks = await fetchTasksForDate(date, controller.signal);
         if (cancelled) return;
-        setTasksForDate(date, tasks);
+        const prior = useHQStore.getState().tasksByDate[date] ?? EMPTY_TASKS;
+        const next =
+          isToday && prior.length > 0
+            ? mergeTasksPreferringLocalCompletedWhenServerStale(prior, tasks)
+            : tasks;
+        setTasksForDate(date, next);
         setStatus("ready");
         setError(null);
       } catch (err) {
@@ -103,7 +109,12 @@ export function useTasksBootstrap(date: string) {
         void (async () => {
           try {
             const tasks = await fetchTasksForDate(date, signal);
-            setTasksForDate(date, tasks);
+            const prior = useHQStore.getState().tasksByDate[date] ?? EMPTY_TASKS;
+            const next =
+              prior.length > 0
+                ? mergeTasksPreferringLocalCompletedWhenServerStale(prior, tasks)
+                : tasks;
+            setTasksForDate(date, next);
             setStatus("ready");
             setError(null);
           } catch {

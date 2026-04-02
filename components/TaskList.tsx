@@ -91,7 +91,7 @@ type Props = {
   energyCap?: { used: number; cap: number; remaining: number; planned: number } | null;
   /** Mode banner etc. Consequence + focus-slot hints are merged into MissionsEngineWarningIcon. */
   missionsContextBelowHero?: ReactNode;
-  /** Backlog / Toekomst uitklap — shown only on the missions "backlog" subtab when set. */
+  /** Backlog / Toekomst — modals for past-due and future-dated missions (all mission sub-views). */
   missionsBacklogShelf?: {
     backlog: { id: string; title: string | null; due_date: string | null; category?: string | null }[];
     futureTasks: { id: string; title: string | null; due_date: string | null; category?: string | null }[];
@@ -1142,22 +1142,23 @@ export function TaskList({
                 </p>
               </div>
             ) : null}
-            {effectiveViewMode === "backlog" && missionsBacklogShelf ? (
-              <div className="tasks-war-hide mb-3 w-full">
-                <BacklogAndToekomstTriggers
-                  backlog={missionsBacklogShelf.backlog}
-                  futureTasks={missionsBacklogShelf.futureTasks}
-                  todayDate={missionsBacklogShelf.todayDate}
-                  onScheduleMission={(task) => setShelfScheduleTask(task)}
-                  onEditMission={(task) => setEditTask(task as ExtendedTask)}
-                  onDeleteMission={(id, bucketDate) =>
-                    setPendingDelete({ id, bucketDate: bucketDate ?? date })
-                  }
-                />
-              </div>
-            ) : null}
           </>
         )}
+
+        {missionsHeroLayout && missionsBacklogShelf ? (
+          <div className="mb-3 w-full">
+            <BacklogAndToekomstTriggers
+              backlog={missionsBacklogShelf.backlog}
+              futureTasks={missionsBacklogShelf.futureTasks}
+              todayDate={missionsBacklogShelf.todayDate}
+              onScheduleMission={(task) => setShelfScheduleTask(task)}
+              onEditMission={(task) => setEditTask(task as ExtendedTask)}
+              onDeleteMission={(id, bucketDate) =>
+                setPendingDelete({ id, bucketDate: bucketDate ?? date })
+              }
+            />
+          </div>
+        ) : null}
 
         {missionsHeroLayout && effectiveViewMode !== "focus" && (
           <div className="space-y-3">

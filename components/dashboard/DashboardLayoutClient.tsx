@@ -13,6 +13,7 @@ import { NewDayRefresh } from "@/components/NewDayRefresh";
 import { RoutePrefetcher } from "@/components/RoutePrefetcher";
 import { OfflineQueueSync } from "@/components/OfflineQueueSync";
 import { HQStorePersistOnHide } from "@/components/HQStorePersistOnHide";
+import { DailySnapshotHQMirror } from "@/components/DailySnapshotHQMirror";
 import { PendingXpToast } from "@/components/PendingXpToast";
 import { HelpFloatingIcon } from "@/components/HelpFloatingIcon";
 import { PushAutoPrompt } from "@/components/notifications/PushAutoPrompt";
@@ -126,6 +127,7 @@ export function DashboardLayoutClient({
         >
           <>
             <HQStorePersistOnHide />
+            <DailySnapshotHQMirror />
             <OfflineQueueSync />
             <PendingXpToast />
             <MoodInterventionHost />

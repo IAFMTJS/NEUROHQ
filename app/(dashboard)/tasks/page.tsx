@@ -27,6 +27,8 @@ import { getUserPreferencesOrDefaults } from "@/app/actions/preferences";
 import { MissionsProvider, TasksTabsShell, TodayMissionsGridFromStore } from "@/components/missions";
 import type { TasksTabId } from "@/components/missions/TasksTabsShell";
 import { TasksMissionsSnapshotFallback } from "@/components/missions/TasksMissionsSnapshotFallback";
+import { RoutineTaskList } from "@/components/missions/RoutineTaskList";
+import { TasksRoutineTabFallback } from "@/components/missions/TasksRoutineTabFallback";
 import { TasksCalendarAsync } from "./TasksCalendarAsync";
 import { getGrowthEngineSnapshot } from "@/app/actions/growth-snapshot";
 import { getBehaviorProfile } from "@/app/actions/behavior-profile";
@@ -302,10 +304,17 @@ async function CalendarSectionAsync({
   );
 }
 
-async function RoutineSectionAsync({ dateStr }: { dateStr: string }) {
-  const { routineTasks, suggestedDays, suggestedPlans } = await getRoutineTasksWithSuggestions(dateStr);
-  const RoutineTaskList = (await import("@/components/missions/RoutineTaskList")).RoutineTaskList;
+type RoutineDataPromise = ReturnType<typeof getRoutineTasksWithSuggestions>;
 
+/** Awaits a promise started in TasksPage so routine Supabase work overlaps prefs/backlog. */
+async function RoutineSectionFromPromise({
+  promise,
+  dateStr,
+}: {
+  promise: RoutineDataPromise;
+  dateStr: string;
+}) {
+  const { routineTasks, suggestedDays, suggestedPlans } = await promise;
   return (
     <RoutineTaskList
       routineTasks={routineTasks}
@@ -319,6 +328,8 @@ async function RoutineSectionAsync({ dateStr }: { dateStr: string }) {
 
 export default async function TasksPage({ searchParams }: Props) {
   const dateStr = todayDateString();
+  /** Overlap routine fetch with searchParams + prefs/backlog (tab switch uses hidden panel, no second navigation). */
+  const routineDataPromise = getRoutineTasksWithSuggestions(dateStr);
   const params = await searchParams;
   const growthFromGrowthPage = params.growth === "1";
   const tabParam = params.tab;
@@ -385,8 +396,8 @@ export default async function TasksPage({ searchParams }: Props) {
         </Suspense>
       }
       panelRoutine={
-        <Suspense fallback={null}>
-          <RoutineSectionAsync dateStr={dateStr} />
+        <Suspense fallback={<TasksRoutineTabFallback />}>
+          <RoutineSectionFromPromise promise={routineDataPromise} dateStr={dateStr} />
         </Suspense>
       }
     />

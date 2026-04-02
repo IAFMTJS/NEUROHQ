@@ -14,8 +14,10 @@ import type { DailySnapshot } from "@/types/daily-snapshot";
 import {
   loadDailySnapshot,
   isCurrentSnapshot,
+  isDailySnapshotBootstrapComplete,
   mergeSnapshotKeepBest,
 } from "@/lib/daily-snapshot-storage";
+import { mergeDailySnapshotFromNetwork } from "@/lib/daily-snapshot-full-sync";
 import { getTodayKey } from "@/lib/daily-date";
 import { BootstrapLoader } from "@/components/bootstrap/BootstrapLoader";
 import { StoreHydrator } from "@/components/bootstrap/StoreHydrator";
@@ -60,6 +62,7 @@ export function BootstrapGate({ children }: Props) {
   const [ready, setReady] = useState(false);
   const [snapshot, setSnapshot] = useState<DailySnapshot | null>(null);
   const refreshInFlightRef = useRef(false);
+  const snapshotRepairRef = useRef(false);
 
   const tryHydrateFromStorage = useCallback(async (): Promise<{ hydrated: boolean; current: boolean }> => {
     const existing = await loadDailySnapshot();
@@ -101,6 +104,26 @@ export function BootstrapGate({ children }: Props) {
           // Best-effort: keep rendering from the stale snapshot until the next successful refresh.
         } finally {
           refreshInFlightRef.current = false;
+        }
+      }
+
+      // Same calendar day but disk snapshot never finished bootstrap (or was interrupted) —
+      // fill slices from the network without blocking the shell.
+      if (hydrate.current && hydrate.hydrated && !snapshotRepairRef.current) {
+        const snap = await loadDailySnapshot();
+        if (
+          snap &&
+          isCurrentSnapshot(snap) &&
+          !isDailySnapshotBootstrapComplete(snap)
+        ) {
+          snapshotRepairRef.current = true;
+          void mergeDailySnapshotFromNetwork()
+            .catch(() => {
+              // non-fatal
+            })
+            .finally(() => {
+              snapshotRepairRef.current = false;
+            });
         }
       }
     };
