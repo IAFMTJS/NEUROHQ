@@ -16,7 +16,6 @@ export function PageMascot() {
     "/strategy",
     "/settings",
     "/profile",
-    "/xp",
   ];
   if (!pathname || dashboardRoutes.some((r) => pathname === r || pathname.startsWith(r + "/"))) return null;
   return null;

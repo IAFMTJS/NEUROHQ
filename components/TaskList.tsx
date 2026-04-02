@@ -703,11 +703,11 @@ export function TaskList({
         type="button"
         onClick={() => {
           setLevelUpInfo(null);
-          router.push("/xp");
+          router.push("/profile");
         }}
         className="inline-flex flex-1 items-center justify-center rounded-lg bg-[var(--accent-focus)] px-3 py-2 text-sm font-medium text-black hover:opacity-90 sm:flex-none sm:px-4"
       >
-        Naar XP Command Center
+        Naar profiel
       </button>
     </div>
   ) : null;

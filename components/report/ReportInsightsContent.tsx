@@ -107,7 +107,7 @@ export async function ReportInsightsContent({ searchParams, simplifiedLayout = f
     return (
       <div className="space-y-6">
         <div className="flex flex-wrap items-center justify-between gap-2">
-          <XPBadge totalXp={xp.total_xp} level={xp.level} compact href="/xp" />
+          <XPBadge totalXp={xp.total_xp} level={xp.level} compact href="/profile" />
         </div>
         {insightState && identity && (
           <InsightsKeyNumbersStrip

@@ -115,10 +115,10 @@ export function ProfileIdentitySummary({ identity, insightState, behaviorProfile
           Volledig rapport
         </Link>
         <Link
-          href="/xp"
+          href="/profile"
           className="inline-flex items-center rounded-lg border border-[var(--card-border)] px-3 py-2 text-sm font-medium text-[var(--text-secondary)] transition hover:bg-[var(--bg-hover)]/40 hover:text-[var(--text-primary)]"
         >
-          XP &amp; voorspelling
+          Profiel
         </Link>
       </div>
     </section>

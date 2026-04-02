@@ -32,11 +32,11 @@ function isAuthenticatedAppRoutePath(pathname) {
     pathname === "/dashboard" ||
     pathname === "/tasks" ||
     pathname === "/budget" ||
-    pathname === "/xp" ||
     pathname === "/strategy" ||
     pathname === "/analytics" ||
     pathname === "/report" ||
     pathname === "/settings" ||
+    pathname === "/profile" ||
     // nested analytics / learning pages should behave the same once visited
     pathname.startsWith("/learning")
   );
@@ -249,11 +249,11 @@ const AUTH_ROUTES_TO_PREFETCH = [
   "/dashboard",
   "/tasks",
   "/budget",
-  "/xp",
   "/strategy",
   "/analytics",
   "/report",
   "/settings",
+  "/profile",
 ];
 
 function getSnapshotEndpointsToPrefetch(today) {

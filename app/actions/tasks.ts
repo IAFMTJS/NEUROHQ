@@ -305,7 +305,6 @@ export async function createTask(params: {
   revalidateTagMax("decision-blocks");
   revalidatePath("/dashboard");
   revalidatePath("/tasks");
-  revalidatePath("/xp");
   const task = data as Task;
   return { ok: true as const, id: task?.id, task };
 }
@@ -348,7 +347,6 @@ export async function uncompleteTask(id: string) {
   revalidateDashboardCache(user.id);
   revalidatePath("/dashboard");
   revalidatePath("/tasks");
-  revalidatePath("/xp");
   revalidatePath("/learning");
   revalidatePath("/strategy");
   revalidateTagMax("decision-blocks");
@@ -378,7 +376,6 @@ export async function deleteTask(id: string) {
   revalidateDashboardCache(user.id);
   revalidatePath("/dashboard");
   revalidatePath("/tasks");
-  revalidatePath("/xp");
 }
 
 /** Restore a soft-deleted task (undo delete). */
@@ -395,7 +392,6 @@ export async function restoreTask(id: string) {
   revalidateTagMax("decision-blocks");
   revalidatePath("/dashboard");
   revalidatePath("/tasks");
-  revalidatePath("/xp");
 }
 
 export async function getCarryOverCountForDate(date: string) {
@@ -454,7 +450,6 @@ export async function snoozeTask(id: string) {
   }
   revalidatePath("/dashboard");
   revalidatePath("/tasks");
-  revalidatePath("/xp");
 }
 
 export async function skipNextOccurrence(id: string) {
@@ -482,7 +477,6 @@ export async function skipNextOccurrence(id: string) {
 
   revalidatePath("/dashboard");
   revalidatePath("/tasks");
-  revalidatePath("/xp");
 }
 
 export async function getSubtasks(parentTaskId: string) {
@@ -746,7 +740,6 @@ export async function rescheduleTask(id: string, due_date: string) {
 
   revalidatePath("/dashboard");
   revalidatePath("/tasks");
-  revalidatePath("/xp");
 }
 
 /** Update a task (edit modal). */
@@ -798,7 +791,6 @@ export async function updateTask(
   }
   revalidatePath("/dashboard");
   revalidatePath("/tasks");
-  revalidatePath("/xp");
 }
 
 /** Duplicate a task to a given due date (same fields, new id). */
@@ -839,5 +831,4 @@ export async function duplicateTask(id: string, due_date: string) {
   revalidateTagMax(`tasks-${user.id}-${due_date}`);
   revalidatePath("/dashboard");
   revalidatePath("/tasks");
-  revalidatePath("/xp");
 }

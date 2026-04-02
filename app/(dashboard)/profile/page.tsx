@@ -112,7 +112,7 @@ async function ProfileHomeAsync({ userId }: { userId: string }) {
     getDailyState(today),
     getProfileDailyChallengeContext(today),
   ]);
-  const { identity, insightState } = xpCtx;
+  const { identity, insightState, forecast } = xpCtx;
   const moodLabel = (todayDaily as { mood_label?: string | null } | null)?.mood_label ?? null;
   const simplified = prefs.simplified_content === true;
 
@@ -133,6 +133,7 @@ async function ProfileHomeAsync({ userId }: { userId: string }) {
             <ProfileHomeCompact
               identity={identity}
               insightState={insightState}
+              forecast={forecast}
               initialMoodLabel={moodLabel}
               todayStr={today}
               dailyChallengeContext={dailyChallengeContext}
@@ -148,6 +149,7 @@ async function ProfileHomeAsync({ userId }: { userId: string }) {
       <ProfileHomeCompact
         identity={identity}
         insightState={insightState}
+        forecast={forecast}
         initialMoodLabel={moodLabel}
         todayStr={today}
         dailyChallengeContext={dailyChallengeContext}

@@ -173,12 +173,12 @@ export function DailyChallengesPanel({
       </div>
       {variant === "profile" && (
         <p className="mt-3 text-[10px] text-[var(--text-muted)]">
-          Volledige XP-bridge en analytics:{" "}
+          Meer context en analytics:{" "}
           <Link
-            href="/xp"
+            href="/report"
             className="font-semibold text-[var(--accent-focus)] underline-offset-2 hover:underline rounded-sm outline-none focus-visible:ring-2 focus-visible:ring-[rgba(var(--mode-rgb),0.45)] focus-visible:ring-offset-0"
           >
-            XP-pagina
+            Rapport
           </Link>
           .
         </p>

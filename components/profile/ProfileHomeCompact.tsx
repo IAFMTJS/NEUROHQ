@@ -10,10 +10,12 @@ import { reportInsightsHref } from "@/lib/profile-routes";
 import { EnergyRing, type EnergyRingMode } from "@/components/hud-test/EnergyRing";
 import { MoodManualPanel } from "@/components/mood/MoodManualPanel";
 import { MOOD_LABEL_META, type MoodLabel } from "@/lib/mood-intervention-config";
+import { XPForecastWidget } from "@/components/dashboard/XPForecastWidget";
 
 type Props = {
   identity: XPFullContext["identity"];
   insightState: XPFullContext["insightState"];
+  forecast: XPFullContext["forecast"];
   /** Dag-mood uit daily_state (server). */
   initialMoodLabel?: string | null;
   todayStr: string;
@@ -76,6 +78,7 @@ function OrbitTile({
 export function ProfileHomeCompact({
   identity,
   insightState,
+  forecast,
   initialMoodLabel,
   todayStr,
   dailyChallengeContext,
@@ -146,20 +149,20 @@ export function ProfileHomeCompact({
           </p>
           <p className="mt-1.5 text-center">
             <Link
-              href="/xp"
+              href={reportInsightsHref("overview")}
               className="text-[11px] font-semibold text-[var(--accent-focus)] underline-offset-2 hover:underline rounded-sm outline-none focus-visible:ring-2 focus-visible:ring-[rgba(var(--mode-rgb),0.45)] focus-visible:ring-offset-0"
             >
-              XP-bridge
+              Rapport (insights)
             </Link>
           </p>
         </div>
 
         <div className="order-3 hidden flex-col justify-center gap-3 md:flex">
           <OrbitTile title="Volgende rang">{identity.next_unlock.rank}</OrbitTile>
-          <OrbitTile title="XP tot unlock" href="/xp">
+          <OrbitTile title="XP tot unlock" href={reportInsightsHref("overview")}>
             Nog {identity.next_unlock.xpNeeded.toLocaleString()} XP
           </OrbitTile>
-          <OrbitTile title="Totaal XP" href="/xp">
+          <OrbitTile title="Totaal XP" href={reportInsightsHref("overview")}>
             {identity.total_xp.toLocaleString()}
           </OrbitTile>
         </div>
@@ -171,12 +174,36 @@ export function ProfileHomeCompact({
             </span>
           </OrbitTile>
           <OrbitTile title="Streak">{identity.streak.current}d</OrbitTile>
-          <OrbitTile title="Unlock" href="/xp">
+          <OrbitTile title="Unlock" href={reportInsightsHref("overview")}>
             {identity.next_unlock.xpNeeded} XP
           </OrbitTile>
           <OrbitTile title="XP %">{barPct}%</OrbitTile>
         </div>
       </div>
+      </section>
+
+      <section
+        className="glass-card !rounded-xl !p-4 !shadow-none sm:!p-5"
+        aria-label="XP forecast"
+        data-tutorial="xp-content"
+      >
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <div>
+            <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-[var(--semantic-accent)]/90">XP</p>
+            <p className="mt-1 text-[11px] leading-relaxed text-[var(--text-muted)]">
+              Voorspelling voor vandaag (scenario’s) — details staan op Rapport.
+            </p>
+          </div>
+          <Link
+            href={reportInsightsHref("overview")}
+            className="text-[11px] font-semibold text-[var(--accent-focus)] underline-offset-2 hover:underline rounded-sm outline-none focus-visible:ring-2 focus-visible:ring-[rgba(var(--mode-rgb),0.45)] focus-visible:ring-offset-0"
+          >
+            Open rapport
+          </Link>
+        </div>
+        <div className="mt-3">
+          <XPForecastWidget forecasts={forecast} currentLevel={identity.level} />
+        </div>
       </section>
 
       <section
@@ -239,10 +266,10 @@ export function ProfileHomeCompact({
             ·
           </span>
           <Link
-            href="/xp"
+            href={reportInsightsHref("overview")}
             className="rounded-sm text-[var(--text-muted)] underline-offset-2 hover:text-[var(--accent-focus)] hover:underline outline-none focus-visible:ring-2 focus-visible:ring-[rgba(var(--mode-rgb),0.45)] focus-visible:ring-offset-0"
           >
-            Voorspelling
+            XP context
           </Link>
         </div>
       </div>

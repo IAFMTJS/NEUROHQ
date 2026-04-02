@@ -67,7 +67,7 @@ export function getReEngagementPushPayloadForScenario(
       title: "NEUROHQ — Dicht bij level up",
       body: `Je mist nog ${xp} XP naar je volgende level. Eén missie vandaag is genoeg om daar heel dicht bij te komen.`,
       tag: "re-engagement-level-gap",
-      url: "/xp",
+      url: "/profile",
     };
   }
 

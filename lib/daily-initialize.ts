@@ -360,7 +360,6 @@ async function runStep(
         const routes = [
           "/dashboard",
           "/tasks",
-          "/xp",
           "/report",
           "/analytics",
           "/strategy",
@@ -389,7 +388,6 @@ async function runStep(
         const assets = [
           getMascotSrcForPage("dashboard"),
           getMascotSrcForPage("tasks"),
-          getMascotSrcForPage("xp"),
           getMascotSrcForPage("budget"),
           getMascotSrcForPage("profile"),
         ];

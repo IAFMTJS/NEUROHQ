@@ -234,7 +234,6 @@ export async function completeMission(
   revalidateDashboardCache(user.id);
   revalidatePath("/dashboard");
   revalidatePath("/tasks");
-  revalidatePath("/xp");
   revalidatePath("/learning");
   revalidatePath("/strategy");
   revalidateTagMax("decision-blocks");

@@ -8,7 +8,7 @@ const ITEMS = [
   { where: "Strategy", what: "Kwartaalstrategie, key results, check-in", href: "/strategy" },
   { where: "Tijd & notificaties (hieronder)", what: "Tijdzone, push (quote), stille uren", href: "/settings#tijd-notificaties" },
   { where: "Dashboard", what: "Brain status (energy, focus, mentale belasting) voor energy budget", href: "/dashboard" },
-  { where: "XP-pagina", what: "Extra missies toevoegen (vandaag of andere dag)", href: "/xp" },
+  { where: "Profiel", what: "XP-voorspelling en progress context", href: "/profile" },
 ];
 
 export function SettingsWhereToConfigure() {

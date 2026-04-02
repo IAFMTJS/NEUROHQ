@@ -10,7 +10,7 @@ const MAIN_ROUTES: { path: string; label: string }[] = [
   { path: "/tasks", label: "Missions" },
   { path: "/budget", label: "Budget" },
   { path: "/learning", label: "Growth" },
-  { path: "/xp", label: "XP" },
+  { path: "/profile", label: "XP" },
   { path: "/strategy", label: "Strategy" },
   { path: "/report", label: "Insights" },
 ];

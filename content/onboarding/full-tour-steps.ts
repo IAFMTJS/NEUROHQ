@@ -145,10 +145,10 @@ export const FULL_TOUR_STEPS: TutorialStep[] = [
   // —— XP ——
   {
     id: "full-xp",
-    route: "/xp",
+    route: "/profile",
     targetSelector: "[data-tutorial=\"xp-content\"]",
-    title: "XP Command Center",
-    body: "Extra missions, identity and analytics. XP drives your level and rank; use this page to add side missions and see your trajectory.",
+    title: "XP (in Profile)",
+    body: "XP drives your level and rank. In Profile you can see your progress + forecast; deeper analytics live in Report.",
   },
   // —— Strategy ——
   {

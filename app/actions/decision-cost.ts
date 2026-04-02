@@ -59,7 +59,6 @@ export async function applyAbandonCost(taskId: string, dateStr: string): Promise
   revalidateTagMax(`energy-${user.id}-${dateStr}`);
   revalidatePath("/dashboard");
   revalidatePath("/tasks");
-  revalidatePath("/xp");
   return { xpDeducted, loadBump: ABANDON_LOAD_BUMP };
 }
 
@@ -191,7 +190,6 @@ export async function undoAbandonCost(taskId: string, xpDeducted: number, loadBu
   revalidateTagMax(`energy-${user.id}-${dateStr}`);
   revalidatePath("/dashboard");
   revalidatePath("/tasks");
-  revalidatePath("/xp");
 }
 
 /**

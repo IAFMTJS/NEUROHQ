@@ -15,11 +15,11 @@ export function ServiceWorkerRegistration() {
         p === "/dashboard" ||
         p === "/tasks" ||
         p === "/budget" ||
-        p === "/xp" ||
         p === "/strategy" ||
         p === "/analytics" ||
         p === "/report" ||
         p === "/settings" ||
+        p === "/profile" ||
         p.startsWith("/learning")
       );
     };

@@ -76,7 +76,7 @@ export const HELP_QUICK_LINKS: HelpLink[] = [
   { label: "Strategy", href: "/strategy?tab=overview" },
   { label: "Insights", href: "/report?tab=overview" },
   { label: "Budget", href: "/budget" },
-  { label: "XP", href: "/xp" },
+  { label: "XP", href: "/profile" },
   { label: "Settings", href: "/settings" },
 ];
 
@@ -259,7 +259,7 @@ export const HELP_SECTIONS: HelpSection[] = [
       "Mode/load-semantiek is genormaliseerd voor consistente beslissingen.",
     ],
     seeAlso: [
-      { label: "XP pagina", href: "/xp" },
+      { label: "Profiel (XP context)", href: "/profile" },
       { label: "Insights performance", href: "/report?tab=performance" },
     ],
   },
