@@ -4,6 +4,7 @@ import { XPBadge } from "@/components/XPBadge";
 import { getRealityReport, getStoredReport, getStoredReportWeeks } from "@/app/actions/report";
 import { getFunnelCountsLast7 } from "@/app/actions/analytics";
 import { getAnalyticsEventsSummaryLast7 } from "@/app/actions/analytics-events";
+import { createClient } from "@/lib/supabase/server";
 import {
   getBestHourHeatmap,
   getConsistencyMap,
@@ -76,8 +77,14 @@ export async function ReportInsightsContent({ searchParams, simplifiedLayout = f
     const weekStartParam = params.weekStart;
     const tabParam = params.tab;
 
+    const supabase = await createClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    const userId = user?.id;
+
     const [xpContext, storedWeeks, currentReport, hourHeatmap, consistencyMap, dropOff, correlation, radar, comparative, friction40, funnelCounts, graph30Data, xpBySource30, analyticsEventsSummary, metaInsights30, heatmap30Days, thirtyDayMirror, recentRanks] = await Promise.all([
-      getXPFullContext(),
+      getXPFullContext(undefined, userId),
       getStoredReportWeeks(),
       getRealityReport(currentWeekStart, currentWeekEnd),
       getBestHourHeatmap(),

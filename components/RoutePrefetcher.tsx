@@ -56,34 +56,49 @@ export function RoutePrefetcher() {
     if (typeof window === "undefined") return;
     if (!canPrefetchOnConnection()) return;
 
-    const prefetchAll = () => {
+    // Prefetch in small batches to avoid overwhelming the main thread / network,
+    // which can make navigation feel frozen on some devices.
+    const targets: string[] = [...SHELL_ROUTES];
+    if (isAssistantEnabled()) targets.push("/assistant");
+
+    let queue = targets.filter((route) => route !== normalized);
+    let cancelled = false;
+    const BATCH_SIZE = 2;
+
+    const prefetchBatch = () => {
+      if (cancelled) return;
       if (document.visibilityState !== "visible") return;
 
-      const targets: string[] = [...SHELL_ROUTES];
-      if (isAssistantEnabled()) targets.push("/assistant");
-
-      for (const route of targets) {
-        if (route === normalized) continue;
+      let n = 0;
+      while (queue.length && n < BATCH_SIZE) {
+        const route = queue.shift()!;
         if (prefetchedRoutesRef.current.has(route)) continue;
         prefetchedRoutesRef.current.add(route);
+        n += 1;
         try {
           router.prefetch(route);
         } catch {
           prefetchedRoutesRef.current.delete(route);
         }
       }
+
+      if (queue.length) {
+        // Continue warming the cache in later idle slots.
+        runWhenIdle(prefetchBatch);
+      }
     };
 
-    const cancel = runWhenIdle(prefetchAll);
+    const cancel = runWhenIdle(prefetchBatch);
 
     const onVisible = () => {
       if (document.visibilityState === "visible") {
-        runWhenIdle(prefetchAll);
+        runWhenIdle(prefetchBatch);
       }
     };
     document.addEventListener("visibilitychange", onVisible);
 
     return () => {
+      cancelled = true;
       cancel();
       document.removeEventListener("visibilitychange", onVisible);
     };

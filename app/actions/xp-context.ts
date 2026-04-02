@@ -22,11 +22,11 @@ export type XPFullContext = {
  * - Future: forecast (scenarios vandaag)
  * Gebruik op XP-pagina en Insight/Report-pagina.
  */
-export async function getXPFullContext(dateStr?: string): Promise<XPFullContext> {
+export async function getXPFullContext(dateStr?: string, userId?: string): Promise<XPFullContext> {
   const today = dateStr ?? new Date().toISOString().slice(0, 10);
   const [xp, identity, forecast, insightState] = await Promise.all([
-    getXP(),
-    getXPIdentity(),
+    getXP(userId),
+    getXPIdentity(userId),
     getXPForecast(today),
     getInsightEngineState(),
   ]);

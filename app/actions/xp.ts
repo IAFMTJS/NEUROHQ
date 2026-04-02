@@ -1,6 +1,6 @@
 "use server";
 
-import { createClient } from "@/lib/supabase/server";
+import { createClient, createServiceRoleClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
 import { todayDateString } from "@/lib/utils/timezone";
 import { levelFromTotalXP, xpToNextLevel, rankFromLevel, nextUnlockPreview } from "@/lib/xp";
@@ -19,21 +19,31 @@ const XP_LEARNING_SESSION = 8;
 const XP_WEEKLY_LEARNING_TARGET = 25;
 const XP_STREAK_DAY = 5;
 
-export async function getXP(): Promise<{ total_xp: number; level: number }> {
+async function getXPByUserId(userId: string): Promise<{ total_xp: number; level: number }> {
+  const admin = createServiceRoleClient();
+  if (admin) {
+    const { data } = await admin.from("user_xp").select("total_xp").eq("user_id", userId).maybeSingle();
+    const total = (data?.total_xp as number | undefined) ?? 0;
+    return { total_xp: total, level: levelFromTotalXP(total) };
+  }
   const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return { total_xp: 0, level: 1 };
-  const { data } = await supabase
-    .from("user_xp")
-    .select("total_xp")
-    .eq("user_id", user.id)
-    .single();
+  const { data } = await supabase.from("user_xp").select("total_xp").eq("user_id", userId).maybeSingle();
   const total = (data?.total_xp as number | undefined) ?? 0;
   return { total_xp: total, level: levelFromTotalXP(total) };
 }
 
+export async function getXP(userId?: string): Promise<{ total_xp: number; level: number }> {
+  if (userId) return getXPByUserId(userId);
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { total_xp: 0, level: 1 };
+  return getXPByUserId(user.id);
+}
+
 /** Extended identity for dashboard: level, rank, streak, xp to next level, next unlock preview. */
-export async function getXPIdentity(): Promise<{
+async function getXPIdentityByUserId(userId: string): Promise<{
   total_xp: number;
   level: number;
   rank: string;
@@ -41,22 +51,17 @@ export async function getXPIdentity(): Promise<{
   next_unlock: { level: number; rank: string; xpNeeded: number };
   streak: { current: number; longest: number; last_completion_date: string | null };
 }> {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
   const defaultStreak = { current: 0, longest: 0, last_completion_date: null as string | null };
-  if (!user) {
-    return {
-      total_xp: 0,
-      level: 1,
-      rank: rankFromLevel(1),
-      xp_to_next_level: 100,
-      next_unlock: nextUnlockPreview(0),
-      streak: defaultStreak,
-    };
-  }
+  const admin = createServiceRoleClient();
+  const client = admin ?? (await createClient());
+
   const [xpRes, streakRes] = await Promise.all([
-    supabase.from("user_xp").select("total_xp").eq("user_id", user.id).single(),
-    supabase.from("user_streak").select("current_streak, longest_streak, last_completion_date").eq("user_id", user.id).single(),
+    client.from("user_xp").select("total_xp").eq("user_id", userId).maybeSingle(),
+    client
+      .from("user_streak")
+      .select("current_streak, longest_streak, last_completion_date")
+      .eq("user_id", userId)
+      .maybeSingle(),
   ]);
   const total = (xpRes.data?.total_xp as number | undefined) ?? 0;
   const level = levelFromTotalXP(total);
@@ -73,6 +78,33 @@ export async function getXPIdentity(): Promise<{
       last_completion_date: streakData?.last_completion_date ?? null,
     },
   };
+}
+
+export async function getXPIdentity(userId?: string): Promise<{
+  total_xp: number;
+  level: number;
+  rank: string;
+  xp_to_next_level: number;
+  next_unlock: { level: number; rank: string; xpNeeded: number };
+  streak: { current: number; longest: number; last_completion_date: string | null };
+}> {
+  if (userId) return getXPIdentityByUserId(userId);
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  const defaultStreak = { current: 0, longest: 0, last_completion_date: null as string | null };
+  if (!user) {
+    return {
+      total_xp: 0,
+      level: 1,
+      rank: rankFromLevel(1),
+      xp_to_next_level: 100,
+      next_unlock: nextUnlockPreview(0),
+      streak: defaultStreak,
+    };
+  }
+  return getXPIdentityByUserId(user.id);
 }
 
 export type AddXPResult = { levelUp: boolean; newLevel: number } | undefined;

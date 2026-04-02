@@ -108,7 +108,7 @@ async function ProfileHomeAsync({ userId }: { userId: string }) {
   const today = todayDateString();
   const [prefs, xpCtx, todayDaily, dailyChallengeContext] = await Promise.all([
     getUserPreferencesOrDefaults(),
-    getXPFullContext(),
+    getXPFullContext(undefined, userId),
     getDailyState(today),
     getProfileDailyChallengeContext(today),
   ]);
