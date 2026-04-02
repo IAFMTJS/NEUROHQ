@@ -10,7 +10,7 @@ import { useAppState } from "@/components/providers/AppStateProvider";
 import { useOnboarding } from "@/components/onboarding/OnboardingProvider";
 import { Modal } from "@/components/Modal";
 import { scale1To10ToPct } from "@/lib/dashboard-utils";
-import { useHQStore } from "@/lib/hq-store";
+import { flushHQStoreToStorage, useHQStore } from "@/lib/hq-store";
 import { refreshMergedSnapshotFromNetwork } from "@/lib/daily-bootstrap";
 
 /** Short micro-descriptions to match reference image */
@@ -137,6 +137,7 @@ export function BrainStatusModal({ open, onClose, date, initial, yesterday, onSa
       ...nextState,
       social_load: nextState.social_load ?? 5,
     });
+    flushHQStoreToStorage();
     onSaved?.(nextState);
 
     startTransition(async () => {

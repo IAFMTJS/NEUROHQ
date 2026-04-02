@@ -45,7 +45,7 @@ NEUROHQ is a **nervous-system-aware personal operating system** — calendar-bas
 | Area | What exists | Notes |
 |------|-------------|--------|
 | **Auth** | Login, signup, redirect to dashboard | Forgot password page exists; rate limiting not implemented |
-| **Dashboard** | HQ header (energy/focus/load), BrainStatusCard, EnergyBudgetBar (3-pool, full stats), QuoteCard, ModeBanner, AvoidanceNotice, ActiveMissionCard, Calendar (upcoming + add event), Strategy teaser, Learning streak, Budget remaining, OnTrackCard, RealityReportBlock, PatternInsightCard | Energy budget now advanced; calendar on dashboard |
+| **Dashboard** | Commander bridge (`CommanderHomeHero`), BrainStatusCard, EnergyBudgetBar in System overview, quote context card, DCIC status, Today engine, **FocusBlock** when DRIVEN, ActiveMissionCard data via store | Mode banner lives on **Tasks** only; no separate minimal dashboard layout |
 | **Tasks** | Full list, add/complete/uncomplete/snooze/delete, carry-over styling, backlog, filters (work/personal/recurring), subtasks, recurrence, energy_required, Edit/Details/Focus/QuickAdd modals, ModeBanner, Stabilize (2 tasks, no add) | Uncheck completed task added |
 | **Daily rollover** | Cron daily (UTC) + hourly (per-user timezone); unfinished → today, carry_over_count++; brain status is per-date (no “reset” needed) | |
 | **Energy budget** | 3-pool (Energy, Focus, Load), brain-status → suggested task count → capacity, task/calendar cost split, full stats table, validation on create task | Docs: `docs/ENERGY_BUDGET_ANALYSIS.md` |
@@ -92,7 +92,7 @@ NEUROHQ is a **nervous-system-aware personal operating system** — calendar-bas
 ### Never built (from backlog)
 
 - **FrozenPurchaseCard** — 24h freeze: list frozen items, Confirm/Cancel after 24h (partially: freeze exists; card/reminder flow).
-- **RealityReportBlock on dashboard** — Short “last week” summary with link to full report (RealityReportBlock exists and is used).
+- **Dashboard “last week” teaser** — Short summary on home was never shipped; full insights are **Profile → Insights** (`/report` redirects there). Optional future: reintroduce a small teaser component on the deck.
 - **QuoteCard previous/next** — Browse other days’ quotes (1–365).
 - **Categories (budget)** — Presets (food, transport, etc.) + filter by category.
 - **Book tracking** — “1 book/month” with current book + progress % (monthly book slot exists; progress/Goal could be clearer).
@@ -242,7 +242,7 @@ Organised by pillar. Items are “everything we would possibly need”; not all 
 |---|-------------|-------------|----------|
 | J1 | Reality report (weekly) | ✅ Tasks, learning, savings, carry-over; stored per week. | Done |
 | J2 | Report page | ✅ Week selector, ReportAnalysis, RealityReportCard. | Done |
-| J3 | Dashboard report teaser | ✅ RealityReportBlock on dashboard. | Done |
+| J3 | Dashboard report teaser | Not on home deck; use Profile → Insights or add a small teaser later. | Open |
 | J4 | Execution score | Weekly formula (spec): (tasks×0.5)+(learning×0.2)+(savings×0.2)−(carryover×0.1); show as “score” or in report. | P2 |
 | J5 | 30-day patterns | Energy trends, avoidance frequency, social load impact, spending correlation, learning consistency. | P2 |
 | J6 | Monthly report | Monthly aggregate (tasks, learning, savings, mood summary). | P3 |

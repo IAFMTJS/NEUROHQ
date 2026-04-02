@@ -134,32 +134,24 @@ Most feature modals use `Modal` or `HQModal`; a few (e.g. `FocusModal`) implemen
 
 | Modal | Used on page(s) / component(s) | Notes |
 |-------|--------------------------------|--------|
-| **EditMissionModal** | **TaskList** (tasks), **BacklogAndToekomstTriggers** (tasks) | Same modal type, two separate instances on the same **tasks** page (one in TaskList, one in BacklogAndToekomstTriggers). |
-| **ScheduleModal** | **TaskList**, **BacklogAndToekomstTriggers** (tasks) | Same: two instances on tasks page. |
-| **ConfirmModal** (delete mission) | **TaskList** | Only in TaskList. |
-| **Modal** (generic, “Taak verwijderen?”) | **BacklogAndToekomstTriggers** | Delete confirmation again: different component (generic `Modal`) but same purpose (delete task). |
+| **EditMissionModal** | **TaskList** (tasks) | Single instance; backlog/toekomst triggers call into TaskList state. |
+| **ScheduleModal** | **TaskList** (tasks) | Single instance for shelf scheduling from **BacklogAndToekomstTriggers**. |
+| **ConfirmModal** (delete mission) | **TaskList** | One delete flow for main list and backlog/toekomst (bucket-aware). |
 | **TaskDetailsModal** | **TaskList** (tasks) | One place. |
 | **FocusModal** | **TaskList** (tasks) | One place. |
 | **Modal** (Do another? / bonus missions) | **TaskList** | One place. |
 | **Modal** (All today’s tasks) | **TaskList** | One place. |
 | **Modal** (Level up / rank promotion) | **TaskList** | One place. |
-| **CalendarModal3** / **CalendarModal3Trigger** | **Tasks page** (TasksCalendarSection), **tasks page** (BacklogAndToekomstTriggers area) | Trigger on tasks; modal can be shared. |
+| **CalendarModal3** / **CalendarModal3Trigger** | **Tasks page** (TasksCalendarSection) | Calendar tab. |
 | **BacklogModal** | **BacklogAndToekomstTriggers** (tasks) | One place. |
 | **ToekomstModal** | **BacklogAndToekomstTriggers** (tasks) | One place. |
 | **YesterdayTasksModal** | **YesterdayTasksSection** (tasks) | One place. |
 | **QuickAddModal** / **AddMissionModal3** | **TaskList** (add flows) | TaskList. |
-| **EveningNoTaskModal** | **DashboardClientShell** (dashboard) | Dashboard only. |
-| **ModeExplanationModal** | **DashboardClientShell** | Rendered **twice** in the same shell (lines ~337 and ~448). Same component, two instances. |
-| **LateDayNoTaskBanner** (contains Modal) | **DashboardClientShell** | Dashboard. |
-| **EnergyOverBudgetBanner** (Modal) | **DashboardClientShell** | Dashboard. |
 | **BrainStatusModal** | **BrainStatusCard** (dashboard / HQ) | Dashboard/HQ. |
 | **MissionConfirmationModal** | **Assistant page** | Assistant only. |
-| **Modal** (payday, recurring add, edit entry, impulse, etc.) | **PaydayCard**, **RecurringBudgetCard**, **BudgetEntryList**, **AddBudgetEntryForm**, **DashboardQuickBudgetLog**, **RemainingBudgetHero** (HQModal), **NextMonthExpensesModal**, **LastMonthExpensesModal**, **BudgetPlanCard**, **BudgetSummaryCard**, **SettingsExport**, **HowItWorksModal** (SettingsAbout), **EnergyOverBudgetBanner** | Various; many are page-specific (budget vs dashboard vs settings). |
+| **Modal** (payday, recurring add, edit entry, impulse, etc.) | **PaydayCard**, **RecurringBudgetCard**, **BudgetEntryList**, **AddBudgetEntryForm**, **RemainingBudgetHero** (HQModal), **NextMonthExpensesModal**, **LastMonthExpensesModal**, **BudgetPlanCard**, **BudgetSummaryCard**, **SettingsExport**, **HowItWorksModal** (SettingsAbout) | Various; page-specific (budget vs settings). |
 
-So the main duplication on **one page** is:
-
-- **Tasks page:** EditMissionModal, ScheduleModal, and delete confirmation (ConfirmModal vs generic Modal) each appear in both **TaskList** and **BacklogAndToekomstTriggers**. So the same modal “type” is mounted twice on the same page.
-- **Dashboard:** ModeExplanationModal is used twice in **DashboardClientShell**.
+**Tasks page:** Edit / schedule / delete for backlog and toekomst are centralized in **TaskList** (one modal each + **ConfirmModal**).
 
 ---
 
@@ -173,20 +165,13 @@ So the main duplication on **one page** is:
 
 The cleanest long-term is usually: **one** `DashboardDataProvider` (in the layout), and the dashboard page does a server fetch and passes that as initial data into the layout (e.g. via a pattern that allows layout to receive server data for the initial route).
 
-### 5.2 Tasks page: share mission modals once
+### 5.2 Tasks page: mission modals (done)
 
-- **EditMissionModal** and **ScheduleModal** (and the delete confirmation) are needed from both:
-  - **TaskList** (edit/schedule/delete from main list), and
-  - **BacklogAndToekomstTriggers** (edit/schedule/delete from backlog/toekomst).
-- **Recommendation:** Introduce a **single** mission-modal layer at the **tasks page** (or a shared tasks shell) that owns one instance of:
-  - EditMissionModal  
-  - ScheduleModal  
-  - ConfirmModal (or one generic “delete task” Modal)  
-  and pass down callbacks (e.g. `onOpenEdit(task)`, `onOpenSchedule(task)`, `onOpenDelete(id)`) from the page to both TaskList and BacklogAndToekomstTriggers. So the same modal is loaded once and reused from both places.
+- **TaskList** owns **EditMissionModal**, **ScheduleModal** (including shelf scheduling), and **ConfirmModal** for delete. **BacklogAndToekomstTriggers** only opens list modals and calls parent callbacks.
 
-### 5.3 Dashboard: one ModeExplanationModal
+### 5.3 Dashboard modals
 
-- **ModeExplanationModal** is rendered twice in **DashboardClientShell** (two different spots in the tree). Use a single instance (e.g. one at the top of the shell or inside a single “mode” section) and pass `mode` once.
+- Legacy **ModeExplanationModal** / evening / energy-over banners were removed from the shell. **BrainStatusModal** remains on **BrainStatusCard**.
 
 ### 5.4 Shared modal shell (optional)
 
@@ -210,4 +195,4 @@ The cleanest long-term is usually: **one** `DashboardDataProvider` (in the layou
 | Identity engine | user_identity_engine, user_reputation, user_streak, behaviour_log |
 | Cron / jobs | users, tasks, budget_entries, user_streak, quarterly_strategy, reality_reports, savings_goals, etc. |
 
-This file is the single overview of what gets loaded from Supabase (including duplicates) and where modals are used, so you can clean up double loads and consolidate modal instances (e.g. one EditMissionModal / ScheduleModal / delete confirmation for the whole tasks flow, one ModeExplanationModal for the dashboard).
+This file is the single overview of what gets loaded from Supabase (including duplicates) and where modals are used, so you can clean up double loads where they still exist (e.g. dashboard payload vs tasks page server data).

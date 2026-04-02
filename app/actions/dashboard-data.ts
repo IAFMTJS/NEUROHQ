@@ -258,7 +258,6 @@ async function buildCriticalPayload(ctx: TodayContext, shared: DashboardCrossSli
     : "Add a task on Missions or head to Growth.";
   const emptyMissionHref = learningNeeded ? "/learning" : "/tasks";
   const { window: timeWindow, isActive: isTimeWindowActive } = defaultTimeWindow();
-  const isMinimalUI = false;
   const showLateDayNoTask = new Date().getHours() >= 20 && energyBudget.completedTaskCount === 0;
   const actionsCount =
     (energyBudget.remaining < 0 ? 1 : 0) +
@@ -357,7 +356,6 @@ async function buildCriticalPayload(ctx: TodayContext, shared: DashboardCrossSli
 
   const critical: DashboardCritical = {
     dateStr: ctx.dateStr,
-    isMinimalUI,
     lightUi: prefs.light_ui,
     energyPct,
     focusPct,

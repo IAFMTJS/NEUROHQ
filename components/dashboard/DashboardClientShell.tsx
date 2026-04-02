@@ -9,20 +9,14 @@ import { applyBudgetOptimizationLock } from "@/app/actions/budget-intelligence";
 import { getPendingDailyState } from "@/lib/client-pending-writes";
 import { usePendingBudgetSnapshot } from "@/lib/client-pending-budget";
 import { useHQStore } from "@/lib/hq-store";
-import { HQHeader, BrainStatusCard, ActiveMissionCard } from "@/components/hq";
-import { ModeBanner, ModeExplanationModal } from "@/components/dashboard/DashboardClientOnly";
+import { BrainStatusCard, ActiveMissionCard } from "@/components/hq";
 import { OverdriveBanner } from "@/components/dashboard/OverdriveBanner";
 import { DashboardContextCard } from "@/components/dashboard/DashboardContextCard";
-import { DashboardQuickBudgetLog } from "@/components/dashboard/DashboardQuickBudgetLog";
 import { SystemOverviewCard } from "@/components/dashboard/SystemOverviewCard";
 import { CommanderHomeHero } from "@/components/commander";
 import { DashboardCommandDeckFrame } from "@/components/layout/DashboardCommandDeckFrame";
-import { DelayedFallback } from "@/components/ui/DelayedFallback";
-import { humanizeDecisionType, humanizeReasonCode } from "@/lib/unified-decision-labels";
 import { useDashboardData, fetchAll, type DashboardCritical, type DashboardSecondary } from "@/components/providers/DashboardDataProvider";
-import type { CopyVariant } from "@/app/actions/adaptive";
 import type { BrainMode } from "@/lib/brain-mode";
-import type { ConfrontationSummary } from "@/app/actions/confrontation-summary";
 import type { PoolBudget } from "@/app/actions/energy";
 import type { AppMode } from "@/lib/app-mode";
 import type { Archetype, EvolutionPhase, ReputationScore } from "@/lib/identity-engine";
@@ -30,9 +24,6 @@ import type { MomentumBand } from "@/lib/momentum";
 import type { BucketedToday } from "@/lib/today-engine";
 import type { XPForecastItem } from "@/app/actions/dcic/xp-forecast";
 import type { Quote } from "@/types/database.types";
-import type { HeatmapDay } from "@/app/actions/dcic/heatmap";
-import type { WeekSummary } from "@/app/actions/analytics";
-import type { RealityReport } from "@/app/actions/report";
 import { getDayOfYearFromDateString } from "@/lib/utils/timezone";
 import { useDCICGameState } from "@/lib/dcic/game-state-client";
 import { deriveBrainUI } from "@/lib/brain-ui";
@@ -47,24 +38,8 @@ const cardPlaceholder = (_className: string) => null;
 const IdentityBlock = dynamic(() => import("@/components/dashboard/IdentityBlock").then((m) => ({ default: m.IdentityBlock })), { ssr: false, loading: () => cardPlaceholder("glass-card min-h-[140px] animate-pulse rounded-[22px]") });
 const MomentumScore = dynamic(() => import("@/components/dashboard/MomentumScore").then((m) => ({ default: m.MomentumScore })), { ssr: false, loading: () => cardPlaceholder("glass-card min-h-[100px] animate-pulse rounded-[22px]") });
 const TodayEngineCard = dynamic(() => import("@/components/dashboard/TodayEngineCard").then((m) => ({ default: m.TodayEngineCard })), { ssr: false, loading: () => cardPlaceholder("glass-card min-h-[160px] animate-pulse rounded-[22px]") });
-const WeeklyHeatmap = dynamic(() => import("@/components/dashboard/WeeklyHeatmap").then((m) => ({ default: m.WeeklyHeatmap })), { ssr: false, loading: () => cardPlaceholder("glass-card min-h-[80px] animate-pulse rounded-[22px]") });
-const HQChart = dynamic(() => import("@/components/hq").then((m) => ({ default: m.HQChart })), { ssr: false, loading: () => cardPlaceholder("glass-card min-h-[180px] animate-pulse rounded-[22px]") });
-const RealityReportBlock = dynamic(() => import("@/components/RealityReportBlock").then((m) => ({ default: m.RealityReportBlock })), { ssr: false, loading: () => cardPlaceholder("glass-card min-h-[100px] animate-pulse rounded-[22px]") });
-const PatternInsightCard = dynamic(() => import("@/components/hq/PatternInsightCard").then((m) => ({ default: m.PatternInsightCard })), { ssr: false, loading: () => cardPlaceholder("glass-card min-h-[80px] animate-pulse rounded-[22px]") });
 const EnergyBudgetBar = dynamic(() => import("@/components/EnergyBudgetBar").then((m) => ({ default: m.EnergyBudgetBar })), { loading: () => cardPlaceholder("h-3 w-full animate-pulse rounded-full bg-white/10") });
-const EnergyOverBudgetBanner = dynamic(() => import("@/components/dashboard/EnergyOverBudgetBanner").then((m) => ({ default: m.EnergyOverBudgetBanner })), { loading: () => null });
-const LateDayNoTaskBanner = dynamic(() => import("@/components/dashboard/LateDayNoTaskBanner").then((m) => ({ default: m.LateDayNoTaskBanner })), { loading: () => null });
-const EveningNoTaskModal = dynamic(() => import("@/components/dashboard/EveningNoTaskModal").then((m) => ({ default: m.EveningNoTaskModal })), { loading: () => null });
-const ConsequenceBanner = dynamic(() => import("@/components/ConsequenceBanner").then((m) => ({ default: m.ConsequenceBanner })), { loading: () => null });
-const AvoidanceNotice = dynamic(() => import("@/components/AvoidanceNotice").then((m) => ({ default: m.AvoidanceNotice })), { loading: () => null });
 const FocusBlock = dynamic(() => import("@/components/FocusBlock").then((m) => ({ default: m.FocusBlock })), { ssr: false, loading: () => cardPlaceholder("min-h-[80px] animate-pulse rounded-xl bg-white/5") });
-const OnTrackCard = dynamic(() => import("@/components/OnTrackCard").then((m) => ({ default: m.OnTrackCard })), { ssr: false, loading: () => cardPlaceholder("glass-card min-h-[60px] animate-pulse rounded-[22px]") });
-const AnalyticsWeekWidget = dynamic(() => import("@/components/AnalyticsWeekWidget").then((m) => ({ default: m.AnalyticsWeekWidget })), { loading: () => cardPlaceholder("glass-card min-h-[100px] animate-pulse rounded-[22px]") });
-const ConfrontationBanner = dynamic(() => import("@/components/dashboard/ConfrontationBanner").then((m) => ({ default: m.ConfrontationBanner })), { loading: () => null });
-const WeeklyMirrorBanner = dynamic(() => import("@/components/dashboard/WeeklyMirrorBanner").then((m) => ({ default: m.WeeklyMirrorBanner })), { loading: () => null });
-const BehaviorSuggestionsBanner = dynamic(() => import("@/components/dashboard/BehaviorSuggestionsBanner").then((m) => ({ default: m.BehaviorSuggestionsBanner })), { loading: () => null });
-const MinimalIntegrityBanner = dynamic(() => import("@/components/dashboard/MinimalIntegrityBanner").then((m) => ({ default: m.MinimalIntegrityBanner })), { loading: () => null });
-const ProgressionPrimeBudgetCard = dynamic(() => import("@/components/dashboard/ProgressionPrimeBudgetCard").then((m) => ({ default: m.ProgressionPrimeBudgetCard })), { loading: () => null });
 const DangerousModulesCard = dynamic(() => import("@/components/dashboard/DangerousModulesCard").then((m) => ({ default: m.DangerousModulesCard })), { ssr: false, loading: () => cardPlaceholder("min-h-[120px] animate-pulse rounded-xl bg-white/5") });
 
 export function DashboardClientShell() {
@@ -73,7 +48,6 @@ export function DashboardClientShell() {
   const todayDailyState = useHQStore((s) => s.todayDailyState);
   const todayEnergyBudget = useHQStore((s) => s.todayEnergyBudget);
   const budgetSnapshot = useHQStore((s) => s.budgetSnapshot);
-  const learningSnapshot = useHQStore((s) => s.learningSnapshot);
   const setTodayDate = useHQStore((s) => s.setTodayDate);
   const setTodayDailyState = useHQStore((s) => s.setTodayDailyState);
   const setTodayMode = useHQStore((s) => s.setTodayMode);
@@ -248,7 +222,6 @@ export function DashboardClientShell() {
 
   const effectiveCritical: DashboardCritical = critical ?? {
     dateStr: fallbackDateStr,
-    isMinimalUI: false,
     lightUi: false,
     energyPct: 50,
     focusPct: 50,
@@ -282,7 +255,6 @@ export function DashboardClientShell() {
 
   const {
     dateStr,
-    isMinimalUI,
     energyPct,
     focusPct,
     loadPct,
@@ -304,7 +276,6 @@ export function DashboardClientShell() {
     yesterdayState,
     mode,
     carryOverCount,
-    copyVariant,
     accountabilitySettings,
     burnout = false,
   } = effectiveCritical;
@@ -333,48 +304,27 @@ export function DashboardClientShell() {
       : (todaysTasksFromSnapshot ?? []);
 
   const dcicLevel = gameState?.level ?? xp.level;
-  const confrontationSummary = secondary?.confrontationSummary;
   const identity = secondary?.identity;
   const identityEngine = secondary?.identityEngine;
   const momentum = secondary?.momentum;
   const insightState = secondary?.insightState;
   const todayEngine = secondary?.todayEngine;
   const xpForecast = secondary?.xpForecast;
-  const heatmapDays = secondary?.heatmapDays as { date: string; status: HeatmapDay }[] | undefined;
-  const weekSummary = secondary?.weekSummary as WeekSummary | null | undefined;
-  const lastWeekReport = secondary?.lastWeekReport as RealityReport | null | undefined;
   const strategy = secondary?.strategy;
   const quotesResult = secondary?.quotesResult as (Quote | null)[] | undefined;
   const quoteDay = (secondary?.quoteDay ?? 1) as number;
-  const learningStreak =
-    (typeof learningSnapshot?.learningStreak === "number"
-      ? (learningSnapshot.learningStreak as number)
-      : (secondary?.learningStreak ?? effectiveCritical?.learningStreak)) ?? 0;
-  const weeklyLearningMinutes =
-    (typeof learningSnapshot?.weeklyMinutes === "number"
-      ? (learningSnapshot.weeklyMinutes as number)
-      : (secondary?.weeklyLearningMinutes ?? 0)) as number;
-  const weeklyLearningTarget =
-    (typeof learningSnapshot?.weeklyLearningTarget === "number"
-      ? (learningSnapshot.weeklyLearningTarget as number)
-      : (secondary?.weeklyLearningTarget ?? 60)) as number;
-  const insight = secondary?.insight as string | undefined;
-  const patternSuggestion = secondary?.patternSuggestion as string | null | undefined;
 
   const effectiveEnergyBudget = (todayEnergyBudget ?? energyBudget) as Record<string, unknown>;
 
   const secState = (secondary?.state ?? state) as typeof state;
   const secYesterdayState = (secondary?.yesterdayState ?? yesterdayState) as typeof yesterdayState;
   const secEnergyBudget = (secondary?.energyBudget ?? effectiveEnergyBudget) as Record<string, unknown>;
-  const progressionRank = secondary?.progressionRank as Record<string, unknown> | null | undefined;
-  const primeWindow = secondary?.primeWindow as { start: string; end: string; active: boolean } | null | undefined;
-  const weeklyBudgetOutcome = secondary?.weeklyBudgetOutcome as { message: string; recoveryAvailable: boolean } | null | undefined;
 
   const heroEnergyPct = heroState ? Math.round((heroState.energy / 10) * 100) : energyPct;
   const heroFocusPct = heroState ? Math.round((heroState.focus / 10) * 100) : focusPct;
   const heroLoadPct = heroState ? Math.round((heroState.sensory_load / 10) * 100) : loadPct;
 
-  const skipCinematicLayers = isMinimalUI || (critical?.lightUi === true);
+  const skipCinematicLayers = critical?.lightUi === true;
   const snapshotBudgetRemainingCents =
     typeof budgetSnapshot?.budgetRemainingCents === "number"
       ? (budgetSnapshot.budgetRemainingCents as number)
@@ -478,111 +428,14 @@ export function DashboardClientShell() {
     });
   }, [dateStr, secondary?.todayEngine]);
 
-  const confidenceLabelMap: Record<"low" | "medium" | "high", string> = {
-    low: "Laag",
-    medium: "Middel",
-    high: "Hoog",
-  };
-  const confidenceToneMap: Record<"low" | "medium" | "high", string> = {
-    low: "border-amber-500/40 bg-amber-500/10 text-amber-200",
-    medium: "border-sky-500/40 bg-sky-500/10 text-sky-200",
-    high: "border-emerald-500/40 bg-emerald-500/10 text-emerald-200",
-  };
-  const horizonLabelMap: Record<"past" | "present" | "future" | "blended", string> = {
-    past: "Verleden",
-    present: "Nu",
-    future: "Toekomst",
-    blended: "Gemengd",
-  };
-  const horizonToneMap: Record<"past" | "present" | "future" | "blended", string> = {
-    past: "border-slate-500/40 bg-slate-500/10 text-slate-200",
-    present: "border-cyan-500/40 bg-cyan-500/10 text-cyan-200",
-    future: "border-violet-500/40 bg-violet-500/10 text-violet-200",
-    blended: "border-fuchsia-500/40 bg-fuchsia-500/10 text-fuchsia-200",
-  };
-
   /* Hub shell: frosted plane lives on #app-shell (.hq-app-shell); this wrapper is layout only */
   return (
-    <div
-      className={`relative min-h-0 w-full min-w-0 overflow-x-hidden ${isMinimalUI ? "minimal-ui" : ""}`}
-      data-minimal={isMinimalUI ? "true" : undefined}
-    >
+    <div className="relative min-h-0 w-full min-w-0 overflow-x-hidden">
       <div
-        className={`${!isMinimalUI ? "container page page-wide dashboard-page dashboard-cinematic relative z-10 pb-10" : ""}`}
+        className="container page page-wide dashboard-page dashboard-cinematic relative z-10 pb-10"
         style={dcicModeVars}
         data-mode={dcicMode}
       >
-        {isMinimalUI && (
-          <>
-            <header className="flex flex-col gap-0 relative pt-14 overflow-visible">
-              <div className="relative z-10 -mt-72">
-                <HQHeader energyPct={energyPct} focusPct={focusPct} loadPct={loadPct} copyVariant={copyVariant} />
-              </div>
-            </header>
-            <BrainStatusCard
-              date={dateStr}
-              initial={{ energy: state?.energy ?? null, focus: state?.focus ?? null, sensory_load: state?.sensory_load ?? null, sleep_hours: state?.sleep_hours ?? null, social_load: state?.social_load ?? null, physical_health: (state as { physical_health?: number | null })?.physical_health ?? null, mental_battery: (state as { mental_battery?: number | null })?.mental_battery ?? null, is_rest_day: (state as { is_rest_day?: boolean | null })?.is_rest_day ?? null }}
-              yesterday={{ energy: yesterdayState?.energy ?? null, focus: yesterdayState?.focus ?? null, sensory_load: yesterdayState?.sensory_load ?? null, sleep_hours: yesterdayState?.sleep_hours ?? null, social_load: yesterdayState?.social_load ?? null, physical_health: (yesterdayState as { physical_health?: number | null })?.physical_health ?? null, mental_battery: (yesterdayState as { mental_battery?: number | null })?.mental_battery ?? null }}
-              brainMode={effectiveEnergyBudget.brainMode as BrainMode}
-              suggestedTaskCount={(effectiveEnergyBudget.suggestedTaskCount as number) ?? 3}
-              moodLabel={((state as { mood_label?: string | null } | null)?.mood_label as MoodLabel | null) ?? null}
-            />
-            {dcicMode === "overdrive" && gameState?.mode && (
-              <div className="px-2">
-                <OverdriveBanner
-                  lockedUntil={gameState.mode.lockedUntil}
-                  overdriveSessionStart={gameState.mode.overdriveSessionStart}
-                />
-              </div>
-            )}
-            <ConfrontationBanner />
-            <ConsequenceBanner
-              energyDepleted={(effectiveEnergyBudget.consequence as { energyDepleted?: boolean } | undefined)?.energyDepleted}
-              recoveryOnly={(effectiveEnergyBudget.consequence as { recoveryOnly?: boolean } | undefined)?.recoveryOnly}
-              zeroCompletionPenalty={(state as { zero_completion_penalty_applied?: boolean } | null)?.zero_completion_penalty_applied}
-              burnout={burnout}
-            />
-            {(effectiveEnergyBudget.activeStartedCount as number) != null && (effectiveEnergyBudget.maxSlots as number) != null && (effectiveEnergyBudget.activeStartedCount as number) > (effectiveEnergyBudget.maxSlots as number) && (
-              <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm text-amber-200/95">
-                Je hebt meer missies gestart dan je focus-slots ({Number(effectiveEnergyBudget.activeStartedCount)} &gt; {Number(effectiveEnergyBudget.maxSlots)}). Druk loopt op — voltooi of sluit er een.
-              </div>
-            )}
-            {secondary && <WeeklyMirrorBanner summary={(confrontationSummary ?? null) as ConfrontationSummary | null} />}
-            {secondary && (progressionRank != null || primeWindow != null || weeklyBudgetOutcome != null) && (
-              <ProgressionPrimeBudgetCard
-                progressionRank={(progressionRank ?? null) as import("@/components/dashboard/ProgressionPrimeBudgetCard").ProgressionRankState | null}
-                primeWindow={primeWindow ?? null}
-                weeklyBudgetOutcome={(weeklyBudgetOutcome ?? null) as import("@/components/dashboard/ProgressionPrimeBudgetCard").WeeklyBudgetOutcome | null}
-              />
-            )}
-            <MinimalIntegrityBanner />
-            <BehaviorSuggestionsBanner />
-            {(energyBudget.remaining as number) < 20 && (
-              <EnergyBudgetBar
-                remaining={energyBudget.remaining as number}
-                capacity={energyBudget.capacity as number}
-                suggestedTaskCount={energyBudget.suggestedTaskCount as number}
-                taskUsed={energyBudget.taskUsed as number}
-                completedTaskCount={energyBudget.completedTaskCount as number}
-                taskPlanned={energyBudget.taskPlanned as number}
-                calendarCost={energyBudget.calendarCost as number}
-                energy={energyBudget.energy as PoolBudget}
-                focus={energyBudget.focus as PoolBudget}
-                load={energyBudget.load as PoolBudget}
-                insight={energyBudget.insight as string}
-                brainMode={energyBudget.brainMode as BrainMode}
-                segments={energyBudget.segments as { label: string; value: number; color: string }[]}
-              />
-            )}
-            <ModeBanner mode={mode} />
-            <ModeExplanationModal mode={mode} />
-            <AvoidanceNotice carryOverCount={carryOverCount} />
-            <ActiveMissionCard tasks={todaysTasks} emptyMessage={emptyMissionMessage} emptyHref={emptyMissionHref} timeWindow={timeWindow} isTimeWindowActive={isTimeWindowActive} />
-          </>
-        )}
-
-        {!isMinimalUI && (
-          <>
             <div className="space-y-3 px-1 pt-2 md:pt-3">
               {dcicMode === "overdrive" && gameState?.mode && (
                 <OverdriveBanner
@@ -761,7 +614,6 @@ export function DashboardClientShell() {
                                 identityStatement={(strategy as { identity_statement?: string } | null)?.identity_statement ?? null}
                               />
                             </div>
-                            <ModeExplanationModal mode={mode} />
                             {mode === "driven" && <FocusBlock />}
                           </div>
                         ),
@@ -773,8 +625,6 @@ export function DashboardClientShell() {
                 </div>
               </DashboardCommandDeckFrame>
             </div>
-          </>
-        )}
 
         <Modal
           open={budgetGuardrailOpen}

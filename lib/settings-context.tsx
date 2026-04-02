@@ -5,6 +5,7 @@ import {
   useContext,
   useCallback,
   useEffect,
+  useRef,
   useState,
   type ReactNode,
 } from "react";
@@ -46,8 +47,20 @@ async function fetchSettingsMeta(): Promise<{
   return data as { preferencesUpdatedAt: string | null; usersRowUpdatedAt: string | null };
 }
 
+/** Auth events that imply user/session identity changed; skip TOKEN_REFRESHED etc. to avoid refetch storms. */
+function shouldSyncSettingsOnAuthEvent(event: string): boolean {
+  return (
+    event === "INITIAL_SESSION" ||
+    event === "SIGNED_IN" ||
+    event === "SIGNED_OUT" ||
+    event === "USER_UPDATED"
+  );
+}
+
 export function SettingsProvider({ children }: { children: ReactNode }) {
   const [settings, setSettings] = useState<SettingsPayload>(null);
+  const settingsRef = useRef(settings);
+  settingsRef.current = settings;
 
   const invalidate = useCallback(async () => {
     try {
@@ -60,9 +73,11 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     let cancelled = false;
+    let syncSeq = 0;
     const supabase = createClient();
 
     const syncSettings = async (session: Session | null) => {
+      const seq = ++syncSeq;
       if (cancelled) return;
       if (!session) {
         setSettings(null);
@@ -73,20 +88,17 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
           credentials: "include",
           cache: "no-store",
         });
-        if (cancelled) return;
+        if (cancelled || seq !== syncSeq) return;
         setSettings(res.ok ? ((await res.json()) as SettingsPayload) : null);
       } catch {
-        if (!cancelled) setSettings(null);
+        if (!cancelled && seq === syncSeq) setSettings(null);
       }
     };
 
-    void supabase.auth.getSession().then(({ data: { session } }) => {
-      void syncSettings(session);
-    });
-
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
+    } = supabase.auth.onAuthStateChange((event, session) => {
+      if (!shouldSyncSettingsOnAuthEvent(event)) return;
       void syncSettings(session);
     });
 
@@ -106,13 +118,14 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
           } = await supabase.auth.getSession();
           if (!session) return;
 
-          if (!settings) {
+          const s = settingsRef.current;
+          if (!s) {
             setSettings(await fetchSettings());
             return;
           }
           const meta = await fetchSettingsMeta();
-          const localUpdatedAt = settings.preferences?.updated_at ?? null;
-          const localUsersAt = settings.usersRowUpdatedAt ?? null;
+          const localUpdatedAt = s.preferences?.updated_at ?? null;
+          const localUsersAt = s.usersRowUpdatedAt ?? null;
           let needRefetch = false;
           if (!meta?.preferencesUpdatedAt || !localUpdatedAt) {
             needRefetch = true;
@@ -140,7 +153,7 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
     };
     window.addEventListener("focus", onFocus);
     return () => window.removeEventListener("focus", onFocus);
-  }, [settings]);
+  }, []);
 
   return (
     <SettingsContext.Provider value={{ settings, invalidate }}>

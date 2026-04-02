@@ -238,7 +238,12 @@ export function TaskList({
   const [detailsTask, setDetailsTask] = useState<ExtendedTask | null>(null);
   const [editTask, setEditTask] = useState<ExtendedTask | null>(null);
   const [focusTask, setFocusTask] = useState<ExtendedTask | null>(null);
-  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
+  const [pendingDelete, setPendingDelete] = useState<{ id: string; bucketDate: string } | null>(null);
+  const [shelfScheduleTask, setShelfScheduleTask] = useState<{
+    id: string;
+    title: string | null;
+    due_date: string | null;
+  } | null>(null);
   /** ID of task just removed; animate it out then clear (no re-render flash). */
   const [removingId, setRemovingId] = useState<string | null>(null);
   const [microReportTaskId, setMicroReportTaskId] = useState<string | null>(null);
@@ -532,7 +537,8 @@ export function TaskList({
   function handleDelete(id: string) {
     setDetailsTask(null);
     setFocusTask(null);
-    setConfirmDeleteId(id);
+    const t = extendedTasks.find((x) => x.id === id);
+    setPendingDelete({ id, bucketDate: t?.due_date ?? date });
   }
 
   function showDeleteToast(taskId: string) {
@@ -565,12 +571,12 @@ export function TaskList({
   }
 
   async function handleConfirmDelete() {
-    if (!confirmDeleteId) return;
-    const id = confirmDeleteId;
-    setConfirmDeleteId(null);
+    if (!pendingDelete) return;
+    const { id, bucketDate } = pendingDelete;
+    setPendingDelete(null);
     setRemovingId(id);
     window.setTimeout(() => {
-      removeTask(id, date);
+      removeTask(id, bucketDate);
       setRemovingId(null);
       if (typeof navigator !== "undefined" && !navigator.onLine) {
         addToQueue("deleteTask", { id });
@@ -581,6 +587,29 @@ export function TaskList({
       showDeleteToast(id);
     }, 320);
     // No router.refresh() — UI already updated from store; undo toast will refresh if needed.
+  }
+
+  function handleShelfSchedule(targetDate: string) {
+    if (!shelfScheduleTask) return;
+    startTransition(async () => {
+      const previousDate = shelfScheduleTask.due_date;
+      if (previousDate) {
+        removeTask(shelfScheduleTask.id, previousDate);
+      }
+      upsertTask({
+        id: shelfScheduleTask.id,
+        title: (shelfScheduleTask.title ?? "") as string,
+        due_date: targetDate,
+      } as Task);
+
+      if (typeof navigator !== "undefined" && !navigator.onLine) {
+        await addToQueue("rescheduleTask", { id: shelfScheduleTask.id, due_date: targetDate });
+      } else {
+        await rescheduleTask(shelfScheduleTask.id, targetDate);
+        router.refresh();
+      }
+      setShelfScheduleTask(null);
+    });
   }
 
   function handleDuplicate(task: ExtendedTask) {
@@ -950,7 +979,7 @@ export function TaskList({
           <button
             type="button"
             onClick={(e) => { e.stopPropagation(); handleDelete(task.id); }}
-            disabled={!!confirmDeleteId}
+            disabled={!!pendingDelete}
             className="rounded-lg px-2 py-1 text-xs text-neutral-500 hover:bg-red-500/10 hover:text-red-400"
           >
             Delete
@@ -1119,6 +1148,11 @@ export function TaskList({
                   backlog={missionsBacklogShelf.backlog}
                   futureTasks={missionsBacklogShelf.futureTasks}
                   todayDate={missionsBacklogShelf.todayDate}
+                  onScheduleMission={(task) => setShelfScheduleTask(task)}
+                  onEditMission={(task) => setEditTask(task as ExtendedTask)}
+                  onDeleteMission={(id, bucketDate) =>
+                    setPendingDelete({ id, bucketDate: bucketDate ?? date })
+                  }
                 />
               </div>
             ) : null}
@@ -1446,7 +1480,10 @@ export function TaskList({
             onComplete={(res) => presentCompleteTaskFeedback(detailsTask.id, res)}
             onEdit={() => { setDetailsTask(null); setEditTask(detailsTask); }}
             onDuplicate={() => { handleDuplicate(detailsTask); setDetailsTask(null); }}
-            onDelete={() => { setDetailsTask(null); setConfirmDeleteId(detailsTask.id); }}
+            onDelete={() => {
+              setDetailsTask(null);
+              setPendingDelete({ id: detailsTask.id, bucketDate: detailsTask.due_date ?? date });
+            }}
           />
         )}
         <EditMissionModal
@@ -1505,8 +1542,8 @@ export function TaskList({
           <NeuroMicroReportBar taskId={microReportTaskId} onClose={() => setMicroReportTaskId(null)} />
         )}
         <ConfirmModal
-          open={!!confirmDeleteId}
-          onClose={() => setConfirmDeleteId(null)}
+          open={!!pendingDelete}
+          onClose={() => setPendingDelete(null)}
           title="Delete mission?"
           message="This cannot be undone."
           confirmLabel="Delete"
@@ -1514,6 +1551,17 @@ export function TaskList({
           slideFromBottom
           onConfirm={handleConfirmDelete}
         />
+        {shelfScheduleTask && (
+          <ScheduleModal
+            open
+            onClose={() => setShelfScheduleTask(null)}
+            initialDate={shelfScheduleTask.due_date ?? date}
+            todayDate={missionsBacklogShelf?.todayDate ?? date}
+            taskTitle={shelfScheduleTask.title ?? undefined}
+            onSchedule={handleShelfSchedule}
+            loading={pending}
+          />
+        )}
         <Modal open={showDoAnotherModal} onClose={() => setShowDoAnotherModal(false)} title="Nice work!" size="sm">
           <p className="text-sm text-[var(--text-muted)]">
             Je hebt je minimale missie-doel voor vandaag geraakt. Wil je 2 bonusmissies uit de pool toevoegen?

@@ -20,7 +20,7 @@ type Props = {
   /** Daily quote shown under the rings and above CTA. */
   dailyQuoteText?: string | null;
   dailyQuoteAuthor?: string | null;
-  /** When true, skip the inner "Dashboard / System Overview" title (e.g. when HQHeader is shown above). */
+  /** When true, skip the inner "Dashboard / System Overview" title (bridge layout supplies chrome elsewhere). */
   hideBuiltInTitle?: boolean;
   /** Dashboard bridge: tekst/links blijven links; mascot + stat-rings gecentreerd; icon-rail overlay rechts. */
   bridgeLayout?: boolean;

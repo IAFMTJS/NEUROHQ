@@ -111,10 +111,6 @@ export async function saveDailyState(input: DailyStateInput): Promise<SaveDailyS
       return { ok: false, error: msg };
     }
     revalidateTagMax(`daily-${user.id}-${serverToday}`);
-    revalidatePath("/dashboard");
-    revalidatePath("/profile");
-    revalidatePath("/profile");
-    revalidatePath("/tasks");
     // Direct line: pass the row we just wrote so the allocator never misses it (avoids read-after-write visibility).
     let autoMissionsCreated: number | undefined;
     let autoMissionsDebug: string | undefined;
@@ -141,6 +137,10 @@ export async function saveDailyState(input: DailyStateInput): Promise<SaveDailyS
     } catch (e) {
       autoMissionsDebug = e instanceof Error ? e.message : "error";
     }
+    // Revalidate app routes after auto-missions run so the next RSC render includes new tasks + brain row.
+    revalidatePath("/dashboard");
+    revalidatePath("/profile");
+    revalidatePath("/tasks");
     void (async () => {
       try {
         const { awardXPForBrainStatus } = await import("./xp");

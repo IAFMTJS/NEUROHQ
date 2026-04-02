@@ -1,16 +1,8 @@
 "use client";
 
-import { useState, useTransition } from "react";
-import { useRouter } from "next/navigation";
-import { rescheduleTask, deleteTask } from "@/app/actions/tasks";
-import type { Task } from "@/types/database.types";
-import { useHQStore } from "@/lib/hq-store";
-import { addToQueue } from "@/lib/offline-queue";
+import { useState } from "react";
 import { BacklogModal } from "./BacklogModal";
 import { ToekomstModal } from "./ToekomstModal";
-import { ScheduleModal, EditMissionModal } from "@/components/missions";
-import { Modal } from "@/components/Modal";
-import { GlassButton } from "@/components/hud-test/GlassButton";
 
 type TaskRow = { id: string; title: string | null; due_date: string | null; category?: string | null; [key: string]: unknown };
 
@@ -18,60 +10,21 @@ type Props = {
   backlog: TaskRow[];
   futureTasks: TaskRow[];
   todayDate: string;
+  onScheduleMission: (task: TaskRow) => void;
+  onEditMission: (task: TaskRow) => void;
+  onDeleteMission: (id: string, bucketDate: string | null) => void;
 };
 
-export function BacklogAndToekomstTriggers({ backlog, futureTasks, todayDate }: Props) {
-  const router = useRouter();
-  const [pending, startTransition] = useTransition();
+export function BacklogAndToekomstTriggers({
+  backlog,
+  futureTasks,
+  todayDate,
+  onScheduleMission,
+  onEditMission,
+  onDeleteMission,
+}: Props) {
   const [backlogOpen, setBacklogOpen] = useState(false);
   const [toekomstOpen, setToekomstOpen] = useState(false);
-  const [scheduleTask, setScheduleTask] = useState<TaskRow | null>(null);
-  const [editTask, setEditTask] = useState<TaskRow | null>(null);
-  const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
-  const upsertTask = useHQStore((s) => s.upsertTask);
-  const removeTask = useHQStore((s) => s.removeTask);
-
-  function handleSchedule(date: string) {
-    if (!scheduleTask) return;
-    startTransition(async () => {
-      // Optimistically move in device store so tasks for affected days stay aligned with Backlog/Toekomst changes.
-      const previousDate = scheduleTask.due_date;
-      if (previousDate) {
-        removeTask(scheduleTask.id, previousDate);
-      }
-      upsertTask({
-        id: scheduleTask.id,
-        title: (scheduleTask.title ?? "") as string,
-        due_date: date,
-      } as Task);
-
-      if (typeof navigator !== "undefined" && !navigator.onLine) {
-        await addToQueue("rescheduleTask", { id: scheduleTask.id, due_date: date });
-      } else {
-        await rescheduleTask(scheduleTask.id, date);
-        router.refresh();
-      }
-      setScheduleTask(null);
-    });
-  }
-  function handleDelete(id: string) {
-    startTransition(async () => {
-      // Remove from any known date bucket in the device store so UI stays in sync.
-      const all = [...backlog, ...futureTasks];
-      const row = all.find((t) => t.id === id);
-      if (row?.due_date) {
-        removeTask(id, row.due_date);
-      }
-
-      if (typeof navigator !== "undefined" && !navigator.onLine) {
-        await addToQueue("deleteTask", { id });
-      } else {
-        await deleteTask(id);
-        router.refresh();
-      }
-      setDeleteConfirmId(null);
-    });
-  }
 
   const backlogCount = backlog.length;
   const futureCount = futureTasks.length;
@@ -133,15 +86,16 @@ export function BacklogAndToekomstTriggers({ backlog, futureTasks, todayDate }: 
         todayDate={todayDate}
         onScheduleClick={(task) => {
           setBacklogOpen(false);
-          setScheduleTask(task);
+          onScheduleMission(task as TaskRow);
         }}
         onEditClick={(task) => {
           setBacklogOpen(false);
-          setEditTask(task);
+          onEditMission(task as TaskRow);
         }}
         onDeleteClick={(id) => {
           setBacklogOpen(false);
-          setDeleteConfirmId(id);
+          const row = backlog.find((t) => t.id === id);
+          onDeleteMission(id, (row?.due_date as string | null) ?? null);
         }}
       />
       <ToekomstModal
@@ -151,58 +105,18 @@ export function BacklogAndToekomstTriggers({ backlog, futureTasks, todayDate }: 
         todayDate={todayDate}
         onScheduleClick={(task) => {
           setToekomstOpen(false);
-          setScheduleTask(task);
+          onScheduleMission(task as TaskRow);
         }}
         onEditClick={(task) => {
           setToekomstOpen(false);
-          setEditTask(task);
+          onEditMission(task as TaskRow);
         }}
         onDeleteClick={(id) => {
           setToekomstOpen(false);
-          setDeleteConfirmId(id);
+          const row = futureTasks.find((t) => t.id === id);
+          onDeleteMission(id, (row?.due_date as string | null) ?? null);
         }}
       />
-      {scheduleTask && (
-        <ScheduleModal
-          open
-          onClose={() => setScheduleTask(null)}
-          initialDate={scheduleTask.due_date ?? todayDate}
-          todayDate={todayDate}
-          taskTitle={scheduleTask.title ?? undefined}
-          onSchedule={handleSchedule}
-          loading={pending}
-        />
-      )}
-      {editTask && (
-        <EditMissionModal
-          open
-          onClose={() => setEditTask(null)}
-          task={editTask}
-          onSaved={() => {
-            setEditTask(null);
-            router.refresh();
-          }}
-        />
-      )}
-      {deleteConfirmId && (
-        <Modal open onClose={() => setDeleteConfirmId(null)} title="Taak verwijderen?" size="sm">
-          <p className="text-sm text-[var(--text-muted)]">Deze taak wordt definitief verwijderd.</p>
-          <div className="mt-4 flex gap-2">
-            <GlassButton type="button" onClick={() => setDeleteConfirmId(null)} className="flex-1 text-sm font-medium">
-              Annuleren
-            </GlassButton>
-            <GlassButton
-              type="button"
-              onClick={() => handleDelete(deleteConfirmId)}
-              disabled={pending}
-              variant="alert"
-              className="flex-1 text-sm font-medium"
-            >
-              Verwijderen
-            </GlassButton>
-          </div>
-        </Modal>
-      )}
     </section>
   );
 }

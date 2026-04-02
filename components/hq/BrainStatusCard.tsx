@@ -74,13 +74,11 @@ export const BrainStatusCard = memo(function BrainStatusCard({
 
   // Keep modal seed in sync with freshest available state for this date.
   useEffect(() => {
-    if (!hasCommittedBrainCheckIn(initial)) {
-      setCurrentInitial(initial);
-      return;
-    }
-
+    // Priority: pending localStorage (instant save) → Zustand → server props.
+    // Never prefer stale `initial` while pending/store already have a check-in — that used to
+    // wipe optimistic updates whenever `todayDailyState` changed but RSC props had not refreshed yet.
     const pending = getPendingDailyState(date);
-    if (pending) {
+    if (pending && hasCommittedBrainCheckIn(pending)) {
       setCurrentInitial({
         energy: pending.energy,
         focus: pending.focus,
@@ -103,7 +101,7 @@ export const BrainStatusCard = memo(function BrainStatusCard({
         physical_health?: number | null;
         mental_battery?: number | null;
       } | null;
-      if (state) {
+      if (state && hasCommittedBrainCheckIn(state)) {
         setCurrentInitial({
           energy: state.energy ?? initial.energy,
           focus: state.focus ?? initial.focus,

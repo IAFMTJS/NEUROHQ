@@ -1,4 +1,4 @@
-/** Shared copy for mission-page subtle warnings and ConsequenceBanner (dashboard). */
+/** Shared copy for mission-page subtle warnings (MissionsEngineWarningIcon). */
 
 export type MissionEngineWarningsInput = {
   /** Focus slots / load hint from TaskList (hidden in war mode). */

@@ -56,6 +56,10 @@ export function RoutePrefetcher() {
     // which can make navigation feel frozen on some devices.
     const targets = shellRoutesToPrefetch();
     let queue = targets.filter((route) => route !== normalized);
+    const alreadyAll =
+      queue.length === 0 || queue.every((route) => prefetchedRoutesRef.current.has(route));
+    if (alreadyAll) return;
+
     let cancelled = false;
     const BATCH_SIZE = 2;
 

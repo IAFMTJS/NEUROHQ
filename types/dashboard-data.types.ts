@@ -5,7 +5,6 @@ import type { UnifiedDecision } from "@/lib/unified-decision-engine";
 /** Shape of GET /api/dashboard/data?part=critical — single source for today's mode, tasks, state, etc. */
 export interface DashboardCritical {
   dateStr: string;
-  isMinimalUI: boolean;
   /** Faster UI: skip heavy cinematic layers for fast load. */
   lightUi?: boolean;
   energyPct: number;
