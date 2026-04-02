@@ -3,7 +3,8 @@
 import { useState, useTransition, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Modal } from "@/components/Modal";
-import { createTask, type MissionIntent, type StrategyDomainTask, type AvoidanceTag } from "@/app/actions/tasks";
+import { createTask } from "@/app/actions/tasks";
+import type { MissionIntent, StrategyDomainTask, AvoidanceTag } from "@/lib/tasks-actions-shared";
 import { getSimilarTasksCompletionRate } from "@/app/actions/missions-performance";
 import { getChainsForUser, createChain, addStepToChain } from "@/app/actions/mission-chains";
 import { MISSION_TEMPLATES, xpLevelLabel, type MissionTemplate } from "@/lib/mission-templates";

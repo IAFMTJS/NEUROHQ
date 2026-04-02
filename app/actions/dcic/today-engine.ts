@@ -3,7 +3,8 @@
 import type { AppMode } from "@/lib/app-mode";
 import { getMode } from "@/app/actions/mode";
 import { createClient } from "@/lib/supabase/server";
-import { getTodaysTasks, type TaskListMode } from "@/app/actions/tasks";
+import { getTodaysTasks } from "@/app/actions/tasks";
+import type { TaskListMode } from "@/lib/tasks-actions-shared";
 import { getXP } from "@/app/actions/xp";
 import { getBehaviorProfile } from "@/app/actions/behavior-profile";
 import {

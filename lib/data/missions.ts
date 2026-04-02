@@ -12,4 +12,4 @@ export {
 
 export { completeMission, type CompleteTaskResult } from "@/app/actions/mission-completion-flow";
 
-export type { TaskListMode } from "@/app/actions/tasks";
+export type { TaskListMode } from "@/lib/tasks-actions-shared";

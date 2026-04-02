@@ -2,7 +2,8 @@
 
 import { unstable_cache } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
-import { getTodaysTasks, type TaskListMode } from "@/app/actions/tasks";
+import { getTodaysTasks } from "@/app/actions/tasks";
+import type { DayPlannedLoad, TaskListMode } from "@/lib/tasks-actions-shared";
 import { getMode } from "@/app/actions/mode";
 import { getActiveStrategyFocus } from "@/app/actions/strategyFocus";
 import { getPressureIndex } from "@/app/actions/strategyFocus";
@@ -453,7 +454,7 @@ export async function getDecisionBlocks(dateStr: string): Promise<DecisionBlocks
 
 /** Week data for Calendar Modal 3.0: time budget, strategy allocation, pressure. */
 export async function getCalendarWeekData(weekStartStr: string): Promise<{
-  days: (import("@/app/actions/tasks").DayPlannedLoad & { distributionWarning?: boolean })[];
+  days: (DayPlannedLoad & { distributionWarning?: boolean })[];
   strategy: { weeklyAllocation: Record<string, number>; primaryDomain: string } | null;
   pressure: { zone: "comfort" | "healthy" | "risk"; daysRemaining: number };
   todayStr: string;

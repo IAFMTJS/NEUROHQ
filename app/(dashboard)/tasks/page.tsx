@@ -7,8 +7,8 @@ import {
   getRoutineTasksWithSuggestions,
   getSubtasksForTaskIds,
   getTodaysTasks,
-  type TaskListMode,
 } from "@/app/actions/tasks";
+import type { TaskListMode } from "@/lib/tasks-actions-shared";
 import { getCalendarTabData } from "@/app/actions/calendar-tab-data";
 import { buildBlockedReasonsForTasks } from "@/lib/mission-block-reasons";
 import { getMode } from "@/app/actions/mode";
@@ -345,8 +345,11 @@ async function RoutineSectionFromPromise({
 
 export default async function TasksPage({ searchParams }: Props) {
   const dateStr = todayDateString();
-  /** Overlap routine fetch with searchParams + prefs/backlog (tab switch uses hidden panel, no second navigation). */
+  /** Overlap with `searchParams` (same request); tab shell needs all three panels on first paint. */
+  const prefsPromise = getUserPreferencesOrDefaults();
+  const backlogPromise = getBacklogTasks(dateStr);
   const routineDataPromise = getRoutineTasksWithSuggestions(dateStr);
+
   const params = await searchParams;
   const growthFromGrowthPage = params.growth === "1";
   const tabParam = params.tab;
@@ -358,10 +361,7 @@ export default async function TasksPage({ searchParams }: Props) {
   const selectedCalendarDay = dayParam ?? dateStr;
   /** Overlap calendar Supabase work with prefs/backlog (tab switch is client-side only). */
   const calendarDataPromise = getCalendarTabData(monthParam, dateStr);
-  const [prefs, backlog] = await Promise.all([
-    getUserPreferencesOrDefaults(),
-    getBacklogTasks(dateStr),
-  ]);
+  const [prefs, backlog] = await Promise.all([prefsPromise, backlogPromise]);
 
   const missionsHref = makeTasksHref(
     { add: params.add, month: monthParam, day: dayParam, calView: calendarView },

@@ -17,7 +17,7 @@ import { trackEvent } from "@/app/actions/analytics-events";
 import { useOfflineCompleteTask } from "@/app/hooks/useOfflineCompleteTask";
 import { addToQueue } from "@/lib/offline-queue";
 import type { Task } from "@/types/database.types";
-import type { SubtaskRow } from "@/app/actions/tasks";
+import type { SubtaskRow } from "@/lib/tasks-actions-shared";
 import { nextRecurrenceDates, formatShortDate } from "@/lib/utils/recurrence";
 import type { BrainMode } from "@/lib/brain-mode";
 import {

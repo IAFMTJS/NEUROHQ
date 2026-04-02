@@ -3,7 +3,8 @@
 import { createClient } from "@/lib/supabase/server";
 import { getBehaviorProfile } from "@/app/actions/behavior-profile";
 import { trackEvent } from "@/app/actions/analytics-events";
-import { createTask, type MissionIntent, type StrategyDomainTask } from "@/app/actions/tasks";
+import { createTask } from "@/app/actions/tasks";
+import type { MissionIntent, StrategyDomainTask } from "@/lib/tasks-actions-shared";
 
 export type BehaviorMissionKind = "identity" | "pet" | "hobby";
 

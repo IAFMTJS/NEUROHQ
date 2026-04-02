@@ -164,9 +164,3 @@ export function BacklogAndToekomstTriggers({
     </section>
   );
 }
->
-  );
-}
-ection>
-  );
-}

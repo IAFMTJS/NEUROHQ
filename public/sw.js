@@ -4,7 +4,7 @@
 // - DYNAMIC_CACHE (per dag): HTML/API offline fallback; _next/static JS/CSS = network-first, daarna cache voor offline
 // - IndexedDB (neurohq-offline): offline mutaties (POST/PUT etc.) → gesynchroniseerd zodra er weer netwerk is
 // Bump this when UI/layout changes so authenticated HTML cache doesn't keep old shells after refresh.
-const CACHE_VERSION = "v23";
+const CACHE_VERSION = "v24";
 const STATIC_CACHE = `neurohq-static-${CACHE_VERSION}`;
 const OFFLINE_PAGE = "/offline";
 
@@ -45,7 +45,6 @@ function isAuthenticatedAppRoutePath(pathname) {
   return (
     pathname === "/dashboard" ||
     pathname === "/tasks" ||
-    pathname === "/missions-v2" ||
     pathname === "/budget" ||
     pathname === "/strategy" ||
     pathname === "/analytics" ||
@@ -54,7 +53,6 @@ function isAuthenticatedAppRoutePath(pathname) {
     pathname === "/profile" ||
     pathname === "/help" ||
     pathname === "/assistant" ||
-    pathname === "/xp" ||
     // nested analytics / learning pages should behave the same once visited
     pathname.startsWith("/learning")
   );
@@ -285,7 +283,6 @@ const PUBLIC_ROUTES_TO_PREFETCH = [
 const AUTH_ROUTES_TO_PREFETCH = [
   "/dashboard",
   "/tasks",
-  "/missions-v2",
   "/budget",
   "/strategy",
   "/analytics",
@@ -295,7 +292,6 @@ const AUTH_ROUTES_TO_PREFETCH = [
   "/profile",
   "/help",
   "/assistant",
-  "/xp",
   "/learning",
   "/learning/analytics",
 ];

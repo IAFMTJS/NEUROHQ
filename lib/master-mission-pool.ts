@@ -5,7 +5,7 @@ import { evaluateTemplateAgainstTriggers, resolveMissionTriggers } from "@/lib/m
 import { bandFor10Scale, getMissionCountRangeForEnergyBand, missionEquivalentFromEnergyRequired } from "@/lib/behavioral-engine";
 import type { MissionProgressionStateMap } from "@/lib/mission-progression";
 import { deriveProgressionKeyFromTemplate } from "@/lib/mission-progression";
-import type { MissionIntent } from "@/app/actions/tasks";
+import type { MissionIntent } from "@/lib/tasks-actions-shared";
 
 /** Deterministic 32-bit hash for daily ordering (no Math.random). */
 function djb2Hash(str: string): number {

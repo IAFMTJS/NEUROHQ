@@ -7,7 +7,7 @@ import { deleteTask, snoozeTask } from "@/app/actions/tasks";
 import { logTaskEvent } from "@/app/actions/task-events";
 import { abandonTaskWithCost } from "@/app/actions/decision-cost";
 import { useOfflineCompleteTask } from "@/app/hooks/useOfflineCompleteTask";
-import type { SubtaskRow } from "@/app/actions/tasks";
+import type { SubtaskRow } from "@/lib/tasks-actions-shared";
 import { baseXpToLevelLabel } from "@/lib/mission-templates";
 import { useHQStore } from "@/lib/hq-store";
 import { trackEvent } from "@/app/actions/analytics-events";

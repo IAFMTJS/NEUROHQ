@@ -11,15 +11,20 @@ import { classifyTaskPreset, deriveBaseXpFromIntensityDuration } from "@/lib/tas
 import { todayDateString } from "@/lib/utils/timezone";
 import { computeNextRecurrenceDate } from "@/lib/tasks-recurrence";
 import { completeMission } from "@/app/actions/mission-completion-flow";
+import {
+  TASK_CALENDAR_RANGE_COLUMNS,
+  type TaskListMode,
+  type DayPlannedLoad,
+  type MissionIntent,
+  type StrategyDomainTask,
+  type AvoidanceTag,
+  type HobbyTag,
+  type SubtaskRow,
+} from "@/lib/tasks-actions-shared";
 
 /** Explicit column list for task reads (avoids select * per SUPABASE_PERFORMANCE_GUIDELINES). */
 const TASK_SELECT_COLUMNS =
   "id, user_id, title, due_date, completed, completed_at, carry_over_count, energy_required, priority, notes, created_at, updated_at, parent_task_id, deleted_at, snooze_until, category, impact, domain, cognitive_load, emotional_resistance, mental_load, social_load, focus_required, recurrence_rule, recurrence_weekdays, difficulty, discipline_weight, strategic_value, psychology_label, mission_intent, mission_chain_id, validation_type, base_xp, avoidance_tag, hobby_tag, fatigue_impact, strategy_key_result_id, urgency, task_type, intensity, duration_minutes, task_tags";
-
-/** Slim column list for calendar range (month grid + selected day list). */
-const TASK_CALENDAR_RANGE_COLUMNS = "id, due_date, title, completed, recurrence_rule";
-
-export type TaskListMode = "normal" | "low_energy" | "stabilize" | "driven";
 
 function autoSlotRankFromTask(task: unknown): number {
   const t = task as {
@@ -38,7 +43,7 @@ function autoSlotRankFromTask(task: unknown): number {
 }
 
 /** Request-scoped cache: duplicate getTodaysTasks(date, mode) in the same request return the same result (e.g. dashboard + tasks page). */
-export const getTodaysTasks = cache(async (date: string, mode: TaskListMode): Promise<{ tasks: Task[]; carryOverCount: number }> => {
+const getTodaysTasksCached = cache(async (date: string, mode: TaskListMode): Promise<{ tasks: Task[]; carryOverCount: number }> => {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return { tasks: [], carryOverCount: 0 };
@@ -98,6 +103,13 @@ export const getTodaysTasks = cache(async (date: string, mode: TaskListMode): Pr
   const maxCarryOver = Math.max(0, ...(tasks ?? []).map((t) => (t as { carry_over_count?: number }).carry_over_count ?? 0));
   return { tasks: ordered as Task[], carryOverCount: maxCarryOver };
 });
+
+export async function getTodaysTasks(
+  date: string,
+  mode: TaskListMode
+): Promise<{ tasks: Task[]; carryOverCount: number }> {
+  return getTodaysTasksCached(date, mode);
+}
 
 /** Count of tasks completed today (for late-day banner: avoid showing when dashboard cache is stale). */
 export async function getCompletedTodayCount(date: string): Promise<number> {
@@ -159,9 +171,6 @@ export async function getTasksForDateRange(startDate: string, endDate: string): 
   return byDate;
 }
 
-/** Per-day planned load for a week (Calendar Modal 3.0: time budget, overload, burnout). */
-export type DayPlannedLoad = { date: string; taskCount: number; totalEnergy: number; totalPlannedMinutes?: number; isOverload?: boolean };
-
 const MINUTES_PER_ENERGY = 8;
 
 export async function getWeekPlannedLoad(weekStartStr: string): Promise<DayPlannedLoad[]> {
@@ -202,11 +211,6 @@ export async function getWeekPlannedLoad(weekStartStr: string): Promise<DayPlann
     isOverload: byDate[date].energy > ENERGY_CAP,
   }));
 }
-
-export type MissionIntent = "discipline" | "recovery" | "pressure" | "alignment" | "experiment";
-export type StrategyDomainTask = "discipline" | "health" | "learning" | "business";
-export type AvoidanceTag = "household" | "administration" | "social";
-export type HobbyTag = "fitness" | "music" | "language" | "creative";
 
 export async function createTask(params: {
   title: string;
@@ -494,15 +498,6 @@ export async function getSubtasks(parentTaskId: string) {
     .order("created_at", { ascending: true });
   return data ?? [];
 }
-
-export type SubtaskRow = {
-  id: string;
-  title: string;
-  completed: boolean;
-  created_at: string;
-  parent_task_id: string;
-  due_date: string | null;
-};
 
 export async function getSubtasksForTaskIds(parentIds: string[]): Promise<SubtaskRow[]> {
   if (parentIds.length === 0) return [];

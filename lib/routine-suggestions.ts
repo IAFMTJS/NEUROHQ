@@ -3,7 +3,7 @@
  * Scores days by capacity and fit; returns top 2–3 dates for the current week.
  */
 
-import type { DayPlannedLoad } from "@/app/actions/tasks";
+import type { DayPlannedLoad } from "@/lib/tasks-actions-shared";
 
 const ENERGY_CAP = 10;
 const MAX_SUGGESTIONS = 3;

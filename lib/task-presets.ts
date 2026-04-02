@@ -1,4 +1,4 @@
-import type { MissionIntent, StrategyDomainTask } from "@/app/actions/tasks";
+import type { MissionIntent, StrategyDomainTask } from "@/lib/tasks-actions-shared";
 
 export type TaskType = "mental" | "physical" | "mixed" | "recovery";
 
