@@ -1,10 +1,5 @@
-import { getTasksForDateRange } from "@/app/actions/tasks";
-import { getUpcomingCalendarEvents, hasGoogleCalendarToken } from "@/app/actions/calendar";
+import { getCalendarTabData } from "@/app/actions/calendar-tab-data";
 import { TasksCalendarSection } from "@/components/missions";
-
-function toDateKeyUTC(d: Date): string {
-  return d.toISOString().slice(0, 10);
-}
 
 type TasksCalendarAsyncProps = {
   dateStr: string;
@@ -24,28 +19,7 @@ export async function TasksCalendarAsync({
   backlog,
   simplifiedContent = false,
 }: TasksCalendarAsyncProps) {
-  const [monthYear, monthNumber] = monthParam.split("-").map((p) => parseInt(p, 10));
-  const monthStart = new Date(Date.UTC(monthYear, monthNumber - 1, 1, 12));
-  const weekStartOffset = monthStart.getUTCDay();
-  const gridStart = new Date(monthStart);
-  gridStart.setUTCDate(monthStart.getUTCDate() - weekStartOffset);
-  const nextMonthEnd = new Date(Date.UTC(monthYear, monthNumber + 1, 0, 12));
-  const nextWeekEnd = 6 - nextMonthEnd.getUTCDay();
-  const nextGridEnd = new Date(nextMonthEnd);
-  nextGridEnd.setUTCDate(nextMonthEnd.getUTCDate() + nextWeekEnd);
-  const prevMonthStart = new Date(Date.UTC(monthYear, monthNumber - 2, 1, 12));
-  const prevWeekStart = prevMonthStart.getUTCDay();
-  const prevGridStart = new Date(prevMonthStart);
-  prevGridStart.setUTCDate(prevMonthStart.getUTCDate() - prevWeekStart);
-  const calendarRangeStart = toDateKeyUTC(prevGridStart);
-  const calendarRangeEnd = toDateKeyUTC(nextGridEnd);
-
-  const [tasksByDate, upcomingCalendarEvents, hasGoogle] = await Promise.all([
-    getTasksForDateRange(calendarRangeStart, calendarRangeEnd),
-    // Keep this relatively small; huge ranges can make tab navigations feel stuck.
-    getUpcomingCalendarEvents(dateStr, 60),
-    hasGoogleCalendarToken(),
-  ]);
+  const { tasksByDate, upcomingCalendarEvents, hasGoogle } = await getCalendarTabData(monthParam, dateStr);
 
   const overdueTasksForCalendar = (backlog ?? [])
     .slice()

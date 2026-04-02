@@ -120,6 +120,7 @@ export async function initializeDailySystem(
     learning: null,
     budget: null,
     analytics: null,
+    calendar: null,
     settings: null,
     dcicGameState: null,
     ui: {
@@ -317,6 +318,19 @@ async function runStep(
           };
         }
 
+        let calendar: DailySnapshot["calendar"] = snapshot.calendar ?? null;
+        try {
+          const calRes = await fetch(
+            `/api/tasks/calendar-tab?month=${encodeURIComponent(dateStr.slice(0, 7))}&anchorDate=${encodeURIComponent(dateStr)}`,
+            { credentials: "include" }
+          );
+          if (calRes.ok) {
+            calendar = (await calRes.json()) as DailySnapshot["calendar"];
+          }
+        } catch {
+          // ignore
+        }
+
         return {
           ...snapshot,
           dashboard,
@@ -324,6 +338,7 @@ async function runStep(
           budget,
           learning,
           dcicGameState: data.dcicGameState ?? snapshot.dcicGameState ?? null,
+          calendar,
         };
       } catch {
         return snapshot;

@@ -6,6 +6,17 @@ import { ToekomstModal } from "./ToekomstModal";
 
 type TaskRow = { id: string; title: string | null; due_date: string | null; category?: string | null; [key: string]: unknown };
 
+function formatUpcomingDayLabel(dateStr: string, todayDate: string) {
+  if (dateStr === todayDate) return "Vandaag";
+  const d = new Date(dateStr + "T12:00:00");
+  const today = new Date(todayDate + "T12:00:00");
+  const diffDays = Math.round((d.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+  if (diffDays === 1) return "Morgen";
+  if (diffDays === 2) return "Overmorgen";
+  if (diffDays > 2 && diffDays <= 7) return `Over ${diffDays} dagen`;
+  return dateStr;
+}
+
 type Props = {
   backlog: TaskRow[];
   futureTasks: TaskRow[];
@@ -79,6 +90,39 @@ export function BacklogAndToekomstTriggers({
           </button>
         </div>
       </div>
+
+      <div className="mt-2 rounded-xl border border-[rgba(var(--mode-rgb),0.1)] bg-[rgba(6,18,30,0.28)] px-2.5 py-2 sm:px-3">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <p className="text-[9px] font-bold uppercase tracking-[0.14em] text-[var(--text-muted)]">Komende dagen</p>
+          <button
+            type="button"
+            className="rounded-lg border border-[rgba(var(--mode-rgb),0.2)] bg-[rgba(var(--mode-rgb),0.08)] px-2 py-1 text-[10px] font-semibold text-[var(--accent-focus)] transition hover:border-[rgba(var(--mode-rgb),0.35)]"
+            onClick={() => setToekomstOpen(true)}
+          >
+            Volledige lijst
+          </button>
+        </div>
+        {futureTasks.length > 0 ? (
+          <ul className="mt-2 space-y-1.5" aria-label="Geplande taken binnenkort">
+            {futureTasks.slice(0, 7).map((t) => (
+              <li key={t.id} className="flex items-start justify-between gap-2 text-[11px] leading-snug">
+                <span className="min-w-0 flex-1 truncate text-[var(--text-primary)]">{t.title ?? "Zonder titel"}</span>
+                <span className="shrink-0 tabular-nums text-[var(--text-muted)]">
+                  {t.due_date ? formatUpcomingDayLabel(t.due_date, todayDate) : "—"}
+                </span>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p className="mt-2 text-[10px] leading-relaxed text-[var(--text-muted)]">
+            Nog niets gepland na vandaag. Voeg een missie toe en kies een datum in de toekomst, of gebruik <span className="font-medium text-[var(--text-secondary)]">Toekomst</span> hierboven om alles te beheren.
+          </p>
+        )}
+        {futureTasks.length > 7 ? (
+          <p className="mt-1.5 text-[10px] text-[var(--text-muted)]">+{futureTasks.length - 7} extra — open volledige lijst.</p>
+        ) : null}
+      </div>
+
       <BacklogModal
         open={backlogOpen}
         onClose={() => setBacklogOpen(false)}
@@ -118,5 +162,11 @@ export function BacklogAndToekomstTriggers({
         }}
       />
     </section>
+  );
+}
+>
+  );
+}
+ection>
   );
 }

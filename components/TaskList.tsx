@@ -219,6 +219,7 @@ export function TaskList({
   const selectUpsertTask = useCallback((s: any) => s.upsertTask, []);
   const selectRemoveTask = useCallback((s: any) => s.removeTask, []);
   const storedTasks = useHQStore(selectStoredTasks);
+  const allTasksByDate = useHQStore((s) => s.tasksByDate);
   const setTasksForDate = useHQStore(selectSetTasksForDate);
   const upsertTask = useHQStore(selectUpsertTask);
   const removeTask = useHQStore(selectRemoveTask);
@@ -309,6 +310,41 @@ export function TaskList({
     const added = localTasksAdded.filter((t) => t.due_date === date && !ids.has(t.id));
     return [...fromServer, ...added];
   }, [storedTasks, initialTasks, localTasksAdded, date]);
+
+  /** Server `futureTasks` misses missions added client-side for other days; merge from HQ store + local adds. */
+  const mergedFutureTasksForShelf = useMemo(() => {
+    const today = missionsBacklogShelf?.todayDate ?? date;
+    const server = missionsBacklogShelf?.futureTasks ?? [];
+    const byId = new Map<
+      string,
+      { id: string; title: string | null; due_date: string | null; category?: string | null }
+    >();
+    for (const t of server) {
+      byId.set(t.id, {
+        id: t.id,
+        title: t.title ?? null,
+        due_date: t.due_date ?? null,
+        category: t.category ?? null,
+      });
+    }
+    const consider = (t: ExtendedTask) => {
+      if ((t as { completed?: boolean }).completed) return;
+      if ((t as { parent_task_id?: string | null }).parent_task_id) return;
+      const due = t.due_date ?? null;
+      if (!due || due <= today) return;
+      byId.set(t.id, {
+        id: t.id,
+        title: t.title ?? null,
+        due_date: due,
+        category: t.category ?? null,
+      });
+    };
+    for (const t of localTasksAdded) consider(t);
+    for (const list of Object.values(allTasksByDate)) {
+      for (const raw of list) consider(raw as ExtendedTask);
+    }
+    return Array.from(byId.values()).sort((a, b) => (a.due_date ?? "").localeCompare(b.due_date ?? ""));
+  }, [missionsBacklogShelf?.futureTasks, missionsBacklogShelf?.todayDate, date, localTasksAdded, allTasksByDate]);
   const incompleteTasksForDisplay = useMemo(
     () => extendedTasks.filter((t) => !t.completed && !optimisticCompleteIds.includes(t.id)),
     [extendedTasks, optimisticCompleteIds]
@@ -1149,7 +1185,7 @@ export function TaskList({
           <div className="mb-3 w-full">
             <BacklogAndToekomstTriggers
               backlog={missionsBacklogShelf.backlog}
-              futureTasks={missionsBacklogShelf.futureTasks}
+              futureTasks={mergedFutureTasksForShelf}
               todayDate={missionsBacklogShelf.todayDate}
               onScheduleMission={(task) => setShelfScheduleTask(task)}
               onEditMission={(task) => setEditTask(task as ExtendedTask)}

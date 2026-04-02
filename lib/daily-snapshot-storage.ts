@@ -66,6 +66,7 @@ export function mergeSnapshotKeepBest(
     learning: newer.learning ?? older.learning,
     budget: newer.budget ?? older.budget,
     analytics: newer.analytics ?? older.analytics,
+    calendar: newer.calendar ?? older.calendar,
     settings: newer.settings ?? older.settings ?? null,
     dcicGameState: newer.dcicGameState ?? older.dcicGameState,
     ui: {

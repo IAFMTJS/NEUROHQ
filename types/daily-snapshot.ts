@@ -38,6 +38,27 @@ export interface MissionsSnapshot {
 }
 
 /**
+ * Calendar tab: month grid task range + agenda events (matches `getCalendarTabData`).
+ * `monthKey` is the visible month (YYYY-MM); range covers adjacent grid bleed days.
+ */
+export interface CalendarTabSnapshot {
+  monthKey: string;
+  anchorDate: string;
+  rangeStart: string;
+  rangeEnd: string;
+  tasksByDate: Record<string, unknown[]>;
+  upcomingCalendarEvents: Array<{
+    id: string;
+    title: string | null;
+    start_at: string;
+    end_at: string;
+    is_social: boolean;
+    source: string | null;
+  }>;
+  hasGoogle: boolean;
+}
+
+/**
  * Snapshot of XP/identity/forecast context used by the XP Command Center and insights.
  * Mirrors the XPCachePayload structure used by XPDataProvider.
  */
@@ -168,6 +189,8 @@ export interface DailySnapshot {
   learning: LearningSnapshot | null;
   budget: BudgetSnapshot | null;
   analytics: AnalyticsSnapshot | null;
+  /** Tasks calendar month grid + events; optional for older persisted snapshots. */
+  calendar?: CalendarTabSnapshot | null;
   /** Optional for backward compat with snapshots saved before this field existed. */
   settings?: SettingsSnapshot | null;
   /**

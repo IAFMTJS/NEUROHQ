@@ -9,6 +9,7 @@ import {
   getTodaysTasks,
   type TaskListMode,
 } from "@/app/actions/tasks";
+import { getCalendarTabData } from "@/app/actions/calendar-tab-data";
 import { buildBlockedReasonsForTasks } from "@/lib/mission-block-reasons";
 import { getMode } from "@/app/actions/mode";
 import {
@@ -29,7 +30,8 @@ import type { TasksTabId } from "@/components/missions/TasksTabsShell";
 import { TasksMissionsSnapshotFallback } from "@/components/missions/TasksMissionsSnapshotFallback";
 import { RoutineTaskList } from "@/components/missions/RoutineTaskList";
 import { TasksRoutineTabFallback } from "@/components/missions/TasksRoutineTabFallback";
-import { TasksCalendarAsync } from "./TasksCalendarAsync";
+import { TasksCalendarTabFallback } from "@/components/missions/TasksCalendarTabFallback";
+import { TasksCalendarSection } from "@/components/missions";
 import { getGrowthEngineSnapshot } from "@/app/actions/growth-snapshot";
 import { getBehaviorProfile } from "@/app/actions/behavior-profile";
 import { GrowthMissionsRibbon } from "@/components/growth/GrowthMissionsRibbon";
@@ -277,7 +279,10 @@ async function MissionsSectionAsync({
   return <div className="space-y-6">{missionsBody}</div>;
 }
 
-async function CalendarSectionAsync({
+type CalendarDataPromise = ReturnType<typeof getCalendarTabData>;
+
+async function CalendarSectionFromPromise({
+  promise,
   dateStr,
   monthParam,
   selectedCalendarDay,
@@ -285,6 +290,7 @@ async function CalendarSectionAsync({
   backlog,
   simplifiedContent = false,
 }: {
+  promise: CalendarDataPromise;
   dateStr: string;
   monthParam: string;
   selectedCalendarDay: string;
@@ -292,15 +298,26 @@ async function CalendarSectionAsync({
   backlog: Awaited<ReturnType<typeof getBacklogTasks>>;
   simplifiedContent?: boolean;
 }) {
+  const { tasksByDate, upcomingCalendarEvents, hasGoogle } = await promise;
+  const overdueTasksForCalendar = (backlog ?? [])
+    .slice()
+    .sort((a, b) => (a.due_date ?? "").localeCompare(b.due_date ?? ""));
+
   return (
-    <TasksCalendarAsync
-      dateStr={dateStr}
-      monthParam={monthParam}
-      selectedCalendarDay={selectedCalendarDay}
-      calendarView={calendarView}
-      backlog={(backlog ?? []) as { id: string; title: string | null; due_date: string | null }[]}
-      simplifiedContent={simplifiedContent}
-    />
+    <div className="space-y-4">
+      <TasksCalendarSection
+        initialMonth={monthParam}
+        initialDay={selectedCalendarDay}
+        dateStr={dateStr}
+        tasksByDate={(tasksByDate ?? {}) as Record<string, unknown[]>}
+        upcomingCalendarEvents={upcomingCalendarEvents}
+        hasGoogle={hasGoogle}
+        initialCalView={calendarView}
+        overdueTasks={overdueTasksForCalendar}
+        simplifiedLayout={simplifiedContent}
+        commandDeckVisuals
+      />
+    </div>
   );
 }
 
@@ -339,6 +356,8 @@ export default async function TasksPage({ searchParams }: Props) {
   const monthParam = isValidMonthKey(params.month) ? params.month : dateStr.slice(0, 7);
   const dayParam = isValidDayKey(params.day) ? params.day : null;
   const selectedCalendarDay = dayParam ?? dateStr;
+  /** Overlap calendar Supabase work with prefs/backlog (tab switch is client-side only). */
+  const calendarDataPromise = getCalendarTabData(monthParam, dateStr);
   const [prefs, backlog] = await Promise.all([
     getUserPreferencesOrDefaults(),
     getBacklogTasks(dateStr),
@@ -384,8 +403,18 @@ export default async function TasksPage({ searchParams }: Props) {
         </Suspense>
       }
       panelCalendar={
-        <Suspense fallback={null}>
-          <CalendarSectionAsync
+        <Suspense
+          fallback={
+            <TasksCalendarTabFallback
+              monthParam={monthParam}
+              dateStr={dateStr}
+              selectedCalendarDay={selectedCalendarDay}
+              simplifiedContent={prefs.simplified_content === true}
+            />
+          }
+        >
+          <CalendarSectionFromPromise
+            promise={calendarDataPromise}
             dateStr={dateStr}
             monthParam={monthParam}
             selectedCalendarDay={selectedCalendarDay}

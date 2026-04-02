@@ -150,7 +150,8 @@ export async function mergeDailySnapshotFromNetwork(): Promise<BootstrapTodayRes
   const canPersist = existing != null && isCurrentSnapshot(existing);
 
   const refreshHeaders = { "x-neurohq-refresh": "1" };
-  const [bootRes, xpRes, stratRes, analyticsRes, settingsRes] = await Promise.allSettled([
+  const calendarTabUrl = `/api/tasks/calendar-tab?month=${encodeURIComponent(today.slice(0, 7))}&anchorDate=${encodeURIComponent(today)}`;
+  const [bootRes, xpRes, stratRes, analyticsRes, settingsRes, calRes] = await Promise.allSettled([
     fetch("/api/bootstrap/today", { credentials: "include", headers: refreshHeaders }),
     fetch(`/api/xp/context?date=${encodeURIComponent(today)}`, {
       credentials: "include",
@@ -165,6 +166,7 @@ export async function mergeDailySnapshotFromNetwork(): Promise<BootstrapTodayRes
       headers: refreshHeaders,
     }),
     fetch("/api/settings", { credentials: "include", headers: refreshHeaders }),
+    fetch(calendarTabUrl, { credentials: "include", headers: refreshHeaders }),
   ]);
 
   let bootstrap: BootstrapTodayResponse | null = null;
@@ -301,6 +303,17 @@ export async function mergeDailySnapshotFromNetwork(): Promise<BootstrapTodayRes
           payday: data.payday ?? { last_payday_date: null, payday_day_of_month: null },
         },
       };
+    } catch {
+      // ignore
+    }
+  }
+
+  if (calRes.status === "fulfilled" && calRes.value.ok) {
+    try {
+      const cal = (await calRes.value.json()) as DailySnapshot["calendar"];
+      if (cal && typeof cal.monthKey === "string") {
+        next = { ...next, calendar: cal };
+      }
     } catch {
       // ignore
     }
