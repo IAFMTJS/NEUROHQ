@@ -44,7 +44,7 @@ import { refreshMergedSnapshotFromNetwork } from "@/lib/daily-bootstrap";
 import { parseMissionProgressionFromTaskTags } from "@/lib/mission-progression";
 import { useDCICGameState } from "@/lib/dcic/game-state-client";
 import { NeuroMicroReportBar } from "@/components/missions/NeuroMicroReportBar";
-import { BacklogAndToekomstTriggers } from "@/components/missions/BacklogAndToekomstTriggers";
+import { useMissionsBacklogShelfParts } from "@/components/missions/BacklogAndToekomstTriggers";
 
 const WEEKDAY_LABELS: Record<number, string> = { 1: "Mon", 2: "Tue", 3: "Wed", 4: "Thu", 5: "Fri", 6: "Sat", 7: "Sun" };
 
@@ -345,6 +345,20 @@ export function TaskList({
     }
     return Array.from(byId.values()).sort((a, b) => (a.due_date ?? "").localeCompare(b.due_date ?? ""));
   }, [missionsBacklogShelf?.futureTasks, missionsBacklogShelf?.todayDate, date, localTasksAdded, allTasksByDate]);
+
+  const backlogShelfParts = useMissionsBacklogShelfParts(
+    missionsHeroLayout && missionsBacklogShelf
+      ? {
+          backlog: missionsBacklogShelf.backlog,
+          futureTasks: mergedFutureTasksForShelf,
+          todayDate: missionsBacklogShelf.todayDate,
+          onScheduleMission: (task) => setShelfScheduleTask(task),
+          onEditMission: (task) => setEditTask(task as ExtendedTask),
+          onDeleteMission: (id, bucketDate) => setPendingDelete({ id, bucketDate: bucketDate ?? date }),
+        }
+      : null
+  );
+
   const incompleteTasksForDisplay = useMemo(
     () => extendedTasks.filter((t) => !t.completed && !optimisticCompleteIds.includes(t.id)),
     [extendedTasks, optimisticCompleteIds]
@@ -1183,16 +1197,7 @@ export function TaskList({
 
         {missionsHeroLayout && missionsBacklogShelf ? (
           <div className="mb-3 w-full">
-            <BacklogAndToekomstTriggers
-              backlog={missionsBacklogShelf.backlog}
-              futureTasks={mergedFutureTasksForShelf}
-              todayDate={missionsBacklogShelf.todayDate}
-              onScheduleMission={(task) => setShelfScheduleTask(task)}
-              onEditMission={(task) => setEditTask(task as ExtendedTask)}
-              onDeleteMission={(id, bucketDate) =>
-                setPendingDelete({ id, bucketDate: bucketDate ?? date })
-              }
-            />
+            <section aria-label="Backlog en toekomst">{backlogShelfParts.bar}</section>
           </div>
         ) : null}
 
@@ -1507,6 +1512,10 @@ export function TaskList({
           </div>
         )}
 
+        {missionsHeroLayout && missionsBacklogShelf ? (
+          <div className="mt-4 w-full">{backlogShelfParts.komendeDagen}</div>
+        ) : null}
+
         {detailsTask && (
           <TaskDetailsModal
             open={!!detailsTask}
@@ -1588,6 +1597,7 @@ export function TaskList({
           slideFromBottom
           onConfirm={handleConfirmDelete}
         />
+        {backlogShelfParts.modals}
         {shelfScheduleTask && (
           <ScheduleModal
             open

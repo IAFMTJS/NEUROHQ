@@ -1,7 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { startTransition, useEffect, useState } from "react";
 import type { DailySnapshot } from "@/types/daily-snapshot";
 import {
   DAILY_BOOTSTRAP_STEPS,
@@ -20,15 +19,10 @@ const STEP_COPY: Record<PreloadStepId, string> = {
   fetchStrategy: "Strategy focus",
   fetchAnalytics: "Analytics & insights",
   fetchSettings: "Preferences & account",
-  preloadPages: "App routes & modules",
-  preloadAssets: "Shell visuals — load & decode into cache",
-  prepareCache: "Finalizing local cache",
 };
 
 export function BootstrapLoader({ onReady }: Props) {
-  const router = useRouter();
   const [snapshot, setSnapshot] = useState<DailySnapshot | null>(null);
-  const [kind, setKind] = useState<InitializeResult["kind"] | null>(null);
   const [progress, setProgress] = useState<PreloadProgress | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -36,15 +30,11 @@ export function BootstrapLoader({ onReady }: Props) {
     let cancelled = false;
     const run = async () => {
       try {
-        const result = await initializeDailySystem(
-          (p) => {
-            if (!cancelled) setProgress(p);
-          },
-          { prefetchHref: (href) => router.prefetch(href) }
-        );
+        const result = await initializeDailySystem((p) => {
+          if (!cancelled) startTransition(() => setProgress(p));
+        });
         if (cancelled) return;
         setSnapshot(result.snapshot);
-        setKind(result.kind);
         onReady(result);
       } catch (e) {
         if (cancelled) return;
@@ -68,15 +58,11 @@ export function BootstrapLoader({ onReady }: Props) {
               100
           )
         )
-      : kind === "fromCache"
-      ? 100
       : 0;
 
   const activeLabel =
     progress && STEP_COPY[progress.step]
       ? STEP_COPY[progress.step]
-      : kind === "fromCache"
-      ? "Restoring today’s state..."
       : "Initializing systems...";
 
   const detailLine =

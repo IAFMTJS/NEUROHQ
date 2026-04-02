@@ -19,9 +19,18 @@ import { applyDCICModeOverrideIfAny } from "./dcic-mode-override";
 
 let dcicGameStateBootstrapDone = false;
 
+/** Set when `StoreHydrator` applied `dcicGameState` from the daily snapshot (same payload as GET /api/dcic/game-state). */
+let dcicSeededFromDailySnapshot = false;
+
+/** Call after hydrating DCIC from `DailySnapshot` so `useDCICGameState` skips a redundant network fetch. */
+export function markDcicSeededFromDailySnapshot(): void {
+  dcicSeededFromDailySnapshot = true;
+}
+
 /** Call on sign-out so the next session runs a full bootstrap again. */
 export function resetDcicGameStateBootstrap(): void {
   dcicGameStateBootstrapDone = false;
+  dcicSeededFromDailySnapshot = false;
 }
 
 /**
@@ -68,6 +77,13 @@ export function useDCICGameState() {
 
     const load = async () => {
       if (dcicGameStateBootstrapDone) {
+        return;
+      }
+
+      if (dcicSeededFromDailySnapshot) {
+        setGameStateStatus("ready");
+        setGameStateError(null);
+        dcicGameStateBootstrapDone = true;
         return;
       }
 

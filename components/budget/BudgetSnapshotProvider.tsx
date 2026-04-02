@@ -1,8 +1,11 @@
 "use client";
 
-import { useEffect, type ReactNode } from "react";
+import { useEffect, useMemo, type ReactNode } from "react";
 import { useDailySnapshot } from "@/components/bootstrap/BootstrapGate";
 import { useHQStore } from "@/lib/hq-store";
+import { getTodayKey } from "@/lib/daily-date";
+import { useBootstrapToday } from "@/lib/use-bootstrap-today";
+import { budgetFromBootstrapToday } from "@/lib/bootstrap-today-mappers";
 
 type Props = {
   children: ReactNode;
@@ -15,7 +18,12 @@ type Props = {
  */
 export function BudgetSnapshotProvider({ children }: Props) {
   const snapshot = useDailySnapshot();
-  const budget = snapshot?.budget ?? null;
+  const dayKey = snapshot?.date ?? getTodayKey();
+  const { data: bootstrapToday } = useBootstrapToday(dayKey);
+  const budget = useMemo(() => {
+    if (snapshot?.budget) return snapshot.budget;
+    return budgetFromBootstrapToday(bootstrapToday, dayKey);
+  }, [snapshot?.budget, bootstrapToday, dayKey]);
 
   const setBudgetSnapshot = useHQStore((s) => s.setBudgetSnapshot);
   const setBudgetStatus = useHQStore((s) => s.setBudgetStatus);

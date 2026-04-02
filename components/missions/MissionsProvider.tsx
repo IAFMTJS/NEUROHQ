@@ -4,6 +4,7 @@ import {
   createContext,
   useContext,
   useEffect,
+  useMemo,
   type ReactNode,
 } from "react";
 import type { Task } from "@/types/database.types";
@@ -11,6 +12,8 @@ import type { MissionsSnapshot } from "@/types/daily-snapshot";
 import { useDailySnapshot } from "@/components/bootstrap/BootstrapGate";
 import { getTodayKey } from "@/lib/daily-date";
 import { useHQStore } from "@/lib/hq-store";
+import { useBootstrapToday } from "@/lib/use-bootstrap-today";
+import { missionsFromBootstrapToday } from "@/lib/bootstrap-today-mappers";
 
 type Props = {
   dateStr: string;
@@ -29,10 +32,13 @@ export function useMissionsSnapshot(): MissionsSnapshot | null {
  */
 export function MissionsProvider({ dateStr, children }: Props) {
   const snapshot = useDailySnapshot();
-  const missions =
-    snapshot?.missions && snapshot.missions.dateStr === dateStr
-      ? snapshot.missions
-      : null;
+  const { data: bootstrapToday } = useBootstrapToday(dateStr);
+  const missions = useMemo((): MissionsSnapshot | null => {
+    if (snapshot?.missions && snapshot.missions.dateStr === dateStr) {
+      return snapshot.missions;
+    }
+    return missionsFromBootstrapToday(bootstrapToday, dateStr);
+  }, [snapshot?.missions, bootstrapToday, dateStr]);
 
   const setTodayDate = useHQStore((s) => s.setTodayDate);
   const setTodayDailyState = useHQStore((s) => s.setTodayDailyState);

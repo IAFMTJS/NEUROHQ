@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { NEUROHQ_DAILY_SNAPSHOT_UPDATED } from "@/lib/bootstrap-query";
 import Link from "next/link";
 type AlertItem = {
   id: string;
@@ -49,8 +50,8 @@ export function AlertsBell() {
 
   useEffect(() => {
     const onSnap = () => void refresh();
-    window.addEventListener("neurohq-daily-snapshot-updated", onSnap);
-    return () => window.removeEventListener("neurohq-daily-snapshot-updated", onSnap);
+    window.addEventListener(NEUROHQ_DAILY_SNAPSHOT_UPDATED, onSnap);
+    return () => window.removeEventListener(NEUROHQ_DAILY_SNAPSHOT_UPDATED, onSnap);
   }, [refresh]);
 
   useEffect(() => {

@@ -1,6 +1,10 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import {
+  NEUROHQ_DAILY_SNAPSHOT_UPDATED,
+  type NeurohqDailySnapshotUpdatedDetail,
+} from "@/lib/bootstrap-query";
 
 const SNAPSHOT_KEY = "neurohq-daily-snapshot-v1";
 
@@ -38,16 +42,24 @@ export function PwaStatusChip({ staleAfterMinutes = 30 }: Props) {
     const onOnline = () => setOnline(true);
     const onOffline = () => setOnline(false);
     const onSnapshot = () => setSavedAt(readSnapshotSavedAt());
+    const onBootstrapSynced = (e: Event) => {
+      const d = (e as CustomEvent<NeurohqDailySnapshotUpdatedDetail>).detail?.savedAt;
+      if (typeof d === "number" && Number.isFinite(d)) {
+        setSavedAt(d);
+        return;
+      }
+      onSnapshot();
+    };
 
     window.addEventListener("online", onOnline);
     window.addEventListener("offline", onOffline);
-    window.addEventListener("neurohq-daily-snapshot-updated", onSnapshot);
+    window.addEventListener(NEUROHQ_DAILY_SNAPSHOT_UPDATED, onBootstrapSynced);
 
     const id = window.setInterval(() => setSavedAt(readSnapshotSavedAt()), 60_000);
     return () => {
       window.removeEventListener("online", onOnline);
       window.removeEventListener("offline", onOffline);
-      window.removeEventListener("neurohq-daily-snapshot-updated", onSnapshot);
+      window.removeEventListener(NEUROHQ_DAILY_SNAPSHOT_UPDATED, onBootstrapSynced);
       window.clearInterval(id);
     };
   }, []);

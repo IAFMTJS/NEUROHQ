@@ -1,7 +1,8 @@
 "use client";
 
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { ReactNode, useState } from "react";
+import { ReactNode, useEffect, useState } from "react";
+import { registerBootstrapQueryClient } from "@/lib/bootstrap-query-client-ref";
 
 type ReactQueryProviderProps = {
   children: ReactNode;
@@ -27,6 +28,11 @@ export function ReactQueryProvider({ children }: ReactQueryProviderProps) {
         },
       })
   );
+
+  useEffect(() => {
+    registerBootstrapQueryClient(client);
+    return () => registerBootstrapQueryClient(null);
+  }, [client]);
 
   return <QueryClientProvider client={client}>{children}</QueryClientProvider>;
 }

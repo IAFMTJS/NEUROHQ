@@ -7,6 +7,7 @@ import type { Task } from "@/types/database.types";
 import { useHQStore } from "@/lib/hq-store";
 import { getDcicGameStateFromSnapshot } from "@/lib/daily-snapshot-full-sync";
 import { applyDCICModeOverrideIfAny } from "@/lib/dcic/dcic-mode-override";
+import { markDcicSeededFromDailySnapshot } from "@/lib/dcic/game-state-client";
 
 type Props = {
   snapshot: DailySnapshot | null;
@@ -14,10 +15,8 @@ type Props = {
 };
 
 /**
- * Hydrates the HQ store from the daily snapshot before the rest of the tree paints.
- * Ensures pages see data immediately (no flash of loading/empty) when we have a
- * same-day snapshot. Run as first child of DailySnapshotContext so useLayoutEffect
- * runs before any page content.
+ * Hydrates the HQ store from the in-memory bootstrap snapshot before child content paints.
+ * Runs as the first child under `BootstrapGate` so `useLayoutEffect` runs before page components.
  */
 export function StoreHydrator({ snapshot, children }: Props) {
   useLayoutEffect(() => {
@@ -48,6 +47,7 @@ export function StoreHydrator({ snapshot, children }: Props) {
     if (dcic) {
       applyDCICModeOverrideIfAny(dcic);
       setGameState(dcic);
+      markDcicSeededFromDailySnapshot();
     }
 
     if (snapshot.dashboard) {

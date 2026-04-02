@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
+import { NEUROHQ_DAILY_SNAPSHOT_UPDATED } from "@/lib/bootstrap-query";
 
 function requestDurableStorage() {
   if (typeof window === "undefined" || !("storage" in navigator)) return;
@@ -26,8 +27,8 @@ export function StoragePersistenceManager() {
   useEffect(() => {
     requestDurableStorage();
     const onSnapshotSaved = () => requestDurableStorage();
-    window.addEventListener("neurohq-daily-snapshot-updated", onSnapshotSaved);
-    return () => window.removeEventListener("neurohq-daily-snapshot-updated", onSnapshotSaved);
+    window.addEventListener(NEUROHQ_DAILY_SNAPSHOT_UPDATED, onSnapshotSaved);
+    return () => window.removeEventListener(NEUROHQ_DAILY_SNAPSHOT_UPDATED, onSnapshotSaved);
   }, []);
 
   return null;

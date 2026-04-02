@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useLayoutEffect } from "react";
+import { useEffect, useLayoutEffect, useMemo } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { usePriorityNavClick } from "@/lib/navigation/use-priority-nav-click";
@@ -11,10 +11,7 @@ import { AppStateProvider } from "@/components/providers/AppStateProvider";
 import { BootstrapProvider } from "@/components/providers/BootstrapProvider";
 import { ActiveTimeTracker } from "@/components/ActiveTimeTracker";
 import { NewDayRefresh } from "@/components/NewDayRefresh";
-import { RoutePrefetcher } from "@/components/RoutePrefetcher";
 import { OfflineQueueSync } from "@/components/OfflineQueueSync";
-import { HQStorePersistOnHide } from "@/components/HQStorePersistOnHide";
-import { DailySnapshotHQMirror } from "@/components/DailySnapshotHQMirror";
 import { PendingXpToast } from "@/components/PendingXpToast";
 import { HelpFloatingIcon } from "@/components/HelpFloatingIcon";
 import { PushAutoPrompt } from "@/components/notifications/PushAutoPrompt";
@@ -23,6 +20,8 @@ import { OnboardingProvider } from "@/components/onboarding/OnboardingProvider";
 import { DashboardDataProvider } from "@/components/providers/DashboardDataProvider";
 import { useDailySnapshot } from "@/components/bootstrap/BootstrapGate";
 import type { DashboardSnapshot } from "@/types/daily-snapshot";
+import { useBootstrapToday } from "@/lib/use-bootstrap-today";
+import { dashboardFromBootstrapToday } from "@/lib/bootstrap-today-mappers";
 import { updateLastActiveDate } from "@/app/actions/behavior";
 import { useHQStore } from "@/lib/hq-store";
 import { usePeriodicBootstrapRefresh } from "@/lib/daily-bootstrap";
@@ -62,6 +61,7 @@ export function DashboardLayoutClient({
   const profileRoute = isProfileRoute(pathname);
   const deckChromeRoute = tasksRoute || profileRoute;
   const dailySnapshot = useDailySnapshot();
+  const bootstrapQuery = useBootstrapToday(dailySnapshot?.date ?? null);
   const setTodayDate = useHQStore((s) => s.setTodayDate);
   const hqMode = useHQStore((s) => s.gameState?.mode?.current ?? "focus");
   const { gameState: dcicGameState } = useDCICGameState();
@@ -92,7 +92,7 @@ export function DashboardLayoutClient({
     }
   }, [dailySnapshot?.date, setTodayDate]);
 
-  /** Keeps HQ store + persisted DailySnapshot aligned with `/api/bootstrap/today` between full preloads. */
+  /** Keeps HQ store aligned with `/api/bootstrap/today` between navigations. */
   usePeriodicBootstrapRefresh(PERIODIC_SNAPSHOT_REFRESH_MINUTES);
 
   useEffect(() => {
@@ -116,8 +116,18 @@ export function DashboardLayoutClient({
     });
   }, []);
 
-  const initialDashboardSnapshot =
-    initialDashboardSnapshotProp ?? dailySnapshot?.dashboard ?? null;
+  const initialDashboardSnapshot = useMemo((): DashboardSnapshot | null => {
+    return (
+      initialDashboardSnapshotProp ??
+      dashboardFromBootstrapToday(bootstrapQuery.data) ??
+      dailySnapshot?.dashboard ??
+      null
+    );
+  }, [
+    initialDashboardSnapshotProp,
+    bootstrapQuery.data,
+    dailySnapshot?.dashboard,
+  ]);
 
   return (
     <AppStateProvider>
@@ -128,8 +138,6 @@ export function DashboardLayoutClient({
           initialSecondary={initialDashboardSnapshot?.secondary}
         >
           <>
-            <HQStorePersistOnHide />
-            <DailySnapshotHQMirror />
             <OfflineQueueSync />
             <PendingXpToast />
             <MoodInterventionHost />
@@ -146,7 +154,6 @@ export function DashboardLayoutClient({
               <ThemeHydrate />
               <ActiveTimeTracker />
               <NewDayRefresh />
-              <RoutePrefetcher />
               <a href="#main-content" className="skip-link">
                 Skip to main content
               </a>

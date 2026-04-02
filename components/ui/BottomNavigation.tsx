@@ -1,8 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
-import { memo, useCallback, useRef } from "react";
+import { usePathname } from "next/navigation";
+import { memo } from "react";
 import { BottomNavIcon } from "@/components/ui/BottomNavIcon";
 import { usePriorityNavClick } from "@/lib/navigation/use-priority-nav-click";
 import {
@@ -14,19 +14,7 @@ import {
 
 export default memo(function BottomNavigation() {
   const pathname = usePathname();
-  const router = useRouter();
   const onPriorityNavClick = usePriorityNavClick();
-  const prefetchedRoutesRef = useRef<Set<string>>(new Set());
-
-  const prefetchOnIntent = useCallback(
-    (href: string) => {
-      if (href === pathname) return;
-      if (prefetchedRoutesRef.current.has(href)) return;
-      prefetchedRoutesRef.current.add(href);
-      router.prefetch(href);
-    },
-    [pathname, router]
-  );
 
   const hubLink = BOTTOM_NAV_HUB;
 
@@ -36,11 +24,8 @@ export default memo(function BottomNavigation() {
       <Link
         href={link.href}
         className={`nav-item nav-item-fab-rail ${active ? "active" : ""}`}
-        prefetch
+        prefetch={false}
         onClick={(e) => onPriorityNavClick(link.href, e)}
-        onMouseEnter={() => prefetchOnIntent(link.href)}
-        onFocus={() => prefetchOnIntent(link.href)}
-        onTouchStart={() => prefetchOnIntent(link.href)}
       >
         <span className="nav-item-icon flex items-center justify-center [&_svg]:h-[18px] [&_svg]:w-[18px]">
           <BottomNavIcon link={link} active={active} />
@@ -68,12 +53,9 @@ export default memo(function BottomNavigation() {
               <Link
                 href={hubLink.href}
                 className={`nav-item-fab-hub ${hubActive ? "active" : ""}`}
-                prefetch
+                prefetch={false}
                 aria-current={hubActive ? "page" : undefined}
                 onClick={(e) => onPriorityNavClick(hubLink.href, e)}
-                onMouseEnter={() => prefetchOnIntent(hubLink.href)}
-                onFocus={() => prefetchOnIntent(hubLink.href)}
-                onTouchStart={() => prefetchOnIntent(hubLink.href)}
               >
                 <span className="nav-item-fab-hub-icon flex items-center justify-center [&_svg]:h-[30px] [&_svg]:w-[30px]">
                   <BottomNavIcon link={hubLink} active={hubActive} />

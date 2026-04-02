@@ -1,10 +1,4 @@
 import { create } from "zustand";
-import { createJSONStorage, persist, type StateStorage } from "zustand/middleware";
-import {
-  clearDeviceHqStore,
-  getDeviceHqStorePayload,
-  putDeviceHqStorePayload,
-} from "@/lib/neurohq-device-idb";
 import type { GameState } from "@/lib/dcic/types";
 import type { DashboardCritical, DashboardSecondary } from "@/types/dashboard-data.types";
 import type { Task } from "@/types/database.types";
@@ -70,155 +64,20 @@ type LearningSlice = {
 
 type HQStore = DCICSlice & DashboardSlice & TasksSlice & TodaySlice & BudgetSlice & LearningSlice;
 
-const HQ_PERSIST_KEY = "neurohq-hq-store";
-const HQ_PERSIST_VERSION = 1;
-
-/** localStorage + IndexedDB mirror; async getItem restores HQ when LS was cleared but IDB still has data. */
-const hqDualStorage: StateStorage = {
-  getItem: async (name) => {
-    if (typeof window === "undefined") return null;
-    const fromLs = localStorage.getItem(name);
-    if (fromLs) return fromLs;
-    if (name === HQ_PERSIST_KEY) {
-      const fromIdb = await getDeviceHqStorePayload();
-      if (fromIdb) {
-        try {
-          localStorage.setItem(name, fromIdb);
-        } catch {
-          // LS still full; hydration still works from returned string
-        }
-      }
-      return fromIdb;
-    }
-    return null;
-  },
-  setItem: async (name, value) => {
-    if (typeof window === "undefined") return;
-    localStorage.setItem(name, value);
-    if (name === HQ_PERSIST_KEY) {
-      try {
-        await putDeviceHqStorePayload(value);
-      } catch (e) {
-        console.warn("[hq-store] IndexedDB mirror failed (localStorage ok)", e);
-      }
-    }
-  },
-  removeItem: async (name) => {
-    if (typeof window === "undefined") return;
-    localStorage.removeItem(name);
-    if (name === HQ_PERSIST_KEY) {
-      try {
-        await clearDeviceHqStore();
-      } catch {
-        // ignore
-      }
-    }
-  },
-};
-
-function normalizePersistedState(persisted: unknown): unknown {
-  if (!persisted || typeof persisted !== "object") return persisted;
-  const state = persisted as Record<string, unknown>;
-  const gameStateRaw = state.gameState;
-  if (!gameStateRaw || typeof gameStateRaw !== "object") return persisted;
-
-  const gameState = gameStateRaw as Record<string, unknown>;
-  const modeRaw = gameState.mode;
-  if (modeRaw && typeof modeRaw === "object" && (modeRaw as Record<string, unknown>).current != null) {
-    return persisted;
-  }
-
-  return {
-    ...state,
-    gameState: {
-      ...gameState,
-      mode: {
-        current: "focus",
-        lockedUntil: null,
-        lastSwitch: null,
-        overdriveSessionStart: null,
-        warStage: 1,
-      },
-    },
-  };
-}
-
-function partialize(state: HQStore) {
-  // Persist today's tasks too so recent completions survive app close/reopen instantly.
-  // The server fetch for today still runs and remains the eventual source of truth.
-  return {
-    gameState: state.gameState,
-    gameStateStatus: state.gameStateStatus,
-    gameStateError: state.gameStateError,
-    dashboardCritical: state.dashboardCritical,
-    dashboardSecondary: state.dashboardSecondary,
-    tasksByDate: state.tasksByDate,
-    tasksStatus: state.tasksStatus,
-    tasksError: state.tasksError,
-    todayDate: state.todayDate,
-    todayDailyState: state.todayDailyState,
-    todayMode: state.todayMode,
-    todayEnergyBudget: state.todayEnergyBudget,
-    budgetSnapshot: state.budgetSnapshot,
-    budgetStatus: state.budgetStatus,
-    budgetError: state.budgetError,
-    learningSnapshot: state.learningSnapshot,
-    learningStatus: state.learningStatus,
-    learningError: state.learningError,
-  };
-}
-
 /**
- * Read persisted dashboard from localStorage synchronously (same key as persist).
- * Use for first-paint so the dashboard can show without waiting for rehydration or IndexedDB.
+ * HQ store is memory-only: each full page load starts from bootstrap / providers (no localStorage / IndexedDB).
  */
 export function getPersistedDashboardSync(): {
   critical: DashboardCritical | null;
   secondary: DashboardSecondary | null;
 } {
-  try {
-    if (typeof window === "undefined" || !window.localStorage) return { critical: null, secondary: null };
-    const raw = window.localStorage.getItem(HQ_PERSIST_KEY);
-    if (!raw) return { critical: null, secondary: null };
-    const parsed = JSON.parse(raw) as unknown;
-    const root = parsed && typeof parsed === "object" ? (parsed as Record<string, unknown>) : {};
-    const maybeState =
-      "state" in root && root.state && typeof root.state === "object"
-        ? (root.state as Record<string, unknown>)
-        : root;
-    return {
-      critical: (maybeState.dashboardCritical as DashboardCritical | null | undefined) ?? null,
-      secondary: (maybeState.dashboardSecondary as DashboardSecondary | null | undefined) ?? null,
-    };
-  } catch {
-    return { critical: null, secondary: null };
-  }
+  return { critical: null, secondary: null };
 }
 
-/**
- * Write current HQ store state to localStorage immediately.
- * Call when the app is hidden or closed so a full reload restores the latest state.
- */
-export function flushHQStoreToStorage(): void {
-  try {
-    if (typeof window === "undefined" || !window.localStorage) return;
-    const state = useHQStore.getState();
-    const payload = JSON.stringify({
-      state: partialize(state),
-      version: HQ_PERSIST_VERSION,
-    });
-    window.localStorage.setItem(HQ_PERSIST_KEY, payload);
-    void putDeviceHqStorePayload(payload).catch((e) => {
-      console.warn("[hq-store] flush IndexedDB mirror failed", e);
-    });
-  } catch {
-    // Ignore quota or security errors
-  }
-}
+/** No-op without persistence. */
+export function flushHQStoreToStorage(): void {}
 
-export const useHQStore = create<HQStore>()(
-  persist(
-    (set) => ({
+export const useHQStore = create<HQStore>()((set) => ({
       // DCIC
       gameState: null,
       gameStateStatus: "idle",
@@ -297,14 +156,5 @@ export const useHQStore = create<HQStore>()(
       setLearningSnapshot: (learningSnapshot) => set({ learningSnapshot }),
       setLearningStatus: (learningStatus) => set({ learningStatus }),
       setLearningError: (learningError) => set({ learningError }),
-    }),
-    {
-      name: HQ_PERSIST_KEY,
-      storage: createJSONStorage(() => hqDualStorage),
-      partialize,
-      version: HQ_PERSIST_VERSION,
-      migrate: (persistedState) => normalizePersistedState(persistedState),
-    }
-  )
-);
+}));
 

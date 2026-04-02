@@ -1,31 +1,21 @@
 "use client";
 
 import { getTodayKey } from "@/lib/daily-date";
-import {
-  loadDailySnapshot,
-  saveDailySnapshotWithRetries,
-  getStoragePressureFlag,
-  isCurrentSnapshot,
-  isDailySnapshotBootstrapComplete,
-  mergeSnapshotKeepBest,
-} from "@/lib/daily-snapshot-storage";
-import { preloadShellImagesDecoded } from "@/lib/bootstrap-image-preload";
-import { requestSwCacheWarmupWithRetries } from "@/lib/sw-cache-warmup";
-import { BOOTSTRAP_PREFETCH_ROUTES } from "@/lib/bootstrap-prefetch-routes";
-import { isAssistantEnabled } from "@/lib/feature-flags";
-import { getBootstrapShellVisualPreloadUrls } from "@/lib/bootstrap-shell-visuals";
 import type { DailySnapshot } from "@/types/daily-snapshot";
 import { LATEST_SNAPSHOT_VERSION } from "@/types/daily-snapshot";
+import { fetchSettingsPayload } from "@/lib/settings-api-client";
+import type { BootstrapTodayResponse } from "@/lib/daily-snapshot-full-sync";
+import { mapBootstrapBudgetToSnapshot } from "@/lib/bootstrap-today-mappers";
+
+/** Set during `initializeDailySystem` when `fetchMissions` parses `/api/bootstrap/today`. */
+let bootstrapTodayCapture: BootstrapTodayResponse | null = null;
 
 export type PreloadStepId =
   | "fetchMissions"
   | "fetchXP"
   | "fetchStrategy"
   | "fetchAnalytics"
-  | "fetchSettings"
-  | "preloadPages"
-  | "preloadAssets"
-  | "prepareCache";
+  | "fetchSettings";
 
 export type PreloadProgress = {
   step: PreloadStepId;
@@ -39,13 +29,10 @@ export type PreloadProgress = {
 };
 
 export type InitializeResult = {
-  kind: "fromCache" | "fresh";
+  kind: "fresh";
   snapshot: DailySnapshot;
-};
-
-export type InitializeDailySystemOptions = {
-  /** Warms Next.js client navigation cache; required for prefetch step to have effect. */
-  prefetchHref?: (href: string) => void;
+  /** Raw `/api/bootstrap/today` JSON when the missions step succeeded (seeds TanStack Query). */
+  bootstrapToday: BootstrapTodayResponse | null;
 };
 
 /** Ordered bootstrap work (single source of truth for loader UI + progress). */
@@ -55,9 +42,6 @@ export const DAILY_BOOTSTRAP_STEPS: readonly PreloadStepId[] = [
   "fetchStrategy",
   "fetchAnalytics",
   "fetchSettings",
-  "preloadPages",
-  "preloadAssets",
-  "prepareCache",
 ] as const;
 
 const ALL_STEPS: PreloadStepId[] = [...DAILY_BOOTSTRAP_STEPS];
@@ -80,8 +64,6 @@ function emitProgress(
 }
 
 async function yieldToBrowser(onProgress?: (p: PreloadProgress) => void): Promise<void> {
-  // When steps complete very quickly, React may batch state updates and the loader can look like it
-  // "skips" steps. Yielding gives the browser a chance to paint between step transitions.
   if (!onProgress) return;
   await Promise.resolve();
   if (typeof window !== "undefined" && typeof window.requestAnimationFrame === "function") {
@@ -90,25 +72,11 @@ async function yieldToBrowser(onProgress?: (p: PreloadProgress) => void): Promis
 }
 
 /**
- * Minimal implementation for now: reuses an existing same-day snapshot when available,
- * otherwise creates an empty shell snapshot and only runs the dashboard fetch step.
- *
- * The remaining domain-specific steps are wired as no-ops initially so callers can
- * already rely on the progress contract. They can be filled in iteratively.
+ * Builds today's app payload in memory (sequential steps + progress for the loader).
+ * No localStorage / IndexedDB — each full load runs the network steps.
  */
-export async function initializeDailySystem(
-  onProgress?: (p: PreloadProgress) => void,
-  options?: InitializeDailySystemOptions
-): Promise<InitializeResult> {
-  // 1. Try existing snapshot
-  const existing = await loadDailySnapshot();
-  if (existing && isCurrentSnapshot(existing) && isDailySnapshotBootstrapComplete(existing)) {
-    return { kind: "fromCache", snapshot: existing };
-  }
-
-  const fallback = existing ?? null;
-
-  // 2. Build a fresh snapshot shell for today
+export async function initializeDailySystem(onProgress?: (p: PreloadProgress) => void): Promise<InitializeResult> {
+  bootstrapTodayCapture = null;
   const today = getTodayKey();
   let snapshot: DailySnapshot = {
     version: LATEST_SNAPSHOT_VERSION,
@@ -126,94 +94,44 @@ export async function initializeDailySystem(
     ui: {
       pagesPrefetched: [],
       assetsPrefetched: false,
-      // Must be epoch ms (Date.now) because storage staleness checks compare against Date.now().
       savedAt: Date.now(),
     },
   };
 
-  try {
-    for (let i = 0; i < ALL_STEPS.length; i++) {
-      const step = ALL_STEPS[i];
-      emitProgress(onProgress, step, i, "start");
-      // Allow the loader UI to repaint before doing work.
-      // eslint-disable-next-line no-await-in-loop
-      await yieldToBrowser(onProgress);
-      // eslint-disable-next-line no-await-in-loop
-      const before = typeof performance !== "undefined" ? performance.now() : Date.now();
-      snapshot = await runStep(snapshot, step, options);
-      const after = typeof performance !== "undefined" ? performance.now() : Date.now();
-      // eslint-disable-next-line no-console
-      console.debug("[daily-initialize]", step, "took", Math.round(after - before), "ms");
+  for (let i = 0; i < ALL_STEPS.length; i++) {
+    const step = ALL_STEPS[i];
+    emitProgress(onProgress, step, i, "start");
+    // eslint-disable-next-line no-await-in-loop
+    await yieldToBrowser(onProgress);
+    // eslint-disable-next-line no-await-in-loop
+    const before = typeof performance !== "undefined" ? performance.now() : Date.now();
+    snapshot = await runStep(snapshot, step);
+    const after = typeof performance !== "undefined" ? performance.now() : Date.now();
+    // eslint-disable-next-line no-console
+    console.debug("[daily-initialize]", step, "took", Math.round(after - before), "ms");
 
-      const onDisk = await loadDailySnapshot();
-      snapshot = mergeSnapshotKeepBest(today, onDisk, snapshot);
-      const storagePressure = await getStoragePressureFlag();
-      snapshot = {
-        ...snapshot,
-        ui: {
-          ...snapshot.ui,
-          storagePressure,
-        },
-      };
-      const prePersist = snapshot;
-      const snapshotToSave: DailySnapshot = {
-        ...snapshot,
-        ui: {
-          ...snapshot.ui,
-          persistVerified: true,
-        },
-      };
-      const persist = await saveDailySnapshotWithRetries(snapshotToSave);
-      snapshot = persist.ok
-        ? snapshotToSave
-        : mergeSnapshotKeepBest(today, await loadDailySnapshot(), prePersist);
-
-      emitProgress(onProgress, step, i, "complete");
-      // eslint-disable-next-line no-await-in-loop
-      await yieldToBrowser(onProgress);
-    }
-  } catch (e) {
-    if (fallback) {
-      const merged = mergeSnapshotKeepBest(today, fallback, snapshot);
-      const offlineSnapshot: DailySnapshot = {
-        ...merged,
-        ui: {
-          ...merged.ui,
-          offlineMode: true,
-          persistVerified: true,
-        },
-      };
-      const offPersist = await saveDailySnapshotWithRetries(offlineSnapshot);
-      if (!offPersist.ok) {
-        console.error("[daily-initialize] offline snapshot persist failed", offPersist.error);
-      }
-      return { kind: "fromCache", snapshot: offlineSnapshot };
-    }
-    throw e;
+    emitProgress(onProgress, step, i, "complete");
+    // eslint-disable-next-line no-await-in-loop
+    await yieldToBrowser(onProgress);
   }
 
-  const completedSnapshot: DailySnapshot = {
+  const completedAt = Date.now();
+  const snapshotOut: DailySnapshot = {
     ...snapshot,
     ui: {
       ...snapshot.ui,
-      bootstrapCompletedAt: Date.now(),
-      persistVerified: true,
+      bootstrapCompletedAt: completedAt,
+      savedAt: completedAt,
     },
   };
-  const finalPersist = await saveDailySnapshotWithRetries(completedSnapshot);
-  if (!finalPersist.ok) {
-    console.error("[daily-initialize] final bootstrap completion persist failed", finalPersist.error);
-  }
-  snapshot = finalPersist.ok ? completedSnapshot : snapshot;
 
-  return { kind: "fresh", snapshot };
+  const bootstrapToday = bootstrapTodayCapture;
+  bootstrapTodayCapture = null;
+
+  return { kind: "fresh", snapshot: snapshotOut, bootstrapToday };
 }
 
-async function runStep(
-  snapshot: DailySnapshot,
-  step: PreloadStepId,
-  options?: InitializeDailySystemOptions
-): Promise<DailySnapshot> {
+async function runStep(snapshot: DailySnapshot, step: PreloadStepId): Promise<DailySnapshot> {
   switch (step) {
     case "fetchMissions": {
       try {
@@ -260,6 +178,7 @@ async function runStep(
             };
           } | null;
         };
+        bootstrapTodayCapture = data as BootstrapTodayResponse;
         const dateStr = (data.date as string) ?? snapshot.date;
         const missions = {
           dateStr,
@@ -270,32 +189,7 @@ async function runStep(
         };
         const budget =
           data.budget != null
-            ? {
-                today: dateStr,
-                settings: data.budget.settings,
-                currentMonthExpenses: data.budget.currentMonthExpenses ?? null,
-                currentMonthIncome: data.budget.currentMonthIncome ?? null,
-                currentWeekExpenses: data.budget.currentWeekExpenses ?? null,
-                currentWeekIncome: data.budget.currentWeekIncome ?? null,
-                budgetRemainingCents: data.budget.budgetRemainingCents ?? null,
-                currency: data.budget.currency,
-                isWeekly: data.budget.isWeekly,
-                // Derive period label from isWeekly; history mode is handled in the page.
-                periodLabel: data.budget.isWeekly ? "this week" : "this month",
-                isPaydayCycle: !!(data.budget.financeState as any)?.period?.isPaydayCycle,
-                disciplineScore:
-                  (data.budget.financeState as any)?.disciplineScore ?? null,
-                disciplineXpThisWeek: data.budget.disciplineXpThisWeek ?? 0,
-                disciplineCompletedToday: data.budget.disciplineCompletedToday ?? false,
-                daysUnderBudgetThisWeek:
-                  (data.budget.financeState as any)?.safeDaysThisWeek ?? null,
-                unplannedSummary: data.budget.unplannedSummary ?? {
-                  count: 0,
-                  totalCents: 0,
-                },
-                financeState: data.budget.financeState ?? null,
-                financialInsights: data.budget.financialInsights ?? null,
-              }
+            ? mapBootstrapBudgetToSnapshot(data.budget, dateStr) ?? snapshot.budget
             : snapshot.budget;
         const learning =
           data.learning != null
@@ -400,95 +294,22 @@ async function runStep(
     }
     case "fetchSettings": {
       try {
-        const res = await fetch("/api/settings", {
-          credentials: "include",
-        });
-        if (!res.ok) return snapshot;
-        const data = (await res.json()) as { preferences?: Record<string, unknown>; payday?: { last_payday_date: string | null; payday_day_of_month: number | null } };
+        const data = await fetchSettingsPayload();
+        if (!data) return snapshot;
         const dateStr = snapshot.date || getTodayKey();
         return {
           ...snapshot,
           settings: {
             today: dateStr,
-            preferences: data.preferences ?? {},
-            payday: data.payday ?? { last_payday_date: null, payday_day_of_month: null },
+            preferences: data.preferences as unknown as Record<string, unknown>,
+            payday: data.payday,
           },
         };
       } catch {
         return snapshot;
       }
     }
-    case "preloadPages": {
-      try {
-        const routes = BOOTSTRAP_PREFETCH_ROUTES.filter(
-          (path) => path !== "/assistant" || isAssistantEnabled()
-        );
-        const prefetchInvokedAt = options?.prefetchHref ? Date.now() : undefined;
-        if (options?.prefetchHref) {
-          for (const path of routes) {
-            try {
-              options.prefetchHref(path);
-            } catch {
-              // ignore individual prefetch errors
-            }
-          }
-        }
-        return {
-          ...snapshot,
-          ui: {
-            ...snapshot.ui,
-            pagesPrefetched: [...routes],
-            ...(prefetchInvokedAt != null ? { prefetchInvokedAt } : {}),
-          },
-        };
-      } catch {
-        return snapshot;
-      }
-    }
-    case "preloadAssets": {
-      try {
-        const assets = getBootstrapShellVisualPreloadUrls();
-        const { loaded, total, failedUrls } = await preloadShellImagesDecoded(assets);
-        if (failedUrls.length) {
-          console.warn("[daily-initialize] shell visual decode misses", failedUrls.length, failedUrls.slice(0, 5));
-        }
-        const shellVisualsDecodeOk = total === 0 || loaded === total;
-        return {
-          ...snapshot,
-          ui: {
-            ...snapshot.ui,
-            assetsPrefetched: true,
-            shellVisualsLoadedCount: loaded,
-            shellVisualsTotal: total,
-            shellVisualsDecodeOk,
-          },
-        };
-      } catch {
-        return snapshot;
-      }
-    }
-    case "prepareCache":
-    default: {
-      let swOk = false;
-      try {
-        if (typeof navigator !== "undefined" && "serviceWorker" in navigator) {
-          const warm = await requestSwCacheWarmupWithRetries({
-            includeAuth: true,
-            today: snapshot.date,
-          });
-          swOk = warm.ok;
-        }
-      } catch {
-        swOk = false;
-      }
-      return {
-        ...snapshot,
-        ui: {
-          ...snapshot.ui,
-          swCacheWarmupOk: swOk,
-        },
-      };
-    }
+    default:
+      return snapshot;
   }
 }
-

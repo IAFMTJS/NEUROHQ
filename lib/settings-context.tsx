@@ -9,21 +9,12 @@ import {
   useState,
   type ReactNode,
 } from "react";
-import type { UserPreferences } from "@/types/preferences.types";
 import type { Session } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/client";
+import { fetchSettingsPayload, type SettingsApiPayload } from "@/lib/settings-api-client";
+import { resetDcicGameStateBootstrap } from "@/lib/dcic/game-state-client";
 
-type PaydaySettings = {
-  last_payday_date: string | null;
-  payday_day_of_month: number | null;
-};
-
-type SettingsPayload = {
-  preferences: UserPreferences;
-  payday: PaydaySettings;
-  /** `users.updated_at` — budget/payday row changes */
-  usersRowUpdatedAt?: string | null;
-} | null;
+type SettingsPayload = SettingsApiPayload | null;
 
 const SettingsContext = createContext<{
   settings: SettingsPayload;
@@ -31,10 +22,7 @@ const SettingsContext = createContext<{
 }>({ settings: null, invalidate: async () => {} });
 
 async function fetchSettings(): Promise<SettingsPayload> {
-  const res = await fetch("/api/settings", { credentials: "include", cache: "no-store" });
-  if (!res.ok) return null;
-  const data = await res.json();
-  return data as SettingsPayload;
+  return fetchSettingsPayload();
 }
 
 async function fetchSettingsMeta(): Promise<{
@@ -81,15 +69,13 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
       if (cancelled) return;
       if (!session) {
         setSettings(null);
+        resetDcicGameStateBootstrap();
         return;
       }
       try {
-        const res = await fetch("/api/settings", {
-          credentials: "include",
-          cache: "no-store",
-        });
+        const data = await fetchSettingsPayload();
         if (cancelled || seq !== syncSeq) return;
-        setSettings(res.ok ? ((await res.json()) as SettingsPayload) : null);
+        setSettings(data);
       } catch {
         if (!cancelled && seq === syncSeq) setSettings(null);
       }
