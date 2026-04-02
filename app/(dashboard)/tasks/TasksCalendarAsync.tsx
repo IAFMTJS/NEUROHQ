@@ -15,7 +15,7 @@ type TasksCalendarAsyncProps = {
   simplifiedContent?: boolean;
 };
 
-/** Fetches calendar data in a Suspense boundary so the main tasks page doesn't wait on 3‑month task range or 180‑day events. */
+/** Fetches calendar data in a Suspense boundary so the main tasks page doesn't wait on 3‑month task range or large event ranges. */
 export async function TasksCalendarAsync({
   dateStr,
   monthParam,
@@ -42,7 +42,8 @@ export async function TasksCalendarAsync({
 
   const [tasksByDate, upcomingCalendarEvents, hasGoogle] = await Promise.all([
     getTasksForDateRange(calendarRangeStart, calendarRangeEnd),
-    getUpcomingCalendarEvents(dateStr, 180),
+    // Keep this relatively small; huge ranges can make tab navigations feel stuck.
+    getUpcomingCalendarEvents(dateStr, 60),
     hasGoogleCalendarToken(),
   ]);
 

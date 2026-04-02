@@ -4,7 +4,7 @@
 // - DYNAMIC_CACHE (per dag): HTML/API offline fallback; _next/static JS/CSS = network-first, daarna cache voor offline
 // - IndexedDB (neurohq-offline): offline mutaties (POST/PUT etc.) → gesynchroniseerd zodra er weer netwerk is
 // Bump this when UI/layout changes so authenticated HTML cache doesn't keep old shells after refresh.
-const CACHE_VERSION = "v18";
+const CACHE_VERSION = "v19";
 const STATIC_CACHE = `neurohq-static-${CACHE_VERSION}`;
 const OFFLINE_PAGE = "/offline";
 
@@ -440,6 +440,25 @@ self.addEventListener("fetch", function (event) {
   // Skip cross-origin requests
   if (url.origin !== self.location.origin) {
     return;
+  }
+
+  // Next.js App Router "flight" / RSC navigations should never be cached by the SW.
+  // If these get cached or delayed, client-side Link navigations can feel "stuck",
+  // while opening the same URL in a new tab (full document navigation) feels fast.
+  try {
+    const accept = event.request.headers.get("accept") || "";
+    const hasRouterState = event.request.headers.has("next-router-state-tree");
+    const isRsc = accept.includes("text/x-component") || hasRouterState || url.search.includes("_rsc=");
+    if (url.pathname.startsWith("/_next/") || isRsc) {
+      safeRespondWith(event, function () {
+        return fetch(event.request).catch(function () {
+          return new Response("Offline", { status: 503 });
+        });
+      });
+      return;
+    }
+  } catch {
+    // If header access fails for any reason, fall back to existing handlers below.
   }
 
   // JS/CSS (_next/static): network-first — stale cache was making Light UI / global style updates invisible after ship

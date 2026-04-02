@@ -31,8 +31,11 @@ export function TasksTabsShell({
   const tabStripOuterClass = [
     fillViewport ? "mt-4 shrink-0" : "mt-4",
     stickyTabs
-      ? "sticky top-0 z-20 border-b border-[rgba(var(--mode-rgb),0.18)] bg-[rgba(4,12,22,0.9)] pb-3 pt-1 backdrop-blur-md supports-[backdrop-filter]:bg-[rgba(4,12,22,0.82)]"
+      ? "sticky top-0 z-50 border-b border-[rgba(var(--mode-rgb),0.18)] bg-[rgba(4,12,22,0.9)] pb-3 pt-1 backdrop-blur-md supports-[backdrop-filter]:bg-[rgba(4,12,22,0.82)]"
       : "",
+    // Defensive: some decorative layers/overlays can accidentally intercept clicks.
+    // Keep tab strip above them and ensure it receives pointer events.
+    "relative pointer-events-auto",
   ]
     .filter(Boolean)
     .join(" ");
@@ -46,14 +49,26 @@ export function TasksTabsShell({
       <div className="mb-2 flex items-center justify-between gap-2">
         <span className="text-[10px] font-bold uppercase tracking-[0.16em] text-[var(--text-muted)]">View</span>
       </div>
-      <div className="flex flex-wrap gap-1 rounded-xl border border-[rgba(var(--mode-rgb),0.2)] bg-[rgba(4,12,22,0.5)] p-1 shadow-[inset_0_1px_0_rgba(255,255,255,0.05)] backdrop-blur-sm">
-        <Link href={missionsHref} className={tasksDeckTabClass(initialTab === "missions")} aria-current={initialTab === "missions" ? "page" : undefined}>
+      <div className="relative z-[1] flex flex-wrap gap-1 rounded-xl border border-[rgba(var(--mode-rgb),0.2)] bg-[rgba(4,12,22,0.5)] p-1 shadow-[inset_0_1px_0_rgba(255,255,255,0.05)] backdrop-blur-sm pointer-events-auto">
+        <Link
+          href={missionsHref}
+          className={`${tasksDeckTabClass(initialTab === "missions")} pointer-events-auto`}
+          aria-current={initialTab === "missions" ? "page" : undefined}
+        >
           Missions
         </Link>
-        <Link href={calendarHref} className={tasksDeckTabClass(initialTab === "calendar")} aria-current={initialTab === "calendar" ? "page" : undefined}>
+        <Link
+          href={calendarHref}
+          className={`${tasksDeckTabClass(initialTab === "calendar")} pointer-events-auto`}
+          aria-current={initialTab === "calendar" ? "page" : undefined}
+        >
           Calendar
         </Link>
-        <Link href={routineHref} className={tasksDeckTabClass(initialTab === "routine")} aria-current={initialTab === "routine" ? "page" : undefined}>
+        <Link
+          href={routineHref}
+          className={`${tasksDeckTabClass(initialTab === "routine")} pointer-events-auto`}
+          aria-current={initialTab === "routine" ? "page" : undefined}
+        >
           Routine
         </Link>
       </div>
