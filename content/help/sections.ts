@@ -74,7 +74,7 @@ export const HELP_QUICK_LINKS: HelpLink[] = [
   { label: "Missions", href: "/tasks" },
   { label: "Growth", href: "/learning?tab=command" },
   { label: "Strategy", href: "/strategy?tab=overview" },
-  { label: "Insights", href: "/report?tab=overview" },
+  { label: "Insights", href: "/profile?view=insights&tab=overview" },
   { label: "Budget", href: "/budget" },
   { label: "XP", href: "/profile" },
   { label: "Settings", href: "/settings" },
@@ -123,7 +123,7 @@ export const HELP_SECTIONS: HelpSection[] = [
     ],
     seeAlso: [
       { label: "Open HQ", href: "/dashboard" },
-      { label: "Brain uitleg", href: "/report?tab=diagnostics" },
+      { label: "Brain uitleg", href: "/profile?view=insights&tab=diagnostics" },
     ],
   },
   {
@@ -226,9 +226,9 @@ export const HELP_SECTIONS: HelpSection[] = [
       "Weekselector behoudt actieve tab in de URL.",
     ],
     seeAlso: [
-      { label: "Insights overview", href: "/report?tab=overview" },
-      { label: "Patterns tab", href: "/report?tab=patterns" },
-      { label: "Diagnostics tab", href: "/report?tab=diagnostics" },
+      { label: "Insights overview", href: "/profile?view=insights&tab=overview" },
+      { label: "Patterns tab", href: "/profile?view=insights&tab=patterns" },
+      { label: "Diagnostics tab", href: "/profile?view=insights&tab=diagnostics" },
     ],
   },
   {
@@ -260,7 +260,7 @@ export const HELP_SECTIONS: HelpSection[] = [
     ],
     seeAlso: [
       { label: "Profiel (XP context)", href: "/profile" },
-      { label: "Insights performance", href: "/report?tab=performance" },
+      { label: "Insights performance", href: "/profile?view=insights&tab=performance" },
     ],
   },
   {
@@ -288,7 +288,7 @@ export const HELP_SECTIONS: HelpSection[] = [
       "Bij netwerkherstel wordt gemergde state opnieuw gesynchroniseerd.",
     ],
     seeAlso: [
-      { label: "Insights diagnostics", href: "/report?tab=diagnostics" },
+      { label: "Insights diagnostics", href: "/profile?view=insights&tab=diagnostics" },
       { label: "Open Missions", href: "/tasks" },
     ],
   },
@@ -303,7 +303,7 @@ export const HELP_SECTIONS: HelpSection[] = [
       "/tasks -> Missions",
       "/learning?tab=command -> Growth command center",
       "/strategy?tab=overview -> Strategy overview",
-      "/report?tab=overview -> Insights",
+      "/profile?view=insights&tab=overview -> Insights",
       "/settings -> Settings",
     ],
     seeAlso: [{ label: "Terug naar HQ", href: "/dashboard" }],
@@ -324,7 +324,7 @@ export const HELP_FAQ: { question: string; answer: string }[] = [
   {
     question: "Hoe deel ik direct een specifieke Insights-view?",
     answer:
-      "Gebruik URL-tabs, bijvoorbeeld /report?tab=patterns of /report?tab=diagnostics.",
+      "Gebruik URL-tabs, bijvoorbeeld /profile?view=insights&tab=patterns of /profile?view=insights&tab=diagnostics.",
   },
   {
     question: "Blijven completions bewaard na refresh of heropenen?",

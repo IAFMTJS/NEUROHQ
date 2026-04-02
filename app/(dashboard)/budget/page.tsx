@@ -3,7 +3,6 @@ import nextDynamic from "next/dynamic";
 import Link from "next/link";
 import { addDays, format } from "date-fns";
 import { nl } from "date-fns/locale";
-import { HeroMascotImage } from "@/components/HeroMascotImage";
 import { getSavingsGoals, getSavingsContributions } from "@/app/actions/savings";
 import {
   getBudgetEntries,
@@ -467,13 +466,6 @@ export default async function BudgetPage({ searchParams }: Props) {
       belowTabsSlot={
         simplifiedBudget ? undefined : (
           <>
-            {!isHistoryView && (
-              <section className="mascot-hero mascot-hero-top mascot-hero-sharp" data-mascot-page="budget" aria-hidden>
-                <div className="mascot-hero-inner mx-auto">
-                  <HeroMascotImage page="budget" className="mascot-img" heroLarge />
-                </div>
-              </section>
-            )}
             {!historyMode && (
               <Suspense fallback={null}>
                 <StrategyEnginePaceHint variant="budget" />

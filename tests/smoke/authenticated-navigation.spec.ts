@@ -32,7 +32,7 @@ test.describe("authenticated smoke navigation", () => {
     });
 
     await test.step("Report tabs keep deeplink state", async () => {
-      await page.goto("/report?tab=patterns");
+      await page.goto("/profile?view=insights&tab=patterns");
       await expect(
         page.getByRole("navigation", { name: /insights tabs/i })
       ).toBeVisible();
@@ -43,7 +43,7 @@ test.describe("authenticated smoke navigation", () => {
         page.locator('section[aria-label="Insights tab: patterns"]')
       ).toBeVisible();
 
-      await page.goto("/report?tab=diagnostics");
+      await page.goto("/profile?view=insights&tab=diagnostics");
       await expect(
         page.getByRole("link", { name: /^Diagnostics$/ })
       ).toHaveAttribute("aria-current", "page");

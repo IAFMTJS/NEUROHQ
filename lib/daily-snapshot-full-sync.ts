@@ -12,7 +12,7 @@
 import { getTodayKey } from "@/lib/daily-date";
 import {
   loadDailySnapshot,
-  saveDailySnapshot,
+  saveDailySnapshotWithRetries,
   isCurrentSnapshot,
 } from "@/lib/daily-snapshot-storage";
 import { getPendingDailyState } from "@/lib/client-pending-writes";
@@ -306,7 +306,10 @@ export async function mergeDailySnapshotFromNetwork(): Promise<BootstrapTodayRes
     },
   };
 
-  await saveDailySnapshot(next);
+  const persist = await saveDailySnapshotWithRetries(next);
+  if (!persist.ok) {
+    console.error("[daily-snapshot-full-sync] persist failed", persist.error);
+  }
   return bootstrap;
 }
 

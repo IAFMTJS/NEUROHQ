@@ -1,6 +1,6 @@
 "use client";
 
-import { getMascotSrcForPage } from "@/lib/mascots";
+import { getDashboardMascotSrc } from "@/lib/mascots";
 import { CommanderMascotPedestal, type CommanderMascotPedestalStats } from "./CommanderMascotPedestal";
 import { CommanderStatRing } from "./CommanderStatRing";
 import { ClientCTALink } from "./ClientCTALink";
@@ -60,7 +60,7 @@ export function CommanderHomeHero({
   const mascotStack = (
     <div className="mascot-hero-mascot-stack relative mx-auto flex w-full justify-center">
       <img
-        src={getMascotSrcForPage("dashboard")}
+        src={getDashboardMascotSrc()}
         alt=""
         className="mascot-img"
         aria-hidden

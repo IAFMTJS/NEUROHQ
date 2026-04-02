@@ -19,9 +19,12 @@ import {
   parseProfileEngineTab,
   profileHomeHref,
   profileEngineHref,
-  reportInsightsHref,
+  profileInsightsHref,
   type ProfileEngineTabId,
 } from "@/lib/profile-routes";
+import { ReportInsightsPageChrome } from "@/components/report/ReportInsightsPageChrome";
+import { ReportInsightsContent } from "@/components/report/ReportInsightsContent";
+import { ReportSnapshotFallback } from "@/components/report/ReportSnapshotFallback";
 import { SimplifiedPageShell } from "@/components/layout/SimplifiedPageShell";
 import { SIMPLIFIED_VIEWPORT_WRAPPER } from "@/lib/simplified-page-layout";
 
@@ -42,7 +45,7 @@ const ENGINE_NAV: { id: ProfileEngineTabId; label: string }[] = [
   { id: "modes", label: "Modi" },
 ];
 
-function MainTabNavSimplified({ active }: { active: "home" | "engine" }) {
+function MainTabNavSimplified({ active }: { active: "home" | "engine" | "insights" }) {
   const base =
     "rounded-xl px-3 py-2.5 text-center text-[11px] font-semibold uppercase tracking-wide transition min-h-[44px] flex flex-1 items-center justify-center sm:flex-none outline-none focus-visible:ring-2 focus-visible:ring-[rgba(var(--mode-rgb),0.45)] focus-visible:ring-offset-0";
   const on =
@@ -56,6 +59,9 @@ function MainTabNavSimplified({ active }: { active: "home" | "engine" }) {
       </Link>
       <Link href={profileEngineHref("identity")} aria-current={active === "engine" ? "page" : undefined} className={`${base} ${active === "engine" ? on : off}`}>
         Engine
+      </Link>
+      <Link href={profileInsightsHref("overview")} aria-current={active === "insights" ? "page" : undefined} className={`${base} ${active === "insights" ? on : off}`}>
+        Insights
       </Link>
     </nav>
   );
@@ -84,6 +90,7 @@ type Search = {
   engineTab?: string;
   insightsTab?: string;
   weekStart?: string;
+  tab?: string;
 };
 
 function redirectLegacyProfileQuery(raw: Search) {
@@ -91,9 +98,10 @@ function redirectLegacyProfileQuery(raw: Search) {
   const st = raw.settingsTab ?? "identity";
   if (st === "insights") {
     const p = new URLSearchParams();
+    p.set("view", "insights");
     if (raw.insightsTab) p.set("tab", raw.insightsTab);
     if (raw.weekStart) p.set("weekStart", raw.weekStart);
-    redirect(p.toString() ? `/report?${p}` : "/report");
+    redirect(`/profile?${p}`);
   }
   if (st === "system" || st === "budget") {
     redirect("/settings");
@@ -158,6 +166,53 @@ async function ProfileHomeAsync({ userId }: { userId: string }) {
   );
 }
 
+function insightsSearchParamsPromise(raw: Search): Promise<{ weekStart?: string; tab?: string }> {
+  const tab = raw.tab ?? raw.insightsTab;
+  return Promise.resolve({
+    weekStart: raw.weekStart,
+    ...(tab ? { tab } : {}),
+  });
+}
+
+async function ProfileInsightsAsync({ raw }: { raw: Search }) {
+  const prefs = await getUserPreferencesOrDefaults();
+  const simplified = prefs.simplified_content === true;
+  const sp = insightsSearchParamsPromise(raw);
+
+  if (simplified) {
+    return (
+      <div className={SIMPLIFIED_VIEWPORT_WRAPPER}>
+        <SimplifiedPageShell
+          title="Insights"
+          footerLinks={[
+            { href: profileHomeHref(), label: "Profiel" },
+            { href: "/tasks", label: "Missions" },
+            { href: "/dashboard", label: "HQ" },
+          ]}
+        >
+          <div className="space-y-4">
+            <MainTabNavSimplified active="insights" />
+            <Suspense fallback={<ReportSnapshotFallback />}>
+              <ReportInsightsContent searchParams={sp} simplifiedLayout />
+            </Suspense>
+          </div>
+        </SimplifiedPageShell>
+      </div>
+    );
+  }
+
+  return (
+    <ProfileCommandDeckLayout main="insights">
+      <div className="space-y-6">
+        <ReportInsightsPageChrome />
+        <Suspense fallback={<ReportSnapshotFallback />}>
+          <ReportInsightsContent searchParams={sp} />
+        </Suspense>
+      </div>
+    </ProfileCommandDeckLayout>
+  );
+}
+
 async function ProfileEngineAsync({
   userEmail,
 }: {
@@ -184,6 +239,14 @@ export default async function ProfilePage({ searchParams }: { searchParams: Prom
 
   const mainView = parseProfileMainView(raw.view);
 
+  if (mainView === "insights") {
+    return (
+      <Suspense fallback={<ReportSnapshotFallback />}>
+        <ProfileInsightsAsync raw={raw} />
+      </Suspense>
+    );
+  }
+
   if (mainView === "home") {
     return (
       <Suspense fallback={<ProfileSnapshotFallback main="home" />}>
@@ -209,12 +272,12 @@ export default async function ProfilePage({ searchParams }: { searchParams: Prom
       >
         Instellingen
       </a>
-      . Insights:{" "}
+      .       Insights:{" "}
       <a
-        href={reportInsightsHref("overview")}
+        href={profileInsightsHref("overview")}
         className="font-medium text-[var(--accent-focus)] underline-offset-2 hover:underline rounded-sm outline-none focus-visible:ring-2 focus-visible:ring-[rgba(var(--mode-rgb),0.45)] focus-visible:ring-offset-0"
       >
-        Rapport
+        Insights
       </a>
       .
     </p>

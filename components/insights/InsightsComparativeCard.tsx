@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useSearchParams } from "next/navigation";
+import { profileInsightsHref } from "@/lib/profile-routes";
 
 type Props = {
   sentence: string | null;
@@ -17,14 +18,16 @@ function scrollToMoreInsights() {
 
 export function InsightsComparativeCard({ sentence }: Props) {
   const pathname = usePathname();
-  const isReportPage = pathname === "/report";
+  const searchParams = useSearchParams();
+  const isInsightsSurface =
+    pathname === "/report" || (pathname === "/profile" && searchParams.get("view") === "insights");
 
   if (!sentence) return null;
   return (
     <section className="card-simple hq-card-enter rounded-[var(--hq-card-radius-sharp)] p-5" aria-label="Vergelijking">
       <h2 className="hq-h2 mb-2">Vergelijking</h2>
       <p className="hq-body mb-4 text-[var(--text-secondary)]">{sentence}</p>
-      {isReportPage ? (
+      {isInsightsSurface ? (
         <button
           type="button"
           onClick={scrollToMoreInsights}
@@ -33,7 +36,7 @@ export function InsightsComparativeCard({ sentence }: Props) {
           Meer insights
         </button>
       ) : (
-        <Link href="/report?tab=patterns" className="btn-hq-secondary inline-flex w-full items-center justify-center rounded-[var(--hq-btn-radius)] py-2.5 px-4">
+        <Link href={profileInsightsHref("patterns")} className="btn-hq-secondary inline-flex w-full items-center justify-center rounded-[var(--hq-btn-radius)] py-2.5 px-4">
           Meer insights
         </Link>
       )}

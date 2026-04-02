@@ -169,7 +169,7 @@ export async function addXP(
     revalidatePath("/profile");
     revalidatePath("/tasks");
     revalidatePath("/learning");
-    revalidatePath("/report");
+    revalidatePath("/profile");
     revalidatePath("/strategy");
   }
   const levelAfter = levelFromTotalXP(newTotal);
@@ -353,7 +353,7 @@ export async function deductXP(points: number): Promise<void> {
     revalidatePath("/settings");
     revalidatePath("/profile");
     revalidatePath("/tasks");
-    revalidatePath("/report");
+    revalidatePath("/profile");
     revalidatePath("/strategy");
   }
 }

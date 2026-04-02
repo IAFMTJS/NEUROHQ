@@ -1,7 +1,7 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { getMascotSrcForPage } from "@/lib/mascots";
+import { getDashboardMascotSrc } from "@/lib/mascots";
 import type { CommanderMascotPedestalStats } from "@/components/commander/CommanderMascotPedestal";
 
 /** Mock stats — zelfde shape als live dashboard-pedestal */
@@ -138,7 +138,7 @@ function MascotStandingOnRing({
       <div className={`relative z-[1] w-full ${ringOverlapClass}`}>{ring}</div>
       <div className="pointer-events-none absolute inset-x-0 bottom-[min(2.45rem,12.5vw)] z-[2] flex justify-center sm:bottom-[min(2.75rem,11vw)]">
         <img
-          src={getMascotSrcForPage("dashboard")}
+          src={getDashboardMascotSrc()}
           alt=""
           className="h-[min(9rem,36vw)] max-h-[148px] w-auto max-w-[min(248px,82%)] object-contain object-bottom sm:h-[min(9.75rem,34vw)] sm:max-h-[162px]"
           style={{

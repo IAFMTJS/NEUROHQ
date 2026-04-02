@@ -4,7 +4,7 @@
 // - DYNAMIC_CACHE (per dag): HTML/API offline fallback; _next/static JS/CSS = network-first, daarna cache voor offline
 // - IndexedDB (neurohq-offline): offline mutaties (POST/PUT etc.) → gesynchroniseerd zodra er weer netwerk is
 // Bump this when UI/layout changes so authenticated HTML cache doesn't keep old shells after refresh.
-const CACHE_VERSION = "v20";
+const CACHE_VERSION = "v23";
 const STATIC_CACHE = `neurohq-static-${CACHE_VERSION}`;
 const OFFLINE_PAGE = "/offline";
 
@@ -52,6 +52,9 @@ function isAuthenticatedAppRoutePath(pathname) {
     pathname === "/report" ||
     pathname === "/settings" ||
     pathname === "/profile" ||
+    pathname === "/help" ||
+    pathname === "/assistant" ||
+    pathname === "/xp" ||
     // nested analytics / learning pages should behave the same once visited
     pathname.startsWith("/learning")
   );
@@ -262,7 +265,7 @@ const STATIC_ASSETS = [
   "/app-icon.png",
   // Core branding & HUD visuals – pre-cached so first PWA open has them locally
   "/logo-naam.png",
-  // Mascot files are page-specific (see `public/mascots/`). Keep SW pre-cache limited to assets that exist.
+  // Dashboard mascot only lives under `public/mascots/` (cached on demand when visited).
   "/icons/hq-tab-dashboard.png",
   "/icons/hq-tab-tasks.png",
   "/icons/hq-tab-budget.png",
@@ -287,8 +290,14 @@ const AUTH_ROUTES_TO_PREFETCH = [
   "/strategy",
   "/analytics",
   "/report",
+  "/profile?view=insights&tab=overview",
   "/settings",
   "/profile",
+  "/help",
+  "/assistant",
+  "/xp",
+  "/learning",
+  "/learning/analytics",
 ];
 
 function getSnapshotEndpointsToPrefetch(today) {
@@ -361,10 +370,27 @@ self.addEventListener("message", function (event) {
   if (event.data.type === "WARMUP_BACKGROUND_CACHE") {
     var includeAuth = !!event.data.includeAuth;
     var today = typeof event.data.today === "string" ? event.data.today : undefined;
+    var replyPort =
+      event.data.neurohqReplyPort === true && event.ports && event.ports[0] ? event.ports[0] : null;
+    var warmupPromise = warmupBackgroundCaches({ includeAuth: includeAuth, today: today });
+    if (replyPort) {
+      warmupPromise
+        .then(function () {
+          try {
+            replyPort.postMessage({ ok: true });
+          } catch (e) {}
+        })
+        .catch(function (err) {
+          try {
+            replyPort.postMessage({
+              ok: false,
+              error: err && err.message ? String(err.message) : String(err),
+            });
+          } catch (e2) {}
+        });
+    }
     if ("waitUntil" in event) {
-      event.waitUntil(warmupBackgroundCaches({ includeAuth: includeAuth, today: today }));
-    } else {
-      warmupBackgroundCaches({ includeAuth: includeAuth, today: today });
+      event.waitUntil(warmupPromise);
     }
     return;
   }

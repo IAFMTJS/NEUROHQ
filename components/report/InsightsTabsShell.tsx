@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { profileInsightsHref } from "@/lib/profile-routes";
 
 export type InsightsTabId = "overview" | "performance" | "patterns" | "diagnostics";
 
@@ -15,10 +16,7 @@ export function isInsightsTabId(value: string | null | undefined): value is Insi
 }
 
 function buildTabHref(tab: InsightsTabId, weekStart?: string | null): string {
-  const params = new URLSearchParams();
-  if (weekStart) params.set("weekStart", weekStart);
-  params.set("tab", tab);
-  return `/report?${params.toString()}`;
+  return profileInsightsHref(tab, weekStart);
 }
 
 type Props = {

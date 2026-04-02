@@ -1,6 +1,6 @@
 "use client";
 
-import { getMascotSrcForPage } from "@/lib/mascots";
+import { getDashboardMascotSrc } from "@/lib/mascots";
 import { VISUAL_LAB_PEDESTAL_MOCK } from "@/components/visual-lab/VisualLabPedestalHalfRingAlternatives";
 
 const ANGLES = [
@@ -230,7 +230,7 @@ function MascotOnBand({ className = "" }: { className?: string }) {
       aria-hidden
     >
       <img
-        src={getMascotSrcForPage("dashboard")}
+        src={getDashboardMascotSrc()}
         alt=""
         className="h-[min(8.5rem,36vw)] max-h-[150px] w-auto object-contain object-bottom sm:h-[9.25rem] sm:max-h-[162px]"
         style={{

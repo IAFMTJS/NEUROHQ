@@ -1,5 +1,6 @@
 import Link from "next/link";
 import type { RealityReport } from "@/app/actions/report";
+import { profileInsightsHref } from "@/lib/profile-routes";
 
 type Props = { report: RealityReport };
 
@@ -45,7 +46,7 @@ export function RealityReportBlock({ report }: Props) {
           )}
         </dl>
         <Link
-          href="/report"
+          href={profileInsightsHref("diagnostics")}
           className="mt-3 inline-block text-sm font-medium text-[var(--accent-focus)] hover:underline"
         >
           Full report →

@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useCallback, useContext, useEffect, useMemo, useState } from "react";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import {
   addRouteVisited,
   clearTutorialState,
@@ -47,6 +47,7 @@ const STEPS_BY_MODE: Record<TutorialMode, TutorialStep[]> = {
 
 export function OnboardingProvider({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
+  const searchParams = useSearchParams();
   const router = useRouter();
   const [introModalOpen, setIntroModalOpen] = useState(false);
   const [tourActive, setTourActive] = useState(false);
@@ -62,7 +63,10 @@ export function OnboardingProvider({ children }: { children: React.ReactNode }) 
 
   useEffect(() => {
     addRouteVisited(pathname);
-  }, [pathname]);
+    if (pathname === "/profile" && searchParams.get("view") === "insights") {
+      addRouteVisited("/report");
+    }
+  }, [pathname, searchParams]);
 
   useEffect(() => {
     const state = getTutorialState();

@@ -1,5 +1,6 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import {
   createContext,
   useCallback,
@@ -55,6 +56,7 @@ export function useDailySnapshot(): DailySnapshot | null {
 const SNAPSHOT_STALENESS_POLL_MS = 60_000;
 
 export function BootstrapGate({ children }: Props) {
+  const router = useRouter();
   const [ready, setReady] = useState(false);
   const [snapshot, setSnapshot] = useState<DailySnapshot | null>(null);
   const refreshInFlightRef = useRef(false);
@@ -85,7 +87,9 @@ export function BootstrapGate({ children }: Props) {
       if (!hydrate.current && !refreshInFlightRef.current) {
         refreshInFlightRef.current = true;
         try {
-          const result = await initializeDailySystem();
+          const result = await initializeDailySystem(undefined, {
+            prefetchHref: (href) => router.prefetch(href),
+          });
           if (cancelled) return;
           setSnapshot((prev) => {
             const today = getTodayKey();

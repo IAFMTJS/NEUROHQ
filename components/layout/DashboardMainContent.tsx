@@ -3,7 +3,6 @@
 import { usePathname } from "next/navigation";
 import { TimezoneSyncBanner } from "@/components/TimezoneSyncBanner";
 import { AcceptanceGateLayer } from "@/components/acceptance/AcceptanceGateLayer";
-import { PageMascot } from "@/components/PageMascot";
 import { PwaStatusChip } from "@/components/PwaStatusChip";
 import type { ReactNode } from "react";
 
@@ -56,7 +55,6 @@ export function DashboardMainContent({ children }: Props) {
       <TimezoneSyncBanner />
       <PwaStatusChip />
       <AcceptanceGateLayer />
-      <PageMascot />
       {children}
       <div className="bottom-nav-page-spacer" aria-hidden />
     </main>

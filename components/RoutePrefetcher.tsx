@@ -2,22 +2,18 @@
 
 import { useEffect, useRef } from "react";
 import { usePathname, useRouter } from "next/navigation";
+import { BOOTSTRAP_PREFETCH_ROUTES } from "@/lib/bootstrap-prefetch-routes";
 import { isAssistantEnabled } from "@/lib/feature-flags";
 
 /**
- * Bottom-nav destinations (keep aligned with `lib/navigation/bottom-nav-links.tsx`).
- * `router.prefetch` fills Next.js’s client RSC cache; raw `fetch("/tasks")` from the
- * daily bootstrap does not, so tab switches were often cold after the first hop.
+ * Warms the App Router flight cache using the same route set as bootstrap `preloadPages`
+ * (`lib/bootstrap-prefetch-routes.ts`). Needed when users skip the full loader (same-day cache hit).
  */
-const SHELL_ROUTES = [
-  "/tasks",
-  "/budget",
-  "/learning",
-  "/dashboard",
-  "/strategy",
-  "/profile",
-  "/settings",
-] as const;
+function shellRoutesToPrefetch(): string[] {
+  return BOOTSTRAP_PREFETCH_ROUTES.filter(
+    (path) => path !== "/assistant" || isAssistantEnabled()
+  );
+}
 
 function canPrefetchOnConnection(): boolean {
   if (typeof navigator === "undefined") return true;
@@ -58,9 +54,7 @@ export function RoutePrefetcher() {
 
     // Prefetch in small batches to avoid overwhelming the main thread / network,
     // which can make navigation feel frozen on some devices.
-    const targets: string[] = [...SHELL_ROUTES];
-    if (isAssistantEnabled()) targets.push("/assistant");
-
+    const targets = shellRoutesToPrefetch();
     let queue = targets.filter((route) => route !== normalized);
     let cancelled = false;
     const BATCH_SIZE = 2;

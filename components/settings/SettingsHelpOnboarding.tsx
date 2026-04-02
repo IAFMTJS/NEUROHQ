@@ -4,15 +4,16 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useOnboarding } from "@/components/onboarding/OnboardingProvider";
 import { getRoutesVisited } from "@/lib/onboarding-storage";
+import { profileInsightsHref } from "@/lib/profile-routes";
 
-const MAIN_ROUTES: { path: string; label: string }[] = [
+const MAIN_ROUTES: { path: string; label: string; href?: string }[] = [
   { path: "/dashboard", label: "HQ" },
   { path: "/tasks", label: "Missions" },
   { path: "/budget", label: "Budget" },
   { path: "/learning", label: "Growth" },
   { path: "/profile", label: "XP" },
   { path: "/strategy", label: "Strategy" },
-  { path: "/report", label: "Insights" },
+  { path: "/report", label: "Insights", href: profileInsightsHref("overview") },
 ];
 
 export function SettingsHelpOnboarding() {
@@ -68,7 +69,7 @@ export function SettingsHelpOnboarding() {
               {unvisited.map((r) => (
                 <li key={r.path}>
                   <Link
-                    href={r.path}
+                    href={r.href ?? r.path}
                     className="text-sm text-[var(--accent-focus)] hover:underline"
                   >
                     {r.label}

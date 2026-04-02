@@ -2,7 +2,6 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { Suspense } from "react";
 import { createClient } from "@/lib/supabase/server";
-import { HeroMascotImage } from "@/components/HeroMascotImage";
 import { HQPageHeader } from "@/components/hq";
 import { getWeekBounds } from "@/lib/utils/learning";
 import { getWeekSummary, getAnalyticsRange } from "@/app/actions/analytics";
@@ -30,11 +29,6 @@ function AnalyticsShell() {
           subtitle="Time used, consistency, and mood over time."
         />
       </div>
-      <section className="mascot-hero mascot-hero-top mascot-hero-sharp" data-mascot-page="analytics" aria-hidden>
-        <div className="mascot-hero-inner mx-auto">
-          <HeroMascotImage page="analytics" className="mascot-img" heroLarge />
-        </div>
-      </section>
     </>
   );
 }

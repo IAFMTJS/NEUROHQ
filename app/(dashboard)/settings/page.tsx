@@ -1,7 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import { Suspense } from "react";
-import { HeroMascotImage } from "@/components/HeroMascotImage";
 import { HQPageHeader } from "@/components/hq";
 import { hasGoogleCalendarToken } from "@/app/actions/calendar";
 import { getUserTimezone, getPushQuoteTime, getPushQuietHours, getPushSubscriptionEnabled } from "@/app/actions/auth";
@@ -57,11 +56,6 @@ function SettingsShell() {
         title="Instellingen"
         subtitle="Site en apparaat: account, weergave, netwerk, budget. Engine en persona stuur je onder Profiel → Engine."
       />
-      <section className="mascot-hero mascot-hero-top mascot-hero-sharp" data-mascot-page="settings" aria-hidden>
-        <div className="mascot-hero-inner mx-auto">
-          <HeroMascotImage page="settings" className="mascot-img" heroLarge />
-        </div>
-      </section>
     </>
   );
 }

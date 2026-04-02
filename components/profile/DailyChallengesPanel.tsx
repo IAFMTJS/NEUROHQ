@@ -8,6 +8,7 @@ import type { MissionTemplateItem } from "@/components/xp/XPPageContent";
 import type { BehaviorProfile } from "@/types/behavior-profile.types";
 import type { BrainMode } from "@/lib/brain-mode";
 import { recommendedMissionTemplates } from "@/lib/recommended-mission-templates";
+import { profileInsightsHref } from "@/lib/profile-routes";
 
 type IdentitySlice = {
   xp_to_next_level: number;
@@ -175,7 +176,7 @@ export function DailyChallengesPanel({
         <p className="mt-3 text-[10px] text-[var(--text-muted)]">
           Meer context en analytics:{" "}
           <Link
-            href="/report"
+            href={profileInsightsHref("overview")}
             className="font-semibold text-[var(--accent-focus)] underline-offset-2 hover:underline rounded-sm outline-none focus-visible:ring-2 focus-visible:ring-[rgba(var(--mode-rgb),0.45)] focus-visible:ring-offset-0"
           >
             Rapport

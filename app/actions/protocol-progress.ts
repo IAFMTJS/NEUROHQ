@@ -49,12 +49,14 @@ async function mergeProtocolMissionCompletionsIntoMap(
   base: Record<string, ProtocolProgressState>,
 ): Promise<Record<string, ProtocolProgressState>> {
   let missionRows: { completed?: boolean; task_tags?: unknown }[] | null = null;
+  /** JSON string: postgrest-js maps array args to `cs.{x}` (native array), invalid for jsonb — must use JSON. */
+  const protocolTagFilter = JSON.stringify(["protocol"]);
   const filtered = await supabase
     .from("tasks")
     .select("completed, task_tags")
     .eq("user_id", userId)
     .is("deleted_at", null)
-    .contains("task_tags", ["protocol"]);
+    .contains("task_tags", protocolTagFilter);
   if (filtered.error) {
     if (process.env.NODE_ENV === "development") {
       console.warn("protocol mission merge (contains filter):", filtered.error.message);

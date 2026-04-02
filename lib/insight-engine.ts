@@ -3,6 +3,8 @@
  * Verklaren, voorspellen, sturen. No UI; pure calculations.
  */
 
+import { profileInsightsHref } from "@/lib/profile-routes";
+
 export type TrendDirection = "up" | "plateau" | "down";
 
 export interface MomentumInput {
@@ -138,7 +140,7 @@ export function generateCoachRecommendations(signals: {
       title: "Momentum daalt",
       body: "Je XP de afgelopen 7 dagen ligt onder de week ervoor. Kleine, consistente acties tillen je momentum weer omhoog.",
       actionLabel: "Optimaliseer dit",
-      actionHref: "/report",
+      actionHref: profileInsightsHref("overview"),
     });
   }
 

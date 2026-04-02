@@ -12,20 +12,22 @@ export function PendingXpToast() {
     if (didRun.current) return;
     didRun.current = true;
 
-    getAndClearPendingXpNotification().then((notification) => {
-      if (!notification || notification.totalXp <= 0) return;
+    getAndClearPendingXpNotification()
+      .then((notification) => {
+        if (!notification || notification.totalXp <= 0) return;
 
-      const lines = notification.sources.length
-        ? notification.sources.map((s) => `${s.label}: +${s.xp} XP`).join(" · ")
-        : `+${notification.totalXp} XP`;
+        const lines = notification.sources.length
+          ? notification.sources.map((s) => `${s.label}: +${s.xp} XP`).join(" · ")
+          : `+${notification.totalXp} XP`;
 
-      neuroToast.success(
-        notification.forDate
-          ? `Verdiend (${notification.forDate}): ${lines} — Totaal +${notification.totalXp} XP`
-          : `XP verdiend: ${lines} — Totaal +${notification.totalXp} XP`,
-        { duration: 6000 }
-      );
-    });
+        neuroToast.success(
+          notification.forDate
+            ? `Verdiend (${notification.forDate}): ${lines} — Totaal +${notification.totalXp} XP`
+            : `XP verdiend: ${lines} — Totaal +${notification.totalXp} XP`,
+          { duration: 6000 }
+        );
+      })
+      .catch(() => {});
   }, []);
 
   return null;

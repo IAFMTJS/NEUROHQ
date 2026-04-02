@@ -112,7 +112,7 @@ export async function saveDailyState(input: DailyStateInput): Promise<SaveDailyS
     }
     revalidateTagMax(`daily-${user.id}-${serverToday}`);
     revalidatePath("/dashboard");
-    revalidatePath("/report");
+    revalidatePath("/profile");
     revalidatePath("/profile");
     revalidatePath("/tasks");
     // Direct line: pass the row we just wrote so the allocator never misses it (avoids read-after-write visibility).

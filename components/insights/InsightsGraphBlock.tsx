@@ -12,6 +12,7 @@ import {
   ResponsiveContainer,
 } from "recharts";
 import type { InsightGraphDay } from "@/app/actions/dcic/insight-engine";
+import { profileInsightsHref } from "@/lib/profile-routes";
 
 type Layer = "xp" | "energy" | "focus" | "streak";
 
@@ -111,7 +112,7 @@ export function InsightsGraphBlock({ graphData }: Props) {
         </ResponsiveContainer>
       </div>
       <div className="border-t border-[var(--card-border)] p-4">
-        <Link href="/report" className="btn-hq-secondary inline-flex w-full items-center justify-center rounded-[var(--hq-btn-radius)] py-2.5 px-4">
+        <Link href={profileInsightsHref("performance")} className="btn-hq-secondary inline-flex w-full items-center justify-center rounded-[var(--hq-btn-radius)] py-2.5 px-4">
           Meer data
         </Link>
       </div>

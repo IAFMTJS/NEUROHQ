@@ -133,6 +133,25 @@ export interface DailySnapshotUIState {
    * Client-side timestamp (ms since epoch) when this snapshot was last saved (metadata).
    */
   savedAt?: number;
+  /**
+   * True when the last write to `localStorage` was verified with a byte-identical read-back.
+   */
+  persistVerified?: boolean;
+  /**
+   * True when the service worker finished the authenticated day-cache warmup (within timeout).
+   */
+  swCacheWarmupOk?: boolean;
+  /** Epoch ms when `router.prefetch` was invoked for the bootstrap route list. */
+  prefetchInvokedAt?: number;
+  /** Shell raster URLs that finished load+decode (see `shellVisualsTotal`). */
+  shellVisualsLoadedCount?: number;
+  shellVisualsTotal?: number;
+  /** True when decode/load succeeded for all shell visuals (or none to load). */
+  shellVisualsDecodeOk?: boolean;
+  /** True when `navigator.storage.estimate()` usage is above a high threshold of quota. */
+  storagePressure?: boolean;
+  /** Set after a full fresh bootstrap finishes and the final snapshot is persisted. */
+  bootstrapCompletedAt?: number;
 }
 
 export interface DailySnapshot {

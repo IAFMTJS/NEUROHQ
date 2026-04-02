@@ -7,8 +7,6 @@ import { XPDataProvider } from "@/components/providers/XPDataProvider";
 import type { XPCachePayload } from "@/lib/xp-cache";
 import { useXPData } from "@/components/providers/XPDataProvider";
 import { XPBadge } from "@/components/XPBadge";
-import { MascotImg } from "@/components/MascotImg";
-import { getXPMascotState } from "@/lib/mascots";
 
 const XPPageContent = dynamic(() => import("@/components/xp/XPPageContent"), {
   loading: () => null,
@@ -45,15 +43,6 @@ function XPPageContentContainer({ todayStr }: { todayStr: string }) {
       <div className="flex flex-wrap items-center justify-end gap-2">
         <XPBadge totalXp={data.identity.total_xp} level={data.identity.level} compact href="/xp" />
       </div>
-      <section className="xp-mascot-hero" data-mascot-page="xp" aria-hidden>
-        <div className="xp-mascot-frame">
-          <MascotImg
-            page="xp"
-            state={getXPMascotState((data.brainModeToday as any)?.mode)}
-            className="xp-mascot-img"
-          />
-        </div>
-      </section>
       <XPPageContent
         identity={data.identity as any}
         forecast={data.forecast as any}

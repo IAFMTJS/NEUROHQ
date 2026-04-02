@@ -1,6 +1,5 @@
 import nextDynamic from "next/dynamic";
 import { Suspense } from "react";
-import { HeroMascotImage } from "@/components/HeroMascotImage";
 import {
   getActiveStrategyFocus,
   getPastStrategyFocus,
@@ -28,6 +27,7 @@ import { StrategyAnalysisSquare } from "@/components/strategy/StrategyAnalysisSq
 import { neuroStrategyBudgetHint } from "@/lib/neuro-copy";
 import { SimplifiedPageShell } from "@/components/layout/SimplifiedPageShell";
 import { SIMPLIFIED_VIEWPORT_WRAPPER } from "@/lib/simplified-page-layout";
+import { profileInsightsHref } from "@/lib/profile-routes";
 import { DashboardHubCommandShell } from "@/components/layout/DashboardHubCommandShell";
 
 /** Force dynamic: strategy uses cookies (auth) and live data. */
@@ -192,16 +192,9 @@ async function StrategyContent({ simplifiedLayout = false }: { simplifiedLayout?
         banner={reviewBanner}
         belowTabsSlot={
           !simplifiedLayout ? (
-            <>
-              <section className="mascot-hero mascot-hero-top mascot-hero-sharp" data-mascot-page="strategy" aria-hidden>
-                <div className="mascot-hero-inner mx-auto">
-                  <HeroMascotImage page="strategy" className="mascot-img" heroLarge />
-                </div>
-              </section>
-              <p className="text-center text-xs text-[var(--text-muted)]">
-                Overzicht, allocatie, momentum en review — hieronder thesis en stack.
-              </p>
-            </>
+            <p className="text-center text-xs text-[var(--text-muted)]">
+              Overzicht, allocatie, momentum en review — hieronder thesis en stack.
+            </p>
           ) : undefined
         }
         overview={
@@ -273,7 +266,7 @@ export default async function StrategyPage() {
           hideTitleBar
           footerLinks={[
             { href: "/tasks", label: "Missions" },
-            { href: "/report", label: "Insights" },
+            { href: profileInsightsHref("overview"), label: "Insights" },
             { href: "/budget", label: "Budget" },
           ]}
         >

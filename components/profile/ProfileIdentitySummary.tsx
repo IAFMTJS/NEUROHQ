@@ -1,6 +1,7 @@
 import Link from "next/link";
 import type { BehaviorProfile } from "@/types/behavior-profile.types";
 import type { XPFullContext } from "@/app/actions/xp-context";
+import { profileInsightsHref } from "@/lib/profile-routes";
 
 const WEEK_THEME_NL: Record<NonNullable<BehaviorProfile["weekTheme"]>, string> = {
   environment_reset: "Weekthema: omgeving reset",
@@ -32,7 +33,7 @@ type Props = {
   behaviorProfile: BehaviorProfile;
 };
 
-/** Bovenaan profiel: identiteit + korte inzichten (uitgebreid rapport op /report). */
+/** Bovenaan profiel: identiteit + korte inzichten (uitgebreider beeld onder Profiel → Insights). */
 export function ProfileIdentitySummary({ identity, insightState, behaviorProfile }: Props) {
   const weekLine = behaviorProfile.weekTheme ? WEEK_THEME_NL[behaviorProfile.weekTheme] : null;
   const completionLine = insightState ? completionPctLine(insightState.completionRateLast7) : null;
@@ -111,7 +112,7 @@ export function ProfileIdentitySummary({ identity, insightState, behaviorProfile
       {weekLine && <p className="text-xs font-medium text-[var(--text-secondary)]">{weekLine}</p>}
 
       <div className="flex flex-wrap gap-2">
-        <Link href="/report" className="btn-secondary inline-flex items-center rounded-lg px-3 py-2 text-sm font-medium">
+        <Link href={profileInsightsHref("overview")} className="btn-secondary inline-flex items-center rounded-lg px-3 py-2 text-sm font-medium">
           Volledig rapport
         </Link>
         <Link

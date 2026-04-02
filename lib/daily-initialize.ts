@@ -3,11 +3,16 @@
 import { getTodayKey } from "@/lib/daily-date";
 import {
   loadDailySnapshot,
-  saveDailySnapshot,
+  saveDailySnapshotWithRetries,
+  getStoragePressureFlag,
   isCurrentSnapshot,
   mergeSnapshotKeepBest,
 } from "@/lib/daily-snapshot-storage";
-import { getMascotSrcForPage } from "@/lib/mascots";
+import { preloadShellImagesDecoded } from "@/lib/bootstrap-image-preload";
+import { requestSwCacheWarmupWithRetries } from "@/lib/sw-cache-warmup";
+import { BOOTSTRAP_PREFETCH_ROUTES } from "@/lib/bootstrap-prefetch-routes";
+import { isAssistantEnabled } from "@/lib/feature-flags";
+import { getBootstrapShellVisualPreloadUrls } from "@/lib/bootstrap-shell-visuals";
 import type { DailySnapshot } from "@/types/daily-snapshot";
 import { LATEST_SNAPSHOT_VERSION } from "@/types/daily-snapshot";
 
@@ -37,7 +42,10 @@ export type InitializeResult = {
   snapshot: DailySnapshot;
 };
 
-const PRELOAD_PAGE_TIMEOUT_MS = 2500;
+export type InitializeDailySystemOptions = {
+  /** Warms Next.js client navigation cache; required for prefetch step to have effect. */
+  prefetchHref?: (href: string) => void;
+};
 
 /** Ordered bootstrap work (single source of truth for loader UI + progress). */
 export const DAILY_BOOTSTRAP_STEPS: readonly PreloadStepId[] = [
@@ -88,7 +96,8 @@ async function yieldToBrowser(onProgress?: (p: PreloadProgress) => void): Promis
  * already rely on the progress contract. They can be filled in iteratively.
  */
 export async function initializeDailySystem(
-  onProgress?: (p: PreloadProgress) => void
+  onProgress?: (p: PreloadProgress) => void,
+  options?: InitializeDailySystemOptions
 ): Promise<InitializeResult> {
   // 1. Try existing snapshot
   const existing = await loadDailySnapshot();
@@ -129,14 +138,33 @@ export async function initializeDailySystem(
       await yieldToBrowser(onProgress);
       // eslint-disable-next-line no-await-in-loop
       const before = typeof performance !== "undefined" ? performance.now() : Date.now();
-      snapshot = await runStep(snapshot, step);
+      snapshot = await runStep(snapshot, step, options);
       const after = typeof performance !== "undefined" ? performance.now() : Date.now();
       // eslint-disable-next-line no-console
       console.debug("[daily-initialize]", step, "took", Math.round(after - before), "ms");
 
       const onDisk = await loadDailySnapshot();
       snapshot = mergeSnapshotKeepBest(today, onDisk, snapshot);
-      await saveDailySnapshot(snapshot);
+      const storagePressure = await getStoragePressureFlag();
+      snapshot = {
+        ...snapshot,
+        ui: {
+          ...snapshot.ui,
+          storagePressure,
+        },
+      };
+      const prePersist = snapshot;
+      const snapshotToSave: DailySnapshot = {
+        ...snapshot,
+        ui: {
+          ...snapshot.ui,
+          persistVerified: true,
+        },
+      };
+      const persist = await saveDailySnapshotWithRetries(snapshotToSave);
+      snapshot = persist.ok
+        ? snapshotToSave
+        : mergeSnapshotKeepBest(today, await loadDailySnapshot(), prePersist);
 
       emitProgress(onProgress, step, i, "complete");
       // eslint-disable-next-line no-await-in-loop
@@ -150,20 +178,39 @@ export async function initializeDailySystem(
         ui: {
           ...merged.ui,
           offlineMode: true,
+          persistVerified: true,
         },
       };
-      await saveDailySnapshot(offlineSnapshot);
+      const offPersist = await saveDailySnapshotWithRetries(offlineSnapshot);
+      if (!offPersist.ok) {
+        console.error("[daily-initialize] offline snapshot persist failed", offPersist.error);
+      }
       return { kind: "fromCache", snapshot: offlineSnapshot };
     }
     throw e;
   }
+
+  const completedSnapshot: DailySnapshot = {
+    ...snapshot,
+    ui: {
+      ...snapshot.ui,
+      bootstrapCompletedAt: Date.now(),
+      persistVerified: true,
+    },
+  };
+  const finalPersist = await saveDailySnapshotWithRetries(completedSnapshot);
+  if (!finalPersist.ok) {
+    console.error("[daily-initialize] final bootstrap completion persist failed", finalPersist.error);
+  }
+  snapshot = finalPersist.ok ? completedSnapshot : snapshot;
 
   return { kind: "fresh", snapshot };
 }
 
 async function runStep(
   snapshot: DailySnapshot,
-  step: PreloadStepId
+  step: PreloadStepId,
+  options?: InitializeDailySystemOptions
 ): Promise<DailySnapshot> {
   switch (step) {
     case "fetchMissions": {
@@ -357,26 +404,25 @@ async function runStep(
     }
     case "preloadPages": {
       try {
-        const routes = [
-          "/dashboard",
-          "/tasks",
-          "/report",
-          "/analytics",
-          "/strategy",
-          "/learning",
-          "/learning/analytics",
-          "/budget",
-          "/settings",
-          "/profile",
-          "/help",
-          "/assistant",
-        ];
-        await Promise.allSettled(routes.map((path) => prefetchPage(path)));
+        const routes = BOOTSTRAP_PREFETCH_ROUTES.filter(
+          (path) => path !== "/assistant" || isAssistantEnabled()
+        );
+        const prefetchInvokedAt = options?.prefetchHref ? Date.now() : undefined;
+        if (options?.prefetchHref) {
+          for (const path of routes) {
+            try {
+              options.prefetchHref(path);
+            } catch {
+              // ignore individual prefetch errors
+            }
+          }
+        }
         return {
           ...snapshot,
           ui: {
             ...snapshot.ui,
-            pagesPrefetched: routes,
+            pagesPrefetched: [...routes],
+            ...(prefetchInvokedAt != null ? { prefetchInvokedAt } : {}),
           },
         };
       } catch {
@@ -385,25 +431,20 @@ async function runStep(
     }
     case "preloadAssets": {
       try {
-        const assets = [
-          getMascotSrcForPage("dashboard"),
-          getMascotSrcForPage("tasks"),
-          getMascotSrcForPage("budget"),
-          getMascotSrcForPage("profile"),
-        ];
-        assets.forEach((src) => {
-          try {
-            const img = new Image();
-            img.src = src;
-          } catch {
-            // ignore individual asset failures
-          }
-        });
+        const assets = getBootstrapShellVisualPreloadUrls();
+        const { loaded, total, failedUrls } = await preloadShellImagesDecoded(assets);
+        if (failedUrls.length) {
+          console.warn("[daily-initialize] shell visual decode misses", failedUrls.length, failedUrls.slice(0, 5));
+        }
+        const shellVisualsDecodeOk = total === 0 || loaded === total;
         return {
           ...snapshot,
           ui: {
             ...snapshot.ui,
             assetsPrefetched: true,
+            shellVisualsLoadedCount: loaded,
+            shellVisualsTotal: total,
+            shellVisualsDecodeOk,
           },
         };
       } catch {
@@ -411,34 +452,27 @@ async function runStep(
       }
     }
     case "prepareCache":
-    default:
+    default: {
+      let swOk = false;
       try {
-        // Ask the service worker to warm the authenticated day bundle (HTML + key snapshot endpoints).
         if (typeof navigator !== "undefined" && "serviceWorker" in navigator) {
-          navigator.serviceWorker.ready
-            .then((reg) => reg.active?.postMessage({ type: "WARMUP_BACKGROUND_CACHE", includeAuth: true, today: snapshot.date }))
-            .catch(() => {});
+          const warm = await requestSwCacheWarmupWithRetries({
+            includeAuth: true,
+            today: snapshot.date,
+          });
+          swOk = warm.ok;
         }
       } catch {
-        // ignore
+        swOk = false;
       }
-      return snapshot;
-  }
-}
-
-async function prefetchPage(path: string): Promise<void> {
-  const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), PRELOAD_PAGE_TIMEOUT_MS);
-  try {
-    await fetch(path, {
-      credentials: "include",
-      cache: "force-cache",
-      signal: controller.signal,
-    });
-  } catch {
-    // ignore individual prefetch errors/timeouts
-  } finally {
-    clearTimeout(timeoutId);
+      return {
+        ...snapshot,
+        ui: {
+          ...snapshot.ui,
+          swCacheWarmupOk: swOk,
+        },
+      };
+    }
   }
 }
 

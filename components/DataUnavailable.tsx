@@ -12,7 +12,7 @@ const copy: Record<Page, { title: string; body: string; backHref: string; backLa
   report: {
     title: "Insights tijdelijk niet beschikbaar",
     body: "De verbinding met de server duurde te lang. Vernieuw de pagina om het opnieuw te proberen.",
-    backHref: "/report",
+    backHref: "/profile?view=insights&tab=overview",
     backLabel: "Vernieuw insights",
   },
 };

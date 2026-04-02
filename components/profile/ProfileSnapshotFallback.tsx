@@ -3,10 +3,10 @@
 import Link from "next/link";
 import { useDailySnapshot } from "@/components/bootstrap/BootstrapGate";
 import { ProfileCommandDeckLayout } from "@/components/profile/ProfileCommandDeckLayout";
-import { profileEngineHref, profileHomeHref } from "@/lib/profile-routes";
+import { profileEngineHref, profileHomeHref, profileInsightsHref } from "@/lib/profile-routes";
 
 type Props = {
-  main: "home" | "engine";
+  main: "home" | "engine" | "insights";
 };
 
 export function ProfileSnapshotFallback({ main }: Props) {
@@ -34,6 +34,12 @@ export function ProfileSnapshotFallback({ main }: Props) {
             className="rounded-lg border border-[var(--card-border)] bg-[var(--bg-surface)]/30 px-3 py-2 text-xs font-semibold text-[var(--text-primary)] hover:bg-[var(--bg-hover)]/35"
           >
             Engine
+          </Link>
+          <Link
+            href={profileInsightsHref("overview")}
+            className="rounded-lg border border-[var(--card-border)] bg-[var(--bg-surface)]/30 px-3 py-2 text-xs font-semibold text-[var(--text-primary)] hover:bg-[var(--bg-hover)]/35"
+          >
+            Insights
           </Link>
           <Link
             href="/dashboard"

@@ -9,6 +9,8 @@ import {
   type ReactNode,
 } from "react";
 import type { UserPreferences } from "@/types/preferences.types";
+import type { Session } from "@supabase/supabase-js";
+import { createClient } from "@/lib/supabase/client";
 
 type PaydaySettings = {
   last_payday_date: string | null;
@@ -57,23 +59,40 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
   }, []);
 
   useEffect(() => {
-    const controller = new AbortController();
     let cancelled = false;
-    fetch("/api/settings", {
-      credentials: "include",
-      cache: "no-store",
-      signal: controller.signal,
-    })
-      .then((res) => (res.ok ? res.json() : null))
-      .then((data) => {
-        if (!cancelled) setSettings((data ?? null) as SettingsPayload);
-      })
-      .catch(() => {
+    const supabase = createClient();
+
+    const syncSettings = async (session: Session | null) => {
+      if (cancelled) return;
+      if (!session) {
+        setSettings(null);
+        return;
+      }
+      try {
+        const res = await fetch("/api/settings", {
+          credentials: "include",
+          cache: "no-store",
+        });
+        if (cancelled) return;
+        setSettings(res.ok ? ((await res.json()) as SettingsPayload) : null);
+      } catch {
         if (!cancelled) setSettings(null);
-      });
+      }
+    };
+
+    void supabase.auth.getSession().then(({ data: { session } }) => {
+      void syncSettings(session);
+    });
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      void syncSettings(session);
+    });
+
     return () => {
       cancelled = true;
-      controller.abort();
+      subscription.unsubscribe();
     };
   }, []);
 
@@ -81,6 +100,12 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
     const onFocus = () => {
       void (async () => {
         try {
+          const supabase = createClient();
+          const {
+            data: { session },
+          } = await supabase.auth.getSession();
+          if (!session) return;
+
           if (!settings) {
             setSettings(await fetchSettings());
             return;

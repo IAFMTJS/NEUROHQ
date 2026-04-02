@@ -1,4 +1,3 @@
-import { HeroMascotImage } from "@/components/HeroMascotImage";
 import { getUserPreferencesOrDefaults } from "@/app/actions/preferences";
 import { getLearningState } from "@/app/actions/learning-state";
 import { getXPIdentity } from "@/app/actions/xp";
@@ -43,16 +42,9 @@ export default async function LearningPage({ searchParams }: Props) {
       simplified={simplified}
       heroSlot={
         !simplified ? (
-          <div className="space-y-4">
-            <section className="mascot-hero mascot-hero-top mascot-hero-sharp" data-mascot-page="learning" aria-hidden>
-              <div className="mascot-hero-inner mx-auto">
-                <HeroMascotImage page="learning" className="mascot-img" heroLarge />
-              </div>
-            </section>
-            <p className="text-center text-xs text-[var(--text-muted)]">
-              Minder tabs, meer uitvoeren: focus op command center en je actieve leerpad.
-            </p>
-          </div>
+          <p className="text-center text-xs text-[var(--text-muted)]">
+            Minder tabs, meer uitvoeren: focus op command center en je actieve leerpad.
+          </p>
         ) : undefined
       }
     />

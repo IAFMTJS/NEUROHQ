@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import type { DailySnapshot } from "@/types/daily-snapshot";
 import {
   DAILY_BOOTSTRAP_STEPS,
@@ -20,11 +21,12 @@ const STEP_COPY: Record<PreloadStepId, string> = {
   fetchAnalytics: "Analytics & insights",
   fetchSettings: "Preferences & account",
   preloadPages: "App routes & modules",
-  preloadAssets: "Visuals & mascots",
+  preloadAssets: "Shell visuals — load & decode into cache",
   prepareCache: "Finalizing local cache",
 };
 
 export function BootstrapLoader({ onReady }: Props) {
+  const router = useRouter();
   const [snapshot, setSnapshot] = useState<DailySnapshot | null>(null);
   const [kind, setKind] = useState<InitializeResult["kind"] | null>(null);
   const [progress, setProgress] = useState<PreloadProgress | null>(null);
@@ -34,9 +36,12 @@ export function BootstrapLoader({ onReady }: Props) {
     let cancelled = false;
     const run = async () => {
       try {
-        const result = await initializeDailySystem((p) => {
-          if (!cancelled) setProgress(p);
-        });
+        const result = await initializeDailySystem(
+          (p) => {
+            if (!cancelled) setProgress(p);
+          },
+          { prefetchHref: (href) => router.prefetch(href) }
+        );
         if (cancelled) return;
         setSnapshot(result.snapshot);
         setKind(result.kind);

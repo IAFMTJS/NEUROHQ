@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { profileInsightsHref } from "@/lib/profile-routes";
 
 type Week = { week_start: string; week_end: string };
 
@@ -20,11 +21,7 @@ export function ReportWeekSelector({
 }) {
   const hrefForWeek = (weekStart: string | null) => {
     if (buildWeekHref) return buildWeekHref(weekStart);
-    const params = new URLSearchParams();
-    if (weekStart) params.set("weekStart", weekStart);
-    if (activeTab) params.set("tab", activeTab);
-    const query = params.toString();
-    return query ? `/report?${query}` : "/report";
+    return profileInsightsHref(activeTab ?? "overview", weekStart ?? undefined);
   };
 
   const isCurrent = selectedWeekStart === currentWeekStart;

@@ -26,7 +26,6 @@ import { getIdentityEngine } from "@/app/actions/identity-engine";
 import { getUserPreferencesOrDefaults } from "@/app/actions/preferences";
 import { MissionsProvider, TasksTabsShell, TodayMissionsGridFromStore } from "@/components/missions";
 import type { TasksTabId } from "@/components/missions/TasksTabsShell";
-import { TasksDailyBootstrap } from "@/components/missions/TasksDailyBootstrap";
 import { TasksMissionsSnapshotFallback } from "@/components/missions/TasksMissionsSnapshotFallback";
 import { TasksCalendarAsync } from "./TasksCalendarAsync";
 import { getGrowthEngineSnapshot } from "@/app/actions/growth-snapshot";
@@ -367,12 +366,13 @@ export default async function TasksPage({ searchParams }: Props) {
       header={headerSection}
       fillViewport={simplifiedTasksFillLayout}
       stickyTabs={simplifiedTasksFillLayout}
-    >
-      {activeTab === "missions" ? (
+      dailyBootstrapDateStr={dateStr}
+      panelMissions={
         <Suspense fallback={<TasksMissionsSnapshotFallback dateStr={dateStr} />}>
           <MissionsSectionAsync dateStr={dateStr} backlog={backlog} growthFromGrowthPage={growthFromGrowthPage} />
         </Suspense>
-      ) : activeTab === "calendar" ? (
+      }
+      panelCalendar={
         <Suspense fallback={null}>
           <CalendarSectionAsync
             dateStr={dateStr}
@@ -383,12 +383,13 @@ export default async function TasksPage({ searchParams }: Props) {
             simplifiedContent={prefs.simplified_content === true}
           />
         </Suspense>
-      ) : (
+      }
+      panelRoutine={
         <Suspense fallback={null}>
           <RoutineSectionAsync dateStr={dateStr} />
         </Suspense>
-      )}
-    </TasksTabsShell>
+      }
+    />
   );
 
   return (
@@ -396,7 +397,6 @@ export default async function TasksPage({ searchParams }: Props) {
       className={`tasks-page-root relative isolate overflow-x-hidden ${simplifiedTasksFillLayout ? "flex min-h-0 flex-1 flex-col" : "min-h-screen min-h-[100dvh]"}`}
     >
       <MissionsProvider dateStr={dateStr}>
-        <TasksDailyBootstrap dateStr={dateStr} enabled={activeTab === "missions"} />
         <div
           className={
             simplifiedTasksFillLayout

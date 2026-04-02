@@ -1,5 +1,7 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // Dev: Turbopack via `next dev --turbopack` in package.json (also the default in Next.js 16).
+  turbopack: {},
   // Production build uses --webpack (see package.json "build") so package subpath exports
   // (e.g. @vercel/analytics/next) resolve correctly; Turbopack has known issues with these.
   // Temporary: allows build to complete when types/database.types.ts is out of sync with Supabase.
@@ -36,8 +38,9 @@ const nextConfig = {
     browserDebugInfoInTerminal: true,
     serverComponentsHmrCache: true,
     optimizePackageImports: ['@react-three/fiber', '@react-three/drei', 'recharts'],
-    /* Disabled: can cause endless recompilation. Re-enable for faster dev after first compile. */
-    turbopackFileSystemCacheForDev: false,
+    // Persist Turbopack output between dev restarts (much faster cold starts). If the dev server
+    // ever spins in an endless recompile loop, set this back to false.
+    turbopackFileSystemCacheForDev: true,
   },
   logging: {
     fetches: {

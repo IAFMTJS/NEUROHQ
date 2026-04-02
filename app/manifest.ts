@@ -7,7 +7,9 @@ const baseUrl =
     : null;
 
 export default function manifest(): MetadataRoute.Manifest {
+  const originScopedId = baseUrl ? `${baseUrl}/` : "/";
   return {
+    id: originScopedId,
     name: "NEUROHQ",
     short_name: "NEUROHQ",
     description: "Nervous-system-aware personal operating system",

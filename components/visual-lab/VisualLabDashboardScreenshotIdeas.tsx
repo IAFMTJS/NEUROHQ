@@ -2,7 +2,7 @@
 import type { ReactNode } from "react";
 import { CommanderMascotPedestal, CommanderStatRing } from "@/components/commander";
 import { DashboardCommandDeckFrame } from "@/components/layout/DashboardCommandDeckFrame";
-import { getMascotSrcForPage } from "@/lib/mascots";
+import { getDashboardMascotSrc } from "@/lib/mascots";
 import { VISUAL_LAB_PEDESTAL_MOCK } from "@/components/visual-lab/VisualLabPedestalHalfRingAlternatives";
 
 const chipClass =
@@ -41,7 +41,7 @@ function StatRingsRow() {
 function MascotStack() {
   return (
     <div className="mascot-hero-mascot-stack relative mx-auto flex w-full justify-center">
-      <img src={getMascotSrcForPage("dashboard")} alt="" className="mascot-img" aria-hidden />
+      <img src={getDashboardMascotSrc()} alt="" className="mascot-img" aria-hidden />
     </div>
   );
 }
@@ -172,7 +172,7 @@ function ScreenshotIdeaRunwayDeck() {
               <div className="relative">
                 <div className="relative z-[2] -mb-8 flex justify-center sm:-mb-10">
                   <img
-                    src={getMascotSrcForPage("dashboard")}
+                    src={getDashboardMascotSrc()}
                     alt=""
                     className="h-[min(9rem,38vw)] max-h-[168px] w-auto object-contain object-bottom"
                     style={{ filter: "drop-shadow(0 16px 34px rgba(0,0,0,0.55))" }}

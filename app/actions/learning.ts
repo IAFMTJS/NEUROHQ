@@ -45,7 +45,7 @@ export async function updateWeeklyLearningTarget(minutes: number) {
   if (error) throw new Error(error.message);
   revalidatePath("/learning");
   revalidatePath("/dashboard");
-  revalidatePath("/report");
+  revalidatePath("/profile");
 }
 
 export async function getLearningSessions(weekStart?: string, weekEnd?: string) {

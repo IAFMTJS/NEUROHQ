@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { profileInsightsHref } from "@/lib/profile-routes";
 
 type Props = {
   insight: string;
@@ -10,7 +11,7 @@ type Props = {
 
 export function PatternInsightCard({
   insight,
-  detailsHref = "/report",
+  detailsHref = profileInsightsHref("overview"),
   suggestion,
 }: Props) {
   return (
@@ -34,7 +35,7 @@ export function PatternInsightCard({
           DETAILS
         </Link>
         <Link
-          href="/report?tab=patterns"
+          href={profileInsightsHref("patterns")}
           className="text-center text-sm font-medium text-[var(--accent-focus)] hover:underline"
         >
           See 30-day patterns →

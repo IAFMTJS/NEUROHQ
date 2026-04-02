@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { profileInsightsHref } from "@/lib/profile-routes";
 
 type Props = {
   learningMinutes: number;
@@ -25,7 +26,7 @@ export function OnTrackCard({ learningMinutes, learningTarget, strategySet }: Pr
           <span className="text-[var(--text-muted)]">Strategy set</span>
           <span className={strategySet ? "text-green-400/90" : "text-[var(--text-muted)]"}>{strategySet ? "Yes" : "No"}</span>
         </div>
-        <Link href="/report" className="mt-2 inline-block text-sm font-medium text-[var(--accent-focus)] hover:underline">
+        <Link href={profileInsightsHref("diagnostics")} className="mt-2 inline-block text-sm font-medium text-[var(--accent-focus)] hover:underline">
           Reality report →
         </Link>
       </div>
