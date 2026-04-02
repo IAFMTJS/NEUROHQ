@@ -4,7 +4,7 @@
 // - DYNAMIC_CACHE (per dag): HTML/API offline fallback; _next/static JS/CSS = network-first, daarna cache voor offline
 // - IndexedDB (neurohq-offline): offline mutaties (POST/PUT etc.) → gesynchroniseerd zodra er weer netwerk is
 // Bump this when UI/layout changes so authenticated HTML cache doesn't keep old shells after refresh.
-const CACHE_VERSION = "v17";
+const CACHE_VERSION = "v18";
 const STATIC_CACHE = `neurohq-static-${CACHE_VERSION}`;
 const OFFLINE_PAGE = "/offline";
 
@@ -646,7 +646,9 @@ self.addEventListener("fetch", function (event) {
     return;
   }
 
-  // HTML pages: authenticated app routes = cache-first + background revalidate (instant PWA reopen).
+  // HTML pages: authenticated app routes = NETWORK-first.
+  // Cache-first HTML can serve an old shell that references chunk filenames that no longer exist after deploy,
+  // which shows up as ChunkLoadError 404s even when the user is online.
   if (event.request.headers.get("accept")?.includes("text/html")) {
     var navRequest = new Request(event.request.url, {
       headers: event.request.headers,
@@ -659,45 +661,26 @@ self.addEventListener("fetch", function (event) {
         const pathname = url.pathname;
 
         if (isAuthenticatedAppRoutePath(pathname)) {
-          return cache.match(event.request).then(function (cached) {
-            if (cached) {
-              // Revalidate in the background; do not block the UI.
-              waitUntilIfPossible(
-                event,
-                (event.preloadResponse || Promise.resolve(null))
-                  .then(function (preloadedResponse) {
-                    return preloadedResponse || fetch(navRequest);
-                  })
-                  .then(function (response) {
-                    if (response && response.ok && event.request.method === "GET") {
-                      safeCachePut(cache, event.request, response.clone());
-                    }
-                  })
-              );
-              return cached;
-            }
-
-            // First visit: use preload/network and cache; fallback to offline page when unavailable.
-            return (event.preloadResponse || Promise.resolve(null))
-              .then(function (preloadedResponse) {
-                if (preloadedResponse) return preloadedResponse;
-                return fetch(navRequest);
-              })
-              .then(function (response) {
-                if (response && response.ok && event.request.method === "GET") {
-                  safeCachePut(cache, event.request, response.clone());
-                }
-                return response;
-              })
-              .catch(function () {
-                return cache.match(event.request).then(function (c) {
-                  if (c) return c;
-                  return caches.match(OFFLINE_PAGE).then(function (offline) {
-                    return offline || new Response("Offline", { status: 503 });
-                  });
+          // Prefer preload/network so we always get the newest HTML shell when online.
+          return (event.preloadResponse || Promise.resolve(null))
+            .then(function (preloadedResponse) {
+              return preloadedResponse || fetch(navRequest);
+            })
+            .then(function (response) {
+              if (response && response.ok && event.request.method === "GET") {
+                safeCachePut(cache, event.request, response.clone());
+              }
+              return response;
+            })
+            .catch(function () {
+              // Offline (or network failure): fall back to cached HTML (if any) or offline page.
+              return cache.match(event.request).then(function (c) {
+                if (c) return c;
+                return caches.match(OFFLINE_PAGE).then(function (offline) {
+                  return offline || new Response("Offline", { status: 503 });
                 });
               });
-          });
+            });
         }
 
         // Other HTML: keep existing network-first behavior.
