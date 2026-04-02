@@ -5,7 +5,7 @@ import {
   clearDeviceDailySnapshot,
   getDeviceDailySnapshotPayload,
   putDeviceDailySnapshotPayload,
-} from "@/lib/device-daily-snapshot-idb";
+} from "@/lib/neurohq-device-idb";
 import {
   LATEST_SNAPSHOT_VERSION,
   type DailySnapshot,

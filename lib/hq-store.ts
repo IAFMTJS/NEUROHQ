@@ -1,5 +1,10 @@
 import { create } from "zustand";
-import { persist } from "zustand/middleware";
+import { createJSONStorage, persist, type StateStorage } from "zustand/middleware";
+import {
+  clearDeviceHqStore,
+  getDeviceHqStorePayload,
+  putDeviceHqStorePayload,
+} from "@/lib/neurohq-device-idb";
 import type { GameState } from "@/lib/dcic/types";
 import type { DashboardCritical, DashboardSecondary } from "@/types/dashboard-data.types";
 import type { Task } from "@/types/database.types";
@@ -67,6 +72,49 @@ type HQStore = DCICSlice & DashboardSlice & TasksSlice & TodaySlice & BudgetSlic
 
 const HQ_PERSIST_KEY = "neurohq-hq-store";
 const HQ_PERSIST_VERSION = 1;
+
+/** localStorage + IndexedDB mirror; async getItem restores HQ when LS was cleared but IDB still has data. */
+const hqDualStorage: StateStorage = {
+  getItem: async (name) => {
+    if (typeof window === "undefined") return null;
+    const fromLs = localStorage.getItem(name);
+    if (fromLs) return fromLs;
+    if (name === HQ_PERSIST_KEY) {
+      const fromIdb = await getDeviceHqStorePayload();
+      if (fromIdb) {
+        try {
+          localStorage.setItem(name, fromIdb);
+        } catch {
+          // LS still full; hydration still works from returned string
+        }
+      }
+      return fromIdb;
+    }
+    return null;
+  },
+  setItem: async (name, value) => {
+    if (typeof window === "undefined") return;
+    localStorage.setItem(name, value);
+    if (name === HQ_PERSIST_KEY) {
+      try {
+        await putDeviceHqStorePayload(value);
+      } catch (e) {
+        console.warn("[hq-store] IndexedDB mirror failed (localStorage ok)", e);
+      }
+    }
+  },
+  removeItem: async (name) => {
+    if (typeof window === "undefined") return;
+    localStorage.removeItem(name);
+    if (name === HQ_PERSIST_KEY) {
+      try {
+        await clearDeviceHqStore();
+      } catch {
+        // ignore
+      }
+    }
+  },
+};
 
 function normalizePersistedState(persisted: unknown): unknown {
   if (!persisted || typeof persisted !== "object") return persisted;
@@ -155,13 +203,14 @@ export function flushHQStoreToStorage(): void {
   try {
     if (typeof window === "undefined" || !window.localStorage) return;
     const state = useHQStore.getState();
-    window.localStorage.setItem(
-      HQ_PERSIST_KEY,
-      JSON.stringify({
-        state: partialize(state),
-        version: HQ_PERSIST_VERSION,
-      })
-    );
+    const payload = JSON.stringify({
+      state: partialize(state),
+      version: HQ_PERSIST_VERSION,
+    });
+    window.localStorage.setItem(HQ_PERSIST_KEY, payload);
+    void putDeviceHqStorePayload(payload).catch((e) => {
+      console.warn("[hq-store] flush IndexedDB mirror failed", e);
+    });
   } catch {
     // Ignore quota or security errors
   }
@@ -251,6 +300,7 @@ export const useHQStore = create<HQStore>()(
     }),
     {
       name: HQ_PERSIST_KEY,
+      storage: createJSONStorage(() => hqDualStorage),
       partialize,
       version: HQ_PERSIST_VERSION,
       migrate: (persistedState) => normalizePersistedState(persistedState),
