@@ -3,7 +3,8 @@
 // - STATIC_CACHE (install): /offline, manifest, app-icon, core HUD visuals
 // - DYNAMIC_CACHE (per dag): HTML/API offline fallback; _next/static JS/CSS = network-first, daarna cache voor offline
 // - IndexedDB (neurohq-offline): offline mutaties (POST/PUT etc.) → gesynchroniseerd zodra er weer netwerk is
-const CACHE_VERSION = "v15";
+// Bump this when UI/layout changes so authenticated HTML cache doesn't keep old shells after refresh.
+const CACHE_VERSION = "v16";
 const STATIC_CACHE = `neurohq-static-${CACHE_VERSION}`;
 const OFFLINE_PAGE = "/offline";
 
