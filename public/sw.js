@@ -4,7 +4,7 @@
 // - DYNAMIC_CACHE (per dag): HTML/API offline fallback; _next/static JS/CSS = network-first, daarna cache voor offline
 // - IndexedDB (neurohq-offline): offline mutaties (POST/PUT etc.) → gesynchroniseerd zodra er weer netwerk is
 // Bump this when UI/layout changes so authenticated HTML cache doesn't keep old shells after refresh.
-const CACHE_VERSION = "v19";
+const CACHE_VERSION = "v20";
 const STATIC_CACHE = `neurohq-static-${CACHE_VERSION}`;
 const OFFLINE_PAGE = "/offline";
 
@@ -45,6 +45,7 @@ function isAuthenticatedAppRoutePath(pathname) {
   return (
     pathname === "/dashboard" ||
     pathname === "/tasks" ||
+    pathname === "/missions-v2" ||
     pathname === "/budget" ||
     pathname === "/strategy" ||
     pathname === "/analytics" ||
@@ -54,6 +55,26 @@ function isAuthenticatedAppRoutePath(pathname) {
     // nested analytics / learning pages should behave the same once visited
     pathname.startsWith("/learning")
   );
+}
+
+/** True for App Router flight/RSC fetches — must never use the generic cache-first handler. */
+function isNextFlightLikeRequest(request, url) {
+  try {
+    const h = request.headers;
+    const accept = h.get("accept") || "";
+    if (accept.includes("text/x-component")) return true;
+    // Align with next/dist/client/components/app-router-headers FLIGHT_HEADERS + _rsc query.
+    if (h.get("rsc") === "1") return true;
+    if (h.has("next-router-state-tree")) return true;
+    if (h.has("next-router-prefetch")) return true;
+    if (h.has("next-router-segment-prefetch")) return true;
+    if (h.has("next-hmr-refresh")) return true;
+    const q = url.search || "";
+    if (q.includes("_rsc")) return true;
+    return false;
+  } catch {
+    return false;
+  }
 }
 
 function isSnapshotApiRequest(url) {
@@ -261,6 +282,7 @@ const PUBLIC_ROUTES_TO_PREFETCH = [
 const AUTH_ROUTES_TO_PREFETCH = [
   "/dashboard",
   "/tasks",
+  "/missions-v2",
   "/budget",
   "/strategy",
   "/analytics",
@@ -446,10 +468,8 @@ self.addEventListener("fetch", function (event) {
   // If these get cached or delayed, client-side Link navigations can feel "stuck",
   // while opening the same URL in a new tab (full document navigation) feels fast.
   try {
-    const accept = event.request.headers.get("accept") || "";
-    const hasRouterState = event.request.headers.has("next-router-state-tree");
-    const isRsc = accept.includes("text/x-component") || hasRouterState || url.search.includes("_rsc=");
-    if (url.pathname.startsWith("/_next/") || isRsc) {
+    const isFlight = isNextFlightLikeRequest(event.request, url);
+    if (url.pathname.startsWith("/_next/") || isFlight) {
       safeRespondWith(event, function () {
         return fetch(event.request).catch(function () {
           return new Response("Offline", { status: 503 });
