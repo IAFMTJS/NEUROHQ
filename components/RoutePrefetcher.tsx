@@ -37,8 +37,9 @@ function runWhenIdle(fn: () => void): () => void {
     const id = window.requestIdleCallback(fn, { timeout: 500 });
     return () => window.cancelIdleCallback(id);
   }
-  const t = window.setTimeout(fn, 200);
-  return () => window.clearTimeout(t);
+  // Use global timers to avoid DOM lib inference edge-cases in certain TS configs.
+  const t = globalThis.setTimeout(fn, 200);
+  return () => globalThis.clearTimeout(t);
 }
 
 /**
