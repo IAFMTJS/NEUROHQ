@@ -4,6 +4,7 @@
  */
 
 import { rankFromLevel } from "@/lib/rank-ladder";
+import { levelFromTotalXP } from "@/lib/xp";
 import type { GameState, Mission, SimulationResult } from "./types";
 
 /**
@@ -25,7 +26,7 @@ export function simulateCompleteMission(
 
   // Calculate projected XP and level
   const projectedXP = gameState.currentXP + xpGain;
-  const newLevel = calculateLevel(projectedXP, gameState.level);
+  const newLevel = levelFromTotalXP(projectedXP);
   const newRank = rankFromLevel(newLevel);
 
   // Calculate energy after mission
@@ -78,35 +79,6 @@ export function simulateStartMission(
     energyAfter,
     projectedCompletionTime: completionTime.toISOString(),
   };
-}
-
-/**
- * Calculates level from total XP
- * Uses exponential scaling: XP required = 1000 * 1.15^(level - 4)
- */
-export function calculateLevel(totalXP: number, currentLevel: number): number {
-  let level = currentLevel;
-  let xpForCurrentLevel = calculateXPForLevel(level);
-  let xpAccumulated = totalXP;
-
-  // Check if we level up
-  while (xpAccumulated >= xpForCurrentLevel) {
-    xpAccumulated -= xpForCurrentLevel;
-    level++;
-    xpForCurrentLevel = calculateXPForLevel(level);
-  }
-
-  return level;
-}
-
-/**
- * Calculates XP required for a specific level
- */
-function calculateXPForLevel(level: number): number {
-  if (level <= 4) {
-    return 1000;
-  }
-  return Math.floor(1000 * Math.pow(1.15, level - 4));
 }
 
 /** Rank from level (1–100 ladder). */

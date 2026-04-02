@@ -10,7 +10,8 @@ import type {
   Mission,
   BehaviourLogEntry,
 } from "./types";
-import { calculateLevel, calculateRank } from "./simulation";
+import { calculateRank } from "./simulation";
+import { levelFromTotalXP, xpToNextLevel as xpRemainingToNextLevel } from "@/lib/xp";
 import { updateDifficulty } from "./difficulty-engine";
 import { getModeConfig } from "./mode-engine";
 import { applyActiveEvents } from "./event-engine";
@@ -111,11 +112,7 @@ export function executeCompleteMission(
       eventEffects.xpMultiplier
   );
   updatedState.currentXP += xpGain;
-
-  // Check for level up
-  if (updatedState.currentXP >= updatedState.xpToNextLevel) {
-    levelUp(updatedState);
-  }
+  syncXpLevelFields(updatedState);
 
   // Update streak
   updateStreak(updatedState);
@@ -193,6 +190,10 @@ export function executeCompleteMission(
     const lockUntil = new Date(now.getTime() + 60 * 60 * 1000);
     updatedState.mode.lockedUntil = lockUntil.toISOString();
   }
+
+  syncXpLevelFields(updatedState);
+  updatedState.rank = calculateRank(updatedState.level);
+  updatedState.difficultyEngine = updateDifficulty(updatedState.level, updatedState.rank);
 
   // Note: Logging happens in server action, not here
 
@@ -287,23 +288,10 @@ export function executeStartMission(
   };
 }
 
-/**
- * Level up logic
- */
-function levelUp(gameState: GameState): void {
-  gameState.currentXP -= gameState.xpToNextLevel;
-  gameState.level += 1;
-  gameState.xpToNextLevel = calculateXPForLevel(gameState.level);
-}
-
-/**
- * Calculates XP required for a specific level
- */
-function calculateXPForLevel(level: number): number {
-  if (level <= 4) {
-    return 1000;
-  }
-  return Math.floor(1000 * Math.pow(1.15, level - 4));
+/** `user_xp.total_xp` is cumulative; level and remainder-to-next always derive from it (same as profile / lib/xp). */
+function syncXpLevelFields(gameState: GameState): void {
+  gameState.level = levelFromTotalXP(gameState.currentXP);
+  gameState.xpToNextLevel = xpRemainingToNextLevel(gameState.currentXP);
 }
 
 /**

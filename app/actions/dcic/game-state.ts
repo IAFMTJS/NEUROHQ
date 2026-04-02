@@ -15,6 +15,7 @@ import { autoModeCheck, isModeLocked, passiveRecoveryTick, switchMode } from "@/
 import { maybeAutoTriggerOverdrive } from "@/lib/dcic/overdrive-auto";
 import { updateDifficulty, generateDailyMissions } from "@/lib/dcic/difficulty-engine";
 import { rankFromLevel } from "@/lib/rank-ladder";
+import { levelFromTotalXP, xpToNextLevel as xpRemainingToNextLevel } from "@/lib/xp";
 import { yesterdayDate } from "@/lib/utils/timezone";
 
 const DCIC_MODE_VALUES: GameState["mode"]["current"][] = [
@@ -136,7 +137,7 @@ export async function getGameState(
   const warTierDaysLast7 = countWarTierDays((dailyStateWeek ?? []) as DailyRowForBrain[]);
 
   const totalXP = (xpData?.total_xp as number) ?? 0;
-  const level = calculateLevelFromXP(totalXP);
+  const level = levelFromTotalXP(totalXP);
 
   const missions: Mission[] = (missionsData || []).map((m: Record<string, unknown>) => ({
     id: m.id as string,
@@ -185,7 +186,7 @@ export async function getGameState(
   const gameState: GameState = {
     level,
     currentXP: totalXP,
-    xpToNextLevel: calculateXPForLevel(level),
+    xpToNextLevel: xpRemainingToNextLevel(totalXP),
     stats: {
       energy: dailyBrainCircleToStat100(ds?.energy, 50),
       focus: dailyBrainCircleToStat100(ds?.focus, 50),
@@ -416,9 +417,15 @@ export async function getGeneratedDailyMissions() {
 }
 
 /**
- * Saves gameState to database
+ * Saves gameState to database.
+ * @param persistUserXp — When false, skips writing `user_xp` (e.g. daily bootstrap) so we never clobber
+ *   cumulative XP from `addXP` / tasks with a stale or mis-modeled DCIC snapshot.
  */
-export async function saveGameState(gameState: GameState): Promise<boolean> {
+export async function saveGameState(
+  gameState: GameState,
+  options?: { persistUserXp?: boolean }
+): Promise<boolean> {
+  const persistUserXp = options?.persistUserXp !== false;
   const supabase = await createClient();
   const {
     data: { user },
@@ -426,14 +433,16 @@ export async function saveGameState(gameState: GameState): Promise<boolean> {
   if (!user) return false;
 
   try {
-    // Update XP
-    await supabase
-      .from("user_xp")
-      .upsert({
-        user_id: user.id,
-        total_xp: gameState.currentXP,
-      })
-      .eq("user_id", user.id);
+    if (persistUserXp) {
+      await supabase.from("user_xp").upsert(
+        {
+          user_id: user.id,
+          total_xp: gameState.currentXP,
+          updated_at: new Date().toISOString(),
+        },
+        { onConflict: "user_id" }
+      );
+    }
 
     // Update missions
     for (const mission of gameState.missions) {
@@ -497,32 +506,5 @@ export async function persistDcicOperationalMode(
   switchMode(gameState, newMode, { forced: true });
   const ok = await saveGameState(gameState);
   return ok ? { ok: true } : { ok: false, error: "Opslaan mislukt" };
-}
-
-/**
- * Calculates level from total XP
- */
-function calculateLevelFromXP(totalXP: number): number {
-  let level = 1;
-  let xpRequired = 1000;
-  let xpAccumulated = totalXP;
-
-  while (xpAccumulated >= xpRequired && level < 100) {
-    xpAccumulated -= xpRequired;
-    level++;
-    xpRequired = calculateXPForLevel(level);
-  }
-
-  return level;
-}
-
-/**
- * Calculates XP required for a specific level
- */
-function calculateXPForLevel(level: number): number {
-  if (level <= 4) {
-    return 1000;
-  }
-  return Math.floor(1000 * Math.pow(1.15, level - 4));
 }
 

@@ -109,7 +109,7 @@ export async function GET(request: NextRequest) {
     const now = Date.now();
     updateDynamicMissions(dcicGameState, now);
     triggerRandomEvents(dcicGameState, dateStr);
-    await saveGameState(dcicGameState);
+    await saveGameState(dcicGameState, { persistUserXp: false });
 
     const learningState = await getLearningState();
     const learning: LearningSnapshot = {
