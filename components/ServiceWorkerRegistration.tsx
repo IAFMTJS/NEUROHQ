@@ -20,8 +20,31 @@ export function ServiceWorkerRegistration() {
         p === "/report" ||
         p === "/settings" ||
         p === "/profile" ||
+        p === "/help" ||
+        p === "/assistant" ||
         p.startsWith("/learning")
       );
+    };
+
+    const postWarmupAndSync = (reg: ServiceWorkerRegistration) => {
+      const includeAuth = isAuthenticatedWarmupRoute();
+      const today = new Date().toISOString().slice(0, 10);
+      reg.active?.postMessage({ type: "WARMUP_BACKGROUND_CACHE", includeAuth, today });
+      if (navigator.onLine) {
+        reg.active?.postMessage({ type: "SYNC_OFFLINE_QUEUE" });
+      }
+    };
+
+    /** iOS WebKit often suspends the SW; nudge cache refresh when the PWA returns to foreground. */
+    let lastForegroundWarmup = 0;
+    const FOREGROUND_WARMUP_MIN_MS = 90_000;
+
+    const onForeground = () => {
+      if (document.visibilityState !== "visible") return;
+      const now = Date.now();
+      if (now - lastForegroundWarmup < FOREGROUND_WARMUP_MIN_MS) return;
+      lastForegroundWarmup = now;
+      navigator.serviceWorker.ready.then(postWarmupAndSync).catch(() => {});
     };
 
     const onControllerChange = () => window.location.reload();
@@ -32,6 +55,7 @@ export function ServiceWorkerRegistration() {
       navigator.serviceWorker.ready.then((reg) => reg.active?.postMessage({ type: "SYNC_OFFLINE_QUEUE" }));
     };
     window.addEventListener("online", syncOfflineQueueWhenOnline);
+    document.addEventListener("visibilitychange", onForeground);
 
     let intervalId: ReturnType<typeof setInterval> | undefined;
     navigator.serviceWorker
@@ -39,13 +63,7 @@ export function ServiceWorkerRegistration() {
       .then((registration) => {
         navigator.serviceWorker.ready
           .then((readyRegistration) => {
-            // Avoid caching unauthenticated HTML into the day cache; only warmup auth pages when we're on an auth surface.
-            const includeAuth = isAuthenticatedWarmupRoute();
-            const today = new Date().toISOString().slice(0, 10);
-            readyRegistration.active?.postMessage({ type: "WARMUP_BACKGROUND_CACHE", includeAuth, today });
-            if (navigator.onLine) {
-              readyRegistration.active?.postMessage({ type: "SYNC_OFFLINE_QUEUE" });
-            }
+            postWarmupAndSync(readyRegistration);
           })
           .catch(() => {});
 
@@ -74,6 +92,7 @@ export function ServiceWorkerRegistration() {
     return () => {
       navigator.serviceWorker.removeEventListener("controllerchange", onControllerChange);
       window.removeEventListener("online", syncOfflineQueueWhenOnline);
+      document.removeEventListener("visibilitychange", onForeground);
       if (intervalId !== undefined) clearInterval(intervalId);
     };
   }, []);

@@ -9,6 +9,7 @@ import {
   getTodayDateStr,
 } from "@/lib/dashboard-cache";
 import { useHQStore, getPersistedDashboardSync } from "@/lib/hq-store";
+import { getNavLoadAbortSignal } from "@/lib/navigation/nav-load-abort";
 
 export type { DashboardCritical, DashboardSecondary };
 
@@ -27,10 +28,11 @@ type DashboardDataContextValue = DashboardDataState & {
 const DashboardDataContext = createContext<DashboardDataContextValue | null>(null);
 
 /** Single request returning both critical and secondary; no duplicate work on server. */
-export async function fetchAll(): Promise<{ critical: DashboardCritical; secondary: DashboardSecondary }> {
+export async function fetchAll(signal?: AbortSignal): Promise<{ critical: DashboardCritical; secondary: DashboardSecondary }> {
   const res = await fetch(`/api/dashboard/data?part=all&ts=${Date.now()}`, {
     credentials: "include",
     cache: "no-store",
+    signal,
   });
   if (!res.ok) {
     const body = await res.json().catch(() => ({}));
@@ -42,10 +44,11 @@ export async function fetchAll(): Promise<{ critical: DashboardCritical; seconda
   return data;
 }
 
-export async function fetchCritical(): Promise<DashboardCritical> {
+export async function fetchCritical(signal?: AbortSignal): Promise<DashboardCritical> {
   const res = await fetch(`/api/dashboard/data?part=critical&ts=${Date.now()}`, {
     credentials: "include",
     cache: "no-store",
+    signal,
   });
   if (!res.ok) {
     const body = await res.json().catch(() => ({}));
@@ -55,10 +58,11 @@ export async function fetchCritical(): Promise<DashboardCritical> {
   return res.json() as Promise<DashboardCritical>;
 }
 
-export async function fetchSecondary(): Promise<DashboardSecondary> {
+export async function fetchSecondary(signal?: AbortSignal): Promise<DashboardSecondary> {
   const res = await fetch(`/api/dashboard/data?part=secondary&ts=${Date.now()}`, {
     credentials: "include",
     cache: "no-store",
+    signal,
   });
   if (!res.ok) {
     const body = await res.json().catch(() => ({}));
@@ -175,18 +179,20 @@ export function DashboardDataProvider({ children, initialCritical, initialSecond
       loadingSecondary: needSecondary,
     }));
 
+    const loadSignal = getNavLoadAbortSignal();
+
     try {
       let critical = currentState.critical ?? cachedCritical;
       let secondary = currentState.secondary ?? cachedSecondary;
 
       if (needCritical && needSecondary) {
-        const all = await fetchAll();
+        const all = await fetchAll(loadSignal);
         critical = all.critical;
         secondary = all.secondary;
       } else if (needCritical) {
-        critical = await fetchCritical();
+        critical = await fetchCritical(loadSignal);
       } else if (needSecondary) {
-        secondary = await fetchSecondary();
+        secondary = await fetchSecondary(loadSignal);
       }
 
       setState((prev) => ({
@@ -203,6 +209,10 @@ export function DashboardDataProvider({ children, initialCritical, initialSecond
     } catch (err) {
       setState((prev) => ({ ...prev, loadingCritical: false, loadingSecondary: false }));
       preloadStartedRef.current = false; // Allow retry
+      const aborted =
+        (err instanceof DOMException && err.name === "AbortError") ||
+        (err instanceof Error && err.name === "AbortError");
+      if (aborted) return;
       throw err; // So shell can show error when it called preloadDashboard()
     }
   }, []);

@@ -707,9 +707,8 @@ self.addEventListener("fetch", function (event) {
     return;
   }
 
-  // HTML pages: authenticated app routes = NETWORK-first.
-  // Cache-first HTML can serve an old shell that references chunk filenames that no longer exist after deploy,
-  // which shows up as ChunkLoadError 404s even when the user is online.
+  // HTML pages: authenticated app routes = stale-while-revalidate (cache hit → instant; then network refresh).
+  // Mid-day deploys without refresh can still reference removed chunks; "Nieuwe versie" / hard refresh fixes that.
   if (event.request.headers.get("accept")?.includes("text/html")) {
     var navRequest = new Request(event.request.url, {
       headers: event.request.headers,
@@ -722,26 +721,38 @@ self.addEventListener("fetch", function (event) {
         const pathname = url.pathname;
 
         if (isAuthenticatedAppRoutePath(pathname)) {
-          // Prefer preload/network so we always get the newest HTML shell when online.
-          return (event.preloadResponse || Promise.resolve(null))
-            .then(function (preloadedResponse) {
-              return preloadedResponse || fetch(navRequest);
-            })
-            .then(function (response) {
-              if (response && response.ok && event.request.method === "GET") {
-                safeCachePut(cache, event.request, response.clone());
-              }
-              return response;
-            })
-            .catch(function () {
-              // Offline (or network failure): fall back to cached HTML (if any) or offline page.
-              return cache.match(event.request).then(function (c) {
-                if (c) return c;
-                return caches.match(OFFLINE_PAGE).then(function (offline) {
-                  return offline || new Response("Offline", { status: 503 });
+          // Stale-while-revalidate: same-day cache serves immediately so PWA reopen feels instant
+          // (especially iOS); network refreshes the shell in the background. No cache → network as before.
+          return cache.match(event.request).then(function (cached) {
+            if (cached) {
+              fetch(navRequest)
+                .then(function (response) {
+                  if (response && response.ok && event.request.method === "GET") {
+                    safeCachePut(cache, event.request, response.clone());
+                  }
+                })
+                .catch(function () {});
+              return cached;
+            }
+            return (event.preloadResponse || Promise.resolve(null))
+              .then(function (preloadedResponse) {
+                return preloadedResponse || fetch(navRequest);
+              })
+              .then(function (response) {
+                if (response && response.ok && event.request.method === "GET") {
+                  safeCachePut(cache, event.request, response.clone());
+                }
+                return response;
+              })
+              .catch(function () {
+                return cache.match(event.request).then(function (c) {
+                  if (c) return c;
+                  return caches.match(OFFLINE_PAGE).then(function (offline) {
+                    return offline || new Response("Offline", { status: 503 });
+                  });
                 });
               });
-            });
+          });
         }
 
         // Other HTML: keep existing network-first behavior.

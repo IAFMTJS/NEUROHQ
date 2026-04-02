@@ -6,6 +6,7 @@ import {
   createTask,
   deleteTask,
   duplicateTask,
+  getFutureTasks,
   restoreTask,
   snoozeTask,
   uncompleteTask,
@@ -94,7 +95,8 @@ type Props = {
   /** Backlog / Toekomst — modals for past-due and future-dated missions (all mission sub-views). */
   missionsBacklogShelf?: {
     backlog: { id: string; title: string | null; due_date: string | null; category?: string | null }[];
-    futureTasks: { id: string; title: string | null; due_date: string | null; category?: string | null }[];
+    /** When omitted, future rows load on the client so the missions tab is not blocked on this query. */
+    futureTasks?: { id: string; title: string | null; due_date: string | null; category?: string | null }[];
     todayDate: string;
   } | null;
   /** Recovery / energy consequence flags (missions page); merged with focus-slot limitMessage in the warning icon. */
@@ -302,6 +304,43 @@ export function TaskList({
     }
   }, [date, initialTasks, setTasksForDate, storedTasks.length]);
 
+  /** Filled client-side when `missionsBacklogShelf.futureTasks` is not passed (see /tasks page). */
+  const [deferredFutureTasks, setDeferredFutureTasks] = useState<Task[]>([]);
+  const [deferredFutureReady, setDeferredFutureReady] = useState(
+    () =>
+      missionsBacklogShelf == null || missionsBacklogShelf.futureTasks !== undefined
+  );
+
+  useEffect(() => {
+    if (!missionsBacklogShelf) {
+      setDeferredFutureTasks([]);
+      setDeferredFutureReady(true);
+      return;
+    }
+    if (missionsBacklogShelf.futureTasks !== undefined) {
+      setDeferredFutureTasks([]);
+      setDeferredFutureReady(true);
+      return;
+    }
+    setDeferredFutureReady(false);
+    setDeferredFutureTasks([]);
+    let cancelled = false;
+    const todayKey = missionsBacklogShelf.todayDate;
+    void getFutureTasks(todayKey)
+      .then((rows) => {
+        if (!cancelled) {
+          setDeferredFutureTasks(rows);
+          setDeferredFutureReady(true);
+        }
+      })
+      .catch(() => {
+        if (!cancelled) setDeferredFutureReady(true);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [missionsBacklogShelf]);
+
   // DailySnapshot + MissionsProvider already handle first-paint missions data; no extra per-suffix cache needed here.
 
   const extendedTasks = useMemo(() => {
@@ -311,10 +350,16 @@ export function TaskList({
     return [...fromServer, ...added];
   }, [storedTasks, initialTasks, localTasksAdded, date]);
 
-  /** Server `futureTasks` misses missions added client-side for other days; merge from HQ store + local adds. */
+  /** Server or deferred `futureTasks` plus HQ store / local adds for other days. */
   const mergedFutureTasksForShelf = useMemo(() => {
     const today = missionsBacklogShelf?.todayDate ?? date;
-    const server = missionsBacklogShelf?.futureTasks ?? [];
+    const explicit = missionsBacklogShelf?.futureTasks;
+    const server = (explicit !== undefined ? explicit : deferredFutureTasks) as {
+      id: string;
+      title: string | null;
+      due_date: string | null;
+      category?: string | null;
+    }[];
     const byId = new Map<
       string,
       { id: string; title: string | null; due_date: string | null; category?: string | null }
@@ -344,7 +389,19 @@ export function TaskList({
       for (const raw of list) consider(raw as ExtendedTask);
     }
     return Array.from(byId.values()).sort((a, b) => (a.due_date ?? "").localeCompare(b.due_date ?? ""));
-  }, [missionsBacklogShelf?.futureTasks, missionsBacklogShelf?.todayDate, date, localTasksAdded, allTasksByDate]);
+  }, [
+    missionsBacklogShelf?.futureTasks,
+    deferredFutureTasks,
+    missionsBacklogShelf?.todayDate,
+    date,
+    localTasksAdded,
+    allTasksByDate,
+  ]);
+
+  const shelfFutureLoading =
+    !!missionsBacklogShelf && missionsBacklogShelf.futureTasks === undefined && !deferredFutureReady;
+  const showFutureKomendeDagenSkeleton =
+    shelfFutureLoading && mergedFutureTasksForShelf.length === 0;
 
   const backlogShelfParts = useMissionsBacklogShelfParts(
     missionsHeroLayout && missionsBacklogShelf
@@ -1513,7 +1570,23 @@ export function TaskList({
         )}
 
         {missionsHeroLayout && missionsBacklogShelf ? (
-          <div className="mt-4 w-full">{backlogShelfParts.komendeDagen}</div>
+          <div className="mt-4 w-full">
+            {showFutureKomendeDagenSkeleton ? (
+              <div
+                className="rounded-xl border border-[rgba(var(--mode-rgb),0.1)] bg-[rgba(6,18,30,0.28)] px-2.5 py-3 sm:px-3 motion-safe:animate-pulse"
+                aria-busy
+                aria-label="Komende dagen laden"
+              >
+                <div className="h-2.5 w-28 rounded bg-[var(--text-muted)]/20" />
+                <div className="mt-3 space-y-2">
+                  <div className="h-3 w-full rounded bg-[var(--text-muted)]/15" />
+                  <div className="h-3 w-5/6 rounded bg-[var(--text-muted)]/15" />
+                </div>
+              </div>
+            ) : (
+              backlogShelfParts.komendeDagen
+            )}
+          </div>
         ) : null}
 
         {detailsTask && (

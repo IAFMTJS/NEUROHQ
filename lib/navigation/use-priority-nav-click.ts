@@ -1,18 +1,28 @@
 "use client";
 
+import { useQueryClient } from "@tanstack/react-query";
 import { useCallback } from "react";
 import type { MouseEvent } from "react";
 import { usePathname, useRouter } from "next/navigation";
+import { abortNavLoads } from "@/lib/navigation/nav-load-abort";
 import { normalizeAppPath } from "@/lib/navigation/normalize-app-path";
+
+function cancelInFlightQueries(queryClient: ReturnType<typeof useQueryClient>) {
+  void queryClient.cancelQueries({
+    predicate: (q) => q.state.fetchStatus === "fetching",
+  });
+}
 
 /**
  * Primary navigation for shell links (bottom nav, settings, help).
  * Uses imperative router.push so a new tap supersedes an in-flight App Router transition,
- * and re-tapping the current route runs refresh() to escape a stuck streaming state.
+ * aborts client fetches tied to {@link abortNavLoads}, and cancels in-flight TanStack queries.
+ * Re-tapping the current route runs refresh() to escape a stuck streaming state.
  */
 export function usePriorityNavClick() {
   const router = useRouter();
   const pathname = usePathname();
+  const queryClient = useQueryClient();
 
   return useCallback(
     (href: string, event: MouseEvent<HTMLAnchorElement>) => {
@@ -27,6 +37,9 @@ export function usePriorityNavClick() {
 
       event.preventDefault();
 
+      abortNavLoads();
+      cancelInFlightQueries(queryClient);
+
       const targetPath = normalizeAppPath(href);
       const currentPath = normalizeAppPath(pathname);
 
@@ -37,6 +50,6 @@ export function usePriorityNavClick() {
 
       router.push(href);
     },
-    [router, pathname]
+    [router, pathname, queryClient]
   );
 }

@@ -3,7 +3,6 @@ import { Suspense } from "react";
 import {
   getBacklogTasks,
   getCompletedTodayTasks,
-  getFutureTasks,
   getRoutineTasksWithSuggestions,
   getSubtasksForTaskIds,
   getTodaysTasks,
@@ -108,7 +107,6 @@ async function MissionsSectionAsync({
 }) {
   const [
     mode,
-    futureTasks,
     completedToday,
     smartSuggestion,
     energyCap,
@@ -124,7 +122,6 @@ async function MissionsSectionAsync({
     behaviorProfile,
   ] = await Promise.all([
     getMode(dateStr),
-    getFutureTasks(dateStr),
     getCompletedTodayTasks(dateStr),
     getSmartSuggestion(dateStr),
     getEnergyCapToday(dateStr),
@@ -258,7 +255,7 @@ async function MissionsSectionAsync({
           }}
           missionEngineWarnings={missionEngineWarnings}
           missionsContextBelowHero={<ModeBanner mode={mode} />}
-          missionsBacklogShelf={{ backlog, futureTasks, todayDate: dateStr }}
+          missionsBacklogShelf={{ backlog, todayDate: dateStr }}
         />
       </div>
     </div>

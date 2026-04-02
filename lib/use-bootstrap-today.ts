@@ -15,7 +15,7 @@ export function useBootstrapToday(dateStr: string | null | undefined) {
   const key = dateStr?.trim() ?? "";
   return useQuery<BootstrapTodayResponse, Error>({
     queryKey: bootstrapTodayQueryKey(key),
-    queryFn: fetchBootstrapTodayFromApi,
+    queryFn: ({ signal }) => fetchBootstrapTodayFromApi(signal),
     enabled: key.length > 0,
   });
 }

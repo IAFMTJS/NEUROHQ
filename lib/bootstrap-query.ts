@@ -26,11 +26,12 @@ export function seedBootstrapTodayInCache(
 }
 
 /** Network fetch for `useBootstrapToday` (same endpoint as bootstrap step + background refresh). */
-export async function fetchBootstrapTodayFromApi(): Promise<BootstrapTodayResponse> {
+export async function fetchBootstrapTodayFromApi(signal?: AbortSignal): Promise<BootstrapTodayResponse> {
   const res = await fetch("/api/bootstrap/today", {
     credentials: "include",
     cache: "no-store",
     headers: { "x-neurohq-refresh": "1" },
+    signal,
   });
   if (!res.ok) {
     throw new Error(res.status === 401 ? "Unauthorized" : `bootstrap-today ${res.status}`);
