@@ -3,6 +3,7 @@
 import { useEffect, useLayoutEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { usePriorityNavClick } from "@/lib/navigation/use-priority-nav-click";
 import BottomNavigation from "@/components/ui/BottomNavigation";
 import { KeyboardShortcuts } from "@/components/KeyboardShortcuts";
 import { ThemeHydrate } from "@/components/providers/ThemeHydrate";
@@ -53,6 +54,7 @@ export function DashboardLayoutClient({
   initialDashboardSnapshot: initialDashboardSnapshotProp,
 }: Props) {
   const pathname = usePathname();
+  const onPriorityNavClick = usePriorityNavClick();
   const normalizedPath = pathname.replace(/\/$/, "") || "/";
   const dashboardHomeRoute = normalizedPath === "/dashboard";
   const deckChrome = !dashboardHomeRoute;
@@ -153,6 +155,7 @@ export function DashboardLayoutClient({
               <AlertsBell />
               <Link
                 href="/settings"
+                onClick={(e) => onPriorityNavClick("/settings", e)}
                 className={
                   deckChromeRoute
                     ? "fixed right-[max(0.75rem,env(safe-area-inset-right))] top-[calc(env(safe-area-inset-top,0px)+1.25rem)] z-[70] rounded-xl border border-[rgba(var(--mode-rgb),0.22)] bg-[rgba(6,18,30,0.55)] px-2.5 py-1.5 text-sm font-semibold text-[var(--text-primary)] shadow-[0_0_20px_rgba(var(--mode-rgb),0.12),inset_0_1px_0_rgba(255,255,255,0.08)] backdrop-blur-md hover:border-[rgba(var(--mode-rgb),0.38)] hover:bg-[rgba(8,26,42,0.65)]"

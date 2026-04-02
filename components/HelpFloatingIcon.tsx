@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useSettings } from "@/lib/settings-context";
+import { usePriorityNavClick } from "@/lib/navigation/use-priority-nav-click";
 
 /**
  * Global help icon: fixed position, opens /help. Does not modify app state.
@@ -9,10 +10,12 @@ import { useSettings } from "@/lib/settings-context";
  */
 export function HelpFloatingIcon() {
   const { settings } = useSettings();
+  const onPriorityNavClick = usePriorityNavClick();
   if (settings?.preferences?.simplified_content) return null;
   return (
     <Link
       href="/help"
+      onClick={(e) => onPriorityNavClick("/help", e)}
       aria-label="Open Help Center"
       className="help-floating-icon fixed bottom-[calc(var(--footer-height,58px)+var(--bottom-nav-arch,28px)+env(safe-area-inset-bottom)+52px)] right-[max(1rem,env(safe-area-inset-right))] z-[100] flex h-10 w-10 items-center justify-center rounded-full border border-[var(--card-border)] bg-[var(--bg-primary)]/90 text-[var(--text-muted)] shadow-lg backdrop-blur-sm hover:border-[var(--accent-focus)] hover:text-[var(--accent-focus)] focus:outline-none focus:ring-2 focus:ring-[var(--accent-focus)]"
     >

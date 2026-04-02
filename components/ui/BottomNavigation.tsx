@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { memo, useCallback, useRef } from "react";
 import { BottomNavIcon } from "@/components/ui/BottomNavIcon";
+import { usePriorityNavClick } from "@/lib/navigation/use-priority-nav-click";
 import {
   BOTTOM_NAV_HUB,
   BOTTOM_NAV_LEFT,
@@ -14,6 +15,7 @@ import {
 export default memo(function BottomNavigation() {
   const pathname = usePathname();
   const router = useRouter();
+  const onPriorityNavClick = usePriorityNavClick();
   const prefetchedRoutesRef = useRef<Set<string>>(new Set());
 
   const prefetchOnIntent = useCallback(
@@ -35,6 +37,7 @@ export default memo(function BottomNavigation() {
         href={link.href}
         className={`nav-item nav-item-fab-rail ${active ? "active" : ""}`}
         prefetch
+        onClick={(e) => onPriorityNavClick(link.href, e)}
         onMouseEnter={() => prefetchOnIntent(link.href)}
         onFocus={() => prefetchOnIntent(link.href)}
         onTouchStart={() => prefetchOnIntent(link.href)}
@@ -67,6 +70,7 @@ export default memo(function BottomNavigation() {
                 className={`nav-item-fab-hub ${hubActive ? "active" : ""}`}
                 prefetch
                 aria-current={hubActive ? "page" : undefined}
+                onClick={(e) => onPriorityNavClick(hubLink.href, e)}
                 onMouseEnter={() => prefetchOnIntent(hubLink.href)}
                 onFocus={() => prefetchOnIntent(hubLink.href)}
                 onTouchStart={() => prefetchOnIntent(hubLink.href)}
