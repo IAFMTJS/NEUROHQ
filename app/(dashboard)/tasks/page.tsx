@@ -247,8 +247,6 @@ async function MissionsSectionAsync({
           identityReputation={identityEngine.reputation ?? null}
           blockedReasonByTaskId={blockedReasonByTaskId}
           neuroSelfReportOptIn={behaviorProfile.neuroSelfReportOptIn}
-          missionsHeroLayout
-          commandDeckVisuals
           energyCap={{
             used: energyCap.used,
             cap: energyCap.cap,

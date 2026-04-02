@@ -44,7 +44,6 @@ export function TasksMissionsSnapshotFallback({ dateStr }: Props) {
       mode="normal"
       carryOverCount={0}
       blockedReasonByTaskId={{}}
-      commandDeckVisuals
     />
   );
 }
