@@ -41,6 +41,7 @@ import { useAppState } from "@/components/providers/AppStateProvider";
 import { addBonusAutoMissionsForToday } from "@/app/actions/master-missions";
 import { useHQStore } from "@/lib/hq-store";
 import { useTasksBootstrap } from "@/lib/tasks-bootstrap";
+import { mergeTasksPreferringLocalCompletedWhenServerStale } from "@/lib/merge-tasks-server-response";
 import { refreshMergedSnapshotFromNetwork } from "@/lib/daily-bootstrap";
 import { parseMissionProgressionFromTaskTags } from "@/lib/mission-progression";
 import { useDCICGameState } from "@/lib/dcic/game-state-client";
@@ -347,7 +348,14 @@ export function TaskList({
   // DailySnapshot + MissionsProvider already handle first-paint missions data; no extra per-suffix cache needed here.
 
   const extendedTasks = useMemo(() => {
-    const fromServer = (storedTasks.length > 0 ? storedTasks : initialTasks) as ExtendedTask[];
+    /** Server props (na router.refresh()) bevatten nieuwe rijen; store kan nog achterlopen — mergen i.p.v. alleen store. */
+    const serverList = initialTasks as Task[];
+    const storeList = storedTasks;
+    const merged =
+      storeList.length > 0
+        ? mergeTasksPreferringLocalCompletedWhenServerStale(storeList, serverList)
+        : serverList;
+    const fromServer = merged as ExtendedTask[];
     const ids = new Set(fromServer.map((t) => t.id));
     const added = localTasksAdded.filter((t) => t.due_date === date && !ids.has(t.id));
     return [...fromServer, ...added];

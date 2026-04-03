@@ -37,7 +37,7 @@ export async function suggestPlayDeckTasks(params: {
   const seed = `${params.dateStr}|${params.cursor ?? 0}`;
   const templates = scorePlayTemplates(doc, titles, {
     seed,
-    limit: params.limit ?? 6,
+    limit: params.limit ?? 8,
     cursor: params.cursor ?? 0,
   });
 

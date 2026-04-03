@@ -1,0 +1,42 @@
+import type { PlayDeckTemplate } from "./types";
+
+/**
+ * Volwassen / scherpere / minder “schoolreisje” play-missies — mix met de rest van de library.
+ */
+export const PLAY_DECK_TEMPLATES_MATURE: PlayDeckTemplate[] = [
+  { id: "pd_v01", title: "Zet één album op dat je normaal ‘te veel’ vindt — volume één tik erbij.", play_kind: "fun", tags: ["music", "competitive", "chill"], energy: 2, spice: "medium" },
+  { id: "pd_v02", title: "Shake een cocktail of mocktail die je zelden maakt — recept mag je opzoeken.", play_kind: "fun", tags: ["cooking", "creative", "chill"], energy: 2 },
+  { id: "pd_v03", title: "Schrijf een roast van je eigen week (max 10 zinnen), sluit af met één eerlijke empathische zin.", play_kind: "fun", tags: ["writing", "silly", "philosophy"], energy: 2, spice: "medium" },
+  { id: "pd_v04", title: "Kijk één filmscène drie keer: let op montage, geluid, acteerkeuze — studiemodus.", play_kind: "fun", tags: ["film", "learning", "quiet"], energy: 2 },
+  { id: "pd_v05", title: "12 min steady cardio (fiets, trap, brisk walk) — geen stats-vergelijken met anderen.", play_kind: "challenge", tags: ["sports", "outdoors"], energy: 3, spice: "medium" },
+  { id: "pd_v06", title: "Lees 15 pagina’s van een boek waar je je (stiekem) voor schaamt — gewoon doen.", play_kind: "fun", tags: ["reading", "chill"], energy: 2 },
+  { id: "pd_v07", title: "Één ranked/competitieve game — na afloop 60 tellen ademen, geen rematch.", play_kind: "challenge", tags: ["games", "competitive"], energy: 3, spice: "high" },
+  { id: "pd_v08", title: "Formuleer één mening die je bent bijgekomen — niet posten, alleen scherp opschrijven.", play_kind: "unwind", tags: ["philosophy", "writing", "quiet"], energy: 2 },
+  { id: "pd_v09", title: "Rondje buiten na schemer: één nummer op repeat, geen podcast.", play_kind: "unwind", tags: ["outdoors", "music", "chill"], energy: 2 },
+  { id: "pd_v10", title: "Kies één hoek in huis die je haat — verander vandaag één ding (weg of verplaatsen).", play_kind: "challenge", tags: ["decorating", "competitive", "homebody"], energy: 3, spice: "medium" },
+  { id: "pd_v11", title: "Schrijf wat je tegen je 20-jarige zelf zou zeggen — max half A4, geen filters.", play_kind: "unwind", tags: ["writing", "philosophy", "quiet"], energy: 2 },
+  { id: "pd_v12", title: "Kijk één stand-up special (15–30 min) — lach hardop of noteer één joke-structuur.", play_kind: "fun", tags: ["film", "silly", "learning"], energy: 2 },
+  { id: "pd_v13", title: "Kies een ‘guilty pleasure’ snack en eet die zonder scherm erbij.", play_kind: "unwind", tags: ["cooking", "chill", "quiet"], energy: 1 },
+  { id: "pd_v14", title: "Doe één zware set van iets (kettlebell, push-ups, squats) — tot net voor failure.", play_kind: "challenge", tags: ["sports", "competitive"], energy: 3, spice: "high" },
+  { id: "pd_v15", title: "Luister één podcast-aflevering over iets waar je cynisch over bent — argumenten noteren.", play_kind: "fun", tags: ["podcasts", "philosophy", "puzzles"], energy: 2 },
+  { id: "pd_v16", title: "Speel één potje iets strategisch (bord digitaal) — geen hints, geen undo.", play_kind: "challenge", tags: ["boardgames", "games", "competitive"], energy: 2, spice: "medium" },
+  { id: "pd_v17", title: "Schrijf een one-star review van een product dat je eigenlijk prima vindt — daarna weggooien.", play_kind: "fun", tags: ["writing", "silly", "online_shopping"], energy: 2, spice: "low" },
+  { id: "pd_v18", title: "Neem een langere douche of bad — geen podcast, alleen nadenken of niets.", play_kind: "unwind", tags: ["chill", "quiet"], energy: 2 },
+  { id: "pd_v19", title: "Bekijk lyrics van één nummer regel voor regel — alsof het poëzie is.", play_kind: "fun", tags: ["music", "reading", "philosophy"], energy: 1 },
+  { id: "pd_v20", title: "Plan een hypothetisch avondje uit (3 locaties) — alleen in notities, geen boeken.", play_kind: "fun", tags: ["creative", "social_light", "writing"], energy: 2 },
+  { id: "pd_v21", title: "Doe je make-up of haar anders dan normaal — alleen voor de spiegel, geen fotoplicht.", play_kind: "fun", tags: ["creative", "chill"], energy: 2 },
+  { id: "pd_v22", title: "Lees één opinie-artikel tegen je eigen standpunt — samenvatten in 5 bullets.", play_kind: "challenge", tags: ["reading", "philosophy", "competitive"], energy: 3, spice: "medium" },
+  { id: "pd_v23", title: "Zet één horror/thriller scene op — geluid lager dan comfort, 5 min volhouden.", play_kind: "fun", tags: ["film", "true_crime", "chill"], energy: 2, spice: "medium" },
+  { id: "pd_v24", title: "Schrijf een kort dialoog tussen twee versies van jezelf — max 20 regels.", play_kind: "fun", tags: ["writing", "creative", "philosophy"], energy: 2 },
+  { id: "pd_v25", title: "Ga naar de supermarkt voor één luxe-ingrediënt — geen rest van de lijst.", play_kind: "fun", tags: ["shopping", "cooking", "chill"], energy: 2 },
+  { id: "pd_v26", title: "Kies één skill-video (niet tutorial-spam) en oefen 10 minuten één move.", play_kind: "challenge", tags: ["learning", "sports", "competitive"], energy: 2, spice: "medium" },
+  { id: "pd_v27", title: "Noteer drie dingen die je irriteerden vandaag — zonder oplossing, alleen vent.", play_kind: "unwind", tags: ["writing", "quiet", "chill"], energy: 1 },
+  { id: "pd_v28", title: "Speel één level op moeilijkheid hoger dan je comfort — één retry max.", play_kind: "challenge", tags: ["games", "competitive"], energy: 3, spice: "high" },
+  { id: "pd_v29", title: "Luister een album van voor je 18e — oordeel nu opnieuw, 3 tracks diep.", play_kind: "fun", tags: ["music", "philosophy", "chill"], energy: 2 },
+  { id: "pd_v30", title: "Schrijf ‘wat ik tegen niemand zeg’ op papier — verscheuren of veilig weg.", play_kind: "unwind", tags: ["writing", "quiet", "philosophy"], energy: 2, spice: "medium" },
+  { id: "pd_v31", title: "Kijk één muziekvideo met aandacht voor styling en camerawerk — geen skip.", play_kind: "fun", tags: ["music", "film", "creative"], energy: 1 },
+  { id: "pd_v32", title: "Doe een ‘power pose’ serie voor de spiegel — serieus maar ironisch, 2 min.", play_kind: "fun", tags: ["silly", "sports", "chill"], energy: 1 },
+  { id: "pd_v33", title: "Kies één oude fout waar je nog steeds boos over bent — één zin vergeven of archiveren.", play_kind: "unwind", tags: ["philosophy", "writing", "quiet"], energy: 2 },
+  { id: "pd_v34", title: "Bak iets met te veel boter of kaas — bewust, geen calorie-discussie.", play_kind: "fun", tags: ["cooking", "chill"], energy: 2 },
+  { id: "pd_v35", title: "Scroll je eigen foto’s terug tot 5 jaar — één beeld kiezen en waarom je hem hield.", play_kind: "unwind", tags: ["photography", "philosophy", "quiet"], energy: 2 },
+];

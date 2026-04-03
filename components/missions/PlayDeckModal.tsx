@@ -8,6 +8,7 @@ import { suggestPlayDeckTasks, addPlayDeckTasksForToday } from "@/app/actions/pl
 import type { PlayDeckSuggestion } from "@/app/actions/play-deck";
 import { neuroToast } from "@/lib/ui/neuro-toast";
 import { profileEngineHref } from "@/lib/profile-routes";
+import { refreshMergedSnapshotFromNetwork } from "@/lib/daily-bootstrap";
 
 type Props = {
   open: boolean;
@@ -36,7 +37,7 @@ export function PlayDeckModal({ open, onClose, dateStr }: Props) {
     setLoading(true);
     void (async () => {
       try {
-        const { suggestions: s } = await suggestPlayDeckTasks({ dateStr, cursor: 0, limit: 6 });
+        const { suggestions: s } = await suggestPlayDeckTasks({ dateStr, cursor: 0, limit: 8 });
         setSuggestions(s);
       } finally {
         setLoading(false);
@@ -54,11 +55,11 @@ export function PlayDeckModal({ open, onClose, dateStr }: Props) {
   }
 
   function loadMore() {
-    const next = cursor + 6;
+    const next = cursor + 8;
     setLoading(true);
     void (async () => {
       try {
-        const { suggestions: s } = await suggestPlayDeckTasks({ dateStr, cursor: next, limit: 6 });
+        const { suggestions: s } = await suggestPlayDeckTasks({ dateStr, cursor: next, limit: 8 });
         setSuggestions(s);
         setCursor(next);
         setSelected(new Set());
@@ -85,14 +86,15 @@ export function PlayDeckModal({ open, onClose, dateStr }: Props) {
       } else {
         neuroToast.success(`${r.created} play-missie${r.created === 1 ? "" : "s"} toegevoegd.`);
       }
+      void refreshMergedSnapshotFromNetwork();
       router.refresh();
       onClose();
     });
   }
 
   return (
-    <Modal open={open} onClose={onClose} title="Play deck" size="md">
-      <div className="space-y-4">
+    <Modal open={open} onClose={onClose} title="Play deck" size="lg">
+      <div className="[color-scheme:dark] space-y-4">
         <p className="text-sm leading-relaxed text-[var(--text-muted)]">
           Optionele ideeën voor plezier, ontspanning of een lichte challenge — niet bedoeld als coaching. Vink wat je wilt en voeg toe aan vandaag.{" "}
           <Link href={profileEngineHref("play")} className="text-[var(--accent-focus)] underline-offset-2 hover:underline">

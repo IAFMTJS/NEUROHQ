@@ -26,7 +26,7 @@ import { getIdentityEngine } from "@/app/actions/identity-engine";
 import { getUserPreferencesOrDefaults } from "@/app/actions/preferences";
 import { MissionsProvider, TasksTabsShell, TodayMissionsGridFromStore } from "@/components/missions";
 import type { TasksTabId } from "@/components/missions/TasksTabsShell";
-import { TasksMissionsSnapshotFallback } from "@/components/missions/TasksMissionsSnapshotFallback";
+import { MissionsSectionFallback } from "@/components/missions/MissionsSectionFallback";
 import { RoutineTaskList } from "@/components/missions/RoutineTaskList";
 import { TasksRoutineTabFallback } from "@/components/missions/TasksRoutineTabFallback";
 import { TasksCalendarTabFallback } from "@/components/missions/TasksCalendarTabFallback";
@@ -396,7 +396,7 @@ export default async function TasksPage({ searchParams }: Props) {
       fillViewport={simplifiedTasksFillLayout}
       stickyTabs={simplifiedTasksFillLayout}
       panelMissions={
-        <Suspense fallback={<TasksMissionsSnapshotFallback dateStr={dateStr} />}>
+        <Suspense fallback={<MissionsSectionFallback dateStr={dateStr} />}>
           <MissionsSectionAsync dateStr={dateStr} backlog={backlog} growthFromGrowthPage={growthFromGrowthPage} />
         </Suspense>
       }
