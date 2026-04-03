@@ -24,7 +24,7 @@ import {
 
 /** Explicit column list for task reads (avoids select * per SUPABASE_PERFORMANCE_GUIDELINES). */
 const TASK_SELECT_COLUMNS =
-  "id, user_id, title, due_date, completed, completed_at, carry_over_count, energy_required, priority, notes, created_at, updated_at, parent_task_id, deleted_at, snooze_until, category, impact, domain, cognitive_load, emotional_resistance, mental_load, social_load, focus_required, recurrence_rule, recurrence_weekdays, difficulty, discipline_weight, strategic_value, psychology_label, mission_intent, mission_chain_id, validation_type, base_xp, avoidance_tag, hobby_tag, fatigue_impact, strategy_key_result_id, urgency, task_type, intensity, duration_minutes, task_tags";
+  "id, user_id, title, due_date, completed, completed_at, carry_over_count, energy_required, priority, notes, created_at, updated_at, parent_task_id, play_kind, deleted_at, snooze_until, category, impact, domain, cognitive_load, emotional_resistance, mental_load, social_load, focus_required, recurrence_rule, recurrence_weekdays, difficulty, discipline_weight, strategic_value, psychology_label, mission_intent, mission_chain_id, validation_type, base_xp, avoidance_tag, hobby_tag, fatigue_impact, strategy_key_result_id, urgency, task_type, intensity, duration_minutes, task_tags";
 
 function autoSlotRankFromTask(task: unknown): number {
   const t = task as {
@@ -92,6 +92,18 @@ const getTodaysTasksCached = cache(async (date: string, mode: TaskListMode): Pro
     else if (label === "MasterPoolBonus") bonusTasks.push(t);
     else userTasks.push(t);
   }
+  const isPlayDeckTask = (t: Task) => {
+    const pk = (t as { play_kind?: string | null }).play_kind;
+    if (pk === "fun" || pk === "unwind" || pk === "challenge") return true;
+    const tt = (t as { task_tags?: unknown }).task_tags;
+    return Array.isArray(tt) && tt.includes("play_deck");
+  };
+  userTasks.sort((a, b) => {
+    const pa = isPlayDeckTask(a);
+    const pb = isPlayDeckTask(b);
+    if (pa !== pb) return pa ? 1 : -1;
+    return 0;
+  });
   autoTasks.sort((a, b) => {
     const ra = autoSlotRankFromTask(a);
     const rb = autoSlotRankFromTask(b);
@@ -248,6 +260,8 @@ export async function createTask(params: {
   intensity?: number | null;
   duration_minutes?: number | null;
   task_tags?: string[] | null;
+  /** Play deck missions (optional fun / unwind / challenge). */
+  play_kind?: "fun" | "unwind" | "challenge" | null;
 }) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
@@ -276,8 +290,13 @@ export async function createTask(params: {
     task_type: params.task_type ?? preset.type,
     intensity: params.intensity ?? preset.intensity,
     duration_minutes: params.duration_minutes ?? preset.durationMinutes,
-    task_tags: params.task_tags ?? [],
+    task_tags: (() => {
+      const tags = [...(params.task_tags ?? [])];
+      if (params.play_kind != null && !tags.includes("play_deck")) tags.push("play_deck");
+      return tags;
+    })(),
   };
+  if (params.play_kind != null) row.play_kind = params.play_kind;
   if (params.domain != null) row.domain = params.domain;
   else row.domain = preset.domain;
   if (params.cognitive_load != null) row.cognitive_load = params.cognitive_load;

@@ -107,7 +107,9 @@ export async function getXPIdentity(userId?: string): Promise<{
   return getXPIdentityByUserId(user.id);
 }
 
-export type AddXPResult = { levelUp: boolean; newLevel: number } | undefined;
+export type AddXPResult =
+  | { levelUp: boolean; newLevel: number; pointsApplied: number }
+  | undefined;
 
 export async function addXP(
   points: number,
@@ -132,7 +134,10 @@ export async function addXP(
     (!odRow.dcic_locked_until || Date.parse(odRow.dcic_locked_until) > Date.now())
   ) {
     const { getOverdriveHeatEfficiency } = await import("@/lib/dcic/mode-engine");
-    const heat = getOverdriveHeatEfficiency(odRow.dcic_overdrive_session_start ?? null);
+    const heat = getOverdriveHeatEfficiency(
+      odRow.dcic_overdrive_session_start ?? null,
+      Date.now()
+    );
     overdriveFactor = 2 * heat;
   }
   const adjustedPoints = Math.max(1, Math.floor(points * overdriveFactor));
@@ -155,7 +160,8 @@ export async function addXP(
       },
       { onConflict: "user_id" }
     );
-  if (!error && options?.source_type) {
+  if (error) return undefined;
+  if (options?.source_type) {
     await supabase.from("xp_events").insert({
       user_id: user.id,
       amount: adjustedPoints,
@@ -163,7 +169,7 @@ export async function addXP(
       task_id: options.task_id ?? null,
     });
   }
-  if (!error && !options?.skipRevalidate) {
+  if (!options?.skipRevalidate) {
     revalidatePath("/dashboard");
     revalidatePath("/settings");
     revalidatePath("/profile");
@@ -173,10 +179,11 @@ export async function addXP(
     revalidatePath("/strategy");
   }
   const levelAfter = levelFromTotalXP(newTotal);
-  if (levelAfter > levelBefore) {
-    return { levelUp: true, newLevel: levelAfter };
-  }
-  return undefined;
+  return {
+    pointsApplied: adjustedPoints,
+    levelUp: levelAfter > levelBefore,
+    newLevel: levelAfter,
+  };
 }
 
 /** Alignment <60% for 5 days → XP -10% (Performance Engine consequences). */
@@ -298,8 +305,8 @@ export async function awardXPForTaskComplete(
   const points = Math.max(1, Math.floor(base * mult));
   const levelResult = await addXP(points, { source_type: "task_complete", task_id: taskId ?? null });
   return {
-    xpAwarded: points,
-    ...(levelResult && { levelUp: levelResult.levelUp, newLevel: levelResult.newLevel }),
+    xpAwarded: levelResult?.pointsApplied ?? points,
+    ...(levelResult?.levelUp && { levelUp: levelResult.levelUp, newLevel: levelResult.newLevel }),
     ...(lowSynergy ? { lowSynergy: true } : {}),
   };
 }

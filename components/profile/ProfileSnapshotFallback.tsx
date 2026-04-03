@@ -2,6 +2,8 @@
 
 import Link from "next/link";
 import { useDailySnapshot } from "@/components/bootstrap/BootstrapGate";
+import { useBootstrapToday } from "@/lib/use-bootstrap-today";
+import { getTodayKey } from "@/lib/daily-date";
 import { ProfileCommandDeckLayout } from "@/components/profile/ProfileCommandDeckLayout";
 import { profileEngineHref, profileHomeHref, profileInsightsHref } from "@/lib/profile-routes";
 
@@ -11,7 +13,12 @@ type Props = {
 
 export function ProfileSnapshotFallback({ main }: Props) {
   const snapshot = useDailySnapshot();
-  const today = snapshot?.date ?? new Date().toISOString().slice(0, 10);
+  const dateKey = snapshot?.date?.trim() || getTodayKey();
+  const { data: bootstrapToday } = useBootstrapToday(dateKey, { variant: "core" });
+  const today =
+    (typeof bootstrapToday?.date === "string" && bootstrapToday.date.trim()) ||
+    snapshot?.date ||
+    getTodayKey();
 
   return (
     <ProfileCommandDeckLayout main={main}>

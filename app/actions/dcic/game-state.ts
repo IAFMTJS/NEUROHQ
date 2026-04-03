@@ -7,16 +7,21 @@
 
 import { createClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
-import { todayDateString } from "@/lib/utils/timezone";
+import {
+  todayDateString,
+  yesterdayDate,
+  getAppTimezoneHour,
+  getAppTimezoneWeekday,
+  getAmsterdamIsoWeekRange,
+} from "@/lib/utils/timezone";
 import type { GameState, Mission } from "@/lib/dcic/types";
 import { applyBrainLayerToGameState } from "@/lib/dcic/brain-game-state";
 import { countWarTierDays, type DailyRowForBrain } from "@/lib/dcic/brain-status-average";
 import { autoModeCheck, isModeLocked, passiveRecoveryTick, switchMode } from "@/lib/dcic/mode-engine";
-import { maybeAutoTriggerOverdrive } from "@/lib/dcic/overdrive-auto";
+import { maybeAutoTriggerOverdrive, pickWeeklySlotWeekdays } from "@/lib/dcic/overdrive-auto";
 import { updateDifficulty, generateDailyMissions } from "@/lib/dcic/difficulty-engine";
 import { rankFromLevel } from "@/lib/rank-ladder";
 import { levelFromTotalXP, xpToNextLevel as xpRemainingToNextLevel } from "@/lib/xp";
-import { yesterdayDate } from "@/lib/utils/timezone";
 
 const DCIC_MODE_VALUES: GameState["mode"]["current"][] = [
   "focus",
@@ -62,6 +67,8 @@ export async function getGameState(
   // Fetch all core game data in parallel to avoid a slow waterfall.
   // Must match daily_state.date (saveDailyState, dashboard) — not UTC calendar day.
   const today = todayDateString();
+  const { monday: amsterdamIsoWeekMonday, sunday: amsterdamIsoWeekSunday } =
+    getAmsterdamIsoWeekRange(today);
 
   const MISSIONS_SELECT =
     "id, name, xp_reward, energy_cost, completed, active, started_at, completed_at, difficulty_level, focus_requirement, social_intensity, mission_type, category, skill_link, recurrence_type, streak_eligible, mission_intent, expires_at, created_at";
@@ -77,6 +84,7 @@ export async function getGameState(
     { data: skillsData },
     { data: dailyState },
     { data: dailyStateWeek },
+    { count: weeklySlotCount },
   ] = await Promise.all([
     supabase.from("user_xp").select("total_xp").eq("user_id", user.id).single(),
     supabase
@@ -106,6 +114,13 @@ export async function getGameState(
       .eq("user_id", user.id)
       .gte("date", weekStartStr)
       .lte("date", today),
+    supabase
+      .from("daily_state")
+      .select("id", { count: "exact", head: true })
+      .eq("user_id", user.id)
+      .gte("date", amsterdamIsoWeekMonday)
+      .lte("date", amsterdamIsoWeekSunday)
+      .eq("dcic_overdrive_trigger_reason", "weekly_slot"),
   ]);
 
   let ds = dailyState as Record<string, unknown> | null | undefined;
@@ -293,7 +308,11 @@ export async function getGameState(
     // Auto-trigger Overdrive (mixed rules: momentum combo + streak rescue) when safe.
     const alreadyTriggeredToday = Boolean(ds?.dcic_overdrive_auto_triggered);
     const modeLocked = isModeLocked(gameState);
-    const localHour = new Date().getHours();
+    const localHour = getAppTimezoneHour();
+    const localWeekday = getAppTimezoneWeekday();
+    const weeklySlotDays = pickWeeklySlotWeekdays(user.id, amsterdamIsoWeekMonday);
+    const weeklyRandomSlotToday = weeklySlotDays.has(localWeekday);
+    const weeklySlotTriggersThisIsoWeek = weeklySlotCount ?? 0;
 
     let completionsInLast45m = 0;
     let completionsToday = 0;
@@ -359,6 +378,8 @@ export async function getGameState(
       completionsInLast45m,
       completionsToday,
       streakAtRisk,
+      weeklyRandomSlotToday,
+      weeklySlotTriggersThisIsoWeek,
     });
 
     if (odDecision.shouldTrigger) {

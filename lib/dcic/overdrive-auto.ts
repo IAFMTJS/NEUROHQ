@@ -1,15 +1,20 @@
 import type { GameState } from "./types";
 
-export type OverdriveAutoReason = "momentum_combo" | "streak_rescue";
+export type OverdriveAutoReason = "momentum_combo" | "streak_rescue" | "weekly_slot";
 
 export type OverdriveAutoContext = {
   nowMs: number;
+  /** Hour 0–23 in app timezone (Europe/Amsterdam). */
   localHour: number;
   alreadyTriggeredToday: boolean;
   modeLocked: boolean;
   completionsInLast45m: number;
   completionsToday: number;
   streakAtRisk: boolean;
+  /** Today is one of this user's two pseudo-random Overdrive weekdays for the Amsterdam ISO week. */
+  weeklyRandomSlotToday: boolean;
+  /** `weekly_slot` triggers already used this Amsterdam ISO week (Mon–Sun), max 2. */
+  weeklySlotTriggersThisIsoWeek: number;
 };
 
 export type OverdriveAutoDecision =
@@ -26,13 +31,42 @@ function isWithinWindow(hour: number, startInclusive: number, endInclusive: numb
   return h >= startInclusive && h <= endInclusive;
 }
 
+function hashStringToUint32(s: string): number {
+  let h = 2166136261;
+  for (let i = 0; i < s.length; i++) {
+    h ^= s.charCodeAt(i);
+    h = Math.imul(h, 16777619);
+  }
+  return h >>> 0;
+}
+
+/**
+ * Two distinct weekdays (0=Sun … 6=Sat, Amsterdam convention) for this user × ISO week.
+ * Deterministic from `userId` + Monday YMD so the same days apply all week, then change next week.
+ */
+export function pickWeeklySlotWeekdays(
+  userId: string,
+  weekMondayAmsterdamYmd: string
+): ReadonlySet<number> {
+  let seed = hashStringToUint32(`neurohq-weekly-od|${userId}|${weekMondayAmsterdamYmd}`);
+  const days = [0, 1, 2, 3, 4, 5, 6];
+  for (let i = days.length - 1; i > 0; i--) {
+    seed = (Math.imul(seed, 1103515245) + 12345) >>> 0;
+    const j = seed % (i + 1);
+    const tmp = days[i]!;
+    days[i] = days[j]!;
+    days[j] = tmp;
+  }
+  return new Set([days[0]!, days[1]!]);
+}
+
 /**
  * Pure decision: whether Overdrive should auto-trigger right now.
  *
  * Philosophy:
  * - Rare and bounded: at most once per local day.
  * - Never when capacity is low or when the system is already steering via Recovery/War locks.
- * - Mixed triggers: momentum reward + streak rescue conversion.
+ * - Mixed triggers: twice-weekly random weekdays + momentum + streak rescue.
  */
 export function maybeAutoTriggerOverdrive(
   gameState: GameState,
@@ -52,6 +86,15 @@ export function maybeAutoTriggerOverdrive(
   if (gameState.stats.energy < 60) return { shouldTrigger: false, reason: null };
   if (gameState.stats.focus < 60) return { shouldTrigger: false, reason: null };
   if (gameState.stats.load > 70) return { shouldTrigger: false, reason: null };
+
+  // Trigger 0: Twice per Amsterdam ISO week on pseudo-random weekdays (stable per user × week).
+  if (
+    ctx.weeklySlotTriggersThisIsoWeek < 2 &&
+    ctx.weeklyRandomSlotToday &&
+    isWithinWindow(ctx.localHour, 9, 20)
+  ) {
+    return { shouldTrigger: true, reason: "weekly_slot" };
+  }
 
   // Trigger 1: Momentum combo (3+ completions inside 45 minutes).
   if (ctx.completionsInLast45m >= 3) {

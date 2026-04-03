@@ -45,6 +45,7 @@ import { refreshMergedSnapshotFromNetwork } from "@/lib/daily-bootstrap";
 import { parseMissionProgressionFromTaskTags } from "@/lib/mission-progression";
 import { useDCICGameState } from "@/lib/dcic/game-state-client";
 import { NeuroMicroReportBar } from "@/components/missions/NeuroMicroReportBar";
+import { PlayDeckModal } from "@/components/missions/PlayDeckModal";
 import { useMissionsBacklogShelfParts } from "@/components/missions/BacklogAndToekomstTriggers";
 
 const WEEKDAY_LABELS: Record<number, string> = { 1: "Mon", 2: "Tue", 3: "Wed", 4: "Thu", 5: "Fri", 6: "Sat", 7: "Sun" };
@@ -61,6 +62,7 @@ type ExtendedTask = Task & {
   notes?: string | null;
   validation_type?: string | null;
   psychology_label?: string | null;
+  play_kind?: string | null;
 };
 
 const EMPTY_TASKS: ExtendedTask[] = [];
@@ -260,6 +262,7 @@ export function TaskList({
   );
   const addParam = searchParams.get("add");
   const [quickAddOpen, setQuickAddOpen] = useState(false);
+  const [playDeckOpen, setPlayDeckOpen] = useState(false);
   const [addFullOpen, setAddFullOpen] = useState(false);
 
   useEffect(() => {
@@ -901,11 +904,18 @@ export function TaskList({
       setFocusTask(null);
       setDetailsTask(task);
     }
-    const deckMeta = [strategic?.domain ?? task.category, `+${xp} XP · ${timeFrame}`].filter(Boolean).join(" · ");
+    const deckMeta = [
+      task.play_kind ? "Play deck" : null,
+      strategic?.domain ?? task.category,
+      `+${xp} XP · ${timeFrame}`,
+    ]
+      .filter(Boolean)
+      .join(" · ");
     const deckHint =
       strategic?.psychologyLabel?.trim() ||
       (strategic?.difficultyRank ? `Rank ${strategic.difficultyRank}` : null) ||
       (task.recurrence_rule ? recurrenceLabel(task) : recommendedTaskIds?.includes(task.id) ? "Aanbevolen" : null) ||
+      (task.play_kind ? "Play" : null) ||
       "Missie";
 
     return (
@@ -990,6 +1000,11 @@ export function TaskList({
               )}
               {isFirstIncomplete && !task.completed && !blockReason && (
                 <span className="rounded bg-[var(--accent-focus)]/20 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-[var(--accent-focus)]">Today&apos;s mission</span>
+              )}
+              {(task.play_kind === "fun" || task.play_kind === "unwind" || task.play_kind === "challenge") && !task.completed && (
+                <span className="rounded bg-fuchsia-500/15 px-2 py-0.5 text-[10px] font-semibold text-fuchsia-200/90" title="Optionele play-missie">
+                  Play
+                </span>
               )}
               {isRoutineTask(task) && !task.completed && (
                 <span
@@ -1194,6 +1209,13 @@ export function TaskList({
                     {m === "focus" ? "Vandaag" : m}
                   </button>
                 ))}
+                <button
+                  type="button"
+                  onClick={() => setPlayDeckOpen(true)}
+                  className="rounded-full border border-[rgba(var(--mode-rgb),0.22)] px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.08em] text-[var(--text-muted)] transition-colors hover:border-[rgba(var(--mode-rgb),0.35)] hover:bg-[rgba(var(--mode-rgb),0.08)] hover:text-[var(--accent-focus)]"
+                >
+                  Play deck
+                </button>
               </div>
               {completedForDisplay.length > 0 && (
                 <button
@@ -1316,7 +1338,7 @@ export function TaskList({
                   <p
                     className="text-[9px] font-bold uppercase tracking-[0.16em] text-[var(--semantic-accent)]"
                   >
-                    Main mission
+                    {heroMissionTask.play_kind ? "Play deck" : "Main mission"}
                   </p>
                   <h3
                     className="mt-2 text-base font-bold leading-snug text-[var(--text-primary)] md:text-lg"
@@ -1636,6 +1658,7 @@ export function TaskList({
             router.refresh();
           }}
         />
+        <PlayDeckModal open={playDeckOpen} onClose={() => setPlayDeckOpen(false)} dateStr={date} />
         {focusTask && (
           <FocusModal
             open={!!focusTask}

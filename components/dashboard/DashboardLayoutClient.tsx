@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useLayoutEffect, useMemo } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { usePriorityNavClick } from "@/lib/navigation/use-priority-nav-click";
 import BottomNavigation from "@/components/ui/BottomNavigation";
 import { KeyboardShortcuts } from "@/components/KeyboardShortcuts";
@@ -48,11 +48,17 @@ function isProfileRoute(pathname: string) {
   return p === "/profile" || p.startsWith("/profile/");
 }
 
+function isStrategyRoute(pathname: string) {
+  const p = pathname.replace(/\/$/, "") || "/";
+  return p === "/strategy" || p.startsWith("/strategy/");
+}
+
 export function DashboardLayoutClient({
   children,
   initialDashboardSnapshot: initialDashboardSnapshotProp,
 }: Props) {
   const pathname = usePathname();
+  const router = useRouter();
   const onPriorityNavClick = usePriorityNavClick();
   const normalizedPath = pathname.replace(/\/$/, "") || "/";
   const dashboardHomeRoute = normalizedPath === "/dashboard";
@@ -85,15 +91,42 @@ export function DashboardLayoutClient({
     }
   }, [mode, tasksRoute, profileRoute]);
 
-  // Hydrate HQ store from DailySnapshot (single source of truth); no duplicate /api/bootstrap/today fetch.
+  // Calendar day in store: prefer TanStack bootstrap payload (updates after tab refocus) over frozen snapshot.
   useEffect(() => {
-    if (dailySnapshot?.date) {
-      setTodayDate(dailySnapshot.date);
-    }
-  }, [dailySnapshot?.date, setTodayDate]);
+    const d =
+      (typeof bootstrapQuery.data?.date === "string" && bootstrapQuery.data.date.trim()) ||
+      dailySnapshot?.date;
+    if (d) setTodayDate(d);
+  }, [bootstrapQuery.data?.date, dailySnapshot?.date, setTodayDate]);
 
   /** Keeps HQ store aligned with `/api/bootstrap/today` between navigations. */
   usePeriodicBootstrapRefresh(PERIODIC_SNAPSHOT_REFRESH_MINUTES);
+
+  /**
+   * Profile and Strategy are mostly RSC trees; they do not get new server HTML from bootstrap merge alone.
+   * After a browser tab switch, refetch the current route so content matches what a full reload would show.
+   */
+  const lastHubRefreshAtRef = useRef(0);
+  useEffect(() => {
+    if (!isProfileRoute(pathname) && !isStrategyRoute(pathname)) return;
+    let debounce: ReturnType<typeof setTimeout> | null = null;
+    const run = () => {
+      if (document.visibilityState !== "visible") return;
+      if (debounce) clearTimeout(debounce);
+      debounce = setTimeout(() => {
+        debounce = null;
+        const now = Date.now();
+        if (now - lastHubRefreshAtRef.current < 25_000) return;
+        lastHubRefreshAtRef.current = now;
+        router.refresh();
+      }, 450);
+    };
+    document.addEventListener("visibilitychange", run);
+    return () => {
+      document.removeEventListener("visibilitychange", run);
+      if (debounce) clearTimeout(debounce);
+    };
+  }, [pathname, router]);
 
   useEffect(() => {
     const today = new Date().toISOString().slice(0, 10);

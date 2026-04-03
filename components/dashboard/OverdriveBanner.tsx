@@ -30,6 +30,8 @@ function reasonLabel(reason: string | null | undefined): string | null {
   if (!reason) return null;
   if (reason === "momentum_combo") return "Auto-trigger: momentum combo";
   if (reason === "streak_rescue") return "Auto-trigger: streak rescue";
+  if (reason === "weekly_slot")
+    return "Auto-trigger: surprise weekly Overdrive (random days, changes each week)";
   return `Auto-trigger: ${reason}`;
 }
 

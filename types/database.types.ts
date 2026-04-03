@@ -441,6 +441,7 @@ export type Database = {
           neuro_self_report_opt_in: boolean
           pet_attachment_level: number
           pet_type: string
+          play_profile: Json
           updated_at: string
           user_id: string
           week_theme: string | null
@@ -457,6 +458,7 @@ export type Database = {
           neuro_self_report_opt_in?: boolean
           pet_attachment_level?: number
           pet_type?: string
+          play_profile?: Json
           updated_at?: string
           user_id: string
           week_theme?: string | null
@@ -473,6 +475,7 @@ export type Database = {
           neuro_self_report_opt_in?: boolean
           pet_attachment_level?: number
           pet_type?: string
+          play_profile?: Json
           updated_at?: string
           user_id?: string
           week_theme?: string | null
@@ -2585,6 +2588,7 @@ export type Database = {
           mission_intent: string | null
           notes: string | null
           parent_task_id: string | null
+          play_kind: string | null
           priority: number | null
           psychology_label: string | null
           recurrence_rule: string | null
@@ -2629,6 +2633,7 @@ export type Database = {
           mission_intent?: string | null
           notes?: string | null
           parent_task_id?: string | null
+          play_kind?: string | null
           priority?: number | null
           psychology_label?: string | null
           recurrence_rule?: string | null
@@ -2673,6 +2678,7 @@ export type Database = {
           mission_intent?: string | null
           notes?: string | null
           parent_task_id?: string | null
+          play_kind?: string | null
           priority?: number | null
           psychology_label?: string | null
           recurrence_rule?: string | null

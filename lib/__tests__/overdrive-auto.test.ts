@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { maybeAutoTriggerOverdrive } from "@/lib/dcic/overdrive-auto";
+import { maybeAutoTriggerOverdrive, pickWeeklySlotWeekdays } from "@/lib/dcic/overdrive-auto";
 import type { GameState } from "@/lib/dcic/types";
 
 function baseState(): GameState {
@@ -65,6 +65,8 @@ describe("maybeAutoTriggerOverdrive", () => {
       completionsInLast45m: 10,
       completionsToday: 10,
       streakAtRisk: true,
+      weeklyRandomSlotToday: false,
+      weeklySlotTriggersThisIsoWeek: 0,
     });
     expect(d.shouldTrigger).toBe(false);
   });
@@ -79,6 +81,8 @@ describe("maybeAutoTriggerOverdrive", () => {
       completionsInLast45m: 3,
       completionsToday: 3,
       streakAtRisk: false,
+      weeklyRandomSlotToday: false,
+      weeklySlotTriggersThisIsoWeek: 0,
     });
     expect(d).toEqual({ shouldTrigger: true, reason: "momentum_combo" });
   });
@@ -93,6 +97,8 @@ describe("maybeAutoTriggerOverdrive", () => {
       completionsInLast45m: 1,
       completionsToday: 1,
       streakAtRisk: true,
+      weeklyRandomSlotToday: false,
+      weeklySlotTriggersThisIsoWeek: 0,
     });
     expect(d).toEqual({ shouldTrigger: true, reason: "streak_rescue" });
   });
@@ -108,8 +114,80 @@ describe("maybeAutoTriggerOverdrive", () => {
       completionsInLast45m: 5,
       completionsToday: 5,
       streakAtRisk: false,
+      weeklyRandomSlotToday: false,
+      weeklySlotTriggersThisIsoWeek: 0,
     });
     expect(d.shouldTrigger).toBe(false);
+  });
+
+  it("triggers weekly_slot when random slot day and under weekly cap", () => {
+    const s = baseState();
+    const d = maybeAutoTriggerOverdrive(s, {
+      nowMs: Date.now(),
+      localHour: 10,
+      alreadyTriggeredToday: false,
+      modeLocked: false,
+      completionsInLast45m: 0,
+      completionsToday: 0,
+      streakAtRisk: false,
+      weeklyRandomSlotToday: true,
+      weeklySlotTriggersThisIsoWeek: 0,
+    });
+    expect(d).toEqual({ shouldTrigger: true, reason: "weekly_slot" });
+  });
+
+  it("does not weekly_slot when weekly cap reached", () => {
+    const s = baseState();
+    const d = maybeAutoTriggerOverdrive(s, {
+      nowMs: Date.now(),
+      localHour: 10,
+      alreadyTriggeredToday: false,
+      modeLocked: false,
+      completionsInLast45m: 0,
+      completionsToday: 0,
+      streakAtRisk: false,
+      weeklyRandomSlotToday: true,
+      weeklySlotTriggersThisIsoWeek: 2,
+    });
+    expect(d.shouldTrigger).toBe(false);
+  });
+
+  it("does not weekly_slot outside 9–20 window", () => {
+    const s = baseState();
+    const d = maybeAutoTriggerOverdrive(s, {
+      nowMs: Date.now(),
+      localHour: 8,
+      alreadyTriggeredToday: false,
+      modeLocked: false,
+      completionsInLast45m: 0,
+      completionsToday: 0,
+      streakAtRisk: false,
+      weeklyRandomSlotToday: true,
+      weeklySlotTriggersThisIsoWeek: 0,
+    });
+    expect(d.shouldTrigger).toBe(false);
+  });
+
+  it("pickWeeklySlotWeekdays is stable for the same user and week", () => {
+    const a = pickWeeklySlotWeekdays("user-1", "2026-04-06");
+    const b = pickWeeklySlotWeekdays("user-1", "2026-04-06");
+    expect(a.size).toBe(2);
+    expect(b.size).toBe(2);
+    expect([...a].sort()).toEqual([...b].sort());
+  });
+
+  it("pickWeeklySlotWeekdays can differ across weeks for same user", () => {
+    const weeks = [
+      "2026-01-05",
+      "2026-01-12",
+      "2026-01-19",
+      "2026-01-26",
+      "2026-02-02",
+      "2026-02-09",
+    ].map((m) => pickWeeklySlotWeekdays("user-1", m));
+    const signatures = weeks.map((s) => [...s].sort().join(","));
+    const unique = new Set(signatures);
+    expect(unique.size).toBeGreaterThan(1);
   });
 });
 

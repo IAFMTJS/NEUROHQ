@@ -16,6 +16,63 @@ export function todayDateString(): string {
   return new Date().toLocaleDateString("en-CA", { timeZone: APP_TIMEZONE });
 }
 
+/** Weekday in APP_TIMEZONE: 0 = Sunday … 6 = Saturday (matches JS getDay()). */
+export function getAppTimezoneWeekday(now: Date = new Date()): number {
+  const wd = new Intl.DateTimeFormat("en-US", {
+    timeZone: APP_TIMEZONE,
+    weekday: "short",
+  }).format(now);
+  const map: Record<string, number> = {
+    Sun: 0,
+    Mon: 1,
+    Tue: 2,
+    Wed: 3,
+    Thu: 4,
+    Fri: 5,
+    Sat: 6,
+  };
+  return map[wd] ?? 0;
+}
+
+/** Hour 0–23 in APP_TIMEZONE for the given instant. */
+export function getAppTimezoneHour(now: Date = new Date()): number {
+  const parts = new Intl.DateTimeFormat("en-CA", {
+    timeZone: APP_TIMEZONE,
+    hour: "2-digit",
+    hour12: false,
+  }).formatToParts(now);
+  const h = parts.find((p) => p.type === "hour")?.value ?? "0";
+  return parseInt(h, 10) || 0;
+}
+
+/** Add calendar days to an APP_TIMEZONE YYYY-MM-DD (noon anchor avoids DST edge cases). */
+export function addCalendarDaysAmsterdamYmd(ymd: string, deltaDays: number): string {
+  const [y, m, d] = ymd.split("-").map(Number);
+  const t = Date.UTC(y, m - 1, d, 12, 0, 0) + deltaDays * 86400000;
+  return new Date(t).toLocaleDateString("en-CA", { timeZone: APP_TIMEZONE });
+}
+
+/** Monday YYYY-MM-DD in APP_TIMEZONE for the ISO week that contains `todayAmsterdamYmd`. */
+export function getAmsterdamIsoWeekMonday(todayAmsterdamYmd: string): string {
+  const [y, mo, d] = todayAmsterdamYmd.split("-").map(Number);
+  let t = Date.UTC(y, mo - 1, d, 12, 0, 0);
+  for (let i = 0; i < 8; i++) {
+    const dt = new Date(t);
+    if (getAppTimezoneWeekday(dt) === 1) {
+      return dt.toLocaleDateString("en-CA", { timeZone: APP_TIMEZONE });
+    }
+    t -= 86400000;
+  }
+  return todayAmsterdamYmd;
+}
+
+/** Inclusive Monday–Sunday YYYY-MM-DD bounds in APP_TIMEZONE for the week containing today. */
+export function getAmsterdamIsoWeekRange(todayAmsterdamYmd: string): { monday: string; sunday: string } {
+  const monday = getAmsterdamIsoWeekMonday(todayAmsterdamYmd);
+  const sunday = addCalendarDaysAmsterdamYmd(monday, 6);
+  return { monday, sunday };
+}
+
 function utcCalendarParts(at: Date): { date: string; hour: number; minute: number } {
   return {
     date: at.toISOString().slice(0, 10),

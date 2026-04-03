@@ -22,7 +22,7 @@ let dcicGameStateBootstrapDone = false;
 /** Set when `StoreHydrator` applied `dcicGameState` from the daily snapshot (same payload as GET /api/dcic/game-state). */
 let dcicSeededFromDailySnapshot = false;
 
-/** Call after hydrating DCIC from `DailySnapshot` so `useDCICGameState` skips a redundant network fetch. */
+/** Call after hydrating DCIC from `DailySnapshot` so the store has instant UI; a fresh `/api/dcic/game-state` fetch still runs. */
 export function markDcicSeededFromDailySnapshot(): void {
   dcicSeededFromDailySnapshot = true;
 }
@@ -80,38 +80,40 @@ export function useDCICGameState() {
         return;
       }
 
+      const memoryBeforeLoad = useHQStore.getState().gameState;
+
       if (dcicSeededFromDailySnapshot) {
         setGameStateStatus("ready");
         setGameStateError(null);
-        dcicGameStateBootstrapDone = true;
-        return;
       }
 
-      const memoryBeforeLoad = useHQStore.getState().gameState;
-
-      setGameStateStatus("loading");
-      setGameStateError(null);
+      if (!dcicSeededFromDailySnapshot) {
+        setGameStateStatus("loading");
+        setGameStateError(null);
+      }
 
       let hadCached = false;
 
-      // 1. Try local cache first for instant UI
-      try {
-        const cachedRaw = await getCachedGameState();
-        if (!cancelled && cachedRaw) {
-          const cached = mergePreferValidOverdriveLock(
-            memoryBeforeLoad,
-            cachedRaw
-          );
-          applyDCICModeOverrideIfAny(cached);
-          setGameState(cached);
-          setGameStateStatus("ready");
-          hadCached = true;
+      // 1. Try local cache first for instant UI (skip if bootstrap snapshot already hydrated store)
+      if (!dcicSeededFromDailySnapshot) {
+        try {
+          const cachedRaw = await getCachedGameState();
+          if (!cancelled && cachedRaw) {
+            const cached = mergePreferValidOverdriveLock(
+              memoryBeforeLoad,
+              cachedRaw
+            );
+            applyDCICModeOverrideIfAny(cached);
+            setGameState(cached);
+            setGameStateStatus("ready");
+            hadCached = true;
+          }
+        } catch {
+          // Ignore cache errors; we'll still try network
         }
-      } catch {
-        // Ignore cache errors; we'll still try network
       }
 
-      // 2. Fetch fresh state from API
+      // 2. Fetch fresh state from API (always — corrects stale snapshot/cache for Overdrive locks)
       try {
         const res = await fetch("/api/dcic/game-state", {
           credentials: "include",

@@ -6,6 +6,7 @@ import { Suspense } from "react";
 import { ProfileCommandDeckLayout } from "@/components/profile/ProfileCommandDeckLayout";
 import { getUserPreferencesOrDefaults } from "@/app/actions/preferences";
 import { getBehaviorProfile } from "@/app/actions/behavior-profile";
+import { getPlayProfileDocument } from "@/app/actions/play-profile";
 import { getStudyPlan, getAccountabilitySettings } from "@/app/actions/behavior";
 import { getXPFullContext } from "@/app/actions/xp-context";
 import { getDailyState } from "@/app/actions/daily-state";
@@ -36,6 +37,10 @@ const ProfileEngineModesTab = nextDynamic(
   () => import("@/components/profile/ProfileEngineModesTab").then((m) => ({ default: m.ProfileEngineModesTab })),
   { loading: () => null },
 );
+const ProfileEnginePlayDeckTab = nextDynamic(
+  () => import("@/components/profile/ProfileEnginePlayDeckTab").then((m) => ({ default: m.ProfileEnginePlayDeckTab })),
+  { loading: () => null },
+);
 
 export const dynamic = "force-dynamic";
 
@@ -43,6 +48,7 @@ const ENGINE_NAV: { id: ProfileEngineTabId; label: string }[] = [
   { id: "identity", label: "Identiteit" },
   { id: "behavior", label: "Gedrag" },
   { id: "modes", label: "Modi" },
+  { id: "play", label: "Play deck" },
 ];
 
 function MainTabNavSimplified({ active }: { active: "home" | "engine" | "insights" }) {
@@ -218,13 +224,14 @@ async function ProfileEngineAsync({
 }: {
   userEmail: string;
 }) {
-  const [rawPrefs, behaviorProfile, studyPlan, accountabilitySettings] = await Promise.all([
+  const [rawPrefs, behaviorProfile, studyPlan, accountabilitySettings, playProfile] = await Promise.all([
     getUserPreferencesOrDefaults(),
     getBehaviorProfile(),
     getStudyPlan(),
     getAccountabilitySettings(),
+    getPlayProfileDocument(),
   ]);
-  return { prefs: rawPrefs, behaviorProfile, studyPlan, accountabilitySettings, userEmail };
+  return { prefs: rawPrefs, behaviorProfile, studyPlan, accountabilitySettings, playProfile, userEmail };
 }
 
 export default async function ProfilePage({ searchParams }: { searchParams: Promise<Search> }) {
@@ -314,6 +321,8 @@ export default async function ProfilePage({ searchParams }: { searchParams: Prom
       {engineTab === "modes" && (
         <ProfileEngineModesTab initialSimplifiedContent={prefs.simplified_content} />
       )}
+
+      {engineTab === "play" && <ProfileEnginePlayDeckTab initialDocument={engine.playProfile} />}
     </>
   );
 
