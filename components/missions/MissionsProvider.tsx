@@ -41,11 +41,13 @@ export function MissionsProvider({ dateStr, children }: Props) {
     }))
   );
   const missions = useMemo((): MissionsSnapshot | null => {
-    let base: MissionsSnapshot | null = null;
-    if (snapshot?.missions && snapshot.missions.dateStr === dateStr) {
+    // Prefer TanStack bootstrap cache: it is updated after tab refocus / `applyBootstrapTodayToApp`.
+    // `useDailySnapshot()` stays frozen at first paint — if we preferred it over the query, every
+    // `missions` identity change would re-run the hydrate effect and clobber store daily/energy
+    // (and non-today tasks) with stale first-load data.
+    let base: MissionsSnapshot | null = missionsFromBootstrapToday(bootstrapToday, dateStr);
+    if (base == null && snapshot?.missions && snapshot.missions.dateStr === dateStr) {
       base = snapshot.missions;
-    } else {
-      base = missionsFromBootstrapToday(bootstrapToday, dateStr);
     }
     if (!base) return null;
     if (dateStr === storeTodayDate && missionsPipeline) {
@@ -69,7 +71,7 @@ export function MissionsProvider({ dateStr, children }: Props) {
       }
     }
     return base;
-  }, [snapshot?.missions, bootstrapToday, dateStr, storeTodayDate, missionsPipeline]);
+  }, [bootstrapToday, snapshot?.missions, dateStr, storeTodayDate, missionsPipeline]);
 
   const setTodayDate = useHQStore((s) => s.setTodayDate);
   const setTodayDailyState = useHQStore((s) => s.setTodayDailyState);

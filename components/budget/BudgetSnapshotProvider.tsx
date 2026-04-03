@@ -21,9 +21,10 @@ export function BudgetSnapshotProvider({ children }: Props) {
   const dayKey = snapshot?.date ?? getTodayKey();
   const { data: bootstrapToday } = useBootstrapToday(dayKey);
   const budget = useMemo(() => {
-    if (snapshot?.budget) return snapshot.budget;
-    return budgetFromBootstrapToday(bootstrapToday, dayKey);
-  }, [snapshot?.budget, bootstrapToday, dayKey]);
+    const fromQuery = budgetFromBootstrapToday(bootstrapToday, dayKey);
+    if (fromQuery) return fromQuery;
+    return snapshot?.budget ?? null;
+  }, [bootstrapToday, dayKey, snapshot?.budget]);
 
   const setBudgetSnapshot = useHQStore((s) => s.setBudgetSnapshot);
   const setBudgetStatus = useHQStore((s) => s.setBudgetStatus);
