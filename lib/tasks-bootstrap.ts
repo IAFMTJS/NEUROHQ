@@ -30,6 +30,7 @@ export function useTasksBootstrap(date: string) {
   const setError = useHQStore((s) => s.setTasksError);
   const setTasksForDate = useHQStore((s) => s.setTasksForDate);
   const visibilityDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const visibilityFetchGenRef = useRef(0);
 
   useEffect(() => {
     const isToday = date === getTodayKey();
@@ -67,7 +68,7 @@ export function useTasksBootstrap(date: string) {
         if (cancelled) return;
         const prior = useHQStore.getState().tasksByDate[date] ?? EMPTY_TASKS;
         const next =
-          isToday && prior.length > 0
+          prior.length > 0
             ? mergeTasksPreferringLocalCompletedWhenServerStale(prior, tasks)
             : tasks;
         setTasksForDate(date, next);
@@ -106,9 +107,11 @@ export function useTasksBootstrap(date: string) {
         abort?.abort();
         abort = new AbortController();
         const signal = abort.signal;
+        const gen = ++visibilityFetchGenRef.current;
         void (async () => {
           try {
             const tasks = await fetchTasksForDate(date, signal);
+            if (gen !== visibilityFetchGenRef.current) return;
             const prior = useHQStore.getState().tasksByDate[date] ?? EMPTY_TASKS;
             const next =
               prior.length > 0

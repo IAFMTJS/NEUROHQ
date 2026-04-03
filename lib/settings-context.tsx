@@ -139,7 +139,7 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
             setSettings(await fetchSettings());
           }
         } catch {
-          setSettings(null);
+          // Tab refocus / transient network errors must not wipe settings (would blank large parts of the app).
         }
       })();
     };

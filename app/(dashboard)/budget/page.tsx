@@ -76,23 +76,30 @@ export default async function BudgetPage({ searchParams }: Props) {
   const isHistoryView = !!monthParam && /^\d{4}-\d{2}$/.test(monthParam);
   const [year, month] = isHistoryView ? monthParam!.split("-").map(Number) : [0, 0];
 
-  try {
-    await generateRecurringEntries();
-  } catch {
-    /* table may not exist yet */
-  }
-  try {
-    await autoAwardBudgetOptimizationForCurrentUser();
-  } catch {
-    /* ignore auto-award failures to keep budget page resilient */
-  }
-  await syncBudgetDisciplineFromDataForToday();
-  const prefs = await getUserPreferencesOrDefaults();
+  /** Run preamble in parallel: previously ~5 sequential server round-trips before the main batch. */
+  const [, , , prefs, periodBounds, paydayDayOfMonth] = await Promise.all([
+    (async () => {
+      try {
+        await generateRecurringEntries();
+      } catch {
+        /* table may not exist yet */
+      }
+    })(),
+    (async () => {
+      try {
+        await autoAwardBudgetOptimizationForCurrentUser();
+      } catch {
+        /* ignore auto-award failures to keep budget page resilient */
+      }
+    })(),
+    syncBudgetDisciplineFromDataForToday(),
+    getUserPreferencesOrDefaults(),
+    getBudgetPeriodBounds(),
+    getPaydayDayOfMonth(),
+  ]);
   const simplifiedBudget = prefs.simplified_content === true;
-  const periodBounds = await getBudgetPeriodBounds();
   const { periodStart, periodEnd, isPaydayCycle } = periodBounds;
   const { nextMonthStart, nextMonthEnd, prevMonthStart, prevMonthEnd } = getBudgetAdjacentMonths();
-  const paydayDayOfMonth = await getPaydayDayOfMonth();
   const prevPeriodRange = isPaydayCycle
     ? getPreviousPeriodBounds(periodStart, paydayDayOfMonth ?? 25)
     : { prevStart: prevMonthStart, prevEnd: prevMonthEnd };
