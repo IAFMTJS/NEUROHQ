@@ -123,7 +123,9 @@ export function PlayDeckModal({ open, onClose, dateStr }: Props) {
                       <span className="rounded-md border border-[rgba(var(--mode-rgb),0.25)] bg-[rgba(var(--mode-rgb-deep),0.12)] px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-[var(--text-muted)]">
                         {KIND_LABEL[s.play_kind] ?? s.play_kind}
                       </span>
-                      <span className="text-[10px] text-[var(--text-muted)]">~{s.energy} energie</span>
+                      <span className="text-[10px] text-[var(--text-muted)]">
+                        ~{4 + s.energy} energie
+                      </span>
                     </span>
                     <span className="mt-1 block text-sm text-[var(--text-primary)]">{s.title}</span>
                   </span>

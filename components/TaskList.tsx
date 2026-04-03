@@ -33,7 +33,6 @@ import { EnergyCapBar } from "@/components/missions/EnergyCapBar";
 import { DoneTodayToast } from "@/components/missions/DoneTodayToast";
 import { MissionsEngineWarningIcon } from "@/components/missions/MissionsEngineWarningIcon";
 import { collectMissionEngineWarningLines } from "@/lib/mission-engine-warnings";
-import { CornerNode } from "@/components/hud-test/CornerNode";
 import { neuroToast } from "@/lib/ui/neuro-toast";
 import { Modal } from "@/components/Modal";
 import { ErrorWithNextStep } from "@/components/ui/ErrorWithNextStep";
@@ -974,27 +973,55 @@ export function TaskList({
           tabIndex={0}
           onClick={(e) => { if ((e.target as HTMLElement).closest("button")) return; setFocusTask(null); setDetailsTask(task); }}
           onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setFocusTask(null); setDetailsTask(task); } }}
-          className={`flex cursor-pointer items-center gap-3 rounded-lg border px-3 py-2.5 ${
-            task.completed
-              ? "border-[var(--card-border)] bg-[var(--bg-surface)]/50 opacity-70"
-              : blockReason
-                ? "border-[var(--card-border)] bg-[var(--bg-surface)]/40 opacity-75"
-              : (task.carry_over_count ?? 0) > 0
-                ? isRoutineTask(task)
-                  ? "border-violet-500/40 bg-violet-500/10"
-                  : "border-amber-500/50 bg-amber-500/10"
-                : isFirstIncomplete
-                  ? "border-[var(--accent-focus)]/50 bg-[var(--accent-focus)]/5"
-                  : "border-[var(--card-border)] bg-[var(--bg-surface)]/50"
-          }`}
+          className={
+            commandDeckVisuals && missionsHeroLayout
+              ? `flex cursor-pointer items-center gap-3 rounded-xl border px-3 py-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] transition-colors ${
+                  task.completed
+                    ? "border-[rgba(var(--mode-rgb),0.08)] bg-[rgba(6,18,30,0.22)] opacity-75"
+                    : blockReason
+                      ? "border-[rgba(var(--mode-rgb),0.1)] bg-[rgba(6,18,30,0.28)] opacity-80"
+                      : (task.carry_over_count ?? 0) > 0
+                        ? isRoutineTask(task)
+                          ? "border-violet-500/35 bg-violet-500/[0.08]"
+                          : "border-amber-500/40 bg-amber-500/[0.07]"
+                        : isFirstIncomplete
+                          ? "border-[rgba(var(--semantic-accent),0.35)] bg-[rgba(var(--semantic-accent),0.06)]"
+                          : "border-[rgba(var(--mode-rgb),0.12)] bg-[rgba(6,18,30,0.35)] hover:border-[rgba(var(--mode-rgb),0.22)] hover:bg-[rgba(var(--mode-rgb),0.08)]"
+                }`
+              : `flex cursor-pointer items-center gap-3 rounded-lg border px-3 py-2.5 ${
+                  task.completed
+                    ? "border-[var(--card-border)] bg-[var(--bg-surface)]/50 opacity-70"
+                    : blockReason
+                      ? "border-[var(--card-border)] bg-[var(--bg-surface)]/40 opacity-75"
+                      : (task.carry_over_count ?? 0) > 0
+                        ? isRoutineTask(task)
+                          ? "border-violet-500/40 bg-violet-500/10"
+                          : "border-amber-500/50 bg-amber-500/10"
+                        : isFirstIncomplete
+                          ? "border-[var(--accent-focus)]/50 bg-[var(--accent-focus)]/5"
+                          : "border-[var(--card-border)] bg-[var(--bg-surface)]/50"
+                }`
+          }
         >
+          <span
+            className="mt-0.5 h-2 w-2 shrink-0 rounded-full bg-[var(--semantic-accent)]/55 shadow-[0_0_8px_rgba(var(--mode-rgb),0.25)]"
+            aria-hidden
+          />
           <button
             type="button"
             onClick={(e) => { e.stopPropagation(); if (!task.completed) handleComplete(task.id); }}
             disabled={task.completed || completingIds.has(task.id) || !!blockReason}
-            className={`h-6 w-6 shrink-0 rounded-lg border-2 flex items-center justify-center ${
-              task.completed ? "border-green-500 bg-green-500/20 text-green-400" : "border-neutral-500 bg-transparent hover:border-[var(--accent-focus)] hover:bg-[var(--accent-focus)]/20 text-transparent"
-            } disabled:opacity-50`}
+            className={
+              commandDeckVisuals && missionsHeroLayout
+                ? `h-5 w-5 shrink-0 rounded-md border-2 flex items-center justify-center ${
+                    task.completed
+                      ? "border-emerald-500/70 bg-emerald-500/15 text-emerald-400"
+                      : "border-[rgba(var(--mode-rgb),0.4)] bg-transparent hover:border-[var(--semantic-accent)] hover:bg-[var(--semantic-accent)]/12 text-transparent"
+                  } disabled:opacity-50`
+                : `h-6 w-6 shrink-0 rounded-lg border-2 flex items-center justify-center ${
+                    task.completed ? "border-green-500 bg-green-500/20 text-green-400" : "border-neutral-500 bg-transparent hover:border-[var(--accent-focus)] hover:bg-[var(--accent-focus)]/20 text-transparent"
+                  } disabled:opacity-50`
+            }
             aria-label={task.completed ? "Completed" : completingIds.has(task.id) ? "Saving…" : blockReason ? "Geblokkeerd" : "Complete task"}
           >
             {task.completed && <span className="text-sm">✓</span>}
@@ -1007,7 +1034,9 @@ export function TaskList({
                 </span>
               )}
               {isFirstIncomplete && !task.completed && !blockReason && (
-                <span className="rounded bg-[var(--accent-focus)]/20 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-[var(--accent-focus)]">Today&apos;s mission</span>
+                <span className="rounded bg-[var(--accent-focus)]/20 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-[var(--accent-focus)]">
+                  {commandDeckVisuals && missionsHeroLayout ? "Eerste missie" : "Today's mission"}
+                </span>
               )}
               {(task.play_kind === "fun" || task.play_kind === "unwind" || task.play_kind === "challenge") && !task.completed && (
                 <span className="rounded bg-fuchsia-500/15 px-2 py-0.5 text-[10px] font-semibold text-fuchsia-200/90" title="Optionele play-missie">
@@ -1028,19 +1057,30 @@ export function TaskList({
                 </span>
               )}
               {!isRoutineTask(task) && task.carry_over_count > 0 && !task.completed && (
-                <span className="rounded bg-amber-500/20 px-2 py-0.5 text-[10px] font-semibold text-amber-400">Carried over</span>
+                <span className="rounded bg-amber-500/20 px-2 py-0.5 text-[10px] font-semibold text-amber-400">
+                  {commandDeckVisuals && missionsHeroLayout ? "Meegenomen" : "Carried over"}
+                </span>
               )}
               {task.category && (
                 <span className="rounded bg-[var(--bg-surface)] px-1.5 py-0.5 text-[10px] font-medium text-[var(--text-muted)]">{task.category}</span>
               )}
               {task.energy_required != null && (
-                <span className="rounded bg-[var(--accent-energy)]/20 px-1.5 py-0.5 text-[10px] font-medium text-[var(--accent-energy)]" title="Energy cost">⚡{task.energy_required}</span>
+                <span
+                  className="rounded bg-[var(--accent-energy)]/20 px-1.5 py-0.5 text-[10px] font-medium text-[var(--accent-energy)]"
+                  title="Energie"
+                >
+                  {commandDeckVisuals && missionsHeroLayout ? `E${task.energy_required}` : `⚡${task.energy_required}`}
+                </span>
               )}
               {task.mental_load != null && (
-                <span className="rounded bg-purple-500/20 px-1.5 py-0.5 text-[10px] font-medium text-purple-300" title="Mental load">🧠{task.mental_load}</span>
+                <span className="rounded bg-purple-500/20 px-1.5 py-0.5 text-[10px] font-medium text-purple-300" title="Mentale belasting">
+                  {commandDeckVisuals && missionsHeroLayout ? `M${task.mental_load}` : `🧠${task.mental_load}`}
+                </span>
               )}
               {task.social_load != null && (
-                <span className="rounded bg-white/10 px-1.5 py-0.5 text-[10px] font-medium text-white/80" title="Social load">👥{task.social_load}</span>
+                <span className="rounded bg-white/10 px-1.5 py-0.5 text-[10px] font-medium text-white/80" title="Sociale belasting">
+                  {commandDeckVisuals && missionsHeroLayout ? `S${task.social_load}` : `👥${task.social_load}`}
+                </span>
               )}
               {progressionMeta && (
                 <span
@@ -1091,7 +1131,7 @@ export function TaskList({
                 disabled={snoozingIds.has(task.id)}
                 className="rounded-lg px-2 py-1 text-xs text-[var(--text-muted)] hover:bg-[var(--accent-focus)]/10 hover:text-[var(--accent-focus)]"
               >
-                {snoozingIds.has(task.id) ? "…" : "Snooze"}
+                {snoozingIds.has(task.id) ? "…" : commandDeckVisuals && missionsHeroLayout ? "Uitstellen" : "Snooze"}
               </button>
               {task.recurrence_rule && (
                 <button
@@ -1099,9 +1139,9 @@ export function TaskList({
                   onClick={(e) => { e.stopPropagation(); handleSkipNext(task.id); }}
                   disabled={skipNextIds.has(task.id)}
                   className="rounded-lg px-2 py-1 text-xs text-[var(--text-muted)] hover:bg-[var(--accent-focus)]/10 hover:text-[var(--accent-focus)]"
-                  title="Skip next occurrence (move to the following date)"
+                  title="Volgende herhaling overslaan"
                 >
-                  {skipNextIds.has(task.id) ? "…" : "Skip next"}
+                  {skipNextIds.has(task.id) ? "…" : commandDeckVisuals && missionsHeroLayout ? "Overslaan" : "Skip next"}
                 </button>
               )}
             </>
@@ -1112,7 +1152,7 @@ export function TaskList({
             disabled={!!pendingDelete}
             className="rounded-lg px-2 py-1 text-xs text-neutral-500 hover:bg-red-500/10 hover:text-red-400"
           >
-            Delete
+            {commandDeckVisuals && missionsHeroLayout ? "Verwijderen" : "Delete"}
           </button>
         </div>
         {subtasks.length > 0 && (

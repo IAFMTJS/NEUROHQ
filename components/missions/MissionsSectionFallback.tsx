@@ -2,10 +2,7 @@
 
 import { useMemo } from "react";
 import { useHQStore } from "@/lib/hq-store";
-import { SciFiPanel } from "@/components/hud-test/SciFiPanel";
-import { CornerNode } from "@/components/hud-test/CornerNode";
 import { Skeleton } from "@/components/Skeleton";
-import hudStyles from "@/components/hud-test/hud.module.css";
 
 type CachedMission = { id: string; title?: string | null; completed?: boolean };
 
@@ -15,46 +12,40 @@ type SnapshotData = {
   completedToday: CachedMission[];
 };
 
+function DeckishRow({ muted }: { muted?: boolean }) {
+  return (
+    <li
+      className={`flex items-center gap-3 rounded-xl border px-3 py-3 ${
+        muted
+          ? "border-[rgba(var(--mode-rgb),0.08)] bg-[rgba(6,18,30,0.2)] opacity-80"
+          : "border-[rgba(var(--mode-rgb),0.12)] bg-[rgba(6,18,30,0.35)]"
+      }`}
+    >
+      <span className="h-2 w-2 shrink-0 rounded-full bg-[var(--semantic-accent)]/40" aria-hidden />
+      <Skeleton className="h-5 w-5 shrink-0 rounded-md" />
+      <Skeleton className={`h-4 flex-1 max-w-[220px] ${muted ? "opacity-60" : ""}`} />
+    </li>
+  );
+}
+
 function SkeletonLayout() {
   return (
-    <SciFiPanel variant="flat-glass" className={hudStyles.focusSecondary} bodyClassName="p-4 md:p-5">
-      <CornerNode corner="top-left" />
-      <CornerNode corner="top-right" />
-      <div className="min-h-[44px]" aria-hidden />
-      <div className="h-10 animate-pulse rounded-lg bg-white/5" aria-hidden />
-      <div className="min-h-[24px]" aria-hidden />
-      <div className="card-simple overflow-hidden p-0">
-        <div className="border-b border-[var(--card-border)] px-4 py-3">
-          <div className="flex flex-wrap items-start justify-between gap-3">
-            <div>
-              <h2 className="text-base font-semibold text-[var(--text-primary)]">
-                Today&apos;s missions <span className="font-medium text-[var(--accent-focus)]">· Commander</span>
-              </h2>
-              <p className="mt-0.5 text-xs text-[var(--text-muted)]">Volledige taakformulier · XP per missie</p>
-            </div>
-            <div className="flex flex-wrap items-center gap-2">
-              <Skeleton className="h-10 w-32 rounded-full" />
-              <Skeleton className="h-9 w-24 rounded-full" />
-            </div>
-          </div>
-        </div>
-        <div className="p-4">
-          <div className="rounded-2xl border border-[var(--card-border)] bg-[var(--bg-surface)]/60 p-4">
-            <Skeleton className="mb-3 h-4 w-24" />
-            <ul className="space-y-2">
-              {[1, 2, 3, 4].map((i) => (
-                <li key={i} className="flex items-center gap-3 rounded-lg border border-[var(--card-border)] bg-[var(--bg-surface)]/50 px-3 py-2.5">
-                  <Skeleton className="h-6 w-6 shrink-0 rounded-lg" />
-                  <Skeleton className="h-4 flex-1 max-w-[200px]" />
-                  <Skeleton className="h-8 w-16 rounded-lg" />
-                  <Skeleton className="h-8 w-14 rounded-lg" />
-                </li>
-              ))}
-            </ul>
-          </div>
-        </div>
+    <div className="space-y-4">
+      <div className="flex flex-wrap gap-2">
+        <Skeleton className="h-8 w-24 rounded-full" />
+        <Skeleton className="h-8 w-24 rounded-full" />
+        <Skeleton className="h-8 w-28 rounded-full" />
       </div>
-    </SciFiPanel>
+      <div className="rounded-xl border border-[rgba(var(--mode-rgb),0.14)] bg-[rgba(6,18,30,0.28)] p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
+        <Skeleton className="mb-3 h-3 w-32" />
+        <Skeleton className="mb-4 h-16 w-full rounded-xl" />
+        <ul className="space-y-2">
+          {[1, 2, 3].map((i) => (
+            <DeckishRow key={i} />
+          ))}
+        </ul>
+      </div>
+    </div>
   );
 }
 
@@ -63,68 +54,56 @@ function CachedLayout({ snapshot, dateStr }: { snapshot: SnapshotData; dateStr: 
   const incomplete = (snapshot.tasks ?? []).filter((t) => !t.completed);
   const completed = (snapshot.completedToday ?? []).slice(0, 8);
   return (
-    <SciFiPanel variant="flat-glass" className={hudStyles.focusSecondary} bodyClassName="p-4 md:p-5">
-      <CornerNode corner="top-left" />
-      <CornerNode corner="top-right" />
-      <div className="min-h-[44px]" aria-hidden />
-      <div className="h-10 animate-pulse rounded-lg bg-white/5" aria-hidden />
-      <div className="min-h-[24px]" aria-hidden />
-      <div className="card-simple overflow-hidden p-0">
-        <div className="border-b border-[var(--card-border)] px-4 py-3">
-          <div className="flex flex-wrap items-start justify-between gap-3">
-            <div>
-              <h2 className="text-base font-semibold text-[var(--text-primary)]">
-                Today&apos;s missions <span className="font-medium text-[var(--accent-focus)]">· Commander</span>
-              </h2>
-              <p className="mt-0.5 text-xs text-[var(--text-muted)] flex items-center gap-2">
-                <span className="inline-flex items-center gap-1.5 rounded-full bg-[var(--accent-focus)]/15 px-2 py-0.5 text-[10px] font-medium text-[var(--accent-focus)]">
-                  Updating…
-                </span>
-                Volledige taakformulier · XP per missie
-              </p>
-            </div>
-            <div className="flex flex-wrap items-center gap-2">
-              <div className="h-10 w-32 rounded-full bg-white/5 animate-pulse" />
-            </div>
-          </div>
-        </div>
-        <div className="p-4">
-          <div className="rounded-2xl border border-[var(--card-border)] bg-[var(--bg-surface)]/60 p-4">
-            <ul className="space-y-2">
-              {incomplete.slice(0, 8).map((t) => (
+    <div className="space-y-4">
+      <div className="flex flex-wrap gap-2">
+        <span className="rounded-full border border-[rgba(var(--mode-rgb),0.2)] bg-[rgba(4,12,22,0.45)] px-3 py-1.5 text-[10px] font-semibold uppercase tracking-wide text-[var(--text-muted)]">
+          Laden…
+        </span>
+      </div>
+      <div className="rounded-xl border border-[rgba(var(--mode-rgb),0.14)] bg-[rgba(6,18,30,0.28)] p-4">
+        <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-[var(--text-muted)]">Missies</p>
+        <p className="mt-1 text-xs text-[var(--text-secondary)]">
+          <span className="mr-2 inline-flex items-center rounded-full bg-[var(--semantic-accent)]/15 px-2 py-0.5 text-[10px] font-medium text-[var(--semantic-accent)]">
+            Bijwerken
+          </span>
+          Serverdata wordt geladen…
+        </p>
+        <ul className="mt-4 space-y-2">
+          {incomplete.slice(0, 8).map((t) => (
+            <li
+              key={t.id}
+              className="flex items-center gap-3 rounded-xl border border-[rgba(var(--mode-rgb),0.12)] bg-[rgba(6,18,30,0.35)] px-3 py-3"
+            >
+              <span className="h-2 w-2 shrink-0 rounded-full bg-[var(--semantic-accent)]/50" aria-hidden />
+              <div className="h-5 w-5 shrink-0 rounded-md border-2 border-[rgba(var(--mode-rgb),0.35)]" />
+              <span className="min-w-0 flex-1 truncate text-sm text-[var(--text-primary)]">{t.title ?? "Missie"}</span>
+            </li>
+          ))}
+          {completed.length > 0 ? (
+            <>
+              <p className="mb-1 mt-3 text-[10px] font-bold uppercase tracking-[0.12em] text-[var(--text-muted)]">Voltooid vandaag</p>
+              {completed.map((t) => (
                 <li
                   key={t.id}
-                  className="flex items-center gap-3 rounded-lg border border-[var(--card-border)] bg-[var(--bg-surface)]/50 px-3 py-2.5"
+                  className="flex items-center gap-3 rounded-xl border border-[rgba(var(--mode-rgb),0.08)] bg-[rgba(6,18,30,0.2)] px-3 py-2.5 text-sm text-[var(--text-muted)] line-through opacity-80"
                 >
-                  <div className="h-6 w-6 shrink-0 rounded-lg border-2 border-neutral-500 bg-transparent" />
-                  <span className="text-sm text-[var(--text-primary)] truncate flex-1">{t.title ?? "Task"}</span>
+                  <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-md border border-emerald-500/50 bg-emerald-500/15 text-[10px] text-emerald-400">
+                    ✓
+                  </span>
+                  <span className="min-w-0 flex-1 truncate">{t.title ?? "Missie"}</span>
                 </li>
               ))}
-              {completed.length > 0 && (
-                <>
-                  <p className="mt-3 mb-1 text-xs font-semibold uppercase tracking-wide text-[var(--text-muted)]">Done today</p>
-                  {completed.map((t) => (
-                    <li
-                      key={t.id}
-                      className="flex items-center gap-3 rounded-lg border border-[var(--card-border)]/50 bg-[var(--bg-surface)]/30 px-3 py-2 text-sm text-[var(--text-muted)] line-through"
-                    >
-                      <span className="h-6 w-6 shrink-0 rounded-lg border-2 border-green-500 bg-green-500/20 flex items-center justify-center text-green-400 text-xs">✓</span>
-                      <span className="truncate flex-1">{t.title ?? "Task"}</span>
-                    </li>
-                  ))}
-                </>
-              )}
-            </ul>
-          </div>
-        </div>
+            </>
+          ) : null}
+        </ul>
       </div>
-    </SciFiPanel>
+    </div>
   );
 }
 
 type Props = { dateStr: string };
 
-/** Renders mission layout from HQ store tasks when hydrated; otherwise skeleton matching final layout. */
+/** Loading / streamed shell: matches command-deck missions list (no legacy SciFi double chrome). */
 export function MissionsSectionFallback({ dateStr }: Props) {
   const tasksRaw = useHQStore((s) => s.tasksByDate[dateStr]);
   const snapshot = useMemo(() => {

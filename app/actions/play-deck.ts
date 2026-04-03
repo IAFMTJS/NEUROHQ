@@ -3,6 +3,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { createTask } from "@/app/actions/tasks";
 import { getPlayProfileDocument, updatePlayProfileDocument } from "@/app/actions/play-profile";
+import { baseXpForLevel } from "@/lib/mission-templates";
 import { scorePlayTemplates, getPlayTemplateById } from "@/lib/play-deck/score-play-templates";
 import type { PlayDeckTemplate } from "@/lib/play-deck/types";
 
@@ -72,17 +73,30 @@ export async function addPlayDeckTasksForToday(params: {
       continue;
     }
     try {
+      // Match normal missions for performance rank + XP: low template energy → mid band (5–7)
+      // so energy/focus vs daily check-in is not structurally penalized.
+      const energyRequired = t.energy === 1 ? 5 : t.energy === 2 ? 6 : 7;
+      const focusRequired = energyRequired;
+      const mentalLoad = t.energy === 1 ? 4 : t.energy === 2 ? 5 : 6;
+      // Same scale as mission templates / baseXpForLevel (50 normaal, 100 veel; 75 mid tier).
+      const baseXp =
+        t.spice === "high"
+          ? baseXpForLevel("high")
+          : t.spice === "medium"
+            ? 75
+            : baseXpForLevel("normal");
+
       await createTask({
         title: t.title,
         due_date: params.dateStr,
         category: "personal",
-        energy_required: t.energy,
-        focus_required: Math.min(4, t.energy + 1),
-        mental_load: Math.min(4, t.energy + 1),
+        energy_required: energyRequired,
+        focus_required: focusRequired,
+        mental_load: mentalLoad,
         social_load: t.tags.includes("social_light") ? 4 : 2,
         task_type: t.play_kind === "unwind" ? "recovery" : "mixed",
         mission_intent: t.play_kind === "unwind" ? "recovery" : "experiment",
-        base_xp: 6,
+        base_xp: baseXp,
         play_kind: t.play_kind,
         task_tags: ["play_deck"],
       });

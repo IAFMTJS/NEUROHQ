@@ -1,7 +1,6 @@
 import type { AppMode } from "@/lib/app-mode";
-import { SciFiPanel } from "@/components/hud-test/SciFiPanel";
 
-type Props = { mode: AppMode; flatFrame?: boolean };
+type Props = { mode: AppMode };
 
 const labels: Record<AppMode, string[]> = {
   normal: [],
@@ -24,19 +23,22 @@ const labels: Record<AppMode, string[]> = {
   ],
 };
 
-export function ModeBanner({ mode, flatFrame = false }: Props) {
+/** Mode hint under missions hero — same visual language as command deck (no SciFiPanel / corner HUD). */
+export function ModeBanner({ mode }: Props) {
   if (mode === "normal" || !labels[mode]) return null;
   const options = labels[mode] as string[];
   const idx = new Date().getDay() % options.length;
   const message = options[idx] ?? options[0];
   return (
-    <SciFiPanel
-      variant="flat-glass"
-      className="overflow-hidden"
-      bodyClassName="flex items-start gap-3 px-4 py-3.5 text-sm text-[var(--text-primary)]"
+    <div
+      role="status"
+      className="flex items-start gap-3 rounded-xl border border-[rgba(var(--mode-rgb),0.14)] bg-[rgba(6,18,30,0.38)] px-4 py-3.5 text-sm leading-relaxed text-[var(--text-primary)] shadow-[inset_0_1px_0_rgba(255,255,255,0.05),0_0_24px_rgba(var(--mode-rgb),0.06)]"
     >
-      <span className="mt-0.5 h-2 w-2 shrink-0 rounded-full bg-[var(--accent-focus)]" aria-hidden />
-      <span>{message}</span>
-    </SciFiPanel>
+      <span
+        className="mt-0.5 h-2 w-2 shrink-0 rounded-full bg-[var(--semantic-accent)]/75 shadow-[0_0_10px_rgba(var(--mode-rgb),0.35)]"
+        aria-hidden
+      />
+      <span className="min-w-0">{message}</span>
+    </div>
   );
 }
