@@ -3,6 +3,7 @@ import type { GameState } from "@/lib/dcic/types";
 import type { DashboardCritical, DashboardSecondary } from "@/types/dashboard-data.types";
 import type { Task } from "@/types/database.types";
 import type { LearningSnapshot } from "@/types/hq-store.types";
+import type { MissionsPipelinePayload } from "@/lib/missions/derive-mission-capacity";
 
 export type { LearningSnapshot };
 
@@ -19,6 +20,28 @@ type DashboardSlice = {
   dashboardCritical: DashboardCritical | null;
   dashboardSecondary: DashboardSecondary | null;
   setDashboardSnapshot: (payload: { critical?: DashboardCritical | null; secondary?: DashboardSecondary | null }) => void;
+};
+
+type MissionsPipelineSlice = {
+  missionsPipeline: MissionsPipelinePayload | null;
+  setMissionsPipeline: (payload: MissionsPipelinePayload | null) => void;
+};
+
+/** Eén Zustand-`set` voor bootstrap-merge (minder subscription-trilling). */
+export type BootstrapHydrationInput = {
+  todayDate: string;
+  dashboardCritical?: DashboardCritical | null;
+  dashboardSecondary?: DashboardSecondary | null;
+  missionsPipeline?: MissionsPipelinePayload | null;
+  gameState?: GameState | null;
+  todayDailyState?: Record<string, unknown> | null;
+  todayEnergyBudget?: Record<string, unknown> | null;
+  budgetSnapshot?: Record<string, unknown> | null;
+  learningSnapshot?: LearningSnapshot | null;
+};
+
+type BootstrapHydrationSlice = {
+  applyBootstrapHydration: (input: BootstrapHydrationInput) => void;
 };
 
 type TasksSlice = {
@@ -62,7 +85,14 @@ type LearningSlice = {
   setLearningError: (error: string | null) => void;
 };
 
-type HQStore = DCICSlice & DashboardSlice & TasksSlice & TodaySlice & BudgetSlice & LearningSlice;
+type HQStore = DCICSlice &
+  DashboardSlice &
+  MissionsPipelineSlice &
+  BootstrapHydrationSlice &
+  TasksSlice &
+  TodaySlice &
+  BudgetSlice &
+  LearningSlice;
 
 /**
  * HQ store is memory-only: each full page load starts from bootstrap / providers (no localStorage / IndexedDB).
@@ -92,6 +122,21 @@ export const useHQStore = create<HQStore>()((set) => ({
         set((prev) => ({
           dashboardCritical: critical !== undefined ? critical : prev.dashboardCritical,
           dashboardSecondary: secondary !== undefined ? secondary : prev.dashboardSecondary,
+        })),
+      missionsPipeline: null,
+      setMissionsPipeline: (missionsPipeline) => set({ missionsPipeline }),
+      applyBootstrapHydration: (input) =>
+        set((s) => ({
+          ...s,
+          todayDate: input.todayDate,
+          ...(input.dashboardCritical !== undefined ? { dashboardCritical: input.dashboardCritical } : {}),
+          ...(input.dashboardSecondary !== undefined ? { dashboardSecondary: input.dashboardSecondary } : {}),
+          ...(input.missionsPipeline !== undefined ? { missionsPipeline: input.missionsPipeline } : {}),
+          ...(input.gameState !== undefined ? { gameState: input.gameState } : {}),
+          ...(input.todayDailyState !== undefined ? { todayDailyState: input.todayDailyState } : {}),
+          ...(input.todayEnergyBudget !== undefined ? { todayEnergyBudget: input.todayEnergyBudget } : {}),
+          ...(input.budgetSnapshot !== undefined ? { budgetSnapshot: input.budgetSnapshot } : {}),
+          ...(input.learningSnapshot !== undefined ? { learningSnapshot: input.learningSnapshot } : {}),
         })),
       // Tasks
       tasksByDate: {},

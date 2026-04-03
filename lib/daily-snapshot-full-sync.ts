@@ -18,9 +18,18 @@ export type BootstrapTodayResponse = {
   energyBudget?: Record<string, unknown> | null;
   budget?: Record<string, unknown> | null;
   learning?: unknown;
+  missionsPipeline?: unknown;
 };
 
 let syncDebounce: ReturnType<typeof setTimeout> | null = null;
+let mergeBootstrapInFlight: Promise<BootstrapTodayResponse | null> | null = null;
+
+/** Last successful bootstrap ETag (background merge only; enables 304). */
+let lastBootstrapEtag: string | null = null;
+
+export function resetBootstrapMergeEtag(): void {
+  lastBootstrapEtag = null;
+}
 
 /** Debounced bootstrap refetch (e.g. after local pending writes). */
 export function scheduleSyncDailySnapshot(delayMs = 1400): void {
@@ -34,17 +43,33 @@ export function scheduleSyncDailySnapshot(delayMs = 1400): void {
 
 export async function mergeDailySnapshotFromNetwork(): Promise<BootstrapTodayResponse | null> {
   if (typeof window === "undefined") return null;
+  if (mergeBootstrapInFlight) return mergeBootstrapInFlight;
   const refreshHeaders = { "x-neurohq-refresh": "1" };
-  try {
-    const res = await fetch("/api/bootstrap/today", {
-      credentials: "include",
-      headers: refreshHeaders,
-    });
-    if (!res.ok) return null;
-    return (await res.json()) as BootstrapTodayResponse;
-  } catch {
-    return null;
-  }
+  const run = (async (): Promise<BootstrapTodayResponse | null> => {
+    try {
+      const headers: Record<string, string> = { ...refreshHeaders };
+      if (lastBootstrapEtag) headers["If-None-Match"] = lastBootstrapEtag;
+      const res = await fetch("/api/bootstrap/today", {
+        credentials: "include",
+        headers,
+      });
+      if (res.status === 304) return null;
+      if (res.status === 401) {
+        lastBootstrapEtag = null;
+        return null;
+      }
+      if (!res.ok) return null;
+      const nextEtag = res.headers.get("etag");
+      if (nextEtag) lastBootstrapEtag = nextEtag;
+      return (await res.json()) as BootstrapTodayResponse;
+    } catch {
+      return null;
+    } finally {
+      mergeBootstrapInFlight = null;
+    }
+  })();
+  mergeBootstrapInFlight = run;
+  return run;
 }
 
 /** Apply DCIC game state from the in-memory daily bootstrap snapshot. */

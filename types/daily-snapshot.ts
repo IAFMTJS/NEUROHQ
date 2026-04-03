@@ -4,8 +4,9 @@
  * must match bootstrap `getGameState` for that date. Stale v1 snapshots are discarded via `isCompatibleSnapshot`.
  * v3: Budget slice matches `/api/bootstrap/today` (weekly month income/expense, `financeState`, `financialInsights`);
  * invalidates older caches so first paint uses the full current bootstrap shape.
+ * v4: Missions slice may include `decisionBlocks`, `capacity`, `buildMeta` (UMS pipeline from bootstrap).
  */
-export const LATEST_SNAPSHOT_VERSION = 3 as const;
+export const LATEST_SNAPSHOT_VERSION = 4 as const;
 
 export type DailySnapshotVersion = typeof LATEST_SNAPSHOT_VERSION;
 
@@ -14,6 +15,8 @@ import type {
   DashboardCritical,
   DashboardSecondary,
 } from "@/types/dashboard-data.types";
+import type { DecisionBlocksResult } from "@/app/actions/missions-performance";
+import type { MissionCapacitySnapshot } from "@/lib/missions/derive-mission-capacity";
 import type { XPCachePayload } from "@/lib/xp-cache";
 
 /**
@@ -35,6 +38,12 @@ export interface MissionsSnapshot {
   completedToday: unknown[];
   energyBudget: Record<string, unknown> | null;
   dailyState: Record<string, unknown> | null;
+  /** Server-built UMS/decision blocks (same object as Missions tab / dashboard pipeline). */
+  decisionBlocks?: DecisionBlocksResult | null;
+  capacity?: MissionCapacitySnapshot | null;
+  buildMeta?: { builtAt: number; inputHash?: string };
+  /** Lichte index; zelfde volgorde als UMS (`missionsPipeline.rankedTaskIds`). */
+  rankedTaskIds?: string[];
 }
 
 /**

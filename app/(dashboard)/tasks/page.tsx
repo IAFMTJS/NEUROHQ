@@ -12,11 +12,11 @@ import { getCalendarTabData } from "@/app/actions/calendar-tab-data";
 import { buildBlockedReasonsForTasks } from "@/lib/mission-block-reasons";
 import { getMode } from "@/app/actions/mode";
 import {
-  getDecisionBlocks,
   getEmotionalStateCorrelations,
   getRecoveryCampaignNeeded,
   getResistanceIndex,
 } from "@/app/actions/missions-performance";
+import { loadMissionsPipeline } from "@/lib/missions/load-missions-pipeline";
 import { getSmartSuggestion } from "@/app/actions/dcic/smart-suggestion";
 import { getEnergyCapToday } from "@/app/actions/dcic/energy-cap";
 import { getEnergyBudget } from "@/app/actions/energy";
@@ -111,7 +111,7 @@ async function MissionsSectionAsync({
     smartSuggestion,
     energyCap,
     energyBudget,
-    decisionBlocks,
+    missionsPipeline,
     identity,
     identityEngine,
     tasksNormalResult,
@@ -126,7 +126,7 @@ async function MissionsSectionAsync({
     getSmartSuggestion(dateStr),
     getEnergyCapToday(dateStr),
     getEnergyBudget(dateStr),
-    getDecisionBlocks(dateStr),
+    loadMissionsPipeline(dateStr),
     getXPIdentity(),
     getIdentityEngine(),
     getTodaysTasks(dateStr, "normal"),
@@ -136,6 +136,8 @@ async function MissionsSectionAsync({
     getGrowthEngineSnapshot(),
     getBehaviorProfile(),
   ]);
+
+  const decisionBlocks = missionsPipeline.decisionBlocks;
 
   const taskMode: TaskListMode =
     mode === "stabilize" ? "stabilize" : mode === "low_energy" ? "low_energy" : mode === "driven" ? "driven" : "normal";
@@ -393,7 +395,6 @@ export default async function TasksPage({ searchParams }: Props) {
       header={headerSection}
       fillViewport={simplifiedTasksFillLayout}
       stickyTabs={simplifiedTasksFillLayout}
-      dailyBootstrapDateStr={dateStr}
       panelMissions={
         <Suspense fallback={<TasksMissionsSnapshotFallback dateStr={dateStr} />}>
           <MissionsSectionAsync dateStr={dateStr} backlog={backlog} growthFromGrowthPage={growthFromGrowthPage} />

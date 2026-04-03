@@ -5,7 +5,7 @@ import type { DailySnapshot } from "@/types/daily-snapshot";
 import { LATEST_SNAPSHOT_VERSION } from "@/types/daily-snapshot";
 import { fetchSettingsPayload } from "@/lib/settings-api-client";
 import type { BootstrapTodayResponse } from "@/lib/daily-snapshot-full-sync";
-import { mapBootstrapBudgetToSnapshot } from "@/lib/bootstrap-today-mappers";
+import { mapBootstrapBudgetToSnapshot, missionsFromBootstrapToday } from "@/lib/bootstrap-today-mappers";
 
 /** Set during `initializeDailySystem` when `fetchMissions` parses `/api/bootstrap/today`. */
 let bootstrapTodayCapture: BootstrapTodayResponse | null = null;
@@ -180,13 +180,14 @@ async function runStep(snapshot: DailySnapshot, step: PreloadStepId): Promise<Da
         };
         bootstrapTodayCapture = data as BootstrapTodayResponse;
         const dateStr = (data.date as string) ?? snapshot.date;
-        const missions = {
-          dateStr,
-          tasksByDate: data.tasks ?? {},
-          completedToday: data.completedToday ?? [],
-          energyBudget: (data.energyBudget as Record<string, unknown>) ?? null,
-          dailyState: (data.dailyState as Record<string, unknown>) ?? null,
-        };
+        const missions =
+          missionsFromBootstrapToday(data as BootstrapTodayResponse, dateStr) ?? {
+            dateStr,
+            tasksByDate: data.tasks ?? {},
+            completedToday: data.completedToday ?? [],
+            energyBudget: (data.energyBudget as Record<string, unknown>) ?? null,
+            dailyState: (data.dailyState as Record<string, unknown>) ?? null,
+          };
         const budget =
           data.budget != null
             ? mapBootstrapBudgetToSnapshot(data.budget, dateStr) ?? snapshot.budget

@@ -12,38 +12,84 @@ import {
   seedBootstrapTodayInCache,
 } from "@/lib/bootstrap-query";
 import { getBootstrapQueryClient } from "@/lib/bootstrap-query-client-ref";
+import type { MissionsPipelinePayload } from "@/lib/missions/derive-mission-capacity";
+import type { LearningSnapshot as StoreLearningSnapshot } from "@/types/hq-store.types";
+
+let lastBootstrapApplyFingerprint: string | null = null;
+
+function djb2Hex(input: string): string {
+  let h = 5381;
+  for (let i = 0; i < input.length; i++) {
+    h = Math.imul(h, 33) ^ input.charCodeAt(i);
+  }
+  return (h >>> 0).toString(16);
+}
+
+/** Zelfde semantiek als “snapshot niet gewijzigd”: geen store- of cache-write (voorkomt rerender-cascade). */
+function computeBootstrapApplyFingerprint(bootstrap: BootstrapTodayResponse): string {
+  const serial = JSON.stringify({
+    date: bootstrap.date,
+    tasks: bootstrap.tasks,
+    dailyState: bootstrap.dailyState,
+    energyBudget: bootstrap.energyBudget,
+    budget: bootstrap.budget,
+    learning: bootstrap.learning,
+    dcicGameState: bootstrap.dcicGameState,
+    dashboard: bootstrap.dashboard,
+    missionsPipeline: bootstrap.missionsPipeline,
+  });
+  return djb2Hex(serial);
+}
+
+/** O.a. na uitloggen / account delete — volgende merge moet weer mogen schrijven. */
+export function resetBootstrapApplyFingerprint(): void {
+  lastBootstrapApplyFingerprint = null;
+}
 
 /** Single place: Zustand + TanStack Query cache + listeners (alerts, PWA chip, storage persist hint). */
 export function applyBootstrapTodayToApp(bootstrap: BootstrapTodayResponse): void {
+  const fp = computeBootstrapApplyFingerprint(bootstrap);
+  if (fp === lastBootstrapApplyFingerprint) return;
+  lastBootstrapApplyFingerprint = fp;
+
   const dateStr = (bootstrap.date as string | undefined) ?? getTodayKey();
   seedBootstrapTodayInCache(getBootstrapQueryClient(), dateStr, bootstrap);
 
-  const {
-    setTodayDate,
-    setDashboardSnapshot,
-    setGameState,
-    setTodayDailyState,
-    setTodayEnergyBudget,
-    setBudgetSnapshot,
-    setLearningSnapshot,
-  } = useHQStore.getState();
+  const { applyBootstrapHydration } = useHQStore.getState();
 
-  setTodayDate(dateStr);
-  if (bootstrap.dashboard) {
-    setDashboardSnapshot({
-      critical: bootstrap.dashboard.critical as any,
-      secondary: bootstrap.dashboard.secondary as any,
-    });
-  }
+  const criticalMp = (bootstrap.dashboard?.critical as { missionsPipeline?: MissionsPipelinePayload } | undefined)
+    ?.missionsPipeline;
+  const rootMp = bootstrap.missionsPipeline as MissionsPipelinePayload | undefined;
+  const missionsPipe = criticalMp ?? rootMp ?? null;
+
+  let gameStatePatched: any = undefined;
   if (bootstrap.dcicGameState) {
     const nextDcic = bootstrap.dcicGameState as any;
     applyDCICModeOverrideIfAny(nextDcic);
-    setGameState(nextDcic);
+    gameStatePatched = nextDcic;
   }
-  if (bootstrap.dailyState) setTodayDailyState(bootstrap.dailyState);
-  if (bootstrap.energyBudget) setTodayEnergyBudget(bootstrap.energyBudget);
-  if (bootstrap.budget) setBudgetSnapshot(bootstrap.budget as any);
-  if (bootstrap.learning) setLearningSnapshot(bootstrap.learning as any);
+
+  applyBootstrapHydration({
+    todayDate: dateStr,
+    ...(bootstrap.dashboard
+      ? {
+          dashboardCritical: bootstrap.dashboard.critical as any,
+          dashboardSecondary: bootstrap.dashboard.secondary as any,
+        }
+      : {}),
+    ...(missionsPipe ? { missionsPipeline: missionsPipe } : {}),
+    ...(gameStatePatched !== undefined ? { gameState: gameStatePatched as any } : {}),
+    ...(bootstrap.dailyState ? { todayDailyState: bootstrap.dailyState } : {}),
+    ...(bootstrap.energyBudget ? { todayEnergyBudget: bootstrap.energyBudget } : {}),
+    ...(bootstrap.budget ? { budgetSnapshot: bootstrap.budget as any } : {}),
+    ...(bootstrap.learning && typeof bootstrap.learning === "object"
+      ? {
+          learningSnapshot: {
+            ...(bootstrap.learning as StoreLearningSnapshot),
+          },
+        }
+      : {}),
+  });
 
   const detail: NeurohqDailySnapshotUpdatedDetail = { savedAt: Date.now() };
   window.dispatchEvent(new CustomEvent(NEUROHQ_DAILY_SNAPSHOT_UPDATED, { detail }));

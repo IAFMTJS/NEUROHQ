@@ -3,11 +3,19 @@ import {
   rankUnifiedDecisionCandidates,
   type UnifiedDecisionRankingMode,
 } from "@/lib/unified-decision-ranker";
+import type { UnifiedDecisionMissionsSummary } from "@/lib/missions/missions-summary-for-decision";
+
+export type { UnifiedDecisionMissionsSummary };
 
 export type UnifiedDecisionInput = {
   dateStr: string;
   hasBrainCheckIn: boolean;
   tasksCount: number;
+  /**
+   * Compacte mission-signalen (zelfde bron als Missions-pipeline), geen decisionBlocks-structuur.
+   * Als gezet, gebruikt de engine `todayOpenCount` i.p.v. ruwe `tasksCount` waar dat van toepassing is.
+   */
+  missionsSummary?: UnifiedDecisionMissionsSummary | null;
   budgetRemainingCents: number | null;
   energyRemaining: number | null;
   carryOverCount?: number | null;
@@ -200,9 +208,20 @@ function normalizeEmotion(input: UnifiedDecisionInput): string | null {
 }
 
 function buildFeatureSnapshot(input: UnifiedDecisionInput): UnifiedDecisionFeatureSnapshot {
+  const ms = input.missionsSummary;
   return {
     hasBrainCheckIn: input.hasBrainCheckIn,
     tasksCount: Math.max(0, input.tasksCount),
+    ...(ms
+      ? {
+          missionTodayOpenCount: ms.todayOpenCount,
+          missionTopTaskId: ms.topTaskId,
+          missionHasBacklog: ms.hasBacklog,
+          missionRecommendedCount: ms.recommendedCount,
+          missionOverloadRisk: ms.overloadRisk,
+          missionRecoveryOnly: ms.recoveryOnly,
+        }
+      : {}),
     carryOverCount: Math.max(0, input.carryOverCount ?? 0),
     streakAtRisk: input.streakAtRisk === true,
     budgetRemainingCents: input.budgetRemainingCents ?? null,
@@ -278,7 +297,11 @@ function candidate(
 
 export function deriveUnifiedDecision(input: UnifiedDecisionInput): UnifiedDecision {
   const safeTasksCount = Math.max(0, input.tasksCount);
-  const baseId = `${input.dateStr}-${safeTasksCount}-${input.hasBrainCheckIn ? "checkin" : "nocheckin"}`;
+  const missionAlignedCount =
+    input.missionsSummary != null
+      ? Math.max(0, input.missionsSummary.todayOpenCount)
+      : safeTasksCount;
+  const baseId = `${input.dateStr}-${missionAlignedCount}-${input.hasBrainCheckIn ? "checkin" : "nocheckin"}`;
   const lowBrainCapacity = isLowBrainCapacity(input);
   const selectedEmotion = normalizeEmotion(input);
   const lowCapacityByEmotion =
@@ -327,11 +350,11 @@ export function deriveUnifiedDecision(input: UnifiedDecisionInput): UnifiedDecis
   const learningRemindersEnabled = input.studyPlan?.reminderEnabled === true;
   const overloadNow =
     suggestedCapacity != null &&
-    safeTasksCount >= suggestedCapacity + OVERLOAD_BUFFER_TASKS;
+    missionAlignedCount >= suggestedCapacity + OVERLOAD_BUFFER_TASKS;
   const overloadFromCarryOver = carryOverCount >= 4;
   const streakRescueState =
     input.streakAtRisk === true &&
-    safeTasksCount > 0 &&
+    missionAlignedCount > 0 &&
     completedTaskCount === 0 &&
     isLateDay;
   const completionTrend = getCompletionTrend(input);
@@ -348,7 +371,10 @@ export function deriveUnifiedDecision(input: UnifiedDecisionInput): UnifiedDecis
       : null;
   const learningBehind =
     learningRatio != null && learningRatio < LEARNING_BEHIND_RATIO;
-  const featureSnapshot = buildFeatureSnapshot(input);
+  const featureSnapshot = buildFeatureSnapshot({
+    ...input,
+    tasksCount: missionAlignedCount,
+  });
 
   if (!input.hasBrainCheckIn) {
     const reasonCodes = ["missing_brain_checkin"];
@@ -445,7 +471,7 @@ export function deriveUnifiedDecision(input: UnifiedDecisionInput): UnifiedDecis
     );
   }
 
-  if (preferredWindowMatch && !effectiveLowBrainCapacity && safeTasksCount > 0) {
+  if (preferredWindowMatch && !effectiveLowBrainCapacity && missionAlignedCount > 0) {
     candidates.push(
       candidate({
         score: 72 + (freezeTokens > 0 ? 3 : 0),
@@ -501,7 +527,7 @@ export function deriveUnifiedDecision(input: UnifiedDecisionInput): UnifiedDecis
     );
   }
 
-  if (hardDayOff && !budgetNegative && safeTasksCount > 0) {
+  if (hardDayOff && !budgetNegative && missionAlignedCount > 0) {
     candidates.push(
       candidate({
         score: 76 + (effectiveLowBrainCapacity ? 6 : 0),
@@ -545,7 +571,7 @@ export function deriveUnifiedDecision(input: UnifiedDecisionInput): UnifiedDecis
       (performanceDrift ? 4 : 0);
     const capacityText =
       suggestedCapacity != null
-        ? `Je hebt ${safeTasksCount} open missies tegenover een capaciteit van ${suggestedCapacity}.`
+        ? `Je hebt ${missionAlignedCount} open missies tegenover een capaciteit van ${suggestedCapacity}.`
         : "Je open missiebelasting loopt op ten opzichte van je recente uitvoeringsritme.";
     candidates.push(
       candidate({
@@ -566,7 +592,7 @@ export function deriveUnifiedDecision(input: UnifiedDecisionInput): UnifiedDecis
     );
   }
 
-  if (safeTasksCount === 0) {
+  if (missionAlignedCount === 0) {
     const createMissionScore = 79 - (penaltyPressureHigh ? 8 : 0);
     candidates.push(
       candidate({
@@ -594,7 +620,7 @@ export function deriveUnifiedDecision(input: UnifiedDecisionInput): UnifiedDecis
     learningBehind &&
     !budgetNegative &&
     !effectiveLowBrainCapacity &&
-    safeTasksCount > 0
+    missionAlignedCount > 0
   ) {
     const shortfall =
       learningMinutes != null && learningTarget != null

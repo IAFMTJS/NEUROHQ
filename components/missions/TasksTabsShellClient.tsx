@@ -8,7 +8,6 @@ import {
   type ReactNode,
 } from "react";
 import { DashboardCommandDeckFrame } from "@/components/layout/DashboardCommandDeckFrame";
-import { TasksDailyBootstrap } from "@/components/missions/TasksDailyBootstrap";
 import { tasksDeckTabClass } from "@/components/missions/tasksDeckTabClass";
 import type { TasksTabId } from "@/components/missions/tasksTabTypes";
 
@@ -23,8 +22,6 @@ type Props = {
   panelRoutine: ReactNode;
   fillViewport?: boolean;
   stickyTabs?: boolean;
-  /** When set, daily bootstrap runs only while the Missions tab is active. */
-  dailyBootstrapDateStr?: string;
 };
 
 function readTabFromSearch(search: string): TasksTabId {
@@ -45,7 +42,6 @@ export function TasksTabsShellClient({
   panelRoutine,
   fillViewport = false,
   stickyTabs = false,
-  dailyBootstrapDateStr,
 }: Props) {
   const [activeTab, setActiveTab] = useState<TasksTabId>(initialTab);
 
@@ -156,12 +152,6 @@ export function TasksTabsShellClient({
 
   const deckInner = (
     <>
-      {dailyBootstrapDateStr ? (
-        <TasksDailyBootstrap
-          dateStr={dailyBootstrapDateStr}
-          enabled={activeTab === "missions"}
-        />
-      ) : null}
       {tabStrip}
       {tabBodies}
     </>

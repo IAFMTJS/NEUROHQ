@@ -1,6 +1,7 @@
 import type { AppMode } from "@/lib/app-mode";
 import type { CopyVariant } from "@/app/actions/adaptive";
 import type { UnifiedDecision } from "@/lib/unified-decision-engine";
+import type { MissionsPipelinePayload } from "@/lib/missions/derive-mission-capacity";
 
 /** Shape of GET /api/dashboard/data?part=critical — single source for today's mode, tasks, state, etc. */
 export interface DashboardCritical {
@@ -37,6 +38,8 @@ export interface DashboardCritical {
   autoSuggestions?: { text: string; type: string }[];
   burnout?: boolean;
   unifiedDecision?: UnifiedDecision;
+  /** UMS + capacity; same payload as bootstrap `missionsPipeline` / snapshot.missions pipeline slice. */
+  missionsPipeline?: MissionsPipelinePayload | null;
 }
 
 /** Secondary payload is large and shape varies by usage; type narrowly where needed. */

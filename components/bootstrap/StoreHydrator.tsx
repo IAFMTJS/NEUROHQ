@@ -3,11 +3,14 @@
 import { useLayoutEffect, type ReactNode } from "react";
 import { getTodayKey } from "@/lib/daily-date";
 import type { DailySnapshot } from "@/types/daily-snapshot";
+import type { DashboardCritical } from "@/types/dashboard-data.types";
 import type { Task } from "@/types/database.types";
 import { useHQStore } from "@/lib/hq-store";
 import { getDcicGameStateFromSnapshot } from "@/lib/daily-snapshot-full-sync";
 import { applyDCICModeOverrideIfAny } from "@/lib/dcic/dcic-mode-override";
 import { markDcicSeededFromDailySnapshot } from "@/lib/dcic/game-state-client";
+import type { MissionsPipelinePayload } from "@/lib/missions/derive-mission-capacity";
+import type { LearningSnapshot as StoreLearningSnapshot } from "@/types/hq-store.types";
 
 type Props = {
   snapshot: DailySnapshot | null;
@@ -22,94 +25,98 @@ export function StoreHydrator({ snapshot, children }: Props) {
   useLayoutEffect(() => {
     if (!snapshot) return;
 
-    const {
-      setTodayDate,
-      setDashboardSnapshot,
-      setGameState,
-      setTasksForDate,
-      setTasksStatus,
-      setTasksError,
-      setTodayDailyState,
-      setTodayEnergyBudget,
-      setBudgetSnapshot,
-      setBudgetStatus,
-      setBudgetError,
-      setLearningSnapshot,
-      setLearningStatus,
-      setLearningError,
-    } = useHQStore.getState();
-
-    if (snapshot.date) {
-      setTodayDate(snapshot.date);
-    }
-
     const dcic = getDcicGameStateFromSnapshot(snapshot);
     if (dcic) {
       applyDCICModeOverrideIfAny(dcic);
-      setGameState(dcic);
       markDcicSeededFromDailySnapshot();
     }
 
-    if (snapshot.dashboard) {
-      setDashboardSnapshot({
-        critical: snapshot.dashboard.critical as any,
-        secondary: snapshot.dashboard.secondary as any,
-      });
+    const critical = snapshot.dashboard?.critical as DashboardCritical | undefined;
+    let missionsPipe: MissionsPipelinePayload | null = null;
+    if (critical?.missionsPipeline) {
+      missionsPipe = critical.missionsPipeline;
+    } else if (
+      snapshot.missions?.decisionBlocks != null &&
+      snapshot.missions?.capacity != null
+    ) {
+      missionsPipe = {
+        decisionBlocks: snapshot.missions.decisionBlocks,
+        capacity: snapshot.missions.capacity,
+        buildMeta: snapshot.missions.buildMeta ?? { builtAt: Date.now() },
+        rankedTaskIds:
+          snapshot.missions.rankedTaskIds ??
+          snapshot.missions.decisionBlocks.tasksSortedByUMS.map((t) => t.id),
+      };
     }
 
-    if (snapshot.missions) {
-      const { dateStr, tasksByDate, dailyState, energyBudget } = snapshot.missions;
-      const todayKey = getTodayKey();
-      setTodayDate(dateStr);
-      if (dailyState) setTodayDailyState(dailyState);
-      if (energyBudget) setTodayEnergyBudget(energyBudget);
-      for (const [day, tasks] of Object.entries(tasksByDate)) {
-        if (day === todayKey) continue;
-        setTasksForDate(day, (tasks ?? []) as Task[]);
+    useHQStore.setState((s) => {
+      let todayDateNext = s.todayDate;
+      if (snapshot.missions?.dateStr) todayDateNext = snapshot.missions.dateStr;
+      else if (snapshot.date) todayDateNext = snapshot.date;
+
+      const nextTasksByDate = { ...s.tasksByDate };
+      if (snapshot.missions) {
+        const todayKey = getTodayKey();
+        for (const [day, tasks] of Object.entries(snapshot.missions.tasksByDate)) {
+          if (day === todayKey) continue;
+          nextTasksByDate[day] = (tasks ?? []) as Task[];
+        }
       }
-      setTasksError(null);
-      setTasksStatus("ready");
-    }
 
-    if (snapshot.budget) {
-      const b = snapshot.budget;
-      setBudgetSnapshot({
-        settings: b.settings,
-        currentMonthExpenses: b.currentMonthExpenses,
-        currentMonthIncome: b.currentMonthIncome,
-        currentWeekExpenses: b.currentWeekExpenses,
-        currentWeekIncome: b.currentWeekIncome,
-        budgetRemainingCents: b.budgetRemainingCents,
-        date: b.today,
-        currency: b.currency,
-        isWeekly: b.isWeekly,
-        periodLabel: b.periodLabel,
-        disciplineScore: b.disciplineScore,
-        disciplineXpThisWeek: b.disciplineXpThisWeek,
-        disciplineCompletedToday: b.disciplineCompletedToday,
-        daysUnderBudgetThisWeek: b.daysUnderBudgetThisWeek,
-        unplannedSummary: b.unplannedSummary,
-        financeState: b.financeState,
-        financialInsights: b.financialInsights,
-      });
-      setBudgetStatus("ready");
-      setBudgetError(null);
-    }
-
-    if (snapshot.learning) {
-      const l = snapshot.learning;
-      setLearningSnapshot({
-        weeklyMinutes: l.weeklyMinutes,
-        weeklyLearningTarget: l.weeklyLearningTarget,
-        learningStreak: l.learningStreak,
-        focus: (l as any).focus,
-        streams: (l as any).streams,
-        consistency: (l as any).consistency,
-        reflection: l.reflection as any,
-      });
-      setLearningStatus("ready");
-      setLearningError(null);
-    }
+      return {
+        ...s,
+        todayDate: todayDateNext,
+        gameState: dcic ?? s.gameState,
+        dashboardCritical: snapshot.dashboard
+          ? ((snapshot.dashboard.critical as DashboardCritical | null) ?? s.dashboardCritical)
+          : s.dashboardCritical,
+        dashboardSecondary: snapshot.dashboard
+          ? ((snapshot.dashboard.secondary as typeof s.dashboardSecondary) ?? s.dashboardSecondary)
+          : s.dashboardSecondary,
+        missionsPipeline: missionsPipe !== null ? missionsPipe : s.missionsPipeline,
+        todayDailyState: snapshot.missions?.dailyState ?? s.todayDailyState,
+        todayEnergyBudget: snapshot.missions?.energyBudget ?? s.todayEnergyBudget,
+        tasksByDate: nextTasksByDate,
+        tasksStatus: snapshot.missions ? "ready" : s.tasksStatus,
+        tasksError: snapshot.missions ? null : s.tasksError,
+        budgetSnapshot: snapshot.budget
+          ? {
+              settings: snapshot.budget.settings,
+              currentMonthExpenses: snapshot.budget.currentMonthExpenses,
+              currentMonthIncome: snapshot.budget.currentMonthIncome,
+              currentWeekExpenses: snapshot.budget.currentWeekExpenses,
+              currentWeekIncome: snapshot.budget.currentWeekIncome,
+              budgetRemainingCents: snapshot.budget.budgetRemainingCents,
+              date: snapshot.budget.today,
+              currency: snapshot.budget.currency,
+              isWeekly: snapshot.budget.isWeekly,
+              periodLabel: snapshot.budget.periodLabel,
+              disciplineScore: snapshot.budget.disciplineScore,
+              disciplineXpThisWeek: snapshot.budget.disciplineXpThisWeek,
+              disciplineCompletedToday: snapshot.budget.disciplineCompletedToday,
+              daysUnderBudgetThisWeek: snapshot.budget.daysUnderBudgetThisWeek,
+              unplannedSummary: snapshot.budget.unplannedSummary,
+              financeState: snapshot.budget.financeState,
+              financialInsights: snapshot.budget.financialInsights,
+            }
+          : s.budgetSnapshot,
+        budgetStatus: snapshot.budget ? "ready" : s.budgetStatus,
+        budgetError: snapshot.budget ? null : s.budgetError,
+        learningSnapshot: snapshot.learning
+          ? ({
+              weeklyMinutes: snapshot.learning.weeklyMinutes,
+              weeklyLearningTarget: snapshot.learning.weeklyLearningTarget,
+              learningStreak: snapshot.learning.learningStreak,
+              focus: snapshot.learning.focus as StoreLearningSnapshot["focus"],
+              streams: snapshot.learning.streams as StoreLearningSnapshot["streams"],
+              consistency: snapshot.learning.consistency as StoreLearningSnapshot["consistency"],
+              reflection: snapshot.learning.reflection,
+            } satisfies StoreLearningSnapshot)
+          : s.learningSnapshot,
+        learningStatus: snapshot.learning ? "ready" : s.learningStatus,
+        learningError: snapshot.learning ? null : s.learningError,
+      };
+    });
   }, [snapshot]);
 
   return <>{children}</>;

@@ -13,6 +13,9 @@ import type { Session } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/client";
 import { fetchSettingsPayload, type SettingsApiPayload } from "@/lib/settings-api-client";
 import { resetDcicGameStateBootstrap } from "@/lib/dcic/game-state-client";
+import { resetBootstrapMergeEtag } from "@/lib/daily-snapshot-full-sync";
+import { resetBootstrapApplyFingerprint } from "@/lib/daily-bootstrap";
+import { useHQStore } from "@/lib/hq-store";
 
 type SettingsPayload = SettingsApiPayload | null;
 
@@ -70,6 +73,9 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
       if (!session) {
         setSettings(null);
         resetDcicGameStateBootstrap();
+        resetBootstrapMergeEtag();
+        resetBootstrapApplyFingerprint();
+        useHQStore.getState().setMissionsPipeline(null);
         return;
       }
       try {

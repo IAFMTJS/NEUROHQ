@@ -4,17 +4,14 @@ import { unstable_cache } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { getTodaysTasks } from "@/app/actions/tasks";
 import type { DayPlannedLoad, TaskListMode } from "@/lib/tasks-actions-shared";
-import { getMode } from "@/app/actions/mode";
 import { getActiveStrategyFocus } from "@/app/actions/strategyFocus";
 import { getPressureIndex } from "@/app/actions/strategyFocus";
 import { getAlignmentThisWeek } from "@/app/actions/strategyFocus";
 import { isRecoveryTask } from "@/lib/recovery-task";
 import { yesterdayDate } from "@/lib/utils/timezone";
-import {
-  blendCompletionRate,
-  dataMaturityMissionsHintNl,
-  type UserDataMaturity,
-} from "@/lib/user-data-maturity";
+import { blendCompletionRate, type UserDataMaturity } from "@/lib/user-data-maturity";
+import { buildMissionState } from "@/lib/missions/build-mission-state";
+import { computeUMS } from "@/lib/missions/ums-scoring";
 import { getUserDataMaturitySnapshot } from "@/app/actions/user-data-maturity";
 import {
   getBehavioralConstraints,
@@ -98,99 +95,6 @@ const EMPTY_DECISION_BLOCKS: DecisionBlocksResult = {
   dataMaturityHintNl: null,
 };
 
-function strategyAlignmentForTask(
-  taskDomain: string | null | undefined,
-  primaryDomain: string,
-  secondaryDomains: string[]
-): number {
-  if (!taskDomain) return 0.5;
-  if (taskDomain === primaryDomain) return 1;
-  if (secondaryDomains.includes(taskDomain)) return 0.6;
-  return 0.2; // outside focus
-}
-
-function estimateXP(task: TaskWithMeta): number {
-  const impact = task.impact ?? 2;
-  return Math.max(10, Math.min(100, impact * 35)) || 50;
-}
-
-function estimateMinutes(task: TaskWithMeta): number {
-  const energy = Math.min(10, Math.max(1, task.energy_required ?? 3));
-  return energy * 8; // ~8 min per energy point
-}
-
-/** 0–1 ROI score: XP per minute, normalized (e.g. 5 XP/min = 1). */
-function roiScore(task: TaskWithMeta): number {
-  const xp = estimateXP(task);
-  const min = Math.max(1, estimateMinutes(task));
-  const xpPerMin = xp / min;
-  return Math.min(1, xpPerMin / 5);
-}
-
-/** 0–1 energy match: user energy (1–10) vs task energy_required (1–10). */
-function energyMatchScore(userEnergy: number, task: TaskWithMeta): number {
-  const taskEnergy = Math.min(10, Math.max(1, task.energy_required ?? 5));
-  const diff = Math.abs(userEnergy - taskEnergy);
-  return Math.max(0, 1 - diff / 5);
-}
-
-/** 0–1 pressure impact: high when strategy is under pressure and task is high impact/urgency. */
-function pressureImpactScore(
-  pressureZone: "comfort" | "healthy" | "risk",
-  task: TaskWithMeta
-): number {
-  if (pressureZone === "comfort") return 0.3;
-  const impact = (task.impact ?? 1) / 3;
-  const urgency = (task.urgency ?? 1) / 3;
-  const taskPressure = (impact + urgency) / 2;
-  if (pressureZone === "risk") return 0.4 + taskPressure * 0.6;
-  return 0.3 + taskPressure * 0.4;
-}
-
-/** Compute UMS for one task. */
-function computeUMS(
-  task: TaskWithMeta,
-  opts: {
-    strategyPrimary: string;
-    strategySecondary: string[];
-    completionRate: number;
-    userEnergy: number;
-    pressureZone: "comfort" | "healthy" | "risk";
-  }
-): UnifiedMissionScore {
-  const strategyAlignment = strategyAlignmentForTask(
-    task.domain,
-    opts.strategyPrimary,
-    opts.strategySecondary
-  );
-  let completionProbability = Math.min(1, Math.max(0.2, opts.completionRate));
-  const roi = roiScore(task);
-  const energyMatch = energyMatchScore(opts.userEnergy, task);
-  const pressureImpact = pressureImpactScore(opts.pressureZone, task);
-
-  // Synergy penalty: when energy match is very low, lower completion probability
-  // and (lightly) penalize overall score so low-synergy missions drop in ranking.
-  if (energyMatch < 0.3) {
-    completionProbability = Math.max(0.2, completionProbability - 0.15);
-  }
-
-  const ums =
-    strategyAlignment * 0.3 +
-    completionProbability * 0.2 +
-    roi * 0.2 +
-    energyMatch * 0.15 +
-    pressureImpact * 0.15;
-
-  return {
-    ums: Math.round(ums * 100) / 100,
-    strategyAlignment,
-    completionProbability,
-    roi,
-    energyMatch,
-    pressureImpact,
-  };
-}
-
 /** Get completion rate per task from task_events (view would need RLS). */
 async function getTaskCompletionRates(
   supabase: Awaited<ReturnType<typeof createClient>>,
@@ -236,7 +140,6 @@ async function getDecisionBlocksUncached(dateStr: string): Promise<DecisionBlock
 
   const { getConsequenceState } = await import("./consequence-engine");
 
-  const mode = await getMode(dateStr);
   const { tasks: rawTasks } = await getTodaysTasks(dateStr, "normal");
   let tasks = (rawTasks ?? []) as TaskWithMeta[];
 
@@ -320,9 +223,6 @@ async function getDecisionBlocksUncached(dateStr: string): Promise<DecisionBlock
     return mentalFit && physicalFit;
   });
   tasks = constrainedTasks.length > 0 ? constrainedTasks : tasks;
-  const strategyPrimary = strategy?.primary_domain ?? "discipline";
-  const strategySecondary = strategy?.secondary_domains ?? [];
-
   const completionRates = await getTaskCompletionRates(
     supabase,
     user.id,
@@ -330,7 +230,6 @@ async function getDecisionBlocksUncached(dateStr: string): Promise<DecisionBlock
     dataMaturity
   );
 
-  // Diversity: penalize tasks completed in last 3 days so same missions don't appear on top for days in a row
   const threeDaysAgo = new Date(dateStr);
   threeDaysAgo.setDate(threeDaysAgo.getDate() - 3);
   const since = threeDaysAgo.toISOString().slice(0, 10);
@@ -344,59 +243,25 @@ async function getDecisionBlocksUncached(dateStr: string): Promise<DecisionBlock
   const recentlyCompletedIds = new Set(
     (recentCompletes ?? []).map((r) => (r as { task_id: string }).task_id)
   );
-  const DIVERSITY_PENALTY = 0.2;
 
-  const withUMS: TaskWithUMS[] = tasks.map((t) => {
-    const breakdown = computeUMS(t, {
-      strategyPrimary,
-      strategySecondary,
-      completionRate: completionRates[t.id] ?? 0.7,
-      userEnergy,
-      pressureZone,
-    });
-    let ums = breakdown.ums;
-    if (recentlyCompletedIds.has(t.id)) {
-      ums = Math.max(0.1, ums - DIVERSITY_PENALTY);
-    }
-    return {
-      ...t,
-      umsBreakdown: { ...breakdown, ums },
-    };
-  });
-
-  withUMS.sort((a, b) => b.umsBreakdown.ums - a.umsBreakdown.ums);
-  const topRecommendation = withUMS[0] ?? null;
-
-  const streakCritical: TaskWithMeta[] = streakAtRisk ? tasks.slice(0, 2) : [];
-  const highPressure: TaskWithMeta[] =
-    pressureZone === "risk" || pressureZone === "healthy"
-      ? tasks.filter((t) => ((t.urgency ?? 0) >= 2 || (t.impact ?? 0) >= 2)).slice(0, 4)
-      : [];
-  const recovery: TaskWithMeta[] = tasks.filter((t) => (t.energy_required ?? 5) <= 3).slice(0, 3);
-  const alignmentFix: TaskWithMeta[] =
-    alignmentScore < 0.7 && strategy
-      ? tasks.filter((t) => t.domain === strategy.primary_domain).slice(0, 3)
-      : [];
-
-  return {
-    streakCritical,
-    highPressure,
-    recovery,
-    alignmentFix,
-    topRecommendation,
-    tasksSortedByUMS: withUMS,
-    streakAtRisk,
+  return buildMissionState({
+    tasks,
+    strategy: strategy
+      ? { primary_domain: strategy.primary_domain, secondary_domains: strategy.secondary_domains }
+      : null,
     pressureZone,
     alignmentScore,
-    strategyMapping: strategy
-      ? { primaryDomain: strategy.primary_domain, secondaryDomains: strategy.secondary_domains }
-      : null,
-    recoveryOnly: consequenceState.recoveryOnly,
-    recoveryProtocol: consequenceState.recoveryProtocol,
-    daysSinceLastCompletion: consequenceState.daysSinceLastCompletion,
+    streakAtRisk,
+    userEnergy,
+    consequenceState: {
+      recoveryOnly: consequenceState.recoveryOnly,
+      recoveryProtocol: consequenceState.recoveryProtocol,
+      daysSinceLastCompletion: consequenceState.daysSinceLastCompletion,
+    },
     dataMaturity,
-    dataMaturityHintNl: dataMaturityMissionsHintNl(dataMaturity),
-  };
+    completionRates,
+    recentlyCompletedIds,
+  });
 }
 
 /**
@@ -432,7 +297,12 @@ const decisionBlocksCache = unstable_cache(
   { revalidate: 60, tags: ["decision-blocks"] }
 );
 
-export async function getDecisionBlocks(dateStr: string): Promise<DecisionBlocksResult> {
+/**
+ * Gecachte decision blocks + UMS-sort (60s `unstable_cache`). Niet bedoeld als losse “API” voor pagina’s:
+ * gebruik `loadMissionsPipeline(dateStr)` — deelt `React.cache` met bootstrap/dashboard.
+ * Blijft geëxporteerd voor de pipeline en cache-warmte in `getTasksSortedByUMS`.
+ */
+export async function getDecisionBlocksCached(dateStr: string): Promise<DecisionBlocksResult> {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return EMPTY_DECISION_BLOCKS;
@@ -853,7 +723,7 @@ export async function getEmotionalStateCorrelations(): Promise<{
 
 /** Get today's tasks sorted by UMS (for mission grid). */
 export async function getTasksSortedByUMS(dateStr: string): Promise<TaskWithUMS[]> {
-  await getDecisionBlocks(dateStr);
+  await getDecisionBlocksCached(dateStr);
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return [];

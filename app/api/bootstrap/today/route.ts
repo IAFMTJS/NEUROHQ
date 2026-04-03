@@ -22,6 +22,9 @@ import { getUnplannedWeeklySummary } from "@/app/actions/budget";
 import type { LearningSnapshot } from "@/types/hq-store.types";
 import { updateDynamicMissions } from "@/lib/dcic/dynamic-missions";
 import { triggerRandomEvents } from "@/lib/dcic/event-engine";
+import { loadMissionsPipeline } from "@/lib/missions/load-missions-pipeline";
+import { bootstrapEtagsMatch, computeBootstrapWeakEtag } from "@/lib/bootstrap-etag";
+import { runDailyMissionsBootstrapServer } from "@/lib/bootstrap/run-daily-missions-bootstrap";
 
 /** Default true. Set `includeDashboard=0` to skip `getDashboardPayload()` when the client already fetched `/api/dashboard/data` in the same flow (saves one full dashboard build). */
 function includeDashboardInBootstrap(request: NextRequest): boolean {
@@ -29,6 +32,11 @@ function includeDashboardInBootstrap(request: NextRequest): boolean {
   if (v == null) return true;
   const lower = v.toLowerCase();
   return lower !== "0" && lower !== "false" && lower !== "no";
+}
+
+/** `depth=core`: missions/energy/tasks/DCIC only — skips budget + learning DB work and omits those JSON keys. */
+function isBootstrapDepthCore(request: NextRequest): boolean {
+  return request.nextUrl.searchParams.get("depth")?.toLowerCase() === "core";
 }
 
 export async function GET(request: NextRequest) {
@@ -41,9 +49,68 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
+    try {
+      await runDailyMissionsBootstrapServer();
+    } catch (bootErr) {
+      console.error("[API bootstrap/today] daily missions bootstrap", bootErr);
+    }
+
     const dateStr = todayDateString();
-    const loadDashboard = includeDashboardInBootstrap(request);
+    const depthCore = isBootstrapDepthCore(request);
+    const loadDashboard = includeDashboardInBootstrap(request) && !depthCore;
     const dashboardPromise = loadDashboard ? getDashboardPayload() : Promise.resolve(null);
+
+    const budgetP = depthCore
+      ? Promise.resolve(null)
+      : Promise.all([
+          getBudgetSettings(),
+          getCurrentMonthExpensesCents(),
+          getCurrentMonthIncomeCents(),
+          getCurrentWeekExpensesCents(),
+          getCurrentWeekIncomeCents(),
+          getFinanceState(),
+          getFinancialInsightsSafe(),
+          getBudgetDisciplineXpThisWeek(),
+          getBudgetDisciplineCompletedToday(),
+          getUnplannedWeeklySummary(),
+        ]).then(
+          ([
+            budgetSettings,
+            currentMonthExpenses,
+            currentMonthIncome,
+            currentWeekExpenses,
+            currentWeekIncome,
+            financeState,
+            financialInsights,
+            disciplineXpThisWeek,
+            disciplineCompletedToday,
+            unplannedSummary,
+          ]) => ({
+            budgetSettings,
+            currentMonthExpenses,
+            currentMonthIncome,
+            currentWeekExpenses,
+            currentWeekIncome,
+            financeState,
+            financialInsights,
+            disciplineXpThisWeek,
+            disciplineCompletedToday,
+            unplannedSummary,
+          })
+        );
+
+    const learningPartialP = depthCore
+      ? Promise.resolve(null)
+      : (async () => {
+          const today = new Date(dateStr + "T12:00:00Z");
+          const { start, end } = getWeekBounds(today);
+          const [weeklyMinutes, weeklyLearningTarget, learningStreak] = await Promise.all([
+            getWeeklyMinutes(start, end),
+            getWeeklyLearningTarget(),
+            getLearningStreak(),
+          ]);
+          return { weeklyMinutes, weeklyLearningTarget, learningStreak };
+        })();
 
     const [
       dashboard,
@@ -51,43 +118,18 @@ export async function GET(request: NextRequest) {
       tasksForDate,
       dailyState,
       energyBudget,
-      budgetSettings,
-      currentMonthExpenses,
-      currentMonthIncome,
-      currentWeekExpenses,
-      currentWeekIncome,
-      weeklyMinutes,
-      weeklyLearningTarget,
-      learningStreak,
-      financeState,
-      financialInsights,
-      disciplineXpThisWeek,
-      disciplineCompletedToday,
-      unplannedSummary,
+      budgetData,
+      learningPartial,
+      missionsPipelineParallel,
     ] = await Promise.all([
       dashboardPromise,
       getGameState({ includeFinance: false }),
       getTasksForDate(dateStr),
       getDailyState(dateStr),
       getEnergyBudget(dateStr),
-      getBudgetSettings(),
-      getCurrentMonthExpensesCents(),
-      getCurrentMonthIncomeCents(),
-      getCurrentWeekExpensesCents(),
-      getCurrentWeekIncomeCents(),
-      // learning minutes over this week (not just today)
-      (async () => {
-        const today = new Date(dateStr + "T12:00:00Z");
-        const { start, end } = getWeekBounds(today);
-        return getWeeklyMinutes(start, end);
-      })(),
-      getWeeklyLearningTarget(),
-      getLearningStreak(),
-      getFinanceState(),
-      getFinancialInsightsSafe(),
-      getBudgetDisciplineXpThisWeek(),
-      getBudgetDisciplineCompletedToday(),
-      getUnplannedWeeklySummary(),
+      budgetP,
+      learningPartialP,
+      loadMissionsPipeline(dateStr),
     ]);
 
     if (!dcicGameState) {
@@ -97,66 +139,51 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const spendableCents = Math.max(
-      0,
-      (budgetSettings.monthly_budget_cents ?? 0) - (budgetSettings.monthly_savings_cents ?? 0)
-    );
-    const budgetRemainingCents =
-      budgetSettings.monthly_budget_cents != null ? spendableCents - currentMonthExpenses : null;
-    const currency = budgetSettings.currency ?? "EUR";
-    const isWeekly = budgetSettings.budget_period === "weekly";
-
     const now = Date.now();
     updateDynamicMissions(dcicGameState, now);
     triggerRandomEvents(dcicGameState, dateStr);
     await saveGameState(dcicGameState, { persistUserXp: false });
 
-    const learningState = await getLearningState();
-    const learning: LearningSnapshot = {
-      weeklyMinutes,
-      weeklyLearningTarget,
-      learningStreak,
-      focus: learningState.focus,
-      streams: learningState.streams,
-      consistency: learningState.consistency,
-      reflection: {
-        lastEntryDate: learningState.reflection.lastEntryDate,
-        reflectionRequired: learningState.reflection.reflectionRequired,
-      },
-    };
+    let learning: LearningSnapshot | undefined;
+    if (!depthCore && learningPartial) {
+      const learningState = await getLearningState();
+      learning = {
+        weeklyMinutes: learningPartial.weeklyMinutes,
+        weeklyLearningTarget: learningPartial.weeklyLearningTarget,
+        learningStreak: learningPartial.learningStreak,
+        focus: learningState.focus,
+        streams: learningState.streams,
+        consistency: learningState.consistency,
+        reflection: {
+          lastEntryDate: learningState.reflection.lastEntryDate,
+          reflectionRequired: learningState.reflection.reflectionRequired,
+        },
+      };
+    }
 
-    const completedToday = (tasksForDate ?? []).filter(
-      (task) => !!(task as { completed?: boolean }).completed
-    );
-
-    const payload = {
-      date: dateStr,
-      dashboard: dashboard ?? null,
-      dcicGameState,
-      tasks: {
-        [dateStr]: tasksForDate ?? [],
-      },
-      completedToday,
-      dailyState,
-      energyBudget: {
-        remaining: energyBudget.remaining,
-        capacity: energyBudget.capacity,
-        completedTaskCount: energyBudget.completedTaskCount,
-        suggestedTaskCount: energyBudget.suggestedTaskCount,
-        taskUsed: energyBudget.taskUsed,
-        taskPlanned: energyBudget.taskPlanned,
-        calendarCost: energyBudget.calendarCost,
-        energy: energyBudget.energy,
-        focus: energyBudget.focus,
-        load: energyBudget.load,
-        insight: energyBudget.insight,
-        brainMode: energyBudget.brainMode,
-        segments: energyBudget.segments,
-        consequence: energyBudget.consequence ?? undefined,
-        activeStartedCount: energyBudget.activeStartedCount ?? undefined,
-        maxSlots: energyBudget.maxSlots ?? undefined,
-      },
-      budget: {
+    let budget: Record<string, unknown> | undefined;
+    if (!depthCore && budgetData) {
+      const {
+        budgetSettings,
+        currentMonthExpenses,
+        currentMonthIncome,
+        currentWeekExpenses,
+        currentWeekIncome,
+        financeState,
+        financialInsights,
+        disciplineXpThisWeek,
+        disciplineCompletedToday,
+        unplannedSummary,
+      } = budgetData;
+      const spendableCents = Math.max(
+        0,
+        (budgetSettings.monthly_budget_cents ?? 0) - (budgetSettings.monthly_savings_cents ?? 0)
+      );
+      const budgetRemainingCents =
+        budgetSettings.monthly_budget_cents != null ? spendableCents - currentMonthExpenses : null;
+      const currency = budgetSettings.currency ?? "EUR";
+      const isWeekly = budgetSettings.budget_period === "weekly";
+      budget = {
         settings: budgetSettings,
         currentMonthExpenses,
         currentMonthIncome,
@@ -170,11 +197,66 @@ export async function GET(request: NextRequest) {
         disciplineXpThisWeek,
         disciplineCompletedToday,
         unplannedSummary,
-      },
-      learning,
+      };
+    }
+
+    const completedToday = (tasksForDate ?? []).filter(
+      (task) => !!(task as { completed?: boolean }).completed
+    );
+
+    const missionsPipelineForClient =
+      dashboard?.critical?.missionsPipeline ?? missionsPipelineParallel;
+
+    const energyBudgetJson = {
+      remaining: energyBudget.remaining,
+      capacity: energyBudget.capacity,
+      completedTaskCount: energyBudget.completedTaskCount,
+      suggestedTaskCount: energyBudget.suggestedTaskCount,
+      taskUsed: energyBudget.taskUsed,
+      taskPlanned: energyBudget.taskPlanned,
+      calendarCost: energyBudget.calendarCost,
+      energy: energyBudget.energy,
+      focus: energyBudget.focus,
+      load: energyBudget.load,
+      insight: energyBudget.insight,
+      brainMode: energyBudget.brainMode,
+      segments: energyBudget.segments,
+      consequence: energyBudget.consequence ?? undefined,
+      activeStartedCount: energyBudget.activeStartedCount ?? undefined,
+      maxSlots: energyBudget.maxSlots ?? undefined,
     };
 
-    return NextResponse.json(payload, { status: 200 });
+    const payload: Record<string, unknown> = {
+      date: dateStr,
+      dashboard: depthCore ? null : (dashboard ?? null),
+      dcicGameState,
+      tasks: {
+        [dateStr]: tasksForDate ?? [],
+      },
+      completedToday,
+      dailyState,
+      energyBudget: energyBudgetJson,
+    };
+    if (budget) payload.budget = budget;
+    if (learning) payload.learning = learning;
+    if (!loadDashboard) {
+      payload.missionsPipeline = missionsPipelineForClient;
+    }
+
+    const etag = computeBootstrapWeakEtag(
+      user.id,
+      dateStr,
+      tasksForDate ?? [],
+      missionsPipelineForClient
+    );
+    if (bootstrapEtagsMatch(request.headers.get("if-none-match"), etag)) {
+      return new NextResponse(null, {
+        status: 304,
+        headers: { ETag: etag },
+      });
+    }
+
+    return NextResponse.json(payload, { status: 200, headers: { ETag: etag } });
   } catch (err) {
     console.error("[API bootstrap/today]", err);
     return NextResponse.json(

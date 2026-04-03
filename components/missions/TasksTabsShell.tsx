@@ -16,7 +16,6 @@ type Props = {
   panelRoutine: ReactNode;
   fillViewport?: boolean;
   stickyTabs?: boolean;
-  dailyBootstrapDateStr?: string;
 };
 
 export function TasksTabsShell({
@@ -30,7 +29,6 @@ export function TasksTabsShell({
   panelRoutine,
   fillViewport = false,
   stickyTabs = false,
-  dailyBootstrapDateStr,
 }: Props) {
   return (
     <TasksTabsShellClient
@@ -44,7 +42,6 @@ export function TasksTabsShell({
       panelRoutine={panelRoutine}
       fillViewport={fillViewport}
       stickyTabs={stickyTabs}
-      dailyBootstrapDateStr={dailyBootstrapDateStr}
     />
   );
 }

@@ -12,8 +12,10 @@ export type NeurohqDailySnapshotUpdatedDetail = {
 
 export const BOOTSTRAP_TODAY_QUERY_KEY_ROOT = "bootstrap-today" as const;
 
-export function bootstrapTodayQueryKey(date: string) {
-  return [BOOTSTRAP_TODAY_QUERY_KEY_ROOT, date] as const;
+export type BootstrapTodayQueryVariant = "full" | "core";
+
+export function bootstrapTodayQueryKey(date: string, variant: BootstrapTodayQueryVariant = "full") {
+  return [BOOTSTRAP_TODAY_QUERY_KEY_ROOT, date, variant] as const;
 }
 
 export function seedBootstrapTodayInCache(
@@ -22,12 +24,24 @@ export function seedBootstrapTodayInCache(
   data: BootstrapTodayResponse | null | undefined
 ): void {
   if (!client || !data || !date) return;
-  client.setQueryData(bootstrapTodayQueryKey(date), data);
+  client.setQueryData(bootstrapTodayQueryKey(date, "full"), data);
+  client.setQueryData(bootstrapTodayQueryKey(date, "core"), data);
 }
 
 /** Network fetch for `useBootstrapToday` (same endpoint as bootstrap step + background refresh). */
-export async function fetchBootstrapTodayFromApi(signal?: AbortSignal): Promise<BootstrapTodayResponse> {
-  const res = await fetch("/api/bootstrap/today", {
+export async function fetchBootstrapTodayFromApi(
+  signal?: AbortSignal,
+  options?: { variant?: BootstrapTodayQueryVariant }
+): Promise<BootstrapTodayResponse> {
+  const variant = options?.variant ?? "full";
+  const params = new URLSearchParams();
+  if (variant === "core") {
+    params.set("depth", "core");
+    params.set("includeDashboard", "0");
+  }
+  const qs = params.toString();
+  const url = qs ? `/api/bootstrap/today?${qs}` : "/api/bootstrap/today";
+  const res = await fetch(url, {
     credentials: "include",
     cache: "no-store",
     headers: { "x-neurohq-refresh": "1" },

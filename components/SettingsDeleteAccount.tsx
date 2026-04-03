@@ -2,6 +2,9 @@
 
 import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { resetBootstrapMergeEtag } from "@/lib/daily-snapshot-full-sync";
+import { resetBootstrapApplyFingerprint } from "@/lib/daily-bootstrap";
+import { useHQStore } from "@/lib/hq-store";
 
 const CONFIRM_TEXT = "DELETE_MY_ACCOUNT";
 
@@ -29,6 +32,9 @@ export function SettingsDeleteAccount() {
         setLoading(false);
         return;
       }
+      resetBootstrapMergeEtag();
+      resetBootstrapApplyFingerprint();
+      useHQStore.getState().setMissionsPipeline(null);
       const supabase = createClient();
       await supabase.auth.signOut();
       window.location.href = "/";

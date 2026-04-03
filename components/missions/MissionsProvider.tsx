@@ -7,6 +7,7 @@ import {
   useMemo,
   type ReactNode,
 } from "react";
+import { useShallow } from "zustand/react/shallow";
 import type { Task } from "@/types/database.types";
 import type { MissionsSnapshot } from "@/types/daily-snapshot";
 import { useDailySnapshot } from "@/components/bootstrap/BootstrapGate";
@@ -32,13 +33,43 @@ export function useMissionsSnapshot(): MissionsSnapshot | null {
  */
 export function MissionsProvider({ dateStr, children }: Props) {
   const snapshot = useDailySnapshot();
-  const { data: bootstrapToday } = useBootstrapToday(dateStr);
+  const { data: bootstrapToday } = useBootstrapToday(dateStr, { variant: "core" });
+  const { missionsPipeline, storeTodayDate } = useHQStore(
+    useShallow((s) => ({
+      missionsPipeline: s.missionsPipeline,
+      storeTodayDate: s.todayDate,
+    }))
+  );
   const missions = useMemo((): MissionsSnapshot | null => {
+    let base: MissionsSnapshot | null = null;
     if (snapshot?.missions && snapshot.missions.dateStr === dateStr) {
-      return snapshot.missions;
+      base = snapshot.missions;
+    } else {
+      base = missionsFromBootstrapToday(bootstrapToday, dateStr);
     }
-    return missionsFromBootstrapToday(bootstrapToday, dateStr);
-  }, [snapshot?.missions, bootstrapToday, dateStr]);
+    if (!base) return null;
+    if (dateStr === storeTodayDate && missionsPipeline) {
+      if (base.decisionBlocks == null) {
+        return {
+          ...base,
+          decisionBlocks: missionsPipeline.decisionBlocks,
+          capacity: missionsPipeline.capacity,
+          buildMeta: missionsPipeline.buildMeta ?? { builtAt: Date.now() },
+          rankedTaskIds: missionsPipeline.rankedTaskIds,
+        };
+      }
+      if (!base.rankedTaskIds?.length) {
+        return {
+          ...base,
+          rankedTaskIds:
+            missionsPipeline.rankedTaskIds.length > 0
+              ? missionsPipeline.rankedTaskIds
+              : base.decisionBlocks.tasksSortedByUMS.map((t) => t.id),
+        };
+      }
+    }
+    return base;
+  }, [snapshot?.missions, bootstrapToday, dateStr, storeTodayDate, missionsPipeline]);
 
   const setTodayDate = useHQStore((s) => s.setTodayDate);
   const setTodayDailyState = useHQStore((s) => s.setTodayDailyState);

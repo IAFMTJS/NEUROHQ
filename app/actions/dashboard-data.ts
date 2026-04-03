@@ -46,6 +46,8 @@ import { getBehaviorProfile } from "@/app/actions/behavior-profile";
 import { getFinancialInsightsSafe } from "@/app/actions/dcic/finance-state";
 import { applyZeroCompletionRollover } from "@/app/actions/daily-obligation";
 import { deriveUnifiedDecision } from "@/lib/unified-decision-engine";
+import { loadMissionsPipeline } from "@/lib/missions/load-missions-pipeline";
+import { buildMissionsSummaryForDecision } from "@/lib/missions/missions-summary-for-decision";
 import { syncInboxAlertsFromDashboardCritical } from "@/app/actions/alerts";
 import type { EnergyBudget } from "@/app/actions/energy";
 import type { TodayEngineResult } from "@/app/actions/dcic/today-engine";
@@ -197,6 +199,7 @@ async function buildCriticalPayload(ctx: TodayContext, shared: DashboardCrossSli
     adaptiveDecisionSignals30d,
     financialInsights,
     monthExpensesTrend,
+    missionsPipeline,
   ] = await Promise.all([
     getQuoteForDay(quoteDay),
     getLearningStreak(),
@@ -222,6 +225,7 @@ async function buildCriticalPayload(ctx: TodayContext, shared: DashboardCrossSli
         previousMonthExpenses,
       };
     })(),
+    loadMissionsPipeline(ctx.dateStr),
   ]);
 
   const { state, yesterdayState, tasks, carryOverCount, mode, energyBudget, todayEngine } = ctx;
@@ -287,10 +291,15 @@ async function buildCriticalPayload(ctx: TodayContext, shared: DashboardCrossSli
   const selectedEmotion = prefs.selected_emotion ?? null;
   const isUsualDayOff = (prefs.usual_days_off ?? []).includes(isoDay);
 
+  const missionsSummary = buildMissionsSummaryForDecision(missionsPipeline, {
+    carryOverCount,
+  });
+
   const unifiedDecision = deriveUnifiedDecision({
     dateStr: ctx.dateStr,
     hasBrainCheckIn: state?.energy != null && state?.focus != null,
     tasksCount: todaysTasks.length,
+    missionsSummary,
     carryOverCount,
     streakAtRisk,
     suggestedTaskCapacity: energyBudget.suggestedTaskCount ?? null,
@@ -392,6 +401,7 @@ async function buildCriticalPayload(ctx: TodayContext, shared: DashboardCrossSli
     autoSuggestions,
     burnout: (consequenceState as { burnout?: boolean })?.burnout ?? false,
     unifiedDecision,
+    missionsPipeline,
   };
 
   try {

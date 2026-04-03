@@ -72,11 +72,27 @@ export function missionsFromBootstrapToday(
   if (!b) return null;
   const apiDate = (b.date as string | undefined) ?? dateStr;
   if (apiDate !== dateStr) return null;
+  const mp = (
+    (b.dashboard?.critical as { missionsPipeline?: unknown } | undefined)?.missionsPipeline ?? b.missionsPipeline
+  ) as
+    | {
+        decisionBlocks?: unknown;
+        capacity?: unknown;
+        buildMeta?: { builtAt?: number; inputHash?: string };
+      }
+    | null
+    | undefined;
   return {
     dateStr: apiDate,
     tasksByDate: (b.tasks ?? {}) as Record<string, unknown[]>,
     completedToday: (b.completedToday ?? []) as unknown[],
     energyBudget: (b.energyBudget as Record<string, unknown>) ?? null,
     dailyState: (b.dailyState as Record<string, unknown>) ?? null,
+    decisionBlocks: (mp?.decisionBlocks ?? undefined) as MissionsSnapshot["decisionBlocks"],
+    capacity: (mp?.capacity ?? undefined) as MissionsSnapshot["capacity"],
+    buildMeta: mp?.buildMeta?.builtAt != null ? { builtAt: mp.buildMeta.builtAt, inputHash: mp.buildMeta.inputHash } : undefined,
+    rankedTaskIds: Array.isArray((mp as { rankedTaskIds?: string[] }).rankedTaskIds)
+      ? (mp as { rankedTaskIds: string[] }).rankedTaskIds
+      : undefined,
   };
 }
