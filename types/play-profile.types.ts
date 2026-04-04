@@ -76,6 +76,9 @@ export interface PlayProfileDataV1 {
   /** Favoriete korte pauze (2–5 min) */
   ideal_microbreak?: string;
 
+  /** Gebruiker heeft volledig play deck ontgrendeld (los van profielinhoud). */
+  play_deck_unlocked_full?: boolean;
+
   /** Arbitrary extra fields from future form fields or imports */
   extra?: Record<string, unknown>;
 }

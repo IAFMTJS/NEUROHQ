@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useMemo, useTransition, type CSSProperties } from "react";
+import { useEffect, useState, useMemo, useCallback, useTransition, type CSSProperties } from "react";
 import Link from "next/link";
 import dynamic from "next/dynamic";
 import { Modal } from "@/components/Modal";
@@ -29,6 +29,7 @@ import { useDCICGameState } from "@/lib/dcic/game-state-client";
 import { deriveBrainUI } from "@/lib/brain-ui";
 import { DCICStatusCard } from "@/components/dcic/DCICStatusCard";
 import { neuroToast } from "@/lib/ui/neuro-toast";
+import { toastDashboardFirstMission } from "@/lib/ui/dashboard-first-mission-toast";
 import type { MoodLabel } from "@/lib/mood-intervention-config";
 
 const DCIC_SUGGESTION_TOAST_KEY = "neurohq-dcic-suggestion-education-toast-v1";
@@ -342,6 +343,11 @@ export function DashboardClientShell() {
     (state?.energy != null && state?.focus != null) ||
     (secState?.energy != null && secState?.focus != null);
   const hasMissionsToday = (todaysTasks?.length ?? 0) > 0;
+  const firstMissionToday = todaysTasks[0] ?? null;
+  const openFirstMissionToast = useCallback(() => {
+    if (!firstMissionToday) return;
+    toastDashboardFirstMission({ id: firstMissionToday.id, title: firstMissionToday.title });
+  }, [firstMissionToday?.id, firstMissionToday?.title]);
   const brainUI = deriveBrainUI({
     hasBrainCheckIn,
     hasMissionsToday,
@@ -468,8 +474,9 @@ export function DashboardClientShell() {
                       energyPct={heroEnergyPct}
                       focusPct={heroFocusPct}
                       loadPct={heroLoadPct}
-                      missionHref="/tasks"
+                      missionHref={firstMissionToday ? "/tasks" : emptyMissionHref}
                       missionLabel={missionLabel}
+                      missionCtaAction={firstMissionToday ? openFirstMissionToast : null}
                       exportDate={dateStr}
                       streakAtRisk={streakAtRisk}
                       dailyQuoteText={dailyQuoteText}

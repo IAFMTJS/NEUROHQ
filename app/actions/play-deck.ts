@@ -6,21 +6,36 @@ import { getPlayProfileDocument, updatePlayProfileDocument } from "@/app/actions
 import { baseXpForLevel } from "@/lib/mission-templates";
 import { scorePlayTemplates, getPlayTemplateById } from "@/lib/play-deck/score-play-templates";
 import type { PlayDeckTemplate } from "@/lib/play-deck/types";
+import type { PlayProfileDocument } from "@/types/play-profile.types";
 
 export type PlayDeckSuggestion = Pick<PlayDeckTemplate, "id" | "title" | "play_kind" | "energy">;
+
+/** Volledig deck: expliciete vlag óf genoeg play-profiel voor betere matching. */
+function isPlayDeckFullyUnlocked(doc: PlayProfileDocument): boolean {
+  if (doc.data.play_deck_unlocked_full === true) return true;
+  const styles = Array.isArray(doc.data.fun_styles) ? doc.data.fun_styles.filter((s) => typeof s === "string" && s.trim()).length : 0;
+  const about = typeof doc.data.about_you === "string" ? doc.data.about_you.trim().length : 0;
+  const er = doc.data.energy_recharge;
+  const rechargeSet = typeof er === "string" && er.trim().length > 0;
+  if (styles >= 1) return true;
+  if (about >= 28) return true;
+  if (rechargeSet) return true;
+  return false;
+}
 
 export async function suggestPlayDeckTasks(params: {
   dateStr: string;
   cursor?: number;
   limit?: number;
-}): Promise<{ suggestions: PlayDeckSuggestion[] }> {
+}): Promise<{ suggestions: PlayDeckSuggestion[]; fullDeckUnlocked: boolean }> {
   const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  if (!user) return { suggestions: [] };
+  if (!user) return { suggestions: [], fullDeckUnlocked: false };
 
   const doc = await getPlayProfileDocument();
+  const fullDeckUnlocked = isPlayDeckFullyUnlocked(doc);
 
   const { data: rows } = await supabase
     .from("tasks")
@@ -35,14 +50,17 @@ export async function suggestPlayDeckTasks(params: {
     .map((r) => (typeof (r as { title?: string }).title === "string" ? (r as { title: string }).title : ""))
     .filter(Boolean);
 
-  const seed = `${params.dateStr}|${params.cursor ?? 0}`;
+  const cursor = fullDeckUnlocked ? Math.max(0, params.cursor ?? 0) : 0;
+  const seed = `${params.dateStr}|${cursor}`;
   const templates = scorePlayTemplates(doc, titles, {
     seed,
-    limit: params.limit ?? 8,
-    cursor: params.cursor ?? 0,
+    limit: fullDeckUnlocked ? params.limit ?? 8 : 3,
+    cursor,
+    starterOnly: !fullDeckUnlocked,
   });
 
   return {
+    fullDeckUnlocked,
     suggestions: templates.map((t) => ({
       id: t.id,
       title: t.title,
@@ -50,6 +68,16 @@ export async function suggestPlayDeckTasks(params: {
       energy: t.energy,
     })),
   };
+}
+
+/** Handmatig volledig play deck tonen (zonder profiel). */
+export async function unlockPlayDeckFull(): Promise<{ ok: true } | { ok: false; error: string }> {
+  const doc = await getPlayProfileDocument();
+  if (doc.data.play_deck_unlocked_full === true) return { ok: true };
+  return await updatePlayProfileDocument({
+    schemaVersion: doc.schemaVersion,
+    data: { ...doc.data, play_deck_unlocked_full: true },
+  });
 }
 
 export async function addPlayDeckTasksForToday(params: {

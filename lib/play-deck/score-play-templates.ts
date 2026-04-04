@@ -1,6 +1,6 @@
 import type { PlayProfileDocument, PlayChallengeAppetite, PlayProfileDataV1 } from "@/types/play-profile.types";
 import type { PlayDeckTemplate } from "./types";
-import { PLAY_DECK_TEMPLATES } from "./builtin-templates";
+import { PLAY_DECK_TEMPLATES, PLAY_DECK_STARTER_IDS } from "./builtin-templates";
 
 function norm(s: string): string {
   return s
@@ -288,7 +288,7 @@ function seededOrder<T>(items: T[], seed: string): T[] {
 export function scorePlayTemplates(
   doc: PlayProfileDocument,
   existingTaskTitles: string[],
-  options?: { seed?: string; limit?: number; cursor?: number }
+  options?: { seed?: string; limit?: number; cursor?: number; starterOnly?: boolean }
 ): PlayDeckTemplate[] {
   const userTags = userTagSet(doc);
   const avoids = avoidList(doc);
@@ -297,9 +297,11 @@ export function scorePlayTemplates(
   const energyPref = typeof doc.data.energy_recharge === "string" ? doc.data.energy_recharge : "";
 
   const movementLow = doc.data.movement_baseline === "low";
+  const starterOnly = options?.starterOnly === true;
 
   const scored: { t: PlayDeckTemplate; score: number }[] = [];
   for (const t of PLAY_DECK_TEMPLATES) {
+    if (starterOnly && !PLAY_DECK_STARTER_IDS.has(t.id)) continue;
     if (movementLow && t.energy >= 3 && t.tags.includes("sports")) continue;
     if (templateBlockedByAvoid(t, avoids)) continue;
     if (duplicateTitle(t, existingTaskTitles)) continue;
@@ -327,16 +329,17 @@ export function scorePlayTemplates(
   scored.sort((a, b) => b.score - a.score || a.t.id.localeCompare(b.t.id));
 
   const seed = options?.seed ?? "playdeck";
-  const limit = Math.min(16, Math.max(3, options?.limit ?? 8));
+  const limit = Math.min(16, Math.max(1, options?.limit ?? 8));
   const cursor = Math.max(0, options?.cursor ?? 0);
 
   const band = scored.length > 0 ? scored.slice(0, Math.min(100, scored.length)).map((r) => r.t) : [];
   const pool =
     band.length > 0
       ? band
-      : PLAY_DECK_TEMPLATES.filter(
-          (t) => !templateBlockedByAvoid(t, avoids) && !duplicateTitle(t, existingTaskTitles)
-        );
+      : PLAY_DECK_TEMPLATES.filter((t) => {
+          if (starterOnly && !PLAY_DECK_STARTER_IDS.has(t.id)) return false;
+          return !templateBlockedByAvoid(t, avoids) && !duplicateTitle(t, existingTaskTitles);
+        });
 
   const shuffled = seededOrder(pool, seed);
   return shuffled.slice(cursor, cursor + limit);

@@ -3385,8 +3385,8 @@ header h1 { margin: 0; }
 }
 
 /* Commander bridge: primary CTA — same glass language as dashboard cards (capsule link). */
-.dashboard-cinematic a.commander-cta-glass,
-.tasks-command-deck.dashboard-cinematic a.commander-cta-glass {
+.dashboard-cinematic .commander-cta-glass,
+.tasks-command-deck.dashboard-cinematic .commander-cta-glass {
   animation: none !important;
   backdrop-filter: blur(22px) saturate(1.14) !important;
   -webkit-backdrop-filter: blur(22px) saturate(1.14) !important;
@@ -3400,8 +3400,8 @@ header h1 { margin: 0; }
     inset 0 -8px 22px rgba(0, 0, 0, 0.28) !important;
 }
 
-.dashboard-cinematic a.commander-cta-glass:hover,
-.tasks-command-deck.dashboard-cinematic a.commander-cta-glass:hover {
+.dashboard-cinematic .commander-cta-glass:hover,
+.tasks-command-deck.dashboard-cinematic .commander-cta-glass:hover {
   border-color: rgba(var(--mode-rgb), 0.48) !important;
   box-shadow:
     0 0 0 1px rgba(0, 0, 0, 0.34),
@@ -3412,7 +3412,7 @@ header h1 { margin: 0; }
   filter: brightness(1.06);
 }
 
-[data-mode="war"] .dashboard-cinematic a.commander-cta-glass {
+[data-mode="war"] .dashboard-cinematic .commander-cta-glass {
   border-color: rgba(220, 38, 38, 0.38) !important;
   background: rgba(40, 4, 10, 0.45) !important;
   box-shadow:
@@ -3423,7 +3423,7 @@ header h1 { margin: 0; }
     inset 0 -8px 22px rgba(0, 0, 0, 0.32) !important;
 }
 
-[data-mode="recovery"] .dashboard-cinematic a.commander-cta-glass {
+[data-mode="recovery"] .dashboard-cinematic .commander-cta-glass {
   border-color: rgba(34, 197, 94, 0.36) !important;
   background: rgba(0, 36, 14, 0.45) !important;
   box-shadow:
@@ -3434,7 +3434,7 @@ header h1 { margin: 0; }
     inset 0 -8px 22px rgba(0, 0, 0, 0.32) !important;
 }
 
-[data-mode="overdrive"] .dashboard-cinematic a.commander-cta-glass {
+[data-mode="overdrive"] .dashboard-cinematic .commander-cta-glass {
   border-color: rgba(167, 139, 250, 0.42) !important;
   background: rgba(36, 12, 52, 0.48) !important;
   box-shadow:
@@ -3445,7 +3445,7 @@ header h1 { margin: 0; }
     inset 0 -8px 22px rgba(0, 0, 0, 0.32) !important;
 }
 
-[data-light-ui="true"] .dashboard-cinematic a.commander-cta-glass {
+[data-light-ui="true"] .dashboard-cinematic .commander-cta-glass {
   backdrop-filter: var(--light-ui-glass-blur) !important;
   -webkit-backdrop-filter: var(--light-ui-glass-blur) !important;
   background: var(--light-ui-glass-bg) !important;
@@ -3459,7 +3459,7 @@ header h1 { margin: 0; }
   filter: none !important;
 }
 
-[data-light-ui="true"] .dashboard-cinematic a.commander-cta-glass:hover {
+[data-light-ui="true"] .dashboard-cinematic .commander-cta-glass:hover {
   filter: brightness(1.06) !important;
   border-color: rgba(var(--mode-rgb), 0.48) !important;
   box-shadow:
@@ -3471,7 +3471,7 @@ header h1 { margin: 0; }
 }
 
 /* Beat Light UI flattening for the hero CTA inside the command deck (see glass-card note above). */
-[data-light-ui="true"] .tasks-command-deck.dashboard-cinematic a.commander-cta-glass {
+[data-light-ui="true"] .tasks-command-deck.dashboard-cinematic .commander-cta-glass {
   backdrop-filter: blur(20px) saturate(1.12) !important;
   -webkit-backdrop-filter: blur(20px) saturate(1.12) !important;
   background: rgba(4, 14, 26, 0.42) !important;
@@ -3484,7 +3484,7 @@ header h1 { margin: 0; }
     inset 0 -8px 22px rgba(0, 0, 0, 0.28) !important;
 }
 
-[data-light-ui="true"] .tasks-command-deck.dashboard-cinematic a.commander-cta-glass:hover {
+[data-light-ui="true"] .tasks-command-deck.dashboard-cinematic .commander-cta-glass:hover {
   border-color: rgba(var(--mode-rgb), 0.48) !important;
   box-shadow:
     0 0 0 1px rgba(0, 0, 0, 0.34),

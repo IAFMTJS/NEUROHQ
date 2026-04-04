@@ -60,7 +60,18 @@ async function EmotionalStateCorrelationBannerAsync() {
 }
 
 type Props = {
-  searchParams: Promise<{ tab?: string; add?: string; month?: string; day?: string; calView?: string; growth?: string }>;
+  searchParams: Promise<{
+    tab?: string;
+    add?: string;
+    month?: string;
+    day?: string;
+    calView?: string;
+    growth?: string;
+    /** TaskList opent details of focus; zie `focusMission`. */
+    openTask?: string;
+    /** `1` = focus-flow; anders detailsmodal. */
+    focusMission?: string;
+  }>;
 };
 
 type CalendarView = "today" | "calendar" | "routines" | "overdue";

@@ -1,10 +1,10 @@
 "use client";
 
-import { useState, useTransition, useEffect } from "react";
+import { useState, useTransition, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Modal } from "@/components/Modal";
-import { suggestPlayDeckTasks, addPlayDeckTasksForToday } from "@/app/actions/play-deck";
+import { suggestPlayDeckTasks, addPlayDeckTasksForToday, unlockPlayDeckFull } from "@/app/actions/play-deck";
 import type { PlayDeckSuggestion } from "@/app/actions/play-deck";
 import { neuroToast } from "@/lib/ui/neuro-toast";
 import { profileEngineHref } from "@/lib/profile-routes";
@@ -25,25 +25,34 @@ const KIND_LABEL: Record<string, string> = {
 export function PlayDeckModal({ open, onClose, dateStr }: Props) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
+  const [unlockPending, startUnlock] = useTransition();
   const [loading, setLoading] = useState(false);
   const [suggestions, setSuggestions] = useState<PlayDeckSuggestion[]>([]);
   const [cursor, setCursor] = useState(0);
   const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [fullDeckUnlocked, setFullDeckUnlocked] = useState(true);
+
+  const loadSuggestions = useCallback(async (nextCursor: number) => {
+    setLoading(true);
+    try {
+      const { suggestions: s, fullDeckUnlocked: full } = await suggestPlayDeckTasks({
+        dateStr,
+        cursor: nextCursor,
+        limit: 8,
+      });
+      setSuggestions(s);
+      setCursor(nextCursor);
+      setFullDeckUnlocked(full);
+    } finally {
+      setLoading(false);
+    }
+  }, [dateStr]);
 
   useEffect(() => {
     if (!open) return;
-    setCursor(0);
     setSelected(new Set());
-    setLoading(true);
-    void (async () => {
-      try {
-        const { suggestions: s } = await suggestPlayDeckTasks({ dateStr, cursor: 0, limit: 8 });
-        setSuggestions(s);
-      } finally {
-        setLoading(false);
-      }
-    })();
-  }, [open, dateStr]);
+    void loadSuggestions(0);
+  }, [open, loadSuggestions]);
 
   function toggle(id: string) {
     setSelected((prev) => {
@@ -55,18 +64,25 @@ export function PlayDeckModal({ open, onClose, dateStr }: Props) {
   }
 
   function loadMore() {
-    const next = cursor + 8;
-    setLoading(true);
-    void (async () => {
-      try {
-        const { suggestions: s } = await suggestPlayDeckTasks({ dateStr, cursor: next, limit: 8 });
-        setSuggestions(s);
-        setCursor(next);
-        setSelected(new Set());
-      } finally {
-        setLoading(false);
+    if (!fullDeckUnlocked) return;
+    void loadSuggestions(cursor + 8);
+    setSelected(new Set());
+  }
+
+  function unlockFullDeck() {
+    startUnlock(async () => {
+      const r = await unlockPlayDeckFull();
+      if (!r.ok) {
+        neuroToast.error(r.error);
+        return;
       }
-    })();
+      neuroToast.success("Volledig play deck ontgrendeld.");
+      setFullDeckUnlocked(true);
+      setCursor(0);
+      setSelected(new Set());
+      await loadSuggestions(0);
+      router.refresh();
+    });
   }
 
   function addSelected() {
@@ -95,18 +111,32 @@ export function PlayDeckModal({ open, onClose, dateStr }: Props) {
   return (
     <Modal open={open} onClose={onClose} title="Play deck" size="lg">
       <div className="[color-scheme:dark] space-y-4">
-        <p className="text-sm leading-relaxed text-[var(--text-muted)]">
-          Optionele ideeën voor plezier, ontspanning of een lichte challenge — niet bedoeld als coaching. Vink wat je wilt en voeg toe aan vandaag.{" "}
-          <Link href={profileEngineHref("play")} className="text-[var(--accent-focus)] underline-offset-2 hover:underline">
-            Play-profiel invullen
-          </Link>{" "}
-          geeft betere matches (mag groot en uitgebreid).
-        </p>
+        {fullDeckUnlocked ? (
+          <p className="text-sm leading-relaxed text-[var(--text-muted)]">
+            Optionele ideeën voor plezier, ontspanning of een lichte challenge — niet bedoeld als coaching. Vink wat je wilt en voeg toe aan vandaag.{" "}
+            <Link href={profileEngineHref("play")} className="text-[var(--accent-focus)] underline-offset-2 hover:underline">
+              Play-profiel
+            </Link>{" "}
+            verfijnt de matches verder.
+          </p>
+        ) : (
+          <div className="rounded-xl border border-[rgba(var(--mode-rgb),0.2)] bg-[var(--bg-primary)]/30 p-3">
+            <p className="text-sm font-medium text-[var(--text-primary)]">Start simpel — drie ideeën</p>
+            <p className="mt-1 text-sm leading-relaxed text-[var(--text-muted)]">
+              We tonen eerst een kleine set.{" "}
+              <span className="text-[var(--text-secondary)]">Wil je betere matches?</span> Voeg iets toe aan je{" "}
+              <Link href={profileEngineHref("play")} className="font-medium text-[var(--accent-focus)] underline-offset-2 hover:underline">
+                Play-profiel
+              </Link>{" "}
+              (stijlen, over jou, hoe je oplaadt) — dan ontgrendelt automatisch het volledige deck met meer ideeën en betere aansluiting.
+            </p>
+          </div>
+        )}
 
         {loading ? (
           <p className="text-sm text-[var(--text-muted)]">Ideeën laden…</p>
         ) : suggestions.length === 0 ? (
-          <p className="text-sm text-[var(--text-muted)]">Geen ideeën gevonden. Probeer Play-profiel aan te vullen of Meer ideeën.</p>
+          <p className="text-sm text-[var(--text-muted)]">Geen ideeën gevonden. Vul je Play-profiel aan of probeer later opnieuw.</p>
         ) : (
           <ul className="max-h-[min(52vh,420px)] space-y-2 overflow-y-auto pr-1">
             {suggestions.map((s) => (
@@ -123,9 +153,7 @@ export function PlayDeckModal({ open, onClose, dateStr }: Props) {
                       <span className="rounded-md border border-[rgba(var(--mode-rgb),0.25)] bg-[rgba(var(--mode-rgb-deep),0.12)] px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-[var(--text-muted)]">
                         {KIND_LABEL[s.play_kind] ?? s.play_kind}
                       </span>
-                      <span className="text-[10px] text-[var(--text-muted)]">
-                        ~{4 + s.energy} energie
-                      </span>
+                      <span className="text-[10px] text-[var(--text-muted)]">~{4 + s.energy} energie</span>
                     </span>
                     <span className="mt-1 block text-sm text-[var(--text-primary)]">{s.title}</span>
                   </span>
@@ -135,15 +163,42 @@ export function PlayDeckModal({ open, onClose, dateStr }: Props) {
           </ul>
         )}
 
+        {!fullDeckUnlocked && !loading && (
+          <div className="rounded-xl border border-dashed border-[var(--card-border)] bg-[var(--bg-elevated)]/40 p-4">
+            <p className="text-xs font-semibold uppercase tracking-[0.08em] text-[var(--accent-focus)]">Meer ideeën</p>
+            <p className="mt-2 text-sm text-[var(--text-muted)]">
+              Na een korte Play-profiel update zie je automatisch het volledige deck. Of ontgrendel nu alles — zonder profiel zijn matches generieker.
+            </p>
+            <div className="mt-3 flex flex-wrap gap-2">
+              <Link
+                href={profileEngineHref("play")}
+                className="inline-flex items-center justify-center rounded-lg border border-[rgba(var(--mode-rgb),0.35)] bg-[rgba(var(--mode-rgb-deep),0.15)] px-3 py-2 text-xs font-semibold text-[var(--accent-focus)] no-underline hover:bg-[rgba(var(--mode-rgb-deep),0.22)]"
+              >
+                Play-profiel aanvullen
+              </Link>
+              <button
+                type="button"
+                disabled={unlockPending}
+                onClick={unlockFullDeck}
+                className="rounded-lg border border-[var(--card-border)] px-3 py-2 text-xs font-medium text-[var(--text-secondary)] hover:bg-[var(--bg-hover)]/40 disabled:opacity-50"
+              >
+                {unlockPending ? "Bezig…" : "Toon volledig deck nu"}
+              </button>
+            </div>
+          </div>
+        )}
+
         <div className="flex flex-wrap gap-2 border-t border-[var(--card-border)]/60 pt-4">
-          <button
-            type="button"
-            disabled={loading}
-            onClick={loadMore}
-            className="rounded-lg border border-[var(--card-border)] px-3 py-2 text-xs font-semibold text-[var(--text-primary)] hover:bg-[var(--bg-hover)]/40 disabled:opacity-50"
-          >
-            Meer ideeën
-          </button>
+          {fullDeckUnlocked ? (
+            <button
+              type="button"
+              disabled={loading}
+              onClick={loadMore}
+              className="rounded-lg border border-[var(--card-border)] px-3 py-2 text-xs font-semibold text-[var(--text-primary)] hover:bg-[var(--bg-hover)]/40 disabled:opacity-50"
+            >
+              Meer ideeën
+            </button>
+          ) : null}
           <button
             type="button"
             disabled={pending || selected.size === 0}

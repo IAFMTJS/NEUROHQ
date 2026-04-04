@@ -101,3 +101,22 @@ export const PLAY_DECK_TEMPLATES: PlayDeckTemplate[] = [
   ...PLAY_DECK_TEMPLATES_EXTRA,
   ...PLAY_DECK_TEMPLATES_MATURE,
 ];
+
+/**
+ * Progressive unlock: alleen deze ids in “start”-modus (laagdrempelig, geen extra/mature library).
+ * Wordt gescoord met play-profiel maar beperkt tot deze set; UI toont er 3 van.
+ */
+export const PLAY_DECK_STARTER_IDS = new Set<string>([
+  "pd_u01",
+  "pd_u02",
+  "pd_u03",
+  "pd_u06",
+  "pd_f02",
+  "pd_f08",
+  "pd_f12",
+  "pd_c03",
+  "pd_c07",
+  "pd_x01",
+  "pd_x02",
+  "pd_r01",
+]);

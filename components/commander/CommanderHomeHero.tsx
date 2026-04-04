@@ -6,6 +6,7 @@ import { CommanderStatRing } from "./CommanderStatRing";
 import { ClientCTALink } from "./ClientCTALink";
 import { useHQStore } from "@/lib/hq-store";
 import { scale1To10ToPct } from "@/lib/dashboard-utils";
+import { trackEvent } from "@/app/actions/analytics-events";
 
 type Props = {
   energyPct: number;
@@ -26,6 +27,11 @@ type Props = {
   bridgeLayout?: boolean;
   /** Platform + segment-ring (resources + brain; brain wordt gemerged met store-check-in). */
   pedestalStats?: CommanderMascotPedestalStats | null;
+  /**
+   * Dashboard: bij openstaande missies vandaag toont de CTA een toast i.p.v. alleen te navigeren.
+   * `null`/`undefined` = gewone link naar `missionHref`.
+   */
+  missionCtaAction?: (() => void) | null;
 };
 
 export function CommanderHomeHero({
@@ -41,6 +47,7 @@ export function CommanderHomeHero({
   hideBuiltInTitle = false,
   bridgeLayout = false,
   pedestalStats = null,
+  missionCtaAction = null,
 }: Props) {
   const todayDailyState = useHQStore((s) => s.todayDailyState);
   const effectiveEnergyPct =
@@ -137,15 +144,28 @@ export function CommanderHomeHero({
         </div>
       )}
 
-      <ClientCTALink
-        href={missionHref}
-        label={missionLabel}
-        tone="glass"
-        className={`commander-cta-glass block w-full no-underline rounded-full h-[48px] min-h-[48px] px-5 text-[11px] tracking-[0.08em] ${dailyQuoteText ? "mt-3.5" : "mt-2"}`}
-        streakAtRisk={streakAtRisk}
-      >
-        {missionLabel}
-      </ClientCTALink>
+      {missionCtaAction ? (
+        <button
+          type="button"
+          className={`commander-cta-glass inline-flex w-full cursor-pointer items-center justify-center rounded-full px-5 text-[11px] font-medium tracking-[0.08em] text-[var(--text-main)] h-[48px] min-h-[48px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[rgba(var(--mode-rgb),0.45)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--bg-primary)] ${streakAtRisk ? "cta-streak-pulse" : ""} ${dailyQuoteText ? "mt-3.5" : "mt-2"}`}
+          onClick={() => {
+            void trackEvent("CTA_clicked", { label: missionLabel, href: missionHref, context: "dashboard_mission_toast" });
+            missionCtaAction();
+          }}
+        >
+          {missionLabel}
+        </button>
+      ) : (
+        <ClientCTALink
+          href={missionHref}
+          label={missionLabel}
+          tone="glass"
+          className={`commander-cta-glass block w-full no-underline rounded-full h-[48px] min-h-[48px] px-5 text-[11px] tracking-[0.08em] ${dailyQuoteText ? "mt-3.5" : "mt-2"}`}
+          streakAtRisk={streakAtRisk}
+        >
+          {missionLabel}
+        </ClientCTALink>
+      )}
     </>
   );
 

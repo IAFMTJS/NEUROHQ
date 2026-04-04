@@ -161,9 +161,26 @@ export async function ensureMasterMissionsForToday(dailyStateFromSave?: DailySta
     .is("deleted_at", null);
   const allAutoTasks = allAutoToday ?? [];
   const existingAutoCount = allAutoTasks.length;
+  /** Actieve (niet verwijderde) titels vandaag — voor tellen / dedupe in deze run. */
   const autoMasterTitles = new Set(
     allAutoTasks.map((t) => (t as { title?: string | null }).title ?? "").filter(Boolean)
   );
+  /**
+   * Alle pool-titels die vandaag al voorkwamen, inclusief soft-deleted en afgerond.
+   * Zonder dit: unique index geldt alleen op deleted_at IS NULL → na verwijderen mag DB dezelfde titel opnieuw,
+   * en recentlyUsedTitles sluit vandaag uit (.lt date) → de pool kan identiek terugkomen.
+   */
+  const { data: todayPoolTitleRows } = await db
+    .from("tasks")
+    .select("title")
+    .eq("user_id", user.id)
+    .eq("due_date", dateStr)
+    .in("psychology_label", ["MasterPoolAuto", "MasterPoolBonus"])
+    .is("parent_task_id", null);
+  for (const r of todayPoolTitleRows ?? []) {
+    const ti = (r as { title?: string | null }).title?.trim();
+    if (ti) autoMasterTitles.add(ti);
+  }
 
   const DEFAULT_SLIDER = 5;
   const energy = stateRow.energy ?? DEFAULT_SLIDER;
@@ -248,6 +265,7 @@ export async function ensureMasterMissionsForToday(dailyStateFromSave?: DailySta
   const recentlyUsedTitles = new Set(
     (recentAuto ?? []).map((r) => (r as { title?: string | null }).title ?? "").filter(Boolean)
   );
+  for (const t of autoMasterTitles) recentlyUsedTitles.add(t);
 
   const recentlyUsedSubcategories = new Set<string>();
   for (const title of recentlyUsedTitles) {
@@ -386,7 +404,6 @@ export async function ensureMasterMissionsForToday(dailyStateFromSave?: DailySta
       .eq("psychology_label", "MasterPoolAuto")
       .eq("title", title)
       .is("parent_task_id", null)
-      .is("deleted_at", null)
       .limit(1);
     if (existingRows && existingRows.length > 0) {
       autoMasterTitles.add(title);

@@ -431,6 +431,40 @@ export function TaskList({
     [extendedTasks, optimisticCompleteIds]
   );
 
+  /** Deep link: /tasks?openTask=id — optioneel focusMission=1 voor focus-flow i.p.v. detailsmodal. */
+  const openTaskDeepLinkOpenedRef = useRef<string | null>(null);
+  useEffect(() => {
+    const oid = searchParams.get("openTask");
+    if (!oid) {
+      openTaskDeepLinkOpenedRef.current = null;
+      return;
+    }
+
+    const task = extendedTasks.find((t) => t.id === oid);
+    if (!task) return;
+
+    if (openTaskDeepLinkOpenedRef.current !== oid) {
+      openTaskDeepLinkOpenedRef.current = oid;
+      const wantFocus = searchParams.get("focusMission") === "1";
+      if (!task.completed && !optimisticCompleteIds.includes(task.id)) {
+        setViewMode("focus");
+        if (wantFocus) {
+          setFocusTask(task);
+          setDetailsTask(null);
+        } else {
+          setDetailsTask(task);
+          setFocusTask(null);
+        }
+      }
+    }
+
+    const sp = new URLSearchParams(searchParams.toString());
+    sp.delete("openTask");
+    sp.delete("focusMission");
+    const qs = sp.toString();
+    router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
+  }, [extendedTasks, optimisticCompleteIds, pathname, router, searchParams]);
+
   const heroMissionTask = useMemo(() => {
     if (incompleteTasksForDisplay.length === 0) return null;
     if (isWarMode) return incompleteTasksForDisplay[0] ?? null;
