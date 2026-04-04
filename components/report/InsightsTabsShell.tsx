@@ -1,13 +1,12 @@
 import Link from "next/link";
 import { profileInsightsHref } from "@/lib/profile-routes";
 
-export type InsightsTabId = "overview" | "performance" | "patterns" | "diagnostics";
+export type InsightsTabId = "overview" | "performance" | "patterns";
 
 const TABS: { id: InsightsTabId; label: string }[] = [
   { id: "overview", label: "Overview" },
   { id: "performance", label: "Performance" },
   { id: "patterns", label: "Patterns" },
-  { id: "diagnostics", label: "Diagnostics" },
 ];
 
 export function isInsightsTabId(value: string | null | undefined): value is InsightsTabId {

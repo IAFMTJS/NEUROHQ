@@ -15,10 +15,8 @@ export function useSettingsPageLayout() {
 const NAV = [
   { id: "settings-section-user", label: "Gebruiker", hint: "Account" },
   { id: "settings-section-missions", label: "Missies", hint: "Automatisering" },
-  { id: "settings-section-system", label: "Systeem", hint: "Weergave & engine" },
-  { id: "settings-section-network", label: "Netwerk", hint: "Push & agenda" },
-  { id: "settings-section-budget", label: "Budget", hint: "Valuta & drempels" },
-  { id: "settings-section-device", label: "Toestel", hint: "Export & privacy" },
+  { id: "settings-section-system", label: "Systeem", hint: "Thema, budget, DCIC" },
+  { id: "settings-section-device", label: "Toestel", hint: "Push, agenda, export" },
 ] as const;
 
 export function SettingsPageLayout({ children }: { children: ReactNode }) {

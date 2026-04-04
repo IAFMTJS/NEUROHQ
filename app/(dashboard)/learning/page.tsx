@@ -28,7 +28,7 @@ export default async function LearningPage({ searchParams }: Props) {
     getStrategyPacingHints(),
   ]);
   const simplified = prefs.simplified_content === true;
-  const lightUi = prefs.light_ui === true;
+  const lightUi = false;
 
   const learningBody = (
     <LearningContentClient

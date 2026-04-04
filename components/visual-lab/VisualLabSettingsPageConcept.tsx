@@ -5,10 +5,8 @@ import type { ReactNode } from "react";
 const NAV = [
   { id: "user", label: "Gebruiker", hint: "Account" },
   { id: "missions", label: "Missies", hint: "Automatisering" },
-  { id: "system", label: "Systeem", hint: "Weergave & engine" },
-  { id: "network", label: "Netwerk", hint: "Push & agenda" },
-  { id: "budget", label: "Budget", hint: "Valuta & drempels" },
-  { id: "device", label: "Toestel", hint: "Export & privacy" },
+  { id: "system", label: "Systeem", hint: "Thema, budget, DCIC" },
+  { id: "device", label: "Toestel", hint: "Push, agenda, export" },
 ] as const;
 
 function MockToggle({ on, label }: { on: boolean; label: string }) {
@@ -143,7 +141,7 @@ export function VisualLabSettingsPageConcept() {
             </p>
           </SectionCard>
 
-          <SectionCard id="settings-concept-system" title="Systeem" subtitle="Thema, compacte UI, DCIC, lokale tools">
+          <SectionCard id="settings-concept-system" title="Systeem" subtitle="Thema, budget, DCIC, lokale tools">
             <div className="flex flex-wrap gap-2">
               {["Neuro", "Amber", "Emerald"].map((t) => (
                 <span
@@ -158,46 +156,10 @@ export function VisualLabSettingsPageConcept() {
                 </span>
               ))}
             </div>
-            <div className="grid gap-2 sm:grid-cols-2">
-              <MockToggle on={false} label="Compacte UI" />
-              <MockToggle on label="Verminder beweging" />
-              <MockToggle on={false} label="Light UI" />
-            </div>
             <div className="rounded-lg border border-[rgba(var(--mode-rgb),0.1)] bg-[rgba(6,18,30,0.35)] px-3 py-2 text-xs text-[var(--text-secondary)]">
               <span className="font-semibold text-[var(--text-primary)]">XP</span> · Level <span className="tabular-nums">12</span> ·{" "}
               <span className="tabular-nums">8.420</span> totaal <span className="text-[var(--text-muted)]">(mock)</span>
             </div>
-            <div className="flex flex-wrap gap-2 text-[10px] text-[var(--text-muted)]">
-              <span className="rounded border border-[var(--card-border)] px-2 py-1">DCIC-uitleg</span>
-              <span className="rounded border border-[var(--card-border)] px-2 py-1">Modus test</span>
-              <span className="rounded border border-[var(--card-border)] px-2 py-1">Snapshot refresh</span>
-            </div>
-          </SectionCard>
-
-          <SectionCard id="settings-concept-network" title="Netwerk" subtitle="Tijdzone, push, e-mail, agenda">
-            <div className="grid gap-3 sm:grid-cols-2">
-              <div className="rounded-lg border border-[rgba(var(--mode-rgb),0.1)] bg-black/20 p-3">
-                <p className="text-[10px] font-bold uppercase tracking-wide text-[var(--text-muted)]">Tijdzone</p>
-                <p className="mt-1 text-sm text-[var(--text-primary)]">Europe/Amsterdam</p>
-              </div>
-              <div className="rounded-lg border border-[rgba(var(--mode-rgb),0.1)] bg-black/20 p-3">
-                <p className="text-[10px] font-bold uppercase tracking-wide text-[var(--text-muted)]">Push</p>
-                <p className="mt-1 text-sm text-[var(--text-primary)]">Ochtend · avond · quote</p>
-                <p className="mt-0.5 text-[10px] text-[var(--text-muted)]">Stille uren 22:00–07:00 (mock)</p>
-              </div>
-            </div>
-            <MockToggle on label="E-mailherinneringen" />
-            <div className="flex flex-wrap gap-2">
-              <span className="rounded-lg border border-[var(--card-border)] bg-[rgba(6,18,30,0.4)] px-3 py-2 text-[10px] font-semibold text-[var(--text-secondary)]">
-                Apple Agenda
-              </span>
-              <span className="rounded-lg border border-[var(--card-border)] bg-[rgba(6,18,30,0.4)] px-3 py-2 text-[10px] font-semibold text-[var(--text-secondary)]">
-                Google Calendar · gekoppeld
-              </span>
-            </div>
-          </SectionCard>
-
-          <SectionCard id="settings-concept-budget" title="Budget" subtitle="Valuta, periode, impuls — app-breed">
             <div className="grid gap-3 sm:grid-cols-3">
               <div className="rounded-lg border border-[rgba(var(--mode-rgb),0.1)] bg-black/20 p-3">
                 <p className="text-[10px] font-bold uppercase text-[var(--text-muted)]">Valuta</p>
@@ -212,18 +174,31 @@ export function VisualLabSettingsPageConcept() {
                 <p className="mt-1 text-sm font-medium tabular-nums text-[var(--text-primary)]">18%</p>
               </div>
             </div>
-            <p className="text-[11px] text-[var(--text-muted)]">
-              Volledige velden blijven zoals <code className="rounded bg-black/30 px-1 text-[10px]">SettingsBudget</code>; hier alleen dichtheid-voorbeeld.
-            </p>
+            <div className="flex flex-wrap gap-2 text-[10px] text-[var(--text-muted)]">
+              <span className="rounded border border-[var(--card-border)] px-2 py-1">DCIC-uitleg</span>
+              <span className="rounded border border-[var(--card-border)] px-2 py-1">Modus test</span>
+              <span className="rounded border border-[var(--card-border)] px-2 py-1">Snapshot refresh</span>
+            </div>
           </SectionCard>
 
-          <SectionCard id="settings-concept-device" title="Toestel" subtitle="Export, account wissen, onboarding, versie">
-            <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap">
-              <span className="cursor-default rounded-lg border border-[rgba(var(--mode-rgb),0.2)] px-3 py-2 text-center text-xs font-medium text-[var(--text-primary)]">
-                Snelle links
+          <SectionCard id="settings-concept-device" title="Toestel" subtitle="Tijdzone, push, agenda’s, export, onboarding">
+            <div className="grid gap-3 sm:grid-cols-2">
+              <div className="rounded-lg border border-[rgba(var(--mode-rgb),0.1)] bg-black/20 p-3">
+                <p className="text-[10px] font-bold uppercase tracking-wide text-[var(--text-muted)]">Tijdzone</p>
+                <p className="mt-1 text-sm text-[var(--text-primary)]">Europe/Amsterdam</p>
+              </div>
+              <div className="rounded-lg border border-[rgba(var(--mode-rgb),0.1)] bg-black/20 p-3">
+                <p className="text-[10px] font-bold uppercase tracking-wide text-[var(--text-muted)]">Push</p>
+                <p className="mt-1 text-sm text-[var(--text-primary)]">Ochtend · avond · quote</p>
+                <p className="mt-0.5 text-[10px] text-[var(--text-muted)]">Stille uren 22:00–07:00 (mock)</p>
+              </div>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <span className="rounded-lg border border-[var(--card-border)] bg-[rgba(6,18,30,0.4)] px-3 py-2 text-[10px] font-semibold text-[var(--text-secondary)]">
+                Apple Agenda
               </span>
-              <span className="cursor-default rounded-lg border border-red-400/30 bg-red-950/20 px-3 py-2 text-center text-xs font-medium text-red-200">
-                Account verwijderen
+              <span className="rounded-lg border border-[var(--card-border)] bg-[rgba(6,18,30,0.4)] px-3 py-2 text-[10px] font-semibold text-[var(--text-secondary)]">
+                Google Calendar · gekoppeld
               </span>
             </div>
             <p className="text-[11px] leading-relaxed text-[var(--text-muted)]">

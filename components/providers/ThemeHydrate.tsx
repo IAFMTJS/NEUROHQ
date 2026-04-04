@@ -26,20 +26,17 @@ export function ThemeHydrate() {
               hq_headline: prefs.hq_headline,
               greeting_locale: prefs.greeting_locale,
             });
-            // Only overwrite DOM/localStorage if server prefs differ from current; avoids flash when light UI already set from inline script
-            const currentLight = document.documentElement.getAttribute("data-light-ui");
-            const nextLight = prefs.light_ui ? "true" : "false";
-            if (currentLight !== nextLight) {
-              document.documentElement.dataset.lightUi = nextLight;
+            // Standard display only (compact / reduced-motion / light-UI toggles removed from settings).
+            const nextLight = "false";
+            const nextReduced = "false";
+            const nextCompact = "false";
+            document.documentElement.dataset.lightUi = nextLight;
+            document.documentElement.dataset.reducedMotion = nextReduced;
+            document.documentElement.dataset.compactUi = nextCompact;
+            try {
               localStorage.setItem("neurohq-light-ui", nextLight);
-            }
-            const currentReduced = document.documentElement.getAttribute("data-reduced-motion");
-            const nextReduced = prefs.reduced_motion ? "true" : "false";
-            if (currentReduced !== nextReduced) {
-              document.documentElement.dataset.reducedMotion = nextReduced;
               localStorage.setItem("neurohq-reduced-motion", nextReduced);
-            }
-            document.documentElement.dataset.compactUi = prefs.compact_ui ? "true" : "false";
+            } catch (_) {}
           } catch (_) {}
         }
       })

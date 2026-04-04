@@ -43,12 +43,12 @@ test.describe("authenticated smoke navigation", () => {
         page.locator('section[aria-label="Insights tab: patterns"]')
       ).toBeVisible();
 
-      await page.goto("/profile?view=insights&tab=diagnostics");
+      await page.goto("/profile?view=insights&tab=overview");
       await expect(
-        page.getByRole("link", { name: /^Diagnostics$/ })
+        page.getByRole("link", { name: /^Overview$/ })
       ).toHaveAttribute("aria-current", "page");
       await expect(
-        page.locator('section[aria-label="Insights tab: diagnostics"]')
+        page.locator('section[aria-label="Insights tab: overview"]')
       ).toBeVisible();
     });
 

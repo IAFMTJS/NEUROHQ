@@ -21,7 +21,6 @@ export function SettingsSnapshotFallback() {
     );
   }
 
-  const prefs = (settings.preferences ?? {}) as Record<string, unknown>;
   const payday = settings.payday ?? { last_payday_date: null, payday_day_of_month: null };
 
   return (
@@ -30,11 +29,6 @@ export function SettingsSnapshotFallback() {
         <h2 className="text-xs font-semibold uppercase tracking-wide text-[var(--text-muted)]">Instellingen (van cache)</h2>
         <div className="card-simple overflow-hidden p-0">
           <div className="p-4 space-y-2">
-            {prefs.compact_ui != null && (
-              <p className="text-sm text-[var(--text-secondary)]">
-                Compacte weergave: {prefs.compact_ui ? "Aan" : "Uit"}
-              </p>
-            )}
             {payday.last_payday_date != null && (
               <p className="text-sm text-[var(--text-secondary)]">
                 Laatste loondag: {String(payday.last_payday_date)}

@@ -2,8 +2,6 @@ import nextDynamic from "next/dynamic";
 import { getXPFullContext } from "@/app/actions/xp-context";
 import { XPBadge } from "@/components/XPBadge";
 import { getRealityReport, getStoredReport, getStoredReportWeeks } from "@/app/actions/report";
-import { getFunnelCountsLast7 } from "@/app/actions/analytics";
-import { getAnalyticsEventsSummaryLast7 } from "@/app/actions/analytics-events";
 import { createClient } from "@/lib/supabase/server";
 import {
   getBestHourHeatmap,
@@ -39,7 +37,6 @@ import {
 } from "@/components/insights";
 import { DataUnavailable } from "@/components/DataUnavailable";
 import { InsightsTabsShell, isInsightsTabId } from "@/components/report/InsightsTabsShell";
-import { InsightsDiagnosticsPopup } from "@/components/report/InsightsDiagnosticsPopup";
 
 const ReportWeekSelector = nextDynamic(
   () => import("@/components/ReportWeekSelector").then((m) => ({ default: m.ReportWeekSelector })),
@@ -83,7 +80,7 @@ export async function ReportInsightsContent({ searchParams, simplifiedLayout = f
     } = await supabase.auth.getUser();
     const userId = user?.id;
 
-    const [xpContext, storedWeeks, currentReport, hourHeatmap, consistencyMap, dropOff, correlation, radar, comparative, friction40, funnelCounts, graph30Data, xpBySource30, analyticsEventsSummary, metaInsights30, heatmap30Days, thirtyDayMirror, recentRanks] = await Promise.all([
+    const [xpContext, storedWeeks, currentReport, hourHeatmap, consistencyMap, dropOff, correlation, radar, comparative, friction40, graph30Data, xpBySource30, metaInsights30, heatmap30Days, thirtyDayMirror, recentRanks] = await Promise.all([
       getXPFullContext(undefined, userId),
       getStoredReportWeeks(),
       getRealityReport(currentWeekStart, currentWeekEnd),
@@ -94,10 +91,8 @@ export async function ReportInsightsContent({ searchParams, simplifiedLayout = f
       getStrengthWeaknessRadar(),
       getComparativeIntelligence(),
       getFriction40Insight(),
-      getFunnelCountsLast7(),
       getGraphData30Days(),
       getXPBySourceLast30(),
-      getAnalyticsEventsSummaryLast7(),
       getMetaInsights30(),
       getHeatmapLast30Days(),
       getThirtyDayMirror(),
@@ -248,71 +243,6 @@ export async function ReportInsightsContent({ searchParams, simplifiedLayout = f
               </section>
             )}
 
-            {activeTab === "diagnostics" && (
-              <div className="space-y-4">
-                <section className="rounded-xl border border-[var(--card-border)] bg-[var(--bg-surface)]/50 px-4 py-3" aria-label="Missie-funnel">
-                  <h3 className="text-sm font-semibold text-[var(--text-primary)]">Funnel (laatste 7 dagen)</h3>
-                  <p className="mt-0.5 text-xs text-[var(--text-muted)]">Bekeken → Gestart → Voltooid</p>
-                  <div className="mt-2 flex flex-wrap items-center gap-2 text-sm">
-                    <span className="rounded-lg bg-white/10 px-3 py-1.5 font-medium text-[var(--text-primary)]">View: {funnelCounts.view}</span>
-                    <span className="text-[var(--text-muted)]" aria-hidden>
-                      →
-                    </span>
-                    <span className="rounded-lg bg-white/10 px-3 py-1.5 font-medium text-[var(--text-primary)]">Start: {funnelCounts.start}</span>
-                    <span className="text-[var(--text-muted)]" aria-hidden>
-                      →
-                    </span>
-                    <span className="rounded-lg bg-[var(--accent-focus)]/20 px-3 py-1.5 font-medium text-[var(--accent-focus)]">Complete: {funnelCounts.complete}</span>
-                  </div>
-                </section>
-
-                <InsightsDiagnosticsPopup
-                  graphData={insightState.graphData}
-                  analyticsEventsSummary={analyticsEventsSummary}
-                  rawSummary={{
-                    xpLast7: insightState.xpLast7,
-                    xpPrevious7: insightState.xpPrevious7,
-                    completionRate: insightState.completionRateLast7,
-                  }}
-                />
-
-                <details className="rounded-lg border border-[var(--card-border)] bg-[var(--bg-surface)]/30 px-4 py-3 text-sm">
-                  <summary className="cursor-pointer font-medium text-[var(--text-primary)]">Wat betekenen deze insights?</summary>
-                  <ul className="mt-3 space-y-2 text-[var(--text-muted)]">
-                    <li>
-                      <strong className="text-[var(--text-secondary)]">Kerncijfers:</strong> XP en missies (7d/30d), velocity, completion %, streak en beste dag.
-                    </li>
-                    <li>
-                      <strong className="text-[var(--text-secondary)]">Momentum (0–100):</strong> Gebaseerd op groeisnelheid, completion rate en streak-stabiliteit.
-                    </li>
-                    <li>
-                      <strong className="text-[var(--text-secondary)]">Performance trends:</strong> 14d/30d grafieken en weekvergelijking helpen pieken en dippen verklaren.
-                    </li>
-                    <li>
-                      <strong className="text-[var(--text-secondary)]">Voorspelling &amp; risico:</strong> Schatting naar volgend level + streak-risico.
-                    </li>
-                    <li>
-                      <strong className="text-[var(--text-secondary)]">Execution score:</strong> Weekrapport met tasks, learning, sparen en carry-over.
-                    </li>
-                  </ul>
-                </details>
-
-                <details className="rounded-lg border border-[var(--card-border)] bg-[var(--bg-surface)]/30 px-4 py-3 text-sm" open={isCurrentWeek}>
-                  <summary className="cursor-pointer font-medium text-[var(--text-primary)]">Weekrapport en archief</summary>
-                  <div className="mt-3 space-y-4">
-                    <p className="text-sm text-[var(--text-muted)]">Taken, learning, execution score en spaardoelen. Gebruik de weekselector voor eerdere weken.</p>
-                    <ReportWeekSelector
-                      storedWeeks={storedWeeks}
-                      currentWeekStart={currentWeekStart}
-                      selectedWeekStart={selectedWeekStart}
-                      activeTab={activeTab}
-                    />
-                    <ReportAnalysis report={report} />
-                    <RealityReportCard report={report} />
-                  </div>
-                </details>
-              </div>
-            )}
           </InsightsTabsShell>
         )}
 

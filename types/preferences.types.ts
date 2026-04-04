@@ -68,7 +68,7 @@ export const PREFERENCES_DEFAULTS: UserPreferences = {
   selected_emotion: null,
   compact_ui: false,
   reduced_motion: false,
-  light_ui: true,
+  light_ui: false,
   simplified_content: false,
   auto_master_missions: true,
   usual_days_off: null,

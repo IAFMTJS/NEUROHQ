@@ -256,7 +256,7 @@ async function StrategyContent({ simplifiedLayout = false }: { simplifiedLayout?
 export default async function StrategyPage() {
   const prefs = await getUserPreferencesOrDefaults();
   const simplified = prefs.simplified_content === true;
-  const lightUi = prefs.light_ui === true;
+  const lightUi = false;
 
   if (simplified) {
     return (

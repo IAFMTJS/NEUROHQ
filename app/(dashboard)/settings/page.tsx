@@ -21,25 +21,17 @@ const SettingsExport = nextDynamic(() => import("@/components/SettingsExport").t
 const SettingsPush = nextDynamic(() => import("@/components/SettingsPush").then((m) => ({ default: m.SettingsPush })), {
   loading: () => <div className="min-h-[120px] animate-pulse rounded-xl bg-white/5" aria-hidden />,
 });
-const SettingsDeleteAccount = nextDynamic(() => import("@/components/SettingsDeleteAccount").then((m) => ({ default: m.SettingsDeleteAccount })), { loading: () => null });
 const SettingsAppleCalendar = nextDynamic(() => import("@/components/SettingsAppleCalendar").then((m) => ({ default: m.SettingsAppleCalendar })), { loading: () => null });
 const SettingsGoogleCalendar = nextDynamic(() => import("@/components/SettingsGoogleCalendar").then((m) => ({ default: m.SettingsGoogleCalendar })), { loading: () => null });
 const SettingsTimezone = nextDynamic(() => import("@/components/SettingsTimezone").then((m) => ({ default: m.SettingsTimezone })), { loading: () => null });
 const SettingsBudget = nextDynamic(() => import("@/components/SettingsBudget").then((m) => ({ default: m.SettingsBudget })), { loading: () => null });
 const SettingsAbout = nextDynamic(() => import("@/components/SettingsAbout").then((m) => ({ default: m.SettingsAbout })), { loading: () => null });
 const ThemePicker = nextDynamic(() => import("@/components/settings/ThemePicker").then((m) => ({ default: m.ThemePicker })), { loading: () => null });
-const SettingsCompactUi = nextDynamic(() => import("@/components/settings/SettingsCompactUi").then((m) => ({ default: m.SettingsCompactUi })), { loading: () => null });
-const SettingsReducedMotion = nextDynamic(() => import("@/components/settings/SettingsReducedMotion").then((m) => ({ default: m.SettingsReducedMotion })), { loading: () => null });
-const SettingsLightUI = nextDynamic(() => import("@/components/settings/SettingsLightUI").then((m) => ({ default: m.SettingsLightUI })), { loading: () => null });
 const SettingsWhereToConfigure = nextDynamic(() => import("@/components/settings/SettingsWhereToConfigure").then((m) => ({ default: m.SettingsWhereToConfigure })), { loading: () => null });
 const SettingsClearCache = nextDynamic(() => import("@/components/settings/SettingsClearCache").then((m) => ({ default: m.SettingsClearCache })), { loading: () => null });
 const SettingsRefreshSnapshot = nextDynamic(() => import("@/components/settings/SettingsRefreshSnapshot").then((m) => ({ default: m.SettingsRefreshSnapshot })), { loading: () => null });
 const SettingsDCICModeTest = nextDynamic(() => import("@/components/settings/SettingsDCICModeTest").then((m) => ({ default: m.SettingsDCICModeTest })), { loading: () => null });
 const SettingsDcicModeExplain = nextDynamic(() => import("@/components/settings/SettingsDcicModeExplain").then((m) => ({ default: m.SettingsDcicModeExplain })), { loading: () => null });
-const SettingsQuickLinks = nextDynamic(() => import("@/components/settings/SettingsQuickLinks").then((m) => ({ default: m.SettingsQuickLinks })), { loading: () => null });
-const SettingsEmailReminders = nextDynamic(() => import("@/components/settings/SettingsEmailReminders").then((m) => ({ default: m.SettingsEmailReminders })), {
-  loading: () => <div className="min-h-[80px] animate-pulse rounded-xl bg-white/5" aria-hidden />,
-});
 const SettingsHelpOnboarding = nextDynamic(() => import("@/components/settings/SettingsHelpOnboarding").then((m) => ({ default: m.SettingsHelpOnboarding })), { loading: () => null });
 const SettingsAutoMasterMissions = nextDynamic(
   () => import("@/components/settings/SettingsAutoMasterMissions").then((m) => ({ default: m.SettingsAutoMasterMissions })),
@@ -54,7 +46,7 @@ function SettingsShell() {
       <HQPageHeader
         compact
         title="Instellingen"
-        subtitle="Site en apparaat: account, weergave, netwerk, budget. Engine en persona stuur je onder Profiel → Engine."
+        subtitle="Accountoverzicht, missies, systeem en toestel. Engine en persona stuur je onder Profiel → Engine."
       />
     </>
   );
@@ -123,14 +115,18 @@ async function SettingsContent() {
       <SettingsSectionCard
         id="settings-section-system"
         title="Systeem"
-        subtitle="Weergave, modus, DCIC en lokale appcontrole"
-        searchText="thema neuro amber emerald compact ui beweging light dcic modus snapshot cache service worker xp level dark mode"
+        subtitle="Thema, budget, DCIC en lokale appcontrole"
+        searchText="thema neuro amber emerald dcic modus snapshot cache service worker xp level dark mode budget valuta eur usd impuls drempel periode maand week categorie risk quick add"
       >
         <ThemePicker />
-        <SettingsCompactUi initialCompactUi={prefs.compact_ui} />
-        <SettingsReducedMotion initialReducedMotion={prefs.reduced_motion} />
-        <SettingsLightUI initialLightUi={prefs.light_ui} />
         <XPBadge totalXp={xp.total_xp} level={xp.level} href="/settings" />
+        <SettingsBudget
+          initialCurrency={budgetSettings.currency}
+          initialImpulseThresholdPct={budgetSettings.impulse_threshold_pct}
+          initialBudgetPeriod={budgetSettings.budget_period}
+          initialImpulseQuickAddMinutes={budgetSettings.impulse_quick_add_minutes}
+          initialImpulseRiskCategories={budgetSettings.impulse_risk_categories}
+        />
         <SettingsDcicModeExplain />
         <SettingsDCICModeTest />
         <SettingsClearCache />
@@ -138,10 +134,10 @@ async function SettingsContent() {
       </SettingsSectionCard>
 
       <SettingsSectionCard
-        id="settings-section-network"
-        title="Netwerk"
-        subtitle="Notificaties, tijdzone en agenda"
-        searchText="push notificaties tijdzone agenda google apple calendar icloud email herinneringen ochtend avond quote stille uren"
+        id="settings-section-device"
+        title="Toestel"
+        subtitle="Tijdzone, push, agenda’s en data"
+        searchText="push notificaties tijdzone agenda google apple calendar icloud ochtend avond quote stille uren export data download privacy onboarding help waar configureer versie about"
       >
         <section id="tijd-notificaties" className="space-y-3" data-tutorial="settings-push">
           <SettingsTimezone initialTimezone={userTimezone} />
@@ -155,36 +151,10 @@ async function SettingsContent() {
             initialPushWeeklyLearningEnabled={prefs.push_weekly_learning_enabled ?? true}
             initialPushPersonalityMode={prefs.push_personality_mode ?? "auto"}
           />
-          <SettingsEmailReminders initialEnabled={prefs.email_reminders_enabled ?? true} />
         </section>
         <SettingsAppleCalendar />
         <SettingsGoogleCalendar hasToken={hasGoogle} />
-      </SettingsSectionCard>
-
-      <SettingsSectionCard
-        id="settings-section-budget"
-        title="Budget"
-        subtitle="Valuta, drempels en snelle acties (app-breed)"
-        searchText="budget valuta eur usd impuls drempel periode maand week categorie risk quick add"
-      >
-        <SettingsBudget
-          initialCurrency={budgetSettings.currency}
-          initialImpulseThresholdPct={budgetSettings.impulse_threshold_pct}
-          initialBudgetPeriod={budgetSettings.budget_period}
-          initialImpulseQuickAddMinutes={budgetSettings.impulse_quick_add_minutes}
-          initialImpulseRiskCategories={budgetSettings.impulse_risk_categories}
-        />
-      </SettingsSectionCard>
-
-      <SettingsSectionCard
-        id="settings-section-device"
-        title="Toestel"
-        subtitle="Export, privacy en uitleg"
-        searchText="export data download privacy verwijderen account onboarding help snelle links waar configureer versie about"
-      >
-        <SettingsQuickLinks />
         <SettingsExport />
-        <SettingsDeleteAccount />
         <SettingsHelpOnboarding />
         <SettingsWhereToConfigure />
         <SettingsAbout appVersion={appVersion} />

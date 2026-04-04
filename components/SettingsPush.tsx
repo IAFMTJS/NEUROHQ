@@ -49,8 +49,6 @@ export function SettingsPush({
   const [pushPersonalityMode, setPushPersonalityMode] = useState<
     "auto" | "stoic" | "friendly" | "coach" | "drill" | "chaos"
   >(initialPushPersonalityMode);
-  const [testPending, setTestPending] = useState(false);
-  const [serverTestPending, setServerTestPending] = useState(false);
   const { invalidate: invalidateSettings } = useSettings();
 
   const savePrefs = (next: {
@@ -104,83 +102,6 @@ export function SettingsPush({
     } catch (e) {
       setStatus("error");
       setMessage(e instanceof Error ? e.message : "Could not disconnect push.");
-    }
-  };
-
-  const scheduleTestNotification = async () => {
-    if (!supportsPush()) {
-      setMessage("This browser does not support push notifications.");
-      return;
-    }
-    setTestPending(true);
-    setMessage(null);
-    try {
-      // On platforms like iOS, make sure we explicitly ask for notification permission
-      // before trying to show a local notification from the service worker.
-      if (typeof Notification !== "undefined") {
-        const current = Notification.permission;
-        if (current === "default") {
-          const permission = await Notification.requestPermission();
-          if (permission !== "granted") {
-            setMessage(
-              permission === "denied"
-                ? "Notifications are blocked for this app. Enable them in your device settings to see push alerts."
-                : "Browser permission not granted."
-            );
-            setTestPending(false);
-            return;
-          }
-        } else if (current === "denied") {
-          setMessage("Notifications are blocked for this app. Enable them in your device settings to see push alerts.");
-          setTestPending(false);
-          return;
-        }
-      }
-      // Ensure a service worker registration exists so we can send it a message.
-      if (!("serviceWorker" in navigator)) {
-        throw new Error("Service worker not available.");
-      }
-      let reg = await navigator.serviceWorker.getRegistration();
-      if (!reg) {
-        reg = await navigator.serviceWorker.register("/sw.js", { scope: "/" });
-      }
-      const sw = reg.active || reg.waiting || reg.installing;
-      if (!sw) {
-        throw new Error("Service worker did not activate. Refresh the page and try again.");
-      }
-      sw.postMessage({ type: "TEST_PUSH_IN_30S" });
-      setMessage("Test notification scheduled. It should appear in about 30 seconds.");
-    } catch (e) {
-      setMessage(e instanceof Error ? e.message : "Could not schedule test notification.");
-    } finally {
-      setTestPending(false);
-    }
-  };
-
-  const sendServerPushTest = async () => {
-    setServerTestPending(true);
-    setMessage(null);
-    try {
-      const res = await fetch("/api/push/test", {
-        method: "POST",
-        credentials: "include",
-      });
-      const body = await res.json().catch(() => ({}));
-      if (!res.ok) {
-        const errMsg =
-          typeof body.error === "string"
-            ? body.error
-            : res.status === 401
-              ? "Not logged in on this device."
-              : "Server push test failed.";
-        setMessage(errMsg);
-        return;
-      }
-      setMessage("Server push test sent. If push is configured, it should appear even when the PWA is closed.");
-    } catch (e) {
-      setMessage(e instanceof Error ? e.message : "Could not send server push test.");
-    } finally {
-      setServerTestPending(false);
     }
   };
 
@@ -410,34 +331,6 @@ export function SettingsPush({
           </button>
           <span className="text-xs text-[var(--text-muted)]">
             {subscribed ? "Browser subscription active." : "No browser subscription yet."}
-          </span>
-        </div>
-
-        <div className="mt-1 flex flex-wrap items-center gap-3">
-          <button
-            type="button"
-            onClick={scheduleTestNotification}
-            disabled={testPending || status === "loading"}
-            className="rounded-lg border border-[var(--card-border)] px-4 py-2.5 text-sm font-medium text-[var(--text-primary)] disabled:opacity-50"
-          >
-            {testPending ? "Scheduling…" : "Test notification in 30s"}
-          </button>
-          <span className="text-xs text-[var(--text-muted)]">
-            Schedules a one-off local notification ≈30 seconden later to preview how push looks, even when the PWA is in the background.
-          </span>
-        </div>
-
-        <div className="flex flex-wrap items-center gap-3">
-          <button
-            type="button"
-            onClick={sendServerPushTest}
-            disabled={serverTestPending || status === "loading"}
-            className="rounded-lg border border-[var(--card-border)] px-4 py-2.5 text-sm font-medium text-[var(--text-primary)] disabled:opacity-50"
-          >
-            {serverTestPending ? "Sending…" : "Server push test"}
-          </button>
-          <span className="text-xs text-[var(--text-muted)]">
-            Sends a real push from the server via APNs. It should arrive even when the PWA is fully closed.
           </span>
         </div>
 

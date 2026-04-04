@@ -40,17 +40,14 @@ export const viewport = {
   viewportFit: "cover" as const,
 };
 
-/** Commander v2 – normal + dark. Light UI default ON for fast load; from localStorage before first paint to avoid flash. */
+/** Commander v2 — normal + dark; standard (full) UI. ThemeHydrate overwrites persisted keys to match. */
 const themeScript = `
 (function(){
   document.documentElement.setAttribute('data-theme','normal');
   document.documentElement.setAttribute('data-color-mode','dark');
-  try {
-    var lightUi = localStorage.getItem('neurohq-light-ui');
-    document.documentElement.setAttribute('data-light-ui', lightUi !== null ? lightUi : 'true');
-    var reducedMotion = localStorage.getItem('neurohq-reduced-motion');
-    if (reducedMotion !== null) document.documentElement.setAttribute('data-reduced-motion', reducedMotion);
-  } catch (e) {}
+  document.documentElement.setAttribute('data-light-ui','false');
+  document.documentElement.setAttribute('data-reduced-motion','false');
+  document.documentElement.setAttribute('data-compact-ui','false');
 })();
 `;
 

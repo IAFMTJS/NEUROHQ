@@ -123,7 +123,7 @@ export const HELP_SECTIONS: HelpSection[] = [
     ],
     seeAlso: [
       { label: "Open HQ", href: "/dashboard" },
-      { label: "Brain uitleg", href: "/profile?view=insights&tab=diagnostics" },
+      { label: "Insights overview", href: "/profile?view=insights&tab=overview" },
     ],
   },
   {
@@ -219,16 +219,15 @@ export const HELP_SECTIONS: HelpSection[] = [
     title: "Insights report",
     group: "systems",
     summary:
-      "Insights is herbouwd naar taakgerichte tabs: overview, performance, patterns en diagnostics met collapsibles en detail-popup.",
+      "Insights gebruikt taakgerichte tabs: overview, performance en patterns met collapsibles.",
     highlights: [
       "Patterns-signalen zijn gemerged om duplicatie te verminderen.",
-      "Diagnostiek (tracked events + raw export) staat in een popup om cognitieve load te verlagen.",
       "Weekselector behoudt actieve tab in de URL.",
     ],
     seeAlso: [
       { label: "Insights overview", href: "/profile?view=insights&tab=overview" },
       { label: "Patterns tab", href: "/profile?view=insights&tab=patterns" },
-      { label: "Diagnostics tab", href: "/profile?view=insights&tab=diagnostics" },
+      { label: "Performance tab", href: "/profile?view=insights&tab=performance" },
     ],
   },
   {
@@ -288,7 +287,7 @@ export const HELP_SECTIONS: HelpSection[] = [
       "Bij netwerkherstel wordt gemergde state opnieuw gesynchroniseerd.",
     ],
     seeAlso: [
-      { label: "Insights diagnostics", href: "/profile?view=insights&tab=diagnostics" },
+      { label: "Insights overview", href: "/profile?view=insights&tab=overview" },
       { label: "Open Missions", href: "/tasks" },
     ],
   },
@@ -324,7 +323,7 @@ export const HELP_FAQ: { question: string; answer: string }[] = [
   {
     question: "Hoe deel ik direct een specifieke Insights-view?",
     answer:
-      "Gebruik URL-tabs, bijvoorbeeld /profile?view=insights&tab=patterns of /profile?view=insights&tab=diagnostics.",
+      "Gebruik URL-tabs, bijvoorbeeld /profile?view=insights&tab=patterns of /profile?view=insights&tab=performance.",
   },
   {
     question: "Blijven completions bewaard na refresh of heropenen?",

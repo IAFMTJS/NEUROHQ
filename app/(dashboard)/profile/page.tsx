@@ -41,6 +41,10 @@ const ProfileEnginePlayDeckTab = nextDynamic(
   () => import("@/components/profile/ProfileEnginePlayDeckTab").then((m) => ({ default: m.ProfileEnginePlayDeckTab })),
   { loading: () => null },
 );
+const SettingsDeleteAccount = nextDynamic(
+  () => import("@/components/SettingsDeleteAccount").then((m) => ({ default: m.SettingsDeleteAccount })),
+  { loading: () => null },
+);
 
 export const dynamic = "force-dynamic";
 
@@ -130,6 +134,12 @@ async function ProfileHomeAsync({ userId }: { userId: string }) {
   const moodLabel = (todayDaily as { mood_label?: string | null } | null)?.mood_label ?? null;
   const simplified = prefs.simplified_content === true;
 
+  const deleteAccountSection = (
+    <section className="space-y-3" aria-label="Account verwijderen">
+      <SettingsDeleteAccount />
+    </section>
+  );
+
   if (simplified) {
     return (
       <div className={SIMPLIFIED_VIEWPORT_WRAPPER}>
@@ -152,6 +162,7 @@ async function ProfileHomeAsync({ userId }: { userId: string }) {
               todayStr={today}
               dailyChallengeContext={dailyChallengeContext}
             />
+            {deleteAccountSection}
           </div>
         </SimplifiedPageShell>
       </div>
@@ -168,6 +179,7 @@ async function ProfileHomeAsync({ userId }: { userId: string }) {
         todayStr={today}
         dailyChallengeContext={dailyChallengeContext}
       />
+      {deleteAccountSection}
     </ProfileCommandDeckLayout>
   );
 }
