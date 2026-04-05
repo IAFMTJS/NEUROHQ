@@ -15,8 +15,8 @@ export type StrategyQuarterSavingsPayload = {
 type GoalOption = { id: string; name: string };
 
 /**
- * Stortingen op een willekeurig spaardoel tellen voor het Strategy-kwartaaldoel (engine telt alle contributions).
- * Dit formulier maakt die koppeling expliciet en voorkomt dat gebruikers alleen per kaart ontdekken.
+ * Stortingen op een spaardoel tellen mee voor Strategy zodra er een kwartaaldoel is (alle contributions in het kwartaal).
+ * `quarter` mag null zijn: het formulier blijft zichtbaar zodat je altijd kunt storten; zonder contract zie je geen voortgangsbalk.
  */
 export function StrategyQuarterSavingsLogForm({
   goals,
@@ -25,7 +25,7 @@ export function StrategyQuarterSavingsLogForm({
 }: {
   goals: GoalOption[];
   currency: string;
-  quarter: StrategyQuarterSavingsPayload;
+  quarter: StrategyQuarterSavingsPayload | null;
 }) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
@@ -33,7 +33,7 @@ export function StrategyQuarterSavingsLogForm({
   const [goalId, setGoalId] = useState(goals[0]?.id ?? "");
   const symbol = getCurrencySymbol(currency);
   const pct =
-    quarter.targetCents > 0
+    quarter && quarter.targetCents > 0
       ? Math.min(100, Math.round((quarter.savedThisQuarterCents / quarter.targetCents) * 100))
       : 0;
 
@@ -68,27 +68,40 @@ export function StrategyQuarterSavingsLogForm({
 
   return (
     <div className="rounded-xl border border-emerald-500/25 bg-emerald-950/20 px-3 py-3">
-      <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-emerald-200/90">Strategy · dit kwartaal</p>
-      <p className="mt-1 text-[11px] leading-snug text-[var(--text-muted)]">
-        Doel {quarter.quarterLabel}:{" "}
-        <span className="font-medium text-[var(--text-primary)]">{formatCents(quarter.targetCents, currency)}</span>
-        . Stortingen op <span className="font-medium text-[var(--text-secondary)]">elk</span> spaardoel tellen mee voor dit
-        kwartaal.
-      </p>
-      <div className="mt-2 h-2 w-full overflow-hidden rounded-full bg-[var(--card-border)]">
-        <div
-          className="h-full rounded-full bg-emerald-400/80 transition-all"
-          style={{ width: `${pct}%` }}
-          aria-hidden
-        />
-      </div>
-      <p className="mt-1 text-[11px] text-[var(--text-muted)]">
-        Gelogd: {formatCents(quarter.savedThisQuarterCents, currency)} ({pct}%)
-      </p>
+      {quarter ? (
+        <>
+          <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-emerald-200/90">Strategy · dit kwartaal</p>
+          <p className="mt-1 text-[11px] leading-snug text-[var(--text-muted)]">
+            Doel {quarter.quarterLabel}:{" "}
+            <span className="font-medium text-[var(--text-primary)]">{formatCents(quarter.targetCents, currency)}</span>
+            . Stortingen op <span className="font-medium text-[var(--text-secondary)]">elk</span> spaardoel tellen mee voor
+            dit kwartaal.
+          </p>
+          <div className="mt-2 h-2 w-full overflow-hidden rounded-full bg-[var(--card-border)]">
+            <div
+              className="h-full rounded-full bg-emerald-400/80 transition-all"
+              style={{ width: `${pct}%` }}
+              aria-hidden
+            />
+          </div>
+          <p className="mt-1 text-[11px] text-[var(--text-muted)]">
+            Gelogd: {formatCents(quarter.savedThisQuarterCents, currency)} ({pct}%)
+          </p>
+        </>
+      ) : (
+        <>
+          <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-emerald-200/90">Spaarstorting</p>
+          <p className="mt-1 text-[11px] leading-snug text-[var(--text-muted)]">
+            Stort op een spaardoel hieronder. Zodra je op Strategy een kwartaaldoel hebt, tellen deze stortingen automatisch
+            mee voor je voortgang.
+          </p>
+        </>
+      )}
 
       {goals.length === 0 ? (
         <p className="mt-3 text-xs leading-snug text-amber-100/90">
-          Je hebt nog geen spaardoel. Maak er hieronder een aan; daarna kun je hier storten voor je Strategy-tracking.
+          Je hebt nog geen spaardoel. Maak er hieronder een aan; daarna kun je hier storten (en ze meetellen voor Strategy
+          zodra je contract dat vastlegt).
         </p>
       ) : (
         <form onSubmit={onSubmit} className="mt-3 space-y-2">

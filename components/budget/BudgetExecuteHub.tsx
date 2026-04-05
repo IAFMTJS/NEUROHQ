@@ -289,13 +289,11 @@ export function BudgetExecuteHub({
           ariaLabel="Sparen en spaardoelen"
         >
           <div className="space-y-4">
-            {strategyQuarterSavings ? (
-              <StrategyQuarterSavingsLogForm
-                goals={goals.map((g) => ({ id: g.id, name: g.name }))}
-                currency={currency}
-                quarter={strategyQuarterSavings}
-              />
-            ) : null}
+            <StrategyQuarterSavingsLogForm
+              goals={goals.map((g) => ({ id: g.id, name: g.name }))}
+              currency={currency}
+              quarter={strategyQuarterSavings ?? null}
+            />
             <BudgetAchievementsCard financeState={financeState} compact />
             <AddSavingsGoalForm readOnly={false} />
             <div className="space-y-3">
@@ -361,7 +359,8 @@ export function BudgetExecuteHub({
           <span className="min-w-0 flex-1 pr-10">
             <span className="block text-sm font-bold text-emerald-100">Sparen & spaardoelen</span>
             <span className="mt-0.5 block text-xs text-emerald-200/80">
-              Maanddoel, bijdragen deze periode en nieuwe doelen — je belangrijkste actie.
+              Open het paneel: bovenaan stort je op een gekozen spaardoel (zichtbaar altijd; Strategy-voortgang als je een
+              kwartaaldoel hebt).
             </span>
           </span>
           <span className="shrink-0 text-xs font-semibold text-emerald-300">Open →</span>
