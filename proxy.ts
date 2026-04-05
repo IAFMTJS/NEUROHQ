@@ -3,6 +3,17 @@ import { NextResponse, type NextRequest } from "next/server";
 
 const APP_ROUTES = ["/dashboard", "/tasks", "/settings", "/budget", "/learning", "/strategy", "/report", "/xp", "/assistant", "/analytics"];
 const AUTH_ROUTES = ["/login", "/signup", "/forgot-password"];
+
+function isAdminLoginPath(pathname: string) {
+  return pathname === "/admin/login";
+}
+/** /admin and /admin/* except /admin/login */
+function isAdminProtectedPath(pathname: string) {
+  if (pathname !== "/admin" && !pathname.startsWith("/admin/")) return false;
+  if (isAdminLoginPath(pathname)) return false;
+  if (pathname.startsWith("/admin/login/")) return false;
+  return true;
+}
 const SUPABASE_PROXY_MS = 8_000;
 
 function isAppRoute(pathname: string) {
@@ -51,8 +62,9 @@ export async function proxy(request: NextRequest) {
   const hasSbCookie = request.cookies.getAll().some((c) => c.name.startsWith("sb-"));
 
   let user: { id: string } | null = null;
+  let supabaseClient: ReturnType<typeof createServerClient> | null = null;
   try {
-    const supabase = createServerClient(supabaseUrl, supabaseAnonKey, {
+    supabaseClient = createServerClient(supabaseUrl, supabaseAnonKey, {
       global: { fetch: fetchWithTimeout },
       cookies: {
         getAll() {
@@ -73,13 +85,45 @@ export async function proxy(request: NextRequest) {
         },
       },
     });
-    const { data } = await supabase.auth.getUser();
+    const { data } = await supabaseClient.auth.getUser();
     user = data?.user ?? null;
   } catch {
     // Supabase timeout or error (e.g. on deploy): fall back to cookie presence so users aren't blocked
   }
 
   const hasSession = !!user || hasSbCookie;
+
+  let userRole: "admin" | "user" | null = null;
+  if (user && pathname.startsWith("/admin") && supabaseClient) {
+    const { data: profile } = await supabaseClient.from("users").select("role").eq("id", user.id).maybeSingle();
+    userRole = profile && (profile as { role?: string }).role === "admin" ? "admin" : "user";
+  }
+
+  if (isAdminProtectedPath(pathname)) {
+    if (!user) {
+      const redirect = NextResponse.redirect(new URL("/admin/login", base), 302);
+      response.cookies.getAll().forEach((c) => redirect.cookies.set(c.name, c.value));
+      return redirect;
+    }
+    if (userRole !== "admin") {
+      const redirect = NextResponse.redirect(new URL("/dashboard", base), 302);
+      response.cookies.getAll().forEach((c) => redirect.cookies.set(c.name, c.value));
+      return redirect;
+    }
+  }
+
+  if (isAdminLoginPath(pathname) && request.method === "GET") {
+    if (user && userRole === "admin") {
+      const redirect = NextResponse.redirect(new URL("/admin", base), 302);
+      response.cookies.getAll().forEach((c) => redirect.cookies.set(c.name, c.value));
+      return redirect;
+    }
+    if (user && userRole === "user") {
+      const redirect = NextResponse.redirect(new URL("/dashboard", base), 302);
+      response.cookies.getAll().forEach((c) => redirect.cookies.set(c.name, c.value));
+      return redirect;
+    }
+  }
 
   if (isAppRoute(pathname) && !hasSession) {
     const redirect = NextResponse.redirect(new URL("/login", base), 302);

@@ -989,6 +989,7 @@ html[data-light-ui="true"] body {
 [data-light-ui="true"] .glass-card,
 [data-light-ui="true"] .glass-panel,
 [data-light-ui="true"] .hq-card,
+[data-light-ui="true"] .dashboard-command-deck-frame,
 [data-light-ui="true"] .dashboard-bridge,
 [data-light-ui="true"] .dashboard-bridge-frame,
 [data-light-ui="true"] .dashboard-cinematic:not(.tasks-command-deck) .glass-card,
@@ -2230,11 +2231,13 @@ a.nav-item-fab-hub::after {
   /* Mascot visuals should never block clicks on buttons or inputs in front of them. */
   pointer-events: none;
 }
-/* Commander platform: SVG niet interactief; mascotte niet; zwevende kaarten wél */
-.mascot-hero .commander-mascot-pedestal .commander-mascot-pedestal-arc-wrap,
-.mascot-hero .commander-mascot-pedestal .commander-mascot-pedestal-arc,
-.mascot-hero .commander-mascot-pedestal .commander-mascot-pedestal-arc * {
+/* Commander platform: pie-SVG niet interactief; HUD-links in de kolom wél */
+.mascot-hero .commander-mascot-pedestal .commander-vertical-resource-pies .commander-vertical-resource-pie-cell,
+.mascot-hero .commander-mascot-pedestal .commander-vertical-resource-pies .commander-vertical-resource-pie-cell * {
   pointer-events: none;
+}
+.mascot-hero .commander-mascot-pedestal .commander-vertical-resource-pies .commander-vertical-resource-pies-hud {
+  pointer-events: auto;
 }
 .mascot-hero .commander-mascot-pedestal .commander-mascot-pedestal-mascot,
 .mascot-hero .commander-mascot-pedestal .commander-mascot-pedestal-mascot * {
@@ -2249,27 +2252,7 @@ a.nav-item-fab-hub::after {
   margin-bottom: -52px;
 }
 
-/* Donut-perspectief: schuin van boven + lichte skew: zijkanten ogen omhoog schuin */
-.commander-mascot-pedestal-donut-tilt {
-  display: flex;
-  width: 100%;
-  justify-content: center;
-  perspective: 980px;
-  perspective-origin: 48% 90%;
-}
-.commander-mascot-pedestal .commander-mascot-pedestal-donut-ring {
-  transform: rotateX(50deg) rotateZ(-5deg) skewX(-5deg);
-  transform-origin: center bottom;
-  transform-style: preserve-3d;
-}
-
-/* Verticaal uitrekken vanaf bovenkant arc-vlak: bovenste punten vast, onderkant band lager */
-.commander-mascot-pedestal .commander-mascot-pedestal-donut-vert-stretch {
-  transform: scaleY(1.24);
-  transform-origin: top center;
-}
-
-/* Commander HUD-cellen (onder mascotte: XP / midden / budget) */
+/* Commander HUD-cellen (onder mascotte: XP / budget) */
 .commander-pedestal-hud-card {
   border-color: rgba(var(--mode-rgb, 0, 212, 255), 0.22);
   background: linear-gradient(
@@ -2286,24 +2269,18 @@ a.nav-item-fab-hub::after {
   line-height: 1.25;
 }
 
-/* Commander segment ring: vloeiende vulling + load-pulse bij stijging */
-.commander-segment-fill {
-  transition: stroke-dasharray 0.85s cubic-bezier(0.4, 0, 0.2, 1);
-}
-@keyframes commander-load-pulse-glow {
+/* Commander verticale resource-pies: load-pulse bij stijging mentale belasting */
+@keyframes commander-vertical-load-pulse-svg {
   0%,
   100% {
-    filter: drop-shadow(0 0 6px rgba(251, 146, 60, 0.4));
+    filter: drop-shadow(0 0 3px rgba(251, 146, 60, 0.35));
   }
   50% {
-    filter: drop-shadow(0 0 18px rgba(251, 146, 60, 0.9));
+    filter: drop-shadow(0 0 14px rgba(251, 146, 60, 0.82));
   }
 }
-.commander-segment-load {
-  filter: drop-shadow(0 0 6px rgba(251, 146, 60, 0.35));
-}
-.commander-segment-load-pulse {
-  animation: commander-load-pulse-glow 0.55s ease-in-out 2;
+.commander-vertical-resource-pie-load-pulse {
+  animation: commander-vertical-load-pulse-svg 0.55s ease-in-out 2;
 }
 /* Wrapper for heroLarge image: big PNG, centered, overflow so “square” is minimal */
 .mascot-hero-img-wrap {
@@ -2516,21 +2493,21 @@ body {
   background-attachment: scroll;
 }
 
-/* Global frosted plane — mode-tinted rim + depth; all DCIC modes pick up --mode-rgb from html[data-mode] */
+/* Global frosted plane — zelfde basis als cards (mode-bg); lichte accent-vegen */
 .hq-app-shell {
   position: relative;
   z-index: 1;
   isolation: isolate;
   background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.045) 0%, transparent 28%, transparent 72%, rgba(0, 0, 0, 0.42) 100%),
-    radial-gradient(ellipse 100% 85% at 50% -8%, rgba(var(--mode-rgb), 0.14), transparent 58%),
-    radial-gradient(ellipse 80% 55% at 100% 0%, rgba(var(--mode-rgb-deep), 0.08), transparent 52%),
-    rgba(5, 12, 22, 0.48);
-  backdrop-filter: blur(24px) saturate(1.16);
-  -webkit-backdrop-filter: blur(24px) saturate(1.16);
+    linear-gradient(180deg, rgba(255, 255, 255, 0.04) 0%, transparent 28%, transparent 72%, rgba(0, 0, 0, 0.38) 100%),
+    radial-gradient(ellipse 100% 85% at 50% -8%, rgba(var(--mode-rgb), 0.08), transparent 58%),
+    radial-gradient(ellipse 80% 55% at 100% 0%, rgba(var(--mode-rgb-deep), 0.05), transparent 52%),
+    color-mix(in srgb, var(--mode-bg-main) 94%, black);
+  backdrop-filter: blur(24px) saturate(1.12);
+  -webkit-backdrop-filter: blur(24px) saturate(1.12);
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.07),
-    0 0 0 1px rgba(var(--mode-rgb), 0.06);
+    inset 0 1px 0 rgba(255, 255, 255, 0.06),
+    0 0 0 1px rgba(255, 255, 255, 0.04);
 }
 
 /**
@@ -2549,17 +2526,22 @@ body {
     0 0 0 1px rgba(var(--mode-rgb), 0.06);
 }
 
-/* Main scroll area: flat-glass ambient shell on all dashboard routes */
+/* Main scroll area: zelfde basis als glass-cards (mode-bg), zachte accent-vegen i.p.v. zware cyan wash */
 main#main-content.hq-deck-ambient-shell {
   background:
-    radial-gradient(ellipse 92% 50% at 50% -14%, rgba(var(--mode-rgb), 0.22), transparent 58%),
-    radial-gradient(ellipse 55% 38% at 100% 0%, rgba(var(--mode-rgb-deep), 0.14), transparent 52%),
-    linear-gradient(to bottom, rgba(2, 10, 22, 0.88) 0%, rgba(5, 14, 26, 0.62) 45%, rgba(2, 8, 18, 0.9) 100%);
+    radial-gradient(ellipse 92% 50% at 50% -14%, rgba(var(--mode-rgb), 0.07), transparent 58%),
+    radial-gradient(ellipse 55% 38% at 100% 0%, rgba(var(--mode-rgb-deep), 0.05), transparent 52%),
+    linear-gradient(
+      to bottom,
+      color-mix(in srgb, var(--mode-bg-main) 94%, black) 0%,
+      color-mix(in srgb, var(--mode-bg-elevated) 82%, transparent) 44%,
+      color-mix(in srgb, var(--mode-bg-main) 96%, black) 100%
+    );
   backdrop-filter: blur(28px) saturate(1.14);
   -webkit-backdrop-filter: blur(28px) saturate(1.14);
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.07),
-    0 0 0 1px rgba(var(--mode-rgb), 0.05);
+    inset 0 1px 0 rgba(255, 255, 255, 0.06),
+    0 0 0 1px rgba(255, 255, 255, 0.04);
 }
 [data-light-ui="true"] main#main-content.hq-deck-ambient-shell {
   background:
@@ -2595,19 +2577,16 @@ main#main-content.hq-deck-ambient-shell {
   }
 }
 
-/* Dashboard home: main content stack matches elevated glass cards (blur + mode rim). */
+/* Dashboard home: zelfde vlak als .glass-card (bento + bridge voelen één geheel). */
 .dashboard-cinematic .hq-frosted-main-shell {
   border-radius: var(--hq-card-radius, 20px);
-  border: 1px solid rgba(var(--mode-rgb), 0.22);
-  background: var(--hud-surface-card-elevated);
-  backdrop-filter: blur(22px) saturate(1.12);
-  -webkit-backdrop-filter: blur(22px) saturate(1.12);
+  border: 1px solid var(--border-soft);
+  background: color-mix(in srgb, var(--mode-bg-surface) 88%, black);
+  backdrop-filter: blur(22px) saturate(1.1);
+  -webkit-backdrop-filter: blur(22px) saturate(1.1);
   box-shadow:
-    0 0 0 1px rgba(0, 0, 0, 0.28),
-    0 0 20px rgba(var(--mode-rgb), 0.1),
-    0 14px 40px rgba(0, 0, 0, 0.45),
-    inset 0 1px 0 rgba(255, 255, 255, 0.08),
-    inset 0 -12px 28px rgba(0, 0, 0, 0.28);
+    0 4px 22px rgba(0, 0, 0, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06);
 }
 
 [data-mode="war"] .dashboard-cinematic .hq-frosted-main-shell {
@@ -2672,16 +2651,11 @@ main.tasks-page-root {
 [data-deck-chrome="true"] .dashboard-cinematic .glass-card,
 [data-deck-chrome="true"] .dashboard-cinematic .card-simple,
 [data-deck-chrome="true"] .dashboard-cinematic .card-simple-accent {
-  border: 1px solid rgba(var(--mode-rgb), 0.28) !important;
-  background: var(--hud-surface-card-elevated) !important;
-  backdrop-filter: blur(22px) saturate(1.12);
-  -webkit-backdrop-filter: blur(22px) saturate(1.12);
-  box-shadow:
-    0 0 0 1px rgba(0, 0, 0, 0.34),
-    0 0 22px rgba(var(--mode-rgb), 0.12),
-    0 14px 42px rgba(0, 0, 0, 0.52),
-    inset 0 1px 0 rgba(255, 255, 255, 0.09),
-    inset 0 -10px 26px rgba(0, 0, 0, 0.36) !important;
+  border: 1px solid var(--border-soft) !important;
+  background: color-mix(in srgb, var(--mode-bg-surface) 88%, black) !important;
+  backdrop-filter: blur(16px) saturate(1.08);
+  -webkit-backdrop-filter: blur(16px) saturate(1.08);
+  box-shadow: 0 4px 22px rgba(0, 0, 0, 0.4) !important;
 }
 
 [data-deck-chrome="true"] .dashboard-cinematic .dashboard-top-strip {
@@ -3149,19 +3123,18 @@ header h1 { margin: 0; }
 }
 
 /*
- * Visual Lab — dashboard one-screen mock: iets compactere pedestal, maar mascotte + halve ring blijven zichtbaar.
+ * Visual Lab — dashboard one-screen mock: compactere pedestal + resource-meter links.
  * Alleen binnen .visual-lab-dash-noscroll (geen impact op productie-dashboard).
  */
 .visual-lab-dash-noscroll .commander-mascot-pedestal {
   padding-bottom: 0.5rem !important;
 }
 .visual-lab-dash-noscroll .commander-mascot-pedestal-donut-stage {
-  /* Genoeg ruimte voor SVG-boog onder de mascotte; niet op 0 collapsen */
-  min-height: min(200px, 42vw) !important;
-  padding-bottom: min(2.5rem, 8vw) !important;
+  min-height: min(160px, 36vw) !important;
+  padding-bottom: 0 !important;
 }
 .visual-lab-dash-noscroll .commander-mascot-pedestal-mascot {
-  margin-bottom: -2.75rem !important;
+  margin-bottom: -2rem !important;
   max-width: min(260px, 72vw) !important;
 }
 .visual-lab-dash-noscroll .commander-mascot-pedestal-mascot .mascot-img {
@@ -3169,8 +3142,8 @@ header h1 { margin: 0; }
   width: auto !important;
   object-fit: contain;
 }
-.visual-lab-dash-noscroll .commander-mascot-pedestal-donut-ring {
-  max-height: min(17rem, 58vw) !important;
+.visual-lab-dash-noscroll .commander-vertical-resource-pies {
+  height: min(220px, 48vw) !important;
 }
 
 /* Hero-grid: ringstatus naast mascotte — geen dubbele stats-marge */
@@ -3179,8 +3152,7 @@ header h1 { margin: 0; }
 }
 @media (min-width: 640px) {
   .visual-lab-dash-noscroll .visual-lab-dash-hero .commander-mascot-pedestal-donut-stage {
-    min-height: min(180px, 38vw) !important;
-    padding-bottom: min(2rem, 6vw) !important;
+    min-height: min(150px, 34vw) !important;
   }
 }
 
@@ -3192,29 +3164,66 @@ header h1 { margin: 0; }
   max-height: min(118px, 26dvh) !important;
 }
 
+/* Command-deck buitenrand: zelfde frosted stack als dashboard glass-cards */
+.dashboard-command-deck-frame {
+  border: 1px solid var(--border-soft);
+  background: linear-gradient(
+    165deg,
+    color-mix(in srgb, var(--mode-bg-surface) 90%, rgb(var(--mode-rgb-deep))) 0%,
+    color-mix(in srgb, var(--mode-bg-main) 94%, black) 100%
+  );
+  backdrop-filter: blur(20px) saturate(1.08);
+  -webkit-backdrop-filter: blur(20px) saturate(1.08);
+  box-shadow:
+    0 4px 26px rgba(0, 0, 0, 0.42),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+
+[data-mode="war"] .dashboard-command-deck-frame {
+  border-color: rgba(220, 38, 38, 0.22);
+  background: linear-gradient(165deg, rgba(74, 0, 12, 0.52) 0%, rgba(26, 0, 6, 0.45) 100%);
+  box-shadow:
+    0 4px 26px rgba(0, 0, 0, 0.44),
+    0 0 0 1px rgba(220, 38, 38, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+[data-mode="recovery"] .dashboard-command-deck-frame {
+  border-color: rgba(34, 197, 94, 0.22);
+  background: linear-gradient(165deg, rgba(0, 55, 18, 0.52) 0%, rgba(0, 24, 10, 0.45) 100%);
+  box-shadow:
+    0 4px 26px rgba(0, 0, 0, 0.44),
+    0 0 0 1px rgba(34, 197, 94, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+[data-mode="overdrive"] .dashboard-command-deck-frame {
+  border-color: rgba(167, 139, 250, 0.28);
+  background: linear-gradient(165deg, rgba(50, 20, 72, 0.58) 0%, rgba(18, 8, 32, 0.46) 100%);
+  box-shadow:
+    0 4px 26px rgba(0, 0, 0, 0.44),
+    0 0 0 1px rgba(168, 85, 247, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
 .dashboard-bridge,
 .dashboard-bridge-frame {
   position: relative;
   z-index: 3;
   padding: 0.75rem 1rem 1rem;
   margin-bottom: 0.5rem;
-  border: 1px solid rgba(var(--mode-rgb), 0.22);
-  background: linear-gradient(
-    165deg,
-    rgba(var(--mode-rgb-deep), 0.46) 0%,
-    rgba(var(--mode-rgb), 0.18) 100%
-  ) !important;
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid var(--border-soft);
+  background: color-mix(in srgb, var(--mode-bg-surface) 88%, black) !important;
+  backdrop-filter: blur(16px) saturate(1.08);
+  -webkit-backdrop-filter: blur(16px) saturate(1.08);
+  box-shadow: 0 4px 22px rgba(0, 0, 0, 0.4) !important;
 }
 
 .dashboard-bridge-body {
   padding: 1rem 1rem 1.125rem !important;
-  background: linear-gradient(
-    180deg,
-    rgba(var(--mode-rgb-deep), 0.56) 0%,
-    rgba(var(--mode-rgb), 0.2) 100%
-  ) !important;
+  background: color-mix(in srgb, var(--mode-bg-surface) 84%, black) !important;
+  backdrop-filter: blur(14px) saturate(1.06);
+  -webkit-backdrop-filter: blur(14px) saturate(1.06);
 }
 
 /* Growth hub: meer breedte, smallere zijmarges op de bridge */

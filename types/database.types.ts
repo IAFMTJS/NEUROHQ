@@ -1903,6 +1903,39 @@ export type Database = {
           },
         ]
       }
+      platform_events: {
+        Row: {
+          active: boolean
+          body: string
+          created_at: string
+          ends_at: string | null
+          id: string
+          starts_at: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          body: string
+          created_at?: string
+          ends_at?: string | null
+          id?: string
+          starts_at?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          body?: string
+          created_at?: string
+          ends_at?: string | null
+          id?: string
+          starts_at?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       protocol_library: {
         Row: {
           body_md: string
@@ -3677,6 +3710,7 @@ export type Database = {
       }
     }
     Functions: {
+      admin_platform_diagnostics: { Args: never; Returns: Json }
       current_user_is_admin: { Args: never; Returns: boolean }
       lock_daily_dcic_mode_if_unset: {
         Args: { p_date: string; p_mode: string; p_user_id: string }

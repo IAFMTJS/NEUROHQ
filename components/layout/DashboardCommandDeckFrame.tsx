@@ -2,7 +2,7 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 
 export const dashboardCommandDeckOuterClass =
-  "tasks-command-deck dashboard-cinematic relative overflow-hidden rounded-2xl border border-[rgba(var(--mode-rgb),0.36)] bg-gradient-to-br from-[rgba(6,22,38,0.88)] via-[var(--bg-elevated)]/76 to-[rgba(var(--mode-rgb-deep),0.22)] shadow-[0_0_56px_rgba(var(--mode-rgb),0.18),0_12px_40px_rgba(0,0,0,0.38),inset_0_1px_0_rgba(255,255,255,0.1)]";
+  "tasks-command-deck dashboard-cinematic dashboard-command-deck-frame relative overflow-hidden rounded-2xl";
 
 type Props = {
   deckTitle: ReactNode;
@@ -36,11 +36,11 @@ export function DashboardCommandDeckFrame({
       className={`${dashboardCommandDeckOuterClass} ${fillViewport ? "flex min-h-0 flex-1 flex-col" : ""} ${outerClassName}`.trim()}
     >
       <div
-        className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_75%_55%_at_50%_0%,rgba(var(--mode-rgb),0.16),transparent_58%)]"
+        className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_75%_55%_at_50%_0%,rgba(var(--mode-rgb),0.07),transparent_58%)]"
         aria-hidden
       />
       <div
-        className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_80%_0%,rgba(var(--mode-rgb),0.1),transparent_55%)]"
+        className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_80%_0%,rgba(var(--mode-rgb),0.05),transparent_55%)]"
         aria-hidden
       />
       {accentFlareClassName ? (
@@ -49,7 +49,7 @@ export function DashboardCommandDeckFrame({
       <div
         className={`relative z-[1] flex flex-col gap-0 p-4 md:p-5 ${fillViewport ? "min-h-0 flex-1" : ""} ${innerClassName}`.trim()}
       >
-        <header className="flex shrink-0 flex-wrap items-start justify-between gap-3 border-b border-[rgba(var(--mode-rgb),0.18)] pb-4">
+        <header className="flex shrink-0 flex-wrap items-start justify-between gap-3 border-b border-[var(--border-soft)] pb-4">
           <div className="min-w-0 border-l-2 border-[rgba(var(--semantic-accent),0.55)] pl-3">
             <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[var(--semantic-accent)]/90">
               Command
@@ -64,7 +64,7 @@ export function DashboardCommandDeckFrame({
           </div>
           <Link
             href="/dashboard"
-            className="shrink-0 rounded-xl border border-[rgba(var(--mode-rgb),0.24)] bg-[rgba(6,18,30,0.55)] px-3 py-2 text-[10px] font-semibold uppercase tracking-wide text-[var(--text-muted)] shadow-[0_0_18px_rgba(var(--mode-rgb),0.1),inset_0_1px_0_rgba(255,255,255,0.06)] transition hover:border-[rgba(var(--mode-rgb),0.4)] hover:bg-[rgba(8,26,42,0.65)] hover:text-[var(--text-primary)]"
+            className="shrink-0 rounded-xl border border-[var(--border-soft)] bg-[color-mix(in_srgb,var(--mode-bg-surface)_75%,transparent)] px-3 py-2 text-[10px] font-semibold uppercase tracking-wide text-[var(--text-muted)] shadow-[inset_0_1px_0_rgba(255,255,255,0.05)] transition hover:border-[rgba(var(--mode-rgb),0.22)] hover:bg-[color-mix(in_srgb,var(--mode-bg-surface)_88%,black)] hover:text-[var(--text-primary)]"
           >
             ← HQ
           </Link>

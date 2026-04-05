@@ -4,7 +4,7 @@ import { useEffect, useLayoutEffect, useMemo, useRef } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { usePriorityNavClick } from "@/lib/navigation/use-priority-nav-click";
-import BottomNavigation from "@/components/ui/BottomNavigation";
+import { BottomNavigationPortal } from "@/components/ui/BottomNavigationPortal";
 import { KeyboardShortcuts } from "@/components/KeyboardShortcuts";
 import { ThemeHydrate } from "@/components/providers/ThemeHydrate";
 import { AppStateProvider } from "@/components/providers/AppStateProvider";
@@ -214,8 +214,7 @@ export function DashboardLayoutClient({
                 {children}
               </div>
               <StrategyWeeklyReviewLockOverlay locked={strategyWeeklyReviewLocked} />
-              <div className="bottom-nav-underlay" aria-hidden />
-              <BottomNavigation />
+              <BottomNavigationPortal />
             </div>
           </>
         </DashboardDataProvider>

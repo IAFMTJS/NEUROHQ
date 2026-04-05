@@ -1,6 +1,3 @@
-"use client";
-
-import { useId } from "react";
 import type { QuarterEngineSnapshot } from "@/app/actions/quarter-engine-snapshot";
 import { buildPillarCardModel } from "@/lib/strategy/command-pillar-summaries";
 import type { PillarCardModel } from "@/lib/strategy/command-pillar-summaries";
@@ -50,34 +47,34 @@ type PillarSlice = {
   label: string;
   pct: number;
   committed: boolean;
-  trackClass: string;
-  progClass: string;
-  swatchClass: string;
 };
 
-/** Donut segment + legenda: mode-tint voor budget, aparte hues per pijler (leesbaar in war/recovery). */
-const PILLAR_VISUAL: Record<PillarKey, { trackClass: string; progClass: string; swatchClass: string }> = {
-  budget: {
-    trackClass: "fill-[rgba(var(--mode-rgb),0.14)]",
-    progClass: "fill-[rgba(var(--mode-rgb-deep),0.9)]",
-    swatchClass: "bg-[rgba(var(--mode-rgb-deep),0.85)]",
-  },
-  growth: {
-    trackClass: "fill-emerald-400/14",
-    progClass: "fill-emerald-400/88",
-    swatchClass: "bg-emerald-400/80",
-  },
-  xp: {
-    trackClass: "fill-violet-400/14",
-    progClass: "fill-violet-400/85",
-    swatchClass: "bg-violet-400/78",
-  },
-  discipline: {
-    trackClass: "fill-amber-400/14",
-    progClass: "fill-amber-300/88",
-    swatchClass: "bg-amber-300/80",
-  },
+/** RGB op 100% voortgang — per pijler herkenbaar (focus/cyan-achtig voor budget). */
+const PILLAR_TARGET_RGB: Record<PillarKey, { r: number; g: number; b: number }> = {
+  budget: { r: 0, g: 186, b: 255 },
+  growth: { r: 52, g: 211, b: 153 },
+  xp: { r: 232, g: 78, b: 238 },
+  discipline: { r: 251, g: 191, b: 36 },
 };
+
+/** Laag voortgang: zacht “stress”-rood; kleur schuift naar pijleraccent naarmate % stijgt. */
+const PILLAR_LOW_RGB = { r: 198, g: 72, b: 78 };
+
+function lerpByte(a: number, b: number, t: number) {
+  return Math.round(a + (b - a) * t);
+}
+
+/** Volledige taartpunt: vulling = voortgang via kleur (niet alleen booglengte). */
+function pillarSegmentFill(key: PillarKey, committed: boolean, pct: number): string {
+  if (!committed) return "rgba(82, 96, 118, 0.4)";
+  const t = Math.max(0, Math.min(1, pct / 100));
+  const hi = PILLAR_TARGET_RGB[key];
+  const r = lerpByte(PILLAR_LOW_RGB.r, hi.r, t);
+  const g = lerpByte(PILLAR_LOW_RGB.g, hi.g, t);
+  const b = lerpByte(PILLAR_LOW_RGB.b, hi.b, t);
+  const alpha = 0.48 + 0.44 * t;
+  return `rgba(${r},${g},${b},${alpha})`;
+}
 
 function QuarterCommandOverview({
   scorePct,
@@ -86,12 +83,12 @@ function QuarterCommandOverview({
   scorePct: number;
   pillars: PillarSlice[];
 }) {
-  const filterId = useId().replace(/:/g, "");
-  const cx = 64;
-  const cy = 64;
-  const rOuter = 54;
-  const rInner = 30;
-  const gapDeg = 5;
+  const vb = 176;
+  const cx = vb / 2;
+  const cy = vb / 2;
+  const rOuter = 78;
+  const rInner = 42;
+  const gapDeg = 4;
   const slot = 90;
   /** Clockwise from top (12u): top → right → bottom → left. */
   const baseStarts = [-135, -45, 45, 135].map((deg) => deg + gapDeg / 2);
@@ -99,59 +96,45 @@ function QuarterCommandOverview({
   const p = Math.max(0, Math.min(100, Math.round(scorePct)));
 
   return (
-    <div className="mx-auto max-w-md">
-      <div className="relative mx-auto aspect-square w-full max-w-[220px] sm:max-w-[248px]">
+    <div className="mx-auto max-w-lg">
+      <div className="relative mx-auto aspect-square w-full max-w-[280px] sm:max-w-[320px]">
         <svg
           width="100%"
           height="100%"
-          viewBox="0 0 128 128"
-          className="overflow-visible drop-shadow-[0_0_24px_rgba(var(--mode-rgb),0.12)]"
+          viewBox={`0 0 ${vb} ${vb}`}
+          className="overflow-visible drop-shadow-[0_0_28px_rgba(var(--mode-rgb),0.14)]"
           role="img"
-          aria-label={`Kwartaal contractscore ${p} procent, vier pijlers elk een kwart`}
+          aria-label={`Kwartaal contractscore ${p} procent; elke sector toont voortgang van die pijler met kleur`}
         >
-          <defs>
-            <filter id={`hq-strategy-quarter-glow-${filterId}`} x="-40%" y="-40%" width="180%" height="180%">
-              <feGaussianBlur stdDeviation="1.2" result="b" />
-              <feMerge>
-                <feMergeNode in="b" />
-                <feMergeNode in="SourceGraphic" />
-              </feMerge>
-            </filter>
-          </defs>
           {pillars.map((pl, i) => {
             const start = baseStarts[i];
-            const trackEnd = start + slot - gapDeg;
-            const progSpan = (slot - gapDeg) * (pl.committed ? Math.max(0, Math.min(100, pl.pct)) / 100 : 0);
-            const progEnd = start + progSpan;
+            const segEnd = start + slot - gapDeg;
+            const fill = pillarSegmentFill(pl.key, pl.committed, pl.pct);
             return (
-              <g key={pl.key}>
-                <path
-                  d={annularSectorPath(cx, cy, rInner, rOuter, start, trackEnd)}
-                  className={`transition-opacity duration-300 ${pl.trackClass}`}
-                />
-                {progSpan > 0.35 ? (
-                  <path
-                    d={annularSectorPath(cx, cy, rInner, rOuter, start, progEnd)}
-                    filter={`url(#hq-strategy-quarter-glow-${filterId})`}
-                    className={`transition-all duration-500 ease-out ${pl.progClass}`}
-                  />
-                ) : null}
-              </g>
+              <path
+                key={pl.key}
+                d={annularSectorPath(cx, cy, rInner, rOuter, start, segEnd)}
+                fill={fill}
+                stroke="rgba(4,12,22,0.55)"
+                strokeWidth="1.1"
+                paintOrder="stroke fill"
+                className="transition-[fill] duration-500 ease-out"
+              />
             );
           })}
           <circle
             cx={cx}
             cy={cy}
-            r={rInner - 2}
-            fill="rgba(4,12,22,0.92)"
-            stroke="rgba(var(--mode-rgb),0.18)"
-            strokeWidth="1"
+            r={rInner - 2.5}
+            fill="rgba(4,12,22,0.94)"
+            stroke="rgba(var(--mode-rgb),0.22)"
+            strokeWidth="1.25"
           />
         </svg>
-        <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center text-center">
-          <span className="font-mono text-3xl font-bold tabular-nums text-[var(--text-primary)] sm:text-4xl">{p}</span>
+        <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center px-6 text-center">
+          <span className="font-mono text-4xl font-bold tabular-nums text-[var(--text-primary)] sm:text-5xl">{p}</span>
           <span className="text-[10px] font-semibold uppercase tracking-[0.2em] text-[var(--text-muted)]">contract</span>
-          <span className="mt-0.5 text-[9px] text-[var(--text-muted)]">4 × 25%</span>
+          <span className="mt-0.5 text-[9px] leading-tight text-[var(--text-muted)]">Kleur = voortgang per pijler</span>
         </div>
       </div>
 
@@ -174,10 +157,9 @@ function QuarterCommandOverview({
               </p>
             </div>
             <span
-              className={`h-4 w-4 shrink-0 rounded-sm border border-[rgba(var(--mode-rgb),0.2)] ${
-                pl.committed ? pl.swatchClass : "bg-[var(--text-muted)]/20"
-              }`}
-              title={pl.label}
+              className="h-4 w-4 shrink-0 rounded-sm border border-[rgba(var(--mode-rgb),0.2)]"
+              style={{ background: pillarSegmentFill(pl.key, pl.committed, pl.pct) }}
+              title={pl.committed ? `${pl.label}: ${pl.pct}%` : pl.label}
               aria-hidden
             />
           </li>
@@ -336,7 +318,6 @@ export function StrategyCommandTab({ snapshot }: Props) {
     label: b.label,
     pct: b.pct,
     committed: b.committed,
-    ...PILLAR_VISUAL[b.key],
   }));
 
   return (

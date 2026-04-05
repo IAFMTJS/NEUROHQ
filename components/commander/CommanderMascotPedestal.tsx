@@ -5,6 +5,7 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { getCurrencySymbol } from "@/lib/utils/currency";
 import { xpRangeForNextLevel } from "@/lib/xp";
+import { CommanderVerticalResourcePies } from "./CommanderVerticalResourcePies";
 
 export type CommanderMascotPedestalStats = {
   totalXP: number;
@@ -23,145 +24,12 @@ export type CommanderMascotPedestalStats = {
 type Props = {
   stats: CommanderMascotPedestalStats;
   children: ReactNode;
-  /** Zonder resource-boog (alleen mascotte-vlak); o.a. visual lab alternatieven. */
+  /** Zonder resource-meter (alleen mascotte-vlak); o.a. visual lab alternatieven. */
   showResourceArc?: boolean;
 };
 
-const CX = 200;
-/** Middelpunt boven: ondere boog steekt naar voren (naar kijker); open deel boven achter mascotte */
-const CY = 0;
-/** Referentie midden van de band (centerline boog) */
-const R_MID = 204;
-/** Brede driedelige band (Energy | Focus | Load), aligned met visual-lab “commander strip” */
-const R_INNER = R_MID - 38;
-const R_OUTER = R_MID + 30;
-/** Eindpunten langs de cirkel; iets smallere α = armen van de boog reiken hoger naar de mascotte */
-const SIDE_ALPHA = Math.PI / 18;
-/** Onderlangs: π+α → … → −α (45° | 90° | 45° + zij-opwaarts) */
-const ANGLES = [Math.PI + SIDE_ALPHA, (3 * Math.PI) / 4, Math.PI / 4, -SIDE_ALPHA] as const;
-
-/** Middenhoek Focus-segment (XP/Budget op de band) */
-const SEG_MID_FOCUS_RAD = (ANGLES[1] + ANGLES[2]) / 2;
-
-function polar(cx: number, cy: number, r: number, t: number) {
-  return { x: cx + r * Math.cos(t), y: cy + r * Math.sin(t) };
-}
-
-/** Kleine boog op de ondere helft (open deel boven); centerline = R_MID */
-const PTS = ANGLES.map((t) => polar(CX, CY, R_MID, t));
-const sweepLower: 0 | 1 = 0;
-
-/**
- * Gevulde annulus-sector tussen twee hoeken (theta1 → theta2, kleinere hoek eerst in richting sweep).
- * Onderste helft: gebruik zelfde sweep als stroke-paden.
- */
-function annularSectorD(
-  cx: number,
-  cy: number,
-  rInner: number,
-  rOuter: number,
-  theta1: number,
-  theta2: number,
-  sweep: 0 | 1,
-): string {
-  const p1o = polar(cx, cy, rOuter, theta1);
-  const p2o = polar(cx, cy, rOuter, theta2);
-  const p2i = polar(cx, cy, rInner, theta2);
-  const p1i = polar(cx, cy, rInner, theta1);
-  const large = 0;
-  const innerSweep = (1 - sweep) as 0 | 1;
-  return [
-    `M ${p1o.x} ${p1o.y}`,
-    `A ${rOuter} ${rOuter} 0 ${large} ${sweep} ${p2o.x} ${p2o.y}`,
-    `L ${p2i.x} ${p2i.y}`,
-    `A ${rInner} ${rInner} 0 ${large} ${innerSweep} ${p1i.x} ${p1i.y}`,
-    "Z",
-  ].join(" ");
-}
-
-const SEG_SECTOR_D = [0, 1, 2].map((i) =>
-  annularSectorD(CX, CY, R_INNER, R_OUTER, ANGLES[i], ANGLES[i + 1], sweepLower),
-);
-
-/** Stroke-paden op centerline voor dash-vulling */
-const SEG_PATHS = [0, 1, 2].map((i) => {
-  const a = PTS[i];
-  const b = PTS[i + 1];
-  return `M ${a.x} ${a.y} A ${R_MID} ${R_MID} 0 0 ${sweepLower} ${b.x} ${b.y}`;
-});
-
-const OUTER_RIM_D = [0, 1, 2]
-  .map((i) => {
-    const a = polar(CX, CY, R_OUTER, ANGLES[i]);
-    const b = polar(CX, CY, R_OUTER, ANGLES[i + 1]);
-    return `M ${a.x} ${a.y} A ${R_OUTER} ${R_OUTER} 0 0 ${sweepLower} ${b.x} ${b.y}`;
-  })
-  .join(" ");
-
-const VB_W = 400;
-const VB_H = 200;
-
-/** Visuele “dikte” voor dash-strokes op centerline (vulling = %) */
-const W_FILL_SIDE = 44;
-const W_FILL_CENTER = 52;
-const RIM_STROKE = 6;
-const DIVIDER_STROKE_DARK = 3.5;
-const DIVIDER_STROKE_ACCENT = 1.25;
-
-/** Radiale scheiding tussen de drie segmenten */
-function SegmentDividers({
-  rIn,
-  rOut,
-  stroke,
-  strokeWidth,
-  opacity = 1,
-}: {
-  rIn: number;
-  rOut: number;
-  stroke: string;
-  strokeWidth: number;
-  opacity?: number;
-}) {
-  const splitAngles: number[] = [ANGLES[1], ANGLES[2]];
-  return (
-    <>
-      {splitAngles.map((theta) => {
-        const a = polar(CX, CY, rIn, theta);
-        const b = polar(CX, CY, rOut, theta);
-        return (
-          <line
-            key={theta}
-            x1={a.x}
-            y1={a.y}
-            x2={b.x}
-            y2={b.y}
-            stroke={stroke}
-            strokeWidth={strokeWidth}
-            strokeLinecap="square"
-            opacity={opacity}
-          />
-        );
-      })}
-    </>
-  );
-}
-
-const pathLen = 100;
-
-/** Straal voor XP/Budget op de band (kleiner = hoger op de boog, dichter bij de mascotte) */
-function bandLabelRadiusXp() {
-  return R_INNER + (R_OUTER - R_INNER) * 0.13;
-}
-
-/** HTML-overlay: zelfde meetkunde als SVG-groep met verticale squash */
-function bandLabelPct(theta: number, r: number, squash: number) {
-  const x = CX + r * Math.cos(theta);
-  const ySquashed = CY + r * Math.sin(theta) * squash;
-  return { left: `${(x / VB_W) * 100}%`, top: `${(ySquashed / VB_H) * 100}%` };
-}
-
 const cardClass =
-  "commander-pedestal-hud-card commander-pedestal-band-card pointer-events-auto max-w-[min(52%,8.5rem)] rounded-lg border px-2 py-1.5 backdrop-blur-md no-underline outline-none transition-transform hover:scale-[1.02] focus-visible:ring-2 focus-visible:ring-[var(--accent-focus)]/55 sm:max-w-[10rem] sm:rounded-xl sm:px-2.5 sm:py-2";
+  "commander-pedestal-hud-card commander-pedestal-band-card pointer-events-auto block w-full max-w-none rounded-lg border px-1.5 py-1.5 text-center backdrop-blur-md no-underline outline-none transition-transform hover:scale-[1.02] focus-visible:ring-2 focus-visible:ring-[var(--accent-focus)]/55 sm:rounded-xl sm:px-2 sm:py-2";
 
 function clampPct(n: number) {
   return Math.min(100, Math.max(0, n));
@@ -187,8 +55,6 @@ export function CommanderMascotPedestal({ stats, children, showResourceArc = tru
   const amount = Math.abs(budgetRemainingCents) / 100;
   const isNegative = budgetRemainingCents < 0;
 
-  const platformWidth = "min(100%, calc(min(320px, 88vw) * 1.32))";
-
   const prevLoad = useRef(loadPct);
   const [loadPulse, setLoadPulse] = useState(false);
   useEffect(() => {
@@ -203,193 +69,72 @@ export function CommanderMascotPedestal({ stats, children, showResourceArc = tru
     };
   }, [loadPct]);
 
-  /** Foreshortening: cirkel → ellips; hogere squash = boog oogt meer uitgestrekt naar boven. */
-  const donutSquash = 0.66;
-
-  const rXpBudget = bandLabelRadiusXp();
-  const posXp = bandLabelPct(SEG_MID_FOCUS_RAD, rXpBudget, donutSquash);
-
   const ariaBand = showResourceArc
-    ? `Resourceband: arcering Energy ${ePct}%, Focus ${fPct}%, Load ${lPct}%. XP level ${displayLevel}, ${current} van ${needed}. Budget ${isNegative ? "−" : ""}${symbol}${amount.toFixed(0)}. Brain status-cirkels onder de mascotte.`
+    ? `Resourcemeter links: Energy ${ePct}%, Focus ${fPct}%, Load ${lPct}%. XP level ${displayLevel}, ${current} van ${needed}. Budget ${isNegative ? "−" : ""}${symbol}${amount.toFixed(0)}. Brain status-cirkels onder de mascotte.`
     : `Mascotte. Energy ${ePct}%, Focus ${fPct}%, Load ${lPct}%. XP level ${displayLevel}.`;
+
+  const xpLink = (
+    <Link href="/profile" className={cardClass}>
+      <span className="block text-[8px] font-semibold uppercase tracking-[0.12em] text-[var(--text-muted)] sm:text-[9px]">XP</span>
+      <span className="mt-0.5 block text-[12px] font-bold tabular-nums leading-tight text-[var(--text-primary)] sm:text-[13px]">
+        Lv {displayLevel}
+      </span>
+      <span className="mt-0.5 block text-[9px] tabular-nums text-[var(--text-secondary)] sm:text-[10px]">
+        {current}/{needed}
+      </span>
+    </Link>
+  );
+
+  const budgetLink = (
+    <Link href="/budget" className={cardClass}>
+      <span className="block text-[8px] font-semibold uppercase tracking-[0.1em] text-[var(--text-muted)] sm:text-[9px]">Budget</span>
+      <span className="mt-0.5 block text-[12px] font-bold tabular-nums leading-tight text-[var(--text-primary)] sm:text-[13px]">
+        {isNegative && "−"}
+        {symbol}
+        {amount.toFixed(0)}
+      </span>
+      <span className="mt-0.5 block text-[10px] text-[var(--text-secondary)] sm:text-[11px]">
+        {isNegative ? "over" : "rest"}
+      </span>
+    </Link>
+  );
 
   return (
     <div
-      className="commander-mascot-pedestal commander-mascot-platform relative mx-auto w-full overflow-visible pb-6 sm:pb-8"
+      className="commander-mascot-pedestal commander-mascot-platform relative mx-auto w-full overflow-visible pb-4 sm:pb-5"
       role="group"
       aria-label={ariaBand}
     >
       <div
         className={
           showResourceArc
-            ? "commander-mascot-pedestal-donut-stage relative mx-auto w-full min-h-[min(300px,78vw)] overflow-visible pb-[min(5rem,16vw)] sm:min-h-[min(340px,64vw)] sm:pb-[min(5.5rem,15vw)]"
+            ? "commander-mascot-pedestal-donut-stage relative mx-auto w-full min-h-0 overflow-visible"
             : "commander-mascot-pedestal-donut-stage relative mx-auto w-full min-h-0 overflow-visible pb-3 sm:pb-4"
         }
       >
-        {/* Mascotte eerst (gat van de donut); ring eronder/erachter via z-index */}
-        <div
-          className={
-            showResourceArc
-              ? "commander-mascot-pedestal-mascot relative z-[14] -mb-10 mx-auto w-full max-w-[min(320px,88vw)] shrink-0 px-1 sm:-mb-12 lg:-mb-[3.85rem]"
-              : "commander-mascot-pedestal-mascot relative z-[14] mx-auto mb-0 w-full max-w-[min(280px,80vw)] shrink-0 px-1"
-          }
-        >
-          {children}
-        </div>
-
-        {/* Ring: iets hogere mascotte + bredere band onder de voeten */}
         {showResourceArc ? (
-        <div className="absolute bottom-0 left-1/2 z-[1] flex w-full max-w-none -translate-x-1/2 -translate-y-[min(0.65rem,3vw)] justify-center sm:-translate-y-[min(0.8rem,3.5vw)]">
-          <div className="commander-mascot-pedestal-donut-tilt">
-            <div
-              className="commander-mascot-pedestal-arc-wrap commander-mascot-pedestal-donut-ring relative shrink-0 overflow-visible"
-              style={{
-                width: platformWidth,
-                aspectRatio: `${VB_W} / ${VB_H}`,
-                maxHeight: "min(20.5rem, 63vw)",
-              }}
-            >
-              <div className="commander-mascot-pedestal-donut-vert-stretch relative h-full min-h-0 w-full">
-              <svg
-                className="commander-mascot-pedestal-arc commander-mascot-platform-svg absolute inset-0 block h-full w-full overflow-visible"
-                viewBox={`0 0 ${VB_W} ${VB_H}`}
-                preserveAspectRatio="xMidYMax meet"
-                aria-hidden
-              >
-                <defs>
-                  <radialGradient id="commander-bowl-floor" cx="50%" cy="100%" r="78%" fx="50%" fy="100%">
-                    <stop offset="0%" stopColor="rgba(var(--mode-rgb, 0, 212, 255), 0.2)" />
-                    <stop offset="42%" stopColor="rgba(var(--mode-rgb, 0, 212, 255), 0.07)" />
-                    <stop offset="100%" stopColor="rgba(0, 0, 0, 0.28)" />
-                  </radialGradient>
-                </defs>
-
-                <g transform={`translate(${CX} ${CY}) scale(1 ${donutSquash}) translate(${-CX} ${-CY})`}>
-                  <ellipse cx={CX} cy={198} rx={R_MID - 6} ry={22} fill="url(#commander-bowl-floor)" opacity={0.16} />
-
-                  <g className="commander-orbit-arc-path">
-                    {/* Drie getinte annulus-sectoren */}
-                    <path
-                      d={SEG_SECTOR_D[0]}
-                      fill="rgba(34, 211, 238, 0.12)"
-                      stroke="rgba(0,0,0,0.22)"
-                      strokeWidth={0.75}
-                    />
-                    <path
-                      d={SEG_SECTOR_D[1]}
-                      fill="rgba(167, 139, 250, 0.14)"
-                      stroke="rgba(0,0,0,0.22)"
-                      strokeWidth={0.75}
-                    />
-                    <path
-                      d={SEG_SECTOR_D[2]}
-                      fill="rgba(251, 146, 60, 0.1)"
-                      stroke="rgba(0,0,0,0.22)"
-                      strokeWidth={0.75}
-                    />
-
-                    <SegmentDividers
-                      rIn={R_INNER + 2}
-                      rOut={R_OUTER - 2}
-                      stroke="rgba(0,0,0,0.55)"
-                      strokeWidth={DIVIDER_STROKE_DARK}
-                    />
-                    <SegmentDividers
-                      rIn={R_INNER + 2}
-                      rOut={R_OUTER - 2}
-                      stroke="rgba(var(--mode-rgb, 0, 212, 255), 0.45)"
-                      strokeWidth={DIVIDER_STROKE_ACCENT}
-                      opacity={0.95}
-                    />
-
-                    <path
-                      d={OUTER_RIM_D}
-                      fill="none"
-                      stroke="rgba(var(--mode-rgb, 0, 212, 255), 0.38)"
-                      strokeWidth={RIM_STROKE}
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      opacity={0.72}
-                      style={{
-                        filter: "drop-shadow(0 2px 10px rgba(0, 0, 0, 0.35))",
-                      }}
-                    />
-
-                    {/* Per-segment vulling = % (transition via .commander-segment-fill) */}
-                    <path
-                      className="commander-segment-fill"
-                      d={SEG_PATHS[0]}
-                      fill="none"
-                      stroke="rgba(34, 211, 238, 0.95)"
-                      strokeWidth={W_FILL_SIDE}
-                      strokeLinecap="round"
-                      pathLength={pathLen}
-                      strokeDasharray={`${Math.max(0.35, (ePct / 100) * pathLen)} ${pathLen}`}
-                      style={{
-                        filter: "drop-shadow(0 0 10px rgba(34, 211, 238, 0.42))",
-                      }}
-                    />
-                    <path
-                      className="commander-segment-fill"
-                      d={SEG_PATHS[1]}
-                      fill="none"
-                      stroke="rgba(167, 139, 250, 0.98)"
-                      strokeWidth={W_FILL_CENTER}
-                      strokeLinecap="round"
-                      pathLength={pathLen}
-                      strokeDasharray={`${Math.max(0.35, (fPct / 100) * pathLen)} ${pathLen}`}
-                      style={{
-                        filter: "drop-shadow(0 0 14px rgba(167, 139, 250, 0.48))",
-                      }}
-                    />
-                    <path
-                      className={`commander-segment-fill commander-segment-load ${loadPulse ? "commander-segment-load-pulse" : ""}`}
-                      d={SEG_PATHS[2]}
-                      fill="none"
-                      stroke="rgba(251, 146, 60, 0.96)"
-                      strokeWidth={W_FILL_SIDE}
-                      strokeLinecap="round"
-                      pathLength={pathLen}
-                      strokeDasharray={`${Math.max(0.35, (lPct / 100) * pathLen)} ${pathLen}`}
-                    />
-                  </g>
-                </g>
-              </svg>
-
-                <div
-                  className="commander-mascot-pedestal-cards pointer-events-none absolute z-[12] flex w-[min(96%,19rem)] max-w-none justify-between gap-1.5 px-0.5 sm:gap-2.5"
-                  style={{
-                    left: posXp.left,
-                    top: posXp.top,
-                    transform: "translate(-50%, calc(-50% - clamp(0.65rem, 3vw, 1.1rem)))",
-                  }}
-                >
-                  <Link href="/profile" className={`${cardClass} text-left`}>
-                    <span className="block text-[8px] font-semibold uppercase tracking-[0.12em] text-[var(--text-muted)] sm:text-[9px]">XP</span>
-                    <span className="mt-0.5 block text-[13px] font-bold tabular-nums leading-tight text-[var(--text-primary)] sm:text-sm">
-                      Lv {displayLevel}
-                    </span>
-                    <span className="mt-0.5 block text-[10px] tabular-nums text-[var(--text-secondary)] sm:text-[11px]">
-                      {current}/{needed}
-                    </span>
-                  </Link>
-                  <Link href="/budget" className={`${cardClass} text-right`}>
-                    <span className="block text-[8px] font-semibold uppercase tracking-[0.1em] text-[var(--text-muted)] sm:text-[9px]">Budget</span>
-                    <span className="mt-0.5 block text-[13px] font-bold tabular-nums leading-tight text-[var(--text-primary)] sm:text-sm">
-                      {isNegative && "−"}
-                      {symbol}
-                      {amount.toFixed(0)}
-                    </span>
-                    <span className="mt-0.5 block text-[10px] text-[var(--text-secondary)] sm:text-[11px]">
-                      {isNegative ? "over" : "rest"}
-                    </span>
-                  </Link>
-                </div>
+          <div className="commander-mascot-pedestal-hero-row mx-auto flex w-full max-w-[min(400px,100%)] items-center justify-center gap-2 sm:max-w-[min(440px,100%)] sm:gap-3">
+            <CommanderVerticalResourcePies
+              energyPct={ePct}
+              focusPct={fPct}
+              loadPct={lPct}
+              loadPulse={loadPulse}
+              xpLink={xpLink}
+              budgetLink={budgetLink}
+            />
+            <div className="flex min-w-0 flex-1 flex-col items-center">
+              <div className="commander-mascot-pedestal-mascot relative z-[14] mx-auto w-full max-w-[min(320px,88vw)] shrink-0 px-1 sm:-mb-2 lg:-mb-3">
+                {children}
               </div>
             </div>
           </div>
-        </div>
-        ) : null}
+        ) : (
+          <>
+            <div className="commander-mascot-pedestal-mascot relative z-[14] mx-auto mb-0 w-full max-w-[min(280px,80vw)] shrink-0 px-1">
+              {children}
+            </div>
+          </>
+        )}
       </div>
     </div>
   );
