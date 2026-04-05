@@ -9,6 +9,7 @@ import type { PlayDeckSuggestion } from "@/app/actions/play-deck";
 import { neuroToast } from "@/lib/ui/neuro-toast";
 import { profileEngineHref } from "@/lib/profile-routes";
 import { refreshMergedSnapshotFromNetwork } from "@/lib/daily-bootstrap";
+import styles from "./play-deck-modal.module.css";
 
 type Props = {
   open: boolean;
@@ -23,7 +24,8 @@ const KIND_LABEL: Record<string, string> = {
 };
 
 const MAX_PICK_GENERATION = 2;
-const REVEAL_STAGGER_MS = 220;
+/** Time between each card starting its flip (overlapping flips = dealer-style cadence). */
+const REVEAL_STAGGER_MS = 260;
 
 export function PlayDeckModal({ open, onClose, dateStr }: Props) {
   const router = useRouter();
@@ -75,7 +77,7 @@ export function PlayDeckModal({ open, onClose, dateStr }: Props) {
     setRevealStep(0);
     const n = suggestions.length;
     for (let i = 1; i <= n; i++) {
-      const t = setTimeout(() => setRevealStep(i), 160 + (i - 1) * REVEAL_STAGGER_MS);
+      const t = setTimeout(() => setRevealStep(i), 200 + (i - 1) * REVEAL_STAGGER_MS);
       revealTimersRef.current.push(t);
     }
     return () => clearRevealTimers();
@@ -182,21 +184,25 @@ export function PlayDeckModal({ open, onClose, dateStr }: Props) {
               const shown = revealStep > i;
               return (
                 <li key={`${s.id}-${pickGeneration}`}>
-                  <div
-                    className="rounded-xl border border-[var(--card-border)]/80 bg-[var(--bg-primary)]/25 p-4 shadow-[0_0_0_1px_rgba(var(--mode-rgb),0.06)] transition-[opacity,transform,filter] duration-500 ease-out"
-                    style={{
-                      opacity: shown ? 1 : 0,
-                      transform: shown ? "translateY(0) scale(1)" : "translateY(12px) scale(0.98)",
-                      filter: shown ? "blur(0)" : "blur(6px)",
-                    }}
-                  >
-                    <div className="flex flex-wrap items-center gap-2">
-                      <span className="rounded-md border border-[rgba(var(--mode-rgb),0.25)] bg-[rgba(var(--mode-rgb-deep),0.12)] px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-[var(--text-muted)]">
-                        {KIND_LABEL[s.play_kind] ?? s.play_kind}
-                      </span>
-                      <span className="text-[10px] text-[var(--text-muted)]">~{4 + s.energy} energie</span>
+                  <div className={styles.scene}>
+                    <div className={`${styles.inner} ${shown ? styles.innerRevealed : ""}`}>
+                      <div className={`${styles.face} ${styles.back}`} aria-hidden>
+                        <div className={styles.backOrnament}>?</div>
+                        <span className={styles.backCaption}>Play deck</span>
+                      </div>
+                      <div
+                        className={`${styles.face} ${styles.front} rounded-xl border border-[var(--card-border)]/80 bg-[var(--bg-primary)]/25 p-4 shadow-[0_0_0_1px_rgba(var(--mode-rgb),0.06)]`}
+                        aria-hidden={!shown}
+                      >
+                        <div className="flex flex-wrap items-center gap-2">
+                          <span className="rounded-md border border-[rgba(var(--mode-rgb),0.25)] bg-[rgba(var(--mode-rgb-deep),0.12)] px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-[var(--text-muted)]">
+                            {KIND_LABEL[s.play_kind] ?? s.play_kind}
+                          </span>
+                          <span className="text-[10px] text-[var(--text-muted)]">~{4 + s.energy} energie</span>
+                        </div>
+                        <p className="mt-2 text-sm font-medium text-[var(--text-primary)]">{s.title}</p>
+                      </div>
                     </div>
-                    <p className="mt-2 text-sm font-medium text-[var(--text-primary)]">{s.title}</p>
                   </div>
                 </li>
               );

@@ -112,6 +112,8 @@ export async function completeMission(
     performanceRank,
     durationToCompleteSeconds,
   });
+  const { logMissionOutcome } = await import("./mission-outcome-events");
+  await logMissionOutcome(id, "complete");
   await trackEvent("mission_completed", { taskId: id, performanceRank, performanceScore });
 
   if (t?.recurrence_rule) {

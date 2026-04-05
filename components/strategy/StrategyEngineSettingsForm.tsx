@@ -46,6 +46,9 @@ export function StrategyEngineSettingsForm({ strategyId, initial, locksUsedThisQ
       ? String(initial.growth.quarterlyLearningProgressTargetPct)
       : ""
   );
+  const [xpQuarter, setXpQuarter] = useState(
+    initial.xp.quarterlyTargetXpEarned != null ? String(initial.xp.quarterlyTargetXpEarned) : ""
+  );
   const [nM, setNM] = useState<PushAreaStyle>(initial.notifications.missions);
   const [nB, setNB] = useState<PushAreaStyle>(initial.notifications.budget);
   const [nG, setNG] = useState<PushAreaStyle>(initial.notifications.growth);
@@ -73,6 +76,8 @@ export function StrategyEngineSettingsForm({ strategyId, initial, locksUsedThisQ
           saveEuro.trim() === "" ? null : parseToCents(saveEuro.replace(/\s/g, "").replace(",", "."));
         const lp =
           learnPct.trim() === "" ? null : Math.max(0, Math.min(100, parseInt(learnPct, 10) || 0));
+        const xpRaw = xpQuarter.trim() === "" ? null : Math.max(0, Math.floor(parseInt(xpQuarter, 10) || 0));
+        const xpTarget = xpRaw != null && xpRaw > 0 ? xpRaw : null;
 
         await updateStrategyEngineParams(strategyId, {
           missions: {
@@ -86,6 +91,9 @@ export function StrategyEngineSettingsForm({ strategyId, initial, locksUsedThisQ
           },
           growth: {
             quarterlyLearningProgressTargetPct: lp,
+          },
+          xp: {
+            quarterlyTargetXpEarned: xpTarget,
           },
           notifications: {
             missions: nM,
@@ -106,6 +114,7 @@ export function StrategyEngineSettingsForm({ strategyId, initial, locksUsedThisQ
 
   return (
     <section
+      id="strategy-engine"
       className="space-y-6 rounded-2xl border border-[var(--accent-focus)]/25 bg-[var(--bg-elevated)]/90 p-5 shadow-[0_0_36px_rgba(59,130,246,0.08)]"
       aria-label="Strategy engine instellingen"
     >
@@ -222,6 +231,25 @@ export function StrategyEngineSettingsForm({ strategyId, initial, locksUsedThisQ
               value={learnPct}
               onChange={(e) => setLearnPct(e.target.value)}
               placeholder="bijv. 25"
+              className="mt-1 w-full rounded-lg border border-[var(--card-border)] bg-[var(--bg-elevated)] px-3 py-2 text-sm"
+            />
+          </label>
+        </div>
+
+        <div className="space-y-3 rounded-xl border border-[var(--card-border)] bg-[var(--bg-primary)]/40 p-4">
+          <h3 className="text-xs font-semibold uppercase tracking-wide text-[var(--text-muted)]">XP dit kwartaal</h3>
+          <p className="text-xs text-[var(--text-secondary)]">
+            Bruto XP dat je wilt verdienen dit kalenderkwartaal (zoals gelogd in xp_events). Leeg = neutraal in strategy
+            score.
+          </p>
+          <label className="block text-xs text-[var(--text-muted)]">
+            Doel XP (heel getal, leeg = geen vast doel)
+            <input
+              type="number"
+              min={0}
+              value={xpQuarter}
+              onChange={(e) => setXpQuarter(e.target.value)}
+              placeholder="bijv. 5000"
               className="mt-1 w-full rounded-lg border border-[var(--card-border)] bg-[var(--bg-elevated)] px-3 py-2 text-sm"
             />
           </label>

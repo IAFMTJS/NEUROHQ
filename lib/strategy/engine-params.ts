@@ -36,6 +36,10 @@ export type StrategyEngineParams = {
     /** Target % of active protocol / learning track to complete this quarter (0–100). */
     quarterlyLearningProgressTargetPct: number | null;
   };
+  /** Quarter XP contract: gross XP to earn this calendar quarter (from xp_events). */
+  xp: {
+    quarterlyTargetXpEarned: number | null;
+  };
   notifications: {
     missions: PushAreaStyle;
     budget: PushAreaStyle;
@@ -60,6 +64,9 @@ export const DEFAULT_STRATEGY_ENGINE_PARAMS: StrategyEngineParams = {
   growth: {
     quarterlyLearningProgressTargetPct: null,
   },
+  xp: {
+    quarterlyTargetXpEarned: null,
+  },
   notifications: {
     missions: "balanced",
     budget: "balanced",
@@ -76,13 +83,20 @@ function clampInt(n: number, lo: number, hi: number): number {
 /** Merge stored JSON with defaults (invalid keys ignored). */
 export function normalizeStrategyEngineParams(raw: unknown): StrategyEngineParams {
   const d = DEFAULT_STRATEGY_ENGINE_PARAMS;
-  if (!raw || typeof raw !== "object") return { ...d, missions: { ...d.missions }, notifications: { ...d.notifications } };
+  if (!raw || typeof raw !== "object")
+    return {
+      ...d,
+      missions: { ...d.missions },
+      xp: { ...d.xp },
+      notifications: { ...d.notifications },
+    };
   const o = raw as Record<string, unknown>;
 
   const missionsIn = (o.missions && typeof o.missions === "object" ? o.missions : {}) as Record<string, unknown>;
   const budgetIn = (o.budget && typeof o.budget === "object" ? o.budget : {}) as Record<string, unknown>;
   const savingsIn = (o.savings && typeof o.savings === "object" ? o.savings : {}) as Record<string, unknown>;
   const growthIn = (o.growth && typeof o.growth === "object" ? o.growth : {}) as Record<string, unknown>;
+  const xpIn = (o.xp && typeof o.xp === "object" ? o.xp : {}) as Record<string, unknown>;
   const notifIn = (o.notifications && typeof o.notifications === "object" ? o.notifications : {}) as Record<string, unknown>;
 
   const push = (k: keyof StrategyEngineParams["notifications"]): PushAreaStyle => {
@@ -118,6 +132,12 @@ export function normalizeStrategyEngineParams(raw: unknown): StrategyEngineParam
         growthIn.quarterlyLearningProgressTargetPct == null || growthIn.quarterlyLearningProgressTargetPct === ""
           ? null
           : clampInt(Number(growthIn.quarterlyLearningProgressTargetPct), 0, 100),
+    },
+    xp: {
+      quarterlyTargetXpEarned:
+        xpIn.quarterlyTargetXpEarned == null || xpIn.quarterlyTargetXpEarned === ""
+          ? null
+          : Math.max(0, Math.floor(Number(xpIn.quarterlyTargetXpEarned))),
     },
     notifications: {
       missions: push("missions"),
@@ -161,6 +181,7 @@ export function mergeStrategyEngineParams(
     budget: Partial<StrategyEngineParams["budget"]>;
     savings: Partial<StrategyEngineParams["savings"]>;
     growth: Partial<StrategyEngineParams["growth"]>;
+    xp: Partial<StrategyEngineParams["xp"]>;
     notifications: Partial<StrategyEngineParams["notifications"]>;
   }>
 ): StrategyEngineParams {
@@ -176,6 +197,9 @@ export function mergeStrategyEngineParams(
   }
   if (patch.growth) {
     base.growth = { ...base.growth, ...patch.growth };
+  }
+  if (patch.xp) {
+    base.xp = { ...base.xp, ...patch.xp };
   }
   if (patch.notifications) {
     base.notifications = { ...base.notifications, ...patch.notifications };

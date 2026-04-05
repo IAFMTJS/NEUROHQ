@@ -1736,12 +1736,17 @@ html[data-light-ui="true"] body {
 .bottom-nav {
   position: fixed;
   bottom: 0;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 100%;
-  max-width: min(420px, 100vw);
+  left: 0;
+  right: 0;
+  width: min(420px, 100%);
+  max-width: 100%;
+  margin-left: auto;
+  margin-right: auto;
+  box-sizing: border-box;
   padding-top: var(--bottom-nav-arch, 28px);
   padding-bottom: env(safe-area-inset-bottom);
+  padding-left: max(0px, env(safe-area-inset-left, 0px));
+  padding-right: max(0px, env(safe-area-inset-right, 0px));
   min-height: calc(var(--footer-height, 58px) + var(--bottom-nav-arch, 28px) + env(safe-area-inset-bottom));
   background: transparent;
   border: none;
@@ -1759,6 +1764,8 @@ html[data-light-ui="true"] body {
   z-index: 2;
   pointer-events: auto;
   width: 100%;
+  max-width: 100%;
+  min-width: 0;
   display: flex;
   align-items: flex-end;
   justify-content: center;
@@ -1770,6 +1777,8 @@ html[data-light-ui="true"] body {
 .bottom-nav-fab-bar {
   position: relative;
   width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
   border-radius: 1rem;
   border: 1px solid rgba(var(--mode-rgb), 0.22);
   background: linear-gradient(180deg, rgba(10, 24, 42, 0.94) 0%, rgba(4, 10, 20, 0.98) 100%);
@@ -1805,6 +1814,7 @@ html[data-light-ui="true"] body {
   justify-content: space-between;
   gap: 2px;
   width: 100%;
+  min-width: 0;
 }
 
 .bottom-nav-fab-cluster {
@@ -1841,10 +1851,15 @@ html[data-light-ui="true"] body {
 .bottom-nav-underlay {
   position: fixed;
   bottom: 0;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 100%;
-  max-width: min(420px, 100vw);
+  left: 0;
+  right: 0;
+  width: min(420px, 100%);
+  max-width: 100%;
+  margin-left: auto;
+  margin-right: auto;
+  box-sizing: border-box;
+  padding-left: max(0px, env(safe-area-inset-left, 0px));
+  padding-right: max(0px, env(safe-area-inset-right, 0px));
   height: calc(var(--footer-height, 58px) + var(--bottom-nav-arch, 28px) + 18px);
   min-height: 56px;
   padding-bottom: env(safe-area-inset-bottom);
@@ -1872,9 +1887,10 @@ html[data-light-ui="true"] body {
     right: 0 !important;
     width: 100% !important;
     max-width: none !important;
-    transform: none !important;
-    padding-left: env(safe-area-inset-left);
-    padding-right: env(safe-area-inset-right);
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    padding-left: max(0px, env(safe-area-inset-left, 0px));
+    padding-right: max(0px, env(safe-area-inset-right, 0px));
   }
   .bottom-nav-fab-stack {
     padding-left: max(6px, env(safe-area-inset-left, 0px));
@@ -1885,9 +1901,10 @@ html[data-light-ui="true"] body {
     right: 0 !important;
     width: 100% !important;
     max-width: none !important;
-    transform: none !important;
-    padding-left: env(safe-area-inset-left);
-    padding-right: env(safe-area-inset-right);
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    padding-left: max(0px, env(safe-area-inset-left, 0px));
+    padding-right: max(0px, env(safe-area-inset-right, 0px));
   }
 }
 

@@ -22,7 +22,9 @@ export function getSuggestedTaskCount(
     sleep_hours: number | null;
     physical_health?: number | null;
   },
-  missionEngine?: MissionEngineTuning | null
+  missionEngine?: MissionEngineTuning | null,
+  /** Quarter engine: extra minimum missions when strategy score / discipline is weak. */
+  missionFloorBonus = 0
 ): number {
   const { energy: e, sleep_hours: sleep, physical_health: phys } = input;
   const energyBand = bandFor10Scale(e);
@@ -41,7 +43,7 @@ export function getSuggestedTaskCount(
   if (!missionEngine) {
     n = Math.min(n, energyMax);
   } else {
-    const floor = missionFloorForEnergy(e, missionEngine);
+    const floor = missionFloorForEnergy(e, missionEngine) + Math.max(0, Math.min(4, missionFloorBonus));
     n = Math.max(n, floor);
     n = Math.min(8, n);
   }

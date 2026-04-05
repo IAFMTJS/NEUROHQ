@@ -16,7 +16,8 @@ import { StrategyFocusMultipliers } from "@/components/strategy/StrategyFocusMul
 import { StrategyPhaseIndicator } from "@/components/strategy/StrategyPhaseIndicator";
 import { StrategyArchiveHistory } from "@/components/strategy/StrategyArchiveHistory";
 import { StrategyIntegratedOverview } from "@/components/strategy/StrategyIntegratedOverview";
-import { StrategyTabsShell } from "@/components/strategy/StrategyTabsShell";
+import { StrategyQuarterCommandCenter } from "@/components/strategy/StrategyQuarterCommandCenter";
+import { getQuarterEngineSnapshot } from "@/app/actions/quarter-engine-snapshot";
 import { getBehaviorProfile } from "@/app/actions/behavior-profile";
 import { getStrategyIntegrationOverview } from "@/app/actions/strategy-integration";
 import { getStrategyPacingHints } from "@/app/actions/strategy-engine-pacing";
@@ -128,8 +129,9 @@ async function StrategyContent({ simplifiedLayout = false }: { simplifiedLayout?
   let neuroBudgetHint: string | null = null;
   let strategyIntegration: Awaited<ReturnType<typeof getStrategyIntegrationOverview>> = null;
   let strategyEngineHints: Awaited<ReturnType<typeof getStrategyPacingHints>> = null;
+  let quarterSnapshot: Awaited<ReturnType<typeof getQuarterEngineSnapshot>> = null;
   try {
-    const [p, a, log, mom, drift, review, behaviorProfile, integration, engineHints] = await Promise.all([
+    const [p, a, log, mom, drift, review, behaviorProfile, integration, engineHints, quarter] = await Promise.all([
       getPressureIndex(strategy.id),
       getAlignmentThisWeek(strategy.id),
       getAlignmentLog(strategy.id, 14),
@@ -139,6 +141,7 @@ async function StrategyContent({ simplifiedLayout = false }: { simplifiedLayout?
       getBehaviorProfile(),
       getStrategyIntegrationOverview(),
       getStrategyPacingHints(),
+      getQuarterEngineSnapshot(),
     ]);
     pressureData = p ?? pressureData;
     alignmentThisWeek = a ?? alignmentThisWeek;
@@ -149,6 +152,7 @@ async function StrategyContent({ simplifiedLayout = false }: { simplifiedLayout?
     neuroBudgetHint = neuroStrategyBudgetHint(behaviorProfile.neuroProfileTags);
     strategyIntegration = integration;
     strategyEngineHints = engineHints;
+    quarterSnapshot = quarter;
   } catch {
     // Fallbacks already set
   }
@@ -168,46 +172,46 @@ async function StrategyContent({ simplifiedLayout = false }: { simplifiedLayout?
   const reviewBanner =
     reviewStatus.reviewDue ? (
       <div className="rounded-xl border border-amber-500/40 bg-amber-500/10 px-4 py-3 text-sm text-amber-200">
-        <strong>Zonder review: nieuwe week inactive.</strong> Voltooi je wekelijkse review in het tabblad Review om de strategie actief te houden.
+        <strong>Zonder review: nieuwe week inactive.</strong> Voltooi je wekelijkse review hieronder om de strategie
+        actief te houden.
       </div>
     ) : null;
 
-  const tabs = (
-    <StrategyTabsShell
-      simplifiedLayout={simplifiedLayout}
-      banner={reviewBanner}
-      belowTabsSlot={
-        !simplifiedLayout ? (
-          <p className="text-center text-xs text-[var(--text-muted)]">
-            Overzicht, allocatie, momentum en review — hieronder thesis en stack.
-          </p>
-        ) : undefined
-      }
-      overview={
-        <>
-          <StrategyIntegratedOverview integrationData={strategyIntegration} />
-          <StrategyThesisHero
-            thesis={strategy.thesis}
-            thesisWhy={strategy.thesis_why}
-            deadline={strategy.deadline}
-            targetMetric={strategy.target_metric}
-            pressure={pressureData.pressure}
-            zone={pressureData.zone}
-            daysRemaining={pressureData.daysRemaining}
-          />
-        </>
-      }
-      focusBudget={
-        <>
+  const detailsClass =
+    "rounded-xl border border-[var(--card-border)] bg-[var(--bg-elevated)]/60 px-4 py-3 text-sm text-[var(--text-secondary)]";
+  const summaryClass =
+    "cursor-pointer list-none font-semibold text-[var(--text-primary)] marker:content-none [&::-webkit-details-marker]:hidden";
+
+  const mainStack = (
+    <div className={simplifiedLayout ? "space-y-6" : "space-y-5"}>
+      {reviewBanner}
+      {quarterSnapshot ? (
+        <StrategyQuarterCommandCenter snapshot={quarterSnapshot} simplifiedLayout={simplifiedLayout} />
+      ) : null}
+      {analysisSnapshot ? <StrategyAnalysisSquare snapshot={analysisSnapshot} /> : null}
+      <StrategyIntegratedOverview integrationData={strategyIntegration} />
+      <StrategyThesisHero
+        thesis={strategy.thesis}
+        thesisWhy={strategy.thesis_why}
+        deadline={strategy.deadline}
+        targetMetric={strategy.target_metric}
+        pressure={pressureData.pressure}
+        zone={pressureData.zone}
+        daysRemaining={pressureData.daysRemaining}
+      />
+      <details className={detailsClass} open={!simplifiedLayout}>
+        <summary className={summaryClass}>Allocatie & focus</summary>
+        <div className="mt-4 space-y-5 border-t border-[rgba(var(--mode-rgb),0.1)] pt-4">
           <StrategyFocusMultipliers
             primaryDomain={strategy.primary_domain}
             secondaryDomains={strategy.secondary_domains}
           />
           <StrategyAllocationSliders initialAllocation={strategy.weekly_allocation} neuroHint={neuroBudgetHint} />
-        </>
-      }
-      alignment={
-        <>
+        </div>
+      </details>
+      <details className={detailsClass} open={!simplifiedLayout}>
+        <summary className={summaryClass}>Alignment & momentum</summary>
+        <div className="mt-4 space-y-5 border-t border-[rgba(var(--mode-rgb),0.1)] pt-4">
           <StrategyAlignmentGraph
             plannedDistribution={alignmentThisWeek.planned}
             actualDistribution={alignmentThisWeek.actual}
@@ -215,13 +219,14 @@ async function StrategyContent({ simplifiedLayout = false }: { simplifiedLayout?
             alignmentLog={alignmentLogTrend}
           />
           <StrategyMomentumPerDomain momentumByDomain={momentum} />
-          {driftAlert && (
+          {driftAlert ? (
             <StrategyDriftAlertBlock message={driftAlert.message} pctOff={driftAlert.pctOff} />
-          )}
-        </>
-      }
-      review={
-        <>
+          ) : null}
+        </div>
+      </details>
+      <details className={detailsClass} open={!simplifiedLayout}>
+        <summary className={summaryClass}>Review & archief</summary>
+        <div className="mt-4 space-y-5 border-t border-[rgba(var(--mode-rgb),0.1)] pt-4">
           <StrategyPhaseIndicator phase={strategy.phase} />
           <StrategyWeeklyReviewCTA
             strategyId={strategy.id}
@@ -232,21 +237,14 @@ async function StrategyContent({ simplifiedLayout = false }: { simplifiedLayout?
           />
           <StrategyArchiveCTA strategyId={strategy.id} />
           <StrategyArchiveHistory past={past} />
-        </>
-      }
-    />
+        </div>
+      </details>
+    </div>
   );
 
   return (
     <div data-tutorial="strategy-content" className={simplifiedLayout ? "space-y-6" : "space-y-4"}>
-      {analysisSnapshot ? (
-        <>
-          <StrategyAnalysisSquare snapshot={analysisSnapshot} />
-          <div className="mt-4 border-t border-[rgba(var(--mode-rgb),0.12)] pt-6">{tabs}</div>
-        </>
-      ) : (
-        tabs
-      )}
+      {mainStack}
     </div>
   );
 }
@@ -264,6 +262,7 @@ export default async function StrategyPage() {
           hideTitleBar
           footerLinks={[
             { href: "/tasks", label: "Missions" },
+            { href: "/profile#strategy-engine", label: "Engine" },
             { href: profileInsightsHref("overview"), label: "Insights" },
             { href: "/budget", label: "Budget" },
           ]}

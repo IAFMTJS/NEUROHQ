@@ -177,7 +177,7 @@ export function DashboardLayoutClient({
             <PushAutoPrompt />
             <PushClickTracker />
             <div
-              className="relative flex min-h-screen max-h-[100dvh] w-full max-w-[100vw] flex-col overflow-x-hidden bg-transparent"
+              className="relative flex min-h-screen max-h-[100dvh] w-full min-w-0 max-w-full flex-col overflow-x-hidden bg-transparent"
               data-ui="dark-commander"
               data-mode={mode}
               data-deck-chrome={deckChrome ? "true" : undefined}
@@ -206,7 +206,7 @@ export function DashboardLayoutClient({
               >
                 ⚙
               </Link>
-              <div className="relative z-10 mx-auto flex min-h-0 max-h-[100dvh] w-full max-w-[100vw] flex-1 flex-col overflow-hidden bg-transparent md:min-h-[640px]">
+              <div className="relative z-10 mx-auto flex min-h-0 max-h-[100dvh] w-full min-w-0 max-w-full flex-1 flex-col overflow-hidden bg-transparent md:min-h-[640px]">
                 {children}
               </div>
               <div className="bottom-nav-underlay" aria-hidden />

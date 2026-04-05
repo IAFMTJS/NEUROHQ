@@ -26,7 +26,8 @@ export function StrategyThesisHero({
   const countdown = daysRemaining > 0
     ? formatDistanceToNow(deadlineDate, { addSuffix: false, locale: nl })
     : "Afgelopen";
-  const zoneLabel = zone === "comfort" ? "Comfortabel" : zone === "healthy" ? "Gezond" : "Risk zone";
+  const zoneLabel =
+    zone === "comfort" ? "Ontspannen" : zone === "healthy" ? "Normaal" : "Druk (engine)";
   const meterColor =
     zone === "comfort"
       ? "var(--accent-focus)"

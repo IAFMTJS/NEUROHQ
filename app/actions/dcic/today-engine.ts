@@ -67,7 +67,7 @@ export async function getTodayEngine(
   const streakAtRisk = lastCompletion !== yesterdayStr && lastCompletion !== dateStr;
 
   const sinceIso = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
-  const [{ data: dailyRow }, { data: sfRow }, { data: adaptiveEventRows }] = await Promise.all([
+  const [{ data: dailyRow }, { data: sfRow }, { data: adaptiveEventRows }, quarterSnap] = await Promise.all([
     supabase
       .from("daily_state")
       .select("energy, focus, sensory_load, mental_battery, load, social_load, physical_health, sleep_hours")
@@ -92,6 +92,7 @@ export async function getTodayEngine(
         "mission_deleted",
         "mission_aborted",
       ]),
+    import("@/app/actions/quarter-engine-snapshot").then((m) => m.getQuarterEngineSnapshot()),
   ]);
 
   const missionTuning: MissionEngineTuning | null = sfRow
@@ -107,6 +108,7 @@ export async function getTodayEngine(
     sleep_hours?: number | null;
   } | null;
 
+  const missionFloorBonus = quarterSnap?.modifiers.extraMissionFloorDelta ?? 0;
   const missionEquivalentCap = ds
     ? getSuggestedTaskCount(
         {
@@ -117,7 +119,8 @@ export async function getTodayEngine(
           sleep_hours: ds.sleep_hours ?? null,
           physical_health: ds.physical_health ?? null,
         },
-        missionTuning
+        missionTuning,
+        missionFloorBonus
       )
     : undefined;
 

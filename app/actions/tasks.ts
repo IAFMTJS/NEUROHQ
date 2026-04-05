@@ -395,6 +395,8 @@ export async function deleteTask(id: string) {
     .eq("id", id)
     .eq("user_id", user.id);
   if (error) throw new Error(error.message);
+  const { logMissionOutcome } = await import("./mission-outcome-events");
+  await logMissionOutcome(id, "delete");
   await trackEvent("mission_deleted", { taskId: id });
   if (dueDate) revalidateTagMax(`tasks-${user.id}-${dueDate}`);
   revalidateTagMax("decision-blocks");
@@ -470,6 +472,8 @@ export async function snoozeTask(id: string) {
     .eq("id", id)
     .eq("user_id", user.id);
   if (error) throw new Error(error.message);
+  const { logMissionOutcome } = await import("./mission-outcome-events");
+  await logMissionOutcome(id, "reschedule");
   const tag = row.avoidance_tag ?? null;
   if (tag === "household" || tag === "administration" || tag === "social") {
     await incrementAvoidanceSkip(tag);
@@ -491,6 +495,13 @@ export async function skipNextOccurrence(id: string) {
   const row = task as { due_date?: string | null; recurrence_rule?: string | null; recurrence_weekdays?: string | null } | null;
   if (!row?.due_date || !row.recurrence_rule) return;
 
+  const { assertMissionSkipAllowed } = await import("./mission-outcome-events");
+  try {
+    await assertMissionSkipAllowed();
+  } catch (e) {
+    throw e instanceof Error ? e : new Error("Skip niet toegestaan.");
+  }
+
   const nextStr = computeNextRecurrenceDate(row.due_date, row.recurrence_rule, row.recurrence_weekdays ?? null);
   if (!nextStr) return;
 
@@ -500,6 +511,9 @@ export async function skipNextOccurrence(id: string) {
     .eq("id", id)
     .eq("user_id", user.id);
   if (error) throw new Error(error.message);
+
+  const { logMissionOutcome } = await import("./mission-outcome-events");
+  await logMissionOutcome(id, "skip");
 
   revalidatePath("/dashboard");
   revalidatePath("/tasks");
@@ -748,6 +762,11 @@ export async function rescheduleTask(id: string, due_date: string) {
     .eq("id", id)
     .eq("user_id", user.id);
   if (error) throw new Error(error.message);
+
+  if (oldDueDate !== due_date) {
+    const { logMissionOutcome } = await import("./mission-outcome-events");
+    await logMissionOutcome(id, "reschedule");
+  }
 
   // Invalidate cache for the new date (and old date if different).
   revalidateTagMax(`tasks-${user.id}-${due_date}`);

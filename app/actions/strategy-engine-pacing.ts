@@ -32,7 +32,8 @@ export async function getStrategyPacingHints(): Promise<StrategyPacingHints | nu
   if (!ep) return null;
   const saveT = ep.savings.quarterlyMustSaveCents;
   const learnT = ep.growth.quarterlyLearningProgressTargetPct;
-  if (saveT == null && learnT == null) return null;
+  const xpT = ep.xp.quarterlyTargetXpEarned;
+  if (saveT == null && learnT == null && (xpT == null || xpT <= 0)) return null;
 
   const today = todayDateString();
   const { start, end } = calendarQuarterBounds(today);

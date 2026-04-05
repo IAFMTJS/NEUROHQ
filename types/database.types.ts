@@ -1630,6 +1630,48 @@ export type Database = {
           },
         ]
       }
+      mission_outcome_events: {
+        Row: {
+          created_at: string
+          id: string
+          occurred_at: string
+          outcome: string
+          task_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          occurred_at?: string
+          outcome: string
+          task_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          occurred_at?: string
+          outcome?: string
+          task_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mission_outcome_events_task_id_fkey"
+            columns: ["task_id"]
+            isOneToOne: false
+            referencedRelation: "tasks"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "mission_outcome_events_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       mission_state: {
         Row: {
           active_mission_id: string | null
