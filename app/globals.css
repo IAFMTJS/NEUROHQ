@@ -2549,7 +2549,7 @@ body {
     0 0 0 1px rgba(var(--mode-rgb), 0.06);
 }
 
-/* Hub pages (all except /dashboard): same ambient scroll shell as Missions */
+/* Main scroll area: flat-glass ambient shell on all dashboard routes */
 main#main-content.hq-deck-ambient-shell {
   background:
     radial-gradient(ellipse 92% 50% at 50% -14%, rgba(var(--mode-rgb), 0.22), transparent 58%),

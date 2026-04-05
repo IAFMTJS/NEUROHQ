@@ -12,8 +12,8 @@ import { StrategyAnalysisSplitRing } from "@/components/strategy/StrategyAnalysi
 import { ZoneBandBar } from "@/components/visual-lab/VisualLabBars";
 import { PolygonHudMeter } from "@/components/visual-lab/VisualLabPolygonMeters";
 import { VisualLabShapeEnergyRing } from "@/components/visual-lab/VisualLabShapeEnergyRing";
-import { VisualLabDashboardReimaginedConcepts } from "@/components/visual-lab/VisualLabDashboardReimaginedConcepts";
-import { VisualLabStrategyReimaginedConcepts } from "@/components/visual-lab/VisualLabStrategyReimaginedConcepts";
+import { VisualLabDashboardOneScreenConcept } from "@/components/visual-lab/VisualLabDashboardOneScreenConcept";
+import { VisualLabStrategyBalancedConcept } from "@/components/visual-lab/VisualLabStrategyBalancedConcept";
 import { VisualLabNotificationsPageConcept } from "@/components/visual-lab/VisualLabUserPageConcepts";
 import {
   VISUAL_LAB_UI_BACKDROP_ORDER,
@@ -138,7 +138,7 @@ function ledClasses(tone: (typeof MOCK_STATUS)[number]["tone"]) {
 
 export function VisualLabClient() {
   const [uiBackdrop, setUiBackdrop] =
-    useState<VisualLabUiBackdropId>("strategyAnalysis");
+    useState<VisualLabUiBackdropId>("minimalGlass");
   const activeBackdrop = VISUAL_LAB_UI_BACKDROP_PRESETS[uiBackdrop];
   const [pageShell, setPageShell] = useState<VisualLabPageShellId>(
     "hubFlatDashboard",
@@ -269,7 +269,7 @@ export function VisualLabClient() {
                 UI panel shells
               </h2>
               <span className="max-w-xs text-right text-[10px] leading-snug text-[var(--text-muted)]">
-                Achtergrond van dit artikel — default = Strategy Analyse-kaart
+                Achtergrond van dit artikel — default = Flat glas (zoals productie)
               </span>
             </div>
             <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-6">
@@ -322,14 +322,14 @@ export function VisualLabClient() {
               <code className="rounded bg-black/30 px-1 text-[10px]">
                 space-y-6
               </code>
-              . Hieronder: drie dashboard-reimaginings (mascotte + tokens), daarna drie
-              strategy-reimaginings, dan het meldingen-deck.
+              . Hieronder: dashboard als één scherm-view, strategy als gebalanceerde
+              enkelvoudige layout, daarna het meldingen-deck.
             </p>
           </div>
 
-          <VisualLabDashboardReimaginedConcepts />
+          <VisualLabDashboardOneScreenConcept />
 
-          <VisualLabStrategyReimaginedConcepts />
+          <VisualLabStrategyBalancedConcept />
 
           <VisualLabNotificationsPageConcept />
 

@@ -31,11 +31,11 @@ const STRATEGY_ANALYSIS_RADIAL =
   "pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_75%_55%_at_50%_0%,rgba(var(--mode-rgb),0.16),transparent_58%),radial-gradient(ellipse_at_80%_0%,rgba(var(--mode-rgb),0.1),transparent_55%)]";
 
 export const VISUAL_LAB_UI_BACKDROP_ORDER: VisualLabUiBackdropId[] = [
+  "minimalGlass",
   "strategyAnalysis",
   "insightHub",
   "toastDeep",
   "budgetEmerald",
-  "minimalGlass",
   "sandboxLegacy",
 ];
 

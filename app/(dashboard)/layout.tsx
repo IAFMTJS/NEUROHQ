@@ -2,7 +2,7 @@ import { DashboardLayoutClient } from "@/components/dashboard/DashboardLayoutCli
 import { BootstrapGate } from "@/components/bootstrap/BootstrapGate";
 import { DashboardMainContent } from "@/components/layout/DashboardMainContent";
 
-/** Auth enforced by proxy. Client main shell applies flat glass on all routes except `/dashboard`. */
+/** Auth enforced by proxy. Client main uses flat-glass ambient scroll shell on all dashboard routes. */
 export default function DashboardLayout({
   children,
 }: {

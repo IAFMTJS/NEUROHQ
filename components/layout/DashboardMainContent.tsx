@@ -6,11 +6,6 @@ import { AcceptanceGateLayer } from "@/components/acceptance/AcceptanceGateLayer
 import { PwaStatusChip } from "@/components/PwaStatusChip";
 import type { ReactNode } from "react";
 
-function isDashboardHome(pathname: string) {
-  const p = (pathname.replace(/\/$/, "") || "/") as string;
-  return p === "/dashboard";
-}
-
 function isTasksRoute(pathname: string) {
   const p = pathname.replace(/\/$/, "") || "/";
   return p === "/tasks" || p.startsWith("/tasks/");
@@ -34,22 +29,18 @@ type Props = {
   children: ReactNode;
 };
 
-/** Scroll shell: global frost is on `#app-shell`; hub pages (all except `/dashboard`) get `hq-deck-ambient-shell` like Missions. */
+/** Scroll shell: global frost is on `#app-shell`; main uses `hq-deck-ambient-shell` on every route (flat-glass ambient). */
 export function DashboardMainContent({ children }: Props) {
   const pathname = usePathname();
-  const dashboardHome = isDashboardHome(pathname);
-  const tasksShell = !dashboardHome && isTasksRoute(pathname);
-  const profileShell = !dashboardHome && isProfileRoute(pathname);
-  const deckAmbient = !dashboardHome;
+  const tasksShell = isTasksRoute(pathname);
+  const profileShell = isProfileRoute(pathname);
 
   return (
     <main
       id="main-content"
-      data-page-surface={dashboardHome ? "dashboard-home" : "flat-glass"}
+      data-page-surface="flat-glass"
       data-page-route={tasksShell ? "tasks" : profileShell ? "profile" : undefined}
-      className={`scrollbar-hide relative z-10 min-h-0 flex-1 overflow-auto ${
-        deckAmbient ? "hq-deck-ambient-shell" : "bg-transparent"
-      }`}
+      className="scrollbar-hide hq-deck-ambient-shell relative z-10 min-h-0 flex-1 overflow-auto"
       style={mainPaddingStyle}
       tabIndex={-1}
     >
