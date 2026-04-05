@@ -1,17 +1,20 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import type { SupabaseClient } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/server";
 import { addXP } from "@/app/actions/xp";
-import type { Json } from "@/types/database.types";
+import type { Database, Json } from "@/types/database.types";
 import { isPlatformGameLive } from "@/lib/platform-games";
 import {
   answerWin,
   checklistWin,
   parsePlatformGameProgressSpec,
   parseProgressState,
+  type PlatformGameAutoPublic,
   type PlatformGameStateShape,
 } from "@/lib/platform-games-config";
+import { evaluatePlatformGameAutoRules } from "@/lib/platform-games-metrics-eval";
 
 async function requireUser() {
   const supabase = await createClient();
@@ -20,6 +23,69 @@ async function requireUser() {
   } = await supabase.auth.getUser();
   if (!user) throw new Error("Niet ingelogd.");
   return { supabase, userId: user.id };
+}
+
+type GameRowMini = { id: string; starts_at: string; ends_at: string | null; config: Json };
+
+/**
+ * Evalueert auto-metrische regels, schrijft completed_at + XP indien gehaald, en geeft live status terug voor de UI.
+ */
+export async function evaluateAndSyncAutoPlatformGame(
+  supabase: SupabaseClient<Database>,
+  userId: string,
+  game: GameRowMini
+): Promise<{ autoPublic: PlatformGameAutoPublic | null; completedAt: string | null }> {
+  const spec = parsePlatformGameProgressSpec(game.config);
+  if (spec.mode !== "auto" || spec.autoRules.length === 0) {
+    return { autoPublic: null, completedAt: null };
+  }
+
+  const { data: row } = await supabase
+    .from("user_platform_game_progress")
+    .select("state, completed_at")
+    .eq("user_id", userId)
+    .eq("game_id", game.id)
+    .maybeSingle();
+
+  const existingCompleted = row?.completed_at ?? null;
+
+  const { satisfied, results } = await evaluatePlatformGameAutoRules(
+    supabase,
+    userId,
+    game.starts_at,
+    game.ends_at,
+    spec.autoRules,
+    spec.autoWinLogic
+  );
+
+  const autoPublic: PlatformGameAutoPublic = {
+    winLogic: spec.autoWinLogic,
+    rules: results,
+    satisfied,
+  };
+
+  if (satisfied && !existingCompleted) {
+    const nowIso = new Date().toISOString();
+    const prev = parseProgressState(row?.state as Json);
+    const { error } = await supabase.from("user_platform_game_progress").upsert(
+      {
+        user_id: userId,
+        game_id: game.id,
+        state: prev as unknown as Json,
+        updated_at: nowIso,
+        completed_at: nowIso,
+      },
+      { onConflict: "user_id,game_id" }
+    );
+    if (!error && spec.rewardXp > 0) {
+      await addXP(spec.rewardXp, { source_type: "platform_game_win", skipOverdriveMultiplier: true });
+    }
+    revalidatePath("/profile");
+    revalidatePath("/dashboard");
+    return { autoPublic, completedAt: nowIso };
+  }
+
+  return { autoPublic, completedAt: existingCompleted };
 }
 
 async function loadLiveGame(supabase: Awaited<ReturnType<typeof createClient>>, gameId: string) {

@@ -3,11 +3,13 @@
 import { useTransition, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createPlatformGame } from "@/app/actions/admin-platform-games";
+import { AdminGamePresetBuilder } from "@/components/admin/AdminGamePresetBuilder";
 
 export function AdminGameCreateForm() {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [err, setErr] = useState<string | null>(null);
+  const [configJson, setConfigJson] = useState("{}");
 
   return (
     <form
@@ -22,7 +24,7 @@ export function AdminGameCreateForm() {
         const startsLocal = String(fd.get("starts_at") ?? "").trim();
         const endsLocal = String(fd.get("ends_at") ?? "").trim();
         const active = fd.get("active") === "on";
-        const config_json = String(fd.get("config_json") ?? "").trim();
+        const config_json = configJson.trim();
 
         if (!title || !body) {
           setErr("Titel en beschrijving zijn verplicht.");
@@ -36,6 +38,7 @@ export function AdminGameCreateForm() {
           try {
             await createPlatformGame({ title, body, starts_at, ends_at, active, config_json });
             form.reset();
+            setConfigJson("{}");
             router.refresh();
           } catch (er) {
             setErr(er instanceof Error ? er.message : "Opslaan mislukt.");
@@ -74,27 +77,28 @@ export function AdminGameCreateForm() {
             placeholder="Voltooi deze week vijf missies om deel te nemen aan de prijzenpot."
           />
         </div>
-        <div className="sm:col-span-2">
-          <label htmlFor="pg-config" className="mb-1 block text-xs font-medium text-white/50">
-            Config (JSON) — parameters + optioneel voortgang / win
-          </label>
-          <textarea
-            id="pg-config"
-            name="config_json"
-            rows={6}
-            defaultValue="{}"
-            className="w-full resize-y rounded-lg border border-white/15 bg-black/40 px-3 py-2 font-mono text-[11px] leading-relaxed text-white outline-none focus:ring-2 focus:ring-amber-500/50"
-            placeholder='{"progress":{"mode":"checklist","checklist":[{"id":"a","label":"Stap"}]}}'
-          />
-          <p className="mt-1 text-[10px] text-white/35">
-            <span className="text-amber-200/80">Voortgang:</span> <code className="text-white/50">progress.mode</code>{" "}
-            <code className="text-white/50">&quot;checklist&quot;</code> + <code className="text-white/50">checklist[]</code> met{" "}
-            <code className="text-white/50">id</code>/<code className="text-white/50">label</code>, of{" "}
-            <code className="text-white/50">&quot;answer&quot;</code> + <code className="text-white/50">accepts</code> (array
-            toegestane antwoorden, blijft server-side) + <code className="text-white/50">prompt</code>. Optioneel{" "}
-            <code className="text-white/50">rewardXp</code> bij voltooien. Platte sleutels naast <code className="text-white/50">progress</code>{" "}
-            blijven zichtbaar als uitleg.
-          </p>
+        <div className="sm:col-span-2 space-y-3">
+          <AdminGamePresetBuilder configJson={configJson} setConfigJson={setConfigJson} />
+          <div>
+            <label htmlFor="pg-config" className="mb-1 block text-xs font-medium text-white/50">
+              Config (JSON) — parameters + voortgang
+            </label>
+            <textarea
+              id="pg-config"
+              name="config_json"
+              rows={8}
+              value={configJson}
+              onChange={(e) => setConfigJson(e.target.value)}
+              className="w-full resize-y rounded-lg border border-white/15 bg-black/40 px-3 py-2 font-mono text-[11px] leading-relaxed text-white outline-none focus:ring-2 focus:ring-amber-500/50"
+              placeholder='{"progress":{"mode":"auto","winLogic":"all","rules":[...]}}'
+            />
+            <p className="mt-1 text-[10px] text-white/35">
+              <span className="text-amber-200/80">Handmatig:</span> <code className="text-white/50">progress.mode</code>{" "}
+              <code className="text-white/50">&quot;checklist&quot;</code>, <code className="text-white/50">&quot;answer&quot;</code>{" "}
+              of <code className="text-white/50">&quot;auto&quot;</code> (automatische meting; zie preset-builder). Optioneel{" "}
+              <code className="text-white/50">rewardXp</code> / <code className="text-white/50">winMessage</code>.
+            </p>
+          </div>
         </div>
         <div>
           <label htmlFor="pg-starts" className="mb-1 block text-xs font-medium text-white/50">

@@ -46,9 +46,11 @@ export default async function AdminGamesPage() {
         <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-amber-400/90">Games</p>
         <h1 className="text-xl font-semibold text-white">Platform-games</h1>
         <p className="mt-1 max-w-xl text-sm text-white/50">
-          Spellen of challenges voor alle gebruikers. Je kiest wanneer ze starten (en optioneel eindigen), past tekst en JSON-config aan.
-          Met <code className="rounded bg-black/30 px-1 font-mono text-[11px]">progress</code> in de config kun je checklist- of
-          antwoord-win definiëren; voortgang staat per gebruiker in de database (zie formulierhulp onder &quot;Nieuwe game&quot;).
+          Challenges voor alle gebruikers: start/einde, tekst, en win-voorwaarden. Gebruik de{" "}
+          <strong className="text-white/70">preset-builder</strong> voor automatische meting (missies, learning, budget, brain
+          check-in, streak, …) per <strong className="text-white/70">hele periode</strong>, <strong className="text-white/70">dagelijks</strong>{" "}
+          of momentopname — of handmatig JSON met <code className="rounded bg-black/30 px-1 font-mono text-[11px]">progress.mode</code>{" "}
+          <code className="text-white/45">checklist</code>, <code className="text-white/45">answer</code> of <code className="text-white/45">auto</code>.
         </p>
       </header>
 

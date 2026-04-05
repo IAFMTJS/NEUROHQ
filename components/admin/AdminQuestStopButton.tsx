@@ -21,7 +21,7 @@ export function AdminQuestStopButton({ campaignId, slug, variant = "default", on
     const label = slug ? `“${slug}”` : "deze campagne";
     if (
       !confirm(
-        `${label} nu stoppen? Actief wordt uitgezet en het event eindigt nu voor spelers (indien nog bezig). Voortgang blijft bewaard.`
+        `${label} nu stoppen? De campagne gaat uit voor spelers en alle opgeslagen quest-voortgang (voor alle gebruikers) voor deze campagne wordt gewist. Reeds toegekende finale-XP of achievements worden niet teruggedraaid.`
       )
     ) {
       return;

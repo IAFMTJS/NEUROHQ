@@ -1,8 +1,13 @@
 import type { Json } from "@/types/database.types";
 import { answerMatchesAccepts, normalizeQuestAnswer } from "@/lib/quests/engine";
+import {
+  parseAutoRulesFromConfig,
+  type PlatformGameAutoRuleParsed,
+  type RuleEvalResult,
+} from "@/lib/platform-games-metrics-eval";
 
 export type PlatformGameProgressSpec = {
-  mode: "none" | "checklist" | "answer";
+  mode: "none" | "checklist" | "answer" | "auto";
   checklist: { id: string; label: string }[];
   /** Alleen server-side (zit in DB-config, nooit naar client). */
   accepts: string[];
@@ -10,6 +15,9 @@ export type PlatformGameProgressSpec = {
   answerPlaceholder: string | null;
   winMessage: string | null;
   rewardXp: number;
+  /** Automatische meting o.b.v. site-data (taken, learning, …). */
+  autoWinLogic: "all" | "any";
+  autoRules: PlatformGameAutoRuleParsed[];
 };
 
 const EMPTY: PlatformGameProgressSpec = {
@@ -20,6 +28,8 @@ const EMPTY: PlatformGameProgressSpec = {
   answerPlaceholder: null,
   winMessage: null,
   rewardXp: 0,
+  autoWinLogic: "all",
+  autoRules: [],
 };
 
 function asRecord(v: unknown): Record<string, unknown> | null {
@@ -47,7 +57,7 @@ export function parsePlatformGameProgressSpec(config: Json | null | undefined): 
         : "none";
 
   let mode: PlatformGameProgressSpec["mode"] = "none";
-  if (modeRaw === "checklist" || modeRaw === "answer") mode = modeRaw;
+  if (modeRaw === "checklist" || modeRaw === "answer" || modeRaw === "auto") mode = modeRaw;
 
   const checklist: { id: string; label: string }[] = [];
   const checklistRaw = prog.checklist;
@@ -69,6 +79,9 @@ export function parsePlatformGameProgressSpec(config: Json | null | undefined): 
     }
   }
 
+  const { winLogic: autoWinLogic, rules: autoRules } = parseAutoRulesFromConfig(prog);
+  if (mode === "auto" && autoRules.length === 0) mode = "none";
+
   if (mode === "checklist" && checklist.length === 0) mode = "none";
   if (mode === "answer" && accepts.length === 0) mode = "none";
 
@@ -89,7 +102,7 @@ export function parsePlatformGameProgressSpec(config: Json | null | undefined): 
     rewardXp = Math.min(1_000_000, Math.round(root.rewardXp));
   }
 
-  return { mode, checklist, accepts, prompt, answerPlaceholder, winMessage, rewardXp };
+  return { mode, checklist, accepts, prompt, answerPlaceholder, winMessage, rewardXp, autoWinLogic, autoRules };
 }
 
 /** Verwijdert geheime velden voor API / profiel payload. */
@@ -137,3 +150,10 @@ export function answerWin(spec: PlatformGameProgressSpec, rawAnswer: string): bo
   if (!trimmed) return false;
   return answerMatchesAccepts(normalizeQuestAnswer(trimmed), spec.accepts);
 }
+
+/** Publieke weergave van auto-evaluatie (server vult dit in). */
+export type PlatformGameAutoPublic = {
+  winLogic: "all" | "any";
+  rules: RuleEvalResult[];
+  satisfied: boolean;
+};

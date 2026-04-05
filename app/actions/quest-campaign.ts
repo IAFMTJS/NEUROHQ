@@ -457,7 +457,7 @@ export async function submitQuestAnswer(campaignId: string, answer: string): Pro
   };
 }
 
-/** Admin: upsert campaign by slug (creates if missing). */
+/** Admin: upsert campaign by slug (creates if missing). Returns campaign id. */
 export async function adminUpsertQuestCampaign(input: {
   slug?: string;
   title: string;
@@ -510,15 +510,23 @@ export async function adminUpsertQuestCampaign(input: {
   if (existing?.id) {
     const { error } = await supabase.from("platform_quest_campaigns").update(base).eq("id", existing.id);
     if (error) throw new Error(error.message);
-  } else {
-    const { error } = await supabase.from("platform_quest_campaigns").insert({ ...base, created_at: now });
-    if (error) throw new Error(error.message);
+    revalidatePath("/admin/quests");
+    revalidatePath("/admin/games");
+    return { id: existing.id };
   }
+  const { data: inserted, error } = await supabase
+    .from("platform_quest_campaigns")
+    .insert({ ...base, created_at: now })
+    .select("id")
+    .single();
+  if (error) throw new Error(error.message);
+  if (!inserted?.id) throw new Error("Campagne aangemaakt maar geen id ontvangen.");
   revalidatePath("/admin/quests");
   revalidatePath("/admin/games");
+  return { id: inserted.id as string };
 }
 
-/** Admin: quest onmiddellijk beëindigen — niet meer zichtbaar voor spelers. Zet `active` uit en zet `ends_at` op nu als het event nog liep. */
+/** Admin: quest onmiddellijk beëindigen — niet meer zichtbaar voor spelers. Zet `active` uit, eindigt het event indien nodig, en wist alle gebruikersvoortgang voor deze campagne. */
 export async function adminStopQuestCampaign(campaignId: string) {
   const admin = await getAdminSessionUser();
   if (!admin) throw new Error("Geen beheerderstoegang.");
@@ -548,6 +556,9 @@ export async function adminStopQuestCampaign(campaignId: string) {
 
   const { error } = await supabase.from("platform_quest_campaigns").update(patch).eq("id", campaignId);
   if (error) throw new Error(error.message);
+
+  const { error: delErr } = await supabase.from("user_quest_campaign_progress").delete().eq("campaign_id", campaignId);
+  if (delErr) throw new Error(delErr.message);
 
   revalidatePath("/admin/quests");
   revalidatePath("/admin/games");

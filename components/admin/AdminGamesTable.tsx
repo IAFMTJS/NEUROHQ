@@ -8,6 +8,7 @@ import {
   stopPlatformGameNow,
   updatePlatformGame,
 } from "@/app/actions/admin-platform-games";
+import { AdminGamePresetBuilder } from "@/components/admin/AdminGamePresetBuilder";
 import type { Tables } from "@/types/database.types";
 
 type GameRow = Tables<"platform_games">;
@@ -25,6 +26,142 @@ function formatConfig(config: unknown): string {
   } catch {
     return "{}";
   }
+}
+
+function AdminGameEditForm({
+  g,
+  pending,
+  onSaved,
+}: {
+  g: GameRow;
+  pending: boolean;
+  onSaved: () => void;
+}) {
+  const router = useRouter();
+  const [configJson, setConfigJson] = useState(() => formatConfig(g.config));
+  const [pendingSave, startSave] = useTransition();
+
+  return (
+    <form
+      className="space-y-3"
+      onSubmit={(e) => {
+        e.preventDefault();
+        const form = e.currentTarget;
+        const fd = new FormData(form);
+        const title = String(fd.get("title") ?? "").trim();
+        const body = String(fd.get("body") ?? "").trim();
+        const startsLocal = String(fd.get("starts_at") ?? "").trim();
+        const endsLocal = String(fd.get("ends_at") ?? "").trim();
+        const active = fd.get("active") === "on";
+        const config_json = configJson.trim();
+
+        if (!title || !body) {
+          alert("Titel en beschrijving zijn verplicht.");
+          return;
+        }
+
+        const starts_at = startsLocal ? new Date(startsLocal).toISOString() : new Date().toISOString();
+        const ends_at = endsLocal ? new Date(endsLocal).toISOString() : null;
+
+        startSave(() => {
+          void (async () => {
+            try {
+              await updatePlatformGame({
+                id: g.id,
+                title,
+                body,
+                starts_at,
+                ends_at,
+                active,
+                config_json,
+              });
+              onSaved();
+              router.refresh();
+            } catch (er) {
+              alert(er instanceof Error ? er.message : "Opslaan mislukt.");
+            }
+          })();
+        });
+      }}
+    >
+      <p className="text-[10px] font-bold uppercase tracking-wider text-amber-400/90">Game bewerken</p>
+      <div className="grid gap-3 sm:grid-cols-2">
+        <div className="sm:col-span-2">
+          <label className="mb-1 block text-xs text-white/50">Titel</label>
+          <input
+            name="title"
+            required
+            defaultValue={g.title}
+            className="w-full rounded-lg border border-white/15 bg-black/40 px-3 py-2 text-sm text-white outline-none focus:ring-2 focus:ring-amber-500/50"
+          />
+        </div>
+        <div className="sm:col-span-2">
+          <label className="mb-1 block text-xs text-white/50">Beschrijving</label>
+          <textarea
+            name="body"
+            required
+            rows={3}
+            defaultValue={g.body}
+            className="w-full resize-y rounded-lg border border-white/15 bg-black/40 px-3 py-2 text-sm text-white outline-none focus:ring-2 focus:ring-amber-500/50"
+          />
+        </div>
+        <div className="sm:col-span-2 space-y-3">
+          <AdminGamePresetBuilder configJson={configJson} setConfigJson={setConfigJson} />
+          <div>
+            <label className="mb-1 block text-xs text-white/50">Config (JSON)</label>
+            <textarea
+              name="config_json"
+              rows={8}
+              value={configJson}
+              onChange={(e) => setConfigJson(e.target.value)}
+              className="w-full resize-y rounded-lg border border-white/15 bg-black/40 px-3 py-2 font-mono text-[11px] leading-relaxed text-white outline-none focus:ring-2 focus:ring-amber-500/50"
+            />
+            <p className="mt-1 text-[10px] text-white/35">
+              <code className="text-white/45">progress.mode</code> checklist, answer of auto (preset-builder).{" "}
+              <code className="text-white/45">accepts</code> alleen server-side.
+            </p>
+          </div>
+        </div>
+        <div>
+          <label className="mb-1 block text-xs text-white/50">Start (lokaal)</label>
+          <input
+            name="starts_at"
+            type="datetime-local"
+            defaultValue={isoToDatetimeLocal(g.starts_at)}
+            className="w-full rounded-lg border border-white/15 bg-black/40 px-3 py-2 text-sm text-white outline-none focus:ring-2 focus:ring-amber-500/50"
+          />
+        </div>
+        <div>
+          <label className="mb-1 block text-xs text-white/50">Einde (lokaal)</label>
+          <input
+            name="ends_at"
+            type="datetime-local"
+            defaultValue={g.ends_at ? isoToDatetimeLocal(g.ends_at) : ""}
+            className="w-full rounded-lg border border-white/15 bg-black/40 px-3 py-2 text-sm text-white outline-none focus:ring-2 focus:ring-amber-500/50"
+          />
+        </div>
+        <div className="flex items-center gap-2 sm:col-span-2">
+          <input
+            id={`pg-active-${g.id}`}
+            name="active"
+            type="checkbox"
+            defaultChecked={g.active}
+            className="h-4 w-4 rounded border-white/30"
+          />
+          <label htmlFor={`pg-active-${g.id}`} className="text-sm text-white/70">
+            Actief
+          </label>
+        </div>
+      </div>
+      <button
+        type="submit"
+        disabled={pending || pendingSave}
+        className="rounded-lg bg-amber-500 px-4 py-2 text-sm font-semibold text-[#050810] hover:bg-amber-400 disabled:opacity-50"
+      >
+        {pending || pendingSave ? "Opslaan…" : "Wijzigingen opslaan"}
+      </button>
+    </form>
+  );
 }
 
 export function AdminGamesTable({ rows }: { rows: GameRow[] }) {
@@ -157,123 +294,12 @@ export function AdminGamesTable({ rows }: { rows: GameRow[] }) {
                   {editing ? (
                     <tr className="border-b border-white/[0.06] bg-white/[0.02]">
                       <td colSpan={6} className="px-3 py-4">
-                        <form
-                          className="space-y-3"
-                          onSubmit={(e) => {
-                            e.preventDefault();
-                            const form = e.currentTarget;
-                            const fd = new FormData(form);
-                            const title = String(fd.get("title") ?? "").trim();
-                            const body = String(fd.get("body") ?? "").trim();
-                            const startsLocal = String(fd.get("starts_at") ?? "").trim();
-                            const endsLocal = String(fd.get("ends_at") ?? "").trim();
-                            const active = fd.get("active") === "on";
-                            const config_json = String(fd.get("config_json") ?? "").trim();
-
-                            if (!title || !body) {
-                              alert("Titel en beschrijving zijn verplicht.");
-                              return;
-                            }
-
-                            const starts_at = startsLocal
-                              ? new Date(startsLocal).toISOString()
-                              : new Date().toISOString();
-                            const ends_at = endsLocal ? new Date(endsLocal).toISOString() : null;
-
-                            startTransition(() => {
-                              void (async () => {
-                                try {
-                                  await updatePlatformGame({
-                                    id: g.id,
-                                    title,
-                                    body,
-                                    starts_at,
-                                    ends_at,
-                                    active,
-                                    config_json,
-                                  });
-                                  setEditingId(null);
-                                  router.refresh();
-                                } catch (er) {
-                                  alert(er instanceof Error ? er.message : "Opslaan mislukt.");
-                                }
-                              })();
-                            });
-                          }}
-                        >
-                          <p className="text-[10px] font-bold uppercase tracking-wider text-amber-400/90">Game bewerken</p>
-                          <div className="grid gap-3 sm:grid-cols-2">
-                            <div className="sm:col-span-2">
-                              <label className="mb-1 block text-xs text-white/50">Titel</label>
-                              <input
-                                name="title"
-                                required
-                                defaultValue={g.title}
-                                className="w-full rounded-lg border border-white/15 bg-black/40 px-3 py-2 text-sm text-white outline-none focus:ring-2 focus:ring-amber-500/50"
-                              />
-                            </div>
-                            <div className="sm:col-span-2">
-                              <label className="mb-1 block text-xs text-white/50">Beschrijving</label>
-                              <textarea
-                                name="body"
-                                required
-                                rows={3}
-                                defaultValue={g.body}
-                                className="w-full resize-y rounded-lg border border-white/15 bg-black/40 px-3 py-2 text-sm text-white outline-none focus:ring-2 focus:ring-amber-500/50"
-                              />
-                            </div>
-                            <div className="sm:col-span-2">
-                              <label className="mb-1 block text-xs text-white/50">Config (JSON) — o.a. progress / win</label>
-                              <textarea
-                                name="config_json"
-                                rows={5}
-                                defaultValue={formatConfig(g.config)}
-                                className="w-full resize-y rounded-lg border border-white/15 bg-black/40 px-3 py-2 font-mono text-[11px] leading-relaxed text-white outline-none focus:ring-2 focus:ring-amber-500/50"
-                              />
-                              <p className="mt-1 text-[10px] text-white/35">
-                                Zie admin Games — uitleg bij nieuwe game: <code className="text-white/45">progress.mode</code> checklist of
-                                answer + <code className="text-white/45">accepts</code> (alleen server).
-                              </p>
-                            </div>
-                            <div>
-                              <label className="mb-1 block text-xs text-white/50">Start (lokaal)</label>
-                              <input
-                                name="starts_at"
-                                type="datetime-local"
-                                defaultValue={isoToDatetimeLocal(g.starts_at)}
-                                className="w-full rounded-lg border border-white/15 bg-black/40 px-3 py-2 text-sm text-white outline-none focus:ring-2 focus:ring-amber-500/50"
-                              />
-                            </div>
-                            <div>
-                              <label className="mb-1 block text-xs text-white/50">Einde (lokaal)</label>
-                              <input
-                                name="ends_at"
-                                type="datetime-local"
-                                defaultValue={g.ends_at ? isoToDatetimeLocal(g.ends_at) : ""}
-                                className="w-full rounded-lg border border-white/15 bg-black/40 px-3 py-2 text-sm text-white outline-none focus:ring-2 focus:ring-amber-500/50"
-                              />
-                            </div>
-                            <div className="flex items-center gap-2 sm:col-span-2">
-                              <input
-                                id={`pg-active-${g.id}`}
-                                name="active"
-                                type="checkbox"
-                                defaultChecked={g.active}
-                                className="h-4 w-4 rounded border-white/30"
-                              />
-                              <label htmlFor={`pg-active-${g.id}`} className="text-sm text-white/70">
-                                Actief
-                              </label>
-                            </div>
-                          </div>
-                          <button
-                            type="submit"
-                            disabled={pending}
-                            className="rounded-lg bg-amber-500 px-4 py-2 text-sm font-semibold text-[#050810] hover:bg-amber-400 disabled:opacity-50"
-                          >
-                            {pending ? "Opslaan…" : "Wijzigingen opslaan"}
-                          </button>
-                        </form>
+                        <AdminGameEditForm
+                          key={g.id}
+                          g={g}
+                          pending={pending}
+                          onSaved={() => setEditingId(null)}
+                        />
                       </td>
                     </tr>
                   ) : null}

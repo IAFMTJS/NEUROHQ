@@ -1,18 +1,13 @@
 "use client";
 
+import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
+import type { ProfileSpecialGameRow } from "@/app/actions/profile-special-events";
+import { PlatformGameProgressPanel } from "@/components/profile/PlatformGameProgressPanel";
 import type { Json } from "@/types/database.types";
 
 const STORAGE_KEY = "neurohq-platform-games-dismissed";
-
-type Game = {
-  id: string;
-  title: string;
-  body: string;
-  starts_at: string;
-  ends_at: string | null;
-  config: Json;
-};
 
 function readDismissed(): Set<string> {
   if (typeof window === "undefined") return new Set();
@@ -28,6 +23,28 @@ function readDismissed(): Set<string> {
 
 function writeDismissed(ids: Set<string>) {
   localStorage.setItem(STORAGE_KEY, JSON.stringify([...ids]));
+}
+
+function statusSummary(game: ProfileSpecialGameRow): { label: string; tone: "done" | "progress" | "neutral" } {
+  if (game.completedAt) return { label: "Voltooid", tone: "done" };
+  const { interaction: i } = game;
+  if (i.mode === "auto" && i.auto?.rules?.length) {
+    const ok = i.auto.rules.filter((r) => r.satisfied).length;
+    const n = i.auto.rules.length;
+    return {
+      label: `${ok}/${n} voorwaarden`,
+      tone: i.auto.satisfied ? "done" : "progress",
+    };
+  }
+  if (i.mode === "checklist" && i.checklist.length > 0) {
+    const done = i.checklist.filter((x) => game.checklistState[x.id] === true).length;
+    return {
+      label: `${done}/${i.checklist.length} stappen`,
+      tone: done >= i.checklist.length ? "done" : "progress",
+    };
+  }
+  if (i.mode === "answer") return { label: "Antwoord invullen", tone: "progress" };
+  return { label: "Actieve challenge", tone: "neutral" };
 }
 
 function ConfigDetails({ config }: { config: Json }) {
@@ -64,7 +81,8 @@ function ConfigDetails({ config }: { config: Json }) {
 }
 
 export function PlatformGamesBanner() {
-  const [games, setGames] = useState<Game[]>([]);
+  const pathname = usePathname();
+  const [games, setGames] = useState<ProfileSpecialGameRow[]>([]);
   const [dismissed, setDismissed] = useState<Set<string>>(() => new Set());
 
   useEffect(() => {
@@ -72,18 +90,30 @@ export function PlatformGamesBanner() {
   }, []);
 
   const load = useCallback(async () => {
+    if (pathname === "/profile" || pathname.startsWith("/profile/")) return;
     try {
-      const res = await fetch("/api/platform-games", { credentials: "same-origin" });
+      const res = await fetch("/api/platform-games", {
+        credentials: "same-origin",
+        cache: "no-store",
+      });
       if (!res.ok) return;
-      const json = (await res.json()) as { games?: Game[] };
+      const json = (await res.json()) as { games?: ProfileSpecialGameRow[] };
       setGames(Array.isArray(json.games) ? json.games : []);
     } catch {
       /* ignore */
     }
-  }, []);
+  }, [pathname]);
 
   useEffect(() => {
     void load();
+  }, [load, pathname]);
+
+  useEffect(() => {
+    const onVis = () => {
+      if (document.visibilityState === "visible") void load();
+    };
+    document.addEventListener("visibilitychange", onVis);
+    return () => document.removeEventListener("visibilitychange", onVis);
   }, [load]);
 
   const dismiss = (id: string) => {
@@ -96,28 +126,62 @@ export function PlatformGamesBanner() {
   };
 
   const visible = games.filter((g) => !dismissed.has(g.id));
+  if (pathname === "/profile" || pathname.startsWith("/profile/")) return null;
   if (visible.length === 0) return null;
 
   return (
     <div className="mb-3 space-y-2 px-0" role="region" aria-label="Platformgames">
-      {visible.map((g) => (
-        <div
-          key={g.id}
-          className="relative rounded-xl border border-violet-500/40 bg-gradient-to-r from-violet-950/55 to-slate-900/60 px-3 py-2.5 pr-10 shadow-[0_0_24px_rgba(167,139,250,0.12)]"
-        >
-          <button
-            type="button"
-            onClick={() => dismiss(g.id)}
-            className="absolute right-2 top-2 flex h-7 w-7 items-center justify-center rounded-lg text-lg leading-none text-white/50 hover:bg-white/10 hover:text-white"
-            aria-label="Game-banner sluiten"
+      {visible.map((g) => {
+        const summary = statusSummary(g);
+        const hasInteraction = g.interaction.mode !== "none";
+        const badgeClass =
+          summary.tone === "done"
+            ? "bg-emerald-500/20 text-emerald-100 ring-emerald-400/35"
+            : summary.tone === "progress"
+              ? "bg-amber-500/15 text-amber-100 ring-amber-400/30"
+              : "bg-white/10 text-white/85 ring-white/15";
+
+        return (
+          <div
+            key={g.id}
+            className="relative rounded-xl border border-violet-500/40 bg-gradient-to-r from-violet-950/55 to-slate-900/60 px-3 py-2.5 pr-10 shadow-[0_0_24px_rgba(167,139,250,0.12)]"
           >
-            ×
-          </button>
-          <p className="text-xs font-semibold uppercase tracking-wide text-violet-200/90">{g.title}</p>
-          <p className="mt-1 whitespace-pre-wrap text-sm text-white/85">{g.body}</p>
-          <ConfigDetails config={g.config} />
-        </div>
-      ))}
+            <button
+              type="button"
+              onClick={() => dismiss(g.id)}
+              className="absolute right-2 top-2 flex h-7 w-7 items-center justify-center rounded-lg text-lg leading-none text-white/50 hover:bg-white/10 hover:text-white"
+              aria-label="Game-banner sluiten"
+            >
+              ×
+            </button>
+            <div className="flex flex-wrap items-center gap-2 pr-6">
+              <p className="text-xs font-semibold uppercase tracking-wide text-violet-200/90">{g.title}</p>
+              <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ring-1 ${badgeClass}`}>
+                {summary.label}
+              </span>
+            </div>
+            <p className="mt-1 line-clamp-4 whitespace-pre-wrap text-sm text-white/85">{g.body}</p>
+
+            {hasInteraction ? (
+              <div className="platform-game-banner-panel mt-2 rounded-lg border border-violet-400/25 bg-black/25 p-1">
+                <PlatformGameProgressPanel game={g} domIdPrefix="pg-banner" onAfterServerMutation={load} />
+              </div>
+            ) : (
+              <ConfigDetails config={g.config} />
+            )}
+
+            <div className="mt-2 flex flex-wrap items-center gap-2 border-t border-violet-400/15 pt-2">
+              <Link
+                href={`/profile#platform-game-${g.id}`}
+                className="text-xs font-semibold text-violet-200 underline-offset-2 hover:text-white hover:underline"
+              >
+                Open op profiel
+              </Link>
+              <span className="text-[10px] text-white/40">· metingen verversen bij laden dashboard</span>
+            </div>
+          </div>
+        );
+      })}
     </div>
   );
 }

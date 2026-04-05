@@ -2,7 +2,7 @@ import type { CSSProperties } from "react";
 
 /** Dashboard bridge: zelfde schil voor Hoofdmissie-teaser en missie-CTA (zie .bridge-mission-pair-card in globals). */
 export const BRIDGE_MISSION_CARD_CLASS =
-  "bridge-mission-pair-card glass-card glass-preserve-decoration box-border flex min-h-[52px] w-full flex-col justify-center !rounded-xl border border-[var(--card-border)] px-3 py-2.5 text-left font-inherit text-[var(--text-primary)] no-underline antialiased transition hover:border-[rgba(var(--mode-rgb),0.28)] appearance-none";
+  "bridge-mission-pair-card glass-card glass-preserve-decoration box-border flex h-full min-h-[52px] w-full flex-col justify-center !rounded-xl border border-[var(--card-border)] px-3 py-2.5 text-left font-inherit text-[var(--text-primary)] no-underline antialiased transition hover:border-[rgba(var(--mode-rgb),0.28)] appearance-none";
 
 export const BRIDGE_MISSION_EYEBROW_CLASS =
   "text-[9px] font-semibold uppercase tracking-[0.12em]";

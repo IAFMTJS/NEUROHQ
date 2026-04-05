@@ -154,12 +154,12 @@ export function CommanderHomeHero({
       )}
 
       <div
-        className={`bridge-mission-footer flex w-full gap-2 ${mainMissionSlot ? "flex-row items-stretch" : "flex-col"} ${dailyQuoteText ? "mt-2" : "mt-1.5"}`}
+        className={`bridge-mission-footer w-full gap-2 ${mainMissionSlot ? "grid grid-cols-2 items-stretch" : "flex flex-col"} ${dailyQuoteText ? "mt-2" : "mt-1.5"}`}
       >
         {mainMissionSlot ? (
-          <div className="min-w-0 flex-1 basis-0">{mainMissionSlot}</div>
+          <div className="min-h-0 min-w-0">{mainMissionSlot}</div>
         ) : null}
-        <div className={mainMissionSlot ? "min-w-0 flex-1 basis-0" : "w-full"}>
+        <div className={mainMissionSlot ? "min-h-0 min-w-0" : "w-full"}>
           {mainMissionSlot ? (
             missionCtaAction ? (
               <button

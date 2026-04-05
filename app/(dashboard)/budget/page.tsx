@@ -135,7 +135,7 @@ export default async function BudgetPage({ searchParams }: Props) {
     getStrategyPacingHints(),
   ]);
   const strategyQuarterSavingsForExecute =
-    !historyMode &&
+    !isHistoryView &&
     strategyPacingHints &&
     strategyPacingHints.savingsTargetCents != null &&
     strategyPacingHints.savingsTargetCents > 0
