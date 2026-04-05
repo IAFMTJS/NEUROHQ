@@ -35,6 +35,7 @@ import {
   getBudgetOptimizationSuggestions,
 } from "@/app/actions/budget-intelligence";
 import { evaluateFlexBudgetForDay, getFlexBudgetHeroPayload } from "@/app/actions/flex-budget";
+import { getStrategyPacingHints } from "@/app/actions/strategy-engine-pacing";
 import { formatMonthYearShort } from "@/lib/utils/date-locale";
 import { formatCents } from "@/lib/utils/currency";
 import { getBudgetToday, getBudgetAdjacentMonths, getPreviousPeriodBounds } from "@/lib/utils/budget-date";
@@ -104,7 +105,7 @@ export default async function BudgetPage({ searchParams }: Props) {
   const prevPeriodRange = isPaydayCycle
     ? getPreviousPeriodBounds(periodStart, paydayDayOfMonth ?? 25)
     : { prevStart: prevMonthStart, prevEnd: prevMonthEnd };
-  const [goals, entries, nextMonthEntries, prevMonthEntries, alternatives, budgetSettings, currentMonthExpenses, currentMonthIncome, currentWeekExpenses, currentWeekIncome, activeFrozen, readyForAction, unplannedSummary, contributions, recurringTemplates, financeState, financialInsights, incomeSources, budgetTargets, _paydayDayOfMonth, weeklyReviewStatus, disciplineXpThisWeek, disciplineCompletedToday, impulseWindow, budgetControlState, optimization] = await Promise.all([
+  const [goals, entries, nextMonthEntries, prevMonthEntries, alternatives, budgetSettings, currentMonthExpenses, currentMonthIncome, currentWeekExpenses, currentWeekIncome, activeFrozen, readyForAction, unplannedSummary, contributions, recurringTemplates, financeState, financialInsights, incomeSources, budgetTargets, _paydayDayOfMonth, weeklyReviewStatus, disciplineXpThisWeek, disciplineCompletedToday, impulseWindow, budgetControlState, optimization, strategyPacingHints] = await Promise.all([
     getSavingsGoals(),
     getBudgetEntries(periodStart, periodEnd),
     getBudgetEntries(nextMonthStart, nextMonthEnd),
@@ -131,7 +132,22 @@ export default async function BudgetPage({ searchParams }: Props) {
     getImpulseTimeWindow(),
     getBudgetControlState(),
     getBudgetOptimizationSuggestions(),
+    getStrategyPacingHints(),
   ]);
+  const strategyQuarterSavingsForExecute =
+    !historyMode &&
+    strategyPacingHints &&
+    strategyPacingHints.savingsTargetCents != null &&
+    strategyPacingHints.savingsTargetCents > 0
+      ? {
+          quarterLabel: (() => {
+            const [y, mo] = today.split("-").map(Number);
+            return `Q${Math.floor((mo - 1) / 3) + 1} ${y}`;
+          })(),
+          targetCents: strategyPacingHints.savingsTargetCents,
+          savedThisQuarterCents: strategyPacingHints.savedThisQuarterCents ?? 0,
+        }
+      : null;
   type EntryRow = { date: string; amount_cents: number; category: string | null };
   const categoryTotals = (entries as EntryRow[])
     .filter((e) => (e.amount_cents ?? 0) < 0)
@@ -375,6 +391,7 @@ export default async function BudgetPage({ searchParams }: Props) {
           prevPeriodRange={prevPeriodRange}
           prevMonthEntries={prevMonthEntries}
           executeEntriesHref={executeEntriesHref}
+          strategyQuarterSavings={strategyQuarterSavingsForExecute}
         />
       )}
 

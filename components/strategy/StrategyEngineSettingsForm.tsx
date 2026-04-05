@@ -165,7 +165,10 @@ export function StrategyEngineSettingsForm({
         </label>
         {initial.savings.quarterlyMustSaveCents != null && initial.savings.quarterlyMustSaveCents > 0 && (
           <p className="text-xs text-[var(--text-muted)]">
-            Huidig doel: {formatCents(initial.savings.quarterlyMustSaveCents)} — log stortingen op Budget.
+            Huidig doel: {formatCents(initial.savings.quarterlyMustSaveCents)} — stort op een spaardoel via Budget → tab{" "}
+            <span className="font-medium text-[var(--text-secondary)]">Sparen & boeken</span> →{" "}
+            <span className="font-medium text-[var(--text-secondary)]">Sparen & spaardoelen</span> (blok Strategy
+            bovenaan).
           </p>
         )}
         {budgetDerivedQuarterlyCents != null && budgetDerivedQuarterlyCents > 0 && (

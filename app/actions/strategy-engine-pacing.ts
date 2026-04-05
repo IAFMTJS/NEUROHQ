@@ -1,5 +1,6 @@
 "use server";
 
+import { cache } from "react";
 import { getActiveStrategyEngineParams } from "@/app/actions/strategyFocus";
 import { getStrategyBudgetSavingsContext } from "@/app/actions/strategy-budget-savings-context";
 import { sumSavingsContributionsInDateRange } from "@/app/actions/savings";
@@ -21,8 +22,9 @@ function quarterElapsedFraction(todayStr: string, start: string, end: string): n
 /**
  * Read-only pace vs Strategy engine quarterly targets (savings + learning).
  * Does not write anywhere — avoids conflicting with Budget/Growth CRUD.
+ * Request-gededupliceerd (o.a. Budget-pagina + StrategyEnginePaceHint).
  */
-export async function getStrategyPacingHints(): Promise<StrategyPacingHints | null> {
+export const getStrategyPacingHints = cache(async (): Promise<StrategyPacingHints | null> => {
   const [ep, budgetCtx] = await Promise.all([getActiveStrategyEngineParams(), getStrategyBudgetSavingsContext()]);
   if (!ep) return null;
   const saveT = resolveEffectiveQuarterlySavingsTargetCents(ep.savings.quarterlyMustSaveCents, budgetCtx);
@@ -76,4 +78,4 @@ export async function getStrategyPacingHints(): Promise<StrategyPacingHints | nu
     learningOnTrack,
     protocolQuarterTasks,
   };
-}
+});

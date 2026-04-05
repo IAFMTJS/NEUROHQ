@@ -24,6 +24,10 @@ import {
   budgetDeckShellClass,
   budgetDeckTileClass,
 } from "@/lib/budget/budget-deck-chrome";
+import {
+  StrategyQuarterSavingsLogForm,
+  type StrategyQuarterSavingsPayload,
+} from "@/components/budget/StrategyQuarterSavingsLogForm";
 
 type EntryRow = {
   id: string;
@@ -76,6 +80,8 @@ export type BudgetExecuteHubProps = {
   prevPeriodRange: { prevStart: string; prevEnd: string };
   prevMonthEntries: EntryRow[];
   executeEntriesHref: string;
+  /** Effectief Strategy-kwartaaldoel + voortgang (alle spaar-stortingen tellen mee). */
+  strategyQuarterSavings?: StrategyQuarterSavingsPayload | null;
 };
 
 type Props = BudgetExecuteHubProps;
@@ -172,6 +178,7 @@ export function BudgetExecuteHub({
   prevPeriodRange,
   prevMonthEntries,
   executeEntriesHref,
+  strategyQuarterSavings = null,
 }: Props) {
   const frozenTotal = activeFrozen.length + readyForAction.length;
   const expenseEntryCount = entries.filter((e) => (e.amount_cents ?? 0) < 0).length;
@@ -282,6 +289,13 @@ export function BudgetExecuteHub({
           ariaLabel="Sparen en spaardoelen"
         >
           <div className="space-y-4">
+            {strategyQuarterSavings ? (
+              <StrategyQuarterSavingsLogForm
+                goals={goals.map((g) => ({ id: g.id, name: g.name }))}
+                currency={currency}
+                quarter={strategyQuarterSavings}
+              />
+            ) : null}
             <BudgetAchievementsCard financeState={financeState} compact />
             <AddSavingsGoalForm readOnly={false} />
             <div className="space-y-3">

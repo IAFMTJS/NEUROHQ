@@ -4,6 +4,21 @@ import { useEffect, useState } from "react";
 import { Toaster, toast } from "sonner";
 import { NeuroToastIcon } from "@/components/brand/NeuroToastIcon";
 
+/** True if the event target is inside the toast DOM or a portaled overlay (modal/sheet) opened on top. */
+function pointerTargetKeepsToastsOpen(target: EventTarget | null): boolean {
+  if (!(target instanceof Element)) return false;
+  if (target.closest("[data-sonner-toast]")) return true;
+  /* createPortal(..., document.body) — e.g. Modal, BottomSheet — lives outside the toast <li>. */
+  const modalish = target.closest("[aria-modal]");
+  if (
+    modalish instanceof HTMLElement &&
+    modalish.getAttribute("aria-modal") !== "false"
+  ) {
+    return true;
+  }
+  return false;
+}
+
 /**
  * Renders Toaster after first paint so sonner doesn't block initial hydration.
  * Uses requestIdleCallback when available for light UI / fast load.
@@ -24,9 +39,7 @@ export function DeferredToaster() {
     if (!mounted || typeof document === "undefined") return;
     const onPointerDownCapture = (e: PointerEvent) => {
       if (toast.getToasts().length === 0) return;
-      const el = e.target;
-      if (!(el instanceof Element)) return;
-      if (el.closest("[data-sonner-toast]")) return;
+      if (pointerTargetKeepsToastsOpen(e.target)) return;
       toast.dismiss();
     };
     document.addEventListener("pointerdown", onPointerDownCapture, true);
