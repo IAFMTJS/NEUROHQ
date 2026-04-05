@@ -216,7 +216,6 @@ async function StrategyContent({ simplifiedLayout = false }: { simplifiedLayout?
 export default async function StrategyPage() {
   const prefs = await getUserPreferencesOrDefaults();
   const simplified = prefs.simplified_content === true;
-  const lightUi = false;
 
   if (simplified) {
     return (
@@ -244,7 +243,7 @@ export default async function StrategyPage() {
   }
 
   return (
-    <DashboardHubCommandShell hubLabel="Strategy" showBridgeLabel={false} lightUi={lightUi}>
+    <DashboardHubCommandShell hubLabel="Strategy" showBridgeLabel={false}>
       <Suspense
         fallback={<div className="min-h-[200px] animate-pulse rounded-2xl bg-[var(--bg-elevated)]/30" aria-hidden />}
       >

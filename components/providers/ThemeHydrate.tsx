@@ -26,15 +26,12 @@ export function ThemeHydrate() {
               hq_headline: prefs.hq_headline,
               greeting_locale: prefs.greeting_locale,
             });
-            // Standard display only (compact / reduced-motion / light-UI toggles removed from settings).
-            const nextLight = "false";
+            // Standard display only (compact / reduced-motion toggles removed from settings).
             const nextReduced = "false";
             const nextCompact = "false";
-            document.documentElement.dataset.lightUi = nextLight;
             document.documentElement.dataset.reducedMotion = nextReduced;
             document.documentElement.dataset.compactUi = nextCompact;
             try {
-              localStorage.setItem("neurohq-light-ui", nextLight);
               localStorage.setItem("neurohq-reduced-motion", nextReduced);
             } catch (_) {}
           } catch (_) {}

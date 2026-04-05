@@ -11,6 +11,7 @@ import {
   type NeurohqDailySnapshotUpdatedDetail,
   seedBootstrapTodayInCache,
 } from "@/lib/bootstrap-query";
+import { patchPersistedDailyFromBootstrap } from "@/lib/daily-init-persist";
 import { getBootstrapQueryClient } from "@/lib/bootstrap-query-client-ref";
 import type { MissionsPipelinePayload } from "@/lib/missions/derive-mission-capacity";
 import type { LearningSnapshot as StoreLearningSnapshot } from "@/types/hq-store.types";
@@ -93,6 +94,8 @@ export function applyBootstrapTodayToApp(bootstrap: BootstrapTodayResponse): voi
 
   const detail: NeurohqDailySnapshotUpdatedDetail = { savedAt: Date.now() };
   window.dispatchEvent(new CustomEvent(NEUROHQ_DAILY_SNAPSHOT_UPDATED, { detail }));
+
+  void patchPersistedDailyFromBootstrap(bootstrap).catch(() => {});
 }
 
 /** Merge server `/api/bootstrap/today` into HQ store and shared query cache. */

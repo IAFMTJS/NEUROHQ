@@ -2,6 +2,9 @@
 
 import { startTransition, useEffect, useState } from "react";
 import type { DailySnapshot } from "@/types/daily-snapshot";
+import { createClient } from "@/lib/supabase/client";
+import { getSnapshotValidityDayKey } from "@/lib/daily-date";
+import { persistDailyInitResult, readPersistedDailyInit } from "@/lib/daily-init-persist";
 import {
   DAILY_BOOTSTRAP_STEPS,
   initializeDailySystem,
@@ -30,10 +33,28 @@ export function BootstrapLoader({ onReady }: Props) {
     let cancelled = false;
     const run = async () => {
       try {
+        const dayKey = getSnapshotValidityDayKey();
+        const supabase = createClient();
+        const {
+          data: { user },
+        } = await supabase.auth.getUser();
+
+        if (user && !cancelled) {
+          const cached = await readPersistedDailyInit(user.id, dayKey);
+          if (cached) {
+            setSnapshot(cached.snapshot);
+            onReady(cached);
+            return;
+          }
+        }
+
         const result = await initializeDailySystem((p) => {
           if (!cancelled) startTransition(() => setProgress(p));
         });
         if (cancelled) return;
+        if (user) {
+          void persistDailyInitResult(user.id, result).catch(() => {});
+        }
         setSnapshot(result.snapshot);
         onReady(result);
       } catch (e) {

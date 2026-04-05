@@ -22,7 +22,6 @@ export default async function LearningPage({ searchParams }: Props) {
     getStrategyPacingHints(),
   ]);
   const simplified = prefs.simplified_content === true;
-  const lightUi = false;
 
   const learningBody = (
     <LearningContentClient
@@ -59,5 +58,5 @@ export default async function LearningPage({ searchParams }: Props) {
     );
   }
 
-  return <GrowthPageCommandShell lightUi={lightUi}>{learningBody}</GrowthPageCommandShell>;
+  return <GrowthPageCommandShell>{learningBody}</GrowthPageCommandShell>;
 }

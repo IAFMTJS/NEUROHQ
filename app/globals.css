@@ -214,6 +214,9 @@
   /* Flat-glass page shells (SciFiPanel + flatFrame): frame vs inner body */
   --panel-radius-flat: 16px;
   --panel-inner-radius-flat: 14px;
+  /* Fat glass: frosted panel shells (command deck, page plate, bridge, hub cards) */
+  --hq-fat-glass-blur: blur(32px) saturate(1.16);
+  --hq-fat-glass-blur-card: blur(28px) saturate(1.14);
   --button-radius-pill: 999px;
   --transition-ease: cubic-bezier(0.4, 0, 0.2, 1);
   --transition-120: 120ms var(--transition-ease);
@@ -817,14 +820,16 @@
 }
 
 /* ========== RING-STYLE GLOWS – alle pagina’s (zelfde familie als brain status rings) ========== */
-/* Card-simple: flat command-deck surface (geen HUD-rim / inset-glow) */
+/* Card-simple: fat glass surface (geen HUD-rim / inset-glow) */
 .card-simple {
-  background: color-mix(in srgb, var(--mode-bg-surface) 88%, black);
-  backdrop-filter: blur(16px) saturate(1.08);
-  -webkit-backdrop-filter: blur(16px) saturate(1.08);
+  background: color-mix(in srgb, var(--mode-bg-surface) 84%, black);
+  backdrop-filter: var(--hq-fat-glass-blur-card);
+  -webkit-backdrop-filter: var(--hq-fat-glass-blur-card);
   border-radius: var(--hq-card-radius, 18px);
-  border: 1px solid var(--border-soft);
-  box-shadow: 0 4px 22px rgba(0, 0, 0, 0.38);
+  border: 1px solid rgba(var(--mode-rgb), 0.16);
+  box-shadow:
+    0 0 0 1px rgba(0, 0, 0, 0.16),
+    0 8px 30px rgba(0, 0, 0, 0.42);
   position: relative;
   overflow: hidden;
   transition: box-shadow 0.2s ease, border-color 0.2s ease;
@@ -851,479 +856,16 @@
 [data-reduced-motion="true"] .glow-pulse { animation: none; }
 [data-reduced-motion="true"] .skill-node.unlocked { animation: none; }
 
-/* Light UI: lightning fast – no animations, instant transitions, no flicker */
-[data-light-ui="true"] {
-  --hq-duration-fast: 0ms;
-  --hq-duration-normal: 0ms;
-  --shadow-button: 0 2px 8px rgba(0, 0, 0, 0.2);
-  --neon-btn-shadow: 0 2px 8px rgba(0, 0, 0, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.15);
-  /* Shared frosted stack (Visual Lab / command-deck parity) */
-  --light-ui-glass-blur: blur(22px) saturate(1.12);
-  --light-ui-glass-bg: rgba(4, 14, 26, 0.48);
-  --light-ui-glass-border: rgba(var(--mode-rgb), 0.28);
-  --light-ui-glass-shadow:
-    0 0 0 1px rgba(0, 0, 0, 0.34),
-    0 0 22px rgba(var(--mode-rgb), 0.12),
-    0 14px 42px rgba(0, 0, 0, 0.52),
-    inset 0 1px 0 rgba(255, 255, 255, 0.09),
-    inset 0 -10px 26px rgba(0, 0, 0, 0.36);
-}
-[data-light-ui="true"] *,
-[data-light-ui="true"] *::before,
-[data-light-ui="true"] *::after {
-  animation-duration: 0.01ms !important;
-  animation-delay: 0 !important;
-  transition-duration: 0ms !important;
-  transition-delay: 0 !important;
-}
-[data-light-ui="true"] .glow-pulse,
-[data-light-ui="true"] .cta-streak-pulse { animation: none !important; }
-/* Light UI: disable all glow/flicker on buttons and cards */
-[data-light-ui="true"] .btn-primary,
-[data-light-ui="true"] .btn-hq-primary,
-[data-light-ui="true"] .primary-btn {
-  backdrop-filter: blur(14px) saturate(1.1) !important;
-  -webkit-backdrop-filter: blur(14px) saturate(1.1) !important;
-  border-color: rgba(var(--mode-rgb), 0.42) !important;
-  background: linear-gradient(
-    180deg,
-    rgba(var(--mode-rgb), 0.82) 0%,
-    rgba(var(--mode-rgb-deep), 0.88) 48%,
-    rgba(var(--mode-rgb-deep), 0.92) 100%
-  ) !important;
-  box-shadow:
-    0 0 0 1px rgba(0, 0, 0, 0.32),
-    0 0 20px rgba(var(--mode-rgb), 0.22),
-    0 8px 24px rgba(0, 0, 0, 0.48),
-    inset 0 1px 0 rgba(255, 255, 255, 0.22) !important;
-}
-[data-light-ui="true"] .btn-hq-secondary {
-  backdrop-filter: blur(16px) saturate(1.1) !important;
-  -webkit-backdrop-filter: blur(16px) saturate(1.1) !important;
-  border-color: rgba(var(--mode-rgb), 0.3) !important;
-  background: rgba(6, 18, 30, 0.52) !important;
-  color: var(--text-primary) !important;
-  box-shadow:
-    0 0 0 1px rgba(0, 0, 0, 0.28),
-    0 0 16px rgba(var(--mode-rgb), 0.1),
-    0 6px 20px rgba(0, 0, 0, 0.42),
-    inset 0 1px 0 rgba(255, 255, 255, 0.1) !important;
-}
-[data-light-ui="true"] .mission-card.active,
-[data-light-ui="true"] .mission-card.completed,
-[data-light-ui="true"] .glow-pill,
-[data-light-ui="true"] .skill-node.unlocked,
-[data-light-ui="true"] .progress-fill-glow,
-[data-light-ui="true"] .link-glow-hover:hover {
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.28), 0 0 0 1px rgba(var(--mode-rgb), 0.12) !important;
-}
-[data-light-ui="true"] .mission-card.active,
-[data-light-ui="true"] .mission-card.completed { border-color: rgba(var(--mode-rgb), 0.28) !important; }
-[data-light-ui="true"] .mission-card.active::before,
-[data-light-ui="true"] .mission-card.completed::after { display: none !important; }
-[data-light-ui="true"] .page-title-glow,
-[data-light-ui="true"] .text-glow-accent { text-shadow: none !important; }
-/* Disable glow keyframe animations in light UI */
-[data-light-ui="true"] .stat-ring.energy,
-[data-light-ui="true"] .stat-ring.focus,
-[data-light-ui="true"] .stat-ring.load { animation: none !important; box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2) !important; }
-
-/* Light UI: same base palette as normal hub — only skip heavy galaxy PNG layers (faster paint) */
-html[data-light-ui="true"] {
-  background-color: var(--mode-bg-main) !important;
-  background-image: linear-gradient(
-    180deg,
-    var(--hud-dark-1) 0%,
-    var(--hud-dark-3) 42%,
-    var(--hud-dark-5) 100%
-  ) !important;
-  background-size: 100% 100% !important;
-  background-repeat: no-repeat !important;
-  background-attachment: scroll !important;
-}
-html[data-light-ui="true"] body {
-  background-color: transparent !important;
-  background-image: none !important;
-}
-[data-light-ui="true"] body::after,
-[data-light-ui="true"] body::before { display: none !important; }
-
-/* Light UI: dashboard – no tiles, mist, atmosphere, noise or animations (fast load) */
-[data-light-ui="true"] .dashboard-cinematic-bg,
-[data-light-ui="true"] .dashboard-bg-tiles,
-[data-light-ui="true"] .dashboard-bg-tiles-offset,
-[data-light-ui="true"] .dashboard-bg-mist,
-[data-light-ui="true"] .dashboard-bg-atmosphere,
-[data-light-ui="true"] .dashboard-bg-blend,
-[data-light-ui="true"] .dashboard-bg-noise { display: none !important; }
-[data-light-ui="true"] .dashboard-page::before,
-[data-light-ui="true"] .dashboard-page::after { display: none !important; }
-[data-light-ui="true"] .command-stack-page-root {
-  background-image: none !important;
-  background-color: var(--mode-bg-main) !important;
-  background-attachment: scroll !important;
-}
-[data-light-ui="true"] .command-stack-page-root::before,
-[data-light-ui="true"] .command-stack-page-root::after { display: none !important; }
-[data-light-ui="true"] .dashboard-cinematic:not(.tasks-command-deck) {
-  background-image: none !important;
-}
-
-/*
- * Light UI: full frosted glass (Visual Lab parity) — blur + translucent stack, not flat fills.
- * Tier 2 (accent / modal / 3D glass) uses elevated HUD gradient + stronger rim.
- */
-[data-light-ui="true"] .card,
-[data-light-ui="true"] .card-simple,
-[data-light-ui="true"] .glass-card,
-[data-light-ui="true"] .glass-panel,
-[data-light-ui="true"] .hq-card,
-[data-light-ui="true"] .dashboard-command-deck-frame,
-[data-light-ui="true"] .dashboard-bridge,
-[data-light-ui="true"] .dashboard-bridge-frame,
-[data-light-ui="true"] .dashboard-cinematic:not(.tasks-command-deck) .glass-card,
-[data-light-ui="true"] .dashboard-cinematic:not(.tasks-command-deck) .card-simple,
-[data-light-ui="true"] .dashboard-hud-sheet.modal-card,
-[data-light-ui="true"] .bottom-nav-plate,
-[data-light-ui="true"] .dashboard-cinematic .hq-frosted-main-shell {
-  backdrop-filter: var(--light-ui-glass-blur) !important;
-  -webkit-backdrop-filter: var(--light-ui-glass-blur) !important;
-  background: var(--light-ui-glass-bg) !important;
-  box-shadow: var(--light-ui-glass-shadow) !important;
-  border-color: var(--light-ui-glass-border) !important;
-}
-[data-light-ui="true"] .card-simple-accent,
-[data-light-ui="true"] .dashboard-cinematic:not(.tasks-command-deck) .card-simple-accent,
-[data-light-ui="true"] .glass-card-3d,
-[data-light-ui="true"] .modal-card {
-  backdrop-filter: var(--light-ui-glass-blur) !important;
-  -webkit-backdrop-filter: var(--light-ui-glass-blur) !important;
-  background: var(--hud-surface-card-elevated) !important;
-  border-color: rgba(var(--mode-rgb), 0.34) !important;
-  box-shadow:
-    0 0 0 1px rgba(0, 0, 0, 0.34),
-    0 0 22px rgba(var(--mode-rgb), 0.12),
-    0 14px 42px rgba(0, 0, 0, 0.52),
-    inset 0 1px 0 rgba(255, 255, 255, 0.09),
-    inset 0 -10px 26px rgba(0, 0, 0, 0.36) !important;
-}
-[data-light-ui="true"] .modal-overlay {
-  backdrop-filter: blur(8px) saturate(1.05) !important;
-  -webkit-backdrop-filter: blur(8px) saturate(1.05) !important;
-  background: rgba(0, 0, 0, 0.62) !important;
-}
-
-/* Command deck: same frosted tokens as global Light UI (full Visual Lab parity). */
-[data-light-ui="true"] .tasks-command-deck.dashboard-cinematic .glass-card,
-[data-light-ui="true"] .tasks-command-deck.dashboard-cinematic .glass-card-3d,
-[data-light-ui="true"] .tasks-command-deck.dashboard-cinematic .card-simple {
-  backdrop-filter: var(--light-ui-glass-blur) !important;
-  -webkit-backdrop-filter: var(--light-ui-glass-blur) !important;
-  background: var(--light-ui-glass-bg) !important;
-  border-color: var(--light-ui-glass-border) !important;
-  box-shadow: var(--light-ui-glass-shadow) !important;
-}
-
-/* Deck only: a touch more transparency + rim so frosted glass reads (default Light UI on). */
-[data-light-ui="true"] .tasks-command-deck.dashboard-cinematic .glass-card,
-[data-light-ui="true"] .tasks-command-deck.dashboard-cinematic .glass-card-3d {
-  background: rgba(4, 14, 26, 0.36) !important;
-  backdrop-filter: blur(26px) saturate(1.14) !important;
-  -webkit-backdrop-filter: blur(26px) saturate(1.14) !important;
-  border-color: rgba(var(--mode-rgb), 0.34) !important;
-  box-shadow:
-    0 0 0 1px rgba(0, 0, 0, 0.4),
-    0 0 28px rgba(var(--mode-rgb), 0.15),
-    0 14px 42px rgba(0, 0, 0, 0.52),
-    inset 0 1px 0 rgba(255, 255, 255, 0.1),
-    inset 0 -10px 26px rgba(0, 0, 0, 0.36) !important;
-}
-
-[data-light-ui="true"] .tasks-command-deck.dashboard-cinematic .card-simple {
-  background: rgba(4, 14, 26, 0.34) !important;
-  backdrop-filter: blur(24px) saturate(1.12) !important;
-  -webkit-backdrop-filter: blur(24px) saturate(1.12) !important;
-  border-color: rgba(var(--mode-rgb), 0.32) !important;
-  box-shadow:
-    0 0 0 1px rgba(0, 0, 0, 0.38),
-    0 0 18px rgba(var(--mode-rgb), 0.11),
-    0 10px 32px rgba(0, 0, 0, 0.48),
-    inset 0 1px 0 rgba(255, 255, 255, 0.08) !important;
-}
-
-/* Light UI deck: add specular sheen so cards read "real glass" (Visual Lab parity). */
-[data-light-ui="true"] .tasks-command-deck.dashboard-cinematic .glass-card::before,
-[data-light-ui="true"] .tasks-command-deck.dashboard-cinematic .glass-card-3d::before {
-  height: 46%;
-  background: linear-gradient(
-    118deg,
-    rgba(255, 255, 255, 0) 0%,
-    rgba(255, 255, 255, 0.06) 34%,
-    rgba(var(--mode-rgb), 0.16) 52%,
-    rgba(255, 255, 255, 0.03) 70%,
-    transparent 100%
-  );
-  box-shadow: none;
-  opacity: 0.92;
-}
-[data-light-ui="true"] .tasks-command-deck.dashboard-cinematic .glass-card::after,
-[data-light-ui="true"] .tasks-command-deck.dashboard-cinematic .glass-card-3d::after {
-  background: linear-gradient(
-    148deg,
-    rgba(var(--mode-rgb), 0.26) 0%,
-    rgba(var(--mode-rgb-deep), 0.18) 42%,
-    rgba(var(--mode-rgb), 0.1) 100%
-  );
-}
-
-[data-light-ui="true"] .tasks-command-deck.dashboard-cinematic .card-simple-accent {
-  backdrop-filter: var(--light-ui-glass-blur) !important;
-  -webkit-backdrop-filter: var(--light-ui-glass-blur) !important;
-  background: var(--hud-surface-card-elevated) !important;
-  border-color: rgba(var(--mode-rgb), 0.34) !important;
-  box-shadow:
-    0 0 0 1px rgba(0, 0, 0, 0.34),
-    0 0 22px rgba(var(--mode-rgb), 0.12),
-    0 14px 42px rgba(0, 0, 0, 0.52),
-    inset 0 1px 0 rgba(255, 255, 255, 0.09),
-    inset 0 -10px 26px rgba(0, 0, 0, 0.36) !important;
-}
-
-/* Hub deck chrome: slightly lighter blur for scroll-heavy stacks; still glass. */
-[data-light-ui="true"] [data-deck-chrome="true"] .tasks-command-deck .glass-card,
-[data-light-ui="true"] [data-deck-chrome="true"] .tasks-command-deck .glass-card-3d,
-[data-light-ui="true"] [data-deck-chrome="true"] .tasks-command-deck .card-simple {
-  backdrop-filter: blur(18px) saturate(1.1) !important;
-  -webkit-backdrop-filter: blur(18px) saturate(1.1) !important;
-  background: var(--light-ui-glass-bg) !important;
-  box-shadow: var(--light-ui-glass-shadow) !important;
-}
-[data-light-ui="true"] [data-deck-chrome="true"] .tasks-command-deck .card-simple-accent {
-  backdrop-filter: blur(18px) saturate(1.1) !important;
-  -webkit-backdrop-filter: blur(18px) saturate(1.1) !important;
-  background: var(--hud-surface-card-elevated) !important;
-  box-shadow:
-    0 0 0 1px rgba(0, 0, 0, 0.34),
-    0 0 22px rgba(var(--mode-rgb), 0.12),
-    0 14px 42px rgba(0, 0, 0, 0.52),
-    inset 0 1px 0 rgba(255, 255, 255, 0.09),
-    inset 0 -10px 26px rgba(0, 0, 0, 0.36) !important;
-}
-
-[data-light-ui="true"] .dashboard-bridge-body {
-  backdrop-filter: var(--light-ui-glass-blur) !important;
-  -webkit-backdrop-filter: var(--light-ui-glass-blur) !important;
-  background: linear-gradient(
-    185deg,
-    rgba(12, 22, 38, 0.72) 0%,
-    rgba(6, 12, 22, 0.68) 45%,
-    rgba(var(--mode-rgb-deep), 0.12) 100%
-  ) !important;
-  box-shadow: var(--light-ui-glass-shadow) !important;
-}
-[data-light-ui="true"] .panelBody,
-[data-light-ui="true"] [class*="panelBody"] {
-  backdrop-filter: blur(18px) saturate(1.1) !important;
-  -webkit-backdrop-filter: blur(18px) saturate(1.1) !important;
-}
-[data-light-ui="true"] .mascot-img,
-[data-light-ui="true"] .mascot-hero-img-wrap .mascot-img,
-[data-light-ui="true"] .mascot-hero-inner .mascot-img { filter: none !important; }
-
-/* Light UI: instant page show, no enter animation */
-[data-light-ui="true"] .page { animation: none !important; }
-
-/* Light UI: avoid extra compositor layers */
-[data-light-ui="true"] * { will-change: auto !important; }
-
-/* Light UI: no skeleton pulse – static placeholders only (faster paint) */
-[data-light-ui="true"] .animate-pulse { animation: none !important; opacity: 0.7; }
-
-/* Light UI: below-fold sections – browser can skip painting until near viewport */
-[data-light-ui="true"] .light-ui-defer-paint {
-  content-visibility: auto;
-  contain-intrinsic-size: auto 200px;
-}
-
-/* Light UI: mission CTA – frosted neon stack (no WebGL canvas). */
-[data-light-ui="true"] .mission-hdr-canvas { display: none !important; }
-[data-light-ui="true"] .glass-card .mission-hdr-wrap,
-[data-light-ui="true"] .card .mission-hdr-wrap {
-  backdrop-filter: blur(12px) saturate(1.08) !important;
-  -webkit-backdrop-filter: blur(12px) saturate(1.08) !important;
-  background: linear-gradient(
-    180deg,
-    rgba(var(--mode-rgb-deep), 0.88) 0%,
-    rgba(var(--mode-rgb), 0.82) 52%,
-    rgba(var(--mode-rgb-deep), 0.9) 100%
-  ) !important;
-  box-shadow:
-    0 0 0 1px rgba(0, 0, 0, 0.28),
-    0 0 18px rgba(var(--mode-rgb), 0.24),
-    0 6px 20px rgba(0, 0, 0, 0.42),
-    inset 0 1px 0 rgba(255, 255, 255, 0.2) !important;
-  filter: none !important;
-  transform: none !important;
-}
-[data-light-ui="true"] .glass-card .mission-hdr-wrap:hover,
-[data-light-ui="true"] .card .mission-hdr-wrap:hover {
-  filter: none !important;
-  box-shadow:
-    0 0 0 1px rgba(0, 0, 0, 0.3),
-    0 0 22px rgba(var(--mode-rgb), 0.28),
-    0 8px 24px rgba(0, 0, 0, 0.48),
-    inset 0 1px 0 rgba(255, 255, 255, 0.22) !important;
-}
-[data-light-ui="true"] .glass-card .mission-hdr-wrap:active,
-[data-light-ui="true"] .card .mission-hdr-wrap:active {
-  transform: none !important;
-  box-shadow:
-    0 0 0 1px rgba(0, 0, 0, 0.32),
-    0 0 14px rgba(var(--mode-rgb), 0.2),
-    0 4px 16px rgba(0, 0, 0, 0.45),
-    inset 0 1px 0 rgba(255, 255, 255, 0.14) !important;
-}
-[data-light-ui="true"] .mission-hdr-wrap {
-  backdrop-filter: blur(12px) saturate(1.08) !important;
-  -webkit-backdrop-filter: blur(12px) saturate(1.08) !important;
-  box-shadow:
-    0 0 0 1px rgba(0, 0, 0, 0.28),
-    0 0 18px rgba(var(--mode-rgb), 0.22),
-    0 6px 20px rgba(0, 0, 0, 0.42),
-    inset 0 1px 0 rgba(255, 255, 255, 0.18) !important;
-  filter: none !important;
-  transform: none !important;
-}
-[data-light-ui="true"] .mission-hdr-wrap:hover {
-  filter: none !important;
-  box-shadow:
-    0 0 0 1px rgba(0, 0, 0, 0.32),
-    0 0 22px rgba(var(--mode-rgb), 0.26),
-    0 8px 24px rgba(0, 0, 0, 0.48),
-    inset 0 1px 0 rgba(255, 255, 255, 0.2) !important;
-}
-[data-light-ui="true"] .mission-hdr-wrap:active {
-  transform: none !important;
-  box-shadow:
-    0 0 0 1px rgba(0, 0, 0, 0.34),
-    0 0 14px rgba(var(--mode-rgb), 0.2),
-    0 4px 16px rgba(0, 0, 0, 0.45),
-    inset 0 1px 0 rgba(255, 255, 255, 0.12) !important;
-}
-
-/* Light UI: neon-button – glass depth + top highlight line (Visual Lab parity). */
-[data-light-ui="true"] .neon-button {
-  backdrop-filter: blur(14px) saturate(1.1) !important;
-  -webkit-backdrop-filter: blur(14px) saturate(1.1) !important;
-  background: linear-gradient(
-    180deg,
-    rgba(var(--mode-rgb), 0.78) 0%,
-    rgba(var(--mode-rgb-deep), 0.86) 100%
-  ) !important;
-  border-color: rgba(var(--mode-rgb), 0.45) !important;
-  box-shadow:
-    0 0 0 1px rgba(0, 0, 0, 0.3),
-    0 0 18px rgba(var(--mode-rgb), 0.2),
-    0 8px 22px rgba(0, 0, 0, 0.45),
-    inset 0 1px 0 rgba(255, 255, 255, 0.2) !important;
-  filter: none !important;
-}
-[data-light-ui="true"] .neon-button::before {
-  display: block !important;
-  opacity: 0.95;
-}
-[data-light-ui="true"] .neon-button:hover:not(:disabled) {
-  filter: brightness(1.06) !important;
-  box-shadow:
-    0 0 0 1px rgba(0, 0, 0, 0.32),
-    0 0 24px rgba(var(--mode-rgb), 0.28),
-    0 10px 28px rgba(0, 0, 0, 0.5),
-    inset 0 1px 0 rgba(255, 255, 255, 0.24) !important;
-}
-[data-light-ui="true"] .neon-button:active:not(:disabled) {
-  transform: none !important;
-}
-
-/* Light UI: progress bars – simple fill, no glow animation */
-[data-light-ui="true"] .progress-fill,
-[data-light-ui="true"] .progress-fill-glow {
-  box-shadow: none !important;
-}
-[data-light-ui="true"] .progress:hover .progress-fill {
-  box-shadow: none !important;
-}
-
-/* Light UI: mini controls – frosted pill glass */
-[data-light-ui="true"] .dashboard-mini-btn,
-[data-light-ui="true"] .dashboard-cinematic:not(.tasks-command-deck) .dashboard-mini-btn {
-  backdrop-filter: blur(12px) saturate(1.08) !important;
-  -webkit-backdrop-filter: blur(12px) saturate(1.08) !important;
-  filter: none !important;
-}
-[data-light-ui="true"] .dashboard-mini-btn-primary {
-  background: linear-gradient(
-    180deg,
-    rgba(var(--mode-rgb), 0.78) 0%,
-    rgba(var(--mode-rgb-deep), 0.84) 100%
-  ) !important;
-  border-color: rgba(var(--mode-rgb), 0.42) !important;
-  box-shadow:
-    0 0 0 1px rgba(0, 0, 0, 0.28),
-    0 0 16px rgba(var(--mode-rgb), 0.2),
-    0 6px 18px rgba(0, 0, 0, 0.42),
-    inset 0 1px 0 rgba(255, 255, 255, 0.2) !important;
-}
-[data-light-ui="true"] .dashboard-mini-btn-secondary {
-  background: rgba(6, 18, 30, 0.5) !important;
-  border-color: rgba(var(--mode-rgb), 0.26) !important;
-  box-shadow:
-    0 0 0 1px rgba(0, 0, 0, 0.22),
-    inset 0 1px 0 rgba(255, 255, 255, 0.08) !important;
-}
-[data-light-ui="true"] .dashboard-mini-btn:hover,
-[data-light-ui="true"] .dashboard-cinematic:not(.tasks-command-deck) .dashboard-mini-btn:hover {
-  filter: brightness(1.05) !important;
-  box-shadow:
-    0 0 0 1px rgba(0, 0, 0, 0.3),
-    0 0 18px rgba(var(--mode-rgb), 0.16),
-    0 6px 20px rgba(0, 0, 0, 0.4),
-    inset 0 1px 0 rgba(255, 255, 255, 0.12) !important;
-}
-
-/* Light UI: hero mission shell – same glass rim as cards */
-[data-light-ui="true"] .dashboard-mission-hero > *:first-child {
-  box-shadow: var(--light-ui-glass-shadow) !important;
-}
-
-/* Light UI: HUD chips / triggers – frosted controls */
-[data-light-ui="true"] .dashboard-cinematic:not(.tasks-command-deck) .dashboard-hud-chip,
-[data-light-ui="true"] .dashboard-cinematic:not(.tasks-command-deck) .dashboard-hud-trigger {
-  backdrop-filter: blur(12px) saturate(1.06) !important;
-  -webkit-backdrop-filter: blur(12px) saturate(1.06) !important;
-  background: rgba(6, 18, 30, 0.48) !important;
-  box-shadow:
-    0 0 0 1px rgba(0, 0, 0, 0.26),
-    0 0 14px rgba(var(--mode-rgb), 0.1),
-    0 4px 14px rgba(0, 0, 0, 0.38),
-    inset 0 1px 0 rgba(255, 255, 255, 0.08) !important;
-}
-[data-light-ui="true"] .dashboard-cinematic:not(.tasks-command-deck) .dashboard-mini-strip {
-  backdrop-filter: blur(10px) saturate(1.05) !important;
-  -webkit-backdrop-filter: blur(10px) saturate(1.05) !important;
-  background: rgba(4, 12, 22, 0.4) !important;
-  box-shadow:
-    0 0 0 1px rgba(0, 0, 0, 0.22),
-    inset 0 1px 0 rgba(255, 255, 255, 0.06) !important;
-}
-
-/* Card-simple-accent: iets lichter dan card-simple, zonder neon-rand strip */
+/* Card-simple-accent: fat glass, iets lichter dan card-simple */
 .card-simple-accent {
-  background: color-mix(in srgb, var(--mode-bg-elevated) 90%, black);
-  backdrop-filter: blur(18px) saturate(1.1);
-  -webkit-backdrop-filter: blur(18px) saturate(1.1);
+  background: color-mix(in srgb, var(--mode-bg-elevated) 88%, black);
+  backdrop-filter: var(--hq-fat-glass-blur-card);
+  -webkit-backdrop-filter: var(--hq-fat-glass-blur-card);
   border-radius: var(--hq-card-radius, 18px);
   border: 1px solid rgba(var(--mode-rgb), 0.22);
-  box-shadow: 0 6px 26px rgba(0, 0, 0, 0.42);
+  box-shadow:
+    0 0 0 1px rgba(0, 0, 0, 0.18),
+    0 8px 32px rgba(0, 0, 0, 0.44);
   position: relative;
   overflow: hidden;
   transition: box-shadow 0.2s ease, border-color 0.2s ease;
@@ -2049,52 +1591,10 @@ a.nav-item-fab-hub::after {
   text-align: center;
 }
 
-/* Light UI: HQ hub — zelfde cyan/navy familie als .bottom-nav-fab-bar, geen wit vlak */
-[data-light-ui="true"] a.nav-item-fab-hub {
-  background: linear-gradient(
-    165deg,
-    color-mix(in srgb, var(--semantic-accent, #00d4ff) 16%, rgba(8, 20, 38, 0.96)) 0%,
-    rgba(5, 12, 24, 0.97) 48%,
-    rgba(4, 10, 20, 0.98) 100%
-  );
-  border-color: color-mix(in srgb, var(--semantic-accent, #00d4ff) 32%, rgba(var(--mode-rgb), 0.28));
-  color: var(--semantic-accent, #00d4ff);
-  box-shadow:
-    0 8px 28px rgba(0, 0, 0, 0.4),
-    0 0 1px color-mix(in srgb, var(--semantic-accent, #00d4ff) 28%, transparent),
-    inset 0 1px 0 rgba(255, 255, 255, 0.07);
-  backdrop-filter: none !important;
-  -webkit-backdrop-filter: none !important;
-}
 
-[data-light-ui="true"] a.nav-item-fab-hub.active {
-  border-color: color-mix(in srgb, var(--semantic-accent, #00d4ff) 58%, rgba(var(--mode-rgb), 0.25));
-  background: linear-gradient(
-    165deg,
-    color-mix(in srgb, var(--semantic-accent, #00d4ff) 24%, rgba(4, 14, 30, 0.98)) 0%,
-    rgba(3, 8, 18, 0.99) 100%
-  );
-  box-shadow:
-    0 10px 34px rgba(0, 0, 0, 0.48),
-    0 0 28px rgba(var(--mode-rgb), 0.32),
-    inset 0 1px 0 rgba(255, 255, 255, 0.08);
-}
 
-[data-light-ui="true"] .nav-item-fab-hub-label {
-  color: color-mix(in srgb, var(--semantic-accent, #00d4ff) 92%, #e8f6ff);
-}
 
-[data-light-ui="true"] .nav-item-fab-hub-icon img,
-[data-light-ui="true"] .nav-item-fab-hub-icon svg {
-  filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.35))
-    drop-shadow(0 0 14px color-mix(in srgb, var(--semantic-accent, #00d4ff) 45%, transparent));
-}
 
-[data-light-ui="true"] .nav-item-fab-hub.active .nav-item-fab-hub-icon img,
-[data-light-ui="true"] .nav-item-fab-hub.active .nav-item-fab-hub-icon svg {
-  filter: drop-shadow(0 3px 10px rgba(0, 0, 0, 0.42))
-    drop-shadow(0 0 18px color-mix(in srgb, var(--semantic-accent, #00d4ff) 65%, transparent));
-}
 
 /* TOAST (LOCKED) */
 .toast {
@@ -2538,22 +2038,6 @@ body {
     0 0 0 1px rgba(255, 255, 255, 0.04);
 }
 
-/**
- * Light UI: same frosted stack as .hq-app-shell — only drop backdrop blur (perf).
- */
-[data-light-ui="true"] .hq-app-shell {
-  background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.045) 0%, transparent 28%, transparent 72%, rgba(0, 0, 0, 0.42) 100%),
-    radial-gradient(ellipse 100% 85% at 50% -8%, rgba(var(--mode-rgb), 0.14), transparent 58%),
-    radial-gradient(ellipse 80% 55% at 100% 0%, rgba(var(--mode-rgb-deep), 0.08), transparent 52%),
-    rgba(5, 12, 22, 0.48);
-  backdrop-filter: none !important;
-  -webkit-backdrop-filter: none !important;
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.07),
-    0 0 0 1px rgba(var(--mode-rgb), 0.06);
-}
-
 /* Main scroll area: zelfde basis als glass-cards (mode-bg), zachte accent-vegen i.p.v. zware cyan wash */
 main#main-content.hq-deck-ambient-shell {
   background:
@@ -2565,22 +2049,11 @@ main#main-content.hq-deck-ambient-shell {
       color-mix(in srgb, var(--mode-bg-main) 94%, black) 44%,
       color-mix(in srgb, var(--mode-bg-main) 98%, black) 100%
     );
-  backdrop-filter: blur(28px) saturate(1.14);
-  -webkit-backdrop-filter: blur(28px) saturate(1.14);
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.06),
-    0 0 0 1px rgba(255, 255, 255, 0.04);
-}
-[data-light-ui="true"] main#main-content.hq-deck-ambient-shell {
-  background:
-    radial-gradient(ellipse 92% 50% at 50% -14%, rgba(var(--mode-rgb), 0.22), transparent 58%),
-    radial-gradient(ellipse 55% 38% at 100% 0%, rgba(var(--mode-rgb-deep), 0.14), transparent 52%),
-    linear-gradient(to bottom, rgba(2, 10, 22, 0.88) 0%, rgba(5, 14, 26, 0.62) 45%, rgba(2, 8, 18, 0.9) 100%);
-  backdrop-filter: none !important;
-  -webkit-backdrop-filter: none !important;
+  backdrop-filter: var(--hq-fat-glass-blur);
+  -webkit-backdrop-filter: var(--hq-fat-glass-blur);
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.07),
-    0 0 0 1px rgba(var(--mode-rgb), 0.05);
+    0 0 0 1px rgba(255, 255, 255, 0.05);
 }
 
 /**
@@ -2605,49 +2078,58 @@ main#main-content.hq-deck-ambient-shell {
   }
 }
 
-/* Dashboard home: zelfde vlak als .glass-card (bento + bridge voelen één geheel). */
+/* Dashboard home: fat glass page plate (bento + bridge één familie). */
 .dashboard-cinematic .hq-frosted-main-shell {
   border-radius: var(--hq-card-radius, 20px);
-  border: 1px solid var(--border-soft);
-  background: color-mix(in srgb, var(--mode-bg-surface) 88%, black);
-  backdrop-filter: blur(22px) saturate(1.1);
-  -webkit-backdrop-filter: blur(22px) saturate(1.1);
+  border: 1px solid rgba(var(--mode-rgb), 0.16);
+  background: color-mix(in srgb, var(--mode-bg-surface) 82%, black);
+  backdrop-filter: var(--hq-fat-glass-blur);
+  -webkit-backdrop-filter: var(--hq-fat-glass-blur);
   box-shadow:
-    0 4px 22px rgba(0, 0, 0, 0.4),
-    inset 0 1px 0 rgba(255, 255, 255, 0.06);
+    0 0 0 1px rgba(0, 0, 0, 0.2),
+    0 8px 36px rgba(0, 0, 0, 0.46),
+    0 0 40px rgba(var(--mode-rgb), 0.06),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08),
+    inset 0 -12px 32px rgba(0, 0, 0, 0.28);
 }
 
 [data-mode="war"] .dashboard-cinematic .hq-frosted-main-shell {
-  border-color: rgba(220, 38, 38, 0.24);
-  background: linear-gradient(165deg, rgba(74, 0, 12, 0.55) 0%, rgba(26, 0, 6, 0.48) 100%);
+  border-color: rgba(220, 38, 38, 0.26);
+  background: linear-gradient(165deg, rgba(74, 0, 12, 0.5) 0%, rgba(26, 0, 6, 0.42) 100%);
+  backdrop-filter: var(--hq-fat-glass-blur);
+  -webkit-backdrop-filter: var(--hq-fat-glass-blur);
   box-shadow:
-    0 0 0 1px rgba(220, 38, 38, 0.14),
-    0 0 18px rgba(220, 38, 38, 0.1),
-    0 14px 40px rgba(0, 0, 0, 0.46),
+    0 0 0 1px rgba(220, 38, 38, 0.16),
+    0 0 28px rgba(220, 38, 38, 0.12),
+    0 14px 44px rgba(0, 0, 0, 0.48),
     inset 0 1px 0 rgba(255, 255, 255, 0.07),
-    inset 0 -12px 28px rgba(0, 0, 0, 0.3);
+    inset 0 -14px 34px rgba(0, 0, 0, 0.32);
 }
 
 [data-mode="recovery"] .dashboard-cinematic .hq-frosted-main-shell {
-  border-color: rgba(34, 197, 94, 0.24);
-  background: linear-gradient(165deg, rgba(0, 55, 18, 0.55) 0%, rgba(0, 24, 10, 0.48) 100%);
+  border-color: rgba(34, 197, 94, 0.26);
+  background: linear-gradient(165deg, rgba(0, 55, 18, 0.5) 0%, rgba(0, 24, 10, 0.42) 100%);
+  backdrop-filter: var(--hq-fat-glass-blur);
+  -webkit-backdrop-filter: var(--hq-fat-glass-blur);
   box-shadow:
-    0 0 0 1px rgba(34, 197, 94, 0.14),
-    0 0 18px rgba(34, 197, 94, 0.1),
-    0 14px 40px rgba(0, 0, 0, 0.46),
+    0 0 0 1px rgba(34, 197, 94, 0.16),
+    0 0 28px rgba(34, 197, 94, 0.1),
+    0 14px 44px rgba(0, 0, 0, 0.48),
     inset 0 1px 0 rgba(255, 255, 255, 0.07),
-    inset 0 -12px 28px rgba(0, 0, 0, 0.3);
+    inset 0 -14px 34px rgba(0, 0, 0, 0.32);
 }
 
 [data-mode="overdrive"] .dashboard-cinematic .hq-frosted-main-shell {
-  border-color: rgba(167, 139, 250, 0.3);
-  background: linear-gradient(165deg, rgba(50, 20, 72, 0.62) 0%, rgba(18, 8, 32, 0.5) 100%);
+  border-color: rgba(167, 139, 250, 0.32);
+  background: linear-gradient(165deg, rgba(50, 20, 72, 0.56) 0%, rgba(18, 8, 32, 0.44) 100%);
+  backdrop-filter: var(--hq-fat-glass-blur);
+  -webkit-backdrop-filter: var(--hq-fat-glass-blur);
   box-shadow:
-    0 0 0 1px rgba(168, 85, 247, 0.18),
-    0 0 22px rgba(192, 38, 211, 0.1),
-    0 14px 40px rgba(0, 0, 0, 0.46),
+    0 0 0 1px rgba(168, 85, 247, 0.2),
+    0 0 32px rgba(192, 38, 211, 0.12),
+    0 14px 44px rgba(0, 0, 0, 0.48),
     inset 0 1px 0 rgba(255, 255, 255, 0.07),
-    inset 0 -12px 28px rgba(0, 0, 0, 0.3);
+    inset 0 -14px 34px rgba(0, 0, 0, 0.32);
 }
 
 main.tasks-page-root {
@@ -2679,11 +2161,14 @@ main.tasks-page-root {
 [data-deck-chrome="true"] .dashboard-cinematic .glass-card,
 [data-deck-chrome="true"] .dashboard-cinematic .card-simple,
 [data-deck-chrome="true"] .dashboard-cinematic .card-simple-accent {
-  border: 1px solid var(--border-soft) !important;
-  background: color-mix(in srgb, var(--mode-bg-surface) 88%, black) !important;
-  backdrop-filter: blur(16px) saturate(1.08);
-  -webkit-backdrop-filter: blur(16px) saturate(1.08);
-  box-shadow: 0 4px 22px rgba(0, 0, 0, 0.4) !important;
+  border: 1px solid rgba(var(--mode-rgb), 0.18) !important;
+  background: color-mix(in srgb, var(--mode-bg-surface) 84%, black) !important;
+  backdrop-filter: var(--hq-fat-glass-blur-card);
+  -webkit-backdrop-filter: var(--hq-fat-glass-blur-card);
+  box-shadow:
+    0 0 0 1px rgba(0, 0, 0, 0.18),
+    0 8px 32px rgba(0, 0, 0, 0.44),
+    inset 0 1px 0 rgba(255, 255, 255, 0.07) !important;
 }
 
 [data-deck-chrome="true"] .dashboard-cinematic .dashboard-top-strip {
@@ -3174,13 +2659,6 @@ header h1 { margin: 0; }
   );
 }
 
-[data-light-ui="true"] .visual-lab-shell-nebula-root {
-  background-image: none !important;
-  background-color: var(--mode-bg-main) !important;
-}
-[data-light-ui="true"] .visual-lab-shell-nebula-root::before {
-  display: none !important;
-}
 
 /*
  * Visual Lab — dashboard one-screen mock: compactere pedestal + resource-meter links.
@@ -3224,46 +2702,61 @@ header h1 { margin: 0; }
   max-height: min(118px, 26dvh) !important;
 }
 
-/* Command-deck buitenrand: zelfde frosted stack als dashboard glass-cards */
+/* Command-deck buitenrand: fat glass (zware frosted stack, dieper inset) */
 .dashboard-command-deck-frame {
-  border: 1px solid var(--border-soft);
+  border: 1px solid rgba(var(--mode-rgb), 0.18);
   background: linear-gradient(
     165deg,
-    color-mix(in srgb, var(--mode-bg-surface) 90%, rgb(var(--mode-rgb-deep))) 0%,
-    color-mix(in srgb, var(--mode-bg-main) 94%, black) 100%
+    color-mix(in srgb, var(--mode-bg-surface) 82%, rgb(var(--mode-rgb-deep))) 0%,
+    color-mix(in srgb, var(--mode-bg-main) 88%, black) 100%
   );
-  backdrop-filter: blur(20px) saturate(1.08);
-  -webkit-backdrop-filter: blur(20px) saturate(1.08);
+  backdrop-filter: var(--hq-fat-glass-blur);
+  -webkit-backdrop-filter: var(--hq-fat-glass-blur);
   box-shadow:
-    0 4px 26px rgba(0, 0, 0, 0.42),
-    inset 0 1px 0 rgba(255, 255, 255, 0.06);
+    0 0 0 1px rgba(0, 0, 0, 0.22),
+    0 10px 40px rgba(0, 0, 0, 0.5),
+    0 0 44px rgba(var(--mode-rgb), 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08),
+    inset 0 -14px 36px rgba(0, 0, 0, 0.32);
 }
 
 [data-mode="war"] .dashboard-command-deck-frame {
-  border-color: rgba(220, 38, 38, 0.22);
-  background: linear-gradient(165deg, rgba(74, 0, 12, 0.52) 0%, rgba(26, 0, 6, 0.45) 100%);
+  border-color: rgba(220, 38, 38, 0.26);
+  background: linear-gradient(165deg, rgba(74, 0, 12, 0.48) 0%, rgba(26, 0, 6, 0.4) 100%);
+  backdrop-filter: var(--hq-fat-glass-blur);
+  -webkit-backdrop-filter: var(--hq-fat-glass-blur);
   box-shadow:
-    0 4px 26px rgba(0, 0, 0, 0.44),
-    0 0 0 1px rgba(220, 38, 38, 0.08),
-    inset 0 1px 0 rgba(255, 255, 255, 0.05);
+    0 0 0 1px rgba(220, 38, 38, 0.12),
+    0 10px 40px rgba(0, 0, 0, 0.48),
+    0 0 40px rgba(220, 38, 38, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06),
+    inset 0 -14px 36px rgba(0, 0, 0, 0.34);
 }
 
 [data-mode="recovery"] .dashboard-command-deck-frame {
-  border-color: rgba(34, 197, 94, 0.22);
-  background: linear-gradient(165deg, rgba(0, 55, 18, 0.52) 0%, rgba(0, 24, 10, 0.45) 100%);
+  border-color: rgba(34, 197, 94, 0.26);
+  background: linear-gradient(165deg, rgba(0, 55, 18, 0.48) 0%, rgba(0, 24, 10, 0.4) 100%);
+  backdrop-filter: var(--hq-fat-glass-blur);
+  -webkit-backdrop-filter: var(--hq-fat-glass-blur);
   box-shadow:
-    0 4px 26px rgba(0, 0, 0, 0.44),
-    0 0 0 1px rgba(34, 197, 94, 0.08),
-    inset 0 1px 0 rgba(255, 255, 255, 0.05);
+    0 0 0 1px rgba(34, 197, 94, 0.12),
+    0 10px 40px rgba(0, 0, 0, 0.48),
+    0 0 40px rgba(34, 197, 94, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06),
+    inset 0 -14px 36px rgba(0, 0, 0, 0.34);
 }
 
 [data-mode="overdrive"] .dashboard-command-deck-frame {
-  border-color: rgba(167, 139, 250, 0.28);
-  background: linear-gradient(165deg, rgba(50, 20, 72, 0.58) 0%, rgba(18, 8, 32, 0.46) 100%);
+  border-color: rgba(167, 139, 250, 0.32);
+  background: linear-gradient(165deg, rgba(50, 20, 72, 0.52) 0%, rgba(18, 8, 32, 0.42) 100%);
+  backdrop-filter: var(--hq-fat-glass-blur);
+  -webkit-backdrop-filter: var(--hq-fat-glass-blur);
   box-shadow:
-    0 4px 26px rgba(0, 0, 0, 0.44),
-    0 0 0 1px rgba(168, 85, 247, 0.1),
-    inset 0 1px 0 rgba(255, 255, 255, 0.05);
+    0 0 0 1px rgba(168, 85, 247, 0.14),
+    0 10px 40px rgba(0, 0, 0, 0.48),
+    0 0 44px rgba(168, 85, 247, 0.12),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06),
+    inset 0 -14px 36px rgba(0, 0, 0, 0.34);
 }
 
 .dashboard-bridge,
@@ -3272,18 +2765,22 @@ header h1 { margin: 0; }
   z-index: 3;
   padding: 0.75rem 1rem 1rem;
   margin-bottom: 0.5rem;
-  border: 1px solid var(--border-soft);
-  background: color-mix(in srgb, var(--mode-bg-surface) 88%, black) !important;
-  backdrop-filter: blur(16px) saturate(1.08);
-  -webkit-backdrop-filter: blur(16px) saturate(1.08);
-  box-shadow: 0 4px 22px rgba(0, 0, 0, 0.4) !important;
+  border: 1px solid rgba(var(--mode-rgb), 0.16);
+  background: color-mix(in srgb, var(--mode-bg-surface) 82%, black) !important;
+  backdrop-filter: var(--hq-fat-glass-blur);
+  -webkit-backdrop-filter: var(--hq-fat-glass-blur);
+  box-shadow:
+    0 0 0 1px rgba(0, 0, 0, 0.2),
+    0 8px 34px rgba(0, 0, 0, 0.46),
+    inset 0 1px 0 rgba(255, 255, 255, 0.07) !important;
 }
 
 .dashboard-bridge-body {
   padding: 1rem 1rem 1.125rem !important;
-  background: color-mix(in srgb, var(--mode-bg-surface) 84%, black) !important;
-  backdrop-filter: blur(14px) saturate(1.06);
-  -webkit-backdrop-filter: blur(14px) saturate(1.06);
+  background: color-mix(in srgb, var(--mode-bg-surface) 80%, black) !important;
+  backdrop-filter: var(--hq-fat-glass-blur-card);
+  -webkit-backdrop-filter: var(--hq-fat-glass-blur-card);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
 }
 
 /* Growth hub: meer breedte, smallere zijmarges op de bridge */
@@ -3352,61 +2849,84 @@ header h1 { margin: 0; }
   color: #ffd9bf;
 }
 
-/* Dashboard: cards — zelfde vlakke taal als card-simple (geen HUD-inset) */
+/* Dashboard: hub cards — fat glass (iets lichtere blur dan outer shell) */
 .dashboard-cinematic .glass-card,
 .dashboard-cinematic .card-simple,
 .dashboard-cinematic .card-simple-accent {
-  border: 1px solid var(--border-soft) !important;
-  background: color-mix(in srgb, var(--mode-bg-surface) 88%, black) !important;
-  backdrop-filter: blur(16px) saturate(1.08);
-  -webkit-backdrop-filter: blur(16px) saturate(1.08);
-  box-shadow: 0 4px 22px rgba(0, 0, 0, 0.4) !important;
+  border: 1px solid rgba(var(--mode-rgb), 0.18) !important;
+  background: color-mix(in srgb, var(--mode-bg-surface) 84%, black) !important;
+  backdrop-filter: var(--hq-fat-glass-blur-card);
+  -webkit-backdrop-filter: var(--hq-fat-glass-blur-card);
+  box-shadow:
+    0 0 0 1px rgba(0, 0, 0, 0.18),
+    0 8px 32px rgba(0, 0, 0, 0.44),
+    inset 0 1px 0 rgba(255, 255, 255, 0.07) !important;
 }
 
 /*
  * Command deck (`tasks-command-deck`): lower fill opacity so backdrop blur reads; stronger rim + blur.
- * `[data-light-ui="true"]` rules elsewhere beat this on background when Light UI is on.
  * Placed before `[data-mode]` blocks so war/recovery/overdrive still win on the main surface.
  */
 .tasks-command-deck.dashboard-cinematic .glass-card {
-  border: 1px solid rgba(var(--mode-rgb), 0.22) !important;
-  background: color-mix(in srgb, var(--mode-bg-surface) 86%, black) !important;
-  backdrop-filter: blur(20px) saturate(1.1) !important;
-  -webkit-backdrop-filter: blur(20px) saturate(1.1) !important;
-  box-shadow: 0 6px 26px rgba(0, 0, 0, 0.45) !important;
+  border: 1px solid rgba(var(--mode-rgb), 0.24) !important;
+  background: color-mix(in srgb, var(--mode-bg-surface) 82%, black) !important;
+  backdrop-filter: var(--hq-fat-glass-blur-card) !important;
+  -webkit-backdrop-filter: var(--hq-fat-glass-blur-card) !important;
+  box-shadow:
+    0 0 0 1px rgba(0, 0, 0, 0.2),
+    0 8px 34px rgba(0, 0, 0, 0.48),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08) !important;
 }
 
 .tasks-command-deck.dashboard-cinematic .card-simple,
 .tasks-command-deck.dashboard-cinematic .card-simple-accent {
-  border: 1px solid rgba(var(--mode-rgb), 0.22) !important;
-  background: color-mix(in srgb, var(--mode-bg-surface) 84%, black) !important;
-  backdrop-filter: blur(18px) saturate(1.1) !important;
-  -webkit-backdrop-filter: blur(18px) saturate(1.1) !important;
-  box-shadow: 0 6px 26px rgba(0, 0, 0, 0.45) !important;
+  border: 1px solid rgba(var(--mode-rgb), 0.24) !important;
+  background: color-mix(in srgb, var(--mode-bg-surface) 82%, black) !important;
+  backdrop-filter: var(--hq-fat-glass-blur-card) !important;
+  -webkit-backdrop-filter: var(--hq-fat-glass-blur-card) !important;
+  box-shadow:
+    0 0 0 1px rgba(0, 0, 0, 0.2),
+    0 8px 34px rgba(0, 0, 0, 0.48),
+    inset 0 1px 0 rgba(255, 255, 255, 0.07) !important;
 }
 
 [data-mode="war"] .dashboard-cinematic .glass-card,
 [data-mode="war"] .dashboard-cinematic .card-simple,
 [data-mode="war"] .dashboard-cinematic .card-simple-accent {
-  border: 1px solid rgba(220, 38, 38, 0.22) !important;
-  background: linear-gradient(165deg, rgba(74, 0, 12, 0.62) 0%, rgba(26, 0, 6, 0.52) 100%) !important;
-  box-shadow: 0 6px 26px rgba(0, 0, 0, 0.44), 0 0 0 1px rgba(220, 38, 38, 0.1) !important;
+  border: 1px solid rgba(220, 38, 38, 0.26) !important;
+  background: linear-gradient(165deg, rgba(74, 0, 12, 0.55) 0%, rgba(26, 0, 6, 0.46) 100%) !important;
+  backdrop-filter: var(--hq-fat-glass-blur-card) !important;
+  -webkit-backdrop-filter: var(--hq-fat-glass-blur-card) !important;
+  box-shadow:
+    0 0 0 1px rgba(220, 38, 38, 0.14),
+    0 8px 34px rgba(0, 0, 0, 0.46),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06) !important;
 }
 
 [data-mode="recovery"] .dashboard-cinematic .glass-card,
 [data-mode="recovery"] .dashboard-cinematic .card-simple,
 [data-mode="recovery"] .dashboard-cinematic .card-simple-accent {
-  border: 1px solid rgba(34, 197, 94, 0.22) !important;
-  background: linear-gradient(165deg, rgba(0, 55, 18, 0.62) 0%, rgba(0, 24, 10, 0.52) 100%) !important;
-  box-shadow: 0 6px 26px rgba(0, 0, 0, 0.44), 0 0 0 1px rgba(34, 197, 94, 0.1) !important;
+  border: 1px solid rgba(34, 197, 94, 0.26) !important;
+  background: linear-gradient(165deg, rgba(0, 55, 18, 0.55) 0%, rgba(0, 24, 10, 0.46) 100%) !important;
+  backdrop-filter: var(--hq-fat-glass-blur-card) !important;
+  -webkit-backdrop-filter: var(--hq-fat-glass-blur-card) !important;
+  box-shadow:
+    0 0 0 1px rgba(34, 197, 94, 0.14),
+    0 8px 34px rgba(0, 0, 0, 0.46),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06) !important;
 }
 
 [data-mode="overdrive"] .dashboard-cinematic .glass-card,
 [data-mode="overdrive"] .dashboard-cinematic .card-simple,
 [data-mode="overdrive"] .dashboard-cinematic .card-simple-accent {
-  border: 1px solid rgba(167, 139, 250, 0.32) !important;
-  background: linear-gradient(165deg, rgba(50, 20, 72, 0.68) 0%, rgba(18, 8, 32, 0.55) 100%) !important;
-  box-shadow: 0 6px 26px rgba(0, 0, 0, 0.44), 0 0 0 1px rgba(168, 85, 247, 0.14) !important;
+  border: 1px solid rgba(167, 139, 250, 0.34) !important;
+  background: linear-gradient(165deg, rgba(50, 20, 72, 0.62) 0%, rgba(18, 8, 32, 0.5) 100%) !important;
+  backdrop-filter: var(--hq-fat-glass-blur-card) !important;
+  -webkit-backdrop-filter: var(--hq-fat-glass-blur-card) !important;
+  box-shadow:
+    0 0 0 1px rgba(168, 85, 247, 0.16),
+    0 8px 34px rgba(0, 0, 0, 0.46),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06) !important;
 }
 
 .dashboard-cinematic .primary-btn,
@@ -3421,8 +2941,8 @@ header h1 { margin: 0; }
 .dashboard-cinematic .commander-cta-glass,
 .tasks-command-deck.dashboard-cinematic .commander-cta-glass {
   animation: none !important;
-  backdrop-filter: blur(22px) saturate(1.14) !important;
-  -webkit-backdrop-filter: blur(22px) saturate(1.14) !important;
+  backdrop-filter: var(--hq-fat-glass-blur-card) !important;
+  -webkit-backdrop-filter: var(--hq-fat-glass-blur-card) !important;
   background: rgba(4, 14, 26, 0.38) !important;
   border: 1px solid rgba(var(--mode-rgb), 0.34) !important;
   box-shadow:
@@ -3478,55 +2998,9 @@ header h1 { margin: 0; }
     inset 0 -8px 22px rgba(0, 0, 0, 0.32) !important;
 }
 
-[data-light-ui="true"] .dashboard-cinematic .commander-cta-glass {
-  backdrop-filter: var(--light-ui-glass-blur) !important;
-  -webkit-backdrop-filter: var(--light-ui-glass-blur) !important;
-  background: var(--light-ui-glass-bg) !important;
-  border: 1px solid rgba(var(--mode-rgb), 0.34) !important;
-  box-shadow:
-    0 0 0 1px rgba(0, 0, 0, 0.32),
-    0 0 22px rgba(var(--mode-rgb), 0.16),
-    0 10px 32px rgba(0, 0, 0, 0.5),
-    inset 0 1px 0 rgba(255, 255, 255, 0.12),
-    inset 0 -8px 22px rgba(0, 0, 0, 0.28) !important;
-  filter: none !important;
-}
 
-[data-light-ui="true"] .dashboard-cinematic .commander-cta-glass:hover {
-  filter: brightness(1.06) !important;
-  border-color: rgba(var(--mode-rgb), 0.48) !important;
-  box-shadow:
-    0 0 0 1px rgba(0, 0, 0, 0.34),
-    0 0 28px rgba(var(--mode-rgb), 0.26),
-    0 14px 38px rgba(0, 0, 0, 0.55),
-    inset 0 1px 0 rgba(255, 255, 255, 0.15),
-    inset 0 -8px 22px rgba(0, 0, 0, 0.3) !important;
-}
 
-/* Beat Light UI flattening for the hero CTA inside the command deck (see glass-card note above). */
-[data-light-ui="true"] .tasks-command-deck.dashboard-cinematic .commander-cta-glass {
-  backdrop-filter: blur(20px) saturate(1.12) !important;
-  -webkit-backdrop-filter: blur(20px) saturate(1.12) !important;
-  background: rgba(4, 14, 26, 0.42) !important;
-  border: 1px solid rgba(var(--mode-rgb), 0.34) !important;
-  box-shadow:
-    0 0 0 1px rgba(0, 0, 0, 0.32),
-    0 0 22px rgba(var(--mode-rgb), 0.16),
-    0 10px 32px rgba(0, 0, 0, 0.5),
-    inset 0 1px 0 rgba(255, 255, 255, 0.12),
-    inset 0 -8px 22px rgba(0, 0, 0, 0.28) !important;
-}
 
-[data-light-ui="true"] .tasks-command-deck.dashboard-cinematic .commander-cta-glass:hover {
-  border-color: rgba(var(--mode-rgb), 0.48) !important;
-  box-shadow:
-    0 0 0 1px rgba(0, 0, 0, 0.34),
-    0 0 28px rgba(var(--mode-rgb), 0.26),
-    0 14px 38px rgba(0, 0, 0, 0.55),
-    inset 0 1px 0 rgba(255, 255, 255, 0.15),
-    inset 0 -8px 22px rgba(0, 0, 0, 0.3) !important;
-  filter: brightness(1.06) !important;
-}
 
 [data-mode="war"] .dashboard-cinematic .primary-btn,
 [data-mode="war"] .dashboard-cinematic .btn-primary,
@@ -4429,13 +3903,16 @@ header h1 { margin: 0; }
 .glass-panel,
 .glass-card,
 .hq-card {
-  background: color-mix(in srgb, var(--mode-bg-surface) 88%, black);
-  backdrop-filter: blur(16px) saturate(1.08);
-  -webkit-backdrop-filter: blur(16px) saturate(1.08);
+  background: color-mix(in srgb, var(--mode-bg-surface) 84%, black);
+  backdrop-filter: var(--hq-fat-glass-blur-card);
+  -webkit-backdrop-filter: var(--hq-fat-glass-blur-card);
   border-radius: var(--hq-card-radius, 20px);
   padding: 20px;
-  border: 1px solid var(--border-soft);
-  box-shadow: 0 4px 22px rgba(0, 0, 0, 0.38);
+  border: 1px solid rgba(var(--mode-rgb), 0.16);
+  box-shadow:
+    0 0 0 1px rgba(0, 0, 0, 0.18),
+    0 8px 32px rgba(0, 0, 0, 0.42),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06);
   position: relative;
   overflow: hidden;
 }
@@ -4466,10 +3943,13 @@ header h1 { margin: 0; }
 .glass-card-3d,
 .glass-card.glass-card-3d,
 .card.glass-card-3d {
-  background: color-mix(in srgb, var(--mode-bg-surface) 88%, black) !important;
-  backdrop-filter: blur(18px) saturate(1.08);
-  -webkit-backdrop-filter: blur(18px) saturate(1.08);
-  box-shadow: 0 6px 28px rgba(0, 0, 0, 0.42), 0 0 0 1px rgba(var(--mode-rgb), 0.12) !important;
+  background: color-mix(in srgb, var(--mode-bg-surface) 84%, black) !important;
+  backdrop-filter: var(--hq-fat-glass-blur-card);
+  -webkit-backdrop-filter: var(--hq-fat-glass-blur-card);
+  box-shadow:
+    0 0 0 1px rgba(var(--mode-rgb), 0.14),
+    0 8px 34px rgba(0, 0, 0, 0.46),
+    inset 0 1px 0 rgba(255, 255, 255, 0.07) !important;
 }
 .glass-card-3d::before,
 .glass-card.glass-card-3d::before,
@@ -4480,10 +3960,13 @@ header h1 { margin: 0; }
   display: none !important;
 }
 .cinematic-card.glass-card-3d {
-  background: color-mix(in srgb, var(--mode-bg-surface) 88%, black) !important;
-  backdrop-filter: blur(18px) saturate(1.08);
-  -webkit-backdrop-filter: blur(18px) saturate(1.08);
-  box-shadow: 0 6px 28px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(var(--mode-rgb), 0.12) !important;
+  background: color-mix(in srgb, var(--mode-bg-surface) 84%, black) !important;
+  backdrop-filter: var(--hq-fat-glass-blur-card);
+  -webkit-backdrop-filter: var(--hq-fat-glass-blur-card);
+  box-shadow:
+    0 0 0 1px rgba(var(--mode-rgb), 0.14),
+    0 8px 34px rgba(0, 0, 0, 0.44),
+    inset 0 1px 0 rgba(255, 255, 255, 0.07) !important;
 }
 
 /* Global mode-surface sync for cardholders outside dashboard-specific selectors. */

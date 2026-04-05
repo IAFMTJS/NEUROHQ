@@ -3,41 +3,9 @@ import nextDynamic from "next/dynamic";
 import Link from "next/link";
 import { addDays, format } from "date-fns";
 import { nl } from "date-fns/locale";
-import { getSavingsGoals, getSavingsContributions } from "@/app/actions/savings";
-import {
-  getBudgetEntries,
-  getBudgetSettings,
-  getBudgetPeriodBounds,
-  getCurrentMonthExpensesCents,
-  getCurrentMonthIncomeCents,
-  getCurrentWeekExpensesCents,
-  getCurrentWeekIncomeCents,
-  getFrozenEntries,
-  getFrozenEntriesReadyForAction,
-  getMonthExpensesCents,
-  getMonthIncomeCents,
-  getPaydayDayOfMonth,
-  getRecurringTemplates,
-  generateRecurringEntries,
-  getUnplannedWeeklySummary,
-} from "@/app/actions/budget";
-import { getFinanceState, getFinancialInsightsSafe, getBudgetTargets } from "@/app/actions/dcic/finance-state";
-import { getIncomeSources } from "@/app/actions/dcic/income-sources";
-import { getAlternatives } from "@/app/actions/alternatives";
-import { getBudgetWeeklyReviewStatus } from "@/app/actions/budget-weekly-review";
-import { getBudgetDisciplineXpThisWeek, getBudgetDisciplineCompletedToday } from "@/app/actions/budget-discipline";
-import { syncBudgetDisciplineFromDataForToday } from "@/app/actions/missions-performance";
-import { getUserPreferencesOrDefaults } from "@/app/actions/preferences";
-import { getImpulseTimeWindow } from "@/app/actions/budget-impulse-pattern";
-import {
-  autoAwardBudgetOptimizationForCurrentUser,
-  getBudgetControlState,
-  getBudgetOptimizationSuggestions,
-} from "@/app/actions/budget-intelligence";
-import { evaluateFlexBudgetForDay, getFlexBudgetHeroPayload } from "@/app/actions/flex-budget";
-import { getStrategyPacingHints } from "@/app/actions/strategy-engine-pacing";
+import { getMonthExpensesCents, getMonthIncomeCents } from "@/app/actions/budget";
+import { loadBudgetPageDataBatch, runBudgetPagePreamble } from "@/lib/budget/budget-page-load";
 import { formatMonthYearShort } from "@/lib/utils/date-locale";
-import { formatCents } from "@/lib/utils/currency";
 import { getBudgetToday, getBudgetAdjacentMonths, getPreviousPeriodBounds } from "@/lib/utils/budget-date";
 import { getSafeDaysThisWeek, getBudgetLoadTrend } from "@/lib/dcic/finance-engine";
 import { deriveCanonicalBudgetSignals } from "@/lib/budget/canonical";
@@ -78,62 +46,53 @@ export default async function BudgetPage({ searchParams }: Props) {
   const isHistoryView = !!monthParam && /^\d{4}-\d{2}$/.test(monthParam);
   const [year, month] = isHistoryView ? monthParam!.split("-").map(Number) : [0, 0];
 
-  /** Run preamble in parallel: previously ~5 sequential server round-trips before the main batch. */
-  const [, , , prefs, periodBounds, paydayDayOfMonth] = await Promise.all([
-    (async () => {
-      try {
-        await generateRecurringEntries();
-      } catch {
-        /* table may not exist yet */
-      }
-    })(),
-    (async () => {
-      try {
-        await autoAwardBudgetOptimizationForCurrentUser();
-      } catch {
-        /* ignore auto-award failures to keep budget page resilient */
-      }
-    })(),
-    syncBudgetDisciplineFromDataForToday(),
-    getUserPreferencesOrDefaults(),
-    getBudgetPeriodBounds(),
-    getPaydayDayOfMonth(),
-  ]);
+  const { prefs, periodBounds, paydayDayOfMonth } = await runBudgetPagePreamble();
   const simplifiedBudget = prefs.simplified_content === true;
   const { periodStart, periodEnd, isPaydayCycle } = periodBounds;
   const { nextMonthStart, nextMonthEnd, prevMonthStart, prevMonthEnd } = getBudgetAdjacentMonths();
   const prevPeriodRange = isPaydayCycle
     ? getPreviousPeriodBounds(periodStart, paydayDayOfMonth ?? 25)
     : { prevStart: prevMonthStart, prevEnd: prevMonthEnd };
-  const [goals, entries, nextMonthEntries, prevMonthEntries, alternatives, budgetSettings, currentMonthExpenses, currentMonthIncome, currentWeekExpenses, currentWeekIncome, activeFrozen, readyForAction, unplannedSummary, contributions, recurringTemplates, financeState, financialInsights, incomeSources, budgetTargets, _paydayDayOfMonth, weeklyReviewStatus, disciplineXpThisWeek, disciplineCompletedToday, impulseWindow, budgetControlState, optimization, strategyPacingHints] = await Promise.all([
-    getSavingsGoals(),
-    getBudgetEntries(periodStart, periodEnd),
-    getBudgetEntries(nextMonthStart, nextMonthEnd),
-    getBudgetEntries(prevPeriodRange.prevStart, prevPeriodRange.prevEnd),
-    getAlternatives(),
-    getBudgetSettings(),
-    getCurrentMonthExpensesCents(),
-    getCurrentMonthIncomeCents(),
-    getCurrentWeekExpensesCents(),
-    getCurrentWeekIncomeCents(),
-    getFrozenEntries(),
-    getFrozenEntriesReadyForAction(),
-    getUnplannedWeeklySummary(),
-    getSavingsContributions({ fromDate: periodStart, toDate: periodEnd }),
-    getRecurringTemplates(),
-    getFinanceState(),
-    getFinancialInsightsSafe(),
-    getIncomeSources(),
-    getBudgetTargets(),
-    Promise.resolve(paydayDayOfMonth),
-    getBudgetWeeklyReviewStatus(),
-    getBudgetDisciplineXpThisWeek(),
-    getBudgetDisciplineCompletedToday(),
-    getImpulseTimeWindow(),
-    getBudgetControlState(),
-    getBudgetOptimizationSuggestions(),
-    getStrategyPacingHints(),
-  ]);
+
+  const {
+    goals,
+    entries,
+    nextMonthEntries,
+    prevMonthEntries,
+    alternatives,
+    budgetSettings,
+    currentMonthExpenses,
+    currentMonthIncome,
+    currentWeekExpenses,
+    currentWeekIncome,
+    activeFrozen,
+    readyForAction,
+    unplannedSummary,
+    contributions,
+    recurringTemplates,
+    financeState,
+    financialInsights,
+    incomeSources,
+    budgetTargets,
+    weeklyReviewStatus,
+    disciplineXpThisWeek,
+    disciplineCompletedToday,
+    impulseWindow,
+    budgetControlState,
+    optimization,
+    strategyPacingHints,
+    flexHeroPayload,
+  } = await loadBudgetPageDataBatch({
+    today,
+    isHistoryView,
+    periodStart,
+    periodEnd,
+    nextMonthStart,
+    nextMonthEnd,
+    prevStart: prevPeriodRange.prevStart,
+    prevEnd: prevPeriodRange.prevEnd,
+    paydayDayOfMonth,
+  });
   const strategyQuarterSavingsForExecute =
     !isHistoryView &&
     strategyPacingHints &&
@@ -201,8 +160,12 @@ export default async function BudgetPage({ searchParams }: Props) {
   let periodLabel = "this month"; // canonical period label for active period
   let historyMode = false;
   if (isHistoryView) {
-    expensesCents = await getMonthExpensesCents(year, month);
-    incomeCents = await getMonthIncomeCents(year, month);
+    const [monthExp, monthInc] = await Promise.all([
+      getMonthExpensesCents(year, month),
+      getMonthIncomeCents(year, month),
+    ]);
+    expensesCents = monthExp;
+    incomeCents = monthInc;
     periodLabel = formatMonthYearShort(year, month);
     historyMode = true;
   } else if (isWeekly) {
@@ -295,16 +258,6 @@ export default async function BudgetPage({ searchParams }: Props) {
       : remainingToSpendCents < 5000
       ? { title: "Guarded", tone: "text-[var(--mode-text-soft)]", border: "border-[var(--semantic-ring)]/30 bg-[var(--semantic-accent)]/10" }
       : { title: "Stable", tone: "text-emerald-200", border: "border-emerald-400/30 bg-emerald-400/10" };
-
-  let flexHeroPayload: Awaited<ReturnType<typeof getFlexBudgetHeroPayload>> = null;
-  if (!historyMode) {
-    try {
-      await evaluateFlexBudgetForDay(today);
-      flexHeroPayload = await getFlexBudgetHeroPayload();
-    } catch {
-      flexHeroPayload = null;
-    }
-  }
 
   const budgetCommandToolbar = (
     <>

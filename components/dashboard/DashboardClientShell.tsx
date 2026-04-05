@@ -225,7 +225,6 @@ export function DashboardClientShell() {
 
   const effectiveCritical: DashboardCritical = critical ?? {
     dateStr: fallbackDateStr,
-    lightUi: false,
     energyPct: 50,
     focusPct: 50,
     loadPct: 50,
@@ -328,7 +327,6 @@ export function DashboardClientShell() {
   const heroFocusPct = heroState ? Math.round((heroState.focus / 10) * 100) : focusPct;
   const heroLoadPct = heroState ? Math.round((heroState.sensory_load / 10) * 100) : loadPct;
 
-  const skipCinematicLayers = critical?.lightUi === true;
   const snapshotBudgetRemainingCents =
     typeof budgetSnapshot?.budgetRemainingCents === "number"
       ? (budgetSnapshot.budgetRemainingCents as number)
@@ -463,7 +461,7 @@ export function DashboardClientShell() {
                     </span>
                   </>
                 }
-                outerClassName={`idle-breathing ${skipCinematicLayers ? "light-ui-defer-paint" : ""}`.trim()}
+                outerClassName="idle-breathing"
                 innerClassName="gap-3 [-webkit-overflow-scrolling:touch]"
               >
                 <div

@@ -10,8 +10,6 @@ type Props = {
   hubLabel: string;
   /** Kept for API compatibility; the deck always shows `hubLabel` in the header. */
   showBridgeLabel?: boolean;
-  /** When true, defer heavy paint in inner body (matches previous light-ui bridge hint). */
-  lightUi?: boolean;
   /** Narrower horizontal bridge padding + full-bleed outer strip (e.g. Growth). */
   compactHorizontal?: boolean;
   /** Less top padding so primary chrome (e.g. tab bar) sits higher — Growth /learning. */
@@ -27,7 +25,6 @@ export function DashboardHubCommandShell({
   children,
   hubLabel,
   showBridgeLabel: _showBridgeLabel = true,
-  lightUi = false,
   compactHorizontal = false,
   compactVertical = false,
 }: Props) {
@@ -45,11 +42,9 @@ export function DashboardHubCommandShell({
     return { "--mode-rgb": "0, 212, 255", "--mode-rgb-deep": "0, 136, 255" } as CSSProperties;
   }, [dcicMode]);
 
-  const skipCinematic = lightUi === true;
-
   return (
     <div
-      className={`relative w-full overflow-x-hidden ${skipCinematic ? "light-ui-defer-paint" : ""}`}
+      className="relative w-full overflow-x-hidden"
       style={dcicModeVars}
       data-mode={dcicMode}
     >
@@ -64,7 +59,7 @@ export function DashboardHubCommandShell({
           <div className="hq-frosted-main-shell">
             <DashboardCommandDeckFrame
               deckTitle={hubLabel}
-              outerClassName={`idle-breathing ${skipCinematic ? "light-ui-defer-paint" : ""}`.trim()}
+              outerClassName="idle-breathing"
               innerClassName={compactVertical ? "gap-3 md:gap-4" : "gap-4"}
             >
               <div className="flex flex-col gap-4 [-webkit-overflow-scrolling:touch]">{children}</div>

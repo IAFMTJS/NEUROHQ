@@ -5,16 +5,13 @@ import { DashboardHubCommandShell } from "@/components/layout/DashboardHubComman
 
 type Props = {
   children: ReactNode;
-  /** When true, skip starfield / mist (matches dashboard light UI). */
-  lightUi?: boolean;
 };
 
-export function GrowthPageCommandShell({ children, lightUi = false }: Props) {
+export function GrowthPageCommandShell({ children }: Props) {
   return (
     <DashboardHubCommandShell
       hubLabel="Growth"
       showBridgeLabel={false}
-      lightUi={lightUi}
       compactHorizontal
       compactVertical
     >

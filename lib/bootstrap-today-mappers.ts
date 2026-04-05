@@ -1,5 +1,11 @@
 import type { BootstrapTodayResponse } from "@/lib/daily-snapshot-full-sync";
-import type { BudgetSnapshot, DashboardSnapshot, MissionsSnapshot } from "@/types/daily-snapshot";
+import type {
+  BudgetSnapshot,
+  DailySnapshot,
+  DashboardSnapshot,
+  LearningSnapshot,
+  MissionsSnapshot,
+} from "@/types/daily-snapshot";
 
 /** Maps `/api/bootstrap/today` `budget` JSON to `BudgetSnapshot` (same rules as `daily-initialize`). */
 export function mapBootstrapBudgetToSnapshot(
@@ -63,6 +69,72 @@ export function dashboardFromBootstrapToday(
     };
   }
   return null;
+}
+
+/**
+ * Merges `/api/bootstrap/today` into an existing daily snapshot (missions, dashboard, budget, learning, DCIC).
+ * Does not fetch calendar — preserves `snapshot.calendar`.
+ */
+export function mergeBootstrapTodayIntoDailySnapshot(
+  snapshot: DailySnapshot,
+  data: BootstrapTodayResponse
+): DailySnapshot {
+  const dateStr = (data.date as string | undefined) ?? snapshot.date;
+  const missions =
+    missionsFromBootstrapToday(data, dateStr) ?? {
+      dateStr,
+      tasksByDate: (data.tasks ?? {}) as Record<string, unknown[]>,
+      completedToday: (data.completedToday ?? []) as unknown[],
+      energyBudget: (data.energyBudget as Record<string, unknown>) ?? null,
+      dailyState: (data.dailyState as Record<string, unknown>) ?? null,
+    };
+  const budget =
+    data.budget != null
+      ? mapBootstrapBudgetToSnapshot(data.budget, dateStr) ?? snapshot.budget
+      : snapshot.budget;
+  const learning: LearningSnapshot | null =
+    data.learning != null && typeof data.learning === "object"
+      ? (() => {
+          const L = data.learning as {
+            weeklyMinutes: number;
+            weeklyLearningTarget: number;
+            learningStreak: number;
+            focus: unknown | null;
+            streams: unknown;
+            consistency: unknown;
+            reflection: LearningSnapshot["reflection"];
+          };
+          return {
+            today: dateStr,
+            weeklyMinutes: L.weeklyMinutes,
+            weeklyLearningTarget: L.weeklyLearningTarget,
+            learningStreak: L.learningStreak,
+            focus: L.focus,
+            streams: L.streams,
+            consistency: L.consistency,
+            reflection: L.reflection ?? {
+              lastEntryDate: null,
+              reflectionRequired: false,
+            },
+          };
+        })()
+      : snapshot.learning;
+  let dashboard: DashboardSnapshot | null = snapshot.dashboard;
+  if (data.dashboard?.critical != null && data.dashboard?.secondary != null) {
+    dashboard = {
+      critical: data.dashboard.critical as DashboardSnapshot["critical"],
+      secondary: data.dashboard.secondary as DashboardSnapshot["secondary"],
+    };
+  }
+  return {
+    ...snapshot,
+    date: dateStr,
+    dashboard,
+    missions,
+    budget,
+    learning,
+    dcicGameState: data.dcicGameState ?? snapshot.dcicGameState ?? null,
+  };
 }
 
 export function missionsFromBootstrapToday(

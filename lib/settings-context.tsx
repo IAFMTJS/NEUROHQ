@@ -16,6 +16,7 @@ import { resetDcicGameStateBootstrap } from "@/lib/dcic/game-state-client";
 import { resetBootstrapMergeEtag } from "@/lib/daily-snapshot-full-sync";
 import { resetBootstrapApplyFingerprint } from "@/lib/daily-bootstrap";
 import { useHQStore } from "@/lib/hq-store";
+import { clearDailySnapshot } from "@/lib/daily-snapshot-storage";
 
 type SettingsPayload = SettingsApiPayload | null;
 
@@ -76,6 +77,7 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
         resetBootstrapMergeEtag();
         resetBootstrapApplyFingerprint();
         useHQStore.getState().setMissionsPipeline(null);
+        void clearDailySnapshot();
         return;
       }
       try {

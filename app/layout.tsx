@@ -45,7 +45,6 @@ const themeScript = `
 (function(){
   document.documentElement.setAttribute('data-theme','normal');
   document.documentElement.setAttribute('data-color-mode','dark');
-  document.documentElement.setAttribute('data-light-ui','false');
   document.documentElement.setAttribute('data-reduced-motion','false');
   document.documentElement.setAttribute('data-compact-ui','false');
 })();

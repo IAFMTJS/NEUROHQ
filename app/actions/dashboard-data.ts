@@ -366,7 +366,6 @@ async function buildCriticalPayload(ctx: TodayContext, shared: DashboardCrossSli
 
   const critical: DashboardCritical = {
     dateStr: ctx.dateStr,
-    lightUi: false,
     energyPct,
     focusPct,
     loadPct,

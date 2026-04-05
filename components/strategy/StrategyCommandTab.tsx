@@ -105,7 +105,7 @@ function QuarterCommandOverview({
           viewBox={`0 0 ${vb} ${vb}`}
           className="overflow-visible drop-shadow-[0_0_28px_rgba(var(--mode-rgb),0.14)]"
           role="img"
-          aria-label={`Kwartaal contractscore ${p} procent; elke boog is honderd procent voor die pijler, gekleurde boog toont behaalde procent`}
+          aria-label={`Kwartaal contractscore ${p} procent`}
         >
           {pillars.map((pl, i) => {
             const start = baseStarts[i];
@@ -153,9 +153,6 @@ function QuarterCommandOverview({
         <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center px-6 text-center">
           <span className="font-mono text-4xl font-bold tabular-nums text-[var(--text-primary)] sm:text-5xl">{p}</span>
           <span className="text-[10px] font-semibold uppercase tracking-[0.2em] text-[var(--text-muted)]">contract</span>
-          <span className="mt-0.5 text-[9px] leading-tight text-[var(--text-muted)]">
-            Elke boog = 100% voor die pijler; gekleurde deel = jouw %
-          </span>
         </div>
       </div>
 

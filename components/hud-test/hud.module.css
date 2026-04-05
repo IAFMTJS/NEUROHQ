@@ -280,15 +280,6 @@
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
 }
 
-:global([data-light-ui="true"]) .flatGlassPageRoot {
-  background:
-    linear-gradient(180deg, rgba(var(--mode-rgb), 0.06) 0%, transparent 42%),
-    rgba(5, 12, 22, 0.42);
-  backdrop-filter: none !important;
-  -webkit-backdrop-filter: none !important;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
-}
-
 .cinematicBackdrop {
   position: relative;
   min-height: 100vh;
@@ -446,82 +437,6 @@
   }
 }
 
-/* Light UI: same panel fill as default .panelBody — no backdrop blur (perf) */
-:global([data-light-ui="true"]) .panelBody {
-  backdrop-filter: none !important;
-  -webkit-backdrop-filter: none !important;
-  background: linear-gradient(
-    185deg,
-    rgba(12, 22, 38, 0.94) 0%,
-    rgba(6, 12, 22, 0.92) 45%,
-    rgba(var(--mode-rgb-deep), 0.12) 100%
-  ) !important;
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.07),
-    inset 0 -10px 28px rgba(0, 0, 0, 0.42),
-    inset 0 10px 22px rgba(0, 0, 0, 0.28) !important;
-}
-
-/* Flat-glass panels: match default .panelBodyFlatGlass fill — blur off only */
-:global([data-light-ui="true"]) .panelBody.panelBodyFlatGlass {
-  background: linear-gradient(
-    188deg,
-    rgba(10, 18, 32, 0.92) 0%,
-    rgba(6, 12, 22, 0.88) 48%,
-    rgba(var(--mode-rgb-deep), 0.11) 100%
-  ) !important;
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.06),
-    inset 0 -8px 22px rgba(0, 0, 0, 0.32),
-    inset 0 8px 16px rgba(0, 0, 0, 0.22) !important;
-}
-
-/* Light UI: same base as cinematic — no image layer (fast load) */
-:global([data-light-ui="true"]) .cinematicBackdrop {
-  background-image: none !important;
-  background-color: var(--mode-bg-main) !important;
-  background-attachment: scroll !important;
-}
-:global([data-light-ui="true"]) .cinematicBackdrop::before { display: none !important; }
-:global([data-light-ui="true"]) .spaceMist,
-:global([data-light-ui="true"]) .starLayerFar,
-:global([data-light-ui="true"]) .starLayerNear,
-:global([data-light-ui="true"]) .backgroundAtmosphere,
-:global([data-light-ui="true"]) .colorBlend,
-:global([data-light-ui="true"]) .spaceNoise {
-  display: none !important;
-  animation: none !important;
-}
-
-/* Light UI: panel frame — accent rim + mode hue */
-:global([data-light-ui="true"]) .panelFrame {
-  background: linear-gradient(
-    145deg,
-    rgba(var(--mode-rgb), 0.22) 0%,
-    rgba(var(--mode-rgb-deep), 0.38) 100%
-  ) !important;
-  border-color: rgba(var(--mode-rgb), 0.28) !important;
-  box-shadow:
-    0 0 0 1px rgba(var(--mode-rgb), 0.12),
-    0 8px 28px rgba(0, 0, 0, 0.38) !important;
-}
-:global([data-light-ui="true"]) .panelWorldGlow {
-  display: none !important;
-}
-
-/* Light UI: flat glass shell — flatter rim than generic panelFrame */
-:global([data-light-ui="true"]) .panelFrame[data-variant="flat-glass"] {
-  background: linear-gradient(
-    165deg,
-    rgba(var(--mode-rgb-deep), 0.44) 0%,
-    rgba(var(--mode-rgb), 0.11) 100%
-  ) !important;
-  border-color: rgba(var(--mode-rgb), 0.2) !important;
-  box-shadow:
-    0 0 0 1px rgba(var(--mode-rgb), 0.1),
-    0 6px 24px rgba(0, 0, 0, 0.4) !important;
-}
-
 /* Squared HUD frame for hub pages — mechanical; radii from globals (--panel-radius-flat) */
 .panelFrameFlat {
   border-radius: var(--panel-radius-flat, 16px) !important;
@@ -586,17 +501,18 @@
   box-shadow: 0 0 12px rgba(var(--mode-rgb), 0.05);
 }
 
-/** Page / bridge shells: flat glass — zelfde familie als dashboard glass-cards. */
+/** Page / bridge shells: fat glass frame rim. */
 .panelFrame[data-variant="flat-glass"] {
   background: linear-gradient(
     165deg,
-    color-mix(in srgb, var(--mode-bg-surface) 90%, rgb(var(--mode-rgb-deep))) 0%,
-    color-mix(in srgb, var(--mode-bg-main) 94%, black) 100%
+    color-mix(in srgb, var(--mode-bg-surface) 84%, rgb(var(--mode-rgb-deep))) 0%,
+    color-mix(in srgb, var(--mode-bg-main) 90%, black) 100%
   );
-  border-color: var(--border-soft) !important;
+  border-color: rgba(var(--mode-rgb), 0.18) !important;
   box-shadow:
-    0 0 0 1px rgba(0, 0, 0, 0.22),
-    0 4px 22px rgba(0, 0, 0, 0.4) !important;
+    0 0 0 1px rgba(0, 0, 0, 0.24),
+    0 8px 32px rgba(0, 0, 0, 0.46),
+    0 0 36px rgba(var(--mode-rgb), 0.06) !important;
 }
 
 .panelBody {
@@ -617,15 +533,15 @@
     inset 0 10px 22px rgba(0, 0, 0, 0.24);
 }
 
-/** Flat-glass shell inner: flatter frosted surface (overrides .panelBody defaults). */
+/** Flat-glass shell inner: fat frosted stack (page / bridge SciFi panels). */
 .panelBody.panelBodyFlatGlass {
-  backdrop-filter: blur(20px) saturate(1.08);
-  -webkit-backdrop-filter: blur(20px) saturate(1.08);
-  background: color-mix(in srgb, var(--mode-bg-surface) 88%, black);
+  backdrop-filter: var(--hq-fat-glass-blur-card, blur(28px) saturate(1.14));
+  -webkit-backdrop-filter: var(--hq-fat-glass-blur-card, blur(28px) saturate(1.14));
+  background: color-mix(in srgb, var(--mode-bg-surface) 82%, black);
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.06),
-    inset 0 -8px 22px rgba(0, 0, 0, 0.32),
-    inset 0 8px 16px rgba(0, 0, 0, 0.22);
+    inset 0 1px 0 rgba(255, 255, 255, 0.07),
+    inset 0 -10px 28px rgba(0, 0, 0, 0.34),
+    inset 0 8px 18px rgba(0, 0, 0, 0.24);
 }
 
 .panelBody::before {

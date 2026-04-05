@@ -5,7 +5,7 @@ import type { DailySnapshot } from "@/types/daily-snapshot";
 import { LATEST_SNAPSHOT_VERSION } from "@/types/daily-snapshot";
 import { fetchSettingsPayload } from "@/lib/settings-api-client";
 import type { BootstrapTodayResponse } from "@/lib/daily-snapshot-full-sync";
-import { mapBootstrapBudgetToSnapshot, missionsFromBootstrapToday } from "@/lib/bootstrap-today-mappers";
+import { mergeBootstrapTodayIntoDailySnapshot } from "@/lib/bootstrap-today-mappers";
 
 /** Set during `initializeDailySystem` when `fetchMissions` parses `/api/bootstrap/today`. */
 let bootstrapTodayCapture: BootstrapTodayResponse | null = null;
@@ -73,7 +73,7 @@ async function yieldToBrowser(onProgress?: (p: PreloadProgress) => void): Promis
 
 /**
  * Builds today's app payload in memory (sequential steps + progress for the loader).
- * No localStorage / IndexedDB — each full load runs the network steps.
+ * Cold start may skip this when {@link readPersistedDailyInit} returns same-day cache; merges still update IDB.
  */
 export async function initializeDailySystem(onProgress?: (p: PreloadProgress) => void): Promise<InitializeResult> {
   bootstrapTodayCapture = null;
@@ -180,40 +180,9 @@ async function runStep(snapshot: DailySnapshot, step: PreloadStepId): Promise<Da
         };
         bootstrapTodayCapture = data as BootstrapTodayResponse;
         const dateStr = (data.date as string) ?? snapshot.date;
-        const missions =
-          missionsFromBootstrapToday(data as BootstrapTodayResponse, dateStr) ?? {
-            dateStr,
-            tasksByDate: data.tasks ?? {},
-            completedToday: data.completedToday ?? [],
-            energyBudget: (data.energyBudget as Record<string, unknown>) ?? null,
-            dailyState: (data.dailyState as Record<string, unknown>) ?? null,
-          };
-        const budget =
-          data.budget != null
-            ? mapBootstrapBudgetToSnapshot(data.budget, dateStr) ?? snapshot.budget
-            : snapshot.budget;
-        const learning =
-          data.learning != null
-            ? {
-                today: dateStr,
-                weeklyMinutes: data.learning.weeklyMinutes,
-                weeklyLearningTarget: data.learning.weeklyLearningTarget,
-                learningStreak: data.learning.learningStreak,
-                focus: data.learning.focus,
-                streams: data.learning.streams,
-                consistency: data.learning.consistency,
-                reflection: data.learning.reflection,
-              }
-            : snapshot.learning;
-        let dashboard = snapshot.dashboard;
-        if (data.dashboard?.critical != null && data.dashboard?.secondary != null) {
-          dashboard = {
-            critical: data.dashboard.critical as any,
-            secondary: data.dashboard.secondary as any,
-          };
-        }
+        const merged = mergeBootstrapTodayIntoDailySnapshot(snapshot, data as BootstrapTodayResponse);
 
-        let calendar: DailySnapshot["calendar"] = snapshot.calendar ?? null;
+        let calendar: DailySnapshot["calendar"] = merged.calendar ?? null;
         try {
           const calRes = await fetch(
             `/api/tasks/calendar-tab?month=${encodeURIComponent(dateStr.slice(0, 7))}&anchorDate=${encodeURIComponent(dateStr)}`,
@@ -227,12 +196,7 @@ async function runStep(snapshot: DailySnapshot, step: PreloadStepId): Promise<Da
         }
 
         return {
-          ...snapshot,
-          dashboard,
-          missions,
-          budget,
-          learning,
-          dcicGameState: data.dcicGameState ?? snapshot.dcicGameState ?? null,
+          ...merged,
           calendar,
         };
       } catch {

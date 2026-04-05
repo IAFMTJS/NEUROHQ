@@ -18,14 +18,14 @@ type Props = {
 
 const DailySnapshotContext = createContext<DailySnapshot | null>(null);
 
-/** In-memory bootstrap payload for the current session (no disk cache). */
+/** Same-day bootstrap payload: restored from IndexedDB on cold start when valid, else from network init. */
 export function useDailySnapshot(): DailySnapshot | null {
   return useContext(DailySnapshotContext);
 }
 
 /**
- * Runs one sequential bootstrap (`initializeDailySystem`) on first paint, then provides
- * the result to the tree. No localStorage / IndexedDB / snapshot repair loops.
+ * Cold start: same calendar day + user may hydrate from IndexedDB (`readPersistedDailyInit`) for instant UI;
+ * full `initializeDailySystem` runs on cache miss. `applyBootstrapTodayToApp` patches IDB for next launch.
  */
 export function BootstrapGate({ children }: Props) {
   const queryClient = useQueryClient();
