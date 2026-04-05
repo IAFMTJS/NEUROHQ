@@ -1,8 +1,34 @@
 diff --git a/node_modules/sonner/dist/index.js b/node_modules/sonner/dist/index.js
-index bd21e89..86202c1 100644
+index bd21e89..a101b80 100644
 --- a/node_modules/sonner/dist/index.js
 +++ b/node_modules/sonner/dist/index.js
-@@ -946,6 +946,8 @@ const Toaster = /*#__PURE__*/ React__default.default.forwardRef(function Toaster
+@@ -153,7 +153,7 @@ class Observer {
+             const alreadyExists = this.toasts.find((toast)=>{
+                 return toast.id === id;
+             });
+-            const dismissible = data.dismissible === undefined ? true : data.dismissible;
++            const dismissible = data.dismissible === undefined ? false : data.dismissible;
+             if (this.dismissedToasts.has(id)) {
+                 this.dismissedToasts.delete(id);
+             }
+@@ -787,7 +787,7 @@ const Toast = (props)=>{
+         "aria-label": closeButtonAriaLabel,
+         "data-disabled": disabled,
+         "data-close-button": true,
+-        onClick: disabled || !dismissible ? ()=>{} : ()=>{
++        onClick: disabled ? ()=>{} : ()=>{
+             deleteToast();
+             toast.onDismiss == null ? void 0 : toast.onDismiss.call(toast, toast);
+         },
+@@ -811,7 +811,6 @@ const Toast = (props)=>{
+         onClick: (event)=>{
+             // We need to check twice because typescript
+             if (!isAction(toast.cancel)) return;
+-            if (!dismissible) return;
+             toast.cancel.onClick == null ? void 0 : toast.cancel.onClick.call(toast.cancel, event);
+             deleteToast();
+         },
+@@ -946,6 +945,8 @@ const Toaster = /*#__PURE__*/ React__default.default.forwardRef(function Toaster
      const [heights, setHeights] = React__default.default.useState([]);
      const [expanded, setExpanded] = React__default.default.useState(false);
      const [interacting, setInteracting] = React__default.default.useState(false);
@@ -11,7 +37,7 @@ index bd21e89..86202c1 100644
      const [actualTheme, setActualTheme] = React__default.default.useState(theme !== 'system' ? theme : typeof window !== 'undefined' ? window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light' : 'light');
      const listRef = React__default.default.useRef(null);
      const hotkeyLabel = hotkey.join('+').replace(/Key/g, '').replace(/Digit/g, '');
-@@ -1132,11 +1134,27 @@ const Toaster = /*#__PURE__*/ React__default.default.forwardRef(function Toaster
+@@ -1132,11 +1133,27 @@ const Toaster = /*#__PURE__*/ React__default.default.forwardRef(function Toaster
                      lastFocusedElementRef.current = event.relatedTarget;
                  }
              },
@@ -40,7 +66,7 @@ index bd21e89..86202c1 100644
                      setExpanded(false);
                  }
              },
-@@ -1146,7 +1164,16 @@ const Toaster = /*#__PURE__*/ React__default.default.forwardRef(function Toaster
+@@ -1146,7 +1163,16 @@ const Toaster = /*#__PURE__*/ React__default.default.forwardRef(function Toaster
                  if (isNotDismissible) return;
                  setInteracting(true);
              },
@@ -58,7 +84,7 @@ index bd21e89..86202c1 100644
          }, filteredToasts.filter((toast)=>!toast.position && index === 0 || toast.position === position).map((toast, index)=>{
              var _toastOptions_duration, _toastOptions_closeButton;
              return /*#__PURE__*/ React__default.default.createElement(Toast, {
-@@ -1161,7 +1188,7 @@ const Toaster = /*#__PURE__*/ React__default.default.forwardRef(function Toaster
+@@ -1161,7 +1187,7 @@ const Toaster = /*#__PURE__*/ React__default.default.forwardRef(function Toaster
                  invert: invert,
                  visibleToasts: visibleToasts,
                  closeButton: (_toastOptions_closeButton = toastOptions == null ? void 0 : toastOptions.closeButton) != null ? _toastOptions_closeButton : closeButton,
@@ -68,10 +94,36 @@ index bd21e89..86202c1 100644
                  style: toastOptions == null ? void 0 : toastOptions.style,
                  unstyled: toastOptions == null ? void 0 : toastOptions.unstyled,
 diff --git a/node_modules/sonner/dist/index.mjs b/node_modules/sonner/dist/index.mjs
-index d0c7a5a..b8929cc 100644
+index d0c7a5a..de2d067 100644
 --- a/node_modules/sonner/dist/index.mjs
 +++ b/node_modules/sonner/dist/index.mjs
-@@ -939,6 +939,8 @@ const Toaster = /*#__PURE__*/ React.forwardRef(function Toaster(props, ref) {
+@@ -146,7 +146,7 @@ class Observer {
+             const alreadyExists = this.toasts.find((toast)=>{
+                 return toast.id === id;
+             });
+-            const dismissible = data.dismissible === undefined ? true : data.dismissible;
++            const dismissible = data.dismissible === undefined ? false : data.dismissible;
+             if (this.dismissedToasts.has(id)) {
+                 this.dismissedToasts.delete(id);
+             }
+@@ -780,7 +780,7 @@ const Toast = (props)=>{
+         "aria-label": closeButtonAriaLabel,
+         "data-disabled": disabled,
+         "data-close-button": true,
+-        onClick: disabled || !dismissible ? ()=>{} : ()=>{
++        onClick: disabled ? ()=>{} : ()=>{
+             deleteToast();
+             toast.onDismiss == null ? void 0 : toast.onDismiss.call(toast, toast);
+         },
+@@ -804,7 +804,6 @@ const Toast = (props)=>{
+         onClick: (event)=>{
+             // We need to check twice because typescript
+             if (!isAction(toast.cancel)) return;
+-            if (!dismissible) return;
+             toast.cancel.onClick == null ? void 0 : toast.cancel.onClick.call(toast.cancel, event);
+             deleteToast();
+         },
+@@ -939,6 +938,8 @@ const Toaster = /*#__PURE__*/ React.forwardRef(function Toaster(props, ref) {
      const [heights, setHeights] = React.useState([]);
      const [expanded, setExpanded] = React.useState(false);
      const [interacting, setInteracting] = React.useState(false);
@@ -80,7 +132,7 @@ index d0c7a5a..b8929cc 100644
      const [actualTheme, setActualTheme] = React.useState(theme !== 'system' ? theme : typeof window !== 'undefined' ? window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light' : 'light');
      const listRef = React.useRef(null);
      const hotkeyLabel = hotkey.join('+').replace(/Key/g, '').replace(/Digit/g, '');
-@@ -1125,11 +1127,27 @@ const Toaster = /*#__PURE__*/ React.forwardRef(function Toaster(props, ref) {
+@@ -1125,11 +1126,27 @@ const Toaster = /*#__PURE__*/ React.forwardRef(function Toaster(props, ref) {
                      lastFocusedElementRef.current = event.relatedTarget;
                  }
              },
@@ -109,7 +161,7 @@ index d0c7a5a..b8929cc 100644
                      setExpanded(false);
                  }
              },
-@@ -1139,7 +1157,16 @@ const Toaster = /*#__PURE__*/ React.forwardRef(function Toaster(props, ref) {
+@@ -1139,7 +1156,16 @@ const Toaster = /*#__PURE__*/ React.forwardRef(function Toaster(props, ref) {
                  if (isNotDismissible) return;
                  setInteracting(true);
              },
@@ -127,7 +179,7 @@ index d0c7a5a..b8929cc 100644
          }, filteredToasts.filter((toast)=>!toast.position && index === 0 || toast.position === position).map((toast, index)=>{
              var _toastOptions_duration, _toastOptions_closeButton;
              return /*#__PURE__*/ React.createElement(Toast, {
-@@ -1154,7 +1181,7 @@ const Toaster = /*#__PURE__*/ React.forwardRef(function Toaster(props, ref) {
+@@ -1154,7 +1180,7 @@ const Toaster = /*#__PURE__*/ React.forwardRef(function Toaster(props, ref) {
                  invert: invert,
                  visibleToasts: visibleToasts,
                  closeButton: (_toastOptions_closeButton = toastOptions == null ? void 0 : toastOptions.closeButton) != null ? _toastOptions_closeButton : closeButton,

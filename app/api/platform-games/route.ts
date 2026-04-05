@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { isPlatformGameLive } from "@/lib/platform-games";
+import { publicPlatformGameConfig } from "@/lib/platform-games-config";
 
 /**
  * GET /api/platform-games
@@ -43,7 +44,7 @@ export async function GET() {
       body,
       starts_at,
       ends_at,
-      config,
+      config: publicPlatformGameConfig(config),
     })),
   });
 }

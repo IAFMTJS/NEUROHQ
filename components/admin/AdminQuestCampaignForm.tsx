@@ -2,7 +2,7 @@
 
 import { useTransition, useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { adminUpsertQuestCampaign, getDefaultQuestContentJson } from "@/app/actions/quest-campaign";
+import { adminStopQuestCampaign, adminUpsertQuestCampaign, getDefaultQuestContentJson } from "@/app/actions/quest-campaign";
 import type { Tables } from "@/types/database.types";
 
 type Row = Tables<"platform_quest_campaigns">;
@@ -232,11 +232,37 @@ export function AdminQuestCampaignForm({ initialRow }: { initialRow: Row | null 
             className="w-full rounded-lg border border-white/15 bg-black/40 px-3 py-2 text-sm text-white outline-none focus:ring-2 focus:ring-amber-500/50"
           />
         </div>
-        <div className="flex items-center gap-2 sm:col-span-2">
-          <input id="qc-active" name="active" type="checkbox" defaultChecked={initialRow?.active ?? true} className="h-4 w-4 rounded border-white/30" />
-          <label htmlFor="qc-active" className="text-sm text-white/70">
-            Actief
-          </label>
+        <div className="space-y-3 sm:col-span-2 rounded-lg border border-white/10 bg-white/[0.02] p-4">
+          <div className="flex flex-wrap items-center gap-3">
+            <input id="qc-active" name="active" type="checkbox" defaultChecked={initialRow?.active ?? true} className="h-4 w-4 rounded border-white/30" />
+            <label htmlFor="qc-active" className="text-sm text-white/70">
+              Actief
+            </label>
+            <span className="text-xs text-white/40">Uitgeschakeld = verborgen voor alle spelers (zelfde effect als stoppen, maar je kunt hier weer aanzetten).</span>
+          </div>
+          {initialRow?.id ? (
+            <div className="flex flex-wrap items-center gap-2 border-t border-white/10 pt-3">
+              <button
+                type="button"
+                disabled={pending}
+                onClick={() => {
+                  if (!confirm("Quest nu stoppen? De campagne verdwijnt voor iedereen (dashboard en profiel). Voortgang blijft bewaard; je kunt later opnieuw activeren via het vinkje en opslaan.")) return;
+                  startTransition(async () => {
+                    try {
+                      await adminStopQuestCampaign(initialRow.id);
+                      router.refresh();
+                    } catch (er) {
+                      setErr(er instanceof Error ? er.message : "Stoppen mislukt.");
+                    }
+                  });
+                }}
+                className="rounded-lg border border-rose-500/50 bg-rose-500/10 px-3 py-2 text-sm font-semibold text-rose-100 hover:bg-rose-500/20 disabled:opacity-50"
+              >
+                Quest nu stoppen
+              </button>
+              <span className="text-xs text-white/40">Zet actief uit en beëindigt het tijdvenster nu (indien het nog liep).</span>
+            </div>
+          ) : null}
         </div>
         <div className="sm:col-span-2">
           <label className="mb-1 block text-xs font-medium text-white/50" htmlFor="qc-json">

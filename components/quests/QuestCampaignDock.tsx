@@ -38,7 +38,7 @@ export function QuestCampaignDock() {
           aria-label="Open platformquest"
           title="Quest"
         >
-          <span aria-hidden>⛩️</span>
+          <span aria-hidden>🧩</span>
         </button>
       ) : null}
       <QuestCampaignModal open={open} onClose={() => setOpen(false)} />

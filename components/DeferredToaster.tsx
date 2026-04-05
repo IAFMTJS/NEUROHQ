@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Toaster } from "sonner";
+import { Toaster, toast } from "sonner";
 import { NeuroToastIcon } from "@/components/brand/NeuroToastIcon";
 
 /**
@@ -18,6 +18,20 @@ export function DeferredToaster() {
       : (cb: () => void) => setTimeout(cb, 150);
     schedule(() => setMounted(true));
   }, []);
+
+  /** Sluit alleen bij tik buiten de toast of op het kruisje — niet door swipe/timer (zie gepatchte sonner + toastOptions). */
+  useEffect(() => {
+    if (!mounted || typeof document === "undefined") return;
+    const onPointerDownCapture = (e: PointerEvent) => {
+      if (toast.getToasts().length === 0) return;
+      const el = e.target;
+      if (!(el instanceof Element)) return;
+      if (el.closest("[data-sonner-toast]")) return;
+      toast.dismiss();
+    };
+    document.addEventListener("pointerdown", onPointerDownCapture, true);
+    return () => document.removeEventListener("pointerdown", onPointerDownCapture, true);
+  }, [mounted]);
 
   if (!mounted) return null;
   /* Sonner uses `mobileOffset` for bottom on ≤600px; default 16px sat on the dock. */
@@ -39,8 +53,9 @@ export function DeferredToaster() {
       }}
       toastOptions={{
         className: "hq-toast",
-        /* Sonner default is 4s; timers keep running when focus moves to inputs elsewhere on the page. */
-        duration: 16_000,
+        dismissible: false,
+        /* Geen auto-sluit; sluiten via kruisje of tik buiten de toast (document listener hierboven). */
+        duration: Number.POSITIVE_INFINITY,
       }}
     />
   );

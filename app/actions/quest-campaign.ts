@@ -37,7 +37,7 @@ export type QuestPuzzlePublic = {
   kind: "paintings" | "riddle" | "multi" | "coords";
   intro?: string;
   storyLine?: string;
-  paintings?: { title: string; letter?: string; caption?: string }[];
+  paintings?: { title: string; caption?: string; imageUrl?: string }[];
   riddle?: string;
   stepIndex?: number;
   stepTotal?: number;
@@ -78,8 +78,8 @@ function buildPuzzlePublic(def: QuestDayDef, state: QuestProgressState): QuestPu
       storyLine: def.storyLine,
       paintings: def.paintings?.map((p) => ({
         title: p.title,
-        letter: p.letter,
         caption: p.caption,
+        ...(typeof p.imageUrl === "string" && p.imageUrl.trim() ? { imageUrl: p.imageUrl.trim() } : {}),
       })),
     };
   }
@@ -516,6 +516,43 @@ export async function adminUpsertQuestCampaign(input: {
   }
   revalidatePath("/admin/quests");
   revalidatePath("/admin/games");
+}
+
+/** Admin: quest onmiddellijk beëindigen — niet meer zichtbaar voor spelers. Zet `active` uit en zet `ends_at` op nu als het event nog liep. */
+export async function adminStopQuestCampaign(campaignId: string) {
+  const admin = await getAdminSessionUser();
+  if (!admin) throw new Error("Geen beheerderstoegang.");
+
+  const supabase = await createClient();
+  const { data: row, error: fetchErr } = await supabase
+    .from("platform_quest_campaigns")
+    .select("starts_at, ends_at")
+    .eq("id", campaignId)
+    .maybeSingle();
+  if (fetchErr) throw new Error(fetchErr.message);
+  if (!row) throw new Error("Campagne niet gevonden.");
+
+  const nowIso = new Date().toISOString();
+  const nowMs = Date.now();
+  const startsMs = new Date(row.starts_at).getTime();
+
+  const patch: { active: boolean; updated_at: string; ends_at?: string | null } = {
+    active: false,
+    updated_at: nowIso,
+  };
+
+  if (startsMs <= nowMs) {
+    const curEndMs = row.ends_at ? new Date(row.ends_at).getTime() : Infinity;
+    if (curEndMs > nowMs) patch.ends_at = nowIso;
+  }
+
+  const { error } = await supabase.from("platform_quest_campaigns").update(patch).eq("id", campaignId);
+  if (error) throw new Error(error.message);
+
+  revalidatePath("/admin/quests");
+  revalidatePath("/admin/games");
+  revalidatePath("/dashboard");
+  revalidatePath("/profile");
 }
 
 export async function adminUpdateQuestPrizeSummary(input: { campaign_id: string; prize_summary: string }) {

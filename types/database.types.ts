@@ -2153,6 +2153,48 @@ export type Database = {
           },
         ]
       }
+      user_platform_game_progress: {
+        Row: {
+          completed_at: string | null
+          created_at: string
+          game_id: string
+          state: Json
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string
+          game_id: string
+          state?: Json
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string
+          game_id?: string
+          state?: Json
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_platform_game_progress_game_id_fkey"
+            columns: ["game_id"]
+            isOneToOne: false
+            referencedRelation: "platform_games"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_platform_game_progress_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_quest_campaign_progress: {
         Row: {
           answer_log: Json

@@ -1,10 +1,18 @@
 "use client";
 
 import type { ReactNode } from "react";
+import Link from "next/link";
 import { getDashboardMascotSrc } from "@/lib/mascots";
 import { CommanderMascotPedestal, type CommanderMascotPedestalStats } from "./CommanderMascotPedestal";
 import { CommanderStatRing } from "./CommanderStatRing";
 import { ClientCTALink } from "./ClientCTALink";
+import {
+  BRIDGE_MISSION_BODY_CLASS,
+  BRIDGE_MISSION_CARD_CLASS,
+  BRIDGE_MISSION_CTA_FOCUS_CLASS,
+  BRIDGE_MISSION_EYEBROW_CLASS,
+  bridgeMissionEyebrowStyle,
+} from "./bridgeMissionCardClasses";
 import { useHQStore } from "@/lib/hq-store";
 import { scale1To10ToPct } from "@/lib/dashboard-utils";
 import { trackEvent } from "@/app/actions/analytics-events";
@@ -130,11 +138,8 @@ export function CommanderHomeHero({
         <CommanderStatRing value={effectiveLoadPct} variant="load" size={bridgeLayout ? 120 : 102} />
       </section>
       {dailyQuoteText && (
-        <div className="bridge-hero-daily-quote glass-card glass-preserve-decoration mx-auto !rounded-xl !p-3 w-full max-w-[520px] text-center">
-          <p
-            className="mb-1 text-[9px] font-semibold uppercase tracking-[0.14em]"
-            style={{ color: "rgba(var(--mode-rgb), 0.78)" }}
-          >
+        <div className="bridge-hero-daily-quote glass-card glass-preserve-decoration mx-auto w-full max-w-[520px] !rounded-xl border border-[var(--card-border)] !p-3 text-center">
+          <p className={`mb-1 ${BRIDGE_MISSION_EYEBROW_CLASS}`} style={bridgeMissionEyebrowStyle}>
             Daily Quote
           </p>
           <p className="text-[12px] italic leading-snug text-[var(--text-primary)]">
@@ -155,7 +160,40 @@ export function CommanderHomeHero({
           <div className="min-w-0 flex-1 basis-0">{mainMissionSlot}</div>
         ) : null}
         <div className={mainMissionSlot ? "min-w-0 flex-1 basis-0" : "w-full"}>
-          {missionCtaAction ? (
+          {mainMissionSlot ? (
+            missionCtaAction ? (
+              <button
+                type="button"
+                className={`bridge-mission-cta-card ${BRIDGE_MISSION_CARD_CLASS} ${BRIDGE_MISSION_CTA_FOCUS_CLASS} ${streakAtRisk ? "cta-streak-pulse" : ""}`}
+                onClick={() => {
+                  void trackEvent("CTA_clicked", {
+                    label: missionLabel,
+                    href: missionHref,
+                    context: "dashboard_mission_toast",
+                  });
+                  missionCtaAction();
+                }}
+              >
+                <p className={BRIDGE_MISSION_EYEBROW_CLASS} style={bridgeMissionEyebrowStyle}>
+                  Volgende stap
+                </p>
+                <p className={BRIDGE_MISSION_BODY_CLASS}>{missionLabel}</p>
+              </button>
+            ) : (
+              <Link
+                href={missionHref}
+                className={`bridge-mission-cta-card ${BRIDGE_MISSION_CARD_CLASS} ${BRIDGE_MISSION_CTA_FOCUS_CLASS} ${streakAtRisk ? "cta-streak-pulse" : ""}`}
+                onClick={() => {
+                  void trackEvent("CTA_clicked", { label: missionLabel, href: missionHref });
+                }}
+              >
+                <p className={BRIDGE_MISSION_EYEBROW_CLASS} style={bridgeMissionEyebrowStyle}>
+                  Volgende stap
+                </p>
+                <p className={BRIDGE_MISSION_BODY_CLASS}>{missionLabel}</p>
+              </Link>
+            )
+          ) : missionCtaAction ? (
             <button
               type="button"
               className={`commander-cta-glass inline-flex w-full cursor-pointer items-center justify-center rounded-full px-3 text-[11px] font-medium tracking-[0.08em] text-[var(--text-main)] h-[48px] min-h-[48px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[rgba(var(--mode-rgb),0.45)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--bg-primary)] sm:px-5 ${streakAtRisk ? "cta-streak-pulse" : ""}`}

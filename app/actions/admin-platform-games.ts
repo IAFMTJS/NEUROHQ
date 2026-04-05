@@ -91,6 +91,37 @@ export async function setPlatformGameActive(id: string, active: boolean) {
   revalidatePath("/admin/games");
 }
 
+/** Admin: game onmiddellijk beëindigen — `active` uit, en `ends_at` op nu als het venster nog open was (past binnen de DB-check). */
+export async function stopPlatformGameNow(id: string) {
+  await requireAdmin();
+  const supabase = await createClient();
+  const { data: row, error: fetchErr } = await supabase
+    .from("platform_games")
+    .select("starts_at, ends_at")
+    .eq("id", id)
+    .maybeSingle();
+  if (fetchErr) throw new Error(fetchErr.message);
+  if (!row) throw new Error("Game niet gevonden.");
+
+  const nowIso = new Date().toISOString();
+  const nowMs = Date.now();
+  const startsMs = new Date(row.starts_at).getTime();
+
+  const patch: { active: boolean; updated_at: string; ends_at?: string | null } = {
+    active: false,
+    updated_at: nowIso,
+  };
+
+  if (startsMs <= nowMs) {
+    const curEndMs = row.ends_at ? new Date(row.ends_at).getTime() : Infinity;
+    if (curEndMs > nowMs) patch.ends_at = nowIso;
+  }
+
+  const { error } = await supabase.from("platform_games").update(patch).eq("id", id);
+  if (error) throw new Error(error.message);
+  revalidatePath("/admin/games");
+}
+
 export async function deletePlatformGame(id: string) {
   await requireAdmin();
   const supabase = await createClient();

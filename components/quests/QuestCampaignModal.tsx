@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useCallback, useEffect, useState, useTransition } from "react";
 import { Modal } from "@/components/Modal";
 import { submitQuestAnswer, type QuestClientPayload } from "@/app/actions/quest-campaign";
@@ -31,6 +32,7 @@ export function QuestCampaignModal({ open, onClose }: Props) {
   const [feedback, setFeedback] = useState<"ok" | "bad" | null>(null);
   const [feedbackText, setFeedbackText] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
+  const [paintingLightbox, setPaintingLightbox] = useState<{ src: string; label: string } | null>(null);
 
   const refresh = useCallback(async () => {
     const q = await fetchQuest();
@@ -47,12 +49,23 @@ export function QuestCampaignModal({ open, onClose }: Props) {
       setAnswer("");
       setFeedback(null);
       setFeedbackText(null);
+      setPaintingLightbox(null);
     }
   }, [open]);
 
   const puzzle = status?.puzzle;
 
+  useEffect(() => {
+    if (!paintingLightbox) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setPaintingLightbox(null);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [paintingLightbox]);
+
   return (
+    <>
     <Modal
       open={open}
       onClose={onClose}
@@ -163,24 +176,53 @@ export function QuestCampaignModal({ open, onClose }: Props) {
                   {puzzle.paintings.map((p, i) => (
                     <div
                       key={i}
-                      className="relative overflow-hidden rounded-xl border border-violet-500/25 bg-gradient-to-br from-violet-950/80 to-slate-900/90 p-3 shadow-inner"
+                      className="relative flex flex-col overflow-hidden rounded-xl border border-violet-500/25 bg-gradient-to-br from-violet-950/80 to-slate-900/90 shadow-inner"
                     >
-                      <div
-                        className="pointer-events-none absolute inset-0 opacity-90"
-                        style={{
-                          backgroundImage: `radial-gradient(circle at ${30 + (i * 17) % 40}% ${40 + (i * 11) % 30}%, rgba(167,139,250,0.35), transparent 55%)`,
-                        }}
-                      />
-                      {p.letter ? (
-                        <span
-                          className="absolute bottom-2 right-2 font-serif text-2xl font-bold text-white/[0.22]"
-                          aria-hidden
+                      {p.imageUrl ? (
+                        <button
+                          type="button"
+                          onClick={() => setPaintingLightbox({ src: p.imageUrl!, label: p.title })}
+                          className="relative aspect-[4/3] w-full shrink-0 overflow-hidden border-b border-violet-500/20 outline-none focus-visible:ring-2 focus-visible:ring-violet-400/80 focus-visible:ring-inset"
+                          aria-label={`${p.title} — vergroten om details te zoeken`}
                         >
-                          {p.letter}
-                        </span>
-                      ) : null}
-                      <p className="relative text-xs font-semibold text-violet-100/95">{p.title}</p>
-                      {p.caption ? <p className="relative mt-1 text-[10px] text-white/50">{p.caption}</p> : null}
+                          {p.imageUrl.startsWith("/") ? (
+                            <Image
+                              src={p.imageUrl}
+                              alt=""
+                              fill
+                              className="object-cover object-center"
+                              sizes="(max-width: 640px) 50vw, 22vw"
+                            />
+                          ) : (
+                            // Remote / CDN — geen next.config nodig
+                            // eslint-disable-next-line @next/next/no-img-element
+                            <img
+                              src={p.imageUrl}
+                              alt=""
+                              className="absolute inset-0 h-full w-full object-cover object-center"
+                              loading="lazy"
+                            />
+                          )}
+                        </button>
+                      ) : (
+                        <div
+                          className="pointer-events-none relative aspect-[4/3] w-full shrink-0 border-b border-violet-500/15 bg-black/25"
+                          style={{
+                            backgroundImage: `radial-gradient(circle at ${30 + (i * 17) % 40}% ${40 + (i * 11) % 30}%, rgba(167,139,250,0.28), transparent 55%)`,
+                          }}
+                          aria-hidden
+                        />
+                      )}
+                      <div className="relative p-3">
+                        <div
+                          className="pointer-events-none absolute inset-0 opacity-90"
+                          style={{
+                            backgroundImage: `radial-gradient(circle at ${30 + (i * 17) % 40}% ${40 + (i * 11) % 30}%, rgba(167,139,250,0.2), transparent 55%)`,
+                          }}
+                        />
+                        <p className="relative text-xs font-semibold text-violet-100/95">{p.title}</p>
+                        {p.caption ? <p className="relative mt-1 text-[10px] text-white/50">{p.caption}</p> : null}
+                      </div>
                     </div>
                   ))}
                 </div>
@@ -245,5 +287,35 @@ export function QuestCampaignModal({ open, onClose }: Props) {
         </div>
       )}
     </Modal>
+    {paintingLightbox ? (
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-label={`${paintingLightbox.label} — vergroot`}
+        className="fixed inset-0 z-[100] flex items-center justify-center bg-black/88 p-4 backdrop-blur-[2px]"
+        onClick={() => setPaintingLightbox(null)}
+      >
+        <button
+          type="button"
+          className="absolute right-3 top-3 z-[1] rounded-lg border border-white/20 bg-black/50 px-3 py-1.5 text-xs font-semibold text-white hover:bg-black/70"
+          onClick={(e) => {
+            e.stopPropagation();
+            setPaintingLightbox(null);
+          }}
+        >
+          Sluiten
+        </button>
+        <div className="max-h-[min(90dvh,920px)] max-w-full overflow-auto" onClick={(e) => e.stopPropagation()}>
+          {/* Lightbox: altijd native img (ook voor /paths) zodat vergroten zonder extra config werkt */}
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={paintingLightbox.src}
+            alt={paintingLightbox.label}
+            className="mx-auto max-h-[min(86dvh,880px)] w-auto max-w-full rounded-lg object-contain shadow-2xl"
+          />
+        </div>
+      </div>
+    ) : null}
+    </>
   );
 }

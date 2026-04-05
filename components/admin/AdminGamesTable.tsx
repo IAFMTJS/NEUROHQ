@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import {
   deletePlatformGame,
   setPlatformGameActive,
+  stopPlatformGameNow,
   updatePlatformGame,
 } from "@/app/actions/admin-platform-games";
 import type { Tables } from "@/types/database.types";
@@ -102,6 +103,33 @@ export function AdminGamesTable({ rows }: { rows: GameRow[] }) {
                         >
                           {g.active ? "Deactiveren" : "Activeren"}
                         </button>
+                        {g.active ? (
+                          <button
+                            type="button"
+                            disabled={pending}
+                            onClick={() => {
+                              if (
+                                !confirm(
+                                  "Game nu stoppen? Wordt gedeactiveerd; als het nog liep, wordt het eindmoment op nu gezet. Je kunt daarna weer activeren via Activeren."
+                                )
+                              )
+                                return;
+                              startTransition(() => {
+                                void (async () => {
+                                  try {
+                                    await stopPlatformGameNow(g.id);
+                                    router.refresh();
+                                  } catch (e) {
+                                    alert(e instanceof Error ? e.message : "Stoppen mislukt.");
+                                  }
+                                })();
+                              });
+                            }}
+                            className="rounded-md border border-rose-500/45 bg-rose-500/10 px-2 py-1 text-xs font-semibold text-rose-100 hover:bg-rose-500/20 disabled:opacity-50"
+                          >
+                            Nu stoppen
+                          </button>
+                        ) : null}
                         <button
                           type="button"
                           disabled={pending}
@@ -195,13 +223,17 @@ export function AdminGamesTable({ rows }: { rows: GameRow[] }) {
                               />
                             </div>
                             <div className="sm:col-span-2">
-                              <label className="mb-1 block text-xs text-white/50">Config (JSON-object)</label>
+                              <label className="mb-1 block text-xs text-white/50">Config (JSON) — o.a. progress / win</label>
                               <textarea
                                 name="config_json"
-                                rows={3}
+                                rows={5}
                                 defaultValue={formatConfig(g.config)}
-                                className="w-full resize-y rounded-lg border border-white/15 bg-black/40 px-3 py-2 font-mono text-xs text-white outline-none focus:ring-2 focus:ring-amber-500/50"
+                                className="w-full resize-y rounded-lg border border-white/15 bg-black/40 px-3 py-2 font-mono text-[11px] leading-relaxed text-white outline-none focus:ring-2 focus:ring-amber-500/50"
                               />
+                              <p className="mt-1 text-[10px] text-white/35">
+                                Zie admin Games — uitleg bij nieuwe game: <code className="text-white/45">progress.mode</code> checklist of
+                                answer + <code className="text-white/45">accepts</code> (alleen server).
+                              </p>
                             </div>
                             <div>
                               <label className="mb-1 block text-xs text-white/50">Start (lokaal)</label>

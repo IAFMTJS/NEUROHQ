@@ -76,18 +76,24 @@ export function AdminGameCreateForm() {
         </div>
         <div className="sm:col-span-2">
           <label htmlFor="pg-config" className="mb-1 block text-xs font-medium text-white/50">
-            Extra parameters (JSON-object, optioneel)
+            Config (JSON) — parameters + optioneel voortgang / win
           </label>
           <textarea
             id="pg-config"
             name="config_json"
-            rows={3}
+            rows={6}
             defaultValue="{}"
-            className="w-full resize-y rounded-lg border border-white/15 bg-black/40 px-3 py-2 font-mono text-xs text-white outline-none focus:ring-2 focus:ring-amber-500/50"
-            placeholder='{"bonus_xp": 50, "label": "Winterrun"}'
+            className="w-full resize-y rounded-lg border border-white/15 bg-black/40 px-3 py-2 font-mono text-[11px] leading-relaxed text-white outline-none focus:ring-2 focus:ring-amber-500/50"
+            placeholder='{"progress":{"mode":"checklist","checklist":[{"id":"a","label":"Stap"}]}}'
           />
           <p className="mt-1 text-[10px] text-white/35">
-            Wordt read-only getoond in de app (platte sleutels het leesbaarst). Leeg of {"{}"} = verbergen.
+            <span className="text-amber-200/80">Voortgang:</span> <code className="text-white/50">progress.mode</code>{" "}
+            <code className="text-white/50">&quot;checklist&quot;</code> + <code className="text-white/50">checklist[]</code> met{" "}
+            <code className="text-white/50">id</code>/<code className="text-white/50">label</code>, of{" "}
+            <code className="text-white/50">&quot;answer&quot;</code> + <code className="text-white/50">accepts</code> (array
+            toegestane antwoorden, blijft server-side) + <code className="text-white/50">prompt</code>. Optioneel{" "}
+            <code className="text-white/50">rewardXp</code> bij voltooien. Platte sleutels naast <code className="text-white/50">progress</code>{" "}
+            blijven zichtbaar als uitleg.
           </p>
         </div>
         <div>

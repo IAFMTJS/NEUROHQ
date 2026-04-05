@@ -46,15 +46,16 @@ export default async function AdminGamesPage() {
         <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-amber-400/90">Games</p>
         <h1 className="text-xl font-semibold text-white">Platform-games</h1>
         <p className="mt-1 max-w-xl text-sm text-white/50">
-          Spellen of challenges voor alle gebruikers. Je kiest wanneer ze starten (en optioneel eindigen), past tekst en JSON-parameters
-          aan, en zet ze aan of uit.
+          Spellen of challenges voor alle gebruikers. Je kiest wanneer ze starten (en optioneel eindigen), past tekst en JSON-config aan.
+          Met <code className="rounded bg-black/30 px-1 font-mono text-[11px]">progress</code> in de config kun je checklist- of
+          antwoord-win definiëren; voortgang staat per gebruiker in de database (zie formulierhulp onder &quot;Nieuwe game&quot;).
         </p>
       </header>
 
       <div className="mb-10 rounded-xl border border-violet-500/25 bg-violet-950/20 p-5">
         <h2 className="mb-2 text-xs font-bold uppercase tracking-wider text-violet-300/90">Quest — prijs voor spelers</h2>
         <p className="mb-4 max-w-xl text-sm text-white/50">
-          Dit is de beloningstekst die bovenaan de quest staat (dashboard ⛩️ en profiel). Leeg laten = automatisch uit XP / flex / badge
+          Dit is de beloningstekst die bovenaan de quest staat (dashboard 🧩 en profiel). Leeg laten = automatisch uit XP / flex / badge
           op de Quest-tab.
         </p>
         {questErr ? (

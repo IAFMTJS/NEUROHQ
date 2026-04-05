@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import type { ProfileSpecialEventsBundle } from "@/app/actions/profile-special-events";
+import { PlatformGameProgressPanel } from "@/components/profile/PlatformGameProgressPanel";
 import { QuestCampaignModal } from "@/components/quests/QuestCampaignModal";
 import type { Json } from "@/types/database.types";
 
@@ -114,7 +115,7 @@ export function ProfileSpecialEventsClient({ bundle }: { bundle: ProfileSpecialE
 
       {bundle.games.length > 0 ? (
         <section>
-          <h3 className="mb-2 text-xs font-bold uppercase tracking-wider text-[var(--text-muted)]">Banner-games</h3>
+          <h3 className="mb-2 text-xs font-bold uppercase tracking-wider text-[var(--text-muted)]">Platform-games</h3>
           <ul className="space-y-3">
             {bundle.games.map((g) => (
               <li
@@ -124,6 +125,7 @@ export function ProfileSpecialEventsClient({ bundle }: { bundle: ProfileSpecialE
                 <p className="font-semibold text-violet-100/95">{g.title}</p>
                 <p className="mt-1 whitespace-pre-wrap text-[var(--text-muted)]">{g.body}</p>
                 <ConfigBlock config={g.config} />
+                <PlatformGameProgressPanel game={g} />
                 <p className="mt-2 text-[10px] text-[var(--text-muted)]">
                   {formatWhen(g.starts_at)}
                   {g.ends_at ? ` — ${formatWhen(g.ends_at)}` : ""}

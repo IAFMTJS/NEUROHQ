@@ -13,7 +13,8 @@ export type QuestDayDef = {
   kind: QuestDayKind;
   intro?: string;
   storyLine?: string;
-  paintings?: { title: string; letter: string; caption?: string }[];
+  /** `letter` = auteursnotitie (validatie loopt via `accepts`); niet tonen in UI. `imageUrl` = pad `/quests/...` of absolute URL. */
+  paintings?: { title: string; letter: string; caption?: string; imageUrl?: string }[];
   riddle?: string;
   steps?: QuestDayStep[];
   accepts?: string[];

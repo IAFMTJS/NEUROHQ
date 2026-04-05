@@ -32,6 +32,7 @@ const nextConfig = {
       { pathname: "/Girly%20Theme/**" },
       { pathname: "/Industrial Theme/**" },
       { pathname: "/Industrial%20Theme/**" },
+      { pathname: "/quests/**" },
     ],
   },
   experimental: {
