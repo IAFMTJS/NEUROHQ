@@ -6,6 +6,7 @@ import type { Database } from "@/types/database.types";
 import { revalidatePath } from "next/cache";
 import { getBudgetToday, getBudgetMonthBounds, getBudgetWeekBounds, getBudgetCycleBounds, getPreviousPaydayDateFromDay, getNextPaydayDateFromDay } from "@/lib/utils/budget-date";
 import { createAlternative } from "./alternatives";
+import { addSavingsContribution } from "./savings";
 import { getBudgetControlState, setBudgetNoSpendLock, submitEmergencyExpenseReason } from "./budget-intelligence";
 
 type BudgetSettingsRow = {
@@ -732,19 +733,10 @@ export async function cancelFreeze(entryId: string, options?: { addToGoalId?: st
   const amountAbs = entry ? Math.abs((entry as { amount_cents: number }).amount_cents ?? 0) : 0;
 
   if (options?.addToGoalId && amountAbs > 0) {
-    const { data: goal } = await supabase
-      .from("savings_goals")
-      .select("current_cents")
-      .eq("id", options.addToGoalId)
-      .eq("user_id", user.id)
-      .single();
-    if (goal) {
-      const current = (goal as { current_cents: number }).current_cents ?? 0;
-      await supabase
-        .from("savings_goals")
-        .update({ current_cents: current + amountAbs })
-        .eq("id", options.addToGoalId)
-        .eq("user_id", user.id);
+    try {
+      await addSavingsContribution(options.addToGoalId, amountAbs, "Impuls geannuleerd → spaardoel");
+    } catch {
+      // Goal missing or RLS — still clear freeze below
     }
   }
 
@@ -767,6 +759,7 @@ export async function cancelFreeze(entryId: string, options?: { addToGoalId?: st
   }
   revalidatePath("/budget");
   revalidatePath("/dashboard");
+  revalidatePath("/strategy");
 }
 
 export async function getFrozenEntries(): Promise<BudgetEntryRow[]> {

@@ -438,7 +438,7 @@ export function DashboardClientShell() {
   return (
     <div className="relative min-h-0 w-full min-w-0 overflow-x-hidden">
       <div
-        className="container page page-wide dashboard-page dashboard-cinematic relative z-10 pb-10"
+        className="container page page-wide dashboard-cinematic relative z-10 pb-10"
         style={dcicModeVars}
         data-mode={dcicMode}
       >

@@ -42,8 +42,11 @@ export function VisualLabDashboardOneScreenConcept() {
         <span className="text-[9px] font-semibold uppercase tracking-[0.14em] text-[var(--text-muted)]">Mock</span>
       </div>
 
-      <VisualLabCommandDeck contentClassName="min-h-0 overflow-hidden p-2 md:p-3">
-        <div className="visual-lab-dash-noscroll dashboard-command-bridge relative mx-auto flex h-[min(28rem,calc(85svh-10rem))] w-full max-w-[22rem] flex-col gap-1 overflow-hidden md:h-[min(30rem,calc(82svh-9rem))] md:max-w-[24rem] md:gap-1.5">
+      <VisualLabCommandDeck
+        className="!overflow-visible"
+        contentClassName="min-h-0 overflow-visible p-2 pb-6 md:p-3 md:pb-7"
+      >
+        <div className="visual-lab-dash-noscroll dashboard-command-bridge relative mx-auto flex h-[min(36rem,calc(90svh-9rem))] w-full max-w-[22rem] flex-col gap-1 md:max-w-[26rem] md:gap-1.5">
           {/* Kop: zelfde taal als bridge, één compacte band */}
           <div className="flex shrink-0 items-start justify-between gap-2 border-b border-[rgba(var(--mode-rgb),0.12)] pb-1.5 pt-0.5">
             <div className="min-w-0 border-l-2 border-[rgba(var(--semantic-accent),0.55)] pl-2">
@@ -83,11 +86,11 @@ export function VisualLabDashboardOneScreenConcept() {
             </div>
           </div>
 
-          {/* Pedestal: flex-gedeelte vult rest; clipping voorkomt scroll */}
-          <div className="relative min-h-0 flex-1 overflow-hidden">
-            <div className="absolute inset-x-0 bottom-0 top-0 flex items-end justify-center overflow-hidden rounded-xl border border-[rgba(var(--mode-rgb),0.1)] bg-[radial-gradient(ellipse_100%_90%_at_50%_100%,rgba(var(--mode-rgb),0.14),rgba(4,12,22,0.5))]">
+          {/* Pedestal: geen overflow-hidden — boog tekent buiten de mascotte-box */}
+          <div className="relative flex min-h-[13rem] flex-1 flex-col justify-end">
+            <div className="rounded-xl border border-[rgba(var(--mode-rgb),0.1)] bg-[radial-gradient(ellipse_100%_95%_at_50%_100%,rgba(var(--mode-rgb),0.16),rgba(4,12,22,0.45))] px-1 pb-0.5 pt-1">
               <section
-                className="mascot-hero mascot-hero-top relative w-full max-w-[19rem] overflow-visible"
+                className="mascot-hero mascot-hero-top relative w-full overflow-visible"
                 data-commander-orbit="true"
               >
                 <CommanderMascotPedestal stats={{ ...PEDESTAL }}>

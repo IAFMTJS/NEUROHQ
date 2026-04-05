@@ -1,5 +1,4 @@
 import type { QuarterEngineSnapshot } from "@/app/actions/quarter-engine-snapshot";
-import { formatCents } from "@/lib/utils/currency";
 import {
   EXECUTION_BEHAVIOR_LABELS_NL,
   normalizeExecutionBehaviorFocus,
@@ -66,36 +65,38 @@ function Bar({
   );
 }
 
-function analysisNl(
+/** Korte uitleg onder het onderwerp — geen cijfers of datareview (die staan in de balken). */
+function pillarCardExplainerNl(
   snapshot: QuarterEngineSnapshot,
   key: "budget" | "growth" | "xp" | "discipline"
 ): string {
   const ep = snapshot.engineParams;
-  const p = snapshot[key];
-  if (!p.committed && key !== "discipline") {
-    return "Geen expliciet doel in je contract voor deze pijler — de engine gebruikt een neutrale aanname.";
-  }
   if (key === "budget") {
-    const t = ep.savings.quarterlyMustSaveCents;
-    return t != null && t > 0
-      ? `Doel: ${formatCents(t)} dit kwartaal. Voortgang: ${p.displayPct}% van je spaarcommitment.`
-      : "Spaardoel niet gezet.";
+    const has = ep.savings.quarterlyMustSaveCents != null && ep.savings.quarterlyMustSaveCents > 0;
+    return has
+      ? "Spaardoel koppelt je kwartaalcontract aan wat je echt opzij zet: stortingen die je op Budget logt, worden tegen dit commitment gehouden."
+      : "Zonder spaardoel in je contract blijft deze pijler neutraal in de engine. Vul een bedrag in onder Contract als je hier wél wilt sturen.";
   }
   if (key === "growth") {
-    const tgt = ep.growth.quarterlyLearningProgressTargetPct;
-    return tgt != null && tgt > 0
-      ? `Doel: ${tgt}% leerprogress dit kwartaal. Huidige richting: ${p.displayPct}%.`
-      : "Leerdoel niet gezet.";
+    const hasPct = ep.growth.quarterlyLearningProgressTargetPct != null && ep.growth.quarterlyLearningProgressTargetPct > 0;
+    const hasProto = snapshot.growthProtocolQuarter != null;
+    if (hasPct || hasProto) {
+      return "Leerdoel combineert je gekozen leerpercentage dit kwartaal met je actieve protocol: afgeronde protocoltaken in het kwartaal tellen mee in de meting.";
+    }
+    return "Zonder leerdoel in je contract en zonder bruikbaar protocol blijft deze pijler neutraal. Zet een % in Contract en volg je traject op Growth.";
   }
   if (key === "xp") {
-    const tgt = ep.xp.quarterlyTargetXpEarned;
-    return tgt != null && tgt > 0
-      ? `Doel: ${tgt} XP verdiend dit kwartaal. Nu op ${p.displayPct}% richting dat doel.`
-      : "XP-doel niet gezet.";
+    const has = ep.xp.quarterlyTargetXpEarned != null && ep.xp.quarterlyTargetXpEarned > 0;
+    return has
+      ? "XP-doel vertaalt je kwartaalcommitment naar een beloningsstreepje: verdiende XP in dit kwartaal wordt afgezet tegen het doel uit je contract."
+      : "Zonder XP-doel in je contract blijft deze pijler neutraal. Stel een doel in onder Contract als je hier op wilt sturen.";
   }
   const focus = normalizeExecutionBehaviorFocus(ep.execution?.behaviorFocus);
   const meta = EXECUTION_BEHAVIOR_LABELS_NL[focus];
-  return `${meta.title}: ${meta.measure} Huidige score-indicator: ${p.displayPct}%.`;
+  if (focus === "balanced") {
+    return `Executie meet hoe je missies afrondt ten opzichte van negatieve uitkomsten (zoals skip of verzet). ${meta.measure}`;
+  }
+  return `Je gekozen gedragsfocus is “${meta.title}”. ${meta.measure}`;
 }
 
 type Props = {
@@ -121,23 +122,21 @@ export function StrategyCommandTab({ snapshot }: Props) {
       label: "Spaardoel",
       pct: snapshot.budget.displayPct,
       committed: snapshot.budget.committed,
-      sub: "Voortgang t.o.v. kwartaal-spaardoel",
+      sub: "Kwartaal t.o.v. spaarcommitment in contract",
     },
     {
       key: "growth" as const,
       label: "Leerdoel",
       pct: snapshot.growth.displayPct,
       committed: snapshot.growth.committed,
-      sub: snapshot.growthProtocolWeek
-        ? `Protocol week ${snapshot.growthProtocolWeek.weekIndex}: ${snapshot.growthProtocolWeek.completed}/${snapshot.growthProtocolWeek.expected} taken`
-        : "Leertraject / protocol vs kwartaaldoel",
+      sub: "Kwartaal: protocoltaken + leer-% uit contract",
     },
     {
       key: "xp" as const,
       label: "XP-doel",
       pct: snapshot.xp.displayPct,
       committed: snapshot.xp.committed,
-      sub: "XP verdiend dit kwartaal vs doel",
+      sub: "Kwartaal-XP t.o.v. doel in contract",
     },
     {
       key: "discipline" as const,
@@ -178,7 +177,7 @@ export function StrategyCommandTab({ snapshot }: Props) {
             className="rounded-xl border border-[var(--card-border)] bg-[var(--bg-elevated)]/80 p-4 text-sm leading-relaxed text-[var(--text-secondary)]"
           >
             <h3 className="text-[10px] font-bold uppercase tracking-[0.18em] text-[var(--text-muted)]">{b.label}</h3>
-            <p className="mt-2">{analysisNl(snapshot, b.key)}</p>
+            <p className="mt-2">{pillarCardExplainerNl(snapshot, b.key)}</p>
           </section>
         ))}
       </div>

@@ -13,7 +13,7 @@ import {
   type QuarterEngineResult,
 } from "@/lib/strategy/quarter-engine";
 import { todayDateString } from "@/lib/utils/timezone";
-import { getActiveProtocolWeekMissionStats, type ProtocolWeekMissionStats } from "@/app/actions/protocol-growth-stats";
+import { getActiveProtocolQuarterMissionStats, type ProtocolQuarterMissionStats } from "@/app/actions/protocol-growth-stats";
 import { loadExecutionQuarterMetrics } from "@/app/actions/execution-quarter-metrics";
 import {
   computeExecutionDisciplinePillar,
@@ -30,8 +30,8 @@ export type QuarterEngineSnapshot = QuarterEngineResult & {
   daysToDeadline: number;
   thesisDeadlinePassed: boolean;
   pressureBoostAfterDeadline: boolean;
-  /** Set when Growth-pijler op echte protocol-weekmissies draait (afgerond / verwacht in definitie). */
-  growthProtocolWeek: ProtocolWeekMissionStats | null;
+  /** Growth op basis van protocoltaken dit kalenderkwartaal (verwacht over meerdere protocolweken vs afgerond). */
+  growthProtocolQuarter: ProtocolQuarterMissionStats | null;
 };
 
 function quarterLabel(start: string): string {
@@ -111,9 +111,9 @@ export async function getQuarterEngineSnapshot(): Promise<QuarterEngineSnapshot 
   const engineParams = normalizeStrategyEngineParams((row as { engine_params?: unknown }).engine_params);
   const today = todayDateString();
   const { start, end } = calendarQuarterBounds(today);
-  const [pacing, protocolWeekStats] = await Promise.all([
+  const [pacing, protocolQuarterStats] = await Promise.all([
     getStrategyPacingHints(),
-    getActiveProtocolWeekMissionStats(),
+    getActiveProtocolQuarterMissionStats(),
   ]);
 
   const xpEarned = await sumXpEventsInRange(user.id, start, end);
@@ -134,14 +134,14 @@ export async function getQuarterEngineSnapshot(): Promise<QuarterEngineSnapshot 
 
   let growthTargetPct = engineParams.growth.quarterlyLearningProgressTargetPct;
   let growthActualPct = pacing?.learningRoughPct ?? null;
-  let growthProtocolWeek: ProtocolWeekMissionStats | null = null;
+  let growthProtocolQuarter: ProtocolQuarterMissionStats | null = null;
 
-  if (protocolWeekStats && protocolWeekStats.expected > 0) {
-    growthProtocolWeek = protocolWeekStats;
+  if (protocolQuarterStats && protocolQuarterStats.expectedTasks > 0) {
+    growthProtocolQuarter = protocolQuarterStats;
     growthTargetPct = 100;
     growthActualPct = Math.min(
       100,
-      Math.round((100 * protocolWeekStats.completed) / protocolWeekStats.expected)
+      Math.round((100 * protocolQuarterStats.completedTasks) / protocolQuarterStats.expectedTasks)
     );
   }
 
@@ -192,7 +192,7 @@ export async function getQuarterEngineSnapshot(): Promise<QuarterEngineSnapshot 
     daysToDeadline,
     thesisDeadlinePassed,
     pressureBoostAfterDeadline: boost,
-    growthProtocolWeek,
+    growthProtocolQuarter,
   };
 }
 

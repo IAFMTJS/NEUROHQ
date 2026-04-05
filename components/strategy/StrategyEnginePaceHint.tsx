@@ -26,7 +26,7 @@ export async function StrategyEnginePaceHint({ variant = "both" }: { variant?: V
       <p className="mt-2 text-[var(--text-muted)]">
         Doelen wijzig je op{" "}
         <Link
-          href="/strategy#strategy-contract"
+          href="/strategy?tab=contract#strategy-contract"
           className="font-medium text-[var(--accent-focus)] underline-offset-2 hover:underline"
         >
           Strategy contract

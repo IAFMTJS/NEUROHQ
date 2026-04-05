@@ -89,6 +89,37 @@ export async function addSavingsContribution(goalId: string, amountCents: number
     .eq("user_id", user.id);
   revalidatePath("/budget");
   revalidatePath("/dashboard");
+  revalidatePath("/strategy");
+}
+
+/**
+ * Sum logged contributions in [fromDate, toDate] inclusive.
+ * Use calendar dates `YYYY-MM-DD` only — matches `contributed_at` (date column) and Strategy kwartaal-meting.
+ */
+export async function sumSavingsContributionsInDateRange(fromDate: string, toDate: string): Promise<number> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return 0;
+  const pageSize = 1000;
+  let offset = 0;
+  let total = 0;
+  for (;;) {
+    const { data, error } = await supabase
+      .from("savings_contributions")
+      .select("amount_cents")
+      .eq("user_id", user.id)
+      .gte("contributed_at", fromDate)
+      .lte("contributed_at", toDate)
+      .order("contributed_at", { ascending: true })
+      .range(offset, offset + pageSize - 1);
+    if (error || !data?.length) break;
+    total += data.reduce((s, r) => s + (r.amount_cents ?? 0), 0);
+    if (data.length < pageSize) break;
+    offset += pageSize;
+  }
+  return total;
 }
 
 /** Get contributions for a goal (or all goals) within optional date range */

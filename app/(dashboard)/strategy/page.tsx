@@ -177,7 +177,7 @@ export default async function StrategyPage() {
           hideTitleBar
           footerLinks={[
             { href: "/tasks", label: "Missions" },
-            { href: "/strategy#strategy-contract", label: "Contract" },
+            { href: "/strategy?tab=contract#strategy-contract", label: "Contract" },
             { href: profileInsightsHref("overview"), label: "Insights" },
             { href: "/budget", label: "Budget" },
           ]}

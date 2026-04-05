@@ -1,14 +1,18 @@
 import Link from "next/link";
 import { getActiveStrategyFocus } from "@/app/actions/strategyFocus";
 import { countBudgetLocksThisQuarter } from "@/app/actions/budget-intelligence";
-import { StrategyEngineSettingsForm } from "@/components/strategy/StrategyEngineSettingsForm";
+import {
+  StrategyEngineSettingsForm,
+  type StrategyEngineSettingsFormMode,
+} from "@/components/strategy/StrategyEngineSettingsForm";
 
 type Props = {
-  /** HTML id op het formulier (anchor); default `strategy-engine`. */
+  /** HTML id op het formulier (anchor). */
   formSectionId?: string;
+  mode: StrategyEngineSettingsFormMode;
 };
 
-export async function StrategyEngineSettingsSection({ formSectionId = "strategy-engine" }: Props = {}) {
+export async function StrategyEngineSettingsSection({ formSectionId = "strategy-engine", mode }: Props) {
   const strategy = await getActiveStrategyFocus();
   if (!strategy) {
     return (
@@ -20,14 +24,15 @@ export async function StrategyEngineSettingsSection({ formSectionId = "strategy-
         >
           Strategy
         </Link>
-        -pagina om engine-limieten en -doelen vast te leggen. Die sturen o.a. missie-suggesties, budget-locks en
-        push-context.
+        -pagina. Daarna kun je{" "}
+        {mode === "contract" ? "hier je kwartaalcontract invullen" : "hier de engine tunen"}.
       </div>
     );
   }
-  const locksUsed = await countBudgetLocksThisQuarter();
+  const locksUsed = mode === "engine" ? await countBudgetLocksThisQuarter() : 0;
   return (
     <StrategyEngineSettingsForm
+      mode={mode}
       strategyId={strategy.id}
       initial={strategy.engine_params}
       locksUsedThisQuarter={locksUsed}

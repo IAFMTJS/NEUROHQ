@@ -33,8 +33,8 @@ export function StrategyQuarterCommandCenter({ snapshot, simplifiedLayout = fals
         : "Je zit achter — de engine draait strakker.";
 
   const growthSub =
-    snapshot.growthProtocolWeek != null
-      ? `Week ${snapshot.growthProtocolWeek.weekIndex}: ${snapshot.growthProtocolWeek.completed}/${snapshot.growthProtocolWeek.expected} · ${snapshot.growthProtocolWeek.protocolTitle}`
+    snapshot.growthProtocolQuarter != null
+      ? `${snapshot.growthProtocolQuarter.completedTasks}/${snapshot.growthProtocolQuarter.expectedTasks} protocoltaken dit kwartaal (w${snapshot.growthProtocolQuarter.weekRangeStart}–w${snapshot.growthProtocolQuarter.weekRangeEnd}) · ${snapshot.growthProtocolQuarter.protocolTitle}`
       : "protocol / leertraject (% vs kwartaaldoel)";
 
   const execFocus = normalizeExecutionBehaviorFocus(snapshot.engineParams.execution?.behaviorFocus);
@@ -71,7 +71,7 @@ export function StrategyQuarterCommandCenter({ snapshot, simplifiedLayout = fals
     },
   ] as const;
 
-  const contractHref = "/strategy#strategy-contract";
+  const contractHref = "/strategy?tab=contract#strategy-contract";
 
   return (
     <section

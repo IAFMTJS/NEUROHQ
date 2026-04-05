@@ -1,8 +1,11 @@
+import Link from "next/link";
 import { Suspense } from "react";
+import { profileEngineHref } from "@/lib/profile-routes";
 import { StrategyEngineSettingsSection } from "@/components/strategy/StrategyEngineSettingsSection";
 
 /**
- * Kwartaal contract + engine-formulier op de Strategy-pagina (`#strategy-contract`).
+ * Alleen kwartaalcontract (spaar-, leer-, XP-doelen) op Strategy — tab Contract (`#strategy-contract`).
+ * Strategy engine (missies, locks, push, executie) staat onder Profiel → Engine → Strategy.
  */
 export function StrategyQuarterContractPanel() {
   return (
@@ -19,15 +22,23 @@ export function StrategyQuarterContractPanel() {
           Kwartaal contract
         </h2>
         <p className="mt-1 text-xs leading-snug text-[var(--text-secondary)]">
-          Targets en regels voor de vier pijlers van je Strategy score. Growth sluit aan op je protocol op{" "}
+          De drie numerieke commitments voor je Strategy-score dit kwartaal. Growth sluit aan op je protocol op{" "}
           <span className="font-medium text-[var(--text-primary)]">Growth</span>; spaargeld log je op{" "}
-          <span className="font-medium text-[var(--text-primary)]">Budget</span>.
+          <span className="font-medium text-[var(--text-primary)]">Budget</span>. Missies per energie, budget-locks,
+          push-stijl en executie-focus stel je in onder{" "}
+          <Link
+            href={profileEngineHref("strategy")}
+            className="font-medium text-[var(--accent-focus)] underline-offset-2 hover:underline"
+          >
+            Profiel → Engine → Strategy
+          </Link>
+          .
         </p>
       </div>
       <Suspense
         fallback={<div className="min-h-[140px] animate-pulse rounded-xl bg-[var(--bg-primary)]/40" aria-hidden />}
       >
-        <StrategyEngineSettingsSection formSectionId="strategy-contract-form" />
+        <StrategyEngineSettingsSection mode="contract" formSectionId="strategy-contract-form" />
       </Suspense>
     </section>
   );

@@ -188,10 +188,13 @@ function enginePaceSummaryLine(h: StrategyPacingHints | null): string | null {
   } else if (hp.savingsTargetCents != null && hp.savingsTargetCents > 0) {
     bits.push(`Doel ${formatCents(hp.savingsTargetCents)} · nog geen stortingen dit kwartaal`);
   }
+  const pq = hp.protocolQuarterTasks;
+  const protoBit =
+    pq != null ? ` · ${pq.completedTasks}/${pq.expectedTasks} protocoltaken kwartaal` : "";
   if (hp.learningTargetPct != null && hp.learningTargetPct > 0 && hp.learningRoughPct != null) {
-    bits.push(`Leer ~${hp.learningRoughPct}% t.o.v. ${hp.learningTargetPct}% kwartaaldoel`);
+    bits.push(`Leer ~${hp.learningRoughPct}% t.o.v. ${hp.learningTargetPct}% kwartaaldoel${protoBit}`);
   } else if (hp.learningTargetPct != null && hp.learningTargetPct > 0) {
-    bits.push(`Leerdoel ${hp.learningTargetPct}% kwartaal`);
+    bits.push(`Leerdoel ${hp.learningTargetPct}% kwartaal${protoBit}`);
   }
   if (bits.length === 0) return null;
   return `Kwartaal ${q}% voorbij · ${bits.join(" · ")}`;
@@ -200,7 +203,7 @@ function enginePaceSummaryLine(h: StrategyPacingHints | null): string | null {
 function buildEngineQuarterLine(h: StrategyPacingHints | null): string | null {
   if (!engineTargetsActive(h)) return null;
   const q = Math.round(h!.quarterElapsedFrac * 100);
-  return `Het kwartaal is ${q}% verstreken. Spaar- en leertraject worden vergeleken met de engine-curve (read-only). Limieten pas je aan onder Strategy → Kwartaal contract.`;
+  return `Het kwartaal is ${q}% verstreken. Spaar- en leertraject worden vergeleken met de engine-curve (read-only). Doelen: Strategy → Contract; engine-tuning: Profiel → Engine → Strategy.`;
 }
 
 function buildEngineDetailLines(hints: StrategyPacingHints | null): string[] {

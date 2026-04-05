@@ -1,9 +1,9 @@
 /**
- * Strategy engine parameters — single write path: `strategy_focus.engine_params` (Profiel → Engine → Strategy engine).
+ * Strategy engine parameters — single write path: `strategy_focus.engine_params`.
  * - Read with `normalizeStrategyEngineParams` everywhere (never trust raw JSON).
  * - Does not duplicate `user_preferences` push toggles or `users.monthly_budget_cents`; those stay separate.
- * - Quarterly savings/learning targets and full engine tuning: primary UI Strategy page (Kwartaal contract-sectie).
- *   Budget/Growth UIs may show pace hints via `getStrategyPacingHints` without writing back (read-only).
+ * - UI: kwartaalcontract (spaar-/leer-/XP) op Strategy → Contract; engine-tuning (missies, locks, push, executie) op
+ *   Profiel → Engine → Strategy. Budget/Growth tonen pace hints read-only via `getStrategyPacingHints`.
  */
 import { bandFor10Scale, type StatBand } from "@/lib/behavioral-engine";
 import {

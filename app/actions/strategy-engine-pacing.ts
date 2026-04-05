@@ -1,19 +1,13 @@
 "use server";
 
 import { getActiveStrategyEngineParams } from "@/app/actions/strategyFocus";
-import { getSavingsContributions } from "@/app/actions/savings";
-import { getProtocolProgressMap } from "@/app/actions/protocol-progress";
-import { getGrowthFocus } from "@/app/actions/growth-focus";
-import { getProtocolLibrary } from "@/app/actions/protocol-library";
-import { progressKey, resolveFocusProtocol } from "@/lib/growth/resolve-focus-protocol";
+import { sumSavingsContributionsInDateRange } from "@/app/actions/savings";
+import { getActiveProtocolQuarterMissionStats } from "@/app/actions/protocol-growth-stats";
 import { calendarQuarterBounds } from "@/lib/strategy/engine-params";
 import { todayDateString } from "@/lib/utils/timezone";
 import type { StrategyPacingHints } from "@/lib/strategy/strategy-pacing-hints";
 
 export type { StrategyPacingHints } from "@/lib/strategy/strategy-pacing-hints";
-
-/** Rough week count for progress % when definition total weeks unavailable. */
-const ASSUMED_PROTOCOL_WEEKS = 12;
 
 function quarterElapsedFraction(todayStr: string, start: string, end: string): number {
   const startMs = new Date(start + "T12:00:00Z").getTime();
@@ -42,29 +36,30 @@ export async function getStrategyPacingHints(): Promise<StrategyPacingHints | nu
   let savedThisQuarterCents: number | null = null;
   let savingsOnTrack: boolean | null = null;
   if (saveT != null && saveT > 0) {
-    const rows = await getSavingsContributions({
-      fromDate: `${start}T00:00:00.000Z`,
-      toDate: `${end}T23:59:59.999Z`,
-    });
-    savedThisQuarterCents = rows.reduce((s, r) => s + (r.amount_cents ?? 0), 0);
+    /** Pure dates — `contributed_at` is a Postgres `date`; ISO timestamps can skew TZ edge cases. */
+    savedThisQuarterCents = await sumSavingsContributionsInDateRange(start, end);
     const expected = saveT * quarterElapsedFrac;
     savingsOnTrack = savedThisQuarterCents >= expected * 0.85;
   }
 
   let learningRoughPct: number | null = null;
   let learningOnTrack: boolean | null = null;
-  if (learnT != null && learnT > 0) {
-    const [progressMap, focus, protocols] = await Promise.all([
-      getProtocolProgressMap(),
-      getGrowthFocus(),
-      getProtocolLibrary("nl"),
-    ]);
-    const active = resolveFocusProtocol(protocols, progressMap, focus);
-    if (active) {
-      const key = progressKey(active.slug, active.locale);
-      const prog = progressMap[key];
-      const week = Math.max(1, prog?.current_week_index ?? 1);
-      learningRoughPct = Math.min(100, Math.round((week / ASSUMED_PROTOCOL_WEEKS) * 100));
+  let protocolQuarterTasks: StrategyPacingHints["protocolQuarterTasks"] = null;
+
+  const quarterProto = await getActiveProtocolQuarterMissionStats();
+  if (quarterProto && quarterProto.expectedTasks > 0) {
+    learningRoughPct = Math.min(
+      100,
+      Math.round((100 * quarterProto.completedTasks) / quarterProto.expectedTasks)
+    );
+    protocolQuarterTasks = {
+      completedTasks: quarterProto.completedTasks,
+      expectedTasks: quarterProto.expectedTasks,
+      weekRangeStart: quarterProto.weekRangeStart,
+      weekRangeEnd: quarterProto.weekRangeEnd,
+      protocolTitle: quarterProto.protocolTitle,
+    };
+    if (learnT != null && learnT > 0) {
       const expectedLearn = learnT * quarterElapsedFrac;
       learningOnTrack = learningRoughPct >= expectedLearn * 0.85;
     }
@@ -78,5 +73,6 @@ export async function getStrategyPacingHints(): Promise<StrategyPacingHints | nu
     learningTargetPct: learnT,
     learningRoughPct,
     learningOnTrack,
+    protocolQuarterTasks,
   };
 }

@@ -30,15 +30,21 @@ export function strategyPaceHintLines(variant: StrategyPaceHintVariant, hints: S
         ? `Strategy-doel: ${formatCents(hints.savingsTargetCents!)} sparen dit kwartaal — log stortingen op Budget.`
         : null;
 
-  const learnOffTrack = variant === "learning" ? " — onder tempo; blijf je week volgen." : " — onder tempo; open Growth.";
+  const learnOffTrack = variant === "learning" ? " — onder tempo; pak protocoltaken op Missions op." : " — onder tempo; open Growth.";
   const learnFallback =
     variant === "learning"
       ? `Strategy-doel: ${hints.learningTargetPct}% leerprogress dit kwartaal — volg je traject hier.`
       : `Strategy-doel: ${hints.learningTargetPct}% leerprogress dit kwartaal — volg je traject op Growth.`;
 
+  const pq = hints.protocolQuarterTasks;
+  const protoSuffix =
+    pq != null
+      ? ` (${pq.completedTasks}/${pq.expectedTasks} protocoltaken dit kwartaal, verwachte set w${pq.weekRangeStart}–w${pq.weekRangeEnd})`
+      : "";
+
   const learnLine =
     showLearn && hints.learningRoughPct != null
-      ? `Leerprogress (ruw): ~${hints.learningRoughPct}% t.o.v. ${hints.learningTargetPct}% kwartaaldoel${
+      ? `Leerprogress: ~${hints.learningRoughPct}% t.o.v. ${hints.learningTargetPct}% kwartaaldoel${protoSuffix}${
           hints.learningOnTrack === false ? learnOffTrack : hints.learningOnTrack === true ? " — op schema." : ""
         }`
       : showLearn

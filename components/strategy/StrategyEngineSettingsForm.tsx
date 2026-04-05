@@ -15,12 +15,17 @@ import {
 import { formatCents, parseToCents } from "@/lib/utils/currency";
 import { useRouter } from "next/navigation";
 
+export type StrategyEngineSettingsFormMode = "contract" | "engine";
+
 type Props = {
   strategyId: string;
   initial: StrategyEngineParams;
-  locksUsedThisQuarter: number;
+  /** Alleen nodig in `engine`-modus (budget locks). */
+  locksUsedThisQuarter?: number;
   /** Voor anchor links (default: strategy-engine). */
   sectionId?: string;
+  /** `contract` = alleen kwartaaldoelen (Strategy). `engine` = missies, locks, push, executie (Profiel). */
+  mode: StrategyEngineSettingsFormMode;
 };
 
 const PUSH_OPTIONS: { value: PushAreaStyle; label: string }[] = [
@@ -32,8 +37,9 @@ const PUSH_OPTIONS: { value: PushAreaStyle; label: string }[] = [
 export function StrategyEngineSettingsForm({
   strategyId,
   initial,
-  locksUsedThisQuarter,
+  locksUsedThisQuarter = 0,
   sectionId = "strategy-engine",
+  mode,
 }: Props) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
@@ -81,43 +87,49 @@ export function StrategyEngineSettingsForm({
     setOk(false);
     startTransition(async () => {
       try {
-        const minL = Math.max(1, Math.min(8, parseInt(minLow, 10) || 1));
-        const medV = med.trim() === "" ? null : Math.max(1, Math.min(8, parseInt(med, 10) || 1));
-        const goodV = good.trim() === "" ? null : Math.max(1, Math.min(8, parseInt(good, 10) || 1));
-        const locks = Math.max(0, Math.min(100, parseInt(maxLocks, 10) || 12));
-        const saveCents =
-          saveEuro.trim() === "" ? null : parseToCents(saveEuro.replace(/\s/g, "").replace(",", "."));
-        const lp =
-          learnPct.trim() === "" ? null : Math.max(0, Math.min(100, parseInt(learnPct, 10) || 0));
-        const xpRaw = xpQuarter.trim() === "" ? null : Math.max(0, Math.floor(parseInt(xpQuarter, 10) || 0));
-        const xpTarget = xpRaw != null && xpRaw > 0 ? xpRaw : null;
+        if (mode === "contract") {
+          const saveCents =
+            saveEuro.trim() === "" ? null : parseToCents(saveEuro.replace(/\s/g, "").replace(",", "."));
+          const lp =
+            learnPct.trim() === "" ? null : Math.max(0, Math.min(100, parseInt(learnPct, 10) || 0));
+          const xpRaw = xpQuarter.trim() === "" ? null : Math.max(0, Math.floor(parseInt(xpQuarter, 10) || 0));
+          const xpTarget = xpRaw != null && xpRaw > 0 ? xpRaw : null;
 
-        await updateStrategyEngineParams(strategyId, {
-          missions: {
-            minOnLowEnergyDay: minL,
-            targetOnMediumDay: medV,
-            targetOnGoodDay: goodV,
-          },
-          budget: { maxLocksPerQuarter: locks },
-          savings: {
-            quarterlyMustSaveCents: saveCents != null && saveCents >= 0 ? saveCents : null,
-          },
-          growth: {
-            quarterlyLearningProgressTargetPct: lp,
-          },
-          xp: {
-            quarterlyTargetXpEarned: xpTarget,
-          },
-          notifications: {
-            missions: nM,
-            budget: nB,
-            growth: nG,
-            strategy: nS,
-          },
-          execution: {
-            behaviorFocus,
-          },
-        });
+          await updateStrategyEngineParams(strategyId, {
+            savings: {
+              quarterlyMustSaveCents: saveCents != null && saveCents >= 0 ? saveCents : null,
+            },
+            growth: {
+              quarterlyLearningProgressTargetPct: lp,
+            },
+            xp: {
+              quarterlyTargetXpEarned: xpTarget,
+            },
+          });
+        } else {
+          const minL = Math.max(1, Math.min(8, parseInt(minLow, 10) || 1));
+          const medV = med.trim() === "" ? null : Math.max(1, Math.min(8, parseInt(med, 10) || 1));
+          const goodV = good.trim() === "" ? null : Math.max(1, Math.min(8, parseInt(good, 10) || 1));
+          const locks = Math.max(0, Math.min(100, parseInt(maxLocks, 10) || 12));
+
+          await updateStrategyEngineParams(strategyId, {
+            missions: {
+              minOnLowEnergyDay: minL,
+              targetOnMediumDay: medV,
+              targetOnGoodDay: goodV,
+            },
+            budget: { maxLocksPerQuarter: locks },
+            notifications: {
+              missions: nM,
+              budget: nB,
+              growth: nG,
+              strategy: nS,
+            },
+            execution: {
+              behaviorFocus,
+            },
+          });
+        }
         setOk(true);
         router.refresh();
       } catch (e) {
@@ -128,22 +140,76 @@ export function StrategyEngineSettingsForm({
 
   const maxL = Math.max(0, Math.min(100, parseInt(maxLocks, 10) || 12));
 
-  return (
-    <section
-      id={sectionId}
-      className="space-y-6 rounded-2xl border border-[var(--accent-focus)]/25 bg-[var(--bg-elevated)]/90 p-5 shadow-[0_0_36px_rgba(59,130,246,0.08)]"
-      aria-label="Strategy engine instellingen"
-    >
-      <div>
-        <h2 className="text-sm font-bold uppercase tracking-[0.16em] text-[var(--accent-focus)]">
-          Strategy engine
-        </h2>
-        <p className="mt-1 text-sm text-[var(--text-secondary)]">
-          Deze waarden sturen het hele systeem: aanbevolen missies per energieniveau, budget-lock limiet, spaar- en
-          leerdoelen dit kwartaal, en bias voor push-notificaties.
+  const rootClass =
+    mode === "contract"
+      ? "space-y-6"
+      : "space-y-6 rounded-2xl border border-[var(--accent-focus)]/25 bg-[var(--bg-elevated)]/90 p-5 shadow-[0_0_36px_rgba(59,130,246,0.08)]";
+
+  const contractFields = (
+    <div className="grid gap-6 lg:grid-cols-3">
+      <div className="space-y-3 rounded-xl border border-[var(--card-border)] bg-[var(--bg-primary)]/40 p-4">
+        <h3 className="text-xs font-semibold uppercase tracking-wide text-[var(--text-muted)]">Sparen dit kwartaal</h3>
+        <label className="block text-xs text-[var(--text-muted)]">
+          Verplicht spaardoel (EUR, leeg = geen vast doel)
+          <input
+            type="text"
+            inputMode="decimal"
+            value={saveEuro}
+            onChange={(e) => setSaveEuro(e.target.value)}
+            placeholder="0,00"
+            className="mt-1 w-full rounded-lg border border-[var(--card-border)] bg-[var(--bg-elevated)] px-3 py-2 text-sm"
+          />
+        </label>
+        {initial.savings.quarterlyMustSaveCents != null && (
+          <p className="text-xs text-[var(--text-muted)]">
+            Huidig doel: {formatCents(initial.savings.quarterlyMustSaveCents)} — log stortingen op Budget.
+          </p>
+        )}
+      </div>
+
+      <div className="space-y-3 rounded-xl border border-[var(--card-border)] bg-[var(--bg-primary)]/40 p-4">
+        <h3 className="text-xs font-semibold uppercase tracking-wide text-[var(--text-muted)]">Growth / learning</h3>
+        <label className="block text-xs text-[var(--text-muted)]">
+          Doel leerprogress dit kwartaal (% van actief traject, 0–100)
+          <input
+            type="number"
+            min={0}
+            max={100}
+            value={learnPct}
+            onChange={(e) => setLearnPct(e.target.value)}
+            placeholder="bijv. 25"
+            className="mt-1 w-full rounded-lg border border-[var(--card-border)] bg-[var(--bg-elevated)] px-3 py-2 text-sm"
+          />
+        </label>
+        <p className="text-[10px] text-[var(--text-muted)]">
+          Met een actief protocol meet Strategy je leerpijler op{" "}
+          <span className="font-medium text-[var(--text-secondary)]">afgeronde protocoltaken dit kalenderkwartaal</span>{" "}
+          op Missions. Dit percentage blijft je expliciete kwartaalcommitment in het contract.
         </p>
       </div>
 
+      <div className="space-y-3 rounded-xl border border-[var(--card-border)] bg-[var(--bg-primary)]/40 p-4">
+        <h3 className="text-xs font-semibold uppercase tracking-wide text-[var(--text-muted)]">XP dit kwartaal</h3>
+        <p className="text-xs text-[var(--text-secondary)]">
+          Bruto XP dit kalenderkwartaal (xp_events). Leeg = neutraal in de Strategy-score.
+        </p>
+        <label className="block text-xs text-[var(--text-muted)]">
+          Doel XP (heel getal, leeg = geen vast doel)
+          <input
+            type="number"
+            min={0}
+            value={xpQuarter}
+            onChange={(e) => setXpQuarter(e.target.value)}
+            placeholder="bijv. 5000"
+            className="mt-1 w-full rounded-lg border border-[var(--card-border)] bg-[var(--bg-elevated)] px-3 py-2 text-sm"
+          />
+        </label>
+      </div>
+    </div>
+  );
+
+  const engineFields = (
+    <>
       <div className="grid gap-6 lg:grid-cols-2">
         <div className="space-y-3 rounded-xl border border-[var(--card-border)] bg-[var(--bg-primary)]/40 p-4">
           <h3 className="text-xs font-semibold uppercase tracking-wide text-[var(--text-muted)]">Missies (energie)</h3>
@@ -193,6 +259,28 @@ export function StrategyEngineSettingsForm({
           </p>
         </div>
 
+        <div className="space-y-3 rounded-xl border border-[var(--card-border)] bg-[var(--bg-primary)]/40 p-4">
+          <h3 className="text-xs font-semibold uppercase tracking-wide text-[var(--text-muted)]">Budget locks</h3>
+          <p className="text-xs text-[var(--text-secondary)]">
+            Maximaal aantal nieuwe no-spend locks in dit kalenderkwartaal. Nu gebruikt:{" "}
+            <strong className="text-[var(--text-primary)]">
+              {locksUsedThisQuarter} / {maxL || "—"}
+            </strong>
+            .
+          </p>
+          <label className="block text-xs text-[var(--text-muted)]">
+            Max locks per kwartaal (0–100)
+            <input
+              type="number"
+              min={0}
+              max={100}
+              value={maxLocks}
+              onChange={(e) => setMaxLocks(e.target.value)}
+              className="mt-1 w-full rounded-lg border border-[var(--card-border)] bg-[var(--bg-elevated)] px-3 py-2 text-sm"
+            />
+          </label>
+        </div>
+
         <div className="space-y-3 rounded-xl border border-[var(--card-border)] bg-[var(--bg-primary)]/40 p-4 lg:col-span-2">
           <h3 className="text-xs font-semibold uppercase tracking-wide text-[var(--text-muted)]">
             Executie op Missions — gedragsfocus
@@ -218,89 +306,6 @@ export function StrategyEngineSettingsForm({
           <p className="rounded-lg bg-[var(--bg-card)] px-3 py-2 text-xs text-[var(--text-secondary)]">
             {EXECUTION_BEHAVIOR_LABELS_NL[behaviorFocus].measure}
           </p>
-        </div>
-
-        <div className="space-y-3 rounded-xl border border-[var(--card-border)] bg-[var(--bg-primary)]/40 p-4">
-          <h3 className="text-xs font-semibold uppercase tracking-wide text-[var(--text-muted)]">Budget locks</h3>
-          <p className="text-xs text-[var(--text-secondary)]">
-            Maximaal aantal nieuwe no-spend locks in dit kalenderkwartaal. Nu gebruikt:{" "}
-            <strong className="text-[var(--text-primary)]">
-              {locksUsedThisQuarter} / {maxL || "—"}
-            </strong>
-            .
-          </p>
-          <label className="block text-xs text-[var(--text-muted)]">
-            Max locks per kwartaal (0–100)
-            <input
-              type="number"
-              min={0}
-              max={100}
-              value={maxLocks}
-              onChange={(e) => setMaxLocks(e.target.value)}
-              className="mt-1 w-full rounded-lg border border-[var(--card-border)] bg-[var(--bg-elevated)] px-3 py-2 text-sm"
-            />
-          </label>
-        </div>
-
-        <div className="space-y-3 rounded-xl border border-[var(--card-border)] bg-[var(--bg-primary)]/40 p-4">
-          <h3 className="text-xs font-semibold uppercase tracking-wide text-[var(--text-muted)]">Sparen dit kwartaal</h3>
-          <label className="block text-xs text-[var(--text-muted)]">
-            Verplicht spaardoel (EUR, leeg = geen vast doel in engine)
-            <input
-              type="text"
-              inputMode="decimal"
-              value={saveEuro}
-              onChange={(e) => setSaveEuro(e.target.value)}
-              placeholder="0,00"
-              className="mt-1 w-full rounded-lg border border-[var(--card-border)] bg-[var(--bg-elevated)] px-3 py-2 text-sm"
-            />
-          </label>
-          {initial.savings.quarterlyMustSaveCents != null && (
-            <p className="text-xs text-[var(--text-muted)]">
-              Huidig doel: {formatCents(initial.savings.quarterlyMustSaveCents)} — vergelijk met je spaarrekening op
-              Budget.
-            </p>
-          )}
-        </div>
-
-        <div className="space-y-3 rounded-xl border border-[var(--card-border)] bg-[var(--bg-primary)]/40 p-4">
-          <h3 className="text-xs font-semibold uppercase tracking-wide text-[var(--text-muted)]">Growth / learning</h3>
-          <label className="block text-xs text-[var(--text-muted)]">
-            Doel leerprogress dit kwartaal (% van actief traject, 0–100)
-            <input
-              type="number"
-              min={0}
-              max={100}
-              value={learnPct}
-              onChange={(e) => setLearnPct(e.target.value)}
-              placeholder="bijv. 25"
-              className="mt-1 w-full rounded-lg border border-[var(--card-border)] bg-[var(--bg-elevated)] px-3 py-2 text-sm"
-            />
-          </label>
-          <p className="text-[10px] text-[var(--text-muted)]">
-            Heb je een actief protocol: de Strategy-score gebruikt dan eerst{" "}
-            <span className="font-medium text-[var(--text-secondary)]">afgeronde weekmissies / taken in die week</span>{" "}
-            op je Missions-bord; dit veld geldt als fallback als er geen weektaken in de definitie staan.
-          </p>
-        </div>
-
-        <div className="space-y-3 rounded-xl border border-[var(--card-border)] bg-[var(--bg-primary)]/40 p-4">
-          <h3 className="text-xs font-semibold uppercase tracking-wide text-[var(--text-muted)]">XP dit kwartaal</h3>
-          <p className="text-xs text-[var(--text-secondary)]">
-            Bruto XP dat je wilt verdienen dit kalenderkwartaal (zoals gelogd in xp_events). Leeg = neutraal in strategy
-            score.
-          </p>
-          <label className="block text-xs text-[var(--text-muted)]">
-            Doel XP (heel getal, leeg = geen vast doel)
-            <input
-              type="number"
-              min={0}
-              value={xpQuarter}
-              onChange={(e) => setXpQuarter(e.target.value)}
-              placeholder="bijv. 5000"
-              className="mt-1 w-full rounded-lg border border-[var(--card-border)] bg-[var(--bg-elevated)] px-3 py-2 text-sm"
-            />
-          </label>
         </div>
       </div>
 
@@ -335,13 +340,37 @@ export function StrategyEngineSettingsForm({
           ))}
         </div>
       </div>
+    </>
+  );
+
+  return (
+    <section
+      id={sectionId}
+      className={rootClass}
+      aria-label={mode === "contract" ? "Kwartaal contract" : "Strategy engine instellingen"}
+    >
+      {mode === "engine" && (
+        <div>
+          <h2 className="text-sm font-bold uppercase tracking-[0.16em] text-[var(--accent-focus)]">Strategy engine</h2>
+          <p className="mt-1 text-sm text-[var(--text-secondary)]">
+            Missies per energie, budget-lock limiet, push-bias per domein en executie-focus voor je kwartaalscore.{" "}
+            <span className="text-[var(--text-muted)]">
+              Kwartaaldoelen (sparen, leer-%, XP) stel je in op Strategy → tab Contract.
+            </span>
+          </p>
+        </div>
+      )}
+
+      {mode === "contract" ? contractFields : engineFields}
 
       {err && (
         <p className="rounded-lg border border-red-500/40 bg-red-500/10 px-3 py-2 text-sm text-red-100">{err}</p>
       )}
       {ok && (
         <p className="rounded-lg border border-emerald-500/35 bg-emerald-500/10 px-3 py-2 text-sm text-emerald-100">
-          Engine bijgewerkt. Dashboard en missies gebruiken dit bij de volgende refresh.
+          {mode === "contract"
+            ? "Kwartaal contract opgeslagen. Command en Review volgen deze targets."
+            : "Engine bijgewerkt. Dashboard en missies gebruiken dit bij de volgende refresh."}
         </p>
       )}
 
@@ -351,7 +380,7 @@ export function StrategyEngineSettingsForm({
         disabled={pending}
         className="rounded-xl border border-[var(--accent-focus)]/50 bg-[var(--accent-focus)]/20 px-5 py-2.5 text-sm font-semibold text-[var(--accent-focus)] transition hover:bg-[var(--accent-focus)]/30 disabled:opacity-50"
       >
-        {pending ? "Opslaan…" : "Engine opslaan"}
+        {pending ? "Opslaan…" : mode === "contract" ? "Kwartaal contract opslaan" : "Engine opslaan"}
       </button>
     </section>
   );

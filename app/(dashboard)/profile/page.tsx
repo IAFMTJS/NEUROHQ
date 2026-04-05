@@ -23,6 +23,7 @@ import {
   profileInsightsHref,
   type ProfileEngineTabId,
 } from "@/lib/profile-routes";
+import { StrategyEngineSettingsSection } from "@/components/strategy/StrategyEngineSettingsSection";
 import { ReportInsightsPageChrome } from "@/components/report/ReportInsightsPageChrome";
 import { ReportInsightsContent } from "@/components/report/ReportInsightsContent";
 import { ReportSnapshotFallback } from "@/components/report/ReportSnapshotFallback";
@@ -285,21 +286,22 @@ export default async function ProfilePage({ searchParams }: { searchParams: Prom
 
   const engineHint = (
     <p className="text-xs text-[var(--text-muted)]">
-      Thema, push, budget en meer:{" "}
+      Thema en site-instellingen:{" "}
       <a
         href="/settings"
         className="font-medium text-[var(--accent-focus)] underline-offset-2 hover:underline rounded-sm outline-none focus-visible:ring-2 focus-visible:ring-[rgba(var(--mode-rgb),0.45)] focus-visible:ring-offset-0"
       >
         Instellingen
       </a>
-      . Kwartaal contract:{" "}
+      . Kwartaalcontract (sparen, leer-%, XP):{" "}
       <a
-        href="/strategy#strategy-contract"
+        href="/strategy?tab=contract#strategy-contract"
         className="font-medium text-[var(--accent-focus)] underline-offset-2 hover:underline rounded-sm outline-none focus-visible:ring-2 focus-visible:ring-[rgba(var(--mode-rgb),0.45)] focus-visible:ring-offset-0"
       >
-        Strategy
+        Strategy → Contract
       </a>
-      . Insights:{" "}
+      . Strategy engine (missies, locks, push, executie): tab <strong className="text-[var(--text-secondary)]">Strategy</strong>{" "}
+      hieronder. Insights:{" "}
       <a
         href={profileInsightsHref("overview")}
         className="font-medium text-[var(--accent-focus)] underline-offset-2 hover:underline rounded-sm outline-none focus-visible:ring-2 focus-visible:ring-[rgba(var(--mode-rgb),0.45)] focus-visible:ring-offset-0"
@@ -343,27 +345,25 @@ export default async function ProfilePage({ searchParams }: { searchParams: Prom
       )}
 
       {engineTab === "strategy" && (
-        <section
-          className="rounded-2xl border border-[var(--card-border)] bg-[var(--bg-elevated)]/70 p-5 shadow-[0_0_24px_rgba(0,0,0,0.12)]"
-          aria-labelledby="profile-strategy-contract-hint-heading"
-        >
-          <h2
-            id="profile-strategy-contract-hint-heading"
-            className="text-[10px] font-bold uppercase tracking-[0.18em] text-[var(--semantic-accent)]"
-          >
-            Strategy contract
-          </h2>
-          <p className="mt-2 text-sm leading-snug text-[var(--text-secondary)]">
-            Kwartaalcontract (spaar-, leer-, XP-doelen) en overige engine-instellingen (missies per energie, budget-locks,
-            push-voorkeuren) horen op de Strategy-pagina, bij je thesis en overview.
+        <div className="space-y-4">
+          <p className="text-xs leading-snug text-[var(--text-secondary)]">
+            <Link
+              href="/strategy?tab=contract#strategy-contract"
+              className="font-medium text-[var(--accent-focus)] underline-offset-2 hover:underline"
+            >
+              Strategy → Contract
+            </Link>{" "}
+            voor spaar-, leer- en XP-doelen dit kwartaal. Hieronder: engine-tuning (missies, locks, notificaties,
+            executie-focus).
           </p>
-          <Link
-            href="/strategy#strategy-contract"
-            className="mt-4 inline-flex min-h-[44px] items-center justify-center rounded-xl border border-[rgba(var(--mode-rgb),0.35)] bg-gradient-to-b from-[rgba(var(--mode-rgb-deep),0.45)] to-[rgba(6,18,30,0.95)] px-5 text-sm font-semibold text-[var(--text-primary)] shadow-[0_0_20px_rgba(var(--mode-rgb),0.15)] transition hover:border-[rgba(var(--mode-rgb),0.5)]"
+          <Suspense
+            fallback={
+              <div className="min-h-[160px] animate-pulse rounded-xl bg-[var(--bg-primary)]/40" aria-hidden />
+            }
           >
-            Open Strategy contract →
-          </Link>
-        </section>
+            <StrategyEngineSettingsSection mode="engine" formSectionId="profile-strategy-engine" />
+          </Suspense>
+        </div>
       )}
 
       {engineTab === "play" && <ProfileEnginePlayDeckTab initialDocument={engine.playProfile} />}

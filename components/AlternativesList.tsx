@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { dismissAlternative } from "@/app/actions/alternatives";
-import { updateSavingsGoal } from "@/app/actions/savings";
+import { addSavingsContribution } from "@/app/actions/savings";
 import type { Alternative } from "@/app/actions/alternatives";
 import { getCurrencySymbol } from "@/lib/utils/currency";
 
@@ -32,11 +32,10 @@ export function AlternativesList({
       setAddError("Select a goal and enter an amount.");
       return;
     }
-    const goal = activeGoals.find((g) => g.id === goalId);
-    if (!goal) return;
+    if (!activeGoals.find((g) => g.id === goalId)) return;
     startTransition(async () => {
       try {
-        await updateSavingsGoal(goalId, { current_cents: goal.current_cents + amountCents });
+        await addSavingsContribution(goalId, amountCents, "Quick add");
         setAmount("");
         setGoalId("");
       } catch (err) {

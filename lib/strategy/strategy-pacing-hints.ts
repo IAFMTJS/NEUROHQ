@@ -7,4 +7,12 @@ export type StrategyPacingHints = {
   learningTargetPct: number | null;
   learningRoughPct: number | null;
   learningOnTrack: boolean | null;
+  /** Gezet wanneer leervoortgang uit protocoltaken dit kwartaal komt (i.p.v. alleen week-index). */
+  protocolQuarterTasks: {
+    completedTasks: number;
+    expectedTasks: number;
+    weekRangeStart: number;
+    weekRangeEnd: number;
+    protocolTitle: string;
+  } | null;
 };

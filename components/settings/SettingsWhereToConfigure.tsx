@@ -5,7 +5,16 @@ import Link from "next/link";
 const ITEMS = [
   { where: "Growth", what: "Wekelijkse learning-doel (minuten)", href: "/learning" },
   { where: "Budget", what: "Maandbudget, spaardoelen, impulsen", href: "/budget" },
-  { where: "Strategy", what: "Kwartaalstrategie, key results, check-in", href: "/strategy" },
+  {
+    where: "Strategy",
+    what: "Thesis, kwartaalcontract (tab Contract), command/review",
+    href: "/strategy?tab=contract",
+  },
+  {
+    where: "Profiel → Engine → Strategy",
+    what: "Strategy engine (missies, budget-locks, push, executie-focus)",
+    href: "/profile?view=engine&engineTab=strategy",
+  },
   { where: "Instellingen → Toestel", what: "Tijdzone, push (quote), stille uren, agenda’s", href: "/settings#tijd-notificaties" },
   { where: "Dashboard", what: "Brain status (energy, focus, mentale belasting) voor energy budget", href: "/dashboard" },
   { where: "Profiel", what: "XP-voorspelling en progress context", href: "/profile" },

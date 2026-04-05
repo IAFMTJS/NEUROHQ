@@ -21,6 +21,7 @@ type Props = {
 /**
  * Hub layout: container rim + {@link DashboardCommandDeckFrame} (missions parity).
  * Scroll/ambient frost lives on `#main-content`; avoid nested `main` and duplicate `flatGlassPageRoot`.
+ * Column uses `dashboard-cinematic` only (same base as `/tasks`), not `dashboard-page`, so the fixed vignette matches Missions.
  */
 export function DashboardHubCommandShell({
   children,
@@ -53,7 +54,7 @@ export function DashboardHubCommandShell({
       data-mode={dcicMode}
     >
       <div
-        className="container page page-wide dashboard-page dashboard-cinematic relative z-10 pb-10"
+        className="container page page-wide dashboard-cinematic relative z-10 pb-10"
         {...(compactHorizontal ? { "data-hub-compact-x": "true" } : {})}
         {...(compactVertical ? { "data-hub-compact-y": "true" } : {})}
       >
