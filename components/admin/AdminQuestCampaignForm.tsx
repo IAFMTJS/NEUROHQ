@@ -2,7 +2,8 @@
 
 import { useTransition, useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { adminStopQuestCampaign, adminUpsertQuestCampaign, getDefaultQuestContentJson } from "@/app/actions/quest-campaign";
+import { adminUpsertQuestCampaign, getDefaultQuestContentJson } from "@/app/actions/quest-campaign";
+import { AdminQuestStopButton } from "@/components/admin/AdminQuestStopButton";
 import type { Tables } from "@/types/database.types";
 
 type Row = Tables<"platform_quest_campaigns">;
@@ -238,31 +239,11 @@ export function AdminQuestCampaignForm({ initialRow }: { initialRow: Row | null 
             <label htmlFor="qc-active" className="text-sm text-white/70">
               Actief
             </label>
-            <span className="text-xs text-white/40">Uitgeschakeld = verborgen voor alle spelers (zelfde effect als stoppen, maar je kunt hier weer aanzetten).</span>
+            <span className="text-xs text-white/40">
+              Uitgeschakeld = verborgen voor spelers. Voor <strong className="text-white/60">onmiddellijk beëindigen</strong>{" "}
+              gebruik onderaan <strong className="text-white/60">Quest stoppen</strong> (zet actief uit + eindigt nu).
+            </span>
           </div>
-          {initialRow?.id ? (
-            <div className="flex flex-wrap items-center gap-2 border-t border-white/10 pt-3">
-              <button
-                type="button"
-                disabled={pending}
-                onClick={() => {
-                  if (!confirm("Quest nu stoppen? De campagne verdwijnt voor iedereen (dashboard en profiel). Voortgang blijft bewaard; je kunt later opnieuw activeren via het vinkje en opslaan.")) return;
-                  startTransition(async () => {
-                    try {
-                      await adminStopQuestCampaign(initialRow.id);
-                      router.refresh();
-                    } catch (er) {
-                      setErr(er instanceof Error ? er.message : "Stoppen mislukt.");
-                    }
-                  });
-                }}
-                className="rounded-lg border border-rose-500/50 bg-rose-500/10 px-3 py-2 text-sm font-semibold text-rose-100 hover:bg-rose-500/20 disabled:opacity-50"
-              >
-                Quest nu stoppen
-              </button>
-              <span className="text-xs text-white/40">Zet actief uit en beëindigt het tijdvenster nu (indien het nog liep).</span>
-            </div>
-          ) : null}
         </div>
         <div className="sm:col-span-2">
           <label className="mb-1 block text-xs font-medium text-white/50" htmlFor="qc-json">
@@ -277,13 +258,27 @@ export function AdminQuestCampaignForm({ initialRow }: { initialRow: Row | null 
           />
         </div>
       </div>
-      <button
-        type="submit"
-        disabled={pending}
-        className="rounded-lg bg-amber-500 px-4 py-2 text-sm font-semibold text-[#050810] hover:bg-amber-400 disabled:opacity-50"
-      >
-        {pending ? "Opslaan…" : "Campagne opslaan"}
-      </button>
+      <div className="flex flex-wrap items-center gap-3 border-t border-white/10 pt-4">
+        <button
+          type="submit"
+          disabled={pending}
+          className="rounded-lg bg-amber-500 px-4 py-2 text-sm font-semibold text-[#050810] hover:bg-amber-400 disabled:opacity-50"
+        >
+          {pending ? "Opslaan…" : "Campagne opslaan"}
+        </button>
+        {initialRow?.id ? (
+          <AdminQuestStopButton campaignId={initialRow.id} slug={initialRow.slug ?? undefined} onError={setErr} />
+        ) : null}
+        <button
+          type="button"
+          disabled={pending}
+          onClick={() => window.location.reload()}
+          className="rounded-lg border border-white/25 px-4 py-2 text-sm text-white/80 hover:bg-white/10 disabled:opacity-50"
+        >
+          Annuleren — pagina herladen
+        </button>
+        <span className="text-[11px] text-white/35">Herlaadt zonder op te slaan; alle velden terug naar de serverversie.</span>
+      </div>
     </form>
   );
 }

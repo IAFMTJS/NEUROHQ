@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getAdminSessionUser } from "@/lib/admin-auth";
 import { AdminQuestCampaignForm } from "@/components/admin/AdminQuestCampaignForm";
+import { AdminQuestStopButton } from "@/components/admin/AdminQuestStopButton";
 import type { Tables } from "@/types/database.types";
 
 export const dynamic = "force-dynamic";
@@ -43,11 +44,39 @@ export default async function AdminQuestsPage() {
         </p>
       </header>
 
-      {list.length > 1 ? (
-        <p className="mb-4 text-xs text-amber-200/80">
-          Meerdere rijen in de database — het formulier toont de meest recente campagne (bovenaan). Overweeg oude rijen te
-          deactiveren.
-        </p>
+      {list.length > 0 ? (
+        <div className="mb-6 overflow-x-auto rounded-xl border border-white/10 bg-white/[0.03]">
+          <table className="w-full min-w-[640px] border-collapse text-left text-sm text-white/85">
+            <thead>
+              <tr className="border-b border-white/10 text-[10px] font-bold uppercase tracking-wider text-amber-400/90">
+                <th className="px-4 py-3">Slug</th>
+                <th className="px-4 py-3">Actief</th>
+                <th className="px-4 py-3">Start</th>
+                <th className="px-4 py-3">Einde</th>
+                <th className="px-4 py-3 text-right">Acties</th>
+              </tr>
+            </thead>
+            <tbody>
+              {list.map((row) => (
+                <tr key={row.id} className="border-b border-white/5 hover:bg-white/[0.02]">
+                  <td className="px-4 py-2 font-mono text-xs text-white/90">{row.slug}</td>
+                  <td className="px-4 py-2">{row.active ? "ja" : "nee"}</td>
+                  <td className="px-4 py-2 text-xs text-white/60">{row.starts_at?.slice(0, 16) ?? "—"}</td>
+                  <td className="px-4 py-2 text-xs text-white/60">{row.ends_at?.slice(0, 16) ?? "—"}</td>
+                  <td className="px-4 py-2 text-right">
+                    <AdminQuestStopButton campaignId={row.id} slug={row.slug} variant="compact" />
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          {list.length > 1 ? (
+            <p className="border-t border-white/10 px-4 py-2 text-[11px] text-amber-200/80">
+              Het formulier hieronder bewerkt de meest recente campagne (eerste rij). Gebruik <strong>Stop</strong> per rij om
+              een andere campagne direct te beëindigen.
+            </p>
+          ) : null}
+        </div>
       ) : null}
 
       <div className="rounded-xl border border-white/10 bg-white/[0.03] p-5">
