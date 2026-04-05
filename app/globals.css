@@ -2773,6 +2773,18 @@ header h1 { margin: 0; }
   }
 }
 
+/* Dashboard command bridge: lift mascot, rings & quote slightly */
+.dashboard-command-bridge .bridge-layout-hero .mascot-hero.mascot-hero-top {
+  margin-top: -40px;
+  margin-bottom: -58px;
+}
+.dashboard-command-bridge .bridge-layout-hero .commander-bridge-stats {
+  margin-top: 4px;
+}
+.dashboard-command-bridge .bridge-layout-hero .bridge-hero-daily-quote {
+  margin-top: 0.35rem;
+}
+
 /* 7. MISSION GRID */
 .mission-grid {
   display: grid;

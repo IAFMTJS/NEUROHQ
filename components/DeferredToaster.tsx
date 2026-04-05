@@ -20,13 +20,16 @@ export function DeferredToaster() {
   }, []);
 
   if (!mounted) return null;
+  /* Sonner uses `mobileOffset` for bottom on ≤600px; default 16px sat on the dock. */
+  const dockToastOffset = "var(--toast-offset-bottom)";
   return (
     <Toaster
       theme="dark"
       richColors={false}
       position="bottom-center"
       closeButton
-      offset="var(--toast-offset-bottom)"
+      offset={{ bottom: dockToastOffset }}
+      mobileOffset={{ bottom: dockToastOffset }}
       icons={{
         success: <NeuroToastIcon variant="success" />,
         error: <NeuroToastIcon variant="error" />,

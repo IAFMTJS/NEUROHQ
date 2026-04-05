@@ -1,5 +1,6 @@
 "use client";
 
+import type { ReactNode } from "react";
 import { getDashboardMascotSrc } from "@/lib/mascots";
 import { CommanderMascotPedestal, type CommanderMascotPedestalStats } from "./CommanderMascotPedestal";
 import { CommanderStatRing } from "./CommanderStatRing";
@@ -32,6 +33,8 @@ type Props = {
    * `null`/`undefined` = gewone link naar `missionHref`.
    */
   missionCtaAction?: (() => void) | null;
+  /** Dashboard bridge: small card links (left); mission CTA uses half width on larger screens. */
+  mainMissionSlot?: ReactNode;
 };
 
 export function CommanderHomeHero({
@@ -48,6 +51,7 @@ export function CommanderHomeHero({
   bridgeLayout = false,
   pedestalStats = null,
   missionCtaAction = null,
+  mainMissionSlot = null,
 }: Props) {
   const todayDailyState = useHQStore((s) => s.todayDailyState);
   const effectiveEnergyPct =
@@ -126,7 +130,7 @@ export function CommanderHomeHero({
         <CommanderStatRing value={effectiveLoadPct} variant="load" size={bridgeLayout ? 120 : 102} />
       </section>
       {dailyQuoteText && (
-        <div className="glass-card glass-preserve-decoration mx-auto !rounded-xl !p-3 w-full max-w-[520px] text-center">
+        <div className="bridge-hero-daily-quote glass-card glass-preserve-decoration mx-auto !rounded-xl !p-3 w-full max-w-[520px] text-center">
           <p
             className="mb-1 text-[9px] font-semibold uppercase tracking-[0.14em]"
             style={{ color: "rgba(var(--mode-rgb), 0.78)" }}
@@ -144,28 +148,35 @@ export function CommanderHomeHero({
         </div>
       )}
 
-      {missionCtaAction ? (
-        <button
-          type="button"
-          className={`commander-cta-glass inline-flex w-full cursor-pointer items-center justify-center rounded-full px-5 text-[11px] font-medium tracking-[0.08em] text-[var(--text-main)] h-[48px] min-h-[48px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[rgba(var(--mode-rgb),0.45)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--bg-primary)] ${streakAtRisk ? "cta-streak-pulse" : ""} ${dailyQuoteText ? "mt-3.5" : "mt-2"}`}
-          onClick={() => {
-            void trackEvent("CTA_clicked", { label: missionLabel, href: missionHref, context: "dashboard_mission_toast" });
-            missionCtaAction();
-          }}
-        >
-          {missionLabel}
-        </button>
-      ) : (
-        <ClientCTALink
-          href={missionHref}
-          label={missionLabel}
-          tone="glass"
-          className={`commander-cta-glass block w-full no-underline rounded-full h-[48px] min-h-[48px] px-5 text-[11px] tracking-[0.08em] ${dailyQuoteText ? "mt-3.5" : "mt-2"}`}
-          streakAtRisk={streakAtRisk}
-        >
-          {missionLabel}
-        </ClientCTALink>
-      )}
+      <div
+        className={`bridge-mission-footer flex w-full flex-col gap-2 sm:flex-row sm:items-end ${dailyQuoteText ? "mt-2" : "mt-1.5"}`}
+      >
+        {mainMissionSlot ? <div className="min-w-0 flex-1">{mainMissionSlot}</div> : null}
+        <div className={mainMissionSlot ? "w-full shrink-0 sm:w-1/2 sm:max-w-[50%]" : "w-full"}>
+          {missionCtaAction ? (
+            <button
+              type="button"
+              className={`commander-cta-glass inline-flex w-full cursor-pointer items-center justify-center rounded-full px-3 text-[11px] font-medium tracking-[0.08em] text-[var(--text-main)] h-[48px] min-h-[48px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[rgba(var(--mode-rgb),0.45)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--bg-primary)] sm:px-5 ${streakAtRisk ? "cta-streak-pulse" : ""}`}
+              onClick={() => {
+                void trackEvent("CTA_clicked", { label: missionLabel, href: missionHref, context: "dashboard_mission_toast" });
+                missionCtaAction();
+              }}
+            >
+              {missionLabel}
+            </button>
+          ) : (
+            <ClientCTALink
+              href={missionHref}
+              label={missionLabel}
+              tone="glass"
+              className="commander-cta-glass block w-full no-underline rounded-full h-[48px] min-h-[48px] px-3 text-[11px] tracking-[0.08em] sm:px-5"
+              streakAtRisk={streakAtRisk}
+            >
+              {missionLabel}
+            </ClientCTALink>
+          )}
+        </div>
+      </div>
     </>
   );
 

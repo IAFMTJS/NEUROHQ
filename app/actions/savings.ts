@@ -38,6 +38,7 @@ export async function createSavingsGoal(params: {
   if (error) throw new Error(error.message);
   revalidatePath("/budget");
   revalidatePath("/dashboard");
+  revalidatePath("/strategy");
 }
 
 export async function updateSavingsGoal(id: string, params: {
@@ -58,6 +59,7 @@ export async function updateSavingsGoal(id: string, params: {
   if (error) throw new Error(error.message);
   revalidatePath("/budget");
   revalidatePath("/dashboard");
+  revalidatePath("/strategy");
 }
 
 /** Add a contribution to a goal (updates current_cents and logs in savings_contributions) */
@@ -147,5 +149,6 @@ export async function deleteSavingsGoal(id: string) {
   if (error) throw new Error(error.message);
   revalidatePath("/budget");
   revalidatePath("/dashboard");
+  revalidatePath("/strategy");
 }
 

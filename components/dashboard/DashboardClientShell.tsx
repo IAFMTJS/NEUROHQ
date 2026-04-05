@@ -9,9 +9,10 @@ import { applyBudgetOptimizationLock } from "@/app/actions/budget-intelligence";
 import { getPendingDailyState } from "@/lib/client-pending-writes";
 import { usePendingBudgetSnapshot } from "@/lib/client-pending-budget";
 import { useHQStore } from "@/lib/hq-store";
-import { BrainStatusCard, ActiveMissionCard } from "@/components/hq";
+import { BrainStatusCard } from "@/components/hq";
 import { OverdriveBanner } from "@/components/dashboard/OverdriveBanner";
 import { DashboardContextCard } from "@/components/dashboard/DashboardContextCard";
+import { DashboardMainMissionTeaser } from "@/components/dashboard/DashboardMainMissionTeaser";
 import { SystemOverviewCard } from "@/components/dashboard/SystemOverviewCard";
 import { CommanderHomeHero } from "@/components/commander";
 import { DashboardCommandDeckFrame } from "@/components/layout/DashboardCommandDeckFrame";
@@ -264,6 +265,7 @@ export function DashboardClientShell() {
     xp,
     economy,
     missionLabel,
+    singleGoalLabel,
     emptyMissionMessage,
     emptyMissionHref,
     dailyQuoteText,
@@ -481,6 +483,13 @@ export function DashboardClientShell() {
                       streakAtRisk={streakAtRisk}
                       dailyQuoteText={dailyQuoteText}
                       dailyQuoteAuthor={dailyQuoteAuthor}
+                      mainMissionSlot={
+                        <DashboardMainMissionTeaser
+                          summary={singleGoalLabel ?? firstMissionToday?.title ?? null}
+                          emptyMessage={emptyMissionMessage}
+                          href={firstMissionToday ? "/tasks" : emptyMissionHref}
+                        />
+                      }
                       pedestalStats={{
                         totalXP: typeof xp.total_xp === "number" ? xp.total_xp : 0,
                         displayLevel: dcicLevel,
