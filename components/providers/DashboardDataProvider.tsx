@@ -3,15 +3,35 @@
 import { createContext, useCallback, useContext, useEffect, useRef, useState, type ReactNode } from "react";
 import { usePathname } from "next/navigation";
 import type { DashboardCritical, DashboardSecondary } from "@/types/dashboard-data.types";
-import {
-  getDashboardCache,
-  setDashboardCache,
-  getTodayDateStr,
-} from "@/lib/dashboard-cache";
-import { useHQStore, getPersistedDashboardSync } from "@/lib/hq-store";
-import { getNavLoadAbortSignal } from "@/lib/navigation/nav-load-abort";
+import { getDashboardCache, setDashboardCache, getTodayDateStr } from "@/lib/dashboard-cache";
+import { useHQStore } from "@/lib/hq-store";
+import { applyBootstrapTodayToApp, refreshMergedSnapshotFromNetwork } from "@/lib/daily-bootstrap";
+import { fetchBootstrapTodayFromApi } from "@/lib/bootstrap-query";
 
 export type { DashboardCritical, DashboardSecondary };
+
+/**
+ * Single network path with dashboard: `GET /api/bootstrap/today` (same payload as bootstrap + merge).
+ * Updates HQ store via `applyBootstrapTodayToApp` so TanStack + Zustand stay aligned.
+ */
+export async function fetchAll(signal?: AbortSignal): Promise<{ critical: DashboardCritical; secondary: DashboardSecondary }> {
+  const data = await fetchBootstrapTodayFromApi(signal, { variant: "full" });
+  applyBootstrapTodayToApp(data);
+  const critical = data.dashboard?.critical as DashboardCritical | undefined;
+  const secondary = data.dashboard?.secondary as DashboardSecondary | undefined;
+  if (!critical || !secondary) throw new Error("Invalid dashboard response");
+  return { critical, secondary };
+}
+
+export async function fetchCritical(signal?: AbortSignal): Promise<DashboardCritical> {
+  const { critical } = await fetchAll(signal);
+  return critical;
+}
+
+export async function fetchSecondary(signal?: AbortSignal): Promise<DashboardSecondary> {
+  const { secondary } = await fetchAll(signal);
+  return secondary;
+}
 
 type DashboardDataState = {
   critical: DashboardCritical | null;
@@ -27,89 +47,32 @@ type DashboardDataContextValue = DashboardDataState & {
 
 const DashboardDataContext = createContext<DashboardDataContextValue | null>(null);
 
-/** Single request returning both critical and secondary; no duplicate work on server. */
-export async function fetchAll(signal?: AbortSignal): Promise<{ critical: DashboardCritical; secondary: DashboardSecondary }> {
-  const res = await fetch(`/api/dashboard/data?part=all&ts=${Date.now()}`, {
-    credentials: "include",
-    cache: "no-store",
-    signal,
-  });
-  if (!res.ok) {
-    const body = await res.json().catch(() => ({}));
-    const msg = typeof (body && body.error) === "string" ? body.error : `Dashboard ${res.status}`;
-    throw new Error(res.status === 401 ? "Unauthorized" : msg);
-  }
-  const data = (await res.json()) as { critical: DashboardCritical; secondary: DashboardSecondary };
-  if (!data.critical || !data.secondary) throw new Error("Invalid dashboard response");
-  return data;
-}
-
-export async function fetchCritical(signal?: AbortSignal): Promise<DashboardCritical> {
-  const res = await fetch(`/api/dashboard/data?part=critical&ts=${Date.now()}`, {
-    credentials: "include",
-    cache: "no-store",
-    signal,
-  });
-  if (!res.ok) {
-    const body = await res.json().catch(() => ({}));
-    const msg = typeof (body && body.error) === "string" ? body.error : `Dashboard critical ${res.status}`;
-    throw new Error(res.status === 401 ? "Unauthorized" : msg);
-  }
-  return res.json() as Promise<DashboardCritical>;
-}
-
-export async function fetchSecondary(signal?: AbortSignal): Promise<DashboardSecondary> {
-  const res = await fetch(`/api/dashboard/data?part=secondary&ts=${Date.now()}`, {
-    credentials: "include",
-    cache: "no-store",
-    signal,
-  });
-  if (!res.ok) {
-    const body = await res.json().catch(() => ({}));
-    const msg = typeof (body && body.error) === "string" ? body.error : `Dashboard secondary ${res.status}`;
-    throw new Error(msg);
-  }
-  return res.json();
-}
-
 type DashboardDataProviderProps = {
   children: ReactNode;
-  /** When provided (e.g. from dashboard page server fetch), first paint has data and we skip client fetch. */
+  /** Same-day dashboard from server snapshot / TanStack (first paint before Zustand layout hydrate). */
   initialCritical?: DashboardCritical | null;
   initialSecondary?: DashboardSecondary | null;
 };
 
+/**
+ * Dashboard critical/secondary: **HQ store first** (bootstrap + `applyBootstrapTodayToApp`), then props, then IDB resume.
+ * Persists to IndexedDB when the pair is complete so PWA reopen stays instant without an extra dashboard API.
+ */
 export function DashboardDataProvider({ children, initialCritical, initialSecondary }: DashboardDataProviderProps) {
-  const globalCritical = useHQStore((s) => s.dashboardCritical);
-  const globalSecondary = useHQStore((s) => s.dashboardSecondary);
+  const storeCritical = useHQStore((s) => s.dashboardCritical);
+  const storeSecondary = useHQStore((s) => s.dashboardSecondary);
   const setDashboardSnapshot = useHQStore((s) => s.setDashboardSnapshot);
-  const [state, setState] = useState<DashboardDataState>(() => {
-    // Important for hydration: initial client render must match server HTML.
-    // Server render never sees persisted/localStorage state, so the first client
-    // render also only uses server-provided (initial*) and in-memory global state.
-    return {
-      critical: initialCritical ?? globalCritical ?? null,
-      secondary: initialSecondary ?? globalSecondary ?? null,
-      loadingCritical: false,
-      loadingSecondary: Boolean(initialCritical && !initialSecondary),
-    };
-  });
+
+  const critical = storeCritical ?? initialCritical ?? null;
+  const secondary = storeSecondary ?? initialSecondary ?? null;
+
+  const [loading, setLoading] = useState(false);
   const preloadStartedRef = useRef(false);
-  const stateRef = useRef(state);
   const pathname = usePathname();
   const hasInitialData = Boolean(initialCritical || initialSecondary);
 
-  useEffect(() => {
-    stateRef.current = state;
-  }, [state]);
-
   const setDashboardData = useCallback(
     (data: { critical?: DashboardCritical | null; secondary?: DashboardSecondary | null }) => {
-      setState((prev) => ({
-        ...prev,
-        critical: data.critical !== undefined ? data.critical : prev.critical,
-        secondary: data.secondary !== undefined ? data.secondary : prev.secondary,
-      }));
       setDashboardSnapshot(data);
     },
     [setDashboardSnapshot]
@@ -118,122 +81,71 @@ export function DashboardDataProvider({ children, initialCritical, initialSecond
   const preloadDashboard = useCallback(async () => {
     if (preloadStartedRef.current) return;
     preloadStartedRef.current = true;
-
     const dateStr = getTodayDateStr();
-    let cachedCritical: DashboardCritical | null = null;
-    let cachedSecondary: DashboardSecondary | null = null;
-    // Restore from cache first so reopening the PWA same day shows last-known data immediately (no "loses memory" on iOS)
+
     try {
+      let c = useHQStore.getState().dashboardCritical;
+      let s = useHQStore.getState().dashboardSecondary;
+
+      if (c && s) {
+        await setDashboardCache(dateStr, c, s);
+        return;
+      }
+
       const cached = await getDashboardCache(dateStr);
-      cachedCritical = cached?.critical ?? null;
-      cachedSecondary = cached?.secondary ?? null;
-      if (cachedCritical || cachedSecondary) {
-        const current = stateRef.current;
-        const nextCritical = current.critical ?? cachedCritical;
-        const nextSecondary = current.secondary ?? cachedSecondary;
-
-        setState((prev) => ({
-          critical: nextCritical,
-          secondary: nextSecondary,
-          loadingCritical: prev.critical ? prev.loadingCritical : !nextCritical,
-          loadingSecondary: prev.secondary ? prev.loadingSecondary : !nextSecondary,
-        }));
-
-        setDashboardSnapshot({ critical: nextCritical, secondary: nextSecondary });
+      if (cached?.critical && cached?.secondary) {
+        setDashboardSnapshot({ critical: cached.critical, secondary: cached.secondary });
+        return;
       }
-    } catch {
-      cachedCritical = null;
-      cachedSecondary = null;
-    }
 
-    // If we have a complete cached snapshot (critical + secondary), use it without hitting the network.
-    // Mutations already keep cache fresh; this keeps reopen/resume truly instant.
-    if (cachedCritical && cachedSecondary) {
+      setLoading(true);
+      await refreshMergedSnapshotFromNetwork();
+      c = useHQStore.getState().dashboardCritical;
+      s = useHQStore.getState().dashboardSecondary;
+
+      if (!c || !s) {
+        const fresh = await fetchBootstrapTodayFromApi(undefined, { variant: "full" });
+        applyBootstrapTodayToApp(fresh);
+        c = useHQStore.getState().dashboardCritical;
+        s = useHQStore.getState().dashboardSecondary;
+      }
+
+      if (c && s) {
+        await setDashboardCache(dateStr, c, s);
+      } else {
+        throw new Error("Dashboard data unavailable");
+      }
+    } finally {
+      setLoading(false);
       preloadStartedRef.current = false;
-      setState((prev) => ({
-        ...prev,
-        critical: prev.critical ?? cachedCritical,
-        secondary: prev.secondary ?? cachedSecondary,
-        loadingCritical: false,
-        loadingSecondary: false,
-      }));
-      setDashboardSnapshot({
-        critical: cachedCritical,
-        secondary: cachedSecondary,
-      });
-      return;
     }
+  }, [setDashboardSnapshot]);
 
-    const currentState = stateRef.current;
-    const needCritical = !(currentState.critical ?? cachedCritical);
-    const needSecondary = !(currentState.secondary ?? cachedSecondary);
-    if (!needCritical && !needSecondary) {
-      preloadStartedRef.current = false;
-      setState((prev) => ({ ...prev, loadingCritical: false, loadingSecondary: false }));
-      return;
-    }
-
-    setState((prev) => ({
-      ...prev,
-      loadingCritical: needCritical,
-      loadingSecondary: needSecondary,
-    }));
-
-    const loadSignal = getNavLoadAbortSignal();
-
-    try {
-      let critical = currentState.critical ?? cachedCritical;
-      let secondary = currentState.secondary ?? cachedSecondary;
-
-      if (needCritical && needSecondary) {
-        const all = await fetchAll(loadSignal);
-        critical = all.critical;
-        secondary = all.secondary;
-      } else if (needCritical) {
-        critical = await fetchCritical(loadSignal);
-      } else if (needSecondary) {
-        secondary = await fetchSecondary(loadSignal);
-      }
-
-      setState((prev) => ({
-        ...prev,
-        critical: critical ?? prev.critical,
-        secondary: secondary ?? prev.secondary,
-        loadingCritical: false,
-        loadingSecondary: false,
-      }));
-      if (critical && secondary) {
-        await setDashboardCache(dateStr, critical, secondary);
-        setDashboardSnapshot({ critical, secondary });
-      }
-    } catch (err) {
-      setState((prev) => ({ ...prev, loadingCritical: false, loadingSecondary: false }));
-      preloadStartedRef.current = false; // Allow retry
-      const aborted =
-        (err instanceof DOMException && err.name === "AbortError") ||
-        (err instanceof Error && err.name === "AbortError");
-      if (aborted) return;
-      throw err; // So shell can show error when it called preloadDashboard()
-    }
-  }, []);
+  useEffect(() => {
+    if (!storeCritical || !storeSecondary) return;
+    const dateStr = getTodayDateStr();
+    void setDashboardCache(dateStr, storeCritical, storeSecondary).catch(() => {});
+  }, [storeCritical, storeSecondary]);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
-    if (pathname !== "/dashboard" && hasInitialData) return; // Other routes get a full nested provider already.
-    if (!preloadStartedRef.current) preloadDashboard().catch(() => {});
+    if (pathname !== "/dashboard" && hasInitialData) return;
+    void preloadDashboard().catch(() => {});
   }, [preloadDashboard, hasInitialData, pathname]);
 
+  const loadingCritical = loading && !critical;
+  const loadingSecondary = loading && !secondary;
+
   const value: DashboardDataContextValue = {
-    ...state,
+    critical,
+    secondary,
+    loadingCritical,
+    loadingSecondary,
     setDashboardData,
     preloadDashboard,
   };
 
-  return (
-    <DashboardDataContext.Provider value={value}>
-      {children}
-    </DashboardDataContext.Provider>
-  );
+  return <DashboardDataContext.Provider value={value}>{children}</DashboardDataContext.Provider>;
 }
 
 export function useDashboardData(): DashboardDataContextValue | null {
