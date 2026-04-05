@@ -50,7 +50,10 @@ export function DashboardMainContent({ children }: Props) {
       <PwaStatusChip />
       <AcceptanceGateLayer />
       {children}
-      <div className="bottom-nav-page-spacer" aria-hidden />
+      <div className="bottom-nav-page-spacer" aria-hidden>
+        {/* In-flow plate: same footprint as the fixed dock so the page bottom stays visible above the nav. */}
+        <div className="bottom-nav-page-spacer-plate" />
+      </div>
     </main>
   );
 }

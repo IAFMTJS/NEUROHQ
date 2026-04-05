@@ -446,7 +446,7 @@ export function BudgetInsightHub(props: BudgetInsightHubProps) {
         <div className="relative z-[1] border-b border-[rgba(var(--mode-rgb),0.1)] px-4 py-3 md:px-5">
           <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--mode-text-soft)]">Inzicht</p>
           <p className="mt-1 text-xs text-[var(--text-muted)]">
-            Minder kaarten op het scherm; tik op een tegel voor het volledige paneel.
+            Cijfers, patronen en signalen hier; scroll naar beneden voor weekreview en routines.
           </p>
           <button
             type="button"

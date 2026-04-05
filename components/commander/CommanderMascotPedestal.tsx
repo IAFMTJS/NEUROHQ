@@ -113,17 +113,20 @@ export function CommanderMascotPedestal({ stats, children, showResourceArc = tru
         }
       >
         {showResourceArc ? (
-          <div className="commander-mascot-pedestal-hero-row mx-auto flex w-full max-w-[min(400px,100%)] items-center justify-center gap-2 sm:max-w-[min(440px,100%)] sm:gap-3">
-            <CommanderVerticalResourcePies
-              energyPct={ePct}
-              focusPct={fPct}
-              loadPct={lPct}
-              loadPulse={loadPulse}
-              xpLink={xpLink}
-              budgetLink={budgetLink}
-            />
-            <div className="flex min-w-0 flex-1 flex-col items-center">
-              <div className="commander-mascot-pedestal-mascot relative z-[14] mx-auto w-full max-w-[min(320px,88vw)] shrink-0 px-1 sm:-mb-2 lg:-mb-3">
+          <div className="commander-mascot-pedestal-hero-row relative mx-auto flex w-full max-w-[min(400px,100%)] items-center justify-center sm:max-w-[min(440px,100%)]">
+            {/* Absolute so the column does not shift the mascot; mascot stays centered in the row. */}
+            <div className="commander-mascot-pedestal-resource-rail pointer-events-auto absolute left-0 top-1/2 z-[20] w-[4rem] -translate-y-1/2 sm:w-[4.25rem]">
+              <CommanderVerticalResourcePies
+                energyPct={ePct}
+                focusPct={fPct}
+                loadPct={lPct}
+                loadPulse={loadPulse}
+                xpLink={xpLink}
+                budgetLink={budgetLink}
+              />
+            </div>
+            <div className="relative z-[14] flex w-full flex-col items-center">
+              <div className="commander-mascot-pedestal-mascot relative mx-auto w-full max-w-[min(320px,88vw)] shrink-0 px-1 sm:-mb-2 lg:-mb-3">
                 {children}
               </div>
             </div>

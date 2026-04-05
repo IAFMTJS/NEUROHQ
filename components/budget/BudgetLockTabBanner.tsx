@@ -6,8 +6,8 @@ import { formatLockEndDateTime } from "@/lib/budget-lock-display";
 
 type Props = {
   /** Extra context for screen readers / copy */
-  context?: "overview" | "execute" | "analysis" | "optimization";
-  /** Opens Execute tab + scrolls to lock card (hash alone fails on other tabs). */
+  context?: "overview" | "execute" | "analysis";
+  /** Opens Sparen & boeken-tab + lock-anker (hash alleen faalt op andere tabs). */
   lockPanelHref: string;
   className?: string;
 };
@@ -20,10 +20,8 @@ export function BudgetLockTabBanner({ context, lockPanelHref, className = "" }: 
   const contextHint =
     context === "overview"
       ? "Status blijft zichtbaar, maar acties lopen via de Lock-tab."
-      : context === "optimization"
-      ? "Extra lock-interventies en challenges zijn uitgeschakeld."
       : context === "analysis"
-        ? "Signalen blijven zichtbaar; snelle acties volgen je lock op Execute."
+        ? "Grafieken en routines blijven leesbaar; boeken en sparen doe je via Sparen & boeken of Lock."
         : "Gebruik hieronder het lock-paneel voor noodpad of log een nooduitgave.";
 
   return (

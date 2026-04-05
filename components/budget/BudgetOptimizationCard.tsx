@@ -24,12 +24,12 @@ export function BudgetOptimizationCard({ lockPanelHref, summary, suggestions, ch
   const [lockInfo, setLockInfo] = useState<string | null>(null);
 
   const lockSummary =
-    "Je hebt al een no-spend lock lopen. Extra focus-locks en challenge-validatie horen bij één actie tegelijk — volg je huidige lock af op Execute, of log een nooduitgave als dat nodig is.";
+    "Je hebt al een no-spend lock lopen. Extra focus-locks en challenge-validatie horen bij één actie tegelijk — volg je huidige lock af via Lock of log een nooduitgave als dat nodig is.";
   const untilLabel = formatLockEndDateTime(lockUntilAt);
 
   return (
     <section className="card-simple space-y-3">
-      <h3 className="text-sm font-semibold text-[var(--text-primary)]">Optimalisatie</h3>
+      <h3 className="text-sm font-semibold text-[var(--text-primary)]">Suggesties & interventies</h3>
 
       {lockActive && (
         <div className="rounded-lg border border-[rgba(var(--mode-rgb),0.28)] bg-[rgba(var(--mode-rgb-deep),0.2)] px-3 py-2.5 text-xs text-[var(--text-primary)]">
@@ -42,7 +42,7 @@ export function BudgetOptimizationCard({ lockPanelHref, summary, suggestions, ch
             href={lockPanelHref}
             className="mt-2 inline-block text-xs font-semibold text-[var(--semantic-accent)] underline-offset-2 hover:underline"
           >
-            Open lock- en nooduitgave-paneel op Execute
+            Open lock- en nooduitgave-paneel
           </a>
         </div>
       )}
@@ -71,7 +71,7 @@ export function BudgetOptimizationCard({ lockPanelHref, summary, suggestions, ch
             className="rounded-lg border border-[var(--card-border)] px-3 py-2 text-xs font-semibold text-[var(--text-primary)] disabled:opacity-60"
             onClick={() => {
               if (lockActive) {
-                toast.message("Niet beschikbaar tijdens no-spend lock — gebruik het noodpad onderaan Execute.");
+                toast.message("Niet beschikbaar tijdens no-spend lock — gebruik het noodpad op de tab Lock.");
                 return;
               }
               startTransition(async () => {
@@ -91,7 +91,7 @@ export function BudgetOptimizationCard({ lockPanelHref, summary, suggestions, ch
             className="rounded-lg border border-[var(--card-border)] px-3 py-2 text-xs font-semibold text-[var(--text-primary)] disabled:opacity-60"
             onClick={() => {
               if (lockActive) {
-                toast.message("Niet beschikbaar tijdens no-spend lock — gebruik het noodpad onderaan Execute.");
+                toast.message("Niet beschikbaar tijdens no-spend lock — gebruik het noodpad op de tab Lock.");
                 return;
               }
               startTransition(async () => {

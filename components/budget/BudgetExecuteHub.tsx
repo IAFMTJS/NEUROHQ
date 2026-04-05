@@ -272,9 +272,9 @@ export function BudgetExecuteHub({
       (id) => (
         <ToastChrome
           toastId={id}
-          title="Spaardoelen"
-          hint="Pay yourself first — voortgang en bijdragen deze periode."
-          ariaLabel="Spaardoelen"
+          title="Sparen & spaardoelen"
+          hint="Pay yourself first — voortgang, bijdragen en nieuwe doelen."
+          ariaLabel="Sparen en spaardoelen"
         >
           <div className="space-y-4">
             <BudgetAchievementsCard financeState={financeState} compact />
@@ -318,18 +318,39 @@ export function BudgetExecuteHub({
     <section
       id="entries-frozen"
       className="card-simple scroll-mt-24 overflow-hidden p-0"
-      aria-label="Execute — acties"
+      aria-label="Sparen en boeken — acties"
       data-tutorial="budget-goals"
     >
       <div className="border-b border-[var(--card-border)] px-4 py-3 md:px-5">
-        <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-emerald-200">Execute</p>
+        <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-emerald-200">Sparen & boeken</p>
         <p className="mt-1 text-xs text-[var(--text-muted)]">
-          Tik op een tegel voor het volledige scherm; minder kaarten, dezelfde functies.
+          Sparen eerst (pay yourself first), daarna uitgaven bijwerken. Tik op een rij of tegel voor het volledige paneel.
         </p>
         <button
           type="button"
+          onClick={openGoalsToast}
+          className="relative mt-3 flex w-full items-center justify-between gap-3 rounded-xl border border-emerald-400/35 bg-[linear-gradient(165deg,rgba(6,40,28,0.55),rgba(15,23,42,0.75))] px-3 py-3 text-left shadow-[0_0_24px_rgba(16,185,129,0.12)] transition-colors hover:border-emerald-400/55 hover:bg-[linear-gradient(165deg,rgba(8,50,32,0.65),rgba(15,23,42,0.82))] focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400/50"
+        >
+          {goals.length > 0 ? (
+            <span className="absolute right-3 top-2 rounded-full bg-emerald-500/30 px-2 py-0.5 text-[10px] font-bold text-emerald-50">
+              {goals.length > 99 ? "99+" : goals.length}
+            </span>
+          ) : null}
+          <span className="text-2xl" aria-hidden>
+            🎯
+          </span>
+          <span className="min-w-0 flex-1 pr-10">
+            <span className="block text-sm font-bold text-emerald-100">Sparen & spaardoelen</span>
+            <span className="mt-0.5 block text-xs text-emerald-200/80">
+              Maanddoel, bijdragen deze periode en nieuwe doelen — je belangrijkste actie.
+            </span>
+          </span>
+          <span className="shrink-0 text-xs font-semibold text-emerald-300">Open →</span>
+        </button>
+        <button
+          type="button"
           onClick={openPaydayToast}
-          className="mt-3 flex w-full items-center justify-between gap-3 rounded-xl border border-[var(--card-border)] bg-[var(--bg-primary)]/35 px-3 py-2.5 text-left transition-colors hover:border-[rgba(var(--mode-rgb),0.3)] hover:bg-[var(--bg-primary)]/50 focus:outline-none focus-visible:ring-2 focus-visible:ring-[rgba(var(--mode-rgb),0.45)]"
+          className="mt-2 flex w-full items-center justify-between gap-3 rounded-xl border border-[var(--card-border)] bg-[var(--bg-primary)]/35 px-3 py-2.5 text-left transition-colors hover:border-[rgba(var(--mode-rgb),0.3)] hover:bg-[var(--bg-primary)]/50 focus:outline-none focus-visible:ring-2 focus-visible:ring-[rgba(var(--mode-rgb),0.45)]"
         >
           <span className="text-2xl" aria-hidden>
             📅
@@ -342,8 +363,8 @@ export function BudgetExecuteHub({
         </button>
       </div>
 
-      <div className="grid grid-cols-2 gap-3 p-4 sm:grid-cols-3 md:px-5">
-        <ExecuteTile emoji="⚡" label="Quick log" hint="Snel boeken" onClick={openQuickLogToast} />
+      <div className="grid grid-cols-2 gap-3 p-4 sm:grid-cols-2 md:px-5">
+        <ExecuteTile emoji="⚡" label="Quick log" hint="Snel uitgave boeken" onClick={openQuickLogToast} />
         <ExecuteTile
           emoji="📒"
           label="Boekingen"
@@ -352,7 +373,6 @@ export function BudgetExecuteHub({
           badge={expenseEntryCount}
         />
         <ExecuteTile emoji="🧊" label="Bevriezen" hint="Wachtrij" onClick={openFrozenToast} badge={frozenTotal} />
-        <ExecuteTile emoji="🎯" label="Spaardoelen" hint="Targets" onClick={openGoalsToast} badge={goals.length} />
         <ExecuteTile
           emoji="🔁"
           label="Terugkerend"

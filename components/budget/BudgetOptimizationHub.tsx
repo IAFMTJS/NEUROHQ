@@ -166,11 +166,14 @@ export function BudgetOptimizationHub({
   }
 
   return (
-    <section className={hubShell} aria-label="Optimalisatie hub" id="budget-optimization-hub">
+    <section className={hubShell} aria-label="Routines en verbeteren" id="budget-optimization-hub">
       <div className="px-4 py-4 md:px-5 md:py-5">
-        <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--mode-text-soft)]">Optimalisatie</p>
+        <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--mode-text-soft)]">
+          Routines & verbeteren
+        </p>
         <p className="mt-1 text-xs text-[var(--text-muted)]">
-          Zelfde werkwijze als Inzicht en Execute: tik op een tegel voor het volledige paneel.
+          Hoort bij <strong className="font-semibold text-[var(--text-secondary)]">Inzicht</strong>: weekreview, pre-payday en
+          suggesties. Tik op een tegel voor het volledige paneel.
         </p>
         <div
           className={`mt-4 grid gap-3 ${historyMode ? "mx-auto max-w-md grid-cols-1" : "grid-cols-2 sm:grid-cols-3"}`}

@@ -6,7 +6,7 @@ type Props = {
   lockActive: boolean;
   lockUntil: string | null;
   lockUntilAt: string | null;
-  /** Opens Execute tab + scrolls to lock card (hash alone fails while Status is active). */
+  /** Opens Sparen & boeken-tab + lock-anker (hash faalt als Status actief is). */
   lockPanelHref: string;
   /** Opens Lock tab and triggers emergency-expense modal. */
   emergencyPanelHref?: string;

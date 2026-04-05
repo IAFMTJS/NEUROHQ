@@ -522,7 +522,7 @@ export function RemainingBudgetHero({
                   href={executeHref}
                   className="btn-secondary inline-flex flex-1 items-center justify-center rounded-lg px-4 py-2.5 text-sm font-semibold focus:outline-none focus-visible:ring-2 focus-visible:ring-[rgba(var(--mode-rgb),0.45)] focus-visible:ring-offset-0 sm:flex-initial sm:min-w-[140px]"
                 >
-                  Naar Execute
+                  Naar sparen & boeken
                 </Link>
               )}
             </>

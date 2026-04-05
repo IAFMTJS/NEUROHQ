@@ -158,8 +158,13 @@ export default async function BudgetPage({ searchParams }: Props) {
   const disciplineInputsReady =
     (budgetSettings.monthly_budget_cents ?? 0) > 0 || (entries as EntryRow[]).length > 0;
 
-  const activeTab: "overview" | "execute" | "analysis" | "optimization" | "lock" | "tactical" | "goals" =
-    tabParam === "execute" || tabParam === "tactical" || tabParam === "analysis" || tabParam === "goals" || tabParam === "optimization" || tabParam === "lock"
+  const activeTab: "overview" | "execute" | "analysis" | "lock" | "tactical" | "goals" | "optimization" =
+    tabParam === "execute" ||
+    tabParam === "tactical" ||
+    tabParam === "analysis" ||
+    tabParam === "goals" ||
+    tabParam === "optimization" ||
+    tabParam === "lock"
       ? tabParam
       : "overview";
 
@@ -378,65 +383,64 @@ export default async function BudgetPage({ searchParams }: Props) {
   );
 
   const analysisSection = (
-    <BudgetInsightHub
-      historyMode={historyMode}
-      uxExperiments={ENABLE_BUDGET_UX_EXPERIMENTS}
-      behaviorReimagining={ENABLE_BUDGET_BEHAVIOR_REIMAGINING}
-      currency={currency}
-      periodLabel={periodLabel}
-      budgetPeriod={budgetSettings.budget_period === "weekly" ? "weekly" : "monthly"}
-      categoryTotals={categoryTotals}
-      goals={goals}
-      alternatives={alternatives}
-      commandStatus={commandStatus}
-      remainingToSpendCents={remainingToSpendCents}
-      disciplineScore={financeState?.disciplineScore ?? null}
-      disciplineInputsReady={disciplineInputsReady}
-      monthlyBudgetCents={budgetSettings.monthly_budget_cents}
-      monthlySavingsCents={budgetSettings.monthly_savings_cents}
-      expensesCents={expensesCents}
-      incomeCents={incomeCents}
-      forecastProjectedBalanceCents={financialInsights?.forecast?.projectedBalance ?? null}
-      forecastOverspendCents={financialInsights?.forecast?.overspend ?? null}
-      financeState={financeState}
-      daysUntilNextIncome={canonicalBudgetView.daysUntilNextIncome}
-      safeDailySpendOverrideCents={canonicalSafeDailySpendCents}
-      daysUnderBudgetThisWeek={daysUnderBudgetThisWeek}
-      disciplineXpThisWeek={disciplineXpThisWeek}
-      insights={financialInsights?.insights ?? []}
-      unplannedCount={unplannedSummary.count}
-      unplannedTotalCents={unplannedSummary.totalCents}
-      emergencyActive={financialInsights?.emergencyMode.active ?? false}
-      emergencyReasons={financialInsights?.emergencyMode.reason ?? []}
-      loadTrend={loadTrend}
-      impulseWindow={impulseWindow}
-      weeklyReviewCompleted={weeklyReviewStatus.completed}
-      canonicalInsightsSorted={canonicalInsightsSorted}
-      canonicalTopInsight={canonicalTopInsight}
-      archetype={archetype}
-      archetypeReason={archetypeReason}
-      archetypeAction={archetypeAction}
-      topCategories={topCategories}
-      prevMonthEntries={prevMonthEntries}
-      nextMonthEntries={nextMonthEntries}
-      isPaydayCycle={isPaydayCycle}
-    />
+    <div className="space-y-5">
+      <BudgetInsightHub
+        historyMode={historyMode}
+        uxExperiments={ENABLE_BUDGET_UX_EXPERIMENTS}
+        behaviorReimagining={ENABLE_BUDGET_BEHAVIOR_REIMAGINING}
+        currency={currency}
+        periodLabel={periodLabel}
+        budgetPeriod={budgetSettings.budget_period === "weekly" ? "weekly" : "monthly"}
+        categoryTotals={categoryTotals}
+        goals={goals}
+        alternatives={alternatives}
+        commandStatus={commandStatus}
+        remainingToSpendCents={remainingToSpendCents}
+        disciplineScore={financeState?.disciplineScore ?? null}
+        disciplineInputsReady={disciplineInputsReady}
+        monthlyBudgetCents={budgetSettings.monthly_budget_cents}
+        monthlySavingsCents={budgetSettings.monthly_savings_cents}
+        expensesCents={expensesCents}
+        incomeCents={incomeCents}
+        forecastProjectedBalanceCents={financialInsights?.forecast?.projectedBalance ?? null}
+        forecastOverspendCents={financialInsights?.forecast?.overspend ?? null}
+        financeState={financeState}
+        daysUntilNextIncome={canonicalBudgetView.daysUntilNextIncome}
+        safeDailySpendOverrideCents={canonicalSafeDailySpendCents}
+        daysUnderBudgetThisWeek={daysUnderBudgetThisWeek}
+        disciplineXpThisWeek={disciplineXpThisWeek}
+        insights={financialInsights?.insights ?? []}
+        unplannedCount={unplannedSummary.count}
+        unplannedTotalCents={unplannedSummary.totalCents}
+        emergencyActive={financialInsights?.emergencyMode.active ?? false}
+        emergencyReasons={financialInsights?.emergencyMode.reason ?? []}
+        loadTrend={loadTrend}
+        impulseWindow={impulseWindow}
+        weeklyReviewCompleted={weeklyReviewStatus.completed}
+        canonicalInsightsSorted={canonicalInsightsSorted}
+        canonicalTopInsight={canonicalTopInsight}
+        archetype={archetype}
+        archetypeReason={archetypeReason}
+        archetypeAction={archetypeAction}
+        topCategories={topCategories}
+        prevMonthEntries={prevMonthEntries}
+        nextMonthEntries={nextMonthEntries}
+        isPaydayCycle={isPaydayCycle}
+      />
+      <BudgetOptimizationHub
+        historyMode={historyMode}
+        needsPaydaySurvey={budgetControlState.needsPaydaySurvey}
+        weeklyReviewCompleted={weeklyReviewStatus.completed}
+        lockPanelHref={lockPanelHref}
+        summary={optimization.summary}
+        suggestions={optimization.suggestions}
+        challenges={optimization.challenges}
+      />
+    </div>
   );
 
-  /** Goals, recurring, entries & frozen live in Execute via BudgetExecuteHub (toasts + tiles). */
+  /** Goals, recurring, entries & frozen: Sparen & boeken-tab via BudgetExecuteHub (toasts + tegels). */
   const goalsSection = null;
-
-  const optimizationSection = (
-    <BudgetOptimizationHub
-      historyMode={historyMode}
-      needsPaydaySurvey={budgetControlState.needsPaydaySurvey}
-      weeklyReviewCompleted={weeklyReviewStatus.completed}
-      lockPanelHref={lockPanelHref}
-      summary={optimization.summary}
-      suggestions={optimization.suggestions}
-      challenges={optimization.challenges}
-    />
-  );
 
   const lockSection = (
     <BudgetLockHub
@@ -502,7 +506,6 @@ export default async function BudgetPage({ searchParams }: Props) {
       tactical={tacticalSection}
       analysis={analysisSection}
       goals={goalsSection}
-      optimization={optimizationSection}
       lock={lockSection}
     />
   );

@@ -11,8 +11,8 @@ import { formatLockEndShort } from "@/lib/budget-lock-display";
 import { profileEngineHref } from "@/lib/profile-routes";
 import { tasksDeckTabClass } from "@/components/missions/tasksDeckTabClass";
 
-type TabId = "overview" | "execute" | "analysis" | "optimization" | "lock";
-type LegacyTabId = TabId | "tactical" | "goals";
+type TabId = "overview" | "execute" | "analysis" | "lock";
+type LegacyTabId = TabId | "tactical" | "goals" | "optimization";
 
 export type BudgetCenteredPageHeader = {
   title: string;
@@ -32,7 +32,6 @@ type Props = {
   tactical: ReactNode;
   analysis: ReactNode;
   goals: ReactNode;
-  optimization: ReactNode;
   lock: ReactNode;
   lockActive: boolean;
   lockUntil: string | null;
@@ -55,6 +54,7 @@ type Props = {
 
 function normalizeLegacyTab(tab: LegacyTabId): TabId {
   if (tab === "tactical" || tab === "goals") return "execute";
+  if (tab === "optimization") return "analysis";
   return tab;
 }
 
@@ -63,7 +63,7 @@ function tabFromSearchParam(raw: string | null, historyMode: boolean): TabId {
     return historyMode ? "overview" : "execute";
   }
   if (raw === "analysis") return "analysis";
-  if (raw === "optimization") return "optimization";
+  if (raw === "optimization") return "analysis";
   if (raw === "lock") return historyMode ? "overview" : "lock";
   return "overview";
 }
@@ -109,8 +109,8 @@ function BudgetLockStrip({
           </span>
         ) : null}{" "}
         — overzicht is beperkt; snel loggen uitgeschakeld op Goals.{" "}
-        <span className="text-[var(--text-secondary)]">Optimalisatie-start is gepauzeerd.</span> Gebruik Execute
-        voor noodpad.
+        <span className="text-[var(--text-secondary)]">Routines (review/surveys) staan op pauze.</span> Gebruik{" "}
+        <span className="font-semibold text-[var(--text-primary)]">Sparen & boeken</span> voor noodpad.
       </span>
       <a
         href={lockPanelHref}
@@ -132,7 +132,6 @@ export function BudgetTabsShell({
   tactical,
   analysis,
   goals,
-  optimization,
   lock,
   lockActive,
   lockUntil,
@@ -186,9 +185,8 @@ export function BudgetTabsShell({
 
   const tabs: Array<{ id: TabId; label: string; hidden?: boolean }> = [
     { id: "overview", label: "Status" },
-    { id: "execute", label: "Execute", hidden: historyMode },
+    { id: "execute", label: "Sparen & boeken", hidden: historyMode },
     { id: "analysis", label: "Inzicht" },
-    { id: "optimization", label: "Optimalisatie" },
     { id: "lock", label: "Lock", hidden: historyMode },
   ];
 
@@ -254,12 +252,6 @@ export function BudgetTabsShell({
         <div key="panel-analysis" className="space-y-4">
           <BudgetLockTabBanner context="analysis" lockPanelHref={lockPanelHref} />
           {analysis}
-        </div>
-      )}
-      {activeTab === "optimization" && (
-        <div key="panel-optimization" className="space-y-4">
-          <BudgetLockTabBanner context="optimization" lockPanelHref={lockPanelHref} />
-          {optimization}
         </div>
       )}
       {activeTab === "lock" && !historyMode && (

@@ -1,6 +1,6 @@
 "use client";
 
-import { useId, type ReactNode } from "react";
+import type { ReactNode } from "react";
 
 type Segment = {
   pct: number;
@@ -10,6 +10,9 @@ type Segment = {
   glow: string;
   loadPulse?: boolean;
 };
+
+/** Neutral track + three fills: green (energy), indigo (focus), orange (load). */
+const TRACK_STROKE = "rgba(148, 163, 184, 0.28)";
 
 /** Left semicircle from top → bottom, sweep-flag 0 (CCW in SVG). */
 function wedgePath(cx: number, cy: number, r: number, pct: number): string {
@@ -59,32 +62,31 @@ export function CommanderVerticalResourcePies({
   xpLink,
   budgetLink,
 }: Props) {
-  const uid = useId();
   const segments: Segment[] = [
     {
       pct: energyPct,
       name: "Energy",
-      fill: "rgba(34, 211, 238, 0.92)",
-      glow: "rgba(34, 211, 238, 0.35)",
+      fill: "rgb(34, 197, 94)",
+      glow: "rgba(34, 197, 94, 0.4)",
     },
     {
       pct: focusPct,
       name: "Focus",
-      fill: "rgba(167, 139, 250, 0.95)",
-      glow: "rgba(167, 139, 250, 0.38)",
+      fill: "rgb(99, 102, 241)",
+      glow: "rgba(99, 102, 241, 0.4)",
     },
     {
       pct: loadPct,
       name: "Mentale belasting",
-      fill: "rgba(251, 146, 60, 0.94)",
-      glow: "rgba(251, 146, 60, 0.32)",
+      fill: "rgb(234, 88, 12)",
+      glow: "rgba(234, 88, 12, 0.4)",
       loadPulse,
     },
   ];
 
   return (
     <div
-      className="commander-vertical-resource-pies flex h-[min(248px,56vw)] w-[min(5.35rem,26vw)] shrink-0 flex-col rounded-2xl border border-[rgba(var(--mode-rgb),0.2)] bg-[linear-gradient(180deg,rgba(var(--mode-rgb-deep),0.22)_0%,rgba(6,12,22,0.55)_100%)] py-1.5 pl-1 pr-1 shadow-[inset_0_1px_0_rgba(255,255,255,0.05),0_4px_18px_rgba(0,0,0,0.35)] sm:h-[min(280px,52vw)] sm:w-[5.65rem] sm:py-2 sm:pl-1.5 sm:pr-1.5"
+      className="commander-vertical-resource-pies flex h-[min(248px,56vw)] w-full shrink-0 flex-col rounded-2xl border border-[rgba(var(--mode-rgb),0.2)] bg-[linear-gradient(180deg,rgba(var(--mode-rgb-deep),0.22)_0%,rgba(6,12,22,0.55)_100%)] py-1 pl-0.5 pr-0.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.05),0_4px_18px_rgba(0,0,0,0.35)] sm:h-[min(280px,52vw)] sm:py-1.5 sm:pl-1 sm:pr-1"
     >
       <div className="commander-mascot-pedestal-cards commander-vertical-resource-pies-hud shrink-0 px-0.5 pb-1.5">
         {xpLink}
@@ -93,7 +95,6 @@ export function CommanderVerticalResourcePies({
       {segments.map((seg) => {
         const dFill = wedgePath(VB.cx, VB.cy, VB.r, seg.pct);
         const dTrack = trackPath(VB.cx, VB.cy, VB.r);
-        const gid = `${uid}-${seg.name}`;
         return (
           <div
             key={seg.name}
@@ -105,46 +106,24 @@ export function CommanderVerticalResourcePies({
               viewBox={`0 0 ${VB.w} ${VB.h}`}
               preserveAspectRatio="xMaxYMid meet"
             >
-              <defs>
-                <linearGradient id={`${gid}-edge`} x1="0%" y1="0%" x2="100%" y2="0%">
-                  <stop offset="0%" stopColor="rgba(var(--mode-rgb), 0.45)" />
-                  <stop offset="100%" stopColor="rgba(var(--mode-rgb), 0.08)" />
-                </linearGradient>
-              </defs>
               <path
                 d={dTrack}
                 fill="none"
-                stroke="rgba(0,0,0,0.4)"
-                strokeWidth={2}
-                strokeLinecap="round"
-                opacity={0.75}
-              />
-              <path
-                d={dTrack}
-                fill="none"
-                stroke="rgba(var(--mode-rgb),0.2)"
-                strokeWidth={4}
+                stroke={TRACK_STROKE}
+                strokeWidth={3.5}
                 strokeLinecap="round"
               />
               {dFill ? (
                 <path
                   d={dFill}
                   fill={seg.fill}
-                  fillOpacity={0.88}
+                  fillOpacity={0.92}
                   className="commander-vertical-resource-pie-fill"
                   style={{
-                    filter: `drop-shadow(0 0 5px ${seg.glow})`,
+                    filter: `drop-shadow(0 0 4px ${seg.glow})`,
                   }}
                 />
               ) : null}
-              <path
-                d={dTrack}
-                fill="none"
-                stroke={`url(#${gid}-edge)`}
-                strokeWidth={1}
-                strokeLinecap="round"
-                opacity={0.65}
-              />
             </svg>
           </div>
         );

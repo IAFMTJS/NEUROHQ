@@ -171,7 +171,7 @@ export function BudgetLockHub({
       <div className="px-4 py-4 md:px-5 md:py-5">
         <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--mode-text-soft)]">Lock</p>
         <p className="mt-1 text-xs text-[var(--text-muted)]">
-          No-spend lock en noodpad: tik op een tegel voor het volledige paneel (zelfde werkwijze als Optimalisatie en Execute).
+          No-spend lock en noodpad: tik op een tegel voor het volledige paneel (zelfde werkwijze als op Sparen & boeken).
         </p>
         {!historyMode ? (
           <div className="mt-4 grid grid-cols-2 gap-3 sm:max-w-lg sm:mx-auto">
