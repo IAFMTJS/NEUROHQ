@@ -5,7 +5,7 @@ import { createClient } from "@/lib/supabase/server";
 import { createTask } from "@/app/actions/tasks";
 import { parseProtocolDefinition, getScaledTask, weekForIndex } from "@/lib/growth/protocol-definition";
 import type { DifficultyTier } from "@/lib/growth/adaptive-engine";
-import { assignProtocolTaskDueDates } from "@/lib/growth/spread-protocol-due-dates";
+import { assignProtocolTaskDueDatesFromWeek } from "@/lib/growth/spread-protocol-due-dates";
 import { getBudgetWeekBounds } from "@/lib/utils/budget-date";
 import { todayDateString } from "@/lib/utils/timezone";
 
@@ -28,7 +28,7 @@ function extractPtaskId(notes: string): string | null {
 
 /**
  * Push current protocol week tasks to Missions, deduped by ptask id anywhere in the current budget week.
- * Default: due dates willekeurig gespreid over vandaag t/m zondag (week ma–zo).
+ * Default: due dates volgen `day_overview` / `preferred_days` per taak waar aanwezig, anders gespreid over de rest van de week.
  * Met expliciete `due_date`: alle nieuwe taken op die dag (legacy).
  */
 export async function commitProtocolWeekToMissions(params: {
@@ -94,7 +94,7 @@ export async function commitProtocolWeekToMissions(params: {
 
   const spreadDueDates = forceSingleDay
     ? null
-    : assignProtocolTaskDueDates(week.tasks.length, anchorToday);
+    : assignProtocolTaskDueDatesFromWeek(week.tasks, week, anchorToday);
 
   const taskIds: string[] = [];
   let skipped = 0;

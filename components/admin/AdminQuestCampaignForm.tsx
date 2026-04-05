@@ -262,7 +262,7 @@ export function AdminQuestCampaignForm({
             </label>
             <span className="text-xs text-white/40">
               Uitgeschakeld = verborgen voor spelers. Voor <strong className="text-white/60">onmiddellijk beëindigen</strong>{" "}
-              gebruik onderaan <strong className="text-white/60">Quest stoppen</strong> (zet actief uit + eindigt nu).
+              gebruik onderaan <strong className="text-white/60">Quest stoppen</strong> (run verwijderen, sjabloon bewaren).
             </span>
           </div>
         </div>
@@ -299,7 +299,7 @@ export function AdminQuestCampaignForm({
           Wijzigingen negeren (herladen)
         </button>
         <span className="text-[11px] text-white/35">
-          Herlaadt het formulier zonder op te slaan. Stopt de quest niet — gebruik <strong>Quest stoppen</strong> / <strong>Stop</strong> in de tabel.
+          Herlaadt het formulier zonder op te slaan. Stopt de quest niet — gebruik <strong>Quest stoppen</strong> / <strong>Stop</strong> in de tabel (run weg, sjabloon blijft).
         </span>
       </div>
     </form>

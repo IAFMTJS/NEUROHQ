@@ -3946,6 +3946,10 @@ export type Database = {
       }
     }
     Functions: {
+      admin_archive_quest_campaign_to_template: {
+        Args: { p_campaign_id: string }
+        Returns: string
+      },
       admin_platform_diagnostics: { Args: never; Returns: Json }
       current_user_is_admin: { Args: never; Returns: boolean }
       lock_daily_dcic_mode_if_unset: {

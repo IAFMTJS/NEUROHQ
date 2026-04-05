@@ -21,14 +21,15 @@ export function AdminQuestStopButton({ campaignId, slug, variant = "default", on
     const label = slug ? `“${slug}”` : "deze campagne";
     if (
       !confirm(
-        `${label} nu stoppen? De campagne gaat uit voor spelers en alle opgeslagen quest-voortgang (voor alle gebruikers) voor deze campagne wordt gewist. Reeds toegekende finale-XP of achievements worden niet teruggedraaid.`
+        `${label} nu stoppen? De actieve quest-run verdwijnt voor spelers; alle quest-voortgang voor deze run wordt gewist. Er blijft een inactief sjabloon (zelfde inhoud) om later opnieuw in te plannen. Reeds toegekende finale-XP of achievements worden niet teruggedraaid.`
       )
     ) {
       return;
     }
     startTransition(async () => {
       try {
-        await adminStopQuestCampaign(campaignId);
+        const { id } = await adminStopQuestCampaign(campaignId);
+        router.push(`/admin/quests?campaign=${encodeURIComponent(id)}`);
         router.refresh();
       } catch (e) {
         const msg = e instanceof Error ? e.message : "Stoppen mislukt.";

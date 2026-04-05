@@ -526,44 +526,28 @@ export async function adminUpsertQuestCampaign(input: {
   return { id: inserted.id as string };
 }
 
-/** Admin: quest onmiddellijk beëindigen — niet meer zichtbaar voor spelers. Zet `active` uit, eindigt het event indien nodig, en wist alle gebruikersvoortgang voor deze campagne. */
-export async function adminStopQuestCampaign(campaignId: string) {
+/**
+ * Admin: quest-run verwijderen — niet meer zichtbaar voor spelers.
+ * Verwijdert de campagne-instantie (user-voortgang valt weg via cascade) en voegt een inactief sjabloon toe
+ * (zelfde slug/inhoud/beloningen; start op placeholder-datum tot je opnieuw plant).
+ */
+export async function adminStopQuestCampaign(campaignId: string): Promise<{ id: string }> {
   const admin = await getAdminSessionUser();
   if (!admin) throw new Error("Geen beheerderstoegang.");
 
   const supabase = await createClient();
-  const { data: row, error: fetchErr } = await supabase
-    .from("platform_quest_campaigns")
-    .select("starts_at, ends_at")
-    .eq("id", campaignId)
-    .maybeSingle();
-  if (fetchErr) throw new Error(fetchErr.message);
-  if (!row) throw new Error("Campagne niet gevonden.");
-
-  const nowIso = new Date().toISOString();
-  const nowMs = Date.now();
-  const startsMs = new Date(row.starts_at).getTime();
-
-  const patch: { active: boolean; updated_at: string; ends_at?: string | null } = {
-    active: false,
-    updated_at: nowIso,
-  };
-
-  if (startsMs <= nowMs) {
-    const curEndMs = row.ends_at ? new Date(row.ends_at).getTime() : Infinity;
-    if (curEndMs > nowMs) patch.ends_at = nowIso;
-  }
-
-  const { error } = await supabase.from("platform_quest_campaigns").update(patch).eq("id", campaignId);
+  const { data, error } = await supabase.rpc("admin_archive_quest_campaign_to_template", {
+    p_campaign_id: campaignId,
+  });
   if (error) throw new Error(error.message);
-
-  const { error: delErr } = await supabase.from("user_quest_campaign_progress").delete().eq("campaign_id", campaignId);
-  if (delErr) throw new Error(delErr.message);
+  const id = typeof data === "string" ? data : data != null ? String(data) : "";
+  if (!id) throw new Error("Geen nieuwe sjabloon-id ontvangen. Draai migratie 119_quest_archive_to_template.sql.");
 
   revalidatePath("/admin/quests");
   revalidatePath("/admin/games");
   revalidatePath("/dashboard");
   revalidatePath("/profile");
+  return { id };
 }
 
 export async function adminUpdateQuestPrizeSummary(input: { campaign_id: string; prize_summary: string }) {

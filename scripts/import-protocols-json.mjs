@@ -2,21 +2,52 @@
  * D.3 — Import protocol rows into public.protocol_library.
  * Default seed: lib/protocols-seed-full.json (PHASES → WEEKS → tasks).
  * Usage (service role): npm run import-protocols
- * Env: SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY; optional PROTOCOLS_SEED=file.json
+ * Env: SUPABASE_URL (or NEXT_PUBLIC_SUPABASE_URL), SUPABASE_SERVICE_ROLE_KEY; optional PROTOCOLS_SEED=file.json
+ * Loads .env.local then .env from project root when vars are not already set (same keys as Next.js).
  * Requires migrations 089 + 090 applied.
  */
 import { createClient } from "@supabase/supabase-js";
-import { readFileSync } from "fs";
+import { existsSync, readFileSync } from "fs";
 import { fileURLToPath } from "url";
 import { dirname, join } from "path";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const root = join(__dirname, "..");
 
+/** Minimal KEY=value loader so `npm run import-protocols` picks up .env.local like `next dev`. */
+function loadEnvFile(relPath) {
+  const full = join(root, relPath);
+  if (!existsSync(full)) return;
+  const text = readFileSync(full, "utf8").replace(/^\uFEFF/, "");
+  for (let line of text.split(/\r?\n/)) {
+    line = line.trim();
+    if (!line || line.startsWith("#")) continue;
+    if (line.startsWith("export ")) line = line.slice(7).trim();
+    const eq = line.indexOf("=");
+    if (eq <= 0) continue;
+    const key = line.slice(0, eq).trim();
+    let val = line.slice(eq + 1).trim();
+    if (
+      (val.startsWith('"') && val.endsWith('"')) ||
+      (val.startsWith("'") && val.endsWith("'"))
+    ) {
+      val = val.slice(1, -1);
+    }
+    if (process.env[key] === undefined) process.env[key] = val;
+  }
+}
+
+loadEnvFile(".env.local");
+loadEnvFile(".env");
+
 const url = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL;
 const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
 if (!url || !key) {
-  console.error("Set SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY");
+  console.error(
+    "Missing Supabase credentials. Add to .env.local (or export in shell):\n" +
+      "  SUPABASE_URL or NEXT_PUBLIC_SUPABASE_URL\n" +
+      "  SUPABASE_SERVICE_ROLE_KEY  (Dashboard → Project Settings → API → service_role — never commit this)",
+  );
   process.exit(1);
 }
 
