@@ -1,4 +1,4 @@
-# Weekly cron (reality report, savings alerts, learning push, …).
+# Weekly cron: reality report, savings/learning pushes, strategy & growth nudges (check-in, quarter, etc.).
 name: Cron weekly
 
 on:

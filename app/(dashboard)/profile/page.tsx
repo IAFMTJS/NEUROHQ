@@ -12,6 +12,7 @@ import { getXPFullContext } from "@/app/actions/xp-context";
 import { getDailyState } from "@/app/actions/daily-state";
 import { getProfileDailyChallengeContext } from "@/app/actions/profile-daily-challenges";
 import { todayDateString } from "@/lib/utils/timezone";
+import { StrategyEngineSettingsSection } from "@/components/strategy/StrategyEngineSettingsSection";
 import { ProfileEngineIdentityCard } from "@/components/profile/ProfileEngineIdentityCard";
 import { ProfileHomeCompact } from "@/components/profile/ProfileHomeCompact";
 import { ProfileSnapshotFallback } from "@/components/profile/ProfileSnapshotFallback";
@@ -52,6 +53,7 @@ const ENGINE_NAV: { id: ProfileEngineTabId; label: string }[] = [
   { id: "identity", label: "Identiteit" },
   { id: "behavior", label: "Gedrag" },
   { id: "modes", label: "Modi" },
+  { id: "strategy", label: "Strategy engine" },
   { id: "play", label: "Play deck" },
 ];
 
@@ -332,6 +334,14 @@ export default async function ProfilePage({ searchParams }: { searchParams: Prom
 
       {engineTab === "modes" && (
         <ProfileEngineModesTab initialSimplifiedContent={prefs.simplified_content} />
+      )}
+
+      {engineTab === "strategy" && (
+        <Suspense
+          fallback={<div className="min-h-[120px] animate-pulse rounded-2xl bg-[var(--bg-elevated)]/30" aria-hidden />}
+        >
+          <StrategyEngineSettingsSection />
+        </Suspense>
       )}
 
       {engineTab === "play" && <ProfileEnginePlayDeckTab initialDocument={engine.playProfile} />}

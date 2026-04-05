@@ -1,0 +1,100 @@
+
+
+Neurohq to do
+
+Popup missies die maar bepaalde tijd blijven, zoals 2u bv maar die wel 400xp geven met push melding bij start van beschikbaarheid natuurlijk 
+Dingen in hourly cron verplaatsen naar weekly en monthly cron zoals bv strategy check in
+Onnodige features verwijderen pagina per pagina
+Bucketlist implementeren 
+Oude scifi hud design met bolletjes verwijderen 
+Oude card en button design verwijderen
+Settingspagina herindelen en elke knop werkend maken
+Op basis van brainstatus moet de speel moeilijkheidsgraad verhoogd worden
+Dashboard startmissie knop moet rechtstreeks de eerste task openen in een toast, zodat dashboard ook direct naar actie kan gaan. 
+Playdeck : missies reveal animatie
+Playdeck : chill / chaos / Boost
+Playdeck : Progressive unlock (dit is belangrijk)
+
+
+Niet alles ineens tonen.
+
+
+
+Maar:
+
+• start simpel (3 keuzes)
+
+• daarna unlock:
+
+“wil je betere matches? voeg dit toe”
+
+
+
+Treasure hunt events , resultaat moeten coordinaten zijn. 10 dagen, elke dag een hint en 1 antwoord mogelijkheid 
+
+
+
+
+
+
+Settingspagine : 
+
+Dit Compacte weergave
+
+Minder witruimte op dashboard en kaarten; meer inhoud op één scherm.
+
+Uit
+
+
+
+Minder animatie
+
+Verminder beweging en animaties voor gevoeligheid voor motion (toegankelijkheid).
+
+Uit
+
+
+
+Snellere weergave
+
+Zelfde kleuren als normaal; minder blur en animaties voor een vlottere interface.
+
+Aan
+
+
+
+Dit verwijderen alsook die visuals. We behouden enkel de standaard modus en weergave nu. 
+
+
+
+
+
+Netwerk gedeelte : push notificatie instellingen moeten verplaatsen naar toestel. Push test functies en knoppen mogen verwijderd worden
+
+
+
+Email gedeelte mag ook weg. We gebruiken dat niet
+
+
+
+Kalender settings moeten ook verplaatsen naar toestel
+
+
+
+Budget instellingen moeten verplaatst worden naar systeem
+
+
+
+
+
+Toestel gedeelte heeft een snelkoppelingen sectie, dit verwijderen
+
+
+
+Delete account moet verplaatst worden naar user page
+
+
+
+
+
+Userpage - insights : diagnostics tab mag verwijderd worden

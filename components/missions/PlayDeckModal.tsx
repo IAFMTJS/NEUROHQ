@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition, useEffect, useCallback } from "react";
+import { useState, useTransition, useEffect, useCallback, useRef } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Modal } from "@/components/Modal";
@@ -22,51 +22,74 @@ const KIND_LABEL: Record<string, string> = {
   challenge: "Challenge",
 };
 
+const MAX_PICK_GENERATION = 2;
+const REVEAL_STAGGER_MS = 220;
+
 export function PlayDeckModal({ open, onClose, dateStr }: Props) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [unlockPending, startUnlock] = useTransition();
   const [loading, setLoading] = useState(false);
   const [suggestions, setSuggestions] = useState<PlayDeckSuggestion[]>([]);
-  const [cursor, setCursor] = useState(0);
-  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [pickGeneration, setPickGeneration] = useState(0);
+  const [revealStep, setRevealStep] = useState(0);
   const [fullDeckUnlocked, setFullDeckUnlocked] = useState(true);
+  const revealTimersRef = useRef<ReturnType<typeof setTimeout>[]>([]);
 
-  const loadSuggestions = useCallback(async (nextCursor: number) => {
-    setLoading(true);
-    try {
-      const { suggestions: s, fullDeckUnlocked: full } = await suggestPlayDeckTasks({
-        dateStr,
-        cursor: nextCursor,
-        limit: 8,
-      });
-      setSuggestions(s);
-      setCursor(nextCursor);
-      setFullDeckUnlocked(full);
-    } finally {
-      setLoading(false);
-    }
-  }, [dateStr]);
+  const clearRevealTimers = useCallback(() => {
+    for (const t of revealTimersRef.current) clearTimeout(t);
+    revealTimersRef.current = [];
+  }, []);
+
+  const loadSuggestions = useCallback(
+    async (generation: number) => {
+      setLoading(true);
+      clearRevealTimers();
+      setRevealStep(0);
+      try {
+        const { suggestions: s, fullDeckUnlocked: full } = await suggestPlayDeckTasks({
+          dateStr,
+          pickGeneration: generation,
+        });
+        setSuggestions(s);
+        setFullDeckUnlocked(full);
+      } finally {
+        setLoading(false);
+      }
+    },
+    [dateStr, clearRevealTimers]
+  );
 
   useEffect(() => {
     if (!open) return;
-    setSelected(new Set());
+    setPickGeneration(0);
     void loadSuggestions(0);
   }, [open, loadSuggestions]);
 
-  function toggle(id: string) {
-    setSelected((prev) => {
-      const next = new Set(prev);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
-      return next;
-    });
-  }
+  useEffect(() => {
+    if (!open || loading || suggestions.length === 0) {
+      if (!loading) setRevealStep(0);
+      return;
+    }
+    clearRevealTimers();
+    setRevealStep(0);
+    const n = suggestions.length;
+    for (let i = 1; i <= n; i++) {
+      const t = setTimeout(() => setRevealStep(i), 160 + (i - 1) * REVEAL_STAGGER_MS);
+      revealTimersRef.current.push(t);
+    }
+    return () => clearRevealTimers();
+  }, [open, loading, suggestions, pickGeneration, clearRevealTimers]);
 
-  function loadMore() {
-    if (!fullDeckUnlocked) return;
-    void loadSuggestions(cursor + 8);
-    setSelected(new Set());
+  useEffect(() => {
+    return () => clearRevealTimers();
+  }, [clearRevealTimers]);
+
+  function reshuffle() {
+    if (pickGeneration >= MAX_PICK_GENERATION) return;
+    const next = pickGeneration + 1;
+    setPickGeneration(next);
+    void loadSuggestions(next);
   }
 
   function unlockFullDeck() {
@@ -78,17 +101,16 @@ export function PlayDeckModal({ open, onClose, dateStr }: Props) {
       }
       neuroToast.success("Volledig play deck ontgrendeld.");
       setFullDeckUnlocked(true);
-      setCursor(0);
-      setSelected(new Set());
+      setPickGeneration(0);
       await loadSuggestions(0);
       router.refresh();
     });
   }
 
-  function addSelected() {
-    const ids = [...selected];
+  function addAllPicks() {
+    const ids = suggestions.map((s) => s.id);
     if (ids.length === 0) {
-      neuroToast.message("Kies minstens één idee.");
+      neuroToast.message("Geen ideeën om toe te voegen.");
       return;
     }
     startTransition(async () => {
@@ -108,12 +130,22 @@ export function PlayDeckModal({ open, onClose, dateStr }: Props) {
     });
   }
 
+  const reshufflesLeft = MAX_PICK_GENERATION - pickGeneration;
+  const revealDone = !loading && suggestions.length > 0 && revealStep >= suggestions.length;
+
   return (
     <Modal open={open} onClose={onClose} title="Play deck" size="lg">
       <div className="[color-scheme:dark] space-y-4">
         {fullDeckUnlocked ? (
           <p className="text-sm leading-relaxed text-[var(--text-muted)]">
-            Optionele ideeën voor plezier, ontspanning of een lichte challenge — niet bedoeld als coaching. Vink wat je wilt en voeg toe aan vandaag.{" "}
+            Het deck kiest drie ideeën voor vandaag — plezier, ontspanning of een lichte challenge. Niet bedoeld als coaching.{" "}
+            {reshufflesLeft > 0 ? (
+              <>
+                Nog <span className="text-[var(--text-secondary)]">{reshufflesLeft}</span> keer opnieuw schudden mogelijk.{" "}
+              </>
+            ) : (
+              <>Geen schuifbeurten meer in dit venster. </>
+            )}
             <Link href={profileEngineHref("play")} className="text-[var(--accent-focus)] underline-offset-2 hover:underline">
               Play-profiel
             </Link>{" "}
@@ -123,43 +155,52 @@ export function PlayDeckModal({ open, onClose, dateStr }: Props) {
           <div className="rounded-xl border border-[rgba(var(--mode-rgb),0.2)] bg-[var(--bg-primary)]/30 p-3">
             <p className="text-sm font-medium text-[var(--text-primary)]">Start simpel — drie ideeën</p>
             <p className="mt-1 text-sm leading-relaxed text-[var(--text-muted)]">
-              We tonen eerst een kleine set.{" "}
+              We trekken drie kaarten uit een compact deck.{" "}
               <span className="text-[var(--text-secondary)]">Wil je betere matches?</span> Voeg iets toe aan je{" "}
               <Link href={profileEngineHref("play")} className="font-medium text-[var(--accent-focus)] underline-offset-2 hover:underline">
                 Play-profiel
               </Link>{" "}
-              (stijlen, over jou, hoe je oplaadt) — dan ontgrendelt automatisch het volledige deck met meer ideeën en betere aansluiting.
+              — dan ontgrendelt automatisch het volledige deck.
+              {reshufflesLeft > 0 ? ` Nog ${reshufflesLeft} keer schudden beschikbaar.` : " Geen schuifbeurten meer."}
             </p>
           </div>
         )}
 
         {loading ? (
-          <p className="text-sm text-[var(--text-muted)]">Ideeën laden…</p>
+          <div className="flex flex-col items-center gap-3 py-8">
+            <div
+              className="h-10 w-10 rounded-full border-2 border-[rgba(var(--mode-rgb),0.35)] border-t-[var(--accent-focus)] animate-spin"
+              aria-hidden
+            />
+            <p className="text-sm text-[var(--text-muted)]">Deck schudden…</p>
+          </div>
         ) : suggestions.length === 0 ? (
           <p className="text-sm text-[var(--text-muted)]">Geen ideeën gevonden. Vul je Play-profiel aan of probeer later opnieuw.</p>
         ) : (
-          <ul className="max-h-[min(52vh,420px)] space-y-2 overflow-y-auto pr-1">
-            {suggestions.map((s) => (
-              <li key={s.id}>
-                <label className="flex cursor-pointer gap-3 rounded-lg border border-[var(--card-border)]/80 bg-[var(--bg-primary)]/25 p-3 transition hover:bg-[var(--bg-primary)]/40">
-                  <input
-                    type="checkbox"
-                    checked={selected.has(s.id)}
-                    onChange={() => toggle(s.id)}
-                    className="mt-1 h-4 w-4 shrink-0 rounded border-[var(--card-border)] accent-[var(--semantic-accent)]"
-                  />
-                  <span className="min-w-0 flex-1">
-                    <span className="flex flex-wrap items-center gap-2">
+          <ul className="space-y-3" aria-live="polite">
+            {suggestions.map((s, i) => {
+              const shown = revealStep > i;
+              return (
+                <li key={`${s.id}-${pickGeneration}`}>
+                  <div
+                    className="rounded-xl border border-[var(--card-border)]/80 bg-[var(--bg-primary)]/25 p-4 shadow-[0_0_0_1px_rgba(var(--mode-rgb),0.06)] transition-[opacity,transform,filter] duration-500 ease-out"
+                    style={{
+                      opacity: shown ? 1 : 0,
+                      transform: shown ? "translateY(0) scale(1)" : "translateY(12px) scale(0.98)",
+                      filter: shown ? "blur(0)" : "blur(6px)",
+                    }}
+                  >
+                    <div className="flex flex-wrap items-center gap-2">
                       <span className="rounded-md border border-[rgba(var(--mode-rgb),0.25)] bg-[rgba(var(--mode-rgb-deep),0.12)] px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-[var(--text-muted)]">
                         {KIND_LABEL[s.play_kind] ?? s.play_kind}
                       </span>
                       <span className="text-[10px] text-[var(--text-muted)]">~{4 + s.energy} energie</span>
-                    </span>
-                    <span className="mt-1 block text-sm text-[var(--text-primary)]">{s.title}</span>
-                  </span>
-                </label>
-              </li>
-            ))}
+                    </div>
+                    <p className="mt-2 text-sm font-medium text-[var(--text-primary)]">{s.title}</p>
+                  </div>
+                </li>
+              );
+            })}
           </ul>
         )}
 
@@ -189,23 +230,22 @@ export function PlayDeckModal({ open, onClose, dateStr }: Props) {
         )}
 
         <div className="flex flex-wrap gap-2 border-t border-[var(--card-border)]/60 pt-4">
-          {fullDeckUnlocked ? (
-            <button
-              type="button"
-              disabled={loading}
-              onClick={loadMore}
-              className="rounded-lg border border-[var(--card-border)] px-3 py-2 text-xs font-semibold text-[var(--text-primary)] hover:bg-[var(--bg-hover)]/40 disabled:opacity-50"
-            >
-              Meer ideeën
-            </button>
-          ) : null}
           <button
             type="button"
-            disabled={pending || selected.size === 0}
-            onClick={addSelected}
+            disabled={loading || reshufflesLeft <= 0 || !revealDone}
+            onClick={reshuffle}
+            title={reshufflesLeft <= 0 ? "Geen schuifbeurten meer vandaag in dit venster" : undefined}
+            className="rounded-lg border border-[var(--card-border)] px-3 py-2 text-xs font-semibold text-[var(--text-primary)] hover:bg-[var(--bg-hover)]/40 disabled:opacity-50"
+          >
+            Opnieuw schudden ({reshufflesLeft} over)
+          </button>
+          <button
+            type="button"
+            disabled={pending || !revealDone || suggestions.length === 0}
+            onClick={addAllPicks}
             className="rounded-lg border border-[rgba(var(--mode-rgb),0.35)] bg-[rgba(var(--mode-rgb-deep),0.2)] px-3 py-2 text-xs font-semibold text-[var(--accent-focus)] disabled:opacity-50"
           >
-            {pending ? "Bezig…" : `Toevoegen aan vandaag (${selected.size})`}
+            {pending ? "Bezig…" : `Alle ${suggestions.length} toevoegen aan vandaag`}
           </button>
           <button
             type="button"

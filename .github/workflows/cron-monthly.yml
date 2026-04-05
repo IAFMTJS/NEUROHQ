@@ -1,13 +1,13 @@
-# Strategy & Growth nudges (check-in cadence, incomplete quarter, growth protocol, learning idle, monthly tip).
-name: Cron strategy-growth
+# Strategy monthly tip (and any future month-scoped jobs).
+name: Cron monthly
 
 on:
   schedule:
-    - cron: "30 10 * * *"
+    - cron: "0 10 1 * *"
   workflow_dispatch:
 
 jobs:
-  trigger-strategy-growth:
+  trigger-monthly:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -18,12 +18,10 @@ jobs:
         run: |
           CRON_SECRET="${CRON_SECRET#"${CRON_SECRET%%[![:space:]]*}"}"
           CRON_SECRET="${CRON_SECRET%"${CRON_SECRET##*[![:space:]]}"}"
-          PRODUCTION_URL="${PRODUCTION_URL#"${PRODUCTION_URL%%[![:space:]]*}"}"
-          PRODUCTION_URL="${PRODUCTION_URL%"${PRODUCTION_URL##*[![:space:]]}"}"
           if [ -z "$CRON_SECRET" ] || [ -z "$PRODUCTION_URL" ]; then echo "Set CRON_SECRET and PRODUCTION_URL."; exit 1; fi
-      - name: Call /api/cron/strategy-growth
+      - name: Call /api/cron/monthly
         env:
           CRON_SECRET: ${{ secrets.CRON_SECRET || vars.CRON_SECRET }}
           PRODUCTION_URL: ${{ secrets.PRODUCTION_URL || vars.PRODUCTION_URL }}
-          VERCEL_AUTOMATION_BYPASS_SECRET: ${{ secrets.VERCEL_AUTOMATION_BYPASS_SECRET || vars.VERCEL_AUTOMATION_BYPASS_SECRET }}
-        run: bash scripts/gh-call-cron.sh /api/cron/strategy-growth
+          VERCEL_AUTOMATION_BYPASS_SECRET: ${{ secrets.VERCEL_AUTOMATION_BYPASS_SECRET }}
+        run: bash scripts/gh-call-cron.sh /api/cron/monthly

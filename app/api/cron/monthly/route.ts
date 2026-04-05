@@ -1,14 +1,13 @@
 import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { runStrategyGrowthWeeklyCron } from "@/lib/strategy-growth-cron";
+import { runStrategyGrowthMonthlyCron } from "@/lib/strategy-growth-cron";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 300;
 
 /**
- * Manual / legacy: runs the same pass as the weekly cron (strategy check-in, quarter, growth, learning idle).
- * Production schedule: Monday UTC via `.github/workflows/cron-weekly.yml` (bundled with weekly reports).
- * Monthly tip: `/api/cron/monthly` + `cron-monthly.yml`.
+ * First of month (UTC): strategy monthly tip push, at most once per calendar month per user.
+ * GitHub: `.github/workflows/cron-monthly.yml`.
  */
 export async function GET(request: Request) {
   const authHeader = request.headers.get("authorization");
@@ -27,15 +26,14 @@ export async function GET(request: Request) {
 
   const supabase = createAdminClient();
   const now = new Date();
-  const { sent, skipped, users } = await runStrategyGrowthWeeklyCron(supabase, { userIdFilter, now });
+  const { sent, skipped, users } = await runStrategyGrowthMonthlyCron(supabase, { userIdFilter, now });
 
   return NextResponse.json({
     ok: true,
-    job: "strategy-growth",
+    job: "monthly",
     sent,
     skipped,
     users,
     ...(userIdFilter && { userId: userIdFilter }),
-    note: "Weekly nudges only; use /api/cron/monthly for strategy_monthly_tip.",
   });
 }

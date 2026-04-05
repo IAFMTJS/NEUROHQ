@@ -222,8 +222,6 @@ Strategy page (/strategy)
 			Laat zien: knop om de vaste weekreview af te ronden zodat volgende week actief blijft.
 		Archive CTA + archive history
 			Laat zien: oudere strategieën en besluiten teruglezen — geheugen van jezelf.
-	Onderaan pagina: Strategy engine settings section (los van tabs)
-		Laat zien: technisch/strategische parameters die je engine voeden (fijnafstelling).
 
 Profiel (/profile)
 	Hoofdniveau: Profiel | Engine (view query)
@@ -251,6 +249,9 @@ Profiel (/profile)
 				Laat zien: verschil tussen “hoeveel uitleg/toast” en “thema/push op apparaat”.
 			Simplified content voorkeur
 				Laat zien: minder tekst/stappen in UI voor overprikkelde dagen.
+		Subtab Strategy engine
+			Engine-limieten en -doelen (missions, budget-locks, kwartaaldoelen, push-bias)
+				Laat zien: fijnafstelling die strategy_focus.engine_params voedt; read-only pacing blijft op Strategy/Budget/Growth.
 
 Instellingen (/settings)
 	Geen tabs; accordion-categorieën

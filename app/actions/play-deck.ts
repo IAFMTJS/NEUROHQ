@@ -25,8 +25,8 @@ function isPlayDeckFullyUnlocked(doc: PlayProfileDocument): boolean {
 
 export async function suggestPlayDeckTasks(params: {
   dateStr: string;
-  cursor?: number;
-  limit?: number;
+  /** 0 = first draw; each reshuffle increments (modal caps at 2 reshuffles). */
+  pickGeneration?: number;
 }): Promise<{ suggestions: PlayDeckSuggestion[]; fullDeckUnlocked: boolean }> {
   const supabase = await createClient();
   const {
@@ -50,12 +50,13 @@ export async function suggestPlayDeckTasks(params: {
     .map((r) => (typeof (r as { title?: string }).title === "string" ? (r as { title: string }).title : ""))
     .filter(Boolean);
 
-  const cursor = fullDeckUnlocked ? Math.max(0, params.cursor ?? 0) : 0;
-  const seed = `${params.dateStr}|${cursor}`;
+  const pickGeneration = Math.max(0, Math.min(99, params.pickGeneration ?? 0));
+  const deckKey = fullDeckUnlocked ? "full" : "starter";
+  const seed = `${params.dateStr}|${deckKey}|${pickGeneration}`;
   const templates = scorePlayTemplates(doc, titles, {
     seed,
-    limit: fullDeckUnlocked ? params.limit ?? 8 : 3,
-    cursor,
+    limit: 3,
+    cursor: 0,
     starterOnly: !fullDeckUnlocked,
   });
 

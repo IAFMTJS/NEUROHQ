@@ -15,7 +15,6 @@ import { StrategyThesisHero } from "@/components/strategy/StrategyThesisHero";
 import { StrategyFocusMultipliers } from "@/components/strategy/StrategyFocusMultipliers";
 import { StrategyPhaseIndicator } from "@/components/strategy/StrategyPhaseIndicator";
 import { StrategyArchiveHistory } from "@/components/strategy/StrategyArchiveHistory";
-import { StrategyEngineSettingsSection } from "@/components/strategy/StrategyEngineSettingsSection";
 import { StrategyIntegratedOverview } from "@/components/strategy/StrategyIntegratedOverview";
 import { StrategyTabsShell } from "@/components/strategy/StrategyTabsShell";
 import { getBehaviorProfile } from "@/app/actions/behavior-profile";
@@ -173,82 +172,81 @@ async function StrategyContent({ simplifiedLayout = false }: { simplifiedLayout?
       </div>
     ) : null;
 
+  const tabs = (
+    <StrategyTabsShell
+      simplifiedLayout={simplifiedLayout}
+      banner={reviewBanner}
+      belowTabsSlot={
+        !simplifiedLayout ? (
+          <p className="text-center text-xs text-[var(--text-muted)]">
+            Overzicht, allocatie, momentum en review — hieronder thesis en stack.
+          </p>
+        ) : undefined
+      }
+      overview={
+        <>
+          <StrategyIntegratedOverview integrationData={strategyIntegration} />
+          <StrategyThesisHero
+            thesis={strategy.thesis}
+            thesisWhy={strategy.thesis_why}
+            deadline={strategy.deadline}
+            targetMetric={strategy.target_metric}
+            pressure={pressureData.pressure}
+            zone={pressureData.zone}
+            daysRemaining={pressureData.daysRemaining}
+          />
+        </>
+      }
+      focusBudget={
+        <>
+          <StrategyFocusMultipliers
+            primaryDomain={strategy.primary_domain}
+            secondaryDomains={strategy.secondary_domains}
+          />
+          <StrategyAllocationSliders initialAllocation={strategy.weekly_allocation} neuroHint={neuroBudgetHint} />
+        </>
+      }
+      alignment={
+        <>
+          <StrategyAlignmentGraph
+            plannedDistribution={alignmentThisWeek.planned}
+            actualDistribution={alignmentThisWeek.actual}
+            alignmentScore={alignmentThisWeek.alignmentScore}
+            alignmentLog={alignmentLogTrend}
+          />
+          <StrategyMomentumPerDomain momentumByDomain={momentum} />
+          {driftAlert && (
+            <StrategyDriftAlertBlock message={driftAlert.message} pctOff={driftAlert.pctOff} />
+          )}
+        </>
+      }
+      review={
+        <>
+          <StrategyPhaseIndicator phase={strategy.phase} />
+          <StrategyWeeklyReviewCTA
+            strategyId={strategy.id}
+            weekNumber={reviewStatus.weekNumber}
+            weekStart={reviewStatus.weekStart}
+            reviewDue={reviewStatus.reviewDue}
+            lastAlignmentScore={alignmentThisWeek.alignmentScore}
+          />
+          <StrategyArchiveCTA strategyId={strategy.id} />
+          <StrategyArchiveHistory past={past} />
+        </>
+      }
+    />
+  );
+
   return (
     <div data-tutorial="strategy-content" className={simplifiedLayout ? "space-y-6" : "space-y-4"}>
-      {analysisSnapshot ? <StrategyAnalysisSquare snapshot={analysisSnapshot} /> : null}
-      <Suspense fallback={<div className="min-h-[120px] animate-pulse rounded-2xl bg-[var(--bg-elevated)]/30" aria-hidden />}>
-        <div
-          className={
-            analysisSnapshot
-              ? "mt-4 border-t border-[rgba(var(--mode-rgb),0.12)] pt-6"
-              : "mt-2 border-t border-[rgba(var(--mode-rgb),0.1)] pt-6"
-          }
-        >
-          <StrategyEngineSettingsSection />
-        </div>
-      </Suspense>
-      <StrategyTabsShell
-        simplifiedLayout={simplifiedLayout}
-        banner={reviewBanner}
-        belowTabsSlot={
-          !simplifiedLayout ? (
-            <p className="text-center text-xs text-[var(--text-muted)]">
-              Overzicht, allocatie, momentum en review — hieronder thesis en stack.
-            </p>
-          ) : undefined
-        }
-        overview={
-          <>
-            <StrategyIntegratedOverview integrationData={strategyIntegration} />
-            <StrategyThesisHero
-              thesis={strategy.thesis}
-              thesisWhy={strategy.thesis_why}
-              deadline={strategy.deadline}
-              targetMetric={strategy.target_metric}
-              pressure={pressureData.pressure}
-              zone={pressureData.zone}
-              daysRemaining={pressureData.daysRemaining}
-            />
-          </>
-        }
-        focusBudget={
-          <>
-            <StrategyFocusMultipliers
-              primaryDomain={strategy.primary_domain}
-              secondaryDomains={strategy.secondary_domains}
-            />
-            <StrategyAllocationSliders initialAllocation={strategy.weekly_allocation} neuroHint={neuroBudgetHint} />
-          </>
-        }
-        alignment={
-          <>
-            <StrategyAlignmentGraph
-              plannedDistribution={alignmentThisWeek.planned}
-              actualDistribution={alignmentThisWeek.actual}
-              alignmentScore={alignmentThisWeek.alignmentScore}
-              alignmentLog={alignmentLogTrend}
-            />
-            <StrategyMomentumPerDomain momentumByDomain={momentum} />
-            {driftAlert && (
-              <StrategyDriftAlertBlock message={driftAlert.message} pctOff={driftAlert.pctOff} />
-            )}
-          </>
-        }
-        review={
-          <>
-            <StrategyPhaseIndicator phase={strategy.phase} />
-            <StrategyWeeklyReviewCTA
-              strategyId={strategy.id}
-              weekNumber={reviewStatus.weekNumber}
-              weekStart={reviewStatus.weekStart}
-              reviewDue={reviewStatus.reviewDue}
-              lastAlignmentScore={alignmentThisWeek.alignmentScore}
-            />
-            <StrategyArchiveCTA strategyId={strategy.id} />
-            <StrategyArchiveHistory past={past} />
-          </>
-        }
-      />
+      {analysisSnapshot ? (
+        <>
+          <StrategyAnalysisSquare snapshot={analysisSnapshot} />
+          <div className="mt-4 border-t border-[rgba(var(--mode-rgb),0.12)] pt-6">{tabs}</div>
+        </>
+      ) : (
+        tabs
+      )}
     </div>
   );
 }

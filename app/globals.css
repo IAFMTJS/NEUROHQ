@@ -457,6 +457,7 @@ html[data-shell-route="profile"] {
   flex-direction: column;
   gap: 24px;
   min-height: 100vh;
+  min-height: 100dvh;
 }
 
 @media (max-width: 640px) {

@@ -14,11 +14,11 @@ import {
   wrapReminderHtml,
 } from "@/lib/email";
 import { buildWeeklyLearningPushPayload } from "@/lib/daily-email-content";
+import { runStrategyGrowthWeeklyCron } from "@/lib/strategy-growth-cron";
 
 /**
- * Vercel Cron: runs weekly (e.g. Monday 09:00 UTC).
- * Generates reality report for the previous week and stores in reality_reports.
- * Sends learning reminder push to users who had < 60 min last week.
+ * Weekly (e.g. Monday 09:00 UTC): reality reports, learning/savings pushes, and strategy/growth nudges
+ * (check-in cadence, incomplete quarter, growth protocol, learning idle — same logic as former daily strategy-growth).
  */
 export async function GET(request: Request) {
   const authHeader = request.headers.get("authorization");
@@ -209,6 +209,20 @@ export async function GET(request: Request) {
     }
   }
 
+  let strategyGrowthSent = 0;
+  let strategyGrowthSkipped = 0;
+  let strategyGrowthUsers = 0;
+  if (process.env.VAPID_PRIVATE_KEY && process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY) {
+    try {
+      const sg = await runStrategyGrowthWeeklyCron(supabase, { userIdFilter });
+      strategyGrowthSent = sg.sent;
+      strategyGrowthSkipped = sg.skipped;
+      strategyGrowthUsers = sg.users;
+    } catch {
+      // non-fatal
+    }
+  }
+
   return NextResponse.json({
     ok: true,
     job: "weekly",
@@ -219,6 +233,9 @@ export async function GET(request: Request) {
     learningReminderSent,
     learningReminderEmailSent,
     savingsAlertSent,
+    strategyGrowthSent,
+    strategyGrowthSkipped,
+    strategyGrowthUsers,
     ...(userIdFilter && { userId: userIdFilter }),
   });
 }

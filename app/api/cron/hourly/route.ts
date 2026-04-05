@@ -48,6 +48,9 @@ import {
  * Still invoked every UTC hour (GitHub Actions) so each timezone can hit local midnight for rollover.
  * When no user is in a “heavy job” local window, we skip rollover/quote/brain/evening work and only run
  * the sliding calendar reminder + pending user alerts — less CPU per invocation.
+ *
+ * Strategy check-in and other strategy/growth nudges are not here; they run from `/api/cron/weekly` and
+ * `/api/cron/monthly` (GitHub Actions), not on the hourly schedule.
  */
 const ALLOWED_FORCE_HOURS = [0, 8, 10, 11, 12, 20] as const;
 

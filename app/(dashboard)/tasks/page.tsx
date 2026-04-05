@@ -25,6 +25,7 @@ import { getXPIdentity } from "@/app/actions/xp";
 import { getIdentityEngine } from "@/app/actions/identity-engine";
 import { getUserPreferencesOrDefaults } from "@/app/actions/preferences";
 import { MissionsProvider, TasksTabsShell, TodayMissionsGridFromStore } from "@/components/missions";
+import { TasksHeaderChrome } from "@/components/missions/TasksHeaderChrome";
 import type { TasksTabId } from "@/components/missions/TasksTabsShell";
 import { MissionsSectionFallback } from "@/components/missions/MissionsSectionFallback";
 import { RoutineTaskList } from "@/components/missions/RoutineTaskList";
@@ -391,11 +392,10 @@ export default async function TasksPage({ searchParams }: Props) {
   /** Simplified /tasks: full-height column + scroll contract; same command-deck chrome as standard. */
   const simplifiedTasksFillLayout = prefs.simplified_content === true;
 
-  /**
-   * Missions UI matches visual-lab command deck: no separate HQ header, mascot, or meta strip —
-   * the deck (TasksTabsShell) is the single chrome surface.
-   */
-  const headerSection = null;
+  /** Intro card above the command deck; omitted in simplified full-height mode to preserve the scroll column. */
+  const headerSection = simplifiedTasksFillLayout ? null : (
+    <TasksHeaderChrome dateStr={dateStr} simplified={prefs.simplified_content === true} />
+  );
 
   const tabsShell = (
     <TasksTabsShell

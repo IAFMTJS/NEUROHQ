@@ -1,5 +1,5 @@
 /**
- * Strategy engine parameters — single write path: `strategy_focus.engine_params` (via Strategy page).
+ * Strategy engine parameters — single write path: `strategy_focus.engine_params` (Profiel → Engine → Strategy engine).
  * - Read with `normalizeStrategyEngineParams` everywhere (never trust raw JSON).
  * - Does not duplicate `user_preferences` push toggles or `users.monthly_budget_cents`; those stay separate.
  * - Quarterly savings/learning targets here are strategic commitments; Budget/Growth UIs may show pace hints

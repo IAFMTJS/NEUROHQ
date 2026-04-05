@@ -3,9 +3,9 @@
 export type ProfileMainView = "home" | "engine" | "insights";
 
 /** Subtabs onder Profiel → Engine (geen site-instellingen). */
-export type ProfileEngineTabId = "identity" | "behavior" | "modes" | "play";
+export type ProfileEngineTabId = "identity" | "behavior" | "modes" | "strategy" | "play";
 
-const ENGINE_TABS = new Set<ProfileEngineTabId>(["identity", "behavior", "modes", "play"]);
+const ENGINE_TABS = new Set<ProfileEngineTabId>(["identity", "behavior", "modes", "strategy", "play"]);
 
 export function parseProfileMainView(raw: string | undefined | null): ProfileMainView {
   if (raw === "engine") return "engine";

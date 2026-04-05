@@ -21,10 +21,11 @@ function isProfileRoute(pathname: string) {
   return p === "/profile" || p.startsWith("/profile/");
 }
 
+/** Top safe area is on `body` (globals); avoid double-counting here. Horizontal insets keep PWA content off curved edges in landscape. */
 const mainPaddingStyle = {
-  paddingLeft: "var(--hq-padding-x)",
-  paddingRight: "var(--hq-padding-x)",
-  paddingTop: "calc(env(safe-area-inset-top, 0px) + var(--main-padding-top, 40px))",
+  paddingLeft: "max(var(--hq-padding-x), env(safe-area-inset-left, 0px))",
+  paddingRight: "max(var(--hq-padding-x), env(safe-area-inset-right, 0px))",
+  paddingTop: "var(--main-padding-top, 40px)",
   paddingBottom:
     "calc(var(--footer-height, 58px) + var(--bottom-nav-arch, 28px) + env(safe-area-inset-bottom) + var(--main-padding-bottom, 16px))",
 } as const;
