@@ -1,6 +1,8 @@
 import Link from "next/link";
+import { getStrategyBudgetSavingsContext } from "@/app/actions/strategy-budget-savings-context";
 import { getActiveStrategyFocus } from "@/app/actions/strategyFocus";
 import { countBudgetLocksThisQuarter } from "@/app/actions/budget-intelligence";
+import { resolveEffectiveQuarterlySavingsTargetCents } from "@/lib/strategy/engine-params";
 import {
   StrategyEngineSettingsForm,
   type StrategyEngineSettingsFormMode,
@@ -30,6 +32,16 @@ export async function StrategyEngineSettingsSection({ formSectionId = "strategy-
     );
   }
   const locksUsed = mode === "engine" ? await countBudgetLocksThisQuarter() : 0;
+  let budgetDerivedQuarterlyCents: number | null = null;
+  if (mode === "contract") {
+    const budgetCtx = await getStrategyBudgetSavingsContext();
+    const q = strategy.engine_params.savings.quarterlyMustSaveCents;
+    const contractEmpty = q == null || q <= 0;
+    const derived = resolveEffectiveQuarterlySavingsTargetCents(q, budgetCtx);
+    if (contractEmpty && derived != null && derived > 0) {
+      budgetDerivedQuarterlyCents = derived;
+    }
+  }
   return (
     <StrategyEngineSettingsForm
       mode={mode}
@@ -37,6 +49,7 @@ export async function StrategyEngineSettingsSection({ formSectionId = "strategy-
       initial={strategy.engine_params}
       locksUsedThisQuarter={locksUsed}
       sectionId={formSectionId}
+      budgetDerivedQuarterlyCents={budgetDerivedQuarterlyCents}
     />
   );
 }

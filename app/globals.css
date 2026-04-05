@@ -4275,8 +4275,11 @@ header h1 { margin: 0; }
   --cmd-card-border-alpha: 0.08;
   --cmd-accent-alpha-soft: 0.1;
   --cmd-accent-alpha-strong: 0.22;
+  /* Ruimte boven de dock + safe area; hoger = toasts volledig tappable (Sonner + .toast). */
+  --toast-gap-above-dock: 40px;
   --toast-offset-bottom: calc(
-    var(--footer-height, 58px) + var(--bottom-nav-arch, 28px) + 16px + env(safe-area-inset-bottom)
+    var(--footer-height, 58px) + var(--bottom-nav-arch, 28px) + var(--toast-gap-above-dock) +
+      env(safe-area-inset-bottom)
   );
   --toast-radius: 14px;
 
@@ -4302,6 +4305,8 @@ header h1 { margin: 0; }
     --hq-padding-x: 0;
     --main-padding-top: 0;
     --main-padding-bottom: 0;
+    /* Extra lift: bottom dock + duimzone; volledige toast (sluitknop) blijft bereikbaar. */
+    --toast-gap-above-dock: 52px;
   }
 }
 

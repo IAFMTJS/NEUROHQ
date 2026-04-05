@@ -26,6 +26,8 @@ type Props = {
   sectionId?: string;
   /** `contract` = alleen kwartaaldoelen (Strategy). `engine` = missies, locks, push, executie (Profiel). */
   mode: StrategyEngineSettingsFormMode;
+  /** Kwartaalbedrag dat Strategy al uit Budget haalt zolang contract-sparen leeg is. */
+  budgetDerivedQuarterlyCents?: number | null;
 };
 
 const PUSH_OPTIONS: { value: PushAreaStyle; label: string }[] = [
@@ -40,6 +42,7 @@ export function StrategyEngineSettingsForm({
   locksUsedThisQuarter = 0,
   sectionId = "strategy-engine",
   mode,
+  budgetDerivedQuarterlyCents = null,
 }: Props) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
@@ -160,9 +163,16 @@ export function StrategyEngineSettingsForm({
             className="mt-1 w-full rounded-lg border border-[var(--card-border)] bg-[var(--bg-elevated)] px-3 py-2 text-sm"
           />
         </label>
-        {initial.savings.quarterlyMustSaveCents != null && (
+        {initial.savings.quarterlyMustSaveCents != null && initial.savings.quarterlyMustSaveCents > 0 && (
           <p className="text-xs text-[var(--text-muted)]">
             Huidig doel: {formatCents(initial.savings.quarterlyMustSaveCents)} — log stortingen op Budget.
+          </p>
+        )}
+        {budgetDerivedQuarterlyCents != null && budgetDerivedQuarterlyCents > 0 && (
+          <p className="text-[11px] leading-snug text-[var(--text-secondary)]">
+            Zonder bedrag hierboven gebruikt Strategy nu{" "}
+            <span className="font-medium text-[var(--text-primary)]">{formatCents(budgetDerivedQuarterlyCents)}</span> dit
+            kwartaal op basis van je Budget. Vul het veld in om dat expliciet in je contract vast te leggen.
           </p>
         )}
       </div>

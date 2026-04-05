@@ -38,7 +38,7 @@ export async function getXP(userId?: string): Promise<{ total_xp: number; level:
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  if (!user) return { total_xp: 0, level: 1 };
+  if (!user) return { total_xp: 0, level: 0 };
   return getXPByUserId(user.id);
 }
 
@@ -97,9 +97,9 @@ export async function getXPIdentity(userId?: string): Promise<{
   if (!user) {
     return {
       total_xp: 0,
-      level: 1,
-      rank: rankFromLevel(1),
-      xp_to_next_level: 100,
+      level: 0,
+      rank: rankFromLevel(0),
+      xp_to_next_level: xpToNextLevel(0),
       next_unlock: nextUnlockPreview(0),
       streak: defaultStreak,
     };

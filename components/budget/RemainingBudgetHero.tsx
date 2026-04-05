@@ -2,7 +2,8 @@
 
 import { useEffect, useState, useTransition, type ReactNode } from "react";
 import Link from "next/link";
-import { differenceInCalendarDays } from "date-fns";
+import { addDays, differenceInCalendarDays, format } from "date-fns";
+import { nl } from "date-fns/locale";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { HQModal } from "@/components/hq";
@@ -43,45 +44,117 @@ function budgetRingProgress(isOverBudget: boolean, remainingPctForMeter: number)
   return remainingPctForMeter;
 }
 
+function formatRangeShort(d0: Date, d1: Date): string {
+  const sameMonth = d0.getMonth() === d1.getMonth() && d0.getFullYear() === d1.getFullYear();
+  if (sameMonth) {
+    return `${format(d0, "d", { locale: nl })}–${format(d1, "d MMM", { locale: nl })}`;
+  }
+  return `${format(d0, "d MMM", { locale: nl })} – ${format(d1, "d MMM yyyy", { locale: nl })}`;
+}
+
+type CycleStripSegment = {
+  key: string;
+  label: string;
+  current: boolean;
+  /** Korte datumrange binnen de budgetcyclus */
+  rangeShort: string;
+  /** bv. "Nog 5 dagen tot einde" of "7 dagen" */
+  detail: string;
+};
+
 function cycleStripSegments(
   budgetPeriod: "monthly" | "weekly",
   periodStart: string | undefined,
   periodEnd: string | undefined,
-  today: string
-): { key: string; label: string; current: boolean }[] {
-  if (budgetPeriod === "weekly") {
-    return [{ key: "week", label: "Deze week", current: true }];
-  }
+  today: string,
+  periodLabel: string
+): { headline: string | null; segments: CycleStripSegment[] } {
+  const emptySegments = (): CycleStripSegment[] =>
+    [1, 2, 3, 4].map((n) => ({
+      key: `w${n}`,
+      label: `W${n}`,
+      current: false,
+      rangeShort: "—",
+      detail: "—",
+    }));
+
   if (!periodStart || !periodEnd) {
-    return [
-      { key: "w1", label: "W1", current: false },
-      { key: "w2", label: "W2", current: false },
-      { key: "w3", label: "W3", current: false },
-      { key: "w4", label: "W4", current: false },
-    ];
+    return {
+      headline: periodLabel ? `${periodLabel} · geen datums` : null,
+      segments: emptySegments(),
+    };
   }
   const start = new Date(periodStart + "T12:00:00Z");
   const end = new Date(periodEnd + "T12:00:00Z");
-  if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) {
-    return [
-      { key: "w1", label: "W1", current: false },
-      { key: "w2", label: "W2", current: false },
-      { key: "w3", label: "W3", current: false },
-      { key: "w4", label: "W4", current: false },
-    ];
+  const todayDate = new Date(today + "T12:00:00Z");
+  if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime()) || Number.isNaN(todayDate.getTime())) {
+    return {
+      headline: periodLabel || null,
+      segments: emptySegments(),
+    };
   }
+
   const totalDays = Math.max(1, differenceInCalendarDays(end, start) + 1);
+  const daysToPeriodEnd = Math.max(0, differenceInCalendarDays(end, todayDate) + 1);
+  const rangeFull = formatRangeShort(start, end);
+  const cycleWord = budgetPeriod === "weekly" ? "week" : "cyclus";
+  const headline = `${rangeFull} · ${totalDays} dagen in deze ${cycleWord}`;
+
+  if (budgetPeriod === "weekly") {
+    return {
+      headline,
+      segments: [
+        {
+          key: "week",
+          label: "Deze periode",
+          current: true,
+          rangeShort: rangeFull,
+          detail:
+            daysToPeriodEnd <= 0
+              ? "Laatste dag van periode"
+              : `Nog ${daysToPeriodEnd} ${daysToPeriodEnd === 1 ? "dag" : "dagen"} tot einde`,
+        },
+      ],
+    };
+  }
+
   const slotCount = Math.min(4, Math.max(1, Math.ceil(totalDays / 7)));
-  const dayOffset = Math.max(
-    0,
-    Math.min(totalDays - 1, differenceInCalendarDays(new Date(today + "T12:00:00Z"), start))
-  );
-  const activeIndex = Math.min(slotCount - 1, Math.floor(dayOffset / Math.max(1, totalDays / slotCount)));
-  return Array.from({ length: slotCount }, (_, i) => ({
-    key: `w-${i}`,
-    label: slotCount === 1 ? "Cyclus" : `W${i + 1}`,
-    current: i === activeIndex,
-  }));
+  const dayOffset = Math.max(0, Math.min(totalDays - 1, differenceInCalendarDays(todayDate, start)));
+
+  let activeIndex = 0;
+  for (let i = 0; i < slotCount; i++) {
+    const lo = Math.floor((i * totalDays) / slotCount);
+    const hi = Math.floor(((i + 1) * totalDays) / slotCount) - 1;
+    if (dayOffset >= lo && dayOffset <= hi) {
+      activeIndex = i;
+      break;
+    }
+  }
+
+  return {
+    headline,
+    segments: Array.from({ length: slotCount }, (_, i) => {
+      const lo = Math.floor((i * totalDays) / slotCount);
+      const hi = Math.floor(((i + 1) * totalDays) / slotCount) - 1;
+      const segStart = addDays(start, lo);
+      const segEnd = addDays(start, hi);
+      const rangeShort = formatRangeShort(segStart, segEnd);
+      const segLen = hi - lo + 1;
+      const current = i === activeIndex;
+      const detail = current
+        ? daysToPeriodEnd <= 0
+          ? "Laatste dag cyclus"
+          : `Nog ${daysToPeriodEnd} d. tot einde · ${segLen} d. in dit blok`
+        : `${segLen} dagen in dit blok`;
+      return {
+        key: `w-${i}`,
+        label: slotCount === 1 ? "Cyclus" : `W${i + 1}`,
+        current,
+        rangeShort,
+        detail,
+      };
+    }),
+  };
 }
 
 type Props = {
@@ -291,9 +364,9 @@ export function RemainingBudgetHero({
       : null;
 
   const syncOk = !pendingActive;
-  const cycleSlots = !historyMode
-    ? cycleStripSegments(effectiveBudgetPeriod, periodStart, periodEnd, logDate)
-    : [];
+  const cycleMeta = !historyMode
+    ? cycleStripSegments(effectiveBudgetPeriod, periodStart, periodEnd, logDate, periodLabel)
+    : { headline: null as string | null, segments: [] as CycleStripSegment[] };
 
   const safeDailyLine =
     hasSettings && typeof safeDailySpendCents === "number" && safeDailySpendCents > 0
@@ -462,31 +535,39 @@ export function RemainingBudgetHero({
           </div>
         </div>
 
-        {!historyMode && cycleSlots.length > 0 && (
+        {!historyMode && cycleMeta.segments.length > 0 && (
           <div className="relative z-[1] mt-6 border-t border-[rgba(var(--mode-rgb),0.1)] pt-5">
-            <p className="mb-2 text-[10px] font-bold uppercase tracking-[0.16em] text-[var(--text-muted)]">Cyclus</p>
-            <div className="flex gap-2 overflow-x-auto pb-1">
-              {cycleSlots.map((w) => (
+            <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-[var(--text-muted)]">Cyclus</p>
+            {cycleMeta.headline ? (
+              <p className="mt-1 text-[11px] leading-snug text-[var(--text-secondary)]">{cycleMeta.headline}</p>
+            ) : null}
+            <div className="mt-3 flex gap-2 overflow-x-auto pb-1 [-webkit-overflow-scrolling:touch]">
+              {cycleMeta.segments.map((w) => (
                 <div
                   key={w.key}
                   className={
                     w.current
-                      ? "min-w-[5.5rem] rounded-lg border border-[rgba(var(--mode-rgb),0.35)] bg-[rgba(var(--mode-rgb-deep),0.3)] px-3.5 py-2.5 text-center shadow-[0_0_16px_rgba(var(--mode-rgb),0.2)]"
-                      : "min-w-[5.5rem] rounded-lg border border-[rgba(var(--mode-rgb),0.08)] bg-[rgba(0,0,0,0.2)] px-3.5 py-2.5 text-center text-[var(--text-muted)]"
+                      ? "min-w-[7.25rem] max-w-[11rem] shrink-0 rounded-lg border border-[rgba(var(--mode-rgb),0.35)] bg-[rgba(var(--mode-rgb-deep),0.3)] px-3 py-2.5 text-left shadow-[0_0_16px_rgba(var(--mode-rgb),0.2)] sm:min-w-[7.5rem]"
+                      : "min-w-[7.25rem] max-w-[11rem] shrink-0 rounded-lg border border-[rgba(var(--mode-rgb),0.08)] bg-[rgba(0,0,0,0.2)] px-3 py-2.5 text-left text-[var(--text-muted)] sm:min-w-[7.5rem]"
                   }
                 >
-                  <div className="flex items-center justify-center gap-1.5">
+                  <div className="flex items-center gap-1.5">
                     <span
                       className={
                         w.current
-                          ? "h-2.5 w-2.5 rounded-full bg-[rgb(var(--mode-rgb))] shadow-[0_0_10px_rgba(var(--mode-rgb),0.55)]"
-                          : "h-2 w-2 rounded-full bg-[var(--text-muted)]/35"
+                          ? "h-2.5 w-2.5 shrink-0 rounded-full bg-[rgb(var(--mode-rgb))] shadow-[0_0_10px_rgba(var(--mode-rgb),0.55)]"
+                          : "h-2 w-2 shrink-0 rounded-full bg-[var(--text-muted)]/35"
                       }
                       aria-hidden
                     />
-                    <span className="text-[10px] font-bold uppercase tracking-wide">{w.label}</span>
+                    <span className="text-[10px] font-bold uppercase tracking-wide text-[var(--text-primary)]">
+                      {w.label}
+                    </span>
                   </div>
-                  <span className="mt-1 block text-[9px] tabular-nums opacity-80">{w.current ? "nu" : "—"}</span>
+                  <p className="mt-1.5 text-[10px] font-medium leading-tight text-[var(--text-primary)] opacity-95">
+                    {w.rangeShort}
+                  </p>
+                  <p className="mt-1 text-[9px] leading-snug opacity-85">{w.detail}</p>
                 </div>
               ))}
             </div>

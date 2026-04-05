@@ -97,6 +97,19 @@ async function computeAndUpsertReputation(
     totalCompletionsLast30: completionsLast30,
   });
 
+  const allZero =
+    reputation.discipline === 0 &&
+    reputation.consistency === 0 &&
+    reputation.impact === 0;
+  if (allZero) {
+    const { data: existingRep } = await supabase
+      .from("user_reputation")
+      .select("user_id")
+      .eq("user_id", userId)
+      .maybeSingle();
+    if (!existingRep) return reputation;
+  }
+
   await supabase.from("user_reputation").upsert(
     {
       user_id: userId,

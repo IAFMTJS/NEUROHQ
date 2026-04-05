@@ -15,6 +15,8 @@ const IDENTITIES = [
   { value: "scholar", label: "Scholar" },
 ] as const;
 
+type IdentityProfile = (typeof IDENTITIES)[number]["value"];
+
 const DEFAULT_ALLOCATION: WeeklyAllocation = {
   discipline: 25,
   health: 25,
@@ -30,7 +32,7 @@ export function StrategyThesisForm() {
   const [targetMetric, setTargetMetric] = useState("");
   const [primaryDomain, setPrimaryDomain] = useState<StrategyDomain>("discipline");
   const [secondaryDomains, setSecondaryDomains] = useState<StrategyDomain[]>([]);
-  const [identityProfile, setIdentityProfile] = useState<"commander" | "builder" | "operator" | "athlete" | "scholar">("operator");
+  const [identityProfile, setIdentityProfile] = useState<IdentityProfile | "">("");
   const [alloc, setAlloc] = useState<WeeklyAllocation>({ ...DEFAULT_ALLOCATION });
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -44,7 +46,7 @@ export function StrategyThesisForm() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!thesis.trim() || !deadline) return;
+    if (!thesis.trim() || !deadline || !identityProfile) return;
     setError(null);
     setPending(true);
     try {
@@ -56,7 +58,7 @@ export function StrategyThesisForm() {
         primary_domain: primaryDomain,
         secondary_domains: secondaryDomains,
         weekly_allocation: alloc,
-        identity_profile: identityProfile,
+        identity_profile: identityProfile as IdentityProfile,
       });
       router.refresh();
     } catch (err) {
@@ -177,9 +179,13 @@ export function StrategyThesisForm() {
         <label className="block text-xs font-medium text-[var(--text-muted)]">Strategic identity</label>
         <select
           value={identityProfile}
-          onChange={(e) => setIdentityProfile(e.target.value as typeof identityProfile)}
+          onChange={(e) => setIdentityProfile(e.target.value as IdentityProfile | "")}
+          required
           className="mt-1 w-full rounded-lg border border-[var(--card-border)] bg-[var(--bg-card)] px-3 py-2 text-sm text-[var(--text-primary)]"
         >
+          <option value="" disabled>
+            Kies strategic identity…
+          </option>
           {IDENTITIES.map(({ value, label }) => (
             <option key={value} value={value}>
               {label}
@@ -221,7 +227,7 @@ export function StrategyThesisForm() {
 
       <button
         type="submit"
-        disabled={pending || !thesis.trim() || !deadline || !validAlloc}
+        disabled={pending || !thesis.trim() || !deadline || !identityProfile || !validAlloc}
         className="w-full rounded-lg bg-[var(--accent-focus)] px-4 py-2.5 text-sm font-medium text-white shadow-[var(--glow-stack-cyan)] disabled:opacity-50"
       >
         {pending ? "Bezig..." : "Strategie activeren"}

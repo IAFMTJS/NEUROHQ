@@ -89,8 +89,11 @@ const toastShell =
 const toastShellWide =
   "relative w-[min(100vw-2rem,480px)] max-h-[min(88vh,640px)] overflow-y-auto overflow-x-hidden rounded-[var(--hq-card-radius,18px)] border border-[rgba(var(--mode-rgb),0.12)] bg-[linear-gradient(165deg,rgba(var(--mode-rgb-deep),0.42),rgba(15,23,42,0.96))] px-3 py-3 pr-10 text-left shadow-[0_12px_48px_rgba(0,0,0,0.45),0_0_28px_rgba(var(--mode-rgb),0.06)] backdrop-blur-md";
 
-const insightHubShell =
-  "relative scroll-mt-24 overflow-hidden rounded-[var(--hq-card-radius,18px)] border border-[rgba(var(--mode-rgb),0.09)] bg-gradient-to-b from-[rgba(var(--mode-rgb-deep),0.2)] via-[var(--bg-elevated)]/10 to-[var(--bg-primary)]/26 shadow-[0_12px_48px_rgba(0,0,0,0.32),0_0_24px_rgba(var(--mode-rgb),0.05)] backdrop-blur-xl";
+/** Zelfde deck-chrome als Sparen & boeken (`card-simple`) en tegels als Optimalisatie-hub. */
+const insightHubSectionClass = "card-simple scroll-mt-24 overflow-hidden p-0";
+
+const insightTileClass =
+  "relative flex min-h-[5.5rem] flex-col items-center justify-center gap-1 rounded-xl border border-[var(--card-border)] bg-[var(--bg-elevated)]/50 px-2 py-3 text-center transition-colors hover:border-[rgba(var(--mode-rgb),0.35)] hover:bg-[var(--bg-elevated)]/80 focus:outline-none focus-visible:ring-2 focus-visible:ring-[rgba(var(--mode-rgb),0.45)] focus-visible:ring-offset-0 sm:min-h-[6rem]";
 
 function ToastChrome({
   toastId,
@@ -138,13 +141,9 @@ function InsightTile({
   badge?: number;
 }) {
   return (
-    <button
-      type="button"
-      onClick={onClick}
-      className="relative flex min-h-[5.5rem] flex-col items-center justify-center gap-1 rounded-xl border border-[rgba(var(--mode-rgb),0.1)] bg-[rgba(var(--mode-rgb-deep),0.08)] px-2 py-3 text-center transition-colors hover:border-[rgba(var(--mode-rgb),0.28)] hover:bg-[rgba(var(--mode-rgb-deep),0.12)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[rgba(var(--mode-rgb),0.45)] focus-visible:ring-offset-0 sm:min-h-[6rem]"
-    >
+    <button type="button" onClick={onClick} className={insightTileClass}>
       {badge != null && badge > 0 ? (
-        <span className="absolute right-1.5 top-1.5 min-w-[1.25rem] rounded-full bg-[rgba(var(--mode-rgb),0.22)] px-1.5 py-0.5 text-[10px] font-bold text-[var(--text-primary)]">
+        <span className="absolute right-1.5 top-1.5 min-w-[1.25rem] rounded-full border border-[rgba(var(--mode-rgb),0.35)] bg-[rgba(var(--mode-rgb-deep),0.45)] px-1.5 py-0.5 text-[10px] font-bold text-[var(--semantic-accent)]">
           {badge > 99 ? "99+" : badge}
         </span>
       ) : null}
@@ -230,10 +229,17 @@ export function BudgetInsightHub(props: BudgetInsightHubProps) {
     );
   }
 
-  function openStatusToast() {
+  /** Eén paneel: DCIC-status + week (uit oude Status) en tempo/patronen/load (uit oude Pace). */
+  function openStandWeekAndPaceToast() {
     toast.custom(
       (id) => (
-        <ToastChrome toastId={id} title="Status & week" hint="DCIC-status, week en risico." ariaLabel="Financiële status">
+        <ToastChrome
+          toastId={id}
+          title="Stand, week & tempo"
+          hint="Huidige positie, weekdiscipline, ritme t.o.v. budget en patronen (categorieën, load, risico)."
+          ariaLabel="Stand week en tempo"
+          wide
+        >
           <FinancialStatusCard
             financeState={financeState}
             remainingToSpendCents={remainingToSpendCents}
@@ -241,35 +247,13 @@ export function BudgetInsightHub(props: BudgetInsightHubProps) {
             safeDailySpendOverrideCents={safeDailySpendOverrideCents}
           />
           {uxExperiments ? (
-            <BudgetStabilityRiskCard
-              daysUnderBudget={daysUnderBudgetThisWeek}
-              disciplineXp={disciplineXpThisWeek}
-              insights={canonicalInsightsSorted}
-              topInsightOverride={canonicalTopInsight}
-            />
-          ) : (
             <>
-              <WeeklyPerformanceCard daysUnderBudget={daysUnderBudgetThisWeek} disciplineXp={disciplineXpThisWeek} />
-              <BudgetRiskInsightCard insights={insights} />
-            </>
-          )}
-        </ToastChrome>
-      ),
-      { duration: TOAST_MS }
-    );
-  }
-
-  function openPaceToast() {
-    toast.custom(
-      (id) => (
-        <ToastChrome
-          toastId={id}
-          title="Pace & patronen"
-          hint="Burn, safe pace, load en categorieën."
-          ariaLabel="Pace en patronen"
-        >
-          {uxExperiments ? (
-            <>
+              <BudgetStabilityRiskCard
+                daysUnderBudget={daysUnderBudgetThisWeek}
+                disciplineXp={disciplineXpThisWeek}
+                insights={canonicalInsightsSorted}
+                topInsightOverride={canonicalTopInsight}
+              />
               <BudgetForecastAndReviewCard
                 financeState={financeState}
                 remainingToSpendCents={remainingToSpendCents}
@@ -288,6 +272,7 @@ export function BudgetInsightHub(props: BudgetInsightHubProps) {
             </>
           ) : (
             <>
+              <WeeklyPerformanceCard daysUnderBudget={daysUnderBudgetThisWeek} disciplineXp={disciplineXpThisWeek} />
               <BudgetPerformanceSummaryCard
                 financeState={financeState}
                 remainingToSpendCents={remainingToSpendCents}
@@ -295,6 +280,7 @@ export function BudgetInsightHub(props: BudgetInsightHubProps) {
               />
               <BudgetCognitiveLoadTrendCard points={loadTrend} />
               <BudgetPatternDetectionCard categoryTotals={categoryTotals} impulseWindow={impulseWindow} />
+              <BudgetRiskInsightCard insights={insights} />
             </>
           )}
         </ToastChrome>
@@ -395,19 +381,15 @@ export function BudgetInsightHub(props: BudgetInsightHubProps) {
   if (historyMode) {
     return (
       <div className="space-y-4">
-        <div className="rounded-xl border border-[rgba(var(--mode-rgb),0.1)] bg-[rgba(var(--mode-rgb-deep),0.08)] px-4 py-3 text-sm text-[var(--text-muted)]">
+        <div className="rounded-xl border border-[var(--card-border)] bg-[var(--bg-elevated)]/50 px-4 py-3 text-sm text-[var(--text-muted)]">
           Historische maand: voorspelling en live-gedrag zijn uitgeschakeld. Verdeling en tips blijven beschikbaar.
         </div>
-        <section className={insightHubShell} aria-label="Inzicht — archief" id="budget-insight-hub">
-          <div
-            className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_75%_55%_at_50%_0%,rgba(var(--mode-rgb),0.1),transparent_58%)]"
-            aria-hidden
-          />
-          <div className="relative z-[1] border-b border-[rgba(var(--mode-rgb),0.1)] px-4 py-3 md:px-5">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--mode-text-soft)]">Inzicht</p>
+        <section className={insightHubSectionClass} aria-label="Inzicht — archief" id="budget-insight-hub">
+          <div className="border-b border-[var(--card-border)] px-4 py-3 md:px-5">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-sky-200">Inzicht</p>
             <p className="mt-1 text-xs text-[var(--text-muted)]">Open grafiek, tips of suggesties via de tegels.</p>
           </div>
-          <div className="relative z-[1] grid grid-cols-2 gap-3 p-4 sm:grid-cols-3 md:px-5">
+          <div className="grid grid-cols-2 gap-3 p-4 sm:grid-cols-3 md:px-5">
             <InsightTile emoji="📊" label="Verdeling" hint="Categorieën" onClick={openChartToast} />
             <InsightTile emoji="💡" label="Tips" hint="Sparen" onClick={openTipsToast} />
             {alternatives.length > 0 ? (
@@ -428,7 +410,7 @@ export function BudgetInsightHub(props: BudgetInsightHubProps) {
   return (
     <div className="space-y-4">
       {unplannedCount > 0 && (
-        <div className="rounded-xl border border-[rgba(var(--mode-rgb),0.1)] bg-[rgba(var(--mode-rgb-deep),0.08)] px-4 py-2.5 text-sm text-[var(--text-muted)]">
+        <div className="rounded-xl border border-[var(--card-border)] bg-[var(--bg-elevated)]/50 px-4 py-2.5 text-sm text-[var(--text-muted)]">
           Ongeplande uitgaven deze week: {unplannedCount} ({(unplannedTotalCents / 100).toFixed(2)} {currency})
         </div>
       )}
@@ -438,20 +420,16 @@ export function BudgetInsightHub(props: BudgetInsightHubProps) {
         </div>
       )}
 
-      <section className={insightHubShell} aria-label="Inzicht — overzicht" id="budget-insight-hub">
-        <div
-          className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_75%_55%_at_50%_0%,rgba(var(--mode-rgb),0.12),transparent_58%)]"
-          aria-hidden
-        />
-        <div className="relative z-[1] border-b border-[rgba(var(--mode-rgb),0.1)] px-4 py-3 md:px-5">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--mode-text-soft)]">Inzicht</p>
+      <section className={insightHubSectionClass} aria-label="Inzicht — overzicht" id="budget-insight-hub">
+        <div className="border-b border-[var(--card-border)] px-4 py-3 md:px-5">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-sky-200">Inzicht</p>
           <p className="mt-1 text-xs text-[var(--text-muted)]">
             Cijfers, patronen en signalen hier; scroll naar beneden voor weekreview en routines.
           </p>
           <button
             type="button"
             onClick={openSummaryToast}
-            className="mt-3 flex w-full items-center justify-between gap-3 rounded-xl border border-[rgba(var(--mode-rgb),0.1)] bg-[rgba(var(--mode-rgb-deep),0.1)] px-3 py-2.5 text-left transition-colors hover:border-[rgba(var(--mode-rgb),0.28)] hover:bg-[rgba(var(--mode-rgb-deep),0.14)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[rgba(var(--mode-rgb),0.45)]"
+            className="mt-3 flex w-full items-center justify-between gap-3 rounded-xl border border-[var(--card-border)] bg-[var(--bg-primary)]/35 px-3 py-2.5 text-left transition-colors hover:border-[rgba(var(--mode-rgb),0.3)] hover:bg-[var(--bg-primary)]/50 focus:outline-none focus-visible:ring-2 focus-visible:ring-[rgba(var(--mode-rgb),0.45)]"
           >
             <span className="text-2xl" aria-hidden>
               📋
@@ -466,9 +444,13 @@ export function BudgetInsightHub(props: BudgetInsightHubProps) {
           </button>
         </div>
 
-        <div className="relative z-[1] grid grid-cols-2 gap-3 p-4 sm:grid-cols-3 md:px-5">
-          <InsightTile emoji="🛡️" label="Status & week" hint="DCIC + week" onClick={openStatusToast} />
-          <InsightTile emoji="📈" label="Pace & patronen" hint="Burn & load" onClick={openPaceToast} />
+        <div className="grid grid-cols-2 gap-3 p-4 sm:grid-cols-3 md:px-5">
+          <InsightTile
+            emoji="🛡️"
+            label="Stand, week & tempo"
+            hint="DCIC, ritme, patronen"
+            onClick={openStandWeekAndPaceToast}
+          />
           <InsightTile
             emoji="📣"
             label="Signalenlijst"

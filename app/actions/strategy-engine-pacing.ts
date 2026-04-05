@@ -1,9 +1,10 @@
 "use server";
 
 import { getActiveStrategyEngineParams } from "@/app/actions/strategyFocus";
+import { getStrategyBudgetSavingsContext } from "@/app/actions/strategy-budget-savings-context";
 import { sumSavingsContributionsInDateRange } from "@/app/actions/savings";
 import { getActiveProtocolQuarterMissionStats } from "@/app/actions/protocol-growth-stats";
-import { calendarQuarterBounds } from "@/lib/strategy/engine-params";
+import { calendarQuarterBounds, resolveEffectiveQuarterlySavingsTargetCents } from "@/lib/strategy/engine-params";
 import { todayDateString } from "@/lib/utils/timezone";
 import type { StrategyPacingHints } from "@/lib/strategy/strategy-pacing-hints";
 
@@ -22,9 +23,9 @@ function quarterElapsedFraction(todayStr: string, start: string, end: string): n
  * Does not write anywhere — avoids conflicting with Budget/Growth CRUD.
  */
 export async function getStrategyPacingHints(): Promise<StrategyPacingHints | null> {
-  const ep = await getActiveStrategyEngineParams();
+  const [ep, budgetCtx] = await Promise.all([getActiveStrategyEngineParams(), getStrategyBudgetSavingsContext()]);
   if (!ep) return null;
-  const saveT = ep.savings.quarterlyMustSaveCents;
+  const saveT = resolveEffectiveQuarterlySavingsTargetCents(ep.savings.quarterlyMustSaveCents, budgetCtx);
   const learnT = ep.growth.quarterlyLearningProgressTargetPct;
   const xpT = ep.xp.quarterlyTargetXpEarned;
   if (saveT == null && learnT == null && (xpT == null || xpT <= 0)) return null;

@@ -14,6 +14,7 @@ export interface RankStep {
 
 /** Full ladder: level thresholds for each rank. */
 export const RANKS: RankStep[] = [
+  { name: "Unranked", levelRequired: 0 },
   { name: "Recruit", levelRequired: 1 },
   { name: "Operator", levelRequired: 3 },
   { name: "Specialist", levelRequired: 6 },

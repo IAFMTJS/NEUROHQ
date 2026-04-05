@@ -1,5 +1,5 @@
 import nextDynamic from "next/dynamic";
-import { Suspense } from "react";
+import { Suspense, type ReactNode } from "react";
 import {
   getActiveStrategyFocus,
   getPastStrategyFocus,
@@ -17,6 +17,7 @@ import { SIMPLIFIED_VIEWPORT_WRAPPER } from "@/lib/simplified-page-layout";
 import { profileInsightsHref } from "@/lib/profile-routes";
 import { DashboardHubCommandShell } from "@/components/layout/DashboardHubCommandShell";
 import { isQuarterContractComplete } from "@/lib/strategy/engine-params";
+import { getStrategyBudgetSavingsContext } from "@/app/actions/strategy-budget-savings-context";
 import { StrategyContractLockToast } from "@/components/strategy/StrategyContractLockToast";
 import { StrategyQuarterContractPanel } from "@/components/strategy/StrategyQuarterContractPanel";
 import { StrategyThreeTabShell } from "@/components/strategy/StrategyThreeTabShell";
@@ -35,6 +36,46 @@ const StrategyArchiveCTA = nextDynamic(
   { loading: () => null }
 );
 
+type PastStrategy = Awaited<ReturnType<typeof getPastStrategyFocus>>;
+
+function StrategyOnboardingShell({
+  simplifiedLayout,
+  past,
+  contractSlot,
+}: {
+  simplifiedLayout: boolean;
+  past: PastStrategy;
+  contractSlot: ReactNode;
+}) {
+  const commandEmpty = (
+    <div className="rounded-xl border border-[var(--card-border)] bg-[var(--bg-elevated)]/50 p-6 text-center text-sm text-[var(--text-muted)]">
+      <p className="font-medium text-[var(--text-primary)]">Nog geen actieve strategie</p>
+      <p className="mt-2 max-w-md mx-auto">
+        Open het tabblad Contract om je thesis en focus vast te leggen. Daarna vult Command zich met je kwartaalvoortgang.
+      </p>
+    </div>
+  );
+  const reviewSlot = (
+    <div className={simplifiedLayout ? "space-y-6" : "space-y-5"}>
+      <div className="rounded-xl border border-[var(--card-border)] bg-[var(--bg-elevated)]/50 p-4 text-sm text-[var(--text-muted)]">
+        Weekreviews verschijnen zodra je een strategie hebt opgeslagen.
+      </div>
+      <StrategyArchiveHistory past={past} />
+    </div>
+  );
+  return (
+    <div data-tutorial="strategy-content" className={simplifiedLayout ? "space-y-6" : "space-y-4"}>
+      <StrategyThreeTabShell
+        simplifiedLayout={simplifiedLayout}
+        initialTabWhenMissingQuery="contract"
+        command={commandEmpty}
+        contract={<div className={simplifiedLayout ? "space-y-6" : "space-y-4"}>{contractSlot}</div>}
+        review={reviewSlot}
+      />
+    </div>
+  );
+}
+
 async function StrategyContent({ simplifiedLayout = false }: { simplifiedLayout?: boolean }) {
   let strategy: Awaited<ReturnType<typeof getActiveStrategyFocus>> = null;
   let past: Awaited<ReturnType<typeof getPastStrategyFocus>> = [];
@@ -46,30 +87,38 @@ async function StrategyContent({ simplifiedLayout = false }: { simplifiedLayout?
   } catch (e) {
     console.error("Strategy page data load failed (check Supabase env and migrations):", e);
     return (
-      <>
-        <div className="rounded-xl border border-amber-500/40 bg-amber-500/10 px-4 py-3 text-sm text-[var(--text-primary)]">
-          <p className="font-medium">Er is iets misgegaan</p>
-          <p className="mt-1 text-[var(--text-muted)]">
-            Mogelijke oorzaken: (1) Supabase env — in Vercel: Project → Settings → Environment Variables, zet
-            NEXT_PUBLIC_SUPABASE_URL en NEXT_PUBLIC_SUPABASE_ANON_KEY. (2) Database — voer migraties uit in Supabase SQL
-            Editor. Zie DEPLOY.md.
-          </p>
-        </div>
-        <StrategyThesisForm />
-      </>
+      <StrategyOnboardingShell
+        simplifiedLayout={simplifiedLayout}
+        past={past}
+        contractSlot={
+          <>
+            <div className="rounded-xl border border-amber-500/40 bg-amber-500/10 px-4 py-3 text-sm text-[var(--text-primary)]">
+              <p className="font-medium">Er is iets misgegaan</p>
+              <p className="mt-1 text-[var(--text-muted)]">
+                Mogelijke oorzaken: (1) Supabase env — in Vercel: Project → Settings → Environment Variables, zet
+                NEXT_PUBLIC_SUPABASE_URL en NEXT_PUBLIC_SUPABASE_ANON_KEY. (2) Database — voer migraties uit in Supabase SQL
+                Editor. Zie DEPLOY.md.
+              </p>
+            </div>
+            <StrategyThesisForm />
+          </>
+        }
+      />
     );
   }
 
   if (!strategy) {
     return (
-      <>
-        <StrategyThesisForm />
-        <StrategyArchiveHistory past={past} />
-      </>
+      <StrategyOnboardingShell
+        simplifiedLayout={simplifiedLayout}
+        past={past}
+        contractSlot={<StrategyThesisForm />}
+      />
     );
   }
 
-  const contractComplete = isQuarterContractComplete(strategy.engine_params);
+  const budgetSavingsCtx = await getStrategyBudgetSavingsContext();
+  const contractComplete = isQuarterContractComplete(strategy.engine_params, budgetSavingsCtx);
 
   if (!contractComplete) {
     return (

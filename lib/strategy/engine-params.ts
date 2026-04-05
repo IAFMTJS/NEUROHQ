@@ -2,6 +2,8 @@
  * Strategy engine parameters — single write path: `strategy_focus.engine_params`.
  * - Read with `normalizeStrategyEngineParams` everywhere (never trust raw JSON).
  * - Does not duplicate `user_preferences` push toggles or `users.monthly_budget_cents`; those stay separate.
+ * - Spaardoel: expliciet `savings.quarterlyMustSaveCents` wint; anders Budget (`monthly_savings_cents` × 3) en/of
+ *   actieve spaardoelen met deadline (wekelijks tempo × 13). Zie `resolveEffectiveQuarterlySavingsTargetCents`.
  * - UI: kwartaalcontract (spaar-/leer-/XP) op Strategy → Contract; engine-tuning (missies, locks, push, executie) op
  *   Profiel → Engine → Strategy. Budget/Growth tonen pace hints read-only via `getStrategyPacingHints`.
  */
@@ -10,6 +12,7 @@ import {
   normalizeExecutionBehaviorFocus,
   type ExecutionBehaviorFocus,
 } from "@/lib/strategy/execution-behavior";
+import { weeklyRequired } from "@/lib/utils/savings";
 
 export type { ExecutionBehaviorFocus } from "@/lib/strategy/execution-behavior";
 
@@ -57,6 +60,56 @@ export type StrategyEngineParams = {
     behaviorFocus: ExecutionBehaviorFocus;
   };
 };
+
+/** ~13 weken per kalenderkwartaal — impliciet doel uit spaardoelen (weekly pace). */
+const WEEKS_PER_QUARTER = 13;
+
+/** Actieve spaardoelen + maand-spaarreserve uit Budget (users.monthly_savings_cents). */
+export type StrategyBudgetSavingsContext = {
+  budgetMonthlySavingsCents: number | null;
+  savingsGoals: Array<{
+    target_cents: number;
+    current_cents: number;
+    deadline: string | null;
+    status?: string | null;
+  }>;
+};
+
+function impliedQuarterlyFromGoals(goals: StrategyBudgetSavingsContext["savingsGoals"]): number | null {
+  let sum = 0;
+  let any = false;
+  for (const g of goals) {
+    if (g.status === "completed" || g.status === "cancelled") continue;
+    const wk = weeklyRequired(g.target_cents, g.current_cents, g.deadline);
+    if (wk != null && wk > 0) {
+      sum += wk * WEEKS_PER_QUARTER;
+      any = true;
+    }
+  }
+  if (!any || sum <= 0) return null;
+  return Math.min(Number.MAX_SAFE_INTEGER, Math.round(sum));
+}
+
+/**
+ * Kwartaal spaardoel voor Strategy-engine: eerst contractveld, dan Budget (×3 maandreserve), dan tempo uit doelen met deadline.
+ */
+export function resolveEffectiveQuarterlySavingsTargetCents(
+  quarterlyMustSaveCents: number | null | undefined,
+  ctx: StrategyBudgetSavingsContext
+): number | null {
+  const q =
+    quarterlyMustSaveCents != null && Number.isFinite(quarterlyMustSaveCents) && quarterlyMustSaveCents > 0
+      ? Math.floor(quarterlyMustSaveCents)
+      : null;
+  if (q != null) return q;
+
+  const monthly = ctx.budgetMonthlySavingsCents ?? 0;
+  if (monthly > 0) {
+    return Math.round(monthly * 3);
+  }
+
+  return impliedQuarterlyFromGoals(ctx.savingsGoals);
+}
 
 export const DEFAULT_STRATEGY_ENGINE_PARAMS: StrategyEngineParams = {
   version: ENGINE_PARAMS_VERSION,
@@ -166,12 +219,18 @@ export function normalizeStrategyEngineParams(raw: unknown): StrategyEngineParam
   };
 }
 
-/** Kwartaal contract counts as ingevuld when alle drie commitment-velden een positieve waarde hebben. */
-export function isQuarterContractComplete(ep: unknown): boolean {
+/**
+ * Kwartaal contract counts as ingevuld when growth + XP commitments set and spaar-commitment aanwezig is
+ * (contractbedrag óf afleidbaar uit Budget: spaarreserve en/of spaardoelen met deadline).
+ */
+export function isQuarterContractComplete(ep: unknown, budgetCtx?: StrategyBudgetSavingsContext): boolean {
   const n = normalizeStrategyEngineParams(ep);
-  const save = n.savings.quarterlyMustSaveCents;
   const growth = n.growth.quarterlyLearningProgressTargetPct;
   const xp = n.xp.quarterlyTargetXpEarned;
+  const save =
+    budgetCtx != null
+      ? resolveEffectiveQuarterlySavingsTargetCents(n.savings.quarterlyMustSaveCents, budgetCtx)
+      : n.savings.quarterlyMustSaveCents;
   return (
     typeof save === "number" &&
     save > 0 &&

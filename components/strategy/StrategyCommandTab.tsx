@@ -1,5 +1,8 @@
 import type { QuarterEngineSnapshot } from "@/app/actions/quarter-engine-snapshot";
-import { buildPillarCardModel } from "@/lib/strategy/command-pillar-summaries";
+import {
+  buildPillarCardModel,
+  getPillarFeedbackStatus,
+} from "@/lib/strategy/command-pillar-summaries";
 import type { PillarCardModel } from "@/lib/strategy/command-pillar-summaries";
 import {
   EXECUTION_BEHAVIOR_LABELS_NL,
@@ -49,31 +52,29 @@ type PillarSlice = {
   committed: boolean;
 };
 
-/** RGB op 100% voortgang — per pijler herkenbaar (focus/cyan-achtig voor budget). */
-const PILLAR_TARGET_RGB: Record<PillarKey, { r: number; g: number; b: number }> = {
-  budget: { r: 0, g: 186, b: 255 },
-  growth: { r: 52, g: 211, b: 153 },
-  xp: { r: 232, g: 78, b: 238 },
-  discipline: { r: 251, g: 191, b: 36 },
+/** Vaste kleur per pijler: spaardoel rood, leerdoel groen, XP lichtblauw, discipline geel. */
+const PILLAR_PROGRESS_RGB: Record<PillarKey, { r: number; g: number; b: number }> = {
+  budget: { r: 239, g: 68, b: 68 },
+  growth: { r: 34, g: 197, b: 94 },
+  xp: { r: 125, g: 211, b: 252 },
+  discipline: { r: 250, g: 204, b: 21 },
 };
 
-/** Laag voortgang: zacht “stress”-rood; kleur schuift naar pijleraccent naarmate % stijgt. */
-const PILLAR_LOW_RGB = { r: 198, g: 72, b: 78 };
+const PILLAR_TRACK_FILL = "rgba(148, 163, 184, 0.22)";
+const PILLAR_UNCOMMITTED_TRACK = "rgba(82, 96, 118, 0.35)";
 
-function lerpByte(a: number, b: number, t: number) {
-  return Math.round(a + (b - a) * t);
+/** Legenda / swatch: toon pijlerkleur met intensiteit ~ voortgang. */
+function pillarLegendSwatch(key: PillarKey, committed: boolean, pct: number): string {
+  if (!committed) return PILLAR_UNCOMMITTED_TRACK;
+  const t = Math.max(0, Math.min(1, pct / 100));
+  const { r, g, b } = PILLAR_PROGRESS_RGB[key];
+  const alpha = 0.28 + 0.62 * t;
+  return `rgba(${r},${g},${b},${alpha})`;
 }
 
-/** Volledige taartpunt: vulling = voortgang via kleur (niet alleen booglengte). */
-function pillarSegmentFill(key: PillarKey, committed: boolean, pct: number): string {
-  if (!committed) return "rgba(82, 96, 118, 0.4)";
-  const t = Math.max(0, Math.min(1, pct / 100));
-  const hi = PILLAR_TARGET_RGB[key];
-  const r = lerpByte(PILLAR_LOW_RGB.r, hi.r, t);
-  const g = lerpByte(PILLAR_LOW_RGB.g, hi.g, t);
-  const b = lerpByte(PILLAR_LOW_RGB.b, hi.b, t);
-  const alpha = 0.48 + 0.44 * t;
-  return `rgba(${r},${g},${b},${alpha})`;
+function pillarProgressFillSolid(key: PillarKey): string {
+  const { r, g, b } = PILLAR_PROGRESS_RGB[key];
+  return `rgba(${r},${g},${b},0.92)`;
 }
 
 function QuarterCommandOverview({
@@ -104,21 +105,39 @@ function QuarterCommandOverview({
           viewBox={`0 0 ${vb} ${vb}`}
           className="overflow-visible drop-shadow-[0_0_28px_rgba(var(--mode-rgb),0.14)]"
           role="img"
-          aria-label={`Kwartaal contractscore ${p} procent; elke sector toont voortgang van die pijler met kleur`}
+          aria-label={`Kwartaal contractscore ${p} procent; elke boog is honderd procent voor die pijler, gekleurde boog toont behaalde procent`}
         >
           {pillars.map((pl, i) => {
             const start = baseStarts[i];
             const segEnd = start + slot - gapDeg;
-            const fill = pillarSegmentFill(pl.key, pl.committed, pl.pct);
+            const trackFill = pl.committed ? PILLAR_TRACK_FILL : PILLAR_UNCOMMITTED_TRACK;
             return (
               <path
-                key={pl.key}
+                key={`${pl.key}-track`}
                 d={annularSectorPath(cx, cy, rInner, rOuter, start, segEnd)}
-                fill={fill}
+                fill={trackFill}
                 stroke="rgba(4,12,22,0.55)"
                 strokeWidth="1.1"
                 paintOrder="stroke fill"
-                className="transition-[fill] duration-500 ease-out"
+              />
+            );
+          })}
+          {pillars.map((pl, i) => {
+            if (!pl.committed) return null;
+            const start = baseStarts[i];
+            const fullSpan = slot - gapDeg;
+            const t = Math.max(0, Math.min(100, pl.pct)) / 100;
+            if (t <= 0) return null;
+            const filledEnd = start + fullSpan * t;
+            const fill = pillarProgressFillSolid(pl.key);
+            return (
+              <path
+                key={pl.key}
+                d={annularSectorPath(cx, cy, rInner, rOuter, start, filledEnd)}
+                fill={fill}
+                stroke="rgba(4,12,22,0.35)"
+                strokeWidth="0.85"
+                paintOrder="stroke fill"
               />
             );
           })}
@@ -134,7 +153,9 @@ function QuarterCommandOverview({
         <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center px-6 text-center">
           <span className="font-mono text-4xl font-bold tabular-nums text-[var(--text-primary)] sm:text-5xl">{p}</span>
           <span className="text-[10px] font-semibold uppercase tracking-[0.2em] text-[var(--text-muted)]">contract</span>
-          <span className="mt-0.5 text-[9px] leading-tight text-[var(--text-muted)]">Kleur = voortgang per pijler</span>
+          <span className="mt-0.5 text-[9px] leading-tight text-[var(--text-muted)]">
+            Elke boog = 100% voor die pijler; gekleurde deel = jouw %
+          </span>
         </div>
       </div>
 
@@ -158,7 +179,7 @@ function QuarterCommandOverview({
             </div>
             <span
               className="h-4 w-4 shrink-0 rounded-sm border border-[rgba(var(--mode-rgb),0.2)]"
-              style={{ background: pillarSegmentFill(pl.key, pl.committed, pl.pct) }}
+              style={{ background: pillarLegendSwatch(pl.key, pl.committed, pl.pct) }}
               title={pl.committed ? `${pl.label}: ${pl.pct}%` : pl.label}
               aria-hidden
             />
@@ -211,23 +232,58 @@ function PillarInsightCard({
   committed: boolean;
   model: PillarCardModel;
 }) {
+  const status = getPillarFeedbackStatus(committed, pct);
+  const cardRing =
+    status.tone === "strong"
+      ? "border-emerald-500/40 shadow-[0_0_0_1px_rgba(16,185,129,0.12),0_8px_28px_rgba(0,0,0,0.2)]"
+      : status.tone === "ok"
+        ? "border-amber-400/35 shadow-[0_0_0_1px_rgba(251,191,36,0.1),0_8px_28px_rgba(0,0,0,0.18)]"
+        : status.tone === "warn"
+          ? "border-orange-500/45 shadow-[0_0_0_1px_rgba(249,115,22,0.14),0_8px_28px_rgba(0,0,0,0.22)]"
+          : "border-[var(--card-border)] shadow-[0_0_20px_rgba(0,0,0,0.04)]";
+  const badgeClass =
+    status.tone === "strong"
+      ? "border-emerald-400/50 bg-emerald-500/15 text-emerald-100"
+      : status.tone === "ok"
+        ? "border-amber-400/45 bg-amber-500/12 text-amber-100"
+        : status.tone === "warn"
+          ? "border-orange-400/50 bg-orange-500/15 text-orange-100"
+          : "border-[rgba(var(--mode-rgb),0.25)] bg-[rgba(var(--mode-rgb-deep),0.2)] text-[var(--text-secondary)]";
+
   return (
-    <section className="flex flex-col gap-3 rounded-xl border border-[var(--card-border)] bg-[var(--bg-elevated)]/85 p-4 shadow-[0_0_20px_rgba(0,0,0,0.04)]">
-      <div className="flex flex-wrap items-end justify-between gap-2 border-b border-[rgba(var(--mode-rgb),0.1)] pb-2">
-        <h3 className="text-[10px] font-bold uppercase tracking-[0.18em] text-[var(--text-muted)]">{label}</h3>
-        <div className="text-right">
-          <p className="font-mono text-xl font-bold tabular-nums text-[var(--text-primary)]">
-            {committed ? `${pct}%` : "—"}
-          </p>
-          <p className="text-[9px] font-medium uppercase tracking-wide text-[var(--text-muted)]">pijlerscore</p>
+    <section
+      className={`flex flex-col gap-4 rounded-xl border-2 bg-[var(--bg-elevated)]/90 p-4 sm:p-5 ${cardRing}`}
+      aria-label={`Feedback ${label}`}
+    >
+      <div className="flex flex-col gap-3 border-b border-[rgba(var(--mode-rgb),0.12)] pb-3 sm:flex-row sm:items-start sm:justify-between">
+        <div className="min-w-0 space-y-1">
+          <h3 className="text-[10px] font-bold uppercase tracking-[0.18em] text-[var(--text-muted)]">{label}</h3>
+          <p className="text-[11px] leading-relaxed text-[var(--text-secondary)]">{status.hint}</p>
+        </div>
+        <div className="flex shrink-0 flex-col items-stretch gap-2 sm:items-end">
+          <div className="text-left sm:text-right">
+            <p className="font-mono text-2xl font-bold tabular-nums text-[var(--text-primary)] sm:text-3xl">
+              {committed ? `${pct}%` : "—"}
+            </p>
+            <p className="text-[9px] font-medium uppercase tracking-wide text-[var(--text-muted)]">Pijlerscore</p>
+          </div>
+          <span
+            className={`inline-flex w-fit items-center justify-center rounded-lg border px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide ${badgeClass}`}
+          >
+            {status.label}
+          </span>
         </div>
       </div>
 
-      <p className="text-xs leading-relaxed text-[var(--text-secondary)]">{model.summary}</p>
-      <p className="text-[10px] leading-snug text-[var(--text-muted)]">{model.scoreLine}</p>
+      <div className="space-y-1.5">
+        <p className="text-xs font-medium leading-relaxed text-[var(--text-secondary)]">{model.summary}</p>
+        <p className="text-[10px] leading-snug text-[var(--text-muted)]">{model.scoreLine}</p>
+      </div>
 
-      <div>
-        <p className="text-[9px] font-bold uppercase tracking-[0.14em] text-[var(--semantic-accent)]">Data dit kwartaal</p>
+      <div className="rounded-lg border border-[rgba(var(--mode-rgb),0.12)] bg-[rgba(var(--mode-rgb-deep),0.06)] px-3 py-2.5">
+        <p className="text-[9px] font-bold uppercase tracking-[0.14em] text-[var(--semantic-accent)]">
+          Cijfers dit kwartaal
+        </p>
         <ul className="mt-1.5 list-inside list-disc space-y-1 text-[11px] leading-snug text-[var(--text-secondary)]">
           {model.dataLines.map((line, i) => (
             <li key={i}>{line}</li>
@@ -236,28 +292,96 @@ function PillarInsightCard({
       </div>
 
       <div className="grid gap-3 sm:grid-cols-2">
-        <div className="rounded-lg border border-emerald-500/25 bg-emerald-500/5 px-3 py-2.5">
-          <p className="text-[9px] font-bold uppercase tracking-wide text-emerald-200/90">Wat goed gaat</p>
+        <div
+          role="region"
+          aria-label="Wat goed gaat"
+          className="rounded-xl border-2 border-emerald-500/45 bg-[linear-gradient(165deg,rgba(6,40,28,0.35),rgba(15,23,42,0.55))] px-3 py-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]"
+        >
+          <div className="mb-2 flex items-center gap-2">
+            <span
+              className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-emerald-400/40 bg-emerald-500/20 text-sm font-bold text-emerald-200"
+              aria-hidden
+            >
+              ✓
+            </span>
+            <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-emerald-100">Wat goed gaat</p>
+          </div>
           {model.goodPoints.length > 0 ? (
-            <ul className="mt-1.5 list-inside list-disc space-y-1 text-[11px] leading-snug text-[var(--text-secondary)]">
+            <ul className="space-y-2 text-[11px] leading-snug text-emerald-50/95">
               {model.goodPoints.map((line, i) => (
-                <li key={i}>{line}</li>
+                <li key={i} className="flex gap-2">
+                  <span className="mt-0.5 shrink-0 text-emerald-400" aria-hidden>
+                    ·
+                  </span>
+                  <span>{line}</span>
+                </li>
               ))}
             </ul>
           ) : (
-            <p className="mt-1.5 text-[11px] text-[var(--text-muted)]">Nog geen extra pluspunten — blijf meten.</p>
+            <p className="text-[11px] leading-relaxed text-emerald-200/70">
+              Nog geen harde pluspunten in de data. Blijf loggen — zodra er beweging is, verschijnt die hier.
+            </p>
           )}
         </div>
-        <div className="rounded-lg border border-amber-500/30 bg-amber-500/5 px-3 py-2.5">
-          <p className="text-[9px] font-bold uppercase tracking-wide text-amber-100/90">Aandacht / verbeterplek</p>
+
+        <div
+          role="region"
+          aria-label="Aandacht en verbeterplekken"
+          className={
+            status.tone === "neutral"
+              ? "rounded-xl border-2 border-violet-500/35 bg-[linear-gradient(165deg,rgba(46,16,101,0.25),rgba(15,23,42,0.55))] px-3 py-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]"
+              : "rounded-xl border-2 border-amber-500/50 bg-[linear-gradient(165deg,rgba(60,35,6,0.4),rgba(15,23,42,0.55))] px-3 py-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]"
+          }
+        >
+          <div className="mb-2 flex items-center gap-2">
+            <span
+              className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full border text-sm font-bold ${
+                status.tone === "neutral"
+                  ? "border-violet-400/40 bg-violet-500/20 text-violet-200"
+                  : "border-amber-400/45 bg-amber-500/20 text-amber-200"
+              }`}
+              aria-hidden
+            >
+              !
+            </span>
+            <p
+              className={`text-[10px] font-bold uppercase tracking-[0.12em] ${
+                status.tone === "neutral" ? "text-violet-100" : "text-amber-100"
+              }`}
+            >
+              {status.tone === "neutral" ? "Aandacht: eerst meten" : "Aandacht & verbeterplek"}
+            </p>
+          </div>
           {model.badPoints.length > 0 ? (
-            <ul className="mt-1.5 list-inside list-disc space-y-1 text-[11px] leading-snug text-[var(--text-secondary)]">
+            <ul
+              className={`space-y-2 text-[11px] leading-snug ${
+                status.tone === "neutral" ? "text-violet-50/95" : "text-amber-50/95"
+              }`}
+            >
               {model.badPoints.map((line, i) => (
-                <li key={i}>{line}</li>
+                <li key={i} className="flex gap-2">
+                  <span
+                    className={status.tone === "neutral" ? "mt-0.5 shrink-0 text-violet-300" : "mt-0.5 shrink-0 text-amber-400"}
+                    aria-hidden
+                  >
+                    ·
+                  </span>
+                  <span>{line}</span>
+                </li>
               ))}
             </ul>
           ) : (
-            <p className="mt-1.5 text-[11px] text-[var(--text-muted)]">Geen harde waarschuwingen op basis van deze data.</p>
+            <p
+              className={`text-[11px] leading-relaxed ${
+                status.tone === "neutral"
+                  ? "text-violet-200/75"
+                  : "text-amber-200/80"
+              }`}
+            >
+              {status.tone === "neutral"
+                ? "Zonder contractdoel of data kunnen we hier geen verbeterpunten tonen — richt je eerst op Contract en dagelijks loggen."
+                : "Geen extra rode vlaggen in deze dataset. Hou dit tempo vast en blijf signalen volgen."}
+            </p>
           )}
         </div>
       </div>

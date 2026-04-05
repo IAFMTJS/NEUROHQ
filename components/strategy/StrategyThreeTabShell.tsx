@@ -16,9 +16,17 @@ type Props = {
   contract: ReactNode;
   review: ReactNode;
   simplifiedLayout?: boolean;
+  /** When the URL has no `tab` query, use this instead of Command (e.g. onboarding on /strategy). */
+  initialTabWhenMissingQuery?: StrategyThreeTabId;
 };
 
-export function StrategyThreeTabShell({ command, contract, review, simplifiedLayout = false }: Props) {
+export function StrategyThreeTabShell({
+  command,
+  contract,
+  review,
+  simplifiedLayout = false,
+  initialTabWhenMissingQuery,
+}: Props) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -26,7 +34,7 @@ export function StrategyThreeTabShell({ command, contract, review, simplifiedLay
   const initial =
     tabFromQuery === "contract" || tabFromQuery === "review" || tabFromQuery === "command"
       ? (tabFromQuery as StrategyThreeTabId)
-      : "command";
+      : (initialTabWhenMissingQuery ?? "command");
   const [tab, setTab] = useState<StrategyThreeTabId>(initial);
 
   useEffect(() => {

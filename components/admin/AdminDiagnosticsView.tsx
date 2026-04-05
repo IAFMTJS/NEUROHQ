@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import Link from "next/link";
 import type { Json } from "@/types/database.types";
 
 type SectionProps = { title: string; children: ReactNode };
@@ -56,6 +57,10 @@ export function AdminDiagnosticsView({ payload }: { payload: Json }) {
   const behaviour = asRecord(root.behaviour_log);
   const missions = asRecord(root.missions);
   const uad = asRecord(root.user_analytics_daily);
+  const platformEv = asRecord(root.platform_events);
+  const missionOutcomes = asRecord(root.mission_outcome_events);
+  const taskEv = asRecord(root.task_events);
+  const playTasks = asRecord(root.play_tasks);
   const perUser = Array.isArray(root.per_user) ? (root.per_user as Row[]) : [];
 
   const since =
@@ -81,7 +86,11 @@ export function AdminDiagnosticsView({ payload }: { payload: Json }) {
         {users ? (
           <Section title="Gebruikers">
             <Stat label="Totaal accounts" value={int(users.total)} />
+            <Stat label="Met rol admin" value={int(users.admins)} />
             <Stat label="Met tijdzone ingesteld" value={int(users.with_timezone)} />
+            <Stat label="Nieuwe accounts (7 dagen)" value={int(users.signups_last_7d)} />
+            <Stat label="Nieuwe accounts in venster (30 d)" value={int(users.signups_last_30d)} />
+            <Stat label="Met push-subscription opgeslagen" value={int(users.with_push_subscription)} />
           </Section>
         ) : null}
 
@@ -157,6 +166,52 @@ export function AdminDiagnosticsView({ payload }: { payload: Json }) {
           <Section title="Dagelijkse analytics (user_analytics_daily)">
             <Stat label="Rijen in venster" value={int(uad.rows_last_30d)} />
             <Stat label="Unieke gebruikers" value={int(uad.distinct_users_last_30d)} />
+          </Section>
+        ) : null}
+
+        {platformEv ? (
+          <Section title="Platform-events">
+            <Stat label="Totaal rijen" value={int(platformEv.total)} />
+            <Stat label="Actief-vlag aan" value={int(platformEv.active_rows)} />
+            <Stat label="Live nu (zichtbaar in app)" value={int(platformEv.live_now)} />
+            <Stat label="Aangemaakt in venster" value={int(platformEv.created_last_30d)} />
+            <div className="col-span-full pt-1">
+              <Link
+                href="/admin/events"
+                className="text-xs font-medium text-[var(--accent-focus)] hover:underline"
+              >
+                Events beheren →
+              </Link>
+            </div>
+          </Section>
+        ) : null}
+
+        {missionOutcomes ? (
+          <Section title="Kwartier / uitkomsten (mission_outcome_events)">
+            <Stat label="Events in venster" value={int(missionOutcomes.rows_last_30d)} />
+            <Stat label="Unieke gebruikers" value={int(missionOutcomes.distinct_users_last_30d)} />
+            <Stat label="Complete" value={int(missionOutcomes.complete_last_30d)} />
+            <Stat label="Skip" value={int(missionOutcomes.skip_last_30d)} />
+            <Stat label="Verplaatsen" value={int(missionOutcomes.reschedule_last_30d)} />
+            <Stat label="Verwijderen" value={int(missionOutcomes.delete_last_30d)} />
+          </Section>
+        ) : null}
+
+        {taskEv ? (
+          <Section title="Taak-events (task_events)">
+            <Stat label="Events in venster" value={int(taskEv.rows_last_30d)} />
+            <Stat label="Unieke gebruikers" value={int(taskEv.distinct_users_last_30d)} />
+            <Stat label="Start" value={int(taskEv.start_last_30d)} />
+            <Stat label="Complete" value={int(taskEv.complete_last_30d)} />
+            <Stat label="Abandon" value={int(taskEv.abandon_last_30d)} />
+          </Section>
+        ) : null}
+
+        {playTasks ? (
+          <Section title="Play-deck (open taken)">
+            <Stat label="Fun" value={int(playTasks.open_fun)} />
+            <Stat label="Unwind" value={int(playTasks.open_unwind)} />
+            <Stat label="Challenge" value={int(playTasks.open_challenge)} />
           </Section>
         ) : null}
       </div>

@@ -5,8 +5,10 @@ import { getStrategyPacingHints } from "@/app/actions/strategy-engine-pacing";
 import {
   calendarQuarterBounds,
   normalizeStrategyEngineParams,
+  resolveEffectiveQuarterlySavingsTargetCents,
   type StrategyEngineParams,
 } from "@/lib/strategy/engine-params";
+import { getStrategyBudgetSavingsContext } from "@/app/actions/strategy-budget-savings-context";
 import {
   computeQuarterEngine,
   quarterEngineRuleLinesNl,
@@ -100,18 +102,25 @@ export async function getQuarterEngineSnapshot(): Promise<QuarterEngineSnapshot 
   } = await supabase.auth.getUser();
   if (!user) return null;
 
-  const { data: row } = await supabase
-    .from("strategy_focus")
-    .select("id, deadline, engine_params, pressure_boost_after_deadline")
-    .eq("user_id", user.id)
-    .eq("is_active", true)
-    .order("created_at", { ascending: false })
-    .limit(1)
-    .maybeSingle();
+  const [{ data: row }, budgetCtx] = await Promise.all([
+    supabase
+      .from("strategy_focus")
+      .select("id, deadline, engine_params, pressure_boost_after_deadline")
+      .eq("user_id", user.id)
+      .eq("is_active", true)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle(),
+    getStrategyBudgetSavingsContext(),
+  ]);
 
   if (!row) return null;
 
   const engineParams = normalizeStrategyEngineParams((row as { engine_params?: unknown }).engine_params);
+  const effectiveSavingsTargetCents = resolveEffectiveQuarterlySavingsTargetCents(
+    engineParams.savings.quarterlyMustSaveCents,
+    budgetCtx
+  );
   const today = todayDateString();
   const { start, end } = calendarQuarterBounds(today);
   const [pacing, protocolQuarterStats] = await Promise.all([
@@ -151,7 +160,7 @@ export async function getQuarterEngineSnapshot(): Promise<QuarterEngineSnapshot 
   const inputs = {
     growthTargetPct,
     growthActualPct,
-    savingsTargetCents: engineParams.savings.quarterlyMustSaveCents,
+    savingsTargetCents: effectiveSavingsTargetCents,
     savedThisQuarterCents: pacing?.savedThisQuarterCents ?? null,
     xpTargetEarned: engineParams.xp.quarterlyTargetXpEarned,
     xpEarnedThisQuarter: xpEarned,

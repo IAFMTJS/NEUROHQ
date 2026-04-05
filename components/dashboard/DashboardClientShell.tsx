@@ -229,7 +229,7 @@ export function DashboardClientShell() {
     loadPct: 50,
     budgetRemainingCents: null,
     currency: "€",
-    xp: { total_xp: 0, level: 1 },
+    xp: { total_xp: 0, level: 0 },
     economy: { discipline_points: 0, focus_credits: 0, momentum_boosters: 0 },
     actionsCount: 0,
     topQuickActions: [],

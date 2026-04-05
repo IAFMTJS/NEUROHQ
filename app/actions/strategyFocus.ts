@@ -16,6 +16,7 @@ import {
   isQuarterContractComplete,
   type StrategyEngineParams,
 } from "@/lib/strategy/engine-params";
+import { getStrategyBudgetSavingsContext } from "@/app/actions/strategy-budget-savings-context";
 import type { Json } from "@/types/database.types";
 import {
   parseWeeklyReviewPayload,
@@ -666,7 +667,8 @@ export async function getStrategyAppReviewLockState(): Promise<{ locked: boolean
   const startDate = (row as { start_date: string }).start_date;
   const engineParams = (row as { engine_params?: unknown }).engine_params;
 
-  if (!isQuarterContractComplete(engineParams)) return { locked: false };
+  const budgetCtx = await getStrategyBudgetSavingsContext();
+  if (!isQuarterContractComplete(engineParams, budgetCtx)) return { locked: false };
 
   const status = await getStrategyReviewStatus(strategyId, startDate);
   if (!status.reviewDue) return { locked: false };
