@@ -27,6 +27,36 @@ const MAX_PICK_GENERATION = 2;
 /** Time between each card starting its flip (overlapping flips = dealer-style cadence). */
 const REVEAL_STAGGER_MS = 300;
 
+const PLAY_DECK_GEN_STORAGE_PREFIX = "neurohq-play-deck-pick-gen";
+
+function playDeckGenStorageKey(dateStr: string) {
+  return `${PLAY_DECK_GEN_STORAGE_PREFIX}:${dateStr}`;
+}
+
+/** Persisted per calendar day so sluiten/heropenen (of refresh) de schuif-teller niet reset. */
+function readPlayDeckPickGeneration(dateStr: string): number {
+  if (typeof window === "undefined") return 0;
+  try {
+    const raw = localStorage.getItem(playDeckGenStorageKey(dateStr));
+    if (raw == null) return 0;
+    const n = parseInt(raw, 10);
+    if (!Number.isFinite(n)) return 0;
+    return Math.max(0, Math.min(MAX_PICK_GENERATION, n));
+  } catch {
+    return 0;
+  }
+}
+
+function writePlayDeckPickGeneration(dateStr: string, gen: number) {
+  if (typeof window === "undefined") return;
+  try {
+    const clamped = Math.max(0, Math.min(MAX_PICK_GENERATION, gen));
+    localStorage.setItem(playDeckGenStorageKey(dateStr), String(clamped));
+  } catch {
+    // quota / private mode
+  }
+}
+
 export function PlayDeckModal({ open, onClose, dateStr }: Props) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
@@ -55,6 +85,9 @@ export function PlayDeckModal({ open, onClose, dateStr }: Props) {
         });
         setSuggestions(s);
         setFullDeckUnlocked(full);
+        const clamped = Math.max(0, Math.min(MAX_PICK_GENERATION, generation));
+        setPickGeneration(clamped);
+        writePlayDeckPickGeneration(dateStr, clamped);
       } finally {
         setLoading(false);
       }
@@ -64,9 +97,9 @@ export function PlayDeckModal({ open, onClose, dateStr }: Props) {
 
   useEffect(() => {
     if (!open) return;
-    setPickGeneration(0);
-    void loadSuggestions(0);
-  }, [open, loadSuggestions]);
+    const stored = readPlayDeckPickGeneration(dateStr);
+    void loadSuggestions(stored);
+  }, [open, dateStr, loadSuggestions]);
 
   useEffect(() => {
     if (!open || loading || suggestions.length === 0) {
@@ -89,9 +122,7 @@ export function PlayDeckModal({ open, onClose, dateStr }: Props) {
 
   function reshuffle() {
     if (pickGeneration >= MAX_PICK_GENERATION) return;
-    const next = pickGeneration + 1;
-    setPickGeneration(next);
-    void loadSuggestions(next);
+    void loadSuggestions(pickGeneration + 1);
   }
 
   function unlockFullDeck() {
@@ -103,7 +134,6 @@ export function PlayDeckModal({ open, onClose, dateStr }: Props) {
       }
       neuroToast.success("Volledig play deck ontgrendeld.");
       setFullDeckUnlocked(true);
-      setPickGeneration(0);
       await loadSuggestions(0);
       router.refresh();
     });
@@ -132,6 +162,28 @@ export function PlayDeckModal({ open, onClose, dateStr }: Props) {
     });
   }
 
+  function addSinglePick(id: string) {
+    startTransition(async () => {
+      const r = await addPlayDeckTasksForToday({ dateStr, templateIds: [id] });
+      if (r.errors.length && r.created === 0) {
+        neuroToast.error(r.errors[0] ?? "Kon niet toevoegen.");
+        return;
+      }
+      if (r.errors.length) {
+        neuroToast.warning(`${r.created} toegevoegd.`, { description: r.errors.join(" ") });
+      } else {
+        neuroToast.success("Play-missie toegevoegd.");
+      }
+      void refreshMergedSnapshotFromNetwork();
+      router.refresh();
+      setSuggestions((prev) => {
+        const next = prev.filter((s) => s.id !== id);
+        if (next.length === 0) queueMicrotask(() => onClose());
+        return next;
+      });
+    });
+  }
+
   const reshufflesLeft = MAX_PICK_GENERATION - pickGeneration;
   const revealDone = !loading && suggestions.length > 0 && revealStep >= suggestions.length;
 
@@ -140,13 +192,13 @@ export function PlayDeckModal({ open, onClose, dateStr }: Props) {
       <div className="[color-scheme:dark] space-y-4">
         {fullDeckUnlocked ? (
           <p className="text-sm leading-relaxed text-[var(--text-muted)]">
-            Het deck kiest drie ideeën voor vandaag — plezier, ontspanning of een lichte challenge. Niet bedoeld als coaching.{" "}
+            Het deck kiest drie ideeën voor vandaag — plezier, ontspanning of een lichte challenge. Voeg alles toe, of alleen één kaart. Niet bedoeld als coaching.{" "}
             {reshufflesLeft > 0 ? (
               <>
                 Nog <span className="text-[var(--text-secondary)]">{reshufflesLeft}</span> keer opnieuw schudden mogelijk.{" "}
               </>
             ) : (
-              <>Geen schuifbeurten meer in dit venster. </>
+              <>Geen schuifbeurten meer vandaag. </>
             )}
             <Link href={profileEngineHref("play")} className="text-[var(--accent-focus)] underline-offset-2 hover:underline">
               Play-profiel
@@ -157,7 +209,7 @@ export function PlayDeckModal({ open, onClose, dateStr }: Props) {
           <div className="rounded-xl border border-[rgba(var(--mode-rgb),0.2)] bg-[var(--bg-primary)]/30 p-3">
             <p className="text-sm font-medium text-[var(--text-primary)]">Start simpel — drie ideeën</p>
             <p className="mt-1 text-sm leading-relaxed text-[var(--text-muted)]">
-              We trekken drie kaarten uit een compact deck.{" "}
+              We trekken drie kaarten uit een compact deck — je mag er ook één kiezen.{" "}
               <span className="text-[var(--text-secondary)]">Wil je betere matches?</span> Voeg iets toe aan je{" "}
               <Link href={profileEngineHref("play")} className="font-medium text-[var(--accent-focus)] underline-offset-2 hover:underline">
                 Play-profiel
@@ -201,6 +253,16 @@ export function PlayDeckModal({ open, onClose, dateStr }: Props) {
                           <span className="text-[10px] text-[var(--text-muted)]">~{4 + s.energy} energie</span>
                         </div>
                         <p className="mt-2 text-sm font-medium text-[var(--text-primary)]">{s.title}</p>
+                        {shown ? (
+                          <button
+                            type="button"
+                            disabled={pending}
+                            onClick={() => addSinglePick(s.id)}
+                            className="mt-3 w-full rounded-lg border border-[var(--card-border)] bg-[var(--bg-elevated)]/35 px-3 py-2 text-center text-xs font-semibold text-[var(--text-secondary)] hover:border-[rgba(var(--mode-rgb),0.35)] hover:bg-[rgba(var(--mode-rgb-deep),0.12)] hover:text-[var(--accent-focus)] disabled:opacity-50"
+                          >
+                            Alleen deze toevoegen
+                          </button>
+                        ) : null}
                       </div>
                     </div>
                   </div>
@@ -240,7 +302,7 @@ export function PlayDeckModal({ open, onClose, dateStr }: Props) {
             type="button"
             disabled={loading || reshufflesLeft <= 0 || !revealDone}
             onClick={reshuffle}
-            title={reshufflesLeft <= 0 ? "Geen schuifbeurten meer vandaag in dit venster" : undefined}
+            title={reshufflesLeft <= 0 ? "Geen schuifbeurten meer vandaag voor dit deck" : undefined}
             className="rounded-lg border border-[var(--card-border)] px-3 py-2 text-xs font-semibold text-[var(--text-primary)] hover:bg-[var(--bg-hover)]/40 disabled:opacity-50"
           >
             Opnieuw schudden ({reshufflesLeft} over)
@@ -251,7 +313,7 @@ export function PlayDeckModal({ open, onClose, dateStr }: Props) {
             onClick={addAllPicks}
             className="rounded-lg border border-[rgba(var(--mode-rgb),0.35)] bg-[rgba(var(--mode-rgb-deep),0.2)] px-3 py-2 text-xs font-semibold text-[var(--accent-focus)] disabled:opacity-50"
           >
-            {pending ? "Bezig…" : `Alle ${suggestions.length} toevoegen aan vandaag`}
+            {pending ? "Bezig…" : suggestions.length === 1 ? "Toevoegen aan vandaag" : `Alle ${suggestions.length} toevoegen aan vandaag`}
           </button>
           <button
             type="button"

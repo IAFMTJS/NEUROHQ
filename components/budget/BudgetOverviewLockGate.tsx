@@ -31,7 +31,7 @@ export function BudgetOverviewLockGate({
   return (
     <div className="space-y-2">
       <div
-        className="sticky top-0 z-20 flex flex-wrap items-center justify-between gap-2 rounded-lg border border-[rgba(var(--mode-rgb),0.32)] bg-[rgba(var(--mode-rgb-deep),0.28)] px-3 py-2 text-sm text-[var(--text-primary)] shadow-[0_0_20px_rgba(var(--mode-rgb),0.1)] backdrop-blur-sm"
+        className="sticky top-0 z-20 flex flex-wrap items-center justify-between gap-2 rounded-xl border border-[rgba(var(--mode-rgb),0.28)] bg-[rgba(6,18,30,0.55)] px-3 py-2 text-sm text-[var(--text-primary)] shadow-[inset_0_1px_0_rgba(255,255,255,0.04),0_4px_24px_rgba(var(--mode-rgb),0.12)] backdrop-blur-md"
         role="status"
         aria-live="polite"
       >
@@ -50,7 +50,7 @@ export function BudgetOverviewLockGate({
           {children}
         </div>
         <div
-          className="pointer-events-auto absolute inset-0 z-[5] flex min-h-[180px] items-start justify-center rounded-xl border-2 border-dashed border-[rgba(var(--mode-rgb),0.38)] bg-[var(--bg-primary)]/82 pt-6 text-center shadow-[0_0_32px_rgba(var(--mode-rgb),0.14)] backdrop-blur-sm sm:pt-10"
+          className="pointer-events-auto absolute inset-0 z-[5] flex min-h-[180px] items-start justify-center rounded-xl border-2 border-dashed border-[rgba(var(--mode-rgb),0.4)] bg-[rgba(8,26,42,0.88)] pt-6 text-center shadow-[inset_0_1px_0_rgba(255,255,255,0.05),0_0_40px_rgba(var(--mode-rgb),0.15)] backdrop-blur-md sm:pt-10"
           role="presentation"
         >
           <div className="max-w-sm space-y-2 px-4">

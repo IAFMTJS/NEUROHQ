@@ -39,6 +39,8 @@ export function DeferredToaster() {
       }}
       toastOptions={{
         className: "hq-toast",
+        /* Sonner default is 4s; timers keep running when focus moves to inputs elsewhere on the page. */
+        duration: 16_000,
       }}
     />
   );

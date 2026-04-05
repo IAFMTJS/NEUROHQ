@@ -72,7 +72,7 @@ export const HELP_QUICK_START_STEPS: HelpStep[] = [
 export const HELP_QUICK_LINKS: HelpLink[] = [
   { label: "HQ", href: "/dashboard" },
   { label: "Missions", href: "/tasks" },
-  { label: "Growth", href: "/learning?tab=command" },
+  { label: "Growth", href: "/learning" },
   { label: "Strategy", href: "/strategy?tab=overview" },
   { label: "Insights", href: "/profile?view=insights&tab=overview" },
   { label: "Budget", href: "/budget" },
@@ -187,16 +187,13 @@ export const HELP_SECTIONS: HelpSection[] = [
     title: "Growth command center",
     group: "systems",
     summary:
-      "Growth gebruikt echte URL-tabs en diepere protocolinhoud met execution flows, reflectieblokken en missie-commit.",
+      "Growth is je commandocentrum voor protocolfocus, voortgang en koppeling met missies en Strategy-tempo.",
     highlights: [
-      "Tabs zijn deeplinkable met ?tab= (hash-links worden ondersteund).",
+      "Kies een focusprotocol en zie week-voortgang in één overzicht.",
       "Protocol viewer toont micro/meso/macro uitvoering en quality gates.",
       "Protocol missions bevatten rijkere notes/tags voor praktische uitvoering.",
     ],
-    seeAlso: [
-      { label: "Growth command", href: "/learning?tab=command" },
-      { label: "Protocol systeem", href: "/learning?tab=system" },
-    ],
+    seeAlso: [{ label: "Open Growth", href: "/learning" }],
   },
   {
     id: "strategy",
@@ -300,7 +297,7 @@ export const HELP_SECTIONS: HelpSection[] = [
     highlights: [
       "/dashboard -> HQ",
       "/tasks -> Missions",
-      "/learning?tab=command -> Growth command center",
+      "/learning -> Growth command center",
       "/strategy?tab=overview -> Strategy overview",
       "/profile?view=insights&tab=overview -> Insights",
       "/settings -> Settings",

@@ -15,6 +15,15 @@ import { AddSavingsGoalForm } from "@/components/AddSavingsGoalForm";
 import { BudgetAchievementsCard } from "@/components/budget/BudgetAchievementsCard";
 import { PaydayCard } from "@/components/budget/PaydayCard";
 import { LastMonthExpensesTrigger } from "@/components/budget/LastMonthExpensesTrigger";
+import {
+  budgetDeckFooterDividerClass,
+  budgetDeckHeaderDividerClass,
+  budgetDeckPrimarySavingsRowClass,
+  budgetDeckRowButtonClass,
+  budgetDeckSectionKickerClass,
+  budgetDeckShellClass,
+  budgetDeckTileClass,
+} from "@/lib/budget/budget-deck-chrome";
 
 type EntryRow = {
   id: string;
@@ -126,11 +135,7 @@ function ExecuteTile({
       type="button"
       onClick={onClick}
       disabled={disabled}
-      className={`relative flex min-h-[5.5rem] flex-col items-center justify-center gap-1 rounded-xl border px-2 py-3 text-center transition-colors sm:min-h-[6rem] ${
-        disabled
-          ? "cursor-not-allowed border-[var(--card-border)]/40 bg-[var(--bg-primary)]/20 opacity-50"
-          : "border-[var(--card-border)] bg-[var(--bg-elevated)]/50 hover:border-[rgba(var(--mode-rgb),0.35)] hover:bg-[var(--bg-elevated)]/80 focus:outline-none focus-visible:ring-2 focus-visible:ring-[rgba(var(--mode-rgb),0.45)] focus-visible:ring-offset-0"
-      }`}
+      className={budgetDeckTileClass(disabled)}
     >
       {badge != null && badge > 0 ? (
         <span className="absolute right-1.5 top-1.5 min-w-[1.25rem] rounded-full bg-[rgba(var(--mode-rgb),0.25)] px-1.5 py-0.5 text-[10px] font-bold text-[var(--text-primary)]">
@@ -317,19 +322,19 @@ export function BudgetExecuteHub({
   return (
     <section
       id="entries-frozen"
-      className="card-simple scroll-mt-24 overflow-hidden p-0"
+      className={`${budgetDeckShellClass} scroll-mt-24 p-0`}
       aria-label="Sparen en boeken — acties"
       data-tutorial="budget-goals"
     >
-      <div className="border-b border-[var(--card-border)] px-4 py-3 md:px-5">
-        <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-emerald-200">Sparen & boeken</p>
+      <div className={`${budgetDeckHeaderDividerClass} px-4 py-3 md:px-5`}>
+        <p className={budgetDeckSectionKickerClass}>Sparen & boeken</p>
         <p className="mt-1 text-xs text-[var(--text-muted)]">
           Sparen eerst (pay yourself first), daarna uitgaven bijwerken. Tik op een rij of tegel voor het volledige paneel.
         </p>
         <button
           type="button"
           onClick={openGoalsToast}
-          className="relative mt-3 flex w-full items-center justify-between gap-3 rounded-xl border border-emerald-400/35 bg-[linear-gradient(165deg,rgba(6,40,28,0.55),rgba(15,23,42,0.75))] px-3 py-3 text-left shadow-[0_0_24px_rgba(16,185,129,0.12)] transition-colors hover:border-emerald-400/55 hover:bg-[linear-gradient(165deg,rgba(8,50,32,0.65),rgba(15,23,42,0.82))] focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400/50"
+          className={budgetDeckPrimarySavingsRowClass}
         >
           {goals.length > 0 ? (
             <span className="absolute right-3 top-2 rounded-full bg-emerald-500/30 px-2 py-0.5 text-[10px] font-bold text-emerald-50">
@@ -347,11 +352,7 @@ export function BudgetExecuteHub({
           </span>
           <span className="shrink-0 text-xs font-semibold text-emerald-300">Open →</span>
         </button>
-        <button
-          type="button"
-          onClick={openPaydayToast}
-          className="mt-2 flex w-full items-center justify-between gap-3 rounded-xl border border-[var(--card-border)] bg-[var(--bg-primary)]/35 px-3 py-2.5 text-left transition-colors hover:border-[rgba(var(--mode-rgb),0.3)] hover:bg-[var(--bg-primary)]/50 focus:outline-none focus-visible:ring-2 focus-visible:ring-[rgba(var(--mode-rgb),0.45)]"
-        >
+        <button type="button" onClick={openPaydayToast} className={`${budgetDeckRowButtonClass} mt-2`}>
           <span className="text-2xl" aria-hidden>
             📅
           </span>
@@ -382,7 +383,7 @@ export function BudgetExecuteHub({
         />
       </div>
       {isPaydayCycle && prevPeriodLabel ? (
-        <div className="border-t border-[var(--card-border)]/70 px-4 py-3 md:px-5">
+        <div className={`${budgetDeckFooterDividerClass} px-4 py-3 md:px-5`}>
           <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--text-muted)]">Archief</p>
           <p className="mt-1 text-xs text-[var(--text-muted)]">Periode vóór huidige cyclus: {prevPeriodLabel}</p>
           <div className="mt-2">
@@ -390,7 +391,7 @@ export function BudgetExecuteHub({
           </div>
         </div>
       ) : null}
-      <div className="border-t border-[var(--card-border)]/70 px-4 py-3 text-center md:px-5">
+      <div className={`${budgetDeckFooterDividerClass} px-4 py-3 text-center md:px-5`}>
         <Link href={executeEntriesHref} className="text-xs font-medium text-[var(--accent-focus)] hover:underline">
           Spring naar #entries-frozen
         </Link>

@@ -2,9 +2,9 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 import { tasksDeckTabClass } from "@/components/missions/tasksDeckTabClass";
 import { DashboardCommandDeckFrame } from "@/components/layout/DashboardCommandDeckFrame";
-import { profileEngineHref, profileHomeHref, profileInsightsHref } from "@/lib/profile-routes";
+import { profileEngineHref, profileHomeHref, profileInsightsHref, profileSpecialEventsHref } from "@/lib/profile-routes";
 
-export type ProfileDeckMain = "home" | "engine" | "insights";
+export type ProfileDeckMain = "home" | "engine" | "insights" | "special";
 
 type Props = {
   main: ProfileDeckMain;
@@ -16,7 +16,8 @@ type Props = {
  * + segmented Profiel / Engine / Insights rail.
  */
 export function ProfileCommandDeckLayout({ main, children }: Props) {
-  const deckTitle = main === "engine" ? "Engine" : main === "insights" ? "Insights" : "Profiel";
+  const deckTitle =
+    main === "engine" ? "Engine" : main === "insights" ? "Insights" : main === "special" ? "Special events" : "Profiel";
 
   return (
     <div className="profile-page-root container page page-wide dashboard-cinematic pb-10 pt-4 sm:pt-5">
@@ -49,6 +50,13 @@ export function ProfileCommandDeckLayout({ main, children }: Props) {
                 aria-current={main === "insights" ? "page" : undefined}
               >
                 Insights
+              </Link>
+              <Link
+                href={profileSpecialEventsHref()}
+                className={tasksDeckTabClass(main === "special")}
+                aria-current={main === "special" ? "page" : undefined}
+              >
+                Events
               </Link>
             </div>
           </div>

@@ -8,17 +8,11 @@ import { PushCopyDedupe, parsePushCopyHistory } from "@/lib/push-copy-dedupe";
 import type { PersonalityMode } from "@/lib/behavioral-notifications";
 import { getLocalDateHour, isInQuietHours } from "@/lib/utils/timezone";
 import { isHighSensoryDayForUser } from "@/lib/mode-admin";
-import {
-  isAppEmailConfigured,
-  sendReminderToUser,
-  wrapReminderHtml,
-} from "@/lib/email";
-import { buildWeeklyLearningPushPayload } from "@/lib/daily-email-content";
 import { runStrategyGrowthWeeklyCron } from "@/lib/strategy-growth-cron";
 
 /**
- * Weekly (e.g. Monday 09:00 UTC): reality reports, learning/savings pushes, and strategy/growth nudges
- * (check-in cadence, incomplete quarter, growth protocol, learning idle — same logic as former daily strategy-growth).
+ * Weekly (e.g. Monday 09:00 UTC): reality reports, savings alerts, growth-protocol + learning-idle nudges (web push).
+ * Learning-under-target reminders run Thursday via `/api/cron/weekly-learning`. Strategy check-in / quarter / monthly tip: `/api/cron/monthly`.
  */
 export async function GET(request: Request) {
   const authHeader = request.headers.get("authorization");
@@ -43,31 +37,18 @@ export async function GET(request: Request) {
   if (userIdFilter) usersQuery = usersQuery.eq("id", userIdFilter);
   const { data: users } = await usersQuery;
   if (!users?.length) {
-    return NextResponse.json({ ok: true, job: "weekly", reports: 0, learningReminderSent: 0 });
+    return NextResponse.json({ ok: true, job: "weekly", reports: 0, savingsAlertSent: 0 });
   }
 
-  const prefsByUser = new Map<
-    string,
-    {
-      emailRemindersEnabled: boolean;
-      pushRemindersEnabled: boolean;
-      pushWeeklyLearningEnabled: boolean;
-      personalityMode: PersonalityMode;
-    }
-  >();
+  const prefsByUser = new Map<string, { personalityMode: PersonalityMode }>();
   const pushCopyHistoryByUser = new Map<string, ReturnType<typeof parsePushCopyHistory>>();
   const { data: prefs, error: prefsError } = await supabase
     .from("user_preferences")
-    .select(
-      "user_id, email_reminders_enabled, push_reminders_enabled, push_weekly_learning_enabled, push_personality_mode, push_copy_history"
-    );
+    .select("user_id, push_personality_mode, push_copy_history");
   if (!prefsError && prefs?.length) {
     for (const pref of prefs) {
       const mode = (pref as { push_personality_mode?: PersonalityMode | null }).push_personality_mode ?? "auto";
       prefsByUser.set(pref.user_id, {
-        emailRemindersEnabled: pref.email_reminders_enabled ?? true,
-        pushRemindersEnabled: pref.push_reminders_enabled ?? true,
-        pushWeeklyLearningEnabled: pref.push_weekly_learning_enabled ?? true,
         personalityMode: mode,
       });
       pushCopyHistoryByUser.set(
@@ -83,14 +64,9 @@ export async function GET(request: Request) {
   const todayStr = today.toISOString().slice(0, 10);
 
   let stored = 0;
-  let learningReminderSent = 0;
-  let learningReminderEmailSent = 0;
   let savingsAlertSent = 0;
   for (const { id: userId, timezone, push_quiet_hours_start, push_quiet_hours_end } of users) {
     const userPrefs = prefsByUser.get(userId) ?? {
-      emailRemindersEnabled: true,
-      pushRemindersEnabled: true,
-      pushWeeklyLearningEnabled: true,
       personalityMode: "auto" as PersonalityMode,
     };
     const localDateForDedupe =
@@ -107,51 +83,6 @@ export async function GET(request: Request) {
         { onConflict: "user_id,week_start" }
       );
       if (!error) stored++;
-
-      if (
-        process.env.VAPID_PRIVATE_KEY &&
-        process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY &&
-        payload.learningMinutes < payload.learningTarget &&
-        userPrefs.pushRemindersEnabled &&
-        userPrefs.pushWeeklyLearningEnabled
-      ) {
-        // HIGH_SENSORY: skip non-critical weekly learning push on high sensory days
-        const local = timezone
-          ? getLocalDateHour(timezone as string)
-          : { date: todayStr, hour: today.getUTCHours() };
-        const localDate = local.date;
-        const quietStart = push_quiet_hours_start ? String(push_quiet_hours_start).slice(0, 5) : null;
-        const quietEnd = push_quiet_hours_end ? String(push_quiet_hours_end).slice(0, 5) : null;
-        const highSensory = await isHighSensoryDayForUser(supabase, userId, localDate);
-        if (!highSensory && !isInQuietHours(local.hour, quietStart, quietEnd)) {
-          try {
-            const basePayload = buildWeeklyLearningPushPayload(payload.learningMinutes, payload.learningTarget);
-            const pushPayload = applyPersonalityToPayload(
-              basePayload,
-              userPrefs.personalityMode,
-              "weekly_learning",
-              `${userId}:${localDate}`,
-              { dedupe: pushDedupe }
-            );
-            const ok = await sendPushToUser(supabase, userId, pushPayload);
-            if (ok) learningReminderSent++;
-          } catch {
-            // skip
-          }
-          if (userPrefs.emailRemindersEnabled && isAppEmailConfigured()) {
-            try {
-              const body = `Last week you logged <strong>${payload.learningMinutes} min</strong> (target 60). Log some learning this week to stay on track.`;
-              const sent = await sendReminderToUser(supabase, userId, {
-                subject: "NEUROHQ — Learning reminder",
-                html: wrapReminderHtml(body, "Learning reminder"),
-              });
-              if (sent) learningReminderEmailSent++;
-            } catch {
-              // skip
-            }
-          }
-        }
-      }
 
       const { data: goals } = await supabase
         .from("savings_goals")
@@ -230,8 +161,6 @@ export async function GET(request: Request) {
     weekEnd,
     reports: stored,
     users: users.length,
-    learningReminderSent,
-    learningReminderEmailSent,
     savingsAlertSent,
     strategyGrowthSent,
     strategyGrowthSkipped,

@@ -27,7 +27,7 @@ export function BudgetSyncStatus({ historyMode = false, suppressChrome = false }
   if (suppressChrome || historyMode || !pending) return null;
 
   return (
-    <div className="rounded-full border border-[var(--card-border)] bg-[var(--bg-surface)]/60 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.12em] text-[var(--text-muted)]">
+    <div className="rounded-full border border-[rgba(var(--mode-rgb),0.2)] bg-[rgba(6,18,30,0.45)] px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.12em] text-[var(--text-muted)] shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
       {pending.synced ? "Synced" : "Pending sync"}
     </div>
   );

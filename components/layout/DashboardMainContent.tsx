@@ -3,6 +3,7 @@
 import { usePathname } from "next/navigation";
 import { TimezoneSyncBanner } from "@/components/TimezoneSyncBanner";
 import { PlatformEventsBanner } from "@/components/platform/PlatformEventsBanner";
+import { PlatformGamesBanner } from "@/components/platform/PlatformGamesBanner";
 import { AcceptanceGateLayer } from "@/components/acceptance/AcceptanceGateLayer";
 import { PwaStatusChip } from "@/components/PwaStatusChip";
 import type { ReactNode } from "react";
@@ -46,6 +47,7 @@ export function DashboardMainContent({ children }: Props) {
       tabIndex={-1}
     >
       <TimezoneSyncBanner />
+      <PlatformGamesBanner />
       <PlatformEventsBanner />
       <PwaStatusChip />
       <AcceptanceGateLayer />

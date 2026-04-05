@@ -11,12 +11,7 @@ import {
 } from "@/lib/utils/timezone";
 import { isHighSensoryDayForUser } from "@/lib/mode-admin";
 import { getQuoteByDayNumber, prepareQuoteForPersonalityPush } from "@/lib/quotes";
-import { isAppEmailConfigured, sendReminderToUser } from "@/lib/email";
-import {
-  getEveningEmailData,
-  buildEveningEmailHtml,
-  buildEveningPushPayload,
-} from "@/lib/daily-email-content";
+import { getEveningEmailData, buildEveningPushPayload } from "@/lib/daily-email-content";
 import {
   POSITIVE_ACHIEVEMENT_TRIGGERS,
   buildBehavioralNotificationForContext,
@@ -35,6 +30,7 @@ import {
   deleteDailyPushClaim,
   tryClaimDailyPushSend,
 } from "@/lib/push-daily-claim";
+import { purgeQuestUserProgressAfterDays } from "@/lib/quests/cleanup";
 
 /**
  * Hourly scheduler: on Vercel Hobby, invoke via GitHub Actions (`.github/workflows/cron-hourly.yml`), not `vercel.json`
@@ -42,15 +38,14 @@ import {
  * All users are included; if `timezone` is null, local date/hour use UTC (quote, rollover, brain window, evening).
  * - 00:00 local: task rollover.
  * - From quote hour (default 08:00): daily quote push (catch-up same local day); 08:00: calendar heads-up for today.
- * - 20:00 local: evening email if email_reminders_enabled; 20:00–23:59: evening push + achievement loop.
+ * - 20:00–23:59 local: evening push + achievement loop (no separate evening email).
  * - 08:00–12:59 local: brain-status missing push (first eligible hour ≥ 08, outside quiet hours, max once/day).
  *
  * Still invoked every UTC hour (GitHub Actions) so each timezone can hit local midnight for rollover.
  * When no user is in a “heavy job” local window, we skip rollover/quote/brain/evening work and only run
  * the sliding calendar reminder + pending user alerts — less CPU per invocation.
  *
- * Strategy check-in and other strategy/growth nudges are not here; they run from `/api/cron/weekly` and
- * `/api/cron/monthly` (GitHub Actions), not on the hourly schedule.
+ * Strategy/growth nudges: weekly pass (`/api/cron/weekly`), monthly pass (`/api/cron/monthly`), not hourly.
  */
 const ALLOWED_FORCE_HOURS = [0, 8, 10, 11, 12, 20] as const;
 
@@ -140,10 +135,6 @@ function userNeedsFullHourlyCycle(
     hour <= BRAIN_STATUS_REMINDER_MAX_LOCAL_HOUR &&
     !inQuiet
   ) {
-    return true;
-  }
-
-  if (hour === 20 && userPrefs.emailRemindersEnabled && isAppEmailConfigured()) {
     return true;
   }
 
@@ -357,6 +348,14 @@ export async function GET(request: Request) {
       : undefined;
 
   const supabase = createAdminClient();
+
+  let questProgressPurged = 0;
+  try {
+    questProgressPurged = await purgeQuestUserProgressAfterDays(supabase, 12);
+  } catch (e) {
+    console.error("hourly cron: quest progress purge failed", e);
+  }
+
   let usersQuery = supabase
     .from("users")
     .select("id, timezone, last_rollover_date, push_quiet_hours_start, push_quiet_hours_end, push_quote_enabled, push_quote_time, push_subscription_json");
@@ -400,9 +399,6 @@ export async function GET(request: Request) {
 
   let rolled = 0;
   let quoteSent = 0;
-  let morningEmailSent = 0;
-  let eveningEmailSent = 0;
-  let morningPushSent = 0;
   let eveningPushSent = 0;
   let brainStatusRemindersSent = 0;
   let calendarReminderSent = 0;
@@ -742,23 +738,6 @@ export async function GET(request: Request) {
         }
       }
     }
-    if (hour === 20 && userPrefs.emailRemindersEnabled && isAppEmailConfigured()) {
-      const highSensory = await isHighSensoryDayForUser(supabase, u.id, todayStr);
-      if (!highSensory) {
-        try {
-          const currentUserId = u.id;
-          const data = await getEveningEmailData(supabase, currentUserId, todayStr, appToday);
-          const html = buildEveningEmailHtml(data);
-          const sent = await sendReminderToUser(supabase, currentUserId, {
-            subject: "NEUROHQ — Evening check-in",
-            html,
-          });
-          if (sent) eveningEmailSent++;
-        } catch {
-          // skip
-        }
-      }
-    }
     if (
       hour >= 20 &&
       hour <= 23 &&
@@ -974,12 +953,12 @@ export async function GET(request: Request) {
     ...(userIdFilter && { userId: userIdFilter }),
     rolled,
     quoteSent,
-    eveningEmailSent,
     eveningPushSent,
     brainStatusRemindersSent,
     calendarReminderSent,
     achievementPushSent,
     alertPushSent,
+    questProgressPurged,
     usersChecked: users?.length ?? 0,
     runFullCycle,
   });

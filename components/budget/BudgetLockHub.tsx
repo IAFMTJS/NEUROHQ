@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef } from "react";
 import { toast } from "sonner";
 import { BudgetLockControlCard } from "@/components/budget/BudgetLockControlCard";
+import { budgetDeckSectionKickerClass, budgetDeckShellClass, budgetDeckTileClass } from "@/lib/budget/budget-deck-chrome";
 
 export type BudgetLockHubProps = {
   historyMode: boolean;
@@ -17,12 +18,6 @@ const LOCK_TOAST_ID = "budget-lock-flyout";
 
 const toastShellWide =
   "relative w-[min(100vw-2rem,500px)] max-h-[min(88vh,680px)] overflow-y-auto overflow-x-hidden rounded-[var(--hq-card-radius,18px)] border border-[rgba(var(--mode-rgb),0.12)] bg-[linear-gradient(165deg,rgba(var(--mode-rgb-deep),0.42),rgba(15,23,42,0.96))] px-3 py-3 pr-10 text-left shadow-[0_12px_48px_rgba(0,0,0,0.45),0_0_28px_rgba(var(--mode-rgb),0.06)] backdrop-blur-md";
-
-const hubShell =
-  "relative scroll-mt-24 overflow-hidden rounded-[var(--hq-card-radius,18px)] border border-[var(--card-border)] bg-gradient-to-b from-[var(--bg-elevated)]/35 via-[var(--bg-primary)]/40 to-[var(--bg-primary)]/55 shadow-[0_8px_32px_rgba(0,0,0,0.22)]";
-
-const tileClass =
-  "relative flex min-h-[5.5rem] flex-col items-center justify-center gap-1 rounded-xl border border-[var(--card-border)] bg-[var(--bg-elevated)]/40 px-2 py-3 text-center transition-colors hover:border-[var(--card-border)] hover:bg-[var(--bg-elevated)]/65 focus:outline-none focus-visible:ring-2 focus-visible:ring-[rgba(var(--mode-rgb),0.45)] focus-visible:ring-offset-0 sm:min-h-[6rem]";
 
 function ToastChrome({
   toastId,
@@ -167,9 +162,9 @@ export function BudgetLockHub({
   }, [historyMode]);
 
   return (
-    <section className={hubShell} aria-label="Lock hub" id="budget-lock-hub">
+    <section className={`${budgetDeckShellClass} scroll-mt-24`} aria-label="Lock hub" id="budget-lock-hub">
       <div className="px-4 py-4 md:px-5 md:py-5">
-        <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--mode-text-soft)]">Lock</p>
+        <p className={budgetDeckSectionKickerClass}>Lock</p>
         <p className="mt-1 text-xs text-[var(--text-muted)]">
           No-spend lock en noodpad: tik op een tegel voor het volledige paneel (zelfde werkwijze als op Sparen & boeken).
         </p>

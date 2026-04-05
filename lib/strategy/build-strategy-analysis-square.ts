@@ -311,10 +311,10 @@ function pickCta(
     return { label: "Fix budget & focus", href: "/budget" };
   }
   if (top?.id === "engine-savings") return { label: "Bouw spaar-buffer", href: "/budget" };
-  if (top?.id === "engine-learning") return { label: "Trek Growth recht", href: "/learning?tab=command" };
+  if (top?.id === "engine-learning") return { label: "Trek Growth recht", href: "/learning" };
   if (top?.id === "overload" || top?.id === "overload-1") return { label: "Herbalanceer week", href: "/tasks" };
   if (top?.id === "growth-tier" || top?.id === "growth-brain" || top?.id === "growth-none") {
-    return { label: "Sync Growth", href: "/learning?tab=command" };
+    return { label: "Sync Growth", href: "/learning" };
   }
   if (top?.id === "alignment") return { label: "Herbalanceer focus", href: "/strategy?tab=focus" };
 
@@ -326,7 +326,7 @@ function pickCta(
     return { label: "Brain check-in", href: "/dashboard" };
   }
   if (engineHints?.savingsOnTrack === false) return { label: "Bouw spaar-buffer", href: "/budget" };
-  if (engineHints?.learningOnTrack === false) return { label: "Trek Growth recht", href: "/learning?tab=command" };
+  if (engineHints?.learningOnTrack === false) return { label: "Trek Growth recht", href: "/learning" };
   return { label: "Bekijk alignment", href: "/strategy?tab=alignment" };
 }
 

@@ -3,14 +3,22 @@
 import { toast, type ExternalToast } from "sonner";
 import { NeuroToastIcon } from "@/components/brand/NeuroToastIcon";
 
+const DEFAULT_TOAST_MS = 16_000;
+
 function withIcon(
   variant: "default" | "success" | "error" | "warning" | "info" | "loading",
   options?: ExternalToast
 ): ExternalToast {
-  if (options?.icon != null) return options;
+  if (options?.icon != null) {
+    return {
+      ...options,
+      duration: options.duration ?? DEFAULT_TOAST_MS,
+    };
+  }
   return {
     ...options,
     icon: <NeuroToastIcon variant={variant} />,
+    duration: options?.duration ?? DEFAULT_TOAST_MS,
   };
 }
 

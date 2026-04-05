@@ -34,6 +34,7 @@ import {
   getBudgetControlState,
   getBudgetOptimizationSuggestions,
 } from "@/app/actions/budget-intelligence";
+import { evaluateFlexBudgetForDay, getFlexBudgetHeroPayload } from "@/app/actions/flex-budget";
 import { formatMonthYearShort } from "@/lib/utils/date-locale";
 import { formatCents } from "@/lib/utils/currency";
 import { getBudgetToday, getBudgetAdjacentMonths, getPreviousPeriodBounds } from "@/lib/utils/budget-date";
@@ -279,6 +280,16 @@ export default async function BudgetPage({ searchParams }: Props) {
       ? { title: "Guarded", tone: "text-[var(--mode-text-soft)]", border: "border-[var(--semantic-ring)]/30 bg-[var(--semantic-accent)]/10" }
       : { title: "Stable", tone: "text-emerald-200", border: "border-emerald-400/30 bg-emerald-400/10" };
 
+  let flexHeroPayload: Awaited<ReturnType<typeof getFlexBudgetHeroPayload>> = null;
+  if (!historyMode) {
+    try {
+      await evaluateFlexBudgetForDay(today);
+      flexHeroPayload = await getFlexBudgetHeroPayload();
+    } catch {
+      flexHeroPayload = null;
+    }
+  }
+
   const budgetCommandToolbar = (
     <>
       <ExportBudgetCsvButton />
@@ -332,6 +343,8 @@ export default async function BudgetPage({ searchParams }: Props) {
             executeHref={executeEntriesHref}
             historyMonthParam={monthParam}
             commandToolbar={budgetCommandToolbar}
+            flexPayload={flexHeroPayload}
+            lockPanelHref={lockPanelHref}
           />
         </>
       )}

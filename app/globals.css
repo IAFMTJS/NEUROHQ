@@ -119,10 +119,10 @@
   /* Center spotlight – focus hierarchy */
   --spotlight: radial-gradient(circle at 50% 25%, rgba(var(--mode-rgb-deep),0.15), transparent 60%);
   --spotlight-opacity: 0.65;
-  /** Multiplier on body spotlight (routes e.g. /tasks lower this so layered panels read clearly) */
-  --ui-shell-spotlight-mult: 1;
-  /** Film grain on body::after — adaptive per `html[data-shell-route]` */
-  --ui-shell-grain-opacity: 0.03;
+  /** Multiplier on body spotlight — aligned with /tasks so hubs stay cinematic, not washed out */
+  --ui-shell-spotlight-mult: 0.52;
+  /** Film grain on body::after — subtle, matches mission deck */
+  --ui-shell-grain-opacity: 0.016;
   --spotlight-saturation: 1;
   --spotlight-blur: 0px;
   --spotlight-animation: none;
@@ -223,17 +223,6 @@
   --hud-intensity-card: 0.3;
   --hud-intensity-border: 0.15;
   --hud-intensity-bg: 0.05;
-}
-
-/* Route-level shell tuning (set `data-shell-route` on `<html>` from dashboard client) */
-html[data-shell-route="tasks"] {
-  --ui-shell-spotlight-mult: 0.52;
-  --ui-shell-grain-opacity: 0.016;
-}
-
-html[data-shell-route="profile"] {
-  --ui-shell-spotlight-mult: 0.52;
-  --ui-shell-grain-opacity: 0.016;
 }
 
 /* Mode-specific accents (applied anywhere inside the dashboard shell via data-mode) */
@@ -2541,7 +2530,7 @@ body {
     linear-gradient(180deg, rgba(255, 255, 255, 0.04) 0%, transparent 28%, transparent 72%, rgba(0, 0, 0, 0.38) 100%),
     radial-gradient(ellipse 100% 85% at 50% -8%, rgba(var(--mode-rgb), 0.08), transparent 58%),
     radial-gradient(ellipse 80% 55% at 100% 0%, rgba(var(--mode-rgb-deep), 0.05), transparent 52%),
-    color-mix(in srgb, var(--mode-bg-main) 94%, black);
+    color-mix(in srgb, var(--mode-bg-main) 97%, black);
   backdrop-filter: blur(24px) saturate(1.12);
   -webkit-backdrop-filter: blur(24px) saturate(1.12);
   box-shadow:
@@ -2572,9 +2561,9 @@ main#main-content.hq-deck-ambient-shell {
     radial-gradient(ellipse 55% 38% at 100% 0%, rgba(var(--mode-rgb-deep), 0.05), transparent 52%),
     linear-gradient(
       to bottom,
-      color-mix(in srgb, var(--mode-bg-main) 94%, black) 0%,
-      color-mix(in srgb, var(--mode-bg-elevated) 82%, transparent) 44%,
-      color-mix(in srgb, var(--mode-bg-main) 96%, black) 100%
+      color-mix(in srgb, var(--mode-bg-main) 97%, black) 0%,
+      color-mix(in srgb, var(--mode-bg-main) 94%, black) 44%,
+      color-mix(in srgb, var(--mode-bg-main) 98%, black) 100%
     );
   backdrop-filter: blur(28px) saturate(1.14);
   -webkit-backdrop-filter: blur(28px) saturate(1.14);
@@ -2675,7 +2664,7 @@ main.tasks-page-root {
   box-shadow: none !important;
 }
 
-/* Deck chrome: bottom dock + elevated cards (hub pages; `/dashboard` home uses default dock) */
+/* Deck chrome: bottom dock + elevated cards (all authenticated hub routes) */
 [data-deck-chrome="true"] .bottom-nav-fab-bar {
   border-color: rgba(var(--mode-rgb), 0.24);
   background: linear-gradient(180deg, rgba(6, 22, 38, 0.95) 0%, rgba(3, 10, 20, 0.98) 100%);

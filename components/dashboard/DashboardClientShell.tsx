@@ -32,6 +32,7 @@ import { DCICStatusCard } from "@/components/dcic/DCICStatusCard";
 import { neuroToast } from "@/lib/ui/neuro-toast";
 import { toastDashboardFirstMission } from "@/lib/ui/dashboard-first-mission-toast";
 import type { MoodLabel } from "@/lib/mood-intervention-config";
+import { QuestCampaignDock } from "@/components/quests/QuestCampaignDock";
 
 const DCIC_SUGGESTION_TOAST_KEY = "neurohq-dcic-suggestion-education-toast-v1";
 
@@ -726,6 +727,7 @@ export function DashboardClientShell() {
           </div>
         </Modal>
       </div>
+      <QuestCampaignDock />
     </div>
   );
 }

@@ -21,9 +21,30 @@ export type UserAlertRow = {
   created_at: string;
 };
 
+const NOOP_ALERT_ID = "00000000-0000-0000-0000-000000000000";
+
 /** Generated DB types may lag new migrations; keep runtime table name. */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type AnyDb = { from: (t: string) => any };
+
+async function isAlertDedupeKeySuppressed(db: AnyDb, userId: string, dedupeKey: string): Promise<boolean> {
+  const { data } = await db
+    .from("user_alert_suppressions")
+    .select("dedupe_key")
+    .eq("user_id", userId)
+    .eq("dedupe_key", dedupeKey)
+    .maybeSingle();
+  return data != null;
+}
+
+/** After the user deletes an alert, dashboard sync must not mint the same logical row again (same push_tag). */
+async function recordAlertSuppressions(db: AnyDb, userId: string, keys: string[]): Promise<void> {
+  const uniq = [...new Set(keys.map((k) => k.trim().slice(0, 120)).filter(Boolean))];
+  if (!uniq.length) return;
+  const rows = uniq.map((dedupe_key) => ({ user_id: userId, dedupe_key }));
+  const { error } = await db.from("user_alert_suppressions").upsert(rows, { onConflict: "user_id,dedupe_key" });
+  if (error) console.error("[recordAlertSuppressions]", error.message);
+}
 
 /**
  * Creates an in-app alert for the current user. Optionally sends the same title/body as a web push
@@ -45,12 +66,16 @@ export async function emitUserAlert(input: {
   if (!user) throw new Error("Not authenticated");
 
   if (isNeurohqInboxAlertsPaused()) {
-    return { id: "00000000-0000-0000-0000-000000000000" };
+    return { id: NOOP_ALERT_ID };
   }
 
   const severity = input.severity ?? "info";
   const linkPath = input.linkPath?.trim() || null;
   const tag = input.pushTag?.slice(0, 120) ?? null;
+
+  if (tag && (await isAlertDedupeKeySuppressed(db, user.id, tag))) {
+    return { id: NOOP_ALERT_ID };
+  }
 
   const { data: inserted, error } = await db
     .from("user_alerts")
@@ -160,7 +185,15 @@ export async function deleteUserAlert(alertId: string): Promise<void> {
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) throw new Error("Not authenticated");
+  const { data: row } = await db
+    .from("user_alerts")
+    .select("push_tag")
+    .eq("id", alertId)
+    .eq("user_id", user.id)
+    .maybeSingle();
+  const tag = row && typeof (row as { push_tag?: string | null }).push_tag === "string" ? (row as { push_tag: string }).push_tag : null;
   await db.from("user_alerts").delete().eq("id", alertId).eq("user_id", user.id);
+  if (tag?.trim()) await recordAlertSuppressions(db, user.id, [tag]);
   revalidatePath("/dashboard");
   revalidatePath("/profile");
 }
@@ -173,7 +206,12 @@ export async function deleteAllUserAlerts(): Promise<void> {
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) throw new Error("Not authenticated");
+  const { data: tagRows } = await db.from("user_alerts").select("push_tag").eq("user_id", user.id);
+  const keys = (tagRows ?? [])
+    .map((r) => (r as { push_tag: string | null }).push_tag)
+    .filter((t): t is string => typeof t === "string" && t.trim().length > 0);
   await db.from("user_alerts").delete().eq("user_id", user.id);
+  await recordAlertSuppressions(db, user.id, keys);
   revalidatePath("/dashboard");
   revalidatePath("/profile");
 }
@@ -287,6 +325,7 @@ async function ensureInboxAlertIfNew(
 ): Promise<void> {
   const db = supabase as unknown as AnyDb;
   const tag = input.pushTag.slice(0, 120);
+  if (await isAlertDedupeKeySuppressed(db, userId, tag)) return;
   const { error } = await db.from("user_alerts").insert({
     user_id: userId,
     title: input.title.slice(0, 200),

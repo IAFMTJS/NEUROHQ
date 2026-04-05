@@ -62,19 +62,9 @@ test.describe("authenticated smoke navigation", () => {
       ).toHaveAttribute("aria-selected", "true");
     });
 
-    await test.step("Growth deeplink opens command and system tabs", async () => {
-      await page.goto("/learning?tab=command");
-      await expect(
-        page.getByRole("navigation", { name: /growth tabs/i })
-      ).toBeVisible();
-      await expect(
-        page.getByRole("button", { name: /command center/i })
-      ).toHaveAttribute("aria-pressed", "true");
-
-      await page.goto("/learning?tab=system");
-      await expect(
-        page.getByRole("button", { name: /systeem & protocollen/i })
-      ).toHaveAttribute("aria-pressed", "true");
+    await test.step("Growth page shows command center", async () => {
+      await page.goto("/learning");
+      await expect(page.getByText(/Growth command center/i).first()).toBeVisible();
     });
   });
 });

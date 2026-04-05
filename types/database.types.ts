@@ -1190,6 +1190,50 @@ export type Database = {
           },
         ]
       }
+      flex_budget_ledger: {
+        Row: {
+          budget_day: string
+          created_at: string
+          delta_cents: number
+          id: string
+          idempotency_key: string
+          meta: Json
+          reason: string
+          strategy_multiplier_bp: number | null
+          user_id: string
+        }
+        Insert: {
+          budget_day: string
+          created_at?: string
+          delta_cents: number
+          id?: string
+          idempotency_key: string
+          meta?: Json
+          reason: string
+          strategy_multiplier_bp?: number | null
+          user_id: string
+        }
+        Update: {
+          budget_day?: string
+          created_at?: string
+          delta_cents?: number
+          id?: string
+          idempotency_key?: string
+          meta?: Json
+          reason?: string
+          strategy_multiplier_bp?: number | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "flex_budget_ledger_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       financial_discipline_score: {
         Row: {
           created_at: string
@@ -1936,6 +1980,96 @@ export type Database = {
         }
         Relationships: []
       }
+      platform_games: {
+        Row: {
+          active: boolean
+          body: string
+          config: Json
+          created_at: string
+          ends_at: string | null
+          id: string
+          starts_at: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          body: string
+          config?: Json
+          created_at?: string
+          ends_at?: string | null
+          id?: string
+          starts_at?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          body?: string
+          config?: Json
+          created_at?: string
+          ends_at?: string | null
+          id?: string
+          starts_at?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      platform_quest_campaigns: {
+        Row: {
+          achievement_key: string
+          active: boolean
+          badge_label: string
+          content: Json
+          created_at: string
+          ends_at: string | null
+          id: string
+          prize_summary: string | null
+          reward_flex_percent_bp: number
+          reward_xp: number
+          slug: string
+          starts_at: string
+          tagline: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          achievement_key?: string
+          active?: boolean
+          badge_label?: string
+          content?: Json
+          created_at?: string
+          ends_at?: string | null
+          id?: string
+          prize_summary?: string | null
+          reward_flex_percent_bp?: number
+          reward_xp?: number
+          slug: string
+          starts_at?: string
+          tagline?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          achievement_key?: string
+          active?: boolean
+          badge_label?: string
+          content?: Json
+          created_at?: string
+          ends_at?: string | null
+          id?: string
+          prize_summary?: string | null
+          reward_flex_percent_bp?: number
+          reward_xp?: number
+          slug?: string
+          starts_at?: string
+          tagline?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       protocol_library: {
         Row: {
           body_md: string
@@ -1955,7 +2089,7 @@ export type Database = {
           definition_json?: unknown
           id?: string
           locale?: string
-          slug: string
+          slug?: string
           sort_order?: number
           summary?: string | null
           title: string
@@ -2012,6 +2146,51 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "user_protocol_progress_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_quest_campaign_progress: {
+        Row: {
+          answer_log: Json
+          campaign_id: string
+          created_at: string
+          rewards_granted_at: string | null
+          state: Json
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          answer_log?: Json
+          campaign_id: string
+          created_at?: string
+          rewards_granted_at?: string | null
+          state?: Json
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          answer_log?: Json
+          campaign_id?: string
+          created_at?: string
+          rewards_granted_at?: string | null
+          state?: Json
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_quest_campaign_progress_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "platform_quest_campaigns"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_quest_campaign_progress_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "users"
@@ -3374,6 +3553,11 @@ export type Database = {
           currency: string | null
           display_name: string | null
           email: string | null
+          flex_budget_cents: number
+          flex_budget_enabled: boolean
+          flex_cap_monthly_cents: number
+          flex_chunk_cents: number
+          flex_max_chunks_per_day: number
           id: string
           impulse_quick_add_minutes: number | null
           impulse_risk_categories: Json | null
@@ -3403,6 +3587,11 @@ export type Database = {
           currency?: string | null
           display_name?: string | null
           email?: string | null
+          flex_budget_cents?: number
+          flex_budget_enabled?: boolean
+          flex_cap_monthly_cents?: number
+          flex_chunk_cents?: number
+          flex_max_chunks_per_day?: number
           id: string
           impulse_quick_add_minutes?: number | null
           impulse_risk_categories?: Json | null
@@ -3432,6 +3621,11 @@ export type Database = {
           currency?: string | null
           display_name?: string | null
           email?: string | null
+          flex_budget_cents?: number
+          flex_budget_enabled?: boolean
+          flex_cap_monthly_cents?: number
+          flex_chunk_cents?: number
+          flex_max_chunks_per_day?: number
           id?: string
           impulse_quick_add_minutes?: number | null
           impulse_risk_categories?: Json | null

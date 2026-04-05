@@ -7,12 +7,10 @@ import { loadUserNotificationContextForUser } from "@/lib/behavioral-notificatio
 import { runDailyHobbyCommitmentDecay } from "@/app/actions/hobby-commitment-decay";
 import { applyPersonalityToPayload } from "@/lib/push-personality";
 import { evaluateAcceptanceRulesForUser } from "@/lib/acceptance-rules-evaluator";
-import { runReleaseNotesPush } from "@/lib/release-notes-push";
 
 /**
- * Daily at 00:00 UTC (GitHub): avoidance push (high carry-over), hobby decay, acceptance rules, release notes.
- * Task rollover, daily quote, brain-status reminder, morning pushes, evening, and behavioral achievement-style
- * pushes run in /api/cron/hourly (all users, including no timezone = UTC clock).
+ * Daily at 06:00 UTC (GitHub `cron-daily.yml`): avoidance push (high carry-over), hobby decay, acceptance rules.
+ * Task rollover, quotes, brain reminder, evening push, etc. run in `/api/cron/hourly`.
  */
 export async function GET(request: Request) {
   const authHeader = request.headers.get("authorization");
@@ -113,16 +111,6 @@ export async function GET(request: Request) {
     acceptanceGatesOpened = 0;
   }
 
-  let releaseNotesSent = 0;
-  let releaseNotesSkip: string | null = null;
-  try {
-    const rr = await runReleaseNotesPush(supabase, { userIdFilter });
-    releaseNotesSent = rr.sent;
-    releaseNotesSkip = rr.skippedReason;
-  } catch {
-    releaseNotesSent = 0;
-  }
-
   return NextResponse.json({
     ok: true,
     job: "daily",
@@ -132,8 +120,6 @@ export async function GET(request: Request) {
     hobbyDecayUsers,
     acceptanceRulesUsers,
     acceptanceGatesOpened,
-    releaseNotesSent,
-    ...(releaseNotesSkip && { releaseNotesSkip }),
     date: todayStr,
   });
 }

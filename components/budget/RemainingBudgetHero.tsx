@@ -12,6 +12,7 @@ import { AddBudgetEntryForm } from "@/components/AddBudgetEntryForm";
 import { BudgetLockHeaderBadge } from "@/components/budget/BudgetLockHeaderBadge";
 import { EnergyRing, type EnergyRingMode } from "@/components/hud-test/EnergyRing";
 import { updateBudgetSettings } from "@/app/actions/budget";
+import { updateFlexBudgetSettings, type FlexBudgetHeroPayload } from "@/app/actions/flex-budget";
 import { formatCents } from "@/lib/utils/currency";
 import {
   clearPendingBudgetSnapshot,
@@ -22,6 +23,7 @@ import {
 } from "@/lib/client-pending-budget";
 import { useSettings } from "@/lib/settings-context";
 import { BudgetHistorySelector } from "@/components/BudgetHistorySelector";
+import { budgetDeckShellClass } from "@/lib/budget/budget-deck-chrome";
 
 function budgetRingMode(
   hasSettings: boolean,
@@ -187,6 +189,9 @@ type Props = {
   historyMonthParam?: string;
   /** Export + Strategy links (or other compact actions) next to period picker. */
   commandToolbar?: ReactNode;
+  /** Base/flex game layer; null when DB column set unavailable. */
+  flexPayload?: FlexBudgetHeroPayload | null;
+  lockPanelHref?: string;
 };
 
 export function RemainingBudgetHero({
@@ -208,6 +213,8 @@ export function RemainingBudgetHero({
   executeHref,
   historyMonthParam,
   commandToolbar,
+  flexPayload = null,
+  lockPanelHref,
 }: Props) {
   const pendingBudget = usePendingBudgetSnapshot();
   const pendingActive = pendingBudget != null && pendingBudget.synced !== true;
@@ -268,6 +275,7 @@ export function RemainingBudgetHero({
   const ringMode = budgetRingMode(hasSettings, spendableCents, isOverBudget, remainingPctForMeter);
   const ringProgress = budgetRingProgress(isOverBudget, remainingPctForMeter);
   const ringValue = hasSettings ? formatCents(remainingCents, effectiveCurrency) : "—";
+  const ringCenterTag = flexPayload?.enabled ? "Base resterend" : hasSettings ? "Resterend" : undefined;
 
   useEffect(() => {
     if (!showEdit) return;
@@ -381,7 +389,7 @@ export function RemainingBudgetHero({
   return (
     <>
       <section
-        className="relative overflow-hidden rounded-md border border-[rgba(var(--mode-rgb),0.2)] bg-gradient-to-br from-[rgba(8,26,42,0.92)] via-[var(--bg-elevated)]/88 to-[rgba(var(--mode-rgb-deep),0.12)] px-4 py-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.05)] sm:px-6"
+        className={`${budgetDeckShellClass} px-4 py-5 sm:px-6`}
         aria-label="Remaining budget overview"
         data-tutorial="budget-hero"
       >
@@ -389,8 +397,17 @@ export function RemainingBudgetHero({
           <div className="min-w-0">
             <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--mode-text-soft)]">Budget command</p>
             <p className="mt-1 max-w-xl text-xs leading-snug text-[var(--text-secondary)]">
-              {effectiveBudgetPeriod === "weekly" ? "Weekcyclus" : "Maandcyclus"} · resterend t.o.v. spendable (na
-              spaarreserve)
+              {flexPayload?.enabled ? (
+                <>
+                  {effectiveBudgetPeriod === "weekly" ? "Weekcyclus" : "Maandcyclus"} · base = je vaste lijn; flex =
+                  aparte pot (alleen niet-essentieel).
+                </>
+              ) : (
+                <>
+                  {effectiveBudgetPeriod === "weekly" ? "Weekcyclus" : "Maandcyclus"} · resterend t.o.v. spendable (na
+                  spaarreserve)
+                </>
+              )}
             </p>
           </div>
           <div className="flex w-full min-w-0 flex-col gap-2 sm:w-auto sm:shrink-0 sm:items-end">
@@ -417,6 +434,102 @@ export function RemainingBudgetHero({
           </div>
         </div>
 
+        {flexPayload != null && !historyMode && (
+          <div className="relative z-[1] mt-3 flex flex-wrap items-center gap-3 border-b border-[rgba(var(--mode-rgb),0.08)] pb-3">
+            <label className="flex cursor-pointer items-center gap-2 text-[11px] text-[var(--text-secondary)]">
+              <input
+                type="checkbox"
+                className="h-3.5 w-3.5 rounded border-[var(--card-border)] bg-[var(--bg-primary)] text-[rgb(var(--mode-rgb))] focus:ring-[rgb(var(--mode-rgb))]/40"
+                checked={flexPayload.enabled}
+                disabled={pending}
+                onChange={(e) => {
+                  startTransition(async () => {
+                    try {
+                      await updateFlexBudgetSettings({ flex_budget_enabled: e.target.checked });
+                      router.refresh();
+                    } catch (err) {
+                      toast.error(err instanceof Error ? err.message : "Flex-instelling mislukt");
+                    }
+                  });
+                }}
+              />
+              <span>
+                Flex-laag (beloningen & straffen) · chunk {formatCents(flexPayload.chunkCents, effectiveCurrency)} ·
+                max {formatCents(flexPayload.capMonthlyCents, effectiveCurrency)}/maand
+              </span>
+            </label>
+          </div>
+        )}
+
+        {flexPayload?.enabled && (
+          <div className="relative z-[1] mt-4 grid gap-2 sm:grid-cols-2">
+            <div className="rounded-xl border border-[rgba(var(--mode-rgb),0.22)] bg-black/25 px-3 py-2.5">
+              <p className="text-[9px] font-bold uppercase tracking-[0.14em] text-[var(--text-muted)]">Base (vast)</p>
+              <p className="mt-0.5 text-lg font-semibold tabular-nums text-[var(--text-primary)]">
+                {formatCents(spendableCents, effectiveCurrency)}
+              </p>
+              <p className="mt-0.5 text-[10px] leading-snug text-[var(--text-muted)]">
+                Budget minus spaarreserve — vaste lijn voor normaal leven.
+              </p>
+            </div>
+            <div className="rounded-xl border border-emerald-500/25 bg-emerald-950/20 px-3 py-2.5">
+              <p className="text-[9px] font-bold uppercase tracking-[0.14em] text-emerald-200/90">Flex (game)</p>
+              <p className="mt-0.5 text-lg font-semibold tabular-nums text-emerald-100">
+                {formatCents(flexPayload.flexCents, effectiveCurrency)}
+                {flexPayload.todayDeltaCents !== 0 ? (
+                  <span
+                    className={`ml-2 text-sm font-medium tabular-nums ${
+                      flexPayload.todayDeltaCents > 0 ? "text-emerald-300" : "text-rose-300"
+                    }`}
+                  >
+                    ({flexPayload.todayDeltaCents > 0 ? "+" : ""}
+                    {formatCents(flexPayload.todayDeltaCents, effectiveCurrency)} vandaag)
+                  </span>
+                ) : null}
+              </p>
+              <p className="mt-0.5 text-[10px] leading-snug text-[var(--text-muted)]">
+                Alleen voor niet-essentieel · Strategy: {flexPayload.strategyMultiplierLabel}
+              </p>
+            </div>
+            {(flexPayload.weekEarnedCents > 0 || flexPayload.weekLostCents > 0) && (
+              <div className="space-y-0.5 text-[11px] leading-snug text-[var(--text-secondary)] sm:col-span-2">
+                {flexPayload.weekEarnedCents > 0 ? (
+                  <p>
+                    Deze week verdiend op flex:{" "}
+                    <span className="font-medium tabular-nums text-emerald-300">
+                      {formatCents(flexPayload.weekEarnedCents, effectiveCurrency)}
+                    </span>
+                  </p>
+                ) : null}
+                {flexPayload.weekLostCents > 0 ? (
+                  <p>
+                    Deze week kwijt door regels:{" "}
+                    <span className="font-medium tabular-nums text-rose-300">
+                      {formatCents(flexPayload.weekLostCents, effectiveCurrency)}
+                    </span>
+                  </p>
+                ) : null}
+              </div>
+            )}
+          </div>
+        )}
+
+        {flexPayload?.enabled && flexPayload.lockTier === "critical" && lockPanelHref ? (
+          <div className="relative z-[1] mt-3 rounded-lg border border-rose-500/35 bg-rose-950/30 px-3 py-2 text-[11px] leading-snug text-rose-100">
+            Flex onder €20 —{" "}
+            <Link href={lockPanelHref} className="font-semibold underline underline-offset-2">
+              open no-spend lock
+            </Link>{" "}
+            en houd base strak.
+          </div>
+        ) : null}
+
+        {flexPayload?.enabled && flexPayload.lockTier === "bonus" ? (
+          <div className="relative z-[1] mt-3 rounded-lg border border-emerald-500/30 bg-emerald-950/25 px-3 py-2 text-[11px] leading-snug text-emerald-100">
+            Flex boven €100 — bonuszone: meer ruimte; blijf niet-essentieel uit flex halen.
+          </div>
+        ) : null}
+
         <div className="relative z-[1] mt-5 grid gap-8 lg:grid-cols-[minmax(0,auto)_1fr] lg:items-center lg:gap-10">
           <div className="flex justify-center lg:justify-start">
             <div className="relative">
@@ -429,7 +542,7 @@ export function RemainingBudgetHero({
                   softGlow
                   profileOrbit
                   budgetHub
-                  centerTag={hasSettings ? "Resterend" : undefined}
+                  centerTag={ringCenterTag}
                   size={268}
                   progress={ringProgress}
                   label={hasSettings ? `${remainingPctDisplay}%` : "Geen budget"}
@@ -610,7 +723,9 @@ export function RemainingBudgetHero({
           )}
         </div>
         <p className="relative z-[1] mt-3 text-[10px] leading-snug text-[var(--text-muted)]">
-          budget − spaarreserve − uitgaven = restant
+          {flexPayload?.enabled
+            ? "Base-restant = budget − spaarreserve − uitgaven. Flex is apart en wordt door gedrag bijgewerkt."
+            : "budget − spaarreserve − uitgaven = restant"}
           {pendingActive && (
             <span className="mt-1 block text-[11px] text-[var(--accent-focus)]">
               Bijwerken… tijdelijke waarden actief.

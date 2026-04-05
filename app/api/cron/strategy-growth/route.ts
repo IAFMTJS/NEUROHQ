@@ -6,9 +6,8 @@ export const dynamic = "force-dynamic";
 export const maxDuration = 300;
 
 /**
- * Manual / legacy: runs the same pass as the weekly cron (strategy check-in, quarter, growth, learning idle).
- * Production schedule: Monday UTC via `.github/workflows/cron-weekly.yml` (bundled with weekly reports).
- * Monthly tip: `/api/cron/monthly` + `cron-monthly.yml`.
+ * Manual / legacy: same pass as weekly cron (growth protocol unset, learning idle only).
+ * Strategy check-in, quarter incomplete, monthly tip: `/api/cron/monthly` + `cron-monthly.yml`.
  */
 export async function GET(request: Request) {
   const authHeader = request.headers.get("authorization");
@@ -36,6 +35,6 @@ export async function GET(request: Request) {
     skipped,
     users,
     ...(userIdFilter && { userId: userIdFilter }),
-    note: "Weekly nudges only; use /api/cron/monthly for strategy_monthly_tip.",
+    note: "Weekly growth/idle only; strategy check-in, quarter, monthly tip via /api/cron/monthly.",
   });
 }

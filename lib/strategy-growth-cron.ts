@@ -19,8 +19,8 @@ export type StrategyGrowthCronResult = {
 };
 
 /**
- * Weekly nudges: strategy check-in cadence, incomplete quarter, growth protocol unset, learning idle.
- * Not for calendar/monthly tip — use {@link runStrategyGrowthMonthlyCron}.
+ * Weekly nudges: growth protocol unset, learning idle (users with web push).
+ * Strategy check-in, quarter incomplete, and monthly tip run in {@link runStrategyGrowthMonthlyCron}.
  */
 export async function runStrategyGrowthWeeklyCron(
   supabase: SupabaseClient,
@@ -30,7 +30,7 @@ export async function runStrategyGrowthWeeklyCron(
 }
 
 /**
- * Monthly nudge: strategy_monthly_tip at most once per calendar month per user.
+ * Monthly: strategy_monthly_tip (max once/calendar month), then strategy check-in, then quarter-incomplete nudge.
  */
 export async function runStrategyGrowthMonthlyCron(
   supabase: SupabaseClient,
@@ -104,47 +104,30 @@ async function runStrategyGrowthCronInner(
     const createdAt = (u as { created_at: string }).created_at;
     const accountAgeDays = Math.floor((now.getTime() - new Date(createdAt).getTime()) / (24 * 60 * 60 * 1000));
 
-    const { data: checkRow } = await supabase
-      .from("strategy_check_in")
-      .select("checked_at")
-      .eq("user_id", userId)
-      .maybeSingle();
-
-    const checkedAt = (checkRow as { checked_at?: string | null } | null)?.checked_at ?? null;
-
-    const { data: qStrat } = await supabase
-      .from("quarterly_strategy")
-      .select(
-        "one_word, primary_theme, identity_statement, key_results, north_star, anti_goals, savings_goal_id"
-      )
-      .eq("user_id", userId)
-      .eq("year", year)
-      .eq("quarter", quarter)
-      .maybeSingle();
-
-    const percentComplete = quarterlyStrategyCompletionPercent(
-      qStrat as Parameters<typeof quarterlyStrategyCompletionPercent>[0]
-    );
-    const dayInQuarter = getDayIndexInCurrentQuarter(now);
-
-    const tenDaysAgo = new Date(now.getTime() - 10 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
-    const { data: learnRows } = await supabase
-      .from("user_analytics_daily")
-      .select("learning_minutes")
-      .eq("user_id", userId)
-      .gte("date", tenDaysAgo);
-    const learningSum = (learnRows ?? []).reduce(
-      (acc, r) => acc + ((r as { learning_minutes?: number | null }).learning_minutes ?? 0),
-      0
-    );
-
-    const growthSlug = prefRow?.growth_focus_protocol_slug?.trim() ?? null;
-    const weeklyLearningOn = prefRow?.push_weekly_learning_enabled !== false;
-
-    const checkTier = classifyCheckIn(checkedAt, createdAt);
-
     const pickEvent = async (): Promise<{ event: BehaviorEvent; trigger: TriggerType } | null> => {
       if (options.segment === "monthly") {
+        const { data: checkRow } = await supabase
+          .from("strategy_check_in")
+          .select("checked_at")
+          .eq("user_id", userId)
+          .maybeSingle();
+        const checkedAt = (checkRow as { checked_at?: string | null } | null)?.checked_at ?? null;
+        const checkTier = classifyCheckIn(checkedAt, createdAt);
+
+        const { data: qStrat } = await supabase
+          .from("quarterly_strategy")
+          .select(
+            "one_word, primary_theme, identity_statement, key_results, north_star, anti_goals, savings_goal_id"
+          )
+          .eq("user_id", userId)
+          .eq("year", year)
+          .eq("quarter", quarter)
+          .maybeSingle();
+        const percentComplete = quarterlyStrategyCompletionPercent(
+          qStrat as Parameters<typeof quarterlyStrategyCompletionPercent>[0]
+        );
+        const dayInQuarter = getDayIndexInCurrentQuarter(now);
+
         const sentMonth = await alreadySentThisCalendarMonth(supabase, userId, "strategy_monthly_tip", now);
         if (!sentMonth) {
           const { canSend } = await canSendBehavioralNotification(supabase, userId, "strategy_monthly_tip", now);
@@ -155,41 +138,54 @@ async function runStrategyGrowthCronInner(
             };
           }
         }
+        if (checkTier === "firm") {
+          const { canSend } = await canSendBehavioralNotification(supabase, userId, "strategy_check_in_firm", now);
+          if (canSend) {
+            return {
+              event: { type: "strategy_check_in_reminder", tier: "firm" },
+              trigger: "strategy_check_in_firm",
+            };
+          }
+        }
+        if (checkTier === "soft") {
+          const { canSend } = await canSendBehavioralNotification(supabase, userId, "strategy_check_in_soft", now);
+          if (canSend) {
+            return {
+              event: { type: "strategy_check_in_reminder", tier: "soft" },
+              trigger: "strategy_check_in_soft",
+            };
+          }
+        }
+        if (dayInQuarter > 14 && percentComplete < 100) {
+          const { canSend } = await canSendBehavioralNotification(
+            supabase,
+            userId,
+            "strategy_quarter_incomplete",
+            now
+          );
+          if (canSend) {
+            return {
+              event: { type: "strategy_quarter_incomplete", percentComplete },
+              trigger: "strategy_quarter_incomplete",
+            };
+          }
+        }
         return null;
       }
 
-      if (checkTier === "firm") {
-        const { canSend } = await canSendBehavioralNotification(supabase, userId, "strategy_check_in_firm", now);
-        if (canSend) {
-          return {
-            event: { type: "strategy_check_in_reminder", tier: "firm" },
-            trigger: "strategy_check_in_firm",
-          };
-        }
-      }
-      if (checkTier === "soft") {
-        const { canSend } = await canSendBehavioralNotification(supabase, userId, "strategy_check_in_soft", now);
-        if (canSend) {
-          return {
-            event: { type: "strategy_check_in_reminder", tier: "soft" },
-            trigger: "strategy_check_in_soft",
-          };
-        }
-      }
-      if (dayInQuarter > 14 && percentComplete < 100) {
-        const { canSend } = await canSendBehavioralNotification(
-          supabase,
-          userId,
-          "strategy_quarter_incomplete",
-          now
-        );
-        if (canSend) {
-          return {
-            event: { type: "strategy_quarter_incomplete", percentComplete },
-            trigger: "strategy_quarter_incomplete",
-          };
-        }
-      }
+      const tenDaysAgo = new Date(now.getTime() - 10 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
+      const { data: learnRows } = await supabase
+        .from("user_analytics_daily")
+        .select("learning_minutes")
+        .eq("user_id", userId)
+        .gte("date", tenDaysAgo);
+      const learningSum = (learnRows ?? []).reduce(
+        (acc, r) => acc + ((r as { learning_minutes?: number | null }).learning_minutes ?? 0),
+        0
+      );
+      const growthSlug = prefRow?.growth_focus_protocol_slug?.trim() ?? null;
+      const weeklyLearningOn = prefRow?.push_weekly_learning_enabled !== false;
+
       if (!growthSlug && accountAgeDays >= 7) {
         const { canSend } = await canSendBehavioralNotification(supabase, userId, "growth_focus_unset", now);
         if (canSend) {

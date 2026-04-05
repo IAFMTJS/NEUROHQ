@@ -1,9 +1,7 @@
 "use client";
 
 import { useEffect, useLayoutEffect, useMemo, useRef } from "react";
-import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { usePriorityNavClick } from "@/lib/navigation/use-priority-nav-click";
 import { BottomNavigationPortal } from "@/components/ui/BottomNavigationPortal";
 import { KeyboardShortcuts } from "@/components/KeyboardShortcuts";
 import { ThemeHydrate } from "@/components/providers/ThemeHydrate";
@@ -63,13 +61,9 @@ export function DashboardLayoutClient({
 }: Props) {
   const pathname = usePathname();
   const router = useRouter();
-  const onPriorityNavClick = usePriorityNavClick();
-  const normalizedPath = pathname.replace(/\/$/, "") || "/";
-  const dashboardHomeRoute = normalizedPath === "/dashboard";
-  const deckChrome = !dashboardHomeRoute;
+  /** Same dock + card treatment as Missions on every hub route (incl. HQ home). */
   const tasksRoute = isTasksRoute(pathname);
   const profileRoute = isProfileRoute(pathname);
-  const deckChromeRoute = tasksRoute || profileRoute;
   const dailySnapshot = useDailySnapshot();
   const bootstrapQuery = useBootstrapToday(dailySnapshot?.date ?? null);
   const setTodayDate = useHQStore((s) => s.setTodayDate);
@@ -184,7 +178,7 @@ export function DashboardLayoutClient({
               className="relative flex min-h-screen max-h-[100dvh] w-full min-w-0 max-w-full flex-col overflow-x-hidden bg-transparent"
               data-ui="dark-commander"
               data-mode={mode}
-              data-deck-chrome={deckChrome ? "true" : undefined}
+              data-deck-chrome="true"
               data-route-tasks={tasksRoute ? "true" : undefined}
               data-route-profile={profileRoute ? "true" : undefined}
             >
@@ -197,19 +191,6 @@ export function DashboardLayoutClient({
               <KeyboardShortcuts />
               <HelpFloatingIcon />
               <AlertsBell />
-              <Link
-                href="/settings"
-                onClick={(e) => onPriorityNavClick("/settings", e)}
-                className={
-                  deckChromeRoute
-                    ? "fixed right-[max(0.75rem,env(safe-area-inset-right))] top-[calc(env(safe-area-inset-top,0px)+1.25rem)] z-[70] rounded-xl border border-[rgba(var(--mode-rgb),0.22)] bg-[rgba(6,18,30,0.55)] px-2.5 py-1.5 text-sm font-semibold text-[var(--text-primary)] shadow-[0_0_20px_rgba(var(--mode-rgb),0.12),inset_0_1px_0_rgba(255,255,255,0.08)] backdrop-blur-md hover:border-[rgba(var(--mode-rgb),0.38)] hover:bg-[rgba(8,26,42,0.65)]"
-                    : "fixed right-[max(0.75rem,env(safe-area-inset-right))] top-[calc(env(safe-area-inset-top,0px)+1.25rem)] z-[70] rounded-full border border-[var(--card-border)] bg-[var(--bg-surface)]/80 px-2.5 py-1.5 text-sm font-semibold text-[var(--text-primary)] backdrop-blur hover:bg-[var(--bg-hover)]"
-                }
-                aria-label="Open settings"
-                title="Settings"
-              >
-                ⚙
-              </Link>
               <div className="relative z-10 mx-auto flex min-h-0 max-h-[100dvh] w-full min-w-0 max-w-full flex-1 flex-col overflow-hidden bg-transparent md:min-h-[640px]">
                 {children}
               </div>

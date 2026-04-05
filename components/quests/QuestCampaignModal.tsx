@@ -1,0 +1,249 @@
+"use client";
+
+import { useCallback, useEffect, useState, useTransition } from "react";
+import { Modal } from "@/components/Modal";
+import { submitQuestAnswer, type QuestClientPayload } from "@/app/actions/quest-campaign";
+import { neuroToast } from "@/lib/ui/neuro-toast";
+
+async function fetchQuest(): Promise<QuestClientPayload | null> {
+  const res = await fetch("/api/quest-campaign", { credentials: "same-origin" });
+  if (!res.ok) return null;
+  const json = (await res.json()) as { quest?: QuestClientPayload | null };
+  return json.quest ?? null;
+}
+
+type Props = {
+  open: boolean;
+  onClose: () => void;
+};
+
+function formatShortAt(iso: string) {
+  try {
+    return new Date(iso).toLocaleString("nl-NL", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" });
+  } catch {
+    return "";
+  }
+}
+
+export function QuestCampaignModal({ open, onClose }: Props) {
+  const [status, setStatus] = useState<QuestClientPayload | null>(null);
+  const [answer, setAnswer] = useState("");
+  const [feedback, setFeedback] = useState<"ok" | "bad" | null>(null);
+  const [feedbackText, setFeedbackText] = useState<string | null>(null);
+  const [pending, startTransition] = useTransition();
+
+  const refresh = useCallback(async () => {
+    const q = await fetchQuest();
+    setStatus(q);
+  }, []);
+
+  useEffect(() => {
+    if (!open) return;
+    void refresh();
+  }, [open, refresh]);
+
+  useEffect(() => {
+    if (!open) {
+      setAnswer("");
+      setFeedback(null);
+      setFeedbackText(null);
+    }
+  }, [open]);
+
+  const puzzle = status?.puzzle;
+
+  return (
+    <Modal
+      open={open}
+      onClose={onClose}
+      title={status?.title ?? "Quest"}
+      subtitle={status ? `${status.tagline} · Dag ${Math.min(status.eventDay, status.maxDay)}/${status.maxDay}` : undefined}
+      size="lg"
+      footer={
+        <div className="flex w-full flex-wrap items-center justify-end gap-2">
+          <button
+            type="button"
+            onClick={onClose}
+            className="rounded-lg border border-[var(--card-border)] px-3 py-2 text-xs font-semibold text-[var(--text-primary)] hover:bg-[var(--bg-hover)]"
+          >
+            Sluiten
+          </button>
+          {puzzle ? (
+            <button
+              type="button"
+              disabled={pending || !answer.trim()}
+              onClick={() => {
+                if (!status) return;
+                setFeedback(null);
+                setFeedbackText(null);
+                startTransition(async () => {
+                  const res = await submitQuestAnswer(status.campaignId, answer);
+                  if (!res.ok) {
+                    neuroToast.error(res.error);
+                    return;
+                  }
+                  if (!res.correct) {
+                    setFeedback("bad");
+                    setFeedbackText(res.message);
+                    return;
+                  }
+                  setFeedback("ok");
+                  setFeedbackText(
+                    [res.unlockMessage, res.unlockWord ? `» ${res.unlockWord}` : null].filter(Boolean).join("\n") ||
+                      "Correct."
+                  );
+                  setAnswer("");
+                  await refresh();
+                  if (res.completed) {
+                    neuroToast.success(
+                      `Quest voltooid! +${status.rewardXp} XP, +${(status.rewardFlexPercentBp / 100).toFixed(0)}% flex (indien actief), badge: ${status.badgeLabel}.`
+                    );
+                  }
+                });
+              }}
+              className="rounded-lg bg-[rgba(var(--mode-rgb),0.35)] px-4 py-2 text-xs font-semibold text-[var(--text-primary)] ring-1 ring-[rgba(var(--mode-rgb),0.35)] hover:bg-[rgba(var(--mode-rgb),0.5)] disabled:opacity-50"
+            >
+              {pending ? "…" : "Controleer"}
+            </button>
+          ) : null}
+        </div>
+      }
+    >
+      {!status ? (
+        <p className="text-sm text-[var(--text-muted)]">Laden…</p>
+      ) : (
+        <div className="space-y-4">
+          <div className="rounded-lg border border-amber-500/30 bg-amber-500/10 px-3 py-2.5">
+            <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-amber-200/90">Prijs bij voltooiing</p>
+            <p className="mt-1 text-sm font-medium text-amber-50/95">{status.prizeLine}</p>
+          </div>
+          {status.epigraph ? (
+            <p className="border-l-2 border-[rgba(var(--mode-rgb),0.45)] pl-3 text-sm italic text-[var(--text-muted)]">
+              {status.epigraph}
+            </p>
+          ) : null}
+
+          {status.completed ? (
+            <div className="rounded-xl border border-emerald-500/30 bg-emerald-500/10 p-4 text-sm text-emerald-100">
+              <p className="font-semibold">Je hebt de reis voltooid.</p>
+              {status.rewardsGranted ? (
+                <p className="mt-2 text-xs text-emerald-200/90">
+                  Beloningen zijn toegekend (o.a. {status.badgeLabel}).
+                </p>
+              ) : (
+                <p className="mt-2 text-xs text-emerald-200/90">Beloningen worden verwerkt…</p>
+              )}
+            </div>
+          ) : null}
+
+          {!status.completed && !puzzle ? (
+            <div className="rounded-xl border border-white/10 bg-white/[0.04] p-4 text-sm text-[var(--text-primary)]">
+              <p>Je bent bij voor vandaag. Kom morgen terug voor de volgende dag.</p>
+              <p className="mt-2 text-xs text-[var(--text-muted)]">
+                Opgeloste dagen: {status.solvedDays.length > 0 ? status.solvedDays.join(", ") : "—"}
+              </p>
+            </div>
+          ) : null}
+
+          {puzzle ? (
+            <>
+              <div>
+                <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[var(--text-muted)]">
+                  {puzzle.headline}
+                </p>
+                {puzzle.kind === "multi" && puzzle.stepTotal != null ? (
+                  <p className="mt-1 text-xs text-[var(--text-muted)]">
+                    Deel {(puzzle.stepIndex ?? 0) + 1} van {puzzle.stepTotal}
+                  </p>
+                ) : null}
+              </div>
+
+              {puzzle.kind === "paintings" && puzzle.paintings?.length ? (
+                <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+                  {puzzle.paintings.map((p, i) => (
+                    <div
+                      key={i}
+                      className="relative overflow-hidden rounded-xl border border-violet-500/25 bg-gradient-to-br from-violet-950/80 to-slate-900/90 p-3 shadow-inner"
+                    >
+                      <div
+                        className="pointer-events-none absolute inset-0 opacity-90"
+                        style={{
+                          backgroundImage: `radial-gradient(circle at ${30 + (i * 17) % 40}% ${40 + (i * 11) % 30}%, rgba(167,139,250,0.35), transparent 55%)`,
+                        }}
+                      />
+                      {p.letter ? (
+                        <span
+                          className="absolute bottom-2 right-2 font-serif text-2xl font-bold text-white/[0.22]"
+                          aria-hidden
+                        >
+                          {p.letter}
+                        </span>
+                      ) : null}
+                      <p className="relative text-xs font-semibold text-violet-100/95">{p.title}</p>
+                      {p.caption ? <p className="relative mt-1 text-[10px] text-white/50">{p.caption}</p> : null}
+                    </div>
+                  ))}
+                </div>
+              ) : null}
+
+              {puzzle.intro ? <p className="text-sm text-[var(--text-muted)] whitespace-pre-wrap">{puzzle.intro}</p> : null}
+              {puzzle.storyLine ? (
+                <p className="text-xs italic text-[var(--text-muted)] whitespace-pre-wrap">{puzzle.storyLine}</p>
+              ) : null}
+              {puzzle.riddle ? (
+                <p className="rounded-lg border border-white/10 bg-black/20 p-3 text-sm text-[var(--text-primary)] whitespace-pre-wrap">
+                  {puzzle.riddle}
+                </p>
+              ) : null}
+
+              {(status.recentAttempts?.length ?? 0) > 0 ? (
+                <div className="rounded-lg border border-white/10 bg-white/[0.03] px-3 py-2">
+                  <p className="text-[10px] font-bold uppercase tracking-wide text-[var(--text-muted)]">
+                    Jouw eerdere antwoorden (deze stap)
+                  </p>
+                  <ul className="mt-2 max-h-36 space-y-1.5 overflow-y-auto text-xs">
+                    {(status.recentAttempts ?? []).map((a, i) => (
+                      <li
+                        key={`${a.at}-${i}`}
+                        className="flex flex-wrap items-baseline justify-between gap-2 border-b border-white/[0.06] pb-1.5 last:border-0 last:pb-0"
+                      >
+                        <span className={a.correct ? "text-emerald-300/95" : "text-rose-200/90"}>
+                          {a.correct ? "Goed: " : "Fout: "}
+                          <span className="font-medium text-[var(--text-primary)]">{a.answer}</span>
+                        </span>
+                        <span className="shrink-0 font-mono text-[10px] text-[var(--text-muted)]">{formatShortAt(a.at)}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ) : null}
+
+              <label className="block text-xs font-medium text-[var(--text-muted)]" htmlFor="quest-answer">
+                {puzzle.kind === "coords" ? "Coördinaten (breedtegraad, lengtegraad)" : "Jouw antwoord"}
+              </label>
+              <input
+                id="quest-answer"
+                value={answer}
+                onChange={(e) => setAnswer(e.target.value)}
+                autoComplete="off"
+                className="mt-1 w-full rounded-lg border border-[var(--card-border)] bg-[var(--bg-surface)]/40 px-3 py-2 text-sm text-[var(--text-primary)] outline-none focus:ring-2 focus:ring-[rgba(var(--mode-rgb),0.45)]"
+                placeholder={puzzle.kind === "coords" ? "bijv. 34.865736, 135.491608" : "Typ je antwoord"}
+              />
+
+              {feedback === "bad" && feedbackText ? (
+                <p className="rounded-lg border border-rose-500/35 bg-rose-500/10 px-3 py-2 text-sm text-rose-100" role="alert">
+                  {feedbackText}
+                </p>
+              ) : null}
+              {feedback === "ok" && feedbackText ? (
+                <p className="rounded-lg border border-emerald-500/35 bg-emerald-500/10 px-3 py-2 text-sm text-emerald-100">
+                  {feedbackText}
+                </p>
+              ) : null}
+            </>
+          ) : null}
+        </div>
+      )}
+    </Modal>
+  );
+}

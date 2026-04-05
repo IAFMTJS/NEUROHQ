@@ -5,10 +5,10 @@ import { useDailySnapshot } from "@/components/bootstrap/BootstrapGate";
 import { useBootstrapToday } from "@/lib/use-bootstrap-today";
 import { getTodayKey } from "@/lib/daily-date";
 import { ProfileCommandDeckLayout } from "@/components/profile/ProfileCommandDeckLayout";
-import { profileEngineHref, profileHomeHref, profileInsightsHref } from "@/lib/profile-routes";
+import { profileEngineHref, profileHomeHref, profileInsightsHref, profileSpecialEventsHref } from "@/lib/profile-routes";
 
 type Props = {
-  main: "home" | "engine" | "insights";
+  main: "home" | "engine" | "insights" | "special";
 };
 
 export function ProfileSnapshotFallback({ main }: Props) {
@@ -47,6 +47,12 @@ export function ProfileSnapshotFallback({ main }: Props) {
             className="rounded-lg border border-[var(--card-border)] bg-[var(--bg-surface)]/30 px-3 py-2 text-xs font-semibold text-[var(--text-primary)] hover:bg-[var(--bg-hover)]/35"
           >
             Insights
+          </Link>
+          <Link
+            href={profileSpecialEventsHref()}
+            className="rounded-lg border border-[var(--card-border)] bg-[var(--bg-surface)]/30 px-3 py-2 text-xs font-semibold text-[var(--text-primary)] hover:bg-[var(--bg-hover)]/35"
+          >
+            Events
           </Link>
           <Link
             href="/dashboard"

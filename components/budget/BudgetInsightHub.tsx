@@ -24,6 +24,14 @@ import { NextMonthExpensesTrigger } from "@/components/budget/NextMonthExpensesT
 import { ArchetypeRiskLensCard } from "@/components/budget/ArchetypeRiskLensCard";
 import { ImpulseTriggerMapCard } from "@/components/budget/ImpulseTriggerMapCard";
 import { ReflectionEngineCard } from "@/components/budget/ReflectionEngineCard";
+import {
+  budgetDeckHeaderDividerClass,
+  budgetDeckNoticeClass,
+  budgetDeckRowButtonClass,
+  budgetDeckSectionKickerClass,
+  budgetDeckShellClass,
+  budgetDeckTileClass,
+} from "@/lib/budget/budget-deck-chrome";
 
 type EntryRow = {
   id: string;
@@ -89,12 +97,6 @@ const toastShell =
 const toastShellWide =
   "relative w-[min(100vw-2rem,480px)] max-h-[min(88vh,640px)] overflow-y-auto overflow-x-hidden rounded-[var(--hq-card-radius,18px)] border border-[rgba(var(--mode-rgb),0.12)] bg-[linear-gradient(165deg,rgba(var(--mode-rgb-deep),0.42),rgba(15,23,42,0.96))] px-3 py-3 pr-10 text-left shadow-[0_12px_48px_rgba(0,0,0,0.45),0_0_28px_rgba(var(--mode-rgb),0.06)] backdrop-blur-md";
 
-/** Zelfde deck-chrome als Sparen & boeken (`card-simple`) en tegels als Optimalisatie-hub. */
-const insightHubSectionClass = "card-simple scroll-mt-24 overflow-hidden p-0";
-
-const insightTileClass =
-  "relative flex min-h-[5.5rem] flex-col items-center justify-center gap-1 rounded-xl border border-[var(--card-border)] bg-[var(--bg-elevated)]/50 px-2 py-3 text-center transition-colors hover:border-[rgba(var(--mode-rgb),0.35)] hover:bg-[var(--bg-elevated)]/80 focus:outline-none focus-visible:ring-2 focus-visible:ring-[rgba(var(--mode-rgb),0.45)] focus-visible:ring-offset-0 sm:min-h-[6rem]";
-
 function ToastChrome({
   toastId,
   title,
@@ -141,7 +143,7 @@ function InsightTile({
   badge?: number;
 }) {
   return (
-    <button type="button" onClick={onClick} className={insightTileClass}>
+    <button type="button" onClick={onClick} className={budgetDeckTileClass()}>
       {badge != null && badge > 0 ? (
         <span className="absolute right-1.5 top-1.5 min-w-[1.25rem] rounded-full border border-[rgba(var(--mode-rgb),0.35)] bg-[rgba(var(--mode-rgb-deep),0.45)] px-1.5 py-0.5 text-[10px] font-bold text-[var(--semantic-accent)]">
           {badge > 99 ? "99+" : badge}
@@ -381,12 +383,12 @@ export function BudgetInsightHub(props: BudgetInsightHubProps) {
   if (historyMode) {
     return (
       <div className="space-y-4">
-        <div className="rounded-xl border border-[var(--card-border)] bg-[var(--bg-elevated)]/50 px-4 py-3 text-sm text-[var(--text-muted)]">
+        <div className={budgetDeckNoticeClass}>
           Historische maand: voorspelling en live-gedrag zijn uitgeschakeld. Verdeling en tips blijven beschikbaar.
         </div>
-        <section className={insightHubSectionClass} aria-label="Inzicht — archief" id="budget-insight-hub">
-          <div className="border-b border-[var(--card-border)] px-4 py-3 md:px-5">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-sky-200">Inzicht</p>
+        <section className={`${budgetDeckShellClass} scroll-mt-24 p-0`} aria-label="Inzicht — archief" id="budget-insight-hub">
+          <div className={`${budgetDeckHeaderDividerClass} px-4 py-3 md:px-5`}>
+            <p className={budgetDeckSectionKickerClass}>Inzicht</p>
             <p className="mt-1 text-xs text-[var(--text-muted)]">Open grafiek, tips of suggesties via de tegels.</p>
           </div>
           <div className="grid grid-cols-2 gap-3 p-4 sm:grid-cols-3 md:px-5">
@@ -420,17 +422,13 @@ export function BudgetInsightHub(props: BudgetInsightHubProps) {
         </div>
       )}
 
-      <section className={insightHubSectionClass} aria-label="Inzicht — overzicht" id="budget-insight-hub">
-        <div className="border-b border-[var(--card-border)] px-4 py-3 md:px-5">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-sky-200">Inzicht</p>
+      <section className={`${budgetDeckShellClass} scroll-mt-24 p-0`} aria-label="Inzicht — overzicht" id="budget-insight-hub">
+        <div className={`${budgetDeckHeaderDividerClass} px-4 py-3 md:px-5`}>
+          <p className={budgetDeckSectionKickerClass}>Inzicht</p>
           <p className="mt-1 text-xs text-[var(--text-muted)]">
             Cijfers, patronen en signalen hier; scroll naar beneden voor weekreview en routines.
           </p>
-          <button
-            type="button"
-            onClick={openSummaryToast}
-            className="mt-3 flex w-full items-center justify-between gap-3 rounded-xl border border-[var(--card-border)] bg-[var(--bg-primary)]/35 px-3 py-2.5 text-left transition-colors hover:border-[rgba(var(--mode-rgb),0.3)] hover:bg-[var(--bg-primary)]/50 focus:outline-none focus-visible:ring-2 focus-visible:ring-[rgba(var(--mode-rgb),0.45)]"
-          >
+          <button type="button" onClick={openSummaryToast} className={`${budgetDeckRowButtonClass} mt-3`}>
             <span className="text-2xl" aria-hidden>
               📋
             </span>

@@ -3,15 +3,15 @@
 Neurohq to do
 
 Popup missies die maar bepaalde tijd blijven, zoals 2u bv maar die wel 400xp geven met push melding bij start van beschikbaarheid natuurlijk 
-Dingen in hourly cron verplaatsen naar weekly en monthly cron zoals bv strategy check in
+
 Onnodige features verwijderen pagina per pagina
 Bucketlist implementeren 
 Oude scifi hud design met bolletjes verwijderen 
 Oude card en button design verwijderen
 Settingspagina herindelen en elke knop werkend maken
 Op basis van brainstatus moet de speel moeilijkheidsgraad verhoogd worden
-Dashboard startmissie knop moet rechtstreeks de eerste task openen in een toast, zodat dashboard ook direct naar actie kan gaan. 
-Playdeck : missies reveal animatie
+ 
+
 Playdeck : chill / chaos / Boost
 Playdeck : Progressive unlock (dit is belangrijk)
 
@@ -98,3 +98,46 @@ Delete account moet verplaatst worden naar user page
 
 
 Userpage - insights : diagnostics tab mag verwijderd worden
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Nu moeten we alle loading en schrijven systemen opnieuw bekijken
+Hoe werken alle queries samen, queries, tanstackqueries, etc
+Hoe zitten de local snapshot en localstorage en cache nu elkaar
+Hoe zitten de loading paths
+ETC
+En hoe werkt alles samen als 1 geheel
+Het wordt tijd dat we over de hele pagina een duidelijke structuur en setup plaatsen
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

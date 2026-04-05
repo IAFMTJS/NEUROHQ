@@ -113,7 +113,13 @@ export type AddXPResult =
 
 export async function addXP(
   points: number,
-  options?: { source_type?: string; task_id?: string | null; skipRevalidate?: boolean }
+  options?: {
+    source_type?: string;
+    task_id?: string | null;
+    skipRevalidate?: boolean;
+    /** When true, award exactly `points` (no Overdrive multiplier). */
+    skipOverdriveMultiplier?: boolean;
+  }
 ): Promise<AddXPResult> {
   if (points <= 0) return undefined;
   const supabase = await createClient();
@@ -121,24 +127,26 @@ export async function addXP(
   if (!user) return undefined;
 
   const today = todayDateString();
-  const { data: odRow } = await supabase
-    .from("daily_state")
-    .select("dcic_mode, dcic_locked_until, dcic_overdrive_session_start")
-    .eq("user_id", user.id)
-    .eq("date", today)
-    .maybeSingle();
   let overdriveFactor = 1;
-  if (
-    odRow &&
-    odRow.dcic_mode === "overdrive" &&
-    (!odRow.dcic_locked_until || Date.parse(odRow.dcic_locked_until) > Date.now())
-  ) {
-    const { getOverdriveHeatEfficiency } = await import("@/lib/dcic/mode-engine");
-    const heat = getOverdriveHeatEfficiency(
-      odRow.dcic_overdrive_session_start ?? null,
-      Date.now()
-    );
-    overdriveFactor = 2 * heat;
+  if (!options?.skipOverdriveMultiplier) {
+    const { data: odRow } = await supabase
+      .from("daily_state")
+      .select("dcic_mode, dcic_locked_until, dcic_overdrive_session_start")
+      .eq("user_id", user.id)
+      .eq("date", today)
+      .maybeSingle();
+    if (
+      odRow &&
+      odRow.dcic_mode === "overdrive" &&
+      (!odRow.dcic_locked_until || Date.parse(odRow.dcic_locked_until) > Date.now())
+    ) {
+      const { getOverdriveHeatEfficiency } = await import("@/lib/dcic/mode-engine");
+      const heat = getOverdriveHeatEfficiency(
+        odRow.dcic_overdrive_session_start ?? null,
+        Date.now()
+      );
+      overdriveFactor = 2 * heat;
+    }
   }
   const adjustedPoints = Math.max(1, Math.floor(points * overdriveFactor));
 

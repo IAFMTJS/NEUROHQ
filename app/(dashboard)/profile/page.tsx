@@ -14,13 +14,16 @@ import { getProfileDailyChallengeContext } from "@/app/actions/profile-daily-cha
 import { todayDateString } from "@/lib/utils/timezone";
 import { ProfileEngineIdentityCard } from "@/components/profile/ProfileEngineIdentityCard";
 import { ProfileHomeCompact } from "@/components/profile/ProfileHomeCompact";
+import { ProfileSpecialEventsClient } from "@/components/profile/ProfileSpecialEventsClient";
 import { ProfileSnapshotFallback } from "@/components/profile/ProfileSnapshotFallback";
+import { getProfileSpecialEventsBundle } from "@/app/actions/profile-special-events";
 import {
   parseProfileMainView,
   parseProfileEngineTab,
   profileHomeHref,
   profileEngineHref,
   profileInsightsHref,
+  profileSpecialEventsHref,
   type ProfileEngineTabId,
 } from "@/lib/profile-routes";
 import { StrategyEngineSettingsSection } from "@/components/strategy/StrategyEngineSettingsSection";
@@ -57,7 +60,7 @@ const ENGINE_NAV: { id: ProfileEngineTabId; label: string }[] = [
   { id: "play", label: "Play deck" },
 ];
 
-function MainTabNavSimplified({ active }: { active: "home" | "engine" | "insights" }) {
+function MainTabNavSimplified({ active }: { active: "home" | "engine" | "insights" | "special" }) {
   const base =
     "rounded-xl px-3 py-2.5 text-center text-[11px] font-semibold uppercase tracking-wide transition min-h-[44px] flex flex-1 items-center justify-center sm:flex-none outline-none focus-visible:ring-2 focus-visible:ring-[rgba(var(--mode-rgb),0.45)] focus-visible:ring-offset-0";
   const on =
@@ -74,6 +77,9 @@ function MainTabNavSimplified({ active }: { active: "home" | "engine" | "insight
       </Link>
       <Link href={profileInsightsHref("overview")} aria-current={active === "insights" ? "page" : undefined} className={`${base} ${active === "insights" ? on : off}`}>
         Insights
+      </Link>
+      <Link href={profileSpecialEventsHref()} aria-current={active === "special" ? "page" : undefined} className={`${base} ${active === "special" ? on : off}`}>
+        Events
       </Link>
     </nav>
   );
@@ -150,6 +156,7 @@ async function ProfileHomeAsync({ userId }: { userId: string }) {
           hideTitleBar
           footerLinks={[
             { href: profileEngineHref("identity"), label: "Engine" },
+            { href: profileSpecialEventsHref(), label: "Events" },
             { href: "/settings", label: "Instellingen" },
             { href: "/dashboard", label: "HQ" },
           ]}
@@ -186,6 +193,41 @@ async function ProfileHomeAsync({ userId }: { userId: string }) {
   );
 }
 
+async function ProfileSpecialAsync() {
+  const bundle = await getProfileSpecialEventsBundle();
+  if (!bundle) redirect("/login");
+  const prefs = await getUserPreferencesOrDefaults();
+  const simplified = prefs.simplified_content === true;
+
+  if (simplified) {
+    return (
+      <div className={SIMPLIFIED_VIEWPORT_WRAPPER}>
+        <SimplifiedPageShell
+          title="Special events"
+          hideTitleBar
+          footerLinks={[
+            { href: profileHomeHref(), label: "Profiel" },
+            { href: profileEngineHref("identity"), label: "Engine" },
+            { href: "/settings", label: "Instellingen" },
+            { href: "/dashboard", label: "HQ" },
+          ]}
+        >
+          <div className="space-y-4">
+            <MainTabNavSimplified active="special" />
+            <ProfileSpecialEventsClient bundle={bundle} />
+          </div>
+        </SimplifiedPageShell>
+      </div>
+    );
+  }
+
+  return (
+    <ProfileCommandDeckLayout main="special">
+      <ProfileSpecialEventsClient bundle={bundle} />
+    </ProfileCommandDeckLayout>
+  );
+}
+
 function insightsSearchParamsPromise(raw: Search): Promise<{ weekStart?: string; tab?: string }> {
   const tab = raw.tab ?? raw.insightsTab;
   return Promise.resolve({
@@ -206,6 +248,7 @@ async function ProfileInsightsAsync({ raw }: { raw: Search }) {
           title="Insights"
           footerLinks={[
             { href: profileHomeHref(), label: "Profiel" },
+            { href: profileSpecialEventsHref(), label: "Events" },
             { href: "/tasks", label: "Missions" },
             { href: "/dashboard", label: "HQ" },
           ]}
@@ -264,6 +307,14 @@ export default async function ProfilePage({ searchParams }: { searchParams: Prom
     return (
       <Suspense fallback={<ReportSnapshotFallback />}>
         <ProfileInsightsAsync raw={raw} />
+      </Suspense>
+    );
+  }
+
+  if (mainView === "special") {
+    return (
+      <Suspense fallback={<ProfileSnapshotFallback main="special" />}>
+        <ProfileSpecialAsync />
       </Suspense>
     );
   }
@@ -378,6 +429,7 @@ export default async function ProfilePage({ searchParams }: { searchParams: Prom
           hideTitleBar
           footerLinks={[
             { href: profileHomeHref(), label: "Profiel" },
+            { href: profileSpecialEventsHref(), label: "Events" },
             { href: "/settings", label: "Instellingen" },
             { href: "/dashboard", label: "HQ" },
           ]}

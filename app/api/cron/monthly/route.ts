@@ -6,7 +6,7 @@ export const dynamic = "force-dynamic";
 export const maxDuration = 300;
 
 /**
- * First of month (UTC): strategy monthly tip push, at most once per calendar month per user.
+ * First of month (UTC): strategy monthly tip, strategy check-in nudges, quarter-incomplete nudge (one prioritized push per user).
  * GitHub: `.github/workflows/cron-monthly.yml`.
  */
 export async function GET(request: Request) {

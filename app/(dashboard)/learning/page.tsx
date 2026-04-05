@@ -1,6 +1,4 @@
 import { getUserPreferencesOrDefaults } from "@/app/actions/preferences";
-import { getLearningState } from "@/app/actions/learning-state";
-import { getXPIdentity } from "@/app/actions/xp";
 import { getProtocolLibrary } from "@/app/actions/protocol-library";
 import { getProtocolProgressMap } from "@/app/actions/protocol-progress";
 import { getGrowthFocus } from "@/app/actions/growth-focus";
@@ -16,12 +14,8 @@ type Props = { searchParams: Promise<{ toward?: string }> };
 
 export default async function LearningPage({ searchParams }: Props) {
   void searchParams;
-  const today = new Date();
-  const todayStr = today.toISOString().slice(0, 10);
-  const [prefs, learningState, xpIdentity, protocols, progressMap, growthFocus, strategyPacingHints] = await Promise.all([
+  const [prefs, protocols, progressMap, growthFocus, strategyPacingHints] = await Promise.all([
     getUserPreferencesOrDefaults(),
-    getLearningState(),
-    getXPIdentity(),
     getProtocolLibrary("nl"),
     getProtocolProgressMap(),
     getGrowthFocus(),
@@ -32,9 +26,6 @@ export default async function LearningPage({ searchParams }: Props) {
 
   const learningBody = (
     <LearningContentClient
-      todayStr={todayStr}
-      fallback={learningState}
-      xpIdentity={xpIdentity}
       protocols={protocols}
       progressMap={progressMap}
       growthFocus={growthFocus}
@@ -43,7 +34,7 @@ export default async function LearningPage({ searchParams }: Props) {
       heroSlot={
         !simplified ? (
           <p className="text-center text-xs text-[var(--text-muted)]">
-            Minder tabs, meer uitvoeren: focus op command center en je actieve leerpad.
+            Protocolfocus en kwartaalritme — alles wat je nodig hebt om Growth uit te voeren.
           </p>
         ) : undefined
       }

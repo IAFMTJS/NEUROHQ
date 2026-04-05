@@ -61,6 +61,6 @@ export function toastDashboardFirstMission(task: { id: string; title: string }):
         </button>
       </div>
     ),
-    { id: toastId, duration: 30_000 }
+    { id: toastId, duration: 120_000 }
   );
 }

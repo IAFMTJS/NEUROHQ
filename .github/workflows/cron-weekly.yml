@@ -1,4 +1,4 @@
-# Weekly cron: reality report, savings/learning pushes, strategy & growth nudges (check-in, quarter, etc.).
+# Weekly cron: reality report, savings alerts, growth + learning-idle nudges. Learning reminders: cron-weekly-learning.yml (Thursday).
 name: Cron weekly
 
 on:

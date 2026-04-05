@@ -4,9 +4,7 @@ const LINKS = [
   { href: "#growth-command", label: "Command center" },
   { href: "#growth-system", label: "Systeem & protocollen" },
   { href: "#growth-overview", label: "Dashboard" },
-  { href: "#growth-path", label: "Leerpad" },
   { href: "#growth-missions", label: "Doel → missies" },
-  { href: "#growth-streams", label: "Streams" },
 ] as const;
 
 /** Sticky mini-nav — Growth v2 information architecture. */

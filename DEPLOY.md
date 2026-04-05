@@ -20,7 +20,7 @@ If the build fails locally, it will fail on Vercel. Fix any TypeScript or compil
 |-------|------------|
 | **Strict null (TS)** | “X is possibly null” or “Type 'number \| null' is not assignable to 'number \| undefined'”. Use optional chaining (`obj?.prop`) for possibly-null objects, and align types: action params that receive `null` from forms should be typed `number \| null` (or `undefined`), not just `number`. |
 | **Peer dependency conflict** | `ERESOLVE` during `npm install`. Align versions (e.g. `eslint-config-next@16` needs `eslint@>=9`). Run `npm install` locally and commit `package.json` + `package-lock.json`. |
-| **Cron schedule (Hobby)** | Vercel Hobby allows only one run per day per cron. Remove or comment out any cron with a schedule that runs more than once per day (e.g. hourly `0 * * * *`) from `vercel.json`. |
+| **Cron schedule (Hobby)** | Vercel Hobby allows only one run per day per Vercel Cron path. Use **GitHub Actions** (`cron-hourly.yml`, etc.) for hourly and the rest; this repo leaves `vercel.json` without a `crons` block. |
 | **Middleware deprecation** | Next.js 16 warns that `middleware` is deprecated in favor of `proxy`. The app still builds; to remove the warning later, migrate to `proxy.ts` and the `proxy()` export when ready. |
 
 Run **`npm run deploy:check`** before pushing (runs `next build` only). On Windows with the project on a non-C: drive, `next lint` can fail with “Invalid project directory provided”; use **`npx eslint .`** if `next lint` fails. **Build fails with TypeScript errors:** regenerate `types/database.types.ts` — run `npm run db:types` (see [docs/BUILD_FIX_ANALYSIS.md](docs/BUILD_FIX_ANALYSIS.md)). Until then, `typescript.ignoreBuildErrors` in `next.config.mjs` lets the build complete.
@@ -128,9 +128,9 @@ For Google Calendar: `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `NEXT_PUBLIC_AP
 
 Push to the connected branch or click Deploy. Wait for build to succeed.
 
-### 3.4 Cron jobs (Vercel)
+### 3.4 Cron jobs
 
-Crons are defined in `vercel.json`. **Hobby plan:** Vercel allows only one run per day per cron; the hourly job is not in `vercel.json` so the project deploys. Timezone-aware rollover (hourly) can be triggered manually or use Pro/external cron (e.g. GitHub Actions workflow `.github/workflows/cron-hourly.yml`). **Pro plan:** you can add the hourly cron back (`"schedule": "0 * * * *"` for `/api/cron/hourly`). To authorize cron invocations, set **CRON_SECRET** and in Vercel Cron configuration (if available) set header: `Authorization: Bearer <CRON_SECRET>`. **Deployment Protection:** If you use Vercel Authentication or Password Protection on Production, cron requests from outside (e.g. GitHub Actions) will get 302 to `/login` unless you disable protection for Production or use Protection Bypass for Automation (see Troubleshooting §5.1).
+**Default:** all schedules run from **GitHub Actions** (`.github/workflows/cron-*.yml`); `vercel.json` does **not** define Vercel Crons (no duplicate triggers). **Hobby plan:** Vercel still limits how often each path can run if you add crons in the dashboard; hourly needs an external trigger (GitHub or Pro). To authorize HTTP cron calls, set **CRON_SECRET** and send `Authorization: Bearer <CRON_SECRET>` (see `scripts/gh-call-cron.sh`). **Deployment Protection:** If Production is behind Vercel Authentication or Password Protection, external cron (e.g. GitHub) can get 302 to `/login` unless you allow automation bypass or relax protection (see Troubleshooting §5.1).
 
 ---
 
@@ -177,7 +177,7 @@ Run through this after deploy (or locally) to validate core flows.
 
 If you have **CRON_SECRET** and a way to call APIs (e.g. curl or Vercel Cron logs):
 
-- [ ] `GET /api/cron/daily` with `Authorization: Bearer <CRON_SECRET>` returns 200 and JSON (`ok: true`, `job: "daily"`). Expect avoidance / hobby decay / acceptance / release-note counts in the body (not task rollover; that runs in hourly).
+- [ ] `GET /api/cron/daily` with `Authorization: Bearer <CRON_SECRET>` returns 200 and JSON (`ok: true`, `job: "daily"`). Expect avoidance / hobby decay / acceptance counts in the body (not task rollover; that runs in hourly).
 - [ ] `GET /api/cron/hourly` with auth: 200 (not scheduled on Hobby; use for manual or Pro). Rollover and quote run at 00:00 / from quote hour in each user’s timezone (or UTC if `timezone` is null); check `users.last_rollover_date` and push logs.
 - [ ] `GET /api/cron/weekly` with auth: 200. `reality_reports` has new rows for last week; learning/savings push sent if conditions met.
 
@@ -257,7 +257,7 @@ If the “Cron hourly” workflow keeps failing (302, 404, or 401), follow these
 
 - **From the workflow:** After each run, the log line `Response (200): {...}` shows the JSON body. You should see something like:
   ```json
-  {"ok":true,"job":"hourly","rolled":0,"quoteSent":0,"eveningEmailSent":0,"eveningPushSent":0,"brainStatusRemindersSent":0,"calendarReminderSent":0,"achievementPushSent":0,"alertPushSent":0,"usersChecked":N}
+  {"ok":true,"job":"hourly","rolled":0,"quoteSent":0,"eveningPushSent":0,"brainStatusRemindersSent":0,"calendarReminderSent":0,"achievementPushSent":0,"alertPushSent":0,"usersChecked":N}
   ```
   `usersChecked` is how many users were considered (including those without a timezone; they use UTC for local clock). The other fields are counts of actions taken in that run (rollovers, quote pushes, evening emails and pushes, brain-status reminders, etc.). At most hours these will be 0; they increase when it’s e.g. 00:00, 08:00, or 20:00 in a user’s effective timezone.
 
