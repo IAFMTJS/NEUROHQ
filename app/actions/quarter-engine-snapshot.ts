@@ -13,6 +13,7 @@ import {
   type QuarterEngineResult,
 } from "@/lib/strategy/quarter-engine";
 import { todayDateString } from "@/lib/utils/timezone";
+import { getActiveProtocolWeekMissionStats, type ProtocolWeekMissionStats } from "@/app/actions/protocol-growth-stats";
 
 export type QuarterEngineSnapshot = QuarterEngineResult & {
   quarterStart: string;
@@ -24,6 +25,8 @@ export type QuarterEngineSnapshot = QuarterEngineResult & {
   daysToDeadline: number;
   thesisDeadlinePassed: boolean;
   pressureBoostAfterDeadline: boolean;
+  /** Set when Growth-pijler op echte protocol-weekmissies draait (afgerond / verwacht in definitie). */
+  growthProtocolWeek: ProtocolWeekMissionStats | null;
 };
 
 function quarterLabel(start: string): string {
@@ -103,16 +106,32 @@ export async function getQuarterEngineSnapshot(): Promise<QuarterEngineSnapshot 
   const engineParams = normalizeStrategyEngineParams((row as { engine_params?: unknown }).engine_params);
   const today = todayDateString();
   const { start, end } = calendarQuarterBounds(today);
-  const pacing = await getStrategyPacingHints();
+  const [pacing, protocolWeekStats] = await Promise.all([
+    getStrategyPacingHints(),
+    getActiveProtocolWeekMissionStats(),
+  ]);
 
   const xpEarned = await sumXpEventsInRange(user.id, start, end);
   const completes = await countTaskCompletesInQuarter(user.id, start, end);
   const neg = await countMissionOutcomesInQuarter(user.id, start, end);
   const disciplineNegative = neg.skip + neg.reschedule + neg.delete;
 
+  let growthTargetPct = engineParams.growth.quarterlyLearningProgressTargetPct;
+  let growthActualPct = pacing?.learningRoughPct ?? null;
+  let growthProtocolWeek: ProtocolWeekMissionStats | null = null;
+
+  if (protocolWeekStats && protocolWeekStats.expected > 0) {
+    growthProtocolWeek = protocolWeekStats;
+    growthTargetPct = 100;
+    growthActualPct = Math.min(
+      100,
+      Math.round((100 * protocolWeekStats.completed) / protocolWeekStats.expected)
+    );
+  }
+
   const inputs = {
-    growthTargetPct: engineParams.growth.quarterlyLearningProgressTargetPct,
-    growthActualPct: pacing?.learningRoughPct ?? null,
+    growthTargetPct,
+    growthActualPct,
     savingsTargetCents: engineParams.savings.quarterlyMustSaveCents,
     savedThisQuarterCents: pacing?.savedThisQuarterCents ?? null,
     xpTargetEarned: engineParams.xp.quarterlyTargetXpEarned,
@@ -156,6 +175,7 @@ export async function getQuarterEngineSnapshot(): Promise<QuarterEngineSnapshot 
     daysToDeadline,
     thesisDeadlinePassed,
     pressureBoostAfterDeadline: boost,
+    growthProtocolWeek,
   };
 }
 

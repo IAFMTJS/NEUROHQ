@@ -3,7 +3,12 @@ import { getActiveStrategyFocus } from "@/app/actions/strategyFocus";
 import { countBudgetLocksThisQuarter } from "@/app/actions/budget-intelligence";
 import { StrategyEngineSettingsForm } from "@/components/strategy/StrategyEngineSettingsForm";
 
-export async function StrategyEngineSettingsSection() {
+type Props = {
+  /** HTML id op het formulier (anchor); default `strategy-engine`. */
+  formSectionId?: string;
+};
+
+export async function StrategyEngineSettingsSection({ formSectionId = "strategy-engine" }: Props = {}) {
   const strategy = await getActiveStrategyFocus();
   if (!strategy) {
     return (
@@ -26,6 +31,7 @@ export async function StrategyEngineSettingsSection() {
       strategyId={strategy.id}
       initial={strategy.engine_params}
       locksUsedThisQuarter={locksUsed}
+      sectionId={formSectionId}
     />
   );
 }

@@ -25,7 +25,7 @@ const KIND_LABEL: Record<string, string> = {
 
 const MAX_PICK_GENERATION = 2;
 /** Time between each card starting its flip (overlapping flips = dealer-style cadence). */
-const REVEAL_STAGGER_MS = 260;
+const REVEAL_STAGGER_MS = 300;
 
 export function PlayDeckModal({ open, onClose, dateStr }: Props) {
   const router = useRouter();

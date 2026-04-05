@@ -129,6 +129,13 @@ export function subtractDays(dateStr: string, days: number): string {
   return d.toISOString().slice(0, 10);
 }
 
+/** Add days to a YYYY-MM-DD date string (UTC noon anchor). */
+export function addDays(dateStr: string, days: number): string {
+  const d = new Date(dateStr + "T12:00:00Z");
+  d.setUTCDate(d.getUTCDate() + days);
+  return d.toISOString().slice(0, 10);
+}
+
 /**
  * Previous payday period bounds: the period that ended the day before periodStart.
  * Used to show "previous period remaining" (e.g. resterend februari).

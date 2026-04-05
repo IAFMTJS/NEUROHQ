@@ -8,22 +8,13 @@ import {
   demoToastWeeklyBurnWarningEn,
 } from "@/lib/ui/budget-guardrail-toasts";
 import { EnergyRing } from "@/components/hud-test/EnergyRing";
-import { CommanderStatRing } from "@/components/commander/CommanderStatRing";
 import { StrategyAnalysisSplitRing } from "@/components/strategy/StrategyAnalysisSplitRing";
 import { ZoneBandBar } from "@/components/visual-lab/VisualLabBars";
 import { PolygonHudMeter } from "@/components/visual-lab/VisualLabPolygonMeters";
-import { VisualLabHexMesh } from "@/components/visual-lab/VisualLabHexMesh";
 import { VisualLabShapeEnergyRing } from "@/components/visual-lab/VisualLabShapeEnergyRing";
-import { VisualLabMissionsPageConcept } from "@/components/visual-lab/VisualLabMissionsPageConcept";
-import { VisualLabMissionsSimplifiedConcept } from "@/components/visual-lab/VisualLabMissionsSimplifiedConcept";
-import {
-  VisualLabNotificationsPageConcept,
-  VisualLabProfilePageConcept,
-} from "@/components/visual-lab/VisualLabUserPageConcepts";
-import { VisualLabDashboardPageConcepts } from "@/components/visual-lab/VisualLabDashboardPageConcepts";
-import { VisualLabDashboardScreenshotIdeas } from "@/components/visual-lab/VisualLabDashboardScreenshotIdeas";
-import { VisualLabPedestalHalfRingAlternatives } from "@/components/visual-lab/VisualLabPedestalHalfRingAlternatives";
-import { VisualLabStrategyPageConcept } from "@/components/visual-lab/VisualLabStrategyPageConcepts";
+import { VisualLabDashboardReimaginedConcepts } from "@/components/visual-lab/VisualLabDashboardReimaginedConcepts";
+import { VisualLabStrategyReimaginedConcepts } from "@/components/visual-lab/VisualLabStrategyReimaginedConcepts";
+import { VisualLabNotificationsPageConcept } from "@/components/visual-lab/VisualLabUserPageConcepts";
 import {
   VISUAL_LAB_UI_BACKDROP_ORDER,
   VISUAL_LAB_UI_BACKDROP_PRESETS,
@@ -326,31 +317,21 @@ export function VisualLabClient() {
               Pagina-command decks
             </h2>
             <p className="mt-1 max-w-2xl text-xs leading-relaxed text-[var(--text-secondary)]">
-              Mock-ups die dezelfde opbouw gebruiken als live dashboard:
-              cinematic kaart, Command-header, HUD-tab rail, inhoud met{" "}
+              Mock-ups met dezelfde opbouw als live hubs: cinematic kaart,
+              command-header, inhoud met{" "}
               <code className="rounded bg-black/30 px-1 text-[10px]">
                 space-y-6
               </code>
-              . Daaronder: archived reference van de oude simplified-shell (mini-strip + SciFiPanel); productie{" "}
-              <code className="rounded bg-black/30 px-1 text-[10px]">/tasks</code> volgt het command deck hierboven.
+              . Hieronder: drie dashboard-reimaginings (mascotte + tokens), daarna drie
+              strategy-reimaginings, dan het meldingen-deck.
             </p>
           </div>
 
-          <VisualLabMissionsPageConcept />
+          <VisualLabDashboardReimaginedConcepts />
 
-          <VisualLabMissionsSimplifiedConcept />
-
-          <VisualLabStrategyPageConcept />
-
-          <VisualLabProfilePageConcept />
+          <VisualLabStrategyReimaginedConcepts />
 
           <VisualLabNotificationsPageConcept />
-
-          <VisualLabDashboardPageConcepts />
-
-          <VisualLabDashboardScreenshotIdeas />
-
-          <VisualLabPedestalHalfRingAlternatives />
 
           <section
             className="relative mb-10 w-full space-y-4 md:-mx-4 md:w-[calc(100%+2rem)] md:max-w-[calc(100%+2rem)] md:px-4"
@@ -400,115 +381,6 @@ export function VisualLabClient() {
                   </div>
                 </div>
               ))}
-            </div>
-          </section>
-
-          <section
-            className="relative mb-10"
-            aria-labelledby="pipeline-heading"
-          >
-            <h2
-              id="pipeline-heading"
-              className="mb-4 text-[11px] font-bold uppercase tracking-[0.18em] text-[var(--text-muted)]"
-            >
-              Decision pipeline (diagram)
-            </h2>
-            <div className="overflow-x-auto rounded-xl border border-[rgba(var(--mode-rgb),0.18)] bg-[rgba(4,12,22,0.65)] p-4 shadow-[inset_0_2px_12px_rgba(0,0,0,0.35)]">
-              <svg
-                viewBox="0 0 520 140"
-                className="mx-auto h-auto w-full min-w-[480px]"
-                role="img"
-                aria-label="Mock pipeline from inputs to action"
-              >
-                <defs>
-                  <linearGradient
-                    id="vl-node"
-                    x1="0%"
-                    y1="0%"
-                    x2="100%"
-                    y2="100%"
-                  >
-                    <stop offset="0%" stopColor="rgba(0,212,255,0.25)" />
-                    <stop offset="100%" stopColor="rgba(0,136,255,0.08)" />
-                  </linearGradient>
-                  <filter
-                    id="vl-glow"
-                    x="-20%"
-                    y="-20%"
-                    width="140%"
-                    height="140%"
-                  >
-                    <feGaussianBlur stdDeviation="1.2" result="b" />
-                    <feMerge>
-                      <feMergeNode in="b" />
-                      <feMergeNode in="SourceGraphic" />
-                    </feMerge>
-                  </filter>
-                </defs>
-                {[
-                  { x: 24, label: "Sense" },
-                  { x: 148, label: "Context" },
-                  { x: 272, label: "Decide" },
-                  { x: 396, label: "Act" },
-                ].map((n, i, arr) => (
-                  <g key={n.label}>
-                    {i < arr.length - 1 ? (
-                      <line
-                        x1={n.x + 78}
-                        y1={58}
-                        x2={arr[i + 1].x + 6}
-                        y2={58}
-                        stroke="rgba(0,212,255,0.35)"
-                        strokeWidth="2"
-                        strokeDasharray="4 6"
-                      />
-                    ) : null}
-                    <rect
-                      x={n.x}
-                      y={28}
-                      width={96}
-                      height={60}
-                      rx="10"
-                      fill="url(#vl-node)"
-                      stroke="rgba(0,212,255,0.45)"
-                      strokeWidth="1"
-                      filter="url(#vl-glow)"
-                    />
-                    <text
-                      x={n.x + 48}
-                      y={62}
-                      textAnchor="middle"
-                      fill="rgba(229,231,235,0.92)"
-                      fontSize="12"
-                      fontFamily="var(--font-sans), system-ui, sans-serif"
-                      fontWeight="600"
-                    >
-                      {n.label}
-                    </text>
-                  </g>
-                ))}
-                <rect
-                  x={180}
-                  y={102}
-                  width={160}
-                  height="28"
-                  rx="6"
-                  fill="rgba(251,191,36,0.12)"
-                  stroke="rgba(251,191,36,0.35)"
-                />
-                <text
-                  x={260}
-                  y="121"
-                  textAnchor="middle"
-                  fill="rgba(253,230,138,0.95)"
-                  fontSize="10"
-                  fontFamily="var(--font-sans), system-ui, sans-serif"
-                  fontWeight="600"
-                  letterSpacing="0.08em"
-                >
-                  GUARDRAIL CHECK (MOCK)
-                </text>
-              </svg>
             </div>
           </section>
 
@@ -639,17 +511,6 @@ export function VisualLabClient() {
                     </div>
                   ))}
                 </div>
-              </div>
-            </div>
-
-            <div className="space-y-3">
-              <h3 className="text-[10px] font-bold uppercase tracking-[0.16em] text-[var(--text-muted)]">
-                CommanderStatRing (compact)
-              </h3>
-              <div className="flex flex-wrap items-end justify-center gap-8 rounded-xl border border-[rgba(var(--mode-rgb),0.14)] bg-[rgba(4,12,22,0.35)] px-4 py-5">
-                <CommanderStatRing variant="energy" value={72} size={102} />
-                <CommanderStatRing variant="focus" value={38} size={102} />
-                <CommanderStatRing variant="load" value={76} size={102} />
               </div>
             </div>
 
@@ -810,26 +671,6 @@ export function VisualLabClient() {
                   style="fill"
                 />
               </div>
-            </div>
-          </section>
-
-          <section
-            className="relative mb-10 space-y-3"
-            aria-labelledby="hex-mesh-heading"
-          >
-            <div className="flex flex-wrap items-end justify-between gap-3">
-              <h2
-                id="hex-mesh-heading"
-                className="text-[11px] font-bold uppercase tracking-[0.18em] text-[var(--text-muted)]"
-              >
-                Hex mesh
-              </h2>
-              <span className="text-[10px] text-[var(--text-muted)]">
-                Honeycomb · 60% cells filled
-              </span>
-            </div>
-            <div className="rounded-xl border border-[rgba(var(--mode-rgb),0.16)] bg-[rgba(4,12,22,0.45)] p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
-              <VisualLabHexMesh fillPct={60} />
             </div>
           </section>
 

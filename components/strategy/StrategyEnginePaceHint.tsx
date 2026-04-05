@@ -25,8 +25,11 @@ export async function StrategyEnginePaceHint({ variant = "both" }: { variant?: V
       </ul>
       <p className="mt-2 text-[var(--text-muted)]">
         Doelen wijzig je op{" "}
-        <Link href="/strategy" className="font-medium text-[var(--accent-focus)] underline-offset-2 hover:underline">
-          Strategy
+        <Link
+          href="/strategy#strategy-contract"
+          className="font-medium text-[var(--accent-focus)] underline-offset-2 hover:underline"
+        >
+          Strategy contract
         </Link>
         . Geen tweede bron: dit is een hint, geen aparte database.
       </p>

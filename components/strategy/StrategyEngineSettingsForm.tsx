@@ -14,6 +14,8 @@ type Props = {
   strategyId: string;
   initial: StrategyEngineParams;
   locksUsedThisQuarter: number;
+  /** Voor anchor links (default: strategy-engine). */
+  sectionId?: string;
 };
 
 const PUSH_OPTIONS: { value: PushAreaStyle; label: string }[] = [
@@ -22,7 +24,12 @@ const PUSH_OPTIONS: { value: PushAreaStyle; label: string }[] = [
   { value: "positive", label: "Meer positieve reinforcement" },
 ];
 
-export function StrategyEngineSettingsForm({ strategyId, initial, locksUsedThisQuarter }: Props) {
+export function StrategyEngineSettingsForm({
+  strategyId,
+  initial,
+  locksUsedThisQuarter,
+  sectionId = "strategy-engine",
+}: Props) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [err, setErr] = useState<string | null>(null);
@@ -114,7 +121,7 @@ export function StrategyEngineSettingsForm({ strategyId, initial, locksUsedThisQ
 
   return (
     <section
-      id="strategy-engine"
+      id={sectionId}
       className="space-y-6 rounded-2xl border border-[var(--accent-focus)]/25 bg-[var(--bg-elevated)]/90 p-5 shadow-[0_0_36px_rgba(59,130,246,0.08)]"
       aria-label="Strategy engine instellingen"
     >
@@ -234,6 +241,11 @@ export function StrategyEngineSettingsForm({ strategyId, initial, locksUsedThisQ
               className="mt-1 w-full rounded-lg border border-[var(--card-border)] bg-[var(--bg-elevated)] px-3 py-2 text-sm"
             />
           </label>
+          <p className="text-[10px] text-[var(--text-muted)]">
+            Heb je een actief protocol: de Strategy-score gebruikt dan eerst{" "}
+            <span className="font-medium text-[var(--text-secondary)]">afgeronde weekmissies / taken in die week</span>{" "}
+            op je Missions-bord; dit veld geldt als fallback als er geen weektaken in de definitie staan.
+          </p>
         </div>
 
         <div className="space-y-3 rounded-xl border border-[var(--card-border)] bg-[var(--bg-primary)]/40 p-4">

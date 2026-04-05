@@ -25,6 +25,7 @@ export default memo(function BottomNavigation() {
         href={link.href}
         className={`nav-item nav-item-fab-rail ${active ? "active" : ""}`}
         prefetch={false}
+        aria-label={link.label}
         onClick={(e) => onPriorityNavClick(link.href, e)}
       >
         <span className="nav-item-icon flex items-center justify-center [&_svg]:h-[18px] [&_svg]:w-[18px]">
@@ -54,6 +55,7 @@ export default memo(function BottomNavigation() {
                 href={hubLink.href}
                 className={`nav-item-fab-hub ${hubActive ? "active" : ""}`}
                 prefetch={false}
+                aria-label={hubLink.label}
                 aria-current={hubActive ? "page" : undefined}
                 onClick={(e) => onPriorityNavClick(hubLink.href, e)}
               >

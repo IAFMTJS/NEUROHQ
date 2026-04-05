@@ -5,6 +5,9 @@ import { createClient } from "@/lib/supabase/server";
 import { createTask } from "@/app/actions/tasks";
 import { parseProtocolDefinition, getScaledTask, weekForIndex } from "@/lib/growth/protocol-definition";
 import type { DifficultyTier } from "@/lib/growth/adaptive-engine";
+import { assignProtocolTaskDueDates } from "@/lib/growth/spread-protocol-due-dates";
+import { getBudgetWeekBounds } from "@/lib/utils/budget-date";
+import { todayDateString } from "@/lib/utils/timezone";
 
 const PTASK_MARKER = (id: string) => `ptask:${id}`;
 
@@ -13,11 +16,25 @@ function protocolTaskBaseXp(minutes: number, tier: DifficultyTier): number {
   return Math.max(8, Math.min(120, Math.round(minutes * 0.9) + tierBonus));
 }
 
-/** Push current protocol week tasks to Missions board (tasks table), deduped by ptask id + due date. */
+function notesMatchProtocolWeek(notes: string, protocolSlug: string, weekIndex: number): boolean {
+  const lines = notes.split("\n").map((l) => l.trim());
+  return lines.includes(`protocol:${protocolSlug}`) && lines.includes(`week:${weekIndex}`);
+}
+
+function extractPtaskId(notes: string): string | null {
+  const m = notes.match(/ptask:([^\s]+)/);
+  return m ? m[1] : null;
+}
+
+/**
+ * Push current protocol week tasks to Missions, deduped by ptask id anywhere in the current budget week.
+ * Default: due dates willekeurig gespreid over vandaag t/m zondag (week ma–zo).
+ * Met expliciete `due_date`: alle nieuwe taken op die dag (legacy).
+ */
 export async function commitProtocolWeekToMissions(params: {
   protocol_slug: string;
   locale?: string;
-  /** Defaults to today (UTC date). */
+  /** Alle taken op deze dag; als gezet, geen week-spreiding. */
   due_date?: string;
 }): Promise<{ created: number; skipped: number; taskIds: string[] }> {
   const supabase = await createClient();
@@ -27,7 +44,9 @@ export async function commitProtocolWeekToMissions(params: {
   if (!user) throw new Error("Niet ingelogd.");
 
   const locale = params.locale ?? "nl";
-  const dueDate = params.due_date ?? new Date().toISOString().slice(0, 10);
+  const anchorToday = todayDateString();
+  const forceSingleDay = params.due_date != null && params.due_date !== "";
+  const singleDue = forceSingleDay ? params.due_date! : null;
 
   const { data: row, error: rowErr } = await supabase
     .from("protocol_library")
@@ -56,29 +75,39 @@ export async function commitProtocolWeekToMissions(params: {
 
   const titlePrefix = (row as { title?: string }).title?.slice(0, 48) ?? params.protocol_slug;
 
-  const { data: existingToday } = await supabase
+  const { start: weekStart, end: weekEnd } = getBudgetWeekBounds(anchorToday);
+  const { data: existingInWeek } = await supabase
     .from("tasks")
-    .select("id, notes")
+    .select("notes")
     .eq("user_id", user.id)
-    .eq("due_date", dueDate)
+    .gte("due_date", weekStart)
+    .lte("due_date", weekEnd)
     .is("deleted_at", null);
 
   const existingMarkers = new Set<string>();
-  for (const t of existingToday ?? []) {
+  for (const t of existingInWeek ?? []) {
     const n = (t as { notes?: string | null }).notes ?? "";
-    const m = n.match(/ptask:([^\s]+)/);
-    if (m) existingMarkers.add(m[1]);
+    if (!notesMatchProtocolWeek(n, params.protocol_slug, weekIndex)) continue;
+    const id = extractPtaskId(n);
+    if (id) existingMarkers.add(id);
   }
+
+  const spreadDueDates = forceSingleDay
+    ? null
+    : assignProtocolTaskDueDates(week.tasks.length, anchorToday);
 
   const taskIds: string[] = [];
   let skipped = 0;
   let created = 0;
 
-  for (const task of week.tasks) {
+  for (let ti = 0; ti < week.tasks.length; ti++) {
+    const task = week.tasks[ti];
     if (existingMarkers.has(task.id)) {
       skipped++;
       continue;
     }
+
+    const dueDate = forceSingleDay ? singleDue! : spreadDueDates![ti];
 
     const scaled = getScaledTask(task, tier);
     const notes = [
@@ -130,5 +159,7 @@ export async function commitProtocolWeekToMissions(params: {
   }
 
   revalidatePath("/learning");
+  revalidatePath("/tasks");
+  revalidatePath("/dashboard");
   return { created, skipped, taskIds };
 }

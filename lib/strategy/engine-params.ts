@@ -2,8 +2,8 @@
  * Strategy engine parameters — single write path: `strategy_focus.engine_params` (Profiel → Engine → Strategy engine).
  * - Read with `normalizeStrategyEngineParams` everywhere (never trust raw JSON).
  * - Does not duplicate `user_preferences` push toggles or `users.monthly_budget_cents`; those stay separate.
- * - Quarterly savings/learning targets here are strategic commitments; Budget/Growth UIs may show pace hints
- *   via `getStrategyPacingHints` without writing back (read-only, no dual data stream).
+ * - Quarterly savings/learning targets here are strategic commitments; primary UI: Strategy page (Kwartaal contract).
+ *   Budget/Growth UIs may show pace hints via `getStrategyPacingHints` without writing back (read-only).
  */
 import { bandFor10Scale, type StatBand } from "@/lib/behavioral-engine";
 
@@ -146,6 +146,22 @@ export function normalizeStrategyEngineParams(raw: unknown): StrategyEngineParam
       strategy: push("strategy"),
     },
   };
+}
+
+/** Kwartaal contract counts as ingevuld when alle drie commitment-velden een positieve waarde hebben. */
+export function isQuarterContractComplete(ep: unknown): boolean {
+  const n = normalizeStrategyEngineParams(ep);
+  const save = n.savings.quarterlyMustSaveCents;
+  const growth = n.growth.quarterlyLearningProgressTargetPct;
+  const xp = n.xp.quarterlyTargetXpEarned;
+  return (
+    typeof save === "number" &&
+    save > 0 &&
+    typeof growth === "number" &&
+    growth > 0 &&
+    typeof xp === "number" &&
+    xp > 0
+  );
 }
 
 /** Floors from mission tuning for a given energy reading (1–10). */

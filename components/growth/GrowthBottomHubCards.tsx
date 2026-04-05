@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import type { ProtocolLibraryRow } from "@/app/actions/protocol-library";
 import type { ProtocolProgressState } from "@/app/actions/protocol-progress";
-import { setGrowthFocusProtocol } from "@/app/actions/growth-focus";
+import { setGrowthFocusAndCommitProtocolWeek } from "@/app/actions/growth-focus";
 import type { GrowthFocusState } from "@/app/actions/growth-focus";
 import { parseProtocolDefinition, maxWeekIndex, weekForIndex } from "@/lib/growth/protocol-definition";
 import { progressKey, resolveFocusProtocol } from "@/lib/growth/resolve-focus-protocol";
@@ -70,8 +70,14 @@ export function GrowthBottomHubCards({ protocols, progressMap, growthFocus, onOp
   const setFocus = (p: ProtocolLibraryRow) => {
     startTransition(async () => {
       try {
-        await setGrowthFocusProtocol({ slug: p.slug, locale: p.locale });
-        neuroToast.success(`Focus: ${p.title}`);
+        const r = await setGrowthFocusAndCommitProtocolWeek({ slug: p.slug, locale: p.locale });
+        neuroToast.success(
+          r.created > 0
+            ? `Focus: ${p.title} · ${r.created} taken verdeeld over de week${r.skipped ? ` (${r.skipped} al aanwezig)` : ""}`
+            : r.skipped > 0
+              ? `Focus: ${p.title} · week stond al op je bord`
+              : `Focus: ${p.title}`,
+        );
         router.refresh();
       } catch (e) {
         neuroToast.error(e instanceof Error ? e.message : "Mislukt.");

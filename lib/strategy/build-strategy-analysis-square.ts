@@ -200,7 +200,7 @@ function enginePaceSummaryLine(h: StrategyPacingHints | null): string | null {
 function buildEngineQuarterLine(h: StrategyPacingHints | null): string | null {
   if (!engineTargetsActive(h)) return null;
   const q = Math.round(h!.quarterElapsedFrac * 100);
-  return `Het kwartaal is ${q}% verstreken. Spaar- en leertraject worden vergeleken met de engine-curve (read-only). Limieten pas je aan onder Profiel → Engine → Strategy engine.`;
+  return `Het kwartaal is ${q}% verstreken. Spaar- en leertraject worden vergeleken met de engine-curve (read-only). Limieten pas je aan onder Strategy → Kwartaal contract.`;
 }
 
 function buildEngineDetailLines(hints: StrategyPacingHints | null): string[] {

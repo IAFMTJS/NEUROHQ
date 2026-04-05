@@ -3,6 +3,44 @@
 import { formatDistanceToNow } from "date-fns";
 import { nl } from "date-fns/locale";
 
+function PressureMeter({
+  pressure,
+  zone,
+}: {
+  pressure: number;
+  zone: "comfort" | "healthy" | "risk";
+}) {
+  const zoneLabel =
+    zone === "comfort" ? "Ontspannen" : zone === "healthy" ? "Normaal" : "Druk (engine)";
+  const meterColor =
+    zone === "comfort"
+      ? "var(--accent-focus)"
+      : zone === "healthy"
+        ? "var(--accent-amber)"
+        : "var(--accent-warning, #ef4444)";
+  return (
+    <div className="flex shrink-0 flex-col items-center gap-1">
+      <span className="text-xs font-medium text-[var(--text-muted)]">Strategic Pressure</span>
+      <div
+        className="relative h-24 w-10 overflow-hidden rounded-full border border-[var(--card-border)] bg-[var(--bg-card)]"
+        style={{ boxShadow: "inset 0 0 12px rgba(0,0,0,0.3)" }}
+      >
+        <div
+          className="absolute bottom-0 left-0 right-0 rounded-full transition-all duration-300"
+          style={{
+            height: `${Math.min(100, Math.max(0, pressure * 50))}%`,
+            backgroundColor: meterColor,
+          }}
+          aria-hidden
+        />
+      </div>
+      <span className="text-xs font-semibold" style={{ color: meterColor }}>
+        {zoneLabel}
+      </span>
+    </div>
+  );
+}
+
 type Props = {
   thesis: string;
   thesisWhy: string | null;
@@ -11,6 +49,8 @@ type Props = {
   pressure: number;
   zone: "comfort" | "healthy" | "risk";
   daysRemaining: number;
+  /** Verberg druk-meter als Strategy score al op de pagina staat (Quarter Command Center). */
+  hidePressureMeter?: boolean;
 };
 
 export function StrategyThesisHero({
@@ -21,19 +61,12 @@ export function StrategyThesisHero({
   pressure,
   zone,
   daysRemaining,
+  hidePressureMeter = false,
 }: Props) {
   const deadlineDate = new Date(deadline + "T23:59:59");
   const countdown = daysRemaining > 0
     ? formatDistanceToNow(deadlineDate, { addSuffix: false, locale: nl })
     : "Afgelopen";
-  const zoneLabel =
-    zone === "comfort" ? "Ontspannen" : zone === "healthy" ? "Normaal" : "Druk (engine)";
-  const meterColor =
-    zone === "comfort"
-      ? "var(--accent-focus)"
-      : zone === "healthy"
-        ? "var(--accent-amber)"
-        : "var(--accent-warning, #ef4444)";
 
   return (
     <section className="rounded-[22px] border border-[var(--card-border)] bg-[var(--bg-elevated)] p-5 shadow-[var(--shadow-card)]">
@@ -61,27 +94,9 @@ export function StrategyThesisHero({
             )}
           </div>
         </div>
-        <div className="flex shrink-0 flex-col items-center gap-1">
-          <span className="text-xs font-medium text-[var(--text-muted)]">
-            Strategic Pressure
-          </span>
-          <div
-            className="relative h-24 w-10 overflow-hidden rounded-full border border-[var(--card-border)] bg-[var(--bg-card)]"
-            style={{ boxShadow: "inset 0 0 12px rgba(0,0,0,0.3)" }}
-          >
-            <div
-              className="absolute bottom-0 left-0 right-0 rounded-full transition-all duration-300"
-              style={{
-                height: `${Math.min(100, Math.max(0, pressure * 50))}%`,
-                backgroundColor: meterColor,
-              }}
-              aria-hidden
-            />
-          </div>
-          <span className="text-xs font-semibold" style={{ color: meterColor }}>
-            {zoneLabel}
-          </span>
-        </div>
+        {!hidePressureMeter ? (
+          <PressureMeter pressure={pressure} zone={zone} />
+        ) : null}
       </div>
     </section>
   );

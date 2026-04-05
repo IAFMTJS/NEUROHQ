@@ -12,7 +12,6 @@ import { getXPFullContext } from "@/app/actions/xp-context";
 import { getDailyState } from "@/app/actions/daily-state";
 import { getProfileDailyChallengeContext } from "@/app/actions/profile-daily-challenges";
 import { todayDateString } from "@/lib/utils/timezone";
-import { StrategyEngineSettingsSection } from "@/components/strategy/StrategyEngineSettingsSection";
 import { ProfileEngineIdentityCard } from "@/components/profile/ProfileEngineIdentityCard";
 import { ProfileHomeCompact } from "@/components/profile/ProfileHomeCompact";
 import { ProfileSnapshotFallback } from "@/components/profile/ProfileSnapshotFallback";
@@ -53,7 +52,7 @@ const ENGINE_NAV: { id: ProfileEngineTabId; label: string }[] = [
   { id: "identity", label: "Identiteit" },
   { id: "behavior", label: "Gedrag" },
   { id: "modes", label: "Modi" },
-  { id: "strategy", label: "Strategy engine" },
+  { id: "strategy", label: "Contract" },
   { id: "play", label: "Play deck" },
 ];
 
@@ -293,7 +292,14 @@ export default async function ProfilePage({ searchParams }: { searchParams: Prom
       >
         Instellingen
       </a>
-      .       Insights:{" "}
+      . Kwartaal contract:{" "}
+      <a
+        href="/strategy#strategy-contract"
+        className="font-medium text-[var(--accent-focus)] underline-offset-2 hover:underline rounded-sm outline-none focus-visible:ring-2 focus-visible:ring-[rgba(var(--mode-rgb),0.45)] focus-visible:ring-offset-0"
+      >
+        Strategy
+      </a>
+      . Insights:{" "}
       <a
         href={profileInsightsHref("overview")}
         className="font-medium text-[var(--accent-focus)] underline-offset-2 hover:underline rounded-sm outline-none focus-visible:ring-2 focus-visible:ring-[rgba(var(--mode-rgb),0.45)] focus-visible:ring-offset-0"
@@ -337,11 +343,27 @@ export default async function ProfilePage({ searchParams }: { searchParams: Prom
       )}
 
       {engineTab === "strategy" && (
-        <Suspense
-          fallback={<div className="min-h-[120px] animate-pulse rounded-2xl bg-[var(--bg-elevated)]/30" aria-hidden />}
+        <section
+          className="rounded-2xl border border-[var(--card-border)] bg-[var(--bg-elevated)]/70 p-5 shadow-[0_0_24px_rgba(0,0,0,0.12)]"
+          aria-labelledby="profile-contract-redirect-heading"
         >
-          <StrategyEngineSettingsSection />
-        </Suspense>
+          <h2
+            id="profile-contract-redirect-heading"
+            className="text-[10px] font-bold uppercase tracking-[0.18em] text-[var(--semantic-accent)]"
+          >
+            Kwartaal contract
+          </h2>
+          <p className="mt-2 text-sm leading-snug text-[var(--text-secondary)]">
+            Spaar-, XP- en growth-doelen, missie-floors per energie, budget-locks en push-voorkeuren horen bij je Strategy
+            score. Je stelt ze in op één plek: de Strategy-pagina.
+          </p>
+          <Link
+            href="/strategy#strategy-contract"
+            className="mt-4 inline-flex min-h-[44px] items-center justify-center rounded-xl border border-[rgba(var(--mode-rgb),0.35)] bg-gradient-to-b from-[rgba(var(--mode-rgb-deep),0.45)] to-[rgba(6,18,30,0.95)] px-5 text-sm font-semibold text-[var(--text-primary)] shadow-[0_0_20px_rgba(var(--mode-rgb),0.15)] transition hover:border-[rgba(var(--mode-rgb),0.5)]"
+          >
+            Open Strategy contract →
+          </Link>
+        </section>
       )}
 
       {engineTab === "play" && <ProfileEnginePlayDeckTab initialDocument={engine.playProfile} />}

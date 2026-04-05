@@ -28,11 +28,16 @@ export function StrategyQuarterCommandCenter({ snapshot, simplifiedLayout = fals
         ? "Blijf tempo houden."
         : "Je zit achter — de engine draait strakker.";
 
+  const growthSub =
+    snapshot.growthProtocolWeek != null
+      ? `Week ${snapshot.growthProtocolWeek.weekIndex}: ${snapshot.growthProtocolWeek.completed}/${snapshot.growthProtocolWeek.expected} · ${snapshot.growthProtocolWeek.protocolTitle}`
+      : "protocol / leertraject (% vs kwartaaldoel)";
+
   const drivers = [
     {
       key: "growth",
       label: "Growth",
-      sub: "protocol / leertraject",
+      sub: growthSub,
       pct: snapshot.growth.displayPct,
       committed: snapshot.growth.committed,
     },
@@ -59,7 +64,7 @@ export function StrategyQuarterCommandCenter({ snapshot, simplifiedLayout = fals
     },
   ] as const;
 
-  const profileHref = "/profile#strategy-engine";
+  const contractHref = "/strategy#strategy-contract";
 
   return (
     <section
@@ -88,18 +93,26 @@ export function StrategyQuarterCommandCenter({ snapshot, simplifiedLayout = fals
         <div className="shrink-0 rounded-xl border border-[var(--card-border)] bg-[var(--bg-card)] px-4 py-3 text-xs text-[var(--text-secondary)]">
           <p className="font-semibold text-[var(--text-primary)]">Contract</p>
           <p className="mt-2 leading-relaxed">
-            Vier pijlers wegen elk 25%. Stel spaar-, growth-, en XP-doelen in onder{" "}
-            <Link
-              href={profileHref}
-              className="font-medium text-[var(--semantic-accent)] underline-offset-2 hover:underline"
-            >
-              Profiel → Strategy engine
-            </Link>
-            .
+            Vier pijlers à 25%. Stel targets en floors in via{" "}
+            <Link href={contractHref} className="font-medium text-[var(--semantic-accent)] underline-offset-2 hover:underline">
+              Kwartaal contract
+            </Link>{" "}
+            hieronder.
           </p>
           <p className="mt-2 text-[10px] text-[var(--text-muted)]">
-            Executie gebruikt je mission-log (completes + skip / verzet / verwijderen dit kwartaal).
+            Growth volgt je protocolweek op Missions; budget via spaartransacties; executie via mission-log.
           </p>
+          <div className="mt-3 flex flex-wrap gap-x-3 gap-y-1 text-[10px] font-medium">
+            <Link href="/tasks" className="text-[var(--semantic-accent)] underline-offset-2 hover:underline">
+              Missions
+            </Link>
+            <Link href="/learning" className="text-[var(--semantic-accent)] underline-offset-2 hover:underline">
+              Growth
+            </Link>
+            <Link href="/budget" className="text-[var(--semantic-accent)] underline-offset-2 hover:underline">
+              Budget
+            </Link>
+          </div>
         </div>
       </div>
 

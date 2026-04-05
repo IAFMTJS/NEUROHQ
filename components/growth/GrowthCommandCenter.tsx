@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import type { ProtocolLibraryRow } from "@/app/actions/protocol-library";
 import type { ProtocolProgressState } from "@/app/actions/protocol-progress";
 import { commitProtocolWeekToMissions } from "@/app/actions/protocol-missions";
-import { setGrowthFocusProtocol } from "@/app/actions/growth-focus";
+import { setGrowthFocusProtocol, setGrowthFocusAndCommitProtocolWeek } from "@/app/actions/growth-focus";
 import type { GrowthFocusState } from "@/app/actions/growth-focus";
 import { parseProtocolDefinition, maxWeekIndex, phaseForWeek, weekForIndex } from "@/lib/growth/protocol-definition";
 import type { DifficultyTier } from "@/lib/growth/adaptive-engine";
@@ -152,8 +152,10 @@ export function GrowthCommandCenter({
         });
         neuroToast.success(
           r.created > 0
-            ? `${r.created} taken op Missions${r.skipped ? ` (${r.skipped} al gepland)` : ""}.`
-            : `Geen nieuwe taken — ${r.skipped} stonden al op vandaag.`,
+            ? `${r.created} protocoltaken op Missions, verdeeld over de week${r.skipped ? ` (${r.skipped} stonden er al)` : ""}.`
+            : r.skipped > 0
+              ? `Geen nieuwe taken — ${r.skipped} stonden al in deze week.`
+              : "Geen taken om toe te voegen.",
         );
         router.refresh();
       } catch (e) {
@@ -199,6 +201,9 @@ export function GrowthCommandCenter({
               <span className="mb-1 block text-[10px] font-semibold uppercase tracking-wide text-[var(--text-muted)]">
                 Kies traject
               </span>
+              <p className="mb-1.5 text-[10px] leading-snug text-[var(--text-muted)]">
+                Huidige protocolweek gaat automatisch naar Missions, verdeeld over de rest van de week (ma–zo).
+              </p>
               <select
                 className="w-full rounded-lg border border-[rgba(var(--mode-rgb),0.35)] bg-gradient-to-b from-[rgba(var(--mode-rgb-deep),0.52)] to-[rgba(6,18,30,0.96)] px-3 py-2 text-sm font-medium text-[#e8f6ff] shadow-[inset_0_1px_0_rgba(255,255,255,0.07),0_0_16px_rgba(var(--mode-rgb),0.12)] [color-scheme:dark] focus:border-[rgba(var(--mode-rgb),0.55)] focus:outline-none focus:ring-2 focus:ring-[rgba(var(--mode-rgb),0.35)] disabled:opacity-50"
                 disabled={pending}
@@ -213,8 +218,20 @@ export function GrowthCommandCenter({
                       } else {
                         const p = protocols.find((x) => x.id === id);
                         if (!p) return;
-                        await setGrowthFocusProtocol({ slug: p.slug, locale: p.locale });
-                        neuroToast.success("Focus-protocol bijgewerkt.");
+                        try {
+                          const r = await setGrowthFocusAndCommitProtocolWeek({ slug: p.slug, locale: p.locale });
+                          neuroToast.success(
+                            r.created > 0
+                              ? `Focus: ${p.title}. ${r.created} taken verdeeld over deze week.${r.skipped ? ` (${r.skipped} stonden er al)` : ""}`
+                              : r.skipped > 0
+                                ? `Focus: ${p.title}. Week stond al op je bord (${r.skipped}).`
+                                : `Focus: ${p.title}.`,
+                          );
+                        } catch (commitErr) {
+                          neuroToast.error(
+                            commitErr instanceof Error ? commitErr.message : "Protocol naar Missions mislukt.",
+                          );
+                        }
                       }
                       router.refresh();
                     } catch (err) {

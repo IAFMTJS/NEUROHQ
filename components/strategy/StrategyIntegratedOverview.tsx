@@ -26,7 +26,7 @@ function DomainFocusVsMissions(args: {
         );
       })}
       <p className="pt-1 text-[10px] text-[var(--text-muted)]">
-        Vergelijking: weekly allocation (tab Focus &amp; budget) vs open missies deze week per domein.
+        Vergelijking: weekly allocation (Strategy → allocatie) vs open missies deze week per domein.
       </p>
     </div>
   );

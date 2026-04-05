@@ -6,7 +6,7 @@ import type { ProtocolLibraryRow } from "@/app/actions/protocol-library";
 import { updateProtocolLibraryContent } from "@/app/actions/protocol-library";
 import type { ProtocolProgressState } from "@/app/actions/protocol-progress";
 import { commitProtocolWeekToMissions } from "@/app/actions/protocol-missions";
-import { setGrowthFocusProtocol } from "@/app/actions/growth-focus";
+import { setGrowthFocusAndCommitProtocolWeek } from "@/app/actions/growth-focus";
 import {
   setProtocolPreferredTier,
   setProtocolCurrentWeek,
@@ -85,8 +85,17 @@ export function GrowthProtocolViewerModal({ protocol, progress, engineTier, onCl
             onClick={() =>
               startTransition(async () => {
                 try {
-                  await setGrowthFocusProtocol({ slug: protocol.slug, locale: protocol.locale });
-                  neuroToast.success("Dit protocol is nu je focus op Growth.");
+                  const r = await setGrowthFocusAndCommitProtocolWeek({
+                    slug: protocol.slug,
+                    locale: protocol.locale,
+                  });
+                  neuroToast.success(
+                    r.created > 0
+                      ? `Focus gezet · ${r.created} taken verdeeld over deze week${r.skipped ? ` (${r.skipped} al aanwezig)` : ""}`
+                      : r.skipped > 0
+                        ? "Focus gezet · week stond al op je bord"
+                        : "Dit protocol is nu je focus op Growth.",
+                  );
                   refresh();
                 } catch (e) {
                   neuroToast.error(e instanceof Error ? e.message : "Mislukt.");
@@ -605,7 +614,8 @@ export function GrowthProtocolViewerModal({ protocol, progress, engineTier, onCl
                 Koppeling Missions
               </p>
               <p className="mt-1 text-xs text-[var(--text-secondary)]">
-                Zet deze week als concrete taken op je bord (vandaag). Al bestaande dezelfde protocol-stap wordt overgeslagen.
+                Zet deze week op Missions: taken worden willekeurig verdeeld over vandaag t/m zondag. Bestaande stappen in
+                deze week worden overgeslagen.
               </p>
               <div className="mt-3 flex flex-wrap gap-2">
                 <button
@@ -621,8 +631,10 @@ export function GrowthProtocolViewerModal({ protocol, progress, engineTier, onCl
                         });
                         neuroToast.success(
                           r.created > 0
-                            ? `${r.created} taken op Missions${r.skipped ? ` (${r.skipped} al gepland)` : ""}.`
-                            : `Geen nieuwe taken — ${r.skipped} stonden al op vandaag.`,
+                            ? `${r.created} taken verdeeld over de week${r.skipped ? ` (${r.skipped} al aanwezig)` : ""}.`
+                            : r.skipped > 0
+                              ? `Geen nieuwe taken — ${r.skipped} stonden al in deze week.`
+                              : "Geen taken om toe te voegen.",
                         );
                         refresh();
                       } catch (e) {

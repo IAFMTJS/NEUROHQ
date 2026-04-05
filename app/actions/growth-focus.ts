@@ -91,3 +91,19 @@ export async function setGrowthFocusProtocol(params: { slug: string | null; loca
   revalidatePath("/learning");
   revalidatePath("/dashboard");
 }
+
+/**
+ * Focus-protocol zetten + huidige protocolweek automatisch op Missions (taken willekeurig over rest van de week).
+ */
+export async function setGrowthFocusAndCommitProtocolWeek(params: {
+  slug: string;
+  locale?: string;
+}): Promise<{ created: number; skipped: number }> {
+  await setGrowthFocusProtocol(params);
+  const { commitProtocolWeekToMissions } = await import("./protocol-missions");
+  const r = await commitProtocolWeekToMissions({
+    protocol_slug: params.slug,
+    locale: params.locale ?? "nl",
+  });
+  return { created: r.created, skipped: r.skipped };
+}

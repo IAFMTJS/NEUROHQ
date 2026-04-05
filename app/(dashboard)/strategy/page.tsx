@@ -15,20 +15,18 @@ import { StrategyThesisHero } from "@/components/strategy/StrategyThesisHero";
 import { StrategyFocusMultipliers } from "@/components/strategy/StrategyFocusMultipliers";
 import { StrategyPhaseIndicator } from "@/components/strategy/StrategyPhaseIndicator";
 import { StrategyArchiveHistory } from "@/components/strategy/StrategyArchiveHistory";
-import { StrategyIntegratedOverview } from "@/components/strategy/StrategyIntegratedOverview";
 import { StrategyQuarterCommandCenter } from "@/components/strategy/StrategyQuarterCommandCenter";
+import { StrategyQuarterContractPanel } from "@/components/strategy/StrategyQuarterContractPanel";
 import { getQuarterEngineSnapshot } from "@/app/actions/quarter-engine-snapshot";
 import { getBehaviorProfile } from "@/app/actions/behavior-profile";
-import { getStrategyIntegrationOverview } from "@/app/actions/strategy-integration";
-import { getStrategyPacingHints } from "@/app/actions/strategy-engine-pacing";
 import { getUserPreferencesOrDefaults } from "@/app/actions/preferences";
-import { buildStrategyAnalysisSnapshot } from "@/lib/strategy/build-strategy-analysis-square";
-import { StrategyAnalysisSquare } from "@/components/strategy/StrategyAnalysisSquare";
 import { neuroStrategyBudgetHint } from "@/lib/neuro-copy";
 import { SimplifiedPageShell } from "@/components/layout/SimplifiedPageShell";
 import { SIMPLIFIED_VIEWPORT_WRAPPER } from "@/lib/simplified-page-layout";
 import { profileInsightsHref } from "@/lib/profile-routes";
 import { DashboardHubCommandShell } from "@/components/layout/DashboardHubCommandShell";
+import { isQuarterContractComplete } from "@/lib/strategy/engine-params";
+import { StrategyContractLockToast } from "@/components/strategy/StrategyContractLockToast";
 
 /** Force dynamic: strategy uses cookies (auth) and live data. */
 export const dynamic = "force-dynamic";
@@ -112,6 +110,27 @@ async function StrategyContent({ simplifiedLayout = false }: { simplifiedLayout?
     );
   }
 
+  const contractComplete = isQuarterContractComplete(strategy.engine_params);
+
+  if (!contractComplete) {
+    return (
+      <div data-tutorial="strategy-content" className={simplifiedLayout ? "space-y-6" : "space-y-4"}>
+        <div className={simplifiedLayout ? "space-y-6" : "space-y-5"}>
+          <StrategyContractLockToast show />
+          <div className="rounded-xl border border-amber-500/40 bg-amber-500/10 px-4 py-3 text-sm text-amber-200">
+            <strong>Strategy is vergrendeld</strong>
+            <p className="mt-1 text-[var(--text-secondary)]">
+              Vul hieronder je kwartaal contract in: spaardoel, leergroei (%) en XP-doel. Daarna ontgrendel je
+              het kwartaal-overzicht, thesis en weekly tools.
+            </p>
+          </div>
+          <StrategyQuarterContractPanel />
+          <StrategyArchiveHistory past={past} />
+        </div>
+      </div>
+    );
+  }
+
   const today = new Date().toISOString().slice(0, 10);
   try {
     await computeAndUpsertAlignment(strategy.id, today);
@@ -127,11 +146,9 @@ async function StrategyContent({ simplifiedLayout = false }: { simplifiedLayout?
   let reviewStatus = { reviewDue: false, weekNumber: 0, weekStart: "", lastReview: null as null | unknown };
 
   let neuroBudgetHint: string | null = null;
-  let strategyIntegration: Awaited<ReturnType<typeof getStrategyIntegrationOverview>> = null;
-  let strategyEngineHints: Awaited<ReturnType<typeof getStrategyPacingHints>> = null;
   let quarterSnapshot: Awaited<ReturnType<typeof getQuarterEngineSnapshot>> = null;
   try {
-    const [p, a, log, mom, drift, review, behaviorProfile, integration, engineHints, quarter] = await Promise.all([
+    const [p, a, log, mom, drift, review, behaviorProfile, quarter] = await Promise.all([
       getPressureIndex(strategy.id),
       getAlignmentThisWeek(strategy.id),
       getAlignmentLog(strategy.id, 14),
@@ -139,8 +156,6 @@ async function StrategyContent({ simplifiedLayout = false }: { simplifiedLayout?
       getDriftAlert(strategy.id),
       getStrategyReviewStatus(strategy.id, strategy.start_date),
       getBehaviorProfile(),
-      getStrategyIntegrationOverview(),
-      getStrategyPacingHints(),
       getQuarterEngineSnapshot(),
     ]);
     pressureData = p ?? pressureData;
@@ -150,19 +165,10 @@ async function StrategyContent({ simplifiedLayout = false }: { simplifiedLayout?
     driftAlert = drift ?? null;
     reviewStatus = review ?? reviewStatus;
     neuroBudgetHint = neuroStrategyBudgetHint(behaviorProfile.neuroProfileTags);
-    strategyIntegration = integration;
-    strategyEngineHints = engineHints;
     quarterSnapshot = quarter;
   } catch {
     // Fallbacks already set
   }
-
-  const analysisSnapshot = buildStrategyAnalysisSnapshot(
-    strategyIntegration,
-    alignmentThisWeek.alignmentScore,
-    reviewStatus.reviewDue,
-    strategyEngineHints,
-  );
 
   const alignmentLogTrend = alignmentLog.map((l) => ({
     date: l.date,
@@ -188,8 +194,7 @@ async function StrategyContent({ simplifiedLayout = false }: { simplifiedLayout?
       {quarterSnapshot ? (
         <StrategyQuarterCommandCenter snapshot={quarterSnapshot} simplifiedLayout={simplifiedLayout} />
       ) : null}
-      {analysisSnapshot ? <StrategyAnalysisSquare snapshot={analysisSnapshot} /> : null}
-      <StrategyIntegratedOverview integrationData={strategyIntegration} />
+      <StrategyQuarterContractPanel />
       <StrategyThesisHero
         thesis={strategy.thesis}
         thesisWhy={strategy.thesis_why}
@@ -198,9 +203,10 @@ async function StrategyContent({ simplifiedLayout = false }: { simplifiedLayout?
         pressure={pressureData.pressure}
         zone={pressureData.zone}
         daysRemaining={pressureData.daysRemaining}
+        hidePressureMeter={!!quarterSnapshot}
       />
       <details className={detailsClass} open={!simplifiedLayout}>
-        <summary className={summaryClass}>Allocatie & focus</summary>
+        <summary className={summaryClass}>Weekly allocatie & domeinen</summary>
         <div className="mt-4 space-y-5 border-t border-[rgba(var(--mode-rgb),0.1)] pt-4">
           <StrategyFocusMultipliers
             primaryDomain={strategy.primary_domain}
@@ -262,7 +268,7 @@ export default async function StrategyPage() {
           hideTitleBar
           footerLinks={[
             { href: "/tasks", label: "Missions" },
-            { href: "/profile#strategy-engine", label: "Engine" },
+            { href: "/strategy#strategy-contract", label: "Contract" },
             { href: profileInsightsHref("overview"), label: "Insights" },
             { href: "/budget", label: "Budget" },
           ]}
