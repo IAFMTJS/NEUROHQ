@@ -1,5 +1,9 @@
 import Link from "next/link";
 import type { QuarterEngineSnapshot } from "@/app/actions/quarter-engine-snapshot";
+import {
+  EXECUTION_BEHAVIOR_LABELS_NL,
+  normalizeExecutionBehaviorFocus,
+} from "@/lib/strategy/execution-behavior";
 
 function statusDot(displayPct: number, committed: boolean) {
   if (!committed) return "bg-[var(--text-muted)]/50";
@@ -33,6 +37,9 @@ export function StrategyQuarterCommandCenter({ snapshot, simplifiedLayout = fals
       ? `Week ${snapshot.growthProtocolWeek.weekIndex}: ${snapshot.growthProtocolWeek.completed}/${snapshot.growthProtocolWeek.expected} · ${snapshot.growthProtocolWeek.protocolTitle}`
       : "protocol / leertraject (% vs kwartaaldoel)";
 
+  const execFocus = normalizeExecutionBehaviorFocus(snapshot.engineParams.execution?.behaviorFocus);
+  const execSub = EXECUTION_BEHAVIOR_LABELS_NL[execFocus].measure;
+
   const drivers = [
     {
       key: "growth",
@@ -57,8 +64,8 @@ export function StrategyQuarterCommandCenter({ snapshot, simplifiedLayout = fals
     },
     {
       key: "discipline",
-      label: "Executie",
-      sub: "afgerond vs skip / verzet / delete",
+      label: execFocus === "balanced" ? "Executie" : EXECUTION_BEHAVIOR_LABELS_NL[execFocus].title,
+      sub: execSub,
       pct: snapshot.discipline.displayPct,
       committed: snapshot.discipline.committed,
     },

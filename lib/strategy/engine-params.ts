@@ -2,10 +2,16 @@
  * Strategy engine parameters — single write path: `strategy_focus.engine_params` (Profiel → Engine → Strategy engine).
  * - Read with `normalizeStrategyEngineParams` everywhere (never trust raw JSON).
  * - Does not duplicate `user_preferences` push toggles or `users.monthly_budget_cents`; those stay separate.
- * - Quarterly savings/learning targets and tuning: primary UI Profiel → Engine → Contract; Strategy hub shows thesis,
- *   integrated overview and weekly tools (read-only pacing hints on Budget/Growth via `getStrategyPacingHints`).
+ * - Quarterly savings/learning targets and full engine tuning: primary UI Strategy page (Kwartaal contract-sectie).
+ *   Budget/Growth UIs may show pace hints via `getStrategyPacingHints` without writing back (read-only).
  */
 import { bandFor10Scale, type StatBand } from "@/lib/behavioral-engine";
+import {
+  normalizeExecutionBehaviorFocus,
+  type ExecutionBehaviorFocus,
+} from "@/lib/strategy/execution-behavior";
+
+export type { ExecutionBehaviorFocus } from "@/lib/strategy/execution-behavior";
 
 export const ENGINE_PARAMS_VERSION = 1 as const;
 
@@ -46,6 +52,10 @@ export type StrategyEngineParams = {
     growth: PushAreaStyle;
     strategy: PushAreaStyle;
   };
+  /** Welk gedrag je op Missions wilt laten meetellen voor de executie-pijler. */
+  execution: {
+    behaviorFocus: ExecutionBehaviorFocus;
+  };
 };
 
 export const DEFAULT_STRATEGY_ENGINE_PARAMS: StrategyEngineParams = {
@@ -73,6 +83,9 @@ export const DEFAULT_STRATEGY_ENGINE_PARAMS: StrategyEngineParams = {
     growth: "balanced",
     strategy: "balanced",
   },
+  execution: {
+    behaviorFocus: "balanced",
+  },
 };
 
 function clampInt(n: number, lo: number, hi: number): number {
@@ -89,6 +102,7 @@ export function normalizeStrategyEngineParams(raw: unknown): StrategyEngineParam
       missions: { ...d.missions },
       xp: { ...d.xp },
       notifications: { ...d.notifications },
+      execution: { ...d.execution },
     };
   const o = raw as Record<string, unknown>;
 
@@ -98,6 +112,7 @@ export function normalizeStrategyEngineParams(raw: unknown): StrategyEngineParam
   const growthIn = (o.growth && typeof o.growth === "object" ? o.growth : {}) as Record<string, unknown>;
   const xpIn = (o.xp && typeof o.xp === "object" ? o.xp : {}) as Record<string, unknown>;
   const notifIn = (o.notifications && typeof o.notifications === "object" ? o.notifications : {}) as Record<string, unknown>;
+  const execIn = (o.execution && typeof o.execution === "object" ? o.execution : {}) as Record<string, unknown>;
 
   const push = (k: keyof StrategyEngineParams["notifications"]): PushAreaStyle => {
     const v = notifIn[k as string];
@@ -144,6 +159,9 @@ export function normalizeStrategyEngineParams(raw: unknown): StrategyEngineParam
       budget: push("budget"),
       growth: push("growth"),
       strategy: push("strategy"),
+    },
+    execution: {
+      behaviorFocus: normalizeExecutionBehaviorFocus(execIn.behaviorFocus),
     },
   };
 }
@@ -199,6 +217,7 @@ export function mergeStrategyEngineParams(
     growth: Partial<StrategyEngineParams["growth"]>;
     xp: Partial<StrategyEngineParams["xp"]>;
     notifications: Partial<StrategyEngineParams["notifications"]>;
+    execution: Partial<StrategyEngineParams["execution"]>;
   }>
 ): StrategyEngineParams {
   const base = normalizeStrategyEngineParams(current);
@@ -219,6 +238,9 @@ export function mergeStrategyEngineParams(
   }
   if (patch.notifications) {
     base.notifications = { ...base.notifications, ...patch.notifications };
+  }
+  if (patch.execution) {
+    base.execution = { ...base.execution, ...patch.execution };
   }
   return normalizeStrategyEngineParams(base);
 }

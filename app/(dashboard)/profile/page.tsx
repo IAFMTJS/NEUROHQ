@@ -28,7 +28,6 @@ import { ReportInsightsContent } from "@/components/report/ReportInsightsContent
 import { ReportSnapshotFallback } from "@/components/report/ReportSnapshotFallback";
 import { SimplifiedPageShell } from "@/components/layout/SimplifiedPageShell";
 import { SIMPLIFIED_VIEWPORT_WRAPPER } from "@/lib/simplified-page-layout";
-import { StrategyEngineSettingsSection } from "@/components/strategy/StrategyEngineSettingsSection";
 
 const ProfileEngineBehaviorTab = nextDynamic(
   () => import("@/components/profile/ProfileEngineBehaviorTab").then((m) => ({ default: m.ProfileEngineBehaviorTab })),
@@ -53,7 +52,7 @@ const ENGINE_NAV: { id: ProfileEngineTabId; label: string }[] = [
   { id: "identity", label: "Identiteit" },
   { id: "behavior", label: "Gedrag" },
   { id: "modes", label: "Modi" },
-  { id: "strategy", label: "Contract" },
+  { id: "strategy", label: "Strategy" },
   { id: "play", label: "Play deck" },
 ];
 
@@ -344,17 +343,27 @@ export default async function ProfilePage({ searchParams }: { searchParams: Prom
       )}
 
       {engineTab === "strategy" && (
-        <div className="space-y-3">
-          <p className="text-sm leading-snug text-[var(--text-secondary)]">
-            Kwartaalcontract (spaar-, leer- en XP-doelen), missie-floors, budget-lock limiet en push-bias. De Strategy-pagina
-            toont thesis, overview en weekly tools; hier stel je de motor af.
-          </p>
-          <Suspense
-            fallback={<div className="min-h-[160px] animate-pulse rounded-2xl bg-[var(--bg-elevated)]/40" aria-hidden />}
+        <section
+          className="rounded-2xl border border-[var(--card-border)] bg-[var(--bg-elevated)]/70 p-5 shadow-[0_0_24px_rgba(0,0,0,0.12)]"
+          aria-labelledby="profile-strategy-contract-hint-heading"
+        >
+          <h2
+            id="profile-strategy-contract-hint-heading"
+            className="text-[10px] font-bold uppercase tracking-[0.18em] text-[var(--semantic-accent)]"
           >
-            <StrategyEngineSettingsSection formSectionId="profile-strategy-engine" />
-          </Suspense>
-        </div>
+            Strategy contract
+          </h2>
+          <p className="mt-2 text-sm leading-snug text-[var(--text-secondary)]">
+            Kwartaalcontract (spaar-, leer-, XP-doelen) en overige engine-instellingen (missies per energie, budget-locks,
+            push-voorkeuren) horen op de Strategy-pagina, bij je thesis en overview.
+          </p>
+          <Link
+            href="/strategy#strategy-contract"
+            className="mt-4 inline-flex min-h-[44px] items-center justify-center rounded-xl border border-[rgba(var(--mode-rgb),0.35)] bg-gradient-to-b from-[rgba(var(--mode-rgb-deep),0.45)] to-[rgba(6,18,30,0.95)] px-5 text-sm font-semibold text-[var(--text-primary)] shadow-[0_0_20px_rgba(var(--mode-rgb),0.15)] transition hover:border-[rgba(var(--mode-rgb),0.5)]"
+          >
+            Open Strategy contract →
+          </Link>
+        </section>
       )}
 
       {engineTab === "play" && <ProfileEnginePlayDeckTab initialDocument={engine.playProfile} />}

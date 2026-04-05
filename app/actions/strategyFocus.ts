@@ -13,9 +13,14 @@ import {
 import {
   mergeStrategyEngineParams,
   normalizeStrategyEngineParams,
+  isQuarterContractComplete,
   type StrategyEngineParams,
 } from "@/lib/strategy/engine-params";
 import type { Json } from "@/types/database.types";
+import {
+  parseWeeklyReviewPayload,
+  type StrategyWeeklyReviewPayload,
+} from "@/lib/strategy/weekly-review-payload";
 
 export type StrategyFocusRow = {
   id: string;
@@ -59,6 +64,7 @@ export type StrategyReviewRow = {
   strongest_domain: string | null;
   notes: string | null;
   created_at: string;
+  weekly_review_payload?: Json | null;
 };
 
 const DEFAULT_ALLOCATION: WeeklyAllocation = {
@@ -583,7 +589,7 @@ export async function getStrategyReviewStatus(
     .eq("strategy_id", strategyId)
     .order("week_number", { ascending: false })
     .limit(1)
-    .single();
+    .maybeSingle();
 
   const lastReview = last as StrategyReviewRow | null;
   const lastWeekStart = lastReview?.week_start;
@@ -601,6 +607,8 @@ export async function upsertStrategyReview(params: {
   biggest_drift_domain?: string | null;
   strongest_domain?: string | null;
   notes?: string | null;
+  /** Volledige weekreflectie per pijler (4× 3 schaalvragen + open tekst). Vereist voor lock-release. */
+  weeklyReviewPayload?: StrategyWeeklyReviewPayload | null;
 }): Promise<void> {
   const supabase = await createClient();
   const {
@@ -609,6 +617,14 @@ export async function upsertStrategyReview(params: {
   if (!user) throw new Error("Not authenticated");
   const { data: s } = await supabase.from("strategy_focus").select("id").eq("id", params.strategyId).eq("user_id", user.id).single();
   if (!s) throw new Error("Strategy not found");
+
+  let payloadJson: Json | null = null;
+  if (params.weeklyReviewPayload != null) {
+    const parsed = parseWeeklyReviewPayload(params.weeklyReviewPayload);
+    if (!parsed) throw new Error("Review onvolledig: vul alle schalen (1–5) en reflecties in.");
+    payloadJson = parsed as unknown as Json;
+  }
+
   await supabase.from("strategy_review").upsert(
     {
       strategy_id: params.strategyId,
@@ -618,10 +634,54 @@ export async function upsertStrategyReview(params: {
       biggest_drift_domain: params.biggest_drift_domain ?? null,
       strongest_domain: params.strongest_domain ?? null,
       notes: params.notes ?? null,
+      ...(payloadJson !== null ? { weekly_review_payload: payloadJson } : {}),
     },
     { onConflict: "strategy_id,week_number" }
   );
   revalidatePath("/strategy");
+  revalidatePath("/", "layout");
+}
+
+/**
+ * App-brede lock: actieve strategie + contract compleet + weekreview openstaand + geen geldige weekly_review_payload voor deze week.
+ */
+export async function getStrategyAppReviewLockState(): Promise<{ locked: boolean }> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { locked: false };
+
+  const { data: row } = await supabase
+    .from("strategy_focus")
+    .select("id, engine_params, start_date")
+    .eq("user_id", user.id)
+    .eq("is_active", true)
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  if (!row) return { locked: false };
+  const strategyId = (row as { id: string }).id;
+  const startDate = (row as { start_date: string }).start_date;
+  const engineParams = (row as { engine_params?: unknown }).engine_params;
+
+  if (!isQuarterContractComplete(engineParams)) return { locked: false };
+
+  const status = await getStrategyReviewStatus(strategyId, startDate);
+  if (!status.reviewDue) return { locked: false };
+
+  const { data: weekRow } = await supabase
+    .from("strategy_review")
+    .select("weekly_review_payload")
+    .eq("strategy_id", strategyId)
+    .eq("week_start", status.weekStart)
+    .maybeSingle();
+
+  const payload = (weekRow as { weekly_review_payload?: unknown } | null)?.weekly_review_payload;
+  if (parseWeeklyReviewPayload(payload) !== null) return { locked: false };
+
+  return { locked: true };
 }
 
 /** This week's alignment: planned from strategy, actual from XP this week. */

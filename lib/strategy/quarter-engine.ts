@@ -47,8 +47,11 @@ function growthComponent(
   if (targetPct == null || targetPct <= 0) {
     return { value01: NEUTRAL, displayPct: 50, committed: false };
   }
-  const actual = actualPct ?? 0;
-  const ratio = Math.min(1, actual / targetPct);
+  /** Geen echte meting (geen protocol / geen pacing) — niet straffen met 0%. */
+  if (actualPct == null) {
+    return { value01: NEUTRAL, displayPct: 50, committed: false };
+  }
+  const ratio = Math.min(1, actualPct / targetPct);
   return {
     value01: ratio,
     displayPct: Math.round(ratio * 100),
@@ -90,6 +93,8 @@ export type QuarterEngineInputs = {
   xpEarnedThisQuarter: number | null;
   disciplineCompleted: number;
   disciplineNegative: number;
+  /** Overschrijft `disciplineComponent` wanneer gezet (gedragsfocus op missies). */
+  disciplineOverride?: QuarterPillarScore | null;
 };
 
 export type QuarterEngineResult = {
@@ -109,11 +114,11 @@ export function computeQuarterEngine(inputs: QuarterEngineInputs): QuarterEngine
   let budget: QuarterPillarScore;
   if (inputs.savingsTargetCents == null || inputs.savingsTargetCents <= 0) {
     budget = { value01: NEUTRAL, displayPct: 50, committed: false };
+  } else if (inputs.savedThisQuarterCents == null) {
+    /** Doel gezet maar nog geen spaarlogboek in deze periode — geen valse 0%. */
+    budget = { value01: NEUTRAL, displayPct: 50, committed: false };
   } else {
-    budget = ratioComponent(
-      Math.max(0, inputs.savedThisQuarterCents ?? 0),
-      inputs.savingsTargetCents
-    );
+    budget = ratioComponent(Math.max(0, inputs.savedThisQuarterCents), inputs.savingsTargetCents);
   }
 
   let xp: QuarterPillarScore;
@@ -126,7 +131,9 @@ export function computeQuarterEngine(inputs: QuarterEngineInputs): QuarterEngine
     );
   }
 
-  const discipline = disciplineComponent(inputs.disciplineCompleted, inputs.disciplineNegative);
+  const discipline =
+    inputs.disciplineOverride ??
+    disciplineComponent(inputs.disciplineCompleted, inputs.disciplineNegative);
 
   const strategyScorePct = Math.round(
     100 * (growth.value01 + budget.value01 + xp.value01 + discipline.value01) / 4

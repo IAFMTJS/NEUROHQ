@@ -14,6 +14,11 @@ import {
 } from "@/lib/strategy/quarter-engine";
 import { todayDateString } from "@/lib/utils/timezone";
 import { getActiveProtocolWeekMissionStats, type ProtocolWeekMissionStats } from "@/app/actions/protocol-growth-stats";
+import { loadExecutionQuarterMetrics } from "@/app/actions/execution-quarter-metrics";
+import {
+  computeExecutionDisciplinePillar,
+  normalizeExecutionBehaviorFocus,
+} from "@/lib/strategy/execution-behavior";
 
 export type QuarterEngineSnapshot = QuarterEngineResult & {
   quarterStart: string;
@@ -116,6 +121,17 @@ export async function getQuarterEngineSnapshot(): Promise<QuarterEngineSnapshot 
   const neg = await countMissionOutcomesInQuarter(user.id, start, end);
   const disciplineNegative = neg.skip + neg.reschedule + neg.delete;
 
+  const behaviorFocus = normalizeExecutionBehaviorFocus(engineParams.execution?.behaviorFocus);
+  const execMetrics = {
+    ...(await loadExecutionQuarterMetrics(user.id, start, end, today)),
+    skipRescheduleDelete: disciplineNegative,
+  };
+
+  const disciplineOverride =
+    behaviorFocus === "balanced"
+      ? null
+      : computeExecutionDisciplinePillar(behaviorFocus, execMetrics, completes, disciplineNegative);
+
   let growthTargetPct = engineParams.growth.quarterlyLearningProgressTargetPct;
   let growthActualPct = pacing?.learningRoughPct ?? null;
   let growthProtocolWeek: ProtocolWeekMissionStats | null = null;
@@ -138,6 +154,7 @@ export async function getQuarterEngineSnapshot(): Promise<QuarterEngineSnapshot 
     xpEarnedThisQuarter: xpEarned,
     disciplineCompleted: completes,
     disciplineNegative,
+    disciplineOverride,
   };
 
   let result = computeQuarterEngine(inputs);

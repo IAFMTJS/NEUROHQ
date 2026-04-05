@@ -4,9 +4,14 @@ import { useMemo, useState, useTransition } from "react";
 import { updateStrategyEngineParams } from "@/app/actions/strategyFocus";
 import {
   derivedMissionTargets,
+  type ExecutionBehaviorFocus,
   type PushAreaStyle,
   type StrategyEngineParams,
 } from "@/lib/strategy/engine-params";
+import {
+  EXECUTION_BEHAVIOR_OPTIONS,
+  EXECUTION_BEHAVIOR_LABELS_NL,
+} from "@/lib/strategy/execution-behavior";
 import { formatCents, parseToCents } from "@/lib/utils/currency";
 import { useRouter } from "next/navigation";
 
@@ -60,6 +65,7 @@ export function StrategyEngineSettingsForm({
   const [nB, setNB] = useState<PushAreaStyle>(initial.notifications.budget);
   const [nG, setNG] = useState<PushAreaStyle>(initial.notifications.growth);
   const [nS, setNS] = useState<PushAreaStyle>(initial.notifications.strategy);
+  const [behaviorFocus, setBehaviorFocus] = useState<ExecutionBehaviorFocus>(initial.execution.behaviorFocus);
 
   const preview = useMemo(() => {
     const min = Math.max(1, Math.min(8, parseInt(minLow, 10) || 1));
@@ -107,6 +113,9 @@ export function StrategyEngineSettingsForm({
             budget: nB,
             growth: nG,
             strategy: nS,
+          },
+          execution: {
+            behaviorFocus,
           },
         });
         setOk(true);
@@ -181,6 +190,33 @@ export function StrategyEngineSettingsForm({
             Preview: laag <strong className="text-[var(--text-primary)]">{preview.low}</strong> · gemiddeld{" "}
             <strong className="text-[var(--text-primary)]">{preview.medium}</strong> · goed/ultra{" "}
             <strong className="text-[var(--text-primary)]">{preview.good}</strong> (na normalisatie max 8)
+          </p>
+        </div>
+
+        <div className="space-y-3 rounded-xl border border-[var(--card-border)] bg-[var(--bg-primary)]/40 p-4 lg:col-span-2">
+          <h3 className="text-xs font-semibold uppercase tracking-wide text-[var(--text-muted)]">
+            Executie op Missions — gedragsfocus
+          </h3>
+          <p className="text-xs text-[var(--text-secondary)]">
+            Kies welk gedrag het kwartaal meetelt voor de executie-pijler op Strategy Command. Elke optie gebruikt andere
+            signalen uit je missiepagina (deadlines, routine, weerstand, …).
+          </p>
+          <label className="block text-xs text-[var(--text-muted)]">
+            Focus
+            <select
+              value={behaviorFocus}
+              onChange={(e) => setBehaviorFocus(e.target.value as ExecutionBehaviorFocus)}
+              className="mt-1 w-full rounded-lg border border-[var(--card-border)] bg-[var(--bg-elevated)] px-3 py-2 text-sm text-[var(--text-primary)]"
+            >
+              {EXECUTION_BEHAVIOR_OPTIONS.map((id) => (
+                <option key={id} value={id}>
+                  {EXECUTION_BEHAVIOR_LABELS_NL[id].title}
+                </option>
+              ))}
+            </select>
+          </label>
+          <p className="rounded-lg bg-[var(--bg-card)] px-3 py-2 text-xs text-[var(--text-secondary)]">
+            {EXECUTION_BEHAVIOR_LABELS_NL[behaviorFocus].measure}
           </p>
         </div>
 

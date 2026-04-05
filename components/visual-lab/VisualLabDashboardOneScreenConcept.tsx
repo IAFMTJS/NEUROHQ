@@ -3,7 +3,6 @@
 import { CommanderMascotPedestal } from "@/components/commander/CommanderMascotPedestal";
 import { CommanderStatRing } from "@/components/commander/CommanderStatRing";
 import { getDashboardMascotSrc } from "@/lib/mascots";
-import { SegmentedBar } from "@/components/visual-lab/VisualLabBars";
 import { VisualLabCommandDeck } from "@/components/visual-lab/VisualLabCommandDeck";
 
 const E = 68;
@@ -24,9 +23,8 @@ const PEDESTAL = {
 } as const;
 
 /**
- * Één scherm: zelfde bouwstenen als productie-bridge — pedestal met boog + XP/budget op de band,
- * daaronder commander-rings, quote, wat-nu, primaire CTA. Compact geschaald zodat het op een laptop
- * als één snapshot leesbaar blijft.
+ * Strikt één viewport voor de deck-inhoud: geen overflow/scroll binnen het command deck.
+ * `visual-lab-dash-noscroll` in globals.css comprimeert het pedestal zonder productie aan te raken.
  */
 export function VisualLabDashboardOneScreenConcept() {
   return (
@@ -34,113 +32,108 @@ export function VisualLabDashboardOneScreenConcept() {
       className="relative mb-10 scroll-mt-6 rounded-xl border border-[rgba(var(--mode-rgb),0.12)] bg-[rgba(4,12,22,0.18)] p-3 md:p-4"
       aria-labelledby="vl-dash-one-screen-heading"
     >
-      <div className="mb-3 flex flex-wrap items-end justify-between gap-2 border-b border-[rgba(var(--mode-rgb),0.1)] pb-3">
-        <div>
-          <h2
-            id="vl-dash-one-screen-heading"
-            className="text-[11px] font-bold uppercase tracking-[0.18em] text-[var(--text-muted)]"
-          >
-            Dashboard · één scherm (productie-pariteit)
-          </h2>
-          <p className="mt-1 max-w-2xl text-xs leading-relaxed text-[var(--text-secondary)]">
-            Zelfde stack als live: <code className="rounded bg-black/25 px-1 text-[10px]">CommanderMascotPedestal</code> +
-            rings + glass quote — hier bewust compact voor één viewport. Mock data.
-          </p>
-        </div>
-        <span className="shrink-0 text-[9px] font-semibold uppercase tracking-[0.14em] text-[var(--text-muted)]">
-          Mock
-        </span>
+      <div className="mb-2 flex flex-wrap items-end justify-between gap-2 border-b border-[rgba(var(--mode-rgb),0.1)] pb-2">
+        <h2
+          id="vl-dash-one-screen-heading"
+          className="text-[11px] font-bold uppercase tracking-[0.18em] text-[var(--text-muted)]"
+        >
+          Dashboard — één scherm, geen scroll in deck
+        </h2>
+        <span className="text-[9px] font-semibold uppercase tracking-[0.14em] text-[var(--text-muted)]">Mock</span>
       </div>
 
-      <VisualLabCommandDeck contentClassName="min-h-0 p-3 md:p-4">
-        <div className="mx-auto flex max-w-2xl flex-col gap-2 md:max-h-[min(90vh,860px)] md:gap-2.5 md:overflow-hidden">
-          <header className="flex shrink-0 flex-wrap items-start justify-between gap-2 border-b border-[rgba(var(--mode-rgb),0.12)] pb-2">
-            <div className="min-w-0 border-l-2 border-[rgba(var(--semantic-accent),0.55)] pl-2.5">
-              <p className="text-[9px] font-bold uppercase tracking-[0.2em] text-[var(--semantic-accent)]/90">Operator</p>
-              <h3 className="text-sm font-bold tracking-tight text-[var(--text-primary)] md:text-base">Dashboard</h3>
-              <p className="text-[10px] text-[var(--text-muted)]">System overview</p>
+      <VisualLabCommandDeck contentClassName="min-h-0 overflow-hidden p-2 md:p-3">
+        <div className="visual-lab-dash-noscroll dashboard-command-bridge relative mx-auto flex h-[min(28rem,calc(85svh-10rem))] w-full max-w-[22rem] flex-col gap-1 overflow-hidden md:h-[min(30rem,calc(82svh-9rem))] md:max-w-[24rem] md:gap-1.5">
+          {/* Kop: zelfde taal als bridge, één compacte band */}
+          <div className="flex shrink-0 items-start justify-between gap-2 border-b border-[rgba(var(--mode-rgb),0.12)] pb-1.5 pt-0.5">
+            <div className="min-w-0 border-l-2 border-[rgba(var(--semantic-accent),0.55)] pl-2">
+              <p className="text-[8px] font-bold uppercase tracking-[0.2em] text-[var(--semantic-accent)]/90">
+                Operator
+              </p>
+              <h3 className="text-[13px] font-bold leading-tight tracking-tight text-[var(--text-primary)] md:text-sm">
+                Dashboard
+              </h3>
+              <p className="text-[8px] text-[var(--text-muted)]">System overview</p>
             </div>
-            <div className="flex flex-wrap justify-end gap-1.5 text-[9px] font-semibold uppercase tracking-wide text-[var(--text-secondary)]">
-              <span className="inline-flex items-center gap-1 rounded-lg border border-[rgba(var(--mode-rgb),0.2)] bg-[rgba(6,18,30,0.5)] px-2 py-1">
-                <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" aria-hidden />
-                Sync live
-              </span>
-              <span className="rounded-lg border border-[rgba(var(--mode-rgb),0.2)] bg-[rgba(6,18,30,0.5)] px-2 py-1">
-                Focus
-              </span>
+            <div className="shrink-0 text-right text-[8px] leading-tight text-[var(--text-muted)]">
+              <p className="font-medium text-[var(--text-secondary)]">Zo 5 apr</p>
+              <div className="mt-1 flex justify-end gap-1">
+                <span className="inline-flex items-center gap-1 rounded border border-[rgba(var(--mode-rgb),0.18)] bg-[rgba(6,18,30,0.45)] px-1.5 py-0.5 font-semibold uppercase tracking-wide text-[var(--text-secondary)]">
+                  <span className="h-1 w-1 rounded-full bg-emerald-400" aria-hidden />
+                  Live
+                </span>
+                <span className="rounded border border-[rgba(var(--mode-rgb),0.18)] px-1.5 py-0.5 font-semibold text-[var(--text-primary)]">
+                  Focus
+                </span>
+              </div>
             </div>
-          </header>
-
-          <div className="shrink-0 rounded-lg border border-[rgba(var(--mode-rgb),0.12)] bg-[rgba(4,10,18,0.45)] px-2 py-1.5 backdrop-blur-sm">
-            <SegmentedBar
-              label="Resource strip"
-              caption={`E ${E}% · F ${F}% · L ${L}%`}
-              fills={[E / 100, F / 100, L / 100]}
-              segmentLabels={["Energy", "Focus", "Load"]}
-            />
           </div>
 
-          {/* Pedestal + mascot: productie-component; licht verkleind op desktop */}
-          <div className="relative shrink-0 md:-mt-1 md:scale-[0.92] md:origin-top">
-            <section
-              className="mascot-hero mascot-hero-top relative w-full overflow-visible"
-              data-commander-orbit="true"
-            >
-              <CommanderMascotPedestal stats={{ ...PEDESTAL }}>
-                <div className="mascot-hero-mascot-stack relative mx-auto flex w-full justify-center">
-                  <img src={getDashboardMascotSrc()} alt="" className="mascot-img" aria-hidden />
-                </div>
-              </CommanderMascotPedestal>
-            </section>
+          <div className="shrink-0 space-y-0.5">
+            <div className="flex justify-between text-[8px] font-semibold uppercase tracking-[0.12em] text-[var(--text-muted)]">
+              <span>Energy pool</span>
+              <span className="tabular-nums normal-case text-[var(--text-secondary)]">62%</span>
+            </div>
+            <div className="h-1 overflow-hidden rounded-full border border-[rgba(var(--mode-rgb),0.1)] bg-[rgba(4,10,18,0.6)]">
+              <div
+                className="h-full rounded-full bg-gradient-to-r from-[rgba(var(--mode-rgb),0.3)] via-[var(--semantic-accent)] to-emerald-400/80"
+                style={{ width: "62%" }}
+                aria-hidden
+              />
+            </div>
           </div>
 
-          <section className="stats commander-bridge-stats flex shrink-0 flex-wrap items-end justify-center gap-3 md:gap-5">
-            <CommanderStatRing variant="energy" value={E} size={88} />
-            <CommanderStatRing variant="focus" value={F} size={88} />
-            <CommanderStatRing variant="load" value={L} size={88} />
+          {/* Pedestal: flex-gedeelte vult rest; clipping voorkomt scroll */}
+          <div className="relative min-h-0 flex-1 overflow-hidden">
+            <div className="absolute inset-x-0 bottom-0 top-0 flex items-end justify-center overflow-hidden rounded-xl border border-[rgba(var(--mode-rgb),0.1)] bg-[radial-gradient(ellipse_100%_90%_at_50%_100%,rgba(var(--mode-rgb),0.14),rgba(4,12,22,0.5))]">
+              <section
+                className="mascot-hero mascot-hero-top relative w-full max-w-[19rem] overflow-visible"
+                data-commander-orbit="true"
+              >
+                <CommanderMascotPedestal stats={{ ...PEDESTAL }}>
+                  <div className="mascot-hero-mascot-stack relative mx-auto flex w-full justify-center">
+                    <img src={getDashboardMascotSrc()} alt="" className="mascot-img" aria-hidden />
+                  </div>
+                </CommanderMascotPedestal>
+              </section>
+            </div>
+          </div>
+
+          <section className="stats commander-bridge-stats flex shrink-0 items-end justify-center gap-2 md:gap-4">
+            <CommanderStatRing variant="energy" value={E} size={56} />
+            <CommanderStatRing variant="focus" value={F} size={56} />
+            <CommanderStatRing variant="load" value={L} size={56} />
           </section>
 
-          <div className="glass-card glass-preserve-decoration mx-auto w-full max-w-lg shrink-0 !rounded-xl !px-3 !py-2 !shadow-none">
-            <p
-              className="mb-0.5 text-center text-[9px] font-semibold uppercase tracking-[0.14em]"
-              style={{ color: "rgba(var(--mode-rgb), 0.78)" }}
-            >
-              Daily quote
-            </p>
-            <p className="text-center text-[11px] italic leading-snug text-[var(--text-primary)]">
-              &ldquo;Kleine commit nu, compound later.&rdquo;
-            </p>
-          </div>
+          <p className="shrink-0 truncate px-1 text-center text-[9px] italic leading-tight text-[var(--text-secondary)]">
+            &ldquo;Consistentie verslaat intensiteit op lange horizon.&rdquo;
+          </p>
 
-          <div className="grid shrink-0 grid-cols-1 gap-1.5 rounded-xl border border-[rgba(var(--mode-rgb),0.1)] bg-[rgba(5,16,28,0.35)] p-2 sm:grid-cols-3 sm:gap-0 sm:divide-x sm:divide-[rgba(var(--mode-rgb),0.1)]">
-            <div className="px-2 py-1.5 sm:py-2">
-              <p className="text-[9px] font-bold uppercase tracking-[0.12em] text-[var(--semantic-accent)]/90">Wat nu</p>
-              <p className="mt-0.5 text-xs font-semibold leading-snug text-[var(--text-primary)]">
-                Deep-work blok vóór 14:00
-              </p>
+          <div className="grid shrink-0 grid-cols-3 divide-x divide-[rgba(var(--mode-rgb),0.08)] overflow-hidden rounded-lg border border-[rgba(var(--mode-rgb),0.1)] bg-[rgba(5,16,28,0.45)] text-[8px] leading-tight">
+            <div className="border-l-2 border-[rgba(var(--semantic-accent),0.5)] bg-[rgba(var(--semantic-accent),0.05)] px-1.5 py-1.5">
+              <p className="font-bold uppercase tracking-wide text-[var(--semantic-accent)]">Nu</p>
+              <p className="mt-0.5 line-clamp-2 font-semibold text-[var(--text-primary)]">Deep-work vóór 14:00</p>
             </div>
-            <div className="px-2 py-1.5 sm:py-2">
-              <p className="text-[9px] font-bold uppercase tracking-[0.12em] text-[var(--text-muted)]">Vandaag</p>
-              <p className="mt-0.5 text-lg font-bold tabular-nums leading-none text-[var(--text-primary)]">5</p>
-              <p className="text-[9px] text-[var(--text-secondary)]">open</p>
+            <div className="px-1.5 py-1.5 text-center">
+              <p className="font-bold uppercase tracking-wide text-[var(--text-muted)]">Taken</p>
+              <p className="font-mono text-base font-bold tabular-nums text-[var(--text-primary)]">5</p>
             </div>
-            <div className="px-2 py-1.5 sm:py-2">
-              <p className="text-[9px] font-bold uppercase tracking-[0.12em] text-violet-300/85">Brain</p>
-              <p className="mt-0.5 text-[11px] leading-snug text-[var(--text-secondary)]">Check-in ok · zie ringen</p>
+            <div className="px-1.5 py-1.5">
+              <p className="font-bold uppercase tracking-wide text-violet-300/90">Brain</p>
+              <p className="mt-0.5 line-clamp-2 text-[var(--text-secondary)]">Check-in ok</p>
             </div>
           </div>
 
-          <div className="flex shrink-0 flex-col gap-1.5 sm:flex-row sm:items-center sm:justify-between sm:gap-3">
+          <div className="flex shrink-0 items-center gap-2">
             <button
               type="button"
-              className="commander-cta-glass h-11 w-full rounded-full text-[11px] font-medium tracking-[0.08em] text-[var(--text-main)] sm:max-w-xs"
+              className="commander-cta-glass flex h-9 min-h-9 shrink-0 items-center justify-center rounded-full px-4 text-[10px] font-semibold tracking-[0.08em] text-[var(--text-main)]"
             >
-              Naar missies (mock)
+              Missies
             </button>
-            <ul className="hidden text-[10px] leading-snug text-[var(--text-muted)] sm:block sm:max-w-[14rem] sm:text-right">
-              <li>· Inbox: 2 quick wins</li>
-              <li>· Weektheme: execution</li>
-            </ul>
+            <p className="min-w-0 flex-1 truncate text-[8px] leading-snug text-[var(--text-muted)]">
+              <span className="font-semibold text-[var(--text-secondary)]">Tips ·</span> inbox 2 · weektheme execution
+            </p>
           </div>
         </div>
       </VisualLabCommandDeck>

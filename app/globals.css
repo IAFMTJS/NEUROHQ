@@ -3148,6 +3148,30 @@ header h1 { margin: 0; }
   display: none !important;
 }
 
+/*
+ * Visual Lab — dashboard one-screen mock: pedestal past op vaste hoogte zonder scroll.
+ * Alleen binnen .visual-lab-dash-noscroll (geen impact op productie-dashboard).
+ */
+.visual-lab-dash-noscroll .commander-mascot-pedestal {
+  padding-bottom: 0 !important;
+}
+.visual-lab-dash-noscroll .commander-mascot-pedestal-donut-stage {
+  min-height: 0 !important;
+  padding-bottom: 0.35rem !important;
+}
+.visual-lab-dash-noscroll .commander-mascot-pedestal-mascot {
+  margin-bottom: -3.25rem !important;
+  max-width: min(200px, 48vw) !important;
+}
+.visual-lab-dash-noscroll .commander-mascot-pedestal-mascot .mascot-img {
+  max-height: min(100px, 22dvh) !important;
+  width: auto !important;
+  object-fit: contain;
+}
+.visual-lab-dash-noscroll .commander-mascot-pedestal-donut-ring {
+  max-height: min(7.5rem, 34vw) !important;
+}
+
 .dashboard-bridge,
 .dashboard-bridge-frame {
   position: relative;

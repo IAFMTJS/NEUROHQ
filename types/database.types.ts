@@ -2482,6 +2482,7 @@ export type Database = {
           strongest_domain: string | null
           week_number: number
           week_start: string
+          weekly_review_payload: Json | null
         }
         Insert: {
           alignment_score?: number | null
@@ -2493,6 +2494,7 @@ export type Database = {
           strongest_domain?: string | null
           week_number: number
           week_start: string
+          weekly_review_payload?: Json | null
         }
         Update: {
           alignment_score?: number | null
@@ -2504,6 +2506,7 @@ export type Database = {
           strongest_domain?: string | null
           week_number?: number
           week_start?: string
+          weekly_review_payload?: Json | null
         }
         Relationships: [
           {
