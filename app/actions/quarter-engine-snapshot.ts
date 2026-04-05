@@ -19,6 +19,7 @@ import {
   computeExecutionDisciplinePillar,
   normalizeExecutionBehaviorFocus,
 } from "@/lib/strategy/execution-behavior";
+import type { QuarterCommandMetrics } from "@/lib/strategy/quarter-command-metrics";
 
 export type QuarterEngineSnapshot = QuarterEngineResult & {
   quarterStart: string;
@@ -32,6 +33,8 @@ export type QuarterEngineSnapshot = QuarterEngineResult & {
   pressureBoostAfterDeadline: boolean;
   /** Growth op basis van protocoltaken dit kalenderkwartaal (verwacht over meerdere protocolweken vs afgerond). */
   growthProtocolQuarter: ProtocolQuarterMissionStats | null;
+  /** Ruwe cijfers voor Command-tab kaarten. */
+  commandMetrics: QuarterCommandMetrics;
 };
 
 function quarterLabel(start: string): string {
@@ -157,6 +160,19 @@ export async function getQuarterEngineSnapshot(): Promise<QuarterEngineSnapshot 
     disciplineOverride,
   };
 
+  const commandMetrics: QuarterCommandMetrics = {
+    savedThisQuarterCents: inputs.savedThisQuarterCents,
+    savingsTargetCents: inputs.savingsTargetCents,
+    xpEarnedThisQuarter: inputs.xpEarnedThisQuarter,
+    xpTargetEarned: inputs.xpTargetEarned,
+    growthContractTargetPct: engineParams.growth.quarterlyLearningProgressTargetPct,
+    growthActualPct: inputs.growthActualPct,
+    growthEngineTargetPct: inputs.growthTargetPct,
+    taskCompletesInQuarter: completes,
+    missionOutcomeNegative: disciplineNegative,
+    missionOutcomesBreakdown: neg,
+  };
+
   let result = computeQuarterEngine(inputs);
 
   const deadlineStr = (row as { deadline: string }).deadline;
@@ -193,6 +209,7 @@ export async function getQuarterEngineSnapshot(): Promise<QuarterEngineSnapshot 
     thesisDeadlinePassed,
     pressureBoostAfterDeadline: boost,
     growthProtocolQuarter,
+    commandMetrics,
   };
 }
 

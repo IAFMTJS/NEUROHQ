@@ -23,6 +23,8 @@ export type CommanderMascotPedestalStats = {
 type Props = {
   stats: CommanderMascotPedestalStats;
   children: ReactNode;
+  /** Zonder resource-boog (alleen mascotte-vlak); o.a. visual lab alternatieven. */
+  showResourceArc?: boolean;
 };
 
 const CX = 200;
@@ -165,7 +167,7 @@ function clampPct(n: number) {
   return Math.min(100, Math.max(0, n));
 }
 
-export function CommanderMascotPedestal({ stats, children }: Props) {
+export function CommanderMascotPedestal({ stats, children, showResourceArc = true }: Props) {
   const {
     totalXP,
     displayLevel,
@@ -207,19 +209,36 @@ export function CommanderMascotPedestal({ stats, children }: Props) {
   const rXpBudget = bandLabelRadiusXp();
   const posXp = bandLabelPct(SEG_MID_FOCUS_RAD, rXpBudget, donutSquash);
 
+  const ariaBand = showResourceArc
+    ? `Resourceband: arcering Energy ${ePct}%, Focus ${fPct}%, Load ${lPct}%. XP level ${displayLevel}, ${current} van ${needed}. Budget ${isNegative ? "−" : ""}${symbol}${amount.toFixed(0)}. Brain status-cirkels onder de mascotte.`
+    : `Mascotte. Energy ${ePct}%, Focus ${fPct}%, Load ${lPct}%. XP level ${displayLevel}.`;
+
   return (
     <div
       className="commander-mascot-pedestal commander-mascot-platform relative mx-auto w-full overflow-visible pb-6 sm:pb-8"
       role="group"
-      aria-label={`Resourceband: arcering Energy ${ePct}%, Focus ${fPct}%, Load ${lPct}%. XP level ${displayLevel}, ${current} van ${needed}. Budget ${isNegative ? "−" : ""}${symbol}${amount.toFixed(0)}. Brain status-cirkels onder de mascotte.`}
+      aria-label={ariaBand}
     >
-      <div className="commander-mascot-pedestal-donut-stage relative mx-auto w-full min-h-[min(300px,78vw)] overflow-visible pb-[min(5rem,16vw)] sm:min-h-[min(340px,64vw)] sm:pb-[min(5.5rem,15vw)]">
+      <div
+        className={
+          showResourceArc
+            ? "commander-mascot-pedestal-donut-stage relative mx-auto w-full min-h-[min(300px,78vw)] overflow-visible pb-[min(5rem,16vw)] sm:min-h-[min(340px,64vw)] sm:pb-[min(5.5rem,15vw)]"
+            : "commander-mascot-pedestal-donut-stage relative mx-auto w-full min-h-0 overflow-visible pb-3 sm:pb-4"
+        }
+      >
         {/* Mascotte eerst (gat van de donut); ring eronder/erachter via z-index */}
-        <div className="commander-mascot-pedestal-mascot relative z-[14] -mb-10 mx-auto w-full max-w-[min(320px,88vw)] shrink-0 px-1 sm:-mb-12 lg:-mb-[3.85rem]">
+        <div
+          className={
+            showResourceArc
+              ? "commander-mascot-pedestal-mascot relative z-[14] -mb-10 mx-auto w-full max-w-[min(320px,88vw)] shrink-0 px-1 sm:-mb-12 lg:-mb-[3.85rem]"
+              : "commander-mascot-pedestal-mascot relative z-[14] mx-auto mb-0 w-full max-w-[min(280px,80vw)] shrink-0 px-1"
+          }
+        >
           {children}
         </div>
 
         {/* Ring: iets hogere mascotte + bredere band onder de voeten */}
+        {showResourceArc ? (
         <div className="absolute bottom-0 left-1/2 z-[1] flex w-full max-w-none -translate-x-1/2 -translate-y-[min(0.65rem,3vw)] justify-center sm:-translate-y-[min(0.8rem,3.5vw)]">
           <div className="commander-mascot-pedestal-donut-tilt">
             <div
@@ -370,6 +389,7 @@ export function CommanderMascotPedestal({ stats, children }: Props) {
             </div>
           </div>
         </div>
+        ) : null}
       </div>
     </div>
   );

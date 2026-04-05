@@ -3173,6 +3173,25 @@ header h1 { margin: 0; }
   max-height: min(17rem, 58vw) !important;
 }
 
+/* Hero-grid: ringstatus naast mascotte — geen dubbele stats-marge */
+.visual-lab-dash-noscroll .visual-lab-dash-rings {
+  margin-top: 0 !important;
+}
+@media (min-width: 640px) {
+  .visual-lab-dash-noscroll .visual-lab-dash-hero .commander-mascot-pedestal-donut-stage {
+    min-height: min(180px, 38vw) !important;
+    padding-bottom: min(2rem, 6vw) !important;
+  }
+}
+
+/* Zonder resourceboog: compactere mascotte in visual-lab alternatieven */
+.visual-lab-dash-noscroll .visual-lab-dash-alt-noarc .commander-mascot-pedestal {
+  padding-bottom: 0.35rem !important;
+}
+.visual-lab-dash-noscroll .visual-lab-dash-alt-noarc .commander-mascot-pedestal-mascot .mascot-img {
+  max-height: min(118px, 26dvh) !important;
+}
+
 .dashboard-bridge,
 .dashboard-bridge-frame {
   position: relative;

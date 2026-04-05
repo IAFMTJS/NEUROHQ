@@ -86,11 +86,11 @@ export function VisualLabDashboardOneScreenConcept() {
             </div>
           </div>
 
-          {/* Pedestal: geen overflow-hidden — boog tekent buiten de mascotte-box */}
-          <div className="relative flex min-h-[13rem] flex-1 flex-col justify-end">
-            <div className="rounded-xl border border-[rgba(var(--mode-rgb),0.1)] bg-[radial-gradient(ellipse_100%_95%_at_50%_100%,rgba(var(--mode-rgb),0.16),rgba(4,12,22,0.45))] px-1 pb-0.5 pt-1">
+          {/* Mascotte hoger + ringstatus er direct naast (md+) / eronder (mobiel) */}
+          <div className="relative flex min-h-[12rem] flex-1 flex-col justify-start pt-0.5">
+            <div className="visual-lab-dash-hero grid grid-cols-1 gap-1 overflow-visible rounded-xl border border-[rgba(var(--mode-rgb),0.1)] bg-[radial-gradient(ellipse_100%_95%_at_50%_85%,rgba(var(--mode-rgb),0.16),rgba(4,12,22,0.45))] px-1 pb-1 pt-0 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-start sm:gap-2 sm:px-2 sm:pt-1">
               <section
-                className="mascot-hero mascot-hero-top relative w-full overflow-visible"
+                className="mascot-hero mascot-hero-top relative min-w-0 -translate-y-1 overflow-visible sm:-translate-y-2"
                 data-commander-orbit="true"
               >
                 <CommanderMascotPedestal stats={{ ...PEDESTAL }}>
@@ -99,14 +99,16 @@ export function VisualLabDashboardOneScreenConcept() {
                   </div>
                 </CommanderMascotPedestal>
               </section>
+              <section
+                className="stats visual-lab-dash-rings commander-bridge-stats flex shrink-0 flex-row items-end justify-center gap-3 pb-1 sm:flex-col sm:items-center sm:justify-start sm:gap-2 sm:pb-0 sm:pt-4 sm:pr-1"
+                aria-label="Brain status (mock)"
+              >
+                <CommanderStatRing variant="energy" value={E} size={54} />
+                <CommanderStatRing variant="focus" value={F} size={54} />
+                <CommanderStatRing variant="load" value={L} size={54} />
+              </section>
             </div>
           </div>
-
-          <section className="stats commander-bridge-stats flex shrink-0 items-end justify-center gap-2 md:gap-4">
-            <CommanderStatRing variant="energy" value={E} size={56} />
-            <CommanderStatRing variant="focus" value={F} size={56} />
-            <CommanderStatRing variant="load" value={L} size={56} />
-          </section>
 
           <p className="shrink-0 truncate px-1 text-center text-[9px] italic leading-tight text-[var(--text-secondary)]">
             &ldquo;Consistentie verslaat intensiteit op lange horizon.&rdquo;

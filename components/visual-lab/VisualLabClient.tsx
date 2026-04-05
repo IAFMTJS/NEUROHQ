@@ -13,6 +13,7 @@ import { ZoneBandBar } from "@/components/visual-lab/VisualLabBars";
 import { PolygonHudMeter } from "@/components/visual-lab/VisualLabPolygonMeters";
 import { VisualLabShapeEnergyRing } from "@/components/visual-lab/VisualLabShapeEnergyRing";
 import { VisualLabDashboardOneScreenConcept } from "@/components/visual-lab/VisualLabDashboardOneScreenConcept";
+import { VisualLabDashboardMascotRingAlternatives } from "@/components/visual-lab/VisualLabDashboardMascotRingAlternatives";
 import { VisualLabStrategyBalancedConcept } from "@/components/visual-lab/VisualLabStrategyBalancedConcept";
 import { VisualLabNotificationsPageConcept } from "@/components/visual-lab/VisualLabUserPageConcepts";
 import {
@@ -322,12 +323,14 @@ export function VisualLabClient() {
               <code className="rounded bg-black/30 px-1 text-[10px]">
                 space-y-6
               </code>
-              . Hieronder: dashboard als één scherm-view, strategy als gebalanceerde
-              enkelvoudige layout, daarna het meldingen-deck.
+              . Hieronder: dashboard als één scherm-view, zes mascotte+status-concepten,
+              strategy als gebalanceerde enkelvoudige layout, daarna het meldingen-deck.
             </p>
           </div>
 
           <VisualLabDashboardOneScreenConcept />
+
+          <VisualLabDashboardMascotRingAlternatives />
 
           <VisualLabStrategyBalancedConcept />
 

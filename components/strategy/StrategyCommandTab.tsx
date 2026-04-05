@@ -1,35 +1,188 @@
+"use client";
+
+import { useId } from "react";
 import type { QuarterEngineSnapshot } from "@/app/actions/quarter-engine-snapshot";
+import { buildPillarCardModel } from "@/lib/strategy/command-pillar-summaries";
+import type { PillarCardModel } from "@/lib/strategy/command-pillar-summaries";
 import {
   EXECUTION_BEHAVIOR_LABELS_NL,
   normalizeExecutionBehaviorFocus,
 } from "@/lib/strategy/execution-behavior";
 
-function RingScore({ pct }: { pct: number }) {
-  const p = Math.max(0, Math.min(100, pct));
-  const r = 52;
-  const c = 2 * Math.PI * r;
-  const offset = c - (p / 100) * c;
+function deg2rad(d: number) {
+  return (d * Math.PI) / 180;
+}
+
+/** Annular sector in SVG coords (0° = right, clockwise); we pass standard math angles from top = -90°. */
+function annularSectorPath(
+  cx: number,
+  cy: number,
+  rInner: number,
+  rOuter: number,
+  startDeg: number,
+  endDeg: number
+) {
+  const a1 = deg2rad(startDeg);
+  const a2 = deg2rad(endDeg);
+  const largeArc = endDeg - startDeg > 180 ? 1 : 0;
+  const x0 = cx + rInner * Math.cos(a1);
+  const y0 = cy + rInner * Math.sin(a1);
+  const x1 = cx + rOuter * Math.cos(a1);
+  const y1 = cy + rOuter * Math.sin(a1);
+  const x2 = cx + rOuter * Math.cos(a2);
+  const y2 = cy + rOuter * Math.sin(a2);
+  const x3 = cx + rInner * Math.cos(a2);
+  const y3 = cy + rInner * Math.sin(a2);
+  return `M ${x0} ${y0} L ${x1} ${y1} A ${rOuter} ${rOuter} 0 ${largeArc} 1 ${x2} ${y2} L ${x3} ${y3} A ${rInner} ${rInner} 0 ${largeArc} 0 ${x0} ${y0} Z`;
+}
+
+function pillarStatusClass(committed: boolean, pct: number) {
+  if (!committed) return "bg-[var(--text-muted)]/45";
+  if (pct >= 80) return "bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.45)]";
+  if (pct >= 60) return "bg-amber-400 shadow-[0_0_8px_rgba(251,191,36,0.35)]";
+  return "bg-red-500/90 shadow-[0_0_10px_rgba(239,68,68,0.4)]";
+}
+
+type PillarKey = "budget" | "growth" | "xp" | "discipline";
+
+type PillarSlice = {
+  key: PillarKey;
+  label: string;
+  pct: number;
+  committed: boolean;
+  trackClass: string;
+  progClass: string;
+  swatchClass: string;
+};
+
+/** Donut segment + legenda: mode-tint voor budget, aparte hues per pijler (leesbaar in war/recovery). */
+const PILLAR_VISUAL: Record<PillarKey, { trackClass: string; progClass: string; swatchClass: string }> = {
+  budget: {
+    trackClass: "fill-[rgba(var(--mode-rgb),0.14)]",
+    progClass: "fill-[rgba(var(--mode-rgb-deep),0.9)]",
+    swatchClass: "bg-[rgba(var(--mode-rgb-deep),0.85)]",
+  },
+  growth: {
+    trackClass: "fill-emerald-400/14",
+    progClass: "fill-emerald-400/88",
+    swatchClass: "bg-emerald-400/80",
+  },
+  xp: {
+    trackClass: "fill-violet-400/14",
+    progClass: "fill-violet-400/85",
+    swatchClass: "bg-violet-400/78",
+  },
+  discipline: {
+    trackClass: "fill-amber-400/14",
+    progClass: "fill-amber-300/88",
+    swatchClass: "bg-amber-300/80",
+  },
+};
+
+function QuarterCommandOverview({
+  scorePct,
+  pillars,
+}: {
+  scorePct: number;
+  pillars: PillarSlice[];
+}) {
+  const filterId = useId().replace(/:/g, "");
+  const cx = 64;
+  const cy = 64;
+  const rOuter = 54;
+  const rInner = 30;
+  const gapDeg = 5;
+  const slot = 90;
+  /** Clockwise from top (12u): top → right → bottom → left. */
+  const baseStarts = [-135, -45, 45, 135].map((deg) => deg + gapDeg / 2);
+
+  const p = Math.max(0, Math.min(100, Math.round(scorePct)));
+
   return (
-    <div className="relative mx-auto flex h-40 w-40 items-center justify-center sm:h-44 sm:w-44">
-      <svg className="-rotate-90" width="160" height="160" viewBox="0 0 120 120" aria-hidden>
-        <circle cx="60" cy="60" r={r} fill="none" stroke="rgba(var(--mode-rgb),0.12)" strokeWidth="10" />
-        <circle
-          cx="60"
-          cy="60"
-          r={r}
-          fill="none"
-          stroke="color-mix(in srgb, var(--semantic-accent) 85%, transparent)"
-          strokeWidth="10"
-          strokeLinecap="round"
-          strokeDasharray={c}
-          strokeDashoffset={offset}
-          className="transition-[stroke-dashoffset] duration-500"
-        />
-      </svg>
-      <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
-        <span className="font-mono text-3xl font-bold tabular-nums text-[var(--text-primary)] sm:text-4xl">{p}</span>
-        <span className="text-[10px] font-semibold uppercase tracking-[0.2em] text-[var(--text-muted)]">contract</span>
+    <div className="mx-auto max-w-md">
+      <div className="relative mx-auto aspect-square w-full max-w-[220px] sm:max-w-[248px]">
+        <svg
+          width="100%"
+          height="100%"
+          viewBox="0 0 128 128"
+          className="overflow-visible drop-shadow-[0_0_24px_rgba(var(--mode-rgb),0.12)]"
+          role="img"
+          aria-label={`Kwartaal contractscore ${p} procent, vier pijlers elk een kwart`}
+        >
+          <defs>
+            <filter id={`hq-strategy-quarter-glow-${filterId}`} x="-40%" y="-40%" width="180%" height="180%">
+              <feGaussianBlur stdDeviation="1.2" result="b" />
+              <feMerge>
+                <feMergeNode in="b" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+          </defs>
+          {pillars.map((pl, i) => {
+            const start = baseStarts[i];
+            const trackEnd = start + slot - gapDeg;
+            const progSpan = (slot - gapDeg) * (pl.committed ? Math.max(0, Math.min(100, pl.pct)) / 100 : 0);
+            const progEnd = start + progSpan;
+            return (
+              <g key={pl.key}>
+                <path
+                  d={annularSectorPath(cx, cy, rInner, rOuter, start, trackEnd)}
+                  className={`transition-opacity duration-300 ${pl.trackClass}`}
+                />
+                {progSpan > 0.35 ? (
+                  <path
+                    d={annularSectorPath(cx, cy, rInner, rOuter, start, progEnd)}
+                    filter={`url(#hq-strategy-quarter-glow-${filterId})`}
+                    className={`transition-all duration-500 ease-out ${pl.progClass}`}
+                  />
+                ) : null}
+              </g>
+            );
+          })}
+          <circle
+            cx={cx}
+            cy={cy}
+            r={rInner - 2}
+            fill="rgba(4,12,22,0.92)"
+            stroke="rgba(var(--mode-rgb),0.18)"
+            strokeWidth="1"
+          />
+        </svg>
+        <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center text-center">
+          <span className="font-mono text-3xl font-bold tabular-nums text-[var(--text-primary)] sm:text-4xl">{p}</span>
+          <span className="text-[10px] font-semibold uppercase tracking-[0.2em] text-[var(--text-muted)]">contract</span>
+          <span className="mt-0.5 text-[9px] text-[var(--text-muted)]">4 × 25%</span>
+        </div>
       </div>
+
+      <ul className="mt-5 grid grid-cols-2 gap-2 sm:gap-3" aria-label="Pijlers in het kwartaaloverzicht">
+        {pillars.map((pl) => (
+          <li
+            key={pl.key}
+            className="flex items-center gap-2 rounded-xl border border-[rgba(var(--mode-rgb),0.12)] bg-[var(--bg-card)]/80 px-2.5 py-2 sm:px-3"
+          >
+            <span
+              className={`h-2.5 w-2.5 shrink-0 rounded-full ${pillarStatusClass(pl.committed, pl.pct)}`}
+              aria-hidden
+            />
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-[10px] font-semibold uppercase tracking-wide text-[var(--text-primary)]">
+                {pl.label}
+              </p>
+              <p className="font-mono text-xs tabular-nums text-[var(--text-secondary)]">
+                {pl.committed ? `${pl.pct}%` : "—"}
+              </p>
+            </div>
+            <span
+              className={`h-4 w-4 shrink-0 rounded-sm border border-[rgba(var(--mode-rgb),0.2)] ${
+                pl.committed ? pl.swatchClass : "bg-[var(--text-muted)]/20"
+              }`}
+              title={pl.label}
+              aria-hidden
+            />
+          </li>
+        ))}
+      </ul>
     </div>
   );
 }
@@ -65,38 +218,69 @@ function Bar({
   );
 }
 
-/** Korte uitleg onder het onderwerp — geen cijfers of datareview (die staan in de balken). */
-function pillarCardExplainerNl(
-  snapshot: QuarterEngineSnapshot,
-  key: "budget" | "growth" | "xp" | "discipline"
-): string {
-  const ep = snapshot.engineParams;
-  if (key === "budget") {
-    const has = ep.savings.quarterlyMustSaveCents != null && ep.savings.quarterlyMustSaveCents > 0;
-    return has
-      ? "Spaardoel koppelt je kwartaalcontract aan wat je echt opzij zet: stortingen die je op Budget logt, worden tegen dit commitment gehouden."
-      : "Zonder spaardoel in je contract blijft deze pijler neutraal in de engine. Vul een bedrag in onder Contract als je hier wél wilt sturen.";
-  }
-  if (key === "growth") {
-    const hasPct = ep.growth.quarterlyLearningProgressTargetPct != null && ep.growth.quarterlyLearningProgressTargetPct > 0;
-    const hasProto = snapshot.growthProtocolQuarter != null;
-    if (hasPct || hasProto) {
-      return "Leerdoel combineert je gekozen leerpercentage dit kwartaal met je actieve protocol: afgeronde protocoltaken in het kwartaal tellen mee in de meting.";
-    }
-    return "Zonder leerdoel in je contract en zonder bruikbaar protocol blijft deze pijler neutraal. Zet een % in Contract en volg je traject op Growth.";
-  }
-  if (key === "xp") {
-    const has = ep.xp.quarterlyTargetXpEarned != null && ep.xp.quarterlyTargetXpEarned > 0;
-    return has
-      ? "XP-doel vertaalt je kwartaalcommitment naar een beloningsstreepje: verdiende XP in dit kwartaal wordt afgezet tegen het doel uit je contract."
-      : "Zonder XP-doel in je contract blijft deze pijler neutraal. Stel een doel in onder Contract als je hier op wilt sturen.";
-  }
-  const focus = normalizeExecutionBehaviorFocus(ep.execution?.behaviorFocus);
-  const meta = EXECUTION_BEHAVIOR_LABELS_NL[focus];
-  if (focus === "balanced") {
-    return `Executie meet hoe je missies afrondt ten opzichte van negatieve uitkomsten (zoals skip of verzet). ${meta.measure}`;
-  }
-  return `Je gekozen gedragsfocus is “${meta.title}”. ${meta.measure}`;
+function PillarInsightCard({
+  label,
+  pct,
+  committed,
+  model,
+}: {
+  label: string;
+  pct: number;
+  committed: boolean;
+  model: PillarCardModel;
+}) {
+  return (
+    <section className="flex flex-col gap-3 rounded-xl border border-[var(--card-border)] bg-[var(--bg-elevated)]/85 p-4 shadow-[0_0_20px_rgba(0,0,0,0.04)]">
+      <div className="flex flex-wrap items-end justify-between gap-2 border-b border-[rgba(var(--mode-rgb),0.1)] pb-2">
+        <h3 className="text-[10px] font-bold uppercase tracking-[0.18em] text-[var(--text-muted)]">{label}</h3>
+        <div className="text-right">
+          <p className="font-mono text-xl font-bold tabular-nums text-[var(--text-primary)]">
+            {committed ? `${pct}%` : "—"}
+          </p>
+          <p className="text-[9px] font-medium uppercase tracking-wide text-[var(--text-muted)]">pijlerscore</p>
+        </div>
+      </div>
+
+      <p className="text-xs leading-relaxed text-[var(--text-secondary)]">{model.summary}</p>
+      <p className="text-[10px] leading-snug text-[var(--text-muted)]">{model.scoreLine}</p>
+
+      <div>
+        <p className="text-[9px] font-bold uppercase tracking-[0.14em] text-[var(--semantic-accent)]">Data dit kwartaal</p>
+        <ul className="mt-1.5 list-inside list-disc space-y-1 text-[11px] leading-snug text-[var(--text-secondary)]">
+          {model.dataLines.map((line, i) => (
+            <li key={i}>{line}</li>
+          ))}
+        </ul>
+      </div>
+
+      <div className="grid gap-3 sm:grid-cols-2">
+        <div className="rounded-lg border border-emerald-500/25 bg-emerald-500/5 px-3 py-2.5">
+          <p className="text-[9px] font-bold uppercase tracking-wide text-emerald-200/90">Wat goed gaat</p>
+          {model.goodPoints.length > 0 ? (
+            <ul className="mt-1.5 list-inside list-disc space-y-1 text-[11px] leading-snug text-[var(--text-secondary)]">
+              {model.goodPoints.map((line, i) => (
+                <li key={i}>{line}</li>
+              ))}
+            </ul>
+          ) : (
+            <p className="mt-1.5 text-[11px] text-[var(--text-muted)]">Nog geen extra pluspunten — blijf meten.</p>
+          )}
+        </div>
+        <div className="rounded-lg border border-amber-500/30 bg-amber-500/5 px-3 py-2.5">
+          <p className="text-[9px] font-bold uppercase tracking-wide text-amber-100/90">Aandacht / verbeterplek</p>
+          {model.badPoints.length > 0 ? (
+            <ul className="mt-1.5 list-inside list-disc space-y-1 text-[11px] leading-snug text-[var(--text-secondary)]">
+              {model.badPoints.map((line, i) => (
+                <li key={i}>{line}</li>
+              ))}
+            </ul>
+          ) : (
+            <p className="mt-1.5 text-[11px] text-[var(--text-muted)]">Geen harde waarschuwingen op basis van deze data.</p>
+          )}
+        </div>
+      </div>
+    </section>
+  );
 }
 
 type Props = {
@@ -147,6 +331,14 @@ export function StrategyCommandTab({ snapshot }: Props) {
     },
   ];
 
+  const pillarSlices: PillarSlice[] = bars.map((b) => ({
+    key: b.key,
+    label: b.label,
+    pct: b.pct,
+    committed: b.committed,
+    ...PILLAR_VISUAL[b.key],
+  }));
+
   return (
     <div className="space-y-6">
       <section
@@ -157,7 +349,7 @@ export function StrategyCommandTab({ snapshot }: Props) {
           Kwartaal · {snapshot.quarterLabel}
         </p>
         <div className="mt-4">
-          <RingScore pct={pct} />
+          <QuarterCommandOverview scorePct={pct} pillars={pillarSlices} />
         </div>
         <p className="mt-4 text-center text-sm text-[var(--text-secondary)]">
           Totaalscore over de vier contractpijlers (elk 25% in de engine).
@@ -172,13 +364,13 @@ export function StrategyCommandTab({ snapshot }: Props) {
 
       <div className="grid gap-4 sm:grid-cols-2">
         {bars.map((b) => (
-          <section
+          <PillarInsightCard
             key={b.key}
-            className="rounded-xl border border-[var(--card-border)] bg-[var(--bg-elevated)]/80 p-4 text-sm leading-relaxed text-[var(--text-secondary)]"
-          >
-            <h3 className="text-[10px] font-bold uppercase tracking-[0.18em] text-[var(--text-muted)]">{b.label}</h3>
-            <p className="mt-2">{pillarCardExplainerNl(snapshot, b.key)}</p>
-          </section>
+            label={b.label}
+            pct={b.pct}
+            committed={b.committed}
+            model={buildPillarCardModel(snapshot, b.key)}
+          />
         ))}
       </div>
 
