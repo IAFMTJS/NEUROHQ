@@ -2,8 +2,8 @@
  * Strategy engine parameters — single write path: `strategy_focus.engine_params` (Profiel → Engine → Strategy engine).
  * - Read with `normalizeStrategyEngineParams` everywhere (never trust raw JSON).
  * - Does not duplicate `user_preferences` push toggles or `users.monthly_budget_cents`; those stay separate.
- * - Quarterly savings/learning targets here are strategic commitments; primary UI: Strategy page (Kwartaal contract).
- *   Budget/Growth UIs may show pace hints via `getStrategyPacingHints` without writing back (read-only).
+ * - Quarterly savings/learning targets and tuning: primary UI Profiel → Engine → Contract; Strategy hub shows thesis,
+ *   integrated overview and weekly tools (read-only pacing hints on Budget/Growth via `getStrategyPacingHints`).
  */
 import { bandFor10Scale, type StatBand } from "@/lib/behavioral-engine";
 

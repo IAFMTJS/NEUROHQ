@@ -1,4 +1,5 @@
 import nextDynamic from "next/dynamic";
+import Link from "next/link";
 import { Suspense } from "react";
 import {
   getActiveStrategyFocus,
@@ -16,7 +17,9 @@ import { StrategyFocusMultipliers } from "@/components/strategy/StrategyFocusMul
 import { StrategyPhaseIndicator } from "@/components/strategy/StrategyPhaseIndicator";
 import { StrategyArchiveHistory } from "@/components/strategy/StrategyArchiveHistory";
 import { StrategyQuarterCommandCenter } from "@/components/strategy/StrategyQuarterCommandCenter";
-import { StrategyQuarterContractPanel } from "@/components/strategy/StrategyQuarterContractPanel";
+import { StrategyIntegratedOverview } from "@/components/strategy/StrategyIntegratedOverview";
+import { StrategyTabsShell } from "@/components/strategy/StrategyTabsShell";
+import { getStrategyIntegrationOverview } from "@/app/actions/strategy-integration";
 import { getQuarterEngineSnapshot } from "@/app/actions/quarter-engine-snapshot";
 import { getBehaviorProfile } from "@/app/actions/behavior-profile";
 import { getUserPreferencesOrDefaults } from "@/app/actions/preferences";
@@ -120,11 +123,17 @@ async function StrategyContent({ simplifiedLayout = false }: { simplifiedLayout?
           <div className="rounded-xl border border-amber-500/40 bg-amber-500/10 px-4 py-3 text-sm text-amber-200">
             <strong>Strategy is vergrendeld</strong>
             <p className="mt-1 text-[var(--text-secondary)]">
-              Vul hieronder je kwartaal contract in: spaardoel, leergroei (%) en XP-doel. Daarna ontgrendel je
-              het kwartaal-overzicht, thesis en weekly tools.
+              Vul je kwartaalcontract in (spaardoel, leerprogress % en XP-doel dit kwartaal). Dat doe je onder{" "}
+              <span className="font-medium text-[var(--text-primary)]">Profiel → Engine → Contract</span>. Daarna
+              verschijnen hier overview, thesis en weekly tools.
             </p>
+            <Link
+              href="/profile?view=engine&engineTab=strategy"
+              className="mt-3 inline-flex min-h-[44px] items-center justify-center rounded-xl border border-[rgba(var(--mode-rgb),0.35)] bg-[rgba(6,18,30,0.85)] px-4 text-sm font-semibold text-[var(--semantic-accent)] transition hover:border-[rgba(var(--mode-rgb),0.5)]"
+            >
+              Open contract in Profiel →
+            </Link>
           </div>
-          <StrategyQuarterContractPanel />
           <StrategyArchiveHistory past={past} />
         </div>
       </div>
@@ -147,8 +156,9 @@ async function StrategyContent({ simplifiedLayout = false }: { simplifiedLayout?
 
   let neuroBudgetHint: string | null = null;
   let quarterSnapshot: Awaited<ReturnType<typeof getQuarterEngineSnapshot>> = null;
+  let integrationData: Awaited<ReturnType<typeof getStrategyIntegrationOverview>> = null;
   try {
-    const [p, a, log, mom, drift, review, behaviorProfile, quarter] = await Promise.all([
+    const [p, a, log, mom, drift, review, behaviorProfile, quarter, integration] = await Promise.all([
       getPressureIndex(strategy.id),
       getAlignmentThisWeek(strategy.id),
       getAlignmentLog(strategy.id, 14),
@@ -157,6 +167,7 @@ async function StrategyContent({ simplifiedLayout = false }: { simplifiedLayout?
       getStrategyReviewStatus(strategy.id, strategy.start_date),
       getBehaviorProfile(),
       getQuarterEngineSnapshot(),
+      getStrategyIntegrationOverview(),
     ]);
     pressureData = p ?? pressureData;
     alignmentThisWeek = a ?? alignmentThisWeek;
@@ -166,6 +177,7 @@ async function StrategyContent({ simplifiedLayout = false }: { simplifiedLayout?
     reviewStatus = review ?? reviewStatus;
     neuroBudgetHint = neuroStrategyBudgetHint(behaviorProfile.neuroProfileTags);
     quarterSnapshot = quarter;
+    integrationData = integration;
   } catch {
     // Fallbacks already set
   }
@@ -183,41 +195,52 @@ async function StrategyContent({ simplifiedLayout = false }: { simplifiedLayout?
       </div>
     ) : null;
 
-  const detailsClass =
-    "rounded-xl border border-[var(--card-border)] bg-[var(--bg-elevated)]/60 px-4 py-3 text-sm text-[var(--text-secondary)]";
-  const summaryClass =
-    "cursor-pointer list-none font-semibold text-[var(--text-primary)] marker:content-none [&::-webkit-details-marker]:hidden";
+  const engineAdjustLink = (
+    <p className="text-xs text-[var(--text-muted)]">
+      Contract & motor (missies, locks, push):{" "}
+      <Link
+        href="/profile?view=engine&engineTab=strategy"
+        className="font-medium text-[var(--accent-focus)] underline-offset-2 hover:underline"
+      >
+        Profiel → Engine → Contract
+      </Link>
+    </p>
+  );
 
   const mainStack = (
-    <div className={simplifiedLayout ? "space-y-6" : "space-y-5"}>
-      {reviewBanner}
-      {quarterSnapshot ? (
-        <StrategyQuarterCommandCenter snapshot={quarterSnapshot} simplifiedLayout={simplifiedLayout} />
-      ) : null}
-      <StrategyQuarterContractPanel />
-      <StrategyThesisHero
-        thesis={strategy.thesis}
-        thesisWhy={strategy.thesis_why}
-        deadline={strategy.deadline}
-        targetMetric={strategy.target_metric}
-        pressure={pressureData.pressure}
-        zone={pressureData.zone}
-        daysRemaining={pressureData.daysRemaining}
-        hidePressureMeter={!!quarterSnapshot}
-      />
-      <details className={detailsClass} open={!simplifiedLayout}>
-        <summary className={summaryClass}>Weekly allocatie & domeinen</summary>
-        <div className="mt-4 space-y-5 border-t border-[rgba(var(--mode-rgb),0.1)] pt-4">
+    <StrategyTabsShell
+      simplifiedLayout={simplifiedLayout}
+      banner={reviewBanner}
+      overview={
+        <div className={simplifiedLayout ? "space-y-6" : "space-y-5"}>
+          <StrategyIntegratedOverview integrationData={integrationData} />
+          {quarterSnapshot ? (
+            <StrategyQuarterCommandCenter snapshot={quarterSnapshot} simplifiedLayout={simplifiedLayout} />
+          ) : null}
+          <StrategyThesisHero
+            thesis={strategy.thesis}
+            thesisWhy={strategy.thesis_why}
+            deadline={strategy.deadline}
+            targetMetric={strategy.target_metric}
+            pressure={pressureData.pressure}
+            zone={pressureData.zone}
+            daysRemaining={pressureData.daysRemaining}
+            hidePressureMeter={!!quarterSnapshot}
+          />
+          {engineAdjustLink}
+        </div>
+      }
+      focusBudget={
+        <div className={simplifiedLayout ? "space-y-6" : "space-y-5"}>
           <StrategyFocusMultipliers
             primaryDomain={strategy.primary_domain}
             secondaryDomains={strategy.secondary_domains}
           />
           <StrategyAllocationSliders initialAllocation={strategy.weekly_allocation} neuroHint={neuroBudgetHint} />
         </div>
-      </details>
-      <details className={detailsClass} open={!simplifiedLayout}>
-        <summary className={summaryClass}>Alignment & momentum</summary>
-        <div className="mt-4 space-y-5 border-t border-[rgba(var(--mode-rgb),0.1)] pt-4">
+      }
+      alignment={
+        <div className={simplifiedLayout ? "space-y-6" : "space-y-5"}>
           <StrategyAlignmentGraph
             plannedDistribution={alignmentThisWeek.planned}
             actualDistribution={alignmentThisWeek.actual}
@@ -229,10 +252,9 @@ async function StrategyContent({ simplifiedLayout = false }: { simplifiedLayout?
             <StrategyDriftAlertBlock message={driftAlert.message} pctOff={driftAlert.pctOff} />
           ) : null}
         </div>
-      </details>
-      <details className={detailsClass} open={!simplifiedLayout}>
-        <summary className={summaryClass}>Review & archief</summary>
-        <div className="mt-4 space-y-5 border-t border-[rgba(var(--mode-rgb),0.1)] pt-4">
+      }
+      review={
+        <div className={simplifiedLayout ? "space-y-6" : "space-y-5"}>
           <StrategyPhaseIndicator phase={strategy.phase} />
           <StrategyWeeklyReviewCTA
             strategyId={strategy.id}
@@ -244,8 +266,8 @@ async function StrategyContent({ simplifiedLayout = false }: { simplifiedLayout?
           <StrategyArchiveCTA strategyId={strategy.id} />
           <StrategyArchiveHistory past={past} />
         </div>
-      </details>
-    </div>
+      }
+    />
   );
 
   return (
@@ -268,7 +290,7 @@ export default async function StrategyPage() {
           hideTitleBar
           footerLinks={[
             { href: "/tasks", label: "Missions" },
-            { href: "/strategy#strategy-contract", label: "Contract" },
+            { href: "/profile?view=engine&engineTab=strategy", label: "Contract" },
             { href: profileInsightsHref("overview"), label: "Insights" },
             { href: "/budget", label: "Budget" },
           ]}
