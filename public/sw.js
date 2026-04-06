@@ -4,7 +4,7 @@
 // - DYNAMIC_CACHE (per dag): HTML/API offline fallback; _next/static JS/CSS = network-first, daarna cache voor offline
 // - IndexedDB (neurohq-offline): offline mutaties (POST/PUT etc.) → gesynchroniseerd zodra er weer netwerk is
 // Bump this when UI/layout changes so authenticated HTML cache doesn't keep old shells after refresh.
-const CACHE_VERSION = "v25";
+const CACHE_VERSION = "v26";
 const STATIC_CACHE = `neurohq-static-${CACHE_VERSION}`;
 const OFFLINE_PAGE = "/offline";
 
@@ -630,6 +630,26 @@ self.addEventListener("fetch", function (event) {
           if (shouldForceRefreshFromNetwork(event.request)) {
             return fetch(event.request)
               .then(function (response) {
+                if (response && response.status === 304) {
+                  return cache.match(event.request).then(function (cached) {
+                    if (cached) return cached;
+                    var u = event.request.url;
+                    u += (u.indexOf("?") >= 0 ? "&" : "?") + "_swbust=" + Date.now();
+                    return fetch(
+                      new Request(u, {
+                        method: "GET",
+                        credentials: event.request.credentials,
+                        headers: event.request.headers,
+                        cache: "no-store",
+                      })
+                    ).then(function (r2) {
+                      if (r2 && r2.ok && looksLikeJsonResponse(r2)) {
+                        safeCachePut(cache, event.request, r2.clone());
+                      }
+                      return r2;
+                    });
+                  });
+                }
                 if (response && response.ok && looksLikeJsonResponse(response)) {
                   safeCachePut(cache, event.request, response.clone());
                 }

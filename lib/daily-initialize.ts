@@ -4,11 +4,18 @@ import { getTodayKey } from "@/lib/daily-date";
 import type { DailySnapshot } from "@/types/daily-snapshot";
 import { LATEST_SNAPSHOT_VERSION } from "@/types/daily-snapshot";
 import { fetchSettingsPayload } from "@/lib/settings-api-client";
-import { isBootstrapTodayPayloadUsable, type BootstrapTodayResponse } from "@/lib/daily-snapshot-full-sync";
+import {
+  fetchBootstrapTodayWithBody,
+  isBootstrapTodayPayloadUsable,
+  type BootstrapTodayResponse,
+} from "@/lib/daily-snapshot-full-sync";
 import { mergeBootstrapTodayIntoDailySnapshot } from "@/lib/bootstrap-today-mappers";
 
 /** Set during `initializeDailySystem` when `fetchMissions` parses `/api/bootstrap/today`. */
 let bootstrapTodayCapture: BootstrapTodayResponse | null = null;
+
+/** Last bootstrap HTTP status when init fetch failed (for error copy). Cleared on success start. */
+let lastBootstrapInitFetchStatus: number | null = null;
 
 export type PreloadStepId =
   | "fetchMissions"
@@ -77,6 +84,7 @@ async function yieldToBrowser(onProgress?: (p: PreloadProgress) => void): Promis
  */
 export async function initializeDailySystem(onProgress?: (p: PreloadProgress) => void): Promise<InitializeResult> {
   bootstrapTodayCapture = null;
+  lastBootstrapInitFetchStatus = null;
   const today = getTodayKey();
   let snapshot: DailySnapshot = {
     version: LATEST_SNAPSHOT_VERSION,
@@ -121,7 +129,14 @@ export async function initializeDailySystem(onProgress?: (p: PreloadProgress) =>
     snapshot.missions != null ||
     snapshot.dashboard != null;
   if (!hasMissionsPayload) {
-    throw new Error("Bootstrap did not return any Supabase-backed payload.");
+    const st = lastBootstrapInitFetchStatus;
+    lastBootstrapInitFetchStatus = null;
+    if (st === 401) {
+      throw new Error("Je sessie is verlopen of de server weigerde bootstrap. Log opnieuw in en probeer het nog eens.");
+    }
+    throw new Error(
+      "Kon vandaag niet laden (geen geldige bootstrap-response). Ververs hard (Ctrl+Shift+R) of wis sitegegevens voor deze app. Controleer in DevTools → Network of GET /api/bootstrap/today status 200 heeft."
+    );
   }
 
   const completedAt = Date.now();
@@ -143,13 +158,10 @@ async function runStep(snapshot: DailySnapshot, step: PreloadStepId): Promise<Da
   switch (step) {
     case "fetchMissions": {
       try {
-        const res = await fetch("/api/bootstrap/today", {
-          credentials: "include",
-          cache: "no-store",
-          headers: { "x-neurohq-refresh": "1" },
-        });
-        if (!res.ok) return snapshot;
-        const data = (await res.json()) as {
+        const boot = await fetchBootstrapTodayWithBody();
+        lastBootstrapInitFetchStatus = boot.ok ? null : boot.status;
+        if (!boot.ok) return snapshot;
+        const data = boot.data as {
           date?: string;
           dashboard?: {
             critical?: unknown;

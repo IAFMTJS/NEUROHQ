@@ -25,11 +25,55 @@ export type BootstrapTodayResponse = {
 export function isBootstrapTodayPayloadUsable(b: BootstrapTodayResponse | null): boolean {
   if (!b || typeof b !== "object") return false;
   if ("error" in b && (b as { error?: unknown }).error != null) return false;
-  if (typeof b.date === "string" && /^\d{4}-\d{2}-\d{2}$/.test(b.date)) return true;
+  if (typeof b.date === "string" && /^\d{4}-\d{2}-\d{2}/.test(b.date)) return true;
   if (b.dcicGameState != null && typeof b.dcicGameState === "object") return true;
   if (b.dashboard != null) return true;
   if (b.tasks != null && typeof b.tasks === "object") return true;
+  if (Array.isArray(b.completedToday)) return true;
+  if (b.dailyState != null && typeof b.dailyState === "object") return true;
+  if (b.energyBudget != null && typeof b.energyBudget === "object") return true;
   return false;
+}
+
+/**
+ * Fetches `/api/bootstrap/today` with a JSON body suitable for cold init.
+ * Retries when the server or SW returns 304/empty body (those responses are not parseable as JSON).
+ */
+export async function fetchBootstrapTodayWithBody(): Promise<
+  | { ok: true; status: number; data: BootstrapTodayResponse }
+  | { ok: false; status: number; data: null }
+> {
+  const opts: RequestInit = {
+    method: "GET",
+    credentials: "include",
+    cache: "no-store",
+    headers: { "x-neurohq-refresh": "1" },
+  };
+
+  const bust = () => `/api/bootstrap/today?_nb=${Date.now()}`;
+
+  let res = await fetch("/api/bootstrap/today", opts);
+  if (res.status === 304) {
+    res = await fetch(bust(), opts);
+  }
+  if (!res.ok) {
+    return { ok: false, status: res.status, data: null };
+  }
+
+  let text = await res.text();
+  if (!text.trim()) {
+    res = await fetch(bust(), opts);
+    if (!res.ok) return { ok: false, status: res.status, data: null };
+    text = await res.text();
+    if (!text.trim()) return { ok: false, status: res.status, data: null };
+  }
+
+  try {
+    const data = JSON.parse(text) as BootstrapTodayResponse;
+    return { ok: true, status: res.status, data };
+  } catch {
+    return { ok: false, status: res.status, data: null };
+  }
 }
 
 let syncDebounce: ReturnType<typeof setTimeout> | null = null;
