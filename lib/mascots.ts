@@ -8,13 +8,25 @@ const MASCOT_CACHE_VERSION = 5;
 /** DCIC operational mode; extra modes use dedicated artwork + shell `data-mode` glow tokens. */
 export type DashboardMascotMode = "focus" | "war" | "recovery" | "overdrive";
 
-const DEFAULT_MASCOT_FILE = "Homepage Mascotte.png";
+export const DEFAULT_MASCOT_FILE = "Homepage Mascotte.png";
 
 const MODE_MASCOT_FILE: Partial<Record<DashboardMascotMode, string>> = {
   war: "War Mode Mascotte.png",
   recovery: "Recovery Mode Mascotte.png",
   overdrive: "Overdrive Mode Mascotte.png",
 };
+
+/** Distinct mascot image URLs for native prefetch / Filesystem warm-cache. */
+export function listDashboardMascotWarmUrls(): string[] {
+  const files = [
+    DEFAULT_MASCOT_FILE,
+    ...Object.values(MODE_MASCOT_FILE).filter((f): f is string => typeof f === "string" && f.length > 0),
+  ];
+  const unique = [...new Set(files)];
+  return unique.map(
+    (file) => `${MASCOTS_BASE}/${encodeURIComponent(file)}?v=${MASCOT_CACHE_VERSION}`
+  );
+}
 
 export function getDashboardMascotSrc(mode?: DashboardMascotMode | null): string {
   const file = (mode && MODE_MASCOT_FILE[mode]) || DEFAULT_MASCOT_FILE;

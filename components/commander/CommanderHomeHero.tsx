@@ -2,6 +2,7 @@
 
 import type { ReactNode } from "react";
 import Link from "next/link";
+import { NativeCachedImg } from "@/components/NativeCachedImg";
 import { getDashboardMascotSrc } from "@/lib/mascots";
 import { CommanderMascotPedestal, type CommanderMascotPedestalStats } from "./CommanderMascotPedestal";
 import { CommanderStatRing } from "./CommanderStatRing";
@@ -79,7 +80,7 @@ export function CommanderHomeHero({
 
   const mascotStack = (
     <div className="mascot-hero-mascot-stack relative mx-auto flex w-full justify-center">
-      <img
+      <NativeCachedImg
         src={getDashboardMascotSrc(dcicMode)}
         alt=""
         className="mascot-img"

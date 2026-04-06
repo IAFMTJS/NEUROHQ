@@ -5,6 +5,7 @@ import {
   STORE_OUTBOX,
   STORE_SYNC_CHECKPOINT,
   type EntityCacheRow,
+  type NativeAssetRegistryRow,
   type OutboxRow,
   type SyncCheckpointRow,
 } from "@/lib/mobile/schema";
@@ -62,6 +63,23 @@ async function getNativeSqliteDb(): Promise<SQLiteLike | null> {
         CREATE TABLE IF NOT EXISTS sync_checkpoint (
           domain TEXT PRIMARY KEY NOT NULL,
           cursor TEXT NOT NULL,
+          updated_at INTEGER NOT NULL
+        );
+      `);
+      await db.execute(`
+        CREATE TABLE IF NOT EXISTS native_asset_registry (
+          url_key TEXT PRIMARY KEY NOT NULL,
+          fs_subpath TEXT NOT NULL,
+          etag TEXT,
+          content_type TEXT,
+          byte_length INTEGER NOT NULL,
+          fetched_at INTEGER NOT NULL
+        );
+      `);
+      await db.execute(`
+        CREATE TABLE IF NOT EXISTS native_extended_kv (
+          k TEXT PRIMARY KEY NOT NULL,
+          json TEXT NOT NULL,
           updated_at INTEGER NOT NULL
         );
       `);
@@ -293,5 +311,79 @@ export async function upsertSyncCheckpoint(row: SyncCheckpointRow): Promise<void
     return;
   }
   await withStore<void>(STORE_SYNC_CHECKPOINT, "readwrite", (store) => idbPut(store, row));
+}
+
+export async function getNativeAssetRegistryRow(urlKey: string): Promise<NativeAssetRegistryRow | null> {
+  const native = await getNativeSqliteDb();
+  if (!native) return null;
+  const result = await native.query(
+    `SELECT url_key, fs_subpath, etag, content_type, byte_length, fetched_at
+     FROM native_asset_registry WHERE url_key = ? LIMIT 1`,
+    [urlKey]
+  );
+  const row = result.values?.[0];
+  if (!row) return null;
+  return {
+    urlKey: String(row.url_key),
+    fsSubpath: String(row.fs_subpath),
+    etag: row.etag == null ? null : String(row.etag),
+    contentType: row.content_type == null ? null : String(row.content_type),
+    byteLength: Number(row.byte_length ?? 0),
+    fetchedAt: Number(row.fetched_at ?? 0),
+  };
+}
+
+export async function upsertNativeAssetRegistryRow(row: NativeAssetRegistryRow): Promise<void> {
+  const native = await getNativeSqliteDb();
+  if (!native) return;
+  await native.execute(
+    `INSERT OR REPLACE INTO native_asset_registry (url_key, fs_subpath, etag, content_type, byte_length, fetched_at)
+     VALUES (?, ?, ?, ?, ?, ?)`,
+    [row.urlKey, row.fsSubpath, row.etag, row.contentType, row.byteLength, row.fetchedAt]
+  );
+}
+
+export async function deleteNativeAssetRegistryRow(urlKey: string): Promise<void> {
+  const native = await getNativeSqliteDb();
+  if (!native) return;
+  await native.execute("DELETE FROM native_asset_registry WHERE url_key = ?", [urlKey]);
+}
+
+export async function getNativeExtendedKvJson(key: string): Promise<string | null> {
+  const native = await getNativeSqliteDb();
+  if (!native) return null;
+  const result = await native.query(
+    "SELECT json FROM native_extended_kv WHERE k = ? LIMIT 1",
+    [key]
+  );
+  const row = result.values?.[0];
+  if (!row?.json) return null;
+  return String(row.json);
+}
+
+export async function upsertNativeExtendedKvJson(key: string, json: string): Promise<void> {
+  const native = await getNativeSqliteDb();
+  if (!native) return;
+  await native.execute(
+    "INSERT OR REPLACE INTO native_extended_kv (k, json, updated_at) VALUES (?, ?, ?)",
+    [key, json, Date.now()]
+  );
+}
+
+export async function deleteNativeExtendedKvKey(key: string): Promise<void> {
+  const native = await getNativeSqliteDb();
+  if (!native) return;
+  await native.execute("DELETE FROM native_extended_kv WHERE k = ?", [key]);
+}
+
+export async function clearNativeAssetRegistry(): Promise<void> {
+  const native = await getNativeSqliteDb();
+  if (!native) return;
+  await native.execute("DELETE FROM native_asset_registry");
+}
+
+/** True when Capacitor SQLite opened successfully (registry + extended KV are usable). */
+export async function isNativeSqliteDatabaseAvailable(): Promise<boolean> {
+  return (await getNativeSqliteDb()) != null;
 }
 

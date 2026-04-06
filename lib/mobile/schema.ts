@@ -32,3 +32,13 @@ export type SyncCheckpointRow = {
   updatedAt: number;
 };
 
+/** Capacitor-only: maps web asset URLs to Filesystem paths under Directory.Data. */
+export type NativeAssetRegistryRow = {
+  urlKey: string;
+  fsSubpath: string;
+  etag: string | null;
+  contentType: string | null;
+  byteLength: number;
+  fetchedAt: number;
+};
+

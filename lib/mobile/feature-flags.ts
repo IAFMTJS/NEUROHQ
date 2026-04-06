@@ -23,7 +23,8 @@ function envPercent(name: string, fallback: number): number {
   return Math.max(0, Math.min(100, Math.floor(value)));
 }
 
-function isNativeCapacitorRuntime(): boolean {
+/** True when running inside the Capacitor native shell (iOS/Android), not mobile Safari/PWA. */
+export function isNativeCapacitorRuntime(): boolean {
   if (typeof window === "undefined") return false;
   const maybeCapacitor = (window as unknown as { Capacitor?: { isNativePlatform?: () => boolean } }).Capacitor;
   if (!maybeCapacitor || typeof maybeCapacitor.isNativePlatform !== "function") return false;

@@ -96,6 +96,10 @@ export function applyBootstrapTodayToApp(bootstrap: BootstrapTodayResponse): voi
   window.dispatchEvent(new CustomEvent(NEUROHQ_DAILY_SNAPSHOT_UPDATED, { detail }));
 
   void patchPersistedDailyFromBootstrap(bootstrap).catch(() => {});
+
+  void import("@/lib/mobile/native-extended-cache").then(({ mirrorBootstrapToNativeExtendedKv }) =>
+    mirrorBootstrapToNativeExtendedKv(bootstrap).catch(() => {})
+  );
 }
 
 /** Merge server `/api/bootstrap/today` into HQ store and shared query cache. */
