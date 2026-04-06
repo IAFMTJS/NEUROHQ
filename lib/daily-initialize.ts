@@ -4,7 +4,7 @@ import { getTodayKey } from "@/lib/daily-date";
 import type { DailySnapshot } from "@/types/daily-snapshot";
 import { LATEST_SNAPSHOT_VERSION } from "@/types/daily-snapshot";
 import { fetchSettingsPayload } from "@/lib/settings-api-client";
-import type { BootstrapTodayResponse } from "@/lib/daily-snapshot-full-sync";
+import { isBootstrapTodayPayloadUsable, type BootstrapTodayResponse } from "@/lib/daily-snapshot-full-sync";
 import { mergeBootstrapTodayIntoDailySnapshot } from "@/lib/bootstrap-today-mappers";
 
 /** Set during `initializeDailySystem` when `fetchMissions` parses `/api/bootstrap/today`. */
@@ -117,7 +117,7 @@ export async function initializeDailySystem(onProgress?: (p: PreloadProgress) =>
 
   const bootstrapToday = bootstrapTodayCapture;
   const hasMissionsPayload =
-    bootstrapToday != null ||
+    isBootstrapTodayPayloadUsable(bootstrapToday) ||
     snapshot.missions != null ||
     snapshot.dashboard != null;
   if (!hasMissionsPayload) {

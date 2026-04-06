@@ -21,6 +21,17 @@ export type BootstrapTodayResponse = {
   missionsPipeline?: unknown;
 };
 
+/** True when bootstrap JSON is not an empty shell (avoids poisoning IDB / silent empty UI). */
+export function isBootstrapTodayPayloadUsable(b: BootstrapTodayResponse | null): boolean {
+  if (!b || typeof b !== "object") return false;
+  if ("error" in b && (b as { error?: unknown }).error != null) return false;
+  if (typeof b.date === "string" && /^\d{4}-\d{2}-\d{2}$/.test(b.date)) return true;
+  if (b.dcicGameState != null && typeof b.dcicGameState === "object") return true;
+  if (b.dashboard != null) return true;
+  if (b.tasks != null && typeof b.tasks === "object") return true;
+  return false;
+}
+
 let syncDebounce: ReturnType<typeof setTimeout> | null = null;
 let mergeBootstrapInFlight: Promise<BootstrapTodayResponse | null> | null = null;
 
@@ -51,6 +62,7 @@ export async function mergeDailySnapshotFromNetwork(): Promise<BootstrapTodayRes
       if (lastBootstrapEtag) headers["If-None-Match"] = lastBootstrapEtag;
       const res = await fetch("/api/bootstrap/today", {
         credentials: "include",
+        cache: "no-store",
         headers,
       });
       if (res.status === 304) return null;

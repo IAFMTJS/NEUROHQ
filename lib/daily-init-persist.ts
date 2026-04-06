@@ -3,7 +3,7 @@
 import { createClient } from "@/lib/supabase/client";
 import { mergeBootstrapTodayIntoDailySnapshot } from "@/lib/bootstrap-today-mappers";
 import type { InitializeResult } from "@/lib/daily-initialize";
-import type { BootstrapTodayResponse } from "@/lib/daily-snapshot-full-sync";
+import { isBootstrapTodayPayloadUsable, type BootstrapTodayResponse } from "@/lib/daily-snapshot-full-sync";
 import { getSnapshotValidityDayKey } from "@/lib/daily-date";
 import {
   DAILY_INIT_RECORD_ID,
@@ -14,7 +14,7 @@ import {
 import { isCompatibleSnapshot, LATEST_SNAPSHOT_VERSION } from "@/types/daily-snapshot";
 
 function hasUsableSnapshotData(snapshot: InitializeResult["snapshot"], bootstrapToday: BootstrapTodayResponse | null): boolean {
-  if (bootstrapToday && typeof bootstrapToday === "object") return true;
+  if (isBootstrapTodayPayloadUsable(bootstrapToday)) return true;
   if (snapshot.dashboard != null) return true;
   if (snapshot.missions != null) return true;
   if (snapshot.budget != null) return true;
