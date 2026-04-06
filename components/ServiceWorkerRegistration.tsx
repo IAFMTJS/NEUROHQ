@@ -1,6 +1,10 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { flushOutboxQueue } from "@/lib/mobile/sync-engine";
+import { isSupabaseFirstMobileEnabled } from "@/lib/mobile/feature-flags";
+import { getDashboardPayloadLocalFirst } from "@/lib/data/dashboard-repository";
+import { publishSyncMetrics } from "@/lib/mobile/metrics";
 
 export function ServiceWorkerRegistration() {
   const [updateAvailable, setUpdateAvailable] = useState(false);
@@ -52,6 +56,10 @@ export function ServiceWorkerRegistration() {
 
     const syncOfflineQueueWhenOnline = () => {
       if (!navigator.onLine) return;
+      if (isSupabaseFirstMobileEnabled()) {
+        void flushOutboxQueue();
+        void publishSyncMetrics();
+      }
       navigator.serviceWorker.ready.then((reg) => reg.active?.postMessage({ type: "SYNC_OFFLINE_QUEUE" }));
     };
     window.addEventListener("online", syncOfflineQueueWhenOnline);
@@ -61,6 +69,12 @@ export function ServiceWorkerRegistration() {
     navigator.serviceWorker
       .register("/sw.js", { scope: "/" })
       .then((registration) => {
+        if (isSupabaseFirstMobileEnabled()) {
+          // Warm dashboard cache for faster post-resume paints in mobile/PWA.
+          void getDashboardPayloadLocalFirst({ preferCache: true }).catch(() => {});
+          void flushOutboxQueue();
+          void publishSyncMetrics(true);
+        }
         navigator.serviceWorker.ready
           .then((readyRegistration) => {
             postWarmupAndSync(readyRegistration);

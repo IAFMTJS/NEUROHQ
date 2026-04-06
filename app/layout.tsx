@@ -16,6 +16,7 @@ const plusJakarta = Plus_Jakarta_Sans({
 import { ServiceWorkerRegistration } from "@/components/ServiceWorkerRegistration";
 import { DeferredRootComponents } from "@/components/DeferredRootComponents";
 import { DeferredToaster } from "@/components/DeferredToaster";
+import { MobileSyncBootstrap } from "@/components/MobileSyncBootstrap";
 
 export const metadata: Metadata = {
   title: "NEUROHQ",
@@ -65,6 +66,7 @@ export default function RootLayout({
       <body className={`min-h-screen antialiased ${plusJakarta.variable} font-sans`}>
         <div id="app-shell" className="hq-app-shell min-h-screen min-h-dvh">
           <ServiceWorkerRegistration />
+          <MobileSyncBootstrap />
           <ReactQueryProvider>
             <DeferredRootComponents />
             <SettingsProvider>

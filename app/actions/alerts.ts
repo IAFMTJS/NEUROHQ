@@ -207,9 +207,10 @@ export async function deleteAllUserAlerts(): Promise<void> {
   } = await supabase.auth.getUser();
   if (!user) throw new Error("Not authenticated");
   const { data: tagRows } = await db.from("user_alerts").select("push_tag").eq("user_id", user.id);
-  const keys = (tagRows ?? [])
-    .map((r) => (r as { push_tag: string | null }).push_tag)
-    .filter((t): t is string => typeof t === "string" && t.trim().length > 0);
+  const rows = (tagRows ?? []) as Array<{ push_tag: string | null }>;
+  const keys = rows
+    .map((row) => row.push_tag)
+    .filter((tag): tag is string => typeof tag === "string" && tag.trim().length > 0);
   await db.from("user_alerts").delete().eq("user_id", user.id);
   await recordAlertSuppressions(db, user.id, keys);
   revalidatePath("/dashboard");

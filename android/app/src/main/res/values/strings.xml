@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">NEUROHQ</string>
+    <string name="title_activity_main">NEUROHQ</string>
+    <string name="package_name">com.neurohq.app</string>
+    <string name="custom_url_scheme">com.neurohq.app</string>
+</resources>

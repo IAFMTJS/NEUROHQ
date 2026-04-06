@@ -21,3 +21,10 @@ Optimized loading and integration patterns used in NEUROHQ.
 ## Client (`client.ts`)
 
 - **Browser** — Use `createClient()` from `@/lib/supabase/client` for client-side Supabase (e.g. realtime, client-only fetches). Server data should go through the dashboard API or server actions.
+
+## Supabase-first mobile contract
+
+- **Authoritative server state** — Supabase remains the single source of truth for user data.
+- **Local DB purpose** — Mobile SQLite/IndexedDB is cache + outbox only (`@/lib/mobile/*`), never authoritative persistence.
+- **Conflict policy** — `serverWins` by default.
+- **Idempotency** — Mobile outbox writes must include `x-neurohq-idempotency-key`; server deduplicates retries via `mobile_sync_receipts`.

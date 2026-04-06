@@ -5,6 +5,7 @@ import {
   getDashboardPayload,
   getDashboardSecondaryPayload,
 } from "@/app/actions/dashboard-data";
+import { SUPABASE_FIRST_CONTRACT_VERSION } from "@/lib/mobile/supabase-first-contract";
 
 /** GET /api/dashboard/data?part=critical|secondary|all — dashboard data for client. Use part=all for one round-trip. */
 export async function GET(request: NextRequest) {
@@ -25,6 +26,8 @@ export async function GET(request: NextRequest) {
 
       const res = NextResponse.json(out);
       res.headers.set("Cache-Control", "no-store, max-age=0");
+      res.headers.set("x-neurohq-source-of-truth", "supabase");
+      res.headers.set("x-neurohq-sync-contract", SUPABASE_FIRST_CONTRACT_VERSION);
       return res;
     }
     if (part === "critical") {
@@ -34,6 +37,8 @@ export async function GET(request: NextRequest) {
       }
       const res = NextResponse.json(critical);
       res.headers.set("Cache-Control", "no-store, max-age=0");
+      res.headers.set("x-neurohq-source-of-truth", "supabase");
+      res.headers.set("x-neurohq-sync-contract", SUPABASE_FIRST_CONTRACT_VERSION);
       return res;
     }
     if (part === "secondary") {
@@ -43,6 +48,8 @@ export async function GET(request: NextRequest) {
       }
       const res = NextResponse.json(secondary);
       res.headers.set("Cache-Control", "no-store, max-age=0");
+      res.headers.set("x-neurohq-source-of-truth", "supabase");
+      res.headers.set("x-neurohq-sync-contract", SUPABASE_FIRST_CONTRACT_VERSION);
       return res;
     }
     return NextResponse.json(

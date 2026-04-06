@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { getTasksForDate } from "@/app/actions/tasks";
+import { SUPABASE_FIRST_CONTRACT_VERSION } from "@/lib/mobile/supabase-first-contract";
 
 /**
  * GET /api/tasks?date=YYYY-MM-DD — full task list for that due_date (completed + incomplete).
@@ -20,5 +21,9 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: "Invalid or missing date" }, { status: 400 });
   }
   const tasks = await getTasksForDate(date);
-  return NextResponse.json(tasks);
+  const res = NextResponse.json(tasks);
+  res.headers.set("Cache-Control", "no-store, max-age=0");
+  res.headers.set("x-neurohq-source-of-truth", "supabase");
+  res.headers.set("x-neurohq-sync-contract", SUPABASE_FIRST_CONTRACT_VERSION);
+  return res;
 }

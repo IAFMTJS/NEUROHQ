@@ -8,18 +8,7 @@ import {
   useState,
   type ReactNode,
 } from "react";
-
-export type BudgetContextPayload = {
-  periodStart: string;
-  periodEnd: string | null;
-  periodLabel: string;
-  nextPaydayDate: string;
-  daysUntilNextIncome: number;
-  budgetRemainingCents: number | null;
-  disciplineScore: number;
-  safeDailySpend: number;
-  currency: string;
-} | null;
+import { getBudgetContextLocalFirst, type BudgetContextPayload } from "@/lib/data/budget-repository";
 
 const BudgetDashboardContext = createContext<{
   budget: BudgetContextPayload;
@@ -27,10 +16,8 @@ const BudgetDashboardContext = createContext<{
 }>({ budget: null, invalidate: async () => {} });
 
 async function fetchBudgetContext(): Promise<BudgetContextPayload> {
-  const res = await fetch("/api/budget/context", { credentials: "include", cache: "no-store" });
-  if (!res.ok) return null;
-  const data = await res.json();
-  return data as BudgetContextPayload;
+  const result = await getBudgetContextLocalFirst({ preferCache: false });
+  return result.budget;
 }
 
 export function BudgetDashboardProvider({ children }: { children: ReactNode }) {
@@ -48,14 +35,9 @@ export function BudgetDashboardProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const controller = new AbortController();
     let cancelled = false;
-    fetch("/api/budget/context", {
-      credentials: "include",
-      cache: "no-store",
-      signal: controller.signal,
-    })
-      .then((res) => (res.ok ? res.json() : null))
-      .then((data) => {
-        if (!cancelled) setBudget((data ?? null) as BudgetContextPayload);
+    getBudgetContextLocalFirst({ signal: controller.signal, preferCache: false })
+      .then((result) => {
+        if (!cancelled) setBudget(result.budget);
       })
       .catch(() => {
         if (!cancelled) setBudget(null);

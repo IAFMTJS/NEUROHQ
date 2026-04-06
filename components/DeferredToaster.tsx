@@ -71,7 +71,6 @@ export function DeferredToaster() {
       }}
       toastOptions={{
         className: "hq-toast",
-        dismissible: false,
         /* Geen auto-sluit; sluiten via kruisje of tik buiten de toast (document listener hierboven). */
         duration: Number.POSITIVE_INFINITY,
       }}

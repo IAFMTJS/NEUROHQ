@@ -29,9 +29,17 @@
     "import:automissions": "node scripts/import-automissions-json.mjs",
     "validate:automissions": "node scripts/validate-automissions.mjs --write",
     "build:protocol-catalog": "node scripts/build-protocol-catalog.mjs",
-    "postinstall": "patch-package && node scripts/patch-three-stdlib-uv1.js"
+    "postinstall": "patch-package && node scripts/patch-three-stdlib-uv1.js",
+    "cap:sync": "npx cap sync",
+    "cap:open:android": "npx cap open android",
+    "cap:open:ios": "npx cap open ios",
+    "cap:copy": "npx cap copy"
   },
   "dependencies": {
+    "@capacitor-community/sqlite": "^7.0.1",
+    "@capacitor/android": "^7.4.3",
+    "@capacitor/core": "^7.4.3",
+    "@capacitor/ios": "^7.4.3",
     "@fontsource/plus-jakarta-sans": "^5.2.8",
     "@react-three/drei": "^10.7.7",
     "@react-three/fiber": "^9.5.0",
@@ -52,6 +60,7 @@
     "web-push": "^3.6.7"
   },
   "devDependencies": {
+    "@capacitor/cli": "^7.4.3",
     "@playwright/test": "^1.58.2",
     "@types/node": "^22.9.0",
     "@types/react": "^19.2.14",

@@ -6,17 +6,13 @@ import type { Task } from "@/types/database.types";
 import { useMissionsSnapshot } from "@/components/missions";
 import { getTodayKey } from "@/lib/daily-date";
 import { mergeTasksPreferringLocalCompletedWhenServerStale } from "@/lib/merge-tasks-server-response";
+import { getTasksForDateLocalFirst } from "@/lib/data/tasks-repository";
 
 const EMPTY_TASKS: Task[] = [];
 
 async function fetchTasksForDate(date: string, signal: AbortSignal): Promise<Task[]> {
-  const res = await fetch(`/api/tasks?date=${encodeURIComponent(date)}`, {
-    credentials: "include",
-    cache: "no-store",
-    signal,
-  });
-  if (!res.ok) throw new Error(`Tasks ${res.status}`);
-  return res.json();
+  const result = await getTasksForDateLocalFirst(date, { signal, preferCache: false });
+  return result.tasks;
 }
 
 /**
