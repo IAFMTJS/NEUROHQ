@@ -62,6 +62,7 @@ export function CommanderHomeHero({
   mainMissionSlot = null,
 }: Props) {
   const todayDailyState = useHQStore((s) => s.todayDailyState);
+  const dcicMode = useHQStore((s) => s.gameState?.mode?.current ?? "focus");
   const effectiveEnergyPct =
     typeof todayDailyState?.energy === "number" ? scale1To10ToPct(todayDailyState.energy as number) : energyPct;
   const effectiveFocusPct =
@@ -79,7 +80,7 @@ export function CommanderHomeHero({
   const mascotStack = (
     <div className="mascot-hero-mascot-stack relative mx-auto flex w-full justify-center">
       <img
-        src={getDashboardMascotSrc()}
+        src={getDashboardMascotSrc(dcicMode)}
         alt=""
         className="mascot-img"
         aria-hidden

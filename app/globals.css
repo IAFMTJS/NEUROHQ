@@ -1731,7 +1731,7 @@ a.nav-item-fab-hub::after {
   background: radial-gradient(
     ellipse 85% 100%,
     rgba(var(--mode-rgb), 0.35),
-    rgba(139, 92, 246, 0.2) 40%,
+    rgba(var(--mode-rgb-deep), 0.22) 40%,
     transparent 70%
   );
   z-index: 0;
@@ -1832,11 +1832,11 @@ a.nav-item-fab-hub::after {
   object-fit: contain;
   object-position: center center;
   filter:
-    drop-shadow(0 0 80px rgba(147, 197, 253, 0.22))
-    drop-shadow(0 0 48px rgba(var(--mode-rgb), 0.28))
-    drop-shadow(0 0 28px rgba(147, 197, 253, 0.35))
-    drop-shadow(0 0 16px rgba(var(--mode-rgb), 0.3))
-    drop-shadow(0 0 10px rgba(139, 92, 246, 0.25));
+    drop-shadow(0 0 80px rgba(var(--mode-rgb), 0.2))
+    drop-shadow(0 0 48px rgba(var(--mode-rgb), 0.3))
+    drop-shadow(0 0 28px rgba(var(--mode-rgb-deep), 0.24))
+    drop-shadow(0 0 16px rgba(var(--mode-rgb), 0.32))
+    drop-shadow(0 0 10px rgba(var(--mode-rgb-deep), 0.26));
 }
 /* Section reserves space for mascot + glow so the halo can overflow and nothing clips */
 .mascot-hero:has(.mascot-hero-img-wrap) {
@@ -1857,11 +1857,11 @@ a.nav-item-fab-hub::after {
 }
 .mascot-hero-inner:not(:has(.mascot-hero-img-wrap)) .mascot-img {
   filter:
-    drop-shadow(0 0 80px rgba(147, 197, 253, 0.22))
-    drop-shadow(0 0 48px rgba(var(--mode-rgb), 0.28))
-    drop-shadow(0 0 28px rgba(147, 197, 253, 0.35))
-    drop-shadow(0 0 16px rgba(var(--mode-rgb), 0.3))
-    drop-shadow(0 0 10px rgba(139, 92, 246, 0.25));
+    drop-shadow(0 0 80px rgba(var(--mode-rgb), 0.2))
+    drop-shadow(0 0 48px rgba(var(--mode-rgb), 0.3))
+    drop-shadow(0 0 28px rgba(var(--mode-rgb-deep), 0.24))
+    drop-shadow(0 0 16px rgba(var(--mode-rgb), 0.32))
+    drop-shadow(0 0 10px rgba(var(--mode-rgb-deep), 0.26));
 }
 .mascot-img {
   width: auto !important;
@@ -1880,9 +1880,9 @@ a.nav-item-fab-hub::after {
   object-fit: contain;
   object-position: center 0%;
   filter:
-    drop-shadow(0 0 32px rgba(147, 197, 253, 0.4))
-    drop-shadow(0 0 20px rgba(var(--mode-rgb), 0.35))
-    drop-shadow(0 0 12px rgba(139, 92, 246, 0.3));
+    drop-shadow(0 0 32px rgba(var(--mode-rgb), 0.38))
+    drop-shadow(0 0 20px rgba(var(--mode-rgb-deep), 0.3))
+    drop-shadow(0 0 12px rgba(var(--mode-rgb), 0.34));
 }
 /* Sharp mascot (no grain/overlay) – same look as budget page */
 .mascot-hero-sharp::before,
@@ -1982,8 +1982,8 @@ header:has(+ .mascot-hero) {
 /* Login page: mascot lager, geen negatieve margin, zelfde glow als rest */
 .login-mascot img.mascot-img {
   filter:
-    drop-shadow(0 0 20px rgba(147, 197, 253, 0.35))
-    drop-shadow(0 0 12px rgba(var(--mode-rgb), 0.3));
+    drop-shadow(0 0 20px rgba(var(--mode-rgb), 0.34))
+    drop-shadow(0 0 12px rgba(var(--mode-rgb-deep), 0.28));
 }
 
 /* ========== Hub shell base — mode-aware atmosphere (uses --mode-rgb from data-mode); frost on #app-shell ========== */

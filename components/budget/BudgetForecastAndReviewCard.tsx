@@ -1,6 +1,8 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 import type { FinanceState } from "@/lib/dcic/types";
 import { completeBudgetWeeklyReview } from "@/app/actions/budget-weekly-review";
 import { calculateBurnRate, calculateSafeDailySpend, forecastEndOfCycle } from "@/lib/dcic/finance-engine";
@@ -22,6 +24,7 @@ export function BudgetForecastAndReviewCard({
   daysUntilNextIncome,
   safeDailySpendCents,
 }: Props) {
+  const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [done, setDone] = useState(completedThisWeek);
 
@@ -55,11 +58,12 @@ export function BudgetForecastAndReviewCard({
   function handleComplete() {
     if (done) return;
     startTransition(async () => {
-      try {
-        await completeBudgetWeeklyReview();
+      const res = await completeBudgetWeeklyReview();
+      if (res.ok) {
         setDone(true);
-      } catch {
-        // noop
+        router.refresh();
+      } else {
+        toast.error("Weekreview opslaan mislukt. Probeer opnieuw.");
       }
     });
   }

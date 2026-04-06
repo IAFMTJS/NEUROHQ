@@ -1,4 +1,3 @@
-import { Suspense } from "react";
 import nextDynamic from "next/dynamic";
 import Link from "next/link";
 import { addDays, format } from "date-fns";
@@ -23,7 +22,6 @@ import { PaydayPlannerCard } from "@/components/budget/PaydayPlannerCard";
 import { GroceryMissionPlannerCard } from "@/components/budget/GroceryMissionPlannerCard";
 import { BudgetLockHub } from "@/components/budget/BudgetLockHub";
 import { BudgetOptimizationHub } from "@/components/budget/BudgetOptimizationHub";
-import { StrategyEnginePaceHint } from "@/components/strategy/StrategyEnginePaceHint";
 import { DashboardCommandDeckFrame } from "@/components/layout/DashboardCommandDeckFrame";
 
 const BudgetHistorySelector = nextDynamic(() => import("@/components/BudgetHistorySelector").then((m) => ({ default: m.BudgetHistorySelector })), { loading: () => null });
@@ -461,21 +459,12 @@ export default async function BudgetPage({ searchParams }: Props) {
         ) : undefined
       }
       belowTabsSlot={
-        simplifiedBudget ? undefined : (
-          <>
-            {!historyMode && (
-              <Suspense fallback={null}>
-                <StrategyEnginePaceHint variant="budget" />
-              </Suspense>
-            )}
-            {!historyMode && (
-              <BudgetPrePaydayUrgencyToast
-                daysToPayday={budgetControlState.daysToPayday}
-                needsPaydaySurvey={budgetControlState.needsPaydaySurvey}
-                hasRecentSurvey={budgetControlState.hasRecentSurvey}
-              />
-            )}
-          </>
+        simplifiedBudget || historyMode ? undefined : (
+          <BudgetPrePaydayUrgencyToast
+            daysToPayday={budgetControlState.daysToPayday}
+            needsPaydaySurvey={budgetControlState.needsPaydaySurvey}
+            hasRecentSurvey={budgetControlState.hasRecentSurvey}
+          />
         )
       }
       overview={

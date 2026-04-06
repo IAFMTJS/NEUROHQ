@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 import { completeBudgetWeeklyReview } from "@/app/actions/budget-weekly-review";
 
 type Props = {
@@ -16,12 +17,12 @@ export function BudgetWeeklyReviewCard({ completedThisWeek }: Props) {
   function handleComplete() {
     if (done) return;
     startTransition(async () => {
-      try {
-        await completeBudgetWeeklyReview();
+      const res = await completeBudgetWeeklyReview();
+      if (res.ok) {
         setDone(true);
         router.refresh();
-      } catch (err) {
-        console.error(err);
+      } else {
+        toast.error("Weekreview opslaan mislukt. Probeer opnieuw of controleer of migraties op de database draaien.");
       }
     });
   }
