@@ -5,7 +5,8 @@
  * - When `NEUROHQ_INBOX_ALERTS_PAUSED` is true: no new inbox rows from dashboard sync or emitUserAlert.
  * - Re-enable inbox without deploy: set `NEUROHQ_INBOX_ALERTS_ENABLED=1` in the environment.
  */
-export const NEUROHQ_INBOX_ALERTS_PAUSED = true;
+/** When true, no new rows in `user_alerts` (bell). Toasts and push can still fire separately. */
+export const NEUROHQ_INBOX_ALERTS_PAUSED = false;
 
 function envDisablesInboxAlerts(): boolean {
   const v = process.env.NEUROHQ_INBOX_ALERTS_DISABLED;

@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import { getAndClearPendingXpNotification } from "@/app/actions/pending-xp-notification";
+import { NEUROHQ_ALERTS_UPDATED } from "@/lib/bootstrap-query";
 import { neuroToast } from "@/lib/ui/neuro-toast";
 
 /** On mount, fetches any pending XP notification (from automatic XP) and shows a one-time toast. */
@@ -26,6 +27,11 @@ export function PendingXpToast() {
             : `XP verdiend: ${lines} — Totaal +${notification.totalXp} XP`,
           { duration: 6000 }
         );
+        try {
+          window.dispatchEvent(new CustomEvent(NEUROHQ_ALERTS_UPDATED));
+        } catch {
+          // ignore
+        }
       })
       .catch(() => {});
   }, []);

@@ -6,6 +6,9 @@ import type { BootstrapTodayResponse } from "@/lib/daily-snapshot-full-sync";
 /** Dispatched after bootstrap data is fresh (initial load or background refetch). */
 export const NEUROHQ_DAILY_SNAPSHOT_UPDATED = "neurohq-daily-snapshot-updated" as const;
 
+/** Dispatched when `user_alerts` may have changed (e.g. consumed pending XP); bell should refetch. */
+export const NEUROHQ_ALERTS_UPDATED = "neurohq-alerts-updated" as const;
+
 export type NeurohqDailySnapshotUpdatedDetail = {
   savedAt: number;
 };

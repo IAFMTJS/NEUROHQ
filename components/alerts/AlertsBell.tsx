@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { NEUROHQ_DAILY_SNAPSHOT_UPDATED } from "@/lib/bootstrap-query";
+import { NEUROHQ_ALERTS_UPDATED, NEUROHQ_DAILY_SNAPSHOT_UPDATED } from "@/lib/bootstrap-query";
 import { dashboardCommandDeckOuterClass } from "@/components/layout/DashboardCommandDeckFrame";
 import Link from "next/link";
 
@@ -99,7 +99,11 @@ export function AlertsBell() {
   useEffect(() => {
     const onSnap = () => void refresh();
     window.addEventListener(NEUROHQ_DAILY_SNAPSHOT_UPDATED, onSnap);
-    return () => window.removeEventListener(NEUROHQ_DAILY_SNAPSHOT_UPDATED, onSnap);
+    window.addEventListener(NEUROHQ_ALERTS_UPDATED, onSnap);
+    return () => {
+      window.removeEventListener(NEUROHQ_DAILY_SNAPSHOT_UPDATED, onSnap);
+      window.removeEventListener(NEUROHQ_ALERTS_UPDATED, onSnap);
+    };
   }, [refresh]);
 
   useEffect(() => {

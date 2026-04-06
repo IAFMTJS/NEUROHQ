@@ -1,5 +1,6 @@
 "use server";
 
+import { emitUserAlert } from "@/app/actions/alerts";
 import { createClient } from "@/lib/supabase/server";
 
 export type PendingXpSource = { label: string; xp: number };
@@ -19,7 +20,7 @@ export async function getAndClearPendingXpNotification(): Promise<PendingXpNotif
 
     const { data, error } = await supabase
       .from("pending_xp_notifications")
-      .select("total_xp, sources, for_date")
+      .select("id, total_xp, sources, for_date")
       .eq("user_id", user.id)
       .order("created_at", { ascending: false })
       .limit(1)
@@ -27,7 +28,7 @@ export async function getAndClearPendingXpNotification(): Promise<PendingXpNotif
 
     if (error || !data) return null;
 
-    const row = data as { total_xp: number; sources: unknown; for_date: string };
+    const row = data as { id: string; total_xp: number; sources: unknown; for_date: string };
     const sources = Array.isArray(row.sources)
       ? (row.sources as { label?: string; xp?: number }[]).map((s) => ({
           label: s.label ?? "XP",
@@ -35,12 +36,46 @@ export async function getAndClearPendingXpNotification(): Promise<PendingXpNotif
         }))
       : [];
 
-    await supabase.from("pending_xp_notifications").delete().eq("user_id", user.id);
+    const { error: delErr } = await supabase.from("pending_xp_notifications").delete().eq("id", row.id);
+    if (delErr) {
+      const { error: delAllErr } = await supabase.from("pending_xp_notifications").delete().eq("user_id", user.id);
+      if (delAllErr) {
+        console.error("[getAndClearPendingXpNotification] delete failed", delAllErr.message);
+        return null;
+      }
+    }
+
+    const totalXp = row.total_xp ?? 0;
+    const forDate = row.for_date ?? "";
+    if (totalXp > 0) {
+      const lines = sources.length
+        ? sources.map((s) => `${s.label}: +${s.xp} XP`).join(" · ")
+        : `+${totalXp} XP`;
+      const body =
+        forDate.length > 0
+          ? `${lines} — Totaal +${totalXp} XP`.slice(0, 2000)
+          : `XP verdiend: ${lines} — Totaal +${totalXp} XP`.slice(0, 2000);
+      const title =
+        forDate.length > 0 ? `Verdiend (${forDate})` : "XP verdiend";
+      const tag = `hq-pending-xp-${forDate || "unknown"}`;
+      try {
+        await emitUserAlert({
+          title: title.slice(0, 200),
+          body,
+          severity: "info",
+          linkPath: "/profile",
+          sendPush: false,
+          pushTag: tag.slice(0, 120),
+        });
+      } catch {
+        // Bell is best-effort; toast still shows from return value
+      }
+    }
 
     return {
-      totalXp: row.total_xp ?? 0,
+      totalXp,
       sources,
-      forDate: row.for_date ?? "",
+      forDate,
     };
   } catch {
     return null;

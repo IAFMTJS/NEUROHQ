@@ -271,10 +271,6 @@ async function dismissObsoleteDashboardInboxAlerts(
 
     const parsedUnified = parseUnifiedInboxPushTag(tag);
     if (parsedUnified) {
-      if (parsedUnified.decisionType === "budget_guardrail") {
-        staleIds.push(id);
-        continue;
-      }
       if (parsedUnified.date < appDateStr) {
         staleIds.push(id);
         continue;
@@ -366,17 +362,15 @@ export async function syncInboxAlertsFromDashboardCritical(critical: DashboardCr
 
   if (critical.unifiedDecision) {
     const u = critical.unifiedDecision;
-    if (u.decisionType !== "budget_guardrail") {
-      // Stable per (day, decision type): decisionId changes when task count / ranking shifts,
-      // which would mint endless duplicate inbox rows + pushes if used as push_tag.
-      candidates.push({
-        pushTag: `hq-inbox-unified-${critical.dateStr}-${u.decisionType}`,
-        title: u.title.slice(0, 200),
-        body: u.description ? u.description.slice(0, 2000) : null,
-        severity: severityForUnifiedDecision(u),
-        linkPath: normalizeInboxLinkPath(u.href),
-      });
-    }
+    // Stable per (day, decision type): decisionId changes when task count / ranking shifts,
+    // which would mint endless duplicate inbox rows + pushes if used as push_tag.
+    candidates.push({
+      pushTag: `hq-inbox-unified-${critical.dateStr}-${u.decisionType}`,
+      title: u.title.slice(0, 200),
+      body: u.description ? u.description.slice(0, 2000) : null,
+      severity: severityForUnifiedDecision(u),
+      linkPath: normalizeInboxLinkPath(u.href),
+    });
   }
 
   const streakCoveredByUnified = critical.unifiedDecision?.decisionType === "streak_rescue";

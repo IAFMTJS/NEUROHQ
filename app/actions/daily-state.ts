@@ -92,9 +92,9 @@ export async function saveDailyState(input: DailyStateInput): Promise<SaveDailyS
       physical_health: input.physical_health ?? null,
       mental_battery: input.mental_battery ?? null,
       load: input.load ?? null,
-      // Unlock day mode after check-in changes so server can recalculate
-      // based on the latest brain status instead of a stale early lock.
-      dcic_mode: null,
+      // Do not clear dcic_mode here: operational mode (e.g. Overdrive) must stay on
+      // `daily_state` so server-side XP (`addXP`) still sees ×2. Stale war/recovery is
+      // cleared in `getGameState` via brain averages + `staleDcicModeInDb` repair.
       is_rest_day: input.is_rest_day ?? null,
       // Clear so the auto-mission engine runs on every update (direct line: dashboard → allocator).
       auto_master_missions_generated: false,
