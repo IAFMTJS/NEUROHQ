@@ -1,7 +1,15 @@
 /**
  * Offline-first: queue mutations in IndexedDB and sync when online.
  * Store: neurohq-pending with { id, action, payload, createdAt }.
+ *
+ * In the Capacitor native app with mobile sync enabled, known task mutations are
+ * written to the SQLite outbox instead (durable + same push API as the rest of native sync).
  */
+
+import { isSupabaseFirstMobileEnabled } from "@/lib/mobile/feature-flags";
+import { mapLegacyQueueToOutbox } from "@/lib/mobile/legacy-queue-bridge";
+import { enqueueOutboxAction } from "@/lib/mobile/outbox";
+import { flushOutboxQueue } from "@/lib/mobile/sync-engine";
 
 const DB_NAME = "neurohq-offline-actions";
 const STORE_NAME = "pendingActions";
@@ -28,16 +36,30 @@ function openDB(): Promise<IDBDatabase> {
   });
 }
 
-export function addToQueue(action: string, payload: unknown): Promise<void> {
-  return openDB().then((db) => {
-    return new Promise((resolve, reject) => {
-      const tx = db.transaction(STORE_NAME, "readwrite");
-      const store = tx.objectStore(STORE_NAME);
-      const id = `q-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
-      store.add({ id, action, payload, createdAt: Date.now() });
-      tx.oncomplete = () => { db.close(); resolve(); };
-      tx.onerror = () => { db.close(); reject(tx.error); };
-    });
+export async function addToQueue(action: string, payload: unknown): Promise<void> {
+  if (isSupabaseFirstMobileEnabled()) {
+    const mapped = mapLegacyQueueToOutbox(action, payload);
+    if (mapped) {
+      await enqueueOutboxAction(mapped);
+      await flushOutboxQueue();
+      return;
+    }
+  }
+
+  const db = await openDB();
+  await new Promise<void>((resolve, reject) => {
+    const tx = db.transaction(STORE_NAME, "readwrite");
+    const store = tx.objectStore(STORE_NAME);
+    const id = `q-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
+    store.add({ id, action, payload, createdAt: Date.now() });
+    tx.oncomplete = () => {
+      db.close();
+      resolve();
+    };
+    tx.onerror = () => {
+      db.close();
+      reject(tx.error);
+    };
   });
 }
 

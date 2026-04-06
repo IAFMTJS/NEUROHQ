@@ -22,7 +22,15 @@ export const DEFAULT_CONFLICT_POLICY: ConflictPolicy = "serverWins";
 export type OutboxActionType =
   | "task.create"
   | "task.complete"
-  | "budget.add_entry";
+  | "task.uncomplete"
+  | "task.delete"
+  | "task.snooze"
+  | "task.skip_next"
+  | "task.reschedule"
+  | "task.duplicate"
+  | "task.update"
+  | "budget.add_entry"
+  | "budget.update_settings";
 
 export type SyncDeliveryState = "queued" | "processing" | "dead_letter";
 

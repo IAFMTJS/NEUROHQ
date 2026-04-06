@@ -94,11 +94,39 @@ export async function queueBudgetEntryMutation(payload: {
   date: string;
   category?: string | null;
   note?: string | null;
+  is_planned?: boolean;
+  store_name?: string | null;
+  subscription_name?: string | null;
+  detail_name?: string | null;
+  emergency_override_reason?: string | null;
 }): Promise<void> {
   if (!isSupabaseFirstMobileEnabled()) return;
   await enqueueOutboxAction({
     action: "budget.add_entry",
     payload,
+  });
+  void flushOutboxQueue();
+}
+
+/** Same fields as `updateBudgetSettings` server action; queued on native when offline. */
+export type QueuedBudgetSettingsMutation = {
+  monthly_budget_cents?: number | null;
+  monthly_savings_cents?: number | null;
+  currency?: string | null;
+  impulse_threshold_pct?: number | null;
+  budget_period?: "monthly" | "weekly" | null;
+  impulse_quick_add_minutes?: number | null;
+  impulse_risk_categories?: string[] | null;
+  payday_day_of_month?: number | null;
+  last_payday_date?: string | null;
+  apply_to_next_period?: boolean;
+};
+
+export async function queueBudgetSettingsMutation(settings: QueuedBudgetSettingsMutation): Promise<void> {
+  if (!isSupabaseFirstMobileEnabled()) return;
+  await enqueueOutboxAction({
+    action: "budget.update_settings",
+    payload: { settings },
   });
   void flushOutboxQueue();
 }

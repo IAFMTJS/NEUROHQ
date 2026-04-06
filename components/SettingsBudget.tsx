@@ -3,6 +3,8 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { updateBudgetSettings } from "@/app/actions/budget";
+import { queueBudgetSettingsMutation } from "@/lib/data/budget-repository";
+import { isSupabaseFirstMobileEnabled } from "@/lib/mobile/feature-flags";
 import { useSettings } from "@/lib/settings-context";
 import { getCurrencySymbol } from "@/lib/utils/currency";
 
@@ -50,13 +52,18 @@ export function SettingsBudget({
     const categories = riskCategories.split(",").map((s) => s.trim()).filter(Boolean);
     startTransition(async () => {
       try {
-        await updateBudgetSettings({
+        const params = {
           currency: currency.trim() || "EUR",
           impulse_threshold_pct: pct,
           budget_period: budgetPeriod,
           impulse_quick_add_minutes: mins,
           impulse_risk_categories: categories,
-        });
+        };
+        if (typeof navigator !== "undefined" && !navigator.onLine && isSupabaseFirstMobileEnabled()) {
+          await queueBudgetSettingsMutation(params);
+        } else {
+          await updateBudgetSettings(params);
+        }
         setSaved(true);
         setTimeout(() => setSaved(false), 2000);
         await invalidateSettings();

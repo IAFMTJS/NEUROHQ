@@ -1,14 +1,86 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
-import { createTask, completeTask } from "@/app/actions/tasks";
-import { addBudgetEntry } from "@/app/actions/budget";
-import { IDEMPOTENCY_HEADER } from "@/lib/mobile/supabase-first-contract";
+import {
+  completeTask,
+  createTask,
+  deleteTask,
+  duplicateTask,
+  rescheduleTask,
+  skipNextOccurrence,
+  snoozeTask,
+  uncompleteTask,
+  updateTask,
+} from "@/app/actions/tasks";
+import { addBudgetEntry, updateBudgetSettings } from "@/app/actions/budget";
+import { IDEMPOTENCY_HEADER, type OutboxActionType } from "@/lib/mobile/supabase-first-contract";
 
 type PushBody = {
-  action?: "task.create" | "task.complete" | "budget.add_entry";
+  action?: OutboxActionType;
   payload?: Record<string, unknown>;
   mutationId?: string;
 };
+
+function clientErrorMessage(err: unknown): string {
+  return err instanceof Error ? err.message : "Failed";
+}
+
+function isConflictMessage(message: string): boolean {
+  return /not found|invalid|already|task not found/i.test(message);
+}
+
+function parseTaskUpdateParams(raw: unknown): Parameters<typeof updateTask>[1] | null {
+  if (!raw || typeof raw !== "object") return null;
+  const p = raw as Record<string, unknown>;
+  const out: Parameters<typeof updateTask>[1] = {};
+  if (typeof p.title === "string") out.title = p.title;
+  if (typeof p.due_date === "string") out.due_date = p.due_date;
+  if (p.category === "work" || p.category === "personal" || p.category === null) out.category = p.category;
+  if (p.recurrence_rule === "daily" || p.recurrence_rule === "weekly" || p.recurrence_rule === "monthly" || p.recurrence_rule === null) {
+    out.recurrence_rule = p.recurrence_rule;
+  }
+  if (typeof p.recurrence_weekdays === "string" || p.recurrence_weekdays === null) {
+    out.recurrence_weekdays = p.recurrence_weekdays as string | null;
+  }
+  for (const key of ["impact", "urgency", "energy_required", "focus_required", "mental_load", "social_load", "priority"] as const) {
+    const v = p[key];
+    if (typeof v === "number" || v === null) out[key] = v as never;
+  }
+  if (typeof p.notes === "string" || p.notes === null) out.notes = p.notes;
+  return Object.keys(out).length > 0 ? out : null;
+}
+
+function parseBudgetSettingsPayload(raw: unknown): Parameters<typeof updateBudgetSettings>[0] | null {
+  if (!raw || typeof raw !== "object") return null;
+  const p = raw as Record<string, unknown>;
+  const out: Parameters<typeof updateBudgetSettings>[0] = {};
+  if (typeof p.monthly_budget_cents === "number" || p.monthly_budget_cents === null) {
+    out.monthly_budget_cents = p.monthly_budget_cents as number | null;
+  }
+  if (typeof p.monthly_savings_cents === "number" || p.monthly_savings_cents === null) {
+    out.monthly_savings_cents = p.monthly_savings_cents as number | null;
+  }
+  if (typeof p.currency === "string" || p.currency === null) out.currency = p.currency;
+  if (typeof p.impulse_threshold_pct === "number" || p.impulse_threshold_pct === null) {
+    out.impulse_threshold_pct = p.impulse_threshold_pct as number | null;
+  }
+  if (p.budget_period === "monthly" || p.budget_period === "weekly" || p.budget_period === null) {
+    out.budget_period = p.budget_period;
+  }
+  if (typeof p.impulse_quick_add_minutes === "number" || p.impulse_quick_add_minutes === null) {
+    out.impulse_quick_add_minutes = p.impulse_quick_add_minutes as number | null;
+  }
+  if (Array.isArray(p.impulse_risk_categories)) {
+    out.impulse_risk_categories = p.impulse_risk_categories.filter((x): x is string => typeof x === "string");
+  }
+  if (typeof p.payday_day_of_month === "number" || p.payday_day_of_month === null) {
+    out.payday_day_of_month = p.payday_day_of_month as number | null;
+  }
+  if (typeof p.last_payday_date === "string" || p.last_payday_date === null) {
+    out.last_payday_date = p.last_payday_date;
+  }
+  if (p.apply_to_next_period === true) out.apply_to_next_period = true;
+  return Object.keys(out).length > 0 ? out : null;
+}
 
 async function readIdempotentReplay(
   userId: string,
@@ -92,6 +164,14 @@ export async function POST(request: Request) {
   const action = body.action;
   const payload = body.payload ?? {};
 
+  const okResponse = (act: string, extra: Record<string, unknown> = {}) =>
+    saveIdempotentReplay(user.id, idempotencyKey, act, {
+      ok: true,
+      action: act,
+      mutationId: body.mutationId ?? null,
+      ...extra,
+    }).then((json) => NextResponse.json(json));
+
   if (action === "task.create") {
     const title = typeof payload.title === "string" ? payload.title.trim() : "";
     const dueDate = typeof payload.due_date === "string" ? payload.due_date : "";
@@ -120,20 +200,127 @@ export async function POST(request: Request) {
     try {
       await completeTask(taskId, { startedAt: typeof payload.completedAt === "string" ? payload.completedAt : null });
     } catch (err) {
-      const message = err instanceof Error ? err.message : "Failed";
-      if (/not found|invalid|already/i.test(message)) {
+      const message = clientErrorMessage(err);
+      if (isConflictMessage(message)) {
         return NextResponse.json({ error: message }, { status: 409 });
       }
       throw err;
     }
-    const responseJson = {
-      ok: true,
-      action,
-      mutationId: body.mutationId ?? null,
-      taskId,
-    };
-    const replayJson = await saveIdempotentReplay(user.id, idempotencyKey, action, responseJson);
-    return NextResponse.json(replayJson);
+    return okResponse("task.complete", { taskId });
+  }
+
+  if (action === "task.uncomplete") {
+    const taskId = typeof payload.taskId === "string" ? payload.taskId : "";
+    if (!taskId) return NextResponse.json({ error: "Invalid task.uncomplete payload" }, { status: 400 });
+    try {
+      await uncompleteTask(taskId);
+    } catch (err) {
+      const message = clientErrorMessage(err);
+      if (isConflictMessage(message)) {
+        return NextResponse.json({ error: message }, { status: 409 });
+      }
+      throw err;
+    }
+    return okResponse("task.uncomplete", { taskId });
+  }
+
+  if (action === "task.delete") {
+    const taskId = typeof payload.taskId === "string" ? payload.taskId : "";
+    if (!taskId) return NextResponse.json({ error: "Invalid task.delete payload" }, { status: 400 });
+    try {
+      await deleteTask(taskId);
+    } catch (err) {
+      const message = clientErrorMessage(err);
+      if (isConflictMessage(message)) {
+        return NextResponse.json({ error: message }, { status: 409 });
+      }
+      throw err;
+    }
+    return okResponse("task.delete", { taskId });
+  }
+
+  if (action === "task.snooze") {
+    const taskId = typeof payload.taskId === "string" ? payload.taskId : "";
+    if (!taskId) return NextResponse.json({ error: "Invalid task.snooze payload" }, { status: 400 });
+    try {
+      await snoozeTask(taskId);
+    } catch (err) {
+      const message = clientErrorMessage(err);
+      if (isConflictMessage(message)) {
+        return NextResponse.json({ error: message }, { status: 409 });
+      }
+      throw err;
+    }
+    return okResponse("task.snooze", { taskId });
+  }
+
+  if (action === "task.skip_next") {
+    const taskId = typeof payload.taskId === "string" ? payload.taskId : "";
+    if (!taskId) return NextResponse.json({ error: "Invalid task.skip_next payload" }, { status: 400 });
+    try {
+      await skipNextOccurrence(taskId);
+    } catch (err) {
+      const message = clientErrorMessage(err);
+      if (isConflictMessage(message)) {
+        return NextResponse.json({ error: message }, { status: 409 });
+      }
+      throw err;
+    }
+    return okResponse("task.skip_next", { taskId });
+  }
+
+  if (action === "task.reschedule") {
+    const taskId = typeof payload.taskId === "string" ? payload.taskId : "";
+    const dueDate = typeof payload.due_date === "string" ? payload.due_date : "";
+    if (!taskId || !/^\d{4}-\d{2}-\d{2}$/.test(dueDate)) {
+      return NextResponse.json({ error: "Invalid task.reschedule payload" }, { status: 400 });
+    }
+    try {
+      await rescheduleTask(taskId, dueDate);
+    } catch (err) {
+      const message = clientErrorMessage(err);
+      if (isConflictMessage(message)) {
+        return NextResponse.json({ error: message }, { status: 409 });
+      }
+      throw err;
+    }
+    return okResponse("task.reschedule", { taskId, due_date: dueDate });
+  }
+
+  if (action === "task.duplicate") {
+    const taskId = typeof payload.taskId === "string" ? payload.taskId : "";
+    const dueDate = typeof payload.due_date === "string" ? payload.due_date : "";
+    if (!taskId || !/^\d{4}-\d{2}-\d{2}$/.test(dueDate)) {
+      return NextResponse.json({ error: "Invalid task.duplicate payload" }, { status: 400 });
+    }
+    try {
+      await duplicateTask(taskId, dueDate);
+    } catch (err) {
+      const message = clientErrorMessage(err);
+      if (isConflictMessage(message)) {
+        return NextResponse.json({ error: message }, { status: 409 });
+      }
+      throw err;
+    }
+    return okResponse("task.duplicate", { taskId, due_date: dueDate });
+  }
+
+  if (action === "task.update") {
+    const taskId = typeof payload.taskId === "string" ? payload.taskId : "";
+    const params = parseTaskUpdateParams(payload.params);
+    if (!taskId || !params) {
+      return NextResponse.json({ error: "Invalid task.update payload" }, { status: 400 });
+    }
+    try {
+      await updateTask(taskId, params);
+    } catch (err) {
+      const message = clientErrorMessage(err);
+      if (isConflictMessage(message)) {
+        return NextResponse.json({ error: message }, { status: 409 });
+      }
+      throw err;
+    }
+    return okResponse("task.update", { taskId });
   }
 
   if (action === "budget.add_entry") {
@@ -142,22 +329,52 @@ export async function POST(request: Request) {
     if (!Number.isFinite(amount) || !/^\d{4}-\d{2}-\d{2}$/.test(date)) {
       return NextResponse.json({ error: "Invalid budget.add_entry payload" }, { status: 400 });
     }
-    const result = await addBudgetEntry({
-      amount_cents: amount,
-      date,
-      category: typeof payload.category === "string" ? payload.category : undefined,
-      note: typeof payload.note === "string" ? payload.note : undefined,
-    });
-    const responseJson = {
-      ok: true,
-      action,
-      mutationId: body.mutationId ?? null,
-      budgetEntryId: result?.id ?? null,
-    };
-    const replayJson = await saveIdempotentReplay(user.id, idempotencyKey, action, responseJson);
-    return NextResponse.json(replayJson);
+    try {
+      const result = await addBudgetEntry({
+        amount_cents: amount,
+        date,
+        category: typeof payload.category === "string" ? payload.category : undefined,
+        note: typeof payload.note === "string" ? payload.note : undefined,
+        is_planned: typeof payload.is_planned === "boolean" ? payload.is_planned : undefined,
+        store_name: typeof payload.store_name === "string" ? payload.store_name : null,
+        subscription_name: typeof payload.subscription_name === "string" ? payload.subscription_name : null,
+        detail_name: typeof payload.detail_name === "string" ? payload.detail_name : null,
+        emergency_override_reason:
+          typeof payload.emergency_override_reason === "string" ? payload.emergency_override_reason : null,
+      });
+      const responseJson = {
+        ok: true,
+        action,
+        mutationId: body.mutationId ?? null,
+        budgetEntryId: result?.id ?? null,
+      };
+      const replayJson = await saveIdempotentReplay(user.id, idempotencyKey, action, responseJson);
+      return NextResponse.json(replayJson);
+    } catch (err) {
+      const message = clientErrorMessage(err);
+      if (isConflictMessage(message) || /budget lock|survey|nooduitgaven|Vul eerst/i.test(message)) {
+        return NextResponse.json({ error: message }, { status: 409 });
+      }
+      throw err;
+    }
+  }
+
+  if (action === "budget.update_settings") {
+    const settings = parseBudgetSettingsPayload(payload.settings ?? payload);
+    if (!settings) {
+      return NextResponse.json({ error: "Invalid budget.update_settings payload" }, { status: 400 });
+    }
+    try {
+      await updateBudgetSettings(settings);
+    } catch (err) {
+      const message = clientErrorMessage(err);
+      if (isConflictMessage(message) || /geen budget/i.test(message)) {
+        return NextResponse.json({ error: message }, { status: 409 });
+      }
+      throw err;
+    }
+    return okResponse("budget.update_settings", {});
   }
 
   return NextResponse.json({ error: "Unsupported action" }, { status: 400 });
 }
-

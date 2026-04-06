@@ -726,7 +726,7 @@ export function TaskList({
       removeTask(id, bucketDate);
       setRemovingId(null);
       if (typeof navigator !== "undefined" && !navigator.onLine) {
-        addToQueue("deleteTask", { id });
+        void addToQueue("deleteTask", { id });
       } else {
         deleteTask(id);
           void refreshMergedSnapshotFromNetwork();

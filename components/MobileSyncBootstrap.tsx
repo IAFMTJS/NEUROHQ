@@ -39,10 +39,28 @@ export function MobileSyncBootstrap() {
     timer = setInterval(run, 60_000);
     window.addEventListener("online", run);
     document.addEventListener("visibilitychange", run);
+
+    let appListenerRemove: (() => void) | undefined;
+    if (isNativeCapacitorRuntime()) {
+      void import("@capacitor/app")
+        .then(({ App }) =>
+          App.addListener("appStateChange", ({ isActive }) => {
+            if (isActive) run();
+          })
+        )
+        .then((handle) => {
+          appListenerRemove = () => {
+            void handle.remove();
+          };
+        })
+        .catch(() => {});
+    }
+
     return () => {
       window.removeEventListener("online", run);
       document.removeEventListener("visibilitychange", run);
       if (timer) clearInterval(timer);
+      appListenerRemove?.();
     };
   }, []);
 

@@ -3,6 +3,8 @@
 import { useEffect, useState, useTransition, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { addBudgetEntry, checkImpulseSignal, freezePurchase, updateBudgetEntry } from "@/app/actions/budget";
+import { queueBudgetEntryMutation } from "@/lib/data/budget-repository";
+import { isSupabaseFirstMobileEnabled } from "@/lib/mobile/feature-flags";
 import { Modal } from "@/components/Modal";
 import { getCurrencySymbol } from "@/lib/utils/currency";
 import { getPendingBudgetSnapshot, setPendingBudgetSnapshot } from "@/lib/client-pending-budget";
@@ -107,6 +109,38 @@ export function AddBudgetEntryForm({
     startTransition(async () => {
       try {
         setSubmitError(null);
+        if (typeof navigator !== "undefined" && !navigator.onLine && isSupabaseFirstMobileEnabled()) {
+          await queueBudgetEntryMutation({
+            amount_cents,
+            date,
+            category: resolvedCategory || undefined,
+            note: effectiveNote,
+            is_planned: isPlanned,
+            store_name: category === "Boodschappen" && storeName ? storeName : null,
+            subscription_name: category === "Abonnementen" && subscriptionName ? subscriptionName : null,
+            detail_name: detailForCategory,
+            emergency_override_reason: emergencyReason || null,
+          });
+          try {
+            const snapshot = getPendingBudgetSnapshot();
+            if (snapshot && typeof snapshot.budgetRemainingCents === "number" && Number.isFinite(snapshot.budgetRemainingCents)) {
+              setPendingBudgetSnapshot({
+                budgetRemainingCents: snapshot.budgetRemainingCents + amount_cents,
+              });
+            }
+          } catch {
+            // ignore
+          }
+          setAmount("");
+          setNote("");
+          setStoreName("");
+          setSubscriptionName("");
+          setDetailName("");
+          setEmergencyReason("");
+          router.refresh();
+          onSuccess?.();
+          return;
+        }
         const result = await withServerActionRetry(() =>
           addBudgetEntry({
             amount_cents,
