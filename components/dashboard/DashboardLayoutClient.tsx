@@ -9,6 +9,7 @@ import { AppStateProvider } from "@/components/providers/AppStateProvider";
 import { BootstrapProvider } from "@/components/providers/BootstrapProvider";
 import { ActiveTimeTracker } from "@/components/ActiveTimeTracker";
 import { NewDayRefresh } from "@/components/NewDayRefresh";
+import { DailyDataPackageScheduler } from "@/components/DailyDataPackageScheduler";
 import { OfflineQueueSync } from "@/components/OfflineQueueSync";
 import { PendingXpToast } from "@/components/PendingXpToast";
 import { HelpFloatingIcon } from "@/components/HelpFloatingIcon";
@@ -189,6 +190,7 @@ export function DashboardLayoutClient({
             >
               <ThemeHydrate />
               <ActiveTimeTracker />
+              <DailyDataPackageScheduler />
               <NewDayRefresh />
               <a href="#main-content" className="skip-link">
                 Skip to main content
