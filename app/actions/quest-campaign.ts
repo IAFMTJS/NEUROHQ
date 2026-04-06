@@ -28,6 +28,7 @@ import {
 } from "@/lib/quests/engine";
 import { buildQuestPrizeLine } from "@/lib/quests/prize-line";
 import { appendAnswerLog, recentAttemptsForPuzzle, type QuestRecentAttempt } from "@/lib/quests/answer-log";
+import { buildQuestAnswerHistoryRows, type QuestAnswerHistoryDisplayRow } from "@/lib/quests/answer-history-display";
 
 const DEFAULT_SLUG = "katsuo-ji";
 
@@ -66,6 +67,8 @@ export type QuestClientPayload = {
   rewardsGranted: boolean;
   /** Pogingen voor de actieve puzzel (dag/stap). */
   recentAttempts: QuestRecentAttempt[];
+  /** Alle geregistreerde pogingen met bijbehorende vraagtekst (nieuwste eerst). */
+  answerHistory: QuestAnswerHistoryDisplayRow[];
 };
 
 function buildPuzzlePublic(def: QuestDayDef, state: QuestProgressState): QuestPuzzlePublic {
@@ -212,6 +215,8 @@ export async function getQuestCampaignPublicStatus(): Promise<QuestClientPayload
       ? recentAttemptsForPuzzle(progRow?.answer_log as Json, puzzle.day, stepForHistory)
       : [];
 
+  const answerHistory = buildQuestAnswerHistoryRows(content, progRow?.answer_log as Json);
+
   const prizeLine = buildQuestPrizeLine({
     prizeSummary: row.prize_summary,
     rewardXp: row.reward_xp,
@@ -240,6 +245,7 @@ export async function getQuestCampaignPublicStatus(): Promise<QuestClientPayload
     completed,
     rewardsGranted: progRow?.rewards_granted_at != null,
     recentAttempts,
+    answerHistory,
   };
 }
 

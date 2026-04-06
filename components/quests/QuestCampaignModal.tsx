@@ -5,6 +5,7 @@ import { useCallback, useEffect, useState, useTransition } from "react";
 import { Modal } from "@/components/Modal";
 import { submitQuestAnswer, type QuestClientPayload } from "@/app/actions/quest-campaign";
 import { neuroToast } from "@/lib/ui/neuro-toast";
+import { QuestAnswerHistoryList } from "@/components/quests/QuestAnswerHistoryList";
 
 async function fetchQuest(): Promise<QuestClientPayload | null> {
   const res = await fetch("/api/quest-campaign", { credentials: "same-origin" });
@@ -146,6 +147,18 @@ export function QuestCampaignModal({ open, onClose }: Props) {
               ) : (
                 <p className="mt-2 text-xs text-emerald-200/90">Beloningen worden verwerkt…</p>
               )}
+            </div>
+          ) : null}
+
+          {status.answerHistory.length > 0 ? (
+            <div className="rounded-lg border border-white/10 bg-white/[0.03] px-3 py-2.5">
+              <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-[var(--text-muted)]">
+                Jouw vragen en antwoorden (alle dagen)
+              </p>
+              <p className="mt-1 text-[11px] text-[var(--text-muted)]">
+                Nieuwste bovenaan. Zelfde log als op profiel → Events.
+              </p>
+              <QuestAnswerHistoryList rows={status.answerHistory} listClassName="max-h-[min(22rem,50vh)]" />
             </div>
           ) : null}
 

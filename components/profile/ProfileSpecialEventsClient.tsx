@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import type { ProfileSpecialEventsBundle } from "@/app/actions/profile-special-events";
 import { PlatformGameProgressPanel } from "@/components/profile/PlatformGameProgressPanel";
 import { QuestCampaignModal } from "@/components/quests/QuestCampaignModal";
+import { QuestAnswerHistoryList } from "@/components/quests/QuestAnswerHistoryList";
 
 function formatWhen(iso: string) {
   try {
@@ -72,6 +73,17 @@ export function ProfileSpecialEventsClient({ bundle }: { bundle: ProfileSpecialE
           >
             Quest openen
           </button>
+          {q.answerHistory.length > 0 ? (
+            <details className="mt-4 rounded-lg border border-violet-500/25 bg-violet-950/25 px-3 py-2.5">
+              <summary className="cursor-pointer select-none text-sm font-medium text-violet-100/95">
+                Jouw eerdere vragen en antwoorden ({q.answerHistory.length})
+              </summary>
+              <p className="mt-2 text-[11px] leading-snug text-[var(--text-muted)]">
+                Per poging: de vraag (of hint) zoals die toen gold, en wat je invulde.
+              </p>
+              <QuestAnswerHistoryList rows={q.answerHistory} listClassName="max-h-[min(24rem,55vh)]" />
+            </details>
+          ) : null}
           <QuestCampaignModal open={questOpen} onClose={() => setQuestOpen(false)} />
         </section>
       ) : null}

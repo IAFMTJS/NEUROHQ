@@ -205,8 +205,7 @@ export function GrowthCommandCenter({
                 Kies traject
               </span>
               <p className="mb-1.5 text-[10px] leading-snug text-[var(--text-muted)]">
-                Nieuwe kalenderweek: protocolweek schuift op en taken gaan naar Missions (zelfde ma–zo als je bord). Start week =
-                extra push nu.
+                Ander traject kiezen; kalenderweek en Missions syncen automatisch bij Growth of Missions.
               </p>
               <select
                 className="w-full rounded-lg border border-[rgba(var(--mode-rgb),0.35)] bg-gradient-to-b from-[rgba(var(--mode-rgb-deep),0.52)] to-[rgba(6,18,30,0.96)] px-3 py-2 text-sm font-medium text-[#e8f6ff] shadow-[inset_0_1px_0_rgba(255,255,255,0.07),0_0_16px_rgba(var(--mode-rgb),0.12)] [color-scheme:dark] focus:border-[rgba(var(--mode-rgb),0.55)] focus:outline-none focus:ring-2 focus:ring-[rgba(var(--mode-rgb),0.35)] disabled:opacity-50"
@@ -405,18 +404,19 @@ export function GrowthCommandCenter({
         </p>
       </div>
 
-      {/* Bottom: one primary + two quiet secondaries */}
+      {/* Bottom: primary = Missions; sync runs on /learning load — commitWeek is fallback */}
       <div className="relative z-[1] border-t border-[rgba(var(--mode-rgb),0.12)] bg-black/10 px-4 py-5 sm:px-5">
         {def && week ? (
           <>
-            <button
-              type="button"
-              disabled={pending}
-              className="primary-btn !min-h-[56px] w-full disabled:pointer-events-none disabled:opacity-45"
-              onClick={commitWeek}
+            <Link
+              href="/tasks?growth=1"
+              className="primary-btn !min-h-[56px] flex w-full items-center justify-center no-underline"
             >
-              {pending ? "Bezig…" : "START WEEK"}
-            </button>
+              Naar Missions — deze week
+            </Link>
+            <p className="mt-2 text-center text-[10px] leading-snug text-[var(--text-muted)]">
+              Deze pagina of Missions laden = protocoltaken automatisch verdeeld over je kalenderweek.
+            </p>
             <div className="mt-4 flex flex-wrap items-center justify-center gap-x-8 gap-y-2">
               <button
                 type="button"
@@ -426,12 +426,14 @@ export function GrowthCommandCenter({
               >
                 Open traject
               </button>
-              <Link
-                href="/tasks?growth=1"
-                className="text-xs font-medium text-[var(--text-muted)] underline-offset-4 transition hover:text-[var(--accent-focus)] hover:underline"
+              <button
+                type="button"
+                disabled={pending}
+                className="text-xs font-medium text-[var(--text-muted)] underline-offset-4 transition hover:text-[var(--accent-focus)] hover:underline disabled:opacity-50"
+                onClick={commitWeek}
               >
-                Naar missions
-              </Link>
+                {pending ? "Bezig…" : "Opnieuw verdelen"}
+              </button>
             </div>
             <p className="mt-3 text-center text-[10px] text-[var(--text-muted)]/80">
               Missions vandaag · <span className="font-mono">growth</span> · <span className="font-mono">protocol</span>

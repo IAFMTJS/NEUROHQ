@@ -29,6 +29,7 @@ function calendarMondayFromRow(row: UserProtocolProgressRow | null): string | nu
 /**
  * When the budget week (Mon–Sun) advances, bump focus-protocol `current_week_index` and push that week's tasks to Missions.
  * Idempotent per calendar week (anchor stored on `user_protocol_progress.growth_calendar_week_start`).
+ * Also ensures current-week missions exist whenever anchor already matches this Monday (no manual "START WEEK" needed).
  * Call from /learning and /tasks so Missions stays in sync without opening Growth.
  */
 export async function syncGrowthFocusProtocolToCalendarWeek(): Promise<{
@@ -102,7 +103,21 @@ export async function syncGrowthFocusProtocolToCalendarWeek(): Promise<{
   }
 
   if (!prog) {
-    return { didRoll: false, calendarWeeksAdvanced: 0, missionCommit: null };
+    try {
+      const missionCommit = await commitProtocolWeekToMissions({ protocol_slug: slug, locale });
+      revalidatePath("/learning");
+      revalidatePath("/tasks");
+      revalidatePath("/dashboard");
+      return {
+        didRoll: false,
+        calendarWeeksAdvanced: 0,
+        missionCommit: { created: missionCommit.created, skipped: missionCommit.skipped },
+      };
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : String(e);
+      if (process.env.NODE_ENV === "development") console.warn("syncGrowthFocusProtocolToCalendarWeek !prog:", msg);
+      return { didRoll: false, calendarWeeksAdvanced: 0, missionCommit: null };
+    }
   }
 
   const row = prog as UserProtocolProgressRow;
@@ -115,13 +130,27 @@ export async function syncGrowthFocusProtocolToCalendarWeek(): Promise<{
         locale,
         growth_calendar_week_start: thisMonday,
       });
+      const missionCommit = await commitProtocolWeekToMissions({ protocol_slug: slug, locale });
       revalidatePath("/learning");
       revalidatePath("/tasks");
-      return { didRoll: false, calendarWeeksAdvanced: 0, missionCommit: null };
+      revalidatePath("/dashboard");
+      return {
+        didRoll: false,
+        calendarWeeksAdvanced: 0,
+        missionCommit: { created: missionCommit.created, skipped: missionCommit.skipped },
+      };
     }
 
     if (anchor === thisMonday) {
-      return { didRoll: false, calendarWeeksAdvanced: 0, missionCommit: null };
+      const missionCommit = await commitProtocolWeekToMissions({ protocol_slug: slug, locale });
+      revalidatePath("/learning");
+      revalidatePath("/tasks");
+      revalidatePath("/dashboard");
+      return {
+        didRoll: false,
+        calendarWeeksAdvanced: 0,
+        missionCommit: { created: missionCommit.created, skipped: missionCommit.skipped },
+      };
     }
 
     if (thisMonday < anchor) {
@@ -130,9 +159,15 @@ export async function syncGrowthFocusProtocolToCalendarWeek(): Promise<{
         locale,
         growth_calendar_week_start: thisMonday,
       });
+      const missionCommit = await commitProtocolWeekToMissions({ protocol_slug: slug, locale });
       revalidatePath("/learning");
       revalidatePath("/tasks");
-      return { didRoll: false, calendarWeeksAdvanced: 0, missionCommit: null };
+      revalidatePath("/dashboard");
+      return {
+        didRoll: false,
+        calendarWeeksAdvanced: 0,
+        missionCommit: { created: missionCommit.created, skipped: missionCommit.skipped },
+      };
     }
 
     const steps = wholeBudgetWeeksBetween(anchor, thisMonday);
@@ -142,9 +177,15 @@ export async function syncGrowthFocusProtocolToCalendarWeek(): Promise<{
         locale,
         growth_calendar_week_start: thisMonday,
       });
+      const missionCommit = await commitProtocolWeekToMissions({ protocol_slug: slug, locale });
       revalidatePath("/learning");
       revalidatePath("/tasks");
-      return { didRoll: false, calendarWeeksAdvanced: 0, missionCommit: null };
+      revalidatePath("/dashboard");
+      return {
+        didRoll: false,
+        calendarWeeksAdvanced: 0,
+        missionCommit: { created: missionCommit.created, skipped: missionCommit.skipped },
+      };
     }
 
     const prevWeek = Math.max(1, row.current_week_index ?? 1);

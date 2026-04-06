@@ -116,6 +116,10 @@ export async function loadBudgetPageDataBatch(params: BatchParams): Promise<Budg
     ? (async () => {
         try {
           await evaluateFlexBudgetForDay(today);
+        } catch {
+          // Best-effort: ledger/rules may fail without blocking flex settings UI.
+        }
+        try {
           return await getFlexBudgetHeroPayload();
         } catch {
           return null;
