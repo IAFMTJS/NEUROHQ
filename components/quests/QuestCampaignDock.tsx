@@ -34,7 +34,7 @@ export function QuestCampaignDock() {
         <button
           type="button"
           onClick={() => setOpen(true)}
-          className="quest-fab fixed bottom-[calc(env(safe-area-inset-bottom)+88px)] right-[max(12px,env(safe-area-inset-right))] z-[45] flex h-14 w-14 items-center justify-center rounded-full border border-violet-400/50 bg-gradient-to-br from-violet-600/90 to-indigo-900/95 text-2xl shadow-[0_8px_32px_rgba(139,92,246,0.45)] outline-none transition hover:scale-[1.04] hover:border-violet-300/70 focus-visible:ring-2 focus-visible:ring-violet-400/80"
+          className="quest-fab fixed right-[max(12px,env(safe-area-inset-right))] top-[calc(env(safe-area-inset-top,0px)+4.5rem)] z-[45] flex h-14 w-14 items-center justify-center rounded-full border border-violet-400/50 bg-gradient-to-br from-violet-600/90 to-indigo-900/95 text-2xl shadow-[0_8px_32px_rgba(139,92,246,0.45)] outline-none transition hover:scale-[1.04] hover:border-violet-300/70 focus-visible:ring-2 focus-visible:ring-violet-400/80"
           aria-label="Open platformquest"
           title="Quest"
         >
