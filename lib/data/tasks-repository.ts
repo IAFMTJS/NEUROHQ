@@ -20,24 +20,35 @@ function cacheKey(date: string): string {
 }
 
 async function fetchTasksFromServer(date: string, signal?: AbortSignal): Promise<Task[]> {
-  const checkpoint = await getSyncCheckpoint(`tasks:${date}`);
-  const qs = new URLSearchParams({ domain: "tasks", date });
-  if (checkpoint?.cursor) qs.set("cursor", checkpoint.cursor);
-  const res = await fetch(`/api/mobile/sync/pull?${qs.toString()}`, {
-    credentials: "include",
-    cache: "no-store",
-    signal,
-  });
-  if (!res.ok) throw new Error(`Tasks ${res.status}`);
-  const json = (await res.json()) as { payload?: Task[]; cursor?: string };
-  if (json.cursor) {
-    await upsertSyncCheckpoint({
-      domain: `tasks:${date}`,
-      cursor: json.cursor,
-      updatedAt: Date.now(),
+  try {
+    const checkpoint = await getSyncCheckpoint(`tasks:${date}`);
+    const qs = new URLSearchParams({ domain: "tasks", date });
+    if (checkpoint?.cursor) qs.set("cursor", checkpoint.cursor);
+    const res = await fetch(`/api/mobile/sync/pull?${qs.toString()}`, {
+      credentials: "include",
+      cache: "no-store",
+      signal,
     });
+    if (!res.ok) throw new Error(`mobile-sync-pull ${res.status}`);
+    const json = (await res.json()) as { payload?: Task[]; cursor?: string };
+    if (json.cursor) {
+      await upsertSyncCheckpoint({
+        domain: `tasks:${date}`,
+        cursor: json.cursor,
+        updatedAt: Date.now(),
+      });
+    }
+    return json.payload ?? [];
+  } catch {
+    // Fallback to existing stable endpoint so Supabase data still loads when mobile sync is unavailable.
+    const res = await fetch(`/api/tasks?date=${encodeURIComponent(date)}`, {
+      credentials: "include",
+      cache: "no-store",
+      signal,
+    });
+    if (!res.ok) throw new Error(`Tasks ${res.status}`);
+    return (await res.json()) as Task[];
   }
-  return json.payload ?? [];
 }
 
 export async function getTasksForDateLocalFirst(

@@ -14,25 +14,36 @@ const DASHBOARD_STALE_MS = 20_000;
 const CACHE_KEY = "dashboard:all";
 
 async function fetchDashboardAllFromServer(signal?: AbortSignal): Promise<DashboardPayload> {
-  const checkpoint = await getSyncCheckpoint("dashboard");
-  const qs = new URLSearchParams({ domain: "dashboard" });
-  if (checkpoint?.cursor) qs.set("cursor", checkpoint.cursor);
-  const res = await fetch(`/api/mobile/sync/pull?${qs.toString()}`, {
-    credentials: "include",
-    cache: "no-store",
-    signal,
-    headers: { "x-neurohq-refresh": "1" },
-  });
-  if (!res.ok) return null;
-  const json = (await res.json()) as { payload?: DashboardPayload; cursor?: string };
-  if (json.cursor) {
-    await upsertSyncCheckpoint({
-      domain: "dashboard",
-      cursor: json.cursor,
-      updatedAt: Date.now(),
+  try {
+    const checkpoint = await getSyncCheckpoint("dashboard");
+    const qs = new URLSearchParams({ domain: "dashboard" });
+    if (checkpoint?.cursor) qs.set("cursor", checkpoint.cursor);
+    const res = await fetch(`/api/mobile/sync/pull?${qs.toString()}`, {
+      credentials: "include",
+      cache: "no-store",
+      signal,
+      headers: { "x-neurohq-refresh": "1" },
     });
+    if (!res.ok) throw new Error(`mobile-sync-pull ${res.status}`);
+    const json = (await res.json()) as { payload?: DashboardPayload; cursor?: string };
+    if (json.cursor) {
+      await upsertSyncCheckpoint({
+        domain: "dashboard",
+        cursor: json.cursor,
+        updatedAt: Date.now(),
+      });
+    }
+    return json.payload ?? null;
+  } catch {
+    const res = await fetch("/api/dashboard/data?part=all", {
+      credentials: "include",
+      cache: "no-store",
+      signal,
+      headers: { "x-neurohq-refresh": "1" },
+    });
+    if (!res.ok) return null;
+    return (await res.json()) as DashboardPayload;
   }
-  return json.payload ?? null;
 }
 
 export async function getDashboardPayloadLocalFirst(

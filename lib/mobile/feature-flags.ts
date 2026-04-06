@@ -25,7 +25,8 @@ function envPercent(name: string, fallback: number): number {
 
 export function isSupabaseFirstMobileEnabled(): boolean {
   const enabled = process.env.NEXT_PUBLIC_MOBILE_SYNC_ENABLED;
-  if (enabled === "0" || enabled === "false") return false;
+  // Safety default: do not hijack existing Supabase data paths unless explicitly enabled.
+  if (enabled !== "1" && enabled !== "true") return false;
   const rollout = envPercent("NEXT_PUBLIC_MOBILE_SYNC_ROLLOUT", 100);
   return readBucket() < rollout;
 }

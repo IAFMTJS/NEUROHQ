@@ -25,24 +25,34 @@ function cacheKey(): string {
 }
 
 async function fetchBudgetContextFromServer(signal?: AbortSignal): Promise<BudgetContextPayload> {
-  const checkpoint = await getSyncCheckpoint("budget");
-  const qs = new URLSearchParams({ domain: "budget" });
-  if (checkpoint?.cursor) qs.set("cursor", checkpoint.cursor);
-  const res = await fetch(`/api/mobile/sync/pull?${qs.toString()}`, {
-    credentials: "include",
-    cache: "no-store",
-    signal,
-  });
-  if (!res.ok) return null;
-  const json = (await res.json()) as { payload?: BudgetContextPayload; cursor?: string };
-  if (json.cursor) {
-    await upsertSyncCheckpoint({
-      domain: "budget",
-      cursor: json.cursor,
-      updatedAt: Date.now(),
+  try {
+    const checkpoint = await getSyncCheckpoint("budget");
+    const qs = new URLSearchParams({ domain: "budget" });
+    if (checkpoint?.cursor) qs.set("cursor", checkpoint.cursor);
+    const res = await fetch(`/api/mobile/sync/pull?${qs.toString()}`, {
+      credentials: "include",
+      cache: "no-store",
+      signal,
     });
+    if (!res.ok) throw new Error(`mobile-sync-pull ${res.status}`);
+    const json = (await res.json()) as { payload?: BudgetContextPayload; cursor?: string };
+    if (json.cursor) {
+      await upsertSyncCheckpoint({
+        domain: "budget",
+        cursor: json.cursor,
+        updatedAt: Date.now(),
+      });
+    }
+    return json.payload ?? null;
+  } catch {
+    const res = await fetch("/api/budget/context", {
+      credentials: "include",
+      cache: "no-store",
+      signal,
+    });
+    if (!res.ok) return null;
+    return (await res.json()) as BudgetContextPayload;
   }
-  return json.payload ?? null;
 }
 
 export async function getBudgetContextLocalFirst(
