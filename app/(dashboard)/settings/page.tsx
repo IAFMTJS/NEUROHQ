@@ -30,6 +30,7 @@ const ThemePicker = nextDynamic(() => import("@/components/settings/ThemePicker"
 const SettingsWhereToConfigure = nextDynamic(() => import("@/components/settings/SettingsWhereToConfigure").then((m) => ({ default: m.SettingsWhereToConfigure })), { loading: () => null });
 const SettingsClearCache = nextDynamic(() => import("@/components/settings/SettingsClearCache").then((m) => ({ default: m.SettingsClearCache })), { loading: () => null });
 const SettingsRefreshSnapshot = nextDynamic(() => import("@/components/settings/SettingsRefreshSnapshot").then((m) => ({ default: m.SettingsRefreshSnapshot })), { loading: () => null });
+const SettingsHardRefresh = nextDynamic(() => import("@/components/settings/SettingsHardRefresh").then((m) => ({ default: m.SettingsHardRefresh })), { loading: () => null });
 const SettingsDCICModeTest = nextDynamic(() => import("@/components/settings/SettingsDCICModeTest").then((m) => ({ default: m.SettingsDCICModeTest })), { loading: () => null });
 const SettingsDcicModeExplain = nextDynamic(() => import("@/components/settings/SettingsDcicModeExplain").then((m) => ({ default: m.SettingsDcicModeExplain })), { loading: () => null });
 const SettingsHelpOnboarding = nextDynamic(() => import("@/components/settings/SettingsHelpOnboarding").then((m) => ({ default: m.SettingsHelpOnboarding })), { loading: () => null });
@@ -120,7 +121,7 @@ async function SettingsContent() {
         id="settings-section-system"
         title="Systeem"
         subtitle="Thema, budget, DCIC en lokale appcontrole"
-        searchText="thema neuro amber emerald dcic modus snapshot cache service worker xp level dark mode budget valuta eur usd impuls drempel periode maand week categorie risk quick add geluid spraak tts"
+        searchText="thema neuro amber emerald dcic modus snapshot cache harde refresh volledig vernieuwen service worker xp level dark mode budget valuta eur usd impuls drempel periode maand week categorie risk quick add geluid spraak tts"
       >
         <ThemePicker />
         <SettingsUiFeedback
@@ -137,6 +138,7 @@ async function SettingsContent() {
         />
         <SettingsDcicModeExplain />
         <SettingsDCICModeTest />
+        <SettingsHardRefresh />
         <SettingsClearCache />
         <SettingsRefreshSnapshot />
       </SettingsSectionCard>
