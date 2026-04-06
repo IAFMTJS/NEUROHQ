@@ -20,11 +20,12 @@ export default memo(function BottomNavigation() {
 
   function RailLink({ link }: { link: BottomNavLink }) {
     const active = pathname === link.href;
+    const prefetchHeavyRoute = link.href === "/tasks" || link.href === "/budget";
     return (
       <Link
         href={link.href}
         className={`nav-item nav-item-fab-rail ${active ? "active" : ""}`}
-        prefetch={false}
+        prefetch={prefetchHeavyRoute}
         aria-label={link.label}
         onClick={(e) => onPriorityNavClick(link.href, e)}
       >
