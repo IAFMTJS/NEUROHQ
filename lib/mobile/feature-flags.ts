@@ -23,7 +23,20 @@ function envPercent(name: string, fallback: number): number {
   return Math.max(0, Math.min(100, Math.floor(value)));
 }
 
+function isNativeCapacitorRuntime(): boolean {
+  if (typeof window === "undefined") return false;
+  const maybeCapacitor = (window as unknown as { Capacitor?: { isNativePlatform?: () => boolean } }).Capacitor;
+  if (!maybeCapacitor || typeof maybeCapacitor.isNativePlatform !== "function") return false;
+  try {
+    return maybeCapacitor.isNativePlatform() === true;
+  } catch {
+    return false;
+  }
+}
+
 export function isSupabaseFirstMobileEnabled(): boolean {
+  // Keep website/PWA on the stable Supabase path; enable this only in native Capacitor runtime.
+  if (!isNativeCapacitorRuntime()) return false;
   const enabled = process.env.NEXT_PUBLIC_MOBILE_SYNC_ENABLED;
   // Safety default: do not hijack existing Supabase data paths unless explicitly enabled.
   if (enabled !== "1" && enabled !== "true") return false;

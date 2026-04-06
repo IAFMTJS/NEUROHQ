@@ -13,6 +13,16 @@ import {
 } from "@/lib/neurohq-device-idb";
 import { isCompatibleSnapshot, LATEST_SNAPSHOT_VERSION } from "@/types/daily-snapshot";
 
+function hasUsableSnapshotData(snapshot: InitializeResult["snapshot"], bootstrapToday: BootstrapTodayResponse | null): boolean {
+  if (bootstrapToday && typeof bootstrapToday === "object") return true;
+  if (snapshot.dashboard != null) return true;
+  if (snapshot.missions != null) return true;
+  if (snapshot.budget != null) return true;
+  if (snapshot.learning != null) return true;
+  if (snapshot.settings != null) return true;
+  return false;
+}
+
 export async function readPersistedDailyInit(
   userId: string,
   validityDayKey: string
@@ -22,6 +32,7 @@ export async function readPersistedDailyInit(
   if (row.userId !== userId || row.validityDayKey !== validityDayKey) return null;
   if (row.snapshotVersion !== LATEST_SNAPSHOT_VERSION) return null;
   if (!isCompatibleSnapshot(row.snapshot)) return null;
+  if (!hasUsableSnapshotData(row.snapshot, row.bootstrapToday)) return null;
   return {
     kind: "fresh",
     snapshot: row.snapshot,
@@ -30,6 +41,7 @@ export async function readPersistedDailyInit(
 }
 
 export async function persistDailyInitResult(userId: string, result: InitializeResult): Promise<void> {
+  if (!hasUsableSnapshotData(result.snapshot, result.bootstrapToday)) return;
   const validityDayKey = getSnapshotValidityDayKey();
   const row: DailyInitPersistedRow = {
     id: DAILY_INIT_RECORD_ID,
@@ -58,6 +70,7 @@ export async function patchPersistedDailyFromBootstrap(bootstrap: BootstrapToday
   if (!isCompatibleSnapshot(row.snapshot)) return;
 
   const merged = mergeBootstrapTodayIntoDailySnapshot(row.snapshot, bootstrap);
+  if (!hasUsableSnapshotData(merged, bootstrap)) return;
   const savedAt = Date.now();
   await putDailyInitRecord({
     ...row,

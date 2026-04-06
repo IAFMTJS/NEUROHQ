@@ -36,6 +36,7 @@ async function fetchBudgetContextFromServer(signal?: AbortSignal): Promise<Budge
     });
     if (!res.ok) throw new Error(`mobile-sync-pull ${res.status}`);
     const json = (await res.json()) as { payload?: BudgetContextPayload; cursor?: string };
+    if (json.payload == null) throw new Error("mobile-sync-pull empty budget payload");
     if (json.cursor) {
       await upsertSyncCheckpoint({
         domain: "budget",

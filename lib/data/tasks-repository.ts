@@ -31,6 +31,7 @@ async function fetchTasksFromServer(date: string, signal?: AbortSignal): Promise
     });
     if (!res.ok) throw new Error(`mobile-sync-pull ${res.status}`);
     const json = (await res.json()) as { payload?: Task[]; cursor?: string };
+    if (!Array.isArray(json.payload)) throw new Error("mobile-sync-pull invalid tasks payload");
     if (json.cursor) {
       await upsertSyncCheckpoint({
         domain: `tasks:${date}`,

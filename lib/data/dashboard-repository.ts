@@ -26,6 +26,7 @@ async function fetchDashboardAllFromServer(signal?: AbortSignal): Promise<Dashbo
     });
     if (!res.ok) throw new Error(`mobile-sync-pull ${res.status}`);
     const json = (await res.json()) as { payload?: DashboardPayload; cursor?: string };
+    if (json.payload == null) throw new Error("mobile-sync-pull empty dashboard payload");
     if (json.cursor) {
       await upsertSyncCheckpoint({
         domain: "dashboard",

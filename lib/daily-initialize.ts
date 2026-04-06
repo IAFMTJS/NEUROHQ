@@ -115,6 +115,15 @@ export async function initializeDailySystem(onProgress?: (p: PreloadProgress) =>
     await yieldToBrowser(onProgress);
   }
 
+  const bootstrapToday = bootstrapTodayCapture;
+  const hasMissionsPayload =
+    bootstrapToday != null ||
+    snapshot.missions != null ||
+    snapshot.dashboard != null;
+  if (!hasMissionsPayload) {
+    throw new Error("Bootstrap did not return any Supabase-backed payload.");
+  }
+
   const completedAt = Date.now();
   const snapshotOut: DailySnapshot = {
     ...snapshot,
@@ -125,7 +134,6 @@ export async function initializeDailySystem(onProgress?: (p: PreloadProgress) =>
     },
   };
 
-  const bootstrapToday = bootstrapTodayCapture;
   bootstrapTodayCapture = null;
 
   return { kind: "fresh", snapshot: snapshotOut, bootstrapToday };
@@ -137,6 +145,8 @@ async function runStep(snapshot: DailySnapshot, step: PreloadStepId): Promise<Da
       try {
         const res = await fetch("/api/bootstrap/today", {
           credentials: "include",
+          cache: "no-store",
+          headers: { "x-neurohq-refresh": "1" },
         });
         if (!res.ok) return snapshot;
         const data = (await res.json()) as {
@@ -186,7 +196,7 @@ async function runStep(snapshot: DailySnapshot, step: PreloadStepId): Promise<Da
         try {
           const calRes = await fetch(
             `/api/tasks/calendar-tab?month=${encodeURIComponent(dateStr.slice(0, 7))}&anchorDate=${encodeURIComponent(dateStr)}`,
-            { credentials: "include" }
+            { credentials: "include", cache: "no-store", headers: { "x-neurohq-refresh": "1" } }
           );
           if (calRes.ok) {
             calendar = (await calRes.json()) as DailySnapshot["calendar"];
@@ -210,6 +220,8 @@ async function runStep(snapshot: DailySnapshot, step: PreloadStepId): Promise<Da
           `/api/xp/context?date=${encodeURIComponent(dateStr)}`,
           {
             credentials: "include",
+            cache: "no-store",
+            headers: { "x-neurohq-refresh": "1" },
           }
         );
         if (!res.ok) return snapshot;
@@ -231,6 +243,8 @@ async function runStep(snapshot: DailySnapshot, step: PreloadStepId): Promise<Da
       try {
         const res = await fetch("/api/strategy/snapshot", {
           credentials: "include",
+          cache: "no-store",
+          headers: { "x-neurohq-refresh": "1" },
         });
         if (!res.ok) return snapshot;
         const data = (await res.json()) as DailySnapshot["strategy"];
@@ -246,6 +260,8 @@ async function runStep(snapshot: DailySnapshot, step: PreloadStepId): Promise<Da
       try {
         const res = await fetch("/api/analytics/snapshot", {
           credentials: "include",
+          cache: "no-store",
+          headers: { "x-neurohq-refresh": "1" },
         });
         if (!res.ok) return snapshot;
         const data = (await res.json()) as DailySnapshot["analytics"];
