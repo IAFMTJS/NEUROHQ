@@ -4,7 +4,7 @@
 // - DYNAMIC_CACHE (per dag): HTML/API offline fallback; _next/static JS/CSS = network-first, daarna cache voor offline
 // - IndexedDB (neurohq-offline): offline mutaties (POST/PUT etc.) → gesynchroniseerd zodra er weer netwerk is
 // Bump this when UI/layout changes so authenticated HTML cache doesn't keep old shells after refresh.
-const CACHE_VERSION = "v26";
+const CACHE_VERSION = "v27";
 const STATIC_CACHE = `neurohq-static-${CACHE_VERSION}`;
 const OFFLINE_PAGE = "/offline";
 
@@ -96,14 +96,6 @@ function looksLikeJsonResponse(response) {
   try {
     const ct = response && response.headers ? response.headers.get("content-type") : null;
     return typeof ct === "string" && ct.toLowerCase().includes("application/json");
-  } catch {
-    return false;
-  }
-}
-
-function shouldForceRefreshFromNetwork(request) {
-  try {
-    return request && request.headers && request.headers.get("x-neurohq-refresh") === "1";
   } catch {
     return false;
   }
@@ -622,82 +614,46 @@ self.addEventListener("fetch", function (event) {
       return;
     }
 
-    // GETs: snapshot endpoints = cache-first + background revalidate (keep UI instant all day).
-    // When the app explicitly forces a refresh (x-neurohq-refresh: 1), do network-first and update cache.
+    // GETs: snapshot endpoints = network-first (same as other /api GETs). Cache-first here made the PWA
+    // serve stale JSON for /api/tasks, /api/dashboard/data, etc. when fetches omit x-neurohq-refresh —
+    // browser tabs could look fine while the installed PWA kept yesterday/empty snapshots. Update cache on
+    // successful JSON; fall back to cache only when the network fails (offline).
     if (method === "GET" && isSnapshotApiRequest(url)) {
       safeRespondWith(event, function () {
         return caches.open(getDynamicCacheName()).then(function (cache) {
-          if (shouldForceRefreshFromNetwork(event.request)) {
-            return fetch(event.request)
-              .then(function (response) {
-                if (response && response.status === 304) {
-                  return cache.match(event.request).then(function (cached) {
-                    if (cached) return cached;
-                    var u = event.request.url;
-                    u += (u.indexOf("?") >= 0 ? "&" : "?") + "_swbust=" + Date.now();
-                    return fetch(
-                      new Request(u, {
-                        method: "GET",
-                        credentials: event.request.credentials,
-                        headers: event.request.headers,
-                        cache: "no-store",
-                      })
-                    ).then(function (r2) {
-                      if (r2 && r2.ok && looksLikeJsonResponse(r2)) {
-                        safeCachePut(cache, event.request, r2.clone());
-                      }
-                      return r2;
-                    });
-                  });
-                }
-                if (response && response.ok && looksLikeJsonResponse(response)) {
-                  safeCachePut(cache, event.request, response.clone());
-                }
-                return response;
-              })
-              .catch(function () {
-                return cache.match(event.request).then(function (c) {
-                  return (
-                    c ||
-                    new Response(JSON.stringify({ error: "Offline" }), {
-                      status: 503,
-                      headers: { "Content-Type": "application/json" },
+          function fetchSnapshot(req) {
+            return fetch(req).then(function (response) {
+              if (response && response.status === 304) {
+                return cache.match(event.request).then(function (cached) {
+                  if (cached) return cached;
+                  var u = event.request.url;
+                  u += (u.indexOf("?") >= 0 ? "&" : "?") + "_swbust=" + Date.now();
+                  return fetchSnapshot(
+                    new Request(u, {
+                      method: "GET",
+                      credentials: event.request.credentials,
+                      headers: event.request.headers,
+                      cache: "no-store",
                     })
                   );
                 });
-              });
+              }
+              if (response && response.ok && looksLikeJsonResponse(response)) {
+                safeCachePut(cache, event.request, response.clone());
+              }
+              return response;
+            });
           }
-          return cache.match(event.request).then(function (cached) {
-            if (cached) {
-              // Revalidate in the background; do not block the UI.
-              fetch(event.request)
-                .then(function (response) {
-                  if (response && response.ok && looksLikeJsonResponse(response)) {
-                    safeCachePut(cache, event.request, response.clone());
-                  }
+          return fetchSnapshot(event.request).catch(function () {
+            return cache.match(event.request).then(function (c) {
+              return (
+                c ||
+                new Response(JSON.stringify({ error: "Offline" }), {
+                  status: 503,
+                  headers: { "Content-Type": "application/json" },
                 })
-                .catch(function () {});
-              return cached;
-            }
-            // No cached snapshot yet: fetch and cache; fallback to cached JSON when offline.
-            return fetch(event.request)
-              .then(function (response) {
-                if (response.ok && looksLikeJsonResponse(response)) {
-                  safeCachePut(cache, event.request, response.clone());
-                }
-                return response;
-              })
-              .catch(function () {
-                return cache.match(event.request).then(function (c) {
-                  return (
-                    c ||
-                    new Response(JSON.stringify({ error: "Offline" }), {
-                      status: 503,
-                      headers: { "Content-Type": "application/json" },
-                    })
-                  );
-                });
-              });
+              );
+            });
           });
         });
       });

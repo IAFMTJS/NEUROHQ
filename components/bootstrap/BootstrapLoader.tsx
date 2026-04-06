@@ -91,6 +91,12 @@ export function BootstrapLoader({ onReady }: Props) {
         const dayKey = getSnapshotValidityDayKey();
         const userId = await resolveSessionUserIdForBootstrap();
 
+        // PWA/standalone: align Supabase cookies with storage before any /api/* fetch (SW always intercepts).
+        if (!cancelled && userId && isStandaloneDisplayMode()) {
+          const supabase = createClient();
+          await supabase.auth.refreshSession().catch(() => {});
+        }
+
         if (userId && !cancelled) {
           requestDurableStorage();
           const cached = await readPersistedDailyInit(userId, dayKey);
