@@ -4,6 +4,7 @@ import { useState, useTransition } from "react";
 import { updatePushQuoteTime, updatePushQuietHours, type QuietHours } from "@/app/actions/auth";
 import { updateUserPreferences } from "@/app/actions/preferences";
 import { useSettings } from "@/lib/settings-context";
+import { writeUiFeedbackLocalPartial } from "@/lib/audio/ui-feedback-storage";
 import { ensurePushSubscription, isPushConfigured, removePushSubscription, supportsPush } from "@/lib/push-client";
 
 // Persist last-saved values so remounts (e.g. React Strict Mode) don't revert to stale server props.
@@ -61,6 +62,9 @@ export function SettingsPush({
     startPrefsTransition(async () => {
       try {
         await updateUserPreferences(next);
+        if (next.push_personality_mode !== undefined) {
+          writeUiFeedbackLocalPartial({ push_personality_mode: next.push_personality_mode });
+        }
         await invalidateSettings();
       } catch (e) {
         setMessage(e instanceof Error ? e.message : "Could not save push reminder settings.");

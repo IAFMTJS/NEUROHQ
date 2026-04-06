@@ -34,11 +34,13 @@ export function QuestCampaignDock() {
         <button
           type="button"
           onClick={() => setOpen(true)}
-          className="quest-fab fixed right-[max(12px,env(safe-area-inset-right))] top-[calc(env(safe-area-inset-top,0px)+4.5rem)] z-[45] flex h-14 w-14 items-center justify-center rounded-full border border-violet-400/50 bg-gradient-to-br from-violet-600/90 to-indigo-900/95 text-2xl shadow-[0_8px_32px_rgba(139,92,246,0.45)] outline-none transition hover:scale-[1.04] hover:border-violet-300/70 focus-visible:ring-2 focus-visible:ring-violet-400/80"
+          className="quest-fab group fixed right-[max(12px,env(safe-area-inset-right))] top-[calc(env(safe-area-inset-top,0px)+4.5rem)] z-[45] flex h-14 w-14 items-center justify-center rounded-full border border-violet-300/45 bg-gradient-to-br from-violet-500/95 via-violet-700/90 to-indigo-950/95 text-2xl shadow-[0_4px_0_rgba(49,46,129,0.5),0_12px_40px_rgba(139,92,246,0.42)] outline-none ring-2 ring-violet-400/25 transition hover:scale-[1.06] hover:border-violet-200/55 hover:shadow-[0_4px_0_rgba(49,46,129,0.55),0_16px_48px_rgba(167,139,250,0.5)] focus-visible:ring-2 focus-visible:ring-violet-300 focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--bg-base,#0f0a1a)]"
           aria-label="Open platformquest"
-          title="Quest"
+          title="Platformquest"
         >
-          <span aria-hidden>🧩</span>
+          <span className="drop-shadow-[0_2px_6px_rgba(0,0,0,0.35)] transition group-hover:scale-110" aria-hidden>
+            🧩
+          </span>
         </button>
       ) : null}
       <QuestCampaignModal open={open} onClose={() => setOpen(false)} />

@@ -122,18 +122,12 @@ function challengeStepForLog(def: QuestDayDef, state: QuestProgressState, day: n
   return state.sub?.[String(day)] ?? 0;
 }
 
-/** Finale-XP: eerst normale addXP; bij falen service role (cron/edge cases). */
-async function grantQuestFinaleXp(userId: string, points: number): Promise<boolean> {
+/** Alleen service role — als gewone addXP faalt (edge cases). */
+async function applyQuestFinaleXpServiceRoleFallback(userId: string, points: number): Promise<boolean> {
   if (points <= 0) return true;
-  const r = await addXP(points, {
-    source_type: "platform_quest_finale",
-    skipOverdriveMultiplier: true,
-  });
-  if (r != null) return true;
-
   const admin = createServiceRoleClient();
   if (!admin) {
-    console.error("grantQuestFinaleXp: no service role client");
+    console.error("applyQuestFinaleXpServiceRoleFallback: no service role client");
     return false;
   }
   const { data: existing } = await admin.from("user_xp").select("total_xp").eq("user_id", userId).maybeSingle();
@@ -145,7 +139,7 @@ async function grantQuestFinaleXp(userId: string, points: number): Promise<boole
     { onConflict: "user_id" }
   );
   if (uerr) {
-    console.error("grantQuestFinaleXp fallback user_xp:", uerr.message);
+    console.error("quest finale XP fallback user_xp:", uerr.message);
     return false;
   }
   const { error: ierr } = await admin.from("xp_events").insert({
@@ -154,7 +148,7 @@ async function grantQuestFinaleXp(userId: string, points: number): Promise<boole
     source_type: "platform_quest_finale",
     task_id: null,
   });
-  if (ierr) console.error("grantQuestFinaleXp fallback xp_events:", ierr.message);
+  if (ierr) console.error("quest finale XP fallback xp_events:", ierr.message);
   revalidatePath("/dashboard");
   revalidatePath("/profile");
   revalidatePath("/learning");
@@ -249,16 +243,49 @@ export async function getQuestCampaignPublicStatus(): Promise<QuestClientPayload
   };
 }
 
-async function grantQuestRewards(
+type QuestGrantRow = {
+  reward_xp: number;
+  reward_flex_percent_bp: number;
+  achievement_key: string;
+  slug: string;
+  badge_label: string;
+};
+
+export type QuestClaimRewardsResult =
+  | { ok: true; alreadyClaimed: true }
+  | {
+      ok: true;
+      alreadyClaimed: false;
+      xp: number;
+      pointsApplied: number;
+      flexPercentBp: number;
+      flexAppliedCents: number | null;
+      flexSkippedReason?: string;
+      badgeLabel: string;
+      levelUp: boolean;
+      newLevel?: number;
+    }
+  | { ok: false; error: string };
+
+/** Eén keer uitvoeren na expliciet claimen; idempotent bij dubbele aanroep. */
+async function grantQuestRewardsOnce(
   userId: string,
   campaignId: string,
-  row: {
-    reward_xp: number;
-    reward_flex_percent_bp: number;
-    achievement_key: string;
-    slug: string;
-  }
-): Promise<void> {
+  row: QuestGrantRow
+): Promise<
+  | { status: "already" }
+  | {
+      status: "granted";
+      xp: number;
+      pointsApplied: number;
+      flexPercentBp: number;
+      flexAppliedCents: number | null;
+      flexSkippedReason?: string;
+      badgeLabel: string;
+      levelUp: boolean;
+      newLevel?: number;
+    }
+> {
   const supabase = await createClient();
   const { data: grantRow } = await supabase
     .from("user_quest_campaign_progress")
@@ -266,21 +293,39 @@ async function grantQuestRewards(
     .eq("user_id", userId)
     .eq("campaign_id", campaignId)
     .maybeSingle();
-  if (grantRow?.rewards_granted_at) return;
+  if (grantRow?.rewards_granted_at) return { status: "already" };
 
   const idBase = `quest:${campaignId}`;
+  let pointsApplied = 0;
+  let levelUp = false;
+  let newLevel: number | undefined;
 
-  const xpOk = await grantQuestFinaleXp(userId, row.reward_xp);
-  if (row.reward_xp > 0 && !xpOk) {
-    console.error("grantQuestRewards: finale XP niet toegekend voor user", userId);
+  if (row.reward_xp > 0) {
+    const xpR = await addXP(row.reward_xp, {
+      source_type: "platform_quest_finale",
+      skipOverdriveMultiplier: true,
+    });
+    if (xpR) {
+      pointsApplied = xpR.pointsApplied;
+      levelUp = xpR.levelUp;
+      newLevel = xpR.newLevel;
+    } else {
+      const xpOk = await applyQuestFinaleXpServiceRoleFallback(userId, row.reward_xp);
+      if (!xpOk) console.error("grantQuestRewardsOnce: finale XP niet toegekend voor user", userId);
+      else pointsApplied = row.reward_xp;
+    }
   }
 
-  await grantFlexPercentOfCapBonus({
+  let flexAppliedCents: number | null = null;
+  let flexSkippedReason: string | undefined;
+  const flexRes = await grantFlexPercentOfCapBonus({
     percentBp: row.reward_flex_percent_bp,
     idempotencyKey: `${idBase}:flex_bonus`,
     reason: "platform_quest_finale",
     meta: { campaign_id: campaignId, slug: row.slug },
   });
+  if ("appliedCents" in flexRes) flexAppliedCents = flexRes.appliedCents;
+  else flexSkippedReason = flexRes.reason;
 
   const { error: achErr } = await supabase.from("achievements").insert({
     user_id: userId,
@@ -291,14 +336,87 @@ async function grantQuestRewards(
     console.error("quest achievement insert:", achErr.message);
   }
 
+  const nowIso = new Date().toISOString();
   await supabase
     .from("user_quest_campaign_progress")
     .update({
-      rewards_granted_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
+      rewards_granted_at: nowIso,
+      updated_at: nowIso,
     })
     .eq("user_id", userId)
     .eq("campaign_id", campaignId);
+
+  return {
+    status: "granted",
+    xp: row.reward_xp,
+    pointsApplied,
+    flexPercentBp: row.reward_flex_percent_bp,
+    flexAppliedCents,
+    flexSkippedReason,
+    badgeLabel: row.badge_label,
+    levelUp,
+    newLevel,
+  };
+}
+
+export async function claimQuestCampaignRewards(campaignId: string): Promise<QuestClaimRewardsResult> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { ok: false, error: "Niet ingelogd." };
+
+  const { data: row, error: rowErr } = await supabase
+    .from("platform_quest_campaigns")
+    .select("*")
+    .eq("id", campaignId)
+    .maybeSingle();
+  if (rowErr || !row) return { ok: false, error: "Quest niet gevonden." };
+
+  const content = parseQuestContent(row.content as Json);
+  if (!content) return { ok: false, error: "Quest-inhoud ontbreekt." };
+
+  const { data: progRow } = await supabase
+    .from("user_quest_campaign_progress")
+    .select("state, rewards_granted_at")
+    .eq("user_id", user.id)
+    .eq("campaign_id", campaignId)
+    .maybeSingle();
+
+  if (!progRow) return { ok: false, error: "Geen voortgang voor deze quest." };
+
+  const state = parseQuestProgressState((progRow.state as Json) ?? undefined);
+  if (!isQuestFullyComplete(content, state)) {
+    return { ok: false, error: "Quest is nog niet voltooid." };
+  }
+
+  const g = await grantQuestRewardsOnce(user.id, campaignId, {
+    reward_xp: row.reward_xp,
+    reward_flex_percent_bp: row.reward_flex_percent_bp,
+    achievement_key: row.achievement_key,
+    slug: row.slug,
+    badge_label: row.badge_label,
+  });
+
+  if (g.status === "already") return { ok: true, alreadyClaimed: true };
+
+  revalidatePath("/dashboard");
+  revalidatePath("/profile");
+  revalidatePath("/budget");
+  revalidatePath("/learning");
+
+  return {
+    ok: true,
+    alreadyClaimed: false,
+    xp: g.xp,
+    pointsApplied: g.pointsApplied,
+    flexPercentBp: g.flexPercentBp,
+    flexAppliedCents: g.flexAppliedCents,
+    flexSkippedReason: g.flexSkippedReason,
+    badgeLabel: g.badgeLabel,
+    levelUp: g.levelUp,
+    newLevel: g.newLevel,
+  };
 }
 
 export type SubmitQuestAnswerResult =
@@ -434,16 +552,6 @@ export async function submitQuestAnswer(campaignId: string, answer: string): Pro
     onConflict: "user_id,campaign_id",
   });
   if (upErr) return { ok: false, error: upErr.message };
-
-  const fullyDone = isQuestFullyComplete(content, newState);
-  if (fullyDone && !progRow?.rewards_granted_at) {
-    await grantQuestRewards(user.id, campaignId, {
-      reward_xp: row.reward_xp,
-      reward_flex_percent_bp: row.reward_flex_percent_bp,
-      achievement_key: row.achievement_key,
-      slug: row.slug,
-    });
-  }
 
   revalidatePath("/dashboard");
   revalidatePath("/profile");

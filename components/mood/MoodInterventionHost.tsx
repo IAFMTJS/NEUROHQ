@@ -12,6 +12,7 @@ import {
 } from "@/app/actions/mood-intervention";
 import { MOOD_QUICK_ACTIONS } from "@/lib/mood-intervention-config";
 import { neuroToast } from "@/lib/ui/neuro-toast";
+import { playUiSound } from "@/lib/audio/ui-sounds";
 
 const STORAGE_KEY = "neurohq-mood-auto-toast";
 
@@ -121,6 +122,8 @@ export function MoodInterventionHost() {
           }
 
           void recordMoodToastShown(candidate.triggerId);
+
+          playUiSound("nudge");
 
           toast.custom(
             (tid) => (

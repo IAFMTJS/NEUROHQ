@@ -2,7 +2,7 @@
 
 import { useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { toast } from "sonner";
+import { neuroToast } from "@/lib/ui/neuro-toast";
 import { upsertStrategyReview } from "@/app/actions/strategyFocus";
 import type { StrategyWeeklyReviewPayload } from "@/lib/strategy/weekly-review-payload";
 import { STRATEGY_REVIEW_PILLAR_KEYS } from "@/lib/strategy/weekly-review-payload";
@@ -76,10 +76,10 @@ export function StrategyReviewTabPanel({
           alignment_score: lastAlignmentScore ?? undefined,
           weeklyReviewPayload: payload,
         });
-        toast.success("Wekelijkse review opgeslagen. Je kunt weer verder door de app.");
+        neuroToast.success("Wekelijkse review opgeslagen. Je kunt weer verder door de app.");
         router.refresh();
       } catch (err) {
-        toast.error(err instanceof Error ? err.message : "Opslaan mislukt.");
+        neuroToast.error(err instanceof Error ? err.message : "Opslaan mislukt.");
       }
     });
   }

@@ -97,6 +97,10 @@ export function DashboardLayoutClient({
     if (d) setTodayDate(d);
   }, [bootstrapQuery.data?.date, dailySnapshot?.date, setTodayDate]);
 
+  useEffect(() => {
+    void import("@/lib/audio/ui-audio-context").then((m) => m.ensureUiAudioUnlockListeners());
+  }, []);
+
   /** Keeps HQ store aligned with `/api/bootstrap/today` between navigations. */
   usePeriodicBootstrapRefresh(PERIODIC_SNAPSHOT_REFRESH_MINUTES);
 

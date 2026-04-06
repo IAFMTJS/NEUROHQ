@@ -12,7 +12,7 @@ import {
   updateEducationOption,
   updateMonthlyBookTitle,
 } from "@/app/actions/learning";
-import { toast } from "sonner";
+import { neuroToast } from "@/lib/ui/neuro-toast";
 import { Modal } from "@/components/Modal";
 
 type Props = {
@@ -100,11 +100,11 @@ export const GrowthStreamsList: FC<Props> = ({ streams }) => {
                     } else {
                       await updateMonthlyBookTitle(editTarget.id, t);
                     }
-                    toast.success("Stream bijgewerkt.");
+                    neuroToast.success("Stream bijgewerkt.");
                     setEditTarget(null);
                     router.refresh();
                   } catch (e) {
-                    toast.error(e instanceof Error ? e.message : "Opslaan mislukt.");
+                    neuroToast.error(e instanceof Error ? e.message : "Opslaan mislukt.");
                   }
                 });
               }}
@@ -134,11 +134,11 @@ export const GrowthStreamsList: FC<Props> = ({ streams }) => {
                     } else {
                       await deleteMonthlyBook(deleteTarget.id);
                     }
-                    toast.success("Stream verwijderd.");
+                    neuroToast.success("Stream verwijderd.");
                     setDeleteTarget(null);
                     router.refresh();
                   } catch (e) {
-                    toast.error(e instanceof Error ? e.message : "Verwijderen mislukt.");
+                    neuroToast.error(e instanceof Error ? e.message : "Verwijderen mislukt.");
                   }
                 });
               }}

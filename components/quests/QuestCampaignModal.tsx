@@ -3,8 +3,10 @@
 import Image from "next/image";
 import { useCallback, useEffect, useState, useTransition } from "react";
 import { Modal } from "@/components/Modal";
-import { submitQuestAnswer, type QuestClientPayload } from "@/app/actions/quest-campaign";
+import { claimQuestCampaignRewards, submitQuestAnswer, type QuestClientPayload } from "@/app/actions/quest-campaign";
+import { buildQuestClaimCelebrationMessage } from "@/lib/platform-reward-celebration";
 import { neuroToast } from "@/lib/ui/neuro-toast";
+import { showLevelUpCelebration } from "@/lib/ui/level-up-celebration";
 import { QuestAnswerHistoryList } from "@/components/quests/QuestAnswerHistoryList";
 
 async function fetchQuest(): Promise<QuestClientPayload | null> {
@@ -109,9 +111,9 @@ export function QuestCampaignModal({ open, onClose }: Props) {
                   setAnswer("");
                   await refresh();
                   if (res.completed) {
-                    neuroToast.success(
-                      `Quest voltooid! +${status.rewardXp} XP, +${(status.rewardFlexPercentBp / 100).toFixed(0)}% flex (indien actief), badge: ${status.badgeLabel}.`
-                    );
+                    neuroToast.success("Je hebt de quest voltooid. Claim je beloning om XP en flex op je account te zetten.", {
+                      duration: 6500,
+                    });
                   }
                 });
               }}
@@ -127,7 +129,32 @@ export function QuestCampaignModal({ open, onClose }: Props) {
         <p className="text-sm text-[var(--text-muted)]">Laden…</p>
       ) : (
         <div className="space-y-4">
-          <div className="rounded-lg border border-amber-500/30 bg-amber-500/10 px-3 py-2.5">
+          {!status.completed && status.maxDay > 0 ? (
+            <div className="rounded-xl border border-violet-500/25 bg-gradient-to-r from-violet-950/40 to-[var(--bg-surface)]/30 px-3 py-2.5">
+              <div className="flex items-center justify-between text-[11px] font-medium text-[var(--text-muted)]">
+                <span>Quest-voortgang</span>
+                <span>
+                  Dag {Math.min(status.eventDay, status.maxDay)}/{status.maxDay}
+                </span>
+              </div>
+              <div
+                className="mt-2 h-2 overflow-hidden rounded-full bg-black/25 ring-1 ring-violet-500/20"
+                role="progressbar"
+                aria-valuenow={Math.min(status.eventDay, status.maxDay)}
+                aria-valuemin={0}
+                aria-valuemax={status.maxDay}
+                aria-label={`Dag ${Math.min(status.eventDay, status.maxDay)} van ${status.maxDay}`}
+              >
+                <div
+                  className="h-full rounded-full bg-gradient-to-r from-violet-500 to-fuchsia-500"
+                  style={{
+                    width: `${Math.min(100, Math.round((Math.min(status.eventDay, status.maxDay) / status.maxDay) * 100))}%`,
+                  }}
+                />
+              </div>
+            </div>
+          ) : null}
+          <div className="rounded-xl border border-amber-500/30 bg-gradient-to-br from-amber-500/12 to-amber-950/25 px-3 py-2.5">
             <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-amber-200/90">Prijs bij voltooiing</p>
             <p className="mt-1 text-sm font-medium text-amber-50/95">{status.prizeLine}</p>
           </div>
@@ -138,14 +165,53 @@ export function QuestCampaignModal({ open, onClose }: Props) {
           ) : null}
 
           {status.completed ? (
-            <div className="rounded-xl border border-emerald-500/30 bg-emerald-500/10 p-4 text-sm text-emerald-100">
+            <div className="rounded-xl border border-emerald-500/35 bg-gradient-to-br from-emerald-500/15 to-emerald-950/20 p-4 text-sm text-emerald-100 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]">
               <p className="font-semibold">Je hebt de reis voltooid.</p>
               {status.rewardsGranted ? (
                 <p className="mt-2 text-xs text-emerald-200/90">
-                  Beloningen zijn toegekend (o.a. {status.badgeLabel}).
+                  Beloning geclaimd — badge: {status.badgeLabel}.
                 </p>
               ) : (
-                <p className="mt-2 text-xs text-emerald-200/90">Beloningen worden verwerkt…</p>
+                <>
+                  <p className="mt-2 text-xs text-emerald-200/90">
+                    Tik op onderstaande knop om je XP, flexbudget (indien actief) en badge te ontvangen.
+                  </p>
+                  <button
+                    type="button"
+                    disabled={pending}
+                    onClick={() => {
+                      startTransition(async () => {
+                        const res = await claimQuestCampaignRewards(status.campaignId);
+                        if (!res.ok) {
+                          neuroToast.error(res.error);
+                          return;
+                        }
+                        if (res.alreadyClaimed) {
+                          neuroToast.info("Deze beloning had je al geclaimd.");
+                          await refresh();
+                          return;
+                        }
+                        if (res.levelUp && typeof res.newLevel === "number") {
+                          showLevelUpCelebration({ newLevel: res.newLevel });
+                        }
+                        neuroToast.success(
+                          buildQuestClaimCelebrationMessage({
+                            pointsApplied: res.pointsApplied,
+                            flexPercentBp: res.flexPercentBp,
+                            flexAppliedCents: res.flexAppliedCents,
+                            flexSkippedReason: res.flexSkippedReason,
+                            badgeLabel: res.badgeLabel,
+                          }),
+                          { duration: 10_000 }
+                        );
+                        await refresh();
+                      });
+                    }}
+                    className="mt-4 w-full rounded-xl bg-gradient-to-r from-amber-500/90 to-amber-600/90 px-4 py-3 text-sm font-bold text-amber-950 shadow-[inset_0_1px_0_rgba(255,255,255,0.25)] ring-1 ring-amber-300/50 hover:from-amber-400 hover:to-amber-500 disabled:opacity-50 sm:w-auto"
+                  >
+                    {pending ? "…" : "Beloning claimen"}
+                  </button>
+                </>
               )}
             </div>
           ) : null}
@@ -173,10 +239,8 @@ export function QuestCampaignModal({ open, onClose }: Props) {
 
           {puzzle ? (
             <>
-              <div>
-                <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[var(--text-muted)]">
-                  {puzzle.headline}
-                </p>
+              <div className="rounded-xl border border-violet-500/20 bg-violet-950/20 px-3 py-2.5">
+                <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-violet-200/90">{puzzle.headline}</p>
                 {puzzle.kind === "multi" && puzzle.stepTotal != null ? (
                   <p className="mt-1 text-xs text-[var(--text-muted)]">
                     Deel {(puzzle.stepIndex ?? 0) + 1} van {puzzle.stepTotal}

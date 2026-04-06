@@ -5,6 +5,7 @@ import { useTheme } from "./ThemeProvider";
 import { useBootstrap } from "./BootstrapProvider";
 import { getUserPreferencesOrDefaults } from "@/app/actions/preferences";
 import { applyServerPersonaToLocalStorage } from "@/lib/user-persona-storage";
+import { syncUiFeedbackFromPreferences } from "@/lib/audio/ui-feedback-storage";
 
 /** Call once when inside authenticated area to sync theme/emotion from server. Prefers bootstrap preferences when available to avoid duplicate fetch. */
 export function ThemeHydrate() {
@@ -26,6 +27,7 @@ export function ThemeHydrate() {
               hq_headline: prefs.hq_headline,
               greeting_locale: prefs.greeting_locale,
             });
+            syncUiFeedbackFromPreferences(prefs);
             // Standard display only (compact / reduced-motion toggles removed from settings).
             const nextReduced = "false";
             const nextCompact = "false";

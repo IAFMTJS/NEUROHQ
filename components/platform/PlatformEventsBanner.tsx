@@ -62,18 +62,33 @@ export function PlatformEventsBanner() {
       {visible.map((e) => (
         <div
           key={e.id}
-          className="relative rounded-xl border border-cyan-500/35 bg-gradient-to-r from-cyan-950/50 to-slate-900/60 px-3 py-2.5 pr-10 shadow-[0_0_24px_rgba(34,211,238,0.12)]"
+          className="relative overflow-hidden rounded-2xl border border-cyan-500/35 bg-gradient-to-br from-cyan-950/65 via-slate-950/45 to-slate-900/50 px-3 py-3 pr-11 shadow-[0_12px_40px_rgba(8,145,178,0.2),inset_0_1px_0_rgba(255,255,255,0.06)]"
         >
+          <div
+            className="pointer-events-none absolute -right-10 -top-14 h-36 w-36 rounded-full bg-cyan-400/12 blur-2xl"
+            aria-hidden
+          />
           <button
             type="button"
             onClick={() => dismiss(e.id)}
-            className="absolute right-2 top-2 flex h-7 w-7 items-center justify-center rounded-lg text-lg leading-none text-white/50 hover:bg-white/10 hover:text-white"
+            className="absolute right-2 top-2 z-[1] flex h-8 w-8 items-center justify-center rounded-xl text-lg leading-none text-white/45 transition hover:bg-white/10 hover:text-white"
             aria-label="Bericht sluiten"
           >
             ×
           </button>
-          <p className="text-xs font-semibold uppercase tracking-wide text-cyan-200/90">{e.title}</p>
-          <p className="mt-1 whitespace-pre-wrap text-sm text-white/85">{e.body}</p>
+          <div className="relative flex gap-2.5 pr-2">
+            <span
+              className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-cyan-500/20 text-sm ring-1 ring-cyan-400/25"
+              aria-hidden
+            >
+              📣
+            </span>
+            <div className="min-w-0 flex-1">
+              <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-cyan-300/85">Platformbericht</p>
+              <p className="text-sm font-semibold text-white/95">{e.title}</p>
+              <p className="mt-1.5 whitespace-pre-wrap text-sm leading-relaxed text-white/78">{e.body}</p>
+            </div>
+          </div>
         </div>
       ))}
     </div>

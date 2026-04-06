@@ -85,8 +85,9 @@ export default async function AdminQuestsPage({ searchParams }: Props) {
           <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-amber-400/90">Quest</p>
           <h1 className="text-xl font-semibold text-white">Multi-day platformquest</h1>
           <p className="mt-1 max-w-2xl text-sm text-white/50">
-            Bewerk inhoud (JSON), start- en eindtijd, beloningen en badge. Gebruikers zien een 🧩-icoon op het dashboard
-            wanneer er die dag iets open staat; op het profiel blijft de quest altijd bereikbaar tijdens het event.
+            Bewerk dagen in de visuele editor (per puzzeltype: teksten, antwoorden, coördinaten) of via ruwe JSON. Start/einde,
+            beloningen en badge staan hieronder. Spelers zien een quest op het dashboard wanneer er die dag iets open staat;
+            op het profiel blijft de quest bereikbaar tijdens het event.
           </p>
         </div>
         <div className="flex flex-shrink-0 flex-wrap items-center gap-2">

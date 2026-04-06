@@ -26,19 +26,21 @@ export function getDefaultKatsuoQuestContent(): QuestCampaignContent {
         day: 2,
         headline: "Dag 2 — Kernwaarde",
         kind: "riddle",
-        riddle: "Ik buig zonder te breken.\nIk toon kracht door stilte.",
+        riddle:
+          "Ik buig zonder te breken.\nIk toon kracht door stilte.\nIk sta er principieel op en het moet wederzijds",
         accepts: ["respect", "respects"],
-        unlockMessage: "Woord van de dag: EER.",
-        unlockWord: "EER",
+        unlockMessage: "Woord van de dag: RESPECT.",
+        unlockWord: "RESPECT",
       },
       {
         day: 3,
         headline: "Dag 3 — Religie",
         kind: "riddle",
-        riddle: "Ik aanbid geen god, maar vele geesten.\nIk leef in natuur, niet in boeken.",
+        riddle:
+          "Ik aanbid geen god, maar vele geesten.\nIk leef in natuur, niet in boeken. Ik ben een vorm van iets maar geen object. Je vindt me er al sinds de EDO periode",
         accepts: ["shinto", "shintoisme", "shintoïsme", "shintoism"],
-        unlockMessage: "Woord van de dag: TRADITIE.",
-        unlockWord: "TRADITIE",
+        unlockMessage: "Woord van de dag: Geloof.",
+        unlockWord: "Shintoisme",
       },
       {
         day: 4,
@@ -56,7 +58,8 @@ export function getDefaultKatsuoQuestContent(): QuestCampaignContent {
         intro: "Eerst het gerecht, dan de stad.",
         steps: [
           {
-            riddle: "Rond, heet en uit de straat geboren.\nMijn hart komt uit de zee.",
+            riddle:
+              "Rond, heet en uit de straat geboren.\nMijn hart komt uit de zee. Mijn bolster uit deeg. Ik ben een kenmerk",
             accepts: ["takoyaki"],
           },
           {
@@ -71,7 +74,8 @@ export function getDefaultKatsuoQuestContent(): QuestCampaignContent {
         day: 6,
         headline: "Dag 6 — Richting",
         kind: "riddle",
-        riddle: "Ik ben geen plaats, maar ik breng je ernaartoe.\nZonder mij ben je verloren.",
+        riddle:
+          "Ik ben geen plaats, maar ik breng je ernaartoe.\nZonder mij ben je verloren wanneer je moderne hulpmiddelen falen.",
         accepts: ["kompas", "compass"],
         unlockMessage: "Woord van de dag: NOORD.",
         unlockWord: "NOORD",
@@ -80,7 +84,8 @@ export function getDefaultKatsuoQuestContent(): QuestCampaignContent {
         day: 7,
         headline: "Dag 7 — Visuele clue",
         kind: "riddle",
-        riddle: "Ik val, maar sta altijd weer op.",
+        riddle:
+          "Ik val, maar sta altijd weer op. Je kan mij kopen maar ik ben hier niet origineel. Sommigen vinden me eng en voor sommige breng ik geluk",
         accepts: ["daruma"],
         unlockMessage: "Woord van de dag: VOLHARDING.",
         unlockWord: "VOLHARDING",
@@ -118,7 +123,8 @@ export function getDefaultKatsuoQuestContent(): QuestCampaignContent {
         day: 10,
         headline: "Dag 10 — Finale",
         kind: "coords",
-        riddle: "Je kent de plaats.\nAlleen wie exact is, bereikt ze.\nVoer de coördinaten in (breedtegraad, lengtegraad).",
+        riddle:
+          "Je kent de plaats.\nAlleen wie exact is, bereikt ze.\nVoer de coördinaten in (breedtegraad, lengtegraad).",
         acceptCoords: { lat: 34.865736, lng: 135.491608, epsilon: 0.004 },
         unlockMessage: "Je bent gearriveerd.",
         unlockWord: "34.865736, 135.491608",

@@ -2,7 +2,7 @@
 
 import { useState, useTransition, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { toast } from "sonner";
+import { neuroToast } from "@/lib/ui/neuro-toast";
 import { Modal } from "@/components/Modal";
 import { updateManualEvent } from "@/app/actions/calendar";
 
@@ -52,7 +52,7 @@ export function EditCalendarEventModal({
     const startDate = new Date(start);
     const endDate = new Date(end);
     if (!title.trim() || endDate <= startDate) {
-      toast.error("Titel invullen en eindtijd na starttijd.");
+      neuroToast.error("Titel invullen en eindtijd na starttijd.");
       return;
     }
     startTransition(async () => {
@@ -65,14 +65,14 @@ export function EditCalendarEventModal({
           is_social: isSocial,
           link_task: linkTask,
         });
-        toast.success("Afspraak bijgewerkt.");
+        neuroToast.success("Afspraak bijgewerkt.");
         if (linkTask) {
-          toast.info("Taaktitel en vervaldatum zijn mee bijgewerkt met de afspraak.");
+          neuroToast.info("Taaktitel en vervaldatum zijn mee bijgewerkt met de afspraak.");
         }
         onClose();
         router.refresh();
       } catch (err) {
-        toast.error(err instanceof Error ? err.message : "Opslaan mislukt.");
+        neuroToast.error(err instanceof Error ? err.message : "Opslaan mislukt.");
       }
     });
   }

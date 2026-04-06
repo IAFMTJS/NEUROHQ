@@ -37,6 +37,10 @@ const SettingsAutoMasterMissions = nextDynamic(
   () => import("@/components/settings/SettingsAutoMasterMissions").then((m) => ({ default: m.SettingsAutoMasterMissions })),
   { loading: () => <div className="min-h-[88px] animate-pulse rounded-xl bg-white/5" aria-hidden /> },
 );
+const SettingsUiFeedback = nextDynamic(
+  () => import("@/components/settings/SettingsUiFeedback").then((m) => ({ default: m.SettingsUiFeedback })),
+  { loading: () => <div className="min-h-[120px] animate-pulse rounded-xl bg-white/5" aria-hidden /> },
+);
 
 export const dynamic = "force-dynamic";
 
@@ -116,9 +120,13 @@ async function SettingsContent() {
         id="settings-section-system"
         title="Systeem"
         subtitle="Thema, budget, DCIC en lokale appcontrole"
-        searchText="thema neuro amber emerald dcic modus snapshot cache service worker xp level dark mode budget valuta eur usd impuls drempel periode maand week categorie risk quick add"
+        searchText="thema neuro amber emerald dcic modus snapshot cache service worker xp level dark mode budget valuta eur usd impuls drempel periode maand week categorie risk quick add geluid spraak tts"
       >
         <ThemePicker />
+        <SettingsUiFeedback
+          initialSoundEnabled={prefs.ui_sound_enabled !== false}
+          initialSpeechEnabled={prefs.ui_speech_enabled === true}
+        />
         <XPBadge totalXp={xp.total_xp} level={xp.level} href="/settings" />
         <SettingsBudget
           initialCurrency={budgetSettings.currency}

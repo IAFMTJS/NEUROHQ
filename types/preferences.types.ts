@@ -58,6 +58,10 @@ export interface UserPreferences {
   hq_headline?: string | null;
   /** Time-of-day greeting language on HQ header. */
   greeting_locale?: GreetingLocale | null;
+  /** Short UI sounds in the app/PWA (Web Audio). */
+  ui_sound_enabled: boolean;
+  /** Optional spoken lines (Web Speech API), e.g. budget cues. */
+  ui_speech_enabled: boolean;
   updated_at: string;
 }
 
@@ -82,5 +86,7 @@ export const PREFERENCES_DEFAULTS: UserPreferences = {
   display_callsign: null,
   hq_headline: null,
   greeting_locale: "en",
+  ui_sound_enabled: true,
+  ui_speech_enabled: false,
   updated_at: new Date().toISOString(),
 };

@@ -41,6 +41,11 @@ export type ProfileSpecialGameRow = {
   config: Json;
   interaction: ProfileGameInteraction;
   completedAt: string | null;
+  /** True wanneer XP/flex voor deze game al geclaimd is. */
+  rewardsGranted: boolean;
+  /** Zichtbaar voor claim-CTA (geen geheime velden). */
+  rewardXp: number;
+  rewardFlexPercentBp: number;
   checklistState: Record<string, boolean>;
 };
 
@@ -53,7 +58,7 @@ export type ProfileSpecialEventsBundle = {
 type SupabaseServer = Awaited<ReturnType<typeof createClient>>;
 
 /**
- * Live platform-games met dezelfde voortgang/sync als op het profiel (incl. auto-meting + XP).
+ * Live platform-games met dezelfde voortgang/sync als op het profiel (incl. auto-meting; beloning na claim).
  * Gebruikt door profiel-bundle, /api/platform-games en overal waar games server-side nodig zijn.
  */
 export async function getPlatformGamesForSession(
@@ -75,16 +80,21 @@ export async function getPlatformGamesForSession(
   );
 
   const gameIds = liveGameRows.map((g) => g.id);
-  const progByGame: Record<string, { state: Json; completed_at: string | null }> = {};
+  const progByGame: Record<string, { state: Json; completed_at: string | null; rewards_granted_at: string | null }> =
+    {};
   if (gameIds.length > 0) {
     const { data: progRows, error: progErr } = await supabase
       .from("user_platform_game_progress")
-      .select("game_id, state, completed_at")
+      .select("game_id, state, completed_at, rewards_granted_at")
       .eq("user_id", userId)
       .in("game_id", gameIds);
     if (!progErr) {
       for (const p of progRows ?? []) {
-        progByGame[p.game_id] = { state: p.state as Json, completed_at: p.completed_at };
+        progByGame[p.game_id] = {
+          state: p.state as Json,
+          completed_at: p.completed_at,
+          rewards_granted_at: p.rewards_granted_at,
+        };
       }
     }
   }
@@ -98,6 +108,7 @@ export async function getPlatformGamesForSession(
     if (spec.mode === "auto" && spec.autoRules.length > 0) {
       const sync = await evaluateAndSyncAutoPlatformGame(supabase, userId, {
         id: g.id,
+        title: g.title,
         starts_at: g.starts_at,
         ends_at: g.ends_at,
         config: g.config as Json,
@@ -105,8 +116,9 @@ export async function getPlatformGamesForSession(
       autoPublic = sync.autoPublic;
       if (sync.completedAt) {
         pr = {
-          state: (pr?.state as Json) ?? null,
+          state: (pr?.state as Json) ?? ({} as Json),
           completed_at: sync.completedAt,
+          rewards_granted_at: pr?.rewards_granted_at ?? null,
         };
       }
     }
@@ -129,6 +141,9 @@ export async function getPlatformGamesForSession(
       config: publicPlatformGameConfig(g.config as Json),
       interaction,
       completedAt: pr?.completed_at ?? null,
+      rewardsGranted: pr?.rewards_granted_at != null,
+      rewardXp: spec.rewardXp,
+      rewardFlexPercentBp: spec.rewardFlexPercentBp,
       checklistState,
     });
   }

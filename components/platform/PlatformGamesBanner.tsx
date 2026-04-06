@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import type { ProfileSpecialGameRow } from "@/app/actions/profile-special-events";
 import { PlatformGameProgressPanel } from "@/components/profile/PlatformGameProgressPanel";
+import { getPlatformGameStatusSummary, platformGameStatusBadgeClass } from "@/lib/platform-game-status";
 import type { Json } from "@/types/database.types";
 
 const STORAGE_KEY = "neurohq-platform-games-dismissed";
@@ -23,28 +24,6 @@ function readDismissed(): Set<string> {
 
 function writeDismissed(ids: Set<string>) {
   localStorage.setItem(STORAGE_KEY, JSON.stringify([...ids]));
-}
-
-function statusSummary(game: ProfileSpecialGameRow): { label: string; tone: "done" | "progress" | "neutral" } {
-  if (game.completedAt) return { label: "Voltooid", tone: "done" };
-  const { interaction: i } = game;
-  if (i.mode === "auto" && i.auto?.rules?.length) {
-    const ok = i.auto.rules.filter((r) => r.satisfied).length;
-    const n = i.auto.rules.length;
-    return {
-      label: `${ok}/${n} voorwaarden`,
-      tone: i.auto.satisfied ? "done" : "progress",
-    };
-  }
-  if (i.mode === "checklist" && i.checklist.length > 0) {
-    const done = i.checklist.filter((x) => game.checklistState[x.id] === true).length;
-    return {
-      label: `${done}/${i.checklist.length} stappen`,
-      tone: done >= i.checklist.length ? "done" : "progress",
-    };
-  }
-  if (i.mode === "answer") return { label: "Antwoord invullen", tone: "progress" };
-  return { label: "Actieve challenge", tone: "neutral" };
 }
 
 function ConfigDetails({ config }: { config: Json }) {
@@ -132,52 +111,57 @@ export function PlatformGamesBanner() {
   return (
     <div className="mb-3 space-y-2 px-0" role="region" aria-label="Platformgames">
       {visible.map((g) => {
-        const summary = statusSummary(g);
+        const summary = getPlatformGameStatusSummary(g);
         const hasInteraction = g.interaction.mode !== "none";
-        const badgeClass =
-          summary.tone === "done"
-            ? "bg-emerald-500/20 text-emerald-100 ring-emerald-400/35"
-            : summary.tone === "progress"
-              ? "bg-amber-500/15 text-amber-100 ring-amber-400/30"
-              : "bg-white/10 text-white/85 ring-white/15";
+        const badgeClass = platformGameStatusBadgeClass(summary.tone);
 
         return (
           <div
             key={g.id}
-            className="relative rounded-xl border border-violet-500/40 bg-gradient-to-r from-violet-950/55 to-slate-900/60 px-3 py-2.5 pr-10 shadow-[0_0_24px_rgba(167,139,250,0.12)]"
+            className="relative overflow-hidden rounded-2xl border border-violet-500/35 bg-gradient-to-br from-violet-950/70 via-slate-950/50 to-indigo-950/40 px-3 py-3 pr-10 shadow-[0_12px_40px_rgba(88,28,135,0.25),inset_0_1px_0_rgba(255,255,255,0.06)]"
           >
+            <div
+              className="pointer-events-none absolute -right-8 -top-12 h-32 w-32 rounded-full bg-fuchsia-500/15 blur-2xl"
+              aria-hidden
+            />
             <button
               type="button"
               onClick={() => dismiss(g.id)}
-              className="absolute right-2 top-2 flex h-7 w-7 items-center justify-center rounded-lg text-lg leading-none text-white/50 hover:bg-white/10 hover:text-white"
+              className="absolute right-2 top-2 z-[1] flex h-8 w-8 items-center justify-center rounded-xl text-lg leading-none text-white/45 transition hover:bg-white/10 hover:text-white"
               aria-label="Game-banner sluiten"
             >
               ×
             </button>
-            <div className="flex flex-wrap items-center gap-2 pr-6">
-              <p className="text-xs font-semibold uppercase tracking-wide text-violet-200/90">{g.title}</p>
-              <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ring-1 ${badgeClass}`}>
+            <div className="relative flex flex-wrap items-center gap-2 pr-7">
+              <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-violet-500/20 text-base ring-1 ring-violet-400/30" aria-hidden>
+                🎮
+              </span>
+              <div className="min-w-0 flex-1">
+                <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-violet-300/80">Platform-game</p>
+                <p className="truncate text-sm font-semibold text-white/95">{g.title}</p>
+              </div>
+              <span className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-semibold ring-1 ${badgeClass}`}>
                 {summary.label}
               </span>
             </div>
-            <p className="mt-1 line-clamp-4 whitespace-pre-wrap text-sm text-white/85">{g.body}</p>
+            <p className="relative mt-2 line-clamp-4 whitespace-pre-wrap text-sm leading-relaxed text-white/80">{g.body}</p>
 
             {hasInteraction ? (
-              <div className="platform-game-banner-panel mt-2 rounded-lg border border-violet-400/25 bg-black/25 p-1">
+              <div className="platform-game-banner-panel relative mt-3 rounded-xl border border-violet-400/20 bg-black/30 p-2 backdrop-blur-sm">
                 <PlatformGameProgressPanel game={g} domIdPrefix="pg-banner" onAfterServerMutation={load} />
               </div>
             ) : (
               <ConfigDetails config={g.config} />
             )}
 
-            <div className="mt-2 flex flex-wrap items-center gap-2 border-t border-violet-400/15 pt-2">
+            <div className="relative mt-3 flex flex-wrap items-center gap-2 border-t border-violet-400/15 pt-2.5">
               <Link
                 href={`/profile#platform-game-${g.id}`}
-                className="text-xs font-semibold text-violet-200 underline-offset-2 hover:text-white hover:underline"
+                className="inline-flex items-center gap-1 rounded-lg bg-violet-500/15 px-2.5 py-1 text-xs font-semibold text-violet-100 ring-1 ring-violet-400/25 transition hover:bg-violet-500/25 hover:ring-violet-300/40"
               >
                 Open op profiel
               </Link>
-              <span className="text-[10px] text-white/40">· metingen verversen bij laden dashboard</span>
+              <span className="text-[10px] text-white/35">Metingen verversen bij laden dashboard</span>
             </div>
           </div>
         );

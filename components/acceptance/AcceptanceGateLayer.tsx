@@ -4,7 +4,7 @@ import { useEffect, useState, useTransition } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { getActiveAcceptanceGate, resolveAcceptanceGate } from "@/app/actions/acceptance-gate";
-import { toast } from "sonner";
+import { neuroToast } from "@/lib/ui/neuro-toast";
 
 function gateTitle(gateType: string): string {
   switch (gateType) {
@@ -79,11 +79,11 @@ export function AcceptanceGateLayer() {
               startTransition(async () => {
                 try {
                   await resolveAcceptanceGate(gate.id);
-                  toast.success("Je bent weer verder. Blijf voorzichtig met je grenzen.");
+                  neuroToast.success("Je bent weer verder. Blijf voorzichtig met je grenzen.");
                   setGate(null);
                   router.refresh();
                 } catch {
-                  toast.error("Kon niet opslaan. Probeer opnieuw.");
+                  neuroToast.error("Kon niet opslaan. Probeer opnieuw.");
                 }
               })
             }

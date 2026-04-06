@@ -2,44 +2,13 @@
 
 import { toast } from "sonner";
 import { NeuroToastIcon } from "@/components/brand/NeuroToastIcon";
+import { playUiSound } from "@/lib/audio/ui-sounds";
 
 export const LEVEL_UP_TOAST_ID = "neurohq-level-up";
 
-/** Korte ascending chime (Web Audio). Faalt stil bij autoplay-beperkingen. */
+/** Zelfde als level-up preset in `playUiSound` (voor backwards-compat imports). */
 export function playLevelUpChime(): void {
-  if (typeof window === "undefined") return;
-  try {
-    const AC =
-      window.AudioContext || (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
-    if (!AC) return;
-    const ctx = new AC();
-    void ctx.resume();
-    const now = ctx.currentTime;
-    const freqs = [523.25, 659.25, 783.99, 1046.5];
-    freqs.forEach((freq, i) => {
-      const osc = ctx.createOscillator();
-      const g = ctx.createGain();
-      osc.type = "sine";
-      osc.frequency.value = freq;
-      const t0 = now + i * 0.07;
-      g.gain.setValueAtTime(0, t0);
-      g.gain.linearRampToValueAtTime(0.11, t0 + 0.02);
-      g.gain.exponentialRampToValueAtTime(0.0008, t0 + 0.32);
-      osc.connect(g);
-      g.connect(ctx.destination);
-      osc.start(t0);
-      osc.stop(t0 + 0.35);
-    });
-    window.setTimeout(() => {
-      try {
-        void ctx.close();
-      } catch {
-        /* ignore */
-      }
-    }, 900);
-  } catch {
-    /* ignore */
-  }
+  playUiSound("level_up");
 }
 
 export type LevelUpCelebrationOpts = {

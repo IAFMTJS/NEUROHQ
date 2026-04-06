@@ -3,7 +3,12 @@
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import type { ProfileSpecialGameRow } from "@/app/actions/profile-special-events";
-import { setPlatformGameChecklistItem, submitPlatformGameAnswer } from "@/app/actions/platform-game-progress";
+import {
+  claimPlatformGameRewards,
+  setPlatformGameChecklistItem,
+  submitPlatformGameAnswer,
+} from "@/app/actions/platform-game-progress";
+import { buildGameClaimCelebrationMessage } from "@/lib/platform-reward-celebration";
 import { getMetricPreset } from "@/lib/platform-games-metric-presets";
 import { neuroToast } from "@/lib/ui/neuro-toast";
 import { showLevelUpCelebration } from "@/lib/ui/level-up-celebration";
@@ -36,6 +41,64 @@ export function PlatformGameProgressPanel({
   if (i.mode === "none") return null;
 
   const done = Boolean(game.completedAt);
+  const needsClaim = done && !game.rewardsGranted;
+
+  const runClaim = () => {
+    startTransition(() => {
+      void (async () => {
+        try {
+          const res = await claimPlatformGameRewards(game.id);
+          if (!res.ok) {
+            neuroToast.error(res.error);
+            return;
+          }
+          if (res.alreadyClaimed) {
+            neuroToast.info("Deze beloning had je al geclaimd.");
+            onAfterServerMutation?.();
+            router.refresh();
+            return;
+          }
+          if (res.levelUp && typeof res.newLevel === "number") {
+            showLevelUpCelebration({ newLevel: res.newLevel });
+          }
+          neuroToast.success(
+            buildGameClaimCelebrationMessage({
+              pointsApplied: res.pointsApplied,
+              flexPercentBp: res.flexPercentBp,
+              flexAppliedCents: res.flexAppliedCents,
+              flexSkippedReason: res.flexSkippedReason,
+            }),
+            { duration: 10_000 }
+          );
+          onAfterServerMutation?.();
+          router.refresh();
+        } catch (err) {
+          neuroToast.error(err instanceof Error ? err.message : "Claim mislukt.");
+        }
+      })();
+    });
+  };
+
+  const claimSection = needsClaim ? (
+    <div className="mt-3 rounded-xl border border-amber-500/35 bg-amber-500/10 px-3 py-3">
+      <p className="text-[10px] font-bold uppercase tracking-wide text-amber-200/90">Beloning</p>
+      <p className="mt-1 text-xs text-[var(--text-muted)]">
+        {game.rewardXp > 0 || game.rewardFlexPercentBp > 0
+          ? `Claim om ${game.rewardXp > 0 ? `+${game.rewardXp} XP` : ""}${game.rewardXp > 0 && game.rewardFlexPercentBp > 0 ? " en " : ""}${game.rewardFlexPercentBp > 0 ? `+${(game.rewardFlexPercentBp / 100).toFixed(0)}% flex (indien actief)` : ""} te ontvangen.`
+          : "Rond af door je beloning te claimen."}
+      </p>
+      <button
+        type="button"
+        disabled={pending}
+        onClick={runClaim}
+        className="mt-2 w-full rounded-lg bg-gradient-to-r from-amber-500/90 to-amber-600/90 px-3 py-2.5 text-xs font-bold text-amber-950 ring-1 ring-amber-300/45 hover:from-amber-400 hover:to-amber-500 disabled:opacity-50 sm:w-auto"
+      >
+        {pending ? "…" : "Beloning claimen"}
+      </button>
+    </div>
+  ) : done && game.rewardsGranted ? (
+    <p className="mt-3 text-xs font-medium text-emerald-300/95">Beloning geclaimd.</p>
+  ) : null;
 
   if (i.mode === "checklist") {
     return (
@@ -57,10 +120,7 @@ export function PlatformGameProgressPanel({
                     startTransition(() => {
                       void (async () => {
                         try {
-                          const r = await setPlatformGameChecklistItem(game.id, item.id, next);
-                          if (r.levelUp === true && typeof r.newLevel === "number") {
-                            showLevelUpCelebration({ newLevel: r.newLevel });
-                          }
+                          await setPlatformGameChecklistItem(game.id, item.id, next);
                           onAfterServerMutation?.();
                           router.refresh();
                         } catch (err) {
@@ -84,6 +144,7 @@ export function PlatformGameProgressPanel({
         ) : (
           <p className="mt-2 text-[10px] text-[var(--text-muted)]">Vink alles aan zodra je het gedaan hebt.</p>
         )}
+        {claimSection}
       </div>
     );
   }
@@ -140,7 +201,7 @@ export function PlatformGameProgressPanel({
             {i.winMessage ?? "Challenge voltooid — je hebt de voorwaarden gehaald."}
           </p>
         ) : auto.satisfied ? (
-          <p className="mt-2 text-xs text-emerald-200/90">Je voldoet nu aan de voorwaarden — beloning wordt verwerkt.</p>
+          <p className="mt-2 text-xs text-emerald-200/90">Je voldoet nu aan de voorwaarden — claim je beloning hieronder.</p>
         ) : (
           <div className="mt-2 flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center">
             <p className="text-[10px] text-[var(--text-muted)]">
@@ -161,6 +222,7 @@ export function PlatformGameProgressPanel({
             </button>
           </div>
         )}
+        {claimSection}
       </div>
     );
   }
@@ -171,9 +233,12 @@ export function PlatformGameProgressPanel({
         <p className="text-[10px] font-bold uppercase tracking-wide text-violet-200/85">Antwoord</p>
         {i.prompt ? <p className="mt-2 text-sm text-[var(--text-muted)] whitespace-pre-wrap">{i.prompt}</p> : null}
         {done ? (
-          <p className="mt-3 text-xs font-medium text-emerald-300/95">
-            {i.winMessage ?? "Voltooid."}
-          </p>
+          <>
+            <p className="mt-3 text-xs font-medium text-emerald-300/95">
+              {i.winMessage ?? "Voltooid."}
+            </p>
+            {claimSection}
+          </>
         ) : (
           <>
             <input
@@ -193,14 +258,14 @@ export function PlatformGameProgressPanel({
                     try {
                       const res = await submitPlatformGameAnswer(game.id, answer);
                       if (!res.ok) {
-                        neuroToast.error(res.error);
+                        neuroToast.error(res.error ?? "Antwoord mislukt.");
                         return;
                       }
                       setAnswer("");
-                      if (res.levelUp === true && typeof res.newLevel === "number") {
-                        showLevelUpCelebration({ newLevel: res.newLevel });
-                      }
                       if (res.message && res.message.trim()) neuroToast.success(res.message);
+                      if (res.completed) {
+                        neuroToast.info("Claim je beloning hieronder om XP en flex te ontvangen.", { duration: 6000 });
+                      }
                       onAfterServerMutation?.();
                       router.refresh();
                     } catch (err) {

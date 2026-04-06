@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { updateBudgetSettings, setPaydayReceivedToday } from "@/app/actions/budget";
 import { addIncomeSource, deleteIncomeSource } from "@/app/actions/dcic/income-sources";
 import type { IncomeSource } from "@/lib/dcic/types";
-import { toast } from "sonner";
+import { neuroToast } from "@/lib/ui/neuro-toast";
 import { Modal } from "@/components/Modal";
 import { BudgetLockHeaderBadge } from "@/components/budget/BudgetLockHeaderBadge";
 import { getCurrencySymbol } from "@/lib/utils/currency";
@@ -144,7 +144,7 @@ export function PaydayCard({
         await setPaydayReceivedToday();
         markPendingBudgetSynced();
         const undoId = pushPaydayUndo(previousLastPaydayDate);
-        toast.success("Loon gehad geregistreerd.", {
+        neuroToast.success("Loon gehad geregistreerd.", {
           duration: UNDO_TOAST_DURATION_MS,
           action: {
             label: "Ongedaan maken",
@@ -161,7 +161,7 @@ export function PaydayCard({
                   await invalidateSettings();
                   clearPendingBudgetSnapshot();
                 } catch {
-                  toast.error("Ongedaan maken mislukt.");
+                  neuroToast.error("Ongedaan maken mislukt.");
                 }
               });
             },

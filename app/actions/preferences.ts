@@ -34,7 +34,7 @@ export const getUserPreferences = cache(async (): Promise<UserPreferences | null
   const { data, error } = await supabase
     .from("user_preferences")
     .select(
-      "theme, color_mode, selected_emotion, compact_ui, reduced_motion, light_ui, simplified_content, auto_master_missions, usual_days_off, day_off_mode, email_reminders_enabled, push_reminders_enabled, push_morning_enabled, push_evening_enabled, push_weekly_learning_enabled, push_personality_mode, display_callsign, hq_headline, greeting_locale, updated_at",
+      "theme, color_mode, selected_emotion, compact_ui, reduced_motion, light_ui, simplified_content, auto_master_missions, usual_days_off, day_off_mode, email_reminders_enabled, push_reminders_enabled, push_morning_enabled, push_evening_enabled, push_weekly_learning_enabled, push_personality_mode, display_callsign, hq_headline, greeting_locale, ui_sound_enabled, ui_speech_enabled, updated_at",
     )
     .eq("user_id", user.id)
     .single();
@@ -58,6 +58,8 @@ export const getUserPreferences = cache(async (): Promise<UserPreferences | null
       msg.includes("hq_headline") ||
       msg.includes("greeting_locale") ||
       msg.includes("simplified_content") ||
+      msg.includes("ui_sound_enabled") ||
+      msg.includes("ui_speech_enabled") ||
       msg.toLowerCase().includes("schema cache")
     ) {
       const { data: legacyData, error: legacyError } = await supabase
@@ -90,6 +92,8 @@ export const getUserPreferences = cache(async (): Promise<UserPreferences | null
         hq_headline: DEFAULTS.hq_headline ?? null,
         greeting_locale: DEFAULTS.greeting_locale ?? "en",
         simplified_content: DEFAULTS.simplified_content,
+        ui_sound_enabled: DEFAULTS.ui_sound_enabled,
+        ui_speech_enabled: DEFAULTS.ui_speech_enabled,
         updated_at: legacyData.updated_at ?? DEFAULTS.updated_at,
       };
     }
@@ -118,6 +122,8 @@ export const getUserPreferences = cache(async (): Promise<UserPreferences | null
     display_callsign?: string | null;
     hq_headline?: string | null;
     greeting_locale?: string | null;
+    ui_sound_enabled?: boolean | null;
+    ui_speech_enabled?: boolean | null;
     updated_at?: string | null;
   };
   return {
@@ -140,6 +146,8 @@ export const getUserPreferences = cache(async (): Promise<UserPreferences | null
     display_callsign: normCallsign(row.display_callsign),
     hq_headline: normHeadline(row.hq_headline),
     greeting_locale: normGreetingLocale(row.greeting_locale as GreetingLocale | null),
+    ui_sound_enabled: row.ui_sound_enabled ?? DEFAULTS.ui_sound_enabled,
+    ui_speech_enabled: row.ui_speech_enabled ?? DEFAULTS.ui_speech_enabled,
     updated_at: row.updated_at ?? DEFAULTS.updated_at,
   };
 });
@@ -172,6 +180,8 @@ type UpdatePayload = Partial<
     | "display_callsign"
     | "hq_headline"
     | "greeting_locale"
+    | "ui_sound_enabled"
+    | "ui_speech_enabled"
   >
 >;
 
@@ -211,6 +221,8 @@ export async function updateUserPreferences(payload: UpdatePayload) {
       payload.greeting_locale !== undefined
         ? normGreetingLocale(payload.greeting_locale)
         : normGreetingLocale(current.greeting_locale ?? undefined),
+    ui_sound_enabled: payload.ui_sound_enabled ?? current.ui_sound_enabled ?? DEFAULTS.ui_sound_enabled,
+    ui_speech_enabled: payload.ui_speech_enabled ?? current.ui_speech_enabled ?? DEFAULTS.ui_speech_enabled,
     updated_at: new Date().toISOString(),
   };
   const legacyRow = {
@@ -250,6 +262,8 @@ export async function updateUserPreferences(payload: UpdatePayload) {
       msg.includes("hq_headline") ||
       msg.includes("greeting_locale") ||
       msg.includes("simplified_content") ||
+      msg.includes("ui_sound_enabled") ||
+      msg.includes("ui_speech_enabled") ||
       msg.toLowerCase().includes("schema cache")
     ) {
       const legacy = await supabase

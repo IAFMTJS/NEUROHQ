@@ -2,6 +2,7 @@
 
 import { toast, type ExternalToast } from "sonner";
 import { NeuroToastIcon } from "@/components/brand/NeuroToastIcon";
+import { playUiSound } from "@/lib/audio/ui-sounds";
 
 function withIcon(
   variant: "default" | "success" | "error" | "warning" | "info" | "loading",
@@ -29,15 +30,18 @@ export const neuroToast = {
     return toast(message, withIcon("default", options));
   },
   success(message: string, options?: ExternalToast) {
+    playUiSound("success");
     return toast.success(message, withIcon("success", options));
   },
   info(message: string, options?: ExternalToast) {
     return toast.info(message, withIcon("info", options));
   },
   warning(message: string, options?: ExternalToast) {
+    playUiSound("nudge");
     return toast.warning(message, withIcon("warning", options));
   },
   error(message: string, options?: ExternalToast) {
+    playUiSound("error");
     return toast.error(message, withIcon("error", options));
   },
   loading(message: string, options?: ExternalToast) {

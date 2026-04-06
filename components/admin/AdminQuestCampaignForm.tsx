@@ -1,9 +1,17 @@
 "use client";
 
-import { useTransition, useState, useEffect } from "react";
+import { useTransition, useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { adminUpsertQuestCampaign, getDefaultQuestContentJson } from "@/app/actions/quest-campaign";
 import { AdminQuestStopButton } from "@/components/admin/AdminQuestStopButton";
+import { AdminQuestContentEditor } from "@/components/admin/AdminQuestContentEditor";
+import type { QuestCampaignContent } from "@/lib/quests/types";
+import {
+  contentToFormattedJson,
+  getDefaultContentForEditor,
+  parseJsonToContent,
+  validateContentForSave,
+} from "@/lib/quests/admin-quest-editor-utils";
 import type { Tables } from "@/types/database.types";
 
 type Row = Tables<"platform_quest_campaigns">;
@@ -24,6 +32,8 @@ function isoToDatetimeLocal(iso: string): string {
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
 }
 
+type EditorMode = "visual" | "json";
+
 export function AdminQuestCampaignForm({
   initialRow,
   suggestedSlug = null,
@@ -33,21 +43,59 @@ export function AdminQuestCampaignForm({
   const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [err, setErr] = useState<string | null>(null);
-  const [contentJson, setContentJson] = useState("{}");
+  const [content, setContent] = useState<QuestCampaignContent | null>(null);
+  const [editorMode, setEditorMode] = useState<EditorMode>("visual");
+  const [jsonDraft, setJsonDraft] = useState("");
+
+  const applyParsedContent = useCallback((data: QuestCampaignContent) => {
+    setContent(data);
+    setJsonDraft(contentToFormattedJson(data));
+    setErr(null);
+  }, []);
 
   useEffect(() => {
     if (initialRow?.content != null) {
       try {
-        setContentJson(JSON.stringify(initialRow.content, null, 2));
+        const raw = JSON.stringify(initialRow.content, null, 2);
+        const parsed = parseJsonToContent(raw);
+        if (parsed.ok) {
+          applyParsedContent(parsed.data);
+        } else {
+          setErr(`Opgeslagen inhoud kon niet worden geladen: ${parsed.error} Pas JSON aan in de tab “Ruwe JSON”.`);
+          setJsonDraft(raw);
+          setContent(null);
+        }
       } catch {
-        setContentJson("{}");
+        setContent(null);
+        setJsonDraft("{}");
       }
       return;
     }
     void getDefaultQuestContentJson()
-      .then(setContentJson)
-      .catch(() => setContentJson("{}"));
-  }, [initialRow]);
+      .then((raw) => {
+        const parsed = parseJsonToContent(raw);
+        if (parsed.ok) applyParsedContent(parsed.data);
+        else {
+          applyParsedContent(getDefaultContentForEditor());
+        }
+      })
+      .catch(() => applyParsedContent(getDefaultContentForEditor()));
+  }, [initialRow, applyParsedContent]);
+
+  const switchToJson = () => {
+    if (content) setJsonDraft(contentToFormattedJson(content));
+    setEditorMode("json");
+  };
+
+  const applyJsonDraft = () => {
+    const parsed = parseJsonToContent(jsonDraft);
+    if (!parsed.ok) {
+      setErr(parsed.error);
+      return;
+    }
+    applyParsedContent(parsed.data);
+    setEditorMode("visual");
+  };
 
   return (
     <form
@@ -55,6 +103,15 @@ export function AdminQuestCampaignForm({
       onSubmit={(e) => {
         e.preventDefault();
         setErr(null);
+        if (!content) {
+          setErr("Quest-inhoud ontbreekt. Laad standaardinhoud of plak geldige JSON.");
+          return;
+        }
+        const v = validateContentForSave(content);
+        if (v) {
+          setErr(v);
+          return;
+        }
         const form = e.currentTarget;
         const fd = new FormData(form);
         const slug = String(fd.get("slug") ?? "").trim();
@@ -76,6 +133,7 @@ export function AdminQuestCampaignForm({
 
         const starts_at = startsLocal ? new Date(startsLocal).toISOString() : new Date().toISOString();
         const ends_at = endsLocal ? new Date(endsLocal).toISOString() : null;
+        const content_json = contentToFormattedJson(content);
 
         startTransition(async () => {
           try {
@@ -86,7 +144,7 @@ export function AdminQuestCampaignForm({
               starts_at,
               ends_at,
               active,
-              content_json: contentJson,
+              content_json,
               reward_xp: Number.isFinite(reward_xp) ? reward_xp : 1000,
               reward_flex_percent_bp: Number.isFinite(reward_flex_percent_bp) ? reward_flex_percent_bp : 2000,
               achievement_key,
@@ -118,15 +176,19 @@ export function AdminQuestCampaignForm({
             className="w-full rounded-lg border border-white/15 bg-black/40 px-3 py-2 font-mono text-sm text-white outline-none focus:ring-2 focus:ring-amber-500/50"
           />
         </div>
-        <div className="flex items-center gap-2 sm:col-span-1 sm:justify-end sm:pt-6">
+        <div className="flex flex-wrap items-center gap-2 sm:justify-end sm:pt-6">
           <button
             type="button"
             disabled={pending}
             onClick={() =>
               startTransition(async () => {
                 try {
-                  const json = await getDefaultQuestContentJson();
-                  setContentJson(json);
+                  const raw = await getDefaultQuestContentJson();
+                  const parsed = parseJsonToContent(raw);
+                  if (parsed.ok) {
+                    applyParsedContent(parsed.data);
+                    setEditorMode("visual");
+                  } else setErr(parsed.error);
                 } catch {
                   setErr("Kon standaardinhoud niet laden.");
                 }
@@ -134,7 +196,7 @@ export function AdminQuestCampaignForm({
             }
             className="rounded-lg border border-white/20 px-3 py-2 text-xs text-white/85 hover:bg-white/10 disabled:opacity-50"
           >
-            Standaard Katsuo-inhoud (JSON)
+            Standaard Katsuo-quest laden
           </button>
         </div>
         <div className="sm:col-span-2">
@@ -266,23 +328,91 @@ export function AdminQuestCampaignForm({
             </span>
           </div>
         </div>
+
         <div className="sm:col-span-2">
-          <label className="mb-1 block text-xs font-medium text-white/50" htmlFor="qc-json">
-            Quest JSON (dagen, raadsels, accepts)
-          </label>
-          <textarea
-            id="qc-json"
-            value={contentJson}
-            onChange={(e) => setContentJson(e.target.value)}
-            rows={18}
-            className="w-full resize-y rounded-lg border border-white/15 bg-black/40 px-3 py-2 font-mono text-[11px] leading-relaxed text-white outline-none focus:ring-2 focus:ring-amber-500/50"
-          />
+          <div className="mb-3 flex flex-wrap items-center justify-between gap-2 border-b border-white/10 pb-2">
+            <div>
+              <h3 className="text-xs font-bold uppercase tracking-wider text-amber-400/90">Quest-inhoud (dagen &amp; antwoorden)</h3>
+              <p className="mt-0.5 text-[11px] text-white/40">
+                Bewerk per dag: type puzzel, teksten, geaccepteerde antwoorden en feedback na een goede poging.
+              </p>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <button
+                type="button"
+                onClick={() => {
+                  setEditorMode("visual");
+                }}
+                className={`rounded-lg px-3 py-1.5 text-xs font-semibold transition ${
+                  editorMode === "visual"
+                    ? "bg-amber-500/25 text-amber-100 ring-1 ring-amber-500/40"
+                    : "border border-white/15 text-white/65 hover:bg-white/10"
+                }`}
+              >
+                Visuele editor
+              </button>
+              <button
+                type="button"
+                onClick={switchToJson}
+                className={`rounded-lg px-3 py-1.5 text-xs font-semibold transition ${
+                  editorMode === "json"
+                    ? "bg-amber-500/25 text-amber-100 ring-1 ring-amber-500/40"
+                    : "border border-white/15 text-white/65 hover:bg-white/10"
+                }`}
+              >
+                Ruwe JSON
+              </button>
+            </div>
+          </div>
+
+          {editorMode === "visual" ? (
+            content ? (
+              <AdminQuestContentEditor content={content} onChange={setContent} />
+            ) : (
+              <p className="rounded-lg border border-amber-500/30 bg-amber-500/10 px-3 py-4 text-sm text-amber-100/90">
+                Geen gestructureerde inhoud geladen. Open de tab <strong>Ruwe JSON</strong> om te plakken, of klik{" "}
+                <strong>Standaard Katsuo-quest laden</strong>.
+              </p>
+            )
+          ) : (
+            <div className="space-y-2 rounded-xl border border-white/10 bg-black/30 p-4">
+              <label className="mb-1 block text-xs font-medium text-white/50" htmlFor="qc-json-draft">
+                JSON (volledige payload: version, storyEpigraph, days)
+              </label>
+              <textarea
+                id="qc-json-draft"
+                value={jsonDraft}
+                onChange={(e) => setJsonDraft(e.target.value)}
+                rows={22}
+                className="w-full resize-y rounded-lg border border-white/15 bg-black/50 px-3 py-2 font-mono text-[11px] leading-relaxed text-white outline-none focus:ring-2 focus:ring-amber-500/50"
+              />
+              <div className="flex flex-wrap gap-2">
+                <button
+                  type="button"
+                  className="rounded-lg bg-amber-500/90 px-3 py-2 text-xs font-semibold text-[#050810] hover:bg-amber-400"
+                  onClick={applyJsonDraft}
+                >
+                  JSON toepassen (terug naar visueel)
+                </button>
+                <button
+                  type="button"
+                  className="rounded-lg border border-white/20 px-3 py-2 text-xs text-white/80 hover:bg-white/10"
+                  onClick={() => content && setJsonDraft(contentToFormattedJson(content))}
+                >
+                  Vernieuwen vanuit huidige inhoud
+                </button>
+              </div>
+              <p className="text-[10px] text-white/35">
+                Na “Toepassen” wordt de inhoud gevalideerd. Fouten verschijnen rood boven het formulier.
+              </p>
+            </div>
+          )}
         </div>
       </div>
       <div className="flex flex-wrap items-center gap-3 border-t border-white/10 pt-4">
         <button
           type="submit"
-          disabled={pending}
+          disabled={pending || !content}
           className="rounded-lg bg-amber-500 px-4 py-2 text-sm font-semibold text-[#050810] hover:bg-amber-400 disabled:opacity-50"
         >
           {pending ? "Opslaan…" : submitButtonLabel}

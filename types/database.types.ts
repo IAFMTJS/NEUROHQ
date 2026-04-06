@@ -2161,6 +2161,7 @@ export type Database = {
           completed_at: string | null
           created_at: string
           game_id: string
+          rewards_granted_at: string | null
           state: Json
           updated_at: string
           user_id: string
@@ -2169,6 +2170,7 @@ export type Database = {
           completed_at?: string | null
           created_at?: string
           game_id: string
+          rewards_granted_at?: string | null
           state?: Json
           updated_at?: string
           user_id: string
@@ -2177,6 +2179,7 @@ export type Database = {
           completed_at?: string | null
           created_at?: string
           game_id?: string
+          rewards_granted_at?: string | null
           state?: Json
           updated_at?: string
           user_id?: string
@@ -3405,6 +3408,8 @@ export type Database = {
           reduced_motion: boolean
           selected_emotion: string | null
           theme: string
+          ui_sound_enabled: boolean
+          ui_speech_enabled: boolean
           updated_at: string
           user_id: string
           usual_days_off: number[] | null
@@ -3432,6 +3437,8 @@ export type Database = {
           reduced_motion?: boolean
           selected_emotion?: string | null
           theme?: string
+          ui_sound_enabled?: boolean
+          ui_speech_enabled?: boolean
           updated_at?: string
           user_id: string
           usual_days_off?: number[] | null
@@ -3459,6 +3466,8 @@ export type Database = {
           reduced_motion?: boolean
           selected_emotion?: string | null
           theme?: string
+          ui_sound_enabled?: boolean
+          ui_speech_enabled?: boolean
           updated_at?: string
           user_id?: string
           usual_days_off?: number[] | null

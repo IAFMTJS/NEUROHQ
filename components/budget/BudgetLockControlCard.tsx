@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useTransition } from "react";
-import { toast } from "sonner";
+import { neuroToast } from "@/lib/ui/neuro-toast";
 import { setBudgetNoSpendLock, submitEmergencyExpenseReason } from "@/app/actions/budget-intelligence";
 import { BudgetLockCountdown } from "@/components/budget/BudgetLockCountdown";
 import { formatLockEndDateTime } from "@/lib/budget-lock-display";
@@ -111,11 +111,11 @@ export function BudgetLockControlCard({
               end.setHours(hh, mm, 0, 0);
               await setBudgetNoSpendLock({ days, reason: reason.trim(), lockUntilAtIso: end.toISOString() });
               setMessage("Budget lock opgeslagen.");
-              toast.success("Budget lock opgeslagen.");
+              neuroToast.success("Budget lock opgeslagen.");
             } catch (err) {
               const errorMessage = err instanceof Error ? err.message : "Opslaan van budget lock mislukt.";
               setMessage(errorMessage);
-              toast.error(errorMessage);
+              neuroToast.error(errorMessage);
             }
           })
         }
@@ -194,11 +194,11 @@ export function BudgetLockControlCard({
                     setEmergencyReason("");
                     setEmergencyAmount("0");
                     setEmergencyOpen(false);
-                    toast.success("Nooduitgave opgeslagen.");
+                    neuroToast.success("Nooduitgave opgeslagen.");
                   } catch (err) {
                     const errorMessage = err instanceof Error ? err.message : "Opslaan van nooduitgave mislukt.";
                     setMessage(errorMessage);
-                    toast.error(errorMessage);
+                    neuroToast.error(errorMessage);
                   }
                 })
               }

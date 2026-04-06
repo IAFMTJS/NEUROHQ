@@ -15,6 +15,8 @@ export type PlatformGameProgressSpec = {
   answerPlaceholder: string | null;
   winMessage: string | null;
   rewardXp: number;
+  /** Bonus flex als percentage van maandcap (basispunten: 10000 = 100%). */
+  rewardFlexPercentBp: number;
   /** Automatische meting o.b.v. site-data (taken, learning, …). */
   autoWinLogic: "all" | "any";
   autoRules: PlatformGameAutoRuleParsed[];
@@ -28,6 +30,7 @@ const EMPTY: PlatformGameProgressSpec = {
   answerPlaceholder: null,
   winMessage: null,
   rewardXp: 0,
+  rewardFlexPercentBp: 0,
   autoWinLogic: "all",
   autoRules: [],
 };
@@ -102,7 +105,31 @@ export function parsePlatformGameProgressSpec(config: Json | null | undefined): 
     rewardXp = Math.min(1_000_000, Math.round(root.rewardXp));
   }
 
-  return { mode, checklist, accepts, prompt, answerPlaceholder, winMessage, rewardXp, autoWinLogic, autoRules };
+  let rewardFlexPercentBp = 0;
+  if (typeof prog.rewardFlexPercentBp === "number" && Number.isFinite(prog.rewardFlexPercentBp) && prog.rewardFlexPercentBp > 0) {
+    rewardFlexPercentBp = Math.max(0, Math.min(10000, Math.round(prog.rewardFlexPercentBp)));
+  }
+  if (
+    rewardFlexPercentBp === 0 &&
+    typeof root.rewardFlexPercentBp === "number" &&
+    Number.isFinite(root.rewardFlexPercentBp) &&
+    root.rewardFlexPercentBp > 0
+  ) {
+    rewardFlexPercentBp = Math.max(0, Math.min(10000, Math.round(root.rewardFlexPercentBp)));
+  }
+
+  return {
+    mode,
+    checklist,
+    accepts,
+    prompt,
+    answerPlaceholder,
+    winMessage,
+    rewardXp,
+    rewardFlexPercentBp,
+    autoWinLogic,
+    autoRules,
+  };
 }
 
 /** Verwijdert geheime velden voor API / profiel payload. */

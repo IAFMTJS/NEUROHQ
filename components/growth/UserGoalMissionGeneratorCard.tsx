@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { toast } from "sonner";
+import { neuroToast } from "@/lib/ui/neuro-toast";
 import { commitTasksFromUserGoal } from "@/app/actions/user-goal-tasks";
 import { buildUserGoalMissionPreview } from "@/lib/user-goal-mission-preview";
 import { Modal } from "@/components/Modal";
@@ -29,7 +29,7 @@ export function UserGoalMissionGeneratorCard() {
       setPreviewRows(rows.map((r) => ({ title: r.title, due_date: r.due_date })));
       setPreviewOpen(true);
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Check je invoer.");
+      neuroToast.error(e instanceof Error ? e.message : "Check je invoer.");
     }
   }
 
@@ -43,7 +43,7 @@ export function UserGoalMissionGeneratorCard() {
         setPreviewOpen(false);
         setText("");
         setTags([]);
-        toast.success(`${created} taken toegevoegd op je missions.`, {
+        neuroToast.success(`${created} taken toegevoegd op je missions.`, {
           duration: UNDO_MS,
           action: {
             label: "Ongedaan maken",
@@ -53,10 +53,10 @@ export function UserGoalMissionGeneratorCard() {
                   for (const id of taskIds) {
                     await deleteTask(id);
                   }
-                  toast.message("Taken verwijderd.");
+                  neuroToast.message("Taken verwijderd.");
                   router.refresh();
                 } catch {
-                  toast.error("Ongedaan maken mislukt.");
+                  neuroToast.error("Ongedaan maken mislukt.");
                 }
               });
             },
@@ -64,7 +64,7 @@ export function UserGoalMissionGeneratorCard() {
         });
         router.refresh();
       } catch (e) {
-        toast.error(e instanceof Error ? e.message : "Mislukt.");
+        neuroToast.error(e instanceof Error ? e.message : "Mislukt.");
       }
     });
   }

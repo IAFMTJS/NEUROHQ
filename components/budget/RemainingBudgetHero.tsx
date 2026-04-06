@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useTransition, type ReactNode } from "react";
+import { useEffect, useRef, useState, useTransition, type ReactNode } from "react";
 import Link from "next/link";
 import { addDays, differenceInCalendarDays, format } from "date-fns";
 import { nl } from "date-fns/locale";
@@ -240,6 +240,7 @@ export function RemainingBudgetHero({
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
   const { invalidate: invalidateSettings } = useSettings();
+  const prevOverBudgetRef = useRef<boolean | null>(null);
 
   const effectiveBudgetCents =
     pendingActive && pendingBudget?.monthlyBudgetCents !== undefined ? pendingBudget.monthlyBudgetCents ?? 0 : budgetCents;
@@ -253,6 +254,21 @@ export function RemainingBudgetHero({
       ? pendingBudget.budgetRemainingCents
       : derivePendingBudgetRemaining(effectiveBudgetCents, effectiveSavingsCents, expensesCents);
   const isOverBudget = remainingCents < 0;
+
+  useEffect(() => {
+    if (historyMode) {
+      prevOverBudgetRef.current = isOverBudget;
+      return;
+    }
+    if (prevOverBudgetRef.current === null) {
+      prevOverBudgetRef.current = isOverBudget;
+      return;
+    }
+    if (prevOverBudgetRef.current === false && isOverBudget) {
+      void import("@/lib/audio/budget-over-feedback").then((m) => m.playBudgetOverFeedback());
+    }
+    prevOverBudgetRef.current = isOverBudget;
+  }, [historyMode, isOverBudget]);
 
   let remainingRatio: number;
   if (spendableCents > 0) {
