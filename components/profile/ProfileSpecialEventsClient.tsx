@@ -4,7 +4,6 @@ import { useEffect, useState } from "react";
 import type { ProfileSpecialEventsBundle } from "@/app/actions/profile-special-events";
 import { PlatformGameProgressPanel } from "@/components/profile/PlatformGameProgressPanel";
 import { QuestCampaignModal } from "@/components/quests/QuestCampaignModal";
-import type { Json } from "@/types/database.types";
 
 function formatWhen(iso: string) {
   try {
@@ -12,30 +11,6 @@ function formatWhen(iso: string) {
   } catch {
     return iso;
   }
-}
-
-function ConfigBlock({ config }: { config: Json }) {
-  if (config == null || typeof config !== "object" || Array.isArray(config)) return null;
-  const entries = Object.entries(config as Record<string, Json | undefined>).filter(([, v]) => v !== undefined);
-  if (entries.length === 0) return null;
-  const scalar = (v: unknown) => typeof v === "string" || typeof v === "number" || typeof v === "boolean";
-  if (entries.every(([, v]) => scalar(v))) {
-    return (
-      <dl className="mt-2 grid gap-1 text-xs text-[var(--text-muted)] sm:grid-cols-2">
-        {entries.map(([k, v]) => (
-          <div key={k} className="flex flex-wrap gap-x-2">
-            <dt className="font-medium text-[var(--text-secondary)]">{k}</dt>
-            <dd>{String(v)}</dd>
-          </div>
-        ))}
-      </dl>
-    );
-  }
-  return (
-    <pre className="mt-2 max-h-32 overflow-auto rounded-lg bg-black/25 p-2 font-mono text-[10px] text-[var(--text-muted)]">
-      {JSON.stringify(config, null, 2)}
-    </pre>
-  );
 }
 
 function bundleHasContent(b: ProfileSpecialEventsBundle): boolean {
@@ -134,7 +109,6 @@ export function ProfileSpecialEventsClient({ bundle }: { bundle: ProfileSpecialE
               >
                 <p className="font-semibold text-violet-100/95">{g.title}</p>
                 <p className="mt-1 whitespace-pre-wrap text-[var(--text-muted)]">{g.body}</p>
-                <ConfigBlock config={g.config} />
                 <PlatformGameProgressPanel game={g} domIdPrefix="pg-profile" />
                 <p className="mt-2 text-[10px] text-[var(--text-muted)]">
                   {formatWhen(g.starts_at)}

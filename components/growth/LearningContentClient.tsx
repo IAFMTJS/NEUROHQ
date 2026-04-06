@@ -21,6 +21,8 @@ type Props = {
   growthFocus: GrowthFocusState;
   /** Read-only Strategy kwartaal-hint; wordt in de protocolkaart getoond. */
   strategyPacingHints: StrategyPacingHints | null;
+  /** Huidige budget-kalenderweek (ma–zo), server-side geformatteerd. */
+  budgetWeekLabel?: string;
   simplified?: boolean;
   /** Optional strip above main content (e.g. short hint from server page). */
   heroSlot?: ReactNode;
@@ -31,6 +33,7 @@ export function LearningContentClient({
   progressMap,
   growthFocus,
   strategyPacingHints,
+  budgetWeekLabel,
   simplified = false,
   heroSlot,
 }: Props) {
@@ -58,6 +61,7 @@ export function LearningContentClient({
               engineTier={engineTier}
               growthFocus={growthFocus}
               strategyPacingHints={strategyPacingHints}
+              budgetWeekLabel={budgetWeekLabel}
               onOpenProtocol={setViewerProtocol}
             />
             <GrowthBottomHubCards

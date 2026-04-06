@@ -20,7 +20,6 @@ type Props = {
   missionTemplates: MissionTemplateItem[];
   behaviorProfile: BehaviorProfile;
   brainModeToday: BrainMode;
-  activeMissionCountToday: number;
   /** Profile home uses mode-tinted surfaces; XP page uses command/glass cards. */
   variant: "profile" | "xp";
   className?: string;
@@ -32,7 +31,6 @@ export function DailyChallengesPanel({
   missionTemplates,
   behaviorProfile,
   brainModeToday,
-  activeMissionCountToday,
   variant,
   className = "",
 }: Props) {
@@ -45,7 +43,6 @@ export function DailyChallengesPanel({
     setChallengeDate(todayStr);
   }, [todayStr]);
 
-  const maxSlotsToday = brainModeToday.maxSlots;
   const addBlockedToday = brainModeToday.addBlocked;
 
   const recommendedTemplates = useMemo(
@@ -53,7 +50,9 @@ export function DailyChallengesPanel({
     [missionTemplates, behaviorProfile]
   );
 
-  const dailyChallengeReward = Math.max(10, Math.round(identity.xp_to_next_level * 0.1));
+  /** Basiszelfde schaal als vroeger (~10% van XP tot volgend level); completion gebruikt 3× die waarde. */
+  const challengeXpUnit = Math.max(10, Math.round(identity.xp_to_next_level * 0.1));
+  const dailyChallengeReward = challengeXpUnit * 3;
   const daySeed = new Date(`${todayStr}T12:00:00Z`).getUTCDate();
   const challengePool = recommendedTemplates.length > 0 ? recommendedTemplates : missionTemplates;
 
@@ -72,13 +71,11 @@ export function DailyChallengesPanel({
 
   function addMission(template: MissionTemplateItem, dueDate?: string) {
     const date = dueDate ?? challengeDate ?? todayStr;
-    const slotsFilledToday = activeMissionCountToday >= maxSlotsToday;
+    // Dagelijkse challenges mogen altijd gepland worden, ook als focus slots vol zijn (missions-pagina limiet).
     const limitMessage =
       addBlockedToday && date === todayStr
         ? "Mentale belasting te hoog. Vandaag geen nieuwe missies toevoegen; afronden of uit je agenda halen."
-        : slotsFilledToday && date === todayStr
-          ? "Je hebt je focus slots gevuld. Kies één missie om eerst af te maken of te verplaatsen; dan mag er weer één bij."
-          : null;
+        : null;
     if (limitMessage) {
       alert(limitMessage);
       return;
@@ -92,7 +89,8 @@ export function DailyChallengesPanel({
           domain: template.domain,
           energy_required: template.energy,
           category: template.category ?? null,
-          base_xp: template.baseXP ?? undefined,
+          base_xp: dailyChallengeReward,
+          task_tags: ["daily_challenge"],
         });
         router.refresh();
       } finally {
@@ -142,9 +140,9 @@ export function DailyChallengesPanel({
             Dagelijkse challenges
           </h3>
           <p className={subClass}>
-            3 lichte challenges, elk ongeveer {dailyChallengeReward} XP (
-            {Math.round((dailyChallengeReward / Math.max(1, identity.xp_to_next_level)) * 100)}% richting volgend
-            level).
+            3 lichte challenges — 3× XP-bonus bij afronden (±{dailyChallengeReward} XP per stuk, ~
+            {Math.round((dailyChallengeReward / Math.max(1, identity.xp_to_next_level)) * 100)}% van je balk naar het
+            volgende level). Altijd te plannen, ook als je focus slots vol zijn.
           </p>
         </div>
         <input

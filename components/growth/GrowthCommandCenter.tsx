@@ -54,6 +54,8 @@ type Props = {
   engineTier: DifficultyTier | null;
   growthFocus: GrowthFocusState;
   strategyPacingHints: StrategyPacingHints | null;
+  /** Huidige kalenderweek (ma–zo), zelfde als Missions-budgetweek. */
+  budgetWeekLabel?: string;
   onOpenProtocol: (p: ProtocolLibraryRow) => void;
 };
 
@@ -63,6 +65,7 @@ export function GrowthCommandCenter({
   engineTier,
   growthFocus,
   strategyPacingHints,
+  budgetWeekLabel,
   onOpenProtocol,
 }: Props) {
   const router = useRouter();
@@ -202,7 +205,8 @@ export function GrowthCommandCenter({
                 Kies traject
               </span>
               <p className="mb-1.5 text-[10px] leading-snug text-[var(--text-muted)]">
-                Huidige protocolweek gaat automatisch naar Missions, verdeeld over de rest van de week (ma–zo).
+                Nieuwe kalenderweek: protocolweek schuift op en taken gaan naar Missions (zelfde ma–zo als je bord). Start week =
+                extra push nu.
               </p>
               <select
                 className="w-full rounded-lg border border-[rgba(var(--mode-rgb),0.35)] bg-gradient-to-b from-[rgba(var(--mode-rgb-deep),0.52)] to-[rgba(6,18,30,0.96)] px-3 py-2 text-sm font-medium text-[#e8f6ff] shadow-[inset_0_1px_0_rgba(255,255,255,0.07),0_0_16px_rgba(var(--mode-rgb),0.12)] [color-scheme:dark] focus:border-[rgba(var(--mode-rgb),0.55)] focus:outline-none focus:ring-2 focus:ring-[rgba(var(--mode-rgb),0.35)] disabled:opacity-50"
@@ -308,6 +312,9 @@ export function GrowthCommandCenter({
                 <p className="mt-0.5 text-lg font-semibold tabular-nums text-[var(--text-primary)]">
                   Week {weekIndex} <span className="text-[var(--text-muted)]">/</span> {maxW}
                 </p>
+                {budgetWeekLabel ? (
+                  <p className="mt-1 text-[10px] tabular-nums text-[var(--text-muted)]">Kalender · {budgetWeekLabel}</p>
+                ) : null}
               </div>
               <p className="text-sm font-semibold tabular-nums text-[var(--accent-focus)] [text-shadow:0_0_12px_rgba(var(--mode-rgb),0.35)]">
                 {weekPct}%

@@ -3,6 +3,7 @@
 import { useEffect, useRef } from "react";
 import { getQueue, removeFromQueue, type QueuedEntry } from "@/lib/offline-queue";
 import { completeTask, deleteTask, uncompleteTask, snoozeTask, skipNextOccurrence, rescheduleTask, duplicateTask, updateTask } from "@/app/actions/tasks";
+import { showLevelUpCelebration } from "@/lib/ui/level-up-celebration";
 
 async function processEntry(entry: QueuedEntry): Promise<boolean> {
   try {
@@ -10,7 +11,21 @@ async function processEntry(entry: QueuedEntry): Promise<boolean> {
       const id = (entry.payload as { id?: string })?.id;
       const startedAt = (entry.payload as { startedAt?: string | null })?.startedAt ?? null;
       if (id) {
-        await completeTask(id, { startedAt });
+        const res = await completeTask(id, { startedAt });
+        if (
+          res &&
+          typeof res === "object" &&
+          "levelUp" in res &&
+          res.levelUp === true &&
+          typeof (res as { newLevel?: unknown }).newLevel === "number" &&
+          (res as { newLevel: number }).newLevel >= 1
+        ) {
+          const r = res as { newLevel: number; rankPromotion?: boolean; newRank?: string; previousRank?: string };
+          showLevelUpCelebration({
+            newLevel: r.newLevel,
+            ...(r.rankPromotion ? { rankPromotion: true, newRank: r.newRank, previousRank: r.previousRank } : {}),
+          });
+        }
         await removeFromQueue(entry.id);
         return true;
       }

@@ -162,3 +162,15 @@ export function getBudgetWeekBounds(dateStr?: string): { start: string; end: str
     end: sun.toISOString().slice(0, 10),
   };
 }
+
+/**
+ * Whole budget weeks between two Monday dates (inclusive start, exclusive end semantics).
+ * Both arguments must be ISO YYYY-MM-DD Mondays; returns non-negative integer.
+ */
+export function wholeBudgetWeeksBetween(anchorMonday: string, currentMonday: string): number {
+  const a = new Date(anchorMonday + "T12:00:00Z").getTime();
+  const b = new Date(currentMonday + "T12:00:00Z").getTime();
+  if (b <= a) return 0;
+  const ms = b - a;
+  return Math.floor(ms / (7 * 24 * 60 * 60 * 1000));
+}

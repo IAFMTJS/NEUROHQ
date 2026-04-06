@@ -18,10 +18,15 @@ import type { GameState, Mission } from "@/lib/dcic/types";
 import { applyBrainLayerToGameState } from "@/lib/dcic/brain-game-state";
 import { countWarTierDays, type DailyRowForBrain } from "@/lib/dcic/brain-status-average";
 import { autoModeCheck, isModeLocked, passiveRecoveryTick, switchMode } from "@/lib/dcic/mode-engine";
-import { maybeAutoTriggerOverdrive, pickWeeklySlotWeekdays } from "@/lib/dcic/overdrive-auto";
+import {
+  isOverdriveActivationTimeAllowed,
+  maybeAutoTriggerOverdrive,
+  pickWeeklySlotWeekdays,
+} from "@/lib/dcic/overdrive-auto";
 import { updateDifficulty, generateDailyMissions } from "@/lib/dcic/difficulty-engine";
 import { rankFromLevel } from "@/lib/rank-ladder";
 import { levelFromTotalXP, xpToNextLevel as xpRemainingToNextLevel } from "@/lib/xp";
+import { sendOverdriveActivatedPushIfEnabled } from "@/lib/push";
 
 const DCIC_MODE_VALUES: GameState["mode"]["current"][] = [
   "focus",
@@ -400,6 +405,8 @@ export async function getGameState(
       );
       if (odErr) {
         console.error("auto-trigger overdrive:", odErr);
+      } else {
+        void sendOverdriveActivatedPushIfEnabled(supabase, user.id, "auto");
       }
     } else {
       const { error: lockErr } = await supabase.rpc("lock_daily_dcic_mode_if_unset", {
@@ -522,10 +529,28 @@ export async function saveGameState(
 export async function persistDcicOperationalMode(
   newMode: GameState["mode"]["current"]
 ): Promise<{ ok: boolean; error?: string }> {
+  const supabase = await createClient();
   const gameState = await getGameState({ includeFinance: false });
   if (!gameState) return { ok: false, error: "Geen game state" };
+  if (
+    newMode === "overdrive" &&
+    gameState.mode.current !== "overdrive" &&
+    !isOverdriveActivationTimeAllowed(getAppTimezoneHour())
+  ) {
+    return {
+      ok: false,
+      error: "Overdrive kan alleen tussen 08:00 en 18:00 worden gestart.",
+    };
+  }
+  const prevMode = gameState.mode.current;
   switchMode(gameState, newMode, { forced: true });
   const ok = await saveGameState(gameState);
+  if (ok && newMode === "overdrive" && prevMode !== "overdrive") {
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    if (user) void sendOverdriveActivatedPushIfEnabled(supabase, user.id, "manual");
+  }
   return ok ? { ok: true } : { ok: false, error: "Opslaan mislukt" };
 }
 

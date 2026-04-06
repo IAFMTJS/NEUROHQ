@@ -56,11 +56,11 @@ export function EnergyRing({
   /** Profile/soft preset dims glow; budget hub opts out so the command ring reads clearly in the panel. */
   const dampedGlow = (softGlow || profileOrbit) && !budgetHub;
   const modeRgb = "var(--mode-rgb, 0, 212, 255)";
-  /** Budget command hero: thicker arc. Profile home: extra-wide status band. */
-  const strokeWidth = budgetHub ? 18 : profileOrbit ? 30 : 10;
+  /** Budget command hero: thicker arc. Profile home: XP-band (iets dunner dan vroeger 30px). */
+  const strokeWidth = budgetHub ? 18 : profileOrbit ? 22 : 10;
   const trackStrokeWidth =
     dampedGlow && profileOrbit && !budgetHub
-      ? Math.max(12, strokeWidth - 10)
+      ? Math.max(10, strokeWidth - 8)
       : dampedGlow
         ? Math.max(4, strokeWidth - 3)
         : strokeWidth;

@@ -2,7 +2,7 @@
 
 import { toast } from "sonner";
 import { BudgetPaydaySurveyCard } from "@/components/budget/BudgetPaydaySurveyCard";
-import { BudgetWeeklyReviewCard } from "@/components/budget/BudgetWeeklyReviewCard";
+import { openBudgetWeeklyReviewToast } from "@/components/budget/budget-weekly-review-toast";
 import { BudgetOptimizationCard } from "@/components/budget/BudgetOptimizationCard";
 import { budgetDeckSectionKickerClass, budgetDeckShellClass, budgetDeckTileClass } from "@/lib/budget/budget-deck-chrome";
 
@@ -122,20 +122,7 @@ export function BudgetOptimizationHub({
       toast.message("Weekreview is niet beschikbaar in een historische maand.");
       return;
     }
-    toast.custom(
-      (id) => (
-        <ToastChrome
-          toastId={id}
-          title="Weekreview"
-          hint="Eén rustig moment: wat werkte, wat gleed, wat pas je aan."
-          ariaLabel="Weekreview"
-          wide
-        >
-          <BudgetWeeklyReviewCard completedThisWeek={weeklyReviewCompleted} />
-        </ToastChrome>
-      ),
-      { duration: TOAST_MS }
-    );
+    openBudgetWeeklyReviewToast(weeklyReviewCompleted);
   }
 
   function openOptimizationToast() {

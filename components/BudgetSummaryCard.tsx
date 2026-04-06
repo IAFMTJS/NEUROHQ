@@ -1,8 +1,11 @@
 "use client";
 
 import { useEffect, useState, useTransition } from "react";
+import { addDays, format } from "date-fns";
+import { nl } from "date-fns/locale";
 import { useRouter } from "next/navigation";
-import { updateBudgetSettings } from "@/app/actions/budget";
+import { toast } from "sonner";
+import { updateBudgetSettings, type ScheduledNextBudget } from "@/app/actions/budget";
 import { Modal } from "@/components/Modal";
 import { formatCents, getCurrencySymbol } from "@/lib/utils/currency";
 import {
@@ -25,6 +28,9 @@ type Props = {
   historyMode?: boolean;
   forecastProjectedBalanceCents?: number | null;
   forecastOverspendCents?: number | null;
+  /** Einde huidige budgetperiode (YYYY-MM-DD); voor keuze volgende loonsperiode. */
+  periodEnd?: string;
+  scheduledNextBudget?: ScheduledNextBudget | null;
 };
 
 const FORMULA_TOOLTIP = "Spendable = budget minus savings. Remaining = spendable minus expenses.";
@@ -46,6 +52,8 @@ export function BudgetSummaryCard({
   historyMode = false,
   forecastProjectedBalanceCents = null,
   forecastOverspendCents = null,
+  periodEnd = "",
+  scheduledNextBudget = null,
 }: Props) {
   const pendingBudget = usePendingBudgetSnapshot();
   const pendingActive = pendingBudget != null && pendingBudget.synced !== true;
@@ -59,6 +67,7 @@ export function BudgetSummaryCard({
   );
   const [period, setPeriod] = useState<"monthly" | "weekly">(budgetPeriod);
   const [error, setError] = useState<string | null>(null);
+  const [budgetApplyTarget, setBudgetApplyTarget] = useState<"current" | "next">("current");
   const router = useRouter();
   const { invalidate: invalidateSettings } = useSettings();
 
@@ -78,8 +87,19 @@ export function BudgetSummaryCard({
   const isOverBudget = remainingCents < 0;
   const symbol = getCurrencySymbol(effectiveCurrency);
 
+  const nextPeriodStartIso =
+    !historyMode && periodEnd && /^\d{4}-\d{2}-\d{2}$/.test(periodEnd)
+      ? addDays(new Date(periodEnd + "T12:00:00Z"), 1).toISOString().slice(0, 10)
+      : null;
+  const nextPeriodStartLabel =
+    nextPeriodStartIso != null
+      ? format(new Date(nextPeriodStartIso + "T12:00:00Z"), "d MMMM yyyy", { locale: nl })
+      : null;
+  const canChooseNextPeriod = Boolean(nextPeriodStartLabel) && !historyMode;
+
   useEffect(() => {
     if (!showModal) return;
+    setBudgetApplyTarget("current");
     setBudget(effectiveBudgetSetting != null ? String(effectiveBudgetSetting / 100) : "");
     setSavings(effectiveSavingsSetting != null ? String(effectiveSavingsSetting / 100) : "");
     setPeriod(effectiveBudgetPeriod);
@@ -101,6 +121,31 @@ export function BudgetSummaryCard({
       setError("Savings cannot exceed budget.");
       return;
     }
+
+    if (budgetApplyTarget === "next") {
+      startTransition(async () => {
+        try {
+          await updateBudgetSettings({
+            monthly_budget_cents: b ?? null,
+            monthly_savings_cents: s ?? null,
+            budget_period: period,
+            apply_to_next_period: true,
+          });
+          toast.success(
+            nextPeriodStartLabel
+              ? `Budget gepland voor volgende loonsperiode (actief vanaf ${nextPeriodStartLabel}).`
+              : "Budget gepland voor volgende loonsperiode."
+          );
+          setShowModal(false);
+          router.refresh();
+          await invalidateSettings();
+        } catch (e) {
+          setError(e instanceof Error ? e.message : "Failed to save.");
+        }
+      });
+      return;
+    }
+
     const nextRemainingCents = derivePendingBudgetRemaining(b, s, expensesCents);
     setPendingBudgetSnapshot({
       monthlyBudgetCents: b ?? null,
@@ -151,6 +196,19 @@ export function BudgetSummaryCard({
               {pendingActive && (
                 <p className="mt-2 text-xs font-medium text-[var(--accent-focus)]">Bijwerken… tijdelijke waarden actief.</p>
               )}
+              {!historyMode && scheduledNextBudget ? (
+                <p className="mt-2 max-w-xl rounded-lg border border-cyan-500/25 bg-cyan-950/30 px-2.5 py-2 text-[10px] leading-snug text-cyan-100/95">
+                  Gepland vanaf{" "}
+                  {format(new Date(scheduledNextBudget.applies_from + "T12:00:00Z"), "d MMM yyyy", { locale: nl })}:{" "}
+                  {scheduledNextBudget.monthly_budget_cents != null
+                    ? formatCents(scheduledNextBudget.monthly_budget_cents, effectiveCurrency)
+                    : "—"}{" "}
+                  · spaar{" "}
+                  {scheduledNextBudget.monthly_savings_cents != null
+                    ? formatCents(scheduledNextBudget.monthly_savings_cents, effectiveCurrency)
+                    : "—"}
+                </p>
+              ) : null}
             </div>
             <button
               type="button"
@@ -271,6 +329,37 @@ export function BudgetSummaryCard({
         <p className="text-sm text-[var(--text-muted)]">
           Total amount available per {period === "weekly" ? "week" : "month"}, and how much you want to save. Remaining = budget − savings − expenses.
         </p>
+        {canChooseNextPeriod ? (
+          <div className="mt-4 space-y-2 rounded-lg border border-[var(--card-border)] bg-[var(--bg-surface)]/50 p-3">
+            <p className="text-xs font-semibold text-[var(--text-primary)]">Waarvoor geldt dit?</p>
+            <label className="flex cursor-pointer items-start gap-2.5 text-sm text-[var(--text-secondary)]">
+              <input
+                type="radio"
+                name="budgetApplySummary"
+                className="mt-1 h-3.5 w-3.5 shrink-0 border-[var(--card-border)] text-[rgb(var(--mode-rgb))] focus:ring-[rgb(var(--mode-rgb))]/40"
+                checked={budgetApplyTarget === "current"}
+                onChange={() => setBudgetApplyTarget("current")}
+              />
+              <span>
+                <span className="font-medium text-[var(--text-primary)]">Deze loonsperiode</span> — past je huidige
+                restant aan.
+              </span>
+            </label>
+            <label className="flex cursor-pointer items-start gap-2.5 text-sm text-[var(--text-secondary)]">
+              <input
+                type="radio"
+                name="budgetApplySummary"
+                className="mt-1 h-3.5 w-3.5 shrink-0 border-[var(--card-border)] text-[rgb(var(--mode-rgb))] focus:ring-[rgb(var(--mode-rgb))]/40"
+                checked={budgetApplyTarget === "next"}
+                onChange={() => setBudgetApplyTarget("next")}
+              />
+              <span>
+                <span className="font-medium text-[var(--text-primary)]">Volgende loonsperiode</span>
+                {nextPeriodStartLabel ? <> (start {nextPeriodStartLabel})</> : null} — huidige periode ongewijzigd.
+              </span>
+            </label>
+          </div>
+        ) : null}
         <div className="mt-4 space-y-4">
           <div>
             <label className="block text-sm font-medium text-[var(--text-primary)]">Budget period</label>

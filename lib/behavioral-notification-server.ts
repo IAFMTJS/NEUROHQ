@@ -4,6 +4,7 @@ import { normalizeStrategyEngineParams } from "@/lib/strategy/engine-params";
 import type { TriggerType } from "@/lib/behavioral-notifications";
 import { getModeFromState } from "@/lib/app-mode";
 import { getWeekBounds } from "@/lib/utils/timezone";
+import type { PushPayload } from "@/lib/push";
 
 type ConsistencyRow = {
   date: string;
@@ -281,5 +282,51 @@ export async function markBehavioralNotificationSent(
       },
       { onConflict: "user_id,trigger_type" }
     );
+}
+
+/**
+ * Brain-status check-in streak milestones (7 / 14 / 30 days): in-app HQ alert only.
+ * Sets push_sent_at so hourly pending-alert sweep does not send a web push.
+ */
+export async function insertBrainCheckinStreakMilestoneAlert(
+  supabase: SupabaseClient,
+  userId: string,
+  result: { trigger: TriggerType; payload: PushPayload },
+  todayStr: string
+): Promise<boolean> {
+  const m = String(result.trigger).match(/^brain_status_streak_(\d+)$/);
+  if (!m) return false;
+
+  const { canSend } = await canSendBehavioralNotification(supabase, userId, result.trigger, new Date());
+  if (!canSend) return false;
+
+  const days = m[1];
+  const pushTag = `hq-checkin-streak-${days}-${todayStr}`.slice(0, 120);
+  const rawUrl = result.payload.url?.trim() || "/dashboard";
+  const linkPath = rawUrl.startsWith("/") ? rawUrl : `/${rawUrl}`;
+  const nowIso = new Date().toISOString();
+  const title = (result.payload.title ?? "NEUROHQ").slice(0, 200);
+  const body = result.payload.body?.slice(0, 2000) ?? null;
+
+  const { error } = await supabase.from("user_alerts").insert({
+    user_id: userId,
+    title,
+    body,
+    severity: "info",
+    link_path: linkPath,
+    push_tag: pushTag,
+    push_sent_at: nowIso,
+  });
+
+  if (error) {
+    const code = (error as { code?: string }).code;
+    const msg = String((error as { message?: string }).message ?? "");
+    if (code === "23505" || msg.includes("duplicate key")) return false;
+    console.warn("[insertBrainCheckinStreakMilestoneAlert]", error);
+    return false;
+  }
+
+  await markBehavioralNotificationSent(supabase, userId, result.trigger);
+  return true;
 }
 

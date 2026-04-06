@@ -145,13 +145,23 @@ export async function setPlatformGameChecklistItem(gameId: string, itemId: strin
   );
   if (error) throw new Error(error.message);
 
+  let levelUp: boolean | undefined;
+  let newLevel: number | undefined;
   if (won && spec.rewardXp > 0) {
-    await addXP(spec.rewardXp, { source_type: "platform_game_win", skipOverdriveMultiplier: true });
+    const xpRes = await addXP(spec.rewardXp, { source_type: "platform_game_win", skipOverdriveMultiplier: true });
+    if (xpRes?.levelUp === true && typeof xpRes.newLevel === "number") {
+      levelUp = true;
+      newLevel = xpRes.newLevel;
+    }
   }
 
   revalidatePath("/profile");
   revalidatePath("/dashboard");
-  return { ok: true as const, completed: Boolean(completed_at) };
+  return {
+    ok: true as const,
+    completed: Boolean(completed_at),
+    ...(levelUp ? { levelUp: true as const, newLevel: newLevel! } : {}),
+  };
 }
 
 /** Antwoord indienen voor answer-mode; accepts alleen server-side. */
@@ -196,8 +206,14 @@ export async function submitPlatformGameAnswer(gameId: string, rawAnswer: string
   );
   if (error) return { ok: false as const, error: error.message };
 
+  let levelUp: boolean | undefined;
+  let newLevel: number | undefined;
   if (spec.rewardXp > 0) {
-    await addXP(spec.rewardXp, { source_type: "platform_game_win", skipOverdriveMultiplier: true });
+    const xpRes = await addXP(spec.rewardXp, { source_type: "platform_game_win", skipOverdriveMultiplier: true });
+    if (xpRes?.levelUp === true && typeof xpRes.newLevel === "number") {
+      levelUp = true;
+      newLevel = xpRes.newLevel;
+    }
   }
 
   revalidatePath("/profile");
@@ -206,5 +222,6 @@ export async function submitPlatformGameAnswer(gameId: string, rawAnswer: string
     ok: true as const,
     completed: true as const,
     message: spec.winMessage ?? "Goed zo!",
+    ...(levelUp ? { levelUp: true as const, newLevel: newLevel! } : {}),
   };
 }

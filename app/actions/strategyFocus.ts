@@ -22,6 +22,8 @@ import {
   parseWeeklyReviewPayload,
   type StrategyWeeklyReviewPayload,
 } from "@/lib/strategy/weekly-review-payload";
+import { getBudgetWeekBounds } from "@/lib/utils/budget-date";
+import { todayDateString } from "@/lib/utils/timezone";
 
 export type StrategyFocusRow = {
   id: string;
@@ -573,28 +575,32 @@ export async function getStrategyReviewStatus(
   reviewDue: boolean;
 }> {
   const supabase = await createClient();
-  const now = new Date();
-  const day = now.getDay();
-  const weekStart = new Date(now);
-  weekStart.setDate(now.getDate() - (day === 0 ? 6 : day - 1));
-  const weekStartStr = weekStart.toISOString().slice(0, 10);
-  const start = new Date(strategyStartDate);
-  const weekNumber = Math.max(
-    0,
-    Math.floor((weekStart.getTime() - start.getTime()) / (7 * 24 * 60 * 60 * 1000))
-  );
+  const today = todayDateString();
+  const { start: weekStartStr } = getBudgetWeekBounds(today);
+  const startYmd = strategyStartDate.slice(0, 10);
+  const weekStartAnchor = new Date(`${weekStartStr}T12:00:00Z`).getTime();
+  const startAnchor = new Date(`${startYmd}T12:00:00Z`).getTime();
+  const weekNumber = Math.max(0, Math.floor((weekStartAnchor - startAnchor) / (7 * 24 * 60 * 60 * 1000)));
 
-  const { data: last } = await supabase
-    .from("strategy_review")
-    .select("*")
-    .eq("strategy_id", strategyId)
-    .order("week_number", { ascending: false })
-    .limit(1)
-    .maybeSingle();
+  const [{ data: last }, { data: matchRows }] = await Promise.all([
+    supabase
+      .from("strategy_review")
+      .select("*")
+      .eq("strategy_id", strategyId)
+      .order("week_number", { ascending: false })
+      .limit(1)
+      .maybeSingle(),
+    supabase
+      .from("strategy_review")
+      .select("weekly_review_payload, week_start, week_number")
+      .eq("strategy_id", strategyId)
+      .or(`week_start.eq.${weekStartStr},week_number.eq.${weekNumber}`),
+  ]);
 
   const lastReview = last as StrategyReviewRow | null;
-  const lastWeekStart = lastReview?.week_start;
-  const reviewDue = !lastWeekStart || lastWeekStart < weekStartStr;
+  const rows = (matchRows ?? []) as { weekly_review_payload?: unknown; week_start?: string; week_number?: number }[];
+  const completedThisWeek = rows.some((r) => parseWeeklyReviewPayload(r.weekly_review_payload) !== null);
+  const reviewDue = !completedThisWeek;
 
   return { lastReview, weekStart: weekStartStr, weekNumber, reviewDue };
 }
@@ -673,16 +679,6 @@ export async function getStrategyAppReviewLockState(): Promise<{ locked: boolean
   const status = await getStrategyReviewStatus(strategyId, startDate);
   if (!status.reviewDue) return { locked: false };
 
-  const { data: weekRow } = await supabase
-    .from("strategy_review")
-    .select("weekly_review_payload")
-    .eq("strategy_id", strategyId)
-    .eq("week_start", status.weekStart)
-    .maybeSingle();
-
-  const payload = (weekRow as { weekly_review_payload?: unknown } | null)?.weekly_review_payload;
-  if (parseWeeklyReviewPayload(payload) !== null) return { locked: false };
-
   return { locked: true };
 }
 
@@ -705,12 +701,8 @@ export async function getAlignmentThisWeek(strategyId: string): Promise<{
   const planned = distributionFractions(
     normalizeAllocation(strategy.weekly_allocation as Record<string, unknown>)
   );
-  const now = new Date();
-  const day = now.getDay();
-  const weekStart = new Date(now);
-  weekStart.setDate(now.getDate() - (day === 0 ? 6 : day - 1));
-  const weekStartStr = weekStart.toISOString().slice(0, 10);
-  const todayStr = now.toISOString().slice(0, 10);
+  const todayStr = todayDateString();
+  const { start: weekStartStr } = getBudgetWeekBounds(todayStr);
   const xpByDomain = await getXPByDomain(weekStartStr, todayStr);
   const total = Object.values(xpByDomain).reduce((a, b) => a + b, 0);
   const actual: Record<string, number> = {};

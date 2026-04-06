@@ -6,6 +6,7 @@ import type { ProfileSpecialGameRow } from "@/app/actions/profile-special-events
 import { setPlatformGameChecklistItem, submitPlatformGameAnswer } from "@/app/actions/platform-game-progress";
 import { getMetricPreset } from "@/lib/platform-games-metric-presets";
 import { neuroToast } from "@/lib/ui/neuro-toast";
+import { showLevelUpCelebration } from "@/lib/ui/level-up-celebration";
 
 function opSymbol(op: string): string {
   if (op === "gte") return "≥";
@@ -56,7 +57,10 @@ export function PlatformGameProgressPanel({
                     startTransition(() => {
                       void (async () => {
                         try {
-                          await setPlatformGameChecklistItem(game.id, item.id, next);
+                          const r = await setPlatformGameChecklistItem(game.id, item.id, next);
+                          if (r.levelUp === true && typeof r.newLevel === "number") {
+                            showLevelUpCelebration({ newLevel: r.newLevel });
+                          }
                           onAfterServerMutation?.();
                           router.refresh();
                         } catch (err) {
@@ -193,6 +197,9 @@ export function PlatformGameProgressPanel({
                         return;
                       }
                       setAnswer("");
+                      if (res.levelUp === true && typeof res.newLevel === "number") {
+                        showLevelUpCelebration({ newLevel: res.newLevel });
+                      }
                       if (res.message && res.message.trim()) neuroToast.success(res.message);
                       onAfterServerMutation?.();
                       router.refresh();

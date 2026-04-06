@@ -15,20 +15,19 @@
      - Directional top-lighting across components
   */
 
-  /* 1) Background scale (dark-1..dark-5) – dark blue only, no pure black
-     contrast reset: ~10% darker baseline for stronger light peaks */
-  --hud-dark-1: #0e1928;
-  --hud-dark-2: #0b1522;
-  --hud-dark-3: #09111d;
-  --hud-dark-4: #070d17;
-  --hud-dark-5: #050a12;
+  /* 1) Background scale (dark-1..dark-5) – dark blue only, no pure black */
+  --hud-dark-1: #0a141f;
+  --hud-dark-2: #080f18;
+  --hud-dark-3: #060c14;
+  --hud-dark-4: #050910;
+  --hud-dark-5: #03060c;
 
   /* Optional rgb channels for alpha compositions */
-  --hud-dark-1-rgb: 14, 25, 40;
-  --hud-dark-2-rgb: 11, 21, 34;
-  --hud-dark-3-rgb: 9, 17, 29;
-  --hud-dark-4-rgb: 7, 13, 23;
-  --hud-dark-5-rgb: 5, 10, 18;
+  --hud-dark-1-rgb: 10, 20, 31;
+  --hud-dark-2-rgb: 8, 15, 24;
+  --hud-dark-3-rgb: 6, 12, 20;
+  --hud-dark-4-rgb: 5, 9, 16;
+  --hud-dark-5-rgb: 3, 6, 12;
 
   /* 2) HUD accent luminance scale (100..900) – names kept as hud-cyan-*; tints follow DCIC --mode-rgb / --mode-rgb-deep */
   --hud-cyan-100: color-mix(in srgb, rgb(var(--mode-rgb)) 14%, white);
@@ -62,7 +61,7 @@
   --hud-radius-lg: 28px;
 
   /* Support tokens for directional lighting + panel separation */
-  --hud-light-top: radial-gradient(circle at 50% 0%, rgba(var(--mode-rgb), 0.24), transparent 58%);
+  --hud-light-top: radial-gradient(circle at 50% 0%, rgba(var(--mode-rgb), 0.12), transparent 58%);
   --hud-energy-strip: linear-gradient(90deg, transparent, rgba(var(--mode-rgb), 0.6), transparent);
   --hud-frame-bg: linear-gradient(180deg, var(--hud-dark-3) 0%, var(--hud-dark-5) 100%);
   --hud-body-bg: linear-gradient(180deg, var(--hud-dark-1) 0%, var(--hud-dark-2) 100%);
@@ -70,15 +69,15 @@
   /* Card / glass surfaces — same family as SciFiPanel (mode-rgb aware) */
   --hud-surface-card: linear-gradient(
     185deg,
-    rgba(12, 22, 38, 0.94) 0%,
-    rgba(6, 12, 22, 0.9) 45%,
-    rgba(var(--mode-rgb-deep), 0.14) 100%
+    rgba(8, 14, 24, 0.96) 0%,
+    rgba(4, 8, 16, 0.94) 45%,
+    rgba(var(--mode-rgb-deep), 0.06) 100%
   );
   --hud-surface-card-elevated: linear-gradient(
     165deg,
-    rgba(var(--mode-rgb-deep), 0.38) 0%,
-    rgba(8, 14, 26, 0.9) 52%,
-    rgba(var(--mode-rgb), 0.14) 100%
+    rgba(var(--mode-rgb-deep), 0.16) 0%,
+    rgba(5, 10, 18, 0.94) 52%,
+    rgba(var(--mode-rgb), 0.07) 100%
   );
   --hud-card-rim: 0 0 0 1px rgba(0, 0, 0, 0.38), 0 0 22px rgba(var(--mode-rgb), 0.1), 0 14px 40px rgba(0, 0, 0, 0.48),
     inset 0 1px 0 rgba(255, 255, 255, 0.07), inset 0 -12px 28px rgba(0, 0, 0, 0.38);
@@ -90,9 +89,9 @@
   --hud-amber-500-rgb: 255, 158, 36;
 
   /* Backgrounds – slightly darker for contrast range */
-  --bg-main: #050810;
-  --bg-elevated: #0D1320;
-  --bg-card: #0E1420;
+  --bg-main: #03060c;
+  --bg-elevated: #080c14;
+  --bg-card: #0a0e16;
 
   /* Accent Colors */
   --accent-primary: #2563EB;
@@ -117,10 +116,10 @@
   --shadow-button: 0 6px 18px var(--glow-primary);
   --shadow-button-top: inset 0 1px 0 rgba(255,255,255,0.28);
   /* Center spotlight – focus hierarchy */
-  --spotlight: radial-gradient(circle at 50% 25%, rgba(var(--mode-rgb-deep),0.15), transparent 60%);
-  --spotlight-opacity: 0.65;
+  --spotlight: radial-gradient(circle at 50% 25%, rgba(var(--mode-rgb-deep),0.08), transparent 60%);
+  --spotlight-opacity: 0.42;
   /** Multiplier on body spotlight — aligned with /tasks so hubs stay cinematic, not washed out */
-  --ui-shell-spotlight-mult: 0.52;
+  --ui-shell-spotlight-mult: 0.36;
   /** Film grain on body::after — subtle, matches mission deck */
   --ui-shell-grain-opacity: 0.016;
   --spotlight-saturation: 1;
@@ -131,9 +130,9 @@
   --mode-rgb-deep: 0, 136, 255;
   --mode-text-soft: #bfefff;
   --mode-text-strong: #e9f7ff;
-  --mode-bg-main: #050c18;
-  --mode-bg-elevated: #0b1e32;
-  --mode-bg-surface: #081726;
+  --mode-bg-main: #03060e;
+  --mode-bg-elevated: #060d16;
+  --mode-bg-surface: #040910;
 
   /* Layout spacing – native-app feel, consistent rhythm */
   --page-padding-x: clamp(1rem, 4vw, 1.5rem);
@@ -151,24 +150,24 @@
   --cinematic-navy: #040712;
   --cinematic-navy-mid: #080d1c;
   --cinematic-navy-bottom: #0a0f22;
-  --cinematic-nebula: radial-gradient(ellipse 140% 90% at 50% 15%, rgba(var(--mode-rgb), 0.14), transparent 45%),
-    radial-gradient(ellipse 120% 70% at 75% 55%, rgba(var(--mode-rgb-deep), 0.1), transparent 50%),
-    radial-gradient(ellipse 90% 120% at 25% 65%, rgba(var(--mode-rgb), 0.08), transparent 45%),
-    radial-gradient(ellipse 80% 60% at 50% 85%, rgba(var(--mode-rgb-deep), 0.06), transparent 40%);
-  --cinematic-radial-top: radial-gradient(ellipse 110% 70% at 50% 0%, rgba(var(--mode-rgb-deep), 0.18), transparent 48%);
-  --cinematic-radial-mid: radial-gradient(ellipse 90% 60% at 50% 50%, rgba(var(--mode-rgb-deep), 0.08), transparent 52%);
-  --cinematic-radial-bottom: radial-gradient(ellipse 110% 50% at 50% 100%, rgba(var(--mode-rgb-deep), 0.1), transparent 48%);
+  --cinematic-nebula: radial-gradient(ellipse 140% 90% at 50% 15%, rgba(var(--mode-rgb), 0.07), transparent 45%),
+    radial-gradient(ellipse 120% 70% at 75% 55%, rgba(var(--mode-rgb-deep), 0.05), transparent 50%),
+    radial-gradient(ellipse 90% 120% at 25% 65%, rgba(var(--mode-rgb), 0.04), transparent 45%),
+    radial-gradient(ellipse 80% 60% at 50% 85%, rgba(var(--mode-rgb-deep), 0.03), transparent 40%);
+  --cinematic-radial-top: radial-gradient(ellipse 110% 70% at 50% 0%, rgba(var(--mode-rgb-deep), 0.09), transparent 48%);
+  --cinematic-radial-mid: radial-gradient(ellipse 90% 60% at 50% 50%, rgba(var(--mode-rgb-deep), 0.04), transparent 52%);
+  --cinematic-radial-bottom: radial-gradient(ellipse 110% 50% at 50% 100%, rgba(var(--mode-rgb-deep), 0.05), transparent 48%);
   --cinematic-glow-cyan: rgba(var(--mode-rgb), 0.22);
   --cinematic-vignette: radial-gradient(ellipse 80% 80% at 50% 50%, transparent 30%, rgba(4, 7, 18, 0.5) 70%, rgba(4, 7, 18, 0.85) 100%);
   /* Denser starfield – two layers: fine + medium stars */
   --starfield: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='600' height='600'%3E%3Cg fill='%23fff' fill-opacity='0.18'%3E%3Ccircle cx='15' cy='25' r='0.4'/%3E%3Ccircle cx='95' cy='110' r='0.5'/%3E%3Ccircle cx='180' cy='35' r='0.35'/%3E%3Ccircle cx='260' cy='165' r='0.45'/%3E%3Ccircle cx='340' cy='75' r='0.6'/%3E%3Ccircle cx='420' cy='190' r='0.4'/%3E%3Ccircle cx='50' cy='230' r='0.5'/%3E%3Ccircle cx='200' cy='280' r='0.55'/%3E%3Ccircle cx='320' cy='330' r='0.4'/%3E%3Ccircle cx='30' cy='360' r='0.45'/%3E%3Ccircle cx='280' cy='45' r='0.35'/%3E%3Ccircle cx='140' cy='155' r='0.6'/%3E%3Ccircle cx='380' cy='260' r='0.5'/%3E%3Ccircle cx='110' cy='380' r='0.45'/%3E%3Ccircle cx='350' cy='115' r='0.55'/%3E%3Ccircle cx='220' cy='400' r='0.4'/%3E%3Ccircle cx='470' cy='320' r='0.5'/%3E%3Ccircle cx='70' cy='450' r='0.35'/%3E%3Ccircle cx='250' cy='500' r='0.6'/%3E%3Ccircle cx='400' cy='450' r='0.4'/%3E%3Ccircle cx='500' cy='80' r='0.45'/%3E%3Ccircle cx='550' cy='250' r='0.5'/%3E%3C/g%3E%3Cg fill='%23fff' fill-opacity='0.08'%3E%3Ccircle cx='45' cy='70' r='0.25'/%3E%3Ccircle cx='130' cy='180' r='0.3'/%3E%3Ccircle cx='290' cy='95' r='0.2'/%3E%3Ccircle cx='170' cy='240' r='0.28'/%3E%3Ccircle cx='360' cy='200' r='0.25'/%3E%3Ccircle cx='80' cy='310' r='0.3'/%3E%3Ccircle cx='240' cy='350' r='0.22'/%3E%3Ccircle cx='410' cy='380' r='0.28'/%3E%3Ccircle cx='520' cy='150' r='0.25'/%3E%3C/g%3E%3C/svg%3E");
   --starfield-size: 600px;
   /* Galaxy vibe: milky band, core glow, dust clouds */
-  --galaxy-band: linear-gradient(105deg, transparent 0%, transparent 35%, rgba(var(--mode-rgb-deep), 0.06) 48%, rgba(var(--mode-rgb), 0.08) 50%, rgba(var(--mode-rgb-deep), 0.06) 52%, transparent 65%, transparent 100%);
-  --galaxy-core: radial-gradient(ellipse 80% 40% at 50% 8%, rgba(var(--mode-rgb), 0.12), transparent 50%),
-    radial-gradient(ellipse 60% 80% at 85% 60%, rgba(var(--mode-rgb-deep), 0.06), transparent 45%),
-    radial-gradient(ellipse 50% 60% at 15% 70%, rgba(var(--mode-rgb-deep), 0.05), transparent 40%);
-  --galaxy-dust: radial-gradient(ellipse 100% 50% at 50% 20%, rgba(var(--mode-rgb-deep), 0.07), transparent 55%);
+  --galaxy-band: linear-gradient(105deg, transparent 0%, transparent 35%, rgba(var(--mode-rgb-deep), 0.03) 48%, rgba(var(--mode-rgb), 0.04) 50%, rgba(var(--mode-rgb-deep), 0.03) 52%, transparent 65%, transparent 100%);
+  --galaxy-core: radial-gradient(ellipse 80% 40% at 50% 8%, rgba(var(--mode-rgb), 0.06), transparent 50%),
+    radial-gradient(ellipse 60% 80% at 85% 60%, rgba(var(--mode-rgb-deep), 0.03), transparent 45%),
+    radial-gradient(ellipse 50% 60% at 15% 70%, rgba(var(--mode-rgb-deep), 0.025), transparent 40%);
+  --galaxy-dust: radial-gradient(ellipse 100% 50% at 50% 20%, rgba(var(--mode-rgb-deep), 0.035), transparent 55%);
   --glow-depth: 0 8px 32px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.04);
   /* Realistic neon – electric cyan, deep blue, warm orange (real tube glow) */
   --neon-cyan: rgb(var(--mode-rgb));
@@ -200,10 +199,10 @@
   --text-glow-cyan: 0 0 12px rgba(var(--mode-rgb), 0.4), 0 0 4px rgba(var(--mode-rgb), 0.25);
 
   /* hud-test module (hud.module.css) – global :root vars so CSS Modules pure selector rule is satisfied */
-  --dark-1: #060e1a;
-  --dark-2: #0a1626;
-  --dark-3: #0f2236;
-  --dark-4: #122b44;
+  --dark-1: #05080f;
+  --dark-2: #070d14;
+  --dark-3: #0a121c;
+  --dark-4: #0c1622;
   --primary-cyan: rgb(var(--mode-rgb));
   --cyan-mid: rgb(var(--mode-rgb-deep));
   --cyan-soft: rgba(var(--mode-rgb), 0.35);
@@ -822,7 +821,7 @@
 /* ========== RING-STYLE GLOWS – alle pagina’s (zelfde familie als brain status rings) ========== */
 /* Card-simple: fat glass surface (geen HUD-rim / inset-glow) */
 .card-simple {
-  background: color-mix(in srgb, var(--mode-bg-surface) 84%, black);
+  background: color-mix(in srgb, var(--mode-bg-surface) 89%, black);
   backdrop-filter: var(--hq-fat-glass-blur-card);
   -webkit-backdrop-filter: var(--hq-fat-glass-blur-card);
   border-radius: var(--hq-card-radius, 18px);
@@ -858,7 +857,7 @@
 
 /* Card-simple-accent: fat glass, iets lichter dan card-simple */
 .card-simple-accent {
-  background: color-mix(in srgb, var(--mode-bg-elevated) 88%, black);
+  background: color-mix(in srgb, var(--mode-bg-elevated) 90%, black);
   backdrop-filter: var(--hq-fat-glass-blur-card);
   -webkit-backdrop-filter: var(--hq-fat-glass-blur-card);
   border-radius: var(--hq-card-radius, 18px);
@@ -2027,10 +2026,10 @@ body {
   z-index: 1;
   isolation: isolate;
   background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.04) 0%, transparent 28%, transparent 72%, rgba(0, 0, 0, 0.38) 100%),
-    radial-gradient(ellipse 100% 85% at 50% -8%, rgba(var(--mode-rgb), 0.08), transparent 58%),
-    radial-gradient(ellipse 80% 55% at 100% 0%, rgba(var(--mode-rgb-deep), 0.05), transparent 52%),
-    color-mix(in srgb, var(--mode-bg-main) 97%, black);
+    linear-gradient(180deg, rgba(255, 255, 255, 0.022) 0%, transparent 28%, transparent 72%, rgba(0, 0, 0, 0.48) 100%),
+    radial-gradient(ellipse 100% 85% at 50% -8%, rgba(var(--mode-rgb), 0.04), transparent 58%),
+    radial-gradient(ellipse 80% 55% at 100% 0%, rgba(var(--mode-rgb-deep), 0.025), transparent 52%),
+    color-mix(in srgb, var(--mode-bg-main) 98%, black);
   backdrop-filter: blur(24px) saturate(1.12);
   -webkit-backdrop-filter: blur(24px) saturate(1.12);
   box-shadow:
@@ -2041,13 +2040,13 @@ body {
 /* Main scroll area: zelfde basis als glass-cards (mode-bg), zachte accent-vegen i.p.v. zware cyan wash */
 main#main-content.hq-deck-ambient-shell {
   background:
-    radial-gradient(ellipse 92% 50% at 50% -14%, rgba(var(--mode-rgb), 0.07), transparent 58%),
-    radial-gradient(ellipse 55% 38% at 100% 0%, rgba(var(--mode-rgb-deep), 0.05), transparent 52%),
+    radial-gradient(ellipse 92% 50% at 50% -14%, rgba(var(--mode-rgb), 0.035), transparent 58%),
+    radial-gradient(ellipse 55% 38% at 100% 0%, rgba(var(--mode-rgb-deep), 0.028), transparent 52%),
     linear-gradient(
       to bottom,
-      color-mix(in srgb, var(--mode-bg-main) 97%, black) 0%,
-      color-mix(in srgb, var(--mode-bg-main) 94%, black) 44%,
-      color-mix(in srgb, var(--mode-bg-main) 98%, black) 100%
+      color-mix(in srgb, var(--mode-bg-main) 98%, black) 0%,
+      color-mix(in srgb, var(--mode-bg-main) 96%, black) 44%,
+      color-mix(in srgb, var(--mode-bg-main) 99%, black) 100%
     );
   backdrop-filter: var(--hq-fat-glass-blur);
   -webkit-backdrop-filter: var(--hq-fat-glass-blur);
@@ -2063,7 +2062,7 @@ main#main-content.hq-deck-ambient-shell {
 .hq-frosted-main-shell {
   border-radius: 0.75rem;
   border: 1px solid rgba(var(--mode-rgb), 0.12);
-  background: rgba(4, 12, 22, 0.22);
+  background: rgba(2, 6, 12, 0.42);
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
   padding: 0.75rem;
 }
@@ -2082,7 +2081,7 @@ main#main-content.hq-deck-ambient-shell {
 .dashboard-cinematic .hq-frosted-main-shell {
   border-radius: var(--hq-card-radius, 20px);
   border: 1px solid rgba(var(--mode-rgb), 0.16);
-  background: color-mix(in srgb, var(--mode-bg-surface) 82%, black);
+  background: color-mix(in srgb, var(--mode-bg-surface) 88%, black);
   backdrop-filter: var(--hq-fat-glass-blur);
   -webkit-backdrop-filter: var(--hq-fat-glass-blur);
   box-shadow:
@@ -2162,7 +2161,7 @@ main.tasks-page-root {
 [data-deck-chrome="true"] .dashboard-cinematic .card-simple,
 [data-deck-chrome="true"] .dashboard-cinematic .card-simple-accent {
   border: 1px solid rgba(var(--mode-rgb), 0.18) !important;
-  background: color-mix(in srgb, var(--mode-bg-surface) 84%, black) !important;
+  background: color-mix(in srgb, var(--mode-bg-surface) 89%, black) !important;
   backdrop-filter: var(--hq-fat-glass-blur-card);
   -webkit-backdrop-filter: var(--hq-fat-glass-blur-card);
   box-shadow:
@@ -2707,8 +2706,8 @@ header h1 { margin: 0; }
   border: 1px solid rgba(var(--mode-rgb), 0.18);
   background: linear-gradient(
     165deg,
-    color-mix(in srgb, var(--mode-bg-surface) 82%, rgb(var(--mode-rgb-deep))) 0%,
-    color-mix(in srgb, var(--mode-bg-main) 88%, black) 100%
+    color-mix(in srgb, var(--mode-bg-surface) 90%, black) 0%,
+    color-mix(in srgb, var(--mode-bg-main) 92%, black) 100%
   );
   backdrop-filter: var(--hq-fat-glass-blur);
   -webkit-backdrop-filter: var(--hq-fat-glass-blur);
@@ -2766,7 +2765,7 @@ header h1 { margin: 0; }
   padding: 0.75rem 1rem 1rem;
   margin-bottom: 0.5rem;
   border: 1px solid rgba(var(--mode-rgb), 0.16);
-  background: color-mix(in srgb, var(--mode-bg-surface) 82%, black) !important;
+  background: color-mix(in srgb, var(--mode-bg-surface) 88%, black) !important;
   backdrop-filter: var(--hq-fat-glass-blur);
   -webkit-backdrop-filter: var(--hq-fat-glass-blur);
   box-shadow:
@@ -2777,7 +2776,7 @@ header h1 { margin: 0; }
 
 .dashboard-bridge-body {
   padding: 1rem 1rem 1.125rem !important;
-  background: color-mix(in srgb, var(--mode-bg-surface) 80%, black) !important;
+  background: color-mix(in srgb, var(--mode-bg-surface) 87%, black) !important;
   backdrop-filter: var(--hq-fat-glass-blur-card);
   -webkit-backdrop-filter: var(--hq-fat-glass-blur-card);
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
@@ -2854,7 +2853,7 @@ header h1 { margin: 0; }
 .dashboard-cinematic .card-simple,
 .dashboard-cinematic .card-simple-accent {
   border: 1px solid rgba(var(--mode-rgb), 0.18) !important;
-  background: color-mix(in srgb, var(--mode-bg-surface) 84%, black) !important;
+  background: color-mix(in srgb, var(--mode-bg-surface) 89%, black) !important;
   backdrop-filter: var(--hq-fat-glass-blur-card);
   -webkit-backdrop-filter: var(--hq-fat-glass-blur-card);
   box-shadow:
@@ -2869,7 +2868,7 @@ header h1 { margin: 0; }
  */
 .tasks-command-deck.dashboard-cinematic .glass-card {
   border: 1px solid rgba(var(--mode-rgb), 0.24) !important;
-  background: color-mix(in srgb, var(--mode-bg-surface) 82%, black) !important;
+  background: color-mix(in srgb, var(--mode-bg-surface) 87%, black) !important;
   backdrop-filter: var(--hq-fat-glass-blur-card) !important;
   -webkit-backdrop-filter: var(--hq-fat-glass-blur-card) !important;
   box-shadow:
@@ -2881,7 +2880,7 @@ header h1 { margin: 0; }
 .tasks-command-deck.dashboard-cinematic .card-simple,
 .tasks-command-deck.dashboard-cinematic .card-simple-accent {
   border: 1px solid rgba(var(--mode-rgb), 0.24) !important;
-  background: color-mix(in srgb, var(--mode-bg-surface) 82%, black) !important;
+  background: color-mix(in srgb, var(--mode-bg-surface) 87%, black) !important;
   backdrop-filter: var(--hq-fat-glass-blur-card) !important;
   -webkit-backdrop-filter: var(--hq-fat-glass-blur-card) !important;
   box-shadow:
@@ -3737,6 +3736,10 @@ header h1 { margin: 0; }
   --text-secondary: var(--text-soft);
   --text-muted: var(--text-soft);
   --bg-primary: var(--bg-main);
+  /** Inline panels / chips — aligned to mode surface, biased dark (was undefined in some builds) */
+  --bg-surface: color-mix(in srgb, var(--mode-bg-surface) 88%, black);
+  --bg-hover: color-mix(in srgb, var(--mode-bg-elevated) 88%, black);
+  --dc-bg-elevated: color-mix(in srgb, var(--mode-bg-elevated) 85%, black);
   --bg-secondary: var(--bg-elevated);
   --border-subtle: var(--border-soft);
   --card-border: var(--border-soft);
@@ -3780,7 +3783,7 @@ header h1 { margin: 0; }
 
   --card-shadow: var(--shadow-card);
   --modal-backdrop: rgba(0, 0, 0, 0.62);
-  --modal-bg: linear-gradient(185deg, rgba(12, 22, 38, 0.98) 0%, rgba(6, 12, 22, 0.96) 100%);
+  --modal-bg: linear-gradient(185deg, rgba(7, 12, 20, 0.98) 0%, rgba(3, 6, 12, 0.97) 100%);
   --modal-border: rgba(var(--mode-rgb), 0.22);
   --modal-title-bg: rgba(255, 255, 255, 0.04);
   --modal-panel-radius: 18px;
@@ -3903,7 +3906,7 @@ header h1 { margin: 0; }
 .glass-panel,
 .glass-card,
 .hq-card {
-  background: color-mix(in srgb, var(--mode-bg-surface) 84%, black);
+  background: color-mix(in srgb, var(--mode-bg-surface) 89%, black);
   backdrop-filter: var(--hq-fat-glass-blur-card);
   -webkit-backdrop-filter: var(--hq-fat-glass-blur-card);
   border-radius: var(--hq-card-radius, 20px);
@@ -3943,7 +3946,7 @@ header h1 { margin: 0; }
 .glass-card-3d,
 .glass-card.glass-card-3d,
 .card.glass-card-3d {
-  background: color-mix(in srgb, var(--mode-bg-surface) 84%, black) !important;
+  background: color-mix(in srgb, var(--mode-bg-surface) 89%, black) !important;
   backdrop-filter: var(--hq-fat-glass-blur-card);
   -webkit-backdrop-filter: var(--hq-fat-glass-blur-card);
   box-shadow:
@@ -3960,7 +3963,7 @@ header h1 { margin: 0; }
   display: none !important;
 }
 .cinematic-card.glass-card-3d {
-  background: color-mix(in srgb, var(--mode-bg-surface) 84%, black) !important;
+  background: color-mix(in srgb, var(--mode-bg-surface) 89%, black) !important;
   backdrop-filter: var(--hq-fat-glass-blur-card);
   -webkit-backdrop-filter: var(--hq-fat-glass-blur-card);
   box-shadow:

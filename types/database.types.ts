@@ -2114,6 +2114,7 @@ export type Database = {
           completed_task_ids: unknown
           created_at: string
           current_week_index: number
+          growth_calendar_week_start: string | null
           id: string
           locale: string
           preferred_tier: string
@@ -2125,6 +2126,7 @@ export type Database = {
           completed_task_ids?: unknown
           created_at?: string
           current_week_index?: number
+          growth_calendar_week_start?: string | null
           id?: string
           locale?: string
           preferred_tier?: string
@@ -2136,6 +2138,7 @@ export type Database = {
           completed_task_ids?: unknown
           created_at?: string
           current_week_index?: number
+          growth_calendar_week_start?: string | null
           id?: string
           locale?: string
           preferred_tier?: string
@@ -3608,6 +3611,10 @@ export type Database = {
           last_rollover_date: string | null
           monthly_budget_cents: number | null
           monthly_savings_cents: number | null
+          next_budget_applies_from: string | null
+          next_budget_period: string | null
+          next_period_monthly_budget_cents: number | null
+          next_period_monthly_savings_cents: number | null
           payday_day_of_month: number | null
           push_quiet_hours_end: string | null
           push_quiet_hours_start: string | null
@@ -3642,6 +3649,10 @@ export type Database = {
           last_rollover_date?: string | null
           monthly_budget_cents?: number | null
           monthly_savings_cents?: number | null
+          next_budget_applies_from?: string | null
+          next_budget_period?: string | null
+          next_period_monthly_budget_cents?: number | null
+          next_period_monthly_savings_cents?: number | null
           payday_day_of_month?: number | null
           push_quiet_hours_end?: string | null
           push_quiet_hours_start?: string | null
@@ -3676,6 +3687,10 @@ export type Database = {
           last_rollover_date?: string | null
           monthly_budget_cents?: number | null
           monthly_savings_cents?: number | null
+          next_budget_applies_from?: string | null
+          next_budget_period?: string | null
+          next_period_monthly_budget_cents?: number | null
+          next_period_monthly_savings_cents?: number | null
           payday_day_of_month?: number | null
           push_quiet_hours_end?: string | null
           push_quiet_hours_start?: string | null

@@ -33,6 +33,7 @@ import { TasksRoutineTabFallback } from "@/components/missions/TasksRoutineTabFa
 import { TasksCalendarTabFallback } from "@/components/missions/TasksCalendarTabFallback";
 import { TasksCalendarSection } from "@/components/missions";
 import { getGrowthEngineSnapshot } from "@/app/actions/growth-snapshot";
+import { syncGrowthFocusProtocolToCalendarWeek } from "@/app/actions/growth-protocol-calendar-sync";
 import { getBehaviorProfile } from "@/app/actions/behavior-profile";
 import { GrowthMissionsRibbon } from "@/components/growth/GrowthMissionsRibbon";
 /** Tasks page must always run on the server so latest data is rendered after refresh. */
@@ -356,6 +357,7 @@ async function RoutineSectionFromPromise({
 
 export default async function TasksPage({ searchParams }: Props) {
   const dateStr = todayDateString();
+  await syncGrowthFocusProtocolToCalendarWeek();
   /** Overlap with `searchParams` (same request); tab shell needs all three panels on first paint. */
   const prefsPromise = getUserPreferencesOrDefaults();
   const backlogPromise = getBacklogTasks(dateStr);

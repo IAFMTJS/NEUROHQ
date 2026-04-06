@@ -91,7 +91,7 @@ describe("maybeAutoTriggerOverdrive", () => {
     const s = baseState();
     const d = maybeAutoTriggerOverdrive(s, {
       nowMs: Date.now(),
-      localHour: 19,
+      localHour: 17,
       alreadyTriggeredToday: false,
       modeLocked: false,
       completionsInLast45m: 1,
@@ -152,17 +152,33 @@ describe("maybeAutoTriggerOverdrive", () => {
     expect(d.shouldTrigger).toBe(false);
   });
 
-  it("does not weekly_slot outside 9–20 window", () => {
+  it("does not auto-trigger outside 08:00–18:00 (weekly_slot at 07:00)", () => {
     const s = baseState();
     const d = maybeAutoTriggerOverdrive(s, {
       nowMs: Date.now(),
-      localHour: 8,
+      localHour: 7,
       alreadyTriggeredToday: false,
       modeLocked: false,
       completionsInLast45m: 0,
       completionsToday: 0,
       streakAtRisk: false,
       weeklyRandomSlotToday: true,
+      weeklySlotTriggersThisIsoWeek: 0,
+    });
+    expect(d.shouldTrigger).toBe(false);
+  });
+
+  it("does not auto-trigger outside 08:00–18:00 (momentum at 19:00)", () => {
+    const s = baseState();
+    const d = maybeAutoTriggerOverdrive(s, {
+      nowMs: Date.now(),
+      localHour: 19,
+      alreadyTriggeredToday: false,
+      modeLocked: false,
+      completionsInLast45m: 3,
+      completionsToday: 3,
+      streakAtRisk: false,
+      weeklyRandomSlotToday: false,
       weeklySlotTriggersThisIsoWeek: 0,
     });
     expect(d.shouldTrigger).toBe(false);

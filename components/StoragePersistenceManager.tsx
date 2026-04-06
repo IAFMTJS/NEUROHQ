@@ -2,22 +2,7 @@
 
 import { useEffect } from "react";
 import { NEUROHQ_DAILY_SNAPSHOT_UPDATED } from "@/lib/bootstrap-query";
-
-function requestDurableStorage() {
-  if (typeof window === "undefined" || !("storage" in navigator)) return;
-  const storage: Navigator["storage"] & { persist?: () => Promise<boolean>; persisted?: () => Promise<boolean> } =
-    navigator.storage as Navigator["storage"] & { persist?: () => Promise<boolean>; persisted?: () => Promise<boolean> };
-  if (!storage?.persist) return;
-  storage
-    .persisted?.()
-    .then((isPersisted: boolean) => {
-      if (isPersisted) return;
-      return storage.persist?.();
-    })
-    .catch(() => {
-      // Ignore persistence errors; browser may not support it.
-    });
-}
+import { requestDurableStorage } from "@/lib/storage-persist";
 
 /**
  * Asks the browser for persistent quota (IndexedDB + Cache Storage less likely to be purged).

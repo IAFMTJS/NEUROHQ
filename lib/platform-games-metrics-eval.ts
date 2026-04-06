@@ -140,7 +140,8 @@ async function evaluatePresetValue(
         total++;
         if (t.completed) done++;
       }
-      const pct = total === 0 ? 100 : Math.round((done / total) * 1000) / 10;
+      // 0 taken met due in venster ≠ "100% klaar" — anders wint elke auto-game meteen bij start.
+      const pct = total === 0 ? 0 : Math.round((done / total) * 1000) / 10;
       return { value: pct, detail: `${done}/${total} taken op due-dagen` };
     }
     case "protocol_missions_completed_in_window": {

@@ -413,7 +413,7 @@ export function applyPersonalityToPayload(
         chaos: (b) =>
           pickStr(
             [
-              b.toUpperCase().replace(/EVENING/gi, "EVENING").replace(/CHECK-IN/gi, "CHECK-IN") + " 📊",
+              b.toUpperCase().replace(/EVENING/gi, "EVENING").replace(/CHECK-IN/gi, "CHECK-IN"),
               b.replace(/evening/gi, "EVENING").replace(/check-in/gi, "THE SYSTEM'S POLITE WAY OF SAYING LOG YOUR STUFF") || b,
               `WRAP UP: ${b.toUpperCase()}`,
             ],

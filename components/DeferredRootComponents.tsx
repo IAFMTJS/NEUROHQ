@@ -14,6 +14,14 @@ export function DeferredRootComponents() {
 
   useEffect(() => {
     if (typeof window === "undefined") return;
+    const standalone =
+      (window.matchMedia?.("(display-mode: standalone)")?.matches ?? false) ||
+      (window.navigator as Navigator & { standalone?: boolean }).standalone === true;
+    // iOS PWA: request persistent storage immediately — idle defer caused persist() to run too late.
+    if (standalone) {
+      setMounted(true);
+      return;
+    }
     const schedule = window.requestIdleCallback
       ? (cb: () => void) => window.requestIdleCallback(cb, { timeout: 300 })
       : (cb: () => void) => setTimeout(cb, 100);

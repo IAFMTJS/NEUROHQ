@@ -335,8 +335,8 @@ export async function awardXPForTaskComplete(
 }
 
 /** Call when user saves brain status (daily check-in). */
-export async function awardXPForBrainStatus() {
-  await addXP(XP_BRAIN_STATUS, { source_type: "brain_status" });
+export async function awardXPForBrainStatus(): Promise<AddXPResult> {
+  return addXP(XP_BRAIN_STATUS, { source_type: "brain_status" });
 }
 
 /** Call when user logs a learning session. */

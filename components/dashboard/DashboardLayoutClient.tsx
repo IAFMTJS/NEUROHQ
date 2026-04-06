@@ -113,6 +113,7 @@ export function DashboardLayoutClient({
       if (debounce) clearTimeout(debounce);
       debounce = setTimeout(() => {
         debounce = null;
+        if (typeof navigator !== "undefined" && !navigator.onLine) return;
         const now = Date.now();
         if (now - lastHubRefreshAtRef.current < 25_000) return;
         lastHubRefreshAtRef.current = now;

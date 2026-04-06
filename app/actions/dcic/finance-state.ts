@@ -19,6 +19,7 @@ import {
   auditSubscriptions,
   checkEmergencyMode,
 } from "@/lib/dcic/finance-engine";
+import { applyPendingNextPeriodBudgetIfDue } from "@/app/actions/budget";
 import {
   getBudgetCycleBounds,
   getBudgetToday,
@@ -27,16 +28,17 @@ import {
   getNextPaydayDateNextMonth,
   getPreviousPaydayDateFromDay,
 } from "@/lib/utils/budget-date";
+import { cache } from "react";
 
-/**
- * Gets financeState from database
- */
-export async function getFinanceState(): Promise<FinanceState | null> {
+/** Dedupes within one RSC request (`getFinancialInsightsSafe`, flex eval, etc.). */
+const loadFinanceState = cache(async (): Promise<FinanceState | null> => {
   const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) return null;
+
+  await applyPendingNextPeriodBudgetIfDue();
 
   // 1) Income sources: prefer income_sources table (payday + amount per month)
   let incomeSources: IncomeSource[] = [];
@@ -288,6 +290,10 @@ export async function getFinanceState(): Promise<FinanceState | null> {
   financeState.disciplineScore = calculateDisciplineScore(financeState);
 
   return financeState;
+});
+
+export async function getFinanceState(): Promise<FinanceState | null> {
+  return loadFinanceState();
 }
 
 /**

@@ -268,29 +268,23 @@ export function buildEveningEmailHtml(data: EveningEmailData): string {
 }
 
 export function buildEveningPushPayload(data: EveningEmailData): ReminderPushPayload {
-  const { tasksPlanned, tasksCompleted, expensesLogged, learningMinutesToday, brainStatusDone, missionsCompletedThisWeek } = data;
+  const { tasksPlanned, tasksCompleted, expensesLogged, learningMinutesToday, brainStatusDone } = data;
   const nothingLogged = expensesLogged === 0 && learningMinutesToday === 0;
   const lightDay = tasksCompleted <= 1 && (expensesLogged === 0 || learningMinutesToday === 0);
-  const weekLine = missionsCompletedThisWeek != null && missionsCompletedThisWeek > 0
-    ? ` ${missionsCompletedThisWeek} mission(s) this week so far.`
-    : "";
 
   let body: string;
   if (nothingLogged && tasksCompleted === 0) {
     body = "Nothing logged today. Quick check-in before bed?";
   } else if (lightDay || nothingLogged) {
-    const taskBit = tasksPlanned > 0 ? `${tasksCompleted}/${tasksPlanned} missions. ` : "";
-    const nudge =
-      expensesLogged === 0 && learningMinutesToday === 0
-        ? "No budget or learning logged — quick log?"
-        : expensesLogged === 0
-          ? "No expenses logged today — add a quick log?"
-          : "No learning logged today — add a quick log?";
-    body = `Evening check-in: ${taskBit}${nudge}${weekLine}`.trim();
+    if (tasksPlanned > 0) {
+      body = `Evening check-in: ${tasksCompleted}/${tasksPlanned} missions`;
+    } else {
+      body = "Evening check-in";
+    }
   } else if (tasksPlanned > 0) {
-    body = `Evening check-in: ${tasksCompleted}/${tasksPlanned} missions done, ${expensesLogged} expense(s), ${learningMinutesToday} min learning.${weekLine}${!brainStatusDone ? " Brain status still missing." : ""}`.trim();
+    body = `Evening check-in: ${tasksCompleted}/${tasksPlanned} missions done, ${expensesLogged} expense(s), ${learningMinutesToday} min learning.${!brainStatusDone ? " Brain status still missing." : ""}`.trim();
   } else {
-    body = `Evening check-in: ${expensesLogged} expense(s), ${learningMinutesToday} min learning today.${weekLine}${!brainStatusDone ? " Brain status still missing." : ""}`.trim();
+    body = `Evening check-in: ${expensesLogged} expense(s), ${learningMinutesToday} min learning today.${!brainStatusDone ? " Brain status still missing." : ""}`.trim();
   }
 
   return {

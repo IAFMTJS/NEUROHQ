@@ -4,7 +4,15 @@ import { cache } from "react";
 import { createClient } from "@/lib/supabase/server";
 import type { Database } from "@/types/database.types";
 import { revalidatePath } from "next/cache";
-import { getBudgetToday, getBudgetMonthBounds, getBudgetWeekBounds, getBudgetCycleBounds, getPreviousPaydayDateFromDay, getNextPaydayDateFromDay } from "@/lib/utils/budget-date";
+import {
+  addDays,
+  getBudgetToday,
+  getBudgetMonthBounds,
+  getBudgetWeekBounds,
+  getBudgetCycleBounds,
+  getPreviousPaydayDateFromDay,
+  getNextPaydayDateFromDay,
+} from "@/lib/utils/budget-date";
 import { createAlternative } from "./alternatives";
 import { addSavingsContribution } from "./savings";
 import { getBudgetControlState, setBudgetNoSpendLock, submitEmergencyExpenseReason } from "./budget-intelligence";
@@ -43,9 +51,107 @@ async function logUserActionAudit(
 const BUDGET_ENTRY_SELECT =
   "id, user_id, amount_cents, date, category, note, is_planned, freeze_until, freeze_reminder_sent, recurring, store_name, subscription_name, detail_name, created_at, updated_at";
 
+export type BudgetPageEntryBundle = {
+  entries: BudgetEntryRow[];
+  nextMonthEntries: BudgetEntryRow[];
+  prevMonthEntries: BudgetEntryRow[];
+  currentMonthExpenses: number;
+  currentMonthIncome: number;
+  currentWeekExpenses: number;
+  currentWeekIncome: number;
+};
+
+function minDateStr(...dates: string[]): string {
+  return dates.reduce((a, b) => (a < b ? a : b));
+}
+
+function maxDateStr(...dates: string[]): string {
+  return dates.reduce((a, b) => (a > b ? a : b));
+}
+
+function filterEntriesByDateRange(rows: BudgetEntryRow[], from: string, to: string): BudgetEntryRow[] {
+  return rows.filter((e) => e.date >= from && e.date <= to);
+}
+
+function sumExpenseIncomeCents(rows: BudgetEntryRow[]): { expenses: number; income: number } {
+  let expenses = 0;
+  let income = 0;
+  for (const r of rows) {
+    const c = r.amount_cents ?? 0;
+    if (c < 0) expenses += Math.abs(c);
+    else if (c > 0) income += c;
+  }
+  return { expenses, income };
+}
+
+/**
+ * Single budget_entries round-trip for /budget: three period slices + period/week totals.
+ * Replaces 3× getBudgetEntries + 4× aggregate queries that each re-authenticated and re-hit the DB.
+ */
+export async function getBudgetPageEntryBundle(params: {
+  periodStart: string;
+  periodEnd: string;
+  nextMonthStart: string;
+  nextMonthEnd: string;
+  prevStart: string;
+  prevEnd: string;
+}): Promise<BudgetPageEntryBundle> {
+  const empty: BudgetPageEntryBundle = {
+    entries: [],
+    nextMonthEntries: [],
+    prevMonthEntries: [],
+    currentMonthExpenses: 0,
+    currentMonthIncome: 0,
+    currentWeekExpenses: 0,
+    currentWeekIncome: 0,
+  };
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return empty;
+
+  const { start: weekStart, end: weekEnd } = getBudgetWeekBounds();
+  const minD = minDateStr(params.periodStart, params.nextMonthStart, params.prevStart, weekStart);
+  const maxD = maxDateStr(params.periodEnd, params.nextMonthEnd, params.prevEnd, weekEnd);
+
+  const { data } = await supabase
+    .from("budget_entries")
+    .select(BUDGET_ENTRY_SELECT)
+    .eq("user_id", user.id)
+    .gte("date", minD)
+    .lte("date", maxD)
+    .order("date", { ascending: false });
+
+  const all = (data ?? []) as BudgetEntryRow[];
+  const entries = filterEntriesByDateRange(all, params.periodStart, params.periodEnd);
+  const nextMonthEntries = filterEntriesByDateRange(all, params.nextMonthStart, params.nextMonthEnd);
+  const prevMonthEntries = filterEntriesByDateRange(all, params.prevStart, params.prevEnd);
+
+  const periodSums = sumExpenseIncomeCents(filterEntriesByDateRange(all, params.periodStart, params.periodEnd));
+  const weekSums = sumExpenseIncomeCents(filterEntriesByDateRange(all, weekStart, weekEnd));
+
+  return {
+    entries,
+    nextMonthEntries,
+    prevMonthEntries,
+    currentMonthExpenses: periodSums.expenses,
+    currentMonthIncome: periodSums.income,
+    currentWeekExpenses: weekSums.expenses,
+    currentWeekIncome: weekSums.income,
+  };
+}
+
 /** Explicit columns for recurring_budget_templates reads. */
 const RECURRING_TEMPLATE_SELECT =
   "id, user_id, amount_cents, category, note, recurrence_rule, day_of_week, day_of_month, next_generate_date, created_at, updated_at";
+
+export type ScheduledNextBudget = {
+  applies_from: string;
+  monthly_budget_cents: number | null;
+  monthly_savings_cents: number | null;
+  budget_period: "monthly" | "weekly" | null;
+};
 
 type BudgetSettingsResult = {
   monthly_budget_cents: number | null;
@@ -57,29 +163,111 @@ type BudgetSettingsResult = {
   impulse_risk_categories: string[];
   /** Server row `updated_at` — compare with client persisted payday to avoid stale localStorage overwriting server */
   row_updated_at: string | null;
+  /** Gepland voor volgende loonsperiode (nog niet actief). */
+  scheduled_next_budget: ScheduledNextBudget | null;
 };
+
+type UserNextBudgetRow = {
+  next_budget_applies_from?: string | null;
+  next_period_monthly_budget_cents?: number | null;
+  next_period_monthly_savings_cents?: number | null;
+  next_budget_period?: string | null;
+};
+
+function mapScheduledNextBudget(row: UserNextBudgetRow): ScheduledNextBudget | null {
+  const applies = row.next_budget_applies_from;
+  if (applies == null || typeof applies !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(applies)) return null;
+  const hasBudget = row.next_period_monthly_budget_cents != null;
+  const hasSavings = row.next_period_monthly_savings_cents != null;
+  const bp =
+    row.next_budget_period === "weekly" || row.next_budget_period === "monthly"
+      ? row.next_budget_period
+      : null;
+  if (!hasBudget && !hasSavings && !bp) return null;
+  return {
+    applies_from: applies,
+    monthly_budget_cents: hasBudget ? row.next_period_monthly_budget_cents ?? null : null,
+    monthly_savings_cents: hasSavings ? row.next_period_monthly_savings_cents ?? null : null,
+    budget_period: bp,
+  };
+}
+
+async function applyPendingNextPeriodBudgetIfDueWithClient(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  userId: string
+): Promise<void> {
+  const today = getBudgetToday();
+  const { data: row } = await supabase
+    .from("users")
+    .select("next_budget_applies_from, next_period_monthly_budget_cents, next_period_monthly_savings_cents, next_budget_period")
+    .eq("id", userId)
+    .maybeSingle();
+  if (!row) return;
+  const r = row as UserNextBudgetRow;
+  const appliesRaw = r.next_budget_applies_from;
+  if (appliesRaw == null || typeof appliesRaw !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(appliesRaw)) return;
+  if (today < appliesRaw) return;
+  const hasBudget = r.next_period_monthly_budget_cents != null;
+  const hasSavings = r.next_period_monthly_savings_cents != null;
+  const hasPeriod = r.next_budget_period === "weekly" || r.next_budget_period === "monthly";
+  if (!hasBudget && !hasSavings && !hasPeriod) return;
+
+  const updates: Record<string, unknown> = {
+    next_period_monthly_budget_cents: null,
+    next_period_monthly_savings_cents: null,
+    next_budget_applies_from: null,
+    next_budget_period: null,
+  };
+  if (hasBudget) updates.monthly_budget_cents = r.next_period_monthly_budget_cents;
+  if (hasSavings) updates.monthly_savings_cents = r.next_period_monthly_savings_cents;
+  if (hasPeriod) updates.budget_period = r.next_budget_period;
+  const { error } = await supabase.from("users").update(updates).eq("id", userId);
+  if (error) {
+    console.error("applyPendingNextPeriodBudgetIfDueWithClient", error.message);
+  }
+}
+
+/** Idempotent: promotes scheduled next-period budget when `today` ≥ `next_budget_applies_from`. */
+export async function applyPendingNextPeriodBudgetIfDue(): Promise<void> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return;
+  await applyPendingNextPeriodBudgetIfDueWithClient(supabase, user.id);
+}
+
+const defaultBudgetSettings = (): BudgetSettingsResult => ({
+  monthly_budget_cents: null,
+  monthly_savings_cents: null,
+  currency: "EUR",
+  impulse_threshold_pct: 40,
+  budget_period: "monthly",
+  impulse_quick_add_minutes: null,
+  impulse_risk_categories: [],
+  row_updated_at: null,
+  scheduled_next_budget: null,
+});
 
 /** Dedupe reads when dashboard critical + secondary (and bootstrap) run in the same request. */
 const loadBudgetSettings = cache(async (): Promise<BudgetSettingsResult> => {
   const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user)
-    return {
-      monthly_budget_cents: null,
-      monthly_savings_cents: null,
-      currency: "EUR",
-      impulse_threshold_pct: 40,
-      budget_period: "monthly",
-      impulse_quick_add_minutes: null,
-      impulse_risk_categories: [],
-      row_updated_at: null,
-    };
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return defaultBudgetSettings();
+
+  await applyPendingNextPeriodBudgetIfDueWithClient(supabase, user.id);
+
   const { data } = await supabase
     .from("users")
-    .select("monthly_budget_cents, monthly_savings_cents, currency, impulse_threshold_pct, budget_period, impulse_quick_add_minutes, impulse_risk_categories, updated_at")
+    .select(
+      "monthly_budget_cents, monthly_savings_cents, currency, impulse_threshold_pct, budget_period, impulse_quick_add_minutes, impulse_risk_categories, updated_at, next_budget_applies_from, next_period_monthly_budget_cents, next_period_monthly_savings_cents, next_budget_period"
+    )
     .eq("id", user.id)
     .single();
-  const row = (data ?? {}) as BudgetSettingsRow & { updated_at?: string | null };
+  const row = (data ?? {}) as BudgetSettingsRow &
+    UserNextBudgetRow & { updated_at?: string | null };
   const riskCat = row.impulse_risk_categories;
   return {
     monthly_budget_cents: row.monthly_budget_cents ?? null,
@@ -90,6 +278,7 @@ const loadBudgetSettings = cache(async (): Promise<BudgetSettingsResult> => {
     impulse_quick_add_minutes: typeof row.impulse_quick_add_minutes === "number" ? row.impulse_quick_add_minutes : null,
     impulse_risk_categories: Array.isArray(riskCat) ? riskCat.filter((c): c is string => typeof c === "string") : [],
     row_updated_at: typeof row.updated_at === "string" ? row.updated_at : null,
+    scheduled_next_budget: mapScheduledNextBudget(row),
   };
 });
 
@@ -109,10 +298,38 @@ export async function updateBudgetSettings(params: {
   impulse_risk_categories?: string[] | null;
   payday_day_of_month?: number | null;
   last_payday_date?: string | null;
+  /** Zet budget/spaarvoorkeur voor de eerstvolgende loonsperiode (actief vanaf dag na huidige periodEnd, of bij "Vandaag loon gehad"). */
+  apply_to_next_period?: boolean;
 }) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) throw new Error("Not authenticated");
+
+  if (params.apply_to_next_period) {
+    const hasAny =
+      params.monthly_budget_cents !== undefined ||
+      params.monthly_savings_cents !== undefined ||
+      params.budget_period !== undefined;
+    if (!hasAny) throw new Error("Geen budget om te plannen.");
+    const { periodEnd } = await getBudgetPeriodBounds();
+    const appliesFrom = addDays(periodEnd, 1);
+    const nextUpdates: Record<string, unknown> = {
+      next_budget_applies_from: appliesFrom,
+    };
+    if (params.monthly_budget_cents !== undefined)
+      nextUpdates.next_period_monthly_budget_cents = params.monthly_budget_cents;
+    if (params.monthly_savings_cents !== undefined)
+      nextUpdates.next_period_monthly_savings_cents = params.monthly_savings_cents;
+    if (params.budget_period !== undefined) nextUpdates.next_budget_period = params.budget_period ?? "monthly";
+    const { error } = await supabase.from("users").update(nextUpdates).eq("id", user.id);
+    if (error) throw new Error(error.message);
+    revalidatePath("/budget");
+    revalidatePath("/settings");
+    revalidatePath("/profile");
+    revalidatePath("/dashboard");
+    return;
+  }
+
   const updates: Record<string, unknown> = {};
   if (params.monthly_budget_cents !== undefined) updates.monthly_budget_cents = params.monthly_budget_cents;
   if (params.monthly_savings_cents !== undefined) updates.monthly_savings_cents = params.monthly_savings_cents;
@@ -142,17 +359,40 @@ export async function setPaydayReceivedToday(): Promise<void> {
   if (!user) throw new Error("Not authenticated");
   const { data: before } = await supabase
     .from("users")
-    .select("last_payday_date")
+    .select(
+      "last_payday_date, next_period_monthly_budget_cents, next_period_monthly_savings_cents, next_budget_period"
+    )
     .eq("id", user.id)
     .single();
   const previousLastPaydayDate =
     (before as { last_payday_date?: string | null } | null)?.last_payday_date ?? null;
   const today = getBudgetToday();
-  await updateBudgetSettings({ last_payday_date: today });
+  const row = before as UserNextBudgetRow | null;
+  const updates: Record<string, unknown> = {
+    last_payday_date: today,
+    next_period_monthly_budget_cents: null,
+    next_period_monthly_savings_cents: null,
+    next_budget_applies_from: null,
+    next_budget_period: null,
+  };
+  if (row?.next_period_monthly_budget_cents != null)
+    updates.monthly_budget_cents = row.next_period_monthly_budget_cents;
+  if (row?.next_period_monthly_savings_cents != null)
+    updates.monthly_savings_cents = row.next_period_monthly_savings_cents;
+  if (row?.next_budget_period === "weekly" || row?.next_budget_period === "monthly")
+    updates.budget_period = row.next_budget_period;
+  const { error } = await supabase.from("users").update(updates).eq("id", user.id);
+  if (error) throw new Error(error.message);
   await logUserActionAudit(supabase, user.id, "payday_received_today", {
     previous_last_payday_date: previousLastPaydayDate,
     new_last_payday_date: today,
+    promoted_scheduled_budget:
+      row?.next_period_monthly_budget_cents != null || row?.next_period_monthly_savings_cents != null,
   });
+  revalidatePath("/budget");
+  revalidatePath("/settings");
+  revalidatePath("/profile");
+  revalidatePath("/dashboard");
 }
 
 /** Undo "vandaag loon gehad": restore previous last_payday_date. Call within short window after setPaydayReceivedToday. */
@@ -187,13 +427,15 @@ export async function getBudgetPeriodBounds(): Promise<{
   periodStart: string;
   periodEnd: string;
   isPaydayCycle: boolean;
+  /** Resolved payday day 1–31 for labels / pacing (same as former getPaydayDayOfMonth default path). */
+  paydayDayOfMonth: number | null;
 }> {
   const today = getBudgetToday();
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) {
     const { monthStart, monthEnd } = getBudgetMonthBounds();
-    return { periodStart: monthStart, periodEnd: monthEnd, isPaydayCycle: false };
+    return { periodStart: monthStart, periodEnd: monthEnd, isPaydayCycle: false, paydayDayOfMonth: null };
   }
   const { data: userRow } = await supabase
     .from("users")
@@ -230,7 +472,7 @@ export async function getBudgetPeriodBounds(): Promise<{
     const todayDate = new Date(today + "T12:00:00Z");
     if (lastDate.getTime() <= todayDate.getTime()) {
       const { periodStart, periodEnd } = getBudgetCycleBounds(today, lastPayday, day);
-      return { periodStart, periodEnd, isPaydayCycle: true };
+      return { periodStart, periodEnd, isPaydayCycle: true, paydayDayOfMonth: day };
     }
   }
 
@@ -239,7 +481,7 @@ export async function getBudgetPeriodBounds(): Promise<{
   const periodEndDate = new Date(nextPayday + "T12:00:00Z");
   periodEndDate.setUTCDate(periodEndDate.getUTCDate() - 1);
   const periodEnd = periodEndDate.toISOString().slice(0, 10);
-  return { periodStart: prevPayday, periodEnd, isPaydayCycle: true };
+  return { periodStart: prevPayday, periodEnd, isPaydayCycle: true, paydayDayOfMonth: day };
 }
 
 /** Get payday day of month (1–31) when no income_sources; used for "days until next income" */

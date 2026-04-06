@@ -311,7 +311,6 @@ export default function XPPageContent({
           missionTemplates={missionTemplates}
           behaviorProfile={behaviorProfile}
           brainModeToday={brainModeToday}
-          activeMissionCountToday={activeMissionCountToday}
         />
 
         </>

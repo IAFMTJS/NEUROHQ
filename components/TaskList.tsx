@@ -34,6 +34,7 @@ import { DoneTodayToast } from "@/components/missions/DoneTodayToast";
 import { MissionsEngineWarningIcon } from "@/components/missions/MissionsEngineWarningIcon";
 import { collectMissionEngineWarningLines } from "@/lib/mission-engine-warnings";
 import { neuroToast } from "@/lib/ui/neuro-toast";
+import { showLevelUpCelebration } from "@/lib/ui/level-up-celebration";
 import { Modal } from "@/components/Modal";
 import { ErrorWithNextStep } from "@/components/ui/ErrorWithNextStep";
 import { useAppState } from "@/components/providers/AppStateProvider";
@@ -601,21 +602,16 @@ export function TaskList({
         },
       },
     });
-    if (result?.levelUp && result.newLevel) {
+    if (result?.levelUp === true && typeof result.newLevel === "number" && result.newLevel >= 1) {
       const rankPromotion = result.rankPromotion;
       const newRank = result.newRank;
       const previousRank = result.previousRank;
-      neuroToast.success(
-        rankPromotion && newRank
-          ? `Rank promotion · ${newRank}`
-          : `Level up · Level ${result.newLevel}`,
-        {
-          description:
-            rankPromotion && newRank
-              ? `Van ${previousRank ?? "?"} naar ${newRank}. Bekijk je nieuwe perks in de level-modal.`
-              : "Je performance-profiel is geüpdatet. Bekijk de details in de level-modal of op de XP-pagina.",
-        }
-      );
+      window.setTimeout(() => {
+        showLevelUpCelebration({
+          newLevel: result.newLevel!,
+          ...(rankPromotion ? { rankPromotion: true, newRank, previousRank } : {}),
+        });
+      }, 380);
       setLevelUpInfo({
         level: result.newLevel,
         reputation: result.reputation ?? identityReputation ?? undefined,

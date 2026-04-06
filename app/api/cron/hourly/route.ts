@@ -19,6 +19,7 @@ import {
 } from "@/lib/behavioral-notifications";
 import {
   canSendBehavioralNotification,
+  insertBrainCheckinStreakMilestoneAlert,
   loadUserNotificationContextForUser,
   markBehavioralNotificationSent,
 } from "@/lib/behavioral-notification-server";
@@ -911,6 +912,24 @@ export async function GET(request: Request) {
               if (!event) continue;
               const result = buildBehavioralNotificationForContext(ctx, event);
               if (!result) continue;
+
+              if (
+                typeof event === "object" &&
+                event !== null &&
+                "type" in event &&
+                event.type === "brain_status_streak"
+              ) {
+                const ok = await insertBrainCheckinStreakMilestoneAlert(
+                  supabase,
+                  u.id,
+                  result,
+                  todayStr
+                );
+                if (!ok) continue;
+                achievementPushSent++;
+                break;
+              }
+
               const { canSend } = await canSendBehavioralNotification(
                 supabase,
                 u.id,

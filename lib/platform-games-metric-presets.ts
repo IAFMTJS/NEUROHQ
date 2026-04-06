@@ -65,7 +65,7 @@ export const PLATFORM_GAME_METRIC_PRESETS: PlatformGameMetricPresetDef[] = [
     id: "missions_due_completion_rate_pct",
     label: "Missie-completion op due-dagen (%)",
     shortHint:
-      "Van alle openstaande top-level taken met due_date in het venster: welk percentage is afgerond (op elk moment). 100 = alles wat gepland was in de periode is gedaan.",
+      "Van alle top-level taken met due_date in het venster: welk percentage is afgerond. Zonder zo'n missie in de periode is de score 0% (niet meteen 100%). 100 = alles wat gepland was in de periode is gedaan.",
     aggregations: ["period_total"],
     defaultAggregation: "period_total",
     defaultThreshold: 100,

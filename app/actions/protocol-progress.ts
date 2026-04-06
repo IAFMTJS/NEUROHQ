@@ -148,13 +148,17 @@ export async function getProtocolProgressMap(): Promise<Record<string, ProtocolP
   return mergeProtocolMissionCompletionsIntoMap(supabase, user.id, map);
 }
 
-type UpsertInput = {
+export type ProtocolProgressUpsertInput = {
   protocol_slug: string;
   locale?: string;
   preferred_tier?: DifficultyTier;
   current_week_index?: number;
   completed_task_ids?: string[];
+  /** Monday YYYY-MM-DD of the budget week aligned with current_week_index (Growth calendar roll). */
+  growth_calendar_week_start?: string | null;
 };
+
+type UpsertInput = ProtocolProgressUpsertInput;
 
 async function upsertProgress(userId: string, patch: UpsertInput) {
   const supabase = await createClient();
@@ -177,11 +181,19 @@ async function upsertProgress(userId: string, patch: UpsertInput) {
     completed_task_ids: patch.completed_task_ids ?? parseIds(row?.completed_task_ids),
     updated_at: new Date().toISOString(),
   };
+  if (patch.growth_calendar_week_start !== undefined) {
+    merged.growth_calendar_week_start = patch.growth_calendar_week_start;
+  }
 
   const { error } = await supabase.from("user_protocol_progress").upsert(merged as never, {
     onConflict: "user_id,protocol_slug,locale",
   });
   if (error) throw new Error(error.message);
+}
+
+/** Upsert a subset of protocol progress fields (used by Growth calendar sync + commit anchor). */
+export async function upsertProtocolProgress(userId: string, patch: ProtocolProgressUpsertInput): Promise<void> {
+  await upsertProgress(userId, patch);
 }
 
 export async function setProtocolPreferredTier(params: {

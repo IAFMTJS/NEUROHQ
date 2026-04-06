@@ -1,4 +1,16 @@
 /** Shared helpers for dashboard (API + server page). */
+
+/** Subset van EnergyRing-mode waarden voor brain stats (geen client-import: dashboard-utils wordt ook server-side geladen). */
+export type BrainStatusStatRingMode = "default" | "high-alert" | "green" | "green-peak";
+
+/** Ringkleuren voor energy/focus/load: zelfde bands als Brain Status-kaart, modal en check-in feedback. */
+export function brainStatusRingModeFromPct(value: number): BrainStatusStatRingMode {
+  if (value <= 20) return "high-alert";
+  if (value >= 90) return "green-peak";
+  if (value >= 70) return "green";
+  return "default";
+}
+
 export function scale1To10ToPct(value: number | null): number {
   if (value == null) return 50;
   return Math.round((value / 10) * 100);

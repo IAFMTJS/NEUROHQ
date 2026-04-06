@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
 import { completeBudgetWeeklyReview } from "@/app/actions/budget-weekly-review";
 
 type Props = {
@@ -8,6 +9,7 @@ type Props = {
 };
 
 export function BudgetWeeklyReviewCard({ completedThisWeek }: Props) {
+  const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [done, setDone] = useState(completedThisWeek);
 
@@ -17,6 +19,7 @@ export function BudgetWeeklyReviewCard({ completedThisWeek }: Props) {
       try {
         await completeBudgetWeeklyReview();
         setDone(true);
+        router.refresh();
       } catch (err) {
         console.error(err);
       }

@@ -8,6 +8,7 @@ import type { DifficultyTier } from "@/lib/growth/adaptive-engine";
 import { assignProtocolTaskDueDatesFromWeek } from "@/lib/growth/spread-protocol-due-dates";
 import { getBudgetWeekBounds } from "@/lib/utils/budget-date";
 import { todayDateString } from "@/lib/utils/timezone";
+import { upsertProtocolProgress } from "@/app/actions/protocol-progress";
 
 const PTASK_MARKER = (id: string) => `ptask:${id}`;
 
@@ -156,6 +157,16 @@ export async function commitProtocolWeekToMissions(params: {
       taskIds.push(r.id);
       created++;
     }
+  }
+
+  try {
+    await upsertProtocolProgress(user.id, {
+      protocol_slug: params.protocol_slug,
+      locale,
+      growth_calendar_week_start: weekStart,
+    });
+  } catch {
+    /* DB zonder migratie 120: kolom ontbreekt — commit blijft geldig. */
   }
 
   revalidatePath("/learning");

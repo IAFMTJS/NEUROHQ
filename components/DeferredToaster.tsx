@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { Toaster, toast } from "sonner";
 import { NeuroToastIcon } from "@/components/brand/NeuroToastIcon";
+import { LEVEL_UP_TOAST_ID } from "@/lib/ui/level-up-celebration";
 
 /** True if the event target is inside the toast DOM or a portaled overlay (modal/sheet) opened on top. */
 function pointerTargetKeepsToastsOpen(target: EventTarget | null): boolean {
@@ -34,13 +35,17 @@ export function DeferredToaster() {
     schedule(() => setMounted(true));
   }, []);
 
-  /** Sluit alleen bij tik buiten de toast of op het kruisje — niet door swipe/timer (zie gepatchte sonner + toastOptions). */
+  /** Sluit alleen bij tik buiten de toast of op het kruisje — niet door swipe/timer (zie gepatchte sonner + toastOptions). Level-up toast blijft staan tot sluitknop. */
   useEffect(() => {
     if (!mounted || typeof document === "undefined") return;
     const onPointerDownCapture = (e: PointerEvent) => {
-      if (toast.getToasts().length === 0) return;
+      const list = toast.getToasts();
+      if (list.length === 0) return;
       if (pointerTargetKeepsToastsOpen(e.target)) return;
-      toast.dismiss();
+      for (const t of list) {
+        if (t.id === LEVEL_UP_TOAST_ID) continue;
+        toast.dismiss(t.id);
+      }
     };
     document.addEventListener("pointerdown", onPointerDownCapture, true);
     return () => document.removeEventListener("pointerdown", onPointerDownCapture, true);

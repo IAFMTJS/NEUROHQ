@@ -2,6 +2,7 @@
 
 import { toast } from "sonner";
 import type { Alternative } from "@/app/actions/alternatives";
+import type { ScheduledNextBudget } from "@/app/actions/budget";
 import type { FinanceState } from "@/lib/dcic/types";
 import type { Insight } from "@/lib/dcic/finance-engine";
 import { BudgetSummaryCard } from "@/components/BudgetSummaryCard";
@@ -88,6 +89,8 @@ export type BudgetInsightHubProps = {
   prevMonthEntries: EntryRow[];
   nextMonthEntries: EntryRow[];
   isPaydayCycle: boolean;
+  periodEnd: string;
+  scheduledNextBudget: ScheduledNextBudget | null;
 };
 
 const TOAST_MS = 120_000;
@@ -201,6 +204,8 @@ export function BudgetInsightHub(props: BudgetInsightHubProps) {
     prevMonthEntries,
     nextMonthEntries,
     isPaydayCycle,
+    periodEnd,
+    scheduledNextBudget,
   } = props;
 
   const summaryHint =
@@ -223,6 +228,8 @@ export function BudgetInsightHub(props: BudgetInsightHubProps) {
             historyMode={historyMode}
             forecastProjectedBalanceCents={forecastProjectedBalanceCents}
             forecastOverspendCents={forecastOverspendCents}
+            periodEnd={periodEnd}
+            scheduledNextBudget={scheduledNextBudget}
           />
           <DisciplineIndexCard value={disciplineScore} inputsReady={disciplineInputsReady} />
         </ToastChrome>

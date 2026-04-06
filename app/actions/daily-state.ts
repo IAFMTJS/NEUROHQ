@@ -71,7 +71,7 @@ export async function getDailyStateUncached(date: string) {
 }
 
 export type SaveDailyStateResult =
-  | { ok: true; autoMissionsCreated?: number; autoMissionsDebug?: string }
+  | { ok: true; autoMissionsCreated?: number; autoMissionsDebug?: string; levelUp?: boolean; newLevel?: number }
   | { ok: false; error: string };
 
 export async function saveDailyState(input: DailyStateInput): Promise<SaveDailyStateResult> {
@@ -141,17 +141,26 @@ export async function saveDailyState(input: DailyStateInput): Promise<SaveDailyS
     revalidatePath("/dashboard");
     revalidatePath("/profile");
     revalidatePath("/tasks");
-    void (async () => {
-      try {
-        const { awardXPForBrainStatus } = await import("./xp");
-        const { upsertDailyAnalytics } = await import("./analytics");
-        await awardXPForBrainStatus();
-        await upsertDailyAnalytics(serverToday);
-      } catch {
-        // non-blocking
+    let levelUp: boolean | undefined;
+    let newLevel: number | undefined;
+    try {
+      const { awardXPForBrainStatus } = await import("./xp");
+      const { upsertDailyAnalytics } = await import("./analytics");
+      const xpRes = await awardXPForBrainStatus();
+      if (xpRes?.levelUp === true && typeof xpRes.newLevel === "number") {
+        levelUp = true;
+        newLevel = xpRes.newLevel;
       }
-    })();
-    return { ok: true, autoMissionsCreated, autoMissionsDebug };
+      await upsertDailyAnalytics(serverToday);
+    } catch {
+      /* non-blocking voor XP/analytics */
+    }
+    return {
+      ok: true,
+      autoMissionsCreated,
+      autoMissionsDebug,
+      ...(levelUp && newLevel != null ? { levelUp: true, newLevel } : {}),
+    };
   } catch (e) {
     return { ok: false, error: e instanceof Error ? e.message : "Kon dagstatus niet opslaan. Probeer het opnieuw." };
   }

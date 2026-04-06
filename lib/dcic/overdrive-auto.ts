@@ -31,6 +31,14 @@ function isWithinWindow(hour: number, startInclusive: number, endInclusive: numb
   return h >= startInclusive && h <= endInclusive;
 }
 
+/** Earliest and latest local clock hour (inclusive) when Overdrive may *start*; Europe/Amsterdam. */
+export const OVERDRIVE_ACTIVATION_HOUR_MIN = 8;
+export const OVERDRIVE_ACTIVATION_HOUR_MAX = 18;
+
+export function isOverdriveActivationTimeAllowed(localHour: number): boolean {
+  return isWithinWindow(localHour, OVERDRIVE_ACTIVATION_HOUR_MIN, OVERDRIVE_ACTIVATION_HOUR_MAX);
+}
+
 function hashStringToUint32(s: string): number {
   let h = 2166136261;
   for (let i = 0; i < s.length; i++) {
@@ -67,6 +75,7 @@ export function pickWeeklySlotWeekdays(
  * - Rare and bounded: at most once per local day.
  * - Never when capacity is low or when the system is already steering via Recovery/War locks.
  * - Mixed triggers: twice-weekly random weekdays + momentum + streak rescue.
+ * - All auto-triggers only between 08:00 and 18:59 local (hour 8–18 inclusive).
  */
 export function maybeAutoTriggerOverdrive(
   gameState: GameState,
@@ -87,12 +96,12 @@ export function maybeAutoTriggerOverdrive(
   if (gameState.stats.focus < 60) return { shouldTrigger: false, reason: null };
   if (gameState.stats.load > 70) return { shouldTrigger: false, reason: null };
 
+  if (!isOverdriveActivationTimeAllowed(ctx.localHour)) {
+    return { shouldTrigger: false, reason: null };
+  }
+
   // Trigger 0: Twice per Amsterdam ISO week on pseudo-random weekdays (stable per user × week).
-  if (
-    ctx.weeklySlotTriggersThisIsoWeek < 2 &&
-    ctx.weeklyRandomSlotToday &&
-    isWithinWindow(ctx.localHour, 9, 20)
-  ) {
+  if (ctx.weeklySlotTriggersThisIsoWeek < 2 && ctx.weeklyRandomSlotToday) {
     return { shouldTrigger: true, reason: "weekly_slot" };
   }
 
@@ -101,10 +110,10 @@ export function maybeAutoTriggerOverdrive(
     return { shouldTrigger: true, reason: "momentum_combo" };
   }
 
-  // Trigger 2: Streak rescue conversion (late-day, first completion of the day).
+  // Trigger 2: Streak rescue conversion (late afternoon, first completion of the day; still within 8–18).
   if (
     ctx.streakAtRisk &&
-    isWithinWindow(ctx.localHour, 17, 21) &&
+    isWithinWindow(ctx.localHour, 17, 18) &&
     ctx.completionsToday === 1 &&
     ctx.completionsInLast45m >= 1
   ) {

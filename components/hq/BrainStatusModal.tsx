@@ -5,11 +5,11 @@ import { useRouter } from "next/navigation";
 import { saveDailyState } from "@/app/actions/daily-state";
 import { setPendingDailyState, markDailyStateSynced } from "@/lib/client-pending-writes";
 import { getSuggestedTaskCount } from "@/lib/utils/energy";
-import { EnergyRing, type EnergyRingMode } from "@/components/hud-test/EnergyRing";
+import { EnergyRing } from "@/components/hud-test/EnergyRing";
 import { useAppState } from "@/components/providers/AppStateProvider";
 import { useOnboarding } from "@/components/onboarding/OnboardingProvider";
 import { Modal } from "@/components/Modal";
-import { scale1To10ToPct } from "@/lib/dashboard-utils";
+import { brainStatusRingModeFromPct, scale1To10ToPct } from "@/lib/dashboard-utils";
 import { flushHQStoreToStorage, useHQStore } from "@/lib/hq-store";
 import { refreshMergedSnapshotFromNetwork } from "@/lib/daily-bootstrap";
 
@@ -31,13 +31,6 @@ function description(value: number, type: "energy" | "focus" | "load"): string {
     return "Lage belasting";
   }
   return "";
-}
-
-function getRingMode(value: number): EnergyRingMode {
-  if (value <= 20) return "high-alert";
-  if (value >= 90) return "green-peak";
-  if (value >= 70) return "green";
-  return "default";
 }
 
 type Props = {
@@ -157,6 +150,12 @@ export function BrainStatusModal({ open, onClose, date, initial, yesterday, onSa
           setSaved(true);
           onboarding?.reportTutorialAction("brain-status-save");
           appState?.triggerReward();
+          if (result.levelUp === true && typeof result.newLevel === "number") {
+            try {
+              const { showLevelUpCelebration } = await import("@/lib/ui/level-up-celebration");
+              showLevelUpCelebration({ newLevel: result.newLevel });
+            } catch (_) {}
+          }
           if (result.autoMissionsCreated != null && result.autoMissionsCreated > 0) {
             try {
               const { toast } = await import("sonner");
@@ -210,7 +209,7 @@ export function BrainStatusModal({ open, onClose, date, initial, yesterday, onSa
                   size={96}
                   label=""
                   value={`${energyPct}%`}
-                  mode={getRingMode(energyPct)}
+                  mode={brainStatusRingModeFromPct(energyPct)}
                   softGlow
                 />
                 <span className="text-[11px] text-[var(--text-secondary)]">Energy</span>
@@ -226,7 +225,7 @@ export function BrainStatusModal({ open, onClose, date, initial, yesterday, onSa
                   size={96}
                   label=""
                   value={`${focusPct}%`}
-                  mode={getRingMode(focusPct)}
+                  mode={brainStatusRingModeFromPct(focusPct)}
                   softGlow
                 />
                 <span className="text-[11px] text-[var(--text-secondary)]">Focus</span>
@@ -244,7 +243,7 @@ export function BrainStatusModal({ open, onClose, date, initial, yesterday, onSa
                 size={96}
                 label=""
                 value={`${loadPct}%`}
-                mode={getRingMode(loadPct)}
+                mode={brainStatusRingModeFromPct(loadPct)}
                 softGlow
               />
               <span className="text-[11px] text-[var(--text-secondary)]">Mentale belasting</span>

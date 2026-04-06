@@ -5,6 +5,9 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
+import { sendOverdriveActivatedPushIfEnabled } from "@/lib/push";
+import { isOverdriveActivationTimeAllowed } from "@/lib/dcic/overdrive-auto";
+import { getAppTimezoneHour } from "@/lib/utils/timezone";
 import { revalidatePath } from "next/cache";
 import { getGameState, saveGameState } from "./game-state";
 import { validateAction } from "@/lib/dcic/state-gatekeeper";
@@ -56,12 +59,24 @@ export async function confirmStartMission(
   success: boolean;
   error?: string;
 }> {
+  const supabase = await createClient();
   const gameState = await getGameState({ includeFinance: false });
   if (!gameState) {
     return { success: false, error: "Game state not found" };
   }
 
+  const prevMode = gameState.mode.current;
   if (options?.modeOverride) {
+    if (
+      options.modeOverride === "overdrive" &&
+      prevMode !== "overdrive" &&
+      !isOverdriveActivationTimeAllowed(getAppTimezoneHour())
+    ) {
+      return {
+        success: false,
+        error: "Overdrive kan alleen tussen 08:00 en 18:00 worden gestart.",
+      };
+    }
     switchMode(gameState, options.modeOverride, { forced: true });
   }
 
@@ -135,12 +150,24 @@ export async function confirmCompleteMission(
   success: boolean;
   error?: string;
 }> {
+  const supabase = await createClient();
   const gameState = await getGameState({ includeFinance: false });
   if (!gameState) {
     return { success: false, error: "Game state not found" };
   }
 
+  const prevMode = gameState.mode.current;
   if (options?.modeOverride) {
+    if (
+      options.modeOverride === "overdrive" &&
+      prevMode !== "overdrive" &&
+      !isOverdriveActivationTimeAllowed(getAppTimezoneHour())
+    ) {
+      return {
+        success: false,
+        error: "Overdrive kan alleen tussen 08:00 en 18:00 worden gestart.",
+      };
+    }
     switchMode(gameState, options.modeOverride, { forced: true });
   }
 
@@ -168,6 +195,13 @@ export async function confirmCompleteMission(
   const saved = await saveGameState(result.updatedState);
   if (!saved) {
     return { success: false, error: "Failed to save game state" };
+  }
+
+  if (options?.modeOverride === "overdrive" && prevMode !== "overdrive") {
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    if (user) void sendOverdriveActivatedPushIfEnabled(supabase, user.id, "manual");
   }
 
   // Log behaviour entry

@@ -91,7 +91,6 @@ export default async function BudgetPage({ searchParams }: Props) {
     nextMonthEnd,
     prevStart: prevPeriodRange.prevStart,
     prevEnd: prevPeriodRange.prevEnd,
-    paydayDayOfMonth,
   });
   const strategyQuarterSavingsForExecute =
     !isHistoryView &&
@@ -314,6 +313,8 @@ export default async function BudgetPage({ searchParams }: Props) {
             commandToolbar={budgetCommandToolbar}
             flexPayload={flexHeroPayload}
             lockPanelHref={lockPanelHref}
+            scheduledNextBudget={budgetSettings.scheduled_next_budget}
+            weeklyReviewCompleted={weeklyReviewStatus.completed}
           />
         </>
       )}
@@ -409,6 +410,8 @@ export default async function BudgetPage({ searchParams }: Props) {
         prevMonthEntries={prevMonthEntries}
         nextMonthEntries={nextMonthEntries}
         isPaydayCycle={isPaydayCycle}
+        periodEnd={periodEnd}
+        scheduledNextBudget={budgetSettings.scheduled_next_budget}
       />
       <BudgetOptimizationHub
         historyMode={historyMode}

@@ -185,3 +185,40 @@ export async function sendPushToUser(
 
   return true;
 }
+
+/**
+ * Web push when DCIC Overdrive becomes active. Respects `push_reminders_enabled` (default on if no prefs row).
+ * Uses separate tags per source so auto- and handmatige activatie elkaar niet dedupen; dubbele `getGameState` wel.
+ * Safe to call from server actions: failures are logged and do not throw (e.g. missing VAPID in dev).
+ */
+export async function sendOverdriveActivatedPushIfEnabled(
+  supabase: SupabaseClient,
+  userId: string,
+  source: "auto" | "manual" = "auto"
+): Promise<boolean> {
+  const { data: prefs } = await supabase
+    .from("user_preferences")
+    .select("push_reminders_enabled")
+    .eq("user_id", userId)
+    .maybeSingle();
+  if (prefs?.push_reminders_enabled === false) return false;
+
+  const body =
+    source === "auto"
+      ? "Overdrive is geactiveerd. Extra XP — blijf in de flow."
+      : "Je hebt Overdrive ingeschakeld. Extra XP zolang de sessie loopt.";
+  const tag = source === "auto" ? "dcic-overdrive-auto" : "dcic-overdrive-manual";
+
+  try {
+    return await sendPushToUser(supabase, userId, {
+      title: "Overdrive actief",
+      body,
+      tag,
+      url: "/dashboard",
+      priority: "normal",
+    });
+  } catch (e) {
+    console.warn("[push] sendOverdriveActivatedPushIfEnabled failed", e);
+    return false;
+  }
+}

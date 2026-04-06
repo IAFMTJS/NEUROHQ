@@ -218,7 +218,6 @@ export function ProfileHomeCompact({
           missionTemplates={dailyChallengeContext.missionTemplates}
           behaviorProfile={dailyChallengeContext.behaviorProfile}
           brainModeToday={dailyChallengeContext.brainModeToday}
-          activeMissionCountToday={dailyChallengeContext.activeMissionCountToday}
         />
       </section>
 

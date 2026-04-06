@@ -11,9 +11,9 @@ import { Modal } from "@/components/Modal";
 import { AddBudgetEntryForm } from "@/components/AddBudgetEntryForm";
 import { BudgetLockHeaderBadge } from "@/components/budget/BudgetLockHeaderBadge";
 import { EnergyRing, type EnergyRingMode } from "@/components/hud-test/EnergyRing";
-import { updateBudgetSettings } from "@/app/actions/budget";
+import { updateBudgetSettings, type ScheduledNextBudget } from "@/app/actions/budget";
 import { updateFlexBudgetSettings, type FlexBudgetHeroPayload } from "@/app/actions/flex-budget";
-import { formatCents } from "@/lib/utils/currency";
+import { formatCents, formatCentsValue, getCurrencySymbol } from "@/lib/utils/currency";
 import {
   clearPendingBudgetSnapshot,
   derivePendingBudgetRemaining,
@@ -24,6 +24,7 @@ import {
 import { useSettings } from "@/lib/settings-context";
 import { BudgetHistorySelector } from "@/components/BudgetHistorySelector";
 import { budgetDeckShellClass } from "@/lib/budget/budget-deck-chrome";
+import { openBudgetWeeklyReviewToast } from "@/components/budget/budget-weekly-review-toast";
 
 function budgetRingMode(
   hasSettings: boolean,
@@ -192,6 +193,10 @@ type Props = {
   /** Base/flex game layer; null when DB column set unavailable. */
   flexPayload?: FlexBudgetHeroPayload | null;
   lockPanelHref?: string;
+  /** Gepland budget voor de eerstvolgende loonsperiode. */
+  scheduledNextBudget?: ScheduledNextBudget | null;
+  /** `false` = toon vaste CTA voor budget-weekreview (los van Strategy-weekreview). */
+  weeklyReviewCompleted?: boolean;
 };
 
 export function RemainingBudgetHero({
@@ -215,11 +220,19 @@ export function RemainingBudgetHero({
   commandToolbar,
   flexPayload = null,
   lockPanelHref,
+  scheduledNextBudget = null,
+  weeklyReviewCompleted,
 }: Props) {
   const pendingBudget = usePendingBudgetSnapshot();
   const pendingActive = pendingBudget != null && pendingBudget.synced !== true;
   const [showDetails, setShowDetails] = useState(false);
   const [showEdit, setShowEdit] = useState(false);
+  const [budgetApplyTarget, setBudgetApplyTarget] = useState<"current" | "next">("current");
+  const [flexSettingsOpen, setFlexSettingsOpen] = useState(false);
+  const [flexChunkInput, setFlexChunkInput] = useState("");
+  const [flexCapInput, setFlexCapInput] = useState("");
+  const [flexMaxChunksInput, setFlexMaxChunksInput] = useState("");
+  const [flexSettingsError, setFlexSettingsError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
   const [budgetInput, setBudgetInput] = useState(String(Math.max(0, budgetCents) / 100));
   const [savingsInput, setSavingsInput] = useState(String(Math.max(0, savingsCents) / 100));
@@ -277,8 +290,19 @@ export function RemainingBudgetHero({
   const ringValue = hasSettings ? formatCents(remainingCents, effectiveCurrency) : "—";
   const ringCenterTag = flexPayload?.enabled ? "Base resterend" : hasSettings ? "Resterend" : undefined;
 
+  const nextPeriodStartIso =
+    !historyMode && periodEnd && /^\d{4}-\d{2}-\d{2}$/.test(periodEnd)
+      ? addDays(new Date(periodEnd + "T12:00:00Z"), 1).toISOString().slice(0, 10)
+      : null;
+  const nextPeriodStartLabel =
+    nextPeriodStartIso != null
+      ? format(new Date(nextPeriodStartIso + "T12:00:00Z"), "d MMMM yyyy", { locale: nl })
+      : null;
+  const canChooseNextPeriod = Boolean(nextPeriodStartLabel) && !historyMode;
+
   useEffect(() => {
     if (!showEdit) return;
+    setBudgetApplyTarget("current");
     setBudgetInput(String(Math.max(0, effectiveBudgetCents) / 100));
     setSavingsInput(String(Math.max(0, effectiveSavingsCents) / 100));
     setPeriodInput(effectiveBudgetPeriod);
@@ -299,6 +323,30 @@ export function RemainingBudgetHero({
     }
     if (b != null && s != null && s > b) {
       setError("Savings cannot exceed budget.");
+      return;
+    }
+
+    if (budgetApplyTarget === "next") {
+      startTransition(async () => {
+        try {
+          await updateBudgetSettings({
+            monthly_budget_cents: b ?? null,
+            monthly_savings_cents: s ?? null,
+            budget_period: periodInput,
+            apply_to_next_period: true,
+          });
+          toast.success(
+            nextPeriodStartLabel
+              ? `Budget gepland voor volgende loonsperiode (actief vanaf ${nextPeriodStartLabel}).`
+              : "Budget gepland voor volgende loonsperiode."
+          );
+          setShowEdit(false);
+          router.refresh();
+          await invalidateSettings();
+        } catch (e) {
+          setError(e instanceof Error ? e.message : "Failed to save.");
+        }
+      });
       return;
     }
 
@@ -409,6 +457,23 @@ export function RemainingBudgetHero({
                 </>
               )}
             </p>
+            {!historyMode && scheduledNextBudget ? (
+              <p className="mt-2 max-w-xl rounded-lg border border-cyan-500/25 bg-cyan-950/30 px-2.5 py-2 text-[10px] leading-snug text-cyan-100/95">
+                Gepland voor volgende loonsperiode (actief vanaf{" "}
+                {format(new Date(scheduledNextBudget.applies_from + "T12:00:00Z"), "d MMM yyyy", { locale: nl })}):
+                budget{" "}
+                {scheduledNextBudget.monthly_budget_cents != null
+                  ? formatCents(scheduledNextBudget.monthly_budget_cents, effectiveCurrency)
+                  : "—"}{" "}
+                · spaarreserve{" "}
+                {scheduledNextBudget.monthly_savings_cents != null
+                  ? formatCents(scheduledNextBudget.monthly_savings_cents, effectiveCurrency)
+                  : "—"}
+                {scheduledNextBudget.budget_period
+                  ? ` · ${scheduledNextBudget.budget_period === "weekly" ? "week" : "maand"}cyclus`
+                  : ""}
+              </p>
+            ) : null}
           </div>
           <div className="flex w-full min-w-0 flex-col gap-2 sm:w-auto sm:shrink-0 sm:items-end">
             <div className="flex flex-wrap items-center justify-end gap-x-2 gap-y-1.5">
@@ -434,30 +499,184 @@ export function RemainingBudgetHero({
           </div>
         </div>
 
+        {!historyMode && weeklyReviewCompleted === false ? (
+          <div
+            className="relative z-[1] mt-3 flex flex-col gap-2 rounded-xl border border-violet-500/30 bg-violet-950/30 px-3 py-2.5 sm:flex-row sm:items-center sm:justify-between"
+            role="status"
+          >
+            <p className="text-[11px] leading-snug text-violet-100/95">
+              <span className="font-semibold">Budget-weekreview</span> van deze week staat nog open — kort check-in
+              (geen extra invoer), telt mee voor discipline.
+            </p>
+            <div className="flex flex-wrap items-center gap-2">
+              <button
+                type="button"
+                onClick={() => openBudgetWeeklyReviewToast(false)}
+                className="inline-flex items-center rounded-lg bg-violet-500/90 px-3 py-1.5 text-[11px] font-semibold text-white shadow-sm hover:bg-violet-500"
+              >
+                Open weekreview
+              </button>
+              <Link
+                href="/budget?tab=analysis#budget-optimization-hub"
+                className="text-[11px] font-medium text-violet-200 underline underline-offset-2 hover:text-white"
+              >
+                Naar Inzicht-tab
+              </Link>
+            </div>
+          </div>
+        ) : null}
+
         {flexPayload != null && !historyMode && (
-          <div className="relative z-[1] mt-3 flex flex-wrap items-center gap-3 border-b border-[rgba(var(--mode-rgb),0.08)] pb-3">
-            <label className="flex cursor-pointer items-center gap-2 text-[11px] text-[var(--text-secondary)]">
-              <input
-                type="checkbox"
-                className="h-3.5 w-3.5 rounded border-[var(--card-border)] bg-[var(--bg-primary)] text-[rgb(var(--mode-rgb))] focus:ring-[rgb(var(--mode-rgb))]/40"
-                checked={flexPayload.enabled}
+          <div className="relative z-[1] mt-3 space-y-3 border-b border-[rgba(var(--mode-rgb),0.08)] pb-3">
+            <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
+              <label className="flex cursor-pointer items-center gap-2 text-[11px] text-[var(--text-secondary)]">
+                <input
+                  type="checkbox"
+                  className="h-3.5 w-3.5 rounded border-[var(--card-border)] bg-[var(--bg-primary)] text-[rgb(var(--mode-rgb))] focus:ring-[rgb(var(--mode-rgb))]/40"
+                  checked={flexPayload.enabled}
+                  disabled={pending}
+                  onChange={(e) => {
+                    startTransition(async () => {
+                      try {
+                        await updateFlexBudgetSettings({ flex_budget_enabled: e.target.checked });
+                        router.refresh();
+                      } catch (err) {
+                        toast.error(err instanceof Error ? err.message : "Flex-instelling mislukt");
+                      }
+                    });
+                  }}
+                />
+                <span>
+                  Flex-laag (beloningen & straffen) · chunk {formatCents(flexPayload.chunkCents, effectiveCurrency)} ·
+                  max {formatCents(flexPayload.capMonthlyCents, effectiveCurrency)}/maand ·{" "}
+                  {flexPayload.maxChunksPerDay}×/dag max.
+                </span>
+              </label>
+              <button
+                type="button"
                 disabled={pending}
-                onChange={(e) => {
+                onClick={() => {
+                  setFlexSettingsOpen((open) => {
+                    const next = !open;
+                    if (next) {
+                      setFlexSettingsError(null);
+                      setFlexChunkInput(formatCentsValue(flexPayload.chunkCents));
+                      setFlexCapInput(formatCentsValue(flexPayload.capMonthlyCents));
+                      setFlexMaxChunksInput(String(flexPayload.maxChunksPerDay));
+                    }
+                    return next;
+                  });
+                }}
+                className="text-[11px] font-semibold text-[rgb(var(--mode-rgb))] underline underline-offset-2 hover:opacity-90 disabled:opacity-50"
+              >
+                {flexSettingsOpen ? "Sluiten" : "Flex instellen"}
+              </button>
+            </div>
+            {flexSettingsOpen ? (
+              <form
+                className="rounded-xl border border-[rgba(var(--mode-rgb),0.15)] bg-[rgba(6,18,30,0.35)] p-3"
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  setFlexSettingsError(null);
+                  const chunkCents = Math.round(parseFloat(flexChunkInput.replace(",", ".")) * 100);
+                  const capCents = Math.round(parseFloat(flexCapInput.replace(",", ".")) * 100);
+                  const maxChunks = Math.round(parseFloat(flexMaxChunksInput.replace(",", ".")));
+                  if (!Number.isFinite(chunkCents) || chunkCents <= 0) {
+                    setFlexSettingsError("Chunk moet groter zijn dan 0.");
+                    return;
+                  }
+                  if (!Number.isFinite(capCents) || capCents < 0) {
+                    setFlexSettingsError("Maandcap ongeldig.");
+                    return;
+                  }
+                  if (!Number.isFinite(maxChunks) || maxChunks < 1 || maxChunks > 10) {
+                    setFlexSettingsError("Max. regels per dag: 1 tot 10.");
+                    return;
+                  }
                   startTransition(async () => {
                     try {
-                      await updateFlexBudgetSettings({ flex_budget_enabled: e.target.checked });
+                      await updateFlexBudgetSettings({
+                        flex_chunk_cents: chunkCents,
+                        flex_cap_monthly_cents: capCents,
+                        flex_max_chunks_per_day: maxChunks,
+                      });
+                      toast.success("Flex-instellingen opgeslagen");
                       router.refresh();
+                      setFlexSettingsOpen(false);
                     } catch (err) {
-                      toast.error(err instanceof Error ? err.message : "Flex-instelling mislukt");
+                      toast.error(err instanceof Error ? err.message : "Opslaan mislukt");
                     }
                   });
                 }}
-              />
-              <span>
-                Flex-laag (beloningen & straffen) · chunk {formatCents(flexPayload.chunkCents, effectiveCurrency)} ·
-                max {formatCents(flexPayload.capMonthlyCents, effectiveCurrency)}/maand
-              </span>
-            </label>
+              >
+                <p className="mb-2 text-[10px] font-bold uppercase tracking-[0.12em] text-[var(--text-muted)]">
+                  Chunk & maandlimiet
+                </p>
+                <div className="grid gap-3 sm:grid-cols-3">
+                  <label className="block text-[11px] text-[var(--text-secondary)]">
+                    <span className="mb-1 block text-[var(--text-muted)]">Chunk (stap beloning/straf)</span>
+                    <span className="flex items-center gap-1 rounded-lg border border-[var(--card-border)] bg-[var(--bg-primary)] px-2 py-1.5 tabular-nums">
+                      <span className="text-[var(--text-muted)]">{getCurrencySymbol(effectiveCurrency)}</span>
+                      <input
+                        type="text"
+                        inputMode="decimal"
+                        className="min-w-0 flex-1 bg-transparent text-sm text-[var(--text-primary)] outline-none"
+                        value={flexChunkInput}
+                        onChange={(ev) => setFlexChunkInput(ev.target.value)}
+                        aria-label="Flex chunk in hoofdeenheid"
+                      />
+                    </span>
+                  </label>
+                  <label className="block text-[11px] text-[var(--text-secondary)]">
+                    <span className="mb-1 block text-[var(--text-muted)]">Max. per maand (flexpot-plafond)</span>
+                    <span className="flex items-center gap-1 rounded-lg border border-[var(--card-border)] bg-[var(--bg-primary)] px-2 py-1.5 tabular-nums">
+                      <span className="text-[var(--text-muted)]">{getCurrencySymbol(effectiveCurrency)}</span>
+                      <input
+                        type="text"
+                        inputMode="decimal"
+                        className="min-w-0 flex-1 bg-transparent text-sm text-[var(--text-primary)] outline-none"
+                        value={flexCapInput}
+                        onChange={(ev) => setFlexCapInput(ev.target.value)}
+                        aria-label="Flex maandcap in hoofdeenheid"
+                      />
+                    </span>
+                  </label>
+                  <label className="block text-[11px] text-[var(--text-secondary)]">
+                    <span className="mb-1 block text-[var(--text-muted)]">Max. chunks per dag</span>
+                    <input
+                      type="number"
+                      min={1}
+                      max={10}
+                      step={1}
+                      className="w-full rounded-lg border border-[var(--card-border)] bg-[var(--bg-primary)] px-2 py-1.5 text-sm tabular-nums text-[var(--text-primary)] outline-none"
+                      value={flexMaxChunksInput}
+                      onChange={(ev) => setFlexMaxChunksInput(ev.target.value)}
+                      aria-label="Maximum flex chunks per dag"
+                    />
+                  </label>
+                </div>
+                {flexSettingsError ? (
+                  <p className="mt-2 text-[11px] text-rose-300">{flexSettingsError}</p>
+                ) : null}
+                <div className="mt-3 flex flex-wrap gap-2">
+                  <button
+                    type="submit"
+                    disabled={pending}
+                    className="inline-flex items-center rounded-lg bg-[rgb(var(--mode-rgb))] px-3 py-1.5 text-xs font-semibold text-black disabled:opacity-50"
+                  >
+                    Opslaan
+                  </button>
+                  <button
+                    type="button"
+                    disabled={pending}
+                    onClick={() => setFlexSettingsOpen(false)}
+                    className="inline-flex items-center rounded-lg border border-[var(--card-border)] px-3 py-1.5 text-xs font-medium text-[var(--text-secondary)] disabled:opacity-50"
+                  >
+                    Annuleren
+                  </button>
+                </div>
+              </form>
+            ) : null}
           </div>
         )}
 
@@ -808,6 +1027,41 @@ export function RemainingBudgetHero({
         <p className="text-sm text-[var(--text-muted)]">
           Total amount per {periodInput === "weekly" ? "week" : "month"}, and how much you reserve for savings.
         </p>
+        {canChooseNextPeriod ? (
+          <div className="mt-4 space-y-2 rounded-lg border border-[var(--card-border)] bg-[var(--bg-surface)]/50 p-3">
+            <p className="text-xs font-semibold text-[var(--text-primary)]">Waarvoor geldt dit?</p>
+            <label className="flex cursor-pointer items-start gap-2.5 text-sm text-[var(--text-secondary)]">
+              <input
+                type="radio"
+                name="budgetApplyTarget"
+                className="mt-1 h-3.5 w-3.5 shrink-0 border-[var(--card-border)] text-[rgb(var(--mode-rgb))] focus:ring-[rgb(var(--mode-rgb))]/40"
+                checked={budgetApplyTarget === "current"}
+                onChange={() => setBudgetApplyTarget("current")}
+              />
+              <span>
+                <span className="font-medium text-[var(--text-primary)]">Deze loonsperiode</span> (nu actief) — past
+                je huidige restant en meter aan.
+              </span>
+            </label>
+            <label className="flex cursor-pointer items-start gap-2.5 text-sm text-[var(--text-secondary)]">
+              <input
+                type="radio"
+                name="budgetApplyTarget"
+                className="mt-1 h-3.5 w-3.5 shrink-0 border-[var(--card-border)] text-[rgb(var(--mode-rgb))] focus:ring-[rgb(var(--mode-rgb))]/40"
+                checked={budgetApplyTarget === "next"}
+                onChange={() => setBudgetApplyTarget("next")}
+              />
+              <span>
+                <span className="font-medium text-[var(--text-primary)]">Volgende loonsperiode</span>
+                {nextPeriodStartLabel ? (
+                  <> (start {nextPeriodStartLabel}) — deze periode blijft ongewijzigd.</>
+                ) : (
+                  <> — deze periode blijft ongewijzigd.</>
+                )}
+              </span>
+            </label>
+          </div>
+        ) : null}
         <div className="mt-4 space-y-4">
           <div>
             <label className="block text-sm font-medium text-[var(--text-primary)]">Budget period</label>

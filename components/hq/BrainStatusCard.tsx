@@ -7,18 +7,11 @@ import { getPendingDailyState } from "@/lib/client-pending-writes";
 import { useHQStore } from "@/lib/hq-store";
 import { BrainStatusModal } from "./BrainStatusModal";
 import { useDCICGameState } from "@/lib/dcic/game-state-client";
-import { EnergyRing, type EnergyRingMode } from "@/components/hud-test/EnergyRing";
-import { brainCirclePcts, hasCommittedBrainCheckIn } from "@/lib/dashboard-utils";
+import { EnergyRing } from "@/components/hud-test/EnergyRing";
+import { brainCirclePcts, brainStatusRingModeFromPct, hasCommittedBrainCheckIn } from "@/lib/dashboard-utils";
 import type { MoodLabel } from "@/lib/mood-intervention-config";
 import { MOOD_LABEL_META } from "@/lib/mood-intervention-config";
 import { MoodManualPanel } from "@/components/mood/MoodManualPanel";
-
-function getRingMode(value: number): EnergyRingMode {
-  if (value <= 20) return "high-alert";
-  if (value >= 90) return "green-peak";
-  if (value >= 70) return "green";
-  return "default";
-}
 
 type Props = {
   date: string;
@@ -261,15 +254,15 @@ export const BrainStatusCard = memo(function BrainStatusCard({
         <div className="mb-6 rounded-2xl border border-white/[0.08] border-t-[rgba(var(--mode-rgb),0.22)] bg-[rgba(var(--mode-rgb-deep),0.18)] p-5 shadow-[0_-2px_0_0_rgba(var(--mode-rgb),0.08)] backdrop-blur-xl">
           <div className="grid grid-cols-3 gap-4">
             <div className="flex flex-col items-center gap-1" data-tutorial="brain-status-energy">
-              <EnergyRing progress={energyPct} size={84} label="" value={`${energyPct}%`} mode={getRingMode(energyPct)} softGlow />
+              <EnergyRing progress={energyPct} size={84} label="" value={`${energyPct}%`} mode={brainStatusRingModeFromPct(energyPct)} softGlow />
               <span className="text-[10px] text-[var(--text-muted)]">Energy</span>
             </div>
             <div className="flex flex-col items-center gap-1" data-tutorial="brain-status-focus">
-              <EnergyRing progress={focusPct} size={84} label="" value={`${focusPct}%`} mode={getRingMode(focusPct)} softGlow />
+              <EnergyRing progress={focusPct} size={84} label="" value={`${focusPct}%`} mode={brainStatusRingModeFromPct(focusPct)} softGlow />
               <span className="text-[10px] text-[var(--text-muted)]">Focus</span>
             </div>
             <div className="flex flex-col items-center gap-1" data-tutorial="brain-status-load">
-              <EnergyRing progress={loadPct} size={84} label="" value={`${loadPct}%`} mode={getRingMode(loadPct)} softGlow />
+              <EnergyRing progress={loadPct} size={84} label="" value={`${loadPct}%`} mode={brainStatusRingModeFromPct(loadPct)} softGlow />
               <span className="text-[10px] text-[var(--text-muted)]">Mentale belasting</span>
             </div>
           </div>

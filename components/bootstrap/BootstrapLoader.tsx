@@ -12,9 +12,64 @@ import {
   type PreloadStepId,
   type InitializeResult,
 } from "@/lib/daily-initialize";
+import { requestDurableStorage } from "@/lib/storage-persist";
+
 type Props = {
   onReady: (result: InitializeResult) => void;
 };
+
+function isStandaloneDisplayMode(): boolean {
+  if (typeof window === "undefined") return false;
+  return (
+    (window.matchMedia?.("(display-mode: standalone)")?.matches ?? false) ||
+    (window.navigator as Navigator & { standalone?: boolean }).standalone === true
+  );
+}
+
+/** True if Supabase likely has a persisted session (localStorage not readable yet on cold start). */
+function likelyHasStoredSupabaseSession(): boolean {
+  try {
+    if (typeof localStorage === "undefined") return false;
+    for (let i = 0; i < localStorage.length; i++) {
+      const k = localStorage.key(i);
+      if (k && k.startsWith("sb-") && k.endsWith("-auth-token")) return true;
+    }
+  } catch {
+    return false;
+  }
+  return false;
+}
+
+/**
+ * iOS PWA cold start: Supabase session from storage often arrives a few hundred ms after JS runs.
+ * If we only call getUser() once, we skip IndexedDB replay and refetch everything every launch.
+ */
+async function resolveSessionUserIdForBootstrap(): Promise<string | null> {
+  const supabase = createClient();
+  const {
+    data: { session: first },
+  } = await supabase.auth.getSession();
+  if (first?.user?.id) return first.user.id;
+
+  const maxWaitMs =
+    isStandaloneDisplayMode() && likelyHasStoredSupabaseSession() ? 900 : 0;
+  if (maxWaitMs > 0) {
+    requestDurableStorage();
+    const deadline = Date.now() + maxWaitMs;
+    while (Date.now() < deadline) {
+      await new Promise((r) => setTimeout(r, 70));
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+      if (session?.user?.id) return session.user.id;
+    }
+  }
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  return user?.id ?? null;
+}
 
 const STEP_COPY: Record<PreloadStepId, string> = {
   fetchMissions: "Dashboard, missions, budget & growth (today)",
@@ -34,13 +89,11 @@ export function BootstrapLoader({ onReady }: Props) {
     const run = async () => {
       try {
         const dayKey = getSnapshotValidityDayKey();
-        const supabase = createClient();
-        const {
-          data: { user },
-        } = await supabase.auth.getUser();
+        const userId = await resolveSessionUserIdForBootstrap();
 
-        if (user && !cancelled) {
-          const cached = await readPersistedDailyInit(user.id, dayKey);
+        if (userId && !cancelled) {
+          requestDurableStorage();
+          const cached = await readPersistedDailyInit(userId, dayKey);
           if (cached) {
             setSnapshot(cached.snapshot);
             onReady(cached);
@@ -52,8 +105,8 @@ export function BootstrapLoader({ onReady }: Props) {
           if (!cancelled) startTransition(() => setProgress(p));
         });
         if (cancelled) return;
-        if (user) {
-          void persistDailyInitResult(user.id, result).catch(() => {});
+        if (userId) {
+          await persistDailyInitResult(userId, result).catch(() => {});
         }
         setSnapshot(result.snapshot);
         onReady(result);

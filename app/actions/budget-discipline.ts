@@ -1,5 +1,6 @@
 "use server";
 
+import { cache } from "react";
 import { createClient } from "@/lib/supabase/server";
 
 export type BudgetDisciplineMissionKey = "safe_spend" | "log_all" | "no_impulse";
@@ -32,8 +33,7 @@ export async function getBudgetDisciplineCompletedToday(): Promise<BudgetDiscipl
   }
 }
 
-/** XP from budget discipline sources (missions + weekly reviews) for the current week. */
-export async function getBudgetDisciplineXpThisWeek(): Promise<number> {
+const loadBudgetDisciplineXpThisWeek = cache(async (): Promise<number> => {
   try {
     const supabase = await createClient();
     const {
@@ -64,5 +64,10 @@ export async function getBudgetDisciplineXpThisWeek(): Promise<number> {
   } catch {
     return 0;
   }
+});
+
+/** XP from budget discipline sources (missions + weekly reviews) for the current week. */
+export async function getBudgetDisciplineXpThisWeek(): Promise<number> {
+  return loadBudgetDisciplineXpThisWeek();
 }
 

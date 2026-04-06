@@ -6,16 +6,12 @@
 
 import { getSavingsGoals, getSavingsContributions } from "@/app/actions/savings";
 import {
-  getBudgetEntries,
+  applyPendingNextPeriodBudgetIfDue,
+  getBudgetPageEntryBundle,
   getBudgetSettings,
   getBudgetPeriodBounds,
-  getCurrentMonthExpensesCents,
-  getCurrentMonthIncomeCents,
-  getCurrentWeekExpensesCents,
-  getCurrentWeekIncomeCents,
   getFrozenEntries,
   getFrozenEntriesReadyForAction,
-  getPaydayDayOfMonth,
   getRecurringTemplates,
   generateRecurringEntries,
   getUnplannedWeeklySummary,
@@ -39,11 +35,18 @@ import { getStrategyPacingHints } from "@/app/actions/strategy-engine-pacing";
 export type BudgetPagePreamble = {
   prefs: Awaited<ReturnType<typeof getUserPreferencesOrDefaults>>;
   periodBounds: Awaited<ReturnType<typeof getBudgetPeriodBounds>>;
-  paydayDayOfMonth: Awaited<ReturnType<typeof getPaydayDayOfMonth>>;
+  paydayDayOfMonth: number | null;
 };
 
 export async function runBudgetPagePreamble(): Promise<BudgetPagePreamble> {
-  const [, , , prefs, periodBounds, paydayDayOfMonth] = await Promise.all([
+  const [, , , , prefs, periodBounds] = await Promise.all([
+    (async () => {
+      try {
+        await applyPendingNextPeriodBudgetIfDue();
+      } catch {
+        /* non-fatal */
+      }
+    })(),
     (async () => {
       try {
         await generateRecurringEntries();
@@ -61,22 +64,21 @@ export async function runBudgetPagePreamble(): Promise<BudgetPagePreamble> {
     syncBudgetDisciplineFromDataForToday(),
     getUserPreferencesOrDefaults(),
     getBudgetPeriodBounds(),
-    getPaydayDayOfMonth(),
   ]);
-  return { prefs, periodBounds, paydayDayOfMonth };
+  return { prefs, periodBounds, paydayDayOfMonth: periodBounds.paydayDayOfMonth };
 }
 
 export type BudgetPageDataBatch = {
   goals: Awaited<ReturnType<typeof getSavingsGoals>>;
-  entries: Awaited<ReturnType<typeof getBudgetEntries>>;
-  nextMonthEntries: Awaited<ReturnType<typeof getBudgetEntries>>;
-  prevMonthEntries: Awaited<ReturnType<typeof getBudgetEntries>>;
+  entries: Awaited<ReturnType<typeof getBudgetPageEntryBundle>>["entries"];
+  nextMonthEntries: Awaited<ReturnType<typeof getBudgetPageEntryBundle>>["nextMonthEntries"];
+  prevMonthEntries: Awaited<ReturnType<typeof getBudgetPageEntryBundle>>["prevMonthEntries"];
   alternatives: Awaited<ReturnType<typeof getAlternatives>>;
   budgetSettings: Awaited<ReturnType<typeof getBudgetSettings>>;
-  currentMonthExpenses: Awaited<ReturnType<typeof getCurrentMonthExpensesCents>>;
-  currentMonthIncome: Awaited<ReturnType<typeof getCurrentMonthIncomeCents>>;
-  currentWeekExpenses: Awaited<ReturnType<typeof getCurrentWeekExpensesCents>>;
-  currentWeekIncome: Awaited<ReturnType<typeof getCurrentWeekIncomeCents>>;
+  currentMonthExpenses: number;
+  currentMonthIncome: number;
+  currentWeekExpenses: number;
+  currentWeekIncome: number;
   activeFrozen: Awaited<ReturnType<typeof getFrozenEntries>>;
   readyForAction: Awaited<ReturnType<typeof getFrozenEntriesReadyForAction>>;
   unplannedSummary: Awaited<ReturnType<typeof getUnplannedWeeklySummary>>;
@@ -105,21 +107,10 @@ type BatchParams = {
   nextMonthEnd: string;
   prevStart: string;
   prevEnd: string;
-  paydayDayOfMonth: Awaited<ReturnType<typeof getPaydayDayOfMonth>>;
 };
 
 export async function loadBudgetPageDataBatch(params: BatchParams): Promise<BudgetPageDataBatch> {
-  const {
-    today,
-    isHistoryView,
-    periodStart,
-    periodEnd,
-    nextMonthStart,
-    nextMonthEnd,
-    prevStart,
-    prevEnd,
-    paydayDayOfMonth,
-  } = params;
+  const { today, isHistoryView, periodStart, periodEnd, nextMonthStart, nextMonthEnd, prevStart, prevEnd } = params;
 
   const flexHeroPromise: Promise<FlexBudgetHeroPayload | null> = !isHistoryView
     ? (async () => {
@@ -132,17 +123,20 @@ export async function loadBudgetPageDataBatch(params: BatchParams): Promise<Budg
       })()
     : Promise.resolve(null);
 
+  const entryBundlePromise = getBudgetPageEntryBundle({
+    periodStart,
+    periodEnd,
+    nextMonthStart,
+    nextMonthEnd,
+    prevStart,
+    prevEnd,
+  });
+
   const [
     goals,
-    entries,
-    nextMonthEntries,
-    prevMonthEntries,
+    entryBundle,
     alternatives,
     budgetSettings,
-    currentMonthExpenses,
-    currentMonthIncome,
-    currentWeekExpenses,
-    currentWeekIncome,
     activeFrozen,
     readyForAction,
     unplannedSummary,
@@ -162,15 +156,9 @@ export async function loadBudgetPageDataBatch(params: BatchParams): Promise<Budg
     flexHeroPayload,
   ] = await Promise.all([
     getSavingsGoals(),
-    getBudgetEntries(periodStart, periodEnd),
-    getBudgetEntries(nextMonthStart, nextMonthEnd),
-    getBudgetEntries(prevStart, prevEnd),
+    entryBundlePromise,
     getAlternatives(),
     getBudgetSettings(),
-    getCurrentMonthExpensesCents(),
-    getCurrentMonthIncomeCents(),
-    getCurrentWeekExpensesCents(),
-    getCurrentWeekIncomeCents(),
     getFrozenEntries(),
     getFrozenEntriesReadyForAction(),
     getUnplannedWeeklySummary(),
@@ -189,6 +177,16 @@ export async function loadBudgetPageDataBatch(params: BatchParams): Promise<Budg
     getStrategyPacingHints(),
     flexHeroPromise,
   ]);
+
+  const {
+    entries,
+    nextMonthEntries,
+    prevMonthEntries,
+    currentMonthExpenses,
+    currentMonthIncome,
+    currentWeekExpenses,
+    currentWeekIncome,
+  } = entryBundle;
 
   return {
     goals,

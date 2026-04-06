@@ -4,7 +4,7 @@
 // - DYNAMIC_CACHE (per dag): HTML/API offline fallback; _next/static JS/CSS = network-first, daarna cache voor offline
 // - IndexedDB (neurohq-offline): offline mutaties (POST/PUT etc.) → gesynchroniseerd zodra er weer netwerk is
 // Bump this when UI/layout changes so authenticated HTML cache doesn't keep old shells after refresh.
-const CACHE_VERSION = "v24";
+const CACHE_VERSION = "v25";
 const STATIC_CACHE = `neurohq-static-${CACHE_VERSION}`;
 const OFFLINE_PAGE = "/offline";
 
@@ -486,24 +486,8 @@ self.addEventListener("fetch", function (event) {
     return;
   }
 
-  // Next.js App Router "flight" / RSC navigations should never be cached by the SW.
-  // If these get cached or delayed, client-side Link navigations can feel "stuck",
-  // while opening the same URL in a new tab (full document navigation) feels fast.
-  try {
-    const isFlight = isNextFlightLikeRequest(event.request, url);
-    if (url.pathname.startsWith("/_next/") || isFlight) {
-      safeRespondWith(event, function () {
-        return fetch(event.request).catch(function () {
-          return new Response("Offline", { status: 503 });
-        });
-      });
-      return;
-    }
-  } catch {
-    // If header access fails for any reason, fall back to existing handlers below.
-  }
-
-  // JS/CSS (_next/static): network-first — stale cache was making Light UI / global style updates invisible after ship
+  // JS/CSS (_next/static): MUST run before generic `/_next/` handling — otherwise every static chunk
+  // was network-only with a plain-text 503 fallback (unreachable dead branch + bad offline behavior).
   if (url.pathname.startsWith("/_next/static/") && (url.pathname.endsWith(".js") || url.pathname.endsWith(".css"))) {
     safeRespondWith(event, function () {
       return caches.open(getDynamicCacheName()).then(function (cache) {
@@ -519,6 +503,26 @@ self.addEventListener("fetch", function (event) {
               return c || new Response("Offline", { status: 503 });
             });
           });
+      });
+    });
+    return;
+  }
+
+  // App Router RSC/flight: do not call respondWith — a synthetic 503 body breaks flight parsing after
+  // PWA resume when the radio is still waking (half the app showed "Er is iets misgegaan").
+  try {
+    if (isNextFlightLikeRequest(event.request, url)) {
+      return;
+    }
+  } catch {
+    // If header access fails, fall through to other handlers.
+  }
+
+  // Remaining Next internals (e.g. image optimizer): network-only, never cache flight.
+  if (url.pathname.startsWith("/_next/")) {
+    safeRespondWith(event, function () {
+      return fetch(event.request).catch(function () {
+        return new Response("Offline", { status: 503 });
       });
     });
     return;

@@ -1,6 +1,7 @@
 "use client";
 
-import { EnergyRing, type EnergyRingMode } from "@/components/hud-test/EnergyRing";
+import { EnergyRing } from "@/components/hud-test/EnergyRing";
+import { brainStatusRingModeFromPct } from "@/lib/dashboard-utils";
 
 type Variant = "energy" | "focus" | "load";
 
@@ -23,14 +24,7 @@ export function CommanderStatRing({ value, variant, size = 102 }: Props) {
   const isLow = variant === "load" ? pct >= 80 : pct <= 20;
   const lowHint = LOW_VALUE_HINT[variant];
   const label = variant === "energy" ? "Energy" : variant === "focus" ? "Focus" : "Load";
-  let mode: EnergyRingMode = "default";
-  if (variant === "load") {
-    if (pct >= 80) mode = "high-alert";
-    else if (pct >= 65) mode = "alert";
-  } else {
-    if (pct <= 20) mode = "high-alert";
-    else if (pct <= 35) mode = "alert";
-  }
+  const mode = brainStatusRingModeFromPct(pct);
 
   return (
     <div className="flex flex-col items-center gap-1">
