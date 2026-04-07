@@ -4,6 +4,7 @@ import { useState } from "react";
 import { CommanderMascotPedestal } from "@/components/commander/CommanderMascotPedestal";
 import { CommanderStatRing } from "@/components/commander/CommanderStatRing";
 import { EnergyRing } from "@/components/hud-test/EnergyRing";
+import { NativeCachedImg } from "@/components/NativeCachedImg";
 import { getDashboardMascotSrc } from "@/lib/mascots";
 import { StrategyAnalysisSplitRing } from "@/components/strategy/StrategyAnalysisSplitRing";
 import { VisualLabCommandDeck } from "@/components/visual-lab/VisualLabCommandDeck";
@@ -29,7 +30,7 @@ const PEDESTAL = {
 function MascotBlock() {
   return (
     <div className="mascot-hero-mascot-stack relative mx-auto flex w-full justify-center">
-      <img src={getDashboardMascotSrc()} alt="" className="mascot-img" aria-hidden />
+      <NativeCachedImg src={getDashboardMascotSrc()} alt="" className="mascot-img" aria-hidden />
     </div>
   );
 }

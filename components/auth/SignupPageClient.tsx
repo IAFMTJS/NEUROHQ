@@ -2,8 +2,8 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import Image from "next/image";
 import { createClient } from "@/lib/supabase/client";
+import { AuthHeroBrand } from "@/components/branding/AuthHeroBrand";
 import GlassCard from "@/components/ui/GlassCard";
 import PrimaryButton from "@/components/ui/PrimaryButton";
 
@@ -49,27 +49,7 @@ export default function SignupPageClient() {
     return (
       <main className="w-full max-w-[420px] hq-card-enter" data-ui="dark-commander">
         <div className="flex flex-col items-center gap-6">
-          <div className="flex flex-col items-center gap-2">
-            <Image
-              src="/app-icon.png"
-              alt=""
-              width={96}
-              height={96}
-              className="h-24 w-24 rounded-2xl object-contain"
-              priority
-            />
-            <Image
-              src="/logo-naam.png"
-              alt="NEUROHQ"
-              width={220}
-              height={58}
-              className="h-14 w-auto max-w-[200px] object-contain"
-              priority
-            />
-            <p className="text-xs font-semibold uppercase tracking-widest text-white/60">
-              Your daily HQ
-            </p>
-          </div>
+          <AuthHeroBrand />
           <GlassCard className="w-full max-w-[360px] p-8 text-center rounded-2xl border border-[var(--card-border)]">
             <div
               className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-[var(--accent-energy)]/20 text-[var(--accent-energy)]"
@@ -102,27 +82,7 @@ export default function SignupPageClient() {
       data-ui="dark-commander"
     >
       <div className="flex flex-col items-center gap-6">
-        <div className="flex flex-col items-center gap-2">
-          <Image
-            src="/app-icon.png"
-            alt=""
-            width={96}
-            height={96}
-            className="h-24 w-24 rounded-2xl object-contain"
-            priority
-          />
-          <Image
-            src="/logo-naam.png"
-            alt="NEUROHQ"
-            width={220}
-            height={58}
-            className="h-14 w-auto max-w-[200px] object-contain"
-            priority
-          />
-          <p className="text-xs font-semibold uppercase tracking-widest text-white/60">
-            Your daily HQ
-          </p>
-        </div>
+        <AuthHeroBrand />
 
         <GlassCard className="w-full max-w-[360px] p-8 rounded-2xl border border-[var(--card-border)]">
           <h2 className="text-center text-sm font-semibold text-[var(--text-secondary)] mb-6">

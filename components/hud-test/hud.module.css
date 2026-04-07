@@ -284,7 +284,7 @@
   position: relative;
   min-height: 100vh;
   background-color: var(--mode-bg-main, #050c18);
-  background-image: url("/Background12.PNG");
+  background-image: var(--hq-asset-bg-tiles);
   background-position: center center;
   background-size: cover;
   background-repeat: no-repeat;
@@ -349,7 +349,7 @@
 .starLayerFar {
   z-index: 3;
   opacity: 0.24;
-  background-image: url("/stars.png");
+  background-image: var(--hq-asset-hud-stars);
   background-size: 520px 520px;
   animation: starDriftSlow 44s ease-in-out infinite;
 }
@@ -358,7 +358,7 @@
   z-index: 4;
   opacity: 0.1;
   filter: blur(0.45px);
-  background-image: url("/stars.png");
+  background-image: var(--hq-asset-hud-stars);
   background-size: 700px 700px;
   background-position: 37% 21%;
   animation: starDriftNear 30s ease-in-out infinite;
@@ -421,7 +421,7 @@
   z-index: 6;
   opacity: 0.04;
   mix-blend-mode: overlay;
-  background-image: url("/grain.PNG");
+  background-image: var(--hq-asset-bg-grain);
   background-size: 180px 180px;
   background-repeat: repeat;
 }

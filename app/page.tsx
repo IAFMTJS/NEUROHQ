@@ -1,7 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import Link from "next/link";
-import Image from "next/image";
+import { AuthHeroBrand } from "@/components/branding/AuthHeroBrand";
 import GlassCard from "@/components/ui/GlassCard";
 
 export default async function HomePage() {
@@ -13,9 +13,9 @@ export default async function HomePage() {
     <main className="relative min-h-screen">
       <div className="relative z-10 mx-auto flex min-h-screen max-w-[420px] flex-col items-center justify-center p-6">
         <GlassCard className="hq-card-enter w-full max-w-[360px] p-10 text-center">
-          <Image src="/app-icon.png" alt="" width={96} height={96} className="mx-auto h-24 w-24 rounded-2xl object-contain" priority />
-          <Image src="/logo-naam.png" alt="NEUROHQ" width={220} height={58} className="mx-auto mt-5 h-14 w-auto max-w-[200px] object-contain" priority />
-          <p className="mt-3 text-xs font-semibold uppercase tracking-widest text-white/60">Your daily HQ</p>
+          <div className="mx-auto w-full">
+            <AuthHeroBrand />
+          </div>
           <p className="mt-4 text-sm text-white/70">
             The place you open every day. Tasks, energy, learning, finances. Built for focus and energy awareness.
           </p>

@@ -1,10 +1,34 @@
 /**
- * Supabase-first data contract for mobile + web offline flows.
+ * NEUROHQ — ideal split between Capacitor, Supabase, and local SQLite/IndexedDB
  *
- * This contract is intentionally strict:
- * - Supabase is the only source of truth for persisted user data.
- * - Local stores (SQLite/IndexedDB) are cache + mutation outbox only.
- * - In conflicts, server state wins unless a domain explicitly overrides.
+ * Goals: one mental model for mobile and PWA; no “two sources of truth”; safe offline writes.
+ *
+ * 1) Supabase (Postgres + Auth + RLS)
+ *    - Sole authority for persisted user data. RLS stays enforced; clients never hold service-role keys.
+ *    - Native runs the same hosted Next app in WebView; session is the normal browser session (cookies).
+ *
+ * 2) Next.js API (`/api/mobile/sync/push`, `/pull`, …)
+ *    - Validates the user via `createClient()` (server), runs the same actions as the web app, persists
+ *      idempotency in `mobile_sync_receipts`. Business logic parity: one path to Supabase.
+ *
+ * 3) SQLite on Capacitor (IndexedDB mirror when SQLite is unavailable)
+ *    Tables are intentionally non-authoritative:
+ *    - `entity_cache` — read-through cache (stale-at, prefer fresh from network when online).
+ *    - `outbox` — durable mutation queue until push succeeds (idempotency key per attempt).
+ *    - `sync_checkpoint` — pull/bookkeeping per domain.
+ *    - `native_asset_registry` + app Filesystem — static visuals only; not user domain data.
+ *
+ * 4) Capacitor’s role
+ *    - Shell (WebView), native SQLite, Filesystem for assets/splash, optional platform listeners.
+ *    - Not a second backend: it does not replace Supabase writes; it adds durability and UX on device.
+ *
+ * Golden rules:
+ *    - Writes: UI → local outbox → POST push → server actions → Supabase. Never “SQLite wins” over server.
+ *    - Reads: use cache for instant UI; reconcile from `pull` or existing authenticated fetches.
+ *    - Conflicts: default server wins (`DEFAULT_CONFLICT_POLICY`).
+ *
+ * Feature gate: native Capacitor + `NEXT_PUBLIC_MOBILE_SYNC_ENABLED` (+ optional rollout); web/PWA keeps
+ * stable paths until you intentionally widen the gate.
  */
 
 export const SUPABASE_FIRST_CONTRACT_VERSION = "2026-04-06";

@@ -255,12 +255,17 @@ const STATIC_ASSETS = [
   "/app-icon.png",
   // Core branding & HUD visuals – pre-cached so first PWA open has them locally
   "/logo-naam.png",
-  // Dashboard mascot only lives under `public/mascots/` (cached on demand when visited).
-  "/icons/hq-tab-dashboard.png",
-  "/icons/hq-tab-tasks.png",
-  "/icons/hq-tab-budget.png",
-  "/icons/hq-tab-report.png",
-  "/icons/hq-tab-settings.png",
+  // Bottom nav PNGs (`lib/navigation/bottom-nav-links.tsx`); aligns with native warm-cache.
+  "/nav/Missions.png",
+  "/nav/Budget.png",
+  "/nav/Growth.png",
+  "/nav/Dashboard.png",
+  "/nav/Strategy.png",
+  "/Icons/User.PNG",
+  "/nav/Settings.png",
+  "/Background12.PNG",
+  "/grain.PNG",
+  "/stars.png",
 ];
 
 // Alleen openbare routes prefetchen (zonder cookies). Dashboard/tasks/budget etc. worden gecached bij echte navigatie (met cookies) = juiste HTML

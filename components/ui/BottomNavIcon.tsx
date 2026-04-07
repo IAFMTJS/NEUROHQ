@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { NativeCachedImg } from "@/components/NativeCachedImg";
 import type { BottomNavLink } from "@/lib/navigation/bottom-nav-links";
 
 type Props = {
@@ -18,7 +19,7 @@ export function BottomNavIcon({ link, active }: Props) {
   const src =
     "iconSrc" in link && link.iconSrc ? link.iconSrc : `/nav/${encodeURIComponent(link.pngFile)}`;
   return (
-    <img
+    <NativeCachedImg
       src={src}
       alt=""
       width={px}

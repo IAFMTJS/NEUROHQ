@@ -1,11 +1,11 @@
 import { IDEMPOTENCY_HEADER, SYNC_CLIENT_HEADER, type OutboxActionType } from "@/lib/mobile/supabase-first-contract";
 import {
-  ackOutboxAction,
   getOutboxPendingDepth,
   listReadyOutboxActions,
   markOutboxActionFailed,
   markOutboxActionProcessing,
 } from "@/lib/mobile/outbox";
+import { removeOutboxRowsBatch } from "@/lib/mobile/db";
 import { publishSyncMetrics, recordOutboxDepth, recordSyncConflict, recordSyncFailure, recordSyncSuccess } from "@/lib/mobile/metrics";
 import type { OutboxRow } from "@/lib/mobile/schema";
 
@@ -53,15 +53,16 @@ async function flushOutboxOnce(): Promise<void> {
     recordOutboxDepth(await getOutboxPendingDepth());
     return;
   }
+  const toAck: string[] = [];
   for (const row of rows) {
     await markOutboxActionProcessing(row);
     try {
       const result = await pushRow(row);
       if (result.ok) {
-        await ackOutboxAction(row.id);
+        toAck.push(row.id);
         recordSyncSuccess();
       } else if (result.conflict) {
-        await ackOutboxAction(row.id);
+        toAck.push(row.id);
         recordSyncConflict();
       } else {
         await markOutboxActionFailed(row, `http-${result.status}`);
@@ -72,6 +73,9 @@ async function flushOutboxOnce(): Promise<void> {
       await markOutboxActionFailed(row, message);
       recordSyncFailure();
     }
+  }
+  if (toAck.length > 0) {
+    await removeOutboxRowsBatch(toAck);
   }
   recordOutboxDepth(await getOutboxPendingDepth());
   void publishSyncMetrics();

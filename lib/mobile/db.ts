@@ -271,6 +271,21 @@ export async function removeOutboxRow(id: string): Promise<void> {
   await withStore<void>(STORE_OUTBOX, "readwrite", (store) => idbDelete(store, id));
 }
 
+export async function removeOutboxRowsBatch(ids: string[]): Promise<void> {
+  if (ids.length === 0) return;
+  const native = await getNativeSqliteDb();
+  if (native) {
+    const placeholders = ids.map(() => "?").join(", ");
+    await native.execute(`DELETE FROM outbox WHERE id IN (${placeholders})`, ids);
+    return;
+  }
+  await withStore<void>(STORE_OUTBOX, "readwrite", async (store) => {
+    for (const id of ids) {
+      await idbDelete(store, id);
+    }
+  });
+}
+
 export async function getOutboxDepth(): Promise<number> {
   const native = await getNativeSqliteDb();
   if (native) {

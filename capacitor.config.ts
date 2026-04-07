@@ -41,6 +41,12 @@ const config: CapacitorConfig = {
   appId: "com.neurohq.app",
   appName: "NEUROHQ",
   webDir: "public",
+  plugins: {
+    SplashScreen: {
+      launchAutoHide: false,
+      backgroundColor: "#03060c",
+    },
+  },
   server: {
     /**
      * Supabase-first rollout starts as a thin shell over the existing Next deployment.

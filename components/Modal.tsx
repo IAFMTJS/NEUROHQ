@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, type ReactNode } from "react";
 import { createPortal } from "react-dom";
-import Image from "next/image";
+import { NativeCachedImg } from "@/components/NativeCachedImg";
 
 export type ModalSize = "sm" | "md" | "lg" | "xl";
 
@@ -98,7 +98,7 @@ export function Modal({
         <header className="modal-card-header shrink-0">
           <div className="flex min-w-0 flex-1 items-center gap-3">
             {showBranding && (
-              <Image
+              <NativeCachedImg
                 src="/app-icon.png"
                 alt=""
                 width={36}

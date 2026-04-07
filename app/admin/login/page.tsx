@@ -1,5 +1,5 @@
-import Image from "next/image";
 import Link from "next/link";
+import { WarmedAppIcon } from "@/components/branding/WarmedAppIcon";
 import { AdminLoginForm } from "@/components/admin/AdminLoginForm";
 
 type Props = {
@@ -15,7 +15,7 @@ export default async function AdminLoginPage({ searchParams }: Props) {
   return (
     <main className="mx-auto flex min-h-dvh max-w-md flex-col justify-center gap-8 px-4 py-12">
       <div className="flex flex-col items-center gap-3 text-center">
-        <Image src="/app-icon.png" alt="" width={72} height={72} className="h-[72px] w-[72px] rounded-2xl" priority />
+        <WarmedAppIcon width={72} height={72} className="h-[72px] w-[72px] rounded-2xl" />
         <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-amber-400/90">Beheerdersconsole</p>
         <h1 className="text-lg font-semibold text-white">NEUROHQ admin</h1>
         <p className="text-xs text-white/50">Aparte login. Alleen accounts met rol admin in de database.</p>

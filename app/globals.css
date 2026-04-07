@@ -142,8 +142,13 @@
   --card-padding: 1.25rem;
   --content-max-width: 72rem;
 
+  /* Rasters: on Capacitor, `applyNativeResolvedCssAssets` may set these to cached file URLs */
+  --hq-asset-bg-tiles: url("/Background12.PNG");
+  --hq-asset-bg-grain: url("/grain.PNG");
+  --hq-asset-hud-stars: url("/stars.png");
+
   /* Command stack page (visual lab preview; tune here then promote to layout / hud) */
-  --command-stack-bg-image: url("/Background12.PNG");
+  --command-stack-bg-image: var(--hq-asset-bg-tiles);
   --command-stack-inner-max: 64rem;
 
   /* ========== CINEMATIC NEON (full design) ========== */
@@ -2500,7 +2505,7 @@ header h1 { margin: 0; }
 .dashboard-bg-tiles {
   position: absolute;
   inset: 0;
-  background-image: url("/Background12.PNG");
+  background-image: var(--hq-asset-bg-tiles);
   background-repeat: repeat;
   background-size: auto;
   background-position: 0 0;
@@ -2542,7 +2547,7 @@ header h1 { margin: 0; }
   z-index: 3;
   opacity: 0.032;
   mix-blend-mode: overlay;
-  background-image: url("/grain.PNG");
+  background-image: var(--hq-asset-bg-grain);
   background-repeat: repeat;
   background-size: 180px 180px;
 }

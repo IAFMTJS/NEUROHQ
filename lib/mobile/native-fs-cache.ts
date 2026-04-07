@@ -6,7 +6,11 @@ import {
 } from "@/lib/mobile/db";
 import type { NativeAssetRegistryRow } from "@/lib/mobile/schema";
 import { isNativeCapacitorRuntime } from "@/lib/mobile/feature-flags";
-import { getNativeVisualWarmPaths, NATIVE_ASSET_PACK_VERSION } from "@/lib/mobile/native-asset-manifest";
+import {
+  getNativeVisualCriticalWarmPaths,
+  getNativeVisualWarmPaths,
+  NATIVE_ASSET_PACK_VERSION,
+} from "@/lib/mobile/native-asset-manifest";
 import { getNativeExtendedValue, setNativeExtendedValue } from "@/lib/mobile/native-extended-cache";
 
 const PACK_META_KEY = "native_asset_pack_version";
@@ -57,18 +61,35 @@ async function fetchOneVisual(
 ): Promise<void> {
   const urlKey = assetUrlKeyFromAbsolute(absoluteUrl);
   const fsSubpath = fsSubpathFromUrlKey(urlKey);
-  const res = await fetch(absoluteUrl, { credentials: "include", cache: "no-store" });
+  const existing = await getNativeAssetRegistryRow(urlKey);
+
+  let ifNoneMatch: string | undefined;
+  if (existing?.etag && existing.fsSubpath === fsSubpath) {
+    try {
+      await Filesystem.stat({ path: existing.fsSubpath, directory: Directory.Data });
+      ifNoneMatch = existing.etag;
+    } catch {
+      // missing on disk — full GET
+    }
+  }
+
+  const res = await fetch(absoluteUrl, {
+    credentials: "include",
+    cache: "no-store",
+    ...(ifNoneMatch ? { headers: { "If-None-Match": ifNoneMatch } } : {}),
+  });
+
+  if (res.status === 304) return;
   if (!res.ok) return;
 
   const etag = res.headers.get("etag");
   const contentType = res.headers.get("content-type");
-  const existing = await getNativeAssetRegistryRow(urlKey);
   if (existing?.etag && etag && existing.etag === etag && existing.fsSubpath === fsSubpath) {
     try {
       await Filesystem.stat({ path: existing.fsSubpath, directory: Directory.Data });
       return;
     } catch {
-      // missing on disk — re-download
+      // re-persist below
     }
   }
 
@@ -95,16 +116,7 @@ async function fetchOneVisual(
   await upsertNativeAssetRegistryRow(row);
 }
 
-/**
- * Downloads core visuals into app-private storage and registers them in SQLite.
- * Safe to call repeatedly (ETag + stat short-circuit).
- */
-export async function warmNativeVisualAssetCache(): Promise<void> {
-  if (typeof window === "undefined" || !isNativeCapacitorRuntime()) return;
-  const { Capacitor } = await import("@capacitor/core");
-  if (Capacitor.getPlatform() !== "ios" && Capacitor.getPlatform() !== "android") return;
-  if (!(await isNativeSqliteDatabaseAvailable())) return;
-
+async function ensurePackMetaAndWarm(paths: string[]): Promise<void> {
   const { Filesystem, Directory } = await import("@capacitor/filesystem");
 
   const storedPack = await getNativeExtendedValue<number>(PACK_META_KEY);
@@ -113,7 +125,6 @@ export async function warmNativeVisualAssetCache(): Promise<void> {
     await setNativeExtendedValue(PACK_META_KEY, NATIVE_ASSET_PACK_VERSION);
   }
 
-  const paths = getNativeVisualWarmPaths();
   const concurrency = 4;
   for (let i = 0; i < paths.length; i += concurrency) {
     const slice = paths.slice(i, i + concurrency);
@@ -125,6 +136,27 @@ export async function warmNativeVisualAssetCache(): Promise<void> {
       )
     );
   }
+}
+
+async function runWarmIfNative(paths: string[]): Promise<void> {
+  if (typeof window === "undefined" || !isNativeCapacitorRuntime()) return;
+  const { Capacitor } = await import("@capacitor/core");
+  if (Capacitor.getPlatform() !== "ios" && Capacitor.getPlatform() !== "android") return;
+  if (!(await isNativeSqliteDatabaseAvailable())) return;
+  await ensurePackMetaAndWarm(paths);
+}
+
+/** Branding + tab bar assets first (~early in session). */
+export async function warmNativeVisualAssetCacheCritical(): Promise<void> {
+  await runWarmIfNative(getNativeVisualCriticalWarmPaths());
+}
+
+/**
+ * Downloads core visuals into app-private storage and registers them in SQLite.
+ * Safe to call repeatedly (ETag + stat short-circuit; conditional GET when possible).
+ */
+export async function warmNativeVisualAssetCache(): Promise<void> {
+  await runWarmIfNative(getNativeVisualWarmPaths());
 }
 
 /**

@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import Image from "next/image";
+import { NativeCachedImg } from "@/components/NativeCachedImg";
 import GlassCard from "@/components/ui/GlassCard";
 import PrimaryButton from "@/components/ui/PrimaryButton";
 
@@ -10,7 +10,7 @@ export function OfflineContent() {
     <div className="relative min-h-screen">
       <div className="relative z-10 flex min-h-screen flex-col items-center justify-center px-5">
         <GlassCard className="w-full max-w-[360px] p-8 text-center">
-          <Image
+          <NativeCachedImg
             src="/app-icon.png"
             alt=""
             width={64}
