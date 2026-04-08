@@ -21,7 +21,7 @@ export default async function LoginPage({ searchParams }: Props) {
       style={{ animationDelay: "50ms" }}
       data-ui="dark-commander"
     >
-      <div className="relative mx-auto w-full max-w-[700px] overflow-hidden rounded-[28px] border border-[rgba(var(--mode-rgb),0.34)] bg-[rgba(2,8,16,0.72)] shadow-[0_24px_80px_rgba(0,0,0,0.58)]">
+      <div className="relative mx-auto w-full max-w-[700px] overflow-hidden rounded-[28px] bg-[rgba(2,8,16,0.72)] shadow-[0_24px_80px_rgba(0,0,0,0.58)]">
         <img
           src={getLoginScreenMascotSrc()}
           alt="NEUROHQ login command artwork"
@@ -29,10 +29,14 @@ export default async function LoginPage({ searchParams }: Props) {
           draggable={false}
         />
 
+        <div
+          className="pointer-events-none absolute left-[10%] right-[10%] top-[36%] h-[18%] bg-[radial-gradient(ellipse_at_center,rgba(129,140,248,0.42),rgba(34,211,238,0.18)_45%,transparent_72%)] blur-2xl"
+          aria-hidden
+        />
         <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-[rgba(2,8,16,0.22)]" aria-hidden />
 
-        <section className="absolute left-[7%] right-[7%] top-[46%] bottom-[4%] z-10">
-          <div className="h-full rounded-[18px] border border-[rgba(201,174,255,0.35)] bg-[rgba(22,10,56,0.28)] p-4 shadow-[0_14px_40px_rgba(0,0,0,0.45)] backdrop-blur-[1.5px] sm:p-6">
+        <section className="absolute left-[7%] right-[7%] top-[43%] bottom-[3%] z-10">
+          <div className="h-full rounded-[18px] bg-[rgba(22,10,56,0.28)] p-4 shadow-[0_14px_40px_rgba(0,0,0,0.45)] backdrop-blur-[1.5px] sm:p-6">
             <p className="mb-1 text-center text-[10px] font-semibold uppercase tracking-[0.2em] text-[var(--text-muted)]">
               Commander Access
             </p>
