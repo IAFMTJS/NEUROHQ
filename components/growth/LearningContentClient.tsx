@@ -6,7 +6,6 @@ import type { ProtocolProgressState } from "@/app/actions/protocol-progress";
 import type { GrowthFocusState } from "@/app/actions/growth-focus";
 import type { StrategyPacingHints } from "@/lib/strategy/strategy-pacing-hints";
 import { GrowthCommandCenter } from "@/components/growth/GrowthCommandCenter";
-import { GrowthBottomHubCards } from "@/components/growth/GrowthBottomHubCards";
 import { GrowthProtocolViewerModal } from "@/components/growth/GrowthProtocolViewerModal";
 import { weeklyDifficultyFromBrain } from "@/lib/growth/adaptive-engine";
 import { progressKey } from "@/lib/growth/resolve-focus-protocol";
@@ -62,12 +61,6 @@ export function LearningContentClient({
               growthFocus={growthFocus}
               strategyPacingHints={strategyPacingHints}
               budgetWeekLabel={budgetWeekLabel}
-              onOpenProtocol={setViewerProtocol}
-            />
-            <GrowthBottomHubCards
-              protocols={protocols}
-              progressMap={progressMap}
-              growthFocus={growthFocus}
               onOpenProtocol={setViewerProtocol}
             />
           </section>
