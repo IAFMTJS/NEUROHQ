@@ -44,6 +44,8 @@ export function GrowthProtocolViewerModal({ protocol, progress, engineTier, onCl
   const [editTitle, setEditTitle] = useState(protocol.title);
   const [editSummary, setEditSummary] = useState(protocol.summary ?? "");
   const [editBody, setEditBody] = useState(protocol.body_md ?? "");
+  const [quizSelectionMap, setQuizSelectionMap] = useState<Record<string, string>>({});
+  const [quizSubmittedWeeks, setQuizSubmittedWeeks] = useState<Record<string, boolean>>({});
 
   const def = parseProtocolDefinition(protocol.definition_json);
   const tier = progress?.preferred_tier ?? "medium";
@@ -53,6 +55,19 @@ export function GrowthProtocolViewerModal({ protocol, progress, engineTier, onCl
   const week = def ? weekForIndex(def, weekIndex) : undefined;
   const phase = def ? phaseForWeek(def, weekIndex) : undefined;
   const maxW = def ? maxWeekIndex(def) : 1;
+  const weekQuiz = week?.weekly_checkin_quiz;
+  const weekQuizKey = `${protocol.id}:${weekIndex}`;
+  const weekQuizQuestions = weekQuiz?.questions ?? [];
+  const weekQuizAnswered = weekQuizQuestions.filter(
+    (q) => quizSelectionMap[`${weekQuizKey}:${q.id}`] != null,
+  ).length;
+  const weekQuizCorrect = weekQuizQuestions.filter((q) => {
+    const selected = quizSelectionMap[`${weekQuizKey}:${q.id}`];
+    if (!selected) return false;
+    return q.options.find((o) => o.id === selected)?.is_correct === true;
+  }).length;
+  const weekQuizPassScore = weekQuiz?.passing_score ?? weekQuizQuestions.length;
+  const weekQuizSubmitted = quizSubmittedWeeks[weekQuizKey] === true;
 
   useEffect(() => {
     setEditOpen(false);
@@ -421,6 +436,31 @@ export function GrowthProtocolViewerModal({ protocol, progress, engineTier, onCl
               </div>
             )}
 
+            {week.progression_steps && week.progression_steps.length > 0 && (
+              <div className="mb-3 rounded-lg border border-violet-500/25 bg-violet-500/6 p-3">
+                <p className="text-[10px] font-bold uppercase tracking-wide text-violet-200/85">Progressiestappen</p>
+                <ol className="mt-2 list-inside list-decimal space-y-1 text-xs text-[var(--text-secondary)]">
+                  {week.progression_steps.map((step) => (
+                    <li key={step}>{step}</li>
+                  ))}
+                </ol>
+              </div>
+            )}
+
+            {week.effective_assignments && week.effective_assignments.length > 0 && (
+              <div className="mb-3 rounded-lg border border-amber-500/25 bg-amber-500/7 p-3">
+                <p className="text-[10px] font-bold uppercase tracking-wide text-amber-200/90">Effectieve opdrachten</p>
+                <ul className="mt-2 space-y-1 text-xs text-[var(--text-secondary)]">
+                  {week.effective_assignments.map((line) => (
+                    <li key={line} className="flex gap-2">
+                      <span className="text-amber-300/80">▸</span>
+                      <span>{line}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
             {week.weekly_reflection_block && week.weekly_reflection_block.length > 0 && (
               <div className="mb-3 rounded-lg border border-cyan-500/25 bg-cyan-500/6 p-3">
                 <p className="text-[10px] font-bold uppercase tracking-wide text-cyan-200/85">
@@ -434,6 +474,100 @@ export function GrowthProtocolViewerModal({ protocol, progress, engineTier, onCl
                     </li>
                   ))}
                 </ul>
+              </div>
+            )}
+
+            {weekQuizQuestions.length > 0 && (
+              <div className="mb-3 rounded-lg border border-sky-500/25 bg-sky-500/6 p-3">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <p className="text-[10px] font-bold uppercase tracking-wide text-sky-200/90">
+                    {weekQuiz?.title ?? "Weekly check-in quiz"}
+                  </p>
+                  <span className="rounded-full border border-sky-300/30 px-2 py-0.5 text-[10px] text-sky-100/90">
+                    {weekQuizAnswered}/{weekQuizQuestions.length} beantwoord
+                  </span>
+                </div>
+
+                <div className="mt-2 space-y-3">
+                  {weekQuizQuestions.map((question, qi) => {
+                    const selectedId = quizSelectionMap[`${weekQuizKey}:${question.id}`];
+                    const selectedOption = question.options.find((o) => o.id === selectedId);
+                    return (
+                      <fieldset key={question.id} className="rounded-md border border-[var(--card-border)]/60 bg-[var(--bg-primary)]/35 p-2">
+                        <legend className="px-1 text-xs font-semibold text-[var(--text-primary)]">
+                          {qi + 1}. {question.prompt}
+                        </legend>
+                        <div className="mt-1 space-y-1.5">
+                          {question.options.map((option) => {
+                            const checked = selectedId === option.id;
+                            const showCorrect = weekQuizSubmitted && option.is_correct;
+                            const showWrong = weekQuizSubmitted && checked && !option.is_correct;
+                            return (
+                              <label
+                                key={option.id}
+                                className={`flex cursor-pointer items-start gap-2 rounded-md border px-2 py-1.5 text-xs ${
+                                  showCorrect
+                                    ? "border-emerald-400/45 bg-emerald-500/12"
+                                    : showWrong
+                                      ? "border-rose-400/45 bg-rose-500/12"
+                                      : "border-[var(--card-border)]/60 bg-[var(--bg-primary)]/35"
+                                }`}
+                              >
+                                <input
+                                  type="radio"
+                                  name={`${weekQuizKey}:${question.id}`}
+                                  checked={checked}
+                                  onChange={() =>
+                                    setQuizSelectionMap((prev) => ({
+                                      ...prev,
+                                      [`${weekQuizKey}:${question.id}`]: option.id,
+                                    }))
+                                  }
+                                  className="mt-0.5 h-3.5 w-3.5"
+                                />
+                                <span className="flex-1">{option.text}</span>
+                                {weekQuizSubmitted && option.is_correct && (
+                                  <span className="text-[10px] font-semibold text-emerald-200/90">Goed</span>
+                                )}
+                                {weekQuizSubmitted && checked && !option.is_correct && (
+                                  <span className="text-[10px] font-semibold text-rose-200/90">Fout</span>
+                                )}
+                              </label>
+                            );
+                          })}
+                        </div>
+                        {weekQuizSubmitted && selectedOption?.explanation && (
+                          <p className="mt-1.5 rounded-md bg-[var(--bg-primary)]/50 px-2 py-1 text-[11px] text-[var(--text-secondary)]">
+                            <span className="font-semibold text-[var(--text-muted)]">Uitleg: </span>
+                            {selectedOption.explanation}
+                          </p>
+                        )}
+                      </fieldset>
+                    );
+                  })}
+                </div>
+
+                <div className="mt-3 flex flex-wrap items-center gap-2">
+                  <button
+                    type="button"
+                    className="rounded-lg border border-sky-300/35 bg-sky-500/15 px-3 py-1.5 text-xs font-semibold text-sky-100 hover:bg-sky-500/25"
+                    onClick={() => setQuizSubmittedWeeks((prev) => ({ ...prev, [weekQuizKey]: true }))}
+                  >
+                    Check antwoorden
+                  </button>
+                  {weekQuizSubmitted && (
+                    <span
+                      className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${
+                        weekQuizCorrect >= weekQuizPassScore
+                          ? "bg-emerald-500/20 text-emerald-100"
+                          : "bg-amber-500/20 text-amber-100"
+                      }`}
+                    >
+                      Score {weekQuizCorrect}/{weekQuizQuestions.length}{" "}
+                      {weekQuizCorrect >= weekQuizPassScore ? "geslaagd" : "nog niet geslaagd"}
+                    </span>
+                  )}
+                </div>
               </div>
             )}
 

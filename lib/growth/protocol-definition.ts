@@ -23,6 +23,25 @@ export type ProtocolExecutionFlow = {
   macro: string;
 };
 
+export type ProtocolQuizOption = {
+  id: string;
+  text: string;
+  is_correct: boolean;
+  explanation?: string;
+};
+
+export type ProtocolWeeklyQuizQuestion = {
+  id: string;
+  prompt: string;
+  options: ProtocolQuizOption[];
+};
+
+export type ProtocolWeeklyCheckinQuiz = {
+  title: string;
+  passing_score?: number;
+  questions: ProtocolWeeklyQuizQuestion[];
+};
+
 /** Optionele bron of referentie bij een taak (geen harde URL vereiste). */
 export type ProtocolTaskResource = {
   label: string;
@@ -85,6 +104,12 @@ export type ProtocolWeek = {
   execution_flow?: ProtocolExecutionFlow;
   /** Reflection prompts for week-level closure. */
   weekly_reflection_block?: string[];
+  /** Concrete progression sequence (week-level). */
+  progression_steps?: string[];
+  /** Effective weekly assignments (action-focused). */
+  effective_assignments?: string[];
+  /** Optional check-in quiz with correct/incorrect answers. */
+  weekly_checkin_quiz?: ProtocolWeeklyCheckinQuiz;
 };
 
 export type ProtocolPhase = {
