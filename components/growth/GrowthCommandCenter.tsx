@@ -405,87 +405,94 @@ export function GrowthCommandCenter({
               </article>
             </section>
 
-            <div className="flex flex-wrap items-end justify-between gap-2">
-              <div>
-                <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-[var(--text-muted)]">Week-indicator</p>
-                <p className="mt-0.5 text-lg font-semibold tabular-nums text-[var(--text-primary)]">
-                  Week {weekIndex} <span className="text-[var(--text-muted)]">/</span> {maxW}
-                </p>
-                {budgetWeekLabel ? (
-                  <p className="mt-1 text-[10px] tabular-nums text-[var(--text-muted)]">Kalender · {budgetWeekLabel}</p>
-                ) : null}
-              </div>
-              <p className="text-sm font-semibold tabular-nums text-[var(--accent-focus)] [text-shadow:0_0_12px_rgba(var(--mode-rgb),0.35)]">
-                {weekPct}%
-              </p>
-            </div>
-
-            <div>
-              <div className="sr-only" aria-live="polite">
-                Voortgang deze week: {doneInWeek} van {totalInWeek} taken, {weekPct} procent
-              </div>
-              <p className="text-xs leading-snug text-[var(--text-secondary)]">
-                Voortgang deze week: <span className="font-medium text-[var(--text-primary)]">{doneInWeek}</span> van{" "}
-                <span className="font-medium text-[var(--text-primary)]">{totalInWeek}</span> taken,{" "}
-                <span className="tabular-nums">{weekPct}</span>% — hieronder één segment per protocolweek.
-              </p>
-            </div>
-
-            {protocolWeekFills.length > 0 ? (
-              <div className="-mx-1 overflow-x-auto pb-1 [scrollbar-width:thin]">
-                <div className="min-w-min px-1">
-                  <SegmentedBar
-                    label="Protocolweken · voltooid per week"
-                    caption={protocolWeekCaption}
-                    fills={protocolWeekFills}
-                    segmentLabels={protocolWeekLabels}
-                    className={maxW > 14 ? "min-w-[min(100%,28rem)]" : undefined}
-                  />
+            <details className="rounded-xl border border-white/10 bg-black/20 p-3">
+              <summary className="cursor-pointer text-xs font-semibold uppercase tracking-[0.14em] text-[var(--text-muted)]">
+                Geavanceerde protocoldiagnostiek
+              </summary>
+              <div className="mt-3 space-y-4">
+                <div className="flex flex-wrap items-end justify-between gap-2">
+                  <div>
+                    <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-[var(--text-muted)]">Week-indicator</p>
+                    <p className="mt-0.5 text-lg font-semibold tabular-nums text-[var(--text-primary)]">
+                      Week {weekIndex} <span className="text-[var(--text-muted)]">/</span> {maxW}
+                    </p>
+                    {budgetWeekLabel ? (
+                      <p className="mt-1 text-[10px] tabular-nums text-[var(--text-muted)]">Kalender · {budgetWeekLabel}</p>
+                    ) : null}
+                  </div>
+                  <p className="text-sm font-semibold tabular-nums text-[var(--accent-focus)] [text-shadow:0_0_12px_rgba(var(--mode-rgb),0.35)]">
+                    {weekPct}%
+                  </p>
                 </div>
-              </div>
-            ) : null}
 
-            {week.title ? (
-              <p className="text-xs text-[var(--text-secondary)] line-clamp-2">{week.title}</p>
-            ) : null}
+                <div>
+                  <div className="sr-only" aria-live="polite">
+                    Voortgang deze week: {doneInWeek} van {totalInWeek} taken, {weekPct} procent
+                  </div>
+                  <p className="text-xs leading-snug text-[var(--text-secondary)]">
+                    Voortgang deze week: <span className="font-medium text-[var(--text-primary)]">{doneInWeek}</span> van{" "}
+                    <span className="font-medium text-[var(--text-primary)]">{totalInWeek}</span> taken,{" "}
+                    <span className="tabular-nums">{weekPct}</span>% — hieronder één segment per protocolweek.
+                  </p>
+                </div>
 
-            {previewTasks.length > 0 ? (
-              <div>
-                <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-[var(--text-muted)]">Deze week</p>
-                <ul className="mt-2 space-y-2">
-                  {previewTasks.map((task) => {
-                    const done = completed.has(task.id);
-                    return (
-                      <li
-                        key={task.id}
-                        className={`flex items-center gap-3 rounded-xl border px-4 py-2.5 ${
-                          done
-                            ? "border-emerald-500/35 bg-emerald-500/[0.07]"
-                            : "border-[rgba(var(--mode-rgb),0.12)] bg-[var(--bg-surface)]/35"
-                        }`}
-                      >
-                        <span
-                          className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs font-bold ${
-                            done ? "bg-emerald-500/25 text-emerald-200" : "bg-[var(--bg-soft)] text-[var(--text-muted)]"
-                          }`}
-                          aria-hidden
-                        >
-                          {done ? "✓" : "○"}
-                        </span>
-                        <span className="min-w-0 text-sm font-medium leading-snug text-[var(--text-primary)]">
-                          {task.title}
-                        </span>
-                      </li>
-                    );
-                  })}
-                </ul>
-                {week.tasks.length > 3 ? (
-                  <p className="mt-2 text-[11px] text-[var(--text-muted)]">+{week.tasks.length - 3} extra in het traject</p>
+                {protocolWeekFills.length > 0 ? (
+                  <div className="-mx-1 overflow-x-auto pb-1 [scrollbar-width:thin]">
+                    <div className="min-w-min px-1">
+                      <SegmentedBar
+                        label="Protocolweken · voltooid per week"
+                        caption={protocolWeekCaption}
+                        fills={protocolWeekFills}
+                        segmentLabels={protocolWeekLabels}
+                        className={maxW > 14 ? "min-w-[min(100%,28rem)]" : undefined}
+                      />
+                    </div>
+                  </div>
                 ) : null}
+
+                {week.title ? (
+                  <p className="text-xs text-[var(--text-secondary)] line-clamp-2">{week.title}</p>
+                ) : null}
+
+                {previewTasks.length > 0 ? (
+                  <div>
+                    <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-[var(--text-muted)]">Deze week</p>
+                    <ul className="mt-2 space-y-2">
+                      {previewTasks.map((task) => {
+                        const done = completed.has(task.id);
+                        return (
+                          <li
+                            key={task.id}
+                            className={`flex items-center gap-3 rounded-xl border px-4 py-2.5 ${
+                              done
+                                ? "border-emerald-500/35 bg-emerald-500/[0.07]"
+                                : "border-[rgba(var(--mode-rgb),0.12)] bg-[var(--bg-surface)]/35"
+                            }`}
+                          >
+                            <span
+                              className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs font-bold ${
+                                done ? "bg-emerald-500/25 text-emerald-200" : "bg-[var(--bg-soft)] text-[var(--text-muted)]"
+                              }`}
+                              aria-hidden
+                            >
+                              {done ? "✓" : "○"}
+                            </span>
+                            <span className="min-w-0 text-sm font-medium leading-snug text-[var(--text-primary)]">
+                              {task.title}
+                            </span>
+                          </li>
+                        );
+                      })}
+                    </ul>
+                    {week.tasks.length > 3 ? (
+                      <p className="mt-2 text-[11px] text-[var(--text-muted)]">+{week.tasks.length - 3} extra in het traject</p>
+                    ) : null}
+                  </div>
+                ) : (
+                  <p className="text-sm text-[var(--text-muted)]">Geen taken voor deze week in het protocol.</p>
+                )}
               </div>
-            ) : (
-              <p className="text-sm text-[var(--text-muted)]">Geen taken voor deze week in het protocol.</p>
-            )}
+            </details>
           </>
         ) : (
           <p className="text-sm text-[var(--text-secondary)]">
