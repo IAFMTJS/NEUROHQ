@@ -1,240 +1,185 @@
-"use client";
+import Link from "next/link";
+import { getProtocolLibrary } from "@/app/actions/protocol-library";
+import { getProtocolProgressMap } from "@/app/actions/protocol-progress";
+import { getGrowthFocus } from "@/app/actions/growth-focus";
+import { syncGrowthFocusProtocolToCalendarWeek } from "@/app/actions/growth-protocol-calendar-sync";
+import { getStrategyPacingHints } from "@/app/actions/strategy-engine-pacing";
+import { getGrowthEngineSnapshot } from "@/app/actions/growth-snapshot";
+import { getLearningState } from "@/app/actions/learning-state";
+import { LearningContentClient } from "@/components/growth/LearningContentClient";
+import { GrowthMissionsRibbon } from "@/components/growth/GrowthMissionsRibbon";
+import { GrowthPageCommandShell } from "@/components/growth/GrowthPageCommandShell";
+import { formatDayShort } from "@/lib/utils/date-locale";
+import { getBudgetWeekBounds } from "@/lib/utils/budget-date";
+import { todayDateString } from "@/lib/utils/timezone";
 
-import { useState } from "react";
-import { neuroToast } from "@/lib/ui/neuro-toast";
+export const dynamic = "force-dynamic";
 
-type PulseMetric = {
+type DeckParityStatus = "covered" | "bridge";
+type DeckParityItem = {
   label: string;
-  value: string;
-  trend: string;
+  status: DeckParityStatus;
+  note: string;
 };
 
-type ArcNode = {
-  phase: string;
-  title: string;
-  objective: string;
-  completion: number;
-};
-
-type CommandItem = {
-  stream: string;
-  mission: string;
-  effort: string;
-  expectedReturn: string;
-};
-
-const pulseMetrics: PulseMetric[] = [
-  { label: "Execution coherence", value: "81%", trend: "+7 this cycle" },
-  { label: "Cognitive reserve", value: "68", trend: "+10 recovery points" },
-  { label: "Intent fidelity", value: "88%", trend: "+4 adherence" },
-  { label: "Overload risk", value: "29%", trend: "-11 risk drift" },
-];
-
-const arc: ArcNode[] = [
+const deckParity: DeckParityItem[] = [
   {
-    phase: "Phase 01",
-    title: "Stabilize",
-    objective: "Basisritme vastzetten met herhaalbare focusblokken.",
-    completion: 100,
+    label: "Protocol selectie + weekprogressie",
+    status: "covered",
+    note: "Zelfde command center en protocol-progress als productie.",
   },
   {
-    phase: "Phase 02",
-    title: "Amplify",
-    objective: "Output verhogen zonder extra mentale frictie.",
-    completion: 73,
+    label: "Missions sync inclusief feedback",
+    status: "covered",
+    note: "Zelfde commit/sync actions met result-feedback.",
   },
   {
-    phase: "Phase 03",
-    title: "Integrate",
-    objective: "Reflectie, transfer en duurzame gewoonteborging.",
-    completion: 34,
+    label: "Tier alignment signal",
+    status: "covered",
+    note: "Live engine/protocol tieralignment via growth snapshot.",
+  },
+  {
+    label: "Vooruitzicht volgende week",
+    status: "covered",
+    note: "Zelfde outlookkaart uit de Growth bottom hub.",
+  },
+  {
+    label: "Learning momentum",
+    status: "covered",
+    note: "Live momentum uit learning state i.p.v. statische pulse.",
+  },
+  {
+    label: "Decision-block uitvoering",
+    status: "bridge",
+    note: "Uitvoering blijft centraal in Missions op /tasks?growth=1.",
   },
 ];
 
-const commandDeck: CommandItem[] = [
-  {
-    stream: "Focus Engine",
-    mission: "2x 50 min deep block met recovery reset",
-    effort: "110 min",
-    expectedReturn: "High clarity output",
-  },
-  {
-    stream: "Decision Engine",
-    mission: "Daily decision brief (context, options, confidence)",
-    effort: "25 min",
-    expectedReturn: "Faster high-quality choices",
-  },
-  {
-    stream: "Social Engine",
-    mission: "Pre-meeting intent + post-meeting decompression",
-    effort: "30 min",
-    expectedReturn: "Lower spillover stress",
-  },
-];
+function deckParityStyle(status: DeckParityStatus): string {
+  if (status === "covered") return "border-emerald-300/35 bg-emerald-500/12 text-emerald-100";
+  return "border-cyan-300/35 bg-cyan-500/12 text-cyan-100";
+}
 
-type ConceptBTab = "pulse" | "arc" | "deck";
+export default async function GrowthReimaginedBPage() {
+  await syncGrowthFocusProtocolToCalendarWeek();
 
-export default function GrowthReimaginedBPage() {
-  const [activeTab, setActiveTab] = useState<ConceptBTab>("pulse");
+  const today = todayDateString();
+  const { start: budgetWeekStart, end: budgetWeekEnd } = getBudgetWeekBounds(today);
+  const budgetWeekLabel = `${formatDayShort(budgetWeekStart)} – ${formatDayShort(budgetWeekEnd)}`;
+
+  const [protocols, progressMap, growthFocus, strategyPacingHints, growthSnap, learningState] = await Promise.all([
+    getProtocolLibrary("nl"),
+    getProtocolProgressMap(),
+    getGrowthFocus(),
+    getStrategyPacingHints(),
+    getGrowthEngineSnapshot(),
+    getLearningState(),
+  ]);
+
+  const topStreams = learningState.streams.slice(0, 3);
+  const covered = deckParity.filter((item) => item.status === "covered").length;
 
   return (
-    <div className="container page page-wide dashboard-cinematic relative z-10 pb-12">
-      <div className="hq-frosted-main-shell">
-        <div className="space-y-6 rounded-[22px] border border-[rgba(var(--mode-rgb),0.24)] bg-[radial-gradient(circle_at_20%_0%,rgba(0,224,255,0.16),transparent_38%),radial-gradient(circle_at_100%_0%,rgba(153,96,255,0.2),transparent_44%),linear-gradient(160deg,rgba(4,9,19,0.95)_0%,rgba(8,20,38,0.9)_52%,rgba(3,8,18,0.96)_100%)] p-5 shadow-[0_24px_80px_rgba(0,0,0,0.5),inset_0_1px_0_rgba(255,255,255,0.08)] md:space-y-8 md:p-7">
-          <section className="relative overflow-hidden rounded-2xl border border-white/10 bg-black/20 p-5 md:p-6">
-            <div className="pointer-events-none absolute -right-16 -top-20 h-56 w-56 rounded-full bg-cyan-300/20 blur-3xl" />
-            <div className="pointer-events-none absolute -left-20 bottom-0 h-56 w-56 rounded-full bg-violet-400/20 blur-3xl" />
-            <div className="relative z-[1]">
-              <p className="text-[11px] uppercase tracking-[0.22em] text-cyan-200/90">Growth Concept B</p>
-              <h1 className="mt-3 max-w-4xl text-3xl font-bold tracking-tight text-white md:text-4xl">
-                Command-center stijl: minder “page”, meer <span className="text-cyan-200">live operating console</span>
-              </h1>
-              <p className="mt-3 max-w-3xl text-sm leading-relaxed text-slate-200/85">
-                Deze variant leunt zwaarder op premium sci-fi visuals, sterkere gloed, hogere contrastlagen en een command-deck opzet.
-                Mock data toont hoe inhoud + stijl samen een duidelijk “growth control room” kunnen maken.
-              </p>
-              <div className="mt-4 inline-flex items-center gap-2 rounded-full border border-cyan-300/30 bg-cyan-400/15 px-3 py-1 text-xs text-cyan-100">
+    <GrowthPageCommandShell>
+      <div className="space-y-6">
+        <section className="relative overflow-hidden rounded-2xl border border-white/10 bg-black/20 p-5 md:p-6">
+          <div className="pointer-events-none absolute -right-16 -top-20 h-56 w-56 rounded-full bg-cyan-300/20 blur-3xl" />
+          <div className="pointer-events-none absolute -left-20 bottom-0 h-56 w-56 rounded-full bg-violet-400/20 blur-3xl" />
+          <div className="relative z-[1]">
+            <p className="text-[11px] uppercase tracking-[0.22em] text-cyan-200/90">Growth Concept B · Live</p>
+            <h1 className="mt-3 max-w-4xl text-3xl font-bold tracking-tight text-white md:text-4xl">
+              Command-deck stijl met <span className="text-cyan-200">echte growth-engine functies</span>
+            </h1>
+            <p className="mt-3 max-w-3xl text-sm leading-relaxed text-slate-200/85">
+              Deze variant blijft visueel agressiever, maar draait nu op dezelfde productiecomponenten en server-data als de kern Growth-pagina.
+            </p>
+            <div className="mt-4 flex flex-wrap items-center gap-2">
+              <span className="inline-flex items-center gap-2 rounded-full border border-cyan-300/30 bg-cyan-400/15 px-3 py-1 text-xs text-cyan-100">
                 <span className="h-2 w-2 rounded-full bg-cyan-200 shadow-[0_0_10px_rgba(103,232,249,0.9)]" />
-                Simulation mode · mock telemetry
-              </div>
-              <div className="mt-4 flex flex-wrap items-center gap-2" role="tablist" aria-label="Growth concept B secties">
-                {[
-                  { id: "pulse", label: "Pulse" },
-                  { id: "arc", label: "Arc" },
-                  { id: "deck", label: "Deck" },
-                ].map((tab) => {
-                  const selected = activeTab === tab.id;
-                  return (
-                    <button
-                      key={tab.id}
-                      type="button"
-                      role="tab"
-                      aria-selected={selected}
-                      onClick={() => setActiveTab(tab.id as ConceptBTab)}
-                      className={`rounded-full border px-3 py-1.5 text-xs font-semibold transition ${
-                        selected
-                          ? "border-cyan-300/50 bg-cyan-400/20 text-cyan-100"
-                          : "border-white/15 bg-black/20 text-slate-300 hover:border-white/25 hover:text-white"
-                      }`}
-                    >
-                      {tab.label}
-                    </button>
-                  );
-                })}
-              </div>
+                Live engine mode
+              </span>
+              <span className="rounded-full border border-white/10 bg-black/20 px-3 py-1 text-xs text-slate-300">
+                Parity {covered}/{deckParity.length}
+              </span>
+              <span className="rounded-full border border-white/10 bg-black/20 px-3 py-1 text-xs text-slate-300">Week {budgetWeekLabel}</span>
             </div>
-          </section>
+            <div className="mt-4 flex flex-wrap items-center gap-2">
+              <Link
+                href="/learning"
+                className="rounded-lg border border-white/15 bg-black/20 px-3 py-1.5 text-xs font-semibold text-slate-300 transition hover:text-white"
+              >
+                Echte Growth
+              </Link>
+              <Link
+                href="/tasks?growth=1"
+                className="rounded-lg border border-cyan-300/35 bg-cyan-500/12 px-3 py-1.5 text-xs font-semibold text-cyan-100 transition hover:bg-cyan-500/20"
+              >
+                Missions deck
+              </Link>
+            </div>
+          </div>
+        </section>
 
-          {activeTab === "pulse" ? (
-            <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-              {pulseMetrics.map((metric) => (
-                <article
-                  key={metric.label}
-                  className="rounded-xl border border-white/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.06),rgba(255,255,255,0.02))] p-4 backdrop-blur-md"
-                >
-                  <p className="text-[11px] uppercase tracking-[0.16em] text-slate-300">{metric.label}</p>
-                  <p className="mt-2 text-2xl font-bold text-white">{metric.value}</p>
-                  <p className="mt-2 text-xs text-cyan-200">{metric.trend}</p>
+        <section className="rounded-2xl border border-white/10 bg-black/20 p-5">
+          <h2 className="text-lg font-semibold text-white">Parity matrix</h2>
+          <div className="mt-4 grid gap-2 md:grid-cols-2 xl:grid-cols-3">
+            {deckParity.map((item) => (
+              <article key={item.label} className="rounded-xl border border-white/10 bg-white/[0.04] p-3">
+                <div className="flex items-center justify-between gap-2">
+                  <p className="text-sm font-medium text-white">{item.label}</p>
+                  <span className={`rounded-full border px-2 py-0.5 text-[10px] font-semibold uppercase ${deckParityStyle(item.status)}`}>
+                    {item.status}
+                  </span>
+                </div>
+                <p className="mt-1 text-xs text-slate-300">{item.note}</p>
+              </article>
+            ))}
+          </div>
+        </section>
+
+        {growthSnap ? <GrowthMissionsRibbon snap={growthSnap} className="!rounded-2xl" /> : null}
+
+        <section className="rounded-2xl border border-white/10 bg-black/20 p-5">
+          <div className="flex items-center justify-between gap-3">
+            <h2 className="text-lg font-semibold text-white">Momentum radar (live)</h2>
+            <p className="text-xs text-slate-300">Gebaseerd op learning_state</p>
+          </div>
+          {topStreams.length === 0 ? (
+            <p className="mt-3 text-sm text-slate-300">Geen streams actief. Start een stream op Growth om signalen te activeren.</p>
+          ) : (
+            <div className="mt-3 grid gap-2 md:grid-cols-3">
+              {topStreams.map((stream) => (
+                <article key={stream.id} className="rounded-lg border border-white/10 bg-white/[0.04] p-3">
+                  <p className="text-sm font-medium text-white">{stream.title}</p>
+                  <p className="mt-1 text-xs text-slate-400">
+                    {stream.sessionsThisWeek} sessies · last active {stream.lastActive ?? "n.v.t."}
+                  </p>
+                  <div className="mt-2 h-1.5 rounded-full bg-white/10">
+                    <div
+                      className="h-1.5 rounded-full bg-gradient-to-r from-cyan-300 via-sky-300 to-violet-300"
+                      style={{ width: `${Math.round(stream.momentumScore * 100)}%` }}
+                    />
+                  </div>
                 </article>
               ))}
-              <div className="sm:col-span-2 xl:col-span-4">
-                <button
-                  type="button"
-                  onClick={() => neuroToast.info("Pulse-analyse naar dagelijkse briefing gestuurd (mock).")}
-                  className="w-full rounded-lg border border-cyan-300/30 bg-cyan-500/10 px-3 py-2 text-xs font-semibold text-cyan-100 transition hover:bg-cyan-500/20"
-                >
-                  Stuur pulse naar briefing
-                </button>
-              </div>
-            </section>
-          ) : null}
+            </div>
+          )}
+        </section>
 
-          {activeTab === "arc" ? (
-            <section className="grid gap-6 xl:grid-cols-[1.3fr_1fr]">
-              <article className="rounded-2xl border border-white/10 bg-black/20 p-5">
-                <div className="flex items-center justify-between">
-                  <h2 className="text-lg font-semibold text-white">Growth Arc Timeline</h2>
-                  <p className="text-xs text-slate-300">Phase-based progression</p>
-                </div>
-                <div className="mt-4 space-y-3">
-                  {arc.map((node) => (
-                    <div key={node.phase} className="rounded-xl border border-white/10 bg-white/[0.04] p-4">
-                      <div className="flex items-center justify-between gap-3">
-                        <p className="text-xs uppercase tracking-[0.14em] text-cyan-200">{node.phase}</p>
-                        <p className="text-xs text-slate-300">{node.completion}%</p>
-                      </div>
-                      <h3 className="mt-1 text-sm font-semibold text-white">{node.title}</h3>
-                      <p className="mt-2 text-sm text-slate-200/90">{node.objective}</p>
-                      <div className="mt-3 h-1.5 rounded-full bg-white/10">
-                        <div
-                          className="h-1.5 rounded-full bg-gradient-to-r from-cyan-300 via-sky-300 to-violet-300"
-                          style={{ width: `${node.completion}%` }}
-                        />
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </article>
-
-              <article className="rounded-2xl border border-white/10 bg-black/20 p-5">
-                <h2 className="text-lg font-semibold text-white">Neuro Signals</h2>
-                <div className="mt-4 space-y-3">
-                  {[
-                    { label: "Focus stability", value: 82, tone: "from-cyan-300 to-cyan-500" },
-                    { label: "Decision confidence", value: 66, tone: "from-violet-300 to-violet-500" },
-                    { label: "Recovery quality", value: 74, tone: "from-emerald-300 to-emerald-500" },
-                  ].map((signal) => (
-                    <div key={signal.label} className="rounded-xl border border-white/10 bg-white/[0.04] p-3">
-                      <div className="flex items-center justify-between text-xs text-slate-300">
-                        <span>{signal.label}</span>
-                        <span>{signal.value}</span>
-                      </div>
-                      <div className="mt-2 h-1.5 rounded-full bg-white/10">
-                        <div className={`h-1.5 rounded-full bg-gradient-to-r ${signal.tone}`} style={{ width: `${signal.value}%` }} />
-                      </div>
-                    </div>
-                  ))}
-                </div>
-                <button
-                  type="button"
-                  onClick={() => neuroToast.success("Arc milestone vastgezet voor weekreview (mock).")}
-                  className="mt-4 w-full rounded-lg border border-emerald-300/30 bg-emerald-500/12 px-3 py-2 text-xs font-semibold text-emerald-100 transition hover:bg-emerald-500/22"
-                >
-                  Markeer milestone
-                </button>
-              </article>
-            </section>
-          ) : null}
-
-          {activeTab === "deck" ? (
-            <section className="rounded-2xl border border-white/10 bg-black/20 p-5">
-              <div className="flex items-center justify-between gap-3">
-                <h2 className="text-lg font-semibold text-white">Command Deck</h2>
-                <p className="text-xs text-slate-300">Van inzicht naar directe weekly execution</p>
-              </div>
-              <div className="mt-4 grid gap-3 md:grid-cols-3">
-                {commandDeck.map((item) => (
-                  <article key={item.stream} className="rounded-xl border border-cyan-300/20 bg-cyan-400/10 p-4">
-                    <p className="text-xs uppercase tracking-[0.14em] text-cyan-100">{item.stream}</p>
-                    <p className="mt-2 text-sm font-medium text-white">{item.mission}</p>
-                    <div className="mt-3 flex items-center justify-between text-[11px] text-slate-200">
-                      <span>Effort: {item.effort}</span>
-                      <span className="text-cyan-100">{item.expectedReturn}</span>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => neuroToast.success(`${item.stream} gequeued naar weekplan (mock).`)}
-                      className="mt-3 rounded-lg border border-cyan-300/30 bg-cyan-500/10 px-3 py-1.5 text-[11px] font-semibold text-cyan-100 transition hover:bg-cyan-500/20"
-                    >
-                      Queue actie
-                    </button>
-                  </article>
-                ))}
-              </div>
-            </section>
-          ) : null}
-        </div>
+        <LearningContentClient
+          protocols={protocols}
+          progressMap={progressMap}
+          growthFocus={growthFocus}
+          strategyPacingHints={strategyPacingHints}
+          budgetWeekLabel={budgetWeekLabel}
+          simplified={false}
+          heroSlot={
+            <p className="text-center text-xs text-[var(--text-muted)]">
+              Concept B gebruikt live growth-data: dezelfde functionele ruggengraat, andere command-deck presentatie.
+            </p>
+          }
+        />
       </div>
-    </div>
+    </GrowthPageCommandShell>
   );
 }
