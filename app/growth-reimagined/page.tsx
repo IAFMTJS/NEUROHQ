@@ -1,3 +1,8 @@
+"use client";
+
+import { useState } from "react";
+import { neuroToast } from "@/lib/ui/neuro-toast";
+
 type GrowthStat = {
   label: string;
   value: string;
@@ -92,6 +97,8 @@ const experiments: GrowthExperiment[] = [
   },
 ];
 
+type GrowthViewTab = "overview" | "execution" | "experiments";
+
 function signalBadge(signal: GrowthTrack["signal"]) {
   if (signal === "on-track") return "border-emerald-400/35 bg-emerald-500/15 text-emerald-200";
   if (signal === "watch") return "border-amber-400/35 bg-amber-500/15 text-amber-100";
@@ -111,6 +118,8 @@ function experimentBadge(status: GrowthExperiment["status"]) {
 }
 
 export default function GrowthReimaginedPage() {
+  const [activeTab, setActiveTab] = useState<GrowthViewTab>("overview");
+
   return (
     <div className="container page page-wide dashboard-cinematic relative z-10 pb-12">
       <div className="hq-frosted-main-shell space-y-6 md:space-y-8">
@@ -134,138 +143,215 @@ export default function GrowthReimaginedPage() {
               <p className="mt-1">Primary intent: Sustainable high performance</p>
             </div>
           </div>
+          <div className="mt-4 flex flex-wrap items-center gap-2" role="tablist" aria-label="Growth reimagined secties">
+            {[
+              { id: "overview", label: "Overview" },
+              { id: "execution", label: "Execution" },
+              { id: "experiments", label: "Experiments" },
+            ].map((tab) => {
+              const selected = activeTab === tab.id;
+              return (
+                <button
+                  key={tab.id}
+                  type="button"
+                  role="tab"
+                  aria-selected={selected}
+                  onClick={() => setActiveTab(tab.id as GrowthViewTab)}
+                  className={`rounded-full border px-3 py-1.5 text-xs font-semibold transition ${
+                    selected
+                      ? "border-cyan-300/50 bg-cyan-400/20 text-cyan-100"
+                      : "border-white/15 bg-black/20 text-[var(--text-secondary)] hover:border-white/25 hover:text-[var(--text-primary)]"
+                  }`}
+                >
+                  {tab.label}
+                </button>
+              );
+            })}
+          </div>
         </section>
 
-        <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-          {growthStats.map((stat) => (
-            <article
-              key={stat.label}
-              className="rounded-xl border border-[var(--card-border)] bg-[var(--bg-elevated)]/70 p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.05)]"
-            >
-              <p className="text-[11px] uppercase tracking-[0.14em] text-[var(--text-muted)]">{stat.label}</p>
-              <p className="mt-2 text-2xl font-bold text-[var(--text-primary)]">{stat.value}</p>
-              <p className={`mt-2 text-xs ${stat.positive ? "text-emerald-200" : "text-[var(--text-secondary)]"}`}>{stat.delta}</p>
-            </article>
-          ))}
-        </section>
+        {activeTab === "overview" ? (
+          <>
+            <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+              {growthStats.map((stat) => (
+                <article
+                  key={stat.label}
+                  className="rounded-xl border border-[var(--card-border)] bg-[var(--bg-elevated)]/70 p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.05)]"
+                >
+                  <p className="text-[11px] uppercase tracking-[0.14em] text-[var(--text-muted)]">{stat.label}</p>
+                  <p className="mt-2 text-2xl font-bold text-[var(--text-primary)]">{stat.value}</p>
+                  <p className={`mt-2 text-xs ${stat.positive ? "text-emerald-200" : "text-[var(--text-secondary)]"}`}>{stat.delta}</p>
+                </article>
+              ))}
+            </section>
 
-        <section className="grid gap-6 xl:grid-cols-[1.5fr_1fr]">
-          <article className="rounded-2xl border border-[var(--card-border)] bg-[var(--bg-elevated)]/55 p-5">
-            <div className="flex items-center justify-between">
-              <h2 className="text-lg font-semibold text-[var(--text-primary)]">Active Growth Tracks</h2>
-              <p className="text-xs text-[var(--text-muted)]">Intent-driven in plaats van losse lijstjes</p>
-            </div>
-            <div className="mt-4 space-y-3">
-              {tracks.map((track) => (
-                <div key={track.name} className="rounded-xl border border-white/10 bg-black/20 p-4">
-                  <div className="flex flex-wrap items-center justify-between gap-3">
-                    <h3 className="text-sm font-semibold text-[var(--text-primary)]">{track.name}</h3>
-                    <span className={`rounded-full border px-2 py-0.5 text-[10px] font-semibold uppercase ${signalBadge(track.signal)}`}>
-                      {signalLabel(track.signal)}
+            <section className="grid gap-6 xl:grid-cols-[1.5fr_1fr]">
+              <article className="rounded-2xl border border-[var(--card-border)] bg-[var(--bg-elevated)]/55 p-5">
+                <div className="flex items-center justify-between">
+                  <h2 className="text-lg font-semibold text-[var(--text-primary)]">Active Growth Tracks</h2>
+                  <p className="text-xs text-[var(--text-muted)]">Intent-driven in plaats van losse lijstjes</p>
+                </div>
+                <div className="mt-4 space-y-3">
+                  {tracks.map((track) => (
+                    <div key={track.name} className="rounded-xl border border-white/10 bg-black/20 p-4">
+                      <div className="flex flex-wrap items-center justify-between gap-3">
+                        <h3 className="text-sm font-semibold text-[var(--text-primary)]">{track.name}</h3>
+                        <span className={`rounded-full border px-2 py-0.5 text-[10px] font-semibold uppercase ${signalBadge(track.signal)}`}>
+                          {signalLabel(track.signal)}
+                        </span>
+                      </div>
+                      <p className="mt-2 text-sm text-[var(--text-secondary)]">{track.intent}</p>
+                      <p className="mt-2 text-xs text-[var(--text-muted)]">{track.focus}</p>
+                      <div className="mt-3">
+                        <div className="mb-1 flex items-center justify-between text-xs text-[var(--text-muted)]">
+                          <span>{track.cadence}</span>
+                          <span>{track.completion}%</span>
+                        </div>
+                        <div className="h-2 rounded-full bg-white/10">
+                          <div
+                            className="h-2 rounded-full bg-gradient-to-r from-cyan-400/80 to-blue-300/80"
+                            style={{ width: `${track.completion}%` }}
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </article>
+
+              <article className="rounded-2xl border border-[var(--card-border)] bg-[var(--bg-elevated)]/55 p-5">
+                <h2 className="text-lg font-semibold text-[var(--text-primary)]">Narrative Coach</h2>
+                <p className="mt-2 text-sm text-[var(--text-secondary)]">
+                  Je consistency stijgt, maar besluitkwaliteit daalt op dagen met veel context-switching.
+                </p>
+                <ul className="mt-4 space-y-2 text-sm text-[var(--text-secondary)]">
+                  <li className="rounded-lg border border-cyan-400/20 bg-cyan-500/10 p-3">Plan max 2 decision-heavy taken op dezelfde dag.</li>
+                  <li className="rounded-lg border border-white/10 bg-black/20 p-3">Blokkeer 15 min decompression na meetings.</li>
+                  <li className="rounded-lg border border-white/10 bg-black/20 p-3">
+                    Houd vrijdag als review+integration in plaats van execution.
+                  </li>
+                </ul>
+                <div className="mt-4 flex flex-wrap gap-2">
+                  <button
+                    type="button"
+                    onClick={() => neuroToast.success("Coach advies vastgezet in weekplan (mock).")}
+                    className="rounded-lg border border-cyan-300/35 bg-cyan-500/15 px-3 py-1.5 text-xs font-semibold text-cyan-100 transition hover:bg-cyan-500/25"
+                  >
+                    Advies toepassen
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => neuroToast.info("Nieuwe coach-prompt aangemaakt voor morgen (mock).")}
+                    className="rounded-lg border border-white/15 bg-black/20 px-3 py-1.5 text-xs font-semibold text-[var(--text-secondary)] transition hover:text-[var(--text-primary)]"
+                  >
+                    Plan reminder
+                  </button>
+                </div>
+              </article>
+            </section>
+          </>
+        ) : null}
+
+        {activeTab === "execution" ? (
+          <section className="grid gap-6 xl:grid-cols-[1.2fr_1fr]">
+            <article className="rounded-2xl border border-[var(--card-border)] bg-[var(--bg-elevated)]/55 p-5">
+              <div className="flex items-center justify-between">
+                <h2 className="text-lg font-semibold text-[var(--text-primary)]">Weekplan met impact-prioriteit</h2>
+                <button
+                  type="button"
+                  onClick={() => neuroToast.success("Weekplan gesynchroniseerd naar Missions (mock).")}
+                  className="rounded-lg border border-emerald-300/35 bg-emerald-500/15 px-3 py-1.5 text-xs font-semibold text-emerald-100 transition hover:bg-emerald-500/25"
+                >
+                  Sync naar Missions
+                </button>
+              </div>
+              <div className="mt-4 space-y-2">
+                {missions.map((mission) => (
+                  <div key={`${mission.day}-${mission.title}`} className="flex items-center gap-3 rounded-xl border border-white/10 bg-black/20 p-3">
+                    <div className="w-9 shrink-0 rounded-md border border-white/15 bg-white/5 py-1 text-center text-xs font-semibold text-[var(--text-primary)]">
+                      {mission.day}
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-sm font-medium text-[var(--text-primary)]">{mission.title}</p>
+                      <p className="text-xs text-[var(--text-muted)]">
+                        {mission.duration} · {mission.tag}
+                      </p>
+                    </div>
+                    <span
+                      className={`rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase ${
+                        mission.impact === "high" ? "bg-emerald-500/20 text-emerald-200" : "bg-white/10 text-[var(--text-secondary)]"
+                      }`}
+                    >
+                      {mission.impact}
                     </span>
                   </div>
-                  <p className="mt-2 text-sm text-[var(--text-secondary)]">{track.intent}</p>
-                  <p className="mt-2 text-xs text-[var(--text-muted)]">{track.focus}</p>
-                  <div className="mt-3">
-                    <div className="mb-1 flex items-center justify-between text-xs text-[var(--text-muted)]">
-                      <span>{track.cadence}</span>
-                      <span>{track.completion}%</span>
+                ))}
+              </div>
+            </article>
+
+            <article className="rounded-2xl border border-[var(--card-border)] bg-[var(--bg-elevated)]/55 p-5">
+              <h2 className="text-lg font-semibold text-[var(--text-primary)]">Friction Radar</h2>
+              <p className="mt-2 text-sm text-[var(--text-secondary)]">Top 3 blockers op basis van patroonherkenning in mock telemetry.</p>
+              <div className="mt-4 space-y-2">
+                {[
+                  { label: "Meeting spillover", value: 71 },
+                  { label: "Late-start mornings", value: 58 },
+                  { label: "Task switching", value: 64 },
+                ].map((item) => (
+                  <div key={item.label} className="rounded-xl border border-white/10 bg-black/20 p-3">
+                    <div className="flex items-center justify-between text-xs text-[var(--text-muted)]">
+                      <span>{item.label}</span>
+                      <span>{item.value}</span>
                     </div>
-                    <div className="h-2 rounded-full bg-white/10">
+                    <div className="mt-2 h-1.5 rounded-full bg-white/10">
                       <div
-                        className="h-2 rounded-full bg-gradient-to-r from-cyan-400/80 to-blue-300/80"
-                        style={{ width: `${track.completion}%` }}
+                        className="h-1.5 rounded-full bg-gradient-to-r from-fuchsia-300/80 to-rose-300/80"
+                        style={{ width: `${item.value}%` }}
                       />
                     </div>
                   </div>
-                </div>
-              ))}
+                ))}
+              </div>
+              <button
+                type="button"
+                onClick={() => neuroToast.warning("Friction protocol geactiveerd: low-switch mode (mock).")}
+                className="mt-4 w-full rounded-lg border border-amber-300/35 bg-amber-500/15 px-3 py-2 text-xs font-semibold text-amber-100 transition hover:bg-amber-500/25"
+              >
+                Activeer anti-frictie protocol
+              </button>
+            </article>
+          </section>
+        ) : null}
+
+        {activeTab === "experiments" ? (
+          <section className="rounded-2xl border border-[var(--card-border)] bg-[var(--bg-elevated)]/55 p-5">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <h2 className="text-lg font-semibold text-[var(--text-primary)]">Experiment Pipeline</h2>
+              <p className="text-xs text-[var(--text-muted)]">Growth als iteratief systeem: hypothese → interventie → resultaat</p>
             </div>
-          </article>
-
-          <article className="rounded-2xl border border-[var(--card-border)] bg-[var(--bg-elevated)]/55 p-5">
-            <h2 className="text-lg font-semibold text-[var(--text-primary)]">Narrative Coach</h2>
-            <p className="mt-2 text-sm text-[var(--text-secondary)]">
-              Je consistency stijgt, maar besluitkwaliteit daalt op dagen met veel context-switching.
-            </p>
-            <ul className="mt-4 space-y-2 text-sm text-[var(--text-secondary)]">
-              <li className="rounded-lg border border-cyan-400/20 bg-cyan-500/10 p-3">Plan max 2 decision-heavy taken op dezelfde dag.</li>
-              <li className="rounded-lg border border-white/10 bg-black/20 p-3">Blokkeer 15 min decompression na meetings.</li>
-              <li className="rounded-lg border border-white/10 bg-black/20 p-3">Houd vrijdag als review+integration in plaats van execution.</li>
-            </ul>
-          </article>
-        </section>
-
-        <section className="grid gap-6 xl:grid-cols-[1.2fr_1fr]">
-          <article className="rounded-2xl border border-[var(--card-border)] bg-[var(--bg-elevated)]/55 p-5">
-            <h2 className="text-lg font-semibold text-[var(--text-primary)]">Weekplan met impact-prioriteit</h2>
-            <div className="mt-4 space-y-2">
-              {missions.map((mission) => (
-                <div key={`${mission.day}-${mission.title}`} className="flex items-center gap-3 rounded-xl border border-white/10 bg-black/20 p-3">
-                  <div className="w-9 shrink-0 rounded-md border border-white/15 bg-white/5 py-1 text-center text-xs font-semibold text-[var(--text-primary)]">
-                    {mission.day}
+            <div className="mt-4 grid gap-3 md:grid-cols-3">
+              {experiments.map((experiment) => (
+                <article key={experiment.title} className="rounded-xl border border-white/10 bg-black/20 p-4">
+                  <div className="flex items-start justify-between gap-3">
+                    <h3 className="text-sm font-semibold text-[var(--text-primary)]">{experiment.title}</h3>
+                    <span className={`rounded-full border px-2 py-0.5 text-[10px] font-semibold uppercase ${experimentBadge(experiment.status)}`}>
+                      {experiment.status}
+                    </span>
                   </div>
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-medium text-[var(--text-primary)]">{mission.title}</p>
-                    <p className="text-xs text-[var(--text-muted)]">
-                      {mission.duration} · {mission.tag}
-                    </p>
-                  </div>
-                  <span
-                    className={`rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase ${
-                      mission.impact === "high" ? "bg-emerald-500/20 text-emerald-200" : "bg-white/10 text-[var(--text-secondary)]"
-                    }`}
+                  <p className="mt-2 text-xs leading-relaxed text-[var(--text-secondary)]">{experiment.hypothesis}</p>
+                  <p className="mt-3 text-[11px] text-[var(--text-muted)]">Metric: {experiment.metric}</p>
+                  <button
+                    type="button"
+                    onClick={() => neuroToast.success(`Experiment "${experiment.title}" toegevoegd aan review queue (mock).`)}
+                    className="mt-3 rounded-lg border border-cyan-300/30 bg-cyan-500/10 px-3 py-1.5 text-[11px] font-semibold text-cyan-100 transition hover:bg-cyan-500/20"
                   >
-                    {mission.impact}
-                  </span>
-                </div>
+                    Queue voor weekreview
+                  </button>
+                </article>
               ))}
             </div>
-          </article>
-
-          <article className="rounded-2xl border border-[var(--card-border)] bg-[var(--bg-elevated)]/55 p-5">
-            <h2 className="text-lg font-semibold text-[var(--text-primary)]">Friction Radar</h2>
-            <p className="mt-2 text-sm text-[var(--text-secondary)]">Top 3 blockers op basis van patroonherkenning in mock telemetry.</p>
-            <div className="mt-4 space-y-2">
-              {[
-                { label: "Meeting spillover", value: 71 },
-                { label: "Late-start mornings", value: 58 },
-                { label: "Task switching", value: 64 },
-              ].map((item) => (
-                <div key={item.label} className="rounded-xl border border-white/10 bg-black/20 p-3">
-                  <div className="flex items-center justify-between text-xs text-[var(--text-muted)]">
-                    <span>{item.label}</span>
-                    <span>{item.value}</span>
-                  </div>
-                  <div className="mt-2 h-1.5 rounded-full bg-white/10">
-                    <div className="h-1.5 rounded-full bg-gradient-to-r from-fuchsia-300/80 to-rose-300/80" style={{ width: `${item.value}%` }} />
-                  </div>
-                </div>
-              ))}
-            </div>
-          </article>
-        </section>
-
-        <section className="rounded-2xl border border-[var(--card-border)] bg-[var(--bg-elevated)]/55 p-5">
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <h2 className="text-lg font-semibold text-[var(--text-primary)]">Experiment Pipeline</h2>
-            <p className="text-xs text-[var(--text-muted)]">Growth als iteratief systeem: hypothese → interventie → resultaat</p>
-          </div>
-          <div className="mt-4 grid gap-3 md:grid-cols-3">
-            {experiments.map((experiment) => (
-              <article key={experiment.title} className="rounded-xl border border-white/10 bg-black/20 p-4">
-                <div className="flex items-start justify-between gap-3">
-                  <h3 className="text-sm font-semibold text-[var(--text-primary)]">{experiment.title}</h3>
-                  <span className={`rounded-full border px-2 py-0.5 text-[10px] font-semibold uppercase ${experimentBadge(experiment.status)}`}>
-                    {experiment.status}
-                  </span>
-                </div>
-                <p className="mt-2 text-xs leading-relaxed text-[var(--text-secondary)]">{experiment.hypothesis}</p>
-                <p className="mt-3 text-[11px] text-[var(--text-muted)]">Metric: {experiment.metric}</p>
-              </article>
-            ))}
-          </div>
-        </section>
+          </section>
+        ) : null}
       </div>
     </div>
   );

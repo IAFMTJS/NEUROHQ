@@ -5,6 +5,7 @@ import { flushOutboxQueue } from "@/lib/mobile/sync-engine";
 import { isSupabaseFirstMobileEnabled } from "@/lib/mobile/feature-flags";
 import { getDashboardPayloadLocalFirst } from "@/lib/data/dashboard-repository";
 import { publishSyncMetrics } from "@/lib/mobile/metrics";
+import { syncPendingDailyStateNow } from "@/lib/client-pending-writes";
 
 export function ServiceWorkerRegistration() {
   const [updateAvailable, setUpdateAvailable] = useState(false);
@@ -36,6 +37,7 @@ export function ServiceWorkerRegistration() {
       reg.active?.postMessage({ type: "WARMUP_BACKGROUND_CACHE", includeAuth, today });
       if (navigator.onLine) {
         reg.active?.postMessage({ type: "SYNC_OFFLINE_QUEUE" });
+        void syncPendingDailyStateNow();
       }
     };
 
@@ -51,7 +53,13 @@ export function ServiceWorkerRegistration() {
       navigator.serviceWorker.ready.then(postWarmupAndSync).catch(() => {});
     };
 
-    const onControllerChange = () => window.location.reload();
+    const hardReloadToLatest = () => {
+      const url = new URL(window.location.href);
+      url.searchParams.set("__swv", String(Date.now()));
+      window.location.replace(url.toString());
+    };
+
+    const onControllerChange = () => hardReloadToLatest();
     navigator.serviceWorker.addEventListener("controllerchange", onControllerChange);
 
     const syncOfflineQueueWhenOnline = () => {
@@ -60,6 +68,7 @@ export function ServiceWorkerRegistration() {
         void flushOutboxQueue();
         void publishSyncMetrics();
       }
+      void syncPendingDailyStateNow();
       navigator.serviceWorker.ready.then((reg) => reg.active?.postMessage({ type: "SYNC_OFFLINE_QUEUE" }));
     };
     window.addEventListener("online", syncOfflineQueueWhenOnline);
@@ -111,12 +120,21 @@ export function ServiceWorkerRegistration() {
     };
   }, []);
 
+  const hardReloadToLatest = () => {
+    const url = new URL(window.location.href);
+    url.searchParams.set("__swv", String(Date.now()));
+    window.location.replace(url.toString());
+  };
+
   const handleRefresh = () => {
     if (waitingWorker) {
       waitingWorker.postMessage({ type: "SKIP_WAITING" });
       setUpdateAvailable(false);
       setWaitingWorker(null);
+      return;
     }
+    // Fallback: if no waiting worker is attached, still force a cache-busting reload.
+    hardReloadToLatest();
   };
 
   if (!updateAvailable) return null;

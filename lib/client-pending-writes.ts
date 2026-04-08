@@ -94,32 +94,59 @@ function scheduleSync(): void {
   if (syncTimer) clearTimeout(syncTimer);
   syncTimer = setTimeout(() => {
     syncTimer = null;
-    syncPending();
+    void syncPending();
   }, SYNC_DEBOUNCE_MS);
+}
+
+function getUnsyncedEntries(): Array<{ date: string; state: PendingDailyState }> {
+  if (typeof window === "undefined") return [];
+  const out: Array<{ date: string; state: PendingDailyState }> = [];
+  try {
+    for (let i = 0; i < window.localStorage.length; i += 1) {
+      const key = window.localStorage.key(i);
+      if (!key || !key.startsWith(DAILY_STATE_PREFIX)) continue;
+      const date = key.slice(DAILY_STATE_PREFIX.length);
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) continue;
+      const raw = window.localStorage.getItem(key);
+      if (!raw) continue;
+      const parsed = JSON.parse(raw) as PendingDailyState;
+      if (parsed._synced === true) continue;
+      out.push({ date, state: parsed });
+    }
+  } catch {
+    return [];
+  }
+  out.sort((a, b) => a.state._updatedAt - b.state._updatedAt);
+  return out;
+}
+
+export async function syncPendingDailyStateNow(): Promise<void> {
+  await syncPending();
 }
 
 async function syncPending(): Promise<void> {
   if (typeof window === "undefined") return;
-  const today = new Date().toISOString().slice(0, 10);
-  const key = dailyStateKey(today);
+  const pending = getUnsyncedEntries();
+  if (pending.length === 0) return;
+  let didSyncAny = false;
   try {
-    const raw = window.localStorage.getItem(key);
-    if (!raw) return;
-    const parsed = JSON.parse(raw) as PendingDailyState;
-    if (parsed._synced === true) return;
     const { saveDailyState } = await import("@/app/actions/daily-state");
-    const result = await saveDailyState({
-      date: today,
-      energy: parsed.energy,
-      focus: parsed.focus,
-      sensory_load: parsed.sensory_load,
-      sleep_hours: parsed.sleep_hours,
-      social_load: parsed.social_load,
-      physical_health: parsed.physical_health ?? null,
-      mental_battery: parsed.mental_battery,
-    });
-    if (result.ok) {
-      markDailyStateSynced(today);
+    for (const item of pending) {
+      const result = await saveDailyState({
+        date: item.date,
+        energy: item.state.energy,
+        focus: item.state.focus,
+        sensory_load: item.state.sensory_load,
+        sleep_hours: item.state.sleep_hours,
+        social_load: item.state.social_load,
+        physical_health: item.state.physical_health ?? null,
+        mental_battery: item.state.mental_battery,
+      });
+      if (!result.ok) continue;
+      markDailyStateSynced(item.date);
+      didSyncAny = true;
+    }
+    if (didSyncAny) {
       queueDailySnapshotMerge();
     }
   } catch (err) {

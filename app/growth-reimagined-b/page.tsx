@@ -1,3 +1,8 @@
+"use client";
+
+import { useState } from "react";
+import { neuroToast } from "@/lib/ui/neuro-toast";
+
 type PulseMetric = {
   label: string;
   value: string;
@@ -67,7 +72,11 @@ const commandDeck: CommandItem[] = [
   },
 ];
 
+type ConceptBTab = "pulse" | "arc" | "deck";
+
 export default function GrowthReimaginedBPage() {
+  const [activeTab, setActiveTab] = useState<ConceptBTab>("pulse");
+
   return (
     <div className="container page page-wide dashboard-cinematic relative z-10 pb-12">
       <div className="hq-frosted-main-shell">
@@ -88,88 +97,142 @@ export default function GrowthReimaginedBPage() {
                 <span className="h-2 w-2 rounded-full bg-cyan-200 shadow-[0_0_10px_rgba(103,232,249,0.9)]" />
                 Simulation mode · mock telemetry
               </div>
-            </div>
-          </section>
-
-          <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-            {pulseMetrics.map((metric) => (
-              <article
-                key={metric.label}
-                className="rounded-xl border border-white/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.06),rgba(255,255,255,0.02))] p-4 backdrop-blur-md"
-              >
-                <p className="text-[11px] uppercase tracking-[0.16em] text-slate-300">{metric.label}</p>
-                <p className="mt-2 text-2xl font-bold text-white">{metric.value}</p>
-                <p className="mt-2 text-xs text-cyan-200">{metric.trend}</p>
-              </article>
-            ))}
-          </section>
-
-          <section className="grid gap-6 xl:grid-cols-[1.3fr_1fr]">
-            <article className="rounded-2xl border border-white/10 bg-black/20 p-5">
-              <div className="flex items-center justify-between">
-                <h2 className="text-lg font-semibold text-white">Growth Arc Timeline</h2>
-                <p className="text-xs text-slate-300">Phase-based progression</p>
-              </div>
-              <div className="mt-4 space-y-3">
-                {arc.map((node) => (
-                  <div key={node.phase} className="rounded-xl border border-white/10 bg-white/[0.04] p-4">
-                    <div className="flex items-center justify-between gap-3">
-                      <p className="text-xs uppercase tracking-[0.14em] text-cyan-200">{node.phase}</p>
-                      <p className="text-xs text-slate-300">{node.completion}%</p>
-                    </div>
-                    <h3 className="mt-1 text-sm font-semibold text-white">{node.title}</h3>
-                    <p className="mt-2 text-sm text-slate-200/90">{node.objective}</p>
-                    <div className="mt-3 h-1.5 rounded-full bg-white/10">
-                      <div
-                        className="h-1.5 rounded-full bg-gradient-to-r from-cyan-300 via-sky-300 to-violet-300"
-                        style={{ width: `${node.completion}%` }}
-                      />
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </article>
-
-            <article className="rounded-2xl border border-white/10 bg-black/20 p-5">
-              <h2 className="text-lg font-semibold text-white">Neuro Signals</h2>
-              <div className="mt-4 space-y-3">
+              <div className="mt-4 flex flex-wrap items-center gap-2" role="tablist" aria-label="Growth concept B secties">
                 {[
-                  { label: "Focus stability", value: 82, tone: "from-cyan-300 to-cyan-500" },
-                  { label: "Decision confidence", value: 66, tone: "from-violet-300 to-violet-500" },
-                  { label: "Recovery quality", value: 74, tone: "from-emerald-300 to-emerald-500" },
-                ].map((signal) => (
-                  <div key={signal.label} className="rounded-xl border border-white/10 bg-white/[0.04] p-3">
-                    <div className="flex items-center justify-between text-xs text-slate-300">
-                      <span>{signal.label}</span>
-                      <span>{signal.value}</span>
-                    </div>
-                    <div className="mt-2 h-1.5 rounded-full bg-white/10">
-                      <div className={`h-1.5 rounded-full bg-gradient-to-r ${signal.tone}`} style={{ width: `${signal.value}%` }} />
-                    </div>
-                  </div>
-                ))}
+                  { id: "pulse", label: "Pulse" },
+                  { id: "arc", label: "Arc" },
+                  { id: "deck", label: "Deck" },
+                ].map((tab) => {
+                  const selected = activeTab === tab.id;
+                  return (
+                    <button
+                      key={tab.id}
+                      type="button"
+                      role="tab"
+                      aria-selected={selected}
+                      onClick={() => setActiveTab(tab.id as ConceptBTab)}
+                      className={`rounded-full border px-3 py-1.5 text-xs font-semibold transition ${
+                        selected
+                          ? "border-cyan-300/50 bg-cyan-400/20 text-cyan-100"
+                          : "border-white/15 bg-black/20 text-slate-300 hover:border-white/25 hover:text-white"
+                      }`}
+                    >
+                      {tab.label}
+                    </button>
+                  );
+                })}
               </div>
-            </article>
+            </div>
           </section>
 
-          <section className="rounded-2xl border border-white/10 bg-black/20 p-5">
-            <div className="flex items-center justify-between gap-3">
-              <h2 className="text-lg font-semibold text-white">Command Deck</h2>
-              <p className="text-xs text-slate-300">Van inzicht naar directe weekly execution</p>
-            </div>
-            <div className="mt-4 grid gap-3 md:grid-cols-3">
-              {commandDeck.map((item) => (
-                <article key={item.stream} className="rounded-xl border border-cyan-300/20 bg-cyan-400/10 p-4">
-                  <p className="text-xs uppercase tracking-[0.14em] text-cyan-100">{item.stream}</p>
-                  <p className="mt-2 text-sm font-medium text-white">{item.mission}</p>
-                  <div className="mt-3 flex items-center justify-between text-[11px] text-slate-200">
-                    <span>Effort: {item.effort}</span>
-                    <span className="text-cyan-100">{item.expectedReturn}</span>
-                  </div>
+          {activeTab === "pulse" ? (
+            <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+              {pulseMetrics.map((metric) => (
+                <article
+                  key={metric.label}
+                  className="rounded-xl border border-white/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.06),rgba(255,255,255,0.02))] p-4 backdrop-blur-md"
+                >
+                  <p className="text-[11px] uppercase tracking-[0.16em] text-slate-300">{metric.label}</p>
+                  <p className="mt-2 text-2xl font-bold text-white">{metric.value}</p>
+                  <p className="mt-2 text-xs text-cyan-200">{metric.trend}</p>
                 </article>
               ))}
-            </div>
-          </section>
+              <div className="sm:col-span-2 xl:col-span-4">
+                <button
+                  type="button"
+                  onClick={() => neuroToast.info("Pulse-analyse naar dagelijkse briefing gestuurd (mock).")}
+                  className="w-full rounded-lg border border-cyan-300/30 bg-cyan-500/10 px-3 py-2 text-xs font-semibold text-cyan-100 transition hover:bg-cyan-500/20"
+                >
+                  Stuur pulse naar briefing
+                </button>
+              </div>
+            </section>
+          ) : null}
+
+          {activeTab === "arc" ? (
+            <section className="grid gap-6 xl:grid-cols-[1.3fr_1fr]">
+              <article className="rounded-2xl border border-white/10 bg-black/20 p-5">
+                <div className="flex items-center justify-between">
+                  <h2 className="text-lg font-semibold text-white">Growth Arc Timeline</h2>
+                  <p className="text-xs text-slate-300">Phase-based progression</p>
+                </div>
+                <div className="mt-4 space-y-3">
+                  {arc.map((node) => (
+                    <div key={node.phase} className="rounded-xl border border-white/10 bg-white/[0.04] p-4">
+                      <div className="flex items-center justify-between gap-3">
+                        <p className="text-xs uppercase tracking-[0.14em] text-cyan-200">{node.phase}</p>
+                        <p className="text-xs text-slate-300">{node.completion}%</p>
+                      </div>
+                      <h3 className="mt-1 text-sm font-semibold text-white">{node.title}</h3>
+                      <p className="mt-2 text-sm text-slate-200/90">{node.objective}</p>
+                      <div className="mt-3 h-1.5 rounded-full bg-white/10">
+                        <div
+                          className="h-1.5 rounded-full bg-gradient-to-r from-cyan-300 via-sky-300 to-violet-300"
+                          style={{ width: `${node.completion}%` }}
+                        />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </article>
+
+              <article className="rounded-2xl border border-white/10 bg-black/20 p-5">
+                <h2 className="text-lg font-semibold text-white">Neuro Signals</h2>
+                <div className="mt-4 space-y-3">
+                  {[
+                    { label: "Focus stability", value: 82, tone: "from-cyan-300 to-cyan-500" },
+                    { label: "Decision confidence", value: 66, tone: "from-violet-300 to-violet-500" },
+                    { label: "Recovery quality", value: 74, tone: "from-emerald-300 to-emerald-500" },
+                  ].map((signal) => (
+                    <div key={signal.label} className="rounded-xl border border-white/10 bg-white/[0.04] p-3">
+                      <div className="flex items-center justify-between text-xs text-slate-300">
+                        <span>{signal.label}</span>
+                        <span>{signal.value}</span>
+                      </div>
+                      <div className="mt-2 h-1.5 rounded-full bg-white/10">
+                        <div className={`h-1.5 rounded-full bg-gradient-to-r ${signal.tone}`} style={{ width: `${signal.value}%` }} />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                <button
+                  type="button"
+                  onClick={() => neuroToast.success("Arc milestone vastgezet voor weekreview (mock).")}
+                  className="mt-4 w-full rounded-lg border border-emerald-300/30 bg-emerald-500/12 px-3 py-2 text-xs font-semibold text-emerald-100 transition hover:bg-emerald-500/22"
+                >
+                  Markeer milestone
+                </button>
+              </article>
+            </section>
+          ) : null}
+
+          {activeTab === "deck" ? (
+            <section className="rounded-2xl border border-white/10 bg-black/20 p-5">
+              <div className="flex items-center justify-between gap-3">
+                <h2 className="text-lg font-semibold text-white">Command Deck</h2>
+                <p className="text-xs text-slate-300">Van inzicht naar directe weekly execution</p>
+              </div>
+              <div className="mt-4 grid gap-3 md:grid-cols-3">
+                {commandDeck.map((item) => (
+                  <article key={item.stream} className="rounded-xl border border-cyan-300/20 bg-cyan-400/10 p-4">
+                    <p className="text-xs uppercase tracking-[0.14em] text-cyan-100">{item.stream}</p>
+                    <p className="mt-2 text-sm font-medium text-white">{item.mission}</p>
+                    <div className="mt-3 flex items-center justify-between text-[11px] text-slate-200">
+                      <span>Effort: {item.effort}</span>
+                      <span className="text-cyan-100">{item.expectedReturn}</span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => neuroToast.success(`${item.stream} gequeued naar weekplan (mock).`)}
+                      className="mt-3 rounded-lg border border-cyan-300/30 bg-cyan-500/10 px-3 py-1.5 text-[11px] font-semibold text-cyan-100 transition hover:bg-cyan-500/20"
+                    >
+                      Queue actie
+                    </button>
+                  </article>
+                ))}
+              </div>
+            </section>
+          ) : null}
         </div>
       </div>
     </div>
