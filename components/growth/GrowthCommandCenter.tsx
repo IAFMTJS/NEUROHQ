@@ -13,22 +13,12 @@ import type { DifficultyTier } from "@/lib/growth/adaptive-engine";
 import { progressKey, resolveFocusProtocol } from "@/lib/growth/resolve-focus-protocol";
 import { tierLabelNl } from "@/lib/growth/tier-labels";
 import { neuroToast } from "@/lib/ui/neuro-toast";
-import { EnergyRing, type EnergyRingMode } from "@/components/hud-test/EnergyRing";
 import { SegmentedBar } from "@/components/visual-lab/VisualLabBars";
 import type { StrategyPacingHints } from "@/lib/strategy/strategy-pacing-hints";
 import { strategyPaceHintLines } from "@/lib/strategy/format-strategy-pace-hints";
 
-const RING_SIZE = 180;
 const LOW_PROGRESS_THRESHOLD = 40;
 const CATCHUP_OPTIONS = [2, 3, 4] as const;
-
-function weekProgressRingMode(pct: number, totalTasks: number): EnergyRingMode {
-  if (totalTasks === 0) return "default";
-  if (pct >= 100) return "green-peak";
-  if (pct >= 70) return "green";
-  if (pct >= 40) return "alert";
-  return "high-alert";
-}
 
 function weekProgressState(pct: number, totalTasks: number): "No plan" | "Behind" | "Risk" | "On track" {
   if (totalTasks <= 0) return "No plan";
@@ -138,7 +128,6 @@ export function GrowthCommandCenter({
           ? "border-rose-300/35 bg-rose-500/12 text-rose-100"
           : "border-white/20 bg-white/10 text-slate-200";
   const isLowProgress = totalInWeek > 0 && weekPct < LOW_PROGRESS_THRESHOLD;
-  const ringMode = weekProgressRingMode(weekPct, totalInWeek);
 
   const previewTasks = week?.tasks.slice(0, 3) ?? [];
   const totalWeekMinutes = week?.tasks.reduce((sum, task) => sum + getScaledTask(task, tier).minutes, 0) ?? 0;
@@ -228,8 +217,8 @@ export function GrowthCommandCenter({
     >
       {/* Top: Visual Lab–aligned header + title + focus + ring */}
       <div className="relative z-[1] border-b border-[rgba(var(--mode-rgb),0.14)] px-4 py-4 sm:px-5">
-        <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
-          <div className="min-w-0 flex-1 space-y-2">
+        <div className="space-y-3">
+          <div className="min-w-0 space-y-2">
             <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[var(--semantic-accent)]/90">
               Growth command center
             </p>
@@ -319,50 +308,29 @@ export function GrowthCommandCenter({
               </select>
             </label>
           </div>
-
-          <div className="flex shrink-0 justify-center lg:justify-end lg:pt-1">
-            <div
-              className="relative"
-              role="img"
-              aria-label={`Weekvoortgang ${weekPct} procent, week ${weekIndex} van ${maxW}`}
-            >
-              <div
-                className="absolute left-1/2 top-1/2 h-[115%] w-[115%] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[radial-gradient(circle,rgba(var(--mode-rgb),0.2)_0%,transparent_65%)] blur-md"
-                aria-hidden
-              />
-              <div className="relative drop-shadow-[0_16px_40px_rgba(0,0,0,0.5)]" aria-hidden>
-                <EnergyRing
-                  size={RING_SIZE}
-                  progress={weekPct}
-                  label="Week"
-                  value={`${weekIndex}/${maxW}`}
-                  mode={ringMode}
-                  softGlow
-                />
-              </div>
-            </div>
-          </div>
         </div>
       </div>
 
       {quarterPacingLines.length > 0 ? (
         <div className="relative z-[1] border-b border-[rgba(var(--mode-rgb),0.1)] bg-[rgba(var(--mode-rgb),0.05)] px-4 py-3 sm:px-5">
-          <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-[var(--text-muted)]">
-            Kwartaal · Strategy-doel
-          </p>
-          <ul className="mt-1.5 space-y-1">
-            {quarterPacingLines.map((line) => (
-              <li key={line} className="text-xs leading-snug text-[var(--text-secondary)]">
-                {line}
-              </li>
-            ))}
-          </ul>
-          <Link
-            href="/strategy"
-            className="mt-2 inline-flex text-[11px] font-medium text-[var(--accent-focus)] underline-offset-2 transition hover:underline"
-          >
-            Doelen op Strategy →
-          </Link>
+          <details>
+            <summary className="cursor-pointer text-[10px] font-bold uppercase tracking-[0.14em] text-[var(--text-muted)]">
+              Kwartaal · Strategy-doel
+            </summary>
+            <ul className="mt-2 space-y-1">
+              {quarterPacingLines.map((line) => (
+                <li key={line} className="text-xs leading-snug text-[var(--text-secondary)]">
+                  {line}
+                </li>
+              ))}
+            </ul>
+            <Link
+              href="/strategy"
+              className="mt-2 inline-flex text-[11px] font-medium text-[var(--accent-focus)] underline-offset-2 transition hover:underline"
+            >
+              Doelen op Strategy →
+            </Link>
+          </details>
         </div>
       ) : null}
 

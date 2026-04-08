@@ -10,6 +10,7 @@ import { getTasksForDateRange, getTodaysTasks } from "@/app/actions/tasks";
 import { GrowthMissionsRibbon } from "@/components/growth/GrowthMissionsRibbon";
 import { GrowthProtocolCommandCard } from "@/components/growth/GrowthProtocolCommandCard";
 import { GrowthCommanderSummaryCard } from "@/components/growth/GrowthCommanderSummaryCard";
+import { GrowthMissionsDeckToastButton } from "@/components/growth/GrowthMissionsDeckToastButton";
 import { GrowthReimaginedBTabShell } from "@/components/growth/GrowthReimaginedBTabShell";
 import { formatDayShort } from "@/lib/utils/date-locale";
 import { getBudgetWeekBounds } from "@/lib/utils/budget-date";
@@ -76,6 +77,12 @@ function weekDateKeysFromStart(startDateKey: string): string[] {
   return dates;
 }
 
+function isProtocolMission(task: unknown): boolean {
+  const tagsRaw = (task as { task_tags?: unknown }).task_tags;
+  const tags = Array.isArray(tagsRaw) ? tagsRaw.filter((tag): tag is string => typeof tag === "string") : [];
+  return tags.includes("protocol") || tags.some((tag) => tag.startsWith("protocol_"));
+}
+
 export async function GrowthReimaginedBExperience({ showLearningLink = true }: Props) {
   await syncGrowthFocusProtocolToCalendarWeek();
 
@@ -90,23 +97,26 @@ export async function GrowthReimaginedBExperience({ showLearningLink = true }: P
     getStrategyPacingHints(),
     getGrowthEngineSnapshot(),
     getLearningState(),
-    getTodaysTasks(today, "normal"),
-    getTasksForDateRange(budgetWeekStart, budgetWeekEnd),
+    getTodaysTasks(today, "normal", { growthOnly: true }),
+    getTasksForDateRange(budgetWeekStart, budgetWeekEnd, { growthOnly: true }),
   ]);
 
   const topStreams = learningState.streams.slice(0, 3);
-  const covered = deckParity.filter((item) => item.status === "covered").length;
-  const todayTasks = todaysTasksResult.tasks ?? [];
+  const todayTasks = (todaysTasksResult.tasks ?? []).filter((task) => isProtocolMission(task));
   const todayDoneCount = todayTasks.filter((task) => (task as { completed?: boolean }).completed === true).length;
   const todayTotalCount = todayTasks.length;
   const todayOpenCount = Math.max(0, todayTotalCount - todayDoneCount);
   const weekDayKeys = Object.keys(weekTasksByDate ?? {});
-  const weekRows = weekDayKeys.flatMap((date) => (weekTasksByDate[date] ?? []) as Array<{ completed?: boolean }>);
+  const weekRows = weekDayKeys.flatMap((date) =>
+    ((weekTasksByDate[date] ?? []) as Array<{ completed?: boolean; task_tags?: unknown }>).filter((row) => isProtocolMission(row))
+  );
   const weekTotalCount = weekRows.length;
   const weekDoneCount = weekRows.filter((task) => task.completed === true).length;
   const weeklyProgressPct = weekTotalCount > 0 ? Math.round((weekDoneCount / weekTotalCount) * 100) : 0;
   const daysDoneCount = weekDayKeys.filter((date) => {
-    const rows = (weekTasksByDate[date] ?? []) as Array<{ completed?: boolean }>;
+    const rows = ((weekTasksByDate[date] ?? []) as Array<{ completed?: boolean; task_tags?: unknown }>).filter((row) =>
+      isProtocolMission(row)
+    );
     if (rows.length === 0) return false;
     const done = rows.filter((row) => row.completed === true).length;
     return done > 0;
@@ -118,7 +128,9 @@ export async function GrowthReimaginedBExperience({ showLearningLink = true }: P
   const paceLines = strategyPacingHints ? strategyPaceHintLines("learning", strategyPacingHints).slice(0, 2) : [];
   const orderedWeekDates = weekDateKeysFromStart(budgetWeekStart);
   const weekDayStats = orderedWeekDates.map((date) => {
-    const rows = (weekTasksByDate?.[date] ?? []) as Array<{ completed?: boolean }>;
+    const rows = ((weekTasksByDate?.[date] ?? []) as Array<{ completed?: boolean; task_tags?: unknown }>).filter((row) =>
+      isProtocolMission(row)
+    );
     const total = rows.length;
     const done = rows.filter((row) => row.completed === true).length;
     const pct = total > 0 ? Math.round((done / total) * 100) : 0;
@@ -127,6 +139,15 @@ export async function GrowthReimaginedBExperience({ showLearningLink = true }: P
   const priorityToday = (todayTasks as Array<{ id: string; title?: string; completed?: boolean; due_date?: string }>)
     .filter((task) => task.completed !== true)
     .slice(0, 5);
+  const protocolDeckTasks = orderedWeekDates
+    .flatMap((date) => (weekTasksByDate?.[date] ?? []) as Array<{ id?: string; title?: string; completed?: boolean; due_date?: string | null; task_tags?: unknown }>)
+    .filter((task) => isProtocolMission(task))
+    .map((task) => ({
+      id: task.id ?? `${task.title ?? "task"}-${task.due_date ?? "no-date"}`,
+      title: task.title ?? "Untitled task",
+      completed: task.completed === true,
+      dueDate: task.due_date ?? null,
+    }));
 
   const commandPanel = (
     <>
@@ -193,32 +214,6 @@ export async function GrowthReimaginedBExperience({ showLearningLink = true }: P
 
       {growthSnap ? <GrowthMissionsRibbon snap={growthSnap} className="!rounded-2xl" /> : null}
 
-      <section className="rounded-2xl border border-white/10 bg-black/20 p-5">
-        <div className="flex items-center justify-between gap-3">
-          <h2 className="text-lg font-semibold text-white">Momentum radar (live)</h2>
-          <p className="text-xs text-slate-300">Gebaseerd op learning_state</p>
-        </div>
-        {topStreams.length === 0 ? (
-          <p className="mt-3 text-sm text-slate-300">Geen streams actief. Start een stream op Growth om signalen te activeren.</p>
-        ) : (
-          <div className="mt-3 grid gap-2 md:grid-cols-3">
-            {topStreams.map((stream) => (
-              <article key={stream.id} className="rounded-lg border border-white/10 bg-white/[0.04] p-3">
-                <p className="text-sm font-medium text-white">{stream.title}</p>
-                <p className="mt-1 text-xs text-slate-400">
-                  {stream.sessionsThisWeek} sessies · last active {stream.lastActive ?? "n.v.t."}
-                </p>
-                <div className="mt-2 h-1.5 rounded-full bg-white/10">
-                  <div
-                    className="h-1.5 rounded-full bg-gradient-to-r from-cyan-300 via-sky-300 to-violet-300"
-                    style={{ width: `${Math.round(stream.momentumScore * 100)}%` }}
-                  />
-                </div>
-              </article>
-            ))}
-          </div>
-        )}
-      </section>
     </>
   );
 
@@ -314,29 +309,24 @@ export async function GrowthReimaginedBExperience({ showLearningLink = true }: P
 
   return (
     <div className="space-y-6">
-      <section className="relative overflow-hidden rounded-2xl border border-white/10 bg-black/20 p-5 md:p-6">
-        <div className="pointer-events-none absolute -right-16 -top-20 h-56 w-56 rounded-full bg-cyan-300/20 blur-3xl" />
-        <div className="pointer-events-none absolute -left-20 bottom-0 h-56 w-56 rounded-full bg-violet-400/20 blur-3xl" />
+      <section className="relative overflow-hidden rounded-2xl border border-white/10 bg-black/20 p-4 md:p-5">
+        <div className="pointer-events-none absolute -right-20 -top-24 h-44 w-44 rounded-full bg-cyan-300/15 blur-3xl" />
         <div className="relative z-[1]">
           <p className="text-[11px] uppercase tracking-[0.22em] text-cyan-200/90">Growth Command Deck · Live</p>
-          <h1 className="mt-3 max-w-4xl text-3xl font-bold tracking-tight text-white md:text-4xl">
-            Stuur je protocolweek met een <span className="text-cyan-200">live growth command deck</span>
+          <h1 className="mt-2 text-2xl font-bold tracking-tight text-white md:text-3xl">
+            Live command deck voor je protocolweek
           </h1>
-          <p className="mt-3 max-w-3xl text-sm leading-relaxed text-slate-200/85">
-            Stel focus, zwaarte en periode in, sync direct naar Missions en volg realtime je voortgang, momentum en tier-alignment in een
-            centrale execution flow.
+          <p className="mt-2 text-xs text-slate-300">
+            Focus instellen, syncen naar Missions en je weekprogress direct sturen.
           </p>
-          <div className="mt-4 flex flex-wrap items-center gap-2">
+          <div className="mt-3 flex flex-wrap items-center gap-2">
             <span className="inline-flex items-center gap-2 rounded-full border border-cyan-300/30 bg-cyan-400/15 px-3 py-1 text-xs text-cyan-100">
               <span className="h-2 w-2 rounded-full bg-cyan-200 shadow-[0_0_10px_rgba(103,232,249,0.9)]" />
               Live engine mode
             </span>
-            <span className="rounded-full border border-white/10 bg-black/20 px-3 py-1 text-xs text-slate-300">
-              Parity {covered}/{deckParity.length}
-            </span>
             <span className="rounded-full border border-white/10 bg-black/20 px-3 py-1 text-xs text-slate-300">Week {budgetWeekLabel}</span>
           </div>
-          <div className="mt-4 flex flex-wrap items-center gap-2">
+          <div className="mt-3 flex flex-wrap items-center gap-2">
             {showLearningLink ? (
               <Link
                 href="/learning"
@@ -345,12 +335,7 @@ export async function GrowthReimaginedBExperience({ showLearningLink = true }: P
                 Echte Growth
               </Link>
             ) : null}
-            <Link
-              href="/tasks?growth=1"
-              className="rounded-lg border border-cyan-300/35 bg-cyan-500/12 px-3 py-1.5 text-xs font-semibold text-cyan-100 transition hover:bg-cyan-500/20"
-            >
-              Missions deck
-            </Link>
+            <GrowthMissionsDeckToastButton tasks={protocolDeckTasks} weekLabel={budgetWeekLabel} />
           </div>
         </div>
       </section>
