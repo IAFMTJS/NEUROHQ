@@ -9,6 +9,7 @@ import { getLearningState } from "@/app/actions/learning-state";
 import { LearningContentClient } from "@/components/growth/LearningContentClient";
 import { GrowthMissionsRibbon } from "@/components/growth/GrowthMissionsRibbon";
 import { GrowthPageCommandShell } from "@/components/growth/GrowthPageCommandShell";
+import { GrowthProtocolCommandCard } from "@/components/growth/GrowthProtocolCommandCard";
 import { formatDayShort } from "@/lib/utils/date-locale";
 import { getBudgetWeekBounds } from "@/lib/utils/budget-date";
 import { todayDateString } from "@/lib/utils/timezone";
@@ -138,6 +139,8 @@ export default async function GrowthReimaginedBPage() {
         </section>
 
         {growthSnap ? <GrowthMissionsRibbon snap={growthSnap} className="!rounded-2xl" /> : null}
+
+        <GrowthProtocolCommandCard protocols={protocols} progressMap={progressMap} growthFocus={growthFocus} />
 
         <section className="rounded-2xl border border-white/10 bg-black/20 p-5">
           <div className="flex items-center justify-between gap-3">
