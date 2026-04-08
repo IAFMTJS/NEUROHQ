@@ -40,7 +40,7 @@ Use this to verify manually even if you don’t run Lighthouse.
 - [ ] **name / short_name** — NEUROHQ.
 - [ ] **start_url** — `/dashboard` (or `/`).
 - [ ] **display** — `standalone` (or `minimal-ui`).
-- [ ] **icons** — At least 192×192 and 512×512 (e.g. `/icon-192.png`, `/icon-512.png`).
+- [ ] **icons** — At least 192×192 + 512×512 icons (e.g. `/icon-192.png`, `/icon-512.png`) and an Apple touch icon (e.g. `/apple-touch-icon.png`).
 - [ ] **theme_color / background_color** — Set (e.g. theme `#3b82f6`, background `#0a0a0a`).
 
 ### 2.2 Service worker

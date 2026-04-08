@@ -24,6 +24,8 @@ const nextConfig = {
       },
       { pathname: "/icons/**" },
       { pathname: "/icon-192.png" },
+      { pathname: "/icon-512.png" },
+      { pathname: "/apple-touch-icon.png" },
       { pathname: "/logo-naam.png" },
       { pathname: "/2D Emotions PNGs/**" },
       // Percent-encoded form (some runtimes normalize paths before matching)
