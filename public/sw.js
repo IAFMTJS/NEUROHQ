@@ -4,7 +4,7 @@
 // - DYNAMIC_CACHE (per dag): HTML/API offline fallback; _next/static JS/CSS = network-first, daarna cache voor offline
 // - IndexedDB (neurohq-offline): offline mutaties (POST/PUT etc.) → gesynchroniseerd zodra er weer netwerk is
 // Bump this when UI/layout changes so authenticated HTML cache doesn't keep old shells after refresh.
-const CACHE_VERSION = "v27";
+const CACHE_VERSION = "v28";
 const STATIC_CACHE = `neurohq-static-${CACHE_VERSION}`;
 const OFFLINE_PAGE = "/offline";
 
@@ -56,6 +56,10 @@ function isAuthenticatedAppRoutePath(pathname) {
     // nested analytics / learning pages should behave the same once visited
     pathname.startsWith("/learning")
   );
+}
+
+function isLearningPath(pathname) {
+  return pathname === "/learning" || pathname.startsWith("/learning/");
 }
 
 /** True for App Router flight/RSC fetches — must never use the generic cache-first handler. */
@@ -722,6 +726,28 @@ self.addEventListener("fetch", function (event) {
         const pathname = url.pathname;
 
         if (isAuthenticatedAppRoutePath(pathname)) {
+          // Learning is updated frequently in this project; prefer fresh HTML over instant stale shell.
+          if (isLearningPath(pathname)) {
+            return (event.preloadResponse || Promise.resolve(null))
+              .then(function (preloadedResponse) {
+                return preloadedResponse || fetch(navRequest);
+              })
+              .then(function (response) {
+                if (response && response.ok && event.request.method === "GET") {
+                  safeCachePut(cache, event.request, response.clone());
+                }
+                return response;
+              })
+              .catch(function () {
+                return cache.match(event.request).then(function (c) {
+                  if (c) return c;
+                  return caches.match(OFFLINE_PAGE).then(function (offline) {
+                    return offline || new Response("Offline", { status: 503 });
+                  });
+                });
+              });
+          }
+
           // Stale-while-revalidate: same-day cache serves immediately so PWA reopen feels instant
           // (especially iOS); network refreshes the shell in the background. No cache → network as before.
           return cache.match(event.request).then(function (cached) {
