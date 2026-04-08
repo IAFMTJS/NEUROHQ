@@ -169,6 +169,8 @@ async function runStep(snapshot: DailySnapshot, step: PreloadStepId): Promise<Da
             cache: "no-store",
             headers: {
               "x-neurohq-refresh": "1",
+              "x-sw-bypass": "1",
+              accept: "application/json",
               "cache-control": "no-cache",
               pragma: "no-cache",
             },

@@ -47,7 +47,11 @@ export async function fetchBootstrapTodayWithBody(): Promise<
     method: "GET",
     credentials: "include",
     cache: "no-store",
-    headers: { "x-neurohq-refresh": "1" },
+    headers: {
+      "x-neurohq-refresh": "1",
+      "x-sw-bypass": "1",
+      accept: "application/json",
+    },
   };
 
   const bust = () => `/api/bootstrap/today?_nb=${Date.now()}`;

@@ -551,6 +551,22 @@ self.addEventListener("fetch", function (event) {
   if (url.pathname.startsWith("/api/")) {
     const method = event.request.method.toUpperCase();
 
+    // Explicit network bypass for bootstrap/debug requests.
+    if (event.request.headers.get("x-sw-bypass") === "1") {
+      safeRespondWith(event, function () {
+        return fetch(event.request).catch(function () {
+          return new Response(
+            JSON.stringify({ error: "Offline", offline: true }),
+            {
+              status: 503,
+              headers: { "Content-Type": "application/json" },
+            }
+          );
+        });
+      });
+      return;
+    }
+
     // Push / auth / security-sensitive endpoints: NEVER cache or queue, always network-only
     if (
       url.pathname.startsWith("/api/push") ||
