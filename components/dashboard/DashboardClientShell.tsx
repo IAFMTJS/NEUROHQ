@@ -175,14 +175,12 @@ export function DashboardClientShell() {
   }, [critical, setTodayDailyState, setTodayDate, setTodayEnergyBudget, setTodayMode]);
 
   const heroState = useMemo(() => {
-    const raw = critical?.state as {
-      energy?: number | null;
-      focus?: number | null;
-      sensory_load?: number | null;
-    } | null;
-    const serverSaved = raw != null && raw.energy != null && raw.focus != null;
-    if (!serverSaved) return null;
-    if (pendingDailyForHero) {
+    if (
+      pendingDailyForHero &&
+      pendingDailyForHero.energy != null &&
+      pendingDailyForHero.focus != null &&
+      pendingDailyForHero.sensory_load != null
+    ) {
       return {
         energy: pendingDailyForHero.energy,
         focus: pendingDailyForHero.focus,
@@ -202,6 +200,18 @@ export function DashboardClientShell() {
           sensory_load: state.sensory_load,
         };
       }
+    }
+    const raw = critical?.state as {
+      energy?: number | null;
+      focus?: number | null;
+      sensory_load?: number | null;
+    } | null;
+    if (raw && raw.energy != null && raw.focus != null && raw.sensory_load != null) {
+      return {
+        energy: raw.energy,
+        focus: raw.focus,
+        sensory_load: raw.sensory_load,
+      };
     }
     return null;
   }, [critical?.state, pendingDailyForHero, todayDailyState]);

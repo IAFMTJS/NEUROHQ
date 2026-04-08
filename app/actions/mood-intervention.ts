@@ -272,14 +272,32 @@ export async function saveDailyMoodLabel(label: MoodLabel): Promise<{ ok: boolea
 
   if (existing) {
     const { error } = await supabase.from("daily_state").update({ mood_label: label }).eq("user_id", user.id).eq("date", today);
-    if (error) return { ok: false, error: error.message };
+    if (error) {
+      if (error.message.includes("daily_state_mood_label_check")) {
+        return {
+          ok: false,
+          error:
+            "Deze mood-optie staat nog niet in je database schema. Draai de nieuwste migraties en probeer opnieuw.",
+        };
+      }
+      return { ok: false, error: error.message };
+    }
   } else {
     const { error } = await supabase.from("daily_state").insert({
       user_id: user.id,
       date: today,
       mood_label: label,
     });
-    if (error) return { ok: false, error: error.message };
+    if (error) {
+      if (error.message.includes("daily_state_mood_label_check")) {
+        return {
+          ok: false,
+          error:
+            "Deze mood-optie staat nog niet in je database schema. Draai de nieuwste migraties en probeer opnieuw.",
+        };
+      }
+      return { ok: false, error: error.message };
+    }
   }
 
   revalidateTagMax(`daily-${user.id}-${today}`);

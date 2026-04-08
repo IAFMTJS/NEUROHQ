@@ -27,11 +27,19 @@ export function useOfflineCompleteTask() {
         if (dateKey && /^\d{4}-\d{2}-\d{2}$/.test(dateKey)) {
           await patchTaskCompleteInEntityCache(dateKey, id, completedAtIso);
         }
+        // Online first: keep level-up signal immediate for UI celebrations.
+        if (typeof navigator === "undefined" || navigator.onLine) {
+          try {
+            return await completeTask(id, { startedAt: options?.startedAt ?? undefined });
+          } catch {
+            // Network/server hiccup: fallback to outbox for eventual sync.
+          }
+        }
         await queueCompleteTaskMutation({
           taskId: id,
           completedAt: options?.startedAt ?? null,
         });
-        return;
+        return undefined;
       }
 
       if (typeof navigator !== "undefined" && !navigator.onLine) {
