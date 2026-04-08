@@ -158,6 +158,11 @@ async function runStep(snapshot: DailySnapshot, step: PreloadStepId): Promise<Da
   switch (step) {
     case "fetchMissions": {
       try {
+        const requestHeaders = {
+          "x-neurohq-refresh": "1",
+          "x-sw-bypass": "1",
+          accept: "application/json",
+        } as const;
         let boot = await fetchBootstrapTodayWithBody();
         lastBootstrapInitFetchStatus = boot.ok ? null : boot.status;
         // First-load hardening: if first bootstrap is unusable (empty shell / SW edge), do one forced retry.
@@ -168,9 +173,7 @@ async function runStep(snapshot: DailySnapshot, step: PreloadStepId): Promise<Da
             credentials: "include",
             cache: "no-store",
             headers: {
-              "x-neurohq-refresh": "1",
-              "x-sw-bypass": "1",
-              accept: "application/json",
+              ...requestHeaders,
               "cache-control": "no-cache",
               pragma: "no-cache",
             },
@@ -194,7 +197,55 @@ async function runStep(snapshot: DailySnapshot, step: PreloadStepId): Promise<Da
             lastBootstrapInitFetchStatus = retryRes.status;
           }
         }
-        if (!boot.ok) return snapshot;
+        if (!boot.ok) {
+          // Fallback path: build a minimal usable snapshot from dashboard + tasks endpoints.
+          const dateStr = snapshot.date || getTodayKey();
+          try {
+            const [dashRes, tasksRes] = await Promise.all([
+              fetch("/api/dashboard/data?part=all", {
+                credentials: "include",
+                cache: "no-store",
+                headers: requestHeaders,
+              }),
+              fetch(`/api/tasks?date=${encodeURIComponent(dateStr)}`, {
+                credentials: "include",
+                cache: "no-store",
+                headers: requestHeaders,
+              }),
+            ]);
+
+            let dashboardRaw: { critical?: unknown; secondary?: unknown } | null = null;
+            let tasksRaw: unknown[] | null = null;
+            if (dashRes.ok) {
+              const parsed = (await dashRes.json()) as { critical?: unknown; secondary?: unknown };
+              if (parsed?.critical != null && parsed?.secondary != null) dashboardRaw = parsed;
+            }
+            if (tasksRes.ok) {
+              const parsed = await tasksRes.json();
+              if (Array.isArray(parsed)) tasksRaw = parsed as unknown[];
+            }
+
+            if (dashboardRaw || tasksRaw) {
+              const fallbackBootstrap: BootstrapTodayResponse = {
+                date: dateStr,
+                ...(dashboardRaw ? { dashboard: { critical: dashboardRaw.critical, secondary: dashboardRaw.secondary } } : {}),
+                ...(tasksRaw ? { tasks: { [dateStr]: tasksRaw } } : {}),
+                ...(tasksRaw
+                  ? {
+                      completedToday: tasksRaw.filter(
+                        (t) => !!(t as { completed?: boolean; completed_at?: string | null }).completed
+                      ),
+                    }
+                  : {}),
+              };
+              bootstrapTodayCapture = fallbackBootstrap;
+              return mergeBootstrapTodayIntoDailySnapshot(snapshot, fallbackBootstrap);
+            }
+          } catch {
+            // fall through to old behavior
+          }
+          return snapshot;
+        }
         const data = boot.data as {
           date?: string;
           dashboard?: {
