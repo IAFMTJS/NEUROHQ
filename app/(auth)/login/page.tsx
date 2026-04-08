@@ -31,18 +31,18 @@ export default async function LoginPage({ searchParams }: Props) {
 
         <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-[rgba(2,8,16,0.22)]" aria-hidden />
 
-        <section className="absolute inset-x-0 bottom-0 z-10 px-4 pb-4 sm:px-5 sm:pb-5">
-          <div className="mx-auto w-full max-w-[540px] rounded-2xl border border-[var(--card-border)] bg-[rgba(4,12,22,0.7)] p-5 shadow-[0_14px_40px_rgba(0,0,0,0.5)] backdrop-blur-md sm:p-6">
-            <p className="mb-1 text-center text-[10px] font-semibold uppercase tracking-[0.22em] text-[var(--text-muted)]">
+        <section className="absolute left-[7%] right-[7%] top-[46%] bottom-[4%] z-10">
+          <div className="h-full rounded-[18px] border border-[rgba(201,174,255,0.35)] bg-[rgba(22,10,56,0.28)] p-4 shadow-[0_14px_40px_rgba(0,0,0,0.45)] backdrop-blur-[1.5px] sm:p-6">
+            <p className="mb-1 text-center text-[10px] font-semibold uppercase tracking-[0.2em] text-[var(--text-muted)]">
               Commander Access
             </p>
-            <h1 className="mb-5 text-center text-base font-semibold text-[var(--text-primary)]">
+            <h1 className="mb-4 text-center text-sm font-semibold text-[var(--text-primary)] sm:mb-5 sm:text-base">
               Sign in to your account
             </h1>
 
             <LoginForm initialError={initialError} />
 
-            <p className="mt-6 text-center text-sm text-[var(--text-muted)]">
+            <p className="mt-4 text-center text-sm text-[var(--text-muted)] sm:mt-6">
               No account?{" "}
               <Link
                 href="/signup"

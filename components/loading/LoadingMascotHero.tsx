@@ -17,13 +17,13 @@ export function LoadingMascotHero({ className = "", variant = "page" }: LoadingM
       <div className={`relative w-full ${frameSizeClass}`}>
         <div
           aria-hidden
-          className="pointer-events-none absolute inset-0 rounded-[28px] bg-[radial-gradient(circle_at_50%_42%,rgba(var(--mode-rgb),0.3),transparent_72%)] blur-2xl"
+          className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_52%_45%,rgba(129,140,248,0.42),transparent_65%),radial-gradient(circle_at_48%_55%,rgba(34,211,238,0.28),transparent_70%)] blur-2xl"
         />
         <img
           src={getLoadingMascotSrc()}
           alt=""
           aria-hidden
-          className="relative z-10 h-full w-full object-contain drop-shadow-[0_14px_35px_rgba(0,0,0,0.45)]"
+          className="relative z-10 h-full w-full object-contain drop-shadow-[0_14px_35px_rgba(99,102,241,0.42)]"
           draggable={false}
         />
       </div>

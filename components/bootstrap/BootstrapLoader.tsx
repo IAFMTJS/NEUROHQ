@@ -160,21 +160,21 @@ export function BootstrapLoader({ onReady }: Props) {
       aria-label="Initializing NEUROHQ"
     >
       <div className="relative z-10 flex min-h-screen items-center justify-center px-4 py-10">
-        <section className="w-full max-w-xl rounded-2xl border border-[var(--card-border)] bg-[var(--bg-surface)]/80 px-6 py-5 shadow-xl backdrop-blur">
+        <section className="w-full max-w-xl rounded-2xl border border-violet-300/30 bg-[linear-gradient(160deg,rgba(35,20,73,0.78),rgba(14,20,52,0.78))] px-6 py-5 shadow-[0_16px_60px_rgba(18,8,40,0.55)] backdrop-blur">
           <LoadingMascotHero className="mb-2" variant="page" />
           <div className="mb-4">
-            <h1 className="text-xs font-semibold uppercase tracking-[0.28em] text-[var(--text-muted)]">
+            <h1 className="text-xs font-semibold uppercase tracking-[0.28em] text-violet-100/85">
               Initializing System
             </h1>
-            <p className="mt-1 text-[10px] uppercase tracking-[0.14em] text-[var(--text-muted)]">
+            <p className="mt-1 text-[10px] uppercase tracking-[0.14em] text-violet-200/65">
               Bootstrap + Snapshot
             </p>
           </div>
-          <p className="mt-2 text-sm font-medium text-[var(--text-primary)]">
+          <p className="mt-2 text-sm font-semibold text-violet-50">
             {activeLabel}
           </p>
           {progress != null && (
-            <p className="mt-1 text-xs text-[var(--text-secondary)]">
+            <p className="mt-1 text-xs text-cyan-100/80">
               {progress.phase === "start"
                 ? `Working on step ${progress.stepIndex + 1} of ${total}`
                 : `Completed ${progress.completedSteps} of ${total} steps`}
@@ -183,19 +183,19 @@ export function BootstrapLoader({ onReady }: Props) {
             </p>
           )}
           {detailLine && (
-            <p className="mt-1 font-mono text-[10px] leading-relaxed text-[var(--text-muted)]">
+            <p className="mt-1 rounded-md border border-violet-300/20 bg-black/20 px-2 py-1 font-mono text-[10px] leading-relaxed text-violet-100/70">
               {detailLine}
             </p>
           )}
-          <div className="mt-4 h-2 w-full overflow-hidden rounded-full bg-white/10" aria-hidden>
+          <div className="mt-4 h-2.5 w-full overflow-hidden rounded-full border border-violet-200/20 bg-violet-950/45" aria-hidden>
             <div
-              className="h-full rounded-full bg-[var(--accent-focus)] transition-[width] duration-200 ease-out"
+              className="h-full rounded-full bg-[linear-gradient(90deg,rgba(34,211,238,0.95),rgba(129,140,248,0.95),rgba(192,132,252,0.95))] shadow-[0_0_18px_rgba(129,140,248,0.65)] transition-[width] duration-200 ease-out"
               style={{ width: `${pct}%` }}
             />
           </div>
 
           {progress != null && (
-            <ol className="mt-4 max-h-40 space-y-1 overflow-y-auto text-left text-[11px] text-[var(--text-muted)]">
+            <ol className="mt-4 max-h-40 space-y-1 overflow-y-auto text-left text-[11px] text-violet-100/65">
               {DAILY_BOOTSTRAP_STEPS.map((stepId, idx) => {
                 const done = idx < progress.completedSteps;
                 const current = idx === progress.stepIndex && progress.phase === "start";
@@ -204,13 +204,13 @@ export function BootstrapLoader({ onReady }: Props) {
                     key={stepId}
                     className={
                       done
-                        ? "text-[var(--text-secondary)]"
+                        ? "rounded-md border border-emerald-300/20 bg-emerald-500/10 px-2 py-1 text-emerald-100/80"
                         : current
-                        ? "font-medium text-[var(--accent-focus)]"
-                        : "opacity-50"
+                        ? "rounded-md border border-cyan-200/30 bg-cyan-400/10 px-2 py-1 font-medium text-cyan-100"
+                        : "rounded-md border border-transparent px-2 py-1 opacity-55"
                     }
                   >
-                    <span aria-hidden>{done ? "✓ " : current ? "◆ " : "○ "}</span>
+                    <span aria-hidden>{done ? "✓ " : current ? "◉ " : "○ "}</span>
                     {STEP_COPY[stepId]}
                   </li>
                 );
@@ -219,8 +219,8 @@ export function BootstrapLoader({ onReady }: Props) {
           )}
 
           {snapshot && (
-            <p className="mt-3 text-xs text-[var(--text-muted)]">
-              Today: <span className="font-mono text-[var(--text-secondary)]">{snapshot.date}</span>
+            <p className="mt-3 text-xs text-violet-100/70">
+              Today: <span className="font-mono text-cyan-100/90">{snapshot.date}</span>
             </p>
           )}
           {error && <p className="mt-3 text-xs text-amber-300">{error}</p>}
