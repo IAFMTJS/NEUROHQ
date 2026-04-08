@@ -8,7 +8,7 @@ export default function AuthLayout({
 }) {
   return (
     <div className="relative min-h-screen">
-      <div className="relative z-10 mx-auto flex min-h-screen max-w-[420px] flex-col items-center justify-center p-5 md:min-h-[640px]">
+      <div className="relative z-10 mx-auto flex min-h-screen w-full max-w-[760px] flex-col items-center justify-center p-5 md:min-h-[640px]">
         <Link
           href="/"
           className="absolute top-5 left-5 z-20 flex items-center gap-2 text-sm text-[var(--text-muted)] hover:text-[var(--text-primary)] transition focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-focus)] focus-visible:ring-offset-2 focus-visible:ring-offset-transparent rounded"

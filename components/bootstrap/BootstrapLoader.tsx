@@ -13,8 +13,7 @@ import {
   type InitializeResult,
 } from "@/lib/daily-initialize";
 import { requestDurableStorage } from "@/lib/storage-persist";
-import { NativeCachedImg } from "@/components/NativeCachedImg";
-import { getLoadingMascotSrc } from "@/lib/mascots";
+import { LoadingMascotHero } from "@/components/loading/LoadingMascotHero";
 
 type Props = {
   onReady: (result: InitializeResult) => void;
@@ -161,24 +160,15 @@ export function BootstrapLoader({ onReady }: Props) {
       aria-label="Initializing NEUROHQ"
     >
       <div className="relative z-10 flex min-h-screen items-center justify-center px-4 py-10">
-        <section className="w-full max-w-md rounded-2xl border border-[var(--card-border)] bg-[var(--bg-surface)]/80 px-6 py-5 shadow-xl backdrop-blur">
-          <div className="mb-4 flex items-center justify-between gap-3">
-            <div>
-              <h1 className="text-xs font-semibold uppercase tracking-[0.28em] text-[var(--text-muted)]">
-                Initializing System
-              </h1>
-              <p className="mt-1 text-[10px] uppercase tracking-[0.14em] text-[var(--text-muted)]">
-                Bootstrap + Snapshot
-              </p>
-            </div>
-            <div className="relative h-14 w-14 shrink-0 rounded-full border border-[rgba(var(--mode-rgb),0.35)] bg-[radial-gradient(circle_at_35%_30%,rgba(255,255,255,0.3),transparent_60%),rgba(6,18,30,0.65)] p-1.5 shadow-[0_0_24px_rgba(var(--mode-rgb),0.22)]">
-              <NativeCachedImg
-                src={getLoadingMascotSrc()}
-                alt=""
-                aria-hidden
-                className="h-full w-full object-contain drop-shadow-[0_0_8px_rgba(var(--mode-rgb),0.2)]"
-              />
-            </div>
+        <section className="w-full max-w-xl rounded-2xl border border-[var(--card-border)] bg-[var(--bg-surface)]/80 px-6 py-5 shadow-xl backdrop-blur">
+          <LoadingMascotHero className="mb-2" variant="page" />
+          <div className="mb-4">
+            <h1 className="text-xs font-semibold uppercase tracking-[0.28em] text-[var(--text-muted)]">
+              Initializing System
+            </h1>
+            <p className="mt-1 text-[10px] uppercase tracking-[0.14em] text-[var(--text-muted)]">
+              Bootstrap + Snapshot
+            </p>
           </div>
           <p className="mt-2 text-sm font-medium text-[var(--text-primary)]">
             {activeLabel}

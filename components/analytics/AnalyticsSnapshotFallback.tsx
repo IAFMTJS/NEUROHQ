@@ -4,7 +4,6 @@ import { useMemo } from "react";
 import { useDailySnapshot } from "@/components/bootstrap/BootstrapGate";
 import { useBootstrapToday } from "@/lib/use-bootstrap-today";
 import { getTodayKey } from "@/lib/daily-date";
-import { getLoadingMascotSrc } from "@/lib/mascots";
 
 type Summary = {
   today: string;
@@ -29,11 +28,6 @@ export function AnalyticsSnapshotFallback() {
 
   return (
     <section className="glass-card p-4">
-      <div className="mb-3 flex justify-end">
-        <div className="h-12 w-12 rounded-full border border-[rgba(var(--mode-rgb),0.25)] bg-[rgba(6,18,30,0.42)] p-1.5">
-          <img src={getLoadingMascotSrc()} alt="" aria-hidden className="h-full w-full object-contain" />
-        </div>
-      </div>
       <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[var(--text-muted)]">
         Loading analytics
       </p>

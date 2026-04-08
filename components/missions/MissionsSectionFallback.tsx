@@ -3,7 +3,6 @@
 import { useMemo } from "react";
 import { useHQStore } from "@/lib/hq-store";
 import { Skeleton } from "@/components/Skeleton";
-import { getLoadingMascotSrc } from "@/lib/mascots";
 
 type CachedMission = { id: string; title?: string | null; completed?: boolean };
 
@@ -32,11 +31,6 @@ function DeckishRow({ muted }: { muted?: boolean }) {
 function SkeletonLayout() {
   return (
     <div className="space-y-4">
-      <div className="flex justify-end">
-        <div className="h-12 w-12 rounded-full border border-[rgba(var(--mode-rgb),0.25)] bg-[rgba(6,18,30,0.42)] p-1.5">
-          <img src={getLoadingMascotSrc()} alt="" aria-hidden className="h-full w-full object-contain" />
-        </div>
-      </div>
       <div className="flex flex-wrap gap-2">
         <Skeleton className="h-8 w-24 rounded-full" />
         <Skeleton className="h-8 w-24 rounded-full" />
@@ -61,11 +55,6 @@ function CachedLayout({ snapshot, dateStr }: { snapshot: SnapshotData; dateStr: 
   const completed = (snapshot.completedToday ?? []).slice(0, 8);
   return (
     <div className="space-y-4">
-      <div className="flex justify-end">
-        <div className="h-12 w-12 rounded-full border border-[rgba(var(--mode-rgb),0.25)] bg-[rgba(6,18,30,0.42)] p-1.5">
-          <img src={getLoadingMascotSrc()} alt="" aria-hidden className="h-full w-full object-contain" />
-        </div>
-      </div>
       <div className="flex flex-wrap gap-2">
         <span className="rounded-full border border-[rgba(var(--mode-rgb),0.2)] bg-[rgba(4,12,22,0.45)] px-3 py-1.5 text-[10px] font-semibold uppercase tracking-wide text-[var(--text-muted)]">
           Laden…

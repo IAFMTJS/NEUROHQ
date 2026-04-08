@@ -1,13 +1,12 @@
 import Link from "next/link";
-import { AuthHeroBrand } from "@/components/branding/AuthHeroBrand";
-import GlassCard from "@/components/ui/GlassCard";
 import { LoginForm } from "@/components/auth/LoginForm";
+import { getLoginScreenMascotSrc } from "@/lib/mascots";
 
 type Props = {
   searchParams: Promise<{ error?: string }>;
 };
 
-/** Login: same layout as home (one card, logo, one primary CTA). Redirect goes to /dashboard after a short delay so session is recognized. */
+/** Login: mascot-first screen. Form overlays the lower panel area of the artwork. */
 export default async function LoginPage({ searchParams }: Props) {
   const resolved = await searchParams;
   const errorParam = resolved?.error;
@@ -18,28 +17,42 @@ export default async function LoginPage({ searchParams }: Props) {
 
   return (
     <main
-      className="w-full max-w-[420px] hq-card-enter space-y-6"
+      className="w-full max-w-[760px] hq-card-enter"
       style={{ animationDelay: "50ms" }}
       data-ui="dark-commander"
     >
-      <div className="flex flex-col items-center gap-6">
-        <AuthHeroBrand />
+      <div className="relative mx-auto w-full max-w-[700px] overflow-hidden rounded-[28px] border border-[rgba(var(--mode-rgb),0.34)] bg-[rgba(2,8,16,0.72)] shadow-[0_24px_80px_rgba(0,0,0,0.58)]">
+        <img
+          src={getLoginScreenMascotSrc()}
+          alt="NEUROHQ login command artwork"
+          className="block w-full select-none object-cover"
+          draggable={false}
+        />
 
-        <GlassCard className="w-full max-w-[360px] p-8 rounded-2xl border border-[var(--card-border)]">
-          <h2 className="text-center text-sm font-semibold text-[var(--text-secondary)] mb-6">
-            Sign in to your account
-          </h2>
-          <LoginForm initialError={initialError} />
-          <p className="mt-6 text-center text-sm text-[var(--text-muted)]">
-            No account?{" "}
-            <Link
-              href="/signup"
-              className="font-medium text-[var(--accent-focus)] hover:underline rounded focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-focus)] focus-visible:ring-offset-2 rounded"
-            >
-              Sign up
-            </Link>
-          </p>
-        </GlassCard>
+        <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-[rgba(2,8,16,0.22)]" aria-hidden />
+
+        <section className="absolute inset-x-0 bottom-0 z-10 px-4 pb-4 sm:px-5 sm:pb-5">
+          <div className="mx-auto w-full max-w-[540px] rounded-2xl border border-[var(--card-border)] bg-[rgba(4,12,22,0.7)] p-5 shadow-[0_14px_40px_rgba(0,0,0,0.5)] backdrop-blur-md sm:p-6">
+            <p className="mb-1 text-center text-[10px] font-semibold uppercase tracking-[0.22em] text-[var(--text-muted)]">
+              Commander Access
+            </p>
+            <h1 className="mb-5 text-center text-base font-semibold text-[var(--text-primary)]">
+              Sign in to your account
+            </h1>
+
+            <LoginForm initialError={initialError} />
+
+            <p className="mt-6 text-center text-sm text-[var(--text-muted)]">
+              No account?{" "}
+              <Link
+                href="/signup"
+                className="font-medium text-[var(--accent-focus)] hover:underline rounded focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-focus)] focus-visible:ring-offset-2"
+              >
+                Sign up
+              </Link>
+            </p>
+          </div>
+        </section>
       </div>
     </main>
   );

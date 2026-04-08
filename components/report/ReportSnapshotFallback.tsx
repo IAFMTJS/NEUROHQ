@@ -5,7 +5,6 @@ import { useDailySnapshot } from "@/components/bootstrap/BootstrapGate";
 import { getTodayKey } from "@/lib/daily-date";
 import { XPBadge } from "@/components/XPBadge";
 import { InsightsKeyNumbersStrip } from "@/components/insights";
-import { getLoadingMascotSrc } from "@/lib/mascots";
 
 type AnalyticsSlice = {
   today: string;
@@ -72,11 +71,6 @@ export function ReportSnapshotFallback() {
   if (!analytics || !analytics.payload) {
     return (
       <div className="space-y-6">
-        <div className="flex justify-end">
-          <div className="h-12 w-12 rounded-full border border-[rgba(var(--mode-rgb),0.25)] bg-[rgba(6,18,30,0.42)] p-1.5">
-            <img src={getLoadingMascotSrc()} alt="" aria-hidden className="h-full w-full object-contain" />
-          </div>
-        </div>
         <div className="h-9 w-24 animate-pulse rounded-lg bg-white/10" aria-hidden />
         <p className="text-sm text-[var(--text-muted)]">Insights laden…</p>
       </div>
@@ -109,11 +103,6 @@ export function ReportSnapshotFallback() {
   if (!insightState || !identity || !xp || !graph30Data) {
     return (
       <div className="space-y-6">
-        <div className="flex justify-end">
-          <div className="h-12 w-12 rounded-full border border-[rgba(var(--mode-rgb),0.25)] bg-[rgba(6,18,30,0.42)] p-1.5">
-            <img src={getLoadingMascotSrc()} alt="" aria-hidden className="h-full w-full object-contain" />
-          </div>
-        </div>
         <div className="h-9 w-24 animate-pulse rounded-lg bg-white/10" aria-hidden />
         <p className="text-sm text-[var(--text-muted)]">Insights laden…</p>
       </div>
