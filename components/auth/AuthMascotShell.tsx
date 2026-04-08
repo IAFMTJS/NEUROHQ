@@ -39,8 +39,8 @@ export function AuthMascotShell({ children, className = "" }: AuthMascotShellPro
         className="pointer-events-none absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-[rgba(2,8,16,0.12)]"
       />
 
-      <section className="absolute left-[7%] right-[7%] top-[34%] bottom-[2%] z-10 overflow-hidden sm:top-[35%]">
-        <div className="relative h-full overflow-y-auto rounded-[18px] bg-[rgba(22,10,56,0.24)] p-3 backdrop-blur-[1.5px] sm:p-5">
+      <section className="absolute left-[7%] right-[7%] top-[33%] bottom-[2.5%] z-10 overflow-hidden sm:top-[34%]">
+        <div className="relative h-full overflow-y-auto rounded-[18px] bg-[rgba(22,10,56,0.24)] p-2.5 backdrop-blur-[1.5px] sm:p-4">
           {children}
         </div>
       </section>

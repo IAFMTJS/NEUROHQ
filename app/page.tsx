@@ -12,7 +12,7 @@ export default async function HomePage() {
     <main className="relative min-h-screen">
       <div className="relative z-10 mx-auto flex min-h-screen w-full max-w-[760px] flex-col items-center justify-center p-6">
         <AuthMascotShell className="hq-card-enter">
-          <div className="-mt-20 mb-0.5 flex justify-center sm:-mt-24">
+          <div className="-mt-24 mb-0 flex justify-center sm:-mt-28">
             <img
               src="/logo-naam.png"
               alt="NEUROHQ"
@@ -26,10 +26,10 @@ export default async function HomePage() {
           <h1 className="text-center text-base font-semibold text-[var(--text-primary)] sm:text-lg">
             Your daily command center
           </h1>
-          <p className="mt-3 text-center text-sm text-[var(--text-muted)]">
+          <p className="mt-2 text-center text-sm text-[var(--text-muted)]">
             The place you open every day. Tasks, energy, learning and finances built for focused execution.
           </p>
-          <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:justify-center">
+          <div className="mt-4 flex flex-col gap-2.5 sm:flex-row sm:justify-center">
             <Link
               href="/login"
               className="neon-button inline-flex min-h-[48px] items-center justify-center px-6 py-2.5 text-sm font-semibold text-white"
