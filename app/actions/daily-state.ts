@@ -79,11 +79,12 @@ export async function saveDailyState(input: DailyStateInput): Promise<SaveDailyS
     const supabase = await createServerClient();
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return { ok: false, error: "Not signed in." };
-    // Always persist for server "today" so missions page and dashboard use the same date.
     const serverToday = todayDateString();
+    const inputDate = typeof input.date === "string" ? input.date.trim() : "";
+    const targetDate = /^\d{4}-\d{2}-\d{2}$/.test(inputDate) ? inputDate : serverToday;
     const row = {
       user_id: user.id,
-      date: serverToday,
+      date: targetDate,
       energy: input.energy ?? null,
       focus: input.focus ?? null,
       sensory_load: input.sensory_load ?? null,
@@ -110,7 +111,7 @@ export async function saveDailyState(input: DailyStateInput): Promise<SaveDailyS
           : "Kon dagstatus niet opslaan. Probeer het opnieuw.";
       return { ok: false, error: msg };
     }
-    revalidateTagMax(`daily-${user.id}-${serverToday}`);
+    revalidateTagMax(`daily-${user.id}-${targetDate}`);
     // Direct line: pass the row we just wrote so the allocator never misses it (avoids read-after-write visibility).
     let autoMissionsCreated: number | undefined;
     let autoMissionsDebug: string | undefined;
@@ -151,7 +152,7 @@ export async function saveDailyState(input: DailyStateInput): Promise<SaveDailyS
         levelUp = true;
         newLevel = xpRes.newLevel;
       }
-      await upsertDailyAnalytics(serverToday);
+      await upsertDailyAnalytics(targetDate);
     } catch {
       /* non-blocking voor XP/analytics */
     }
