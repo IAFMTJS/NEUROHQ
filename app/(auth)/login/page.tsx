@@ -35,8 +35,12 @@ export default async function LoginPage({ searchParams }: Props) {
         />
         <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-[rgba(2,8,16,0.22)]" aria-hidden />
 
-        <section className="absolute left-[7%] right-[7%] top-[39%] bottom-[3%] z-10">
-          <div className="h-full rounded-[18px] bg-[rgba(22,10,56,0.28)] p-4 shadow-[0_14px_40px_rgba(0,0,0,0.45)] backdrop-blur-[1.5px] sm:p-6">
+        <section className="absolute left-[7%] right-[7%] top-[37%] bottom-[3%] z-10 overflow-visible">
+          <div
+            aria-hidden
+            className="pointer-events-none absolute inset-[-4%] rounded-[24px] bg-[radial-gradient(ellipse_at_center,rgba(167,139,250,0.38),rgba(129,140,248,0.24)_45%,transparent_78%)] blur-2xl"
+          />
+          <div className="relative h-full rounded-[18px] bg-[rgba(22,10,56,0.28)] p-4 shadow-[0_14px_40px_rgba(0,0,0,0.45),0_0_34px_rgba(129,140,248,0.35)] backdrop-blur-[1.5px] sm:p-6">
             <p className="mb-1 text-center text-[10px] font-semibold uppercase tracking-[0.2em] text-[var(--text-muted)]">
               Commander Access
             </p>
