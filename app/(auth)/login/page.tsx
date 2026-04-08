@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { LoginForm } from "@/components/auth/LoginForm";
-import { getLoginScreenMascotSrc } from "@/lib/mascots";
+import { AuthMascotShell } from "@/components/auth/AuthMascotShell";
+import { AuthHeroBrand } from "@/components/branding/AuthHeroBrand";
 
 type Props = {
   searchParams: Promise<{ error?: string }>;
@@ -21,47 +22,31 @@ export default async function LoginPage({ searchParams }: Props) {
       style={{ animationDelay: "50ms" }}
       data-ui="dark-commander"
     >
-      <div className="relative mx-auto w-full max-w-[700px] overflow-hidden rounded-[28px] bg-[rgba(2,8,16,0.72)] shadow-[0_24px_80px_rgba(0,0,0,0.58)]">
-        <img
-          src={getLoginScreenMascotSrc()}
-          alt="NEUROHQ login command artwork"
-          className="block w-full select-none object-cover"
-          draggable={false}
-        />
-
-        <div
-          className="pointer-events-none absolute left-[2%] right-[2%] top-[28%] h-[34%] bg-[radial-gradient(ellipse_at_center,rgba(167,139,250,0.7),rgba(129,140,248,0.55)_34%,rgba(34,211,238,0.38)_54%,transparent_80%)] blur-3xl"
-          aria-hidden
-        />
-        <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-[rgba(2,8,16,0.22)]" aria-hidden />
-
-        <section className="absolute left-[7%] right-[7%] top-[37%] bottom-[3%] z-10 overflow-visible">
-          <div
-            aria-hidden
-            className="pointer-events-none absolute inset-[-4%] rounded-[24px] bg-[radial-gradient(ellipse_at_center,rgba(167,139,250,0.38),rgba(129,140,248,0.24)_45%,transparent_78%)] blur-2xl"
-          />
-          <div className="relative h-full rounded-[18px] bg-[rgba(22,10,56,0.28)] p-4 shadow-[0_14px_40px_rgba(0,0,0,0.45),0_0_34px_rgba(129,140,248,0.35)] backdrop-blur-[1.5px] sm:p-6">
-            <p className="mb-1 text-center text-[10px] font-semibold uppercase tracking-[0.2em] text-[var(--text-muted)]">
-              Commander Access
-            </p>
-            <h1 className="mb-4 text-center text-sm font-semibold text-[var(--text-primary)] sm:mb-5 sm:text-base">
-              Sign in to your account
-            </h1>
-
-            <LoginForm initialError={initialError} />
-
-            <p className="mt-4 text-center text-sm text-[var(--text-muted)] sm:mt-6">
-              No account?{" "}
-              <Link
-                href="/signup"
-                className="font-medium text-[var(--accent-focus)] hover:underline rounded focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-focus)] focus-visible:ring-offset-2"
-              >
-                Sign up
-              </Link>
-            </p>
+      <AuthMascotShell>
+        <div className="mb-2 flex justify-center">
+          <div className="max-w-[210px]">
+            <AuthHeroBrand />
           </div>
-        </section>
-      </div>
+        </div>
+        <p className="mb-1 text-center text-[10px] font-semibold uppercase tracking-[0.2em] text-[var(--text-muted)]">
+          Commander Access
+        </p>
+        <h1 className="mb-4 text-center text-sm font-semibold text-[var(--text-primary)] sm:mb-5 sm:text-base">
+          Sign in to your account
+        </h1>
+
+        <LoginForm initialError={initialError} />
+
+        <p className="mt-4 text-center text-sm text-[var(--text-muted)] sm:mt-6">
+          No account?{" "}
+          <Link
+            href="/signup"
+            className="font-medium text-[var(--accent-focus)] hover:underline rounded focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-focus)] focus-visible:ring-offset-2"
+          >
+            Sign up
+          </Link>
+        </p>
+      </AuthMascotShell>
     </main>
   );
 }

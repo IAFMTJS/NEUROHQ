@@ -1,8 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import Link from "next/link";
-import { AuthHeroBrand } from "@/components/branding/AuthHeroBrand";
-import GlassCard from "@/components/ui/GlassCard";
+import { AuthMascotShell } from "@/components/auth/AuthMascotShell";
 
 export default async function HomePage() {
   const supabase = await createClient();
@@ -11,23 +10,32 @@ export default async function HomePage() {
 
   return (
     <main className="relative min-h-screen">
-      <div className="relative z-10 mx-auto flex min-h-screen max-w-[420px] flex-col items-center justify-center p-6">
-        <GlassCard className="hq-card-enter w-full max-w-[360px] p-10 text-center">
-          <div className="mx-auto w-full">
-            <AuthHeroBrand />
-          </div>
-          <p className="mt-4 text-sm text-white/70">
-            The place you open every day. Tasks, energy, learning, finances. Built for focus and energy awareness.
+      <div className="relative z-10 mx-auto flex min-h-screen w-full max-w-[760px] flex-col items-center justify-center p-6">
+        <AuthMascotShell className="hq-card-enter">
+          <p className="mb-2 text-center text-[10px] font-semibold uppercase tracking-[0.2em] text-[var(--text-muted)]">
+            Welcome to NEUROHQ
+          </p>
+          <h1 className="text-center text-base font-semibold text-[var(--text-primary)] sm:text-lg">
+            Your daily command center
+          </h1>
+          <p className="mt-3 text-center text-sm text-[var(--text-muted)]">
+            The place you open every day. Tasks, energy, learning and finances built for focused execution.
           </p>
           <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:justify-center">
-            <Link href="/login" className="neon-button inline-flex min-h-[48px] items-center justify-center px-6 py-2.5 text-sm font-semibold text-white">
+            <Link
+              href="/login"
+              className="neon-button inline-flex min-h-[48px] items-center justify-center px-6 py-2.5 text-sm font-semibold text-white"
+            >
               Sign in
             </Link>
-            <Link href="/signup" className="inline-flex items-center justify-center rounded-[18px] border border-white/20 bg-transparent px-6 py-2.5 text-sm font-medium text-white">
+            <Link
+              href="/signup"
+              className="inline-flex min-h-[48px] items-center justify-center rounded-[18px] bg-white/10 px-6 py-2.5 text-sm font-medium text-white hover:bg-white/15"
+            >
               Sign up
             </Link>
           </div>
-        </GlassCard>
+        </AuthMascotShell>
       </div>
     </main>
   );
