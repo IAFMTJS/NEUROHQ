@@ -99,7 +99,7 @@ export function Modal({
           <div className="flex min-w-0 flex-1 items-center gap-3">
             {showBranding && (
               <NativeCachedImg
-                src="/app-icon.png"
+                src="/icon-192.png"
                 alt=""
                 width={36}
                 height={36}

@@ -19,7 +19,7 @@ const BOTTOM_NAV_WARM_PATHS: string[] = [
 
 /** Branding + bottom-nav PNGs: warm first so tabs and logos resolve from disk quickly. */
 export function getNativeVisualCriticalWarmPaths(): string[] {
-  return ["/app-icon.png", "/logo-naam.png", ...BOTTOM_NAV_WARM_PATHS];
+  return ["/icon-192.png", "/logo-naam.png", ...BOTTOM_NAV_WARM_PATHS];
 }
 
 /** Large rasters used as CSS backgrounds (dashboard + HUD test). Warmed in full pass. */

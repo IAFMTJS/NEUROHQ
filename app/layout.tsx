@@ -23,8 +23,8 @@ export const metadata: Metadata = {
   description: "Nervous-system-aware personal operating system",
   manifest: "/manifest.webmanifest",
   icons: {
-    icon: "/app-icon.png",
-    apple: "/app-icon.png",
+    icon: "/icon-192.png",
+    apple: "/icon-192.png",
   },
   // iOS/macOS “Add to Home Screen”: status bar blends with app, no browser chrome
   appleWebApp: {

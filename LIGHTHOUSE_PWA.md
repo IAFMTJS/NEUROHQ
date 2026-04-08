@@ -62,7 +62,7 @@ Use this to verify manually even if you don’t run Lighthouse.
 
 ### 2.5 Wat blijft op het apparaat (minder herladen, offline)
 
-- **Install-cache (statisch):** `/`, `/dashboard`, `/offline`, manifest(s), `app-icon.png` — blijft staan tot een nieuwe SW-versie (toast "Nieuwe versie beschikbaar").
+- **Install-cache (statisch):** `/`, `/dashboard`, `/offline`, manifest(s), `icon-192.png` — blijft staan tot een nieuwe SW-versie (toast "Nieuwe versie beschikbaar").
 - **Dynamische cache:** HTML-pagina’s, JS/CSS-bundles (`/_next/static/`), afbeeldingen/fonts, GET-responses van `/api/` — stale-while-revalidate of cache-first; bij herhaald gebruik en offline wordt eerst uit cache geserveerd.
 - **IndexedDB (`neurohq-offline`):** mutaties (POST/PUT/PATCH/DELETE) die offline worden gedaan — worden bij terugkeer van netwerk gesynchroniseerd (Background Sync).
 - **Gevolg:** PWA meermaals per dag openen laadt sneller (JS/CSS direct uit cache); volledige offline use voor al bekeken pagina’s en laatste API-data; wijzigingen offline in de queue, sync zodra er weer internet is.

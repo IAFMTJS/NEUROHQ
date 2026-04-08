@@ -11,7 +11,7 @@ export function OfflineContent() {
       <div className="relative z-10 flex min-h-screen flex-col items-center justify-center px-5">
         <GlassCard className="w-full max-w-[360px] p-8 text-center">
           <NativeCachedImg
-            src="/app-icon.png"
+            src="/icon-192.png"
             alt=""
             width={64}
             height={64}

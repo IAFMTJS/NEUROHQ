@@ -256,7 +256,7 @@ const STATIC_ASSETS = [
   "/offline",
   "/manifest.json",
   "/manifest.webmanifest",
-  "/app-icon.png",
+  "/icon-192.png",
   // Core branding & HUD visuals – pre-cached so first PWA open has them locally
   "/logo-naam.png",
   // Bottom nav PNGs (`lib/navigation/bottom-nav-links.tsx`); aligns with native warm-cache.
@@ -409,8 +409,8 @@ self.addEventListener("message", function (event) {
             self.registration
               .showNotification("NEUROHQ test notification", {
                 body: "This is a delayed test notification (≈30s).",
-                icon: "/app-icon.png",
-                badge: "/app-icon.png",
+                icon: "/icon-192.png",
+                badge: "/icon-192.png",
                 tag: "neurohq-test",
               })
               .finally(resolve);
@@ -421,8 +421,8 @@ self.addEventListener("message", function (event) {
       setTimeout(function () {
         self.registration.showNotification("NEUROHQ test notification", {
           body: "This is a delayed test notification (≈30s).",
-          icon: "/app-icon.png",
-          badge: "/app-icon.png",
+          icon: "/icon-192.png",
+          badge: "/icon-192.png",
           tag: "neurohq-test",
         });
       }, 30000);
@@ -861,8 +861,8 @@ self.addEventListener("push", function (event) {
     const title = (data && typeof data === "object" && data.title) ? data.title : "NEUROHQ";
     const options = {
       body: (data && typeof data === "object" && data.body) ? data.body : "",
-      icon: "/app-icon.png",
-      badge: "/app-icon.png",
+      icon: "/icon-192.png",
+      badge: "/icon-192.png",
       tag: (data && typeof data === "object" && data.tag) ? data.tag : "neurohq",
       data:
         data && typeof data === "object" && data.url

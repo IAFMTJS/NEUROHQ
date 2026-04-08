@@ -20,8 +20,8 @@ export default function manifest(): MetadataRoute.Manifest {
     background_color: "#050810",
     theme_color: "#050810",
     icons: [
-      { src: "/app-icon.png", sizes: "192x192", type: "image/png", purpose: "any" },
-      { src: "/app-icon.png", sizes: "512x512", type: "image/png", purpose: "maskable" },
+      { src: "/icon-192.png", sizes: "192x192", type: "image/png", purpose: "any" },
+      { src: "/icon-192.png", sizes: "192x192", type: "image/png", purpose: "maskable" },
     ],
   };
 }

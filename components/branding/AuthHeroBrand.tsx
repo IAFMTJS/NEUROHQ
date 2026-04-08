@@ -7,7 +7,7 @@ export function AuthHeroBrand() {
   return (
     <div className="flex flex-col items-center gap-2">
       <NativeCachedImg
-        src="/app-icon.png"
+        src="/icon-192.png"
         alt=""
         width={96}
         height={96}
