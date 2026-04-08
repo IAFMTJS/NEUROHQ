@@ -10,10 +10,12 @@ import {
 } from "@/lib/mobile/db";
 import { getSyncMetrics } from "@/lib/mobile/metrics";
 import { flushOutboxQueue } from "@/lib/mobile/sync-engine";
+import { getPendingDailyStateQueueDepth, syncPendingDailyStateNow } from "@/lib/client-pending-writes";
 
 export function SettingsMobileSyncHealth() {
   const [mounted, setMounted] = useState(false);
   const [pending, setPending] = useState(0);
+  const [pendingDailyState, setPendingDailyState] = useState(0);
   const [deadCount, setDeadCount] = useState(0);
   const [samples, setSamples] = useState<OutboxDeadLetterSample[]>([]);
   const [metricsSummary, setMetricsSummary] = useState<string | null>(null);
@@ -35,7 +37,9 @@ export function SettingsMobileSyncHealth() {
         listOutboxDeadLetterSample(5),
         Promise.resolve(getSyncMetrics()),
       ]);
+      const dailyPending = getPendingDailyStateQueueDepth();
       setPending(depth);
+      setPendingDailyState(dailyPending);
       setDeadCount(dCount);
       setSamples(sampleList);
       setMetricsSummary(
@@ -69,6 +73,7 @@ export function SettingsMobileSyncHealth() {
     setError(null);
     try {
       await flushOutboxQueue();
+      await syncPendingDailyStateNow();
       await load();
     } catch (e) {
       setError(e instanceof Error ? e.message : "Flush mislukt");
@@ -91,7 +96,13 @@ export function SettingsMobileSyncHealth() {
       </p>
       <ul className="text-xs text-[var(--text-secondary)] space-y-1 font-mono">
         <li>
-          Wachtrij (queued/processing): <strong className="text-[var(--text-primary)]">{pending}</strong>
+          Wachtrij totaal: <strong className="text-[var(--text-primary)]">{pending + pendingDailyState}</strong>
+        </li>
+        <li>
+          Outbox (queued/processing): <strong className="text-[var(--text-primary)]">{pending}</strong>
+        </li>
+        <li>
+          Dagstatus pending (local write-behind): <strong className="text-[var(--text-primary)]">{pendingDailyState}</strong>
         </li>
         <li>
           Dead letter (max retries): <strong className="text-[var(--text-primary)]">{deadCount}</strong>

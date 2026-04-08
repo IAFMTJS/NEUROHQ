@@ -124,6 +124,10 @@ export async function syncPendingDailyStateNow(): Promise<void> {
   await syncPending();
 }
 
+export function getPendingDailyStateQueueDepth(): number {
+  return getUnsyncedEntries().length;
+}
+
 async function syncPending(): Promise<void> {
   if (typeof window === "undefined") return;
   const pending = getUnsyncedEntries();
