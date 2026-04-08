@@ -18,17 +18,21 @@ export function AuthMascotShell({ children, className = "" }: AuthMascotShellPro
       <img
         src={getLoginScreenMascotSrc()}
         alt="NEUROHQ auth mascot artwork"
-        className="block w-full select-none object-cover"
+        className="relative z-[1] block w-full select-none object-cover drop-shadow-[0_0_44px_rgba(129,140,248,0.5)]"
         draggable={false}
       />
 
       <div
         aria-hidden
-        className="pointer-events-none absolute left-[2%] right-[2%] top-[28%] h-[34%] bg-[radial-gradient(ellipse_at_center,rgba(167,139,250,0.7),rgba(129,140,248,0.55)_34%,rgba(34,211,238,0.38)_54%,transparent_80%)] blur-3xl"
+        className="pointer-events-none absolute -left-[8%] -right-[8%] top-[20%] h-[52%] bg-[radial-gradient(ellipse_at_center,rgba(192,132,252,0.88),rgba(129,140,248,0.72)_30%,rgba(34,211,238,0.5)_52%,transparent_82%)] blur-3xl"
       />
       <div
         aria-hidden
-        className="pointer-events-none absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-[rgba(2,8,16,0.22)]"
+        className="pointer-events-none absolute -left-[10%] -right-[10%] top-[12%] h-[58%] bg-[radial-gradient(ellipse_at_center,rgba(167,139,250,0.42),transparent_74%)] blur-[90px]"
+      />
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-[rgba(2,8,16,0.12)]"
       />
 
       <section className="absolute left-[7%] right-[7%] top-[37%] bottom-[3%] z-10 overflow-visible">
