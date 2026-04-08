@@ -6,10 +6,13 @@ import { syncGrowthFocusProtocolToCalendarWeek } from "@/app/actions/growth-prot
 import { getStrategyPacingHints } from "@/app/actions/strategy-engine-pacing";
 import { getGrowthEngineSnapshot } from "@/app/actions/growth-snapshot";
 import { getLearningState } from "@/app/actions/learning-state";
+import { getTasksForDateRange, getTodaysTasks } from "@/app/actions/tasks";
 import { LearningContentClient } from "@/components/growth/LearningContentClient";
 import { GrowthMissionsRibbon } from "@/components/growth/GrowthMissionsRibbon";
 import { GrowthPageCommandShell } from "@/components/growth/GrowthPageCommandShell";
 import { GrowthProtocolCommandCard } from "@/components/growth/GrowthProtocolCommandCard";
+import { GrowthCommanderSummaryCard } from "@/components/growth/GrowthCommanderSummaryCard";
+import { GrowthReimaginedBTabShell } from "@/components/growth/GrowthReimaginedBTabShell";
 import { formatDayShort } from "@/lib/utils/date-locale";
 import { getBudgetWeekBounds } from "@/lib/utils/budget-date";
 import { todayDateString } from "@/lib/utils/timezone";
@@ -68,17 +71,116 @@ export default async function GrowthReimaginedBPage() {
   const { start: budgetWeekStart, end: budgetWeekEnd } = getBudgetWeekBounds(today);
   const budgetWeekLabel = `${formatDayShort(budgetWeekStart)} – ${formatDayShort(budgetWeekEnd)}`;
 
-  const [protocols, progressMap, growthFocus, strategyPacingHints, growthSnap, learningState] = await Promise.all([
+  const [protocols, progressMap, growthFocus, strategyPacingHints, growthSnap, learningState, todaysTasksResult, weekTasksByDate] = await Promise.all([
     getProtocolLibrary("nl"),
     getProtocolProgressMap(),
     getGrowthFocus(),
     getStrategyPacingHints(),
     getGrowthEngineSnapshot(),
     getLearningState(),
+    getTodaysTasks(today, "normal"),
+    getTasksForDateRange(budgetWeekStart, budgetWeekEnd),
   ]);
 
   const topStreams = learningState.streams.slice(0, 3);
   const covered = deckParity.filter((item) => item.status === "covered").length;
+  const todayTasks = todaysTasksResult.tasks ?? [];
+  const todayDoneCount = todayTasks.filter((task) => (task as { completed?: boolean }).completed === true).length;
+  const todayTotalCount = todayTasks.length;
+  const weekDayKeys = Object.keys(weekTasksByDate ?? {});
+  const weekRows = weekDayKeys.flatMap((date) => (weekTasksByDate[date] ?? []) as Array<{ completed?: boolean }>);
+  const weekTotalCount = weekRows.length;
+  const weekDoneCount = weekRows.filter((task) => task.completed === true).length;
+  const weeklyProgressPct = weekTotalCount > 0 ? Math.round((weekDoneCount / weekTotalCount) * 100) : 0;
+  const daysDoneCount = weekDayKeys.filter((date) => {
+    const rows = (weekTasksByDate[date] ?? []) as Array<{ completed?: boolean }>;
+    if (rows.length === 0) return false;
+    const done = rows.filter((row) => row.completed === true).length;
+    return done > 0;
+  }).length;
+  const daysTotalCount = 7;
+  const activeProtocolTitle = growthSnap?.activeProtocol?.title ?? "Geen actief focusprotocol";
+
+  const commandPanel = (
+    <>
+      <GrowthCommanderSummaryCard
+        weekLabel={budgetWeekLabel}
+        activeProtocolTitle={activeProtocolTitle}
+        weeklyProgressPct={weeklyProgressPct}
+        todayDoneCount={todayDoneCount}
+        todayTotalCount={todayTotalCount}
+        daysDoneCount={daysDoneCount}
+        daysTotalCount={daysTotalCount}
+      />
+      <GrowthProtocolCommandCard protocols={protocols} progressMap={progressMap} growthFocus={growthFocus} />
+    </>
+  );
+
+  const signalsPanel = (
+    <>
+      <section className="rounded-2xl border border-white/10 bg-black/20 p-5">
+        <h2 className="text-lg font-semibold text-white">Parity matrix</h2>
+        <div className="mt-4 grid gap-2 md:grid-cols-2 xl:grid-cols-3">
+          {deckParity.map((item) => (
+            <article key={item.label} className="rounded-xl border border-white/10 bg-white/[0.04] p-3">
+              <div className="flex items-center justify-between gap-2">
+                <p className="text-sm font-medium text-white">{item.label}</p>
+                <span className={`rounded-full border px-2 py-0.5 text-[10px] font-semibold uppercase ${deckParityStyle(item.status)}`}>
+                  {item.status}
+                </span>
+              </div>
+              <p className="mt-1 text-xs text-slate-300">{item.note}</p>
+            </article>
+          ))}
+        </div>
+      </section>
+
+      {growthSnap ? <GrowthMissionsRibbon snap={growthSnap} className="!rounded-2xl" /> : null}
+
+      <section className="rounded-2xl border border-white/10 bg-black/20 p-5">
+        <div className="flex items-center justify-between gap-3">
+          <h2 className="text-lg font-semibold text-white">Momentum radar (live)</h2>
+          <p className="text-xs text-slate-300">Gebaseerd op learning_state</p>
+        </div>
+        {topStreams.length === 0 ? (
+          <p className="mt-3 text-sm text-slate-300">Geen streams actief. Start een stream op Growth om signalen te activeren.</p>
+        ) : (
+          <div className="mt-3 grid gap-2 md:grid-cols-3">
+            {topStreams.map((stream) => (
+              <article key={stream.id} className="rounded-lg border border-white/10 bg-white/[0.04] p-3">
+                <p className="text-sm font-medium text-white">{stream.title}</p>
+                <p className="mt-1 text-xs text-slate-400">
+                  {stream.sessionsThisWeek} sessies · last active {stream.lastActive ?? "n.v.t."}
+                </p>
+                <div className="mt-2 h-1.5 rounded-full bg-white/10">
+                  <div
+                    className="h-1.5 rounded-full bg-gradient-to-r from-cyan-300 via-sky-300 to-violet-300"
+                    style={{ width: `${Math.round(stream.momentumScore * 100)}%` }}
+                  />
+                </div>
+              </article>
+            ))}
+          </div>
+        )}
+      </section>
+    </>
+  );
+
+  const workspacePanel = (
+    <LearningContentClient
+      protocols={protocols}
+      progressMap={progressMap}
+      growthFocus={growthFocus}
+      strategyPacingHints={strategyPacingHints}
+      budgetWeekLabel={budgetWeekLabel}
+      simplified={false}
+      heroSlot={
+        <p className="text-center text-xs text-[var(--text-muted)]">
+          Concept B gebruikt live growth-data: dezelfde functionele ruggengraat, andere command-deck presentatie.
+        </p>
+      }
+    />
+  );
 
   return (
     <GrowthPageCommandShell>
@@ -121,66 +223,10 @@ export default async function GrowthReimaginedBPage() {
           </div>
         </section>
 
-        <section className="rounded-2xl border border-white/10 bg-black/20 p-5">
-          <h2 className="text-lg font-semibold text-white">Parity matrix</h2>
-          <div className="mt-4 grid gap-2 md:grid-cols-2 xl:grid-cols-3">
-            {deckParity.map((item) => (
-              <article key={item.label} className="rounded-xl border border-white/10 bg-white/[0.04] p-3">
-                <div className="flex items-center justify-between gap-2">
-                  <p className="text-sm font-medium text-white">{item.label}</p>
-                  <span className={`rounded-full border px-2 py-0.5 text-[10px] font-semibold uppercase ${deckParityStyle(item.status)}`}>
-                    {item.status}
-                  </span>
-                </div>
-                <p className="mt-1 text-xs text-slate-300">{item.note}</p>
-              </article>
-            ))}
-          </div>
-        </section>
-
-        {growthSnap ? <GrowthMissionsRibbon snap={growthSnap} className="!rounded-2xl" /> : null}
-
-        <GrowthProtocolCommandCard protocols={protocols} progressMap={progressMap} growthFocus={growthFocus} />
-
-        <section className="rounded-2xl border border-white/10 bg-black/20 p-5">
-          <div className="flex items-center justify-between gap-3">
-            <h2 className="text-lg font-semibold text-white">Momentum radar (live)</h2>
-            <p className="text-xs text-slate-300">Gebaseerd op learning_state</p>
-          </div>
-          {topStreams.length === 0 ? (
-            <p className="mt-3 text-sm text-slate-300">Geen streams actief. Start een stream op Growth om signalen te activeren.</p>
-          ) : (
-            <div className="mt-3 grid gap-2 md:grid-cols-3">
-              {topStreams.map((stream) => (
-                <article key={stream.id} className="rounded-lg border border-white/10 bg-white/[0.04] p-3">
-                  <p className="text-sm font-medium text-white">{stream.title}</p>
-                  <p className="mt-1 text-xs text-slate-400">
-                    {stream.sessionsThisWeek} sessies · last active {stream.lastActive ?? "n.v.t."}
-                  </p>
-                  <div className="mt-2 h-1.5 rounded-full bg-white/10">
-                    <div
-                      className="h-1.5 rounded-full bg-gradient-to-r from-cyan-300 via-sky-300 to-violet-300"
-                      style={{ width: `${Math.round(stream.momentumScore * 100)}%` }}
-                    />
-                  </div>
-                </article>
-              ))}
-            </div>
-          )}
-        </section>
-
-        <LearningContentClient
-          protocols={protocols}
-          progressMap={progressMap}
-          growthFocus={growthFocus}
-          strategyPacingHints={strategyPacingHints}
-          budgetWeekLabel={budgetWeekLabel}
-          simplified={false}
-          heroSlot={
-            <p className="text-center text-xs text-[var(--text-muted)]">
-              Concept B gebruikt live growth-data: dezelfde functionele ruggengraat, andere command-deck presentatie.
-            </p>
-          }
+        <GrowthReimaginedBTabShell
+          commandPanel={commandPanel}
+          signalsPanel={signalsPanel}
+          workspacePanel={workspacePanel}
         />
       </div>
     </GrowthPageCommandShell>
