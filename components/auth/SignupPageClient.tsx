@@ -77,7 +77,7 @@ export default function SignupPageClient() {
       data-ui="dark-commander"
     >
       <AuthMascotShell>
-        <div className="-mt-12 mb-0.5 flex justify-center">
+        <div className="-mt-24 mb-0 flex justify-center sm:-mt-28">
           <img
             src="/logo-naam.png"
             alt="NEUROHQ"
@@ -85,7 +85,7 @@ export default function SignupPageClient() {
             draggable={false}
           />
         </div>
-        <p className="mb-1 text-center text-[10px] font-semibold uppercase tracking-[0.2em] text-[var(--text-muted)]">
+        <p className="mb-0.5 text-center text-[10px] font-semibold uppercase tracking-[0.2em] text-[var(--text-muted)]">
           Commander Access
         </p>
         <h2 className="mb-4 text-center text-sm font-semibold text-[var(--text-secondary)]">
