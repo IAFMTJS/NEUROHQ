@@ -41,9 +41,9 @@ export function LoginForm({ initialError = null }: Props) {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-5">
+    <form onSubmit={handleSubmit} className="space-y-4">
       <div>
-        <label htmlFor="login-email" className="hq-label block mb-1.5">
+        <label htmlFor="login-email" className="hq-label block mb-1">
           Email
         </label>
         <input
@@ -59,7 +59,7 @@ export function LoginForm({ initialError = null }: Props) {
         />
       </div>
       <div>
-        <div className="flex justify-between items-center mb-1.5">
+        <div className="mb-1 flex items-center justify-between">
           <label htmlFor="login-password" className="hq-label">
             Password
           </label>

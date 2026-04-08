@@ -88,10 +88,10 @@ export default function SignupPageClient() {
         <p className="mb-0.5 text-center text-[10px] font-semibold uppercase tracking-[0.2em] text-[var(--text-muted)]">
           Commander Access
         </p>
-        <h2 className="mb-4 text-center text-sm font-semibold text-[var(--text-secondary)]">
+        <h2 className="mb-3 text-center text-sm font-semibold text-[var(--text-secondary)]">
           Create your account
         </h2>
-        <form onSubmit={handleSubmit} className="space-y-5">
+        <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label htmlFor="signup-email" className="hq-label block mb-1.5">
               Email
@@ -144,7 +144,7 @@ export default function SignupPageClient() {
             {loading ? "Creating account…" : "Sign up"}
           </PrimaryButton>
         </form>
-        <p className="mt-6 text-center text-sm text-[var(--text-muted)]">
+        <p className="mt-4 text-center text-sm text-[var(--text-muted)]">
           Already have an account?{" "}
           <Link
             href="/login"

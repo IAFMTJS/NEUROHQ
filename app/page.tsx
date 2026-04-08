@@ -12,7 +12,7 @@ export default async function HomePage() {
     <main className="relative min-h-screen">
       <div className="relative z-10 mx-auto flex min-h-screen w-full max-w-[760px] flex-col items-center justify-center p-6">
         <AuthMascotShell className="hq-card-enter">
-          <div className="-mt-2 mb-1 flex justify-center">
+          <div className="-mt-20 mb-0.5 flex justify-center sm:-mt-24">
             <img
               src="/logo-naam.png"
               alt="NEUROHQ"
@@ -20,7 +20,7 @@ export default async function HomePage() {
               draggable={false}
             />
           </div>
-          <p className="mb-2 text-center text-[10px] font-semibold uppercase tracking-[0.2em] text-[var(--text-muted)]">
+          <p className="mb-1 text-center text-[10px] font-semibold uppercase tracking-[0.2em] text-[var(--text-muted)]">
             Welcome to NEUROHQ
           </p>
           <h1 className="text-center text-base font-semibold text-[var(--text-primary)] sm:text-lg">
