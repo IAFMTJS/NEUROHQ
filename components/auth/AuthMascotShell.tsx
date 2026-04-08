@@ -24,11 +24,15 @@ export function AuthMascotShell({ children, className = "" }: AuthMascotShellPro
 
       <div
         aria-hidden
-        className="pointer-events-none absolute -left-[8%] -right-[8%] top-[20%] h-[52%] bg-[radial-gradient(ellipse_at_center,rgba(192,132,252,0.88),rgba(129,140,248,0.72)_30%,rgba(34,211,238,0.5)_52%,transparent_82%)] blur-3xl"
+        className="pointer-events-none absolute -left-[10%] -right-[10%] top-[18%] h-[56%] bg-[radial-gradient(ellipse_at_center,rgba(216,180,255,0.92),rgba(192,132,252,0.86)_28%,rgba(147,51,234,0.72)_48%,rgba(76,29,149,0.46)_66%,transparent_84%)] blur-3xl"
       />
       <div
         aria-hidden
-        className="pointer-events-none absolute -left-[10%] -right-[10%] top-[12%] h-[58%] bg-[radial-gradient(ellipse_at_center,rgba(167,139,250,0.42),transparent_74%)] blur-[90px]"
+        className="pointer-events-none absolute -left-[14%] -right-[14%] top-[10%] h-[62%] bg-[radial-gradient(ellipse_at_center,rgba(168,85,247,0.56),rgba(124,58,237,0.34)_46%,transparent_76%)] blur-[95px]"
+      />
+      <div
+        aria-hidden
+        className="pointer-events-none absolute -left-[10%] -right-[10%] top-[24%] h-[34%] bg-[radial-gradient(ellipse_at_center,rgba(244,114,182,0.28),rgba(192,132,252,0.22)_42%,transparent_75%)] blur-[70px]"
       />
       <div
         aria-hidden

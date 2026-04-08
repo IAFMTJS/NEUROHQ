@@ -77,7 +77,18 @@ export default function SignupPageClient() {
       data-ui="dark-commander"
     >
       <AuthMascotShell>
-        <h2 className="mb-6 text-center text-sm font-semibold text-[var(--text-secondary)]">
+        <div className="-mt-12 mb-0.5 flex justify-center">
+          <img
+            src="/logo-naam.png"
+            alt="NEUROHQ"
+            className="h-auto w-full max-w-[190px] select-none object-contain opacity-95"
+            draggable={false}
+          />
+        </div>
+        <p className="mb-1 text-center text-[10px] font-semibold uppercase tracking-[0.2em] text-[var(--text-muted)]">
+          Commander Access
+        </p>
+        <h2 className="mb-4 text-center text-sm font-semibold text-[var(--text-secondary)]">
           Create your account
         </h2>
         <form onSubmit={handleSubmit} className="space-y-5">
