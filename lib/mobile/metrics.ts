@@ -8,6 +8,9 @@ type SyncMetrics = {
   staleReadCount: number;
   freshReadCount: number;
   updatedAt: number;
+  /** Laatste outbox-rij die naar dead_letter ging (voor instellingen-paneel). */
+  lastDeadLetterAt: number;
+  lastDeadLetterSummary: string | null;
 };
 
 const EMPTY_METRICS: SyncMetrics = {
@@ -18,6 +21,8 @@ const EMPTY_METRICS: SyncMetrics = {
   staleReadCount: 0,
   freshReadCount: 0,
   updatedAt: 0,
+  lastDeadLetterAt: 0,
+  lastDeadLetterSummary: null,
 };
 
 function readMetrics(): SyncMetrics {
@@ -73,6 +78,15 @@ export function recordReadFresh(): void {
 
 export function recordReadStale(): void {
   patchMetrics((m) => ({ staleReadCount: m.staleReadCount + 1 }));
+}
+
+/** Called when an outbox row hits dead_letter (max retries). */
+export function recordDeadLetterHint(action: string, errorPrefix: string): void {
+  const summary = `${action}: ${errorPrefix.slice(0, 240)}`;
+  patchMetrics({
+    lastDeadLetterAt: Date.now(),
+    lastDeadLetterSummary: summary,
+  });
 }
 
 export function getSyncMetrics(): SyncMetrics {

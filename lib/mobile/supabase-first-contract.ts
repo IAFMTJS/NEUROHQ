@@ -27,8 +27,8 @@
  *    - Reads: use cache for instant UI; reconcile from `pull` or existing authenticated fetches.
  *    - Conflicts: default server wins (`DEFAULT_CONFLICT_POLICY`).
  *
- * Feature gate: native Capacitor + `NEXT_PUBLIC_MOBILE_SYNC_ENABLED` (+ optional rollout); web/PWA keeps
- * stable paths until you intentionally widen the gate.
+ * Feature gate: `NEXT_PUBLIC_MOBILE_SYNC_ENABLED` (+ optional rollout). Capacitor: dat volstaat. Browser/PWA:
+ * zet `NEXT_PUBLIC_MOBILE_SYNC_PWA=1` zodat IndexedDB dezelfde outbox/entity_cache gebruikt (zonder native app).
  */
 
 export const SUPABASE_FIRST_CONTRACT_VERSION = "2026-04-06";

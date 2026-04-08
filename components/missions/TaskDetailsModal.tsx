@@ -91,6 +91,23 @@ function classifyEnergyMatch(score: number | undefined): "high" | "ok" | "low" |
   return "ok";
 }
 
+function isVagueTaskExplanation(input: string | null | undefined): boolean {
+  const raw = (input ?? "").trim();
+  if (!raw) return true;
+  const normalized = raw.toLowerCase().replace(/[^\p{L}\p{N}\s]/gu, "").trim();
+  if (!normalized) return true;
+  const words = normalized.split(/\s+/).filter(Boolean);
+  return words.length <= 3;
+}
+
+function autoMissionFallbackExplanation(task: ExtendedTask): string | null {
+  if (task.psychology_label !== "MasterPoolAuto" && task.psychology_label !== "MasterPoolBonus") return null;
+  if (!isVagueTaskExplanation(task.notes)) return null;
+  const minutes = estimatedMinutesFromTask(task);
+  const domainLabel = (task.domain ?? "focus").toString().replaceAll("_", " ");
+  return `${task.title}: werk ongeveer ${minutes} minuten in ${domainLabel}. Kies 1 concrete output, beperk afleiding en sluit af met een zichtbaar resultaat.`;
+}
+
 export function TaskDetailsModal({
   open,
   onClose,
@@ -110,6 +127,7 @@ export function TaskDetailsModal({
   const viewLoggedRef = useRef<string | null>(null);
   const energyMatchCategory = classifyEnergyMatch(strategicPreview?.energyMatch);
   const isLowSynergy = energyMatchCategory === "low";
+  const fallbackExplanation = autoMissionFallbackExplanation(task);
   const upsertTask = useHQStore((s) => s.upsertTask);
   const removeTask = useHQStore((s) => s.removeTask);
 
@@ -134,7 +152,7 @@ export function TaskDetailsModal({
           completed_at: new Date().toISOString(),
         } as any);
       }
-      const result = await completeTaskOffline(task.id);
+      const result = await completeTaskOffline(task.id, { date });
       onComplete?.(result ?? undefined);
       router.refresh();
       onClose();
@@ -351,6 +369,18 @@ export function TaskDetailsModal({
               {task.psychology_label === "MasterPoolAuto" ? "Uitleg" : "Notes"}
             </h3>
             <p className="mt-1.5 whitespace-pre-wrap text-[15px] leading-relaxed text-[var(--text-primary)]">{task.notes}</p>
+          </section>
+        )}
+        {!task.notes?.trim() && fallbackExplanation && (
+          <section>
+            <h3 className="text-xs font-semibold uppercase tracking-wider text-[var(--text-muted)]">Uitleg</h3>
+            <p className="mt-1.5 whitespace-pre-wrap text-[15px] leading-relaxed text-[var(--text-primary)]">{fallbackExplanation}</p>
+          </section>
+        )}
+        {task.notes?.trim() && fallbackExplanation && (
+          <section>
+            <h3 className="text-xs font-semibold uppercase tracking-wider text-[var(--text-muted)]">Extra context</h3>
+            <p className="mt-1.5 whitespace-pre-wrap text-[15px] leading-relaxed text-[var(--text-primary)]">{fallbackExplanation}</p>
           </section>
         )}
         {subtasks.length > 0 && (

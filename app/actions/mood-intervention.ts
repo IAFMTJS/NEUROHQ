@@ -13,6 +13,40 @@ import { revalidateTagMax } from "@/lib/revalidate";
 import { getUserPreferencesOrDefaults } from "@/app/actions/preferences";
 import type { Json } from "@/types/database.types";
 
+type MoodTaskEngineProfile = {
+  mission_intent: "recovery" | "execution";
+  task_type: "recovery" | "focus";
+  base_xp: number;
+  duration_minutes: number;
+};
+
+const DEFAULT_MOOD_TASK_PROFILE: MoodTaskEngineProfile = {
+  mission_intent: "recovery",
+  task_type: "recovery",
+  base_xp: 8,
+  duration_minutes: 15,
+};
+
+const MOOD_TASK_ENGINE_PROFILE: Record<Exclude<MoodLabel, "good">, MoodTaskEngineProfile> = {
+  overwhelmed: { mission_intent: "recovery", task_type: "recovery", base_xp: 8, duration_minutes: 15 },
+  tired: { mission_intent: "recovery", task_type: "recovery", base_xp: 8, duration_minutes: 20 },
+  low: { mission_intent: "recovery", task_type: "recovery", base_xp: 8, duration_minutes: 15 },
+  sick: { mission_intent: "recovery", task_type: "recovery", base_xp: 6, duration_minutes: 15 },
+  physical: { mission_intent: "recovery", task_type: "recovery", base_xp: 7, duration_minutes: 15 },
+  hyperfocus: { mission_intent: "execution", task_type: "focus", base_xp: 12, duration_minutes: 25 },
+  hyperactive: { mission_intent: "execution", task_type: "focus", base_xp: 11, duration_minutes: 15 },
+  drained_ok: { mission_intent: "recovery", task_type: "recovery", base_xp: 8, duration_minutes: 12 },
+  lazy: { mission_intent: "execution", task_type: "focus", base_xp: 9, duration_minutes: 10 },
+  sunny: { mission_intent: "execution", task_type: "focus", base_xp: 10, duration_minutes: 15 },
+  introverted_day: { mission_intent: "execution", task_type: "focus", base_xp: 10, duration_minutes: 20 },
+  extroverted_day: { mission_intent: "execution", task_type: "focus", base_xp: 10, duration_minutes: 15 },
+  calm: { mission_intent: "execution", task_type: "focus", base_xp: 10, duration_minutes: 20 },
+  focused: { mission_intent: "execution", task_type: "focus", base_xp: 12, duration_minutes: 25 },
+  motivated: { mission_intent: "execution", task_type: "focus", base_xp: 12, duration_minutes: 20 },
+  proud: { mission_intent: "execution", task_type: "focus", base_xp: 10, duration_minutes: 15 },
+  joyful: { mission_intent: "execution", task_type: "focus", base_xp: 10, duration_minutes: 15 },
+};
+
 function parsePersist(raw: unknown): MoodInterventionPersist {
   if (!raw || typeof raw !== "object") return {};
   const o = raw as Record<string, unknown>;
@@ -255,17 +289,21 @@ export async function saveDailyMoodLabel(label: MoodLabel): Promise<{ ok: boolea
   return { ok: true };
 }
 
-export async function addMoodInterventionTask(taskTitle: string): Promise<{ ok: boolean; error?: string }> {
+export async function addMoodInterventionTask(
+  taskTitle: string,
+  mood?: Exclude<MoodLabel, "good">
+): Promise<{ ok: boolean; error?: string }> {
   try {
     const today = todayDateString();
+    const profile = (mood ? MOOD_TASK_ENGINE_PROFILE[mood] : null) ?? DEFAULT_MOOD_TASK_PROFILE;
     await createTask({
       title: taskTitle,
       due_date: today,
       category: "personal",
-      mission_intent: "recovery",
-      task_type: "recovery",
-      base_xp: 8,
-      duration_minutes: 15,
+      mission_intent: profile.mission_intent,
+      task_type: profile.task_type,
+      base_xp: profile.base_xp,
+      duration_minutes: profile.duration_minutes,
     });
     return { ok: true };
   } catch (e) {

@@ -50,7 +50,7 @@ function MoodToastContent({
               type="button"
               className="rounded-xl border border-violet-400/25 bg-violet-950/40 px-3 py-2.5 text-left text-sm font-semibold text-[var(--text-primary)] transition hover:border-violet-400/45 hover:bg-violet-900/35"
               onClick={async () => {
-                const r = await addMoodInterventionTask(a.taskTitle);
+                const r = await addMoodInterventionTask(a.taskTitle, candidate.mood);
                 if (r.ok) {
                   neuroToast.success("Taak toegevoegd voor vandaag.");
                   toast.dismiss(toastId);

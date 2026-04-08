@@ -11,7 +11,18 @@ import { getPendingBudgetSnapshot, setPendingBudgetSnapshot } from "@/lib/client
 import { useBudgetLock } from "@/components/budget/BudgetLockContext";
 import { toastForBudgetEntryError } from "@/lib/ui/budget-guardrail-toasts";
 
-const CATEGORY_PRESETS = ["Eten", "Vervoer", "Abonnementen", "Boodschappen", "Uit eten", "Gezondheid", "Overig"];
+const CATEGORY_PRESETS = [
+  "Eten",
+  "Vervoer",
+  "Abonnementen",
+  "Boodschappen",
+  "Uit eten",
+  "Gezondheid",
+  "Impuls aankoop",
+  "Lifestyle",
+  "Cadeaus",
+  "Overig",
+];
 type QuickTag = "planned" | "impulse" | "necessary";
 const QUICK_TAG_OPTIONS: { value: QuickTag; label: string }[] = [
   { value: "planned", label: "Planned" },
@@ -24,6 +35,7 @@ const STORE_OPTIONS = ["Albert Heijn", "Jumbo", "Lidl", "Aldi", "Plus", "Dirk", 
 const EATEN_OPTIONS = ["Thuis", "Delivery", "Kantine", "Meal prep", "Overig"];
 const TRANSPORT_OPTIONS = ["NS", "OV-chip", "Uber / taxi", "Tankstation", "Fiets/onderhoud", "Overig"];
 const HEALTH_OPTIONS = ["Apotheek", "Huisarts", "Tandarts", "Ziekenhuis", "Overig"];
+const LIFESTYLE_OPTIONS = ["Kledij", "Accessoires", "Parfum", "Beauty", "Wellness", "Overig"];
 
 const QUICK_ADD_AMOUNTS = [5, 10, 20, 50];
 const TRANSIENT_SERVER_ACTION_ERROR = "An unexpected response was received from the server.";
@@ -103,7 +115,14 @@ export function AddBudgetEntryForm({
     const effectiveNote =
       quickMode && quickTag === "impulse" && !note.trim() ? "Impulse" : note || undefined;
     const detailForCategory =
-      category === "Eten" || category === "Vervoer" || category === "Uit eten" || category === "Gezondheid" || category === "Overig"
+      category === "Eten" ||
+      category === "Vervoer" ||
+      category === "Uit eten" ||
+      category === "Gezondheid" ||
+      category === "Lifestyle" ||
+      category === "Impuls aankoop" ||
+      category === "Cadeaus" ||
+      category === "Overig"
         ? (detailName || null)
         : null;
     startTransition(async () => {
@@ -514,6 +533,45 @@ export function AddBudgetEntryForm({
                   <option key={o} value={o}>{o}</option>
                 ))}
               </select>
+            </div>
+          )}
+          {category === "Lifestyle" && (
+            <div className="mt-1">
+              <span className="text-xs text-[var(--text-muted)]">Type</span>
+              <select
+                value={detailName || ""}
+                onChange={(e) => setDetailName(e.target.value)}
+                className="mt-0.5 w-full rounded-lg border border-[var(--card-border)] bg-[var(--bg-primary)] px-3 py-2 text-sm text-[var(--text-primary)] focus:border-[var(--accent-focus)] focus:outline-none focus:ring-2 focus:ring-[var(--accent-focus)]/30"
+              >
+                <option value="">— Kies (optioneel)</option>
+                {LIFESTYLE_OPTIONS.map((o) => (
+                  <option key={o} value={o}>{o}</option>
+                ))}
+              </select>
+            </div>
+          )}
+          {category === "Impuls aankoop" && (
+            <div className="mt-1">
+              <span className="text-xs text-[var(--text-muted)]">Waarover ging de aankoop?</span>
+              <input
+                type="text"
+                value={detailName}
+                onChange={(e) => setDetailName(e.target.value)}
+                placeholder="Bijv. gadget, snack, online deal"
+                className="mt-0.5 w-full rounded-lg border border-[var(--card-border)] bg-[var(--bg-primary)] px-3 py-2 text-sm text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:border-[var(--accent-focus)] focus:outline-none focus:ring-2 focus:ring-[var(--accent-focus)]/30"
+              />
+            </div>
+          )}
+          {category === "Cadeaus" && (
+            <div className="mt-1">
+              <span className="text-xs text-[var(--text-muted)]">Voor wie / gelegenheid</span>
+              <input
+                type="text"
+                value={detailName}
+                onChange={(e) => setDetailName(e.target.value)}
+                placeholder="Bijv. verjaardag, huwelijk, feestdag"
+                className="mt-0.5 w-full rounded-lg border border-[var(--card-border)] bg-[var(--bg-primary)] px-3 py-2 text-sm text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:border-[var(--accent-focus)] focus:outline-none focus:ring-2 focus:ring-[var(--accent-focus)]/30"
+              />
             </div>
           )}
           {category === "Overig" && (

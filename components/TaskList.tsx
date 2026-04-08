@@ -650,7 +650,7 @@ export function TaskList({
     setCompletingIds((prev) => new Set(prev).add(id));
     startTransition(async () => {
       try {
-        const result = await completeTaskOffline(id);
+        const result = await completeTaskOffline(id, { date });
         presentCompleteTaskFeedback(id, result ?? undefined);
         if (nextCandidateTask) {
           setNextMissionPromptTask(nextCandidateTask);
@@ -1211,7 +1211,9 @@ export function TaskList({
                     startTransition(() => {
                       void (async () => {
                         try {
-                          const subResult = await completeTaskOffline(s.id);
+                          const subResult = await completeTaskOffline(s.id, {
+                            date: s.due_date ?? date,
+                          });
                           presentCompleteTaskFeedback(s.id, subResult ?? undefined);
                           void refreshMergedSnapshotFromNetwork();
                           router.refresh();

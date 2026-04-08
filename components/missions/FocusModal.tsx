@@ -109,7 +109,7 @@ export function FocusModal({ open, onClose, taskId, taskTitle, date: dateProp, t
         completed_at: new Date().toISOString(),
       } as any);
     }
-    completeTaskOffline(taskId, { startedAt: sessionStartedAt }).then((result) => {
+    completeTaskOffline(taskId, { startedAt: sessionStartedAt, date }).then((result) => {
       onComplete?.(result ?? undefined);
       router.refresh();
       onClose();

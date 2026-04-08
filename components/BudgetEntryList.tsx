@@ -22,7 +22,18 @@ type Goal = { id: string; name: string; target_cents: number; current_cents: num
 
 const ENTRY_PAGE_SIZE = 30;
 
-const BUDGET_CATEGORY_PRESETS = ["Eten", "Vervoer", "Abonnementen", "Boodschappen", "Uit eten", "Gezondheid", "Overig"];
+const BUDGET_CATEGORY_PRESETS = [
+  "Eten",
+  "Vervoer",
+  "Abonnementen",
+  "Boodschappen",
+  "Uit eten",
+  "Gezondheid",
+  "Impuls aankoop",
+  "Lifestyle",
+  "Cadeaus",
+  "Overig",
+];
 
 export function BudgetEntryList({
   entries,

@@ -158,8 +158,40 @@ async function runStep(snapshot: DailySnapshot, step: PreloadStepId): Promise<Da
   switch (step) {
     case "fetchMissions": {
       try {
-        const boot = await fetchBootstrapTodayWithBody();
+        let boot = await fetchBootstrapTodayWithBody();
         lastBootstrapInitFetchStatus = boot.ok ? null : boot.status;
+        // First-load hardening: if first bootstrap is unusable (empty shell / SW edge), do one forced retry.
+        if (!boot.ok || !isBootstrapTodayPayloadUsable(boot.data)) {
+          await new Promise((r) => setTimeout(r, 140));
+          const retryRes = await fetch(`/api/bootstrap/today?_nb=${Date.now()}&_retry=1`, {
+            method: "GET",
+            credentials: "include",
+            cache: "no-store",
+            headers: {
+              "x-neurohq-refresh": "1",
+              "cache-control": "no-cache",
+              pragma: "no-cache",
+            },
+          });
+          if (retryRes.ok) {
+            try {
+              const retryData = (await retryRes.json()) as BootstrapTodayResponse;
+              if (isBootstrapTodayPayloadUsable(retryData)) {
+                boot = { ok: true, status: retryRes.status, data: retryData };
+                lastBootstrapInitFetchStatus = null;
+              } else {
+                boot = { ok: false, status: retryRes.status, data: null };
+                lastBootstrapInitFetchStatus = retryRes.status;
+              }
+            } catch {
+              boot = { ok: false, status: retryRes.status, data: null };
+              lastBootstrapInitFetchStatus = retryRes.status;
+            }
+          } else {
+            boot = { ok: false, status: retryRes.status, data: null };
+            lastBootstrapInitFetchStatus = retryRes.status;
+          }
+        }
         if (!boot.ok) return snapshot;
         const data = boot.data as {
           date?: string;

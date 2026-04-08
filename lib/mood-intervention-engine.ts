@@ -31,6 +31,8 @@ const CHAOS_PLANNED = 7;
 const CHAOS_DONE = 2;
 const MANY_INCOMPLETE = 11;
 const DROP_RATIO = 0.35;
+const FOCUS_FLOW_ACTIVE_SEC = 90 * 60;
+const COMEBACK_RATIO = 1.4;
 
 function activityScore(a: AnalyticsDay | null): number {
   if (!a) return 0;
@@ -70,6 +72,7 @@ export function pickMoodTrigger(input: MoodEngineInput): MoodTriggerId | null {
   const prev7 = prevDaysAnalytics.filter((d) => d.date < input.today).slice(-7);
   const avgPrev = avgPrevActivityScore(prev7);
   const todayScore = activityScore(todayAnalytics);
+  const activeToday = todayAnalytics?.active_seconds ?? 0;
 
   const isoPrev = (from: string, daysBack: number): string => {
     const x = new Date(from + "T12:00:00Z");
@@ -95,7 +98,6 @@ export function pickMoodTrigger(input: MoodEngineInput): MoodTriggerId | null {
   }
 
   // 2) Late night + already heavy use today
-  const activeToday = todayAnalytics?.active_seconds ?? 0;
   if (
     isLateNightWindow(localHour, localMinute, lateNightBiasMinutes) &&
     activeToday >= 45 * 60
@@ -128,11 +130,30 @@ export function pickMoodTrigger(input: MoodEngineInput): MoodTriggerId | null {
     return "low_physical_score";
   }
 
+  // 8) Positive focus flow: substantial focused time + tangible completions.
+  if (activeToday >= FOCUS_FLOW_ACTIVE_SEC && completedToday >= 3 && incompleteToday <= 2) {
+    return "focus_flow";
+  }
+
+  // 9) Comeback day: much stronger than your recent baseline.
+  if (avgPrev >= 2 && todayScore >= avgPrev * COMEBACK_RATIO && completedToday >= 2) {
+    return "comeback_day";
+  }
+
+  // 10) Steady consistency: good execution frequency across the week.
+  const consistentDays = prev7.filter((d) => (d.tasks_completed ?? 0) >= 1).length;
+  if (consistentDays >= 4 && completedToday >= 1) {
+    return "steady_consistency";
+  }
+
   return null;
 }
 
 export function titleForTrigger(triggerId: MoodTriggerId, salt: number): string {
-  const titles = ["Even eerlijk", "Stop even", "Je zit niet lekker"];
+  const positive: MoodTriggerId[] = ["focus_flow", "comeback_day", "steady_consistency"];
+  const titles = positive.includes(triggerId)
+    ? ["Sterk bezig", "Momentum check", "Dit gaat goed"]
+    : ["Even eerlijk", "Stop even", "Je zit niet lekker"];
   return titles[salt % titles.length];
 }
 

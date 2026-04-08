@@ -296,6 +296,53 @@ export async function getOutboxDepth(): Promise<number> {
   return allRows.filter((row) => row.status === "queued" || row.status === "processing").length;
 }
 
+export type OutboxDeadLetterSample = {
+  id: string;
+  action: string;
+  lastError: string | null;
+  retries: number;
+  createdAt: number;
+};
+
+export async function getOutboxDeadLetterCount(): Promise<number> {
+  const native = await getNativeSqliteDb();
+  if (native) {
+    const result = await native.query("SELECT COUNT(1) AS c FROM outbox WHERE status = 'dead_letter'");
+    return Number(result.values?.[0]?.c ?? 0);
+  }
+  const allRows = await withStore<OutboxRow[]>(STORE_OUTBOX, "readonly", (store) => idbGetAll<OutboxRow>(store));
+  return allRows.filter((row) => row.status === "dead_letter").length;
+}
+
+export async function listOutboxDeadLetterSample(limit: number): Promise<OutboxDeadLetterSample[]> {
+  const cap = Math.max(1, Math.min(20, Math.floor(limit)));
+  const native = await getNativeSqliteDb();
+  if (native) {
+    const result = await native.query(
+      `SELECT id, action, last_error, retries, created_at FROM outbox WHERE status = 'dead_letter' ORDER BY created_at DESC LIMIT ${cap}`
+    );
+    return (result.values ?? []).map((row) => ({
+      id: String(row.id),
+      action: String(row.action),
+      lastError: row.last_error == null ? null : String(row.last_error),
+      retries: Number(row.retries ?? 0),
+      createdAt: Number(row.created_at ?? 0),
+    }));
+  }
+  const allRows = await withStore<OutboxRow[]>(STORE_OUTBOX, "readonly", (store) => idbGetAll<OutboxRow>(store));
+  return allRows
+    .filter((r) => r.status === "dead_letter")
+    .sort((a, b) => b.createdAt - a.createdAt)
+    .slice(0, cap)
+    .map((r) => ({
+      id: r.id,
+      action: r.action,
+      lastError: r.lastError,
+      retries: r.retries,
+      createdAt: r.createdAt,
+    }));
+}
+
 export async function getSyncCheckpoint(domain: string): Promise<SyncCheckpointRow | null> {
   const native = await getNativeSqliteDb();
   if (native) {

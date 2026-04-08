@@ -211,6 +211,73 @@ type ExternalAutomissionSeed = {
   description: string;
 };
 
+function isDescriptionTooVague(input: string | null | undefined): boolean {
+  const text = (input ?? "").trim();
+  if (!text) return true;
+  const normalized = text.toLowerCase().replace(/[^\p{L}\p{N}\s]/gu, "").trim();
+  if (!normalized) return true;
+  const words = normalized.split(/\s+/).filter(Boolean);
+  if (words.length <= 3) return true;
+  const vagueSnippets = new Set([
+    "creatieve flow",
+    "intens creeren",
+    "volledig alleen",
+    "complex oplossen",
+    "flow verlengen",
+    "geen switch",
+    "lang focus",
+    "intens leren",
+    "diepe focus",
+    "obsessie benutten",
+    "blijven doorgaan",
+    "max output",
+    "1 doel",
+    "skill trainen",
+    "tijd vergeten",
+    "geen prikkels",
+    "geen onderbreking",
+    "niets doen",
+    "afkoppelen",
+    "staren",
+    "geen input",
+  ]);
+  return vagueSnippets.has(normalized);
+}
+
+function actionHintForSubcategory(seed: ExternalAutomissionSeed): string {
+  switch (seed.subcategory) {
+    case "focus_attention":
+      return "kies 1 duidelijke output, zet notificaties uit en werk zonder taakwissel";
+    case "focus_reflection":
+      return "noteer wat werkte, wat niet werkte en wat je eerstvolgende stap is";
+    case "energy_recovery":
+      return "doe een rustige herstelactiviteit zonder prestatiedruk en zonder multitask";
+    case "energy_movement":
+      return "kies lichte beweging en houd je aandacht bij ademhaling en ritme";
+    case "energy_nervous_system":
+      return "kalmeer je systeem met trage ademhaling en minimale externe prikkels";
+    case "growth_learning":
+    case "growth_cognitive":
+      return "werk met 1 leerdoel en sluit af met 2-3 kerninzichten";
+    case "hobby_creative":
+      return "maak iets tastbaars of zichtbaar in plaats van alleen te consumeren";
+    case "courage":
+      return "kies 1 concrete sociale actie die je normaal uitstelt en voer die nu uit";
+    default:
+      return "kies 1 concrete stap, werk afleidingsvrij en rond af met een zichtbaar resultaat";
+  }
+}
+
+function resolvedExternalDescription(seed: ExternalAutomissionSeed): string {
+  const raw = seed.description?.trim() ?? "";
+  if (!isDescriptionTooVague(raw)) return raw;
+  const durationLabel =
+    seed.durationMinutes && seed.durationMinutes > 0
+      ? `${seed.durationMinutes} minuten`
+      : "een afgebakend blok";
+  return `${seed.title}: werk ${durationLabel} in ${seed.subcategory.replaceAll("_", " ")}. Concreet: ${actionHintForSubcategory(seed)}.`;
+}
+
 const CORE_MASTER_MISSION_POOL: MasterMissionTemplate[] = [
   // Structure: Micro/Deep Cleaning, Administration, Control & Planning
   {
@@ -737,7 +804,7 @@ function mergeExternalMasterMissions(
       energy,
       durationMinutes,
       tags,
-      description: seed.description?.trim() || "Imported mission template.",
+      description: resolvedExternalDescription(seed),
     });
     seenIds.add(id);
     seenTitles.add(titleKey);

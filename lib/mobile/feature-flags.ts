@@ -35,12 +35,22 @@ export function isNativeCapacitorRuntime(): boolean {
   }
 }
 
+/**
+ * Supabase-first offline queue + entity cache (IndexedDB in browser/PWA, SQLite on native).
+ *
+ * - Native Capacitor: set NEXT_PUBLIC_MOBILE_SYNC_ENABLED=1 (and optional ROLLOUT).
+ * - Browser/PWA: zet daarnaast NEXT_PUBLIC_MOBILE_SYNC_PWA=1 zodat dezelfde outbox/cache-pad
+ *   actief is zonder native shell (aanbevolen zolang de store-app nog niet live is).
+ */
 export function isSupabaseFirstMobileEnabled(): boolean {
-  // Keep website/PWA on the stable Supabase path; enable this only in native Capacitor runtime.
-  if (!isNativeCapacitorRuntime()) return false;
   const enabled = process.env.NEXT_PUBLIC_MOBILE_SYNC_ENABLED;
-  // Safety default: do not hijack existing Supabase data paths unless explicitly enabled.
   if (enabled !== "1" && enabled !== "true") return false;
+
+  const native = isNativeCapacitorRuntime();
+  const pwaFlag = process.env.NEXT_PUBLIC_MOBILE_SYNC_PWA;
+  const pwaAllowed = pwaFlag === "1" || pwaFlag === "true";
+  if (!native && !pwaAllowed) return false;
+
   const rollout = envPercent("NEXT_PUBLIC_MOBILE_SYNC_ROLLOUT", 100);
   return readBucket() < rollout;
 }

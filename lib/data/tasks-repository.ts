@@ -19,6 +19,35 @@ function cacheKey(date: string): string {
   return `tasks:${date}`;
 }
 
+/**
+ * Merge a completed task into `entity_cache` for `tasks:<date>` so local-first reads stay consistent
+ * after optimistic UI (native mobile sync only).
+ */
+export async function patchTaskCompleteInEntityCache(
+  date: string,
+  taskId: string,
+  completedAt: string
+): Promise<void> {
+  if (!isSupabaseFirstMobileEnabled() || !/^\d{4}-\d{2}-\d{2}$/.test(date)) return;
+  const key = cacheKey(date);
+  const row = await getEntityCacheRow(key);
+  if (!row || !Array.isArray(row.payload)) return;
+  const tasks = row.payload as Task[];
+  const idx = tasks.findIndex((t) => t.id === taskId);
+  if (idx === -1) return;
+  const next = tasks.slice();
+  next[idx] = { ...next[idx], completed: true, completed_at: completedAt };
+  const now = Date.now();
+  await upsertEntityCacheRow({
+    key,
+    payload: next,
+    etag: row.etag,
+    serverVersion: row.serverVersion,
+    fetchedAt: now,
+    staleAt: Math.max(row.staleAt, now + TASKS_STALE_MS),
+  });
+}
+
 async function fetchTasksFromServer(date: string, signal?: AbortSignal): Promise<Task[]> {
   try {
     const checkpoint = await getSyncCheckpoint(`tasks:${date}`);

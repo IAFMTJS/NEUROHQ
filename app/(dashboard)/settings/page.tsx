@@ -29,6 +29,10 @@ const SettingsAbout = nextDynamic(() => import("@/components/SettingsAbout").the
 const ThemePicker = nextDynamic(() => import("@/components/settings/ThemePicker").then((m) => ({ default: m.ThemePicker })), { loading: () => null });
 const SettingsWhereToConfigure = nextDynamic(() => import("@/components/settings/SettingsWhereToConfigure").then((m) => ({ default: m.SettingsWhereToConfigure })), { loading: () => null });
 const SettingsClearCache = nextDynamic(() => import("@/components/settings/SettingsClearCache").then((m) => ({ default: m.SettingsClearCache })), { loading: () => null });
+const SettingsMobileSyncHealth = nextDynamic(
+  () => import("@/components/settings/SettingsMobileSyncHealth").then((m) => ({ default: m.SettingsMobileSyncHealth })),
+  { loading: () => null },
+);
 const SettingsRefreshSnapshot = nextDynamic(() => import("@/components/settings/SettingsRefreshSnapshot").then((m) => ({ default: m.SettingsRefreshSnapshot })), { loading: () => null });
 const SettingsHardRefresh = nextDynamic(() => import("@/components/settings/SettingsHardRefresh").then((m) => ({ default: m.SettingsHardRefresh })), { loading: () => null });
 const SettingsDCICModeTest = nextDynamic(() => import("@/components/settings/SettingsDCICModeTest").then((m) => ({ default: m.SettingsDCICModeTest })), { loading: () => null });
@@ -121,7 +125,7 @@ async function SettingsContent() {
         id="settings-section-system"
         title="Systeem"
         subtitle="Thema, budget, DCIC en lokale appcontrole"
-        searchText="thema neuro amber emerald dcic modus snapshot cache harde refresh volledig vernieuwen service worker xp level dark mode budget valuta eur usd impuls drempel periode maand week categorie risk quick add geluid spraak tts"
+        searchText="thema neuro amber emerald dcic modus snapshot cache harde refresh volledig vernieuwen service worker mobiele sync outbox dead letter xp level dark mode budget valuta eur usd impuls drempel periode maand week categorie risk quick add geluid spraak tts"
       >
         <ThemePicker />
         <SettingsUiFeedback
@@ -140,6 +144,7 @@ async function SettingsContent() {
         <SettingsDCICModeTest />
         <SettingsHardRefresh />
         <SettingsClearCache />
+        <SettingsMobileSyncHealth />
         <SettingsRefreshSnapshot />
       </SettingsSectionCard>
 

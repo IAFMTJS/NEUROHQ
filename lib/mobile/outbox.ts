@@ -1,5 +1,6 @@
 import { OUTBOX_MAX_RETRIES, type OutboxActionType } from "@/lib/mobile/supabase-first-contract";
 import { getOutboxDepth, getOutboxRowsReady, removeOutboxRow, upsertOutboxRow } from "@/lib/mobile/db";
+import { recordDeadLetterHint } from "@/lib/mobile/metrics";
 import type { OutboxRow } from "@/lib/mobile/schema";
 
 function makeId(): string {
@@ -59,6 +60,9 @@ export async function markOutboxActionFailed(row: OutboxRow, errorMessage: strin
     status: deadLetter ? "dead_letter" : "queued",
   };
   await upsertOutboxRow(nextRow);
+  if (deadLetter) {
+    recordDeadLetterHint(row.action, errorMessage);
+  }
   return nextRow;
 }
 

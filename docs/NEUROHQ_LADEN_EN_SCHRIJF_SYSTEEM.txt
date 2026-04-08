@@ -1,0 +1,353 @@
+================================================================================
+NEUROHQ — LAAD- EN SCHRIJFARCHITECTUUR (DATA, CACHE, SYNC)
+================================================================================
+Versie: 2026-04-07. Bedoeld als referentie voor developers. Code is leidend bij
+afwijkingen.
+
+--------------------------------------------------------------------------------
+1. KERNPRINCIPE
+--------------------------------------------------------------------------------
+
+- Supabase (Postgres + Auth + RLS) is de ENIGE bron van waarheid voor
+  blijvende gebruikersdata.
+
+- De Next.js-server (server actions + API-routes) voert businesslogica uit en
+  praat met Supabase met de normale serverclient (sessie, RLS).
+
+- Clients (browser, PWA, Capacitor WebView) houden GEEN “tweede master” bij:
+  lokale opslag = cache, UI-state, mutatiewachtrij (outbox), of statische assets.
+
+- Conflicten: standaard “server wint”, tenzij een domein expliciet anders
+  documenteert (zie lib/mobile/supabase-first-contract.ts).
+
+
+--------------------------------------------------------------------------------
+2. CAPACITOR (NATIVE SHELL)
+--------------------------------------------------------------------------------
+
+Wat het is:
+- iOS/Android-app die een WebView start en dezelfde gehoste Next-app laadt
+  (server.url in capacitor.config.ts → productie-URL, bijv. Vercel).
+
+Wat het NIET is:
+- Geen vervanging van Supabase; geen aparte “native database” voor
+  domeindata buiten het bewuste SQLite-schema.
+
+Native mogelijkheden die WEL worden gebruikt:
+- @capacitor-community/sqlite — SQLite-database “neurohq_mobile” op device.
+- @capacitor/filesystem + SQLite-registry — download/warm-cache van statische
+  visuals; Capacitor.convertFileSrc voor lokale file-URL’s in <img> / CSS-vars.
+- @capacitor/app — appStateChange (o.a. sync/outbox opnieuw proberen).
+- @capacitor/splash-screen — splash verbergen na eerste paint (launchAutoHide:
+  false + JS hide).
+
+Zie: capacitor.config.ts, components/MobileSyncBootstrap.tsx,
+lib/mobile/native-fs-cache.ts, lib/mobile/native-css-assets.ts.
+
+
+--------------------------------------------------------------------------------
+3. SQLite (CAPACITOR) vs INDEXEDDB (BROWSER / FALLBACK)
+--------------------------------------------------------------------------------
+
+lib/mobile/db.ts kiest automatisch:
+- iOS/Android + succesvolle SQLite-open: alle “mobile cache”-tabellen in
+  SQLite.
+- Anders: dezelfde abstractie valt terug op IndexedDB onder database naam
+  MOBILE_DB_NAME = "neurohq-mobile-cache" (lib/mobile/schema.ts), met stores:
+  - entityCache   — serverpayloads met stale_at
+  - outbox        — mutaties wachtend op push
+  - syncCheckpoint — pull-cursors per domein
+
+Alleen native: extra SQLite-tabellen (geen IDB-equivalent in die DB):
+- native_asset_registry — koppeling URL → pad in app-private Filesystem
+- native_extended_kv — kleine metadata (bijv. asset pack-versie)
+
+Dit is bewust: PWA gebruikt geen Capacitor Filesystem; visuals blijven via
+netwerk/SW.
+
+
+--------------------------------------------------------------------------------
+4. ENTITY CACHE (READ-THROUGH / LOCAL-FIRST)
+--------------------------------------------------------------------------------
+
+Doel: snelle reads en beperkte offline-leesbaarheid.
+
+Voorbeeld: taken per dag — lib/data/tasks-repository.ts
+- Sleutel: "tasks:YYYY-MM-DD"
+- Bij ingeschakelde mobile sync: getTasksForDateLocalFirst leest eerst
+  entity_cache als stale_at nog niet verstreken (of preferCache), anders
+  fetch naar server en schrijft cache opnieuw.
+- Fetch kan /api/mobile/sync/pull?domain=tasks&date=... gebruiken, of bij
+  falen /api/tasks?date=...
+
+Na optimistisch “taak voltooid” op native: patchTaskCompleteInEntityCache
+past de cache voor die dag aan zodat heropenen consistent blijft met de UI.
+
+
+--------------------------------------------------------------------------------
+5. OUTBOX + SYNC-ENGINE (SCHRIJVEN OFFLINE / ACHTERGROND)
+--------------------------------------------------------------------------------
+
+Componenten:
+- lib/mobile/outbox.ts — enqueueOutboxAction, rijen in SQLite/IDB
+- lib/mobile/sync-engine.ts — flushOutboxQueue → POST /api/mobile/sync/push
+
+Push gebruikt:
+- Cookie-sessie (credentials: include)
+- Header x-neurohq-idempotency-key (per mutatie)
+- Body: action, payload, mutationId
+
+Server (app/api/mobile/sync/push/route.ts):
+- Valideert user (Supabase server client)
+- Bij bekende idempotency_key: replay uit mobile_sync_receipts
+- Voert server actions uit (createTask, completeTask, …) → uiteindelijk
+  Supabase
+
+Batch: na succesvolle pushes worden rijen in één keer uit outbox gehaald
+(removeOutboxRowsBatch) voor minder SQLite-roundtrips.
+
+Triggers voor flush (niet exhaustief):
+- Na enqueue (void flushOutboxQueue)
+- MobileSyncBootstrap: interval, online event, visibilitychange, appStateChange
+- Service worker / andere callers die flushOutboxQueue aanroepen
+
+
+--------------------------------------------------------------------------------
+6. PULL API (LEZEN NAAR CACHE)
+--------------------------------------------------------------------------------
+
+GET /api/mobile/sync/pull?domain=...
+- domain=tasks&date=YYYY-MM-DD — takenlijst voor dag
+- domain=budget — budget/finance snapshot
+- domain=dashboard — dashboard payload (critical/secondary)
+
+Authenticatie: Supabase sessie via createClient() server-side.
+Antwoord bevat o.a. cursor; client kan sync_checkpoint bijwerken.
+
+
+--------------------------------------------------------------------------------
+7. IDEMPOTENTIE (SUPABASE TABEL)
+--------------------------------------------------------------------------------
+
+Migratie: supabase/migrations/125_mobile_sync_receipts.sql (en verwijzingen)
+
+Tabel mobile_sync_receipts bewaart per user + idempotency_key het
+serverantwoord zodat retries geen dubbele side-effects geven.
+
+
+--------------------------------------------------------------------------------
+8. LEGACY OFFLINE QUEUE (INDEXEDDB)
+--------------------------------------------------------------------------------
+
+Database: neurohq-offline-actions, store pendingActions
+(lib/offline-queue.ts)
+
+Gebruik als mobile sync UIT staat en client offline is: o.a. completeTask in
+wachtrij; bij online replay via OfflineQueueSync / background sync.
+
+Als mobile sync AAN staat: addToQueue mapt bekende acties naar SQLite-outbox
+(mapLegacyQueueToOutbox in lib/mobile/legacy-queue-bridge.ts) i.p.v. alleen
+legacy IDB.
+
+Taak voltooien met mobile sync AAN: useOfflineCompleteTask gebruikt direct
+patch + queueCompleteTaskMutation (geen directe completeTask server call op
+online native — sync op achtergrond).
+
+
+--------------------------------------------------------------------------------
+9. SUPABASE — WANNEER WORDT HET AANGEROEPEN?
+--------------------------------------------------------------------------------
+
+Vanaf de SERVER (Next.js):
+- Alle server actions en API-routes die createClient() uit lib/supabase/server
+  gebruiken: auth.getUser(), .from(...).select/update, RPC’s, enz.
+- Mobile push/pull zijn dunne lagen: ze roepen dezelfde acties aan als de web
+  UI waar mogelijk, daarna schrijft Postgres via RLS.
+
+Vanaf de CLIENT (browser / WebView):
+- @supabase/supabase-js client voor real-time UI of auth in sommige flows
+  (o.a. login); blijvende domain writes lopen bij voorkeur via server actions
+  of mobile push om logica te centraliseren.
+
+Kort: “waarheid” komt uit Supabase; client-side calls naar Supabase zijn
+meestal lees of session, niet de primaire plek voor complexe business writes
+naast mobile push.
+
+
+--------------------------------------------------------------------------------
+10. SERVICE WORKER (PWA) — public/sw.js
+--------------------------------------------------------------------------------
+
+- Precache van statische publieke assets (icons, nav, backgrounds, …).
+- Offline HTML/API strategieën; niet hetzelfde als SQLite.
+- Heeft GEEN toegang tot Capacitor SQLite.
+
+Wel: verbetert herhaalde loads in de browser/PWA; parallel aan native
+warm-cache voor dezelfde URL-paden waar mogelijk.
+
+
+--------------------------------------------------------------------------------
+11. ANDERE INDEXEDDB / LOCAL STORAGE (NIET ALLEEN MOBILE CACHE)
+--------------------------------------------------------------------------------
+
+Los van neurohq-mobile-cache:
+
+- neurohq-offline-actions — legacy pending mutations (zie §8).
+- neurohq-game-state — DCIC gameState cache (lib/dcic/game-state-cache.ts).
+- neurohq-xp-cache — XP-pagina snapshot (lib/xp-cache.ts).
+- Dashboard/other: lib/dashboard-cache.ts — check codebase.
+
+localStorage (fragmenten):
+- neurohq:* keys — o.a. mutation queue spoor in lib/client-cache.ts,
+  rollout-bucket lib/mobile/feature-flags.ts.
+- Theme, UI geluid, persona/callsign mirrors (ThemeHydrate, user-persona-
+  storage, ui-feedback).
+- Supabase Auth persist session zit in browser storage (Supabase default);
+  BootstrapLoader scant keys voor “waarschijnlijk ingelogd”.
+
+sessionStorage: incidenteel (bv. toast guards).
+
+Dit zijn UX/shell caches — geen vervanging van Supabase domain tables.
+
+
+--------------------------------------------------------------------------------
+12. DAILY SNAPSHOT / BOOTSTRAP
+--------------------------------------------------------------------------------
+
+lib/daily-bootstrap.ts, lib/daily-snapshot-storage.ts, lib/tasks-bootstrap.ts en
+gerelateerde modules vullen de “dag”-state (missions, merged snapshot). Dit is
+een afzonderlijke clientbootstrap-laag naast entity_cache: merge-regels
+bepalen hoe server vs lokale voltooide taken samengaan
+(bijv. mergeTasksPreferringLocalCompletedWhenServerStale). Raadpleeg die files
+voor exacte volgorde bij refresh na sync.
+
+
+--------------------------------------------------------------------------------
+13. ZUSTAND (useHQStore) EN TANSTACK QUERY
+--------------------------------------------------------------------------------
+
+- Zustand: in-memory + soms gesynchroniseerd met props/bootstrap; snelle
+  optimistische UI (taken per datum in tasksByDate).
+- TanStack Query: bootstrap/today en andere views; cache in geheugen + refetch.
+
+Stroom: vaak “optimistische Zustand” + later server refresh; op native mobile
+sync komt entity_cache eronder voor local-first reads.
+
+
+--------------------------------------------------------------------------------
+14. STATISCHE VISUALS — FILESYSTEM + NATIVE TAGGEN
+--------------------------------------------------------------------------------
+
+- lib/mobile/native-asset-manifest.ts — welke URL’s preemptief worden gedownload.
+- warmNativeVisualAssetCacheCritical (snel) + warmNativeVisualAssetCache (idle).
+- NativeCachedImg / applyNativeResolvedCssAssets — zet img en CSS-variabelen
+  (--hq-asset-bg-tiles, …) op file-URL’s als geregistreerd.
+
+Dit verbetert perceived performance; heeft niets met tasks/budget data te maken.
+
+
+--------------------------------------------------------------------------------
+15. FEATURE FLAGS (MOBILE SYNC)
+--------------------------------------------------------------------------------
+
+lib/mobile/feature-flags.ts:
+- isNativeCapacitorRuntime() — echte iOS/Android app.
+- isSupabaseFirstMobileEnabled() — NEXT_PUBLIC_MOBILE_SYNC_ENABLED truthy,
+  EN rollout bucket, EN (native OF NEXT_PUBLIC_MOBILE_SYNC_PWA truthy).
+
+Gevolg:
+- Native: SQLite + Filesystem warm-cache (Capacitor-plugins).
+- PWA/browser met MOBILE_SYNC_PWA: dezelfde logica maar IndexedDB i.p.v. SQLite
+  (lib/mobile/db.ts); geen native asset-file cache.
+
+Zonder deze flags: klassieke fetches + server actions + legacy offline queue
+(neurohq-offline-actions).
+
+
+--------------------------------------------------------------------------------
+16. SAMENVATTING DATASTROOM
+--------------------------------------------------------------------------------
+
+LEZEN (typisch):
+  UI → (optioneel) Zustand/TanStack
+    → entity_cache (mobile sync aan + geldige stale_at)
+    → of fetch API (/api/... of mobile/pull)
+    → server actions → Supabase
+    → cache upsert
+
+SCHRIJVEN (web, mobile sync uit):
+  UI → server action direct OF offline queue → later server
+
+SCHRIJVEN (native, mobile sync aan):
+  UI optimistisch (Zustand) + entity_cache patch waar van toepassing
+    → outbox row
+    → achtergrond POST push
+    → server actions → Supabase
+    → outbox ack / replay via receipts
+
+
+--------------------------------------------------------------------------------
+17. RELEVANTE BESTANDEN (STARTPUNTEN)
+--------------------------------------------------------------------------------
+
+  lib/mobile/supabase-first-contract.ts — contract + architectuurcommentaar
+  lib/mobile/db.ts                     — SQLite + IDB abstractie
+  lib/mobile/outbox.ts
+  lib/mobile/sync-engine.ts
+  lib/data/tasks-repository.ts         — taken local-first + cache patch
+  app/hooks/useOfflineCompleteTask.ts
+  app/api/mobile/sync/push/route.ts
+  app/api/mobile/sync/pull/route.ts
+  lib/offline-queue.ts
+  lib/mobile/legacy-queue-bridge.ts
+  components/MobileSyncBootstrap.tsx
+  components/settings/SettingsMobileSyncHealth.tsx — native sync status (Instellingen)
+  capacitor.config.ts
+  public/sw.js
+
+
+--------------------------------------------------------------------------------
+18. UI: BRON VAN WAARHEID (MENTAAL MODEL)
+--------------------------------------------------------------------------------
+
+- Tijdens tikken: optimistische state in Zustand (bijv. taken per datum) → meteen
+  zichtbaar op dit toestel.
+- Na herstart / local-first read (mobile sync aan): entity_cache onder
+  tasks:<datum> als die nog vers is (stale_at); anders fetch + opnieuw vullen.
+- Definitieve serverstaat: Supabase via server actions / push.
+- Conflicten: server wint; merge-hulpfuncties (zoals mergeTasksPreferring...)
+  beperken flip-flop tussen cache en server.
+
+Doel: één helder verhaal — UI volgt eerst het toestel, daarna persistente cache,
+  daarna server.
+
+
+--------------------------------------------------------------------------------
+19. LEGACY OFFLINE QUEUE + BEHEER
+--------------------------------------------------------------------------------
+
+- IndexedDB neurohq-offline-actions blijft actief zolang mobile sync UIT is
+  (PWA/browser) of voor acties die nog niet naar de SQLite-outbox zijn gemapt.
+
+- Zodra NEXT_PUBLIC_MOBILE_SYNC_ENABLED overal gewenst is: plan om legacy
+  queue te beperken of te migreren zodat één mutatiepad overblijft — nu worden
+  bekende acties al naar de outbox gemapt wanneer mobile sync aan staat
+  (legacy-queue-bridge).
+
+- Instellingen → Systeem: “Offline sync & wachtrij” toont wanneer mobile sync
+  aan staat (PWA of native): wachtrij, dead letters, metrics, knop “Nu
+  synchroniseren”; toont ook of opslag IndexedDB of SQLite is.
+
+
+--------------------------------------------------------------------------------
+20. METRICS (localStorage) — AANVULLING
+--------------------------------------------------------------------------------
+
+lib/mobile/metrics.ts bewaart o.a. syncSuccess/Failure/Conflict, stale/fresh
+reads, outboxDepth-snapshot, en na dead letter: lastDeadLetterAt +
+lastDeadLetterSummary (korte hint voor het instellingenpaneel).
+
+
+================================================================================
+Einde document
+================================================================================

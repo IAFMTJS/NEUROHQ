@@ -7,7 +7,26 @@ import { saveDailyMoodLabel, addMoodInterventionTask } from "@/app/actions/mood-
 import { MOOD_LABEL_META, MOOD_QUICK_ACTIONS, type MoodLabel } from "@/lib/mood-intervention-config";
 import { neuroToast } from "@/lib/ui/neuro-toast";
 
-const ORDER: MoodLabel[] = ["overwhelmed", "tired", "low", "sick", "physical", "good"];
+const ORDER: MoodLabel[] = [
+  "overwhelmed",
+  "tired",
+  "low",
+  "sick",
+  "physical",
+  "hyperfocus",
+  "hyperactive",
+  "drained_ok",
+  "lazy",
+  "sunny",
+  "introverted_day",
+  "extroverted_day",
+  "calm",
+  "focused",
+  "motivated",
+  "proud",
+  "joyful",
+  "good",
+];
 
 type Props = {
   open: boolean;
@@ -63,7 +82,8 @@ export function MoodManualPanel({ open, onClose, onMoodSaved, brainStatusHint }:
   }
 
   async function addTask(title: string) {
-    const r = await addMoodInterventionTask(title);
+    const mood = actionsMoodRef.current;
+    const r = await addMoodInterventionTask(title, mood && mood !== "good" ? mood : undefined);
     if (r.ok) {
       neuroToast.success("Taak toegevoegd voor vandaag.");
       handleClose();

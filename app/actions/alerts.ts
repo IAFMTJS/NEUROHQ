@@ -323,6 +323,15 @@ async function ensureInboxAlertIfNew(
   const db = supabase as unknown as AnyDb;
   const tag = input.pushTag.slice(0, 120);
   if (await isAlertDedupeKeySuppressed(db, userId, tag)) return;
+  // Best-effort guard in case a deployment is missing the unique index migration.
+  const { data: existing } = await db
+    .from("user_alerts")
+    .select("id")
+    .eq("user_id", userId)
+    .eq("push_tag", tag)
+    .limit(1)
+    .maybeSingle();
+  if (existing) return;
   const { error } = await db.from("user_alerts").insert({
     user_id: userId,
     title: input.title.slice(0, 200),
@@ -409,11 +418,32 @@ export async function listUserAlertsForApi(limit = 30): Promise<UserAlertRow[]> 
   if (!user) return [];
   const { data, error } = await db
     .from("user_alerts")
-    .select("id, title, body, severity, link_path, read_at, push_sent_at, created_at")
+    .select("id, title, body, severity, link_path, read_at, push_sent_at, created_at, push_tag")
     .eq("user_id", user.id)
     .order("created_at", { ascending: false })
-    .limit(Math.min(80, Math.max(1, limit)));
+    .limit(Math.min(200, Math.max(20, limit * 3)));
 
   if (error) return [];
-  return (data ?? []) as UserAlertRow[];
+  const rows = (data ?? []) as Array<UserAlertRow & { push_tag?: string | null }>;
+  const seen = new Set<string>();
+  const deduped: UserAlertRow[] = [];
+  for (const row of rows) {
+    const rawTag = typeof row.push_tag === "string" ? row.push_tag.trim() : "";
+    const fallbackKey = `${row.title}::${row.body ?? ""}::${row.link_path ?? ""}`;
+    const key = rawTag || fallbackKey;
+    if (seen.has(key)) continue;
+    seen.add(key);
+    deduped.push({
+      id: row.id,
+      title: row.title,
+      body: row.body,
+      severity: row.severity,
+      link_path: row.link_path,
+      read_at: row.read_at,
+      push_sent_at: row.push_sent_at,
+      created_at: row.created_at,
+    });
+    if (deduped.length >= Math.min(80, Math.max(1, limit))) break;
+  }
+  return deduped;
 }

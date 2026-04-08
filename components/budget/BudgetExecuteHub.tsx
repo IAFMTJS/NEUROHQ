@@ -217,19 +217,8 @@ export function BudgetExecuteHub({
   }
 
   function openQuickLogToast() {
-    toast.custom(
-      (id) => (
-        <ToastChrome
-          toastId={id}
-          title="Quick log"
-          hint="Korte entry — sluit na opslaan of met ✕."
-          ariaLabel="Quick log"
-        >
-          <AddBudgetEntryForm date={today} currency={currency} mode="quick" onSuccess={() => toast.dismiss(id)} />
-        </ToastChrome>
-      ),
-      { duration: TOAST_DURATION_MS }
-    );
+    // Quick log acts as a fast entry point to the full ledger toast.
+    openLedgerToast();
   }
 
   function openLedgerToast() {
