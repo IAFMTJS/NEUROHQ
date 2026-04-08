@@ -6,6 +6,7 @@ import { useBootstrapToday } from "@/lib/use-bootstrap-today";
 import { getTodayKey } from "@/lib/daily-date";
 import { ProfileCommandDeckLayout } from "@/components/profile/ProfileCommandDeckLayout";
 import { profileEngineHref, profileHomeHref, profileInsightsHref, profileSpecialEventsHref } from "@/lib/profile-routes";
+import { getLoadingMascotSrc } from "@/lib/mascots";
 
 type Props = {
   main: "home" | "engine" | "insights" | "special";
@@ -23,6 +24,11 @@ export function ProfileSnapshotFallback({ main }: Props) {
   return (
     <ProfileCommandDeckLayout main={main}>
       <div className="card-simple space-y-3 !rounded-xl p-4 md:p-5">
+        <div className="flex justify-end">
+          <div className="h-12 w-12 rounded-full border border-[rgba(var(--mode-rgb),0.25)] bg-[rgba(6,18,30,0.42)] p-1.5">
+            <img src={getLoadingMascotSrc()} alt="" aria-hidden className="h-full w-full object-contain" />
+          </div>
+        </div>
         <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-[var(--text-muted)]">
           Loading profile
         </p>
