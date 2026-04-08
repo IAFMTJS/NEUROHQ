@@ -18,21 +18,21 @@ export function AuthMascotShell({ children, className = "" }: AuthMascotShellPro
       <img
         src={getLoginScreenMascotSrc()}
         alt="NEUROHQ auth mascot artwork"
-        className="relative z-[1] block w-full select-none object-cover drop-shadow-[0_0_44px_rgba(129,140,248,0.5)]"
+        className="relative z-[1] block w-full select-none object-cover drop-shadow-[0_0_48px_rgba(56,189,248,0.55)]"
         draggable={false}
       />
 
       <div
         aria-hidden
-        className="pointer-events-none absolute -left-[10%] -right-[10%] top-[18%] h-[56%] bg-[radial-gradient(ellipse_at_center,rgba(216,180,255,0.92),rgba(192,132,252,0.86)_28%,rgba(147,51,234,0.72)_48%,rgba(76,29,149,0.46)_66%,transparent_84%)] blur-3xl"
+        className="pointer-events-none absolute -left-[12%] -right-[12%] top-[18%] h-[58%] bg-[radial-gradient(ellipse_at_center,rgba(147,197,253,0.95),rgba(59,130,246,0.84)_28%,rgba(56,189,248,0.72)_48%,rgba(30,64,175,0.5)_67%,transparent_84%)] blur-3xl"
       />
       <div
         aria-hidden
-        className="pointer-events-none absolute -left-[14%] -right-[14%] top-[10%] h-[62%] bg-[radial-gradient(ellipse_at_center,rgba(168,85,247,0.56),rgba(124,58,237,0.34)_46%,transparent_76%)] blur-[95px]"
+        className="pointer-events-none absolute -left-[14%] -right-[14%] top-[9%] h-[64%] bg-[radial-gradient(ellipse_at_center,rgba(56,189,248,0.58),rgba(59,130,246,0.36)_44%,transparent_76%)] blur-[95px]"
       />
       <div
         aria-hidden
-        className="pointer-events-none absolute -left-[10%] -right-[10%] top-[24%] h-[34%] bg-[radial-gradient(ellipse_at_center,rgba(244,114,182,0.28),rgba(192,132,252,0.22)_42%,transparent_75%)] blur-[70px]"
+        className="pointer-events-none absolute -left-[10%] -right-[10%] top-[24%] h-[36%] bg-[radial-gradient(ellipse_at_center,rgba(125,211,252,0.34),rgba(96,165,250,0.26)_42%,transparent_75%)] blur-[72px]"
       />
       <div
         aria-hidden
@@ -40,7 +40,7 @@ export function AuthMascotShell({ children, className = "" }: AuthMascotShellPro
       />
 
       <section className="absolute left-[7%] right-[7%] top-[33%] bottom-[2.5%] z-10 overflow-hidden sm:top-[34%]">
-        <div className="relative h-full overflow-y-auto rounded-[18px] bg-[rgba(22,10,56,0.24)] p-2.5 backdrop-blur-[1.5px] sm:p-4">
+        <div className="relative h-full overflow-y-auto rounded-[18px] bg-[rgba(8,23,64,0.25)] p-2.5 backdrop-blur-[1.5px] sm:p-4">
           {children}
         </div>
       </section>

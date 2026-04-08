@@ -10,7 +10,7 @@ export type DashboardMascotMode = "focus" | "war" | "recovery" | "overdrive";
 
 export const DEFAULT_MASCOT_FILE = "Homepage Mascotte.png";
 export const LOADING_MASCOT_FILE = "Loading screen option 2.PNG";
-export const LOGIN_SCREEN_MASCOT_FILE = "LOGINEVENBIGGER.PNG";
+export const LOGIN_SCREEN_MASCOT_FILE = "LoginBlue.png";
 
 const MODE_MASCOT_FILE: Partial<Record<DashboardMascotMode, string>> = {
   war: "War Mode Mascotte.png",
