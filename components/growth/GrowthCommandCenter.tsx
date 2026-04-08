@@ -1,14 +1,14 @@
 "use client";
 
-import { useMemo, useTransition } from "react";
+import { useMemo, useState, useTransition } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import type { ProtocolLibraryRow } from "@/app/actions/protocol-library";
 import type { ProtocolProgressState } from "@/app/actions/protocol-progress";
-import { commitProtocolWeekToMissions } from "@/app/actions/protocol-missions";
+import { commitProtocolWeekToMissions, createProtocolCatchupRound } from "@/app/actions/protocol-missions";
 import { setGrowthFocusProtocol, setGrowthFocusAndCommitProtocolWeek } from "@/app/actions/growth-focus";
 import type { GrowthFocusState } from "@/app/actions/growth-focus";
-import { parseProtocolDefinition, maxWeekIndex, phaseForWeek, weekForIndex } from "@/lib/growth/protocol-definition";
+import { parseProtocolDefinition, getScaledTask, maxWeekIndex, phaseForWeek, weekForIndex } from "@/lib/growth/protocol-definition";
 import type { DifficultyTier } from "@/lib/growth/adaptive-engine";
 import { progressKey, resolveFocusProtocol } from "@/lib/growth/resolve-focus-protocol";
 import { tierLabelNl } from "@/lib/growth/tier-labels";
@@ -19,6 +19,8 @@ import type { StrategyPacingHints } from "@/lib/strategy/strategy-pacing-hints";
 import { strategyPaceHintLines } from "@/lib/strategy/format-strategy-pace-hints";
 
 const RING_SIZE = 180;
+const LOW_PROGRESS_THRESHOLD = 40;
+const CATCHUP_OPTIONS = [2, 3, 4] as const;
 
 function weekProgressRingMode(pct: number, totalTasks: number): EnergyRingMode {
   if (totalTasks === 0) return "default";
@@ -26,6 +28,13 @@ function weekProgressRingMode(pct: number, totalTasks: number): EnergyRingMode {
   if (pct >= 70) return "green";
   if (pct >= 40) return "alert";
   return "high-alert";
+}
+
+function weekProgressState(pct: number, totalTasks: number): "No plan" | "Behind" | "Risk" | "On track" {
+  if (totalTasks <= 0) return "No plan";
+  if (pct < LOW_PROGRESS_THRESHOLD) return "Behind";
+  if (pct < 70) return "Risk";
+  return "On track";
 }
 
 /** Caption under SegmentedBar — mirrors Visual Lab Growth command center copy. */
@@ -70,6 +79,7 @@ export function GrowthCommandCenter({
 }: Props) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
+  const [catchupTaskCount, setCatchupTaskCount] = useState<(typeof CATCHUP_OPTIONS)[number]>(3);
 
   const quarterPacingLines = useMemo(
     () => (strategyPacingHints ? strategyPaceHintLines("learning", strategyPacingHints) : []),
@@ -118,9 +128,33 @@ export function GrowthCommandCenter({
   const doneInWeek = week ? week.tasks.filter((t) => completed.has(t.id)).length : 0;
   const totalInWeek = week?.tasks.length ?? 0;
   const weekPct = totalInWeek > 0 ? Math.round((doneInWeek / totalInWeek) * 100) : 0;
+  const progressState = weekProgressState(weekPct, totalInWeek);
+  const progressStateClass =
+    progressState === "On track"
+      ? "border-emerald-300/35 bg-emerald-500/12 text-emerald-100"
+      : progressState === "Risk"
+        ? "border-amber-300/35 bg-amber-500/12 text-amber-100"
+        : progressState === "Behind"
+          ? "border-rose-300/35 bg-rose-500/12 text-rose-100"
+          : "border-white/20 bg-white/10 text-slate-200";
+  const isLowProgress = totalInWeek > 0 && weekPct < LOW_PROGRESS_THRESHOLD;
   const ringMode = weekProgressRingMode(weekPct, totalInWeek);
 
   const previewTasks = week?.tasks.slice(0, 3) ?? [];
+  const totalWeekMinutes = week?.tasks.reduce((sum, task) => sum + getScaledTask(task, tier).minutes, 0) ?? 0;
+  const completedWeekMinutes =
+    week?.tasks.reduce((sum, task) => (completed.has(task.id) ? sum + getScaledTask(task, tier).minutes : sum), 0) ?? 0;
+  const remainingWeekMinutes = Math.max(0, totalWeekMinutes - completedWeekMinutes);
+  const learningFocusBullets = useMemo(() => {
+    if (!week) return [] as string[];
+    const bullets: string[] = [];
+    if (week.objective?.trim()) bullets.push(week.objective.trim());
+    if (week.week_intent?.trim()) bullets.push(week.week_intent.trim());
+    for (const task of week.tasks.slice(0, 3)) {
+      bullets.push(task.title.trim());
+    }
+    return bullets.slice(0, 5);
+  }, [week]);
 
   const { protocolWeekFills, protocolWeekLabels, protocolWeekCaption } = useMemo(() => {
     if (!def || maxW < 1) {
@@ -166,6 +200,27 @@ export function GrowthCommandCenter({
       }
     });
 
+  const addCatchupRound = () =>
+    startTransition(async () => {
+      try {
+        const result = await createProtocolCatchupRound({
+          protocol_slug: safeActive.slug,
+          locale: safeActive.locale,
+          max_tasks: catchupTaskCount,
+        });
+        if (result.created > 0) {
+          neuroToast.success(
+            `Catch-up ronde ${result.round}: ${result.created}/${catchupTaskCount} extra growth taken toegevoegd${result.skipped ? ` (${result.skipped} overgeslagen)` : ""}.`
+          );
+        } else {
+          neuroToast.info("Geen extra ronde nodig: huidige protocoltaken lijken al afgedekt.");
+        }
+        router.refresh();
+      } catch (error) {
+        neuroToast.error(error instanceof Error ? error.message : "Extra ronde toevoegen mislukt.");
+      }
+    });
+
   return (
     <section
       id="growth-command"
@@ -200,6 +255,16 @@ export function GrowthCommandCenter({
                 </span>
               )}
             </p>
+            <div className="flex flex-wrap items-center gap-2">
+              <span className={`inline-flex rounded-full border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.08em] ${progressStateClass}`}>
+                {progressState}
+              </span>
+              {isLowProgress ? (
+                <span className="inline-flex rounded-full border border-rose-300/35 bg-rose-500/12 px-2 py-0.5 text-[10px] font-semibold text-rose-100">
+                  Onder {LOW_PROGRESS_THRESHOLD}% · recovery aanbevolen
+                </span>
+              ) : null}
+            </div>
             <label className="mt-3 block max-w-md">
               <span className="mb-1 block text-[10px] font-semibold uppercase tracking-wide text-[var(--text-muted)]">
                 Kies traject
@@ -305,6 +370,41 @@ export function GrowthCommandCenter({
       <div className="relative z-[1] space-y-5 px-4 py-6 sm:px-5">
         {def && week ? (
           <>
+            <section className="grid gap-3 lg:grid-cols-2">
+              <article className="rounded-xl border border-white/10 bg-black/20 p-3">
+                <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-[var(--text-muted)]">Weekvereisten</p>
+                <div className="mt-2 grid gap-2 sm:grid-cols-2">
+                  <div>
+                    <p className="text-[11px] text-[var(--text-muted)]">Taken</p>
+                    <p className="text-sm font-semibold text-[var(--text-primary)]">
+                      {doneInWeek}/{totalInWeek} gedaan
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-[11px] text-[var(--text-muted)]">Minuten</p>
+                    <p className="text-sm font-semibold text-[var(--text-primary)]">
+                      {completedWeekMinutes}/{totalWeekMinutes}
+                    </p>
+                  </div>
+                </div>
+                <p className="mt-2 text-[11px] text-[var(--text-secondary)]">Resterend: {Math.max(0, totalInWeek - doneInWeek)} taken · {remainingWeekMinutes} min</p>
+              </article>
+              <article className="rounded-xl border border-white/10 bg-black/20 p-3">
+                <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-[var(--text-muted)]">Wat je moet leren (deze week)</p>
+                {learningFocusBullets.length === 0 ? (
+                  <p className="mt-2 text-xs text-[var(--text-secondary)]">Nog geen leerfocus voor deze week ingesteld.</p>
+                ) : (
+                  <ul className="mt-2 space-y-1.5">
+                    {learningFocusBullets.map((line) => (
+                      <li key={line} className="text-xs text-[var(--text-secondary)]">
+                        - {line}
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </article>
+            </section>
+
             <div className="flex flex-wrap items-end justify-between gap-2">
               <div>
                 <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-[var(--text-muted)]">Week-indicator</p>
@@ -408,6 +508,14 @@ export function GrowthCommandCenter({
       <div className="relative z-[1] border-t border-[rgba(var(--mode-rgb),0.12)] bg-black/10 px-4 py-5 sm:px-5">
         {def && week ? (
           <>
+            {isLowProgress ? (
+              <div className="mb-3 rounded-xl border border-rose-300/35 bg-rose-500/10 p-3">
+                <p className="text-xs font-semibold text-rose-100">Lage weekvoortgang gedetecteerd ({weekPct}%).</p>
+                <p className="mt-1 text-[11px] text-rose-100/90">
+                  Voeg een extra ronde toe om achterstand deze week in te halen.
+                </p>
+              </div>
+            ) : null}
             <Link
               href="/tasks?growth=1"
               className="primary-btn !min-h-[56px] flex w-full items-center justify-center no-underline"
@@ -418,6 +526,24 @@ export function GrowthCommandCenter({
               Deze pagina of Missions laden = protocoltaken automatisch verdeeld over je kalenderweek.
             </p>
             <div className="mt-4 flex flex-wrap items-center justify-center gap-x-8 gap-y-2">
+              <div className="flex items-center gap-1.5 rounded-lg border border-white/10 bg-black/20 px-2 py-1">
+                <span className="pr-1 text-[10px] uppercase tracking-[0.08em] text-[var(--text-muted)]">Ronde</span>
+                {CATCHUP_OPTIONS.map((count) => (
+                  <button
+                    key={count}
+                    type="button"
+                    disabled={pending}
+                    onClick={() => setCatchupTaskCount(count)}
+                    className={`rounded-md px-2 py-1 text-[11px] font-semibold transition ${
+                      catchupTaskCount === count
+                        ? "border border-cyan-300/35 bg-cyan-500/15 text-cyan-100"
+                        : "border border-white/10 bg-black/30 text-slate-300 hover:text-white"
+                    }`}
+                  >
+                    {count}
+                  </button>
+                ))}
+              </div>
               <button
                 type="button"
                 disabled={pending}
@@ -430,9 +556,17 @@ export function GrowthCommandCenter({
                 type="button"
                 disabled={pending}
                 className="text-xs font-medium text-[var(--text-muted)] underline-offset-4 transition hover:text-[var(--accent-focus)] hover:underline disabled:opacity-50"
+                onClick={addCatchupRound}
+              >
+                {pending ? "Bezig…" : `Voeg ${catchupTaskCount} extra taken toe`}
+              </button>
+              <button
+                type="button"
+                disabled={pending}
+                className="text-xs font-medium text-[var(--text-muted)] underline-offset-4 transition hover:text-[var(--accent-focus)] hover:underline disabled:opacity-50"
                 onClick={commitWeek}
               >
-                {pending ? "Bezig…" : "Opnieuw verdelen"}
+                {pending ? "Bezig…" : "Weektaken opnieuw verdelen"}
               </button>
             </div>
             <p className="mt-3 text-center text-[10px] text-[var(--text-muted)]/80">

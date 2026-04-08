@@ -10,7 +10,7 @@ type Props = {
   variant: "square" | "triangle" | "hex" | "diamond";
   /** "ring" = stroke dash along outline; "fill" = level inside shape (square/diamond/triangle/hex fill styles differ). */
   style?: "ring" | "fill";
-  size?: "sm" | "md" | "lg";
+  size?: "sm" | "md" | "lg" | "xl";
   ringThickness?: "normal" | "thick";
   hideFooter?: boolean;
   centerTopText?: string;
@@ -76,16 +76,20 @@ export function PolygonHudMeter({
 
   /** Hex trace: heavier bezel + neon stack (matches “thick line” HUD). */
   const sizeClass = isHex
-    ? size === "lg"
-      ? "h-[168px] w-[168px]"
-      : size === "sm"
-        ? "h-[96px] w-[96px]"
-        : "h-[112px] w-[112px]"
-    : size === "lg"
-      ? "h-[132px] w-[132px]"
-      : size === "sm"
-        ? "h-[86px] w-[86px]"
-        : "h-[100px] w-[100px]";
+    ? size === "xl"
+      ? "h-[208px] w-[208px]"
+      : size === "lg"
+        ? "h-[168px] w-[168px]"
+        : size === "sm"
+          ? "h-[96px] w-[96px]"
+          : "h-[112px] w-[112px]"
+    : size === "xl"
+      ? "h-[160px] w-[160px]"
+      : size === "lg"
+        ? "h-[132px] w-[132px]"
+        : size === "sm"
+          ? "h-[86px] w-[86px]"
+          : "h-[100px] w-[100px]";
   const thicknessBoost = ringThickness === "thick" ? 1.45 : 1;
   const ringTrackW = (isHex ? 6.5 : 5) * thicknessBoost;
   const ringNeonW = (isHex ? 6 : 5) * thicknessBoost;

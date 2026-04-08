@@ -11,6 +11,8 @@ import { todayDateString } from "@/lib/utils/timezone";
 import { upsertProtocolProgress } from "@/app/actions/protocol-progress";
 
 const PTASK_MARKER = (id: string) => `ptask:${id}`;
+const CATCHUP_ROUND_TAG = "protocol_catchup_round:";
+const CATCHUP_TAG = "protocol_catchup";
 
 function protocolTaskBaseXp(minutes: number, tier: DifficultyTier): number {
   const tierBonus = tier === "hard" ? 12 : tier === "medium" ? 6 : 2;
@@ -25,6 +27,20 @@ function notesMatchProtocolWeek(notes: string, protocolSlug: string, weekIndex: 
 function extractPtaskId(notes: string): string | null {
   const m = notes.match(/ptask:([^\s]+)/);
   return m ? m[1] : null;
+}
+
+function normalizeTaskTags(value: unknown): string[] {
+  if (!Array.isArray(value)) return [];
+  return value.filter((item): item is string => typeof item === "string");
+}
+
+function catchupRoundFromTags(tags: string[]): number | null {
+  for (const tag of tags) {
+    if (!tag.startsWith(CATCHUP_ROUND_TAG)) continue;
+    const n = Number.parseInt(tag.slice(CATCHUP_ROUND_TAG.length), 10);
+    if (Number.isFinite(n) && n > 0) return n;
+  }
+  return null;
 }
 
 /**
@@ -173,4 +189,153 @@ export async function commitProtocolWeekToMissions(params: {
   revalidatePath("/tasks");
   revalidatePath("/dashboard");
   return { created, skipped, taskIds };
+}
+
+/**
+ * Adds a new catch-up round with protocol-linked tasks for the current protocol week.
+ * Unlike normal week commit, catch-up intentionally creates new tasks to recover momentum.
+ */
+export async function createProtocolCatchupRound(params: {
+  protocol_slug: string;
+  locale?: string;
+  max_tasks?: number;
+}): Promise<{ created: number; skipped: number; round: number; taskIds: string[]; plannedTaskTitles: string[] }> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) throw new Error("Niet ingelogd.");
+
+  const locale = params.locale ?? "nl";
+  const anchorToday = todayDateString();
+
+  const { data: row, error: rowErr } = await supabase
+    .from("protocol_library")
+    .select("id, slug, locale, title, definition_json")
+    .eq("slug", params.protocol_slug)
+    .eq("locale", locale)
+    .maybeSingle();
+  if (rowErr || !row) throw new Error("Protocol niet gevonden.");
+
+  const def = parseProtocolDefinition((row as { definition_json?: unknown }).definition_json);
+  if (!def) throw new Error("Dit protocol heeft geen structured definition.");
+
+  const { data: prog } = await supabase
+    .from("user_protocol_progress")
+    .select("preferred_tier, current_week_index, completed_task_ids")
+    .eq("user_id", user.id)
+    .eq("protocol_slug", params.protocol_slug)
+    .eq("locale", locale)
+    .maybeSingle();
+
+  const tier = (prog?.preferred_tier as DifficultyTier) || "medium";
+  const weekIndex = Math.max(1, prog?.current_week_index ?? 1);
+  const week = weekForIndex(def, weekIndex);
+  if (!week) throw new Error(`Geen week ${weekIndex} in dit protocol.`);
+
+  const completedIds = new Set(
+    Array.isArray(prog?.completed_task_ids)
+      ? prog.completed_task_ids.filter((id): id is string => typeof id === "string")
+      : []
+  );
+  const openTasks = week.tasks.filter((task) => !completedIds.has(task.id));
+  if (openTasks.length === 0) {
+    return { created: 0, skipped: 0, round: 1, taskIds: [], plannedTaskTitles: [] };
+  }
+
+  const { start: weekStart, end: weekEnd } = getBudgetWeekBounds(anchorToday);
+  const { data: existingWeekRows } = await supabase
+    .from("tasks")
+    .select("task_tags")
+    .eq("user_id", user.id)
+    .gte("due_date", weekStart)
+    .lte("due_date", weekEnd)
+    .is("deleted_at", null);
+
+  let highestRound = 0;
+  for (const rowItem of existingWeekRows ?? []) {
+    const tags = normalizeTaskTags((rowItem as { task_tags?: unknown }).task_tags);
+    if (!tags.includes(CATCHUP_TAG)) continue;
+    if (!tags.includes(`protocol_slug:${params.protocol_slug}`)) continue;
+    if (!tags.includes(`protocol_locale:${locale}`)) continue;
+    if (!tags.includes(`protocol_week:${weekIndex}`)) continue;
+    const round = catchupRoundFromTags(tags);
+    if (round && round > highestRound) highestRound = round;
+  }
+  const round = highestRound + 1;
+
+  const maxTasks = Math.max(1, Math.min(6, Math.floor(params.max_tasks ?? 3)));
+  const selectedTasks = [...openTasks]
+    .sort((a, b) => b.minutes - a.minutes)
+    .slice(0, maxTasks);
+  const dueDates = assignProtocolTaskDueDatesFromWeek(selectedTasks, week, anchorToday);
+  const titlePrefix = (row as { title?: string }).title?.slice(0, 48) ?? params.protocol_slug;
+
+  const taskIds: string[] = [];
+  let created = 0;
+  let skipped = 0;
+
+  for (let i = 0; i < selectedTasks.length; i += 1) {
+    const task = selectedTasks[i]!;
+    const scaled = getScaledTask(task, tier);
+    const dueDate = dueDates[i] ?? anchorToday;
+    const notes = [
+      `[Catch-up ronde ${round}] ${scaled.concrete}`,
+      task.success_criteria ? `Succescriterium: ${task.success_criteria}` : null,
+      "",
+      "---",
+      `protocol:${params.protocol_slug}`,
+      PTASK_MARKER(task.id),
+      `week:${weekIndex}`,
+      `tier:${tier}`,
+      `catchup_round:${round}`,
+    ]
+      .filter((line): line is string => !!line)
+      .join("\n");
+
+    try {
+      const result = await createTask({
+        title: `${titlePrefix} · Catch-up · ${task.title}`.slice(0, 200),
+        due_date: dueDate,
+        notes,
+        category: "personal",
+        domain: "learning",
+        mission_intent: "experiment",
+        task_type: "mental",
+        duration_minutes: scaled.minutes,
+        base_xp: protocolTaskBaseXp(scaled.minutes, tier),
+        task_tags: [
+          "growth",
+          "protocol",
+          CATCHUP_TAG,
+          params.protocol_slug,
+          `protocol_slug:${params.protocol_slug}`,
+          `protocol_locale:${locale}`,
+          `protocol_week:${weekIndex}`,
+          `protocol_task:${task.id}`,
+          `protocol_tier:${tier}`,
+          `${CATCHUP_ROUND_TAG}${round}`,
+        ],
+      });
+      if (result.id) {
+        taskIds.push(result.id);
+        created += 1;
+      } else {
+        skipped += 1;
+      }
+    } catch {
+      skipped += 1;
+    }
+  }
+
+  revalidatePath("/learning");
+  revalidatePath("/tasks");
+  revalidatePath("/dashboard");
+  return {
+    created,
+    skipped,
+    round,
+    taskIds,
+    plannedTaskTitles: selectedTasks.map((task) => task.title),
+  };
 }

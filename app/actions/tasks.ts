@@ -22,6 +22,17 @@ import {
   type SubtaskRow,
 } from "@/lib/tasks-actions-shared";
 
+function isGrowthTaskRow(task: unknown): boolean {
+  const row = task as {
+    domain?: string | null;
+    mission_intent?: string | null;
+    task_tags?: unknown;
+  };
+  const tags = Array.isArray(row.task_tags) ? row.task_tags.filter((x): x is string => typeof x === "string") : [];
+  const hasGrowthTag = tags.some((tag) => tag === "growth" || tag === "protocol" || tag.startsWith("protocol_"));
+  return row.domain === "learning" || row.mission_intent === "experiment" || hasGrowthTag;
+}
+
 /** Explicit column list for task reads (avoids select * per SUPABASE_PERFORMANCE_GUIDELINES). */
 const TASK_SELECT_COLUMNS =
   "id, user_id, title, due_date, completed, completed_at, carry_over_count, energy_required, priority, notes, created_at, updated_at, parent_task_id, play_kind, deleted_at, snooze_until, category, impact, domain, cognitive_load, emotional_resistance, mental_load, social_load, focus_required, recurrence_rule, recurrence_weekdays, difficulty, discipline_weight, strategic_value, psychology_label, mission_intent, mission_chain_id, validation_type, base_xp, avoidance_tag, hobby_tag, fatigue_impact, strategy_key_result_id, urgency, task_type, intensity, duration_minutes, task_tags";
@@ -42,8 +53,12 @@ function autoSlotRankFromTask(task: unknown): number {
   return 0;
 }
 
-/** Request-scoped cache: duplicate getTodaysTasks(date, mode) in the same request return the same result (e.g. dashboard + tasks page). */
-const getTodaysTasksCached = cache(async (date: string, mode: TaskListMode): Promise<{ tasks: Task[]; carryOverCount: number }> => {
+/** Request-scoped cache: duplicate getTodaysTasks(date, mode, growthOnly) in the same request return the same result (e.g. dashboard + tasks page). */
+const getTodaysTasksCached = cache(async (
+  date: string,
+  mode: TaskListMode,
+  growthOnly: boolean
+): Promise<{ tasks: Task[]; carryOverCount: number }> => {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return { tasks: [], carryOverCount: 0 };
@@ -112,15 +127,17 @@ const getTodaysTasksCached = cache(async (date: string, mode: TaskListMode): Pro
   });
   ordered = [...userTasks, ...autoTasks, ...bonusTasks];
 
-  const maxCarryOver = Math.max(0, ...(tasks ?? []).map((t) => (t as { carry_over_count?: number }).carry_over_count ?? 0));
-  return { tasks: ordered as Task[], carryOverCount: maxCarryOver };
+  const scopedTasks = growthOnly ? (ordered as Task[]).filter((task) => isGrowthTaskRow(task)) : (ordered as Task[]);
+  const maxCarryOver = Math.max(0, ...scopedTasks.map((t) => (t as { carry_over_count?: number }).carry_over_count ?? 0));
+  return { tasks: scopedTasks, carryOverCount: maxCarryOver };
 });
 
 export async function getTodaysTasks(
   date: string,
-  mode: TaskListMode
+  mode: TaskListMode,
+  options?: { growthOnly?: boolean }
 ): Promise<{ tasks: Task[]; carryOverCount: number }> {
-  return getTodaysTasksCached(date, mode);
+  return getTodaysTasksCached(date, mode, options?.growthOnly === true);
 }
 
 /** Count of tasks completed today (for late-day banner: avoid showing when dashboard cache is stale). */
@@ -157,25 +174,48 @@ export async function getTasksForDate(date: string) {
 }
 
 /** Tasks per date for a range (for calendar prefetch: avoid loading on month/day change). */
-export async function getTasksForDateRange(startDate: string, endDate: string): Promise<Record<string, unknown[]>> {
+export async function getTasksForDateRange(
+  startDate: string,
+  endDate: string,
+  options?: { growthOnly?: boolean }
+): Promise<Record<string, unknown[]>> {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return {};
   const nowIso = new Date().toISOString();
-  const { data } = await supabase
-    .from("tasks")
-    .select(TASK_CALENDAR_RANGE_COLUMNS)
-    .eq("user_id", user.id)
-    .gte("due_date", startDate)
-    .lte("due_date", endDate)
-    .is("parent_task_id", null)
-    .is("deleted_at", null)
-    .or(`snooze_until.is.null,snooze_until.lt.${nowIso}`)
-    .order("due_date")
-    .order("completed")
-    .order("created_at", { ascending: true });
+  const data =
+    options?.growthOnly === true
+      ? (
+        await supabase
+          .from("tasks")
+          .select(TASK_SELECT_COLUMNS)
+          .eq("user_id", user.id)
+          .gte("due_date", startDate)
+          .lte("due_date", endDate)
+          .is("parent_task_id", null)
+          .is("deleted_at", null)
+          .or(`snooze_until.is.null,snooze_until.lt.${nowIso}`)
+          .order("due_date")
+          .order("completed")
+          .order("created_at", { ascending: true })
+      ).data
+      : (
+        await supabase
+          .from("tasks")
+          .select(TASK_CALENDAR_RANGE_COLUMNS)
+          .eq("user_id", user.id)
+          .gte("due_date", startDate)
+          .lte("due_date", endDate)
+          .is("parent_task_id", null)
+          .is("deleted_at", null)
+          .or(`snooze_until.is.null,snooze_until.lt.${nowIso}`)
+          .order("due_date")
+          .order("completed")
+          .order("created_at", { ascending: true })
+      ).data;
+  const rows = options?.growthOnly === true ? (data ?? []).filter((row) => isGrowthTaskRow(row)) : (data ?? []);
   const byDate: Record<string, unknown[]> = {};
-  for (const row of data ?? []) {
+  for (const row of rows) {
     const d = (row as { due_date: string }).due_date;
     if (!byDate[d]) byDate[d] = [];
     byDate[d].push(row);
