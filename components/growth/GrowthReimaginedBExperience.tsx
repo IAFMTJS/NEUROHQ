@@ -173,18 +173,31 @@ export async function GrowthReimaginedBExperience({ showLearningLink = true }: P
 
   const commandPanel = (
     <>
-      <GrowthCommanderSummaryCard
-        weekLabel={budgetWeekLabel}
-        activeProtocolTitle={activeProtocolTitle}
-        protocolProgressPct={protocolProgressPct}
-        protocolDoneCount={protocolDoneCount}
-        protocolTotalCount={protocolTotalCount}
-        weeklyProgressPct={weeklyProgressPct}
-        todayDoneCount={todayDoneCount}
-        todayTotalCount={todayTotalCount}
-        daysDoneCount={daysDoneCount}
-        daysTotalCount={daysTotalCount}
-      />
+      <section className="space-y-3">
+        <GrowthCommanderSummaryCard
+          weekLabel={budgetWeekLabel}
+          activeProtocolTitle={activeProtocolTitle}
+          protocolProgressPct={protocolProgressPct}
+          protocolDoneCount={protocolDoneCount}
+          protocolTotalCount={protocolTotalCount}
+          weeklyProgressPct={weeklyProgressPct}
+          todayDoneCount={todayDoneCount}
+          todayTotalCount={todayTotalCount}
+          daysDoneCount={daysDoneCount}
+          daysTotalCount={daysTotalCount}
+        />
+        <div className="flex flex-wrap items-center gap-2 rounded-xl border border-white/10 bg-black/20 p-2.5">
+          <GrowthMissionsDeckToastButton tasks={protocolDeckTasks} weekLabel={budgetWeekLabel} />
+          {showLearningLink ? (
+            <Link
+              href="/learning"
+              className="rounded-lg border border-white/20 bg-black/25 px-2.5 py-1 text-[11px] font-semibold text-slate-200 transition hover:text-white"
+            >
+              Echte Growth
+            </Link>
+          ) : null}
+        </div>
+      </section>
       <GrowthProtocolCommandCard protocols={protocols} progressMap={progressMap} growthFocus={growthFocus} />
     </>
   );
@@ -413,31 +426,6 @@ export async function GrowthReimaginedBExperience({ showLearningLink = true }: P
 
   return (
     <div className="space-y-6">
-      <section className="relative overflow-hidden rounded-xl border border-white/10 bg-black/20 p-3">
-        <div className="pointer-events-none absolute -right-16 -top-16 h-28 w-28 rounded-full bg-cyan-300/10 blur-3xl" />
-        <div className="relative z-[1] flex flex-wrap items-center justify-between gap-2">
-          <div className="flex min-w-0 flex-wrap items-center gap-2">
-            <p className="text-[10px] uppercase tracking-[0.2em] text-cyan-200/90">Growth Command Deck · Live</p>
-            <span className="inline-flex items-center gap-2 rounded-full border border-cyan-300/30 bg-cyan-400/15 px-2.5 py-0.5 text-[11px] text-cyan-100">
-              <span className="h-1.5 w-1.5 rounded-full bg-cyan-200 shadow-[0_0_8px_rgba(103,232,249,0.9)]" />
-              Live engine
-            </span>
-            <span className="rounded-full border border-white/10 bg-black/20 px-2.5 py-0.5 text-[11px] text-slate-300">Week {budgetWeekLabel}</span>
-          </div>
-          <div className="flex flex-wrap items-center gap-2">
-            {showLearningLink ? (
-              <Link
-                href="/learning"
-                className="rounded-lg border border-white/15 bg-black/20 px-2.5 py-1 text-[11px] font-semibold text-slate-300 transition hover:text-white"
-              >
-                Echte Growth
-              </Link>
-            ) : null}
-            <GrowthMissionsDeckToastButton tasks={protocolDeckTasks} weekLabel={budgetWeekLabel} />
-          </div>
-        </div>
-      </section>
-
       <GrowthReimaginedBTabShell
         commandPanel={commandPanel}
         signalsPanel={signalsPanel}
