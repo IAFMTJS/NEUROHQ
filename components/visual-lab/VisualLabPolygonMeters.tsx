@@ -29,8 +29,8 @@ const SQUARE_PATH =
 /** Equilateral-ish triangle: top vertex, clockwise */
 const TRI_PATH = "M 50 8 L 90 88 L 10 88 Z";
 
-/** Flat-top hexagon */
-const HEX_PATH = "M 50 12 L 79 29 L 79 71 L 50 88 L 21 71 L 21 29 Z";
+/** Flat-top hexagon (slightly wider for commander HUD readability). */
+const HEX_PATH = "M 50 12 L 84 29 L 84 71 L 50 88 L 16 71 L 16 29 Z";
 
 /** Diamond (square 45°) */
 const DIAMOND_PATH = "M 50 6 L 88 50 L 50 94 L 12 50 Z";

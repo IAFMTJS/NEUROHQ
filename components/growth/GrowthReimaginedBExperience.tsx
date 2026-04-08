@@ -5,13 +5,16 @@ import { getGrowthFocus } from "@/app/actions/growth-focus";
 import { syncGrowthFocusProtocolToCalendarWeek } from "@/app/actions/growth-protocol-calendar-sync";
 import { getStrategyPacingHints } from "@/app/actions/strategy-engine-pacing";
 import { getGrowthEngineSnapshot } from "@/app/actions/growth-snapshot";
-import { getLearningState } from "@/app/actions/learning-state";
 import { getTasksForDateRange, getTodaysTasks } from "@/app/actions/tasks";
 import { GrowthMissionsRibbon } from "@/components/growth/GrowthMissionsRibbon";
 import { GrowthProtocolCommandCard } from "@/components/growth/GrowthProtocolCommandCard";
 import { GrowthCommanderSummaryCard } from "@/components/growth/GrowthCommanderSummaryCard";
 import { GrowthMissionsDeckToastButton } from "@/components/growth/GrowthMissionsDeckToastButton";
+import { GrowthCatchupRoundButton } from "@/components/growth/GrowthCatchupRoundButton";
+import { GrowthWorkspaceInfoToastButtons } from "@/components/growth/GrowthWorkspaceInfoToastButtons";
 import { GrowthReimaginedBTabShell } from "@/components/growth/GrowthReimaginedBTabShell";
+import { parseProtocolDefinition } from "@/lib/growth/protocol-definition";
+import { progressKey } from "@/lib/growth/resolve-focus-protocol";
 import { formatDayShort } from "@/lib/utils/date-locale";
 import { getBudgetWeekBounds } from "@/lib/utils/budget-date";
 import { todayDateString } from "@/lib/utils/timezone";
@@ -90,18 +93,16 @@ export async function GrowthReimaginedBExperience({ showLearningLink = true }: P
   const { start: budgetWeekStart, end: budgetWeekEnd } = getBudgetWeekBounds(today);
   const budgetWeekLabel = `${formatDayShort(budgetWeekStart)} – ${formatDayShort(budgetWeekEnd)}`;
 
-  const [protocols, progressMap, growthFocus, strategyPacingHints, growthSnap, learningState, todaysTasksResult, weekTasksByDate] = await Promise.all([
+  const [protocols, progressMap, growthFocus, strategyPacingHints, growthSnap, todaysTasksResult, weekTasksByDate] = await Promise.all([
     getProtocolLibrary("nl"),
     getProtocolProgressMap(),
     getGrowthFocus(),
     getStrategyPacingHints(),
     getGrowthEngineSnapshot(),
-    getLearningState(),
     getTodaysTasks(today, "normal", { growthOnly: true }),
     getTasksForDateRange(budgetWeekStart, budgetWeekEnd, { growthOnly: true }),
   ]);
 
-  const topStreams = learningState.streams.slice(0, 3);
   const todayTasks = (todaysTasksResult.tasks ?? []).filter((task) => isProtocolMission(task));
   const todayDoneCount = todayTasks.filter((task) => (task as { completed?: boolean }).completed === true).length;
   const todayTotalCount = todayTasks.length;
@@ -125,6 +126,27 @@ export async function GrowthReimaginedBExperience({ showLearningLink = true }: P
   const activeProtocolTitle = growthSnap?.activeProtocol?.title ?? "Geen actief focusprotocol";
   const engineTier = growthSnap?.engineTier ?? "medium";
   const tierAligned = growthSnap?.tierAligned ?? true;
+  const activeProtocolSlug = growthSnap?.activeProtocol?.slug ?? null;
+  const activeProtocolLocale = growthSnap?.activeProtocol?.locale ?? "nl";
+  const activeProtocolRow =
+    activeProtocolSlug == null
+      ? null
+      : protocols.find((row) => row.slug === activeProtocolSlug && row.locale === activeProtocolLocale) ??
+        protocols.find((row) => row.slug === activeProtocolSlug) ??
+        null;
+  const activeDefinition = parseProtocolDefinition(activeProtocolRow?.definition_json ?? null);
+  const activeProgress = activeProtocolSlug ? progressMap[progressKey(activeProtocolSlug, activeProtocolLocale)] ?? null : null;
+  const protocolCompletedIds = new Set(activeProgress?.completed_task_ids ?? []);
+  const protocolTotalCount =
+    activeDefinition?.weeks.reduce((sum, week) => sum + week.tasks.length, 0) ?? 0;
+  const protocolDoneCount =
+    activeDefinition?.weeks.reduce(
+      (sum, week) => sum + week.tasks.filter((task) => protocolCompletedIds.has(task.id)).length,
+      0
+    ) ?? 0;
+  const protocolProgressPct =
+    protocolTotalCount > 0 ? Math.round((protocolDoneCount / protocolTotalCount) * 100) : 0;
+  const trajectoryWeeks = (activeDefinition?.weeks ?? []).slice().sort((a, b) => a.week_index - b.week_index);
   const paceLines = strategyPacingHints ? strategyPaceHintLines("learning", strategyPacingHints).slice(0, 2) : [];
   const orderedWeekDates = weekDateKeysFromStart(budgetWeekStart);
   const weekDayStats = orderedWeekDates.map((date) => {
@@ -154,6 +176,9 @@ export async function GrowthReimaginedBExperience({ showLearningLink = true }: P
       <GrowthCommanderSummaryCard
         weekLabel={budgetWeekLabel}
         activeProtocolTitle={activeProtocolTitle}
+        protocolProgressPct={protocolProgressPct}
+        protocolDoneCount={protocolDoneCount}
+        protocolTotalCount={protocolTotalCount}
         weeklyProgressPct={weeklyProgressPct}
         todayDoneCount={todayDoneCount}
         todayTotalCount={todayTotalCount}
@@ -226,18 +251,25 @@ export async function GrowthReimaginedBExperience({ showLearningLink = true }: P
             <h2 className="mt-1 text-lg font-semibold text-white">Execution workspace · week {budgetWeekLabel}</h2>
           </div>
           <div className="flex flex-wrap gap-2">
-            <Link
-              href="/tasks?growth=1"
-              className="rounded-lg border border-cyan-300/35 bg-cyan-500/12 px-3 py-1.5 text-xs font-semibold text-cyan-100 transition hover:bg-cyan-500/20"
-            >
-              Open Missions
-            </Link>
-            <Link
-              href="/learning/analytics"
-              className="rounded-lg border border-white/20 bg-white/10 px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-white/15"
-            >
-              Open Analytics
-            </Link>
+            <GrowthWorkspaceInfoToastButtons
+              missions={{ weekLabel: budgetWeekLabel, tasks: protocolDeckTasks }}
+              analytics={{
+                weekLabel: budgetWeekLabel,
+                weeklyProgressPct,
+                weekDoneCount,
+                weekTotalCount,
+                daysDoneCount,
+                daysTotalCount,
+                todayOpenCount,
+                engineTier,
+                tierAligned,
+                priorityTitles: priorityToday.map((task) => task.title ?? "Untitled task").slice(0, 3),
+              }}
+            />
+            <GrowthCatchupRoundButton
+              protocolSlug={growthSnap?.activeProtocol?.slug ?? null}
+              locale={growthSnap?.activeProtocol?.locale ?? "nl"}
+            />
           </div>
         </div>
         {paceLines.length > 0 ? (
@@ -286,51 +318,117 @@ export async function GrowthReimaginedBExperience({ showLearningLink = true }: P
         </article>
       </section>
 
-      <section className="rounded-2xl border border-white/10 bg-black/20 p-5">
-        <h3 className="text-base font-semibold text-white">Learning streams in execution context</h3>
-        {topStreams.length === 0 ? (
-          <p className="mt-3 text-sm text-slate-300">Nog geen streams actief. Voeg focusstreams toe om momentum te sturen.</p>
-        ) : (
-          <div className="mt-3 grid gap-2 md:grid-cols-3">
-            {topStreams.map((stream) => (
-              <article key={stream.id} className="rounded-lg border border-white/10 bg-white/[0.04] p-3">
-                <p className="text-sm font-medium text-white">{stream.title}</p>
-                <p className="mt-1 text-xs text-slate-400">
-                  {stream.sessionsThisWeek} sessies · last active {stream.lastActive ?? "n.v.t."}
-                </p>
-                <p className="mt-2 text-xs text-cyan-100">Momentum {Math.round(stream.momentumScore * 100)}%</p>
-              </article>
-            ))}
-          </div>
-        )}
+    </>
+  );
+
+  const trajectoryPanel = (
+    <>
+      <section className="rounded-2xl border border-cyan-300/20 bg-[linear-gradient(155deg,rgba(3,11,24,0.94)_0%,rgba(5,14,30,0.9)_100%)] p-5">
+        <p className="text-[11px] uppercase tracking-[0.16em] text-cyan-200/90">Protocol traject</p>
+        <h2 className="mt-1 text-lg font-semibold text-white">Van dag 1 tot 100% voltooiing</h2>
+        <p className="mt-2 text-xs text-slate-300">
+          Overzicht van alle protocoltaken, inclusief reeds afgeronde items.
+        </p>
+        <div className="mt-3 grid gap-2 sm:grid-cols-3">
+          <article className="rounded-lg border border-white/10 bg-white/[0.04] p-3">
+            <p className="text-[11px] text-slate-300">Totale progressie</p>
+            <p className="mt-1 text-base font-semibold text-cyan-100">{protocolProgressPct}%</p>
+          </article>
+          <article className="rounded-lg border border-white/10 bg-white/[0.04] p-3">
+            <p className="text-[11px] text-slate-300">Taken voltooid</p>
+            <p className="mt-1 text-base font-semibold text-white">
+              {protocolDoneCount}/{protocolTotalCount}
+            </p>
+          </article>
+          <article className="rounded-lg border border-white/10 bg-white/[0.04] p-3">
+            <p className="text-[11px] text-slate-300">Open taken</p>
+            <p className="mt-1 text-base font-semibold text-white">{Math.max(0, protocolTotalCount - protocolDoneCount)}</p>
+          </article>
+        </div>
       </section>
+
+      {trajectoryWeeks.length === 0 ? (
+        <section className="rounded-2xl border border-white/10 bg-black/20 p-5">
+          <p className="text-sm text-slate-300">Geen actief protocoltraject gevonden om volledig te tonen.</p>
+        </section>
+      ) : (
+        <section className="space-y-3">
+          {trajectoryWeeks.map((week) => {
+            const weekDoneCount = week.tasks.filter((task) => protocolCompletedIds.has(task.id)).length;
+            const weekTotalCount = week.tasks.length;
+            const weekPct = weekTotalCount > 0 ? Math.round((weekDoneCount / weekTotalCount) * 100) : 0;
+            const rationale = week.week_intent?.trim() || week.coach_notes?.trim() || "Deze week bouwt voort op de vorige fase om continu progressie te houden.";
+            return (
+              <article key={week.week_index} className="rounded-2xl border border-white/10 bg-black/20 p-5">
+                <div className="flex flex-wrap items-start justify-between gap-3">
+                  <div>
+                    <p className="text-[11px] uppercase tracking-[0.14em] text-cyan-200/90">Week {week.week_index}</p>
+                    <h3 className="mt-1 text-base font-semibold text-white">{week.title}</h3>
+                    <p className="mt-1 text-xs text-slate-300">{week.objective}</p>
+                  </div>
+                  <div className="rounded-lg border border-white/10 bg-white/[0.04] px-3 py-1.5 text-xs text-slate-200">
+                    {weekDoneCount}/{weekTotalCount} done · {weekPct}%
+                  </div>
+                </div>
+                <div className="mt-3 rounded-lg border border-cyan-300/20 bg-cyan-500/[0.08] p-3">
+                  <p className="text-[10px] uppercase tracking-[0.1em] text-cyan-100/90">Waarom deze week</p>
+                  <p className="mt-1 text-xs text-slate-200">{rationale}</p>
+                </div>
+                <ul className="mt-3 space-y-2">
+                  {week.tasks.map((task) => {
+                    const done = protocolCompletedIds.has(task.id);
+                    return (
+                      <li
+                        key={task.id}
+                        className={`rounded-lg border px-3 py-2 ${
+                          done
+                            ? "border-emerald-300/25 bg-emerald-500/[0.08]"
+                            : "border-white/10 bg-white/[0.03]"
+                        }`}
+                      >
+                        <div className="flex items-start gap-2">
+                          <span
+                            className={`mt-0.5 inline-flex h-5 w-5 items-center justify-center rounded-full text-[11px] font-semibold ${
+                              done ? "bg-emerald-500/25 text-emerald-100" : "bg-white/10 text-slate-300"
+                            }`}
+                          >
+                            {done ? "✓" : "○"}
+                          </span>
+                          <div>
+                            <p className={`text-sm ${done ? "text-emerald-100" : "text-white"}`}>{task.title}</p>
+                            {task.concrete ? <p className="mt-0.5 text-xs text-slate-300">{task.concrete}</p> : null}
+                          </div>
+                        </div>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </article>
+            );
+          })}
+        </section>
+      )}
     </>
   );
 
   return (
     <div className="space-y-6">
-      <section className="relative overflow-hidden rounded-2xl border border-white/10 bg-black/20 p-4 md:p-5">
-        <div className="pointer-events-none absolute -right-20 -top-24 h-44 w-44 rounded-full bg-cyan-300/15 blur-3xl" />
-        <div className="relative z-[1]">
-          <p className="text-[11px] uppercase tracking-[0.22em] text-cyan-200/90">Growth Command Deck · Live</p>
-          <h1 className="mt-2 text-2xl font-bold tracking-tight text-white md:text-3xl">
-            Live command deck voor je protocolweek
-          </h1>
-          <p className="mt-2 text-xs text-slate-300">
-            Focus instellen, syncen naar Missions en je weekprogress direct sturen.
-          </p>
-          <div className="mt-3 flex flex-wrap items-center gap-2">
-            <span className="inline-flex items-center gap-2 rounded-full border border-cyan-300/30 bg-cyan-400/15 px-3 py-1 text-xs text-cyan-100">
-              <span className="h-2 w-2 rounded-full bg-cyan-200 shadow-[0_0_10px_rgba(103,232,249,0.9)]" />
-              Live engine mode
+      <section className="relative overflow-hidden rounded-xl border border-white/10 bg-black/20 p-3">
+        <div className="pointer-events-none absolute -right-16 -top-16 h-28 w-28 rounded-full bg-cyan-300/10 blur-3xl" />
+        <div className="relative z-[1] flex flex-wrap items-center justify-between gap-2">
+          <div className="flex min-w-0 flex-wrap items-center gap-2">
+            <p className="text-[10px] uppercase tracking-[0.2em] text-cyan-200/90">Growth Command Deck · Live</p>
+            <span className="inline-flex items-center gap-2 rounded-full border border-cyan-300/30 bg-cyan-400/15 px-2.5 py-0.5 text-[11px] text-cyan-100">
+              <span className="h-1.5 w-1.5 rounded-full bg-cyan-200 shadow-[0_0_8px_rgba(103,232,249,0.9)]" />
+              Live engine
             </span>
-            <span className="rounded-full border border-white/10 bg-black/20 px-3 py-1 text-xs text-slate-300">Week {budgetWeekLabel}</span>
+            <span className="rounded-full border border-white/10 bg-black/20 px-2.5 py-0.5 text-[11px] text-slate-300">Week {budgetWeekLabel}</span>
           </div>
-          <div className="mt-3 flex flex-wrap items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             {showLearningLink ? (
               <Link
                 href="/learning"
-                className="rounded-lg border border-white/15 bg-black/20 px-3 py-1.5 text-xs font-semibold text-slate-300 transition hover:text-white"
+                className="rounded-lg border border-white/15 bg-black/20 px-2.5 py-1 text-[11px] font-semibold text-slate-300 transition hover:text-white"
               >
                 Echte Growth
               </Link>
@@ -344,6 +442,7 @@ export async function GrowthReimaginedBExperience({ showLearningLink = true }: P
         commandPanel={commandPanel}
         signalsPanel={signalsPanel}
         workspacePanel={workspacePanel}
+        trajectoryPanel={trajectoryPanel}
       />
     </div>
   );

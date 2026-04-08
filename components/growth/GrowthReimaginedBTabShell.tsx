@@ -2,21 +2,23 @@
 
 import { useState, type ReactNode } from "react";
 
-type TabId = "command" | "signals" | "workspace";
+type TabId = "command" | "signals" | "workspace" | "trajectory";
 
 type Props = {
   commandPanel: ReactNode;
   signalsPanel: ReactNode;
   workspacePanel: ReactNode;
+  trajectoryPanel: ReactNode;
 };
 
 const tabs: Array<{ id: TabId; label: string; hint: string }> = [
   { id: "command", label: "Command", hint: "Sturen en instellen" },
   { id: "signals", label: "Signals", hint: "Parity, momentum, sync" },
   { id: "workspace", label: "Workspace", hint: "Volledige growth-omgeving" },
+  { id: "trajectory", label: "Traject", hint: "Volledig protocol van 0 tot 100%" },
 ];
 
-export function GrowthReimaginedBTabShell({ commandPanel, signalsPanel, workspacePanel }: Props) {
+export function GrowthReimaginedBTabShell({ commandPanel, signalsPanel, workspacePanel, trajectoryPanel }: Props) {
   const [activeTab, setActiveTab] = useState<TabId>("command");
 
   return (
@@ -48,6 +50,7 @@ export function GrowthReimaginedBTabShell({ commandPanel, signalsPanel, workspac
         {activeTab === "command" ? <div className="space-y-4">{commandPanel}</div> : null}
         {activeTab === "signals" ? <div className="space-y-4">{signalsPanel}</div> : null}
         {activeTab === "workspace" ? <div className="space-y-4">{workspacePanel}</div> : null}
+        {activeTab === "trajectory" ? <div className="space-y-4">{trajectoryPanel}</div> : null}
       </div>
     </section>
   );
