@@ -5,6 +5,7 @@
 
 const DAILY_STATE_PREFIX = "hq-daily-state-";
 const SYNC_DEBOUNCE_MS = 5000;
+const DAILY_STATE_LOCAL_EVENT = "neurohq-daily-state-local-updated";
 
 export type PendingDailyState = {
   energy: number;
@@ -62,6 +63,11 @@ export function setPendingDailyState(
       _synced: false,
     };
     window.localStorage.setItem(dailyStateKey(date), JSON.stringify(payload));
+    try {
+      window.dispatchEvent(new CustomEvent(DAILY_STATE_LOCAL_EVENT, { detail: { date, synced: false } }));
+    } catch {
+      // ignore
+    }
     scheduleSync();
     queueDailySnapshotMerge();
   } catch {
@@ -78,6 +84,11 @@ export function markDailyStateSynced(date: string): void {
     const parsed = JSON.parse(raw) as PendingDailyState;
     parsed._synced = true;
     window.localStorage.setItem(dailyStateKey(date), JSON.stringify(parsed));
+    try {
+      window.dispatchEvent(new CustomEvent(DAILY_STATE_LOCAL_EVENT, { detail: { date, synced: true } }));
+    } catch {
+      // ignore
+    }
   } catch {
     // ignore
   }
@@ -135,6 +146,7 @@ async function syncPending(): Promise<void> {
   let didSyncAny = false;
   try {
     const { saveDailyState } = await import("@/app/actions/daily-state");
+    const { recordSyncFailure, recordSyncSuccess } = await import("@/lib/mobile/metrics");
     for (const item of pending) {
       const result = await saveDailyState({
         date: item.date,
@@ -146,7 +158,11 @@ async function syncPending(): Promise<void> {
         physical_health: item.state.physical_health ?? null,
         mental_battery: item.state.mental_battery,
       });
-      if (!result.ok) continue;
+      if (!result.ok) {
+        recordSyncFailure();
+        continue;
+      }
+      recordSyncSuccess();
       markDailyStateSynced(item.date);
       didSyncAny = true;
     }

@@ -158,8 +158,17 @@ export function DashboardClientShell() {
     if (!d) return;
     setPendingDailyForHero(getPendingDailyState(d));
     const onSaved = () => setPendingDailyForHero(getPendingDailyState(d));
+    const onLocalDailyStateUpdated = (event: Event) => {
+      const detail = (event as CustomEvent<{ date?: string }>).detail;
+      if (!detail?.date || detail.date !== d) return;
+      setPendingDailyForHero(getPendingDailyState(d));
+    };
     window.addEventListener("neurohq-daily-state-saved", onSaved);
-    return () => window.removeEventListener("neurohq-daily-state-saved", onSaved);
+    window.addEventListener("neurohq-daily-state-local-updated", onLocalDailyStateUpdated as EventListener);
+    return () => {
+      window.removeEventListener("neurohq-daily-state-saved", onSaved);
+      window.removeEventListener("neurohq-daily-state-local-updated", onLocalDailyStateUpdated as EventListener);
+    };
   }, [critical?.dateStr]);
 
   useEffect(() => {
