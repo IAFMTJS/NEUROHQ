@@ -288,19 +288,9 @@ function intersectDecisionBlocksWithValidTasks(
   };
 }
 
-const decisionBlocksCache = unstable_cache(
-  async (userId: string, dateStr: string) => {
-    // userId is part of the cache key; the inner function reads auth from cookies.
-    return getDecisionBlocksUncached(dateStr);
-  },
-  ["decision-blocks"],
-  { revalidate: 60, tags: ["decision-blocks"] }
-);
-
 /**
- * Gecachte decision blocks + UMS-sort (60s `unstable_cache`). Niet bedoeld als losse “API” voor pagina’s:
- * gebruik `loadMissionsPipeline(dateStr)` — deelt `React.cache` met bootstrap/dashboard.
- * Blijft geëxporteerd voor de pipeline en cache-warmte in `getTasksSortedByUMS`.
+ * Decision blocks + UMS-sort voor de missions pipeline.
+ * Niet bedoeld als losse “API” voor pagina’s: gebruik `loadMissionsPipeline(dateStr)`.
  */
 export async function getDecisionBlocksCached(dateStr: string): Promise<DecisionBlocksResult> {
   const supabase = await createClient();
@@ -308,7 +298,7 @@ export async function getDecisionBlocksCached(dateStr: string): Promise<Decision
   if (!user) return EMPTY_DECISION_BLOCKS;
 
   const [cached, { tasks: freshTasks }] = await Promise.all([
-    decisionBlocksCache(user.id, dateStr),
+    getDecisionBlocksUncached(dateStr),
     getTodaysTasks(dateStr, "normal"),
   ]);
   const validIds = new Set(freshTasks.map((t) => t.id));

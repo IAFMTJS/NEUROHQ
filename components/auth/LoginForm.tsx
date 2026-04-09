@@ -43,7 +43,10 @@ export function LoginForm({ initialError = null }: Props) {
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div>
-        <label htmlFor="login-email" className="hq-label block mb-1">
+        <label
+          htmlFor="login-email"
+          className="mb-1 block text-xs font-medium uppercase tracking-wide text-violet-200/85"
+        >
           Email
         </label>
         <input
@@ -53,19 +56,22 @@ export function LoginForm({ initialError = null }: Props) {
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           required
-          className="w-full rounded-[var(--hq-btn-radius)] border border-[var(--accent-neutral)] bg-[var(--bg-primary)] px-4 py-2.5 text-sm text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:border-[var(--accent-focus)] focus:outline-none focus:ring-2 focus:ring-[var(--accent-focus)]/30 transition"
+          className="w-full rounded-xl border border-violet-300/25 bg-black/25 px-4 py-2.5 text-sm text-violet-50 placeholder:text-violet-300/45 focus:border-cyan-300/45 focus:outline-none focus:ring-2 focus:ring-cyan-400/25 transition"
           placeholder="you@example.com"
           aria-invalid={!!error}
         />
       </div>
       <div>
         <div className="mb-1 flex items-center justify-between">
-          <label htmlFor="login-password" className="hq-label">
+          <label
+            htmlFor="login-password"
+            className="text-xs font-medium uppercase tracking-wide text-violet-200/85"
+          >
             Password
           </label>
           <a
             href="/forgot-password"
-            className="text-xs font-medium text-[var(--accent-focus)] hover:underline focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-focus)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--bg-surface)] rounded"
+            className="text-xs font-medium text-cyan-200/90 hover:text-cyan-100 hover:underline focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400/50 focus-visible:ring-offset-2 focus-visible:ring-offset-transparent rounded"
           >
             Forgot password?
           </a>
@@ -77,13 +83,13 @@ export function LoginForm({ initialError = null }: Props) {
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           required
-          className="w-full rounded-[var(--hq-btn-radius)] border border-[var(--accent-neutral)] bg-[var(--bg-primary)] px-4 py-2.5 text-sm text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:border-[var(--accent-focus)] focus:outline-none focus:ring-2 focus:ring-[var(--accent-focus)]/30 transition"
+          className="w-full rounded-xl border border-violet-300/25 bg-black/25 px-4 py-2.5 text-sm text-violet-50 placeholder:text-violet-300/45 focus:border-cyan-300/45 focus:outline-none focus:ring-2 focus:ring-cyan-400/25 transition"
           aria-invalid={!!error}
         />
       </div>
       {error && (
         <div
-          className="rounded-lg border border-red-500/30 bg-red-500/10 px-3 py-2.5 text-sm text-red-400"
+          className="rounded-lg border border-red-500/30 bg-red-500/10 px-3 py-2.5 text-sm text-red-300"
           role="alert"
         >
           {error}

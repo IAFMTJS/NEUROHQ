@@ -46,22 +46,25 @@ export default function SignupPageClient() {
 
   if (success) {
     return (
-      <main className="w-full max-w-[760px] hq-card-enter" data-ui="dark-commander">
+      <main className="w-full hq-card-enter" data-ui="dark-commander">
         <AuthMascotShell>
-          <p className="mb-1 text-center text-[10px] font-semibold uppercase tracking-[0.2em] text-[var(--text-muted)]">
-            Account Created
+          <p className="text-center text-xs font-semibold uppercase tracking-[0.28em] text-violet-100/85">
+            Account created
           </p>
-          <h1 className="text-center text-base font-semibold text-[var(--text-primary)] sm:text-lg">
+          <p className="mt-1 text-center text-[10px] font-semibold uppercase tracking-[0.14em] text-violet-200/65">
+            Confirm your email
+          </p>
+          <h1 className="mt-3 text-center text-base font-semibold text-violet-50 sm:text-lg">
             Check your email
           </h1>
-          <p className="mt-3 text-center text-sm leading-relaxed text-[var(--text-muted)]">
+          <p className="mt-3 text-center text-sm leading-relaxed text-violet-100/75">
             We sent a confirmation link to{" "}
-            <span className="font-medium text-[var(--text-primary)]">{email}</span>. Click it to
-            activate your account, then sign in.
+            <span className="font-medium text-cyan-100/90">{email}</span>. Click it to activate your
+            account, then sign in.
           </p>
           <Link
             href="/login"
-            className="neon-button mt-6 inline-flex min-h-[48px] w-full items-center justify-center px-6 py-2.5 text-sm font-semibold text-white rounded-[var(--hq-btn-radius)]"
+            className="neon-button mt-6 inline-flex min-h-[48px] w-full items-center justify-center px-6 py-2.5 text-sm font-semibold text-white rounded-xl"
           >
             Back to sign in
           </Link>
@@ -72,28 +75,34 @@ export default function SignupPageClient() {
 
   return (
     <main
-      className="w-full max-w-[760px] hq-card-enter"
+      className="w-full hq-card-enter"
       style={{ animationDelay: "50ms" }}
       data-ui="dark-commander"
     >
       <AuthMascotShell>
-        <div className="-mt-24 mb-0 flex justify-center sm:-mt-28">
+        <div className="mb-3 flex justify-center">
           <img
             src="/logo-naam.png"
             alt="NEUROHQ"
-            className="h-auto w-full max-w-[190px] select-none object-contain opacity-95"
+            className="h-auto w-full max-w-[160px] select-none object-contain opacity-95"
             draggable={false}
           />
         </div>
-        <p className="mb-0.5 text-center text-[10px] font-semibold uppercase tracking-[0.2em] text-[var(--text-muted)]">
+        <p className="text-center text-xs font-semibold uppercase tracking-[0.28em] text-violet-100/85">
           Commander Access
         </p>
-        <h2 className="mb-2.5 text-center text-sm font-semibold text-[var(--text-secondary)]">
+        <p className="mt-1 text-center text-[10px] font-semibold uppercase tracking-[0.14em] text-violet-200/65">
+          New account
+        </p>
+        <h2 className="mb-4 mt-3 text-center text-sm font-semibold text-violet-50 sm:text-base">
           Create your account
         </h2>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label htmlFor="signup-email" className="hq-label block mb-1.5">
+            <label
+              htmlFor="signup-email"
+              className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-violet-200/85"
+            >
               Email
             </label>
             <input
@@ -103,15 +112,18 @@ export default function SignupPageClient() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
-              className="w-full rounded-[var(--hq-btn-radius)] border border-[var(--accent-neutral)] bg-[var(--bg-primary)] px-4 py-2.5 text-sm text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:border-[var(--accent-focus)] focus:outline-none focus:ring-2 focus:ring-[var(--accent-focus)]/30 transition"
+              className="w-full rounded-xl border border-violet-300/25 bg-black/25 px-4 py-2.5 text-sm text-violet-50 placeholder:text-violet-300/45 focus:border-cyan-300/45 focus:outline-none focus:ring-2 focus:ring-cyan-400/25 transition"
               placeholder="you@example.com"
               aria-invalid={!!error}
             />
           </div>
           <div>
-            <label htmlFor="signup-password" className="hq-label block mb-1.5">
+            <label
+              htmlFor="signup-password"
+              className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-violet-200/85"
+            >
               Password{" "}
-              <span className="font-normal text-[var(--text-muted)]">
+              <span className="font-normal normal-case tracking-normal text-violet-100/55">
                 (at least 6 characters)
               </span>
             </label>
@@ -123,14 +135,14 @@ export default function SignupPageClient() {
               onChange={(e) => setPassword(e.target.value)}
               required
               minLength={6}
-              className="w-full rounded-[var(--hq-btn-radius)] border border-[var(--accent-neutral)] bg-[var(--bg-primary)] px-4 py-2.5 text-sm text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:border-[var(--accent-focus)] focus:outline-none focus:ring-2 focus:ring-[var(--accent-focus)]/30 transition"
+              className="w-full rounded-xl border border-violet-300/25 bg-black/25 px-4 py-2.5 text-sm text-violet-50 placeholder:text-violet-300/45 focus:border-cyan-300/45 focus:outline-none focus:ring-2 focus:ring-cyan-400/25 transition"
               placeholder="At least 6 characters"
               aria-invalid={!!error}
             />
           </div>
           {error && (
             <div
-              className="rounded-lg border border-red-500/30 bg-red-500/10 px-3 py-2.5 text-sm text-red-400"
+              className="rounded-lg border border-red-500/30 bg-red-500/10 px-3 py-2.5 text-sm text-red-300"
               role="alert"
             >
               {error}
@@ -144,11 +156,11 @@ export default function SignupPageClient() {
             {loading ? "Creating account…" : "Sign up"}
           </PrimaryButton>
         </form>
-        <p className="mt-3 text-center text-sm text-[var(--text-muted)]">
+        <p className="mt-3 text-center text-sm text-violet-100/75">
           Already have an account?{" "}
           <Link
             href="/login"
-            className="font-medium text-[var(--accent-focus)] hover:underline focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-focus)] focus-visible:ring-offset-2 rounded"
+            className="font-medium text-cyan-200/95 hover:text-cyan-100 hover:underline focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400/50 focus-visible:ring-offset-2 focus-visible:ring-offset-transparent rounded"
           >
             Sign in
           </Link>

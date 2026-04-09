@@ -7,11 +7,11 @@ export default function AuthLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="relative min-h-screen">
-      <div className="relative z-10 mx-auto flex min-h-screen w-full max-w-[760px] flex-col items-center justify-center p-5 md:min-h-[640px]">
+    <div className="relative min-h-screen overflow-hidden bg-transparent">
+      <div className="relative z-10 flex min-h-screen w-full flex-col items-center justify-center px-4 py-10">
         <Link
           href="/"
-          className="absolute top-5 left-5 z-20 flex items-center gap-2 text-sm text-[var(--text-muted)] hover:text-[var(--text-primary)] transition focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-focus)] focus-visible:ring-offset-2 focus-visible:ring-offset-transparent rounded"
+          className="absolute top-5 left-5 z-20 flex items-center gap-2 text-sm text-violet-200/70 hover:text-violet-50 transition focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400/50 focus-visible:ring-offset-2 focus-visible:ring-offset-transparent rounded"
         >
           <span aria-hidden>←</span>
           Back to home
