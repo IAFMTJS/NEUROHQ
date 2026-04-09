@@ -1,4 +1,6 @@
 /** @type {import('next').NextConfig} */
+const verboseServerLogs = process.env.NEUROHQ_VERBOSE_SERVER_LOGS === "1";
+
 const nextConfig = {
   // Dev: Turbopack via `next dev --turbopack` in package.json (also the default in Next.js 16).
   turbopack: {},
@@ -38,7 +40,7 @@ const nextConfig = {
     ],
   },
   experimental: {
-    browserDebugInfoInTerminal: true,
+    browserDebugInfoInTerminal: verboseServerLogs,
     serverComponentsHmrCache: true,
     optimizePackageImports: ['@react-three/fiber', '@react-three/drei', 'recharts'],
     // Persist Turbopack output between dev restarts (much faster cold starts). If the dev server
@@ -47,7 +49,7 @@ const nextConfig = {
   },
   logging: {
     fetches: {
-      fullUrl: true,
+      fullUrl: verboseServerLogs,
     },
   },
   compiler: {

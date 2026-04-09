@@ -52,6 +52,18 @@ export const DAILY_BOOTSTRAP_STEPS: readonly PreloadStepId[] = [
 ] as const;
 
 const ALL_STEPS: PreloadStepId[] = [...DAILY_BOOTSTRAP_STEPS];
+const BOOTSTRAP_TIMING_DEBUG = process.env.NEXT_PUBLIC_BOOTSTRAP_TIMING_DEBUG === "1";
+
+/** PWA / cold start: cookies can lag behind `localStorage` session — refresh before retrying bootstrap. */
+async function refreshSupabaseSessionForApi(): Promise<void> {
+  try {
+    const { createClient } = await import("@/lib/supabase/client");
+    await createClient().auth.refreshSession();
+    await new Promise((r) => setTimeout(r, 160));
+  } catch {
+    /* ignore */
+  }
+}
 
 function emitProgress(
   onProgress: ((p: PreloadProgress) => void) | undefined,
@@ -115,8 +127,10 @@ export async function initializeDailySystem(onProgress?: (p: PreloadProgress) =>
     const before = typeof performance !== "undefined" ? performance.now() : Date.now();
     snapshot = await runStep(snapshot, step);
     const after = typeof performance !== "undefined" ? performance.now() : Date.now();
-    // eslint-disable-next-line no-console
-    console.debug("[daily-initialize]", step, "took", Math.round(after - before), "ms");
+    if (BOOTSTRAP_TIMING_DEBUG) {
+      // eslint-disable-next-line no-console
+      console.debug("[daily-initialize]", step, "took", Math.round(after - before), "ms");
+    }
 
     emitProgress(onProgress, step, i, "complete");
     // eslint-disable-next-line no-await-in-loop
@@ -132,7 +146,24 @@ export async function initializeDailySystem(onProgress?: (p: PreloadProgress) =>
     const st = lastBootstrapInitFetchStatus;
     lastBootstrapInitFetchStatus = null;
     if (st === 401) {
-      throw new Error("Je sessie is verlopen of de server weigerde bootstrap. Log opnieuw in en probeer het nog eens.");
+      let hasClientSession = false;
+      try {
+        const { createClient } = await import("@/lib/supabase/client");
+        const {
+          data: { session },
+        } = await createClient().auth.getSession();
+        hasClientSession = !!session?.user;
+      } catch {
+        /* ignore */
+      }
+      if (!hasClientSession) {
+        throw new Error(
+          "Je bent niet ingelogd. Open NeuroHQ in de browser om in te loggen, of meld je opnieuw aan."
+        );
+      }
+      throw new Error(
+        "De server kon bootstrap nog niet starten (sessie-cookies waren nog niet klaar of de server weigerde tijdelijk). Vernieuw de pagina of sluit de app en open opnieuw. Blijft dit zo, log één keer uit en weer in via de website."
+      );
     }
     throw new Error(
       "Kon vandaag niet laden (geen geldige bootstrap-response). Ververs hard (Ctrl+Shift+R) of wis sitegegevens voor deze app. Controleer in DevTools → Network of GET /api/bootstrap/today status 200 heeft."
@@ -197,6 +228,46 @@ async function runStep(snapshot: DailySnapshot, step: PreloadStepId): Promise<Da
             lastBootstrapInitFetchStatus = retryRes.status;
           }
         }
+
+        if (!boot.ok || !isBootstrapTodayPayloadUsable(boot.data)) {
+          await refreshSupabaseSessionForApi();
+          const recovered = await fetchBootstrapTodayWithBody();
+          lastBootstrapInitFetchStatus = recovered.ok ? null : recovered.status;
+          if (recovered.ok && isBootstrapTodayPayloadUsable(recovered.data)) {
+            boot = recovered;
+          } else {
+            await new Promise((r) => setTimeout(r, 160));
+            const authRetryRes = await fetch(`/api/bootstrap/today?_nb=${Date.now()}&_retry=auth`, {
+              method: "GET",
+              credentials: "include",
+              cache: "no-store",
+              headers: {
+                ...requestHeaders,
+                "cache-control": "no-cache",
+                pragma: "no-cache",
+              },
+            });
+            if (authRetryRes.ok) {
+              try {
+                const authData = (await authRetryRes.json()) as BootstrapTodayResponse;
+                if (isBootstrapTodayPayloadUsable(authData)) {
+                  boot = { ok: true, status: authRetryRes.status, data: authData };
+                  lastBootstrapInitFetchStatus = null;
+                } else {
+                  boot = { ok: false, status: authRetryRes.status, data: null };
+                  lastBootstrapInitFetchStatus = authRetryRes.status;
+                }
+              } catch {
+                boot = { ok: false, status: authRetryRes.status, data: null };
+                lastBootstrapInitFetchStatus = authRetryRes.status;
+              }
+            } else {
+              boot = { ok: false, status: authRetryRes.status, data: null };
+              lastBootstrapInitFetchStatus = authRetryRes.status;
+            }
+          }
+        }
+
         if (!boot.ok) {
           // Fallback path: build a minimal usable snapshot from dashboard + tasks endpoints.
           const dateStr = snapshot.date || getTodayKey();

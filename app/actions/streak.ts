@@ -1,6 +1,25 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
+import { ENERGY_CAP } from "@/lib/today-engine";
+
+async function usedEnergyForDate(userId: string, dateStr: string): Promise<number> {
+  const supabase = await createClient();
+  const dayStart = `${dateStr}T00:00:00.000Z`;
+  const dayEnd = `${dateStr}T23:59:59.999Z`;
+  const { data: completedToday } = await supabase
+    .from("tasks")
+    .select("energy_required")
+    .eq("user_id", userId)
+    .eq("completed", true)
+    .gte("completed_at", dayStart)
+    .lte("completed_at", dayEnd);
+
+  return (completedToday ?? []).reduce(
+    (sum, t) => sum + Math.min(5, Math.max(1, (t.energy_required as number | null) ?? 2)),
+    0,
+  );
+}
 
 /**
  * Fase 2: When 5+ days no completion, set current_streak to 0 (streak decay).
@@ -44,6 +63,9 @@ export async function updateStreakOnTaskComplete(completionDateStr: string): Pro
   if (!user) return;
 
   const completionDate = completionDateStr.slice(0, 10);
+  const used = await usedEnergyForDate(user.id, completionDate);
+  // Product rule: a day counts for streak only when today's available energy budget is exhausted.
+  if (used < ENERGY_CAP) return;
 
   const { data: row } = await supabase
     .from("user_streak")

@@ -53,7 +53,11 @@ async function resolveSessionUserIdForBootstrap(): Promise<string | null> {
   if (first?.user?.id) return first.user.id;
 
   const maxWaitMs =
-    isStandaloneDisplayMode() && likelyHasStoredSupabaseSession() ? 900 : 0;
+    isStandaloneDisplayMode() && likelyHasStoredSupabaseSession()
+      ? 2400
+      : likelyHasStoredSupabaseSession()
+        ? 1200
+        : 0;
   if (maxWaitMs > 0) {
     requestDurableStorage();
     const deadline = Date.now() + maxWaitMs;
@@ -90,12 +94,19 @@ export function BootstrapLoader({ onReady }: Props) {
     const run = async () => {
       try {
         const dayKey = getSnapshotValidityDayKey();
-        const userId = await resolveSessionUserIdForBootstrap();
+        let userId = await resolveSessionUserIdForBootstrap();
 
-        // PWA/standalone: align Supabase cookies with storage before any /api/* fetch (SW always intercepts).
-        if (!cancelled && userId && isStandaloneDisplayMode()) {
+        // Align SSR cookies with client storage before any `/api/*` call (PWA / slow storage often races otherwise).
+        if (!cancelled && (isStandaloneDisplayMode() || likelyHasStoredSupabaseSession())) {
           const supabase = createClient();
           await supabase.auth.refreshSession().catch(() => {});
+          if (!userId) {
+            const {
+              data: { session },
+            } = await supabase.auth.getSession().catch(() => ({ data: { session: null } }));
+            userId = session?.user?.id ?? null;
+          }
+          await new Promise((r) => setTimeout(r, 80));
         }
 
         if (userId && !cancelled) {
@@ -108,17 +119,47 @@ export function BootstrapLoader({ onReady }: Props) {
           }
         }
 
-        const result = await initializeDailySystem((p) => {
+        let result = await initializeDailySystem((p) => {
           if (!cancelled) startTransition(() => setProgress(p));
         });
         if (cancelled) return;
-        if (userId) {
-          await persistDailyInitResult(userId, result).catch(() => {});
+
+        const persistUserId = userId;
+        if (persistUserId) {
+          await persistDailyInitResult(persistUserId, result).catch(() => {});
         }
         setSnapshot(result.snapshot);
         onReady(result);
       } catch (e) {
         if (cancelled) return;
+        const msg = e instanceof Error ? e.message : "";
+        const maybeRecoverable =
+          msg.includes("sessie") ||
+          msg.includes("bootstrap") ||
+          msg.includes("geldige bootstrap-response");
+        if (maybeRecoverable) {
+          try {
+            const supabase = createClient();
+            await supabase.auth.refreshSession().catch(() => {});
+            await new Promise((r) => setTimeout(r, 450));
+            const result = await initializeDailySystem((p) => {
+              if (!cancelled) startTransition(() => setProgress(p));
+            });
+            if (cancelled) return;
+            const {
+              data: { session },
+            } = await supabase.auth.getSession().catch(() => ({ data: { session: null } }));
+            const uid = session?.user?.id ?? null;
+            if (uid) {
+              await persistDailyInitResult(uid, result).catch(() => {});
+            }
+            setSnapshot(result.snapshot);
+            onReady(result);
+            return;
+          } catch {
+            /* show original error */
+          }
+        }
         setError(e instanceof Error ? e.message : "Failed to initialize system");
       }
     };

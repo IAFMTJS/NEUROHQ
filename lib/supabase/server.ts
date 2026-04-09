@@ -64,12 +64,48 @@ export const createClient = cache(async (): Promise<SupabaseClient<Database>> =>
         },
       },
     });
+    const serverAuth = serverClient.auth as typeof serverClient.auth;
+    const originalGetUser = serverAuth.getUser.bind(serverAuth);
+    const originalGetSession = serverAuth.getSession.bind(serverAuth);
+
+    let memoizedGetUser:
+      | Promise<Awaited<ReturnType<typeof originalGetUser>>>
+      | null = null;
+    let memoizedGetSession:
+      | Promise<Awaited<ReturnType<typeof originalGetSession>>>
+      | null = null;
+
+    (serverAuth as typeof serverAuth & { getUser: typeof serverAuth.getUser }).getUser =
+      ((jwt?: string) => {
+        if (typeof jwt === "string" && jwt.length > 0) {
+          return originalGetUser(jwt);
+        }
+        if (!memoizedGetUser) {
+          memoizedGetUser = originalGetUser().catch((err) => {
+            memoizedGetUser = null;
+            throw err;
+          });
+        }
+        return memoizedGetUser;
+      }) as typeof serverAuth.getUser;
+
+    (serverAuth as typeof serverAuth & { getSession: typeof serverAuth.getSession }).getSession =
+      (() => {
+        if (!memoizedGetSession) {
+          memoizedGetSession = originalGetSession().catch((err) => {
+            memoizedGetSession = null;
+            throw err;
+          });
+        }
+        return memoizedGetSession;
+      }) as typeof serverAuth.getSession;
+
     // Return a client created with Database generic so table types (Row/Insert/Update) are correct.
     // Reuse the server client's auth so cookies/session are shared.
     const typedClient = createSupabaseClient<Database>(supabaseUrl, supabaseAnonKey, {
       global: { fetch: fetchWithTimeout },
     });
-    (typedClient as unknown as { auth: typeof serverClient.auth }).auth = serverClient.auth;
+    (typedClient as unknown as { auth: typeof serverClient.auth }).auth = serverAuth;
     return typedClient;
   } catch (e) {
     console.error("[Supabase server]", e instanceof Error ? e.message : e);

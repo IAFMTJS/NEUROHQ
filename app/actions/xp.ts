@@ -4,6 +4,7 @@ import { createClient, createServiceRoleClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
 import { todayDateString } from "@/lib/utils/timezone";
 import { levelFromTotalXP, xpToNextLevel, rankFromLevel, nextUnlockPreview } from "@/lib/xp";
+import { ENERGY_CAP } from "@/lib/today-engine";
 import {
   getBrainState,
   getBrainStateMultiplier,
@@ -18,6 +19,7 @@ const XP_BRAIN_STATUS = 5;
 const XP_LEARNING_SESSION = 8;
 const XP_WEEKLY_LEARNING_TARGET = 25;
 const XP_STREAK_DAY = 5;
+const ENERGY_OVERFLOW_XP_BONUS_MULTIPLIER = 1.1;
 
 async function getXPByUserId(userId: string): Promise<{ total_xp: number; level: number }> {
   const admin = createServiceRoleClient();
@@ -288,6 +290,22 @@ export async function awardXPForTaskComplete(
       const { getConsequenceState } = await import("./consequence-engine");
       const consequence = await getConsequenceState(completionDate);
       if (consequence.recoveryProtocol) recoveryPenaltyMult = 0.95; // Weekly performance penalty (Fase 2)
+
+      const dayStart = `${completionDate}T00:00:00.000Z`;
+      const dayEnd = `${completionDate}T23:59:59.999Z`;
+      const { data: completedToday } = await supabase
+        .from("tasks")
+        .select("energy_required")
+        .eq("user_id", user.id)
+        .eq("completed", true)
+        .gte("completed_at", dayStart)
+        .lte("completed_at", dayEnd);
+      const usedToday = (completedToday ?? []).reduce(
+        (sum, t) => sum + Math.min(5, Math.max(1, (t.energy_required as number | null) ?? 2)),
+        0,
+      );
+      // Above the visible energy meter: reward extra output with +10% XP.
+      if (usedToday > ENERGY_CAP) energyMult *= ENERGY_OVERFLOW_XP_BONUS_MULTIPLIER;
 
       const normalized = normalizeBehavioralStats({
         energy: energy ?? 5,

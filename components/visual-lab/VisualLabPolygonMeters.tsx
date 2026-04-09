@@ -214,6 +214,18 @@ export function PolygonHudMeter({
                 </feMerge>
               </filter>
             ) : null}
+            {isHex ? (
+              <>
+                <linearGradient id={`${gradId}-innerfill`} x1="0%" y1="100%" x2="0%" y2="0%">
+                  <stop offset="0%" stopColor="rgba(0,212,255,0.82)" />
+                  <stop offset="60%" stopColor="rgba(34,211,238,0.5)" />
+                  <stop offset="100%" stopColor="rgba(94,234,212,0.35)" />
+                </linearGradient>
+                <clipPath id={`${gradId}-innerclip`}>
+                  <path d={d} transform="translate(50 50) scale(0.72) translate(-50 -50)" />
+                </clipPath>
+              </>
+            ) : null}
           </defs>
           <path
             d={d}
@@ -224,6 +236,21 @@ export function PolygonHudMeter({
             strokeLinecap="round"
             pathLength={100}
           />
+          {isHex ? (
+            <>
+              <path
+                d={d}
+                transform="translate(50 50) scale(0.72) translate(-50 -50)"
+                fill="rgba(6,18,30,0.55)"
+                stroke="rgba(255,255,255,0.08)"
+                strokeWidth={1.2}
+                strokeLinejoin="round"
+              />
+              <g clipPath={`url(#${gradId}-innerclip)`}>
+                <rect x="0" y={100 - p} width="100" height="100" fill={`url(#${gradId}-innerfill)`} opacity={0.95} />
+              </g>
+            </>
+          ) : null}
           {isHex ? (
             <path
               d={d}

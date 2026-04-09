@@ -1,6 +1,6 @@
 /**
  * Builds lib/protocols-seed-catalog.json — catalog stubs for Updates 22-03 protocol names
- * not yet fully authored. Valid definition_json (4 weeks × 2 tasks, tier scaling).
+ * not yet fully authored. Valid definition_json (6 weeks × 2 tasks, tier scaling).
  * Run: node scripts/build-protocol-catalog.mjs
  */
 import { writeFileSync } from "fs";
@@ -15,7 +15,7 @@ const STUB_NOTE =
 
 /** @param {string} slug */
 function buildDefinition(slug, title, oneLiner, weekHints) {
-  const weeks = 4;
+  const weeks = 6;
   const phases = [
     {
       id: "p1",
@@ -23,21 +23,21 @@ function buildDefinition(slug, title, oneLiner, weekHints) {
       title: "Fase 1 — Basis",
       summary: "Fundament en ritme vastzetten.",
       week_start: 1,
-      week_end: 2,
+      week_end: 3,
     },
     {
       id: "p2",
       order: 2,
       title: "Fase 2 — Verdieping",
       summary: "Volume en consistentie opvoeren.",
-      week_start: 3,
-      week_end: 4,
+      week_start: 4,
+      week_end: 6,
     },
   ];
 
   const weekRows = [];
   for (let w = 1; w <= weeks; w++) {
-    const phaseId = w <= 2 ? "p1" : "p2";
+    const phaseId = w <= 3 ? "p1" : "p2";
     const hint = weekHints[w - 1] ?? `Week ${w}: één duidelijke stap vooruit.`;
     weekRows.push({
       week_index: w,
@@ -74,8 +74,8 @@ function buildDefinition(slug, title, oneLiner, weekHints) {
   return {
     version: 1,
     goal_one_liner: oneLiner,
-    estimated_weeks_min: 4,
-    estimated_weeks_max: 12,
+    estimated_weeks_min: 6,
+    estimated_weeks_max: 13,
     phases,
     weeks: weekRows,
   };

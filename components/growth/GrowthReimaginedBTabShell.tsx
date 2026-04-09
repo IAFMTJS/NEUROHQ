@@ -23,7 +23,7 @@ export function GrowthReimaginedBTabShell({ commandPanel, signalsPanel, workspac
 
   return (
     <section className="rounded-2xl border border-white/10 bg-black/20 p-4 md:p-5">
-      <div className="flex flex-wrap items-center gap-2">
+      <div className="grid grid-cols-4 gap-1.5">
         {tabs.map((tab) => {
           const selected = tab.id === activeTab;
           return (
@@ -33,14 +33,14 @@ export function GrowthReimaginedBTabShell({ commandPanel, signalsPanel, workspac
               role="tab"
               aria-selected={selected}
               onClick={() => setActiveTab(tab.id)}
-              className={`rounded-full border px-3 py-1.5 text-xs font-semibold transition ${
+              className={`min-w-0 rounded-full border px-2 py-1 text-[11px] font-semibold leading-none transition ${
                 selected
                   ? "border-cyan-300/55 bg-cyan-500/18 text-cyan-100"
                   : "border-white/15 bg-black/20 text-slate-300 hover:border-white/30 hover:text-white"
               }`}
               title={tab.hint}
             >
-              {tab.label}
+              <span className="block truncate">{tab.label}</span>
             </button>
           );
         })}
