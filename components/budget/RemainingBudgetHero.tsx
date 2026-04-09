@@ -8,7 +8,11 @@ import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { HQModal } from "@/components/hq";
 import { Modal } from "@/components/Modal";
-import { AddBudgetEntryForm } from "@/components/AddBudgetEntryForm";
+import {
+  openBudgetLedgerToast,
+  type BudgetLedgerToastEntry,
+  type BudgetLedgerToastGoal,
+} from "@/components/budget/open-budget-ledger-toast";
 import { BudgetLockHeaderBadge } from "@/components/budget/BudgetLockHeaderBadge";
 import { EnergyRing, type EnergyRingMode } from "@/components/hud-test/EnergyRing";
 import { updateBudgetSettings, type ScheduledNextBudget } from "@/app/actions/budget";
@@ -197,6 +201,9 @@ type Props = {
   scheduledNextBudget?: ScheduledNextBudget | null;
   /** `false` = toon vaste CTA voor budget-weekreview (los van Strategy-weekreview). */
   weeklyReviewCompleted?: boolean;
+  /** Period lines for the full “Boekingen” toast opened from Quick log. */
+  budgetLedgerEntries: BudgetLedgerToastEntry[];
+  budgetLedgerGoals: BudgetLedgerToastGoal[];
 };
 
 export function RemainingBudgetHero({
@@ -222,6 +229,8 @@ export function RemainingBudgetHero({
   lockPanelHref,
   scheduledNextBudget = null,
   weeklyReviewCompleted,
+  budgetLedgerEntries,
+  budgetLedgerGoals,
 }: Props) {
   const pendingBudget = usePendingBudgetSnapshot();
   const pendingActive = pendingBudget != null && pendingBudget.synced !== true;
@@ -450,35 +459,14 @@ export function RemainingBudgetHero({
   }
 
   function openQuickLogToast() {
-    toast.custom(
-      (id) => (
-        <div
-          className="relative w-[min(100vw-2rem,22rem)] max-h-[min(85vh,520px)] overflow-y-auto rounded-2xl border border-emerald-500/25 bg-[linear-gradient(165deg,rgba(6,24,20,0.97),rgba(15,23,42,0.98))] px-3 py-3 pr-9 text-left shadow-[0_0_36px_rgba(16,185,129,0.15),0_12px_40px_rgba(0,0,0,0.45)] backdrop-blur-md"
-          role="dialog"
-          aria-label="Quick log"
-        >
-          <button
-            type="button"
-            className="absolute right-2 top-2 z-10 rounded-lg p-1.5 text-[var(--text-muted)] hover:bg-[var(--bg-surface)] hover:text-[var(--text-primary)]"
-            aria-label="Sluiten"
-            onClick={() => toast.dismiss(id)}
-          >
-            ✕
-          </button>
-          <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-emerald-200">Quick log</p>
-          <p className="mt-0.5 text-[11px] text-[var(--text-muted)]">Korte entry — sluit automatisch na opslaan.</p>
-          <div className="mt-3">
-            <AddBudgetEntryForm
-              date={logDate}
-              currency={effectiveCurrency}
-              mode="quick"
-              onSuccess={() => toast.dismiss(id)}
-            />
-          </div>
-        </div>
-      ),
-      { duration: 120_000 }
-    );
+    const href = executeHref ?? "/budget?tab=execute#entries-frozen";
+    openBudgetLedgerToast({
+      date: logDate,
+      currency: effectiveCurrency,
+      entries: budgetLedgerEntries,
+      goals: budgetLedgerGoals,
+      executeEntriesHref: href,
+    });
   }
 
   const paydayLine =

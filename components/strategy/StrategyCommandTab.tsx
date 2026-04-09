@@ -77,6 +77,14 @@ function pillarProgressFillSolid(key: PillarKey): string {
   return `rgba(${r},${g},${b},0.92)`;
 }
 
+/** Tube-style glow per segment (aligned with commander / split-ring HUD). */
+const PILLAR_SEGMENT_GLOW: Record<PillarKey, string> = {
+  budget: "rgba(239, 68, 68, 0.52)",
+  growth: "rgba(34, 197, 94, 0.48)",
+  xp: "rgba(125, 211, 252, 0.5)",
+  discipline: "rgba(250, 204, 21, 0.48)",
+};
+
 function QuarterCommandOverview({
   scorePct,
   pillars,
@@ -99,14 +107,36 @@ function QuarterCommandOverview({
   return (
     <div className="mx-auto max-w-lg">
       <div className="relative mx-auto aspect-square w-full max-w-[280px] sm:max-w-[320px]">
+        <div
+          className="pointer-events-none absolute inset-[-18px] rounded-full bg-[radial-gradient(circle_at_50%_42%,rgba(var(--mode-rgb),0.24),transparent_58%)] blur-[14px] sm:blur-[4px]"
+          aria-hidden
+        />
+        <div
+          className="pointer-events-none absolute inset-0 rounded-full bg-[radial-gradient(circle_at_50%_50%,rgba(0,0,0,0.38),transparent_72%)]"
+          aria-hidden
+        />
         <svg
           width="100%"
           height="100%"
           viewBox={`0 0 ${vb} ${vb}`}
-          className="overflow-visible drop-shadow-[0_0_28px_rgba(var(--mode-rgb),0.14)]"
+          className="relative overflow-visible drop-shadow-[0_0_28px_rgba(var(--mode-rgb),0.28),0_0_48px_rgba(var(--mode-rgb),0.1)]"
           role="img"
           aria-label={`Kwartaal contractscore ${p} procent`}
         >
+          <defs>
+            <filter id="strat-quarter-pie-bloom" x="-40%" y="-40%" width="180%" height="180%">
+              <feGaussianBlur stdDeviation="2.2" result="b" />
+              <feColorMatrix
+                in="b"
+                type="matrix"
+                values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 0.4 0"
+                result="s"
+              />
+              <feMerge>
+                <feMergeNode in="s" />
+              </feMerge>
+            </filter>
+          </defs>
           {pillars.map((pl, i) => {
             const start = baseStarts[i];
             const segEnd = start + slot - gapDeg;
@@ -116,8 +146,8 @@ function QuarterCommandOverview({
                 key={`${pl.key}-track`}
                 d={annularSectorPath(cx, cy, rInner, rOuter, start, segEnd)}
                 fill={trackFill}
-                stroke="rgba(4,12,22,0.55)"
-                strokeWidth="1.1"
+                stroke="rgba(255,255,255,0.06)"
+                strokeWidth="1.15"
                 paintOrder="stroke fill"
               />
             );
@@ -130,29 +160,46 @@ function QuarterCommandOverview({
             if (t <= 0) return null;
             const filledEnd = start + fullSpan * t;
             const fill = pillarProgressFillSolid(pl.key);
+            const glow = PILLAR_SEGMENT_GLOW[pl.key];
             return (
-              <path
-                key={pl.key}
-                d={annularSectorPath(cx, cy, rInner, rOuter, start, filledEnd)}
-                fill={fill}
-                stroke="rgba(4,12,22,0.35)"
-                strokeWidth="0.85"
-                paintOrder="stroke fill"
-              />
+              <g key={pl.key}>
+                <path
+                  d={annularSectorPath(cx, cy, rInner, rOuter, start, filledEnd)}
+                  fill={fill}
+                  fillOpacity={0.35}
+                  filter="url(#strat-quarter-pie-bloom)"
+                  aria-hidden
+                />
+                <path
+                  d={annularSectorPath(cx, cy, rInner, rOuter, start, filledEnd)}
+                  fill={fill}
+                  stroke="rgba(255,255,255,0.14)"
+                  strokeWidth="0.9"
+                  paintOrder="stroke fill"
+                  style={{
+                    filter: `drop-shadow(0 0 3px ${glow}) drop-shadow(0 0 12px ${glow})`,
+                  }}
+                />
+              </g>
             );
           })}
           <circle
             cx={cx}
             cy={cy}
             r={rInner - 2.5}
-            fill="rgba(4,12,22,0.94)"
-            stroke="rgba(var(--mode-rgb),0.22)"
-            strokeWidth="1.25"
+            fill="rgba(6,10,18,0.96)"
+            stroke="rgba(var(--mode-rgb),0.38)"
+            strokeWidth="1.35"
+            style={{ filter: "drop-shadow(0 0 8px rgba(var(--mode-rgb),0.32)) drop-shadow(0 0 2px rgba(var(--mode-rgb),0.45))" }}
           />
         </svg>
         <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center px-6 text-center">
-          <span className="font-mono text-4xl font-bold tabular-nums text-[var(--text-primary)] sm:text-5xl">{p}</span>
-          <span className="text-[10px] font-semibold uppercase tracking-[0.2em] text-[var(--text-muted)]">contract</span>
+          <span className="font-mono text-4xl font-bold tabular-nums text-[var(--text-primary)] drop-shadow-[0_0_14px_rgba(var(--mode-rgb),0.35),0_0_4px_rgba(var(--mode-rgb),0.2)] sm:text-5xl">
+            {p}
+          </span>
+          <span className="text-[10px] font-semibold uppercase tracking-[0.2em] text-[var(--semantic-accent)]/90 drop-shadow-[0_0_8px_rgba(var(--mode-rgb),0.22)]">
+            contract
+          </span>
         </div>
       </div>
 

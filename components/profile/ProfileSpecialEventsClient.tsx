@@ -21,7 +21,7 @@ function formatWhen(iso: string) {
 }
 
 function bundleHasContent(b: ProfileSpecialEventsBundle): boolean {
-  return b.events.length > 0 || b.games.length > 0 || b.quest != null;
+  return b.events.length > 0 || b.upcomingEvents.length > 0 || b.games.length > 0 || b.quest != null;
 }
 
 function SectionHeading({
@@ -270,6 +270,58 @@ export function ProfileSpecialEventsClient({ bundle }: { bundle: ProfileSpecialE
                           <span aria-hidden>—</span>
                           <span className="rounded-md bg-black/20 px-2 py-0.5 font-mono text-[10px] text-cyan-200/80">
                             {formatWhen(ev.ends_at)}
+                          </span>
+                        </>
+                      ) : null}
+                    </p>
+                  </div>
+                </div>
+              </li>
+            ))}
+          </ul>
+        </section>
+      ) : null}
+
+      {bundle.upcomingEvents.length > 0 ? (
+        <section aria-labelledby="profile-upcoming-events-heading">
+          <SectionHeading
+            id="profile-upcoming-events-heading"
+            icon="🗓️"
+            kicker="Planning"
+            label="Upcoming events"
+          />
+          <ul className="space-y-3">
+            {bundle.upcomingEvents.map((ev) => (
+              <li
+                key={`upcoming-${ev.id}`}
+                className="relative overflow-hidden rounded-2xl border border-indigo-500/30 bg-gradient-to-br from-indigo-950/35 via-[var(--bg-surface)]/25 to-violet-950/25 p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.05)]"
+              >
+                <div
+                  className="pointer-events-none absolute -right-10 -top-10 h-28 w-28 rounded-full bg-indigo-400/10 blur-2xl"
+                  aria-hidden
+                />
+                <div className="relative flex gap-3">
+                  <span
+                    className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-indigo-500/20 text-sm ring-1 ring-indigo-400/30"
+                    aria-hidden
+                  >
+                    🗓️
+                  </span>
+                  <div className="min-w-0 flex-1">
+                    <p className="font-semibold text-indigo-100/95">{ev.title}</p>
+                    <p className="mt-1.5 text-[11px] font-bold uppercase tracking-[0.12em] text-indigo-300/85">
+                      Story preview
+                    </p>
+                    <p className="mt-1 text-sm leading-relaxed text-[var(--text-muted)]">{ev.storyPreview}</p>
+                    <p className="mt-3 flex flex-wrap items-center gap-x-2 text-[11px] text-[var(--text-muted)]">
+                      <span className="rounded-md bg-black/20 px-2 py-0.5 font-mono text-[10px] text-indigo-200/80">
+                        Start: {formatWhen(ev.starts_at)}
+                      </span>
+                      {ev.ends_at ? (
+                        <>
+                          <span aria-hidden>—</span>
+                          <span className="rounded-md bg-black/20 px-2 py-0.5 font-mono text-[10px] text-indigo-200/80">
+                            Einde: {formatWhen(ev.ends_at)}
                           </span>
                         </>
                       ) : null}

@@ -313,6 +313,8 @@ export default async function BudgetPage({ searchParams }: Props) {
             lockPanelHref={lockPanelHref}
             scheduledNextBudget={budgetSettings.scheduled_next_budget}
             weeklyReviewCompleted={weeklyReviewStatus.completed}
+            budgetLedgerEntries={entries}
+            budgetLedgerGoals={goals}
           />
         </>
       )}

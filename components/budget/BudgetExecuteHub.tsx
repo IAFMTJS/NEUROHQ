@@ -6,8 +6,8 @@ import { format } from "date-fns";
 import { nl } from "date-fns/locale";
 import type { FinanceState, IncomeSource } from "@/lib/dcic/types";
 import { weeklyRequired } from "@/lib/utils/savings";
-import { AddBudgetEntryForm } from "@/components/AddBudgetEntryForm";
-import { BudgetEntryList } from "@/components/BudgetEntryList";
+import { BudgetDeckToastChrome, BUDGET_DECK_TOAST_DURATION_MS } from "@/components/budget/budget-deck-toast-chrome";
+import { openBudgetLedgerToast } from "@/components/budget/open-budget-ledger-toast";
 import { FrozenPurchaseCard } from "@/components/FrozenPurchaseCard";
 import { RecurringBudgetCard } from "@/components/RecurringBudgetCard";
 import { SavingsGoalCard } from "@/components/SavingsGoalCard";
@@ -85,41 +85,6 @@ export type BudgetExecuteHubProps = {
 };
 
 type Props = BudgetExecuteHubProps;
-
-const TOAST_DURATION_MS = 120_000;
-
-const toastShell =
-  "relative w-[min(100vw-2rem,420px)] max-h-[min(85vh,560px)] overflow-y-auto rounded-2xl border border-emerald-500/20 bg-[linear-gradient(165deg,rgba(6,24,20,0.97),rgba(15,23,42,0.98))] px-3 py-3 pr-10 text-left shadow-[0_0_28px_rgba(16,185,129,0.12),0_12px_40px_rgba(0,0,0,0.45)] backdrop-blur-md";
-
-function ToastChrome({
-  toastId,
-  title,
-  hint,
-  children,
-  ariaLabel,
-}: {
-  toastId: string | number;
-  title: string;
-  hint?: string;
-  children: React.ReactNode;
-  ariaLabel: string;
-}) {
-  return (
-    <div className={toastShell} role="dialog" aria-label={ariaLabel}>
-      <button
-        type="button"
-        className="absolute right-2 top-2 z-10 rounded-lg p-1.5 text-[var(--text-muted)] hover:bg-[var(--bg-surface)] hover:text-[var(--text-primary)]"
-        aria-label="Sluiten"
-        onClick={() => toast.dismiss(toastId)}
-      >
-        ✕
-      </button>
-      <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-emerald-200">{title}</p>
-      {hint ? <p className="mt-0.5 text-[11px] leading-snug text-[var(--text-muted)]">{hint}</p> : null}
-      <div className="mt-3">{children}</div>
-    </div>
-  );
-}
 
 function ExecuteTile({
   emoji,
@@ -199,7 +164,7 @@ export function BudgetExecuteHub({
   function openPaydayToast() {
     toast.custom(
       (id) => (
-        <ToastChrome toastId={id} title="Cyclus & loon" hint="Loondag, bronnen en 'Vandaag loon gehad'." ariaLabel="Cyclus en loon">
+        <BudgetDeckToastChrome toastId={id} title="Cyclus & loon" hint="Loondag, bronnen en 'Vandaag loon gehad'." ariaLabel="Cyclus en loon">
           <PaydayCard
             daysUntilNextIncome={daysUntilNextIncome}
             nextPaydayLabel={nextPaydayLabel}
@@ -210,68 +175,45 @@ export function BudgetExecuteHub({
             nextPaydayDate={nextPaydayDate}
             serverRowUpdatedAt={serverRowUpdatedAt}
           />
-        </ToastChrome>
+        </BudgetDeckToastChrome>
       ),
-      { duration: TOAST_DURATION_MS }
+      { duration: BUDGET_DECK_TOAST_DURATION_MS }
     );
   }
 
   function openQuickLogToast() {
-    // Quick log acts as a fast entry point to the full ledger toast.
     openLedgerToast();
   }
 
   function openLedgerToast() {
-    toast.custom(
-      (id) => (
-        <ToastChrome
-          toastId={id}
-          title="Boekingen"
-          hint="Nieuwe posten en dit overzicht van de periode."
-          ariaLabel="Boekingen"
-        >
-          <div className="space-y-4">
-            <AddBudgetEntryForm date={today} currency={currency} readOnly={false} />
-            {entries.length > 0 ? (
-              <BudgetEntryList entries={entries} currency={currency} goals={goals} readOnly={false} />
-            ) : (
-              <p className="rounded-lg border border-dashed border-[var(--card-border)] px-3 py-3 text-sm text-[var(--text-muted)]">
-                Nog geen boekingen in deze periode.
-              </p>
-            )}
-            <Link
-              href={executeEntriesHref}
-              className="inline-block text-xs font-semibold text-[var(--accent-focus)] hover:underline"
-              onClick={() => toast.dismiss(id)}
-            >
-              Anker #entries-frozen op deze pagina →
-            </Link>
-          </div>
-        </ToastChrome>
-      ),
-      { duration: TOAST_DURATION_MS }
-    );
+    openBudgetLedgerToast({
+      date: today,
+      currency,
+      entries,
+      goals,
+      executeEntriesHref,
+    });
   }
 
   function openFrozenToast() {
     toast.custom(
       (id) => (
-        <ToastChrome toastId={id} title="Bevriezen" hint="Wachtlijst en bevestigen." ariaLabel="Bevroren aankopen">
+        <BudgetDeckToastChrome toastId={id} title="Bevriezen" hint="Wachtlijst en bevestigen." ariaLabel="Bevroren aankopen">
           {frozenTotal > 0 ? (
             <FrozenPurchaseCard activeFrozen={activeFrozen} readyForAction={readyForAction} currency={currency} goals={goals} />
           ) : (
             <p className="text-sm text-[var(--text-muted)]">Geen actieve of wachtende bevriezingen.</p>
           )}
-        </ToastChrome>
+        </BudgetDeckToastChrome>
       ),
-      { duration: TOAST_DURATION_MS }
+      { duration: BUDGET_DECK_TOAST_DURATION_MS }
     );
   }
 
   function openGoalsToast() {
     toast.custom(
       (id) => (
-        <ToastChrome
+        <BudgetDeckToastChrome
           toastId={id}
           title="Sparen & spaardoelen"
           hint="Pay yourself first — voortgang, bijdragen en nieuwe doelen."
@@ -303,20 +245,20 @@ export function BudgetExecuteHub({
               )}
             </div>
           </div>
-        </ToastChrome>
+        </BudgetDeckToastChrome>
       ),
-      { duration: TOAST_DURATION_MS }
+      { duration: BUDGET_DECK_TOAST_DURATION_MS }
     );
   }
 
   function openRecurringToast() {
     toast.custom(
       (id) => (
-        <ToastChrome toastId={id} title="Terugkerende posten" hint="Templates die automatisch meeboeken." ariaLabel="Terugkerende posten">
+        <BudgetDeckToastChrome toastId={id} title="Terugkerende posten" hint="Templates die automatisch meeboeken." ariaLabel="Terugkerende posten">
           <RecurringBudgetCard templates={recurringTemplates} currency={currency} />
-        </ToastChrome>
+        </BudgetDeckToastChrome>
       ),
-      { duration: TOAST_DURATION_MS }
+      { duration: BUDGET_DECK_TOAST_DURATION_MS }
     );
   }
 

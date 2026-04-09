@@ -17,6 +17,7 @@ export type ProfileSpecialEventRow = {
   id: string;
   title: string;
   body: string;
+  storyPreview: string;
   starts_at: string;
   ends_at: string | null;
 };
@@ -51,6 +52,7 @@ export type ProfileSpecialGameRow = {
 
 export type ProfileSpecialEventsBundle = {
   events: ProfileSpecialEventRow[];
+  upcomingEvents: ProfileSpecialEventRow[];
   games: ProfileSpecialGameRow[];
   quest: QuestClientPayload | null;
 };
@@ -176,12 +178,52 @@ export async function getProfileSpecialEventsBundle(): Promise<ProfileSpecialEve
     getPlatformGamesForSession(supabase, user.id, now),
   ]);
 
-  const events = (evRes.data ?? []).filter((row) =>
+  const allEvents = (evRes.data ?? []) as Array<{
+    id: string;
+    title: string;
+    body: string;
+    starts_at: string;
+    ends_at: string | null;
+    active?: boolean;
+  }>;
+
+  const toPreview = (body: string): string => {
+    const normalized = body.replace(/\s+/g, " ").trim();
+    if (normalized.length <= 180) return normalized;
+    return `${normalized.slice(0, 177).trimEnd()}...`;
+  };
+
+  const events = allEvents
+    .filter((row) =>
     isPlatformEventLive(
       { active: row.active ?? true, starts_at: row.starts_at, ends_at: row.ends_at },
       now
     )
-  ) as ProfileSpecialEventRow[];
+    )
+    .map((row) => ({
+      id: row.id,
+      title: row.title,
+      body: row.body,
+      storyPreview: toPreview(row.body),
+      starts_at: row.starts_at,
+      ends_at: row.ends_at,
+    }));
 
-  return { events, games, quest };
+  const upcomingEvents = allEvents
+    .filter((row) => {
+      if (row.active === false) return false;
+      return new Date(row.starts_at).getTime() > now;
+    })
+    .sort((a, b) => new Date(a.starts_at).getTime() - new Date(b.starts_at).getTime())
+    .slice(0, 5)
+    .map((row) => ({
+      id: row.id,
+      title: row.title,
+      body: row.body,
+      storyPreview: toPreview(row.body),
+      starts_at: row.starts_at,
+      ends_at: row.ends_at,
+    }));
+
+  return { events, upcomingEvents, games, quest };
 }
