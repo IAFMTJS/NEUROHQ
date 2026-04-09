@@ -35,7 +35,7 @@ function calendarMondayFromRow(row: UserProtocolProgressRow | null): string | nu
 export async function syncGrowthFocusProtocolToCalendarWeek(): Promise<{
   didRoll: boolean;
   calendarWeeksAdvanced: number;
-  missionCommit: { created: number; skipped: number } | null;
+  missionCommit: { created: number; skipped: number; withdrawn: number } | null;
 }> {
   const supabase = await createClient();
   const {
@@ -111,7 +111,11 @@ export async function syncGrowthFocusProtocolToCalendarWeek(): Promise<{
       return {
         didRoll: false,
         calendarWeeksAdvanced: 0,
-        missionCommit: { created: missionCommit.created, skipped: missionCommit.skipped },
+        missionCommit: {
+          created: missionCommit.created,
+          skipped: missionCommit.skipped,
+          withdrawn: missionCommit.withdrawn,
+        },
       };
     } catch (e) {
       const msg = e instanceof Error ? e.message : String(e);
@@ -137,7 +141,11 @@ export async function syncGrowthFocusProtocolToCalendarWeek(): Promise<{
       return {
         didRoll: false,
         calendarWeeksAdvanced: 0,
-        missionCommit: { created: missionCommit.created, skipped: missionCommit.skipped },
+        missionCommit: {
+          created: missionCommit.created,
+          skipped: missionCommit.skipped,
+          withdrawn: missionCommit.withdrawn,
+        },
       };
     }
 
@@ -149,7 +157,11 @@ export async function syncGrowthFocusProtocolToCalendarWeek(): Promise<{
       return {
         didRoll: false,
         calendarWeeksAdvanced: 0,
-        missionCommit: { created: missionCommit.created, skipped: missionCommit.skipped },
+        missionCommit: {
+          created: missionCommit.created,
+          skipped: missionCommit.skipped,
+          withdrawn: missionCommit.withdrawn,
+        },
       };
     }
 
@@ -166,7 +178,11 @@ export async function syncGrowthFocusProtocolToCalendarWeek(): Promise<{
       return {
         didRoll: false,
         calendarWeeksAdvanced: 0,
-        missionCommit: { created: missionCommit.created, skipped: missionCommit.skipped },
+        missionCommit: {
+          created: missionCommit.created,
+          skipped: missionCommit.skipped,
+          withdrawn: missionCommit.withdrawn,
+        },
       };
     }
 
@@ -184,7 +200,11 @@ export async function syncGrowthFocusProtocolToCalendarWeek(): Promise<{
       return {
         didRoll: false,
         calendarWeeksAdvanced: 0,
-        missionCommit: { created: missionCommit.created, skipped: missionCommit.skipped },
+        missionCommit: {
+          created: missionCommit.created,
+          skipped: missionCommit.skipped,
+          withdrawn: missionCommit.withdrawn,
+        },
       };
     }
 
@@ -209,7 +229,11 @@ export async function syncGrowthFocusProtocolToCalendarWeek(): Promise<{
     return {
       didRoll: true,
       calendarWeeksAdvanced: steps,
-      missionCommit: { created: missionCommit.created, skipped: missionCommit.skipped },
+      missionCommit: {
+        created: missionCommit.created,
+        skipped: missionCommit.skipped,
+        withdrawn: missionCommit.withdrawn,
+      },
     };
   } catch (e) {
     const msg = e instanceof Error ? e.message : String(e);

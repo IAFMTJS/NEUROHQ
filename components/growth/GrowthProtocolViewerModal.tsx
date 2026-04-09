@@ -105,11 +105,16 @@ export function GrowthProtocolViewerModal({ protocol, progress, engineTier, onCl
                     locale: protocol.locale,
                   });
                   neuroToast.success(
-                    r.created > 0
-                      ? `Focus gezet · ${r.created} taken verdeeld over deze week${r.skipped ? ` (${r.skipped} al aanwezig)` : ""}`
-                      : r.skipped > 0
-                        ? "Focus gezet · week stond al op je bord"
-                        : "Dit protocol is nu je focus op Growth.",
+                    (() => {
+                      const cleared = r.withdrawn > 0 ? `${r.withdrawn} oude protocoltaken verwijderd · ` : "";
+                      if (r.created > 0) {
+                        return `${cleared}Focus gezet · ${r.created} taken verdeeld over deze week${r.skipped ? ` (${r.skipped} al aanwezig)` : ""}`;
+                      }
+                      if (r.skipped > 0) {
+                        return `${cleared}Focus gezet · week stond al op je bord`;
+                      }
+                      return `${cleared}Dit protocol is nu je focus op Growth.`;
+                    })(),
                   );
                   refresh();
                 } catch (e) {
@@ -764,11 +769,16 @@ export function GrowthProtocolViewerModal({ protocol, progress, engineTier, onCl
                           locale: protocol.locale,
                         });
                         neuroToast.success(
-                          r.created > 0
-                            ? `${r.created} taken verdeeld over de week${r.skipped ? ` (${r.skipped} al aanwezig)` : ""}.`
-                            : r.skipped > 0
-                              ? `Geen nieuwe taken — ${r.skipped} stonden al in deze week.`
-                              : "Geen taken om toe te voegen.",
+                          (() => {
+                            const cleared = r.withdrawn > 0 ? `${r.withdrawn} andere protocoltaken uit de week gehaald. ` : "";
+                            if (r.created > 0) {
+                              return `${cleared}${r.created} taken verdeeld over de week${r.skipped ? ` (${r.skipped} al aanwezig)` : ""}.`;
+                            }
+                            if (r.skipped > 0) {
+                              return `${cleared}Geen nieuwe taken — ${r.skipped} stonden al in deze week.`;
+                            }
+                            return cleared ? `${cleared.trim()}` : "Geen taken om toe te voegen.";
+                          })(),
                         );
                         refresh();
                       } catch (e) {

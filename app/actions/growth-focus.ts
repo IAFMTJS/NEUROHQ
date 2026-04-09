@@ -98,12 +98,12 @@ export async function setGrowthFocusProtocol(params: { slug: string | null; loca
 export async function setGrowthFocusAndCommitProtocolWeek(params: {
   slug: string;
   locale?: string;
-}): Promise<{ created: number; skipped: number }> {
+}): Promise<{ created: number; skipped: number; withdrawn: number }> {
   await setGrowthFocusProtocol(params);
   const { commitProtocolWeekToMissions } = await import("./protocol-missions");
   const r = await commitProtocolWeekToMissions({
     protocol_slug: params.slug,
     locale: params.locale ?? "nl",
   });
-  return { created: r.created, skipped: r.skipped };
+  return { created: r.created, skipped: r.skipped, withdrawn: r.withdrawn };
 }

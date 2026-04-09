@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import type { ProtocolLibraryRow } from "@/app/actions/protocol-library";
 import type { ProtocolProgressState } from "@/app/actions/protocol-progress";
 import type { GrowthFocusState } from "@/app/actions/growth-focus";
-import { setGrowthFocusAndCommitProtocolWeek, setGrowthFocusProtocol } from "@/app/actions/growth-focus";
+import { setGrowthFocusAndCommitProtocolWeek } from "@/app/actions/growth-focus";
 import { setProtocolCurrentWeek, setProtocolPreferredTier } from "@/app/actions/protocol-progress";
 import { parseProtocolDefinition, maxWeekIndex } from "@/lib/growth/protocol-definition";
 import { progressKey, resolveFocusProtocol } from "@/lib/growth/resolve-focus-protocol";
@@ -65,11 +65,15 @@ export function GrowthProtocolCommandCard({ protocols, progressMap, growthFocus 
           locale: selectedProtocol.locale,
           week_index: Math.max(1, Math.min(maxWeeks, selectedWeek)),
         });
-        await setGrowthFocusProtocol({
+        const sync = await setGrowthFocusAndCommitProtocolWeek({
           slug: selectedProtocol.slug,
           locale: selectedProtocol.locale,
         });
-        neuroToast.success("Protocolregels opgeslagen.");
+        const parts: string[] = ["Protocolregels opgeslagen."];
+        if (sync.withdrawn > 0) parts.push(`${sync.withdrawn} oude protocoltaken uit deze week verwijderd.`);
+        if (sync.created > 0) parts.push(`${sync.created} nieuwe taken toegevoegd.`);
+        else if (sync.skipped > 0) parts.push(`(${sync.skipped} stonden al op je bord.)`);
+        neuroToast.success(parts.join(" "));
         router.refresh();
       } catch (error) {
         neuroToast.error(error instanceof Error ? error.message : "Opslaan mislukt.");
@@ -99,9 +103,13 @@ export function GrowthProtocolCommandCard({ protocols, progressMap, growthFocus 
           locale: selectedProtocol.locale,
         });
         neuroToast.success(
-          result.created > 0
-            ? `Focus gezet + ${result.created} taken naar Missions${result.skipped ? ` (${result.skipped} al aanwezig)` : ""}.`
-            : "Focus gezet, geen nieuwe taken toegevoegd.",
+          (() => {
+            const cleared = result.withdrawn > 0 ? `${result.withdrawn} oude protocoltaken verwijderd. ` : "";
+            if (result.created > 0) {
+              return `${cleared}Focus gezet + ${result.created} taken naar Missions${result.skipped ? ` (${result.skipped} al aanwezig)` : ""}.`;
+            }
+            return `${cleared}Focus gezet${result.skipped ? ` (${result.skipped} stonden al op je bord)` : ", geen nieuwe taken toegevoegd"}.`;
+          })(),
         );
         router.refresh();
       } catch (error) {

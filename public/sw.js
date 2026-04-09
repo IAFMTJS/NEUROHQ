@@ -1,10 +1,10 @@
 // NEUROHQ Service Worker – offline-first PWA (hele site)
 // Wat blijft staan op het apparaat (zodat minder opnieuw geladen hoeft):
 // - STATIC_CACHE (install): /offline, manifest, app-icon, core HUD visuals
-// - DYNAMIC_CACHE (per dag): HTML/API offline fallback; _next/static JS/CSS = network-first, daarna cache voor offline
+// - DYNAMIC_CACHE (per CACHE_VERSION): HTML/API offline fallback; _next/static JS/CSS = network-first, daarna cache voor offline
 // - IndexedDB (neurohq-offline): offline mutaties (POST/PUT etc.) → gesynchroniseerd zodra er weer netwerk is
 // Bump this when UI/layout changes so authenticated HTML cache doesn't keep old shells after refresh.
-const CACHE_VERSION = "v28";
+const CACHE_VERSION = "v29";
 const STATIC_CACHE = `neurohq-static-${CACHE_VERSION}`;
 const OFFLINE_PAGE = "/offline";
 
@@ -37,7 +37,10 @@ function getTodayDateString() {
 }
 
 function getDynamicCacheName() {
-  return "neurohq-dynamic-" + CACHE_VERSION + "-" + getTodayDateString();
+  // Single bucket per CACHE_VERSION (no calendar day in the name). A daily suffix used to wipe the
+  // whole cache at midnight, which deleted still-valid /_next/static chunks and caused frequent
+  // "page failed" / cold loads after sleep or the next-day open on PWA.
+  return "neurohq-dynamic-" + CACHE_VERSION;
 }
 
 function isAuthenticatedAppRoutePath(pathname) {
@@ -79,6 +82,26 @@ function isNextFlightLikeRequest(request, url) {
     return false;
   } catch {
     return false;
+  }
+}
+
+/** Stable key for caching HTML navigations (ignore SW reload cache-bust query). */
+function requestForHtmlCache(eventRequest) {
+  try {
+    const u = new URL(eventRequest.url);
+    if (u.searchParams.has("__swv")) {
+      u.searchParams.delete("__swv");
+      const qs = u.searchParams.toString();
+      u.search = qs ? "?" + qs : "";
+    }
+    return new Request(u.toString(), {
+      method: "GET",
+      credentials: eventRequest.credentials,
+      headers: eventRequest.headers,
+      redirect: eventRequest.redirect || "follow",
+    });
+  } catch {
+    return eventRequest;
   }
 }
 
@@ -449,7 +472,7 @@ self.addEventListener("activate", function (event) {
           );
         })
         .then(function () {
-          // Prefetch public routes into today's cache
+          // Prefetch public routes into dynamic cache
           return caches.open(getDynamicCacheName()).then(function (cache) {
             return Promise.all(
               PUBLIC_ROUTES_TO_PREFETCH.map(function (route) {
@@ -715,10 +738,12 @@ self.addEventListener("fetch", function (event) {
   // HTML pages: authenticated app routes = stale-while-revalidate (cache hit → instant; then network refresh).
   // Mid-day deploys without refresh can still reference removed chunks; "Nieuwe versie" / hard refresh fixes that.
   if (event.request.headers.get("accept")?.includes("text/html")) {
-    var navRequest = new Request(event.request.url, {
+    var htmlKey = requestForHtmlCache(event.request);
+    var navRequest = new Request(htmlKey.url, {
       headers: event.request.headers,
       method: "GET",
       redirect: "follow",
+      credentials: event.request.credentials,
     });
 
     safeRespondWith(event, function () {
@@ -734,12 +759,12 @@ self.addEventListener("fetch", function (event) {
               })
               .then(function (response) {
                 if (response && response.ok && event.request.method === "GET") {
-                  safeCachePut(cache, event.request, response.clone());
+                  safeCachePut(cache, htmlKey, response.clone());
                 }
                 return response;
               })
               .catch(function () {
-                return cache.match(event.request).then(function (c) {
+                return cache.match(htmlKey).then(function (c) {
                   if (c) return c;
                   return caches.match(OFFLINE_PAGE).then(function (offline) {
                     return offline || new Response("Offline", { status: 503 });
@@ -748,14 +773,13 @@ self.addEventListener("fetch", function (event) {
               });
           }
 
-          // Stale-while-revalidate: same-day cache serves immediately so PWA reopen feels instant
-          // (especially iOS); network refreshes the shell in the background. No cache → network as before.
-          return cache.match(event.request).then(function (cached) {
+          // Stale-while-revalidate: cache hit serves immediately (PWA reopen / sleep); network refreshes in background.
+          return cache.match(htmlKey).then(function (cached) {
             if (cached) {
               fetch(navRequest)
                 .then(function (response) {
                   if (response && response.ok && event.request.method === "GET") {
-                    safeCachePut(cache, event.request, response.clone());
+                    safeCachePut(cache, htmlKey, response.clone());
                   }
                 })
                 .catch(function () {});
@@ -767,12 +791,12 @@ self.addEventListener("fetch", function (event) {
               })
               .then(function (response) {
                 if (response && response.ok && event.request.method === "GET") {
-                  safeCachePut(cache, event.request, response.clone());
+                  safeCachePut(cache, htmlKey, response.clone());
                 }
                 return response;
               })
               .catch(function () {
-                return cache.match(event.request).then(function (c) {
+                return cache.match(htmlKey).then(function (c) {
                   if (c) return c;
                   return caches.match(OFFLINE_PAGE).then(function (offline) {
                     return offline || new Response("Offline", { status: 503 });
@@ -788,20 +812,20 @@ self.addEventListener("fetch", function (event) {
             if (preloadedResponse) {
               if (event.request.method === "GET") {
                 var c = preloadedResponse.clone();
-                safeCachePut(cache, event.request, c);
+                safeCachePut(cache, htmlKey, c);
               }
               return preloadedResponse;
             }
             return fetch(navRequest).then(function (response) {
               if (response.ok && event.request.method === "GET") {
                 var c = response.clone();
-                safeCachePut(cache, event.request, c);
+                safeCachePut(cache, htmlKey, c);
               }
               return response;
             });
           })
           .catch(function () {
-            return cache.match(event.request).then(function (c) {
+            return cache.match(htmlKey).then(function (c) {
               if (c) return c;
               return caches.match(OFFLINE_PAGE).then(function (offline) {
                 return offline || new Response("Offline", { status: 503 });

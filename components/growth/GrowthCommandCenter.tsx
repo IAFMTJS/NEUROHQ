@@ -177,11 +177,16 @@ export function GrowthCommandCenter({
           locale: safeActive.locale,
         });
         neuroToast.success(
-          r.created > 0
-            ? `${r.created} protocoltaken op Missions, verdeeld over de week${r.skipped ? ` (${r.skipped} stonden er al)` : ""}.`
-            : r.skipped > 0
-              ? `Geen nieuwe taken — ${r.skipped} stonden al in deze week.`
-              : "Geen taken om toe te voegen.",
+          (() => {
+            const cleared = r.withdrawn > 0 ? `${r.withdrawn} andere protocoltaken uit deze week gehaald. ` : "";
+            if (r.created > 0) {
+              return `${cleared}${r.created} protocoltaken op Missions, verdeeld over de week${r.skipped ? ` (${r.skipped} stonden er al)` : ""}.`;
+            }
+            if (r.skipped > 0) {
+              return `${cleared}Geen nieuwe taken — ${r.skipped} stonden al in deze week.`;
+            }
+            return cleared ? `${cleared.trim()}` : "Geen taken om toe te voegen.";
+          })(),
         );
         router.refresh();
       } catch (e) {
@@ -278,11 +283,16 @@ export function GrowthCommandCenter({
                         try {
                           const r = await setGrowthFocusAndCommitProtocolWeek({ slug: p.slug, locale: p.locale });
                           neuroToast.success(
-                            r.created > 0
-                              ? `Focus: ${p.title}. ${r.created} taken verdeeld over deze week.${r.skipped ? ` (${r.skipped} stonden er al)` : ""}`
-                              : r.skipped > 0
-                                ? `Focus: ${p.title}. Week stond al op je bord (${r.skipped}).`
-                                : `Focus: ${p.title}.`,
+                            (() => {
+                              const cleared = r.withdrawn > 0 ? `${r.withdrawn} oude protocoltaken verwijderd. ` : "";
+                              if (r.created > 0) {
+                                return `${cleared}Focus: ${p.title}. ${r.created} taken verdeeld over deze week.${r.skipped ? ` (${r.skipped} stonden er al)` : ""}`;
+                              }
+                              if (r.skipped > 0) {
+                                return `${cleared}Focus: ${p.title}. Week stond al op je bord (${r.skipped}).`;
+                              }
+                              return `${cleared}Focus: ${p.title}.`;
+                            })(),
                           );
                         } catch (commitErr) {
                           neuroToast.error(

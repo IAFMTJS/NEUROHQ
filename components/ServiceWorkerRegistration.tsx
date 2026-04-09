@@ -43,12 +43,21 @@ export function ServiceWorkerRegistration() {
 
     /** iOS WebKit often suspends the SW; nudge cache refresh when the PWA returns to foreground. */
     let lastForegroundWarmup = 0;
+    let lastHiddenAt = 0;
     const FOREGROUND_WARMUP_MIN_MS = 90_000;
+    /** After screen lock / background, refresh sooner than the generic throttle. */
+    const FOREGROUND_WARMUP_AFTER_BACKGROUND_MS = 8_000;
 
-    const onForeground = () => {
-      if (document.visibilityState !== "visible") return;
+    const onVisibilityChange = () => {
+      if (document.visibilityState === "hidden") {
+        lastHiddenAt = Date.now();
+        return;
+      }
       const now = Date.now();
-      if (now - lastForegroundWarmup < FOREGROUND_WARMUP_MIN_MS) return;
+      const awayMs = lastHiddenAt ? now - lastHiddenAt : 0;
+      lastHiddenAt = 0;
+      const bypassThrottle = awayMs >= FOREGROUND_WARMUP_AFTER_BACKGROUND_MS;
+      if (!bypassThrottle && now - lastForegroundWarmup < FOREGROUND_WARMUP_MIN_MS) return;
       lastForegroundWarmup = now;
       navigator.serviceWorker.ready.then(postWarmupAndSync).catch(() => {});
     };
@@ -72,7 +81,7 @@ export function ServiceWorkerRegistration() {
       navigator.serviceWorker.ready.then((reg) => reg.active?.postMessage({ type: "SYNC_OFFLINE_QUEUE" }));
     };
     window.addEventListener("online", syncOfflineQueueWhenOnline);
-    document.addEventListener("visibilitychange", onForeground);
+    document.addEventListener("visibilitychange", onVisibilityChange);
 
     let intervalId: ReturnType<typeof setInterval> | undefined;
     navigator.serviceWorker
@@ -115,7 +124,7 @@ export function ServiceWorkerRegistration() {
     return () => {
       navigator.serviceWorker.removeEventListener("controllerchange", onControllerChange);
       window.removeEventListener("online", syncOfflineQueueWhenOnline);
-      document.removeEventListener("visibilitychange", onForeground);
+      document.removeEventListener("visibilitychange", onVisibilityChange);
       if (intervalId !== undefined) clearInterval(intervalId);
     };
   }, []);

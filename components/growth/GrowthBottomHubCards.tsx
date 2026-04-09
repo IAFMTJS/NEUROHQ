@@ -72,11 +72,16 @@ export function GrowthBottomHubCards({ protocols, progressMap, growthFocus, onOp
       try {
         const r = await setGrowthFocusAndCommitProtocolWeek({ slug: p.slug, locale: p.locale });
         neuroToast.success(
-          r.created > 0
-            ? `Focus: ${p.title} · ${r.created} taken verdeeld over de week${r.skipped ? ` (${r.skipped} al aanwezig)` : ""}`
-            : r.skipped > 0
-              ? `Focus: ${p.title} · week stond al op je bord`
-              : `Focus: ${p.title}`,
+          (() => {
+            const cleared = r.withdrawn > 0 ? `${r.withdrawn} oude protocoltaken verwijderd · ` : "";
+            if (r.created > 0) {
+              return `${cleared}Focus: ${p.title} · ${r.created} taken verdeeld over de week${r.skipped ? ` (${r.skipped} al aanwezig)` : ""}`;
+            }
+            if (r.skipped > 0) {
+              return `${cleared}Focus: ${p.title} · week stond al op je bord`;
+            }
+            return `${cleared}Focus: ${p.title}`;
+          })(),
         );
         router.refresh();
       } catch (e) {

@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { createTask } from "@/app/actions/tasks";
+import { revalidateTagMax } from "@/lib/revalidate";
 import { parseProtocolDefinition, getScaledTask, weekForIndex } from "@/lib/growth/protocol-definition";
 import type { DifficultyTier } from "@/lib/growth/adaptive-engine";
 import { assignProtocolTaskDueDatesFromWeek } from "@/lib/growth/spread-protocol-due-dates";
@@ -29,6 +30,114 @@ function extractPtaskId(notes: string): string | null {
   return m ? m[1] : null;
 }
 
+function extractProtocolSlugFromNotes(notes: string): string | null {
+  for (const raw of notes.split("\n")) {
+    const line = raw.trim();
+    if (!line.startsWith("protocol:")) continue;
+    const slug = line.slice("protocol:".length).trim();
+    if (slug) return slug;
+  }
+  return null;
+}
+
+/** Identity from tags (preferred) or legacy `protocol:` line in notes. */
+function protocolIdentityFromTask(tags: string[], notes: string): { slug: string; locale: string | null } | null {
+  for (const t of tags) {
+    if (!t.startsWith("protocol_slug:")) continue;
+    const slug = t.slice("protocol_slug:".length).trim();
+    if (!slug) continue;
+    let locale: string | null = null;
+    for (const u of tags) {
+      if (u.startsWith("protocol_locale:")) {
+        locale = u.slice("protocol_locale:".length).trim() || null;
+        break;
+      }
+    }
+    return { slug, locale };
+  }
+  const fromNotes = extractProtocolSlugFromNotes(notes);
+  return fromNotes ? { slug: fromNotes, locale: null } : null;
+}
+
+function isOtherProtocolMission(
+  tags: string[],
+  notes: string,
+  keepSlug: string,
+  keepLocale: string,
+): boolean {
+  if (!tags.includes("protocol")) return false;
+  const id = protocolIdentityFromTask(tags, notes);
+  if (!id) return false;
+  if (id.slug !== keepSlug) return true;
+  if (id.locale != null && id.locale !== keepLocale) return true;
+  return false;
+}
+
+/**
+ * Soft-delete open protocol missions in the budget week that belong to another protocol (or locale).
+ * Keeps Missions aligned when switching growth focus.
+ */
+async function withdrawOtherProtocolMissionsInBudgetWeek(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  userId: string,
+  keepSlug: string,
+  keepLocale: string,
+  weekStart: string,
+  weekEnd: string,
+): Promise<{ withdrawn: number; dueDates: string[] }> {
+  const { data: rows, error } = await supabase
+    .from("tasks")
+    .select("id, due_date, task_tags, notes")
+    .eq("user_id", userId)
+    .gte("due_date", weekStart)
+    .lte("due_date", weekEnd)
+    .eq("completed", false)
+    .is("parent_task_id", null)
+    .is("deleted_at", null);
+
+  if (error) {
+    if (process.env.NODE_ENV === "development") {
+      console.warn("withdrawOtherProtocolMissionsInBudgetWeek:", error.message);
+    }
+    return { withdrawn: 0, dueDates: [] };
+  }
+
+  const ids: string[] = [];
+  const dueDates: string[] = [];
+  for (const row of rows ?? []) {
+    const tags = normalizeTaskTags((row as { task_tags?: unknown }).task_tags);
+    const notes = (row as { notes?: string | null }).notes ?? "";
+    if (!isOtherProtocolMission(tags, notes, keepSlug, keepLocale)) continue;
+    ids.push((row as { id: string }).id);
+    const dd = (row as { due_date?: string }).due_date;
+    if (dd) dueDates.push(dd);
+  }
+
+  if (ids.length === 0) return { withdrawn: 0, dueDates: [] };
+
+  const now = new Date().toISOString();
+  const chunkSize = 100;
+  for (let i = 0; i < ids.length; i += chunkSize) {
+    const chunk = ids.slice(i, i + chunkSize);
+    const { error: upErr } = await supabase
+      .from("tasks")
+      .update({ deleted_at: now, updated_at: now })
+      .in("id", chunk)
+      .eq("user_id", userId);
+    if (upErr) throw new Error(upErr.message);
+  }
+
+  for (const d of new Set(dueDates)) {
+    revalidateTagMax(`tasks-${userId}-${d}`);
+  }
+  revalidateTagMax("decision-blocks");
+  revalidatePath("/tasks");
+  revalidatePath("/learning");
+  revalidatePath("/dashboard");
+
+  return { withdrawn: ids.length, dueDates };
+}
+
 function normalizeTaskTags(value: unknown): string[] {
   if (!Array.isArray(value)) return [];
   return value.filter((item): item is string => typeof item === "string");
@@ -53,7 +162,7 @@ export async function commitProtocolWeekToMissions(params: {
   locale?: string;
   /** Alle taken op deze dag; als gezet, geen week-spreiding. */
   due_date?: string;
-}): Promise<{ created: number; skipped: number; taskIds: string[] }> {
+}): Promise<{ created: number; skipped: number; taskIds: string[]; withdrawn: number }> {
   const supabase = await createClient();
   const {
     data: { user },
@@ -93,6 +202,15 @@ export async function commitProtocolWeekToMissions(params: {
   const titlePrefix = (row as { title?: string }).title?.slice(0, 48) ?? params.protocol_slug;
 
   const { start: weekStart, end: weekEnd } = getBudgetWeekBounds(anchorToday);
+  const { withdrawn } = await withdrawOtherProtocolMissionsInBudgetWeek(
+    supabase,
+    user.id,
+    params.protocol_slug,
+    locale,
+    weekStart,
+    weekEnd,
+  );
+
   const { data: existingInWeek } = await supabase
     .from("tasks")
     .select("notes")
@@ -188,7 +306,7 @@ export async function commitProtocolWeekToMissions(params: {
   revalidatePath("/learning");
   revalidatePath("/tasks");
   revalidatePath("/dashboard");
-  return { created, skipped, taskIds };
+  return { created, skipped, taskIds, withdrawn };
 }
 
 /**
