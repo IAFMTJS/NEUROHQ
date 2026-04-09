@@ -656,7 +656,9 @@ export async function getStrategyAppReviewLockState(): Promise<{ locked: boolean
   const supabase = await createClient();
   const {
     data: { user },
-  } = await supabase.auth.getUser();
+  } = await supabase.auth
+    .getUser()
+    .catch(() => ({ data: { user: null } }));
   if (!user) return { locked: false };
 
   const { data: row } = await supabase

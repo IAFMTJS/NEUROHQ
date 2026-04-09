@@ -38,6 +38,17 @@ function fetchWithTimeout(input: RequestInfo | URL, init?: RequestInit): Promise
 }
 
 type CookieOpts = { path?: string; maxAge?: number; domain?: string; sameSite?: "lax" | "strict" | "none"; secure?: boolean; httpOnly?: boolean };
+type AuthProbeState = "ok" | "network_error" | "auth_error";
+
+function isLikelyNetworkAuthProbeError(err: unknown): boolean {
+  if (!err || typeof err !== "object") return false;
+  const anyErr = err as { name?: unknown; message?: unknown };
+  const name = typeof anyErr.name === "string" ? anyErr.name : "";
+  const message = typeof anyErr.message === "string" ? anyErr.message : "";
+  if (name === "AbortError") return true;
+  if (/timeout|timed out|etimedout|network|fetch failed|econnrefused/i.test(message)) return true;
+  return false;
+}
 
 /**
  * Proxy: validate session with Supabase getUser() so auth works on deploy (Vercel).
@@ -62,6 +73,7 @@ export async function proxy(request: NextRequest) {
   const hasSbCookie = request.cookies.getAll().some((c) => c.name.startsWith("sb-"));
 
   let user: { id: string } | null = null;
+  let authProbeState: AuthProbeState = "ok";
   let supabaseClient: ReturnType<typeof createServerClient> | null = null;
   try {
     supabaseClient = createServerClient(supabaseUrl, supabaseAnonKey, {
@@ -87,11 +99,21 @@ export async function proxy(request: NextRequest) {
     });
     const { data } = await supabaseClient.auth.getUser();
     user = data?.user ?? null;
-  } catch {
-    // Supabase timeout or error (e.g. on deploy): fall back to cookie presence so users aren't blocked
+  } catch (err) {
+    authProbeState = isLikelyNetworkAuthProbeError(err) ? "network_error" : "auth_error";
+    // Supabase timeout/network issue (e.g. transient deploy connectivity): fall back to cookie presence so users aren't blocked.
+    // For explicit auth failures (invalid/expired refresh token), treat as signed out and clear stale auth cookies.
+    if (authProbeState === "auth_error") {
+      request.cookies
+        .getAll()
+        .filter((c) => c.name.startsWith("sb-"))
+        .forEach((c) => {
+          response.cookies.set(c.name, "", { path: "/", maxAge: 0 });
+        });
+    }
   }
 
-  const hasSession = !!user || hasSbCookie;
+  const hasSession = !!user || (hasSbCookie && authProbeState === "network_error");
 
   let userRole: "admin" | "user" | null = null;
   if (user && pathname.startsWith("/admin") && supabaseClient) {

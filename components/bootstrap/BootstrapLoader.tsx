@@ -49,7 +49,7 @@ async function resolveSessionUserIdForBootstrap(): Promise<string | null> {
   const supabase = createClient();
   const {
     data: { session: first },
-  } = await supabase.auth.getSession();
+  } = await supabase.auth.getSession().catch(() => ({ data: { session: null } }));
   if (first?.user?.id) return first.user.id;
 
   const maxWaitMs =
@@ -61,14 +61,14 @@ async function resolveSessionUserIdForBootstrap(): Promise<string | null> {
       await new Promise((r) => setTimeout(r, 70));
       const {
         data: { session },
-      } = await supabase.auth.getSession();
+      } = await supabase.auth.getSession().catch(() => ({ data: { session: null } }));
       if (session?.user?.id) return session.user.id;
     }
   }
 
   const {
     data: { user },
-  } = await supabase.auth.getUser();
+  } = await supabase.auth.getUser().catch(() => ({ data: { user: null } }));
   return user?.id ?? null;
 }
 
