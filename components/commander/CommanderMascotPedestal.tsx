@@ -4,12 +4,11 @@ import type { ReactNode } from "react";
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { getCurrencySymbol } from "@/lib/utils/currency";
-import { xpRangeForNextLevel } from "@/lib/xp";
+import { levelFromTotalXP, xpRangeForNextLevel } from "@/lib/xp";
 import { CommanderVerticalResourcePies } from "./CommanderVerticalResourcePies";
 
 export type CommanderMascotPedestalStats = {
   totalXP: number;
-  displayLevel: number;
   budgetRemainingCents: number;
   currency: string;
   energyPct: number;
@@ -38,7 +37,6 @@ function clampPct(n: number) {
 export function CommanderMascotPedestal({ stats, children, showResourceArc = true }: Props) {
   const {
     totalXP,
-    displayLevel,
     budgetRemainingCents,
     currency,
     energyPct,
@@ -46,7 +44,9 @@ export function CommanderMascotPedestal({ stats, children, showResourceArc = tru
     loadPct,
   } = stats;
 
-  const { current, needed } = xpRangeForNextLevel(totalXP);
+  const safeTotalXp = Number.isFinite(totalXP) ? Math.max(0, totalXP) : 0;
+  const displayLevel = levelFromTotalXP(safeTotalXp);
+  const { current, needed } = xpRangeForNextLevel(safeTotalXp);
   const ePct = clampPct(energyPct);
   const fPct = clampPct(focusPct);
   const lPct = clampPct(loadPct);

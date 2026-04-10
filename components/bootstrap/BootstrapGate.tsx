@@ -7,6 +7,7 @@ import { BootstrapLoader } from "@/components/bootstrap/BootstrapLoader";
 import { StoreHydrator } from "@/components/bootstrap/StoreHydrator";
 import type { InitializeResult } from "@/lib/daily-initialize";
 import {
+  NEUROHQ_BOOTSTRAP_READY_FOR_WARMUP,
   NEUROHQ_DAILY_SNAPSHOT_UPDATED,
   type NeurohqDailySnapshotUpdatedDetail,
   seedBootstrapTodayInCache,
@@ -39,6 +40,8 @@ export function BootstrapGate({ children }: Props) {
       const savedAt = result.snapshot.ui.savedAt ?? Date.now();
       const detail: NeurohqDailySnapshotUpdatedDetail = { savedAt };
       window.dispatchEvent(new CustomEvent(NEUROHQ_DAILY_SNAPSHOT_UPDATED, { detail }));
+      (window as Window & { __neurohqBootstrapReady?: number }).__neurohqBootstrapReady = Date.now();
+      window.dispatchEvent(new CustomEvent(NEUROHQ_BOOTSTRAP_READY_FOR_WARMUP));
       setSnapshot(result.snapshot);
       setReady(true);
     },

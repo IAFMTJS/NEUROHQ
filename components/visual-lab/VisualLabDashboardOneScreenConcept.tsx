@@ -12,7 +12,6 @@ const L = 43;
 
 const PEDESTAL = {
   totalXP: 45_200,
-  displayLevel: 12,
   budgetRemainingCents: 42_050,
   currency: "EUR",
   energyPct: E,

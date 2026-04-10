@@ -4,7 +4,7 @@
 // - DYNAMIC_CACHE (per CACHE_VERSION): HTML/API offline fallback; _next/static JS/CSS = network-first, daarna cache voor offline
 // - IndexedDB (neurohq-offline): offline mutaties (POST/PUT etc.) → gesynchroniseerd zodra er weer netwerk is
 // Bump this when UI/layout changes so authenticated HTML cache doesn't keep old shells after refresh.
-const CACHE_VERSION = "v29";
+const CACHE_VERSION = "v30";
 const STATIC_CACHE = `neurohq-static-${CACHE_VERSION}`;
 const OFFLINE_PAGE = "/offline";
 
@@ -323,8 +323,9 @@ const AUTH_ROUTES_TO_PREFETCH = [
 function getSnapshotEndpointsToPrefetch(today) {
   var t = today || getTodayDateString();
   // Keep URLs stable so CacheStorage hits; only include the params that are required.
+  // Note: omit /api/bootstrap/today — the app runs it during BootstrapGate; prefetching it in
+  // parallel caused duplicate heavy server work and slow "step 1/5" cold starts.
   return [
-    "/api/bootstrap/today",
     "/api/dashboard/data?part=all",
     "/api/xp/context?date=" + encodeURIComponent(t),
     "/api/settings",

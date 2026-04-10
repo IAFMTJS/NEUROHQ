@@ -53,34 +53,51 @@ function autoSlotRankFromTask(task: unknown): number {
   return 0;
 }
 
+/**
+ * Single Supabase read per HTTP request per date: open + completed tasks (same row set as legacy
+ * `getTasksForDate`). `getTodaysTasks` derives incomplete-only lists in-memory so bootstrap and
+ * decision engine do not double-hit the tasks table.
+ */
+const loadTasksForDateRowUniverse = cache(async (date: string): Promise<Task[]> => {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return [];
+
+  const nowIso = new Date().toISOString();
+  const { data } = await supabase
+    .from("tasks")
+    .select(TASK_SELECT_COLUMNS)
+    .eq("user_id", user.id)
+    .eq("due_date", date)
+    .is("parent_task_id", null)
+    .is("deleted_at", null)
+    .or(`snooze_until.is.null,snooze_until.lt.${nowIso}`)
+    .order("completed", { ascending: true })
+    .order("created_at", { ascending: true });
+
+  return (data ?? []) as Task[];
+});
+
 /** Request-scoped cache: duplicate getTodaysTasks(date, mode, growthOnly) in the same request return the same result (e.g. dashboard + tasks page). */
 const getTodaysTasksCached = cache(async (
   date: string,
   mode: TaskListMode,
   growthOnly: boolean
 ): Promise<{ tasks: Task[]; carryOverCount: number }> => {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return { tasks: [], carryOverCount: 0 };
+  const allRows = await loadTasksForDateRowUniverse(date);
+  if (allRows.length === 0) return { tasks: [], carryOverCount: 0 };
 
-  const nowIso = new Date().toISOString();
-  let query = supabase
-    .from("tasks")
-    .select(TASK_SELECT_COLUMNS)
-    .eq("user_id", user.id)
-    .eq("due_date", date)
-    .eq("completed", false)
-    .is("parent_task_id", null)
-    .is("deleted_at", null)
-    .or(`snooze_until.is.null,snooze_until.lt.${nowIso}`);
+  let ordered = allRows.filter((t) => (t as { completed?: boolean | null }).completed === false);
 
   if (mode === "low_energy") {
-    query = query.or("energy_required.is.null,energy_required.lt.4");
+    ordered = ordered.filter((t) => {
+      const e = (t as { energy_required?: number | null }).energy_required;
+      return e == null || e < 4;
+    });
   }
 
-  query = query.order("created_at", { ascending: true });
-  const { data: tasks } = await query;
-  let ordered = tasks ?? [];
   const categoryOrder = (c: string | null) => (c === "work" ? 0 : c === "personal" ? 1 : 2);
   ordered = [...ordered].sort((a, b) => {
     const catA = categoryOrder((a as { category?: string | null }).category ?? null);
@@ -156,21 +173,7 @@ export async function getCompletedTodayCount(date: string): Promise<number> {
 }
 
 export async function getTasksForDate(date: string) {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return [];
-  const nowIso = new Date().toISOString();
-  const { data } = await supabase
-    .from("tasks")
-    .select(TASK_SELECT_COLUMNS)
-    .eq("user_id", user.id)
-    .eq("due_date", date)
-    .is("parent_task_id", null)
-    .is("deleted_at", null)
-    .or(`snooze_until.is.null,snooze_until.lt.${nowIso}`)
-    .order("completed")
-    .order("created_at", { ascending: true });
-  return data ?? [];
+  return loadTasksForDateRowUniverse(date);
 }
 
 /** Tasks per date for a range (for calendar prefetch: avoid loading on month/day change). */

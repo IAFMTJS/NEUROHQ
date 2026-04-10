@@ -77,12 +77,12 @@ function pillarProgressFillSolid(key: PillarKey): string {
   return `rgba(${r},${g},${b},0.98)`;
 }
 
-/** Tube-style glow per segment (aligned with commander / split-ring HUD). */
+/** Tube-style glow per segment (CSS fallback + reference for tuning). */
 const PILLAR_SEGMENT_GLOW: Record<PillarKey, string> = {
-  budget: "rgba(248, 113, 113, 0.62)",
-  growth: "rgba(52, 211, 153, 0.55)",
-  xp: "rgba(34, 211, 238, 0.58)",
-  discipline: "rgba(252, 211, 77, 0.52)",
+  budget: "rgba(248, 113, 113, 0.78)",
+  growth: "rgba(52, 211, 153, 0.72)",
+  xp: "rgba(34, 211, 238, 0.75)",
+  discipline: "rgba(252, 211, 77, 0.68)",
 };
 
 function QuarterCommandOverview({
@@ -106,9 +106,9 @@ function QuarterCommandOverview({
 
   return (
     <div className="mx-auto max-w-lg">
-      <div className="relative mx-auto aspect-square w-full max-w-[280px] sm:max-w-[320px]">
+      <div className="relative mx-auto aspect-square w-full max-w-[280px] overflow-visible sm:max-w-[320px]">
         <div
-          className="pointer-events-none absolute inset-[-18px] rounded-full bg-[radial-gradient(circle_at_50%_42%,rgba(var(--mode-rgb),0.24),transparent_58%)] blur-[14px] sm:blur-[4px]"
+          className="pointer-events-none absolute inset-[-28px] rounded-full bg-[radial-gradient(circle_at_50%_42%,rgba(var(--mode-rgb),0.28),transparent_62%)] blur-[18px] sm:blur-[6px]"
           aria-hidden
         />
         <div
@@ -119,17 +119,30 @@ function QuarterCommandOverview({
           width="100%"
           height="100%"
           viewBox={`0 0 ${vb} ${vb}`}
-          className="relative overflow-visible drop-shadow-[0_0_28px_rgba(var(--mode-rgb),0.28),0_0_48px_rgba(var(--mode-rgb),0.1)]"
+          className="relative overflow-visible drop-shadow-[0_0_32px_rgba(var(--mode-rgb),0.32),0_0_56px_rgba(var(--mode-rgb),0.14)]"
           role="img"
           aria-label={`Kwartaal contractscore ${p} procent`}
         >
           <defs>
-            <filter id="strat-quarter-pie-bloom" x="-40%" y="-40%" width="180%" height="180%">
-              <feGaussianBlur stdDeviation="2.8" result="b" />
+            {/** Wide colored halo (segment fill color → blurred); stronger than thin CSS drop-shadow on paths. */}
+            <filter id="strat-quarter-pie-neon-halo" x="-90%" y="-90%" width="280%" height="280%">
+              <feGaussianBlur stdDeviation="7" result="b" />
               <feColorMatrix
                 in="b"
                 type="matrix"
-                values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 0.52 0"
+                values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 0.78 0"
+                result="s"
+              />
+              <feMerge>
+                <feMergeNode in="s" />
+              </feMerge>
+            </filter>
+            <filter id="strat-quarter-pie-bloom" x="-55%" y="-55%" width="210%" height="210%">
+              <feGaussianBlur stdDeviation="3.4" result="b" />
+              <feColorMatrix
+                in="b"
+                type="matrix"
+                values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 0.62 0"
                 result="s"
               />
               <feMerge>
@@ -161,23 +174,32 @@ function QuarterCommandOverview({
             const filledEnd = start + fullSpan * t;
             const fill = pillarProgressFillSolid(pl.key);
             const glow = PILLAR_SEGMENT_GLOW[pl.key];
+            const d = annularSectorPath(cx, cy, rInner, rOuter, start, filledEnd);
             return (
               <g key={pl.key}>
                 <path
-                  d={annularSectorPath(cx, cy, rInner, rOuter, start, filledEnd)}
+                  d={d}
                   fill={fill}
-                  fillOpacity={0.52}
+                  fillOpacity={0.42}
+                  filter="url(#strat-quarter-pie-neon-halo)"
+                  aria-hidden
+                />
+                <path
+                  d={d}
+                  fill={fill}
+                  fillOpacity={0.58}
                   filter="url(#strat-quarter-pie-bloom)"
                   aria-hidden
                 />
                 <path
-                  d={annularSectorPath(cx, cy, rInner, rOuter, start, filledEnd)}
+                  d={d}
                   fill={fill}
-                  stroke="rgba(255,255,255,0.22)"
-                  strokeWidth="0.9"
+                  fillOpacity={0.98}
+                  stroke="rgba(255,255,255,0.38)"
+                  strokeWidth="1.05"
                   paintOrder="stroke fill"
                   style={{
-                    filter: `drop-shadow(0 0 4px ${glow}) drop-shadow(0 0 14px ${glow}) drop-shadow(0 0 24px ${glow})`,
+                    filter: `drop-shadow(0 0 3px ${glow}) drop-shadow(0 0 12px ${glow}) drop-shadow(0 0 22px ${glow}) drop-shadow(0 0 36px ${glow})`,
                   }}
                 />
               </g>

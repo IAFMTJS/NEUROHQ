@@ -6,6 +6,7 @@ import { isSupabaseFirstMobileEnabled } from "@/lib/mobile/feature-flags";
 import { getDashboardPayloadLocalFirst } from "@/lib/data/dashboard-repository";
 import { publishSyncMetrics } from "@/lib/mobile/metrics";
 import { syncPendingDailyStateNow } from "@/lib/client-pending-writes";
+import { NEUROHQ_BOOTSTRAP_READY_FOR_WARMUP } from "@/lib/bootstrap-query";
 
 export function ServiceWorkerRegistration() {
   const [updateAvailable, setUpdateAvailable] = useState(false);
@@ -90,6 +91,11 @@ export function ServiceWorkerRegistration() {
     document.addEventListener("visibilitychange", onVisibilityChange);
 
     let intervalId: ReturnType<typeof setInterval> | undefined;
+    /** Deferred so cold start does not compete with BootstrapGate’s `/api/bootstrap/today`. */
+    const WARMUP_FALLBACK_MS = 8000;
+    let warmupFallbackTimer: ReturnType<typeof setTimeout> | undefined;
+    let onBootstrapReadyListener: (() => void) | null = null;
+
     navigator.serviceWorker
       .register("/sw.js", { scope: "/" })
       .then((registration) => {
@@ -101,7 +107,27 @@ export function ServiceWorkerRegistration() {
         }
         navigator.serviceWorker.ready
           .then((readyRegistration) => {
-            postFullWarmupAndSync(readyRegistration);
+            let warmupRan = false;
+            const runWarmupOnce = () => {
+              if (warmupRan) return;
+              warmupRan = true;
+              if (warmupFallbackTimer !== undefined) {
+                clearTimeout(warmupFallbackTimer);
+                warmupFallbackTimer = undefined;
+              }
+              if (onBootstrapReadyListener) {
+                window.removeEventListener(NEUROHQ_BOOTSTRAP_READY_FOR_WARMUP, onBootstrapReadyListener);
+                onBootstrapReadyListener = null;
+              }
+              postFullWarmupAndSync(readyRegistration);
+            };
+            onBootstrapReadyListener = () => runWarmupOnce();
+            window.addEventListener(NEUROHQ_BOOTSTRAP_READY_FOR_WARMUP, onBootstrapReadyListener);
+            warmupFallbackTimer = setTimeout(runWarmupOnce, WARMUP_FALLBACK_MS);
+            const w = window as Window & { __neurohqBootstrapReady?: number };
+            if (typeof w.__neurohqBootstrapReady === "number") {
+              queueMicrotask(() => runWarmupOnce());
+            }
           })
           .catch(() => {});
 
@@ -132,6 +158,11 @@ export function ServiceWorkerRegistration() {
       window.removeEventListener("online", syncOfflineQueueWhenOnline);
       document.removeEventListener("visibilitychange", onVisibilityChange);
       if (intervalId !== undefined) clearInterval(intervalId);
+      if (warmupFallbackTimer !== undefined) clearTimeout(warmupFallbackTimer);
+      if (onBootstrapReadyListener) {
+        window.removeEventListener(NEUROHQ_BOOTSTRAP_READY_FOR_WARMUP, onBootstrapReadyListener);
+        onBootstrapReadyListener = null;
+      }
     };
   }, []);
 

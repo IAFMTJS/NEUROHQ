@@ -325,7 +325,6 @@ export function DashboardClientShell() {
         }))
       : (todaysTasksFromSnapshot ?? []);
 
-  const dcicLevel = gameState?.level ?? xp.level;
   const identity = secondary?.identity;
   const identityEngine = secondary?.identityEngine;
   const momentum = secondary?.momentum;
@@ -510,7 +509,6 @@ export function DashboardClientShell() {
                       }
                       pedestalStats={{
                         totalXP: typeof xp.total_xp === "number" ? xp.total_xp : 0,
-                        displayLevel: dcicLevel,
                         budgetRemainingCents: badgeBudgetRemainingCents ?? 0,
                         currency: badgeCurrency,
                         energyPct: heroEnergyPct,

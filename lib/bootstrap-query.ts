@@ -6,6 +6,12 @@ import type { BootstrapTodayResponse } from "@/lib/daily-snapshot-full-sync";
 /** Dispatched after bootstrap data is fresh (initial load or background refetch). */
 export const NEUROHQ_DAILY_SNAPSHOT_UPDATED = "neurohq-daily-snapshot-updated" as const;
 
+/**
+ * After `BootstrapGate` finishes (network init or IDB replay). Service worker defers heavy
+ * cache warmup until this fires so cold start does not compete with `GET /api/bootstrap/today`.
+ */
+export const NEUROHQ_BOOTSTRAP_READY_FOR_WARMUP = "neurohq-bootstrap-ready-for-warmup" as const;
+
 /** Dispatched when `user_alerts` may have changed (e.g. consumed pending XP); bell should refetch. */
 export const NEUROHQ_ALERTS_UPDATED = "neurohq-alerts-updated" as const;
 
