@@ -3976,6 +3976,7 @@ export type Database = {
       },
       admin_platform_diagnostics: { Args: never; Returns: Json }
       current_user_is_admin: { Args: never; Returns: boolean }
+      sum_xp_events_for_user: { Args: { p_user_id: string }; Returns: number }
       lock_daily_dcic_mode_if_unset: {
         Args: { p_date: string; p_mode: string; p_user_id: string }
         Returns: undefined

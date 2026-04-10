@@ -21,16 +21,32 @@ const XP_WEEKLY_LEARNING_TARGET = 25;
 const XP_STREAK_DAY = 5;
 const ENERGY_OVERFLOW_XP_BONUS_MULTIPLIER = 1.1;
 
+/**
+ * Account XP for display and leveling: max(user_xp.total_xp, SUM(xp_events.amount)).
+ * Fixes rows that lag the ledger; user_xp stays higher when deductions hit only the row (no event).
+ */
+async function authoritativeTotalXpForUser(
+  client: Awaited<ReturnType<typeof createClient>> | NonNullable<ReturnType<typeof createServiceRoleClient>>,
+  userId: string
+): Promise<number> {
+  const [xpRes, sumRes] = await Promise.all([
+    client.from("user_xp").select("total_xp").eq("user_id", userId).maybeSingle(),
+    client.rpc("sum_xp_events_for_user", { p_user_id: userId }),
+  ]);
+  const rowTotal = Math.max(0, (xpRes.data?.total_xp as number | undefined) ?? 0);
+  let sumLedger = 0;
+  if (!sumRes.error && sumRes.data != null) {
+    const raw = sumRes.data as unknown;
+    sumLedger = typeof raw === "number" ? raw : Number(raw);
+    if (!Number.isFinite(sumLedger) || sumLedger < 0) sumLedger = 0;
+  }
+  return Math.max(rowTotal, sumLedger);
+}
+
 async function getXPByUserId(userId: string): Promise<{ total_xp: number; level: number }> {
   const admin = createServiceRoleClient();
-  if (admin) {
-    const { data } = await admin.from("user_xp").select("total_xp").eq("user_id", userId).maybeSingle();
-    const total = (data?.total_xp as number | undefined) ?? 0;
-    return { total_xp: total, level: levelFromTotalXP(total) };
-  }
-  const supabase = await createClient();
-  const { data } = await supabase.from("user_xp").select("total_xp").eq("user_id", userId).maybeSingle();
-  const total = (data?.total_xp as number | undefined) ?? 0;
+  const client = admin ?? (await createClient());
+  const total = await authoritativeTotalXpForUser(client, userId);
   return { total_xp: total, level: levelFromTotalXP(total) };
 }
 
@@ -57,15 +73,14 @@ async function getXPIdentityByUserId(userId: string): Promise<{
   const admin = createServiceRoleClient();
   const client = admin ?? (await createClient());
 
-  const [xpRes, streakRes] = await Promise.all([
-    client.from("user_xp").select("total_xp").eq("user_id", userId).maybeSingle(),
+  const [total, streakRes] = await Promise.all([
+    authoritativeTotalXpForUser(client, userId),
     client
       .from("user_streak")
       .select("current_streak, longest_streak, last_completion_date")
       .eq("user_id", userId)
       .maybeSingle(),
   ]);
-  const total = (xpRes.data?.total_xp as number | undefined) ?? 0;
   const level = levelFromTotalXP(total);
   const streakData = streakRes.data as { current_streak?: number; longest_streak?: number; last_completion_date?: string | null } | null;
   return {

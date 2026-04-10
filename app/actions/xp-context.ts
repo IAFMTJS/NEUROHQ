@@ -1,6 +1,6 @@
 "use server";
 
-import { getXP, getXPIdentity } from "@/app/actions/xp";
+import { getXPIdentity } from "@/app/actions/xp";
 import { getXPForecast } from "@/app/actions/dcic/xp-forecast";
 import { getInsightEngineState, type InsightEngineState } from "@/app/actions/dcic/insight-engine";
 
@@ -24,11 +24,11 @@ export type XPFullContext = {
  */
 export async function getXPFullContext(dateStr?: string, userId?: string): Promise<XPFullContext> {
   const today = dateStr ?? new Date().toISOString().slice(0, 10);
-  const [xp, identity, forecast, insightState] = await Promise.all([
-    getXP(userId),
+  const [identity, forecast, insightState] = await Promise.all([
     getXPIdentity(userId),
     getXPForecast(today),
     getInsightEngineState(),
   ]);
+  const xp = { total_xp: identity.total_xp, level: identity.level };
   return { xp, identity, forecast, insightState };
 }
