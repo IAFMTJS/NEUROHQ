@@ -10,6 +10,7 @@ import { assignProtocolTaskDueDatesFromWeek } from "@/lib/growth/spread-protocol
 import { getBudgetWeekBounds } from "@/lib/utils/budget-date";
 import { todayDateString } from "@/lib/utils/timezone";
 import { upsertProtocolProgress } from "@/app/actions/protocol-progress";
+import { invalidateUserSnapshotMemoryCaches } from "@/lib/server/snapshot-memory-caches";
 
 const PTASK_MARKER = (id: string) => `ptask:${id}`;
 const CATCHUP_ROUND_TAG = "protocol_catchup_round:";
@@ -131,6 +132,7 @@ async function withdrawOtherProtocolMissionsInBudgetWeek(
     revalidateTagMax(`tasks-${userId}-${d}`);
   }
   revalidateTagMax("decision-blocks");
+  invalidateUserSnapshotMemoryCaches(userId);
   revalidatePath("/tasks");
   revalidatePath("/learning");
   revalidatePath("/dashboard");

@@ -52,7 +52,7 @@ export async function fetchBootstrapTodayFromApi(
   const url = qs ? `/api/bootstrap/today?${qs}` : "/api/bootstrap/today";
   const res = await fetch(url, {
     credentials: "include",
-    cache: "no-store",
+    cache: "default",
     headers: { "x-neurohq-refresh": "1" },
     signal,
   });

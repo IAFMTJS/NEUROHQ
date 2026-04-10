@@ -2,6 +2,7 @@
 
 import { createClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
+import { invalidateUserSnapshotMemoryCaches } from "@/lib/server/snapshot-memory-caches";
 
 export type MissionChain = {
   id: string;
@@ -88,6 +89,7 @@ export async function addStepToChain(chainId: string, taskId: string): Promise<b
   });
   if (error) return false;
   await supabase.from("tasks").update({ mission_chain_id: chainId }).eq("id", taskId).eq("user_id", user.id);
+  invalidateUserSnapshotMemoryCaches(user.id);
   revalidatePath("/tasks");
   return true;
 }

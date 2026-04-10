@@ -6,9 +6,19 @@ import {
   getDashboardSecondaryPayload,
 } from "@/app/actions/dashboard-data";
 import { SUPABASE_FIRST_CONTRACT_VERSION } from "@/lib/mobile/supabase-first-contract";
+import { applyPrivateSnapshotCacheHeaders } from "@/lib/server/api-snapshot-headers";
+import { applyApiRouteTiming, startApiRouteTimer } from "@/lib/server/api-route-telemetry";
+
+function attachSnapshotMeta(res: NextResponse, startedAt: number, timingName: string) {
+  applyPrivateSnapshotCacheHeaders(res);
+  res.headers.set("x-neurohq-source-of-truth", "supabase");
+  res.headers.set("x-neurohq-sync-contract", SUPABASE_FIRST_CONTRACT_VERSION);
+  applyApiRouteTiming(res, startedAt, timingName);
+}
 
 /** GET /api/dashboard/data?part=critical|secondary|all — dashboard data for client. Use part=all for one round-trip. */
 export async function GET(request: NextRequest) {
+  const startedAt = startApiRouteTimer();
   try {
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
@@ -25,9 +35,7 @@ export async function GET(request: NextRequest) {
       const out = { critical: payload.critical, secondary: payload.secondary };
 
       const res = NextResponse.json(out);
-      res.headers.set("Cache-Control", "no-store, max-age=0");
-      res.headers.set("x-neurohq-source-of-truth", "supabase");
-      res.headers.set("x-neurohq-sync-contract", SUPABASE_FIRST_CONTRACT_VERSION);
+      attachSnapshotMeta(res, startedAt, "dashboard_data_all");
       return res;
     }
     if (part === "critical") {
@@ -36,9 +44,7 @@ export async function GET(request: NextRequest) {
         return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
       }
       const res = NextResponse.json(critical);
-      res.headers.set("Cache-Control", "no-store, max-age=0");
-      res.headers.set("x-neurohq-source-of-truth", "supabase");
-      res.headers.set("x-neurohq-sync-contract", SUPABASE_FIRST_CONTRACT_VERSION);
+      attachSnapshotMeta(res, startedAt, "dashboard_data_critical");
       return res;
     }
     if (part === "secondary") {
@@ -47,9 +53,7 @@ export async function GET(request: NextRequest) {
         return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
       }
       const res = NextResponse.json(secondary);
-      res.headers.set("Cache-Control", "no-store, max-age=0");
-      res.headers.set("x-neurohq-source-of-truth", "supabase");
-      res.headers.set("x-neurohq-sync-contract", SUPABASE_FIRST_CONTRACT_VERSION);
+      attachSnapshotMeta(res, startedAt, "dashboard_data_secondary");
       return res;
     }
     return NextResponse.json(

@@ -25,6 +25,8 @@ import { triggerRandomEvents } from "@/lib/dcic/event-engine";
 import { loadMissionsPipeline } from "@/lib/missions/load-missions-pipeline";
 import { bootstrapEtagsMatch, computeBootstrapWeakEtag } from "@/lib/bootstrap-etag";
 import { runDailyMissionsBootstrapServer } from "@/lib/bootstrap/run-daily-missions-bootstrap";
+import { applyPrivateSnapshotCacheHeaders } from "@/lib/server/api-snapshot-headers";
+import { applyApiRouteTiming, startApiRouteTimer } from "@/lib/server/api-route-telemetry";
 
 /** Default true. Set `includeDashboard=0` to skip `getDashboardPayload()` when the client already fetched `/api/dashboard/data` in the same flow (saves one full dashboard build). */
 function includeDashboardInBootstrap(request: NextRequest): boolean {
@@ -40,6 +42,7 @@ function isBootstrapDepthCore(request: NextRequest): boolean {
 }
 
 export async function GET(request: NextRequest) {
+  const startedAt = startApiRouteTimer();
   try {
     const supabase = await createClient();
     const {
@@ -252,13 +255,18 @@ export async function GET(request: NextRequest) {
       missionsPipelineForClient
     );
     if (bootstrapEtagsMatch(request.headers.get("if-none-match"), etag)) {
-      return new NextResponse(null, {
+      const res = new NextResponse(null, {
         status: 304,
         headers: { ETag: etag },
       });
+      applyApiRouteTiming(res, startedAt, "bootstrap_today");
+      return res;
     }
 
-    return NextResponse.json(payload, { status: 200, headers: { ETag: etag } });
+    const res = NextResponse.json(payload, { status: 200, headers: { ETag: etag } });
+    applyPrivateSnapshotCacheHeaders(res);
+    applyApiRouteTiming(res, startedAt, "bootstrap_today");
+    return res;
   } catch (err) {
     console.error("[API bootstrap/today]", err);
     return NextResponse.json(

@@ -8,6 +8,7 @@ import {
   deleteGoogleCalendarEvent,
 } from "@/lib/calendar-google";
 import { createTask } from "@/app/actions/tasks";
+import { invalidateUserSnapshotMemoryCaches } from "@/lib/server/snapshot-memory-caches";
 
 export async function getCalendarEventsForDate(date: string) {
   const supabase = await createClient();
@@ -164,6 +165,7 @@ export async function updateManualEvent(params: {
         .update({ title: params.title.trim(), due_date: dueDate })
         .eq("id", linkedId)
         .eq("user_id", user.id);
+      invalidateUserSnapshotMemoryCaches(user.id);
     }
   } else if (linkedId) {
     linkedId = null;

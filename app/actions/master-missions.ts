@@ -22,6 +22,7 @@ import { trackEvent } from "@/app/actions/analytics-events";
 import { todayDateString } from "@/lib/utils/timezone";
 import { classifyTaskPreset, deriveBaseXpFromIntensityDuration } from "@/lib/task-presets";
 import { buildMissionProgressionStateMap, resolveMissionProgressionPlan } from "@/lib/mission-progression";
+import { invalidateUserSnapshotMemoryCaches } from "@/lib/server/snapshot-memory-caches";
 
 type DailyStateRow = {
   energy?: number | null;
@@ -484,6 +485,7 @@ export async function ensureMasterMissionsForToday(dailyStateFromSave?: DailySta
         } satisfies Record<string, unknown>;
         const { error } = await serviceSupabase.from("tasks").insert(row as any);
         if (error) throw new Error(error.message);
+        invalidateUserSnapshotMemoryCaches(user.id);
         revalidateTagMax(`tasks-${user.id}-${dateStr}`);
         revalidatePath("/dashboard");
         revalidatePath("/tasks");
@@ -587,6 +589,7 @@ export async function trimAutoMasterMissionsToEnergyBand(
     if (!error) removed++;
   }
   if (removed > 0) {
+    invalidateUserSnapshotMemoryCaches(userId);
     revalidateTagMax(`tasks-${userId}-${dateStr}`);
     revalidatePath("/tasks");
     revalidatePath("/dashboard");
@@ -771,6 +774,7 @@ export async function resetAutoMissionsForToday(): Promise<{ deleted: number; er
     .eq("user_id", user.id)
     .eq("date", today);
 
+  invalidateUserSnapshotMemoryCaches(user.id);
   revalidateTagMax(`tasks-${user.id}-${today}`);
   revalidatePath("/tasks");
   revalidatePath("/dashboard");

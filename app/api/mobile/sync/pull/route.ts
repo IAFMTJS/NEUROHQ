@@ -4,6 +4,7 @@ import { getTasksForDate } from "@/app/actions/tasks";
 import { getFinancialInsightsSafe, getFinanceState } from "@/app/actions/dcic/finance-state";
 import { getRemainingBalance } from "@/lib/dcic/finance-engine";
 import { getDashboardPayload } from "@/app/actions/dashboard-data";
+import { loadTasksListWithMemoryCache } from "@/lib/server/snapshot-memory-caches";
 
 function makeCursor(): string {
   return new Date().toISOString();
@@ -25,7 +26,7 @@ export async function GET(request: NextRequest) {
     if (!date || !/^\d{4}-\d{2}-\d{2}$/.test(date)) {
       return NextResponse.json({ error: "Missing/invalid date for tasks domain" }, { status: 400 });
     }
-    const tasks = await getTasksForDate(date);
+    const tasks = await loadTasksListWithMemoryCache(user.id, date, () => getTasksForDate(date));
     return NextResponse.json({ domain, cursor: makeCursor(), payload: tasks });
   }
 

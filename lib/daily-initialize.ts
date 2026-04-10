@@ -275,12 +275,12 @@ async function runStep(snapshot: DailySnapshot, step: PreloadStepId): Promise<Da
             const [dashRes, tasksRes] = await Promise.all([
               fetch("/api/dashboard/data?part=all", {
                 credentials: "include",
-                cache: "no-store",
+                cache: "default",
                 headers: requestHeaders,
               }),
               fetch(`/api/tasks?date=${encodeURIComponent(dateStr)}`, {
                 credentials: "include",
-                cache: "no-store",
+                cache: "default",
                 headers: requestHeaders,
               }),
             ]);

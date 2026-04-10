@@ -3,6 +3,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
 import { revalidateTagMax } from "@/lib/revalidate";
+import { invalidateUserSnapshotMemoryCaches } from "@/lib/server/snapshot-memory-caches";
 import { todayDateString } from "@/lib/utils/timezone";
 import { getMonthlyBookForCurrentMonth } from "@/app/actions/learning";
 import { classifyTaskPreset, deriveBaseXpFromIntensityDuration } from "@/lib/task-presets";
@@ -72,6 +73,7 @@ export async function ensureReadingMissionForToday(): Promise<EnsureReadingMissi
     return { created: false, debug: error.message };
   }
 
+  invalidateUserSnapshotMemoryCaches(user.id);
   revalidateTagMax(`tasks-${user.id}-${today}`);
   revalidatePath("/tasks");
   revalidatePath("/dashboard");

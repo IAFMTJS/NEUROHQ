@@ -20,7 +20,7 @@ async function fetchDashboardAllFromServer(signal?: AbortSignal): Promise<Dashbo
     if (checkpoint?.cursor) qs.set("cursor", checkpoint.cursor);
     const res = await fetch(`/api/mobile/sync/pull?${qs.toString()}`, {
       credentials: "include",
-      cache: "no-store",
+      cache: "default",
       signal,
       headers: { "x-neurohq-refresh": "1" },
     });
@@ -38,7 +38,7 @@ async function fetchDashboardAllFromServer(signal?: AbortSignal): Promise<Dashbo
   } catch {
     const res = await fetch("/api/dashboard/data?part=all", {
       credentials: "include",
-      cache: "no-store",
+      cache: "default",
       signal,
       headers: { "x-neurohq-refresh": "1" },
     });

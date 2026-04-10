@@ -1,6 +1,7 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
+import { invalidateUserSnapshotMemoryCaches } from "@/lib/server/snapshot-memory-caches";
 
 /**
  * Carry-over: incomplete tasks that were due on `fromDate` move to `toDate` (typically yesterday → today).
@@ -31,6 +32,9 @@ export async function rolloverTasksForUser(userId: string, fromDate: string, toD
       })
       .eq("id", t.id);
     if (!error) moved++;
+  }
+  if (moved > 0) {
+    invalidateUserSnapshotMemoryCaches(userId);
   }
   return { moved };
 }

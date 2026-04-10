@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { invalidateUserSnapshotMemoryCaches } from "@/lib/server/snapshot-memory-caches";
 
 /**
  * POST /api/tasks/reschedule — move a task to another date.
@@ -32,5 +33,6 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: error.message }, { status: 400 });
   }
 
+  invalidateUserSnapshotMemoryCaches(user.id);
   return NextResponse.json({ ok: true });
 }

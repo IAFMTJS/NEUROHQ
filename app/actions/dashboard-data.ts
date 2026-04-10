@@ -49,6 +49,11 @@ import { deriveUnifiedDecision } from "@/lib/unified-decision-engine";
 import { loadMissionsPipeline } from "@/lib/missions/load-missions-pipeline";
 import { buildMissionsSummaryForDecision } from "@/lib/missions/missions-summary-for-decision";
 import { syncInboxAlertsFromDashboardCritical } from "@/app/actions/alerts";
+import {
+  readDashboardMemoryCache,
+  writeDashboardMemoryCache,
+  invalidateUserSnapshotMemoryCaches,
+} from "@/lib/server/snapshot-memory-caches";
 import type { EnergyBudget } from "@/app/actions/energy";
 import type { TodayEngineResult } from "@/app/actions/dcic/today-engine";
 import type { DashboardCritical } from "@/types/dashboard-data.types";
@@ -506,6 +511,38 @@ async function buildSecondaryPayload(
 }
 
 /**
+ * Single build path for critical + secondary: one `buildTodayContext`, shared cross-slice reads,
+ * and a 60s in-memory cache per user + calendar day (see lib/supabase/README.md).
+ */
+async function buildDashboardPairForSession(): Promise<{
+  critical: DashboardCritical;
+  secondary: DashboardSecondary;
+} | null> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return null;
+
+  const dateStr = todayDateString();
+  const cached = readDashboardMemoryCache(user.id, dateStr);
+  if (cached) return cached;
+
+  await ensureUserProfileForSession(user);
+  const ctx = await buildTodayContext();
+  const today = new Date();
+  const { start: thisWeekStart, end: thisWeekEnd } = getWeekBounds(today);
+  const shared = await loadDashboardCrossSliceReads(ctx, thisWeekStart, thisWeekEnd);
+  const [critical, secondary] = await Promise.all([
+    buildCriticalPayload(ctx, shared),
+    buildSecondaryPayload(ctx, shared, today),
+  ]);
+  const pair = { critical, secondary };
+  writeDashboardMemoryCache(user.id, dateStr, pair);
+  return pair;
+}
+
+/**
  * Build full dashboard payload on the server. Streamed via Suspense so shell shows immediately.
  * Cached briefly per user so refresh/reopen feels instant.
  * Returns null if not authenticated.
@@ -515,16 +552,7 @@ export async function getDashboardPayload(): Promise<{
   secondary: DashboardSecondary;
 } | null> {
   try {
-    const ctx = await getDashboardContextForCurrentUser();
-    if (!ctx) return null;
-    const today = new Date();
-    const { start: thisWeekStart, end: thisWeekEnd } = getWeekBounds(today);
-    const shared = await loadDashboardCrossSliceReads(ctx, thisWeekStart, thisWeekEnd);
-    const [critical, secondary] = await Promise.all([
-      buildCriticalPayload(ctx, shared),
-      buildSecondaryPayload(ctx, shared, today),
-    ]);
-    return { critical, secondary };
+    return await buildDashboardPairForSession();
   } catch (err) {
     // Log full error in Vercel/server logs so the real cause is visible (production omits it from client).
     console.error("[getDashboardPayload]", err);
@@ -536,12 +564,8 @@ export async function getDashboardPayload(): Promise<{
 
 export async function getDashboardCriticalPayload(): Promise<DashboardCritical | null> {
   try {
-    const ctx = await getDashboardContextForCurrentUser();
-    if (!ctx) return null;
-    const today = new Date();
-    const { start: thisWeekStart, end: thisWeekEnd } = getWeekBounds(today);
-    const shared = await loadDashboardCrossSliceReads(ctx, thisWeekStart, thisWeekEnd);
-    return await buildCriticalPayload(ctx, shared);
+    const pair = await buildDashboardPairForSession();
+    return pair?.critical ?? null;
   } catch (err) {
     console.error("[getDashboardCriticalPayload]", err);
     throw new Error(
@@ -552,12 +576,8 @@ export async function getDashboardCriticalPayload(): Promise<DashboardCritical |
 
 export async function getDashboardSecondaryPayload(): Promise<DashboardSecondary | null> {
   try {
-    const ctx = await getDashboardContextForCurrentUser();
-    if (!ctx) return null;
-    const today = new Date();
-    const { start: thisWeekStart, end: thisWeekEnd } = getWeekBounds(today);
-    const shared = await loadDashboardCrossSliceReads(ctx, thisWeekStart, thisWeekEnd);
-    return await buildSecondaryPayload(ctx, shared, today);
+    const pair = await buildDashboardPairForSession();
+    return pair?.secondary ?? null;
   } catch (err) {
     console.error("[getDashboardSecondaryPayload]", err);
     throw new Error(
@@ -566,19 +586,8 @@ export async function getDashboardSecondaryPayload(): Promise<DashboardSecondary
   }
 }
 
-async function getDashboardContextForCurrentUser(): Promise<TodayContext | null> {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return null;
-
-  await ensureUserProfileForSession(user);
-
-  // Do not use unstable_cache here: the callback would call createClient()/cookies() and revalidateTag
-  // (via getDailyState, applyZeroCompletionRollover, etc.), which Next forbids inside cached functions.
-  return buildTodayContext();
-}
-
-/** Invalidate dashboard cache when today's tasks or identity change (e.g. complete/delete task). Call from task actions. */
+/** Invalidate dashboard + task-list memory caches when tasks or identity change. Call from task actions. */
 export async function revalidateDashboardCache(userId: string): Promise<void> {
+  invalidateUserSnapshotMemoryCaches(userId);
   revalidateTagMax(`dashboard-${userId}`);
 }

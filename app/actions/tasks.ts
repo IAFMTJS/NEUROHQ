@@ -7,6 +7,7 @@ import { incrementAvoidanceSkip } from "@/app/actions/avoidance-tracker";
 import { trackEvent } from "@/app/actions/analytics-events";
 import { revalidatePath, unstable_cache } from "next/cache";
 import { revalidateTagMax } from "@/lib/revalidate";
+import { invalidateUserSnapshotMemoryCaches } from "@/lib/server/snapshot-memory-caches";
 import { classifyTaskPreset, deriveBaseXpFromIntensityDuration } from "@/lib/task-presets";
 import { todayDateString } from "@/lib/utils/timezone";
 import { computeNextRecurrenceDate } from "@/lib/tasks-recurrence";
@@ -378,6 +379,7 @@ export async function createTask(params: {
   }
   revalidateTagMax(`tasks-${user.id}-${params.due_date}`);
   revalidateTagMax("decision-blocks");
+  invalidateUserSnapshotMemoryCaches(user.id);
   revalidatePath("/dashboard");
   revalidatePath("/tasks");
   const task = data as Task;
@@ -467,6 +469,7 @@ export async function restoreTask(id: string) {
     .eq("user_id", user.id);
   if (error) throw new Error(error.message);
   revalidateTagMax("decision-blocks");
+  invalidateUserSnapshotMemoryCaches(user.id);
   revalidatePath("/dashboard");
   revalidatePath("/tasks");
 }
@@ -527,6 +530,7 @@ export async function snoozeTask(id: string) {
   if (tag === "household" || tag === "administration" || tag === "social") {
     await incrementAvoidanceSkip(tag);
   }
+  invalidateUserSnapshotMemoryCaches(user.id);
   revalidatePath("/dashboard");
   revalidatePath("/tasks");
 }
@@ -564,6 +568,7 @@ export async function skipNextOccurrence(id: string) {
   const { logMissionOutcome } = await import("./mission-outcome-events");
   await logMissionOutcome(id, "skip");
 
+  invalidateUserSnapshotMemoryCaches(user.id);
   revalidatePath("/dashboard");
   revalidatePath("/tasks");
 }
@@ -823,6 +828,7 @@ export async function rescheduleTask(id: string, due_date: string) {
     revalidateTagMax(`tasks-${user.id}-${oldDueDate}`);
   }
 
+  invalidateUserSnapshotMemoryCaches(user.id);
   revalidatePath("/dashboard");
   revalidatePath("/tasks");
 }
@@ -874,6 +880,7 @@ export async function updateTask(
     revalidateTagMax(`tasks-${user.id}-${params.due_date}`);
     if (oldDueDate && oldDueDate !== params.due_date) revalidateTagMax(`tasks-${user.id}-${oldDueDate}`);
   }
+  invalidateUserSnapshotMemoryCaches(user.id);
   revalidatePath("/dashboard");
   revalidatePath("/tasks");
 }
@@ -914,6 +921,7 @@ export async function duplicateTask(id: string, due_date: string) {
   } as TablesInsert<"tasks">);
   if (error) throw new Error(error.message);
   revalidateTagMax(`tasks-${user.id}-${due_date}`);
+  invalidateUserSnapshotMemoryCaches(user.id);
   revalidatePath("/dashboard");
   revalidatePath("/tasks");
 }

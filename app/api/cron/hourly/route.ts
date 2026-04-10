@@ -32,6 +32,7 @@ import {
   tryClaimDailyPushSend,
 } from "@/lib/push-daily-claim";
 import { purgeQuestUserProgressAfterDays } from "@/lib/quests/cleanup";
+import { invalidateUserSnapshotMemoryCaches } from "@/lib/server/snapshot-memory-caches";
 
 /**
  * Hourly scheduler: on Vercel Hobby, invoke via GitHub Actions (`.github/workflows/cron-hourly.yml`), not `vercel.json`
@@ -471,6 +472,7 @@ export async function GET(request: Request) {
         .eq("due_date", yesterdayStr)
         .eq("completed", false);
 
+      let movedForUser = 0;
       for (const t of tasks ?? []) {
         const { error } = await supabase
           .from("tasks")
@@ -479,13 +481,20 @@ export async function GET(request: Request) {
             carry_over_count: (t.carry_over_count ?? 0) + 1,
           })
           .eq("id", t.id);
-        if (!error) rolled++;
+        if (!error) {
+          rolled++;
+          movedForUser++;
+        }
       }
 
       await supabase
         .from("users")
         .update({ last_rollover_date: todayStr })
         .eq("id", u.id);
+
+      if (movedForUser > 0) {
+        invalidateUserSnapshotMemoryCaches(u.id);
+      }
     }
 
     // Daily quote at 08:00 local (or user's push_quote_time hour if set)

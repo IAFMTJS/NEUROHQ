@@ -52,12 +52,30 @@ type PillarSlice = {
   committed: boolean;
 };
 
-/** Vaste kleur per pijler — HUD-neon, gelijk aan StrategyAnalysisSplitRing / rest van Strategy. */
+/**
+ * Vaste kleur per pijler — hogere chroma + radial gradient op de top-layer voor minder “matte vlakken”.
+ * (Glow-lagen blijven effen op de randkleur zodat de halo scherp blijft.)
+ */
 const PILLAR_PROGRESS_RGB: Record<PillarKey, { r: number; g: number; b: number }> = {
-  budget: { r: 248, g: 113, b: 113 },
-  growth: { r: 52, g: 211, b: 153 },
-  xp: { r: 34, g: 211, b: 238 },
-  discipline: { r: 252, g: 211, b: 77 },
+  budget: { r: 255, g: 77, b: 90 },
+  growth: { r: 0, g: 232, b: 168 },
+  xp: { r: 0, g: 220, b: 255 },
+  discipline: { r: 255, g: 200, b: 56 },
+};
+
+/** Binnenste highlight in de gradient (lichter, iets meer luminantie). */
+const PILLAR_PIE_GRADIENT_INNER: Record<PillarKey, string> = {
+  budget: "#ff9ea8",
+  growth: "#5dffd4",
+  xp: "#9af6ff",
+  discipline: "#fff3a3",
+};
+
+const PILLAR_PIE_GRADIENT_OUTER: Record<PillarKey, string> = {
+  budget: "#ff4d5a",
+  growth: "#00e8a8",
+  xp: "#00dcff",
+  discipline: "#ffc838",
 };
 
 const PILLAR_TRACK_FILL = "rgba(148, 163, 184, 0.22)";
@@ -79,10 +97,10 @@ function pillarProgressFillSolid(key: PillarKey): string {
 
 /** Tube-style glow per segment (CSS fallback + reference for tuning). */
 const PILLAR_SEGMENT_GLOW: Record<PillarKey, string> = {
-  budget: "rgba(248, 113, 113, 0.78)",
-  growth: "rgba(52, 211, 153, 0.72)",
-  xp: "rgba(34, 211, 238, 0.75)",
-  discipline: "rgba(252, 211, 77, 0.68)",
+  budget: "rgba(255, 77, 90, 0.82)",
+  growth: "rgba(0, 232, 168, 0.78)",
+  xp: "rgba(0, 220, 255, 0.8)",
+  discipline: "rgba(255, 200, 56, 0.76)",
 };
 
 function QuarterCommandOverview({
@@ -149,6 +167,20 @@ function QuarterCommandOverview({
                 <feMergeNode in="s" />
               </feMerge>
             </filter>
+            {(Object.keys(PILLAR_PIE_GRADIENT_OUTER) as PillarKey[]).map((key) => (
+              <radialGradient
+                key={key}
+                id={`strat-quarter-pie-radial-${key}`}
+                gradientUnits="userSpaceOnUse"
+                cx={cx}
+                cy={cy}
+                r={rOuter}
+              >
+                <stop offset="0%" stopColor={PILLAR_PIE_GRADIENT_INNER[key]} />
+                <stop offset="72%" stopColor={PILLAR_PIE_GRADIENT_OUTER[key]} />
+                <stop offset="100%" stopColor={PILLAR_PIE_GRADIENT_OUTER[key]} />
+              </radialGradient>
+            ))}
           </defs>
           {pillars.map((pl, i) => {
             const start = baseStarts[i];
@@ -172,31 +204,32 @@ function QuarterCommandOverview({
             const t = Math.max(0, Math.min(100, pl.pct)) / 100;
             if (t <= 0) return null;
             const filledEnd = start + fullSpan * t;
-            const fill = pillarProgressFillSolid(pl.key);
+            const fillGlow = pillarProgressFillSolid(pl.key);
+            const fillTop = `url(#strat-quarter-pie-radial-${pl.key})`;
             const glow = PILLAR_SEGMENT_GLOW[pl.key];
             const d = annularSectorPath(cx, cy, rInner, rOuter, start, filledEnd);
             return (
               <g key={pl.key}>
                 <path
                   d={d}
-                  fill={fill}
-                  fillOpacity={0.42}
+                  fill={fillGlow}
+                  fillOpacity={0.48}
                   filter="url(#strat-quarter-pie-neon-halo)"
                   aria-hidden
                 />
                 <path
                   d={d}
-                  fill={fill}
-                  fillOpacity={0.58}
+                  fill={fillGlow}
+                  fillOpacity={0.62}
                   filter="url(#strat-quarter-pie-bloom)"
                   aria-hidden
                 />
                 <path
                   d={d}
-                  fill={fill}
-                  fillOpacity={0.98}
-                  stroke="rgba(255,255,255,0.38)"
-                  strokeWidth="1.05"
+                  fill={fillTop}
+                  fillOpacity={1}
+                  stroke="rgba(255,255,255,0.46)"
+                  strokeWidth="1.08"
                   paintOrder="stroke fill"
                   style={{
                     filter: `drop-shadow(0 0 3px ${glow}) drop-shadow(0 0 12px ${glow}) drop-shadow(0 0 22px ${glow}) drop-shadow(0 0 36px ${glow})`,
