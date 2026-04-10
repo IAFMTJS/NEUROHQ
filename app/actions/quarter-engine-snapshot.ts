@@ -1,5 +1,6 @@
 "use server";
 
+import { cache } from "react";
 import { createClient } from "@/lib/supabase/server";
 import { getStrategyPacingHints } from "@/app/actions/strategy-engine-pacing";
 import {
@@ -57,19 +58,6 @@ async function sumXpEventsInRange(userId: string, start: string, end: string): P
   return (data as { amount: number }[]).reduce((s, r) => s + (r.amount ?? 0), 0);
 }
 
-async function countTaskCompletesInQuarter(userId: string, start: string, end: string): Promise<number> {
-  const supabase = await createClient();
-  const { count, error } = await supabase
-    .from("task_events")
-    .select("id", { count: "exact", head: true })
-    .eq("user_id", userId)
-    .eq("event_type", "complete")
-    .gte("occurred_at", `${start}T00:00:00.000Z`)
-    .lte("occurred_at", `${end}T23:59:59.999Z`);
-  if (error) return 0;
-  return count ?? 0;
-}
-
 async function countMissionOutcomesInQuarter(
   userId: string,
   start: string,
@@ -94,8 +82,11 @@ async function countMissionOutcomesInQuarter(
   return { skip, reschedule, delete: delete_ };
 }
 
-/** Active strategy quarter engine snapshot; null if no user or no active strategy. */
-export async function getQuarterEngineSnapshot(): Promise<QuarterEngineSnapshot | null> {
+/**
+ * Active strategy quarter engine snapshot; null if no user or no active strategy.
+ * Wrapped in React `cache()` so multiple callers in the same request share one DB pass (large egress win).
+ */
+export const getQuarterEngineSnapshot = cache(async function getQuarterEngineSnapshot(): Promise<QuarterEngineSnapshot | null> {
   const supabase = await createClient();
   const {
     data: { user },
@@ -123,19 +114,21 @@ export async function getQuarterEngineSnapshot(): Promise<QuarterEngineSnapshot 
   );
   const today = todayDateString();
   const { start, end } = calendarQuarterBounds(today);
-  const [pacing, protocolQuarterStats] = await Promise.all([
+  const [pacing, protocolQuarterStats, xpEarned, neg, execMetricsBase] = await Promise.all([
     getStrategyPacingHints(),
     getActiveProtocolQuarterMissionStats(),
+    sumXpEventsInRange(user.id, start, end),
+    countMissionOutcomesInQuarter(user.id, start, end),
+    loadExecutionQuarterMetrics(user.id, start, end, today),
   ]);
 
-  const xpEarned = await sumXpEventsInRange(user.id, start, end);
-  const completes = await countTaskCompletesInQuarter(user.id, start, end);
-  const neg = await countMissionOutcomesInQuarter(user.id, start, end);
   const disciplineNegative = neg.skip + neg.reschedule + neg.delete;
+  /** Same as legacy HEAD count on completes: one row per complete event in the quarter. */
+  const completes = execMetricsBase.completesWithDue.length;
 
   const behaviorFocus = normalizeExecutionBehaviorFocus(engineParams.execution?.behaviorFocus);
   const execMetrics = {
-    ...(await loadExecutionQuarterMetrics(user.id, start, end, today)),
+    ...execMetricsBase,
     skipRescheduleDelete: disciplineNegative,
   };
 
@@ -220,7 +213,7 @@ export async function getQuarterEngineSnapshot(): Promise<QuarterEngineSnapshot 
     growthProtocolQuarter,
     commandMetrics,
   };
-}
+});
 
 /** Legacy `getPressureIndex` shape for missions + thesis meter. */
 export async function getQuarterPressureLegacy(strategyId: string): Promise<{

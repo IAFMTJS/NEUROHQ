@@ -4,6 +4,9 @@ import { createClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
 import { getCurrentQuarter as getCurrentQuarterUtil, getPreviousQuarter } from "@/lib/utils/strategy";
 
+const QUARTERLY_STRATEGY_ROW_COLUMNS =
+  "id, user_id, year, quarter, primary_theme, secondary_theme, savings_goal_id, identity_statement, key_results, anti_goals, one_word, north_star, kr_checked, created_at, updated_at";
+
 export async function getQuarterlyStrategy(yearQuarter?: { year: number; quarter: number }) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
@@ -11,7 +14,7 @@ export async function getQuarterlyStrategy(yearQuarter?: { year: number; quarter
   const { year, quarter } = yearQuarter ?? getCurrentQuarterUtil();
   const { data } = await supabase
     .from("quarterly_strategy")
-    .select("*")
+    .select(QUARTERLY_STRATEGY_ROW_COLUMNS)
     .eq("user_id", user.id)
     .eq("year", year)
     .eq("quarter", quarter)

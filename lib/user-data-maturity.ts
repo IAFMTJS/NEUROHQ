@@ -40,7 +40,7 @@ export function dataMaturityBannerMessageNl(maturity: UserDataMaturity): string 
 export function dataMaturityMissionsHintNl(maturity: UserDataMaturity): string | null {
   if (maturity === "sparse") return null;
   if (maturity === "enough") {
-    return "Volgorde gebruikt nu je persoonlijke afrond-data (laatste 30 dagen).";
+    return "Volgorde gebruikt nu je persoonlijke afrond-data (recente maanden).";
   }
   return "Volgorde is sterk op jouw afrond-patronen afgestemd.";
 }

@@ -1,5 +1,6 @@
 "use server";
 
+import { cache } from "react";
 import { createClient } from "@/lib/supabase/server";
 import {
   computeMaturityFromCounts,
@@ -12,7 +13,8 @@ export type UserDataMaturitySnapshot = {
   activeDaysLast30: number;
 };
 
-export async function getUserDataMaturitySnapshot(): Promise<UserDataMaturitySnapshot> {
+/** Deduped within a single request (missions pipeline calls this from several branches). */
+export const getUserDataMaturitySnapshot = cache(async function getUserDataMaturitySnapshot(): Promise<UserDataMaturitySnapshot> {
   const supabase = await createClient();
   const {
     data: { user },
@@ -25,22 +27,16 @@ export async function getUserDataMaturitySnapshot(): Promise<UserDataMaturitySna
   since.setDate(since.getDate() - 30);
   const sinceStr = since.toISOString();
 
-  const { count } = await supabase
+  /** One round-trip: exact total count + up to 5000 rows for distinct-day estimate (same cap as before). */
+  const { data: rows, count } = await supabase
     .from("task_events")
-    .select("id", { count: "exact", head: true })
-    .eq("user_id", user.id)
-    .eq("event_type", "complete")
-    .gte("occurred_at", sinceStr);
-
-  const completesLast30 = count ?? 0;
-
-  const { data: rows } = await supabase
-    .from("task_events")
-    .select("occurred_at")
+    .select("occurred_at", { count: "exact" })
     .eq("user_id", user.id)
     .eq("event_type", "complete")
     .gte("occurred_at", sinceStr)
     .limit(5000);
+
+  const completesLast30 = count ?? rows?.length ?? 0;
 
   const days = new Set(
     (rows ?? [])
@@ -54,4 +50,4 @@ export async function getUserDataMaturitySnapshot(): Promise<UserDataMaturitySna
 
   const maturity = computeMaturityFromCounts(completesLast30, activeDaysLast30);
   return { maturity, completesLast30, activeDaysLast30 };
-}
+});

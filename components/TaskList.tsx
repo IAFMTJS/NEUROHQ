@@ -432,6 +432,12 @@ export function TaskList({
     [extendedTasks, optimisticCompleteIds]
   );
 
+  /** Open tasks that have been rolled forward at least once (not af op eerdere geplande dag). */
+  const openCarriedTaskCount = useMemo(
+    () => incompleteTasksForDisplay.filter((t) => (t.carry_over_count ?? 0) > 0).length,
+    [incompleteTasksForDisplay]
+  );
+
   /** Deep link: /tasks?openTask=id — optioneel focusMission=1 voor focus-flow i.p.v. detailsmodal. */
   const openTaskDeepLinkOpenedRef = useRef<string | null>(null);
   useEffect(() => {
@@ -1266,7 +1272,23 @@ export function TaskList({
       )}
       <div className="space-y-4">
         {showAvoidance && (
-          <p className="mb-3 rounded-xl border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-sm text-amber-200">{carryOverCount} tasks carried over. Pick one to focus on.</p>
+          <p className="mb-3 rounded-xl border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-sm text-amber-200">
+            <span className="font-medium text-amber-100">Meenemen</span> = gisteren (of een eerdere geplande dag) niet
+            afgerond, dus de taak staat vandaag weer op je lijst.
+            {openCarriedTaskCount > 0 ? (
+              <>
+                {" "}
+                Nu{" "}
+                {openCarriedTaskCount === 1
+                  ? "is er 1 zulke taak"
+                  : `zijn er ${openCarriedTaskCount} zulke taken`}{" "}
+                open (op zwaarst belaste taak al {carryOverCount}× meegenomen).
+              </>
+            ) : (
+              <> Op minst één taak stapelt meenemen al meerdere dagen — kies waar je mee start.</>
+            )}{" "}
+            Focus op één stuk.
+          </p>
         )}
 
         {!isWarMode && missionsHeroLayout && (

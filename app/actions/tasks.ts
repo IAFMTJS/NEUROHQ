@@ -145,10 +145,16 @@ const getTodaysTasksCached = cache(async (
   ordered = [...userTasks, ...autoTasks, ...bonusTasks];
 
   const scopedTasks = growthOnly ? (ordered as Task[]).filter((task) => isGrowthTaskRow(task)) : (ordered as Task[]);
+  /** Max `carry_over_count` among today's open tasks — how many nights at least one task was rolled forward, on the worst backlog task (not a count of carried tasks). */
   const maxCarryOver = Math.max(0, ...scopedTasks.map((t) => (t as { carry_over_count?: number }).carry_over_count ?? 0));
   return { tasks: scopedTasks, carryOverCount: maxCarryOver };
 });
 
+/**
+ * Today's task list for `date`. Carry-over: each local midnight, incomplete tasks due yesterday get
+ * `due_date` moved to today and `carry_over_count` incremented (see cron + `rolloverTasksForUser`).
+ * `carryOverCount` in the result is the **maximum** of those per-task counters (for mode / pressure), not how many tasks were carried last night.
+ */
 export async function getTodaysTasks(
   date: string,
   mode: TaskListMode,

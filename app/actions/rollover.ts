@@ -3,9 +3,9 @@
 import { createClient } from "@/lib/supabase/server";
 
 /**
- * Roll over incomplete tasks from fromDate to toDate for the current user.
- * Increments carry_over_count on each moved task.
- * Call from cron (with service role) for each user where it's midnight in their TZ, or for dev.
+ * Carry-over: incomplete tasks that were due on `fromDate` move to `toDate` (typically yesterday → today).
+ * Each moved task gets `carry_over_count` incremented so the UI can show backlog depth.
+ * Called from hourly cron at the user's local midnight (or manually for dev).
  */
 export async function rolloverTasksForUser(userId: string, fromDate: string, toDate: string) {
   const supabase = await createClient();

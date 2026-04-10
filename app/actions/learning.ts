@@ -7,6 +7,13 @@ import { getWeekBounds } from "@/lib/utils/learning";
 
 const DEFAULT_WEEKLY_TARGET_MINUTES = 60;
 
+/** List fetch: omit wide/unused columns to cut PostgREST egress. */
+const LEARNING_SESSION_LIST_COLUMNS =
+  "id, date, minutes, topic, education_option_id, monthly_book_id, learning_type, created_at";
+
+const EDUCATION_OPTION_LIST_COLUMNS =
+  "id, name, category, archived_at, created_at, interest_score, future_value_score, effort_score, updated_at";
+
 const loadWeeklyLearningTarget = cache(async (): Promise<number> => {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
@@ -54,7 +61,7 @@ export async function getLearningSessions(weekStart?: string, weekEnd?: string) 
   if (!user) return [];
   let query = supabase
     .from("learning_sessions")
-    .select("*")
+    .select(LEARNING_SESSION_LIST_COLUMNS)
     .eq("user_id", user.id)
     .order("date", { ascending: false });
   if (weekStart) query = query.gte("date", weekStart);
@@ -317,7 +324,7 @@ export async function getEducationOptions(includeArchived = true) {
   if (!user) return [];
   let query = supabase
     .from("education_options")
-    .select("*")
+    .select(EDUCATION_OPTION_LIST_COLUMNS)
     .eq("user_id", user.id)
     .order("created_at", { ascending: false });
   if (!includeArchived) query = query.is("archived_at", null);

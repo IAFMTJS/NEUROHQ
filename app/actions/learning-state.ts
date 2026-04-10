@@ -1,5 +1,6 @@
 "use server";
 
+import { cache } from "react";
 import { createClient } from "@/lib/supabase/server";
 import { getWeekBounds } from "@/lib/utils/learning";
 import {
@@ -74,7 +75,8 @@ function computeRecentActivityWeight(lastActive: string | null, today: Date): nu
   return 0.1;
 }
 
-export async function getLearningState(): Promise<LearningState> {
+/** One merged payload per request — avoids duplicate parallel Supabase bursts from nested RSC. */
+export const getLearningState = cache(async function getLearningState(): Promise<LearningState> {
   const today = new Date();
   const { start: weekStart, end: weekEnd } = getWeekBounds(today);
 
@@ -212,15 +214,22 @@ export async function getLearningState(): Promise<LearningState> {
     consistency,
     reflection,
   };
-}
+});
 
 async function getReflectionState(weekStart: string, todayStr: string): Promise<LearningReflectionState> {
   const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) {
+    return { lastEntryDate: null, reflectionRequired: todayStr >= weekStart };
+  }
   try {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any -- table may be missing from generated types
     const { data, error } = await (supabase as any)
       .from("learning_reflections")
       .select("date, understood, difficult, adjust")
+      .eq("user_id", user.id)
       .order("date", { ascending: false })
       .limit(1);
 

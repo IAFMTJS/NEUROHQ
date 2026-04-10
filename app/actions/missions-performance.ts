@@ -95,6 +95,11 @@ const EMPTY_DECISION_BLOCKS: DecisionBlocksResult = {
   dataMaturityHintNl: null,
 };
 
+/** Recent window only — unbounded history was large egress for active users. */
+const TASK_COMPLETION_RATE_LOOKBACK_DAYS = 120;
+/** Keep `in.(…)` URLs under PostgREST limits when many task ids are requested. */
+const TASK_COMPLETION_RATE_IN_CHUNK = 120;
+
 /** Get completion rate per task from task_events (view would need RLS). */
 async function getTaskCompletionRates(
   supabase: Awaited<ReturnType<typeof createClient>>,
@@ -103,21 +108,30 @@ async function getTaskCompletionRates(
   dataMaturity: UserDataMaturity = "sparse"
 ): Promise<Record<string, number>> {
   if (taskIds.length === 0) return {};
-  const { data: events } = await supabase
-    .from("task_events")
-    .select("task_id, event_type")
-    .eq("user_id", userId)
-    .in("task_id", taskIds);
+  const uniqueIds = [...new Set(taskIds)];
+  const since = new Date();
+  since.setDate(since.getDate() - TASK_COMPLETION_RATE_LOOKBACK_DAYS);
+  const sinceIso = since.toISOString();
+
   const byTask: Record<string, { start: number; complete: number; abandon: number }> = {};
-  for (const e of events ?? []) {
-    const r = e as { task_id: string; event_type: string };
-    if (!byTask[r.task_id]) byTask[r.task_id] = { start: 0, complete: 0, abandon: 0 };
-    if (r.event_type === "start") byTask[r.task_id].start++;
-    else if (r.event_type === "complete") byTask[r.task_id].complete++;
-    else if (r.event_type === "abandon") byTask[r.task_id].abandon++;
+  for (let i = 0; i < uniqueIds.length; i += TASK_COMPLETION_RATE_IN_CHUNK) {
+    const slice = uniqueIds.slice(i, i + TASK_COMPLETION_RATE_IN_CHUNK);
+    const { data: events } = await supabase
+      .from("task_events")
+      .select("task_id, event_type")
+      .eq("user_id", userId)
+      .in("task_id", slice)
+      .gte("occurred_at", sinceIso);
+    for (const e of events ?? []) {
+      const r = e as { task_id: string; event_type: string };
+      if (!byTask[r.task_id]) byTask[r.task_id] = { start: 0, complete: 0, abandon: 0 };
+      if (r.event_type === "start") byTask[r.task_id].start++;
+      else if (r.event_type === "complete") byTask[r.task_id].complete++;
+      else if (r.event_type === "abandon") byTask[r.task_id].abandon++;
+    }
   }
   const out: Record<string, number> = {};
-  for (const taskId of taskIds) {
+  for (const taskId of uniqueIds) {
     const t = byTask[taskId];
     if (!t) {
       out[taskId] = blendCompletionRate(0.7, dataMaturity);
