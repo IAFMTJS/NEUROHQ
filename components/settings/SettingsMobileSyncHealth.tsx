@@ -1,5 +1,6 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import { isNativeCapacitorRuntime, isSupabaseFirstMobileEnabled } from "@/lib/mobile/feature-flags";
 import {
@@ -8,11 +9,13 @@ import {
   listOutboxDeadLetterSample,
   type OutboxDeadLetterSample,
 } from "@/lib/mobile/db";
-import { getSyncMetrics } from "@/lib/mobile/metrics";
+import { getSyncMetrics, publishSyncMetrics } from "@/lib/mobile/metrics";
 import { flushOutboxQueue } from "@/lib/mobile/sync-engine";
 import { getPendingDailyStateQueueDepth, syncPendingDailyStateNow } from "@/lib/client-pending-writes";
+import { neuroToast } from "@/lib/ui/neuro-toast";
 
 export function SettingsMobileSyncHealth() {
+  const router = useRouter();
   const [mounted, setMounted] = useState(false);
   const [pending, setPending] = useState(0);
   const [pendingDailyState, setPendingDailyState] = useState(0);
@@ -72,11 +75,16 @@ export function SettingsMobileSyncHealth() {
     setFlushBusy(true);
     setError(null);
     try {
-      await flushOutboxQueue();
+      await flushOutboxQueue({ force: true });
       await syncPendingDailyStateNow();
+      await publishSyncMetrics(true);
       await load();
+      router.refresh();
+      neuroToast.success("Synchronisatie afgerond (wachtrij + dagstatus).");
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Flush mislukt");
+      const msg = e instanceof Error ? e.message : "Flush mislukt";
+      setError(msg);
+      neuroToast.error(msg);
     } finally {
       setFlushBusy(false);
     }
@@ -109,6 +117,10 @@ export function SettingsMobileSyncHealth() {
         </li>
       </ul>
       {metricsSummary && <p className="text-[11px] text-[var(--text-muted)] leading-snug">{metricsSummary}</p>}
+      <p className="text-[10px] leading-snug text-[var(--text-muted)]">
+        Sync OK / cache fris·verouderd zijn <span className="font-medium text-[var(--text-secondary)]">tellers</span> op dit
+        toestel (niet gereset door deze knop). “Nu synchroniseren” stuurt de outbox en lokale dagstatus naar de server.
+      </p>
       {deadHint && (
         <p className="text-[11px] text-amber-200/90 leading-snug" role="status">
           Laatste dead letter: {deadHint}

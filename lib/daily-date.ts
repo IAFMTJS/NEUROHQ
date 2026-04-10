@@ -26,10 +26,12 @@ export function getYesterdayKey(now: Date = new Date()): string {
 
 /**
  * Calendar day key used to decide if a {@link DailySnapshot} is still valid.
- * Matches the device local date for most of the day, but the boundary after
- * midnight is **00:01**: from 00:00:00 through 00:00:59 we still treat the
- * snapshot as belonging to **yesterday**, then at 00:01 the new day starts.
- * This matches a full reload/discarded snapshot only after 00:01 local.
+ *
+ * For the bulk of the day (including 23:59:59 local), this equals the device’s
+ * local YYYY-MM-DD. After midnight, the boundary is **00:01**: from 00:00:00
+ * through 00:00:59 we still treat the snapshot as belonging to **yesterday**,
+ * then at 00:01 the new day starts. That keeps the first cold-start bundle for
+ * “yesterday” usable through the last second before 00:01.
  */
 export function getSnapshotValidityDayKey(now: Date = new Date()): string {
   if (now.getHours() === 0 && now.getMinutes() === 0) {
@@ -40,7 +42,8 @@ export function getSnapshotValidityDayKey(now: Date = new Date()): string {
 
 /**
  * Whether a persisted snapshot is valid for the current local daily window
- * (entire calendar day until the next 00:01 rollover).
+ * (same calendar day through 23:59:59, then the 00:00–00:00:59 “yesterday” grace
+ * described on {@link getSnapshotValidityDayKey}, then 00:01 rolls to the new day).
  */
 export function isSnapshotForToday(snapshot: DailySnapshot): boolean {
   const now = new Date();

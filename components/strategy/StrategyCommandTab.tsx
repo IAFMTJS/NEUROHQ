@@ -52,12 +52,12 @@ type PillarSlice = {
   committed: boolean;
 };
 
-/** Vaste kleur per pijler: spaardoel rood, leerdoel groen, XP lichtblauw, discipline geel. */
+/** Vaste kleur per pijler — HUD-neon, gelijk aan StrategyAnalysisSplitRing / rest van Strategy. */
 const PILLAR_PROGRESS_RGB: Record<PillarKey, { r: number; g: number; b: number }> = {
-  budget: { r: 239, g: 68, b: 68 },
-  growth: { r: 34, g: 197, b: 94 },
-  xp: { r: 125, g: 211, b: 252 },
-  discipline: { r: 250, g: 204, b: 21 },
+  budget: { r: 248, g: 113, b: 113 },
+  growth: { r: 52, g: 211, b: 153 },
+  xp: { r: 34, g: 211, b: 238 },
+  discipline: { r: 252, g: 211, b: 77 },
 };
 
 const PILLAR_TRACK_FILL = "rgba(148, 163, 184, 0.22)";
@@ -68,21 +68,21 @@ function pillarLegendSwatch(key: PillarKey, committed: boolean, pct: number): st
   if (!committed) return PILLAR_UNCOMMITTED_TRACK;
   const t = Math.max(0, Math.min(1, pct / 100));
   const { r, g, b } = PILLAR_PROGRESS_RGB[key];
-  const alpha = 0.28 + 0.62 * t;
+  const alpha = 0.4 + 0.52 * t;
   return `rgba(${r},${g},${b},${alpha})`;
 }
 
 function pillarProgressFillSolid(key: PillarKey): string {
   const { r, g, b } = PILLAR_PROGRESS_RGB[key];
-  return `rgba(${r},${g},${b},0.92)`;
+  return `rgba(${r},${g},${b},0.98)`;
 }
 
 /** Tube-style glow per segment (aligned with commander / split-ring HUD). */
 const PILLAR_SEGMENT_GLOW: Record<PillarKey, string> = {
-  budget: "rgba(239, 68, 68, 0.52)",
-  growth: "rgba(34, 197, 94, 0.48)",
-  xp: "rgba(125, 211, 252, 0.5)",
-  discipline: "rgba(250, 204, 21, 0.48)",
+  budget: "rgba(248, 113, 113, 0.62)",
+  growth: "rgba(52, 211, 153, 0.55)",
+  xp: "rgba(34, 211, 238, 0.58)",
+  discipline: "rgba(252, 211, 77, 0.52)",
 };
 
 function QuarterCommandOverview({
@@ -125,11 +125,11 @@ function QuarterCommandOverview({
         >
           <defs>
             <filter id="strat-quarter-pie-bloom" x="-40%" y="-40%" width="180%" height="180%">
-              <feGaussianBlur stdDeviation="2.2" result="b" />
+              <feGaussianBlur stdDeviation="2.8" result="b" />
               <feColorMatrix
                 in="b"
                 type="matrix"
-                values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 0.4 0"
+                values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 0.52 0"
                 result="s"
               />
               <feMerge>
@@ -166,18 +166,18 @@ function QuarterCommandOverview({
                 <path
                   d={annularSectorPath(cx, cy, rInner, rOuter, start, filledEnd)}
                   fill={fill}
-                  fillOpacity={0.35}
+                  fillOpacity={0.52}
                   filter="url(#strat-quarter-pie-bloom)"
                   aria-hidden
                 />
                 <path
                   d={annularSectorPath(cx, cy, rInner, rOuter, start, filledEnd)}
                   fill={fill}
-                  stroke="rgba(255,255,255,0.14)"
+                  stroke="rgba(255,255,255,0.22)"
                   strokeWidth="0.9"
                   paintOrder="stroke fill"
                   style={{
-                    filter: `drop-shadow(0 0 3px ${glow}) drop-shadow(0 0 12px ${glow})`,
+                    filter: `drop-shadow(0 0 4px ${glow}) drop-shadow(0 0 14px ${glow}) drop-shadow(0 0 24px ${glow})`,
                   }}
                 />
               </g>

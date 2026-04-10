@@ -31,7 +31,8 @@ export function ServiceWorkerRegistration() {
       );
     };
 
-    const postWarmupAndSync = (reg: ServiceWorkerRegistration) => {
+    /** Zware cache-warmup (tientallen routes/API’s): alleen bij eerste ready / expliciete sync, niet bij elke focus. */
+    const postFullWarmupAndSync = (reg: ServiceWorkerRegistration) => {
       const includeAuth = isAuthenticatedWarmupRoute();
       const today = new Date().toISOString().slice(0, 10);
       reg.active?.postMessage({ type: "WARMUP_BACKGROUND_CACHE", includeAuth, today });
@@ -41,26 +42,21 @@ export function ServiceWorkerRegistration() {
       }
     };
 
-    /** iOS WebKit often suspends the SW; nudge cache refresh when the PWA returns to foreground. */
-    let lastForegroundWarmup = 0;
-    let lastHiddenAt = 0;
-    const FOREGROUND_WARMUP_MIN_MS = 90_000;
-    /** After screen lock / background, refresh sooner than the generic throttle. */
-    const FOREGROUND_WARMUP_AFTER_BACKGROUND_MS = 8_000;
+    /** Licht: offline-queue + dagstatus — veilig bij elke terugkeer naar de app (geen 25+ parallelle fetches). */
+    const postLightSyncOnly = (reg: ServiceWorkerRegistration) => {
+      if (!navigator.onLine) return;
+      reg.active?.postMessage({ type: "SYNC_OFFLINE_QUEUE" });
+      void syncPendingDailyStateNow();
+    };
 
     const onVisibilityChange = () => {
-      if (document.visibilityState === "hidden") {
-        lastHiddenAt = Date.now();
-        return;
-      }
-      const now = Date.now();
-      const awayMs = lastHiddenAt ? now - lastHiddenAt : 0;
-      lastHiddenAt = 0;
-      const bypassThrottle = awayMs >= FOREGROUND_WARMUP_AFTER_BACKGROUND_MS;
-      if (!bypassThrottle && now - lastForegroundWarmup < FOREGROUND_WARMUP_MIN_MS) return;
-      lastForegroundWarmup = now;
-      navigator.serviceWorker.ready.then(postWarmupAndSync).catch(() => {});
+      if (document.visibilityState === "hidden") return;
+      navigator.serviceWorker.ready.then(postLightSyncOnly).catch(() => {});
     };
+
+    /** Tegen dubbele `controllerchange` binnen milliseconden (reload-loop / crash). */
+    const SW_RELOAD_DEBOUNCE_KEY = "neurohq-sw-reload-ts-v1";
+    const SW_RELOAD_DEBOUNCE_MS = 5000;
 
     const hardReloadToLatest = () => {
       const url = new URL(window.location.href);
@@ -68,7 +64,17 @@ export function ServiceWorkerRegistration() {
       window.location.replace(url.toString());
     };
 
-    const onControllerChange = () => hardReloadToLatest();
+    const onControllerChange = () => {
+      const now = Date.now();
+      try {
+        const prev = Number(sessionStorage.getItem(SW_RELOAD_DEBOUNCE_KEY) || "0");
+        if (prev && now - prev < SW_RELOAD_DEBOUNCE_MS) return;
+        sessionStorage.setItem(SW_RELOAD_DEBOUNCE_KEY, String(now));
+      } catch {
+        /* private mode */
+      }
+      hardReloadToLatest();
+    };
     navigator.serviceWorker.addEventListener("controllerchange", onControllerChange);
 
     const syncOfflineQueueWhenOnline = () => {
@@ -95,7 +101,7 @@ export function ServiceWorkerRegistration() {
         }
         navigator.serviceWorker.ready
           .then((readyRegistration) => {
-            postWarmupAndSync(readyRegistration);
+            postFullWarmupAndSync(readyRegistration);
           })
           .catch(() => {});
 
@@ -137,6 +143,11 @@ export function ServiceWorkerRegistration() {
 
   const handleRefresh = () => {
     if (waitingWorker) {
+      try {
+        sessionStorage.removeItem("neurohq-sw-reload-ts-v1");
+      } catch {
+        /* ignore */
+      }
       waitingWorker.postMessage({ type: "SKIP_WAITING" });
       setUpdateAvailable(false);
       setWaitingWorker(null);

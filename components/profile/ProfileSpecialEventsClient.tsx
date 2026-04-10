@@ -21,7 +21,14 @@ function formatWhen(iso: string) {
 }
 
 function bundleHasContent(b: ProfileSpecialEventsBundle): boolean {
-  return b.events.length > 0 || b.upcomingEvents.length > 0 || b.games.length > 0 || b.quest != null;
+  return (
+    b.events.length > 0 ||
+    b.upcomingEvents.length > 0 ||
+    b.upcomingGames.length > 0 ||
+    b.upcomingQuests.length > 0 ||
+    b.games.length > 0 ||
+    b.quest != null
+  );
 }
 
 function SectionHeading({
@@ -322,6 +329,115 @@ export function ProfileSpecialEventsClient({ bundle }: { bundle: ProfileSpecialE
                           <span aria-hidden>—</span>
                           <span className="rounded-md bg-black/20 px-2 py-0.5 font-mono text-[10px] text-indigo-200/80">
                             Einde: {formatWhen(ev.ends_at)}
+                          </span>
+                        </>
+                      ) : null}
+                    </p>
+                  </div>
+                </div>
+              </li>
+            ))}
+          </ul>
+        </section>
+      ) : null}
+
+      {bundle.upcomingQuests.length > 0 ? (
+        <section aria-labelledby="profile-upcoming-quests-heading">
+          <SectionHeading
+            id="profile-upcoming-quests-heading"
+            icon="🧩"
+            kicker="Planning"
+            label="Aankomende quests"
+          />
+          <ul className="space-y-3">
+            {bundle.upcomingQuests.map((uq) => (
+              <li
+                key={`upcoming-quest-${uq.campaignId}`}
+                className="relative overflow-hidden rounded-2xl border border-fuchsia-500/30 bg-gradient-to-br from-fuchsia-950/30 via-[var(--bg-surface)]/25 to-violet-950/25 p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.05)]"
+              >
+                <div
+                  className="pointer-events-none absolute -left-8 -top-8 h-24 w-24 rounded-full bg-fuchsia-500/10 blur-2xl"
+                  aria-hidden
+                />
+                <div className="relative flex gap-3">
+                  <span
+                    className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-fuchsia-500/20 text-sm ring-1 ring-fuchsia-400/30"
+                    aria-hidden
+                  >
+                    🧩
+                  </span>
+                  <div className="min-w-0 flex-1">
+                    <p className="font-semibold text-fuchsia-100/95">{uq.title}</p>
+                    <p className="mt-1 text-xs text-violet-200/85">{uq.tagline}</p>
+                    <p className="mt-1.5 text-[11px] font-bold uppercase tracking-[0.12em] text-fuchsia-300/85">
+                      Preview
+                    </p>
+                    <p className="mt-1 text-sm leading-relaxed text-[var(--text-muted)]">{uq.storyPreview}</p>
+                    <div className="mt-3 rounded-lg border border-amber-500/25 bg-amber-500/10 px-3 py-2">
+                      <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-amber-200/90">Prijs bij voltooiing</p>
+                      <p className="mt-0.5 text-xs font-medium text-amber-50/95">{uq.prizeLine}</p>
+                    </div>
+                    <p className="mt-3 flex flex-wrap items-center gap-x-2 text-[11px] text-[var(--text-muted)]">
+                      <span className="rounded-md bg-black/20 px-2 py-0.5 font-mono text-[10px] text-fuchsia-200/80">
+                        Start: {formatWhen(uq.startsAt)}
+                      </span>
+                      {uq.endsAt ? (
+                        <>
+                          <span aria-hidden>—</span>
+                          <span className="rounded-md bg-black/20 px-2 py-0.5 font-mono text-[10px] text-fuchsia-200/80">
+                            Einde: {formatWhen(uq.endsAt)}
+                          </span>
+                        </>
+                      ) : null}
+                    </p>
+                  </div>
+                </div>
+              </li>
+            ))}
+          </ul>
+        </section>
+      ) : null}
+
+      {bundle.upcomingGames.length > 0 ? (
+        <section aria-labelledby="profile-upcoming-games-heading">
+          <SectionHeading
+            id="profile-upcoming-games-heading"
+            icon="🎮"
+            kicker="Planning"
+            label="Aankomende platform-games"
+          />
+          <ul className="space-y-3">
+            {bundle.upcomingGames.map((ug) => (
+              <li
+                key={`upcoming-game-${ug.id}`}
+                className="relative overflow-hidden rounded-2xl border border-violet-500/30 bg-gradient-to-br from-violet-950/35 via-[var(--bg-surface)]/25 to-indigo-950/25 p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.05)]"
+              >
+                <div
+                  className="pointer-events-none absolute -right-10 top-0 h-28 w-28 rounded-full bg-violet-500/10 blur-2xl"
+                  aria-hidden
+                />
+                <div className="relative flex gap-3">
+                  <span
+                    className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-violet-500/20 text-sm ring-1 ring-violet-400/30"
+                    aria-hidden
+                  >
+                    🎮
+                  </span>
+                  <div className="min-w-0 flex-1">
+                    <p className="font-semibold text-violet-100/95">{ug.title}</p>
+                    <p className="mt-1.5 text-[11px] font-bold uppercase tracking-[0.12em] text-violet-300/85">
+                      Preview
+                    </p>
+                    <p className="mt-1 text-sm leading-relaxed text-[var(--text-muted)]">{ug.storyPreview}</p>
+                    <p className="mt-3 flex flex-wrap items-center gap-x-2 text-[11px] text-[var(--text-muted)]">
+                      <span className="rounded-md bg-black/20 px-2 py-0.5 font-mono text-[10px] text-violet-200/80">
+                        Start: {formatWhen(ug.starts_at)}
+                      </span>
+                      {ug.ends_at ? (
+                        <>
+                          <span aria-hidden>—</span>
+                          <span className="rounded-md bg-black/20 px-2 py-0.5 font-mono text-[10px] text-violet-200/80">
+                            Einde: {formatWhen(ug.ends_at)}
                           </span>
                         </>
                       ) : null}

@@ -5,7 +5,7 @@ import { getGrowthFocus } from "@/app/actions/growth-focus";
 import { syncGrowthFocusProtocolToCalendarWeek } from "@/app/actions/growth-protocol-calendar-sync";
 import { getStrategyPacingHints } from "@/app/actions/strategy-engine-pacing";
 import { getGrowthEngineSnapshot } from "@/app/actions/growth-snapshot";
-import { getTasksForDateRange, getTodaysTasks } from "@/app/actions/tasks";
+import { getTasksForDateRange } from "@/app/actions/tasks";
 import { GrowthMissionsRibbon } from "@/components/growth/GrowthMissionsRibbon";
 import { GrowthProtocolCommandCard } from "@/components/growth/GrowthProtocolCommandCard";
 import { GrowthCommanderSummaryCard } from "@/components/growth/GrowthCommanderSummaryCard";
@@ -93,19 +93,21 @@ export async function GrowthReimaginedBExperience({ showLearningLink = true }: P
   const { start: budgetWeekStart, end: budgetWeekEnd } = getBudgetWeekBounds(today);
   const budgetWeekLabel = `${formatDayShort(budgetWeekStart)} – ${formatDayShort(budgetWeekEnd)}`;
 
-  const [protocols, progressMap, growthFocus, strategyPacingHints, growthSnap, todaysTasksResult, weekTasksByDate] = await Promise.all([
+  const [protocols, progressMap, growthFocus, strategyPacingHints, growthSnap, weekTasksByDate] = await Promise.all([
     getProtocolLibrary("nl"),
     getProtocolProgressMap(),
     getGrowthFocus(),
     getStrategyPacingHints(),
     getGrowthEngineSnapshot(),
-    getTodaysTasks(today, "normal", { growthOnly: true }),
     getTasksForDateRange(budgetWeekStart, budgetWeekEnd, { growthOnly: true }),
   ]);
 
-  const todayTasks = (todaysTasksResult.tasks ?? []).filter((task) => isProtocolMission(task));
-  const todayDoneCount = todayTasks.filter((task) => (task as { completed?: boolean }).completed === true).length;
-  const todayTotalCount = todayTasks.length;
+  /** `getTodaysTasks` sluit afgeronde taken uit; voor X/Y “vandaag” tellen we protocoltaken uit de week-range (zelfde scope als weekstats). */
+  const todayProtocolRows = ((weekTasksByDate[today] ?? []) as Array<{ completed?: boolean; task_tags?: unknown }>).filter((row) =>
+    isProtocolMission(row)
+  );
+  const todayDoneCount = todayProtocolRows.filter((task) => task.completed === true).length;
+  const todayTotalCount = todayProtocolRows.length;
   const todayOpenCount = Math.max(0, todayTotalCount - todayDoneCount);
   const weekDayKeys = Object.keys(weekTasksByDate ?? {});
   const weekRows = weekDayKeys.flatMap((date) =>
@@ -158,7 +160,7 @@ export async function GrowthReimaginedBExperience({ showLearningLink = true }: P
     const pct = total > 0 ? Math.round((done / total) * 100) : 0;
     return { date, total, done, pct };
   });
-  const priorityToday = (todayTasks as Array<{ id: string; title?: string; completed?: boolean; due_date?: string }>)
+  const priorityToday = (todayProtocolRows as Array<{ id: string; title?: string; completed?: boolean; due_date?: string }>)
     .filter((task) => task.completed !== true)
     .slice(0, 5);
   const protocolDeckTasks = orderedWeekDates

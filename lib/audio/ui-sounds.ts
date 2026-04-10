@@ -5,6 +5,10 @@ import { isUiSoundEnabledClient } from "@/lib/audio/ui-feedback-storage";
 
 export type UiSoundId = "success" | "error" | "nudge" | "level_up";
 
+/** Hoger = merkbaar luider; cap voorkomt harde clip op de master. */
+const UI_SOUND_LOUDNESS_MULT = 2.05;
+const UI_SOUND_GAIN_CAP = 0.26;
+
 function beep(
   ctx: AudioContext,
   freq: number,
@@ -13,12 +17,13 @@ function beep(
   gainPeak: number,
   type: OscillatorType = "sine"
 ): void {
+  const peak = Math.min(UI_SOUND_GAIN_CAP, gainPeak * UI_SOUND_LOUDNESS_MULT);
   const osc = ctx.createOscillator();
   const g = ctx.createGain();
   osc.type = type;
   osc.frequency.value = freq;
   g.gain.setValueAtTime(0, t0);
-  g.gain.linearRampToValueAtTime(gainPeak, t0 + 0.015);
+  g.gain.linearRampToValueAtTime(peak, t0 + 0.015);
   g.gain.exponentialRampToValueAtTime(0.0008, t0 + duration);
   osc.connect(g);
   g.connect(ctx.destination);

@@ -133,7 +133,7 @@ export function PolygonHudMeter({
               strokeLinejoin="round"
             />
             <g clipPath={`url(#${gradId}-clip)`}>
-              <rect x="0" y={100 - p} width="100" height="100" fill={`url(#${gradId}-fill)`} opacity={0.92} />
+              <rect x="0" y={100 - p} width="100" height={p} fill={`url(#${gradId}-fill)`} opacity={0.92} />
             </g>
             {isHex ? (
               <>
@@ -247,7 +247,7 @@ export function PolygonHudMeter({
                 strokeLinejoin="round"
               />
               <g clipPath={`url(#${gradId}-innerclip)`}>
-                <rect x="0" y={100 - p} width="100" height="100" fill={`url(#${gradId}-innerfill)`} opacity={0.95} />
+                <rect x="0" y={100 - p} width="100" height={p} fill={`url(#${gradId}-innerfill)`} opacity={0.95} />
               </g>
             </>
           ) : null}

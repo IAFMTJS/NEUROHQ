@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import type { XPFullContext } from "@/app/actions/xp-context";
 import type { ProfileDailyChallengeContext } from "@/app/actions/profile-daily-challenges";
@@ -11,6 +11,10 @@ import { EnergyRing, type EnergyRingMode } from "@/components/hud-test/EnergyRin
 import { MoodManualPanel } from "@/components/mood/MoodManualPanel";
 import { MOOD_LABEL_META, type MoodLabel } from "@/lib/mood-intervention-config";
 import { XPForecastWidget } from "@/components/dashboard/XPForecastWidget";
+import type { XPCachePayload } from "@/lib/xp-cache";
+import { getXPCache, setXPCache } from "@/lib/xp-cache";
+
+const PROFILE_XP_SYNC_SESSION_KEY = "neurohq-profile-xp-sync-v1";
 
 type Props = {
   identity: XPFullContext["identity"];
@@ -87,8 +91,66 @@ export function ProfileHomeCompact({
   const [moodLabel, setMoodLabel] = useState<MoodLabel | null>(
     (initialMoodLabel as MoodLabel | null) ?? null
   );
-  const barPct = Math.round(xpProgressInLevel(identity.total_xp) * 100);
-  const { current: curXp, needed: spanXp } = xpRangeForNextLevel(identity.total_xp);
+  const [identityBoost, setIdentityBoost] = useState<XPFullContext["identity"] | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const applyIdentityIfHigher = (incoming: XPFullContext["identity"]) => {
+      setIdentityBoost((prev) => {
+        const baseline = Math.max(identity.total_xp, prev?.total_xp ?? 0);
+        if (incoming.total_xp > baseline) return incoming;
+        return prev;
+      });
+    };
+
+    const run = async () => {
+      try {
+        if (typeof sessionStorage !== "undefined") {
+          try {
+            if (sessionStorage.getItem(PROFILE_XP_SYNC_SESSION_KEY) === todayStr) {
+              const cached = await getXPCache(todayStr);
+              if (cached?.identity) {
+                if (!cancelled) applyIdentityIfHigher(cached.identity);
+                return;
+              }
+              /* session marked but IDB empty (e.g. storage purge) — fetch once more */
+            }
+          } catch {
+            /* ignore */
+          }
+        }
+
+        const res = await fetch(
+          `/api/xp/context?date=${encodeURIComponent(todayStr)}&ts=${Date.now()}`,
+          { credentials: "include", cache: "no-store" }
+        );
+        if (!res.ok || cancelled) return;
+        const data = (await res.json()) as XPCachePayload;
+        if (!data?.identity) return;
+        applyIdentityIfHigher(data.identity);
+        void setXPCache(todayStr, data);
+        try {
+          sessionStorage.setItem(PROFILE_XP_SYNC_SESSION_KEY, todayStr);
+        } catch {
+          /* private mode */
+        }
+      } catch {
+        /* ignore */
+      }
+    };
+
+    void run();
+    return () => {
+      cancelled = true;
+    };
+  }, [todayStr, identity.total_xp]);
+
+  const displayIdentity =
+    identityBoost && identityBoost.total_xp > identity.total_xp ? identityBoost : identity;
+
+  const barPct = Math.round(xpProgressInLevel(displayIdentity.total_xp) * 100);
+  const { current: curXp, needed: spanXp } = xpRangeForNextLevel(displayIdentity.total_xp);
   const coach = insightState?.coachRecommendations[0]?.body;
   const trend = insightState?.trend.microcopy;
   const insightOneLiner =
@@ -96,11 +158,12 @@ export function ProfileHomeCompact({
     "Log een missie om je curve te vullen.";
 
   const band = insightState?.momentum.band;
-  const ringMode = ringModeFromProfile(identity.level, band);
+  const ringMode = ringModeFromProfile(displayIdentity.level, band);
   const momentumLabel = insightState
     ? `${insightState.momentum.score} · ${insightState.momentum.band === "high" ? "Sterk" : insightState.momentum.band === "medium" ? "Stabiel" : "Opbouw"}`
     : "—";
-  const nextTarget = identity.level >= 100 ? `Cap ${identity.level}` : `Level ${identity.level + 1}`;
+  const nextTarget =
+    displayIdentity.level >= 100 ? `Cap ${displayIdentity.level}` : `Level ${displayIdentity.level + 1}`;
   /** Visual-lab Profiel command deck: compact ring column + 200px orbit. */
   const ringSize = 200;
 
@@ -113,12 +176,12 @@ export function ProfileHomeCompact({
         <div className="relative z-[1] mx-auto grid max-w-3xl grid-cols-1 gap-5 md:grid-cols-[1fr_minmax(0,220px)_1fr] md:items-center md:gap-3">
         <div className="order-2 hidden flex-col justify-center gap-3 md:order-1 md:flex">
           <OrbitTile title="Rang">
-            <span className="line-clamp-2 text-[13px] leading-snug" title={identity.rank}>
-              {identity.rank}
+            <span className="line-clamp-2 text-[13px] leading-snug" title={displayIdentity.rank}>
+              {displayIdentity.rank}
             </span>
           </OrbitTile>
-          <OrbitTile title="Streak actief">{identity.streak.current} dagen</OrbitTile>
-          <OrbitTile title="Langste reeks">{identity.streak.longest} dagen</OrbitTile>
+          <OrbitTile title="Streak actief">{displayIdentity.streak.current} dagen</OrbitTile>
+          <OrbitTile title="Langste reeks">{displayIdentity.streak.longest} dagen</OrbitTile>
           <OrbitTile title="Momentum" className="bg-[rgba(var(--mode-rgb-deep),0.1)]">
             {momentumLabel}
           </OrbitTile>
@@ -135,7 +198,7 @@ export function ProfileHomeCompact({
                 profileOrbit
                 size={ringSize}
                 progress={barPct}
-                label={`Level ${identity.level}`}
+                label={`Level ${displayIdentity.level}`}
                 value={`${barPct}%`}
                 mode={ringMode}
               />
@@ -145,7 +208,7 @@ export function ProfileHomeCompact({
             <span className="tabular-nums text-[var(--text-secondary)]">
               {curXp.toLocaleString()} / {spanXp.toLocaleString()} XP
             </span>{" "}
-            naar {nextTarget} · {identity.total_xp.toLocaleString()} totaal
+            naar {nextTarget} · {displayIdentity.total_xp.toLocaleString()} totaal
           </p>
           <p className="mt-1.5 text-center">
             <Link
@@ -158,24 +221,24 @@ export function ProfileHomeCompact({
         </div>
 
         <div className="order-3 hidden flex-col justify-center gap-3 md:flex">
-          <OrbitTile title="Volgende rang">{identity.next_unlock.rank}</OrbitTile>
+          <OrbitTile title="Volgende rang">{displayIdentity.next_unlock.rank}</OrbitTile>
           <OrbitTile title="XP tot unlock" href={reportInsightsHref("overview")}>
-            Nog {identity.next_unlock.xpNeeded.toLocaleString()} XP
+            Nog {displayIdentity.next_unlock.xpNeeded.toLocaleString()} XP
           </OrbitTile>
           <OrbitTile title="Totaal XP" href={reportInsightsHref("overview")}>
-            {identity.total_xp.toLocaleString()}
+            {displayIdentity.total_xp.toLocaleString()}
           </OrbitTile>
         </div>
 
         <div className="order-4 flex flex-wrap justify-center gap-2 md:col-span-3 md:hidden">
           <OrbitTile title="Rang">
-            <span className="max-w-[100px] truncate text-xs" title={identity.rank}>
-              {identity.rank}
+            <span className="max-w-[100px] truncate text-xs" title={displayIdentity.rank}>
+              {displayIdentity.rank}
             </span>
           </OrbitTile>
-          <OrbitTile title="Streak">{identity.streak.current}d</OrbitTile>
+          <OrbitTile title="Streak">{displayIdentity.streak.current}d</OrbitTile>
           <OrbitTile title="Unlock" href={reportInsightsHref("overview")}>
-            {identity.next_unlock.xpNeeded} XP
+            {displayIdentity.next_unlock.xpNeeded} XP
           </OrbitTile>
           <OrbitTile title="XP %">{barPct}%</OrbitTile>
         </div>
@@ -202,7 +265,7 @@ export function ProfileHomeCompact({
           </Link>
         </div>
         <div className="mt-3">
-          <XPForecastWidget forecasts={forecast} currentLevel={identity.level} />
+          <XPForecastWidget forecasts={forecast} currentLevel={displayIdentity.level} />
         </div>
       </section>
 
@@ -213,7 +276,7 @@ export function ProfileHomeCompact({
         <DailyChallengesPanel
           variant="profile"
           className="space-y-4 border-0 bg-transparent p-0 shadow-none"
-          identity={identity}
+          identity={displayIdentity}
           todayStr={todayStr}
           missionTemplates={dailyChallengeContext.missionTemplates}
           behaviorProfile={dailyChallengeContext.behaviorProfile}

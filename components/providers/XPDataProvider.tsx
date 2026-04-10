@@ -6,10 +6,11 @@ import {
   useContext,
   useEffect,
   useMemo,
-  useRef,
   useState,
   type ReactNode,
 } from "react";
+import { markXpContextNetworkDoneForToday, xpContextNetworkAlreadyDoneForToday } from "@/lib/client-xp-context-session";
+import { getTodayKey } from "@/lib/daily-date";
 import type { XPCachePayload } from "@/lib/xp-cache";
 import { getXPCache, setXPCache } from "@/lib/xp-cache";
 
@@ -38,23 +39,24 @@ export function XPDataProvider({ children, initialDateStr, initialData }: XPData
     loading: !initialData,
     error: null,
   });
-  const stateRef = useRef(state);
-  const preloadStartedRef = useRef(false);
-
-  useEffect(() => {
-    stateRef.current = state;
-  }, [state]);
-
   // When DailySnapshot.xp refreshes (background merge), adopt newer server totals without a full remount.
+  // Never replace live/API data with an older snapshot (lower total_xp).
   useEffect(() => {
     if (initialData == null) return;
     setState((prev) => {
-      const same =
-        prev.data &&
-        prev.data.dateStr === initialData.dateStr &&
-        prev.data.identity.total_xp === initialData.identity.total_xp &&
-        prev.data.identity.level === initialData.identity.level;
-      if (same) return prev;
+      if (!prev.data) {
+        return { ...prev, data: initialData, loading: false, error: null };
+      }
+      const prevXp = prev.data.identity.total_xp;
+      const snapXp = initialData.identity.total_xp;
+      if (snapXp < prevXp) return prev;
+      if (
+        snapXp === prevXp &&
+        prev.data.identity.level === initialData.identity.level &&
+        prev.data.dateStr === initialData.dateStr
+      ) {
+        return prev;
+      }
       return { ...prev, data: initialData, loading: false, error: null };
     });
   }, [initialData]);
@@ -69,9 +71,6 @@ export function XPDataProvider({ children, initialDateStr, initialData }: XPData
   }, []);
 
   const preloadXP = useCallback(async () => {
-    if (preloadStartedRef.current) return;
-    preloadStartedRef.current = true;
-
     // 1. Try IndexedDB cache first for instant UI
     let cached: XPCachePayload | null = null;
     try {
@@ -85,6 +84,21 @@ export function XPDataProvider({ children, initialDateStr, initialData }: XPData
       }
     } catch {
       cached = null;
+    }
+
+    const todayKey = getTodayKey();
+    const seededForToday =
+      initialDateStr === todayKey &&
+      ((initialData != null && initialData.dateStr === todayKey) ||
+        (cached != null && cached.dateStr === todayKey));
+    if (seededForToday && xpContextNetworkAlreadyDoneForToday()) {
+      setState((prev) => ({
+        ...prev,
+        data: prev.data ?? cached ?? initialData ?? null,
+        loading: false,
+        error: null,
+      }));
+      return;
     }
 
     // 2. Fetch fresh XP context from server
@@ -105,11 +119,13 @@ export function XPDataProvider({ children, initialDateStr, initialData }: XPData
         return;
       }
       const fresh = (await res.json()) as XPCachePayload;
-      setState({
-        data: fresh,
-        loading: false,
-        error: null,
+      setState((prev) => {
+        if (prev.data && prev.data.identity.total_xp > fresh.identity.total_xp) {
+          return { ...prev, loading: false, error: null };
+        }
+        return { data: fresh, loading: false, error: null };
       });
+      markXpContextNetworkDoneForToday();
       setXPCache(initialDateStr, fresh).catch(() => {});
     } catch (err) {
       setState((prev) => ({
@@ -121,16 +137,12 @@ export function XPDataProvider({ children, initialDateStr, initialData }: XPData
             ? err.message
             : "Failed to load XP context",
       }));
-    } finally {
-      preloadStartedRef.current = false;
     }
   }, [initialDateStr]);
 
   useEffect(() => {
-    // When we already have data (e.g. from daily snapshot), use it for the whole day — no refetch on every visit.
-    if (state.data) return;
-    preloadXP().catch(() => {});
-  }, [preloadXP, state.data]);
+    void preloadXP();
+  }, [preloadXP]);
 
   const value: XPDataContextValue = useMemo(
     () => ({

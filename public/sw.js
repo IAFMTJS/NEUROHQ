@@ -339,28 +339,35 @@ function warmupBackgroundCaches(opts) {
   var options = opts || {};
   var includeAuth = options.includeAuth === true;
   var today = options.today || getTodayDateString();
+  var CONCURRENCY = 5;
   return caches.open(getDynamicCacheName()).then(function (cache) {
     const routesToPrefetch = includeAuth
       ? PUBLIC_ROUTES_TO_PREFETCH.concat(AUTH_ROUTES_TO_PREFETCH, getSnapshotEndpointsToPrefetch(today))
       : PUBLIC_ROUTES_TO_PREFETCH;
-    return Promise.all(
-      routesToPrefetch.map(function (route) {
-        const request = new Request(route, { method: "GET" });
-        return cache.match(request).then(function (cached) {
-          if (cached) return;
-          return fetch(request)
-            .then(function (response) {
-              // Never cache auth-redirect HTML into API cache keys (causes JSON parse failures later).
-              if (response && response.ok && (!request.url.includes("/api/") || looksLikeJsonResponse(response))) {
-                safeCachePut(cache, request, response.clone());
-              }
-            })
-            .catch(function () {
-              // Ignore errors, just warm what we can
-            });
-        });
-      })
-    );
+
+    function prefetchOne(route) {
+      const request = new Request(route, { method: "GET" });
+      return cache.match(request).then(function (cached) {
+        if (cached) return;
+        return fetch(request)
+          .then(function (response) {
+            if (response && response.ok && (!request.url.includes("/api/") || looksLikeJsonResponse(response))) {
+              safeCachePut(cache, request, response.clone());
+            }
+          })
+          .catch(function () {});
+      });
+    }
+
+    function runChunk(start) {
+      if (start >= routesToPrefetch.length) return Promise.resolve();
+      const slice = routesToPrefetch.slice(start, start + CONCURRENCY);
+      return Promise.all(slice.map(prefetchOne)).then(function () {
+        return runChunk(start + CONCURRENCY);
+      });
+    }
+
+    return runChunk(0);
   });
 }
 

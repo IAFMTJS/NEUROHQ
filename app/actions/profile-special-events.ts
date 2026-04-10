@@ -10,6 +10,8 @@ import {
   type PlatformGameAutoPublic,
 } from "@/lib/platform-games-config";
 import type { Json } from "@/types/database.types";
+import { buildQuestPrizeLine } from "@/lib/quests/prize-line";
+import { parseQuestContent } from "@/lib/quests/types";
 import { getQuestCampaignPublicStatus, type QuestClientPayload } from "@/app/actions/quest-campaign";
 import { evaluateAndSyncAutoPlatformGame } from "@/app/actions/platform-game-progress";
 
@@ -50,9 +52,30 @@ export type ProfileSpecialGameRow = {
   checklistState: Record<string, boolean>;
 };
 
+/** Game start nog in de toekomst — zelfde preview-patroon als upcoming platform_events. */
+export type ProfileUpcomingGamePreview = {
+  id: string;
+  title: string;
+  storyPreview: string;
+  starts_at: string;
+  ends_at: string | null;
+};
+
+export type ProfileUpcomingQuestPreview = {
+  campaignId: string;
+  title: string;
+  tagline: string;
+  storyPreview: string;
+  prizeLine: string;
+  startsAt: string;
+  endsAt: string | null;
+};
+
 export type ProfileSpecialEventsBundle = {
   events: ProfileSpecialEventRow[];
   upcomingEvents: ProfileSpecialEventRow[];
+  upcomingGames: ProfileUpcomingGamePreview[];
+  upcomingQuests: ProfileUpcomingQuestPreview[];
   games: ProfileSpecialGameRow[];
   quest: QuestClientPayload | null;
 };
@@ -172,10 +195,26 @@ export async function getProfileSpecialEventsBundle(): Promise<ProfileSpecialEve
 
   const now = Date.now();
 
-  const [evRes, quest, games] = await Promise.all([
+  const nowIso = new Date(now).toISOString();
+
+  const [evRes, quest, games, upcomingGamesRes, upcomingQuestsRes] = await Promise.all([
     supabase.from("platform_events").select("id, title, body, starts_at, ends_at, active").order("starts_at", { ascending: false }),
     getQuestCampaignPublicStatus(),
     getPlatformGamesForSession(supabase, user.id, now),
+    supabase
+      .from("platform_games")
+      .select("id, title, body, starts_at, ends_at, active")
+      .eq("active", true)
+      .gt("starts_at", nowIso)
+      .order("starts_at", { ascending: true })
+      .limit(5),
+    supabase
+      .from("platform_quest_campaigns")
+      .select("id, title, tagline, starts_at, ends_at, content, prize_summary, reward_xp, reward_flex_percent_bp, badge_label")
+      .eq("active", true)
+      .gt("starts_at", nowIso)
+      .order("starts_at", { ascending: true })
+      .limit(5),
   ]);
 
   const allEvents = (evRes.data ?? []) as Array<{
@@ -225,5 +264,50 @@ export async function getProfileSpecialEventsBundle(): Promise<ProfileSpecialEve
       ends_at: row.ends_at,
     }));
 
-  return { events, upcomingEvents, games, quest };
+  const upcomingGames: ProfileUpcomingGamePreview[] = ((upcomingGamesRes.data ?? []) as Array<{ id: string; title: string; body: string; starts_at: string; ends_at: string | null }>).map(
+    (row) => ({
+      id: row.id,
+      title: row.title,
+      storyPreview: toPreview(row.body ?? ""),
+      starts_at: row.starts_at,
+      ends_at: row.ends_at,
+    })
+  );
+
+  const upcomingQuests: ProfileUpcomingQuestPreview[] = [];
+  for (const row of upcomingQuestsRes.data ?? []) {
+    const r = row as {
+      id: string;
+      title: string;
+      tagline: string | null;
+      starts_at: string;
+      ends_at: string | null;
+      content: Json;
+      prize_summary: string | null;
+      reward_xp: number;
+      reward_flex_percent_bp: number;
+      badge_label: string;
+    };
+    const content = parseQuestContent(r.content);
+    const epigraph = content?.storyEpigraph?.trim();
+    const firstDay = content?.days?.[0];
+    const dayTeaser = [firstDay?.intro, firstDay?.storyLine, firstDay?.headline].find((s) => typeof s === "string" && s.trim().length > 0);
+    const rawPreview = epigraph || r.tagline?.trim() || (typeof dayTeaser === "string" ? dayTeaser : "") || r.title;
+    upcomingQuests.push({
+      campaignId: r.id,
+      title: r.title,
+      tagline: (r.tagline ?? "").trim() || "Meerdaagse platformquest",
+      storyPreview: toPreview(rawPreview),
+      prizeLine: buildQuestPrizeLine({
+        prizeSummary: r.prize_summary,
+        rewardXp: r.reward_xp ?? 0,
+        rewardFlexPercentBp: r.reward_flex_percent_bp ?? 0,
+        badgeLabel: r.badge_label ?? "",
+      }),
+      startsAt: r.starts_at,
+      endsAt: r.ends_at,
+    });
+  }
+
+  return { events, upcomingEvents, upcomingGames, upcomingQuests, games, quest };
 }

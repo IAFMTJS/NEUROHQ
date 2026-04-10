@@ -623,13 +623,32 @@ type AutoBudgetLockInput = {
   isPlanned: boolean;
   category?: string | null;
   source: "add" | "update";
+  /** Kalenderdag van de uitgave (YYYY-MM-DD); voor dagtotaal t.o.v. periodespendable. */
+  entryDate: string;
 };
+
+/** Som van uitgaven op één dag (alle negatieve budget_entries op die `date`). */
+async function getBudgetPeriodExpensesOnDateCents(dateYmd: string): Promise<number> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return 0;
+  const { data } = await supabase
+    .from("budget_entries")
+    .select("amount_cents")
+    .eq("user_id", user.id)
+    .eq("date", dateYmd)
+    .lt("amount_cents", 0);
+  return (data ?? []).reduce((sum, r) => sum + Math.abs((r as { amount_cents: number | null }).amount_cents ?? 0), 0);
+}
 
 function resolveAutoBudgetLockRule(input: {
   spendableCents: number;
   remainingBeforeCents: number;
   remainingAfterCents: number;
   expenseDeltaCents: number;
+  spentTodayCents: number;
   isPlanned: boolean;
   daysToPayday: number | null;
 }): { hours: number; reasonCode: string } | null {
@@ -638,6 +657,7 @@ function resolveAutoBudgetLockRule(input: {
     remainingBeforeCents,
     remainingAfterCents,
     expenseDeltaCents,
+    spentTodayCents,
     isPlanned,
     daysToPayday,
   } = input;
@@ -650,6 +670,9 @@ function resolveAutoBudgetLockRule(input: {
   const impulseSpike = !isPlanned && singleHitRatio >= 0.22;
   const lateCycleUnplannedSpike =
     !isPlanned && daysToPayday != null && daysToPayday <= 4 && singleHitRatio >= 0.12;
+  /** Meerdere boekingen op dezelfde dag kunnen samen >75% zijn zonder dat één mutatie 35% is. */
+  const sameDayBurnRatio = spentTodayCents / Math.max(1, spendableCents);
+  const singleDayHighBurn = sameDayBurnRatio >= 0.75;
 
   if (crossedIntoNegative && deepOverspend) {
     return { hours: 24, reasonCode: "crossed_budget_deep_overspend" };
@@ -662,6 +685,9 @@ function resolveAutoBudgetLockRule(input: {
   }
   if (largeSingleHit) {
     return { hours: 12, reasonCode: "single_expense_large_share" };
+  }
+  if (singleDayHighBurn) {
+    return { hours: 12, reasonCode: "single_day_high_burn" };
   }
   if (impulseSpike) {
     return { hours: 12, reasonCode: "impulse_spike" };
@@ -676,6 +702,7 @@ function resolveAutoBudgetLockRule(input: {
  * Auto safety lock:
  * - Crossing below zero in one move => immediate 12h lock (24h when deep overspend).
  * - Large single-hit expense / unplanned spike => short cooldown lock.
+ * - Zelfde dag: totaal uitgegeven ≥75% van periodespendable => lock (vangt meerdere kleine boekingen).
  * Non-blocking: never throws into add/update flow.
  */
 async function maybeApplyAutomaticBudgetLockAfterExpense(input: AutoBudgetLockInput): Promise<void> {
@@ -694,11 +721,18 @@ async function maybeApplyAutomaticBudgetLockAfterExpense(input: AutoBudgetLockIn
     const remainingAfterCents = spendableCents - spentAfterCents;
     const remainingBeforeCents = remainingAfterCents + Math.max(0, input.expenseDeltaCents);
 
+    const { periodStart, periodEnd } = await getBudgetPeriodBounds();
+    let spentTodayCents = 0;
+    if (input.entryDate >= periodStart && input.entryDate <= periodEnd) {
+      spentTodayCents = await getBudgetPeriodExpensesOnDateCents(input.entryDate);
+    }
+
     const rule = resolveAutoBudgetLockRule({
       spendableCents,
       remainingBeforeCents,
       remainingAfterCents,
       expenseDeltaCents: Math.max(0, input.expenseDeltaCents),
+      spentTodayCents,
       isPlanned: input.isPlanned,
       daysToPayday: control.daysToPayday,
     });
@@ -712,8 +746,10 @@ async function maybeApplyAutomaticBudgetLockAfterExpense(input: AutoBudgetLockIn
       reason: [
         `AUTO_LOCK:${rule.reasonCode}`,
         `source=${input.source}`,
+        `entry_date=${input.entryDate}`,
         `remaining_after_cents=${remainingAfterCents}`,
         `expense_delta_cents=${Math.max(0, input.expenseDeltaCents)}`,
+        `spent_today_cents=${spentTodayCents}`,
         `category=${(input.category ?? "unknown").slice(0, 40)}`,
       ].join(";"),
     });
@@ -841,6 +877,7 @@ export async function addBudgetEntry(params: {
       isPlanned: params.is_planned ?? false,
       category: params.category ?? null,
       source: "add",
+      entryDate: params.date,
     });
   }
   revalidatePath("/budget");
@@ -864,7 +901,7 @@ export async function updateBudgetEntry(id: string, params: {
   if (!user) throw new Error("Not authenticated");
   const { data: existingRow, error: existingError } = await supabase
     .from("budget_entries")
-    .select("amount_cents, is_planned, category")
+    .select("amount_cents, is_planned, category, date")
     .eq("id", id)
     .eq("user_id", user.id)
     .maybeSingle();
@@ -901,11 +938,14 @@ export async function updateBudgetEntry(id: string, params: {
     const nextExpenseCents = Math.abs(nextAmount);
     const expenseDeltaCents = Math.max(0, nextExpenseCents - previousExpenseCents);
     if (expenseDeltaCents > 0) {
+      const entryDate =
+        params.date ?? (existingRow as { date?: string | null }).date ?? getBudgetToday();
       await maybeApplyAutomaticBudgetLockAfterExpense({
         expenseDeltaCents,
         isPlanned: params.is_planned ?? ((existingRow as { is_planned?: boolean | null }).is_planned ?? false),
         category: params.category ?? (existingRow as { category?: string | null }).category ?? null,
         source: "update",
+        entryDate,
       });
     }
   }
