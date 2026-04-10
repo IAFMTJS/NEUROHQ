@@ -1,3 +1,5 @@
+import { createClient } from "@/lib/supabase/client";
+
 const METRICS_KEY = "neurohq-mobile-sync-metrics-v1";
 
 type SyncMetrics = {
@@ -97,6 +99,11 @@ let lastPublishAt = 0;
 
 export async function publishSyncMetrics(force = false): Promise<void> {
   if (typeof window === "undefined") return;
+  const {
+    data: { session },
+  } = await createClient().auth.getSession();
+  if (!session) return;
+
   const now = Date.now();
   if (!force && now - lastPublishAt < 120_000) return;
   lastPublishAt = now;

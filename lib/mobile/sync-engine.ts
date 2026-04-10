@@ -1,3 +1,4 @@
+import { createClient } from "@/lib/supabase/client";
 import { IDEMPOTENCY_HEADER, SYNC_CLIENT_HEADER, type OutboxActionType } from "@/lib/mobile/supabase-first-contract";
 import {
   getOutboxPendingDepth,
@@ -73,6 +74,13 @@ async function pushRow(row: OutboxRow): Promise<PushResult> {
 async function flushOutboxOnce(): Promise<void> {
   const rows = await listReadyOutboxActions(30);
   if (rows.length === 0) {
+    recordOutboxDepth(await getOutboxPendingDepth());
+    return;
+  }
+  const {
+    data: { session },
+  } = await createClient().auth.getSession();
+  if (!session) {
     recordOutboxDepth(await getOutboxPendingDepth());
     return;
   }
