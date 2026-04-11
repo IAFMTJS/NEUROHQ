@@ -9,6 +9,7 @@ import { commitProtocolWeekToMissions, createProtocolCatchupRound } from "@/app/
 import { setGrowthFocusProtocol, setGrowthFocusAndCommitProtocolWeek } from "@/app/actions/growth-focus";
 import type { GrowthFocusState } from "@/app/actions/growth-focus";
 import { parseProtocolDefinition, getScaledTask, maxWeekIndex, phaseForWeek, weekForIndex } from "@/lib/growth/protocol-definition";
+import { selectProtocolTasksForWeeklyMissions } from "@/lib/growth/protocol-week-mission-tasks";
 import type { DifficultyTier } from "@/lib/growth/adaptive-engine";
 import { progressKey, resolveFocusProtocol } from "@/lib/growth/resolve-focus-protocol";
 import { tierLabelNl } from "@/lib/growth/tier-labels";
@@ -18,7 +19,7 @@ import type { StrategyPacingHints } from "@/lib/strategy/strategy-pacing-hints";
 import { strategyPaceHintLines } from "@/lib/strategy/format-strategy-pace-hints";
 
 const LOW_PROGRESS_THRESHOLD = 40;
-const CATCHUP_OPTIONS = [2, 3, 4] as const;
+const CATCHUP_OPTIONS = [1, 2, 3] as const;
 
 function weekProgressState(pct: number, totalTasks: number): "No plan" | "Behind" | "Risk" | "On track" {
   if (totalTasks <= 0) return "No plan";
@@ -69,7 +70,7 @@ export function GrowthCommandCenter({
 }: Props) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
-  const [catchupTaskCount, setCatchupTaskCount] = useState<(typeof CATCHUP_OPTIONS)[number]>(3);
+  const [catchupTaskCount, setCatchupTaskCount] = useState<(typeof CATCHUP_OPTIONS)[number]>(2);
 
   const quarterPacingLines = useMemo(
     () => (strategyPacingHints ? strategyPaceHintLines("learning", strategyPacingHints) : []),
@@ -112,11 +113,12 @@ export function GrowthCommandCenter({
   const weekIndex = prog?.current_week_index ?? 1;
   const completed = new Set(prog?.completed_task_ids ?? []);
   const week = def ? weekForIndex(def, weekIndex) : undefined;
+  const missionWeekTasks = week ? selectProtocolTasksForWeeklyMissions(week.tasks) : [];
   const phase = def ? phaseForWeek(def, weekIndex) : undefined;
   const maxW = def ? maxWeekIndex(def) : 1;
 
-  const doneInWeek = week ? week.tasks.filter((t) => completed.has(t.id)).length : 0;
-  const totalInWeek = week?.tasks.length ?? 0;
+  const doneInWeek = missionWeekTasks.filter((t) => completed.has(t.id)).length;
+  const totalInWeek = missionWeekTasks.length;
   const weekPct = totalInWeek > 0 ? Math.round((doneInWeek / totalInWeek) * 100) : 0;
   const progressState = weekProgressState(weekPct, totalInWeek);
   const progressStateClass =
@@ -129,17 +131,19 @@ export function GrowthCommandCenter({
           : "border-white/20 bg-white/10 text-slate-200";
   const isLowProgress = totalInWeek > 0 && weekPct < LOW_PROGRESS_THRESHOLD;
 
-  const previewTasks = week?.tasks.slice(0, 3) ?? [];
-  const totalWeekMinutes = week?.tasks.reduce((sum, task) => sum + getScaledTask(task, tier).minutes, 0) ?? 0;
-  const completedWeekMinutes =
-    week?.tasks.reduce((sum, task) => (completed.has(task.id) ? sum + getScaledTask(task, tier).minutes : sum), 0) ?? 0;
+  const previewTasks = missionWeekTasks.slice(0, 3);
+  const totalWeekMinutes = missionWeekTasks.reduce((sum, task) => sum + getScaledTask(task, tier).minutes, 0);
+  const completedWeekMinutes = missionWeekTasks.reduce(
+    (sum, task) => (completed.has(task.id) ? sum + getScaledTask(task, tier).minutes : sum),
+    0,
+  );
   const remainingWeekMinutes = Math.max(0, totalWeekMinutes - completedWeekMinutes);
   const learningFocusBullets = useMemo(() => {
     if (!week) return [] as string[];
     const bullets: string[] = [];
     if (week.objective?.trim()) bullets.push(week.objective.trim());
     if (week.week_intent?.trim()) bullets.push(week.week_intent.trim());
-    for (const task of week.tasks.slice(0, 3)) {
+    for (const task of selectProtocolTasksForWeeklyMissions(week.tasks).slice(0, 3)) {
       bullets.push(task.title.trim());
     }
     return bullets.slice(0, 5);
@@ -159,8 +163,9 @@ export function GrowthCommandCenter({
         fills.push(0);
         continue;
       }
-      const doneC = wk.tasks.filter((t) => doneIds.has(t.id)).length;
-      fills.push(doneC / wk.tasks.length);
+      const planned = selectProtocolTasksForWeeklyMissions(wk.tasks);
+      const doneC = planned.filter((t) => doneIds.has(t.id)).length;
+      fills.push(planned.length > 0 ? doneC / planned.length : 0);
     }
     return {
       protocolWeekFills: fills,
@@ -462,8 +467,10 @@ export function GrowthCommandCenter({
                         );
                       })}
                     </ul>
-                    {week.tasks.length > 3 ? (
-                      <p className="mt-2 text-[11px] text-[var(--text-muted)]">+{week.tasks.length - 3} extra in het traject</p>
+                    {missionWeekTasks.length > 3 ? (
+                      <p className="mt-2 text-[11px] text-[var(--text-muted)]">
+                        +{missionWeekTasks.length - 3} extra in het traject
+                      </p>
                     ) : null}
                   </div>
                 ) : (

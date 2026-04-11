@@ -3,6 +3,7 @@
  * “~13 weken × taken per week” i.p.v. alleen de actieve protocolweek.
  */
 import { maxWeekIndex, weekForIndex, type ProtocolDefinitionV1 } from "@/lib/growth/protocol-definition";
+import { selectProtocolTasksForWeeklyMissions } from "@/lib/growth/protocol-week-mission-tasks";
 
 function utcNoonMs(ymd: string): number {
   const y = Number(ymd.slice(0, 4));
@@ -48,7 +49,9 @@ export function sumExpectedTasksInWeekRange(
   if (lo > hi) return 0;
   let sum = 0;
   for (let w = lo; w <= hi; w++) {
-    sum += weekForIndex(def, w)?.tasks.length ?? 0;
+    const wk = weekForIndex(def, w);
+    if (!wk) continue;
+    sum += selectProtocolTasksForWeeklyMissions(wk.tasks).length;
   }
   return sum;
 }

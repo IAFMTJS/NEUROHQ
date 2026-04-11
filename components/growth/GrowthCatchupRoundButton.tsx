@@ -10,12 +10,12 @@ type Props = {
   locale: string | null;
 };
 
-const OPTIONS = [2, 3, 4] as const;
+const OPTIONS = [1, 2, 3] as const;
 
 export function GrowthCatchupRoundButton({ protocolSlug, locale }: Props) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
-  const [count, setCount] = useState<(typeof OPTIONS)[number]>(3);
+  const [count, setCount] = useState<(typeof OPTIONS)[number]>(2);
 
   const canRun = !!protocolSlug;
 

@@ -7,6 +7,7 @@ import { revalidateTagMax } from "@/lib/revalidate";
 import { parseProtocolDefinition, getScaledTask, weekForIndex } from "@/lib/growth/protocol-definition";
 import type { DifficultyTier } from "@/lib/growth/adaptive-engine";
 import { assignProtocolTaskDueDatesFromWeek } from "@/lib/growth/spread-protocol-due-dates";
+import { selectProtocolTasksForWeeklyMissions } from "@/lib/growth/protocol-week-mission-tasks";
 import { getBudgetWeekBounds } from "@/lib/utils/budget-date";
 import { todayDateString } from "@/lib/utils/timezone";
 import { upsertProtocolProgress } from "@/app/actions/protocol-progress";
@@ -201,6 +202,8 @@ export async function commitProtocolWeekToMissions(params: {
   const week = weekForIndex(def, weekIndex);
   if (!week) throw new Error(`Geen week ${weekIndex} in dit protocol.`);
 
+  const tasksForMissions = selectProtocolTasksForWeeklyMissions(week.tasks);
+
   const titlePrefix = (row as { title?: string }).title?.slice(0, 48) ?? params.protocol_slug;
 
   const { start: weekStart, end: weekEnd } = getBudgetWeekBounds(anchorToday);
@@ -231,14 +234,14 @@ export async function commitProtocolWeekToMissions(params: {
 
   const spreadDueDates = forceSingleDay
     ? null
-    : assignProtocolTaskDueDatesFromWeek(week.tasks, week, anchorToday);
+    : assignProtocolTaskDueDatesFromWeek(tasksForMissions, week, anchorToday);
 
   const taskIds: string[] = [];
   let skipped = 0;
   let created = 0;
 
-  for (let ti = 0; ti < week.tasks.length; ti++) {
-    const task = week.tasks[ti];
+  for (let ti = 0; ti < tasksForMissions.length; ti++) {
+    const task = tasksForMissions[ti];
     if (existingMarkers.has(task.id)) {
       skipped++;
       continue;
@@ -358,7 +361,8 @@ export async function createProtocolCatchupRound(params: {
       ? prog.completed_task_ids.filter((id): id is string => typeof id === "string")
       : []
   );
-  const openTasks = week.tasks.filter((task) => !completedIds.has(task.id));
+  const plannable = selectProtocolTasksForWeeklyMissions(week.tasks);
+  const openTasks = plannable.filter((task) => !completedIds.has(task.id));
   if (openTasks.length === 0) {
     return { created: 0, skipped: 0, round: 1, taskIds: [], plannedTaskTitles: [] };
   }
@@ -384,7 +388,7 @@ export async function createProtocolCatchupRound(params: {
   }
   const round = highestRound + 1;
 
-  const maxTasks = Math.max(1, Math.min(6, Math.floor(params.max_tasks ?? 3)));
+  const maxTasks = Math.max(1, Math.min(3, Math.floor(params.max_tasks ?? 2)));
   const selectedTasks = [...openTasks]
     .sort((a, b) => b.minutes - a.minutes)
     .slice(0, maxTasks);

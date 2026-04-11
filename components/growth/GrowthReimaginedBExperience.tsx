@@ -14,6 +14,7 @@ import { GrowthCatchupRoundButton } from "@/components/growth/GrowthCatchupRound
 import { GrowthWorkspaceInfoToastButtons } from "@/components/growth/GrowthWorkspaceInfoToastButtons";
 import { GrowthReimaginedBTabShell } from "@/components/growth/GrowthReimaginedBTabShell";
 import { parseProtocolDefinition } from "@/lib/growth/protocol-definition";
+import { selectProtocolTasksForWeeklyMissions } from "@/lib/growth/protocol-week-mission-tasks";
 import { progressKey } from "@/lib/growth/resolve-focus-protocol";
 import { formatDayShort } from "@/lib/utils/date-locale";
 import { getBudgetWeekBounds } from "@/lib/utils/budget-date";
@@ -140,11 +141,15 @@ export async function GrowthReimaginedBExperience({ showLearningLink = true }: P
   const activeProgress = activeProtocolSlug ? progressMap[progressKey(activeProtocolSlug, activeProtocolLocale)] ?? null : null;
   const protocolCompletedIds = new Set(activeProgress?.completed_task_ids ?? []);
   const protocolTotalCount =
-    activeDefinition?.weeks.reduce((sum, week) => sum + week.tasks.length, 0) ?? 0;
+    activeDefinition?.weeks.reduce(
+      (sum, wk) => sum + selectProtocolTasksForWeeklyMissions(wk.tasks).length,
+      0,
+    ) ?? 0;
   const protocolDoneCount =
     activeDefinition?.weeks.reduce(
-      (sum, week) => sum + week.tasks.filter((task) => protocolCompletedIds.has(task.id)).length,
-      0
+      (sum, wk) =>
+        sum + selectProtocolTasksForWeeklyMissions(wk.tasks).filter((task) => protocolCompletedIds.has(task.id)).length,
+      0,
     ) ?? 0;
   const protocolProgressPct =
     protocolTotalCount > 0 ? Math.round((protocolDoneCount / protocolTotalCount) * 100) : 0;
@@ -369,8 +374,9 @@ export async function GrowthReimaginedBExperience({ showLearningLink = true }: P
       ) : (
         <section className="space-y-3">
           {trajectoryWeeks.map((week) => {
-            const weekDoneCount = week.tasks.filter((task) => protocolCompletedIds.has(task.id)).length;
-            const weekTotalCount = week.tasks.length;
+            const planned = selectProtocolTasksForWeeklyMissions(week.tasks);
+            const weekDoneCount = planned.filter((task) => protocolCompletedIds.has(task.id)).length;
+            const weekTotalCount = planned.length;
             const weekPct = weekTotalCount > 0 ? Math.round((weekDoneCount / weekTotalCount) * 100) : 0;
             const rationale = week.week_intent?.trim() || week.coach_notes?.trim() || "Deze week bouwt voort op de vorige fase om continu progressie te houden.";
             return (
@@ -390,7 +396,7 @@ export async function GrowthReimaginedBExperience({ showLearningLink = true }: P
                   <p className="mt-1 text-xs text-slate-200">{rationale}</p>
                 </div>
                 <ul className="mt-3 space-y-2">
-                  {week.tasks.map((task) => {
+                  {planned.map((task) => {
                     const done = protocolCompletedIds.has(task.id);
                     return (
                       <li
