@@ -16,6 +16,12 @@ import {
   parseJsonToContent,
   validateContentForSave,
 } from "@/lib/quests/admin-quest-editor-utils";
+import {
+  KATSUO_ADMIN_ROW_PRESET,
+  VIREX_ADMIN_ROW_PRESET,
+  rowToAdminPreset,
+  type AdminQuestCampaignRowPreset,
+} from "@/lib/quests/admin-quest-presets";
 import type { Tables } from "@/types/database.types";
 
 type Row = Tables<"platform_quest_campaigns">;
@@ -38,6 +44,17 @@ function isoToDatetimeLocal(iso: string): string {
 
 type EditorMode = "visual" | "json";
 
+function initialCampaignFields(
+  row: Row | null,
+  suggestedSlug: string | null
+): AdminQuestCampaignRowPreset {
+  if (row) return rowToAdminPreset(row);
+  return {
+    ...KATSUO_ADMIN_ROW_PRESET,
+    slug: suggestedSlug?.trim() || KATSUO_ADMIN_ROW_PRESET.slug,
+  };
+}
+
 export function AdminQuestCampaignForm({
   initialRow,
   suggestedSlug = null,
@@ -50,12 +67,19 @@ export function AdminQuestCampaignForm({
   const [content, setContent] = useState<QuestCampaignContent | null>(null);
   const [editorMode, setEditorMode] = useState<EditorMode>("visual");
   const [jsonDraft, setJsonDraft] = useState("");
+  const [campaignFields, setCampaignFields] = useState<AdminQuestCampaignRowPreset>(() =>
+    initialCampaignFields(initialRow, suggestedSlug)
+  );
 
   const applyParsedContent = useCallback((data: QuestCampaignContent) => {
     setContent(data);
     setJsonDraft(contentToFormattedJson(data));
     setErr(null);
   }, []);
+
+  useEffect(() => {
+    setCampaignFields(initialCampaignFields(initialRow, suggestedSlug));
+  }, [initialRow?.id, suggestedSlug]);
 
   useEffect(() => {
     if (initialRow?.content != null) {
@@ -118,17 +142,17 @@ export function AdminQuestCampaignForm({
         }
         const form = e.currentTarget;
         const fd = new FormData(form);
-        const slug = String(fd.get("slug") ?? "").trim();
-        const title = String(fd.get("title") ?? "").trim();
-        const tagline = String(fd.get("tagline") ?? "").trim();
+        const slug = campaignFields.slug.trim();
+        const title = campaignFields.title.trim();
+        const tagline = campaignFields.tagline.trim();
         const startsLocal = String(fd.get("starts_at") ?? "").trim();
         const endsLocal = String(fd.get("ends_at") ?? "").trim();
         const active = fd.get("active") === "on";
-        const reward_xp = Number(fd.get("reward_xp") ?? 1000);
-        const reward_flex_percent_bp = Number(fd.get("reward_flex_bp") ?? 2000);
-        const achievement_key = String(fd.get("achievement_key") ?? "").trim();
-        const badge_label = String(fd.get("badge_label") ?? "").trim();
-        const prize_summary = String(fd.get("prize_summary") ?? "").trim();
+        const reward_xp = campaignFields.rewardXp;
+        const reward_flex_percent_bp = campaignFields.rewardFlexPercentBp;
+        const achievement_key = campaignFields.achievementKey.trim();
+        const badge_label = campaignFields.badgeLabel.trim();
+        const prize_summary = campaignFields.prizeSummary.trim();
 
         if (!title) {
           setErr("Titel is verplicht.");
@@ -176,7 +200,8 @@ export function AdminQuestCampaignForm({
           <input
             id="qc-slug"
             name="slug"
-            defaultValue={initialRow?.slug ?? suggestedSlug ?? "katsuo-ji"}
+            value={campaignFields.slug}
+            onChange={(e) => setCampaignFields((f) => ({ ...f, slug: e.target.value }))}
             className="w-full rounded-lg border border-white/15 bg-black/40 px-3 py-2 font-mono text-sm text-white outline-none focus:ring-2 focus:ring-amber-500/50"
           />
         </div>
@@ -191,6 +216,14 @@ export function AdminQuestCampaignForm({
                   const parsed = parseJsonToContent(raw);
                   if (parsed.ok) {
                     applyParsedContent(parsed.data);
+                    setCampaignFields(
+                      initialRow
+                        ? { ...KATSUO_ADMIN_ROW_PRESET, slug: initialRow.slug }
+                        : {
+                            ...KATSUO_ADMIN_ROW_PRESET,
+                            slug: suggestedSlug?.trim() || KATSUO_ADMIN_ROW_PRESET.slug,
+                          }
+                    );
                     setEditorMode("visual");
                   } else setErr(parsed.error);
                 } catch {
@@ -212,6 +245,7 @@ export function AdminQuestCampaignForm({
                   const parsed = parseJsonToContent(raw);
                   if (parsed.ok) {
                     applyParsedContent(parsed.data);
+                    setCampaignFields(VIREX_ADMIN_ROW_PRESET);
                     setEditorMode("visual");
                   } else setErr(parsed.error);
                 } catch {
@@ -232,7 +266,8 @@ export function AdminQuestCampaignForm({
             id="qc-title"
             name="title"
             required
-            defaultValue={initialRow?.title ?? "De weg van discipline"}
+            value={campaignFields.title}
+            onChange={(e) => setCampaignFields((f) => ({ ...f, title: e.target.value }))}
             className="w-full rounded-lg border border-white/15 bg-black/40 px-3 py-2 text-sm text-white outline-none focus:ring-2 focus:ring-amber-500/50"
           />
         </div>
@@ -243,7 +278,8 @@ export function AdminQuestCampaignForm({
           <input
             id="qc-tagline"
             name="tagline"
-            defaultValue={initialRow?.tagline ?? "Tien dagen — van continent tot coördinaat."}
+            value={campaignFields.tagline}
+            onChange={(e) => setCampaignFields((f) => ({ ...f, tagline: e.target.value }))}
             className="w-full rounded-lg border border-white/15 bg-black/40 px-3 py-2 text-sm text-white outline-none focus:ring-2 focus:ring-amber-500/50"
           />
         </div>
@@ -255,7 +291,8 @@ export function AdminQuestCampaignForm({
             id="qc-prize"
             name="prize_summary"
             rows={2}
-            defaultValue={initialRow?.prize_summary ?? ""}
+            value={campaignFields.prizeSummary}
+            onChange={(e) => setCampaignFields((f) => ({ ...f, prizeSummary: e.target.value }))}
             placeholder="Bijv. +1000 XP · +20% flex · badge The Unbreakable"
             className="w-full resize-y rounded-lg border border-white/15 bg-black/40 px-3 py-2 text-sm text-white outline-none focus:ring-2 focus:ring-amber-500/50"
           />
@@ -294,7 +331,10 @@ export function AdminQuestCampaignForm({
             name="reward_xp"
             type="number"
             min={0}
-            defaultValue={initialRow?.reward_xp ?? 1000}
+            value={Number.isFinite(campaignFields.rewardXp) ? campaignFields.rewardXp : 0}
+            onChange={(e) =>
+              setCampaignFields((f) => ({ ...f, rewardXp: Number(e.target.value) || 0 }))
+            }
             className="w-full rounded-lg border border-white/15 bg-black/40 px-3 py-2 text-sm text-white outline-none focus:ring-2 focus:ring-amber-500/50"
           />
         </div>
@@ -308,7 +348,15 @@ export function AdminQuestCampaignForm({
             type="number"
             min={0}
             max={10000}
-            defaultValue={initialRow?.reward_flex_percent_bp ?? 2000}
+            value={
+              Number.isFinite(campaignFields.rewardFlexPercentBp) ? campaignFields.rewardFlexPercentBp : 0
+            }
+            onChange={(e) =>
+              setCampaignFields((f) => ({
+                ...f,
+                rewardFlexPercentBp: Number(e.target.value) || 0,
+              }))
+            }
             className="w-full rounded-lg border border-white/15 bg-black/40 px-3 py-2 text-sm text-white outline-none focus:ring-2 focus:ring-amber-500/50"
           />
           <p className="mt-1 text-[10px] text-white/35">Opgeslagen als basispunten: 2000 = 20,00%.</p>
@@ -320,7 +368,8 @@ export function AdminQuestCampaignForm({
           <input
             id="qc-ach"
             name="achievement_key"
-            defaultValue={initialRow?.achievement_key ?? "the_unbreakable"}
+            value={campaignFields.achievementKey}
+            onChange={(e) => setCampaignFields((f) => ({ ...f, achievementKey: e.target.value }))}
             className="w-full rounded-lg border border-white/15 bg-black/40 px-3 py-2 font-mono text-sm text-white outline-none focus:ring-2 focus:ring-amber-500/50"
           />
         </div>
@@ -331,7 +380,8 @@ export function AdminQuestCampaignForm({
           <input
             id="qc-badge"
             name="badge_label"
-            defaultValue={initialRow?.badge_label ?? "The Unbreakable"}
+            value={campaignFields.badgeLabel}
+            onChange={(e) => setCampaignFields((f) => ({ ...f, badgeLabel: e.target.value }))}
             className="w-full rounded-lg border border-white/15 bg-black/40 px-3 py-2 text-sm text-white outline-none focus:ring-2 focus:ring-amber-500/50"
           />
         </div>

@@ -28,15 +28,12 @@ import { useDCICGameState } from "@/lib/dcic/game-state-client";
 import { AlertsBell } from "@/components/alerts/AlertsBell";
 import { PERIODIC_SNAPSHOT_REFRESH_MINUTES } from "@/lib/client-refresh";
 import { MoodInterventionHost } from "@/components/mood/MoodInterventionHost";
-import { StrategyWeeklyReviewLockOverlay } from "@/components/dashboard/StrategyWeeklyReviewLockOverlay";
 
 const LAST_ACTIVE_STORAGE_KEY = "neurohq-last-active-date";
 
 type Props = {
   children: React.ReactNode;
   initialDashboardSnapshot?: DashboardSnapshot | null;
-  /** Actief zolang weekreview openstaand is en nog geen volledige payload is opgeslagen. */
-  strategyWeeklyReviewLocked?: boolean;
 };
 
 /** Wraps server-rendered <main> with providers and shell. Children = the <main> element from the server layout. */
@@ -58,7 +55,6 @@ function isStrategyRoute(pathname: string) {
 export function DashboardLayoutClient({
   children,
   initialDashboardSnapshot: initialDashboardSnapshotProp,
-  strategyWeeklyReviewLocked = false,
 }: Props) {
   const pathname = usePathname();
   const router = useRouter();
@@ -201,7 +197,6 @@ export function DashboardLayoutClient({
               <div className="relative z-10 mx-auto flex min-h-0 max-h-[100dvh] w-full min-w-0 max-w-full flex-1 flex-col overflow-hidden bg-transparent md:min-h-[640px]">
                 {children}
               </div>
-              <StrategyWeeklyReviewLockOverlay locked={strategyWeeklyReviewLocked} />
               <BottomNavigationPortal />
             </div>
           </>

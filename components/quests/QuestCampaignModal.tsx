@@ -35,6 +35,14 @@ function formatShortAt(iso: string) {
   }
 }
 
+function formatWhen(iso: string) {
+  try {
+    return new Date(iso).toLocaleString("nl-NL", { dateStyle: "medium", timeStyle: "short" });
+  } catch {
+    return iso;
+  }
+}
+
 export function QuestCampaignModal({ open, onClose }: Props) {
   const [status, setStatus] = useState<QuestClientPayload | null>(null);
   const [answer, setAnswer] = useState("");
@@ -87,12 +95,23 @@ export function QuestCampaignModal({ open, onClose }: Props) {
           : undefined
       }
       size="lg"
+      cardClassName="quest-platform-modal"
+      headerBadge={
+        status ? (
+          <span
+            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-violet-500/25 text-xl ring-1 ring-violet-400/35"
+            aria-hidden
+          >
+            🧩
+          </span>
+        ) : undefined
+      }
       footer={
         <div className="flex w-full flex-wrap items-center justify-end gap-2">
           <button
             type="button"
             onClick={onClose}
-            className="rounded-lg border border-[var(--card-border)] px-3 py-2 text-xs font-semibold text-[var(--text-primary)] hover:bg-[var(--bg-hover)]"
+            className="rounded-xl border border-indigo-400/35 px-3 py-2 text-xs font-semibold text-indigo-100/95 hover:bg-indigo-500/12"
           >
             Sluiten
           </button>
@@ -129,7 +148,7 @@ export function QuestCampaignModal({ open, onClose }: Props) {
                   }
                 });
               }}
-              className="rounded-lg bg-[rgba(var(--mode-rgb),0.35)] px-4 py-2 text-xs font-semibold text-[var(--text-primary)] ring-1 ring-[rgba(var(--mode-rgb),0.35)] hover:bg-[rgba(var(--mode-rgb),0.5)] disabled:opacity-50"
+              className="rounded-xl bg-[rgba(var(--mode-rgb),0.38)] px-4 py-2 text-xs font-semibold text-[var(--text-primary)] shadow-[inset_0_1px_0_rgba(255,255,255,0.08)] ring-1 ring-[rgba(var(--mode-rgb),0.4)] transition hover:bg-[rgba(var(--mode-rgb),0.52)] disabled:opacity-50"
             >
               {pending ? "…" : "Controleer"}
             </button>
@@ -140,19 +159,28 @@ export function QuestCampaignModal({ open, onClose }: Props) {
       {!status ? (
         <p className="text-sm text-[var(--text-muted)]">Laden…</p>
       ) : (
-        <div className="space-y-4">
+        <div className="relative overflow-hidden rounded-2xl border border-fuchsia-500/35 bg-gradient-to-br from-violet-950/55 via-[var(--bg-surface)]/38 to-indigo-950/35 p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.07)] ring-1 ring-fuchsia-500/15 sm:p-5">
+          <div
+            className="pointer-events-none absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-transparent via-fuchsia-400/50 to-transparent"
+            aria-hidden
+          />
+          <div
+            className="pointer-events-none absolute -left-16 top-1/3 h-48 w-48 -translate-y-1/2 rounded-full bg-fuchsia-500/12 blur-3xl"
+            aria-hidden
+          />
+          <div className="relative space-y-4">
           {!status.completed && status.maxDay > 0 ? (
-            <div className="rounded-xl border border-violet-500/25 bg-gradient-to-r from-violet-950/40 to-[var(--bg-surface)]/30 px-3 py-2.5">
-              <div className="flex items-center justify-between text-[11px] font-medium text-[var(--text-muted)]">
+            <div>
+              <div className="mb-1 flex justify-between text-[11px] font-medium text-[var(--text-muted)]">
                 <span>Quest-voortgang</span>
-                <span>
+                <span className="tabular-nums">
                   {status.needsFinaleChoice
-                    ? "Puzzels voltooid"
+                    ? `Dag ${status.maxDay}/${status.maxDay} · finale`
                     : `Dag ${Math.min(status.eventDay, status.maxDay)}/${status.maxDay}`}
                 </span>
               </div>
               <div
-                className="mt-2 h-2 overflow-hidden rounded-full bg-black/25 ring-1 ring-violet-500/20"
+                className="h-2.5 overflow-hidden rounded-full bg-black/30 ring-1 ring-violet-500/25"
                 role="progressbar"
                 aria-valuenow={
                   status.needsFinaleChoice
@@ -168,31 +196,47 @@ export function QuestCampaignModal({ open, onClose }: Props) {
                 }
               >
                 <div
-                  className="h-full rounded-full bg-gradient-to-r from-violet-500 to-fuchsia-500"
+                  className="h-full rounded-full bg-gradient-to-r from-violet-500 to-fuchsia-500 transition-[width] duration-500 ease-out"
                   style={{
                     width: `${status.needsFinaleChoice ? 100 : Math.min(100, Math.round((Math.min(status.eventDay, status.maxDay) / status.maxDay) * 100))}%`,
                   }}
                 />
               </div>
+              {status.needsFinaleChoice ? (
+                <p className="mt-2 text-xs leading-snug text-fuchsia-200/90">
+                  Kies <span className="font-semibold text-rose-200">HELPEN</span> of{" "}
+                  <span className="font-semibold text-sky-200">STOPPEN</span> om het verhaal (gevolgen + slot) te zien; daarna
+                  flex/badge claimen.
+                </p>
+              ) : null}
             </div>
           ) : null}
-          <div className="rounded-xl border border-amber-500/30 bg-gradient-to-br from-amber-500/12 to-amber-950/25 px-3 py-2.5">
-            <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-amber-200/90">Prijs bij voltooiing</p>
-            <p className="mt-1 text-sm font-medium text-amber-50/95">{status.prizeLine}</p>
+          <div className="rounded-xl border border-amber-400/35 bg-gradient-to-br from-amber-500/15 to-amber-950/25 px-4 py-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]">
+            <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-amber-200/90">Loot bij voltooiing</p>
+            <p className="mt-1 text-sm font-semibold text-amber-50/95">{status.prizeLine}</p>
           </div>
+          <p className="text-xs text-[var(--text-muted)]">
+            {formatWhen(status.startsAt)}
+            {status.endsAt ? ` → ${formatWhen(status.endsAt)}` : " · geen vaste eindtijd"}
+          </p>
           {status.epigraph ? (
-            <p className="border-l-2 border-[rgba(var(--mode-rgb),0.45)] pl-3 text-sm italic text-[var(--text-muted)]">
+            <p className="border-l-2 border-violet-400/50 pl-3 text-sm italic leading-relaxed text-[var(--text-muted)]">
               {status.epigraph}
             </p>
           ) : null}
 
           {status.finaleOutcomeText ? (
-            <div className="rounded-xl border border-fuchsia-500/30 bg-fuchsia-950/20 p-4 text-sm text-[var(--text-primary)] shadow-[inset_0_1px_0_rgba(255,255,255,0.05)]">
-              <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-fuchsia-200/85">Gevolgen</p>
+            <details
+              className="group rounded-xl border border-fuchsia-500/30 bg-fuchsia-950/20 px-4 py-3 open:bg-fuchsia-950/28"
+              defaultOpen
+            >
+              <summary className="cursor-pointer select-none text-sm font-semibold text-fuchsia-100/95">
+                Gevolgen van je keuze (volledige tekst)
+              </summary>
               <pre className="mt-3 max-h-[min(28rem,52vh)] overflow-y-auto whitespace-pre-wrap font-sans text-xs leading-relaxed text-[var(--text-primary)]/95">
                 {status.finaleOutcomeText}
               </pre>
-            </div>
+            </details>
           ) : null}
 
           {status.needsFinaleChoice ? (
@@ -316,19 +360,47 @@ export function QuestCampaignModal({ open, onClose }: Props) {
           ) : null}
 
           {status.answerHistory.length > 0 ? (
-            <div className="rounded-lg border border-white/10 bg-white/[0.03] px-3 py-2.5">
-              <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-[var(--text-muted)]">
-                Jouw vragen en antwoorden (alle dagen)
-              </p>
-              <p className="mt-1 text-[11px] text-[var(--text-muted)]">
-                Nieuwste bovenaan. Zelfde log als op profiel → Events.
-              </p>
-              <QuestAnswerHistoryList rows={status.answerHistory} listClassName="max-h-[min(22rem,50vh)]" />
+            <div className="relative overflow-hidden rounded-2xl border border-indigo-400/35 bg-gradient-to-br from-indigo-950/45 via-violet-950/30 to-[var(--bg-surface)]/20 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)] ring-1 ring-indigo-500/20">
+              <div
+                className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-indigo-400/70 to-transparent"
+                aria-hidden
+              />
+              <div
+                className="pointer-events-none absolute -right-16 top-0 h-32 w-32 rounded-full bg-indigo-500/15 blur-2xl"
+                aria-hidden
+              />
+              <div className="relative flex items-center gap-3 border-b border-white/[0.08] px-4 py-3.5">
+                <span
+                  className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-500/35 to-violet-900/50 text-lg shadow-[inset_0_1px_0_rgba(255,255,255,0.12)] ring-1 ring-indigo-400/40"
+                  aria-hidden
+                >
+                  📋
+                </span>
+                <div className="min-w-0 flex-1">
+                  <p className="text-[9px] font-black uppercase tracking-[0.2em] text-indigo-200/85">Quest-log</p>
+                  <p className="mt-0.5 text-sm font-bold tracking-tight text-[var(--text-primary)]">
+                    Jouw vragen en antwoorden
+                  </p>
+                  <p className="mt-0.5 text-[11px] text-[var(--text-muted)]">
+                    Alle dagen · nieuwste bovenaan · zelfde als op profiel → Events
+                  </p>
+                </div>
+                <span className="shrink-0 rounded-full bg-indigo-500/25 px-2.5 py-1 text-xs font-black tabular-nums text-indigo-50 ring-1 ring-indigo-400/40">
+                  {status.answerHistory.length}
+                </span>
+              </div>
+              <div className="relative bg-black/15 px-4 pb-4 pt-3">
+                <QuestAnswerHistoryList
+                  variant="eventsBoard"
+                  rows={status.answerHistory}
+                  listClassName="max-h-[min(22rem,50vh)]"
+                />
+              </div>
             </div>
           ) : null}
 
           {!status.completed && !status.needsFinaleChoice && !puzzle ? (
-            <div className="rounded-xl border border-white/10 bg-white/[0.04] p-4 text-sm text-[var(--text-primary)]">
+            <div className="rounded-xl border border-violet-400/30 bg-gradient-to-br from-violet-950/35 to-[var(--bg-surface)]/20 p-4 text-sm text-[var(--text-primary)] shadow-[inset_0_1px_0_rgba(255,255,255,0.05)] ring-1 ring-violet-500/15">
               <p>Je bent bij voor vandaag. Kom morgen terug voor de volgende dag.</p>
               <p className="mt-2 text-xs text-[var(--text-muted)]">
                 Opgeloste dagen: {status.solvedDays.length > 0 ? status.solvedDays.join(", ") : "—"}
@@ -338,7 +410,7 @@ export function QuestCampaignModal({ open, onClose }: Props) {
 
           {puzzle ? (
             <>
-              <div className="rounded-xl border border-violet-500/20 bg-violet-950/20 px-3 py-2.5">
+              <div className="rounded-xl border border-violet-500/30 bg-violet-950/30 px-3 py-2.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)] ring-1 ring-violet-500/15">
                 <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-violet-200/90">{puzzle.headline}</p>
                 {puzzle.kind === "multi" && puzzle.stepTotal != null ? (
                   <p className="mt-1 text-xs text-[var(--text-muted)]">
@@ -409,14 +481,14 @@ export function QuestCampaignModal({ open, onClose }: Props) {
                 <p className="text-xs italic text-[var(--text-muted)] whitespace-pre-wrap">{puzzle.storyLine}</p>
               ) : null}
               {puzzle.riddle ? (
-                <p className="rounded-lg border border-white/10 bg-black/20 p-3 text-sm text-[var(--text-primary)] whitespace-pre-wrap">
+                <p className="rounded-xl border border-indigo-400/25 bg-black/30 p-3 text-sm text-[var(--text-primary)] whitespace-pre-wrap shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] ring-1 ring-indigo-500/10">
                   {puzzle.riddle}
                 </p>
               ) : null}
 
               {(status.recentAttempts?.length ?? 0) > 0 ? (
-                <div className="rounded-lg border border-white/10 bg-white/[0.03] px-3 py-2">
-                  <p className="text-[10px] font-bold uppercase tracking-wide text-[var(--text-muted)]">
+                <div className="rounded-xl border border-indigo-400/28 bg-gradient-to-br from-indigo-950/40 to-violet-950/20 px-3 py-2.5 ring-1 ring-indigo-500/15">
+                  <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-indigo-200/85">
                     Jouw eerdere antwoorden (deze stap)
                   </p>
                   <ul className="mt-2 max-h-36 space-y-1.5 overflow-y-auto text-xs">
@@ -444,7 +516,7 @@ export function QuestCampaignModal({ open, onClose }: Props) {
                 value={answer}
                 onChange={(e) => setAnswer(e.target.value)}
                 autoComplete="off"
-                className="mt-1 w-full rounded-lg border border-[var(--card-border)] bg-[var(--bg-surface)]/40 px-3 py-2 text-sm text-[var(--text-primary)] outline-none focus:ring-2 focus:ring-[rgba(var(--mode-rgb),0.45)]"
+                className="mt-1 w-full rounded-xl border border-indigo-400/30 bg-black/25 px-3 py-2 text-sm text-[var(--text-primary)] outline-none ring-1 ring-violet-500/10 focus:border-indigo-400/50 focus:ring-2 focus:ring-indigo-500/35"
                 placeholder={puzzle.kind === "coords" ? "bijv. 34.865736, 135.491608" : "Typ je antwoord"}
               />
 
@@ -460,6 +532,7 @@ export function QuestCampaignModal({ open, onClose }: Props) {
               ) : null}
             </>
           ) : null}
+          </div>
         </div>
       )}
     </Modal>

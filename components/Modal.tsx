@@ -23,6 +23,8 @@ type Props = {
   noPadding?: boolean;
   /** Max width: responsive to viewport so modals feel usable on all screen sizes */
   size?: ModalSize;
+  /** Extra class on the modal card (e.g. `quest-platform-modal`). */
+  cardClassName?: string;
 };
 
 /** Modal uses more of the viewport; rendered via portal so never trapped in cards. */
@@ -44,6 +46,7 @@ export function Modal({
   showBranding = false,
   noPadding = false,
   size = "md",
+  cardClassName,
 }: Props) {
   const overlayRef = useRef<HTMLDivElement>(null);
   const previousActive = useRef<HTMLElement | null>(null);
@@ -92,7 +95,7 @@ export function Modal({
         onClick={onClose}
       />
       <div
-        className={`modal-card relative flex w-full max-h-[min(88dvh,calc(100dvh-2rem))] flex-col ${sizeClasses[size]} my-4 modal-card-interactive`}
+        className={`modal-card relative flex w-full max-h-[min(88dvh,calc(100dvh-2rem))] flex-col ${sizeClasses[size]} my-4 modal-card-interactive${cardClassName ? ` ${cardClassName}` : ""}`}
         onClick={(e) => e.stopPropagation()}
       >
         <header className="modal-card-header shrink-0">

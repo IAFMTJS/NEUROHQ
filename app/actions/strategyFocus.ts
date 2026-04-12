@@ -13,10 +13,8 @@ import {
 import {
   mergeStrategyEngineParams,
   normalizeStrategyEngineParams,
-  isQuarterContractComplete,
   type StrategyEngineParams,
 } from "@/lib/strategy/engine-params";
-import { getStrategyBudgetSavingsContext } from "@/app/actions/strategy-budget-savings-context";
 import type { Json } from "@/types/database.types";
 import {
   parseWeeklyReviewPayload,
@@ -614,7 +612,7 @@ export async function upsertStrategyReview(params: {
   biggest_drift_domain?: string | null;
   strongest_domain?: string | null;
   notes?: string | null;
-  /** Volledige weekreflectie per pijler (4× 3 schaalvragen + open tekst). Vereist voor lock-release. */
+  /** Volledige weekreflectie per pijler (4× 3 schaalvragen + open tekst). */
   weeklyReviewPayload?: StrategyWeeklyReviewPayload | null;
 }): Promise<void> {
   const supabase = await createClient();
@@ -647,41 +645,6 @@ export async function upsertStrategyReview(params: {
   );
   revalidatePath("/strategy");
   revalidatePath("/", "layout");
-}
-
-/**
- * App-brede lock: actieve strategie + contract compleet + weekreview openstaand + geen geldige weekly_review_payload voor deze week.
- */
-export async function getStrategyAppReviewLockState(): Promise<{ locked: boolean }> {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth
-    .getUser()
-    .catch(() => ({ data: { user: null } }));
-  if (!user) return { locked: false };
-
-  const { data: row } = await supabase
-    .from("strategy_focus")
-    .select("id, engine_params, start_date")
-    .eq("user_id", user.id)
-    .eq("is_active", true)
-    .order("created_at", { ascending: false })
-    .limit(1)
-    .maybeSingle();
-
-  if (!row) return { locked: false };
-  const strategyId = (row as { id: string }).id;
-  const startDate = (row as { start_date: string }).start_date;
-  const engineParams = (row as { engine_params?: unknown }).engine_params;
-
-  const budgetCtx = await getStrategyBudgetSavingsContext();
-  if (!isQuarterContractComplete(engineParams, budgetCtx)) return { locked: false };
-
-  const status = await getStrategyReviewStatus(strategyId, startDate);
-  if (!status.reviewDue) return { locked: false };
-
-  return { locked: true };
 }
 
 /** This week's alignment: planned from strategy, actual from XP this week. */

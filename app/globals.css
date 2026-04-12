@@ -4067,6 +4067,30 @@ header h1 { margin: 0; }
   border-top: 1px solid var(--modal-border);
 }
 
+/* Platform quest modal — zelfde board-stijl als Profiel → Events hoofdquest */
+.quest-platform-modal.modal-card {
+  border-color: rgba(129, 140, 248, 0.38);
+  background: linear-gradient(
+    165deg,
+    rgba(30, 27, 75, 0.94) 0%,
+    rgba(46, 16, 69, 0.42) 42%,
+    var(--modal-bg) 100%
+  );
+  box-shadow:
+    0 0 0 1px rgba(129, 140, 248, 0.14),
+    0 0 40px rgba(99, 102, 241, 0.22),
+    0 28px 56px rgba(0, 0, 0, 0.55),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+.quest-platform-modal .modal-card-header {
+  border-bottom-color: rgba(129, 140, 248, 0.25);
+  background: linear-gradient(90deg, rgba(49, 46, 129, 0.38) 0%, rgba(30, 27, 75, 0.12) 55%, transparent 100%);
+}
+.quest-platform-modal .modal-card-footer {
+  border-top-color: rgba(129, 140, 248, 0.25);
+  background: linear-gradient(180deg, rgba(30, 27, 75, 0.35) 0%, rgba(15, 10, 26, 0.2) 100%);
+}
+
 /* Mood intervention toast — subtle violet pulse (no heavy motion) */
 @keyframes mood-toast-pulse {
   0%,
