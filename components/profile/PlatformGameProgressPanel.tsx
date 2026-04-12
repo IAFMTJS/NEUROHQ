@@ -8,9 +8,10 @@ import {
   setPlatformGameChecklistItem,
   submitPlatformGameAnswer,
 } from "@/app/actions/platform-game-progress";
-import { buildGameClaimCelebrationMessage } from "@/lib/platform-reward-celebration";
+import { buildGameLootToastModel } from "@/lib/platform-reward-celebration";
 import { getMetricPreset } from "@/lib/platform-games-metric-presets";
 import { neuroToast } from "@/lib/ui/neuro-toast";
+import { showGameLootClaimToast, showGameStageClearedToast } from "@/lib/ui/platform-loot-toast";
 import { showLevelUpCelebration } from "@/lib/ui/level-up-celebration";
 
 function opSymbol(op: string): string {
@@ -61,14 +62,13 @@ export function PlatformGameProgressPanel({
           if (res.levelUp && typeof res.newLevel === "number") {
             showLevelUpCelebration({ newLevel: res.newLevel });
           }
-          neuroToast.success(
-            buildGameClaimCelebrationMessage({
+          showGameLootClaimToast(
+            buildGameLootToastModel({
               pointsApplied: res.pointsApplied,
               flexPercentBp: res.flexPercentBp,
               flexAppliedCents: res.flexAppliedCents,
               flexSkippedReason: res.flexSkippedReason,
-            }),
-            { duration: 10_000 }
+            })
           );
           onAfterServerMutation?.();
           router.refresh();
@@ -262,9 +262,10 @@ export function PlatformGameProgressPanel({
                         return;
                       }
                       setAnswer("");
-                      if (res.message && res.message.trim()) neuroToast.success(res.message);
                       if (res.completed) {
-                        neuroToast.info("Claim je beloning hieronder om XP en flex te ontvangen.", { duration: 6000 });
+                        showGameStageClearedToast(res.message);
+                      } else if (res.message && res.message.trim()) {
+                        neuroToast.success(res.message);
                       }
                       onAfterServerMutation?.();
                       router.refresh();

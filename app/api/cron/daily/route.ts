@@ -7,6 +7,16 @@ import { loadUserNotificationContextForUser } from "@/lib/behavioral-notificatio
 import { runDailyHobbyCommitmentDecay } from "@/app/actions/hobby-commitment-decay";
 import { applyPersonalityToPayload } from "@/lib/push-personality";
 import { evaluateAcceptanceRulesForUser } from "@/lib/acceptance-rules-evaluator";
+import {
+  runAnalyticsEventsRetention,
+  runCompletedTasksRetention,
+  runDailyStateRetentionForAllUsers,
+  runHardPurgeCompletedTasksByDueDate,
+  runHardPurgeSoftDeletedCompletedTasks,
+  runPushSendsLogRetention,
+  runUserActionsAuditRetention,
+  runXpEventsRetention,
+} from "@/lib/server/daily-state-retention";
 
 /**
  * Daily at 06:00 UTC (GitHub `cron-daily.yml`): avoidance push (high carry-over), hobby decay, acceptance rules.
@@ -111,6 +121,102 @@ export async function GET(request: Request) {
     acceptanceGatesOpened = 0;
   }
 
+  let retentionSnapshotted = 0;
+  let retentionDeleted = 0;
+  let retentionErrors: string[] = [];
+  try {
+    const r = await runDailyStateRetentionForAllUsers(supabase, { userId: userIdFilter });
+    retentionSnapshotted = r.snapshotted;
+    retentionDeleted = r.deleted;
+    retentionErrors = r.errors;
+  } catch (e) {
+    retentionErrors = [e instanceof Error ? e.message : String(e)];
+  }
+
+  let tasksRetentionUpdated = 0;
+  let tasksHardPurgedAfterSoft = 0;
+  let tasksHardPurgedByDueDate = 0;
+  try {
+    const days = Number(process.env.DATA_RETENTION_COMPLETED_TASKS_DAYS ?? 0);
+    if (days > 0) {
+      const cutoff = new Date();
+      cutoff.setUTCDate(cutoff.getUTCDate() - days);
+      const cutoffStr = cutoff.toISOString().slice(0, 10);
+      const tr = await runCompletedTasksRetention(supabase, cutoffStr);
+      tasksRetentionUpdated = tr.updated;
+    }
+    const softDeletedGraceDays = Number(
+      process.env.DATA_RETENTION_HARD_PURGE_SOFT_DELETED_AFTER_DAYS ?? 0
+    );
+    if (softDeletedGraceDays > 0) {
+      const hp = await runHardPurgeSoftDeletedCompletedTasks(supabase, softDeletedGraceDays);
+      tasksHardPurgedAfterSoft = hp.deleted;
+    }
+    const directHardDays = Number(process.env.DATA_RETENTION_DIRECT_HARD_PURGE_COMPLETED_DAYS ?? 0);
+    if (directHardDays > 0) {
+      const cutoff = new Date();
+      cutoff.setUTCDate(cutoff.getUTCDate() - directHardDays);
+      const cutoffStr = cutoff.toISOString().slice(0, 10);
+      const hp2 = await runHardPurgeCompletedTasksByDueDate(supabase, cutoffStr);
+      tasksHardPurgedByDueDate = hp2.deleted;
+    }
+  } catch {
+    tasksRetentionUpdated = 0;
+  }
+
+  let xpEventsDeleted = 0;
+  let analyticsEventsDeleted = 0;
+  let userActionsAuditDeleted = 0;
+  let pushSendsLogDeleted = 0;
+  try {
+    const raw = process.env.XP_EVENTS_RETENTION_DAYS;
+    const parsed = raw === undefined || raw === "" ? 30 : Number(raw);
+    const xpLedgerDays =
+      Number.isFinite(parsed) && parsed >= 0 ? Math.floor(parsed) : 30;
+    if (xpLedgerDays > 0) {
+      const r = await runXpEventsRetention(supabase, xpLedgerDays);
+      xpEventsDeleted = r.deleted;
+    }
+
+    const aeParsed =
+      process.env.ANALYTICS_EVENTS_RETENTION_DAYS === undefined ||
+      process.env.ANALYTICS_EVENTS_RETENTION_DAYS === ""
+        ? 90
+        : Number(process.env.ANALYTICS_EVENTS_RETENTION_DAYS);
+    const aeDays = Number.isFinite(aeParsed) ? Math.max(0, Math.floor(aeParsed)) : 90;
+    if (aeDays > 0) {
+      const r = await runAnalyticsEventsRetention(supabase, aeDays);
+      analyticsEventsDeleted = r.deleted;
+    }
+
+    const uaParsed =
+      process.env.USER_ACTIONS_AUDIT_RETENTION_DAYS === undefined ||
+      process.env.USER_ACTIONS_AUDIT_RETENTION_DAYS === ""
+        ? 90
+        : Number(process.env.USER_ACTIONS_AUDIT_RETENTION_DAYS);
+    const uaDays = Number.isFinite(uaParsed) ? Math.max(0, Math.floor(uaParsed)) : 90;
+    if (uaDays > 0) {
+      const r = await runUserActionsAuditRetention(supabase, uaDays);
+      userActionsAuditDeleted = r.deleted;
+    }
+
+    const psParsed =
+      process.env.PUSH_SENDS_LOG_RETENTION_DAYS === undefined ||
+      process.env.PUSH_SENDS_LOG_RETENTION_DAYS === ""
+        ? 90
+        : Number(process.env.PUSH_SENDS_LOG_RETENTION_DAYS);
+    const psDays = Number.isFinite(psParsed) ? Math.max(0, Math.floor(psParsed)) : 90;
+    if (psDays > 0) {
+      const r = await runPushSendsLogRetention(supabase, psDays);
+      pushSendsLogDeleted = r.deleted;
+    }
+  } catch {
+    xpEventsDeleted = 0;
+    analyticsEventsDeleted = 0;
+    userActionsAuditDeleted = 0;
+    pushSendsLogDeleted = 0;
+  }
+
   return NextResponse.json({
     ok: true,
     job: "daily",
@@ -120,6 +226,16 @@ export async function GET(request: Request) {
     hobbyDecayUsers,
     acceptanceRulesUsers,
     acceptanceGatesOpened,
+    retentionSnapshotted,
+    retentionDeleted,
+    ...(retentionErrors.length > 0 && { retentionErrors }),
+    tasksRetentionUpdated,
+    tasksHardPurgedAfterSoft,
+    tasksHardPurgedByDueDate,
+    xpEventsDeleted,
+    analyticsEventsDeleted,
+    userActionsAuditDeleted,
+    pushSendsLogDeleted,
     date: todayStr,
   });
 }

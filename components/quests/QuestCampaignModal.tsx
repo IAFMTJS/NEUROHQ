@@ -4,8 +4,9 @@ import Image from "next/image";
 import { useCallback, useEffect, useState, useTransition } from "react";
 import { Modal } from "@/components/Modal";
 import { claimQuestCampaignRewards, submitQuestAnswer, type QuestClientPayload } from "@/app/actions/quest-campaign";
-import { buildQuestClaimCelebrationMessage } from "@/lib/platform-reward-celebration";
+import { buildQuestLootToastModel } from "@/lib/platform-reward-celebration";
 import { neuroToast } from "@/lib/ui/neuro-toast";
+import { showQuestClearedPendingLootToast, showQuestLootClaimToast } from "@/lib/ui/platform-loot-toast";
 import { showLevelUpCelebration } from "@/lib/ui/level-up-celebration";
 import { QuestAnswerHistoryList } from "@/components/quests/QuestAnswerHistoryList";
 
@@ -111,9 +112,7 @@ export function QuestCampaignModal({ open, onClose }: Props) {
                   setAnswer("");
                   await refresh();
                   if (res.completed) {
-                    neuroToast.success("Je hebt de quest voltooid. Claim je beloning om XP en flex op je account te zetten.", {
-                      duration: 6500,
-                    });
+                    showQuestClearedPendingLootToast();
                   }
                 });
               }}
@@ -194,15 +193,14 @@ export function QuestCampaignModal({ open, onClose }: Props) {
                         if (res.levelUp && typeof res.newLevel === "number") {
                           showLevelUpCelebration({ newLevel: res.newLevel });
                         }
-                        neuroToast.success(
-                          buildQuestClaimCelebrationMessage({
+                        showQuestLootClaimToast(
+                          buildQuestLootToastModel({
                             pointsApplied: res.pointsApplied,
                             flexPercentBp: res.flexPercentBp,
                             flexAppliedCents: res.flexAppliedCents,
                             flexSkippedReason: res.flexSkippedReason,
                             badgeLabel: res.badgeLabel,
-                          }),
-                          { duration: 10_000 }
+                          })
                         );
                         await refresh();
                       });

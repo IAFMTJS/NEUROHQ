@@ -221,19 +221,35 @@ async function evaluatePresetValue(
     }
     case "brain_checkin_days": {
       const { data, error } = await ctx.supabase
-        .from("daily_state")
-        .select("date, energy, focus")
+        .from("user_analytics_daily")
+        .select("date, energy_avg, focus_avg, brain_status_logged")
         .eq("user_id", ctx.userId)
         .gte("date", ctx.startYmd)
         .lte("date", ctx.endYmd);
       if (error || !data) return { value: 0 };
-      const rows = data as { date: string; energy: number | null; focus: number | null }[];
+      const rows = data as {
+        date: string;
+        energy_avg: number | null;
+        focus_avg: number | null;
+        brain_status_logged?: boolean | null;
+      }[];
       let checkinDays = 0;
       for (const r of rows) {
-        if (r.energy != null && r.focus != null) checkinDays++;
+        const ok =
+          r.brain_status_logged === true ||
+          (r.energy_avg != null && r.focus_avg != null);
+        if (ok) checkinDays++;
       }
       if (aggregation === "each_calendar_day") {
-        const ok = new Set(rows.filter((r) => r.energy != null && r.focus != null).map((r) => r.date));
+        const ok = new Set(
+          rows
+            .filter(
+              (r) =>
+                r.brain_status_logged === true ||
+                (r.energy_avg != null && r.focus_avg != null)
+            )
+            .map((r) => r.date)
+        );
         let missing = 0;
         for (const d of ctx.calendarDays) {
           if (!ok.has(d)) missing++;
@@ -248,7 +264,7 @@ async function evaluatePresetValue(
     }
     case "rest_days_logged": {
       const { data, error } = await ctx.supabase
-        .from("daily_state")
+        .from("user_analytics_daily")
         .select("date, is_rest_day")
         .eq("user_id", ctx.userId)
         .gte("date", ctx.startYmd)

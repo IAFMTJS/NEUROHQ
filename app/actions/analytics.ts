@@ -2,6 +2,7 @@
 
 import { createClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
+import { computeBrainCompositePctFromDailyState } from "@/lib/user-analytics-brain-snapshot";
 
 export type DailyAnalyticsRow = {
   date: string;
@@ -92,18 +93,47 @@ export async function upsertDailyAnalytics(date: string) {
   const [tasksRes, learningRes, stateRes, existingRes] = await Promise.all([
     supabase.from("tasks").select("completed, completed_at, due_date").eq("user_id", user.id).eq("due_date", date).is("deleted_at", null),
     supabase.from("learning_sessions").select("minutes").eq("user_id", user.id).eq("date", date),
-    supabase.from("daily_state").select("energy, focus, sensory_load").eq("user_id", user.id).eq("date", date).single(),
-    supabase.from("user_analytics_daily").select("active_seconds, carry_over_count, xp_earned, missions_completed").eq("user_id", user.id).eq("date", date).single(),
+    supabase
+      .from("daily_state")
+      .select(
+        "energy, focus, sensory_load, mental_battery, physical_health, load, sleep_hours, is_rest_day, emotional_state, dcic_overdrive_trigger_reason"
+      )
+      .eq("user_id", user.id)
+      .eq("date", date)
+      .single(),
+    supabase
+      .from("user_analytics_daily")
+      .select("active_seconds, carry_over_count, xp_earned, missions_completed, dcic_overdrive_weekly_slot")
+      .eq("user_id", user.id)
+      .eq("date", date)
+      .single(),
   ]);
 
   const tasks = (tasksRes.data ?? []) as { completed: boolean; completed_at: string | null; due_date: string }[];
   const completed = tasks.filter((t) => t.completed).length;
   const planned = tasks.length;
   const learningMinutes = (learningRes.data ?? []).reduce((sum: number, r: { minutes?: number }) => sum + (r.minutes ?? 0), 0);
-  const state = stateRes.data as { energy?: number | null; focus?: number | null; sensory_load?: number | null } | null;
+  const state = stateRes.data as {
+    energy?: number | null;
+    focus?: number | null;
+    sensory_load?: number | null;
+    mental_battery?: number | null;
+    physical_health?: number | null;
+    load?: number | null;
+    sleep_hours?: number | null;
+    is_rest_day?: boolean | null;
+    emotional_state?: string | null;
+    dcic_overdrive_trigger_reason?: string | null;
+  } | null;
   const brainStatusLogged = !!(state && state.energy != null);
 
-  const existing = existingRes.data as { active_seconds?: number; carry_over_count?: number; xp_earned?: number; missions_completed?: number } | null;
+  const existing = existingRes.data as {
+    active_seconds?: number;
+    carry_over_count?: number;
+    xp_earned?: number;
+    missions_completed?: number;
+    dcic_overdrive_weekly_slot?: boolean | null;
+  } | null;
   const carryOver = existing?.carry_over_count ?? 0;
   const activeSeconds = existing?.active_seconds ?? 0;
   const xpEarned = existing?.xp_earned ?? 0;
@@ -111,6 +141,25 @@ export async function upsertDailyAnalytics(date: string) {
 
   const energyAvg = state?.energy != null ? Number(state.energy) : null;
   const focusAvg = state?.focus != null ? Number(state.focus) : null;
+  const sensoryAvg = state?.sensory_load != null ? Number(state.sensory_load) : null;
+  const mentalBatteryAvg = state?.mental_battery != null ? Number(state.mental_battery) : null;
+  const physicalHealthAvg = state?.physical_health != null ? Number(state.physical_health) : null;
+  const loadAvg = state?.load != null ? Number(state.load) : null;
+  const sleepHoursAvg = state?.sleep_hours != null ? Number(state.sleep_hours) : null;
+  const brainCompositePct =
+    state != null
+      ? computeBrainCompositePctFromDailyState({
+          user_id: user.id,
+          date,
+          energy: state.energy,
+          focus: state.focus,
+          sensory_load: state.sensory_load,
+          mental_battery: state.mental_battery,
+          physical_health: state.physical_health,
+          load: state.load,
+          sleep_hours: state.sleep_hours,
+        })
+      : null;
 
   await supabase.from("user_analytics_daily").upsert(
     {
@@ -126,6 +175,17 @@ export async function upsertDailyAnalytics(date: string) {
       missions_completed: missionsCompleted,
       energy_avg: energyAvg,
       focus_avg: focusAvg,
+      sensory_load_avg: sensoryAvg,
+      mental_battery_avg: mentalBatteryAvg,
+      physical_health_avg: physicalHealthAvg,
+      load_avg: loadAvg,
+      sleep_hours_avg: sleepHoursAvg,
+      is_rest_day: state?.is_rest_day ?? null,
+      emotional_state: state?.emotional_state ?? null,
+      dcic_overdrive_weekly_slot:
+        state?.dcic_overdrive_trigger_reason === "weekly_slot" ||
+        existing?.dcic_overdrive_weekly_slot === true,
+      brain_composite_pct: brainCompositePct,
       updated_at: new Date().toISOString(),
     },
     { onConflict: "user_id,date" }
@@ -182,24 +242,21 @@ export async function getWeekSummary(weekStart: string, weekEnd: string, learnin
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return null;
 
-  const [analyticsRows, dailyStates] = await Promise.all([
-    supabase
-      .from("user_analytics_daily")
-      .select("date, active_seconds, tasks_completed, tasks_planned, learning_minutes, brain_status_logged")
-      .eq("user_id", user.id)
-      .gte("date", weekStart)
-      .lte("date", weekEnd)
-      .order("date", { ascending: true }),
-    supabase
-      .from("daily_state")
-      .select("date, energy, focus, sensory_load")
-      .eq("user_id", user.id)
-      .gte("date", weekStart)
-      .lte("date", weekEnd),
-  ]);
+  const { data: analyticsRows } = await supabase
+    .from("user_analytics_daily")
+    .select(
+      "date, active_seconds, tasks_completed, tasks_planned, learning_minutes, brain_status_logged, energy_avg, focus_avg, sensory_load_avg"
+    )
+    .eq("user_id", user.id)
+    .gte("date", weekStart)
+    .lte("date", weekEnd)
+    .order("date", { ascending: true });
 
-  const rows = (analyticsRows.data ?? []) as DailyAnalyticsRow[];
-  const states = (dailyStates.data ?? []) as { date: string; energy?: number; focus?: number; sensory_load?: number }[];
+  const rows = (analyticsRows ?? []) as (DailyAnalyticsRow & {
+    energy_avg?: number | null;
+    focus_avg?: number | null;
+    sensory_load_avg?: number | null;
+  })[];
 
   let daysWithCheckIn = 0;
   let daysWithTaskComplete = 0;
@@ -221,11 +278,18 @@ export async function getWeekSummary(weekStart: string, weekEnd: string, learnin
     totalTasksPlanned += r.tasks_planned;
     totalLearningMinutes += r.learning_minutes;
     activeSeconds += r.active_seconds;
-  }
-  for (const s of states) {
-    if (s.energy != null) { energySum += s.energy; energyCount++; }
-    if (s.focus != null) { focusSum += s.focus; focusCount++; }
-    if (s.sensory_load != null) { loadSum += s.sensory_load; loadCount++; }
+    if (r.energy_avg != null) {
+      energySum += r.energy_avg;
+      energyCount++;
+    }
+    if (r.focus_avg != null) {
+      focusSum += r.focus_avg;
+      focusCount++;
+    }
+    if (r.sensory_load_avg != null) {
+      loadSum += r.sensory_load_avg;
+      loadCount++;
+    }
   }
 
   return {

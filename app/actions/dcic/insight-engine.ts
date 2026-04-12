@@ -98,13 +98,6 @@ async function loadDailyMetrics(
     .gte("date", startStr)
     .lte("date", endDate);
 
-  const { data: dailyState } = await supabase
-    .from("daily_state")
-    .select("date, energy, focus")
-    .eq("user_id", userId)
-    .gte("date", startStr)
-    .lte("date", endDate);
-
   const byDate = new Map<
     string,
     { xp: number; missionsCompleted: number; energySum: number; energyN: number; focusSum: number; focusN: number }
@@ -145,29 +138,6 @@ async function loadDailyMetrics(
       entry.missionsCompleted += 1;
     }
     byDate.set(d, entry);
-  }
-
-  for (const row of dailyState ?? []) {
-    const r = row as { date: string | Date; energy?: number | null; focus?: number | null };
-    const dateKey = toDateKey(r.date);
-    if (!dateKey || dateKey < startStr || dateKey > endDate) continue;
-    const entry = byDate.get(dateKey) ?? {
-      xp: 0,
-      missionsCompleted: 0,
-      energySum: 0,
-      energyN: 0,
-      focusSum: 0,
-      focusN: 0,
-    };
-    if (r.energy != null) {
-      entry.energySum += r.energy;
-      entry.energyN += 1;
-    }
-    if (r.focus != null) {
-      entry.focusSum += r.focus;
-      entry.focusN += 1;
-    }
-    byDate.set(dateKey, entry);
   }
 
   const empty = () => ({ xp: 0, missionsCompleted: 0, energySum: 0, energyN: 0, focusSum: 0, focusN: 0 });
@@ -723,8 +693,8 @@ export async function getCorrelationInsights(): Promise<{ sentence: string | nul
   const sinceStr = since.toISOString().slice(0, 10);
 
   const { data: daily } = await supabase
-    .from("daily_state")
-    .select("date, energy")
+    .from("user_analytics_daily")
+    .select("date, energy_avg")
     .eq("user_id", user.id)
     .gte("date", sinceStr);
   const { data: events } = await supabase
@@ -735,7 +705,7 @@ export async function getCorrelationInsights(): Promise<{ sentence: string | nul
     .gte("occurred_at", sinceStr);
   const energyByDate = new Map<string, number>();
   for (const r of daily ?? []) {
-    const e = (r as { energy?: number | null }).energy;
+    const e = (r as { energy_avg?: number | null }).energy_avg;
     if (e != null) energyByDate.set((r as { date: string }).date, Number(e));
   }
   const lowEnergyDates = new Set<string>();

@@ -668,7 +668,7 @@ async function getEmotionalStateCorrelationsUncached(): Promise<{
 
   const dates = [...new Set((events as { occurred_at: string }[]).map((e) => e.occurred_at.slice(0, 10)))];
   const { data: dailyRows } = await supabase
-    .from("daily_state")
+    .from("user_analytics_daily")
     .select("date, emotional_state")
     .eq("user_id", user.id)
     .in("date", dates);

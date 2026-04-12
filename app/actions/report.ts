@@ -74,16 +74,20 @@ export async function getRealityReport(weekStart: string, weekEnd: string): Prom
     pct: Math.min(100, Math.round(((g.current_cents ?? 0) / (g.target_cents || 1)) * 100)),
   }));
 
-  const { data: states } = await supabase
-    .from("daily_state")
-    .select("energy, focus")
+  const { data: analyticsWeek } = await supabase
+    .from("user_analytics_daily")
+    .select("energy_avg, focus_avg")
     .eq("user_id", user.id)
     .gte("date", weekStart)
     .lte("date", weekEnd);
-  const withEnergy = (states ?? []).filter((s) => s.energy != null);
-  const withFocus = (states ?? []).filter((s) => s.focus != null);
-  const avgEnergy = withEnergy.length ? withEnergy.reduce((a, s) => a + (s.energy ?? 0), 0) / withEnergy.length : null;
-  const avgFocus = withFocus.length ? withFocus.reduce((a, s) => a + (s.focus ?? 0), 0) / withFocus.length : null;
+  const withEnergy = (analyticsWeek ?? []).filter((s) => s.energy_avg != null);
+  const withFocus = (analyticsWeek ?? []).filter((s) => s.focus_avg != null);
+  const avgEnergy = withEnergy.length
+    ? withEnergy.reduce((a, s) => a + Number(s.energy_avg ?? 0), 0) / withEnergy.length
+    : null;
+  const avgFocus = withFocus.length
+    ? withFocus.reduce((a, s) => a + Number(s.focus_avg ?? 0), 0) / withFocus.length
+    : null;
 
   const { data: lastDayTasks } = await supabase
     .from("tasks")

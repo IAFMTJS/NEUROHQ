@@ -3,6 +3,7 @@
 import { cache } from "react";
 import { createClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
+import { addXP } from "@/app/actions/xp";
 import { getWeekBounds } from "@/lib/utils/learning";
 
 const DEFAULT_WEEKLY_TARGET_MINUTES = 60;
@@ -202,21 +203,10 @@ export async function addLearningSession(params: {
   const adjustedXP = Math.floor(baseXP * xpMultiplier);
   
   if (adjustedXP > 0) {
-    // Add XP directly with adaptive multiplier
-    const supabase = await createClient();
-    const { data: existing } = await supabase
-      .from("user_xp")
-      .select("total_xp")
-      .eq("user_id", user.id)
-      .single();
-    const currentTotal = (existing?.total_xp as number | undefined) ?? 0;
-    await supabase.from("user_xp").upsert({
-      user_id: user.id,
-      total_xp: currentTotal + adjustedXP,
-      updated_at: new Date().toISOString(),
-    }, { onConflict: "user_id" });
-    revalidatePath("/dashboard");
-    revalidatePath("/learning");
+    await addXP(adjustedXP, {
+      source_type: "learning_session",
+      skipOverdriveMultiplier: true,
+    });
   }
   
   await upsertDailyAnalytics(params.date);

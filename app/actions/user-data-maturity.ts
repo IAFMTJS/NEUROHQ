@@ -27,16 +27,28 @@ export const getUserDataMaturitySnapshot = cache(async function getUserDataMatur
   since.setDate(since.getDate() - 30);
   const sinceStr = since.toISOString();
 
-  /** One round-trip: exact total count + up to 5000 rows for distinct-day estimate (same cap as before). */
-  const { data: rows, count } = await supabase
-    .from("task_events")
-    .select("occurred_at", { count: "exact" })
-    .eq("user_id", user.id)
-    .eq("event_type", "complete")
-    .gte("occurred_at", sinceStr)
-    .limit(5000);
+  /**
+   * Egress-conscious: exact count without row payload, plus a bounded sample for distinct-day
+   * estimation (30-day window has at most ~31 calendar days; 500 rows is ample for maturity bands).
+   */
+  const [{ count }, { data: rows }] = await Promise.all([
+    supabase
+      .from("task_events")
+      .select("id", { count: "exact", head: true })
+      .eq("user_id", user.id)
+      .eq("event_type", "complete")
+      .gte("occurred_at", sinceStr),
+    supabase
+      .from("task_events")
+      .select("occurred_at")
+      .eq("user_id", user.id)
+      .eq("event_type", "complete")
+      .gte("occurred_at", sinceStr)
+      .order("occurred_at", { ascending: false })
+      .limit(500),
+  ]);
 
-  const completesLast30 = count ?? rows?.length ?? 0;
+  const completesLast30 = count ?? 0;
 
   const days = new Set(
     (rows ?? [])

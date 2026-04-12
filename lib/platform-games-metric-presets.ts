@@ -138,7 +138,7 @@ export const PLATFORM_GAME_METRIC_PRESETS: PlatformGameMetricPresetDef[] = [
   {
     id: "brain_checkin_days",
     label: "Dagen met brain check-in",
-    shortHint: "Kalenderdagen met daily_state waarin energy én focus zijn ingevuld.",
+    shortHint: "Kalenderdagen met brain-check-in (user_analytics_daily snapshot; live dag zit in daily_state).",
     aggregations: ["period_total", "each_calendar_day"],
     defaultAggregation: "period_total",
     defaultThreshold: 5,
@@ -150,7 +150,7 @@ export const PLATFORM_GAME_METRIC_PRESETS: PlatformGameMetricPresetDef[] = [
   {
     id: "rest_days_logged",
     label: "Rustdagen gemarkeerd",
-    shortHint: "Aantal dagen met daily_state.is_rest_day = true binnen het venster.",
+    shortHint: "Aantal dagen met is_rest_day in de dagelijkse analytics-snapshot (na retentie).",
     aggregations: ["period_total"],
     defaultAggregation: "period_total",
     defaultThreshold: 1,

@@ -17,6 +17,7 @@ import {
 import type { GameState, Mission } from "@/lib/dcic/types";
 import { applyBrainLayerToGameState } from "@/lib/dcic/brain-game-state";
 import { countWarTierDays, type DailyRowForBrain } from "@/lib/dcic/brain-status-average";
+import { analyticsBrainToDailyRowForBrain } from "@/lib/user-analytics-brain-snapshot";
 import { autoModeCheck, isModeLocked, passiveRecoveryTick, switchMode } from "@/lib/dcic/mode-engine";
 import {
   isOverdriveActivationTimeAllowed,
@@ -88,8 +89,8 @@ export async function getGameState(
     { data: achievementsData },
     { data: skillsData },
     { data: dailyState },
-    { data: dailyStateWeek },
-    { count: weeklySlotCount },
+    { data: brainWeekAnalytics },
+    { count: weeklySlotHistoryCount },
   ] = await Promise.all([
     supabase.from("user_xp").select("total_xp").eq("user_id", user.id).single(),
     supabase
@@ -114,18 +115,20 @@ export async function getGameState(
       .eq("date", today)
       .maybeSingle(),
     supabase
-      .from("daily_state")
-      .select("energy, focus, sensory_load, load, mental_battery, physical_health, sleep_hours")
+      .from("user_analytics_daily")
+      .select(
+        "energy_avg, focus_avg, sensory_load_avg, mental_battery_avg, physical_health_avg, load_avg, sleep_hours_avg"
+      )
       .eq("user_id", user.id)
       .gte("date", weekStartStr)
-      .lte("date", today),
+      .lt("date", today),
     supabase
-      .from("daily_state")
+      .from("user_analytics_daily")
       .select("id", { count: "exact", head: true })
       .eq("user_id", user.id)
       .gte("date", amsterdamIsoWeekMonday)
-      .lte("date", amsterdamIsoWeekSunday)
-      .eq("dcic_overdrive_trigger_reason", "weekly_slot"),
+      .lt("date", today)
+      .eq("dcic_overdrive_weekly_slot", true),
   ]);
 
   let ds = dailyState as Record<string, unknown> | null | undefined;
@@ -154,7 +157,37 @@ export async function getGameState(
     }
   }
 
-  const warTierDaysLast7 = countWarTierDays((dailyStateWeek ?? []) as DailyRowForBrain[]);
+  const weekRowsFromAnalytics = (brainWeekAnalytics ?? []).map((row) =>
+    analyticsBrainToDailyRowForBrain(
+      row as {
+        energy_avg?: number | null;
+        focus_avg?: number | null;
+        sensory_load_avg?: number | null;
+        mental_battery_avg?: number | null;
+        physical_health_avg?: number | null;
+        load_avg?: number | null;
+        sleep_hours_avg?: number | null;
+      }
+    )
+  );
+  const todayBrainRow: DailyRowForBrain = {
+    energy: ds?.energy != null ? Number(ds.energy) : null,
+    focus: ds?.focus != null ? Number(ds.focus) : null,
+    sensory_load: ds?.sensory_load != null ? Number(ds.sensory_load) : null,
+    load: ds?.load != null ? Number(ds.load) : null,
+    mental_battery: ds?.mental_battery != null ? Number(ds.mental_battery) : null,
+    physical_health: ds?.physical_health != null ? Number(ds.physical_health) : null,
+    sleep_hours: ds?.sleep_hours != null ? Number(ds.sleep_hours) : null,
+  };
+  const hasTodayBrain =
+    todayBrainRow.energy != null ||
+    todayBrainRow.focus != null ||
+    todayBrainRow.sensory_load != null;
+  const dailyStateWeekMerged: DailyRowForBrain[] = [
+    ...weekRowsFromAnalytics,
+    ...(hasTodayBrain ? [todayBrainRow] : []),
+  ];
+  const warTierDaysLast7 = countWarTierDays(dailyStateWeekMerged);
 
   const totalXP = (xpData?.total_xp as number) ?? 0;
   const level = levelFromTotalXP(totalXP);
@@ -317,7 +350,9 @@ export async function getGameState(
     const localWeekday = getAppTimezoneWeekday();
     const weeklySlotDays = pickWeeklySlotWeekdays(user.id, amsterdamIsoWeekMonday);
     const weeklyRandomSlotToday = weeklySlotDays.has(localWeekday);
-    const weeklySlotTriggersThisIsoWeek = weeklySlotCount ?? 0;
+    const weeklySlotTriggersThisIsoWeek =
+      (weeklySlotHistoryCount ?? 0) +
+      (ds?.dcic_overdrive_trigger_reason === "weekly_slot" ? 1 : 0);
 
     let completionsInLast45m = 0;
     let completionsToday = 0;

@@ -14,16 +14,24 @@ export async function isHighSensoryDayForUser(
 ): Promise<boolean> {
   if (!userId || !dateStr) return false;
 
-  const { data } = await supabase
+  const { data: ds } = await supabase
     .from("daily_state")
     .select("sensory_load")
     .eq("user_id", userId)
     .eq("date", dateStr)
     .maybeSingle();
 
-  const sensory =
-    (data as { sensory_load?: number | null } | null)?.sensory_load ?? null;
+  const fromRow = (ds as { sensory_load?: number | null } | null)?.sensory_load;
+  if (typeof fromRow === "number" && fromRow >= 7) return true;
 
+  const { data: an } = await supabase
+    .from("user_analytics_daily")
+    .select("sensory_load_avg")
+    .eq("user_id", userId)
+    .eq("date", dateStr)
+    .maybeSingle();
+
+  const sensory = (an as { sensory_load_avg?: number | null } | null)?.sensory_load_avg ?? null;
   return typeof sensory === "number" && sensory >= 7;
 }
 

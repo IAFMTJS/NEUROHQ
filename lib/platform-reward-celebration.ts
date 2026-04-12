@@ -1,5 +1,20 @@
 /** Pure helpers for quest/game claim toasts (client + server safe). */
 
+/** Structured copy for rich “loot” toasts (quest/game claims). */
+export type PlatformLootRewardLine = {
+  icon: string;
+  label: string;
+  detail?: string;
+  tone: "xp" | "flex" | "badge" | "note" | "warn";
+};
+
+export type PlatformLootToastModel = {
+  variant: "quest" | "game";
+  headline: string;
+  subhead?: string;
+  lines: PlatformLootRewardLine[];
+};
+
 export function humanizeFlexSkipReason(reason: string | undefined): string | undefined {
   if (!reason) return undefined;
   const m: Record<string, string> = {
@@ -22,24 +37,125 @@ export function buildQuestClaimCelebrationMessage(params: {
   flexSkippedReason?: string;
   badgeLabel: string;
 }): string {
-  const lines: string[] = ["🎉 Quest-beloning geclaimd!"];
+  const m = buildQuestLootToastModel(params);
+  const body = m.lines.map((l) => [l.label, l.detail].filter(Boolean).join(" — ")).join("\n");
+  return ["🎉 Quest-beloning geclaimd!", body].filter(Boolean).join("\n");
+}
+
+export function buildQuestLootToastModel(params: {
+  pointsApplied: number;
+  flexPercentBp: number;
+  flexAppliedCents: number | null;
+  flexSkippedReason?: string;
+  badgeLabel: string;
+}): PlatformLootToastModel {
+  const lines: PlatformLootRewardLine[] = [];
+
   if (params.pointsApplied > 0) {
-    lines.push(`+${params.pointsApplied} XP op je account.`);
+    lines.push({
+      icon: "⚡",
+      label: `+${params.pointsApplied} XP`,
+      detail: "Direct op je account gezet.",
+      tone: "xp",
+    });
   }
+
   if (params.flexPercentBp > 0) {
     if (params.flexAppliedCents != null && params.flexAppliedCents > 0) {
-      lines.push(`+${formatFlexCentsNl(params.flexAppliedCents)} flex budget (≈ ${(params.flexPercentBp / 100).toFixed(0)}% van je maandcap).`);
+      lines.push({
+        icon: "💶",
+        label: `+${formatFlexCentsNl(params.flexAppliedCents)} flex`,
+        detail: `≈ ${(params.flexPercentBp / 100).toFixed(0)}% van je maandcap.`,
+        tone: "flex",
+      });
     } else {
       const why = humanizeFlexSkipReason(params.flexSkippedReason);
-      lines.push(
-        `Flexbonus (${(params.flexPercentBp / 100).toFixed(0)}% van cap) niet toegepast${why ? ` — ${why}.` : "."}`
-      );
+      lines.push({
+        icon: "⏸",
+        label: `Flexbonus (${(params.flexPercentBp / 100).toFixed(0)}% van cap) niet toegepast`,
+        detail: why || "Geen extra flex deze keer.",
+        tone: "warn",
+      });
     }
   }
+
   if (params.badgeLabel?.trim()) {
-    lines.push(`Badge: ${params.badgeLabel.trim()}`);
+    lines.push({
+      icon: "🏅",
+      label: params.badgeLabel.trim(),
+      detail: "Nieuwe badge ontgrendeld.",
+      tone: "badge",
+    });
   }
-  return lines.join("\n");
+
+  if (lines.length === 0) {
+    lines.push({
+      icon: "✓",
+      label: "Beloning verwerkt",
+      detail: "Je voortgang staat goed.",
+      tone: "note",
+    });
+  }
+
+  return {
+    variant: "quest",
+    headline: "Quest loot binnen",
+    subhead: "Je beloning is toegepast.",
+    lines,
+  };
+}
+
+export function buildGameLootToastModel(params: {
+  pointsApplied: number;
+  flexPercentBp: number;
+  flexAppliedCents: number | null;
+  flexSkippedReason?: string;
+}): PlatformLootToastModel {
+  const lines: PlatformLootRewardLine[] = [];
+
+  if (params.pointsApplied > 0) {
+    lines.push({
+      icon: "⚡",
+      label: `+${params.pointsApplied} XP`,
+      detail: "Challenge beloond.",
+      tone: "xp",
+    });
+  }
+
+  if (params.flexPercentBp > 0) {
+    if (params.flexAppliedCents != null && params.flexAppliedCents > 0) {
+      lines.push({
+        icon: "💶",
+        label: `+${formatFlexCentsNl(params.flexAppliedCents)} flex`,
+        detail: `≈ ${(params.flexPercentBp / 100).toFixed(0)}% van je maandcap.`,
+        tone: "flex",
+      });
+    } else {
+      const why = humanizeFlexSkipReason(params.flexSkippedReason);
+      lines.push({
+        icon: "⏸",
+        label: `Flexbonus (${(params.flexPercentBp / 100).toFixed(0)}% van cap) niet toegepast`,
+        detail: why || "Geen extra flex deze keer.",
+        tone: "warn",
+      });
+    }
+  }
+
+  if (lines.length === 0) {
+    lines.push({
+      icon: "✓",
+      label: "Challenge afgerond",
+      detail: "Je voortgang is opgeslagen.",
+      tone: "note",
+    });
+  }
+
+  return {
+    variant: "game",
+    headline: "Challenge cleared",
+    subhead: "Loot toegekend.",
+    lines,
+  };
 }
 
 export function buildGameClaimCelebrationMessage(params: {
@@ -48,22 +164,7 @@ export function buildGameClaimCelebrationMessage(params: {
   flexAppliedCents: number | null;
   flexSkippedReason?: string;
 }): string {
-  const lines: string[] = ["🎉 Game-beloning geclaimd!"];
-  if (params.pointsApplied > 0) {
-    lines.push(`+${params.pointsApplied} XP op je account.`);
-  }
-  if (params.flexPercentBp > 0) {
-    if (params.flexAppliedCents != null && params.flexAppliedCents > 0) {
-      lines.push(`+${formatFlexCentsNl(params.flexAppliedCents)} flex budget (≈ ${(params.flexPercentBp / 100).toFixed(0)}% van je maandcap).`);
-    } else {
-      const why = humanizeFlexSkipReason(params.flexSkippedReason);
-      lines.push(
-        `Flexbonus (${(params.flexPercentBp / 100).toFixed(0)}% van cap) niet toegepast${why ? ` — ${why}.` : "."}`
-      );
-    }
-  }
-  if (params.pointsApplied <= 0 && params.flexPercentBp <= 0) {
-    lines.push("Je voortgang is opgeslagen.");
-  }
-  return lines.join("\n");
+  const m = buildGameLootToastModel(params);
+  const body = m.lines.map((l) => [l.label, l.detail].filter(Boolean).join(" — ")).join("\n");
+  return ["🎉 Game-beloning geclaimd!", body].filter(Boolean).join("\n");
 }

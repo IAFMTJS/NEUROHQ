@@ -3093,16 +3093,25 @@ export type Database = {
       user_analytics_daily: {
         Row: {
           active_seconds: number
+          brain_composite_pct: number | null
           brain_status_logged: boolean
           carry_over_count: number
           created_at: string
           date: string
+          dcic_overdrive_weekly_slot: boolean
+          emotional_state: string | null
           energy_avg: number | null
           focus_avg: number | null
           id: string
+          is_rest_day: boolean | null
           learning_minutes: number
+          load_avg: number | null
+          mental_battery_avg: number | null
           missions_completed: number
+          physical_health_avg: number | null
+          sensory_load_avg: number | null
           session_count: number
+          sleep_hours_avg: number | null
           tasks_completed: number
           tasks_planned: number
           total_session_time_seconds: number
@@ -3112,16 +3121,25 @@ export type Database = {
         }
         Insert: {
           active_seconds?: number
+          brain_composite_pct?: number | null
           brain_status_logged?: boolean
           carry_over_count?: number
           created_at?: string
           date: string
+          dcic_overdrive_weekly_slot?: boolean
+          emotional_state?: string | null
           energy_avg?: number | null
           focus_avg?: number | null
           id?: string
+          is_rest_day?: boolean | null
           learning_minutes?: number
+          load_avg?: number | null
+          mental_battery_avg?: number | null
           missions_completed?: number
+          physical_health_avg?: number | null
+          sensory_load_avg?: number | null
           session_count?: number
+          sleep_hours_avg?: number | null
           tasks_completed?: number
           tasks_planned?: number
           total_session_time_seconds?: number
@@ -3131,16 +3149,25 @@ export type Database = {
         }
         Update: {
           active_seconds?: number
+          brain_composite_pct?: number | null
           brain_status_logged?: boolean
           carry_over_count?: number
           created_at?: string
           date?: string
+          dcic_overdrive_weekly_slot?: boolean
+          emotional_state?: string | null
           energy_avg?: number | null
           focus_avg?: number | null
           id?: string
+          is_rest_day?: boolean | null
           learning_minutes?: number
+          load_avg?: number | null
+          mental_battery_avg?: number | null
           missions_completed?: number
+          physical_health_avg?: number | null
+          sensory_load_avg?: number | null
           session_count?: number
+          sleep_hours_avg?: number | null
           tasks_completed?: number
           tasks_planned?: number
           total_session_time_seconds?: number
@@ -3976,6 +4003,7 @@ export type Database = {
       },
       admin_platform_diagnostics: { Args: never; Returns: Json }
       current_user_is_admin: { Args: never; Returns: boolean }
+      add_user_xp_delta: { Args: { p_delta: number; p_user_id: string }; Returns: number }
       sum_xp_events_for_user: { Args: { p_user_id: string }; Returns: number }
       lock_daily_dcic_mode_if_unset: {
         Args: { p_date: string; p_mode: string; p_user_id: string }

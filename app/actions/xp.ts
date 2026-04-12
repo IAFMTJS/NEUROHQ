@@ -167,17 +167,24 @@ export async function addXP(
   }
   const adjustedPoints = Math.max(1, Math.floor(points * overdriveFactor));
 
-  const { data: existing } = await supabase
-    .from("user_xp")
-    .select("total_xp")
-    .eq("user_id", user.id)
-    .single();
-  const current = (existing?.total_xp as number | undefined) ?? 0;
-  const levelBefore = levelFromTotalXP(current);
-  const newTotal = current + adjustedPoints;
-  const { error } = await supabase
-    .from("user_xp")
-    .upsert(
+  const { data: rpcNewTotal, error: rpcErr } = await supabase.rpc("add_user_xp_delta", {
+    p_user_id: user.id,
+    p_delta: adjustedPoints,
+  });
+
+  let newTotal: number;
+  if (!rpcErr && rpcNewTotal != null && Number.isFinite(Number(rpcNewTotal))) {
+    newTotal = Number(rpcNewTotal);
+  } else {
+    const { data: existing, error: readErr } = await supabase
+      .from("user_xp")
+      .select("total_xp")
+      .eq("user_id", user.id)
+      .maybeSingle();
+    if (readErr) return undefined;
+    const current = (existing?.total_xp as number | undefined) ?? 0;
+    newTotal = current + adjustedPoints;
+    const { error } = await supabase.from("user_xp").upsert(
       {
         user_id: user.id,
         total_xp: newTotal,
@@ -185,7 +192,10 @@ export async function addXP(
       },
       { onConflict: "user_id" }
     );
-  if (error) return undefined;
+    if (error) return undefined;
+  }
+
+  const levelBefore = levelFromTotalXP(newTotal - adjustedPoints);
   if (options?.source_type) {
     await supabase.from("xp_events").insert({
       user_id: user.id,
@@ -210,6 +220,7 @@ export async function addXP(
     newLevel: levelAfter,
   };
 }
+
 
 /** Alignment <60% for 5 days → XP -10% (Performance Engine consequences). */
 async function getAlignmentPenaltyMultiplier(): Promise<number> {
