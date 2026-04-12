@@ -412,14 +412,56 @@ export function ProfileSpecialEventsClient({ bundle }: { bundle: ProfileSpecialE
           </button>
 
           {q.answerHistory.length > 0 ? (
-            <details className="relative mt-4 rounded-xl border border-violet-500/25 bg-violet-950/20 px-4 py-3 open:bg-violet-950/30">
-              <summary className="cursor-pointer select-none text-sm font-medium text-violet-100/95">
-                Jouw eerdere vragen en antwoorden ({q.answerHistory.length})
+            <details className="group relative mt-5 overflow-hidden rounded-2xl border border-indigo-400/35 bg-gradient-to-br from-indigo-950/45 via-violet-950/30 to-[var(--bg-surface)]/20 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)] ring-1 ring-indigo-500/20 open:ring-indigo-400/30">
+              <div
+                className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-indigo-400/70 to-transparent"
+                aria-hidden
+              />
+              <div
+                className="pointer-events-none absolute -right-16 top-0 h-32 w-32 rounded-full bg-indigo-500/15 blur-2xl"
+                aria-hidden
+              />
+              <summary className="relative flex cursor-pointer list-none items-center gap-3 px-4 py-3.5 [&::-webkit-details-marker]:hidden">
+                <span
+                  className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-500/35 to-violet-900/50 text-lg shadow-[inset_0_1px_0_rgba(255,255,255,0.12)] ring-1 ring-indigo-400/40"
+                  aria-hidden
+                >
+                  📋
+                </span>
+                <div className="min-w-0 flex-1">
+                  <p className="text-[9px] font-black uppercase tracking-[0.2em] text-indigo-200/85">Quest-log</p>
+                  <p className="mt-0.5 text-sm font-bold tracking-tight text-[var(--text-primary)]">
+                    Jouw vragen en antwoorden
+                  </p>
+                  <p className="mt-0.5 text-[11px] text-[var(--text-muted)]">
+                    Alle dagen · chronologisch (nieuwste bovenaan)
+                  </p>
+                </div>
+                <span className="shrink-0 rounded-full bg-indigo-500/25 px-2.5 py-1 text-xs font-black tabular-nums text-indigo-50 ring-1 ring-indigo-400/40">
+                  {q.answerHistory.length}
+                </span>
+                <svg
+                  className="h-5 w-5 shrink-0 text-indigo-200/90 transition-transform duration-200 group-open:rotate-180"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  strokeWidth={2}
+                  aria-hidden
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+                </svg>
               </summary>
-              <p className="mt-2 text-[11px] leading-snug text-[var(--text-muted)]">
-                Per poging: de vraag (of hint) zoals die toen gold, en wat je invulde.
-              </p>
-              <QuestAnswerHistoryList rows={q.answerHistory} listClassName="max-h-[min(24rem,55vh)]" />
+              <div className="relative border-t border-white/[0.08] bg-black/15 px-4 pb-4 pt-3">
+                <p className="mb-3 text-[11px] leading-relaxed text-[var(--text-muted)]">
+                  Per regel: de vraagtekst zoals die toen gold, je antwoord, en of het goed was. Zelfde log als in de
+                  quest-modal.
+                </p>
+                <QuestAnswerHistoryList
+                  variant="eventsBoard"
+                  rows={q.answerHistory}
+                  listClassName="max-h-[min(26rem,58vh)]"
+                />
+              </div>
             </details>
           ) : null}
           <QuestCampaignModal open={questOpen} onClose={() => setQuestOpen(false)} />
