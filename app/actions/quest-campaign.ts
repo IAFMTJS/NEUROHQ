@@ -7,8 +7,10 @@ import { addXP } from "@/app/actions/xp";
 import { grantFlexPercentOfCapBonus } from "@/app/actions/flex-budget";
 import { todayDateString } from "@/lib/utils/timezone";
 import type { Json, TablesInsert } from "@/types/database.types";
+import { getDefaultDictatorQuestContent } from "@/lib/quests/default-dictator-content";
 import { getDefaultKatsuoQuestContent } from "@/lib/quests/default-katsuo-content";
 import {
+  hasQuestFinaleChoice,
   parseQuestContent,
   parseQuestProgressState,
   toJsonState,
@@ -21,7 +23,9 @@ import {
   computeEventDayIndex,
   getDayDef,
   isoToAmsterdamYmd,
+  isPuzzlesComplete,
   matchCoords,
+  needsFinaleChoiceSelection,
   normalizeQuestAnswer,
   resolveNextChallengeDay,
   isQuestFullyComplete,
@@ -69,6 +73,13 @@ export type QuestClientPayload = {
   recentAttempts: QuestRecentAttempt[];
   /** Alle geregistreerde pogingen met bijbehorende vraagtekst (nieuwste eerst). */
   answerHistory: QuestAnswerHistoryDisplayRow[];
+  /** Puzzels opgelost; speler moet HELPEN/STOPPEN kiezen. */
+  needsFinaleChoice: boolean;
+  finaleChoiceIntro?: string | null;
+  finaleHelpLabel?: string | null;
+  finaleStopLabel?: string | null;
+  /** Na morele keuze: epiloog + slottekst (geen XP-bedragen). */
+  finaleOutcomeText?: string | null;
 };
 
 function buildPuzzlePublic(def: QuestDayDef, state: QuestProgressState): QuestPuzzlePublic {
@@ -120,6 +131,15 @@ function buildPuzzlePublic(def: QuestDayDef, state: QuestProgressState): QuestPu
 function challengeStepForLog(def: QuestDayDef, state: QuestProgressState, day: number): number | null {
   if (def.kind !== "multi" || !def.steps?.length) return null;
   return state.sub?.[String(day)] ?? 0;
+}
+
+function buildFinaleOutcomeText(content: QuestCampaignContent, choice: "help" | "stop"): string {
+  const f = content.finaleChoice;
+  if (!f) return "";
+  const branch = choice === "help" ? f.help : f.stop;
+  const parts = [branch.epilogue.trim()];
+  if (f.closingThought?.trim()) parts.push(f.closingThought.trim());
+  return parts.join("\n\n—\n\n");
 }
 
 /** Alleen service role — als gewone addXP faalt (edge cases). */
@@ -201,6 +221,12 @@ export async function getQuestCampaignPublicStatus(): Promise<QuestClientPayload
   const state = parseQuestProgressState((progRow?.state as Json) ?? undefined);
   const nextDay = eventDay > 0 ? resolveNextChallengeDay(content, eventDay, state) : null;
   const completed = isQuestFullyComplete(content, state);
+  const needsFinale = needsFinaleChoiceSelection(content, state);
+  const fc = content.finaleChoice;
+  const choiceMade =
+    state.finaleChoice === "help" || state.finaleChoice === "stop" ? state.finaleChoice : null;
+  const finaleOutcomeText =
+    choiceMade != null && fc ? buildFinaleOutcomeText(content, choiceMade) : null;
   const puzzle = nextDay != null ? buildPuzzlePublic(getDayDef(content, nextDay)!, state) : null;
   const stepForHistory =
     puzzle?.kind === "multi" && puzzle.stepIndex != null ? puzzle.stepIndex : null;
@@ -233,13 +259,18 @@ export async function getQuestCampaignPublicStatus(): Promise<QuestClientPayload
     eventDay,
     maxDay,
     solvedDays: state.solvedDays,
-    showDashboardFab: nextDay != null,
+    showDashboardFab: nextDay != null || needsFinale,
     nextDay,
     puzzle,
     completed,
     rewardsGranted: progRow?.rewards_granted_at != null,
     recentAttempts,
     answerHistory,
+    needsFinaleChoice: needsFinale,
+    finaleChoiceIntro: needsFinale ? (fc?.intro ?? null) : null,
+    finaleHelpLabel: needsFinale ? (fc?.help.label ?? null) : null,
+    finaleStopLabel: needsFinale ? (fc?.stop.label ?? null) : null,
+    finaleOutcomeText: finaleOutcomeText && finaleOutcomeText.length > 0 ? finaleOutcomeText : null,
   };
 }
 
@@ -264,6 +295,8 @@ export type QuestClaimRewardsResult =
       badgeLabel: string;
       levelUp: boolean;
       newLevel?: number;
+      /** Quest met finale-keuze: story-XP kwam al bij HELPEN/STOPPEN; claim = flex/badge. */
+      storyXpFromFinaleChoice?: boolean;
     }
   | { ok: false; error: string };
 
@@ -391,7 +424,7 @@ export async function claimQuestCampaignRewards(campaignId: string): Promise<Que
   }
 
   const g = await grantQuestRewardsOnce(user.id, campaignId, {
-    reward_xp: row.reward_xp,
+    reward_xp: hasQuestFinaleChoice(content) ? 0 : row.reward_xp,
     reward_flex_percent_bp: row.reward_flex_percent_bp,
     achievement_key: row.achievement_key,
     slug: row.slug,
@@ -416,12 +449,32 @@ export async function claimQuestCampaignRewards(campaignId: string): Promise<Que
     badgeLabel: g.badgeLabel,
     levelUp: g.levelUp,
     newLevel: g.newLevel,
+    storyXpFromFinaleChoice: hasQuestFinaleChoice(content),
   };
 }
 
 export type SubmitQuestAnswerResult =
-  | { ok: true; correct: true; unlockMessage?: string; unlockWord?: string; completed?: boolean }
+  | {
+      ok: true;
+      correct: true;
+      unlockMessage?: string;
+      unlockWord?: string;
+      /** True wanneer puzzels + eventuele finale-keuze rond zijn (claim beschikbaar). */
+      completed?: boolean;
+      /** Puzzels af; speler moet nog HELPEN/STOPPEN kiezen (geen XP-toast voor “quest klaar”). */
+      awaitingFinaleChoice?: boolean;
+    }
   | { ok: true; correct: false; message: string }
+  | { ok: false; error: string };
+
+export type SubmitQuestFinaleChoiceResult =
+  | {
+      ok: true;
+      already?: boolean;
+      choiceXpGranted?: number;
+      levelUp?: boolean;
+      newLevel?: number;
+    }
   | { ok: false; error: string };
 
 function validateAnswerForDay(def: QuestDayDef, state: QuestProgressState, rawAnswer: string): boolean {
@@ -473,6 +526,15 @@ export async function submitQuestAnswer(campaignId: string, answer: string): Pro
   let state = parseQuestProgressState((progRow?.state as Json) ?? undefined);
   const nextDay = resolveNextChallengeDay(content, eventDay, state);
   if (nextDay == null) {
+    if (needsFinaleChoiceSelection(content, state)) {
+      return {
+        ok: false,
+        error: "Maak eerst je finale keuze in het questscherm (HELPEN of STOPPEN).",
+      };
+    }
+    if (isPuzzlesComplete(content, state)) {
+      return { ok: false, error: "Deze quest is al afgerond." };
+    }
     return { ok: true, correct: false, message: "Je hebt alles voor vandaag opgelost. Kom morgen terug." };
   }
 
@@ -557,6 +619,8 @@ export async function submitQuestAnswer(campaignId: string, answer: string): Pro
   revalidatePath("/profile");
 
   const completedNow = isQuestFullyComplete(content, newState);
+  const awaitingFinaleChoice =
+    isPuzzlesComplete(content, newState) && hasQuestFinaleChoice(content) && !newState.finaleChoice;
   const multiMidStep =
     def.kind === "multi" &&
     def.steps?.length &&
@@ -568,6 +632,95 @@ export async function submitQuestAnswer(campaignId: string, answer: string): Pro
     unlockMessage: multiMidStep ? "Goed. Eén stap verder…" : def.unlockMessage,
     unlockWord: multiMidStep ? undefined : def.unlockWord,
     completed: completedNow,
+    ...(awaitingFinaleChoice ? { awaitingFinaleChoice: true } : {}),
+  };
+}
+
+export async function submitQuestFinaleChoice(
+  campaignId: string,
+  choice: "help" | "stop"
+): Promise<SubmitQuestFinaleChoiceResult> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { ok: false, error: "Niet ingelogd." };
+
+  const { row, error: loadErr } = await loadLiveCampaignRow(supabase);
+  if (loadErr || !row || row.id !== campaignId) {
+    return { ok: false, error: "Deze quest is nu niet beschikbaar." };
+  }
+
+  const content = parseQuestContent(row.content as Json);
+  if (!content || !hasQuestFinaleChoice(content) || !content.finaleChoice) {
+    return { ok: false, error: "Deze quest heeft geen finale keuze." };
+  }
+
+  const { data: progRow } = await supabase
+    .from("user_quest_campaign_progress")
+    .select("state, rewards_granted_at, answer_log")
+    .eq("user_id", user.id)
+    .eq("campaign_id", campaignId)
+    .maybeSingle();
+
+  if (!progRow) return { ok: false, error: "Geen voortgang voor deze quest." };
+
+  const state = parseQuestProgressState((progRow.state as Json) ?? undefined);
+  if (!isPuzzlesComplete(content, state)) {
+    return { ok: false, error: "Los eerst alle puzzels op." };
+  }
+  if (state.finaleChoice === "help" || state.finaleChoice === "stop") {
+    return { ok: true, already: true };
+  }
+
+  const xp =
+    choice === "help" ? content.finaleChoice.help.xp : content.finaleChoice.stop.xp;
+  const newState: QuestProgressState = {
+    ...state,
+    finaleChoice: choice,
+  };
+  const nowIso = new Date().toISOString();
+  const logJson: Json = (progRow.answer_log as Json) ?? ([] as unknown as Json);
+  const { error: upErr } = await supabase.from("user_quest_campaign_progress").upsert(
+    {
+      user_id: user.id,
+      campaign_id: campaignId,
+      state: toJsonState(newState),
+      answer_log: logJson,
+      rewards_granted_at: progRow.rewards_granted_at ?? null,
+      updated_at: nowIso,
+    } as TablesInsert<"user_quest_campaign_progress">,
+    { onConflict: "user_id,campaign_id" }
+  );
+  if (upErr) return { ok: false, error: upErr.message };
+
+  let levelUp = false;
+  let newLevel: number | undefined;
+  let granted = 0;
+  if (xp > 0) {
+    const xpR = await addXP(xp, {
+      source_type: "platform_quest_finale",
+      skipOverdriveMultiplier: true,
+    });
+    if (xpR) {
+      granted = xpR.pointsApplied;
+      levelUp = xpR.levelUp;
+      newLevel = xpR.newLevel;
+    } else {
+      const okFb = await applyQuestFinaleXpServiceRoleFallback(user.id, xp);
+      if (!okFb) console.error("submitQuestFinaleChoice: XP niet toegekend", user.id);
+      else granted = xp;
+    }
+  }
+
+  revalidatePath("/dashboard");
+  revalidatePath("/profile");
+  revalidatePath("/learning");
+
+  return {
+    ok: true,
+    choiceXpGranted: granted,
+    ...(levelUp && newLevel != null ? { levelUp: true, newLevel } : {}),
   };
 }
 
@@ -683,4 +836,8 @@ export async function adminUpdateQuestPrizeSummary(input: { campaign_id: string;
 
 export async function getDefaultQuestContentJson(): Promise<string> {
   return JSON.stringify(getDefaultKatsuoQuestContent(), null, 2);
+}
+
+export async function getDictatorQuestContentJson(): Promise<string> {
+  return JSON.stringify(getDefaultDictatorQuestContent(), null, 2);
 }

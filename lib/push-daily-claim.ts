@@ -21,7 +21,7 @@ export async function cleanupStaleDailyPushClaim(
       : `${localDateYyyyMmDd}T00:00:00.000Z`;
   const { count } = await supabase
     .from("push_sends_log")
-    .select("*", { count: "exact", head: true })
+    .select("id", { count: "exact", head: true })
     .eq("user_id", userId)
     .eq("trigger_type", triggerType)
     .gte("sent_at", sinceIso);

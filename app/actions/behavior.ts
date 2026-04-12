@@ -44,7 +44,9 @@ export async function getBehaviorState(): Promise<BehaviorState> {
 
   const { data } = await supabase
     .from("user_behavior")
-    .select("*")
+    .select(
+      "last_active_date, last_study_date, inactive_days, no_book_selected, weekly_consistency, missed_reason, missed_reason_count"
+    )
     .eq("user_id", user.id)
     .single();
 
@@ -191,7 +193,7 @@ export async function getStudyPlan(): Promise<StudyPlan> {
 
   const { data } = await supabase
     .from("study_plan")
-    .select("*")
+    .select("daily_goal_minutes, preferred_time, reminder_enabled")
     .eq("user_id", user.id)
     .single();
 
@@ -253,7 +255,7 @@ export async function getAccountabilitySettings(): Promise<AccountabilitySetting
 
   const { data } = await supabase
     .from("accountability_settings")
-    .select("*")
+    .select("enabled, penalty_xp_enabled, penalty_xp_amount, streak_freeze_tokens")
     .eq("user_id", user.id)
     .single();
 

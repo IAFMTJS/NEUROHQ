@@ -156,7 +156,9 @@ export async function getAssistantFeatureFlags(userId: string) {
   const supabase = await createClient();
   const { data } = await supabase
     .from("assistant_feature_flags")
-    .select("*")
+    .select(
+      "confrontation_level, identity_intervention, defensive_identity_detection, courage_attribution, energy_fact_check"
+    )
     .eq("user_id", userId)
     .single();
 

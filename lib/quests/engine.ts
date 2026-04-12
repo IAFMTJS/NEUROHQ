@@ -1,5 +1,10 @@
 import { addCalendarDaysAmsterdamYmd } from "@/lib/utils/timezone";
-import type { QuestCampaignContent, QuestDayDef, QuestProgressState } from "@/lib/quests/types";
+import {
+  hasQuestFinaleChoice,
+  type QuestCampaignContent,
+  type QuestDayDef,
+  type QuestProgressState,
+} from "@/lib/quests/types";
 
 const APP_TZ = "Europe/Amsterdam";
 
@@ -82,9 +87,25 @@ export function resolveNextChallengeDay(
   return null;
 }
 
-export function isQuestFullyComplete(content: QuestCampaignContent, state: QuestProgressState): boolean {
+export function isPuzzlesComplete(content: QuestCampaignContent, state: QuestProgressState): boolean {
   const lastDay = Math.max(...content.days.map((d) => d.day));
   return state.solvedDays.includes(lastDay);
+}
+
+/** Quest klaar voor claim: alle puzzels + eventuele morele keuze gedaan. */
+export function isQuestFullyComplete(content: QuestCampaignContent, state: QuestProgressState): boolean {
+  if (!isPuzzlesComplete(content, state)) return false;
+  if (hasQuestFinaleChoice(content)) {
+    return state.finaleChoice === "help" || state.finaleChoice === "stop";
+  }
+  return true;
+}
+
+/** Puzzels af maar speler moet nog HELPEN/STOPPEN kiezen. */
+export function needsFinaleChoiceSelection(content: QuestCampaignContent, state: QuestProgressState): boolean {
+  if (!hasQuestFinaleChoice(content)) return false;
+  if (!isPuzzlesComplete(content, state)) return false;
+  return state.finaleChoice !== "help" && state.finaleChoice !== "stop";
 }
 
 export function campaignEndYmd(startsAtIso: string, dayCount: number): string {

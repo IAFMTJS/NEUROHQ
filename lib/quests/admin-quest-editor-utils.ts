@@ -122,6 +122,16 @@ export function validateContentForSave(c: QuestCampaignContent): string | null {
       }
     }
   }
+  const fc = c.finaleChoice;
+  if (fc != null) {
+    if (!fc.intro?.trim()) return "Finale keuze: intro-tekst ontbreekt.";
+    if (!fc.help?.label?.trim() || typeof fc.help.xp !== "number" || !fc.help.epilogue?.trim()) {
+      return "Finale keuze: HELPEN-tak onvolledig (label, xp, epiloog).";
+    }
+    if (!fc.stop?.label?.trim() || typeof fc.stop.xp !== "number" || !fc.stop.epilogue?.trim()) {
+      return "Finale keuze: STOPPEN-tak onvolledig (label, xp, epiloog).";
+    }
+  }
   return null;
 }
 

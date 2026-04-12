@@ -2,7 +2,11 @@
 
 import { useTransition, useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { adminUpsertQuestCampaign, getDefaultQuestContentJson } from "@/app/actions/quest-campaign";
+import {
+  adminUpsertQuestCampaign,
+  getDefaultQuestContentJson,
+  getDictatorQuestContentJson,
+} from "@/app/actions/quest-campaign";
 import { AdminQuestStopButton } from "@/components/admin/AdminQuestStopButton";
 import { AdminQuestContentEditor } from "@/components/admin/AdminQuestContentEditor";
 import type { QuestCampaignContent } from "@/lib/quests/types";
@@ -198,6 +202,27 @@ export function AdminQuestCampaignForm({
           >
             Standaard Katsuo-quest laden
           </button>
+          <button
+            type="button"
+            disabled={pending}
+            onClick={() =>
+              startTransition(async () => {
+                try {
+                  const raw = await getDictatorQuestContentJson();
+                  const parsed = parseJsonToContent(raw);
+                  if (parsed.ok) {
+                    applyParsedContent(parsed.data);
+                    setEditorMode("visual");
+                  } else setErr(parsed.error);
+                } catch {
+                  setErr("Kon Dictator-/VIREX-inhoud niet laden.");
+                }
+              })
+            }
+            className="rounded-lg border border-rose-500/35 bg-rose-500/10 px-3 py-2 text-xs text-rose-100/95 hover:bg-rose-500/20 disabled:opacity-50"
+          >
+            VIREX 6-daagse cypher laden
+          </button>
         </div>
         <div className="sm:col-span-2">
           <label className="mb-1 block text-xs font-medium text-white/50" htmlFor="qc-title">
@@ -371,7 +396,7 @@ export function AdminQuestCampaignForm({
             ) : (
               <p className="rounded-lg border border-amber-500/30 bg-amber-500/10 px-3 py-4 text-sm text-amber-100/90">
                 Geen gestructureerde inhoud geladen. Open de tab <strong>Ruwe JSON</strong> om te plakken, of klik{" "}
-                <strong>Standaard Katsuo-quest laden</strong>.
+                <strong>Standaard Katsuo-quest laden</strong> of <strong>VIREX 6-daagse cypher laden</strong>.
               </p>
             )
           ) : (

@@ -84,7 +84,7 @@ async function getPushLimitState(
   const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
   const { count: clicksLast7d } = await (supabase as any)
     .from("push_engagement")
-    .select("*", { count: "exact", head: true })
+    .select("id", { count: "exact", head: true })
     .eq("user_id", user.id)
     .eq("event_type", "clicked")
     .gte("created_at", sevenDaysAgo);

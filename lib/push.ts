@@ -70,7 +70,7 @@ export async function sendPushToUser(
     const since = new Date(Date.now() - SAME_TAG_DEDUPE_MS).toISOString();
     const { count } = await supabase
       .from("push_sends_log")
-      .select("*", { count: "exact", head: true })
+      .select("id", { count: "exact", head: true })
       .eq("user_id", userId)
       .eq("trigger_type", tagKey)
       .gte("sent_at", since);
@@ -99,7 +99,7 @@ export async function sendPushToUser(
   const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
   const { count: clicksLast7d } = await (supabase as any)
     .from("push_engagement")
-    .select("*", { count: "exact", head: true })
+    .select("id", { count: "exact", head: true })
     .eq("user_id", userId)
     .eq("event_type", "clicked")
     .gte("created_at", sevenDaysAgo);
@@ -128,7 +128,7 @@ export async function sendPushToUser(
     const since = lastClickedAt ?? new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
     const { count: unreadCount } = await supabase
       .from("push_sends_log")
-      .select("*", { count: "exact", head: true })
+      .select("id", { count: "exact", head: true })
       .eq("user_id", userId)
       .gt("sent_at", since);
     const unread = Math.max(0, unreadCount ?? 0);

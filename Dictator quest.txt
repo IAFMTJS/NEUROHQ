@@ -1,0 +1,319 @@
+
+🔥 HET GEBROKEN SIGNAAL — 6-DAAGSE CYPHER QUEST
+
+📖 VERHAALLIJN
+
+De wereld staat op het punt om te kantelen. Geen klassieke oorlog met tanks en sirenes, maar iets gerichter. Iets dat niemand meteen ziet aankomen.
+
+Een onbekende dictator, codenaam VIREX, communiceert via fragmenten van een onderschept logbestand. Geen gewone taal. Gelaagd. Versleuteld.
+
+Dit is geen waarschuwing.
+Dit is een selectie.
+
+Wie het log kan ontcijferen, leert hoe hij denkt.
+En wie hem begrijpt… kan hem stoppen.
+
+Of hem helpen.
+
+Je ontvangt 6 dagen lang telkens een fragment.
+Elke dag geeft één cruciaal stuk informatie.
+
+Op het einde moet je bepalen:
+👉 WAAR — HOE — WANNEER
+👉 HELPEN OF STOPPEN
+
+⸻
+
+🧠 SPELREGELS
+	•	Elke dag = 1 cipher
+	•	Elke dag = 1 duidelijk antwoord
+	•	Geen gokken, geen interpretatie-chaos
+	•	Alles bouwt logisch op
+
+⸻
+
+🧩 DAG 1 — DE EERSTE BREUK
+
+Logfragment:
+
+RQGHUJURQGV
+
+Hint:
+
+1. Alles is drie stappen verschoven.
+2. Caesar
+
+JOUW ANTWOORD:
+ONDERGRONDS
+
+⸻
+
+🧩 DAG 2 — DE SPIEGEL
+
+Logfragment:
+
+NVGIL
+
+Hint:
+
+1. Kijk ernaar zoals in een spiegel.
+2. Atbash
+
+JOUW ANTWOORD:
+METRO
+
+⸻
+
+🧩 DAG 3 — 
+A. DE MACHINE
+
+Logfragment:
+
+76 73 74 78
+
+Hint:
+
+1. Machines spreken in cijfers.
+2. ASCII
+
+JOUW ANTWOORD:
+LIJN
+
+
+
+B DE INTENTIE
+
+Logfragment:
+
+DDQYDO
+
+Hint:
+
+1. Niet alles verandert. Soms gewoon dezelfde stap opnieuw.
+2. Caesar 
+
+JOUW ANTWOORD:
+AANVAL
+
+
+
+
+⸻
+
+🧩 DAG 4 — DE SLEUTEL
+
+Logfragment:
+
+ELFHPLVFK
+
+Hint:
+
+1. De sleutel verandert niets… behalve je perspectief.
+2. Caesar
+
+JOUW ANTWOORD:
+CHEMISCH
+
+⸻
+
+🧩 DAG 5 — TIJD
+
+Logfragment:
+
+13:37
+
+Hint:
+
+Soms is tijd gewoon tijd.
+
+JOUW ANTWOORD:
+13:37
+
+⸻
+
+🧩 DAG 6 — DE SAMENVOEGING
+
+Logfragment:
+
+ZET ALLES OP ZIJN PLAATS
+
+Gebruik je antwoorden:
+	•	ONDERGRONDS
+	•	METRO
+	•	LIJN
+	•	CHEMISCH
+	•	13:37
+
+⸻
+
+☠️ FINALE OPLOSSING
+
+ONDERGRONDSE METROLIJN — CHEMISCHE AANVAL — 13:37
+
+-> 3 input velden nodig voor de antwoorden
+⸻
+
+# ☠️ FINALE BESLISSING
+
+Je hebt het log ontcijferd.
+
+Je weet nu:
+- WAAR het zal gebeuren  
+- HOE het zal gebeuren  
+- WANNEER het zal gebeuren  
+
+Niemand anders heeft dit gezien.
+
+Niemand anders weet dit.
+
+Alles hangt nu af van jou.
+
+---
+
+## ⚖️ DE KEUZE
+
+### 🔴 HELPEN
+Je laat het gebeuren.  
+Je grijpt niet in.  
+Misschien omdat je gelooft dat chaos nodig is.  
+Misschien omdat je wil zien wat er volgt.
+
+Beloning: +1500 XP (op dat moment onzichtbaar voor de speler) 
+
+---
+
+### 🔵 STOPPEN
+Je grijpt in.  
+Je waarschuwt.  
+Je doorbreekt het patroon.
+
+Misschien red je levens.  
+Misschien verander je niets.
+
+Beloning: +750 XP (op dat moment onzichtbaar voor de speler) 
+
+
+---
+
+## 🧠 ONTHOUD
+
+Niet kiezen is ook een keuze.  
+Maar je krijgt er niets voor.
+
+---
+
+-> spelers krijgen een soort meerkeuze scherm waar ze moeten kiezen, de beloning hangt af van de keuze en het antwoord van het 'spel' hangt dus ook af van de keuze
+
+
+
+
+Systeem antwoord per keuze : 
+
+
+# ☠️ GEVOLGEN VAN JE KEUZE
+
+## 🔴 JE KOOS: HELPEN
+
+Je deed niets.  
+Of misschien nét genoeg om niet verdacht te lijken.
+
+Om 13:37 werd het signaal uitgevoerd.
+
+De aanval gebeurde precies zoals voorspeld.
+
+- ☠️ Doden: 2.847  
+- 🏥 Zwaar gewonden: 6.200+  
+- 🌍 Impact: Internationale paniek, markten crashen  
+
+De naam VIREX verscheen voor het eerst publiek.
+
+Hij verdween daarna.
+
+Niet opgepakt. Niet gezien.  
+Alsof hij nooit bestaan heeft.
+
+---
+
+### 🧠 WAT VOLGT
+
+3 maanden later:
+
+Een tweede aanval. Groter.  
+Beter voorbereid.
+
+Niemand had nog de kans om hem te stoppen.
+
+---
+
+### 🎯 STATUS
+
+- Dictator: ACTIEF  
+- Dreiging: ESCALEREND  
+- Wereld: INSTABIEL
+
+---
+
+## 🔵 JE KOOS: STOPPEN
+
+Je handelde.  
+Je verbrak het patroon.
+
+De autoriteiten grepen in net voor het moment.
+
+De aanval werd deels voorkomen.
+
+- ☠️ Doden: 312  
+- 🏥 Gewonden: 1.100+  
+- 🚇 Schade: Beperkt, maar zichtbaar  
+
+De dader werd gevonden.
+
+Of toch… iemand wordt opgepakt.
+
+---
+
+### 🧠 WAT VOLGT
+
+De persoon die gearresteerd werd, zwijgt.
+
+Geen naam. Geen netwerk. Geen bevestiging.
+
+VIREX wordt nooit officieel geïdentificeerd.
+
+Sommigen geloven dat je hem hebt gestopt.
+
+Anderen denken dat je enkel een pion hebt opgeofferd.
+
+---
+
+### 🎯 STATUS
+
+- Dictator: ONBEKEND / MOGELIJK ACTIEF  
+- Dreiging: LATENT  
+- Wereld: WANTRouwig
+
+---
+
+## ⚖️ DE REALITEIT
+
+Je keuze bepaalde niet alleen wat er gebeurde…
+
+maar ook wat *niemand ooit zeker zal weten
+
+
+
+
+
+
+
+
+## ❗ LAATSTE GEDACHTE
+
+Je dacht dat dit een puzzel was.
+
+Het was een test.
+
+Niet van je intelligentie…  
+maar van je intentie
+
+

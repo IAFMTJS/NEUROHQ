@@ -7,6 +7,9 @@ import { getCurrentQuarter as getCurrentQuarterUtil, getPreviousQuarter } from "
 const QUARTERLY_STRATEGY_ROW_COLUMNS =
   "id, user_id, year, quarter, primary_theme, secondary_theme, savings_goal_id, identity_statement, key_results, anti_goals, one_word, north_star, kr_checked, created_at, updated_at";
 
+const STRATEGY_KEY_RESULT_COLUMNS =
+  "id, strategy_id, user_id, title, status, progress_pct, target_date, sort_order, created_at, updated_at";
+
 export async function getQuarterlyStrategy(yearQuarter?: { year: number; quarter: number }) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
@@ -77,7 +80,7 @@ export async function getStrategyKeyResults(strategyId: string) {
   const supabase = await createClient();
   const { data } = await supabase
     .from("strategy_key_results")
-    .select("*")
+    .select(STRATEGY_KEY_RESULT_COLUMNS)
     .eq("strategy_id", strategyId)
     .order("sort_order", { ascending: true });
   return data ?? [];

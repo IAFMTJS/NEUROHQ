@@ -158,6 +158,9 @@ type NotificationLogRow = {
   ignored_count: number;
 };
 
+const BEHAVIORAL_NOTIFICATION_LOG_COLUMNS =
+  "id, user_id, trigger_type, last_sent_at, ignored_count";
+
 const TRIGGER_COOLDOWN_HOURS: Partial<Record<TriggerType, number>> = {
   inactivity_24h: 12,
   inactivity_3d: 24,
@@ -202,7 +205,7 @@ export async function canSendBehavioralNotification(
 ): Promise<{ canSend: boolean; ignoredCount: number; logRow: NotificationLogRow | null }> {
   const { data } = await supabase
     .from("behavioral_notifications")
-    .select("*")
+    .select(BEHAVIORAL_NOTIFICATION_LOG_COLUMNS)
     .eq("user_id", userId)
     .eq("trigger_type", trigger)
     .maybeSingle();
@@ -239,7 +242,7 @@ export async function getReengagementSendsInLast7Days(
   const since = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
   const { count } = await supabase
     .from("push_sends_log")
-    .select("*", { count: "exact", head: true })
+    .select("id", { count: "exact", head: true })
     .eq("user_id", userId)
     .in("trigger_type", [...REENGAGEMENT_TRIGGERS])
     .gte("sent_at", since);
@@ -260,7 +263,7 @@ export async function markBehavioralNotificationSent(
   const nowIso = new Date().toISOString();
   const { data } = await supabase
     .from("behavioral_notifications")
-    .select("*")
+    .select(BEHAVIORAL_NOTIFICATION_LOG_COLUMNS)
     .eq("user_id", userId)
     .eq("trigger_type", trigger)
     .maybeSingle();

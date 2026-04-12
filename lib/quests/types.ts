@@ -23,16 +23,37 @@ export type QuestDayDef = {
   unlockWord?: string;
 };
 
+export type QuestFinaleChoiceOption = {
+  label: string;
+  /** XP bij deze keuze (spec: geen bedrag tonen in UI). */
+  xp: number;
+  /** Gevolgen / epiloog na de keuze. */
+  epilogue: string;
+};
+
+/** Na alle puzzels: morele keuze + tak-specifieke epiloog (optioneel). */
+export type QuestFinaleChoiceBlock = {
+  /** Tekst vóór de keuzeknoppen. */
+  intro: string;
+  help: QuestFinaleChoiceOption;
+  stop: QuestFinaleChoiceOption;
+  /** Gedeelde slotregels (bijv. “De realiteit”, “Laatste gedachte”). */
+  closingThought?: string;
+};
+
 export type QuestCampaignContent = {
   version: number;
   storyEpigraph?: string;
   days: QuestDayDef[];
+  finaleChoice?: QuestFinaleChoiceBlock;
 };
 
 export type QuestProgressState = {
   solvedDays: number[];
   /** Multi-step days: day number → current step index (0-based). */
   sub?: Record<string, number>;
+  /** Gezet zodra de speler HELPEN of STOPPEN kiest (alleen bij quests met `finaleChoice`). */
+  finaleChoice?: "help" | "stop";
 };
 
 export function parseQuestProgressState(raw: Json | null | undefined): QuestProgressState {
@@ -51,14 +72,56 @@ export function parseQuestProgressState(raw: Json | null | undefined): QuestProg
       if (typeof v === "number" && v >= 0) sub[k] = v;
     }
   }
-  return { solvedDays: [...new Set(solvedDays)].sort((a, b) => a - b), sub: Object.keys(sub).length ? sub : undefined };
+  const fcRaw = o.finaleChoice;
+  const finaleChoice =
+    fcRaw === "help" || fcRaw === "stop" ? (fcRaw as "help" | "stop") : undefined;
+  return {
+    solvedDays: [...new Set(solvedDays)].sort((a, b) => a - b),
+    sub: Object.keys(sub).length ? sub : undefined,
+    ...(finaleChoice ? { finaleChoice } : {}),
+  };
 }
 
 export function toJsonState(s: QuestProgressState): Json {
   return {
     solvedDays: s.solvedDays,
     ...(s.sub && Object.keys(s.sub).length > 0 ? { sub: s.sub } : {}),
+    ...(s.finaleChoice === "help" || s.finaleChoice === "stop" ? { finaleChoice: s.finaleChoice } : {}),
   } as Json;
+}
+
+function parseQuestFinaleChoiceBlock(raw: unknown): QuestFinaleChoiceBlock | undefined {
+  if (!raw || typeof raw !== "object" || Array.isArray(raw)) return undefined;
+  const o = raw as Record<string, unknown>;
+  const intro = o.intro;
+  const help = o.help;
+  const stop = o.stop;
+  if (typeof intro !== "string" || !intro.trim()) return undefined;
+  if (!help || typeof help !== "object" || Array.isArray(help)) return undefined;
+  if (!stop || typeof stop !== "object" || Array.isArray(stop)) return undefined;
+  const h = help as Record<string, unknown>;
+  const s = stop as Record<string, unknown>;
+  const hl = h.label;
+  const sl = s.label;
+  const hx = h.xp;
+  const sx = s.xp;
+  const he = h.epilogue;
+  const se = s.epilogue;
+  if (typeof hl !== "string" || !hl.trim()) return undefined;
+  if (typeof sl !== "string" || !sl.trim()) return undefined;
+  if (typeof hx !== "number" || !Number.isFinite(hx) || hx < 0) return undefined;
+  if (typeof sx !== "number" || !Number.isFinite(sx) || sx < 0) return undefined;
+  if (typeof he !== "string") return undefined;
+  if (typeof se !== "string") return undefined;
+  const closingThought = o.closingThought;
+  return {
+    intro: intro.trim(),
+    help: { label: hl.trim(), xp: Math.round(hx), epilogue: he },
+    stop: { label: sl.trim(), xp: Math.round(sx), epilogue: se },
+    ...(typeof closingThought === "string" && closingThought.trim()
+      ? { closingThought: closingThought.trim() }
+      : {}),
+  };
 }
 
 export function parseQuestContent(raw: Json | null | undefined): QuestCampaignContent | null {
@@ -79,5 +142,15 @@ export function parseQuestContent(raw: Json | null | undefined): QuestCampaignCo
     parsedDays.push(day as unknown as QuestDayDef);
   }
   if (parsedDays.length === 0) return null;
-  return { version, storyEpigraph: typeof o.storyEpigraph === "string" ? o.storyEpigraph : undefined, days: parsedDays };
+  const finaleChoice = parseQuestFinaleChoiceBlock(o.finaleChoice);
+  return {
+    version,
+    storyEpigraph: typeof o.storyEpigraph === "string" ? o.storyEpigraph : undefined,
+    days: parsedDays,
+    ...(finaleChoice ? { finaleChoice } : {}),
+  };
+}
+
+export function hasQuestFinaleChoice(content: QuestCampaignContent): boolean {
+  return content.finaleChoice != null;
 }

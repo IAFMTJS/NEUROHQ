@@ -28,6 +28,10 @@ async function requireUser() {
 
 type GameRowMini = { id: string; starts_at: string; ends_at: string | null; config: Json; title: string };
 
+/** Omit `body` (large markdown) — not needed for progress/claim paths. */
+const PLATFORM_GAME_ROW_LEAN =
+  "id, active, starts_at, ends_at, config, title, created_at, updated_at";
+
 /**
  * Evalueert auto-metrische regels en zet completed_at bij win — beloning pas na claim.
  */
@@ -90,7 +94,11 @@ export async function evaluateAndSyncAutoPlatformGame(
 }
 
 async function loadLiveGame(supabase: Awaited<ReturnType<typeof createClient>>, gameId: string) {
-  const { data: game, error } = await supabase.from("platform_games").select("*").eq("id", gameId).maybeSingle();
+  const { data: game, error } = await supabase
+    .from("platform_games")
+    .select(PLATFORM_GAME_ROW_LEAN)
+    .eq("id", gameId)
+    .maybeSingle();
   if (error) return { error: error.message } as const;
   if (!game) return { error: "Game niet gevonden." } as const;
   if (
@@ -109,7 +117,11 @@ async function loadLiveGame(supabase: Awaited<ReturnType<typeof createClient>>, 
 }
 
 async function loadGameRowForClaim(supabase: Awaited<ReturnType<typeof createClient>>, gameId: string) {
-  const { data: game, error } = await supabase.from("platform_games").select("*").eq("id", gameId).maybeSingle();
+  const { data: game, error } = await supabase
+    .from("platform_games")
+    .select(PLATFORM_GAME_ROW_LEAN)
+    .eq("id", gameId)
+    .maybeSingle();
   if (error) return { error: error.message ?? "Game niet gevonden." } as const;
   if (!game) return { error: "Game niet gevonden." } as const;
   return { game } as const;

@@ -11,6 +11,9 @@ import {
 import { sanitizeNeuroProfileTags } from "@/lib/neuro-profile";
 import { trackEvent } from "@/app/actions/analytics-events";
 
+const BEHAVIOR_PROFILE_READ_COLUMNS =
+  "identity_targets, neuro_profile_tags, neuro_self_report_opt_in, avoidance_patterns, energy_pattern, discipline_level, minimal_integrity_threshold_days, confrontation_mode, pet_type, pet_attachment_level, hobby_commitment, week_theme";
+
 export async function getBehaviorProfile(): Promise<BehaviorProfile> {
   const supabase = await createClient();
   const {
@@ -20,7 +23,7 @@ export async function getBehaviorProfile(): Promise<BehaviorProfile> {
 
   const { data } = await supabase
     .from("behavior_profile")
-    .select("*")
+    .select(BEHAVIOR_PROFILE_READ_COLUMNS)
     .eq("user_id", user.id)
     .single();
   if (!data) return DEFAULT_BEHAVIOR_PROFILE;

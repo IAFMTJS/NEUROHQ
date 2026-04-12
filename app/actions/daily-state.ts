@@ -6,6 +6,12 @@ import { createClient } from "@supabase/supabase-js";
 import { createClient as createServerClient } from "@/lib/supabase/server";
 import { todayDateString } from "@/lib/utils/timezone";
 
+/** daily_state CHECK requires 1–10 when set; coerce bad client values. */
+function clampOptionalBrainStat1to10(n: number | null | undefined): number | null {
+  if (n == null || Number.isNaN(Number(n))) return null;
+  return Math.min(10, Math.max(1, Math.round(Number(n))));
+}
+
 export type DailyStateInput = {
   date: string;
   energy: number | null;
@@ -85,9 +91,9 @@ export async function saveDailyState(input: DailyStateInput): Promise<SaveDailyS
     const row = {
       user_id: user.id,
       date: targetDate,
-      energy: input.energy ?? null,
-      focus: input.focus ?? null,
-      sensory_load: input.sensory_load ?? null,
+      energy: clampOptionalBrainStat1to10(input.energy),
+      focus: clampOptionalBrainStat1to10(input.focus),
+      sensory_load: clampOptionalBrainStat1to10(input.sensory_load),
       sleep_hours: input.sleep_hours,
       social_load: input.social_load ?? null,
       physical_health: input.physical_health ?? null,

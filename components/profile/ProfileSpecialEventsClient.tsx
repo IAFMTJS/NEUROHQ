@@ -77,12 +77,14 @@ function SectionHeading({
 function EventsBoardHero({
   hasQuest,
   questActive,
+  questNeedsFinaleChoice,
   nGames,
   nAnnounce,
   nUpcoming,
 }: {
   hasQuest: boolean;
   questActive: boolean;
+  questNeedsFinaleChoice: boolean;
   nGames: number;
   nAnnounce: number;
   nUpcoming: number;
@@ -129,9 +131,17 @@ function EventsBoardHero({
           <div className="rounded-2xl border border-violet-400/25 bg-black/25 px-3 py-2.5 text-center shadow-[inset_0_1px_0_rgba(255,255,255,0.05)]">
             <p className="text-[9px] font-bold uppercase tracking-[0.14em] text-violet-200/75">Quest</p>
             <p className="mt-1 text-sm font-black tracking-[0.12em] text-[var(--text-primary)]">
-              {hasQuest ? (questActive ? "LIVE" : "DONE") : "—"}
+              {hasQuest ? (questActive ? (questNeedsFinaleChoice ? "KEUZE" : "LIVE") : "DONE") : "—"}
             </p>
-            <p className="text-[10px] text-[var(--text-muted)]">{hasQuest ? (questActive ? "Actief" : "Loot claimen?") : "Geen missie"}</p>
+            <p className="text-[10px] text-[var(--text-muted)]">
+              {hasQuest
+                ? questActive
+                  ? questNeedsFinaleChoice
+                    ? "Finale open"
+                    : "Actief"
+                  : "Loot claimen?"
+                : "Geen missie"}
+            </p>
           </div>
           <div className="rounded-2xl border border-cyan-400/25 bg-black/25 px-3 py-2.5 text-center shadow-[inset_0_1px_0_rgba(255,255,255,0.05)]">
             <p className="text-[9px] font-bold uppercase tracking-[0.14em] text-cyan-200/75">Games</p>
@@ -220,6 +230,9 @@ export function ProfileSpecialEventsClient({ bundle }: { bundle: ProfileSpecialE
   const q = bundle.quest;
   const questDay = q ? Math.min(q.eventDay, q.maxDay) : 0;
   const questPct = q && q.maxDay > 0 ? Math.min(100, Math.round((questDay / q.maxDay) * 100)) : 0;
+  const questNeedsFinale = Boolean(q?.needsFinaleChoice);
+  const questBarDay = q && questNeedsFinale ? q.maxDay : questDay;
+  const questBarPct = q && questNeedsFinale && q.maxDay > 0 ? 100 : questPct;
   const nAnnounce = bundle.events.length;
   const nGames = bundle.games.length;
   const nUpcoming = bundle.upcomingEvents.length + bundle.upcomingGames.length + bundle.upcomingQuests.length;
@@ -229,6 +242,7 @@ export function ProfileSpecialEventsClient({ bundle }: { bundle: ProfileSpecialE
       <EventsBoardHero
         hasQuest={Boolean(q)}
         questActive={Boolean(q && !q.completed)}
+        questNeedsFinaleChoice={questNeedsFinale}
         nGames={nGames}
         nAnnounce={nAnnounce}
         nUpcoming={nUpcoming}
@@ -275,10 +289,12 @@ export function ProfileSpecialEventsClient({ bundle }: { bundle: ProfileSpecialE
               className={`shrink-0 rounded-full px-3 py-1 text-[11px] font-semibold ring-1 ${
                 q.completed
                   ? "bg-emerald-500/20 text-emerald-100 ring-emerald-400/40"
-                  : "bg-amber-500/15 text-amber-100 ring-amber-400/35"
+                  : questNeedsFinale
+                    ? "bg-rose-500/15 text-rose-100 ring-rose-400/35"
+                    : "bg-amber-500/15 text-amber-100 ring-amber-400/35"
               }`}
             >
-              {q.completed ? "Voltooid" : "Actief"}
+              {q.completed ? "Voltooid" : questNeedsFinale ? "Finale keuze" : "Actief"}
             </span>
           </div>
 
@@ -286,22 +302,35 @@ export function ProfileSpecialEventsClient({ bundle }: { bundle: ProfileSpecialE
             <div className="mb-1 flex justify-between text-[11px] font-medium text-[var(--text-muted)]">
               <span>Quest-voortgang</span>
               <span className="tabular-nums">
-                Dag {questDay}/{q.maxDay}
+                {questNeedsFinale
+                  ? `Dag ${q.maxDay}/${q.maxDay} · finale`
+                  : `Dag ${questDay}/${q.maxDay}`}
               </span>
             </div>
             <div
               className="h-2.5 overflow-hidden rounded-full bg-black/30 ring-1 ring-violet-500/25"
               role="progressbar"
-              aria-valuenow={questDay}
+              aria-valuenow={questBarDay}
               aria-valuemin={0}
               aria-valuemax={q.maxDay}
-              aria-label={`Quest voortgang dag ${questDay} van ${q.maxDay}`}
+              aria-label={
+                questNeedsFinale
+                  ? "Alle puzzels voltooid, finale keuze open"
+                  : `Quest voortgang dag ${questDay} van ${q.maxDay}`
+              }
             >
               <div
                 className="h-full rounded-full bg-gradient-to-r from-violet-500 to-fuchsia-500 transition-[width] duration-500 ease-out"
-                style={{ width: `${questPct}%` }}
+                style={{ width: `${questBarPct}%` }}
               />
             </div>
+            {questNeedsFinale ? (
+              <p className="mt-2 text-xs leading-snug text-fuchsia-200/90">
+                Open de quest en kies <span className="font-semibold text-rose-200">HELPEN</span> of{" "}
+                <span className="font-semibold text-sky-200">STOPPEN</span> om het verhaal (gevolgen + slot) te zien en daarna
+                flex/badge te claimen.
+              </p>
+            ) : null}
           </div>
 
           <div className="relative mt-4 rounded-xl border border-amber-400/35 bg-gradient-to-br from-amber-500/15 to-amber-950/25 px-4 py-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]">
@@ -316,6 +345,23 @@ export function ProfileSpecialEventsClient({ bundle }: { bundle: ProfileSpecialE
           {q.epigraph ? (
             <p className="relative mt-3 border-l-2 border-violet-400/50 pl-3 text-sm italic leading-relaxed text-[var(--text-muted)]">
               {q.epigraph}
+            </p>
+          ) : null}
+
+          {q.finaleOutcomeText ? (
+            <details className="relative mt-4 rounded-xl border border-fuchsia-500/30 bg-fuchsia-950/20 px-4 py-3 open:bg-fuchsia-950/28">
+              <summary className="cursor-pointer select-none text-sm font-semibold text-fuchsia-100/95">
+                Gevolgen van je keuze (volledige tekst)
+              </summary>
+              <pre className="mt-3 max-h-[min(28rem,50vh)] overflow-y-auto whitespace-pre-wrap font-sans text-xs leading-relaxed text-[var(--text-primary)]/95">
+                {q.finaleOutcomeText}
+              </pre>
+            </details>
+          ) : null}
+
+          {q.completed && !q.rewardsGranted && q.finaleOutcomeText ? (
+            <p className="relative mt-3 text-xs leading-relaxed text-[var(--text-muted)]">
+              Story-XP kreeg je al bij je finale-keuze. Met de knop hieronder claim je flexbonus (indien actief) en je badge.
             </p>
           ) : null}
 
@@ -345,6 +391,7 @@ export function ProfileSpecialEventsClient({ bundle }: { bundle: ProfileSpecialE
                       flexAppliedCents: res.flexAppliedCents,
                       flexSkippedReason: res.flexSkippedReason,
                       badgeLabel: res.badgeLabel,
+                      storyXpFromFinaleChoice: res.storyXpFromFinaleChoice,
                     })
                   );
                   router.refresh();
@@ -361,7 +408,7 @@ export function ProfileSpecialEventsClient({ bundle }: { bundle: ProfileSpecialE
             onClick={() => setQuestOpen(true)}
             className={`relative w-full rounded-xl bg-[rgba(var(--mode-rgb),0.38)] px-4 py-3 text-sm font-semibold text-[var(--text-primary)] shadow-[inset_0_1px_0_rgba(255,255,255,0.08)] ring-1 ring-[rgba(var(--mode-rgb),0.4)] transition hover:bg-[rgba(var(--mode-rgb),0.52)] sm:w-auto sm:min-w-[11rem] ${q.completed && !q.rewardsGranted ? "mt-3" : "mt-5"}`}
           >
-            {q.completed ? "Quest bekijken" : "Quest openen"}
+            {q.completed ? "Quest bekijken" : questNeedsFinale ? "Quest openen · keuze" : "Quest openen"}
           </button>
 
           {q.answerHistory.length > 0 ? (

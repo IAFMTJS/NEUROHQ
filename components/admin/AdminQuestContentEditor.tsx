@@ -1,7 +1,12 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import type { QuestCampaignContent, QuestDayDef, QuestDayKind } from "@/lib/quests/types";
+import type {
+  QuestCampaignContent,
+  QuestDayDef,
+  QuestDayKind,
+  QuestFinaleChoiceBlock,
+} from "@/lib/quests/types";
 import {
   acceptsFromTextarea,
   acceptsToTextarea,
@@ -29,6 +34,15 @@ type Props = {
   content: QuestCampaignContent;
   onChange: (next: QuestCampaignContent) => void;
 };
+
+function emptyFinaleChoice(): QuestFinaleChoiceBlock {
+  return {
+    intro: "Je hebt de puzzels opgelost.\n\nWelke keuze maak je?",
+    help: { label: "HELPEN", xp: 1500, epilogue: "" },
+    stop: { label: "STOPPEN", xp: 750, epilogue: "" },
+    closingThought: "",
+  };
+}
 
 function DayCard({
   day,
@@ -528,6 +542,192 @@ export function AdminQuestContentEditor({ content, onChange }: Props) {
         <p className={`mt-3 ${hint}`}>
           Tip: dagnummers bepalen de logica in de app (dag 1, 2, …). Volgorde in deze lijst is alleen voor jouw overzicht — sorteer op nummer met ↑↓ of pas nummers aan.
         </p>
+      </div>
+
+      <div className={card}>
+        <div className="mb-3 flex flex-wrap items-center justify-between gap-2 border-b border-white/10 pb-3">
+          <div>
+            <h3 className="text-[11px] font-bold uppercase tracking-wider text-amber-400/90">Finale keuze (optioneel)</h3>
+            <p className={`mt-1 max-w-xl ${hint}`}>
+              Na de laatste puzzel: twee knoppen. <strong className="text-white/55">XP per keuze</strong> wordt direct toegekend
+              (spelers zien het bedrag niet). Zet bij de campagne <strong className="text-white/55">Finale XP</strong> meestal op{" "}
+              <strong className="text-white/55">0</strong> om dubbele XP bij claim te voorkomen.
+            </p>
+          </div>
+          {content.finaleChoice ? (
+            <button
+              type="button"
+              className={btnDanger}
+              onClick={() => confirm("Finale keuze verwijderen? Opgeslagen teksten gaan verloren.") && onChange({ ...content, finaleChoice: undefined })}
+            >
+              Finale verwijderen
+            </button>
+          ) : (
+            <button
+              type="button"
+              className="rounded-lg border border-amber-500/40 bg-amber-500/15 px-3 py-1.5 text-xs font-semibold text-amber-100 hover:bg-amber-500/25"
+              onClick={() => onChange({ ...content, finaleChoice: emptyFinaleChoice() })}
+            >
+              Finale keuze toevoegen
+            </button>
+          )}
+        </div>
+
+        {content.finaleChoice ? (
+          <div className="mt-4 space-y-5">
+            <div>
+              <label className={label}>Intro vóór de knoppen</label>
+              <textarea
+                className={`${field} min-h-[6rem] resize-y font-sans`}
+                rows={5}
+                value={content.finaleChoice.intro}
+                onChange={(e) =>
+                  onChange({
+                    ...content,
+                    finaleChoice: { ...content.finaleChoice!, intro: e.target.value },
+                  })
+                }
+              />
+            </div>
+
+            <div className="grid gap-4 lg:grid-cols-2">
+              <div className="space-y-3 rounded-lg border border-rose-500/25 bg-rose-500/5 p-3">
+                <p className="text-[10px] font-bold uppercase tracking-wider text-rose-200/90">Eerste optie (bijv. HELPEN)</p>
+                <div>
+                  <label className={label}>Knoplabel</label>
+                  <input
+                    className={field}
+                    value={content.finaleChoice.help.label}
+                    onChange={(e) =>
+                      onChange({
+                        ...content,
+                        finaleChoice: {
+                          ...content.finaleChoice!,
+                          help: { ...content.finaleChoice!.help, label: e.target.value },
+                        },
+                      })
+                    }
+                  />
+                </div>
+                <div>
+                  <label className={label}>XP bij deze keuze</label>
+                  <input
+                    type="number"
+                    min={0}
+                    className={field}
+                    value={content.finaleChoice.help.xp}
+                    onChange={(e) =>
+                      onChange({
+                        ...content,
+                        finaleChoice: {
+                          ...content.finaleChoice!,
+                          help: {
+                            ...content.finaleChoice!.help,
+                            xp: Math.max(0, Math.round(parseFloat(e.target.value) || 0)),
+                          },
+                        },
+                      })
+                    }
+                  />
+                </div>
+                <div>
+                  <label className={label}>Epiloog (na keuze)</label>
+                  <textarea
+                    className={`${field} min-h-[8rem] resize-y font-sans`}
+                    rows={6}
+                    value={content.finaleChoice.help.epilogue}
+                    onChange={(e) =>
+                      onChange({
+                        ...content,
+                        finaleChoice: {
+                          ...content.finaleChoice!,
+                          help: { ...content.finaleChoice!.help, epilogue: e.target.value },
+                        },
+                      })
+                    }
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-3 rounded-lg border border-sky-500/25 bg-sky-500/5 p-3">
+                <p className="text-[10px] font-bold uppercase tracking-wider text-sky-200/90">Tweede optie (bijv. STOPPEN)</p>
+                <div>
+                  <label className={label}>Knoplabel</label>
+                  <input
+                    className={field}
+                    value={content.finaleChoice.stop.label}
+                    onChange={(e) =>
+                      onChange({
+                        ...content,
+                        finaleChoice: {
+                          ...content.finaleChoice!,
+                          stop: { ...content.finaleChoice!.stop, label: e.target.value },
+                        },
+                      })
+                    }
+                  />
+                </div>
+                <div>
+                  <label className={label}>XP bij deze keuze</label>
+                  <input
+                    type="number"
+                    min={0}
+                    className={field}
+                    value={content.finaleChoice.stop.xp}
+                    onChange={(e) =>
+                      onChange({
+                        ...content,
+                        finaleChoice: {
+                          ...content.finaleChoice!,
+                          stop: {
+                            ...content.finaleChoice!.stop,
+                            xp: Math.max(0, Math.round(parseFloat(e.target.value) || 0)),
+                          },
+                        },
+                      })
+                    }
+                  />
+                </div>
+                <div>
+                  <label className={label}>Epiloog (na keuze)</label>
+                  <textarea
+                    className={`${field} min-h-[8rem] resize-y font-sans`}
+                    rows={6}
+                    value={content.finaleChoice.stop.epilogue}
+                    onChange={(e) =>
+                      onChange({
+                        ...content,
+                        finaleChoice: {
+                          ...content.finaleChoice!,
+                          stop: { ...content.finaleChoice!.stop, epilogue: e.target.value },
+                        },
+                      })
+                    }
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div>
+              <label className={label}>Slotgedachte (optioneel, na elke tak)</label>
+              <textarea
+                className={`${field} min-h-[4rem] resize-y font-sans`}
+                rows={3}
+                value={content.finaleChoice.closingThought ?? ""}
+                onChange={(e) =>
+                  onChange({
+                    ...content,
+                    finaleChoice: {
+                      ...content.finaleChoice!,
+                      closingThought: e.target.value.trim() || undefined,
+                    },
+                  })
+                }
+                placeholder="Gedeelde tekst onder de epiloog van de gekozen tak…"
+              />
+            </div>
+          </div>
+        ) : null}
       </div>
     </div>
   );

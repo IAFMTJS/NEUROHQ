@@ -3,7 +3,12 @@
 import Image from "next/image";
 import { useCallback, useEffect, useState, useTransition } from "react";
 import { Modal } from "@/components/Modal";
-import { claimQuestCampaignRewards, submitQuestAnswer, type QuestClientPayload } from "@/app/actions/quest-campaign";
+import {
+  claimQuestCampaignRewards,
+  submitQuestAnswer,
+  submitQuestFinaleChoice,
+  type QuestClientPayload,
+} from "@/app/actions/quest-campaign";
 import { buildQuestLootToastModel } from "@/lib/platform-reward-celebration";
 import { neuroToast } from "@/lib/ui/neuro-toast";
 import { showQuestClearedPendingLootToast, showQuestLootClaimToast } from "@/lib/ui/platform-loot-toast";
@@ -74,7 +79,13 @@ export function QuestCampaignModal({ open, onClose }: Props) {
       open={open}
       onClose={onClose}
       title={status?.title ?? "Quest"}
-      subtitle={status ? `${status.tagline} · Dag ${Math.min(status.eventDay, status.maxDay)}/${status.maxDay}` : undefined}
+      subtitle={
+        status
+          ? status.needsFinaleChoice
+            ? `${status.tagline} · Finale keuze`
+            : `${status.tagline} · Dag ${Math.min(status.eventDay, status.maxDay)}/${status.maxDay}`
+          : undefined
+      }
       size="lg"
       footer={
         <div className="flex w-full flex-wrap items-center justify-end gap-2">
@@ -111,8 +122,10 @@ export function QuestCampaignModal({ open, onClose }: Props) {
                   );
                   setAnswer("");
                   await refresh();
-                  if (res.completed) {
+                  if (res.completed && !res.awaitingFinaleChoice) {
                     showQuestClearedPendingLootToast();
+                  } else if (res.awaitingFinaleChoice) {
+                    showQuestClearedPendingLootToast({ awaitingFinaleChoice: true });
                   }
                 });
               }}
@@ -133,21 +146,31 @@ export function QuestCampaignModal({ open, onClose }: Props) {
               <div className="flex items-center justify-between text-[11px] font-medium text-[var(--text-muted)]">
                 <span>Quest-voortgang</span>
                 <span>
-                  Dag {Math.min(status.eventDay, status.maxDay)}/{status.maxDay}
+                  {status.needsFinaleChoice
+                    ? "Puzzels voltooid"
+                    : `Dag ${Math.min(status.eventDay, status.maxDay)}/${status.maxDay}`}
                 </span>
               </div>
               <div
                 className="mt-2 h-2 overflow-hidden rounded-full bg-black/25 ring-1 ring-violet-500/20"
                 role="progressbar"
-                aria-valuenow={Math.min(status.eventDay, status.maxDay)}
+                aria-valuenow={
+                  status.needsFinaleChoice
+                    ? status.maxDay
+                    : Math.min(status.eventDay, status.maxDay)
+                }
                 aria-valuemin={0}
                 aria-valuemax={status.maxDay}
-                aria-label={`Dag ${Math.min(status.eventDay, status.maxDay)} van ${status.maxDay}`}
+                aria-label={
+                  status.needsFinaleChoice
+                    ? "Alle puzzels voltooid, finale keuze open"
+                    : `Dag ${Math.min(status.eventDay, status.maxDay)} van ${status.maxDay}`
+                }
               >
                 <div
                   className="h-full rounded-full bg-gradient-to-r from-violet-500 to-fuchsia-500"
                   style={{
-                    width: `${Math.min(100, Math.round((Math.min(status.eventDay, status.maxDay) / status.maxDay) * 100))}%`,
+                    width: `${status.needsFinaleChoice ? 100 : Math.min(100, Math.round((Math.min(status.eventDay, status.maxDay) / status.maxDay) * 100))}%`,
                   }}
                 />
               </div>
@@ -163,6 +186,81 @@ export function QuestCampaignModal({ open, onClose }: Props) {
             </p>
           ) : null}
 
+          {status.finaleOutcomeText ? (
+            <div className="rounded-xl border border-fuchsia-500/30 bg-fuchsia-950/20 p-4 text-sm text-[var(--text-primary)] shadow-[inset_0_1px_0_rgba(255,255,255,0.05)]">
+              <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-fuchsia-200/85">Gevolgen</p>
+              <pre className="mt-3 max-h-[min(28rem,52vh)] overflow-y-auto whitespace-pre-wrap font-sans text-xs leading-relaxed text-[var(--text-primary)]/95">
+                {status.finaleOutcomeText}
+              </pre>
+            </div>
+          ) : null}
+
+          {status.needsFinaleChoice ? (
+            <div className="space-y-4 rounded-xl border border-rose-500/35 bg-gradient-to-br from-rose-950/35 to-[var(--bg-surface)]/25 p-4">
+              <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-rose-200/90">Finale beslissing</p>
+              <pre className="max-h-[min(20rem,40vh)] overflow-y-auto whitespace-pre-wrap font-sans text-sm leading-relaxed text-[var(--text-muted)]">
+                {status.finaleChoiceIntro ?? ""}
+              </pre>
+              <p className="text-xs text-[var(--text-muted)]">
+                Je ziet hier geen XP-bedrag — de wereld reageert op wat je kiest.
+              </p>
+              <div className="flex flex-col gap-2 sm:flex-row">
+                <button
+                  type="button"
+                  disabled={pending}
+                  onClick={() => {
+                    if (!status) return;
+                    startTransition(async () => {
+                      const res = await submitQuestFinaleChoice(status.campaignId, "help");
+                      if (!res.ok) {
+                        neuroToast.error(res.error);
+                        return;
+                      }
+                      if (res.already) {
+                        await refresh();
+                        return;
+                      }
+                      if (res.levelUp && typeof res.newLevel === "number") {
+                        showLevelUpCelebration({ newLevel: res.newLevel });
+                      }
+                      await refresh();
+                      showQuestClearedPendingLootToast({ afterFinaleChoice: true });
+                    });
+                  }}
+                  className="flex-1 rounded-xl border border-rose-500/50 bg-rose-600/25 px-4 py-3 text-sm font-bold text-rose-50 ring-1 ring-rose-400/35 hover:bg-rose-600/40 disabled:opacity-50"
+                >
+                  {status.finaleHelpLabel ?? "HELPEN"}
+                </button>
+                <button
+                  type="button"
+                  disabled={pending}
+                  onClick={() => {
+                    if (!status) return;
+                    startTransition(async () => {
+                      const res = await submitQuestFinaleChoice(status.campaignId, "stop");
+                      if (!res.ok) {
+                        neuroToast.error(res.error);
+                        return;
+                      }
+                      if (res.already) {
+                        await refresh();
+                        return;
+                      }
+                      if (res.levelUp && typeof res.newLevel === "number") {
+                        showLevelUpCelebration({ newLevel: res.newLevel });
+                      }
+                      await refresh();
+                      showQuestClearedPendingLootToast({ afterFinaleChoice: true });
+                    });
+                  }}
+                  className="flex-1 rounded-xl border border-sky-500/45 bg-sky-600/20 px-4 py-3 text-sm font-bold text-sky-50 ring-1 ring-sky-400/30 hover:bg-sky-600/35 disabled:opacity-50"
+                >
+                  {status.finaleStopLabel ?? "STOPPEN"}
+                </button>
+              </div>
+            </div>
+          ) : null}
+
           {status.completed ? (
             <div className="rounded-xl border border-emerald-500/35 bg-gradient-to-br from-emerald-500/15 to-emerald-950/20 p-4 text-sm text-emerald-100 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]">
               <p className="font-semibold">Je hebt de reis voltooid.</p>
@@ -173,7 +271,9 @@ export function QuestCampaignModal({ open, onClose }: Props) {
               ) : (
                 <>
                   <p className="mt-2 text-xs text-emerald-200/90">
-                    Tik op onderstaande knop om je XP, flexbudget (indien actief) en badge te ontvangen.
+                    {status.finaleOutcomeText
+                      ? "Tik op onderstaande knop voor flexbonus (indien actief) en badge. Story-XP kreeg je al bij je finale-keuze."
+                      : "Tik op onderstaande knop om je XP, flexbudget (indien actief) en badge te ontvangen."}
                   </p>
                   <button
                     type="button"
@@ -200,6 +300,7 @@ export function QuestCampaignModal({ open, onClose }: Props) {
                             flexAppliedCents: res.flexAppliedCents,
                             flexSkippedReason: res.flexSkippedReason,
                             badgeLabel: res.badgeLabel,
+                            storyXpFromFinaleChoice: res.storyXpFromFinaleChoice,
                           })
                         );
                         await refresh();
@@ -226,7 +327,7 @@ export function QuestCampaignModal({ open, onClose }: Props) {
             </div>
           ) : null}
 
-          {!status.completed && !puzzle ? (
+          {!status.completed && !status.needsFinaleChoice && !puzzle ? (
             <div className="rounded-xl border border-white/10 bg-white/[0.04] p-4 text-sm text-[var(--text-primary)]">
               <p>Je bent bij voor vandaag. Kom morgen terug voor de volgende dag.</p>
               <p className="mt-2 text-xs text-[var(--text-muted)]">

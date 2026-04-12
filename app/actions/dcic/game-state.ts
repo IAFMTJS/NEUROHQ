@@ -52,6 +52,14 @@ function dailyBrainCircleToStat100(v: unknown, fallback: number): number {
   return Math.round((n / 10) * 100);
 }
 
+/** Inverse of dailyBrainCircleToStat100 — required before persisting stats to daily_state (1–10 check). */
+function stat100ToDailyBrainCircle(n: number): number {
+  const x = Number(n);
+  if (!Number.isFinite(x)) return 5;
+  const scaled = Math.round((Math.min(100, Math.max(0, x)) / 100) * 10);
+  return Math.min(10, Math.max(1, scaled));
+}
+
 type GetGameStateOptions = {
   includeFinance?: boolean;
 };
@@ -533,21 +541,24 @@ export async function saveGameState(
       })
       .eq("user_id", user.id);
 
-    // Update daily state stats
+    // Update daily state stats (DB brain circles are 1–10; gameState.stats are 0–100).
     const today = todayDateString();
-    await supabase.from("daily_state").upsert({
-      user_id: user.id,
-      date: today,
-      energy: gameState.stats.energy,
-      focus: gameState.stats.focus,
-      sensory_load: gameState.stats.load,
-      dcic_mode: gameState.mode.current,
-      dcic_locked_until: gameState.mode.lockedUntil,
-      dcic_overdrive_session_start:
-        gameState.mode.current === "overdrive"
-          ? gameState.mode.overdriveSessionStart
-          : null,
-    });
+    await supabase.from("daily_state").upsert(
+      {
+        user_id: user.id,
+        date: today,
+        energy: stat100ToDailyBrainCircle(gameState.stats.energy),
+        focus: stat100ToDailyBrainCircle(gameState.stats.focus),
+        sensory_load: stat100ToDailyBrainCircle(gameState.stats.load),
+        dcic_mode: gameState.mode.current,
+        dcic_locked_until: gameState.mode.lockedUntil,
+        dcic_overdrive_session_start:
+          gameState.mode.current === "overdrive"
+            ? gameState.mode.overdriveSessionStart
+            : null,
+      },
+      { onConflict: "user_id,date" }
+    );
 
     revalidatePath("/dashboard");
     revalidatePath("/tasks");

@@ -36,6 +36,7 @@ export function buildQuestClaimCelebrationMessage(params: {
   flexAppliedCents: number | null;
   flexSkippedReason?: string;
   badgeLabel: string;
+  storyXpFromFinaleChoice?: boolean;
 }): string {
   const m = buildQuestLootToastModel(params);
   const body = m.lines.map((l) => [l.label, l.detail].filter(Boolean).join(" — ")).join("\n");
@@ -48,6 +49,8 @@ export function buildQuestLootToastModel(params: {
   flexAppliedCents: number | null;
   flexSkippedReason?: string;
   badgeLabel: string;
+  /** Story-XP kwam al bij finale-keuze (HELPEN/STOPPEN); deze claim is flex/badge. */
+  storyXpFromFinaleChoice?: boolean;
 }): PlatformLootToastModel {
   const lines: PlatformLootRewardLine[] = [];
 
@@ -97,10 +100,18 @@ export function buildQuestLootToastModel(params: {
     });
   }
 
+  const subhead =
+    params.storyXpFromFinaleChoice && params.pointsApplied <= 0
+      ? "Je story-XP kreeg je al bij je finale-keuze. Hieronder: flex en badge (indien van toepassing)."
+      : "Je beloning is toegepast.";
+
+  const questLogHint =
+    " Eerdere vragen (per dag, met vraagtekst) en jouw antwoorden vind je onderaan in de quest-modal en op Profiel → Events — niet in deze toast.";
+
   return {
     variant: "quest",
     headline: "Quest loot binnen",
-    subhead: "Je beloning is toegepast.",
+    subhead: subhead + questLogHint,
     lines,
   };
 }

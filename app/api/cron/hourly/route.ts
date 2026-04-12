@@ -182,7 +182,7 @@ async function hasSentAchievementPushToday(
     timezone && timezone.trim() ? utcStartOfLocalDayIso(timezone, todayStr) : `${todayStr}T00:00:00.000Z`;
   const { count } = await supabase
     .from("push_sends_log")
-    .select("*", { count: "exact", head: true })
+    .select("id", { count: "exact", head: true })
     .eq("user_id", userId)
     .in("trigger_type", POSITIVE_ACHIEVEMENT_TRIGGERS)
     .gte("sent_at", sinceIso);
@@ -200,7 +200,7 @@ async function hasSentTriggerToday(
     timezone && timezone.trim() ? utcStartOfLocalDayIso(timezone, localDate) : `${localDate}T00:00:00.000Z`;
   const { count } = await supabase
     .from("push_sends_log")
-    .select("*", { count: "exact", head: true })
+    .select("id", { count: "exact", head: true })
     .eq("user_id", userId)
     .eq("trigger_type", triggerType)
     .gte("sent_at", sinceIso);
@@ -516,7 +516,7 @@ export async function GET(request: Request) {
           const sinceIso = tz ? utcStartOfLocalDayIso(tz, todayStr) : `${todayStr}T00:00:00.000Z`;
           const { count: alreadySentCount } = await supabase
             .from("push_sends_log")
-            .select("*", { count: "exact", head: true })
+            .select("id", { count: "exact", head: true })
             .eq("user_id", u.id)
             .eq("trigger_type", "daily-quote")
             .gte("sent_at", sinceIso);

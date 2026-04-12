@@ -113,7 +113,7 @@ async function applyFlexLedgerEntry(params: {
   const cap = (before as { flex_cap_monthly_cents: number }).flex_cap_monthly_cents ?? 0;
   const applied = clampFlexDelta(cur, cap, params.rawDeltaCents);
 
-  const { error: insErr } = await supabase.from("flex_budget_ledger").insert({
+  const row = {
     user_id: params.userId,
     budget_day: params.budgetDay,
     delta_cents: applied,
@@ -121,11 +121,13 @@ async function applyFlexLedgerEntry(params: {
     idempotency_key: params.idempotencyKey,
     strategy_multiplier_bp: params.strategyMultiplierBp,
     meta: params.meta,
-  } as never);
-  if (insErr) {
-    if ((insErr as { code?: string }).code === "23505") return;
-    throw new Error(insErr.message);
-  }
+  } as never;
+  const { data: insertedRows, error: insErr } = await supabase
+    .from("flex_budget_ledger")
+    .upsert(row, { onConflict: "user_id,idempotency_key", ignoreDuplicates: true })
+    .select("id");
+  if (insErr) throw new Error(insErr.message);
+  if (!insertedRows?.length) return;
 
   const next = cur + applied;
   const { error: upErr } = await supabase

@@ -10,6 +10,9 @@ import {
 import { createTask } from "@/app/actions/tasks";
 import { invalidateUserSnapshotMemoryCaches } from "@/lib/server/snapshot-memory-caches";
 
+const CALENDAR_EVENT_LIST_COLUMNS =
+  "id, user_id, title, start_at, end_at, duration_hours, is_social, source, external_id, linked_task_id, created_at, updated_at";
+
 export async function getCalendarEventsForDate(date: string) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
@@ -18,7 +21,7 @@ export async function getCalendarEventsForDate(date: string) {
   const end = `${date}T23:59:59`;
   const { data } = await supabase
     .from("calendar_events")
-    .select("*")
+    .select(CALENDAR_EVENT_LIST_COLUMNS)
     .eq("user_id", user.id)
     .gte("start_at", start)
     .lte("start_at", end)
@@ -37,7 +40,7 @@ export async function getUpcomingCalendarEvents(startDate: string, numDays: numb
   const endStr = endDate.toISOString().slice(0, 10) + "T00:00:00";
   const { data } = await supabase
     .from("calendar_events")
-    .select("*")
+    .select(CALENDAR_EVENT_LIST_COLUMNS)
     .eq("user_id", user.id)
     .gte("start_at", start)
     .lt("start_at", endStr)
