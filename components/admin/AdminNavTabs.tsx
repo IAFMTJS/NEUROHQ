@@ -4,7 +4,8 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 const tabs = [
-  { href: "/admin", label: "Diagnostiek" },
+  { href: "/admin", label: "Home" },
+  { href: "/admin/diagnostics", label: "Diagnostiek", prefetch: false },
   { href: "/admin/events", label: "Events" },
   { href: "/admin/games", label: "Games" },
   { href: "/admin/quests", label: "Quest" },
@@ -17,13 +18,14 @@ export function AdminNavTabs() {
   return (
     <nav className="flex flex-wrap items-center gap-2" aria-label="Admin">
       <span className="mr-2 text-[10px] font-bold uppercase tracking-[0.2em] text-amber-400/90">Beheer</span>
-      {tabs.map(({ href, label }) => {
+      {tabs.map(({ href, label, prefetch }) => {
         const isActive =
           href === "/admin" ? normalized === "/admin" : normalized === href || normalized.startsWith(`${href}/`);
         return (
           <Link
             key={href}
             href={href}
+            prefetch={prefetch}
             className={`rounded-lg px-3 py-1.5 text-sm font-medium transition ${
               isActive ? "bg-amber-500/20 text-amber-100 ring-1 ring-amber-500/40" : "text-white/60 hover:bg-white/10 hover:text-white"
             }`}

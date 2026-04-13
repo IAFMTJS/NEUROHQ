@@ -1,43 +1,61 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
-import { createClient } from "@/lib/supabase/server";
 import { getAdminSessionUser } from "@/lib/admin-auth";
-import { AdminDiagnosticsView } from "@/components/admin/AdminDiagnosticsView";
 
 export const dynamic = "force-dynamic";
 
-export default async function AdminDiagnosticsPage() {
+const shortcuts = [
+  {
+    href: "/admin/diagnostics",
+    title: "Diagnostiek",
+    description: "Controleer platformstatistieken, activiteit en RPC-status.",
+    prefetch: false,
+  },
+  {
+    href: "/admin/events",
+    title: "Events",
+    description: "Beheer live platform-events en zichtbaarheid in de app.",
+  },
+  {
+    href: "/admin/games",
+    title: "Games",
+    description: "Stel games in, configureer regels en koppel quest-prijzen.",
+  },
+  {
+    href: "/admin/quests",
+    title: "Quest",
+    description: "Bewerk campagnes, planning en inhoud voor quest-dagen.",
+  },
+] as const;
+
+export default async function AdminHomePage() {
   const admin = await getAdminSessionUser();
   if (!admin) redirect("/admin/login");
-
-  const supabase = await createClient();
-  const { data, error } = await supabase.rpc("admin_platform_diagnostics");
 
   return (
     <>
       <header className="mb-8">
-        <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-amber-400/90">Diagnostiek</p>
-        <h1 className="text-xl font-semibold text-white">Platformgebruik</h1>
-        <p className="mt-1 max-w-xl text-sm text-white/50">
-          Samenvatting van accounts (signups, push), taken en carry-over, budget, state, XP, leren, DCIC, platform-events, kwartier-uitkomsten,
-          taak-events en Play-deck. Alleen zichtbaar voor beheerders.
+        <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-amber-400/90">Admin home</p>
+        <h1 className="text-xl font-semibold text-white">Beheercentrum</h1>
+        <p className="mt-1 max-w-2xl text-sm text-white/50">
+          Gebruik deze startpagina als hub voor beheer. Open een tab hieronder om direct naar diagnostiek, events, games of quest te gaan.
         </p>
       </header>
 
-      {error ? (
-        <div className="rounded-xl border border-rose-500/30 bg-rose-500/10 p-4 text-sm text-rose-100">
-          <p className="font-medium">RPC-fout: {error.message}</p>
-          <p className="mt-2 text-xs text-rose-200/80">
-            Draai migraties <code className="rounded bg-black/30 px-1">109_admin_platform_diagnostics.sql</code> en{" "}
-            <code className="rounded bg-black/30 px-1">111_admin_platform_diagnostics_extend.sql</code> in Supabase als de RPC ontbreekt of
-            verouderd is.
-          </p>
-        </div>
-      ) : data ? (
-        <AdminDiagnosticsView payload={data} />
-      ) : (
-        <p className="text-sm text-white/50">Geen data ontvangen.</p>
-      )}
+      <section className="grid gap-4 sm:grid-cols-2">
+        {shortcuts.map((shortcut) => (
+          <Link
+            key={shortcut.href}
+            href={shortcut.href}
+            prefetch={shortcut.prefetch}
+            className="group rounded-xl border border-white/10 bg-white/[0.03] p-5 transition hover:border-amber-500/40 hover:bg-amber-500/5"
+          >
+            <p className="text-xs font-bold uppercase tracking-[0.16em] text-amber-300/90">{shortcut.title}</p>
+            <p className="mt-2 text-sm text-white/65">{shortcut.description}</p>
+            <p className="mt-4 text-xs font-semibold text-white/60 transition group-hover:text-amber-200">Openen →</p>
+          </Link>
+        ))}
+      </section>
     </>
   );
 }
