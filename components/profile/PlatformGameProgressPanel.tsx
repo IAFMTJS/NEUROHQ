@@ -262,11 +262,7 @@ export function PlatformGameProgressPanel({
                         return;
                       }
                       setAnswer("");
-                      if (res.completed) {
-                        showGameStageClearedToast(res.message);
-                      } else if (res.message && res.message.trim()) {
-                        neuroToast.success(res.message);
-                      }
+                      showGameStageClearedToast(res.message);
                       onAfterServerMutation?.();
                       router.refresh();
                     } catch (err) {

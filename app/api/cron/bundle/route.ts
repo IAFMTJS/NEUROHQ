@@ -73,7 +73,7 @@ export async function GET(request: Request) {
     extra.weekly = await runWeeklyCronExecution({
       supabase,
       userIdFilter,
-      prefetched,
+      prefetched: prefetch,
     });
     ran.push("weekly");
   }

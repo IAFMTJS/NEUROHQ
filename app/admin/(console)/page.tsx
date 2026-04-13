@@ -9,22 +9,25 @@ const shortcuts = [
     href: "/admin/diagnostics",
     title: "Diagnostiek",
     description: "Controleer platformstatistieken, activiteit en RPC-status.",
-    prefetch: false,
+    prefetch: false as const,
   },
   {
     href: "/admin/events",
     title: "Events",
     description: "Beheer live platform-events en zichtbaarheid in de app.",
+    prefetch: true,
   },
   {
     href: "/admin/games",
     title: "Games",
     description: "Stel games in, configureer regels en koppel quest-prijzen.",
+    prefetch: true,
   },
   {
     href: "/admin/quests",
     title: "Quest",
     description: "Bewerk campagnes, planning en inhoud voor quest-dagen.",
+    prefetch: true,
   },
 ] as const;
 

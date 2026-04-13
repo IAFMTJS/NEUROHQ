@@ -50,6 +50,7 @@ export function QuestCampaignModal({ open, onClose }: Props) {
   const [feedbackText, setFeedbackText] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
   const [paintingLightbox, setPaintingLightbox] = useState<{ src: string; label: string } | null>(null);
+  const [finaleOutcomeOpen, setFinaleOutcomeOpen] = useState(true);
 
   const refresh = useCallback(async () => {
     const q = await fetchQuest();
@@ -67,6 +68,7 @@ export function QuestCampaignModal({ open, onClose }: Props) {
       setFeedback(null);
       setFeedbackText(null);
       setPaintingLightbox(null);
+      setFinaleOutcomeOpen(true);
     }
   }, [open]);
 
@@ -228,7 +230,8 @@ export function QuestCampaignModal({ open, onClose }: Props) {
           {status.finaleOutcomeText ? (
             <details
               className="group rounded-xl border border-fuchsia-500/30 bg-fuchsia-950/20 px-4 py-3 open:bg-fuchsia-950/28"
-              defaultOpen
+              open={finaleOutcomeOpen}
+              onToggle={(e) => setFinaleOutcomeOpen(e.currentTarget.open)}
             >
               <summary className="cursor-pointer select-none text-sm font-semibold text-fuchsia-100/95">
                 Gevolgen van je keuze (volledige tekst)

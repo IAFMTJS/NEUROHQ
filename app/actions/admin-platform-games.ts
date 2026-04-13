@@ -55,9 +55,9 @@ export async function createPlatformGame(input: {
       await notifyUsersNewPlatformLaunch({
         kind: "game",
         launchId: inserted.id,
-        title: row.title,
-        startsAt: row.starts_at,
-        preview: row.body,
+        title: input.title.trim(),
+        startsAt: input.starts_at,
+        preview: input.body.trim(),
         url: "/dashboard",
       });
     } catch (err) {

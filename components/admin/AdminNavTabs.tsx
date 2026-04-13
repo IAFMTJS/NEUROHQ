@@ -4,11 +4,11 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 const tabs = [
-  { href: "/admin", label: "Home" },
+  { href: "/admin", label: "Home", prefetch: true },
   { href: "/admin/diagnostics", label: "Diagnostiek", prefetch: false },
-  { href: "/admin/events", label: "Events" },
-  { href: "/admin/games", label: "Games" },
-  { href: "/admin/quests", label: "Quest" },
+  { href: "/admin/events", label: "Events", prefetch: true },
+  { href: "/admin/games", label: "Games", prefetch: true },
+  { href: "/admin/quests", label: "Quest", prefetch: true },
 ] as const;
 
 export function AdminNavTabs() {

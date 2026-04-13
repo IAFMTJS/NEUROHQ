@@ -37,9 +37,9 @@ export async function createPlatformEvent(input: {
       await notifyUsersNewPlatformLaunch({
         kind: "event",
         launchId: inserted.id,
-        title: row.title,
-        startsAt: row.starts_at,
-        preview: row.body,
+        title: input.title.trim(),
+        startsAt: input.starts_at,
+        preview: input.body.trim(),
         url: "/dashboard",
       });
     } catch (err) {
