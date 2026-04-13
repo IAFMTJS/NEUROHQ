@@ -359,46 +359,6 @@ export function QuestCampaignModal({ open, onClose }: Props) {
             </div>
           ) : null}
 
-          {status.answerHistory.length > 0 ? (
-            <div className="relative overflow-hidden rounded-2xl border border-indigo-400/35 bg-gradient-to-br from-indigo-950/45 via-violet-950/30 to-[var(--bg-surface)]/20 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)] ring-1 ring-indigo-500/20">
-              <div
-                className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-indigo-400/70 to-transparent"
-                aria-hidden
-              />
-              <div
-                className="pointer-events-none absolute -right-16 top-0 h-32 w-32 rounded-full bg-indigo-500/15 blur-2xl"
-                aria-hidden
-              />
-              <div className="relative flex items-center gap-3 border-b border-white/[0.08] px-4 py-3.5">
-                <span
-                  className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-500/35 to-violet-900/50 text-lg shadow-[inset_0_1px_0_rgba(255,255,255,0.12)] ring-1 ring-indigo-400/40"
-                  aria-hidden
-                >
-                  📋
-                </span>
-                <div className="min-w-0 flex-1">
-                  <p className="text-[9px] font-black uppercase tracking-[0.2em] text-indigo-200/85">Quest-log</p>
-                  <p className="mt-0.5 text-sm font-bold tracking-tight text-[var(--text-primary)]">
-                    Jouw vragen en antwoorden
-                  </p>
-                  <p className="mt-0.5 text-[11px] text-[var(--text-muted)]">
-                    Alle dagen · nieuwste bovenaan · zelfde als op profiel → Events
-                  </p>
-                </div>
-                <span className="shrink-0 rounded-full bg-indigo-500/25 px-2.5 py-1 text-xs font-black tabular-nums text-indigo-50 ring-1 ring-indigo-400/40">
-                  {status.answerHistory.length}
-                </span>
-              </div>
-              <div className="relative bg-black/15 px-4 pb-4 pt-3">
-                <QuestAnswerHistoryList
-                  variant="eventsBoard"
-                  rows={status.answerHistory}
-                  listClassName="max-h-[min(22rem,50vh)]"
-                />
-              </div>
-            </div>
-          ) : null}
-
           {!status.completed && !status.needsFinaleChoice && !puzzle ? (
             <div className="rounded-xl border border-violet-400/30 bg-gradient-to-br from-violet-950/35 to-[var(--bg-surface)]/20 p-4 text-sm text-[var(--text-primary)] shadow-[inset_0_1px_0_rgba(255,255,255,0.05)] ring-1 ring-violet-500/15">
               <p>Je bent bij voor vandaag. Kom morgen terug voor de volgende dag.</p>
@@ -531,6 +491,45 @@ export function QuestCampaignModal({ open, onClose }: Props) {
                 </p>
               ) : null}
             </>
+          ) : null}
+          {status.answerHistory.length > 0 ? (
+            <div className="relative overflow-hidden rounded-2xl border border-indigo-400/35 bg-gradient-to-br from-indigo-950/45 via-violet-950/30 to-[var(--bg-surface)]/20 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)] ring-1 ring-indigo-500/20">
+              <div
+                className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-indigo-400/70 to-transparent"
+                aria-hidden
+              />
+              <div
+                className="pointer-events-none absolute -right-16 top-0 h-32 w-32 rounded-full bg-indigo-500/15 blur-2xl"
+                aria-hidden
+              />
+              <div className="relative flex items-center gap-3 border-b border-white/[0.08] px-4 py-3.5">
+                <span
+                  className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-500/35 to-violet-900/50 text-lg shadow-[inset_0_1px_0_rgba(255,255,255,0.12)] ring-1 ring-indigo-400/40"
+                  aria-hidden
+                >
+                  📋
+                </span>
+                <div className="min-w-0 flex-1">
+                  <p className="text-[9px] font-black uppercase tracking-[0.2em] text-indigo-200/85">Quest-log</p>
+                  <p className="mt-0.5 text-sm font-bold tracking-tight text-[var(--text-primary)]">
+                    Jouw vragen en antwoorden
+                  </p>
+                  <p className="mt-0.5 text-[11px] text-[var(--text-muted)]">
+                    Alle dagen · nieuwste bovenaan · zelfde als op profiel → Events
+                  </p>
+                </div>
+                <span className="shrink-0 rounded-full bg-indigo-500/25 px-2.5 py-1 text-xs font-black tabular-nums text-indigo-50 ring-1 ring-indigo-400/40">
+                  {status.answerHistory.length}
+                </span>
+              </div>
+              <div className="relative bg-black/15 px-4 pb-4 pt-3">
+                <QuestAnswerHistoryList
+                  variant="eventsBoard"
+                  rows={status.answerHistory}
+                  listClassName="max-h-[min(22rem,50vh)]"
+                />
+              </div>
+            </div>
           ) : null}
           </div>
         </div>
