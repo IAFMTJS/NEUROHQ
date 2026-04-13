@@ -246,7 +246,7 @@ export function FocusModal({ open, onClose, taskId, taskTitle, date: dateProp, t
             >
               Start missie
             </button>
-          )}
+          ) : null}
           <button
             type="button"
             onClick={handleComplete}
