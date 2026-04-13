@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { getAdminSessionUser } from "@/lib/admin-auth";
+import { notifyUsersNewPlatformLaunch } from "@/lib/platform-launch-push";
 import type { TablesInsert } from "@/types/database.types";
 
 async function requireAdmin() {
@@ -29,8 +30,22 @@ export async function createPlatformEvent(input: {
     active: input.active,
     updated_at: now,
   };
-  const { error } = await supabase.from("platform_events").insert(row);
+  const { data: inserted, error } = await supabase.from("platform_events").insert(row).select("id").single();
   if (error) throw new Error(error.message);
+  if (inserted?.id) {
+    try {
+      await notifyUsersNewPlatformLaunch({
+        kind: "event",
+        launchId: inserted.id,
+        title: row.title,
+        startsAt: row.starts_at,
+        preview: row.body,
+        url: "/dashboard",
+      });
+    } catch (err) {
+      console.warn("[push] event launch push failed", { eventId: inserted.id, err });
+    }
+  }
   revalidatePath("/admin/events");
 }
 

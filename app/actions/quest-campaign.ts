@@ -5,6 +5,7 @@ import { createClient, createServiceRoleClient } from "@/lib/supabase/server";
 import { getAdminSessionUser } from "@/lib/admin-auth";
 import { addXP } from "@/app/actions/xp";
 import { grantFlexPercentOfCapBonus } from "@/app/actions/flex-budget";
+import { notifyUsersNewPlatformLaunch } from "@/lib/platform-launch-push";
 import { todayDateString } from "@/lib/utils/timezone";
 import type { Json, TablesInsert } from "@/types/database.types";
 import { getDefaultDictatorQuestContent } from "@/lib/quests/default-dictator-content";
@@ -788,6 +789,18 @@ export async function adminUpsertQuestCampaign(input: {
     .single();
   if (error) throw new Error(error.message);
   if (!inserted?.id) throw new Error("Campagne aangemaakt maar geen id ontvangen.");
+  try {
+    await notifyUsersNewPlatformLaunch({
+      kind: "quest",
+      launchId: inserted.id as string,
+      title: base.title,
+      startsAt: base.starts_at,
+      preview: base.tagline,
+      url: "/dashboard",
+    });
+  } catch (err) {
+    console.warn("[push] quest launch push failed", { questId: inserted.id, err });
+  }
   revalidatePath("/admin/quests");
   revalidatePath("/admin/games");
   return { id: inserted.id as string };

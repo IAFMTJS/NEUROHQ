@@ -25,7 +25,6 @@ import { updateLastActiveDate } from "@/app/actions/behavior";
 import { useHQStore } from "@/lib/hq-store";
 import { usePeriodicBootstrapRefresh } from "@/lib/daily-bootstrap";
 import { useDCICGameState } from "@/lib/dcic/game-state-client";
-import { AlertsBell } from "@/components/alerts/AlertsBell";
 import { PERIODIC_SNAPSHOT_REFRESH_MINUTES } from "@/lib/client-refresh";
 import { MoodInterventionHost } from "@/components/mood/MoodInterventionHost";
 
@@ -193,7 +192,6 @@ export function DashboardLayoutClient({
               </a>
               <KeyboardShortcuts />
               <HelpFloatingIcon />
-              <AlertsBell />
               <div className="relative z-10 mx-auto flex min-h-0 max-h-[100dvh] w-full min-w-0 max-w-full flex-1 flex-col overflow-hidden bg-transparent md:min-h-[640px]">
                 {children}
               </div>

@@ -12,9 +12,6 @@ export const NEUROHQ_DAILY_SNAPSHOT_UPDATED = "neurohq-daily-snapshot-updated" a
  */
 export const NEUROHQ_BOOTSTRAP_READY_FOR_WARMUP = "neurohq-bootstrap-ready-for-warmup" as const;
 
-/** Dispatched when `user_alerts` may have changed (e.g. consumed pending XP); bell should refetch. */
-export const NEUROHQ_ALERTS_UPDATED = "neurohq-alerts-updated" as const;
-
 export type NeurohqDailySnapshotUpdatedDetail = {
   savedAt: number;
 };

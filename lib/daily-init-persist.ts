@@ -37,6 +37,7 @@ export async function readPersistedDailyInit(
     kind: "fresh",
     snapshot: row.snapshot,
     bootstrapToday: row.bootstrapToday,
+    bootstrapTodayEtag: row.bootstrapTodayEtag ?? null,
   };
 }
 
@@ -51,6 +52,7 @@ export async function persistDailyInitResult(userId: string, result: InitializeR
     savedAt: Date.now(),
     snapshot: result.snapshot,
     bootstrapToday: result.bootstrapToday,
+    bootstrapTodayEtag: result.bootstrapTodayEtag ?? null,
   };
   await putDailyInitRecord(row);
 }
@@ -82,6 +84,7 @@ export async function patchPersistedDailyFromBootstrap(bootstrap: BootstrapToday
       },
     },
     bootstrapToday: bootstrap,
+    bootstrapTodayEtag: row.bootstrapTodayEtag ?? null,
     savedAt,
   });
 }

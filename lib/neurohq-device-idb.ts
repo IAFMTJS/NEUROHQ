@@ -25,6 +25,7 @@ export type DailyInitPersistedRow = {
   savedAt: number;
   snapshot: DailySnapshot;
   bootstrapToday: BootstrapTodayResponse | null;
+  bootstrapTodayEtag?: string | null;
 };
 
 function openDb(): Promise<IDBDatabase> {

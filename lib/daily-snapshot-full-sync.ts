@@ -40,7 +40,7 @@ export function isBootstrapTodayPayloadUsable(b: BootstrapTodayResponse | null):
  * Retries when the server or SW returns 304/empty body (those responses are not parseable as JSON).
  */
 export async function fetchBootstrapTodayWithBody(): Promise<
-  | { ok: true; status: number; data: BootstrapTodayResponse }
+  | { ok: true; status: number; data: BootstrapTodayResponse; etag: string | null }
   | { ok: false; status: number; data: null }
 > {
   const opts: RequestInit = {
@@ -74,7 +74,7 @@ export async function fetchBootstrapTodayWithBody(): Promise<
 
   try {
     const data = JSON.parse(text) as BootstrapTodayResponse;
-    return { ok: true, status: res.status, data };
+    return { ok: true, status: res.status, data, etag: res.headers.get("etag") };
   } catch {
     return { ok: false, status: res.status, data: null };
   }
@@ -88,6 +88,11 @@ let lastBootstrapEtag: string | null = null;
 
 export function resetBootstrapMergeEtag(): void {
   lastBootstrapEtag = null;
+}
+
+export function seedBootstrapMergeEtag(etag: string | null | undefined): void {
+  if (!etag) return;
+  lastBootstrapEtag = etag;
 }
 
 /** Debounced bootstrap refetch (e.g. after local pending writes). */

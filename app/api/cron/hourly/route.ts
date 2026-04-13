@@ -19,13 +19,11 @@ import {
 } from "@/lib/behavioral-notifications";
 import {
   canSendBehavioralNotification,
-  insertBrainCheckinStreakMilestoneAlert,
   loadUserNotificationContextForUser,
   markBehavioralNotificationSent,
 } from "@/lib/behavioral-notification-server";
 import { applyPersonalityToPayload } from "@/lib/push-personality";
 import { PushCopyDedupe, parsePushCopyHistory } from "@/lib/push-copy-dedupe";
-import { dispatchPendingUserAlertPushes } from "@/lib/pending-alerts-push";
 import {
   cleanupStaleDailyPushClaim,
   deleteDailyPushClaim,
@@ -33,6 +31,11 @@ import {
 } from "@/lib/push-daily-claim";
 import { purgeQuestUserProgressAfterDays } from "@/lib/quests/cleanup";
 import { invalidateUserSnapshotMemoryCaches } from "@/lib/server/snapshot-memory-caches";
+import {
+  buildActivePlatformReminderPayload,
+  getActivePlatformLaunchForReminder,
+  notifyUsersPlatformLaunchStarted,
+} from "@/lib/platform-launch-push";
 
 /**
  * Hourly scheduler: on Vercel Hobby, invoke via GitHub Actions (`.github/workflows/cron-hourly.yml`), not `vercel.json`
@@ -61,6 +64,8 @@ const BRAIN_STATUS_REMINDER_MAX_LOCAL_HOUR = 12;
 
 /** Look for calendar events starting in the next 0–60 minutes so hourly cron can send one reminder per user. */
 const CALENDAR_REMINDER_WINDOW_MINUTES = 60;
+/** After this local hour, send one daily reminder for currently active event/game/quest. */
+const PLATFORM_ACTIVE_REMINDER_MIN_LOCAL_HOUR = 10;
 
 type HourlyUserRow = {
   id: string;
@@ -358,6 +363,16 @@ export async function GET(request: Request) {
     console.error("hourly cron: quest progress purge failed", e);
   }
 
+  let platformLaunchStartPushSent = 0;
+  try {
+    platformLaunchStartPushSent = await notifyUsersPlatformLaunchStarted(supabase, {
+      userIdFilter,
+      lookbackHours: 24,
+    });
+  } catch (e) {
+    console.error("hourly cron: platform launch start push failed", e);
+  }
+
   let usersQuery = supabase
     .from("users")
     .select("id, timezone, last_rollover_date, push_quiet_hours_start, push_quiet_hours_end, push_quote_enabled, push_quote_time, push_subscription_json");
@@ -405,6 +420,8 @@ export async function GET(request: Request) {
   let brainStatusRemindersSent = 0;
   let calendarReminderSent = 0;
   let achievementPushSent = 0;
+  let platformActiveReminderSent = 0;
+  const activePlatformLaunch = await getActivePlatformLaunchForReminder(supabase);
 
   const defaultUserPrefsForCycle = {
     emailRemindersEnabled: true,
@@ -653,6 +670,31 @@ export async function GET(request: Request) {
           );
           const ok = await sendPushToUser(supabase, u.id, payload);
           if (ok) calendarReminderSent++;
+        }
+      } catch {
+        // skip
+      }
+    }
+
+    if (
+      activePlatformLaunch &&
+      hour >= PLATFORM_ACTIVE_REMINDER_MIN_LOCAL_HOUR &&
+      userPrefs.pushRemindersEnabled &&
+      (u as { push_subscription_json?: unknown }).push_subscription_json &&
+      !isInQuietHours(hour, quietStart, quietEnd, localNow.minute)
+    ) {
+      try {
+        const alreadySentActiveReminder = await hasSentTriggerToday(
+          supabase,
+          u.id,
+          "platform-active-reminder",
+          tz,
+          todayStr
+        );
+        if (!alreadySentActiveReminder) {
+          const payload = buildActivePlatformReminderPayload(activePlatformLaunch);
+          const ok = await sendPushToUser(supabase, u.id, payload);
+          if (ok) platformActiveReminderSent++;
         }
       } catch {
         // skip
@@ -922,21 +964,8 @@ export async function GET(request: Request) {
               const result = buildBehavioralNotificationForContext(ctx, event);
               if (!result) continue;
 
-              if (
-                typeof event === "object" &&
-                event !== null &&
-                "type" in event &&
-                event.type === "brain_status_streak"
-              ) {
-                const ok = await insertBrainCheckinStreakMilestoneAlert(
-                  supabase,
-                  u.id,
-                  result,
-                  todayStr
-                );
-                if (!ok) continue;
-                achievementPushSent++;
-                break;
+              if (typeof event === "object" && event !== null && "type" in event && event.type === "brain_status_streak") {
+                continue;
               }
 
               const { canSend } = await canSendBehavioralNotification(
@@ -967,13 +996,6 @@ export async function GET(request: Request) {
     }
   }
 
-  let alertPushSent = 0;
-  try {
-    alertPushSent = await dispatchPendingUserAlertPushes(supabase);
-  } catch {
-    // non-fatal
-  }
-
   return NextResponse.json({
     ok: true,
     job: "hourly",
@@ -984,8 +1006,9 @@ export async function GET(request: Request) {
     eveningPushSent,
     brainStatusRemindersSent,
     calendarReminderSent,
+    platformActiveReminderSent,
     achievementPushSent,
-    alertPushSent,
+    platformLaunchStartPushSent,
     questProgressPurged,
     usersChecked: users?.length ?? 0,
     runFullCycle,

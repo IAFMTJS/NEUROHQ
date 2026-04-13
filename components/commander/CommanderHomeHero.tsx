@@ -15,7 +15,6 @@ import {
   bridgeMissionEyebrowStyle,
 } from "./bridgeMissionCardClasses";
 import { useHQStore } from "@/lib/hq-store";
-import { scale1To10ToPct } from "@/lib/dashboard-utils";
 import { trackEvent } from "@/app/actions/analytics-events";
 
 type Props = {
@@ -62,16 +61,12 @@ export function CommanderHomeHero({
   missionCtaAction = null,
   mainMissionSlot = null,
 }: Props) {
-  const todayDailyState = useHQStore((s) => s.todayDailyState);
   const dcicMode = useHQStore((s) => s.gameState?.mode?.current ?? "focus");
-  const effectiveEnergyPct =
-    typeof todayDailyState?.energy === "number" ? scale1To10ToPct(todayDailyState.energy as number) : energyPct;
-  const effectiveFocusPct =
-    typeof todayDailyState?.focus === "number" ? scale1To10ToPct(todayDailyState.focus as number) : focusPct;
-  const effectiveLoadPct =
-    typeof todayDailyState?.sensory_load === "number"
-      ? scale1To10ToPct(todayDailyState.sensory_load as number)
-      : loadPct;
+  // Display-only values: this component should render the resolved dashboard percentages as-is.
+  // Source-of-truth lives in DashboardClientShell (pending local write -> store -> snapshot fallback).
+  const effectiveEnergyPct = energyPct;
+  const effectiveFocusPct = focusPct;
+  const effectiveLoadPct = loadPct;
 
   const energyLow = effectiveEnergyPct < 20;
   const focusLow = effectiveFocusPct < 20;
@@ -117,14 +112,6 @@ export function CommanderHomeHero({
               energyPct: effectiveEnergyPct,
               focusPct: effectiveFocusPct,
               loadPct: effectiveLoadPct,
-              energy1to10:
-                typeof todayDailyState?.energy === "number" ? (todayDailyState.energy as number) : undefined,
-              focus1to10:
-                typeof todayDailyState?.focus === "number" ? (todayDailyState.focus as number) : undefined,
-              load1to10:
-                typeof todayDailyState?.sensory_load === "number"
-                  ? (todayDailyState.sensory_load as number)
-                  : undefined,
             }}
           >
             {mascotStack}

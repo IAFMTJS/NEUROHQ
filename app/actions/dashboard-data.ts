@@ -48,7 +48,6 @@ import { applyZeroCompletionRollover } from "@/app/actions/daily-obligation";
 import { deriveUnifiedDecision } from "@/lib/unified-decision-engine";
 import { loadMissionsPipeline } from "@/lib/missions/load-missions-pipeline";
 import { buildMissionsSummaryForDecision } from "@/lib/missions/missions-summary-for-decision";
-import { syncInboxAlertsFromDashboardCritical } from "@/app/actions/alerts";
 import {
   readDashboardMemoryCache,
   writeDashboardMemoryCache,
@@ -407,12 +406,6 @@ async function buildCriticalPayload(ctx: TodayContext, shared: DashboardCrossSli
     unifiedDecision,
     missionsPipeline,
   };
-
-  try {
-    await syncInboxAlertsFromDashboardCritical(critical);
-  } catch (err) {
-    console.error("[syncInboxAlertsFromDashboardCritical]", err);
-  }
 
   return critical;
 }

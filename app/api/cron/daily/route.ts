@@ -71,13 +71,15 @@ export async function GET(request: Request) {
         .eq("user_id", uid)
         .eq("due_date", local.date)
         .eq("completed", false);
-      const maxCarry = Math.max(0, ...(todaysIncomplete ?? []).map((t) => t.carry_over_count ?? 0));
-      if (maxCarry >= 3) {
+      const carriedOverTasksCount = (todaysIncomplete ?? []).filter(
+        (t) => (t.carry_over_count ?? 0) > 0
+      ).length;
+      if (carriedOverTasksCount >= 3) {
         try {
           const ctx = await loadUserNotificationContextForUser(supabase, uid);
           const basePayload = {
             title: "NEUROHQ",
-            body: `${maxCarry} task(s) carried over. Pick one to focus on.`,
+            body: `${carriedOverTasksCount} task(s) carried over. Pick one to focus on.`,
             tag: "avoidance-alert",
             url: "/dashboard",
             priority: "high" as const,

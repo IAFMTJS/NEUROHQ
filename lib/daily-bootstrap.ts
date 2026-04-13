@@ -132,6 +132,7 @@ export function usePeriodicBootstrapRefresh(intervalMinutes = PERIODIC_SNAPSHOT_
     let stopped = false;
     let inFlight = false;
     let lastRunAt = 0;
+    const EVENT_REFRESH_COOLDOWN_MS = 30 * 60 * 1000;
 
     const runOnce = async () => {
       if (stopped || inFlight) return;
@@ -161,14 +162,17 @@ export function usePeriodicBootstrapRefresh(intervalMinutes = PERIODIC_SNAPSHOT_
 
     const kickoffId = window.setTimeout(() => void runOnce(), 4_000);
 
-    const onVisible = () => {
-      if (document.visibilityState === "visible") void runOnce();
+    const runEventRefresh = () => {
+      const now = Date.now();
+      if (now - lastRunAt < EVENT_REFRESH_COOLDOWN_MS) return;
+      void runOnce();
     };
-    const onFocus = () => void runOnce();
-    const onOnline = () => void runOnce();
+    const onVisible = () => {
+      if (document.visibilityState === "visible") runEventRefresh();
+    };
+    const onOnline = () => runEventRefresh();
 
     document.addEventListener("visibilitychange", onVisible);
-    window.addEventListener("focus", onFocus);
     window.addEventListener("online", onOnline);
 
     schedule();
@@ -176,7 +180,6 @@ export function usePeriodicBootstrapRefresh(intervalMinutes = PERIODIC_SNAPSHOT_
       stopped = true;
       window.clearTimeout(kickoffId);
       document.removeEventListener("visibilitychange", onVisible);
-      window.removeEventListener("focus", onFocus);
       window.removeEventListener("online", onOnline);
       if (timer !== undefined) {
         window.clearTimeout(timer);

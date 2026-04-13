@@ -13,6 +13,7 @@ import { mergeBootstrapTodayIntoDailySnapshot } from "@/lib/bootstrap-today-mapp
 
 /** Set during `initializeDailySystem` when `fetchMissions` parses `/api/bootstrap/today`. */
 let bootstrapTodayCapture: BootstrapTodayResponse | null = null;
+let bootstrapTodayEtagCapture: string | null = null;
 
 /** Last bootstrap HTTP status when init fetch failed (for error copy). Cleared on success start. */
 let lastBootstrapInitFetchStatus: number | null = null;
@@ -40,6 +41,8 @@ export type InitializeResult = {
   snapshot: DailySnapshot;
   /** Raw `/api/bootstrap/today` JSON when the missions step succeeded (seeds TanStack Query). */
   bootstrapToday: BootstrapTodayResponse | null;
+  /** Last bootstrap ETag captured during init, reused by background merge for 304s. */
+  bootstrapTodayEtag?: string | null;
 };
 
 /** Ordered bootstrap work (single source of truth for loader UI + progress). */
@@ -96,6 +99,7 @@ async function yieldToBrowser(onProgress?: (p: PreloadProgress) => void): Promis
  */
 export async function initializeDailySystem(onProgress?: (p: PreloadProgress) => void): Promise<InitializeResult> {
   bootstrapTodayCapture = null;
+  bootstrapTodayEtagCapture = null;
   lastBootstrapInitFetchStatus = null;
   const today = getTodayKey();
   let snapshot: DailySnapshot = {
@@ -138,6 +142,7 @@ export async function initializeDailySystem(onProgress?: (p: PreloadProgress) =>
   }
 
   const bootstrapToday = bootstrapTodayCapture;
+  const bootstrapTodayEtag = bootstrapTodayEtagCapture;
   const hasMissionsPayload =
     isBootstrapTodayPayloadUsable(bootstrapToday) ||
     snapshot.missions != null ||
@@ -181,8 +186,9 @@ export async function initializeDailySystem(onProgress?: (p: PreloadProgress) =>
   };
 
   bootstrapTodayCapture = null;
+  bootstrapTodayEtagCapture = null;
 
-  return { kind: "fresh", snapshot: snapshotOut, bootstrapToday };
+  return { kind: "fresh", snapshot: snapshotOut, bootstrapToday, bootstrapTodayEtag };
 }
 
 async function runStep(snapshot: DailySnapshot, step: PreloadStepId): Promise<DailySnapshot> {
@@ -213,7 +219,12 @@ async function runStep(snapshot: DailySnapshot, step: PreloadStepId): Promise<Da
             try {
               const retryData = (await retryRes.json()) as BootstrapTodayResponse;
               if (isBootstrapTodayPayloadUsable(retryData)) {
-                boot = { ok: true, status: retryRes.status, data: retryData };
+                boot = {
+                  ok: true,
+                  status: retryRes.status,
+                  data: retryData,
+                  etag: retryRes.headers.get("etag"),
+                };
                 lastBootstrapInitFetchStatus = null;
               } else {
                 boot = { ok: false, status: retryRes.status, data: null };
@@ -251,7 +262,12 @@ async function runStep(snapshot: DailySnapshot, step: PreloadStepId): Promise<Da
               try {
                 const authData = (await authRetryRes.json()) as BootstrapTodayResponse;
                 if (isBootstrapTodayPayloadUsable(authData)) {
-                  boot = { ok: true, status: authRetryRes.status, data: authData };
+                  boot = {
+                    ok: true,
+                    status: authRetryRes.status,
+                    data: authData,
+                    etag: authRetryRes.headers.get("etag"),
+                  };
                   lastBootstrapInitFetchStatus = null;
                 } else {
                   boot = { ok: false, status: authRetryRes.status, data: null };
@@ -310,6 +326,7 @@ async function runStep(snapshot: DailySnapshot, step: PreloadStepId): Promise<Da
                   : {}),
               };
               bootstrapTodayCapture = fallbackBootstrap;
+              bootstrapTodayEtagCapture = null;
               return mergeBootstrapTodayIntoDailySnapshot(snapshot, fallbackBootstrap);
             }
           } catch {
@@ -357,6 +374,7 @@ async function runStep(snapshot: DailySnapshot, step: PreloadStepId): Promise<Da
           } | null;
         };
         bootstrapTodayCapture = data as BootstrapTodayResponse;
+        bootstrapTodayEtagCapture = boot.etag;
         const dateStr = (data.date as string) ?? snapshot.date;
         const merged = mergeBootstrapTodayIntoDailySnapshot(snapshot, data as BootstrapTodayResponse);
 

@@ -12,6 +12,8 @@ import {
   type PreloadStepId,
   type InitializeResult,
 } from "@/lib/daily-initialize";
+import { mergeDailySnapshotFromNetwork, seedBootstrapMergeEtag } from "@/lib/daily-snapshot-full-sync";
+import { applyBootstrapTodayToApp } from "@/lib/daily-bootstrap";
 import { requestDurableStorage } from "@/lib/storage-persist";
 import { LoadingMascotHero } from "@/components/loading/LoadingMascotHero";
 
@@ -113,8 +115,17 @@ export function BootstrapLoader({ onReady }: Props) {
           requestDurableStorage();
           const cached = await readPersistedDailyInit(userId, dayKey);
           if (cached) {
+            seedBootstrapMergeEtag(cached.bootstrapTodayEtag);
             setSnapshot(cached.snapshot);
             onReady(cached);
+            // Local-first startup: show device cache instantly, then silently revalidate once.
+            void (async () => {
+              await new Promise((r) => setTimeout(r, 600));
+              if (cancelled) return;
+              const latestBootstrap = await mergeDailySnapshotFromNetwork();
+              if (cancelled || !latestBootstrap) return;
+              applyBootstrapTodayToApp(latestBootstrap);
+            })();
             return;
           }
         }
@@ -128,6 +139,7 @@ export function BootstrapLoader({ onReady }: Props) {
         if (persistUserId) {
           await persistDailyInitResult(persistUserId, result).catch(() => {});
         }
+        seedBootstrapMergeEtag(result.bootstrapTodayEtag);
         setSnapshot(result.snapshot);
         onReady(result);
       } catch (e) {
@@ -153,6 +165,7 @@ export function BootstrapLoader({ onReady }: Props) {
             if (uid) {
               await persistDailyInitResult(uid, result).catch(() => {});
             }
+            seedBootstrapMergeEtag(result.bootstrapTodayEtag);
             setSnapshot(result.snapshot);
             onReady(result);
             return;

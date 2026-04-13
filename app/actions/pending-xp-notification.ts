@@ -1,6 +1,5 @@
 "use server";
 
-import { emitUserAlert } from "@/app/actions/alerts";
 import { createClient } from "@/lib/supabase/server";
 
 export type PendingXpSource = { label: string; xp: number };
@@ -47,31 +46,6 @@ export async function getAndClearPendingXpNotification(): Promise<PendingXpNotif
 
     const totalXp = row.total_xp ?? 0;
     const forDate = row.for_date ?? "";
-    if (totalXp > 0) {
-      const lines = sources.length
-        ? sources.map((s) => `${s.label}: +${s.xp} XP`).join(" · ")
-        : `+${totalXp} XP`;
-      const body =
-        forDate.length > 0
-          ? `${lines} — Totaal +${totalXp} XP`.slice(0, 2000)
-          : `XP verdiend: ${lines} — Totaal +${totalXp} XP`.slice(0, 2000);
-      const title =
-        forDate.length > 0 ? `Verdiend (${forDate})` : "XP verdiend";
-      const tag = `hq-pending-xp-${forDate || "unknown"}`;
-      try {
-        await emitUserAlert({
-          title: title.slice(0, 200),
-          body,
-          severity: "info",
-          linkPath: "/profile",
-          sendPush: false,
-          pushTag: tag.slice(0, 120),
-        });
-      } catch {
-        // Bell is best-effort; toast still shows from return value
-      }
-    }
-
     return {
       totalXp,
       sources,
