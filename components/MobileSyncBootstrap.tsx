@@ -57,11 +57,15 @@ export function MobileSyncBootstrap() {
       void flushOutboxQueue();
       void publishSyncMetrics();
     };
+    const runOnVisible = () => {
+      if (document.visibilityState !== "visible") return;
+      run();
+    };
 
     run();
     timer = setInterval(run, 60_000);
     window.addEventListener("online", run);
-    document.addEventListener("visibilitychange", run);
+    document.addEventListener("visibilitychange", runOnVisible);
 
     let appListenerRemove: (() => void) | undefined;
     if (isNativeCapacitorRuntime()) {
@@ -81,7 +85,7 @@ export function MobileSyncBootstrap() {
 
     return () => {
       window.removeEventListener("online", run);
-      document.removeEventListener("visibilitychange", run);
+      document.removeEventListener("visibilitychange", runOnVisible);
       if (timer) clearInterval(timer);
       appListenerRemove?.();
     };

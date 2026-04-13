@@ -10,6 +10,7 @@ type DashboardPayload = {
 } | null;
 
 const DASHBOARD_STALE_MS = 20_000;
+const DASHBOARD_MIN_SERVER_REFETCH_GAP_MS = 5 * 60_000;
 
 const CACHE_KEY = "dashboard:all";
 
@@ -58,12 +59,23 @@ export async function getDashboardPayloadLocalFirst(
   const cached = await getEntityCacheRow(CACHE_KEY);
   const hasCache = cached != null;
   const cacheFresh = hasCache && cached.staleAt > now;
+  const cacheInBackoffWindow =
+    hasCache &&
+    now - Math.max(0, Number(cached.fetchedAt || 0)) < DASHBOARD_MIN_SERVER_REFETCH_GAP_MS;
   if (hasCache && (cacheFresh || options?.preferCache)) {
     if (cacheFresh) recordReadFresh();
     else recordReadStale();
     return {
       payload: (cached.payload ?? null) as DashboardPayload,
       stale: !cacheFresh,
+      source: "cache",
+    };
+  }
+  if (cacheInBackoffWindow) {
+    recordReadStale();
+    return {
+      payload: (cached.payload ?? null) as DashboardPayload,
+      stale: true,
       source: "cache",
     };
   }

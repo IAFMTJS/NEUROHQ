@@ -8,6 +8,7 @@ import { isSupabaseFirstMobileEnabled } from "@/lib/mobile/feature-flags";
 import { recordReadFresh, recordReadStale } from "@/lib/mobile/metrics";
 
 const TASKS_STALE_MS = 45_000;
+const TASKS_MIN_SERVER_REFETCH_GAP_MS = 5 * 60_000;
 
 type TasksRepositoryResult = {
   tasks: Task[];
@@ -94,6 +95,9 @@ export async function getTasksForDateLocalFirst(
   const now = Date.now();
   const canUseCache = cached != null && Array.isArray(cached.payload);
   const cacheFresh = canUseCache && cached.staleAt > now;
+  const cacheInBackoffWindow =
+    canUseCache &&
+    now - Math.max(0, Number(cached.fetchedAt || 0)) < TASKS_MIN_SERVER_REFETCH_GAP_MS;
 
   if (canUseCache && (cacheFresh || options?.preferCache)) {
     if (cacheFresh) recordReadFresh();
@@ -101,6 +105,14 @@ export async function getTasksForDateLocalFirst(
     return {
       tasks: cached.payload as Task[],
       stale: !cacheFresh,
+      source: "cache",
+    };
+  }
+  if (cacheInBackoffWindow) {
+    recordReadStale();
+    return {
+      tasks: cached.payload as Task[],
+      stale: true,
       source: "cache",
     };
   }

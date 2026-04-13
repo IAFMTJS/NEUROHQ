@@ -19,6 +19,7 @@ export type BudgetContextPayload = {
 } | null;
 
 const BUDGET_STALE_MS = 30_000;
+const BUDGET_MIN_SERVER_REFETCH_GAP_MS = 5 * 60_000;
 
 function cacheKey(): string {
   return "budget:context";
@@ -67,12 +68,23 @@ export async function getBudgetContextLocalFirst(
   const now = Date.now();
   const hasCache = cached != null;
   const cacheFresh = hasCache && cached.staleAt > now;
+  const cacheInBackoffWindow =
+    hasCache &&
+    now - Math.max(0, Number(cached.fetchedAt || 0)) < BUDGET_MIN_SERVER_REFETCH_GAP_MS;
   if (hasCache && (cacheFresh || options?.preferCache)) {
     if (cacheFresh) recordReadFresh();
     else recordReadStale();
     return {
       budget: (cached.payload ?? null) as BudgetContextPayload,
       stale: !cacheFresh,
+      source: "cache",
+    };
+  }
+  if (cacheInBackoffWindow) {
+    recordReadStale();
+    return {
+      budget: (cached.payload ?? null) as BudgetContextPayload,
+      stale: true,
       source: "cache",
     };
   }
