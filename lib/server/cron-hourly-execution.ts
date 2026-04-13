@@ -406,40 +406,8 @@ export async function runHourlyCronExecution(input: RunHourlyCronInput): Promise
   let platformActiveReminderSent = 0;
   const activePlatformLaunch = await getActivePlatformLaunchForReminder(supabase);
 
-  const defaultUserPrefsForCycle = {
-    emailRemindersEnabled: true,
-    pushRemindersEnabled: true,
-    pushMorningEnabled: true,
-    pushEveningEnabled: true,
-  };
-  const nowForFullCycle = new Date();
-  const runFullCycle =
-    forceHour !== undefined ||
-    userIdFilter != null ||
-    (users ?? []).some((u) => {
-      const tzRaw = (u.timezone as string | null) ?? null;
-      const tz = tzRaw && tzRaw.trim() ? tzRaw : null;
-      const localNow = tz
-        ? getLocalDateTimeParts(tz, nowForFullCycle)
-        : {
-            date: nowForFullCycle.toISOString().slice(0, 10),
-            hour: nowForFullCycle.getUTCHours(),
-            minute: nowForFullCycle.getUTCMinutes(),
-          };
-      const h = forceHour !== undefined ? forceHour : localNow.hour;
-      const p = prefsByUser.get(u.id) ?? defaultUserPrefsForCycle;
-      const quietStart = u.push_quiet_hours_start ? String(u.push_quiet_hours_start).slice(0, 5) : null;
-      const quietEnd = u.push_quiet_hours_end ? String(u.push_quiet_hours_end).slice(0, 5) : null;
-      return userNeedsFullHourlyCycle(
-        u as HourlyUserRow,
-        h,
-        localNow.date,
-        localNow.minute,
-        p,
-        quietStart,
-        quietEnd
-      );
-    });
+  /** Replaces a global pre-scan over all users (incompatible with paged user loads). */
+  let anyUserFullCycle = false;
 
   for (const u of users ?? []) {
     const tzRaw = (u.timezone as string | null) ?? null;
@@ -462,7 +430,21 @@ export async function runHourlyCronExecution(input: RunHourlyCronInput): Promise
 
     const pushDedupe = new PushCopyDedupe(todayStr, parsePushCopyHistory(pushCopyHistoryByUser.get(u.id)), 7);
 
-    if (runFullCycle) {
+    const userFull =
+      forceHour !== undefined ||
+      userIdFilter != null ||
+      userNeedsFullHourlyCycle(
+        u as HourlyUserRow,
+        hour,
+        todayStr,
+        localNow.minute,
+        userPrefs,
+        quietStart,
+        quietEnd
+      );
+    if (userFull) anyUserFullCycle = true;
+
+    if (userFull) {
     if (hour === 0 && u.last_rollover_date !== todayStr) {
       const yesterdayStr = yesterdayDate(todayStr);
       const { data: tasks } = await supabase
@@ -684,7 +666,7 @@ export async function runHourlyCronExecution(input: RunHourlyCronInput): Promise
       }
     }
 
-    if (runFullCycle) {
+    if (userFull) {
     // Brain status reminder: not before 08:00 local; respect quiet hours (try again a later hour);
     // at most one `brain_status_reminder` push per local calendar day.
     if (
@@ -994,6 +976,6 @@ export async function runHourlyCronExecution(input: RunHourlyCronInput): Promise
     platformLaunchStartPushSent,
     questProgressPurged,
     usersChecked: users?.length ?? 0,
-    runFullCycle,
+    runFullCycle: anyUserFullCycle || forceHour !== undefined || userIdFilter != null,
   };
 }

@@ -16,7 +16,10 @@ import {
   runUserActionsAuditRetention,
   runXpEventsRetention,
 } from "@/lib/server/daily-state-retention";
-import type { CronBundleUserRow } from "@/lib/server/cron-user-prefs-bundle";
+import {
+  fetchAllCronUsersForSelect,
+  type CronBundleUserRow,
+} from "@/lib/server/cron-user-prefs-bundle";
 
 type AdminClient = ReturnType<typeof createAdminClient>;
 
@@ -40,12 +43,11 @@ export async function runDailyCronExecution(input: RunDailyCronInput): Promise<R
   if (prefetchedUsers != null) {
     users = prefetchedUsers;
   } else {
-    let usersAllQuery = supabase
-      .from("users")
-      .select("id, timezone, push_quiet_hours_start, push_quiet_hours_end");
-    if (userIdFilter) usersAllQuery = usersAllQuery.eq("id", userIdFilter);
-    const { data: usersAll } = await usersAllQuery;
-    users = (usersAll ?? []) as CronBundleUserRow[];
+    users = await fetchAllCronUsersForSelect(
+      supabase,
+      "id, timezone, push_quiet_hours_start, push_quiet_hours_end",
+      userIdFilter
+    );
   }
 
   const userMetaById = new Map(

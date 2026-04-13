@@ -8,7 +8,11 @@ import type { PersonalityMode } from "@/lib/behavioral-notifications";
 import { getLocalDateHour, isInQuietHours } from "@/lib/utils/timezone";
 import { isHighSensoryDayForUser } from "@/lib/mode-admin";
 import { runStrategyGrowthWeeklyCron } from "@/lib/strategy-growth-cron";
-import type { CronBundleUserRow, CronUserPrefsBundle } from "@/lib/server/cron-user-prefs-bundle";
+import {
+  loadCronUserPrefsBundle,
+  type CronBundleUserRow,
+  type CronUserPrefsBundle,
+} from "@/lib/server/cron-user-prefs-bundle";
 
 type AdminClient = ReturnType<typeof createAdminClient>;
 
@@ -42,27 +46,13 @@ export async function runWeeklyCronExecution(input: RunWeeklyCronInput): Promise
       pushCopyHistoryByUser.set(id, h);
     }
   } else {
-    let usersQuery = supabase
-      .from("users")
-      .select("id, timezone, push_quiet_hours_start, push_quiet_hours_end");
-    if (userIdFilter) usersQuery = usersQuery.eq("id", userIdFilter);
-    const { data: usersRaw } = await usersQuery;
-    users = (usersRaw ?? []) as CronBundleUserRow[];
-
-    const { data: prefs, error: prefsError } = await supabase
-      .from("user_preferences")
-      .select("user_id, push_personality_mode, push_copy_history");
-    if (!prefsError && prefs?.length) {
-      for (const pref of prefs) {
-        const mode = (pref as { push_personality_mode?: PersonalityMode | null }).push_personality_mode ?? "auto";
-        prefsByUser.set(pref.user_id, {
-          personalityMode: mode,
-        });
-        pushCopyHistoryByUser.set(
-          pref.user_id,
-          parsePushCopyHistory((pref as { push_copy_history?: unknown }).push_copy_history)
-        );
-      }
+    const b = await loadCronUserPrefsBundle(supabase, userIdFilter);
+    users = b.users;
+    for (const [id, p] of b.prefsByUser) {
+      prefsByUser.set(id, { personalityMode: p.personalityMode });
+    }
+    for (const [id, h] of b.pushCopyHistoryByUser) {
+      pushCopyHistoryByUser.set(id, h);
     }
   }
 

@@ -25,8 +25,8 @@ function hourlyProxyRequest(original: Request): Request {
 
 /**
  * Single hourly tick: runs `/api/cron/hourly` work plus scheduled daily / weekly / … jobs
- * when UTC matches the former GitHub schedules. One `users` + `user_preferences` prefetch
- * per invocation for hourly + daily + weekly (when those run).
+ * when UTC matches the former GitHub schedules. Paged `users` + scoped `user_preferences`
+ * prefetch per invocation for hourly + daily + weekly (when those run).
  *
  * GitHub: point `cron-hourly.yml` at this path; disable scheduled runs on the split workflows
  * to avoid duplicate jobs.

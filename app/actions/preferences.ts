@@ -37,11 +37,9 @@ export const getUserPreferences = cache(async (): Promise<UserPreferences | null
       "theme, color_mode, selected_emotion, compact_ui, reduced_motion, light_ui, simplified_content, auto_master_missions, usual_days_off, day_off_mode, email_reminders_enabled, push_reminders_enabled, push_morning_enabled, push_evening_enabled, push_weekly_learning_enabled, push_personality_mode, display_callsign, hq_headline, greeting_locale, ui_sound_enabled, ui_speech_enabled, updated_at",
     )
     .eq("user_id", user.id)
-    .single();
+    .maybeSingle();
 
   if (error) {
-    // No row yet → let caller fall back to defaults.
-    if (error.code === "PGRST116") return null;
     // Column not found (older DB without migration 059): fall back to legacy shape.
     const msg = error.message ?? "";
     if (
@@ -66,9 +64,8 @@ export const getUserPreferences = cache(async (): Promise<UserPreferences | null
         .from("user_preferences")
         .select("theme, color_mode, selected_emotion, compact_ui, reduced_motion, auto_master_missions, updated_at")
         .eq("user_id", user.id)
-        .single();
+        .maybeSingle();
       if (legacyError) {
-        if (legacyError.code === "PGRST116") return null;
         throw new Error(legacyError.message);
       }
       if (!legacyData) return null;
@@ -99,6 +96,7 @@ export const getUserPreferences = cache(async (): Promise<UserPreferences | null
     }
     throw new Error(error.message);
   }
+  // No row yet → caller uses defaults (maybeSingle returns 200 + null, not 406).
   if (!data) return null;
   // Cast to a loose row type so TS doesn't treat it as a SelectQueryError when
   // Supabase schema types lag behind new columns (usual_days_off, day_off_mode).

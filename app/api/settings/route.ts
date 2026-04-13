@@ -18,7 +18,7 @@ export async function GET(request: Request) {
 
   if (mode === "meta") {
     const [{ data: prefRow }, { data: userTs }] = await Promise.all([
-      supabase.from("user_preferences").select("updated_at").eq("user_id", user.id).single(),
+      supabase.from("user_preferences").select("updated_at").eq("user_id", user.id).maybeSingle(),
       supabase.from("users").select("updated_at").eq("id", user.id).single(),
     ]);
     return NextResponse.json({
