@@ -18,7 +18,6 @@ type Props = {
   initialPushRemindersEnabled?: boolean;
   initialPushMorningEnabled?: boolean;
   initialPushEveningEnabled?: boolean;
-  initialPushWeeklyLearningEnabled?: boolean;
   initialPushPersonalityMode?: "auto" | "stoic" | "friendly" | "coach" | "drill" | "chaos";
 };
 
@@ -29,7 +28,6 @@ export function SettingsPush({
   initialPushRemindersEnabled = true,
   initialPushMorningEnabled = true,
   initialPushEveningEnabled = true,
-  initialPushWeeklyLearningEnabled = true,
   initialPushPersonalityMode = "auto",
 }: Props) {
   const [status, setStatus] = useState<"idle" | "loading" | "enabled" | "unsupported" | "denied" | "error">(
@@ -46,7 +44,6 @@ export function SettingsPush({
   const [pushRemindersEnabled, setPushRemindersEnabled] = useState(initialPushRemindersEnabled);
   const [pushMorningEnabled, setPushMorningEnabled] = useState(initialPushMorningEnabled);
   const [pushEveningEnabled, setPushEveningEnabled] = useState(initialPushEveningEnabled);
-  const [pushWeeklyLearningEnabled, setPushWeeklyLearningEnabled] = useState(initialPushWeeklyLearningEnabled);
   const [pushPersonalityMode, setPushPersonalityMode] = useState<
     "auto" | "stoic" | "friendly" | "coach" | "drill" | "chaos"
   >(initialPushPersonalityMode);
@@ -56,7 +53,6 @@ export function SettingsPush({
     push_reminders_enabled?: boolean;
     push_morning_enabled?: boolean;
     push_evening_enabled?: boolean;
-    push_weekly_learning_enabled?: boolean;
     push_personality_mode?: "auto" | "stoic" | "friendly" | "coach" | "drill" | "chaos";
   }) => {
     startPrefsTransition(async () => {
@@ -88,7 +84,7 @@ export function SettingsPush({
       }
       setSubscribed(true);
       setStatus("enabled");
-      setMessage("Push is connected. Morning, evening, and weekly reminders follow your settings below.");
+      setMessage("Push is connected. Morning and evening reminders follow your settings below.");
     } catch (e) {
       setStatus("error");
       setMessage(e instanceof Error ? e.message : "Something went wrong.");
@@ -114,14 +110,14 @@ export function SettingsPush({
       <div className="border-b border-[var(--card-border)] px-4 py-3">
         <h2 className="text-base font-semibold text-[var(--text-primary)]">Push reminders</h2>
         <p className="mt-0.5 text-xs text-[var(--text-muted)]">
-          Scheduled push reminders default to on. The app can ask for browser permission and then send morning, evening, and weekly reminders plus existing push alerts.
+          Scheduled push reminders default to on. The app can ask for browser permission and then send morning and evening reminders plus existing push alerts.
         </p>
       </div>
       <div className="space-y-4 p-4">
         <div className="flex items-center justify-between gap-4">
           <div>
             <p className="text-sm font-medium text-[var(--text-primary)]">Scheduled push reminders</p>
-            <p className="text-xs text-[var(--text-muted)]">Master switch for morning, evening, and weekly learning reminders.</p>
+            <p className="text-xs text-[var(--text-muted)]">Master switch for morning and evening reminders.</p>
           </div>
           <button
             type="button"
@@ -143,7 +139,7 @@ export function SettingsPush({
           </button>
         </div>
 
-        <div className="grid gap-3 sm:grid-cols-3">
+        <div className="grid gap-3 sm:grid-cols-2">
           {[
             {
               label: "Morning push",
@@ -156,12 +152,6 @@ export function SettingsPush({
               checked: pushEveningEnabled,
               setter: setPushEveningEnabled,
               key: "push_evening_enabled" as const,
-            },
-            {
-              label: "Weekly learning push",
-              checked: pushWeeklyLearningEnabled,
-              setter: setPushWeeklyLearningEnabled,
-              key: "push_weekly_learning_enabled" as const,
             },
           ].map((item) => (
             <button
@@ -188,7 +178,7 @@ export function SettingsPush({
         <div className="space-y-2">
           <p className="text-sm font-medium text-[var(--text-primary)]">Notification personality</p>
           <p className="text-xs text-[var(--text-muted)]">
-            How the system talks to you in <strong>all</strong> push notifications: daily quote, calendar, morning/evening reminders, learning, and behaviour-based nudges.
+            How the system talks to you in <strong>all</strong> push notifications: daily quote, calendar, morning/evening reminders, and behaviour-based nudges.
           </p>
           <div className="mt-1 flex flex-wrap gap-2">
             {[

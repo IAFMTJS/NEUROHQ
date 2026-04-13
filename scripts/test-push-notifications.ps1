@@ -53,10 +53,8 @@ $allTypes = @(
     "morning-reminder",
     "evening-reminder",
     "brain-status-reminder",
-    "weekly-learning",
     "savings-alert",
     "shutdown-reminder",
-    "freeze-reminder",
     "avoidance-alert",
     "reengage",
     "streak-growth",
@@ -67,8 +65,7 @@ $allTypes = @(
     "strategy-check-in-firm",
     "strategy-quarter-incomplete",
     "growth-focus-unset",
-    "strategy-monthly-tip",
-    "growth-learning-idle"
+    "strategy-monthly-tip"
 )
 
 $typesToRun = if ($Type) {

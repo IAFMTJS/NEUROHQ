@@ -177,8 +177,9 @@ Run through this after deploy (or locally) to validate core flows.
 
 If you have **CRON_SECRET** and a way to call APIs (e.g. curl or Vercel Cron logs):
 
-- [ ] `GET /api/cron/daily` with `Authorization: Bearer <CRON_SECRET>` returns 200 and JSON (`ok: true`, `job: "daily"`). Expect avoidance / hobby decay / acceptance counts in the body (not task rollover; that runs in hourly).
-- [ ] `GET /api/cron/hourly` with auth: 200 (not scheduled on Hobby; use for manual or Pro). Rollover and quote run at 00:00 / from quote hour in each user’s timezone (or UTC if `timezone` is null); check `users.last_rollover_date` and push logs.
+- [ ] `GET /api/cron/bundle` with `Authorization: Bearer <CRON_SECRET>` returns 200 and JSON (`ok: true`, `job: "bundle"`, `ran: ["hourly", ...]`). Production GitHub Actions should call this every UTC hour (see README). Response includes `hourly` plus optional `daily`, `weekly`, etc. when the UTC clock matches those schedules.
+- [ ] `GET /api/cron/daily` with auth: 200 (`job: "daily"`) — optional manual replay; scheduled daily work runs inside the bundle at 06:00 UTC.
+- [ ] `GET /api/cron/hourly` with auth: 200 (`job: "hourly"`) — optional manual replay of hourly-only work without other gated jobs.
 - [ ] `GET /api/cron/weekly` with auth: 200. `reality_reports` has new rows for last week; learning/savings push sent if conditions met.
 
 ---
@@ -243,10 +244,10 @@ If the “Cron hourly” workflow keeps failing (302, 404, or 401), follow these
 5. **Test from your machine**  
    Replace `YOUR_CRON_SECRET` with your real secret and your production URL if different.
    - **Git Bash / WSL / Mac:**  
-     `curl -s -o /dev/null -w "%{http_code}" -H "Authorization: Bearer YOUR_CRON_SECRET" "https://neurohq.vercel.app/api/cron/hourly"`  
-     Output should be **200**.
+     `curl -s -o /dev/null -w "%{http_code}" -H "Authorization: Bearer YOUR_CRON_SECRET" "https://neurohq.vercel.app/api/cron/bundle"`  
+     Output should be **200** (same for `/api/cron/hourly` if you only want the hourly slice).
    - **PowerShell:**  
-     `(Invoke-WebRequest -Uri "https://neurohq.vercel.app/api/cron/hourly" -Headers @{ Authorization = "Bearer YOUR_CRON_SECRET" } -UseBasicParsing).StatusCode`  
+     `(Invoke-WebRequest -Uri "https://neurohq.vercel.app/api/cron/bundle" -Headers @{ Authorization = "Bearer YOUR_CRON_SECRET" } -UseBasicParsing).StatusCode`  
      Should print **200**.
    - If you see **302** → step 1 not done. **401** → secret mismatch (steps 2 and 4). **404** → step 3 (redeploy) or wrong URL in step 4.
 
@@ -255,23 +256,19 @@ If the “Cron hourly” workflow keeps failing (302, 404, or 401), follow these
 
 ### 5.3 Testing the hourly cron
 
-- **From the workflow:** After each run, the log line `Response (200): {...}` shows the JSON body. You should see something like:
-  ```json
-  {"ok":true,"job":"hourly","rolled":0,"quoteSent":0,"eveningPushSent":0,"brainStatusRemindersSent":0,"calendarReminderSent":0,"achievementPushSent":0,"alertPushSent":0,"usersChecked":N}
-  ```
-  `usersChecked` is how many users were considered (including those without a timezone; they use UTC for local clock). The other fields are counts of actions taken in that run (rollovers, quote pushes, evening emails and pushes, brain-status reminders, etc.). At most hours these will be 0; they increase when it’s e.g. 00:00, 08:00, or 20:00 in a user’s effective timezone.
+- **From the workflow:** After each run, the log line `Response (200): {...}` shows the JSON body. For `/api/cron/bundle` you should see `job: "bundle"`, `ran: ["hourly", ...]`, and an `hourly` object with counts such as `rolled`, `quoteSent`, `eveningPushSent`, `usersChecked`, etc. At most hours only `hourly` runs; at 06:00 UTC you will also see `daily`, and on schedule slots `weekly`, `monthly`, or `quarterly` as applicable.
 
 - **From your machine (full response):** To see the same JSON when testing locally, use:
   ```bash
-  curl -s -H "Authorization: Bearer YOUR_CRON_SECRET" "https://neurohq.vercel.app/api/cron/hourly"
+  curl -s -H "Authorization: Bearer YOUR_CRON_SECRET" "https://neurohq.vercel.app/api/cron/bundle"
   ```
-  You should get `{"ok":true,"job":"hourly",...}` with the counts.
+  You should get `{"ok":true,"job":"bundle","hourly":{...}}` with hourly counts inside `hourly`.
 
-- **Trigger sends now (test run):** Call the cron with `?forceHour=20` (and your `Authorization: Bearer` header) to run as if it were 20:00 in each user’s timezone — evening email/push for users who have them enabled. Use `forceHour=0` for rollover, `forceHour=8` for quote/calendar heads-up, or `forceHour=11` for the brain-status reminder window. Example:
+- **Trigger sends now (test run):** Call the bundle (or `/api/cron/hourly`) with `?forceHour=20` (and your `Authorization: Bearer` header) to run as if it were 20:00 in each user’s timezone — evening email/push for users who have them enabled. Use `forceHour=0` for rollover, `forceHour=8` for quote/calendar heads-up, or `forceHour=11` for the brain-status reminder window. Example:
   ```bash
-  curl -s -H "Authorization: Bearer YOUR_CRON_SECRET" "https://neurohq.vercel.app/api/cron/hourly?forceHour=20"
+  curl -s -H "Authorization: Bearer YOUR_CRON_SECRET" "https://neurohq.vercel.app/api/cron/bundle?forceHour=20"
   ```
-  The response will include `"testRun":true,"forceHour":20` so you know it was a test.
+  The `hourly` object in the response will include `"testRun":true,"forceHour":20` so you know it was a test.
 
 - **In Supabase (optional):** To confirm rollover ran for a user, check `users.last_rollover_date` for today’s date (in that user’s timezone) after 00:00 local. Incomplete tasks from the previous day will have moved to today and `carry_over_count` may have increased.
 
@@ -285,7 +282,7 @@ To send one push type to your app's first push-enabled user, use **curl.exe** (o
 curl.exe -s -H "Authorization: Bearer YOUR_CRON_SECRET" "https://neurohq.vercel.app/api/push/test-all?type=shutdown-reminder"
 ```
 
-Replace `YOUR_CRON_SECRET` with your Vercel env `CRON_SECRET`, and `https://neurohq.vercel.app` with your actual app URL if different. Replace `shutdown-reminder` with any type: `daily-quote`, `calendar-morning`, `calendar-reminder`, `morning-reminder`, `evening-reminder`, `brain-status-reminder`, `weekly-learning`, `savings-alert`, `freeze-reminder`, `avoidance-alert`, `reengage`, `streak-growth`, `streak-protection`, `momentum`. Optional: target a specific user with `&userId=USER_UUID`.
+Replace `YOUR_CRON_SECRET` with your Vercel env `CRON_SECRET`, and `https://neurohq.vercel.app` with your actual app URL if different. Replace `shutdown-reminder` with any `type` from `GET /api/push/test-all` (no query returns the list), e.g. `daily-quote`, `morning-reminder`, `app-release`, `strategy-check-in-soft`, `growth-focus-unset`, `strategy-monthly-tip`. Optional: target a specific user with `&userId=USER_UUID`.
 
 ## 6. Lighthouse PWA check (manual)
 

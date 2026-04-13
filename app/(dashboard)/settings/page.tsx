@@ -163,7 +163,6 @@ async function SettingsContent() {
             initialPushRemindersEnabled={prefs.push_reminders_enabled ?? true}
             initialPushMorningEnabled={prefs.push_morning_enabled ?? true}
             initialPushEveningEnabled={prefs.push_evening_enabled ?? true}
-            initialPushWeeklyLearningEnabled={prefs.push_weekly_learning_enabled ?? true}
             initialPushPersonalityMode={prefs.push_personality_mode ?? "auto"}
           />
         </section>

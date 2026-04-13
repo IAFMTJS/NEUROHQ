@@ -1,10 +1,8 @@
-# Trigger /api/cron/daily from GitHub (avoidance, hobby decay, acceptance rules).
-# If you use this, disable the same schedule in vercel.json to avoid double runs.
+# Manual only: daily work runs on schedule via `/api/cron/bundle` (hourly workflow → 06:00 UTC).
+# Use workflow_dispatch to replay `/api/cron/daily` alone if needed.
 name: Cron daily
 
 on:
-  schedule:
-    - cron: "0 6 * * *"
   workflow_dispatch:
 
 jobs:

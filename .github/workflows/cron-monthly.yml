@@ -1,9 +1,7 @@
-# Strategy monthly tip (and any future month-scoped jobs).
+# Manual only: monthly work runs via `/api/cron/bundle` (1st of month 10:00 UTC).
 name: Cron monthly
 
 on:
-  schedule:
-    - cron: "0 10 1 * *"
   workflow_dispatch:
 
 jobs:

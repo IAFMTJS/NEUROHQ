@@ -190,7 +190,6 @@ const TRIGGER_COOLDOWN_HOURS: Partial<Record<TriggerType, number>> = {
   strategy_quarter_incomplete: 168,
   growth_focus_unset: 336,
   strategy_monthly_tip: 720,
-  growth_learning_idle: 168,
 };
 
 /**

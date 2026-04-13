@@ -14,7 +14,6 @@ export async function GET() {
       pushRemindersEnabled: prefs.push_reminders_enabled ?? true,
       pushMorningEnabled: prefs.push_morning_enabled ?? true,
       pushEveningEnabled: prefs.push_evening_enabled ?? true,
-      pushWeeklyLearningEnabled: prefs.push_weekly_learning_enabled ?? true,
     });
   } catch (err) {
     const message = err instanceof Error ? err.message : "Unable to load push preferences";

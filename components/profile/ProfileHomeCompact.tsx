@@ -175,7 +175,7 @@ export function ProfileHomeCompact({
       >
         <div className="relative z-[1] mx-auto grid max-w-3xl grid-cols-1 gap-5 md:grid-cols-[1fr_minmax(0,220px)_1fr] md:items-center md:gap-3">
         <div className="order-2 hidden flex-col justify-center gap-3 md:order-1 md:flex">
-          <OrbitTile title="Rang">
+          <OrbitTile title="Rang" className="px-2 py-2">
             <span className="line-clamp-2 text-[13px] leading-snug" title={displayIdentity.rank}>
               {displayIdentity.rank}
             </span>
@@ -230,17 +230,21 @@ export function ProfileHomeCompact({
           </OrbitTile>
         </div>
 
-        <div className="order-4 flex flex-wrap justify-center gap-2 md:col-span-3 md:hidden">
+        <div className="order-4 grid w-full grid-cols-4 gap-1.5 md:col-span-3 md:hidden">
           <OrbitTile title="Rang">
-            <span className="max-w-[100px] truncate text-xs" title={displayIdentity.rank}>
+            <span className="block max-w-full truncate text-[11px]" title={displayIdentity.rank}>
               {displayIdentity.rank}
             </span>
           </OrbitTile>
-          <OrbitTile title="Streak">{displayIdentity.streak.current}d</OrbitTile>
-          <OrbitTile title="Unlock" href={reportInsightsHref("overview")}>
-            {displayIdentity.next_unlock.xpNeeded} XP
+          <OrbitTile title="Streak" className="px-2 py-2">
+            <span className="text-[11px]">{displayIdentity.streak.current}d</span>
           </OrbitTile>
-          <OrbitTile title="XP %">{barPct}%</OrbitTile>
+          <OrbitTile title="Unlock" href={reportInsightsHref("overview")} className="px-2 py-2">
+            <span className="text-[11px]">{displayIdentity.next_unlock.xpNeeded.toLocaleString()} XP</span>
+          </OrbitTile>
+          <OrbitTile title="XP %" className="px-2 py-2">
+            <span className="text-[11px]">{barPct}%</span>
+          </OrbitTile>
         </div>
       </div>
       </section>

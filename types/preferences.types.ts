@@ -40,7 +40,7 @@ export interface UserPreferences {
   usual_days_off?: number[] | null;
   /** 'soft' = bias; 'hard' = vermijd werk-missies tenzij expliciet toegevoegd. */
   day_off_mode?: "soft" | "hard" | null;
-  /** When true, receive app reminder emails (morning/evening digest, weekly learning). Default on. */
+  /** When true, receive app reminder emails (morning/evening digest). Default on. */
   email_reminders_enabled?: boolean;
   /** Master toggle for scheduled push reminders. Browser permission/subscription still required. */
   push_reminders_enabled?: boolean;
@@ -48,7 +48,7 @@ export interface UserPreferences {
   push_morning_enabled?: boolean;
   /** Evening push reminder around local 20:00. */
   push_evening_enabled?: boolean;
-  /** Weekly learning push reminder. */
+  /** Legacy column; weekly learning push was removed. Ignored by the push pipeline. */
   push_weekly_learning_enabled?: boolean;
   /** Personality / tone mode for behavioural push notifications. */
   push_personality_mode?: PushPersonalityMode | null;

@@ -1,5 +1,5 @@
 /**
- * Applies notification personality to ALL push notifications (quote, calendar, morning, evening, weekly learning, behavioral).
+ * Applies notification personality to ALL push notifications (quote, calendar, morning, evening, behavioral).
  * Ensures title and body match the user's chosen mode: Stoic (short, wisdom), Friendly (warm), Coach (direct, action),
  * Drill (sharp, commanding), Chaos (sarcastic/overstimulating), Auto (adaptive).
  */
@@ -16,7 +16,6 @@ export type PushContext =
   | "calendar_reminder"
   | "morning"
   | "evening"
-  | "weekly_learning"
   | "freeze_reminder"
   | "avoidance_alert"
   | "savings_alert"
@@ -25,7 +24,7 @@ export type PushContext =
 
 /**
  * Rewrite a push payload's title (and optionally body) so it matches the user's notification personality.
- * Used for quote, calendar, morning, evening, weekly learning — i.e. all non-behavioral pushes.
+ * Used for quote, calendar, morning, evening — i.e. all non-behavioral pushes.
  * When `variantSeed` is set (e.g. `${userId}:${localDate}`), title/body pools pick a stable variant per day.
  * Optional `dedupe` avoids repeating the same pool index within a sliding day window (A.2).
  */
@@ -418,44 +417,6 @@ export function applyPersonalityToPayload(
               `WRAP UP: ${b.toUpperCase()}`,
             ],
             "evening:chaosBody"
-          ),
-        auto: (b) => b,
-      };
-      const fn = bodyByPersonality[personalityMode] ?? bodyByPersonality.auto;
-      return {
-        ...payload,
-        title: titleByPersonality[personalityMode] ?? titleByPersonality.auto,
-        body: fn(body),
-      };
-    }
-
-    case "weekly_learning": {
-      const chaosLearningTitles = [
-        "📚 LEARNING REPORT. YOU DID (OR DIDN'T) STUDY.",
-        "WEEKLY STATS: KNOWLEDGE EDITION",
-        "THE SYSTEM NOTICED YOUR LEARNING. OR LACK THEREOF. 😏",
-      ];
-      const titleByPersonality: Record<PersonalityMode, string> = {
-        stoic: "Learning.",
-        friendly: "Weekly learning 💛",
-        coach: "Learning recap",
-        drill: "Learning report. Plan next. No skip.",
-        chaos: pickStr(chaosLearningTitles, "weekly_learning:chaosTitle"),
-        auto: "NEUROHQ — Learning",
-      };
-      const bodyByPersonality: Record<PersonalityMode, (b: string) => string> = {
-        stoic: (b) => b.replace(/Last week:?/i, "").replace(/Plan a learning block this week\.?/i, "Plan a block.") || b,
-        friendly: (b) => b,
-        coach: (b) => b.replace(/Plan a learning block this week\.?/i, "Schedule one learning block this week.") || b,
-        drill: (b) => b.replace(/\. /g, ". ").replace(/Plan a learning block this week\.?/i, "Block time this week.") || b,
-        chaos: (b) =>
-          pickStr(
-            [
-              b.toUpperCase() + " 📚",
-              b.replace(/Last week/i, "LAST WEEK (yes we're counting)").replace(/Plan a learning block/i, "PLAN A BLOCK. OR DON'T. WE'RE JUST SAYING.") || b,
-              `LEARNING STATS: ${b.toUpperCase()}`,
-            ],
-            "weekly_learning:chaosBody"
           ),
         auto: (b) => b,
       };

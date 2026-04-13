@@ -10,7 +10,6 @@ import {
   getEveningEmailData,
   buildMorningPushPayload,
   buildEveningPushPayload,
-  buildWeeklyLearningPushPayload,
 } from "@/lib/daily-email-content";
 import { buildBehavioralNotificationForContext } from "@/lib/behavioral-notifications";
 import { loadUserNotificationContextForUser } from "@/lib/behavioral-notification-server";
@@ -28,7 +27,6 @@ const PUSH_TYPES = [
   "morning-reminder",
   "evening-reminder",
   "brain-status-reminder",
-  "weekly-learning",
   "savings-alert",
   "shutdown-reminder",
   "avoidance-alert",
@@ -42,7 +40,6 @@ const PUSH_TYPES = [
   "strategy-quarter-incomplete",
   "growth-focus-unset",
   "strategy-monthly-tip",
-  "growth-learning-idle",
 ] as const;
 
 export type PushTestType = (typeof PUSH_TYPES)[number];
@@ -337,23 +334,6 @@ export async function GET(request: Request) {
         }
         break;
       }
-      case "weekly-learning": {
-        const base = buildWeeklyLearningPushPayload(35, 60);
-        const payload = applyPersonalityToPayload(base, ctx.personalityMode, "weekly_learning");
-        const limitState = await getPushLimitState(supabase, userRecord, payload.priority);
-        if (limitState.blockedBy !== "none") {
-          return NextResponse.json({
-            ok: false,
-            type: typeParam,
-            userId,
-            message: "Send blocked by push limits.",
-            reason: limitState.blockedBy,
-            limitState,
-          });
-        }
-        ok = await sendPushToUser(supabase, userId, payload);
-        break;
-      }
       case "savings-alert": {
         const base = {
           title: "NEUROHQ — Savings",
@@ -634,24 +614,6 @@ export async function GET(request: Request) {
           type: "strategy_monthly_tip",
           month: new Date().getMonth(),
         });
-        if (re) {
-          const limitState = await getPushLimitState(supabase, userRecord, re.payload.priority);
-          if (limitState.blockedBy !== "none") {
-            return NextResponse.json({
-              ok: false,
-              type: typeParam,
-              userId,
-              message: "Send blocked by push limits.",
-              reason: limitState.blockedBy,
-              limitState,
-            });
-          }
-          ok = await sendPushToUser(supabase, userId, re.payload);
-        }
-        break;
-      }
-      case "growth-learning-idle": {
-        const re = buildBehavioralNotificationForContext(ctx, { type: "growth_learning_idle" });
         if (re) {
           const limitState = await getPushLimitState(supabase, userRecord, re.payload.priority);
           if (limitState.blockedBy !== "none") {

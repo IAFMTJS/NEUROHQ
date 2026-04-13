@@ -96,13 +96,13 @@ When you change user-facing behaviour (tasks, budget, assistant, settings, routi
 1. Connect the repo to Vercel.  
 2. Set environment variables in Vercel (same as `.env.local`).  
 3. Add **CRON_SECRET** in Vercel and (optional) in Vercel Cron config set “Authorization: Bearer \<CRON_SECRET\>” for cron invocations.  
-4. **Hourly jobs (timezone-aware pushes, rollover, dedupe, evening push window)** are **not** in `vercel.json` — Vercel Hobby only allows each cron path to run **once per day**. Use **GitHub Actions** instead: `.github/workflows/cron-hourly.yml` runs every hour and calls `PRODUCTION_URL/api/cron/hourly` via `scripts/gh-call-cron.sh`. Set repository secrets `CRON_SECRET` and `PRODUCTION_URL` (and optionally `VERCEL_AUTOMATION_BYPASS_SECRET` if Deployment Protection is on).  
-5. **Scheduled jobs** live in **GitHub Actions** (same `CRON_SECRET` / `PRODUCTION_URL`): `cron-hourly.yml`, `cron-daily.yml`, `cron-weekly.yml`, `cron-weekly-learning.yml`, `cron-monthly.yml`, `cron-quarterly.yml`. `vercel.json` defines **no** Vercel Crons (avoids duplicate runs with GitHub). You can still add paths in the Vercel dashboard if you prefer not to use GitHub; then disable the matching workflow and send `Authorization: Bearer <CRON_SECRET>`.  
-   - **Daily** — `/api/cron/daily`, 06:00 UTC  
-   - **Weekly** — `/api/cron/weekly`, Monday 09:00 UTC  
-   - **Weekly learning** — `/api/cron/weekly-learning`, Thursday 09:00 UTC  
-   - **Monthly** — `/api/cron/monthly`, 1st 10:00 UTC  
-   - **Quarterly** — `/api/cron/quarterly`, 1st Jan/Apr/Jul/Oct 06:00 UTC  
+4. **Crons** are **not** in `vercel.json` (Vercel Hobby limits). Use **GitHub Actions**: `.github/workflows/cron-hourly.yml` runs **every UTC hour** and calls `PRODUCTION_URL/api/cron/bundle` via `scripts/gh-call-cron.sh`. That route runs hourly work and, when the clock matches, **daily / weekly / monthly / quarterly** in the **same** invocation with **one shared** `users` + `user_preferences` prefetch when those jobs fire (fewer duplicate Supabase reads). Set repository secrets `CRON_SECRET` and `PRODUCTION_URL` (and optionally `VERCEL_AUTOMATION_BYPASS_SECRET` if Deployment Protection is on).  
+5. **Split workflows** (`cron-daily.yml`, `cron-weekly.yml`, etc.) are **manual-only** (`workflow_dispatch`) so they do not double-run scheduled jobs. Use them to call individual routes if you need a one-off replay. Individual routes still exist: `/api/cron/hourly`, `/api/cron/daily`, `/api/cron/weekly`, `/api/cron/monthly`, `/api/cron/quarterly`. `vercel.json` defines **no** Vercel Crons.  
+   - **Bundle** — `/api/cron/bundle` (hourly + gated jobs at former UTC times)  
+   - **Daily** — also at 06:00 UTC inside bundle  
+   - **Weekly** — Monday 09:00 UTC inside bundle  
+   - **Monthly** — 1st 10:00 UTC inside bundle  
+   - **Quarterly** — 1st Jan/Apr/Jul/Oct 06:00 UTC inside bundle  
    - Legacy manual: `/api/cron/strategy-growth`  
 6. Deploy checklist: run migrations 001–008, enable Email/Password auth, set env vars. See **DEPLOY.md** for step-by-step Supabase/Vercel setup and a full smoke test checklist. For PWA installability and Lighthouse, see **LIGHTHOUSE_PWA.md**.
 

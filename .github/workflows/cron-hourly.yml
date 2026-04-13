@@ -1,7 +1,7 @@
-# Run hourly cron (quote, rollover, evening, brain-status reminder, calendar) via GitHub Actions.
-# The route still runs every UTC hour, but skips heavy per-user work when no account is in a
-# rollover/quote/brain/evening local window (see runFullCycle in app/api/cron/hourly/route.ts).
-# Vercel Hobby allows only 1 run/day per cron, so we trigger /api/cron/hourly from here.
+# Run bundled cron every UTC hour: `/api/cron/bundle` runs hourly work plus daily (06:00 UTC),
+# weekly (Mon 09:00), monthly (1st 10:00), quarterly (1st of Jan/Apr/Jul/Oct 06:00)
+# in the same invocation with one shared `users` + `user_preferences` prefetch when those jobs fire.
+# Legacy paths `/api/cron/hourly`, `/api/cron/daily`, etc. remain for manual `workflow_dispatch` on split workflows.
 #
 # Required: Repository secrets OR variables (Settings → Secrets and variables → Actions):
 #   CRON_SECRET   – same value as Vercel CRON_SECRET
@@ -9,7 +9,7 @@
 # Optional (if using Vercel Deployment Protection):
 #   VERCEL_AUTOMATION_BYPASS_SECRET – from Vercel → Settings → Deployment Protection → Protection Bypass for Automation
 
-name: Cron hourly
+name: Cron bundle (hourly tick)
 
 on:
   schedule:
@@ -46,9 +46,9 @@ jobs:
             exit 1
           fi
       - uses: actions/checkout@v4
-      - name: Call /api/cron/hourly
+      - name: Call /api/cron/bundle
         env:
           CRON_SECRET: ${{ secrets.CRON_SECRET || vars.CRON_SECRET }}
           PRODUCTION_URL: ${{ secrets.PRODUCTION_URL || vars.PRODUCTION_URL }}
           VERCEL_AUTOMATION_BYPASS_SECRET: ${{ secrets.VERCEL_AUTOMATION_BYPASS_SECRET || vars.VERCEL_AUTOMATION_BYPASS_SECRET }}
-        run: bash scripts/gh-call-cron.sh /api/cron/hourly
+        run: bash scripts/gh-call-cron.sh /api/cron/bundle

@@ -1,9 +1,7 @@
-# Quarterly strategy row seed.
+# Manual only: quarterly seed runs via `/api/cron/bundle` (1st of Jan/Apr/Jul/Oct 06:00 UTC).
 name: Cron quarterly
 
 on:
-  schedule:
-    - cron: "0 6 1 1,4,7,10 *"
   workflow_dispatch:
 
 jobs:

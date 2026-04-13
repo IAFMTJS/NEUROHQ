@@ -62,8 +62,7 @@ export type TriggerType =
   | "strategy_check_in_firm"
   | "strategy_quarter_incomplete"
   | "growth_focus_unset"
-  | "strategy_monthly_tip"
-  | "growth_learning_idle";
+  | "strategy_monthly_tip";
 
 // High-level behavior events the rest of the app / crons can emit.
 // These are intentionally compact and behaviour-focused; they are not DB models.
@@ -96,8 +95,7 @@ export type BehaviorEvent =
   | { type: "strategy_check_in_reminder"; tier: "soft" | "firm" }
   | { type: "strategy_quarter_incomplete"; percentComplete: number }
   | { type: "growth_focus_unset" }
-  | { type: "strategy_monthly_tip"; month: number }
-  | { type: "growth_learning_idle" };
+  | { type: "strategy_monthly_tip"; month: number };
 
 export type MessageTemplate = {
   title?: string;
@@ -162,7 +160,6 @@ export function strategyAreaForTrigger(trigger: TriggerType): StrategyNotificati
     case "strategy_monthly_tip":
       return "strategy";
     case "growth_focus_unset":
-    case "growth_learning_idle":
       return "growth";
     default:
       return "missions";
@@ -619,13 +616,6 @@ export const MESSAGE_POOL: MessagePool = {
     stoic: [{ body: "Monthly tip: refine one line in Strategy.", url: "/strategy" }],
     coach: [{ body: "Monthly strategy tip — apply one change today.", url: "/strategy" }],
   },
-  growth_learning_idle: {
-    neutral: [{ body: "No learning logged recently — one short session keeps growth honest.", url: "/learning" }],
-    friendly: [{ body: "Learning’s been quiet — a tiny session in Growth still counts.", url: "/learning" }],
-    stoic: [{ body: "Learning idle. Log one session.", url: "/learning" }],
-    coach: [{ body: "No learning minutes lately. Schedule one block this week.", url: "/learning" }],
-    sarcastic: [{ body: "Your growth graph is flat. Not judging. (Okay, a little.) 📉", url: "/learning" }],
-  },
 };
 
 export function pickMessage(trigger: TriggerType, tone: Tone): MessageTemplate | null {
@@ -668,8 +658,7 @@ export function decidePriority(trigger: TriggerType): PushPayload["priority"] {
     trigger === "reflection_submitted" ||
     trigger === "recovery_task_completed" ||
     trigger === "strategy_monthly_tip" ||
-    trigger === "growth_focus_unset" ||
-    trigger === "growth_learning_idle"
+    trigger === "growth_focus_unset"
   ) {
     return "low";
   }
@@ -860,9 +849,6 @@ export function buildBehavioralNotificationForContext(
     case "strategy_monthly_tip":
       trigger = "strategy_monthly_tip";
       break;
-    case "growth_learning_idle":
-      trigger = "growth_learning_idle";
-      break;
   }
 
   if (!trigger) return null;
@@ -888,7 +874,7 @@ export function buildBehavioralNotificationForContext(
     const idx = ((event.month % 12) + 12) % 12;
     body = STRATEGY_MONTHLY_TIPS[idx] ?? STRATEGY_MONTHLY_TIPS[0];
     url = "/strategy";
-  } else if (event.type === "growth_focus_unset" || event.type === "growth_learning_idle") {
+  } else if (event.type === "growth_focus_unset") {
     url = template.url ?? "/learning";
   }
 

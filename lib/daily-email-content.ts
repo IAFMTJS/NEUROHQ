@@ -295,13 +295,3 @@ export function buildEveningPushPayload(data: EveningEmailData): ReminderPushPay
     priority: "normal",
   };
 }
-
-export function buildWeeklyLearningPushPayload(learningMinutes: number, learningTarget: number): ReminderPushPayload {
-  return {
-    title: "NEUROHQ — Learning",
-    body: `Last week: ${learningMinutes} min logged (target ${learningTarget}). Plan a learning block this week.`,
-    url: "/learning",
-    tag: "learning-reminder",
-    priority: "normal",
-  };
-}

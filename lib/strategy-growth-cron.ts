@@ -82,12 +82,11 @@ async function runStrategyGrowthCronInner(
 
     const { data: pref } = await supabase
       .from("user_preferences")
-      .select("push_reminders_enabled, push_weekly_learning_enabled, growth_focus_protocol_slug")
+      .select("push_reminders_enabled, growth_focus_protocol_slug")
       .eq("user_id", userId)
       .maybeSingle();
     const prefRow = pref as {
       push_reminders_enabled?: boolean;
-      push_weekly_learning_enabled?: boolean;
       growth_focus_protocol_slug?: string | null;
     } | null;
     if (prefRow?.push_reminders_enabled === false) {
@@ -173,29 +172,12 @@ async function runStrategyGrowthCronInner(
         return null;
       }
 
-      const tenDaysAgo = new Date(now.getTime() - 10 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
-      const { data: learnRows } = await supabase
-        .from("user_analytics_daily")
-        .select("learning_minutes")
-        .eq("user_id", userId)
-        .gte("date", tenDaysAgo);
-      const learningSum = (learnRows ?? []).reduce(
-        (acc, r) => acc + ((r as { learning_minutes?: number | null }).learning_minutes ?? 0),
-        0
-      );
       const growthSlug = prefRow?.growth_focus_protocol_slug?.trim() ?? null;
-      const weeklyLearningOn = prefRow?.push_weekly_learning_enabled !== false;
 
       if (!growthSlug && accountAgeDays >= 7) {
         const { canSend } = await canSendBehavioralNotification(supabase, userId, "growth_focus_unset", now);
         if (canSend) {
           return { event: { type: "growth_focus_unset" }, trigger: "growth_focus_unset" };
-        }
-      }
-      if (weeklyLearningOn && accountAgeDays >= 14 && learningSum === 0) {
-        const { canSend } = await canSendBehavioralNotification(supabase, userId, "growth_learning_idle", now);
-        if (canSend) {
-          return { event: { type: "growth_learning_idle" }, trigger: "growth_learning_idle" };
         }
       }
       return null;
