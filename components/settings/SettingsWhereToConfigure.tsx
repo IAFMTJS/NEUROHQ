@@ -3,7 +3,7 @@
 import Link from "next/link";
 
 const ITEMS = [
-  { where: "Growth", what: "Wekelijkse learning-doel (minuten)", href: "/learning" },
+  { where: "Growth", what: "Wekelijkse learning-richting", href: "/learning" },
   { where: "Budget", what: "Maandbudget, spaardoelen, impulsen", href: "/budget" },
   {
     where: "Strategy",

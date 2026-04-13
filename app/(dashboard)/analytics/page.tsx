@@ -65,7 +65,6 @@ async function AnalyticsContent() {
   const taskPct = summary && summary.totalTasksPlanned > 0
     ? Math.round((summary.totalTasksCompleted / summary.totalTasksPlanned) * 100)
     : 0;
-  const learningHit = summary ? summary.totalLearningMinutes >= summary.learningTargetMinutes : false;
 
   return (
     <>
@@ -96,10 +95,6 @@ async function AnalyticsContent() {
                 <p className="text-lg font-semibold text-[var(--text-primary)]">{summary.totalTasksCompleted} / {summary.totalTasksPlanned} ({taskPct}%)</p>
               </div>
               <div>
-                <p className="text-xs text-[var(--text-muted)]">Learning</p>
-                <p className="text-lg font-semibold text-[var(--text-primary)]">{formatMinutes(summary.totalLearningMinutes)} / {summary.learningTargetMinutes} min {learningHit ? "✓" : ""}</p>
-              </div>
-              <div>
                 <p className="text-xs text-[var(--text-muted)]">Focus time</p>
                 <p className="text-lg font-semibold text-[var(--text-primary)]">{formatMinutes(Math.floor(summary.activeSeconds / 60))}</p>
               </div>
@@ -126,10 +121,6 @@ async function AnalyticsContent() {
               <span className="text-[var(--text-muted)]">Tasks completed</span>
               <span className="text-[var(--text-primary)]">{summary.totalTasksCompleted} vs {lastWeekSummary.totalTasksCompleted}</span>
             </li>
-            <li className="flex justify-between">
-              <span className="text-[var(--text-muted)]">Learning</span>
-              <span className="text-[var(--text-primary)]">{formatMinutes(summary.totalLearningMinutes)} vs {formatMinutes(lastWeekSummary.totalLearningMinutes)}</span>
-            </li>
             {summary.avgEnergy != null && lastWeekSummary.avgEnergy != null && (
               <li className="flex justify-between">
                 <span className="text-[var(--text-muted)]">Avg energy</span>
@@ -150,7 +141,7 @@ async function AnalyticsContent() {
               <li key={d.date} className="flex items-center justify-between px-4 py-3 text-sm">
                 <span className="text-[var(--text-muted)]">{d.date}</span>
                 <span className="text-[var(--text-primary)]">
-                  {d.tasks_completed} tasks · {d.learning_minutes} min learning{d.brain_status_logged ? " · check-in" : ""}
+                  {d.tasks_completed} tasks{d.brain_status_logged ? " · check-in" : ""}
                 </span>
               </li>
             ))}

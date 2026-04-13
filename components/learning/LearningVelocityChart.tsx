@@ -19,7 +19,6 @@ export const LearningVelocityChart: FC<Props> = ({ points }) => {
 
   const data = points.map((p) => ({
     week: p.weekStart.slice(5), // MM-DD
-    minutes: p.minutes,
     sessions: p.sessions,
   }));
 
@@ -48,17 +47,9 @@ export const LearningVelocityChart: FC<Props> = ({ points }) => {
           />
           <Line
             type="monotone"
-            dataKey="minutes"
+            dataKey="sessions"
             stroke="var(--accent-primary)"
             strokeWidth={2}
-            dot={false}
-            name="Minutes"
-          />
-          <Line
-            type="monotone"
-            dataKey="sessions"
-            stroke="var(--accent-cyan)"
-            strokeWidth={1.5}
             dot={false}
             name="Sessions"
           />

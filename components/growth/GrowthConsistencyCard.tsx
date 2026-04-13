@@ -47,7 +47,7 @@ export const GrowthConsistencyCard: FC<Props> = ({ consistency, today }) => {
       <div className="border-b border-[var(--card-border)] px-4 py-3">
         <h2 className="text-base font-semibold text-[var(--text-primary)]">Consistency</h2>
         <p className="mt-0.5 text-xs text-[var(--text-muted)]">
-          Weekly rhythm in sessions, not minutes.
+          Weekly rhythm in sessions.
         </p>
       </div>
       <div className="p-4 space-y-3">

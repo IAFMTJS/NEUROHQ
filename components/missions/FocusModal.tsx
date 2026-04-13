@@ -10,8 +10,6 @@ import { useHQStore } from "@/lib/hq-store";
 import { trackEvent } from "@/app/actions/analytics-events";
 import { toast } from "sonner";
 
-const DEFAULT_MINUTES = 25;
-
 const EMOTIONAL_OPTIONS: { value: EmotionalStatePreStart; label: string }[] = [
   { value: "focused", label: "Gefocust" },
   { value: "tired", label: "Moe" },
@@ -36,12 +34,6 @@ type Props = {
   energyMatchScore?: number | null;
 };
 
-function formatTime(seconds: number): string {
-  const m = Math.floor(seconds / 60);
-  const s = seconds % 60;
-  return `${m}:${s.toString().padStart(2, "0")}`;
-}
-
 function classifyEnergyMatch(score: number | null | undefined): "high" | "ok" | "low" | null {
   if (score == null) return null;
   if (score >= 0.7) return "high";
@@ -57,9 +49,6 @@ export function FocusModal({ open, onClose, taskId, taskTitle, date: dateProp, t
   const upsertTask = useHQStore((s) => s.upsertTask);
   const removeTask = useHQStore((s) => s.removeTask);
   const [pending, setPending] = useState(false);
-  const [minutes, setMinutes] = useState(DEFAULT_MINUTES);
-  const [secondsLeft, setSecondsLeft] = useState(minutes * 60);
-  const [running, setRunning] = useState(false);
   const [dailyState, setDailyState] = useState<{ emotional_state?: string | null } | null>(null);
   const [emotionalStateSet, setEmotionalStateSet] = useState(false);
   const [sessionStarted, setSessionStarted] = useState(false);
@@ -81,21 +70,6 @@ export function FocusModal({ open, onClose, taskId, taskTitle, date: dateProp, t
     setSessionStartedAt(null);
     getDailyState(date).then((d) => setDailyState(d as { emotional_state?: string | null } | null));
   }, [open, date]);
-
-  const totalSeconds = minutes * 60;
-  useEffect(() => {
-    setSecondsLeft(totalSeconds);
-  }, [minutes, open]);
-
-  useEffect(() => {
-    if (!open || !running || secondsLeft <= 0) return;
-    const t = setInterval(() => setSecondsLeft((s) => (s <= 1 ? 0 : s - 1)), 1000);
-    return () => clearInterval(t);
-  }, [open, running, secondsLeft]);
-
-  useEffect(() => {
-    if (running && secondsLeft === 0) setRunning(false);
-  }, [running, secondsLeft]);
 
   const handleComplete = useCallback(() => {
     setPending(true);
@@ -190,7 +164,7 @@ export function FocusModal({ open, onClose, taskId, taskTitle, date: dateProp, t
         </header>
 
         <div className="modal-card-body">
-          {!emotionalStateSet && dailyState && dailyState.emotional_state == null && !running ? (
+          {!emotionalStateSet && dailyState && dailyState.emotional_state == null ? (
             <div className="flex flex-col items-center gap-3 py-2">
               <p className="text-sm font-medium text-[var(--text-primary)]">Hoe voel je je nu?</p>
               <div className="flex flex-wrap justify-center gap-2">
@@ -211,7 +185,7 @@ export function FocusModal({ open, onClose, taskId, taskTitle, date: dateProp, t
                 ))}
               </div>
             </div>
-          ) : !running ? (
+          ) : (
             <div className="flex flex-col items-center gap-4">
               {outsideFocus && (
                 <p className="rounded-xl border border-amber-500/40 bg-amber-500/10 px-3 py-2 text-center text-sm text-amber-200">
@@ -244,22 +218,11 @@ export function FocusModal({ open, onClose, taskId, taskTitle, date: dateProp, t
                   )}
                 </p>
               )}
-              <label className="text-sm font-medium text-[var(--text-muted)]">Minutes</label>
-              <input
-                type="number"
-                min={1}
-                max={120}
-                value={minutes}
-                onChange={(e) => setMinutes(Math.max(1, Math.min(120, parseInt(e.target.value, 10) || 1)))}
-                className="w-20 rounded-xl border border-[var(--card-border)] bg-[var(--bg-overlay)] px-4 py-3 text-center text-2xl font-semibold tabular-nums text-[var(--text-primary)] focus:border-[var(--accent-focus)] focus:outline-none focus:ring-2 focus:ring-[var(--accent-focus)]/30"
-              />
-            </div>
-          ) : (
-            <div className="flex flex-col items-center gap-2 py-4">
-              <span className="font-mono text-5xl font-bold tabular-nums text-[var(--accent-focus)]" aria-live="polite">
-                {formatTime(secondsLeft)}
-              </span>
-              <span className="text-sm text-[var(--text-muted)]">remaining</span>
+              {sessionStarted && (
+                <p className="rounded-xl border border-emerald-500/35 bg-emerald-500/10 px-3 py-2 text-center text-sm text-emerald-200">
+                  Mission actief.
+                </p>
+              )}
             </div>
           )}
         </div>
@@ -270,11 +233,10 @@ export function FocusModal({ open, onClose, taskId, taskTitle, date: dateProp, t
               Abort this mission? This applies a small penalty.
             </div>
           )}
-          {!running ? (
+          {!sessionStarted ? (
             <button
               type="button"
               onClick={() => {
-                setRunning(true);
                 setSessionStarted(true);
                 const startedAt = new Date().toISOString();
                 setSessionStartedAt(startedAt);
@@ -282,15 +244,7 @@ export function FocusModal({ open, onClose, taskId, taskTitle, date: dateProp, t
               }}
               className="btn-primary rounded-xl px-6 py-3 text-base font-medium"
             >
-              Start timer
-            </button>
-          ) : (
-            <button
-              type="button"
-              onClick={() => setRunning(false)}
-              className="rounded-xl border border-[var(--card-border)] bg-transparent px-6 py-3 text-base font-medium text-[var(--text-primary)] transition-colors hover:bg-[var(--accent-neutral)]"
-            >
-              Pause
+              Start missie
             </button>
           )}
           <button

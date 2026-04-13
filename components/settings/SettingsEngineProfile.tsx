@@ -98,26 +98,10 @@ export function SettingsEngineProfile({
 
       {block(
         "Leer-ritme",
-        "Dagelijks doel in minuten, optioneel voorkeursmoment en of reminders mogen.",
+        "Optioneel voorkeursmoment en of reminders mogen.",
         <>
           <div className="grid gap-3 sm:grid-cols-2">
-            <label className="text-xs text-[var(--text-secondary)]">
-              Dagelijks leerdoel (minuten)
-              <input
-                type="number"
-                min={5}
-                max={240}
-                value={studyPlan.dailyGoalMinutes}
-                onChange={(e) =>
-                  setStudyPlan((prev) => ({
-                    ...prev,
-                    dailyGoalMinutes: Number(e.target.value || 0),
-                  }))
-                }
-                className="mt-1 w-full rounded-lg border border-[var(--card-border)] bg-[var(--bg-primary)] px-2 py-2 text-sm text-[var(--text-primary)]"
-              />
-            </label>
-            <label className="text-xs text-[var(--text-secondary)]">
+            <label className="text-xs text-[var(--text-secondary)] sm:col-span-2">
               Voorkeursmoment (optioneel)
               <input
                 type="time"

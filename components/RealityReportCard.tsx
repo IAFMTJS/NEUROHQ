@@ -14,7 +14,7 @@ export function RealityReportCard({ report }: { report: RealityReport }) {
           Week {report.weekStart} – {report.weekEnd}
         </h2>
         <p className="mt-0.5 text-xs text-[var(--text-muted)]">
-          Taken = geplande vs voltooide taken in deze week. Learning = gelogde minuten vs wekelijkse doel (Growth). Carry-over = openstaande taken aan het einde van de week; vermindert de execution score. Budget = maandbudget (Budget-pagina).
+          Taken = geplande vs voltooide taken in deze week. Carry-over = openstaande taken aan het einde van de week; vermindert de execution score. Budget = maandbudget (Budget-pagina).
         </p>
       </div>
       <div className="p-4">
@@ -22,7 +22,7 @@ export function RealityReportCard({ report }: { report: RealityReport }) {
         <div className="mb-3 rounded-lg bg-[var(--bg-surface)] px-3 py-2">
           <span className="text-xs font-medium text-[var(--text-muted)]">Execution score</span>
           <p className="text-2xl font-bold tabular-nums text-[var(--accent-focus)]">{report.executionScore}/100</p>
-          <p className="mt-1 text-[10px] text-[var(--text-muted)]">Combinatie van taken, learning, spaarvoortgang en carry-over. Hoger = betere week-uitvoering.</p>
+          <p className="mt-1 text-[10px] text-[var(--text-muted)]">Combinatie van taken, spaarvoortgang en carry-over. Hoger = betere week-uitvoering.</p>
         </div>
       )}
       <div className="space-y-4">
@@ -35,19 +35,6 @@ export function RealityReportCard({ report }: { report: RealityReport }) {
             <div
               className="h-full rounded-full bg-gradient-to-r from-[var(--accent-focus)] to-[var(--accent-energy)] transition-all duration-500"
               style={{ width: `${report.tasksPlanned > 0 ? Math.min(100, (report.tasksCompleted / report.tasksPlanned) * 100) : 0}%` }}
-              aria-hidden
-            />
-          </div>
-        </div>
-        <div>
-          <div className="flex justify-between text-sm mb-1.5">
-            <span className="text-[var(--text-muted)]">Learning</span>
-            <span className="text-[var(--text-primary)]">{report.learningMinutes} / {report.learningTarget} min</span>
-          </div>
-          <div className="h-2 w-full overflow-hidden rounded-full bg-[var(--accent-neutral)]">
-            <div
-              className="h-full rounded-full bg-gradient-to-r from-[var(--accent-energy)] to-[var(--accent-focus)] transition-all duration-500"
-              style={{ width: `${report.learningTarget > 0 ? Math.min(100, (report.learningMinutes / report.learningTarget) * 100) : 0}%` }}
               aria-hidden
             />
           </div>

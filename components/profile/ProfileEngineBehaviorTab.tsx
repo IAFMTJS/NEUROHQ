@@ -88,7 +88,7 @@ export function ProfileEngineBehaviorTab({
   const weekLabel = behaviorProfile.weekTheme
     ? WEEK_THEME_LABELS_NL[behaviorProfile.weekTheme]
     : "Geen weekthema";
-  const motorTrait = `${initialStudyPlan.dailyGoalMinutes} min/dag · accountability ${initialAccountability.enabled ? "aan" : "uit"}`;
+  const motorTrait = `${initialStudyPlan.preferredTime ? `voorkeur ${initialStudyPlan.preferredTime}` : "geen voorkeurstijd"} · reminders ${initialStudyPlan.reminderEnabled ? "aan" : "uit"} · accountability ${initialAccountability.enabled ? "aan" : "uit"}`;
   const calTrait = `${daysOffArr.length} vrije dag(en) · ${initialDayOffMode === "hard" ? "harde" : "zachte"} modus`;
 
   return (

@@ -345,7 +345,7 @@ export async function POST(request: Request) {
           });
           executedAction = "learning";
           const topicPart = requestedAction.payload.topic ? ` (${requestedAction.payload.topic})` : "";
-          responseText = responseText + ` ${requestedAction.payload.minutes} min geleerd${topicPart} gelogd.`;
+          responseText = responseText + ` Leersessie${topicPart} gelogd.`;
         }
         await trackEvent("decision_outcome", {
           decisionId: unifiedDecision.decisionId,

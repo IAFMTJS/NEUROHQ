@@ -44,7 +44,7 @@ export default async function LearningAnalyticsPage(_props: Props) {
           <div>
             <h2 className="text-base font-semibold text-[var(--text-primary)]">Learning velocity</h2>
             <p className="mt-0.5 text-xs text-[var(--text-muted)]">
-              Weekly minutes and sessions. Calm trend view only.
+              Weekly sessions. Calm trend view only.
             </p>
           </div>
         </div>
@@ -66,19 +66,11 @@ export default async function LearningAnalyticsPage(_props: Props) {
             </p>
             <ul className="mt-2 space-y-1.5 text-sm text-[var(--text-primary)]">
               {analytics.knowledgeDensity.topTopics.map((t) => (
-                <li key={t.topic} className="flex items-center justify-between gap-4">
+                <li key={t.topic} className="flex items-center gap-4">
                   <span>{t.topic}</span>
-                  <span className="text-xs text-[var(--text-muted)]">{t.minutes} min</span>
                 </li>
               ))}
             </ul>
-            <p className="mt-2 text-xs text-[var(--text-muted)]">
-              Knowledge density:{" "}
-              <span className="font-semibold text-[var(--text-secondary)]">
-                {Math.round(analytics.knowledgeDensity.densityRatio * 100)}%
-              </span>{" "}
-              of your learning time is in your top 1–2 topics.
-            </p>
           </>
         )}
       </section>

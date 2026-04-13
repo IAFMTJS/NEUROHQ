@@ -100,7 +100,7 @@ const TEMPLATES: { id: string; label: string; description: string; rules: Omit<R
   },
   {
     id: "learning_week",
-    label: "Learning-week (120 min + 5 dagen log)",
+    label: "Learning-week (activiteit + 5 dagen log)",
     description: "Totaal leertijd én consistentie.",
     rules: [
       {
@@ -121,8 +121,8 @@ const TEMPLATES: { id: string; label: string; description: string; rules: Omit<R
   },
   {
     id: "daily_learning_strict",
-    label: "Streng: elke dag ≥30 min leren",
-    description: "Gebruikt each_calendar_day + minuten in params.",
+    label: "Streng: elke dag leren",
+    description: "Gebruikt each_calendar_day + dagdrempel in params.",
     rules: [
       {
         preset: "learning_minutes_total",
@@ -473,7 +473,7 @@ export function AdminGamePresetBuilder({ configJson, setConfigJson }: Props) {
                   {(r.preset === "days_meeting_daily_learning_minutes" ||
                     (r.preset === "learning_minutes_total" && r.aggregation === "each_calendar_day")) && (
                     <label className="block text-[10px] text-white/45">
-                      Min. minuten per dag (params)
+                      Dagelijkse leerdrempel (params)
                       <input
                         type="number"
                         min={1}

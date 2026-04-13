@@ -134,8 +134,6 @@ export function AdminDiagnosticsView({ payload }: { payload: Json }) {
           <Section title="Leren (learning_sessions)">
             <Stat label="Sessies in venster" value={int(learning.rows_last_30d)} />
             <Stat label="Unieke gebruikers" value={int(learning.distinct_users_last_30d)} />
-            <Stat label="Totaal minuten in venster" value={int(learning.total_minutes_last_30d)} />
-            <Stat label="Gem. minuten per sessie" value={num(learning.avg_minutes_per_session_last_30d, 2)} />
           </Section>
         ) : null}
 
@@ -230,7 +228,6 @@ export function AdminDiagnosticsView({ payload }: { payload: Json }) {
                 <th className="py-2 pr-3 font-medium tabular-nums">State</th>
                 <th className="py-2 pr-3 font-medium tabular-nums">XP evt</th>
                 <th className="py-2 pr-3 font-medium tabular-nums">XP Σ</th>
-                <th className="py-2 pr-3 font-medium tabular-nums">Leren min</th>
                 <th className="py-2 pr-3 font-medium tabular-nums">DCIC ✓</th>
                 <th className="py-2 pr-3 font-medium tabular-nums">Open+carry</th>
                 <th className="py-2 font-medium tabular-nums">Score</th>
@@ -247,7 +244,6 @@ export function AdminDiagnosticsView({ payload }: { payload: Json }) {
                   <td className="py-1.5 pr-3 font-mono tabular-nums text-white/80">{int(row.daily_state_rows_30d)}</td>
                   <td className="py-1.5 pr-3 font-mono tabular-nums text-white/80">{int(row.xp_events_30d)}</td>
                   <td className="py-1.5 pr-3 font-mono tabular-nums text-white/80">{int(row.xp_sum_30d)}</td>
-                  <td className="py-1.5 pr-3 font-mono tabular-nums text-white/80">{int(row.learning_minutes_30d)}</td>
                   <td className="py-1.5 pr-3 font-mono tabular-nums text-white/80">{int(row.behaviour_completions_30d)}</td>
                   <td className="py-1.5 pr-3 font-mono tabular-nums text-amber-200/90">{int(row.open_tasks_with_carry_over)}</td>
                   <td className="py-1.5 font-mono tabular-nums text-white/60">{num(row.activity_score, 1)}</td>
