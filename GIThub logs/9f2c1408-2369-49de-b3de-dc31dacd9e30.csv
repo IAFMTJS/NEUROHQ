@@ -1,0 +1,5 @@
+"""'Workflow""","""'Has job failures""","""'Avg run time""","""'Workflow runs""","""'Jobs"""
+"""'.github/workflows/ci.yml""",100.00,53081,18,1
+"""'.github/workflows/cron-daily.yml""",0.00,24467,4,1
+"""'.github/workflows/cron-weekly.yml""",0.00,21118,1,1
+"""'.github/workflows/cron-hourly.yml""",0.00,20656,59,1

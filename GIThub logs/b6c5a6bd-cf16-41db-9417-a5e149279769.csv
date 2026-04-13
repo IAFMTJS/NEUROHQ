@@ -1,0 +1,5 @@
+"""'Job""","""'Workflow""","""'Failure rate""","""'Avg run time""","""'Avg queue time""","""'Runner type""","""'Runner labels""","""'Job runs"""
+"""'validate""","""'.github/workflows/ci.yml""",94.74,53735,2266,"""'hosted""","""'ubuntu-latest""",19
+"""'trigger-daily""","""'.github/workflows/cron-daily.yml""",0.00,24467,2337,"""'hosted""","""'ubuntu-latest""",4
+"""'trigger-weekly""","""'.github/workflows/cron-weekly.yml""",0.00,21118,2914,"""'hosted""","""'ubuntu-latest""",1
+"""'trigger-hourly""","""'.github/workflows/cron-hourly.yml""",0.00,20656,2570,"""'hosted""","""'ubuntu-latest""",59

@@ -1,0 +1,8 @@
+"""'Workflow""","""'Total minutes""","""'Workflow runs""","""'Jobs""","""'Runner type""","""'Runtime OS"""
+"""'.github/workflows/cron-hourly.yml""",200,199,1,"""'hosted""","""'linux"""
+"""'.github/workflows/ci.yml""",143,137,1,"""'hosted""","""'linux"""
+"""'.github/workflows/cron-daily.yml""",13,13,1,"""'hosted""","""'linux"""
+"""'.github/workflows/cron-strategy-growth.yml""",4,4,1,"""'hosted""","""'linux"""
+"""'.github/workflows/cron-weekly.yml""",2,2,1,"""'hosted""","""'linux"""
+"""'.github/workflows/cron-quarterly.yml""",1,1,1,"""'hosted""","""'linux"""
+"""'.github/workflows/cron-weekly-learning.yml""",1,1,1,"""'hosted""","""'linux"""
