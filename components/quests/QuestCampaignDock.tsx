@@ -2,28 +2,56 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { QuestCampaignModal } from "@/components/quests/QuestCampaignModal";
-import type { QuestClientPayload } from "@/app/actions/quest-campaign";
+import type { QuestDockPayload } from "@/app/actions/quest-campaign";
 
-async function fetchQuest(): Promise<QuestClientPayload | null> {
-  const res = await fetch("/api/quest-campaign", { credentials: "same-origin" });
+async function fetchQuest(): Promise<QuestDockPayload | null> {
+  const res = await fetch("/api/quest-campaign?mode=dock", { credentials: "same-origin" });
   if (!res.ok) return null;
-  const json = (await res.json()) as { quest?: QuestClientPayload | null };
+  const json = (await res.json()) as { quest?: QuestDockPayload | null };
   return json.quest ?? null;
 }
 
 /** Dashboard-only floating opener; hidden when nothing to solve today (correct flow). */
 export function QuestCampaignDock() {
   const [open, setOpen] = useState(false);
-  const [status, setStatus] = useState<QuestClientPayload | null>(null);
+  const [status, setStatus] = useState<QuestDockPayload | null>(null);
 
   const load = useCallback(() => {
     void fetchQuest().then(setStatus);
   }, []);
 
   useEffect(() => {
-    load();
-    const t = setInterval(load, 60_000);
-    return () => clearInterval(t);
+    let intervalId: ReturnType<typeof setInterval> | undefined;
+    const startPolling = () => {
+      if (intervalId != null) return;
+      intervalId = setInterval(() => {
+        if (document.visibilityState !== "visible") return;
+        load();
+      }, 120_000);
+    };
+    const stopPolling = () => {
+      if (intervalId != null) {
+        clearInterval(intervalId);
+        intervalId = undefined;
+      }
+    };
+    const onVis = () => {
+      if (document.visibilityState === "visible") {
+        load();
+        startPolling();
+      } else {
+        stopPolling();
+      }
+    };
+    if (document.visibilityState === "visible") {
+      load();
+      startPolling();
+    }
+    document.addEventListener("visibilitychange", onVis);
+    return () => {
+      stopPolling();
+      document.removeEventListener("visibilitychange", onVis);
+    };
   }, [load]);
 
   if (!status) return null;

@@ -3,7 +3,7 @@
 import { useMemo, useTransition } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import type { ProtocolLibraryRow } from "@/app/actions/protocol-library";
+import type { ProtocolLibraryListRow } from "@/app/actions/protocol-library";
 import type { ProtocolProgressState } from "@/app/actions/protocol-progress";
 import { setGrowthFocusAndCommitProtocolWeek } from "@/app/actions/growth-focus";
 import type { GrowthFocusState } from "@/app/actions/growth-focus";
@@ -15,13 +15,13 @@ const subCardClass =
   "rounded-[18px] border border-[rgba(var(--mode-rgb),0.14)] bg-gradient-to-br from-[rgba(var(--mode-rgb-deep),0.28)] via-[rgba(8,14,24,0.78)] to-[rgba(var(--mode-rgb),0.07)] p-4 shadow-[0_8px_26px_rgba(0,0,0,0.34),0_0_0_1px_rgba(var(--mode-rgb),0.08),0_0_18px_rgba(var(--mode-rgb),0.07)] backdrop-blur-[18px] transition-[box-shadow,border-color] duration-200 hover:border-[rgba(var(--mode-rgb),0.22)] hover:shadow-[0_10px_32px_rgba(0,0,0,0.4),0_0_0_1px_rgba(var(--mode-rgb),0.14),0_0_26px_rgba(var(--mode-rgb),0.11)] sm:p-5";
 
 type Props = {
-  protocols: ProtocolLibraryRow[];
+  protocols: ProtocolLibraryListRow[];
   progressMap: Record<string, ProtocolProgressState>;
   growthFocus: GrowthFocusState;
-  onOpenProtocol: (p: ProtocolLibraryRow) => void;
+  onOpenProtocol: (p: ProtocolLibraryListRow) => void;
 };
 
-function sameProtocol(a: ProtocolLibraryRow, b: ProtocolLibraryRow) {
+function sameProtocol(a: ProtocolLibraryListRow, b: ProtocolLibraryListRow) {
   return a.slug === b.slug && a.locale === b.locale;
 }
 
@@ -67,7 +67,7 @@ export function GrowthBottomHubCards({ protocols, progressMap, growthFocus, onOp
     };
   }, [active, progressMap]);
 
-  const setFocus = (p: ProtocolLibraryRow) => {
+  const setFocus = (p: ProtocolLibraryListRow) => {
     startTransition(async () => {
       try {
         const r = await setGrowthFocusAndCommitProtocolWeek({ slug: p.slug, locale: p.locale });

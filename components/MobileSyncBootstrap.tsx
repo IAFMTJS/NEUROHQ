@@ -54,6 +54,7 @@ export function MobileSyncBootstrap() {
 
     const run = () => {
       if (!navigator.onLine) return;
+      if (document.visibilityState !== "visible") return;
       void flushOutboxQueue();
       void publishSyncMetrics();
     };
@@ -63,7 +64,7 @@ export function MobileSyncBootstrap() {
     };
 
     run();
-    timer = setInterval(run, 60_000);
+    timer = setInterval(run, 120_000);
     window.addEventListener("online", run);
     document.addEventListener("visibilitychange", runOnVisible);
 

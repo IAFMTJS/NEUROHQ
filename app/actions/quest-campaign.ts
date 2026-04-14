@@ -83,6 +83,19 @@ export type QuestClientPayload = {
   finaleOutcomeText?: string | null;
 };
 
+type QuestStatusMode = "full" | "dock";
+
+export type QuestDockPayload = {
+  showDashboardFab: boolean;
+};
+
+function sanitizeQuestPaintingImageUrl(raw: string | undefined): string | undefined {
+  if (typeof raw !== "string") return undefined;
+  const value = raw.trim();
+  if (!value.startsWith("/")) return undefined;
+  return value;
+}
+
 function buildPuzzlePublic(def: QuestDayDef, state: QuestProgressState): QuestPuzzlePublic {
   if (def.kind === "paintings") {
     return {
@@ -91,11 +104,14 @@ function buildPuzzlePublic(def: QuestDayDef, state: QuestProgressState): QuestPu
       kind: "paintings",
       intro: def.intro,
       storyLine: def.storyLine,
-      paintings: def.paintings?.map((p) => ({
-        title: p.title,
-        caption: p.caption,
-        ...(typeof p.imageUrl === "string" && p.imageUrl.trim() ? { imageUrl: p.imageUrl.trim() } : {}),
-      })),
+      paintings: def.paintings?.map((p) => {
+        const imageUrl = sanitizeQuestPaintingImageUrl(p.imageUrl);
+        return {
+          title: p.title,
+          caption: p.caption,
+          ...(imageUrl ? { imageUrl } : {}),
+        };
+      }),
     };
   }
   if (def.kind === "multi" && def.steps?.length) {
@@ -194,7 +210,11 @@ async function loadLiveCampaignRow(supabase: Awaited<ReturnType<typeof createCli
   return { row, error: null };
 }
 
-export async function getQuestCampaignPublicStatus(): Promise<QuestClientPayload | null> {
+export async function getQuestCampaignPublicStatus(mode: "dock"): Promise<QuestDockPayload | null>;
+export async function getQuestCampaignPublicStatus(mode?: "full"): Promise<QuestClientPayload | null>;
+export async function getQuestCampaignPublicStatus(
+  mode: QuestStatusMode = "full"
+): Promise<QuestClientPayload | QuestDockPayload | null> {
   const supabase = await createClient();
   const {
     data: { user },
@@ -223,6 +243,9 @@ export async function getQuestCampaignPublicStatus(): Promise<QuestClientPayload
   const nextDay = eventDay > 0 ? resolveNextChallengeDay(content, eventDay, state) : null;
   const completed = isQuestFullyComplete(content, state);
   const needsFinale = needsFinaleChoiceSelection(content, state);
+  if (mode === "dock") {
+    return { showDashboardFab: nextDay != null || needsFinale };
+  }
   const fc = content.finaleChoice;
   const choiceMade =
     state.finaleChoice === "help" || state.finaleChoice === "stop" ? state.finaleChoice : null;

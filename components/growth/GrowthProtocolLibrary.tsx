@@ -1,24 +1,24 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import type { ProtocolLibraryRow } from "@/app/actions/protocol-library";
+import type { ProtocolLibraryListRow } from "@/app/actions/protocol-library";
 import type { ProtocolProgressState } from "@/app/actions/protocol-progress";
 import type { GrowthFocusState } from "@/app/actions/growth-focus";
 import { parseProtocolDefinition, maxWeekIndex } from "@/lib/growth/protocol-definition";
 import { progressKey } from "@/lib/growth/resolve-focus-protocol";
 
 type Props = {
-  protocols: ProtocolLibraryRow[];
+  protocols: ProtocolLibraryListRow[];
   progressMap: Record<string, ProtocolProgressState>;
   growthFocus?: GrowthFocusState;
   /** Shared with Growth command center — one modal for the whole page. */
-  viewerProtocol: ProtocolLibraryRow | null;
-  onViewerProtocolChange: (p: ProtocolLibraryRow | null) => void;
+  viewerProtocol: ProtocolLibraryListRow | null;
+  onViewerProtocolChange: (p: ProtocolLibraryListRow | null) => void;
 };
 
 type ListFilter = "all" | "with_progress";
 
-function hasMeaningfulProgress(p: ProtocolLibraryRow, progressMap: Record<string, ProtocolProgressState>) {
+function hasMeaningfulProgress(p: ProtocolLibraryListRow, progressMap: Record<string, ProtocolProgressState>) {
   const prog = progressMap[progressKey(p.slug, p.locale)];
   if (!prog) return false;
   return prog.completed_task_ids.length > 0 || prog.current_week_index > 1;
@@ -49,9 +49,9 @@ export function GrowthProtocolLibrary({
     [protocols, progressMap],
   );
 
-  const progressFor = (p: ProtocolLibraryRow) => progressMap[progressKey(p.slug, p.locale)] ?? null;
+  const progressFor = (p: ProtocolLibraryListRow) => progressMap[progressKey(p.slug, p.locale)] ?? null;
 
-  const isFocus = (p: ProtocolLibraryRow) =>
+  const isFocus = (p: ProtocolLibraryListRow) =>
     growthFocus?.slug != null && growthFocus.slug === p.slug && growthFocus.locale === p.locale;
 
   return (
@@ -71,11 +71,11 @@ export function GrowthProtocolLibrary({
       {protocols.length === 0 ? (
         <div className="px-4 py-8 text-center">
           <p className="text-sm text-[var(--text-muted)]">
-            Geen rijen in <code className="text-xs">protocol_library</code>. Importeer de seed (migration 090 +{" "}
-            <code className="text-xs">npm run import-protocols</code>).
+            Geen protocollen in de bundled presets. Voeg trajecten toe in{" "}
+            <code className="text-xs">lib/protocols-seed-full.json</code> (of catalog) en deploy opnieuw.
           </p>
           <p className="mt-2 text-xs text-[var(--text-muted)]">
-            Bestand: <code className="text-xs">lib/protocols-seed-full.json</code>
+            Voortgang per gebruiker blijft in Supabase; inhoud zit in de repo.
           </p>
         </div>
       ) : (

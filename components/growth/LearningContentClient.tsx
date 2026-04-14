@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, type ReactNode } from "react";
-import type { ProtocolLibraryRow } from "@/app/actions/protocol-library";
+import type { ProtocolLibraryListRow } from "@/app/actions/protocol-library";
 import type { ProtocolProgressState } from "@/app/actions/protocol-progress";
 import type { GrowthFocusState } from "@/app/actions/growth-focus";
 import type { StrategyPacingHints } from "@/lib/strategy/strategy-pacing-hints";
@@ -12,8 +12,8 @@ import { progressKey } from "@/lib/growth/resolve-focus-protocol";
 import { useHQStore } from "@/lib/hq-store";
 
 type Props = {
-  /** Protocol trajectories from `protocol_library` (D.3). */
-  protocols: ProtocolLibraryRow[];
+  /** Bundled protocol presets from repo JSON; user progress in Supabase. */
+  protocols: ProtocolLibraryListRow[];
   /** Per-protocol voortgang (tiers, week, afgevinkte taken). */
   progressMap: Record<string, ProtocolProgressState>;
   /** Opgeslagen focus-protocol (user_preferences). */
@@ -36,7 +36,7 @@ export function LearningContentClient({
   simplified = false,
   heroSlot,
 }: Props) {
-  const [viewerProtocol, setViewerProtocol] = useState<ProtocolLibraryRow | null>(null);
+  const [viewerProtocol, setViewerProtocol] = useState<ProtocolLibraryListRow | null>(null);
   const gameState = useHQStore((s) => s.gameState);
 
   const energyAvg = gameState?.stats.energy ?? null;

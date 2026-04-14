@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
+import { getBundledProtocolBySlugLocale } from "@/lib/growth/protocol-presets";
 import { createTask } from "@/app/actions/tasks";
 import { revalidateTagMax } from "@/lib/revalidate";
 import { parseProtocolDefinition, getScaledTask, weekForIndex } from "@/lib/growth/protocol-definition";
@@ -177,14 +178,8 @@ export async function commitProtocolWeekToMissions(params: {
   const forceSingleDay = params.due_date != null && params.due_date !== "";
   const singleDue = forceSingleDay ? params.due_date! : null;
 
-  const { data: row, error: rowErr } = await supabase
-    .from("protocol_library")
-    .select("id, slug, locale, title, definition_json")
-    .eq("slug", params.protocol_slug)
-    .eq("locale", locale)
-    .maybeSingle();
-
-  if (rowErr || !row) throw new Error("Protocol niet gevonden.");
+  const row = getBundledProtocolBySlugLocale(params.protocol_slug, locale);
+  if (!row) throw new Error("Protocol niet gevonden.");
 
   const def = parseProtocolDefinition((row as { definition_json?: unknown }).definition_json);
   if (!def) throw new Error("Dit protocol heeft geen structured definition.");
@@ -332,13 +327,8 @@ export async function createProtocolCatchupRound(params: {
   const locale = params.locale ?? "nl";
   const anchorToday = todayDateString();
 
-  const { data: row, error: rowErr } = await supabase
-    .from("protocol_library")
-    .select("id, slug, locale, title, definition_json")
-    .eq("slug", params.protocol_slug)
-    .eq("locale", locale)
-    .maybeSingle();
-  if (rowErr || !row) throw new Error("Protocol niet gevonden.");
+  const row = getBundledProtocolBySlugLocale(params.protocol_slug, locale);
+  if (!row) throw new Error("Protocol niet gevonden.");
 
   const def = parseProtocolDefinition((row as { definition_json?: unknown }).definition_json);
   if (!def) throw new Error("Dit protocol heeft geen structured definition.");

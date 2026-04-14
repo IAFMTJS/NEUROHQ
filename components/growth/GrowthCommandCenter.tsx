@@ -3,7 +3,7 @@
 import { useMemo, useState, useTransition } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import type { ProtocolLibraryRow } from "@/app/actions/protocol-library";
+import type { ProtocolLibraryListRow } from "@/app/actions/protocol-library";
 import type { ProtocolProgressState } from "@/app/actions/protocol-progress";
 import { commitProtocolWeekToMissions, createProtocolCatchupRound } from "@/app/actions/protocol-missions";
 import { setGrowthFocusProtocol, setGrowthFocusAndCommitProtocolWeek } from "@/app/actions/growth-focus";
@@ -49,14 +49,14 @@ function protocolWeekSegmentCaption(fills: number[], weekIndex: number, weekPct:
 }
 
 type Props = {
-  protocols: ProtocolLibraryRow[];
+  protocols: ProtocolLibraryListRow[];
   progressMap: Record<string, ProtocolProgressState>;
   engineTier: DifficultyTier | null;
   growthFocus: GrowthFocusState;
   strategyPacingHints: StrategyPacingHints | null;
   /** Huidige kalenderweek (ma–zo), zelfde als Missions-budgetweek. */
   budgetWeekLabel?: string;
-  onOpenProtocol: (p: ProtocolLibraryRow) => void;
+  onOpenProtocol: (p: ProtocolLibraryListRow) => void;
 };
 
 export function GrowthCommandCenter({

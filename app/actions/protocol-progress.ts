@@ -39,6 +39,13 @@ function parseProgressKey(key: string): { protocol_slug: string; locale: string 
   return { protocol_slug: key.slice(0, idx), locale: key.slice(idx + 2) };
 }
 
+/** Egress: avoid select(*) — only columns used by progress map / merge. */
+const USER_PROTOCOL_PROGRESS_MAP_COLUMNS =
+  "protocol_slug, locale, preferred_tier, current_week_index, completed_task_ids";
+/** Columns needed when reading before upsert (merge + optional growth week anchor). */
+const USER_PROTOCOL_PROGRESS_UPSERT_READ_COLUMNS =
+  "preferred_tier, current_week_index, completed_task_ids, growth_calendar_week_start";
+
 /**
  * Merge stored progress with protocol missions on the Tasks board:
  * completed missions count as done; open missions for the same protocol_task id do not.
@@ -128,7 +135,10 @@ export async function getProtocolProgressMap(): Promise<Record<string, ProtocolP
   } = await supabase.auth.getUser();
   if (!user) return {};
 
-  const { data, error } = await supabase.from("user_protocol_progress").select("*").eq("user_id", user.id);
+  const { data, error } = await supabase
+    .from("user_protocol_progress")
+    .select(USER_PROTOCOL_PROGRESS_MAP_COLUMNS)
+    .eq("user_id", user.id);
   if (error) {
     if (process.env.NODE_ENV === "development") console.warn("user_protocol_progress:", error.message);
     return mergeProtocolMissionCompletionsIntoMap(supabase, user.id, {});
@@ -165,7 +175,7 @@ async function upsertProgress(userId: string, patch: UpsertInput) {
   const locale = patch.locale ?? "nl";
   const { data: existing } = await supabase
     .from("user_protocol_progress")
-    .select("*")
+    .select(USER_PROTOCOL_PROGRESS_UPSERT_READ_COLUMNS)
     .eq("user_id", userId)
     .eq("protocol_slug", patch.protocol_slug)
     .eq("locale", locale)
@@ -248,7 +258,7 @@ export async function toggleProtocolTaskCompleted(params: {
 
   const { data: existing } = await supabase
     .from("user_protocol_progress")
-    .select("*")
+    .select(USER_PROTOCOL_PROGRESS_UPSERT_READ_COLUMNS)
     .eq("user_id", user.id)
     .eq("protocol_slug", params.protocol_slug)
     .eq("locale", locale)
@@ -286,7 +296,7 @@ export async function applyProtocolProgressFromMissionTags(
   const supabase = await createClient();
   const { data: existing } = await supabase
     .from("user_protocol_progress")
-    .select("*")
+    .select(USER_PROTOCOL_PROGRESS_UPSERT_READ_COLUMNS)
     .eq("user_id", userId)
     .eq("protocol_slug", meta.protocol_slug)
     .eq("locale", meta.locale)

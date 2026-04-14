@@ -1,5 +1,5 @@
 /**
- * Protocol content model — matches seed JSON and protocol_library.definition_json.
+ * Protocol content model — matches bundled seed JSON (`definition` / `definition_json` field).
  * Concept: PHASES → WEEKS → SESSIONS (tasks), with optional difficulty scaling (Updates 22-03 D.3).
  */
 import type { DifficultyTier } from "@/lib/growth/adaptive-engine";

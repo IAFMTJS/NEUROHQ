@@ -2,7 +2,7 @@
 
 import { useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import type { ProtocolLibraryRow } from "@/app/actions/protocol-library";
+import type { ProtocolLibraryListRow } from "@/app/actions/protocol-library";
 import type { ProtocolProgressState } from "@/app/actions/protocol-progress";
 import type { GrowthFocusState } from "@/app/actions/growth-focus";
 import { setGrowthFocusAndCommitProtocolWeek } from "@/app/actions/growth-focus";
@@ -15,7 +15,7 @@ import { neuroToast } from "@/lib/ui/neuro-toast";
 type TabId = "command" | "setup";
 
 type Props = {
-  protocols: ProtocolLibraryRow[];
+  protocols: ProtocolLibraryListRow[];
   progressMap: Record<string, ProtocolProgressState>;
   growthFocus: GrowthFocusState;
 };

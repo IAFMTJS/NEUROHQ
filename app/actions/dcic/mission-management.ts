@@ -9,6 +9,13 @@ import { createClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
 import type { Mission } from "@/lib/dcic/types";
 
+/** Task fields used when promoting a task to a mission (egress: not select *). */
+const TASK_FOR_MISSION_COLUMNS = "title, focus_required, social_load, priority, energy_required";
+
+/** Mission fields mapped to Mission type in getMissions / getActiveMission. */
+const MISSION_LIST_COLUMNS =
+  "id, name, xp_reward, energy_cost, completed, active, started_at, completed_at, difficulty_level, focus_requirement, social_intensity";
+
 /**
  * Creates a new mission from a task
  */
@@ -28,7 +35,7 @@ export async function createMissionFromTask(
   // Get task
   const { data: task } = await supabase
     .from("tasks")
-    .select("*")
+    .select(TASK_FOR_MISSION_COLUMNS)
     .eq("id", taskId)
     .eq("user_id", user.id)
     .single();
@@ -63,7 +70,7 @@ export async function createMissionFromTask(
       focus_requirement: focusReq,
       social_intensity: socialInt,
     })
-    .select()
+    .select("id")
     .single();
 
   if (error) {
@@ -104,7 +111,7 @@ export async function createMission(params: {
       focus_requirement: params.focusRequirement ?? null,
       social_intensity: params.socialIntensity ?? null,
     })
-    .select()
+    .select("id")
     .single();
 
   if (error) {
@@ -127,7 +134,7 @@ export async function getMissions(): Promise<Mission[]> {
 
   const { data } = await supabase
     .from("missions")
-    .select("*")
+    .select(MISSION_LIST_COLUMNS)
     .eq("user_id", user.id)
     .order("created_at", { ascending: false });
 
@@ -168,7 +175,7 @@ export async function getActiveMission(): Promise<Mission | null> {
 
   const { data: mission } = await supabase
     .from("missions")
-    .select("*")
+    .select(MISSION_LIST_COLUMNS)
     .eq("id", missionState.active_mission_id)
     .single();
 

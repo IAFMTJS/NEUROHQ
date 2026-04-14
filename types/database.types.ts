@@ -835,6 +835,30 @@ export type Database = {
         }
         Relationships: []
       }
+      budget_weekly_reviews: {
+        Row: {
+          completed_at: string
+          created_at: string
+          id: string
+          user_id: string
+          week_start: string
+        }
+        Insert: {
+          completed_at?: string
+          created_at?: string
+          id?: string
+          user_id: string
+          week_start: string
+        }
+        Update: {
+          completed_at?: string
+          created_at?: string
+          id?: string
+          user_id?: string
+          week_start?: string
+        }
+        Relationships: []
+      }
       calendar_events: {
         Row: {
           created_at: string
@@ -981,7 +1005,10 @@ export type Database = {
           date: string
           dcic_locked_until: string | null
           dcic_mode: string | null
+          dcic_overdrive_auto_triggered: boolean
           dcic_overdrive_session_start: string | null
+          dcic_overdrive_trigger_reason: string | null
+          dcic_overdrive_triggered_at: string | null
           emotional_state: string | null
           energy: number | null
           focus: number | null
@@ -1008,7 +1035,10 @@ export type Database = {
           date: string
           dcic_locked_until?: string | null
           dcic_mode?: string | null
+          dcic_overdrive_auto_triggered?: boolean
           dcic_overdrive_session_start?: string | null
+          dcic_overdrive_trigger_reason?: string | null
+          dcic_overdrive_triggered_at?: string | null
           emotional_state?: string | null
           energy?: number | null
           focus?: number | null
@@ -1035,7 +1065,10 @@ export type Database = {
           date?: string
           dcic_locked_until?: string | null
           dcic_mode?: string | null
+          dcic_overdrive_auto_triggered?: boolean
           dcic_overdrive_session_start?: string | null
+          dcic_overdrive_trigger_reason?: string | null
+          dcic_overdrive_triggered_at?: string | null
           emotional_state?: string | null
           energy?: number | null
           focus?: number | null
@@ -1190,6 +1223,38 @@ export type Database = {
           },
         ]
       }
+      financial_discipline_score: {
+        Row: {
+          created_at: string
+          date: string
+          id: string
+          score: number
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          date: string
+          id?: string
+          score: number
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          date?: string
+          id?: string
+          score?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "financial_discipline_score_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       flex_budget_ledger: {
         Row: {
           budget_day: string
@@ -1224,47 +1289,7 @@ export type Database = {
           strategy_multiplier_bp?: number | null
           user_id?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "flex_budget_ledger_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "users"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      financial_discipline_score: {
-        Row: {
-          created_at: string
-          date: string
-          id: string
-          score: number
-          user_id: string
-        }
-        Insert: {
-          created_at?: string
-          date: string
-          id?: string
-          score: number
-          user_id: string
-        }
-        Update: {
-          created_at?: string
-          date?: string
-          id?: string
-          score?: number
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "financial_discipline_score_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "users"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       friction_events: {
         Row: {
@@ -1832,6 +1857,33 @@ export type Database = {
           },
         ]
       }
+      mobile_sync_receipts: {
+        Row: {
+          action: string
+          created_at: string
+          id: string
+          idempotency_key: string
+          response_json: Json
+          user_id: string
+        }
+        Insert: {
+          action: string
+          created_at?: string
+          id?: string
+          idempotency_key: string
+          response_json?: Json
+          user_id: string
+        }
+        Update: {
+          action?: string
+          created_at?: string
+          id?: string
+          idempotency_key?: string
+          response_json?: Json
+          user_id?: string
+        }
+        Relationships: []
+      }
       monthly_books: {
         Row: {
           chapters_per_week: number | null
@@ -2070,175 +2122,31 @@ export type Database = {
         }
         Relationships: []
       }
-      protocol_library: {
+      push_daily_push_claims: {
         Row: {
-          body_md: string
           created_at: string
-          definition_json: unknown
           id: string
-          locale: string
-          slug: string
-          sort_order: number
-          summary: string | null
-          title: string
-          updated_at: string
-        }
-        Insert: {
-          body_md?: string
-          created_at?: string
-          definition_json?: unknown
-          id?: string
-          locale?: string
-          slug?: string
-          sort_order?: number
-          summary?: string | null
-          title: string
-          updated_at?: string
-        }
-        Update: {
-          body_md?: string
-          created_at?: string
-          definition_json?: unknown
-          id?: string
-          locale?: string
-          slug?: string
-          sort_order?: number
-          summary?: string | null
-          title?: string
-          updated_at?: string
-        }
-        Relationships: []
-      }
-      user_protocol_progress: {
-        Row: {
-          completed_task_ids: unknown
-          created_at: string
-          current_week_index: number
-          growth_calendar_week_start: string | null
-          id: string
-          locale: string
-          preferred_tier: string
-          protocol_slug: string
-          updated_at: string
+          local_date: string
+          trigger_type: string
           user_id: string
         }
         Insert: {
-          completed_task_ids?: unknown
           created_at?: string
-          current_week_index?: number
-          growth_calendar_week_start?: string | null
           id?: string
-          locale?: string
-          preferred_tier?: string
-          protocol_slug: string
-          updated_at?: string
+          local_date: string
+          trigger_type: string
           user_id: string
         }
         Update: {
-          completed_task_ids?: unknown
           created_at?: string
-          current_week_index?: number
-          growth_calendar_week_start?: string | null
           id?: string
-          locale?: string
-          preferred_tier?: string
-          protocol_slug?: string
-          updated_at?: string
+          local_date?: string
+          trigger_type?: string
           user_id?: string
         }
         Relationships: [
           {
-            foreignKeyName: "user_protocol_progress_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "users"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      user_platform_game_progress: {
-        Row: {
-          completed_at: string | null
-          created_at: string
-          game_id: string
-          rewards_granted_at: string | null
-          state: Json
-          updated_at: string
-          user_id: string
-        }
-        Insert: {
-          completed_at?: string | null
-          created_at?: string
-          game_id: string
-          rewards_granted_at?: string | null
-          state?: Json
-          updated_at?: string
-          user_id: string
-        }
-        Update: {
-          completed_at?: string | null
-          created_at?: string
-          game_id?: string
-          rewards_granted_at?: string | null
-          state?: Json
-          updated_at?: string
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "user_platform_game_progress_game_id_fkey"
-            columns: ["game_id"]
-            isOneToOne: false
-            referencedRelation: "platform_games"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "user_platform_game_progress_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "users"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      user_quest_campaign_progress: {
-        Row: {
-          answer_log: Json
-          campaign_id: string
-          created_at: string
-          rewards_granted_at: string | null
-          state: Json
-          updated_at: string
-          user_id: string
-        }
-        Insert: {
-          answer_log?: Json
-          campaign_id: string
-          created_at?: string
-          rewards_granted_at?: string | null
-          state?: Json
-          updated_at?: string
-          user_id: string
-        }
-        Update: {
-          answer_log?: Json
-          campaign_id?: string
-          created_at?: string
-          rewards_granted_at?: string | null
-          state?: Json
-          updated_at?: string
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "user_quest_campaign_progress_campaign_id_fkey"
-            columns: ["campaign_id"]
-            isOneToOne: false
-            referencedRelation: "platform_quest_campaigns"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "user_quest_campaign_progress_user_id_fkey"
+            foreignKeyName: "push_daily_push_claims_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "users"
@@ -3090,6 +2998,79 @@ export type Database = {
         }
         Relationships: []
       }
+      user_alert_suppressions: {
+        Row: {
+          created_at: string
+          dedupe_key: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          dedupe_key: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          dedupe_key?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_alert_suppressions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_alerts: {
+        Row: {
+          body: string | null
+          created_at: string
+          id: string
+          link_path: string | null
+          push_sent_at: string | null
+          push_tag: string | null
+          read_at: string | null
+          severity: string
+          title: string
+          user_id: string
+        }
+        Insert: {
+          body?: string | null
+          created_at?: string
+          id?: string
+          link_path?: string | null
+          push_sent_at?: string | null
+          push_tag?: string | null
+          read_at?: string | null
+          severity?: string
+          title: string
+          user_id: string
+        }
+        Update: {
+          body?: string | null
+          created_at?: string
+          id?: string
+          link_path?: string | null
+          push_sent_at?: string | null
+          push_tag?: string | null
+          read_at?: string | null
+          severity?: string
+          title?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_alerts_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_analytics_daily: {
         Row: {
           active_seconds: number
@@ -3411,6 +3392,51 @@ export type Database = {
           },
         ]
       }
+      user_platform_game_progress: {
+        Row: {
+          completed_at: string | null
+          created_at: string
+          game_id: string
+          rewards_granted_at: string | null
+          state: Json
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string
+          game_id: string
+          rewards_granted_at?: string | null
+          state?: Json
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string
+          game_id?: string
+          rewards_granted_at?: string | null
+          state?: Json
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_platform_game_progress_game_id_fkey"
+            columns: ["game_id"]
+            isOneToOne: false
+            referencedRelation: "platform_games"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_platform_game_progress_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_preferences: {
         Row: {
           auto_master_missions: boolean
@@ -3434,6 +3460,7 @@ export type Database = {
           push_weekly_learning_enabled: boolean
           reduced_motion: boolean
           selected_emotion: string | null
+          simplified_content: boolean
           theme: string
           ui_sound_enabled: boolean
           ui_speech_enabled: boolean
@@ -3463,6 +3490,7 @@ export type Database = {
           push_weekly_learning_enabled?: boolean
           reduced_motion?: boolean
           selected_emotion?: string | null
+          simplified_content?: boolean
           theme?: string
           ui_sound_enabled?: boolean
           ui_speech_enabled?: boolean
@@ -3492,6 +3520,7 @@ export type Database = {
           push_weekly_learning_enabled?: boolean
           reduced_motion?: boolean
           selected_emotion?: string | null
+          simplified_content?: boolean
           theme?: string
           ui_sound_enabled?: boolean
           ui_speech_enabled?: boolean
@@ -3504,6 +3533,90 @@ export type Database = {
             foreignKeyName: "user_preferences_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: true
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_protocol_progress: {
+        Row: {
+          completed_task_ids: Json
+          created_at: string
+          current_week_index: number
+          growth_calendar_week_start: string | null
+          id: string
+          locale: string
+          preferred_tier: string
+          protocol_slug: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          completed_task_ids?: Json
+          created_at?: string
+          current_week_index?: number
+          growth_calendar_week_start?: string | null
+          id?: string
+          locale?: string
+          preferred_tier?: string
+          protocol_slug: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          completed_task_ids?: Json
+          created_at?: string
+          current_week_index?: number
+          growth_calendar_week_start?: string | null
+          id?: string
+          locale?: string
+          preferred_tier?: string
+          protocol_slug?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_quest_campaign_progress: {
+        Row: {
+          answer_log: Json
+          campaign_id: string
+          created_at: string
+          rewards_granted_at: string | null
+          state: Json
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          answer_log?: Json
+          campaign_id: string
+          created_at?: string
+          rewards_granted_at?: string | null
+          state?: Json
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          answer_log?: Json
+          campaign_id?: string
+          created_at?: string
+          rewards_granted_at?: string | null
+          state?: Json
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_quest_campaign_progress_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "platform_quest_campaigns"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_quest_campaign_progress_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
             referencedRelation: "users"
             referencedColumns: ["id"]
           },
@@ -3997,18 +4110,16 @@ export type Database = {
       }
     }
     Functions: {
+      add_user_xp_delta: {
+        Args: { p_delta: number; p_user_id: string }
+        Returns: number
+      }
       admin_archive_quest_campaign_to_template: {
         Args: { p_campaign_id: string }
         Returns: string
-      },
+      }
       admin_platform_diagnostics: { Args: never; Returns: Json }
       current_user_is_admin: { Args: never; Returns: boolean }
-      add_user_xp_delta: { Args: { p_delta: number; p_user_id: string }; Returns: number }
-      sum_xp_events_for_user: { Args: { p_user_id: string }; Returns: number }
-      lock_daily_dcic_mode_if_unset: {
-        Args: { p_date: string; p_mode: string; p_user_id: string }
-        Returns: undefined
-      }
       get_calendar_feed_events: {
         Args: { p_token: string }
         Returns: {
@@ -4018,6 +4129,11 @@ export type Database = {
           title: string
         }[]
       }
+      lock_daily_dcic_mode_if_unset: {
+        Args: { p_date: string; p_mode: string; p_user_id: string }
+        Returns: undefined
+      }
+      sum_xp_events_for_user: { Args: { p_user_id: string }; Returns: number }
     }
     Enums: {
       [_ in never]: never
@@ -4150,6 +4266,7 @@ export const Constants = {
     Enums: {},
   },
 } as const
+
 
 /** Convenience aliases used across the app */
 export type Task = Tables<"tasks">

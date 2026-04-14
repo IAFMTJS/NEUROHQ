@@ -1,4 +1,4 @@
-import type { ProtocolLibraryRow } from "@/app/actions/protocol-library";
+import type { ProtocolLibraryListRow } from "@/app/actions/protocol-library";
 import type { ProtocolProgressState } from "@/app/actions/protocol-progress";
 import type { GrowthFocusState } from "@/app/actions/growth-focus";
 
@@ -8,10 +8,10 @@ export function progressKey(slug: string, locale: string) {
 
 /** Same resolution as Growth command center: saved focus → first with progress → first in library. */
 export function resolveFocusProtocol(
-  protocols: ProtocolLibraryRow[],
+  protocols: ProtocolLibraryListRow[],
   progressMap: Record<string, ProtocolProgressState>,
   focus: GrowthFocusState,
-): ProtocolLibraryRow | null {
+): ProtocolLibraryListRow | null {
   if (protocols.length === 0) return null;
   if (focus.slug) {
     const exact = protocols.find((p) => p.slug === focus.slug && p.locale === focus.locale);

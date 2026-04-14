@@ -113,6 +113,7 @@ function userNeedsFullHourlyCycle(
   if (
     vapidOk &&
     userPrefs.pushRemindersEnabled &&
+    hasPushSub &&
     pushQuoteEnabled &&
     hour >= quoteHour &&
     !inQuiet
@@ -133,6 +134,7 @@ function userNeedsFullHourlyCycle(
   if (
     vapidOk &&
     userPrefs.pushRemindersEnabled &&
+    hasPushSub &&
     hour >= BRAIN_STATUS_REMINDER_MIN_LOCAL_HOUR &&
     hour <= BRAIN_STATUS_REMINDER_MAX_LOCAL_HOUR &&
     !inQuiet
@@ -146,6 +148,7 @@ function userNeedsFullHourlyCycle(
     hour <= 23 &&
     userPrefs.pushRemindersEnabled &&
     userPrefs.pushEveningEnabled &&
+    hasPushSub &&
     !inQuiet
   ) {
     return true;
@@ -427,6 +430,7 @@ export async function runHourlyCronExecution(input: RunHourlyCronInput): Promise
     };
     const quietStart = u.push_quiet_hours_start ? String(u.push_quiet_hours_start).slice(0, 5) : null;
     const quietEnd = u.push_quiet_hours_end ? String(u.push_quiet_hours_end).slice(0, 5) : null;
+    const hasPushSubscription = !!(u as { push_subscription_json?: unknown }).push_subscription_json;
 
     const pushDedupe = new PushCopyDedupe(todayStr, parsePushCopyHistory(pushCopyHistoryByUser.get(u.id)), 7);
 
@@ -488,7 +492,8 @@ export async function runHourlyCronExecution(input: RunHourlyCronInput): Promise
       hour >= quoteHour &&
       process.env.VAPID_PRIVATE_KEY &&
       process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY &&
-      userPrefs.pushRemindersEnabled
+      userPrefs.pushRemindersEnabled &&
+      hasPushSubscription
     ) {
       const pushQuoteEnabled = (u as { push_quote_enabled?: boolean | null }).push_quote_enabled !== false;
       if (pushQuoteEnabled && !isInQuietHours(hour, quietStart, quietEnd, localNow.minute)) {
@@ -552,7 +557,7 @@ export async function runHourlyCronExecution(input: RunHourlyCronInput): Promise
       process.env.VAPID_PRIVATE_KEY &&
       process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY &&
       userPrefs.pushRemindersEnabled &&
-      (u as { push_subscription_json?: unknown }).push_subscription_json &&
+      hasPushSubscription &&
       !isInQuietHours(hour, quietStart, quietEnd, localNow.minute)
     ) {
       try {
@@ -598,7 +603,7 @@ export async function runHourlyCronExecution(input: RunHourlyCronInput): Promise
       process.env.VAPID_PRIVATE_KEY &&
       process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY &&
       userPrefs.pushRemindersEnabled &&
-      (u as { push_subscription_json?: unknown }).push_subscription_json &&
+      hasPushSubscription &&
       !isInQuietHours(hour, quietStart, quietEnd, localNow.minute)
     ) {
       try {
@@ -645,7 +650,7 @@ export async function runHourlyCronExecution(input: RunHourlyCronInput): Promise
       activePlatformLaunch &&
       hour >= PLATFORM_ACTIVE_REMINDER_MIN_LOCAL_HOUR &&
       userPrefs.pushRemindersEnabled &&
-      (u as { push_subscription_json?: unknown }).push_subscription_json &&
+      hasPushSubscription &&
       !isInQuietHours(hour, quietStart, quietEnd, localNow.minute)
     ) {
       try {
@@ -675,6 +680,7 @@ export async function runHourlyCronExecution(input: RunHourlyCronInput): Promise
       userPrefs.pushRemindersEnabled &&
       process.env.VAPID_PRIVATE_KEY &&
       process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY &&
+      hasPushSubscription &&
       !isInQuietHours(hour, quietStart, quietEnd, localNow.minute)
     ) {
       const highSensory = await isHighSensoryDayForUser(supabase, u.id as string, todayStr);
@@ -762,6 +768,7 @@ export async function runHourlyCronExecution(input: RunHourlyCronInput): Promise
       userPrefs.pushEveningEnabled &&
       process.env.VAPID_PRIVATE_KEY &&
       process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY &&
+      hasPushSubscription &&
       !isInQuietHours(hour, quietStart, quietEnd, localNow.minute)
     ) {
       const highSensory = await isHighSensoryDayForUser(supabase, u.id, todayStr);

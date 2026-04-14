@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
+import { getBundledProtocolBySlugLocale } from "@/lib/growth/protocol-presets";
 import { commitProtocolWeekToMissions } from "@/app/actions/protocol-missions";
 import { upsertProtocolProgress } from "@/app/actions/protocol-progress";
 import { parseProtocolDefinition, maxWeekIndex } from "@/lib/growth/protocol-definition";
@@ -71,18 +72,12 @@ export async function syncGrowthFocusProtocolToCalendarWeek(): Promise<{
   const today = todayDateString();
   const { start: thisMonday } = getBudgetWeekBounds(today);
 
-  const { data: libRow, error: libErr } = await supabase
-    .from("protocol_library")
-    .select("definition_json")
-    .eq("slug", slug)
-    .eq("locale", locale)
-    .maybeSingle();
-
-  if (libErr || !libRow) {
+  const libRow = getBundledProtocolBySlugLocale(slug, locale);
+  if (!libRow) {
     return { didRoll: false, calendarWeeksAdvanced: 0, missionCommit: null };
   }
 
-  const def = parseProtocolDefinition((libRow as { definition_json?: unknown }).definition_json);
+  const def = parseProtocolDefinition(libRow.definition_json);
   if (!def) {
     return { didRoll: false, calendarWeeksAdvanced: 0, missionCommit: null };
   }

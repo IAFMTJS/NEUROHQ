@@ -66,8 +66,19 @@ export function SettingsMobileSyncHealth() {
   useEffect(() => {
     if (!enabled) return;
     void load();
-    const t = window.setInterval(() => void load(), 12_000);
-    return () => clearInterval(t);
+    const tick = () => {
+      if (document.visibilityState !== "visible") return;
+      void load();
+    };
+    const t = window.setInterval(tick, 60_000);
+    const onVis = () => {
+      if (document.visibilityState === "visible") void load();
+    };
+    document.addEventListener("visibilitychange", onVis);
+    return () => {
+      clearInterval(t);
+      document.removeEventListener("visibilitychange", onVis);
+    };
   }, [enabled, load]);
 
   async function handleFlush() {

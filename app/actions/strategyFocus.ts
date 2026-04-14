@@ -75,6 +75,16 @@ const DEFAULT_ALLOCATION: WeeklyAllocation = {
   business: 25,
 };
 
+/** Full strategy row fields used by StrategyFocusRow (explicit list vs select *). */
+const STRATEGY_FOCUS_ROW_COLUMNS =
+  "id, user_id, thesis, thesis_why, deadline, target_metric, primary_domain, secondary_domains, weekly_allocation, engine_params, phase, identity_profile, start_date, end_date, is_active, archive_reason, archive_reason_note, created_at, updated_at, pressure_boost_after_deadline";
+
+const ALIGNMENT_LOG_ROW_COLUMNS =
+  "id, strategy_id, date, planned_distribution, actual_distribution, alignment_score, created_at";
+
+const STRATEGY_REVIEW_ROW_COLUMNS =
+  "id, strategy_id, week_number, week_start, alignment_score, biggest_drift_domain, strongest_domain, notes, created_at, weekly_review_payload";
+
 function normalizeAllocation(wa: Record<string, unknown> | null): WeeklyAllocation {
   if (!wa || typeof wa !== "object") return { ...DEFAULT_ALLOCATION };
   const out = { ...DEFAULT_ALLOCATION };
@@ -99,7 +109,7 @@ export const getActiveStrategyFocus = cache(async (): Promise<StrategyFocusRow |
   if (!user) return null;
   const { data } = await supabase
     .from("strategy_focus")
-    .select("*")
+    .select(STRATEGY_FOCUS_ROW_COLUMNS)
     .eq("user_id", user.id)
     .eq("is_active", true)
     .order("created_at", { ascending: false })
@@ -267,7 +277,7 @@ export async function getPastStrategyFocus(limit = 10): Promise<StrategyFocusRow
   if (!user) return [];
   const { data } = await supabase
     .from("strategy_focus")
-    .select("*")
+    .select(STRATEGY_FOCUS_ROW_COLUMNS)
     .eq("user_id", user.id)
     .eq("is_active", false)
     .order("end_date", { ascending: false })
@@ -381,7 +391,7 @@ export async function getAlignmentForDate(strategyId: string, date: string): Pro
   const supabase = await createClient();
   const { data } = await supabase
     .from("alignment_log")
-    .select("*")
+    .select(ALIGNMENT_LOG_ROW_COLUMNS)
     .eq("strategy_id", strategyId)
     .eq("date", date)
     .single();
@@ -404,7 +414,7 @@ export async function getAlignmentLog(strategyId: string, days = 14): Promise<Al
   start.setDate(start.getDate() - days);
   const { data } = await supabase
     .from("alignment_log")
-    .select("*")
+    .select(ALIGNMENT_LOG_ROW_COLUMNS)
     .eq("strategy_id", strategyId)
     .gte("date", start.toISOString().slice(0, 10))
     .lte("date", end.toISOString().slice(0, 10))
@@ -583,7 +593,7 @@ export async function getStrategyReviewStatus(
   const [{ data: last }, { data: matchRows }] = await Promise.all([
     supabase
       .from("strategy_review")
-      .select("*")
+      .select(STRATEGY_REVIEW_ROW_COLUMNS)
       .eq("strategy_id", strategyId)
       .order("week_number", { ascending: false })
       .limit(1)
