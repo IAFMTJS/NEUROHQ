@@ -51,7 +51,7 @@ function isLikelyNetworkAuthProbeError(err: unknown): boolean {
 }
 
 /**
- * Proxy: validate session with Supabase getUser() so auth works on deploy (Vercel).
+ * Proxy: probe session via Supabase SSR cookies.
  * API routes are excluded so /api/auth/login can set cookies and redirect.
  * Redirects use baseUrl() so the client stays on the same domain.
  */
@@ -97,8 +97,10 @@ export async function proxy(request: NextRequest) {
         },
       },
     });
-    const { data } = await supabaseClient.auth.getUser();
-    user = data?.user ?? null;
+    // Use getSession() to avoid a network call to /auth/v1/user on every request.
+    // We only need "is there a session" for app-route gating; admin role checks happen separately below.
+    const { data } = await supabaseClient.auth.getSession();
+    user = data?.session?.user ? { id: data.session.user.id } : null;
   } catch (err) {
     authProbeState = isLikelyNetworkAuthProbeError(err) ? "network_error" : "auth_error";
     // Supabase timeout/network issue (e.g. transient deploy connectivity): fall back to cookie presence so users aren't blocked.

@@ -24,6 +24,7 @@
     "seed:quotes": "node scripts/seed-quotes.js",
     "build:icons": "node scripts/generate-pwa-icons.js",
     "generate-vapid": "node scripts/generate-vapid-keys.js",
+    "egress:report": "node scripts/egress-report.mjs",
     "db:types": "node scripts/gen-db-types.js",
     "import-protocols": "node scripts/import-protocols-json.mjs",
     "import:automissions": "node scripts/import-automissions-json.mjs",
