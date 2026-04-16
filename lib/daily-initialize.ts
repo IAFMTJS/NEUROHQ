@@ -10,6 +10,7 @@ import {
   type BootstrapTodayResponse,
 } from "@/lib/daily-snapshot-full-sync";
 import { mergeBootstrapTodayIntoDailySnapshot } from "@/lib/bootstrap-today-mappers";
+import { seedHubBundlesFromBootstrapToday } from "@/lib/hub-bundles/seed-from-bootstrap";
 
 /** Set during `initializeDailySystem` when `fetchMissions` parses `/api/bootstrap/today`. */
 let bootstrapTodayCapture: BootstrapTodayResponse | null = null;
@@ -377,6 +378,7 @@ async function runStep(snapshot: DailySnapshot, step: PreloadStepId): Promise<Da
         bootstrapTodayEtagCapture = boot.etag;
         const dateStr = (data.date as string) ?? snapshot.date;
         const merged = mergeBootstrapTodayIntoDailySnapshot(snapshot, data as BootstrapTodayResponse);
+        void seedHubBundlesFromBootstrapToday(data as BootstrapTodayResponse).catch(() => {});
 
         let calendar: DailySnapshot["calendar"] = merged.calendar ?? null;
         try {

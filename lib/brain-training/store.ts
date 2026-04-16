@@ -10,7 +10,11 @@ export const BRAIN_DAILY_CAP = 300;
 
 const ACTIVITY_XP = {
   sudoku: 50,
-  quick_test: 20,
+  choice_rt: 30,
+  stroop: 25,
+  sequence_recall: 25,
+  tile_merge: 30,
+  word_scramble: 25,
 } as const;
 
 export type BrainActivityType = keyof typeof ACTIVITY_XP;
@@ -27,7 +31,11 @@ export type BrainTrainingState = {
   userId: string;
   dailyKey: string;
   sudokuDone: boolean;
-  quickTestDone: boolean;
+  choiceRtDone: boolean;
+  stroopDone: boolean;
+  sequenceRecallDone: boolean;
+  tileMergeDone: boolean;
+  wordScrambleDone: boolean;
   dailyCompletionAwarded: boolean;
   dailyXpEarned: number;
   streakCount: number;
@@ -36,8 +44,17 @@ export type BrainTrainingState = {
   pendingXpQueue: PendingXpItem[];
   lastSyncAt: number | null;
   syncRetryCount: number;
-  quickTestBestMs: number | null;
-  quickTestLastMs: number | null;
+  choiceRtBestMs: number | null;
+  choiceRtLastAvgMs: number | null;
+  choiceRtLastWrong: number | null;
+  stroopBestScore: number | null;
+  stroopLastScore: number | null;
+  sequenceBestLevel: number | null;
+  sequenceLastLevel: number | null;
+  tileBestScore: number | null;
+  tileLastScore: number | null;
+  wordBestStreak: number | null;
+  wordLastStreak: number | null;
   sudokuBoard: string;
 };
 
@@ -142,11 +159,20 @@ function normalizeForToday(state: BrainTrainingState, todayKey: string): BrainTr
     ...state,
     dailyKey: todayKey,
     sudokuDone: false,
-    quickTestDone: false,
+    choiceRtDone: false,
+    stroopDone: false,
+    sequenceRecallDone: false,
+    tileMergeDone: false,
+    wordScrambleDone: false,
     dailyCompletionAwarded: false,
     dailyXpEarned: 0,
     sudokuBoard: defaultBoard(state.userId, todayKey),
-    quickTestLastMs: null,
+    choiceRtLastAvgMs: null,
+    choiceRtLastWrong: null,
+    stroopLastScore: null,
+    sequenceLastLevel: null,
+    tileLastScore: null,
+    wordLastStreak: null,
   };
 }
 
@@ -160,7 +186,11 @@ export async function loadBrainState(userId: string, serverTotalXp: number): Pro
       userId,
       dailyKey: todayKey,
       sudokuDone: false,
-      quickTestDone: false,
+      choiceRtDone: false,
+      stroopDone: false,
+      sequenceRecallDone: false,
+      tileMergeDone: false,
+      wordScrambleDone: false,
       dailyCompletionAwarded: false,
       dailyXpEarned: 0,
       streakCount: 0,
@@ -169,14 +199,43 @@ export async function loadBrainState(userId: string, serverTotalXp: number): Pro
       pendingXpQueue: [],
       lastSyncAt: null,
       syncRetryCount: 0,
-      quickTestBestMs: null,
-      quickTestLastMs: null,
+      choiceRtBestMs: null,
+      choiceRtLastAvgMs: null,
+      choiceRtLastWrong: null,
+      stroopBestScore: null,
+      stroopLastScore: null,
+      sequenceBestLevel: null,
+      sequenceLastLevel: null,
+      tileBestScore: null,
+      tileLastScore: null,
+      wordBestStreak: null,
+      wordLastStreak: null,
       sudokuBoard: defaultBoard(userId, todayKey),
     };
 
   const normalized = normalizeForToday(base, todayKey);
-  const upgraded: BrainTrainingState = {
+  const ensured: BrainTrainingState = {
     ...normalized,
+    choiceRtDone: normalized.choiceRtDone ?? false,
+    stroopDone: normalized.stroopDone ?? false,
+    sequenceRecallDone: normalized.sequenceRecallDone ?? false,
+    tileMergeDone: normalized.tileMergeDone ?? false,
+    wordScrambleDone: normalized.wordScrambleDone ?? false,
+    choiceRtBestMs: normalized.choiceRtBestMs ?? null,
+    choiceRtLastAvgMs: normalized.choiceRtLastAvgMs ?? null,
+    choiceRtLastWrong: normalized.choiceRtLastWrong ?? null,
+    stroopBestScore: normalized.stroopBestScore ?? null,
+    stroopLastScore: normalized.stroopLastScore ?? null,
+    sequenceBestLevel: normalized.sequenceBestLevel ?? null,
+    sequenceLastLevel: normalized.sequenceLastLevel ?? null,
+    tileBestScore: normalized.tileBestScore ?? null,
+    tileLastScore: normalized.tileLastScore ?? null,
+    wordBestStreak: normalized.wordBestStreak ?? null,
+    wordLastStreak: normalized.wordLastStreak ?? null,
+  };
+
+  const upgraded: BrainTrainingState = {
+    ...ensured,
     localTotalXp: Math.max(normalized.localTotalXp, Math.max(0, Math.floor(serverTotalXp))),
     sudokuBoard:
       normalized.sudokuBoard && normalized.sudokuBoard.length === 81
@@ -236,18 +295,47 @@ export function applyActivityCompletion(
   if (activity === "sudoku" && normalized.sudokuDone) {
     return { state: normalized, appliedXp: 0, skippedReason: "Sudoku al voltooid vandaag.", dailyCompletedNow: false };
   }
-  if (activity === "quick_test" && normalized.quickTestDone) {
-    return { state: normalized, appliedXp: 0, skippedReason: "Quick Test al voltooid vandaag.", dailyCompletedNow: false };
+  if (activity === "choice_rt" && normalized.choiceRtDone) {
+    return { state: normalized, appliedXp: 0, skippedReason: "Choice RT al voltooid vandaag.", dailyCompletedNow: false };
+  }
+  if (activity === "stroop" && normalized.stroopDone) {
+    return { state: normalized, appliedXp: 0, skippedReason: "Stroop al voltooid vandaag.", dailyCompletedNow: false };
+  }
+  if (activity === "sequence_recall" && normalized.sequenceRecallDone) {
+    return { state: normalized, appliedXp: 0, skippedReason: "Sequence al voltooid vandaag.", dailyCompletedNow: false };
+  }
+  if (activity === "tile_merge" && normalized.tileMergeDone) {
+    return { state: normalized, appliedXp: 0, skippedReason: "Tile Merge al voltooid vandaag.", dailyCompletedNow: false };
+  }
+  if (activity === "word_scramble" && normalized.wordScrambleDone) {
+    return { state: normalized, appliedXp: 0, skippedReason: "Word Scramble al voltooid vandaag.", dailyCompletedNow: false };
   }
 
-  const withActivityFlag =
-    activity === "sudoku" ? { ...normalized, sudokuDone: true } : { ...normalized, quickTestDone: true };
+  const withActivityFlag: BrainTrainingState =
+    activity === "sudoku"
+      ? { ...normalized, sudokuDone: true }
+      : activity === "choice_rt"
+        ? { ...normalized, choiceRtDone: true }
+        : activity === "stroop"
+          ? { ...normalized, stroopDone: true }
+          : activity === "sequence_recall"
+            ? { ...normalized, sequenceRecallDone: true }
+            : activity === "tile_merge"
+              ? { ...normalized, tileMergeDone: true }
+              : { ...normalized, wordScrambleDone: true };
 
   const beforeXp = withActivityFlag.dailyXpEarned;
   let updated = applyXpWithCap(withActivityFlag, ACTIVITY_XP[activity], activity);
   let dailyCompletedNow = false;
 
-  const dailySetComplete = updated.sudokuDone && updated.quickTestDone && !updated.dailyCompletionAwarded;
+  const dailySetComplete =
+    updated.sudokuDone &&
+    updated.choiceRtDone &&
+    updated.stroopDone &&
+    updated.sequenceRecallDone &&
+    updated.tileMergeDone &&
+    updated.wordScrambleDone &&
+    !updated.dailyCompletionAwarded;
   if (dailySetComplete) {
     dailyCompletedNow = true;
     const streak = resolveStreak(updated.lastCompletionDate, todayKey, updated.streakCount);
@@ -283,13 +371,54 @@ export function getSudokuBoard(state: BrainTrainingState, fallback: number[]): n
   return boardStringToCells(state.sudokuBoard, fallback);
 }
 
-export function updateQuickTestScore(state: BrainTrainingState, reactionMs: number): BrainTrainingState {
-  const rounded = Math.max(0, Math.floor(reactionMs));
+export function updateChoiceRtResult(
+  state: BrainTrainingState,
+  avgMs: number,
+  wrong: number
+): BrainTrainingState {
+  const roundedAvg = Math.max(0, Math.floor(avgMs));
+  const wrongCount = Math.max(0, Math.floor(wrong));
   return {
     ...state,
-    quickTestLastMs: rounded,
-    quickTestBestMs:
-      state.quickTestBestMs == null ? rounded : Math.min(state.quickTestBestMs, rounded),
+    choiceRtLastAvgMs: roundedAvg,
+    choiceRtLastWrong: wrongCount,
+    choiceRtBestMs: state.choiceRtBestMs == null ? roundedAvg : Math.min(state.choiceRtBestMs, roundedAvg),
+  };
+}
+
+export function updateStroopScore(state: BrainTrainingState, score: number): BrainTrainingState {
+  const s = Math.max(0, Math.floor(score));
+  return {
+    ...state,
+    stroopLastScore: s,
+    stroopBestScore: state.stroopBestScore == null ? s : Math.max(state.stroopBestScore, s),
+  };
+}
+
+export function updateSequenceLevel(state: BrainTrainingState, level: number): BrainTrainingState {
+  const lvl = Math.max(0, Math.floor(level));
+  return {
+    ...state,
+    sequenceLastLevel: lvl,
+    sequenceBestLevel: state.sequenceBestLevel == null ? lvl : Math.max(state.sequenceBestLevel, lvl),
+  };
+}
+
+export function updateTileScore(state: BrainTrainingState, score: number): BrainTrainingState {
+  const s = Math.max(0, Math.floor(score));
+  return {
+    ...state,
+    tileLastScore: s,
+    tileBestScore: state.tileBestScore == null ? s : Math.max(state.tileBestScore, s),
+  };
+}
+
+export function updateWordStreak(state: BrainTrainingState, streak: number): BrainTrainingState {
+  const s = Math.max(0, Math.floor(streak));
+  return {
+    ...state,
+    wordLastStreak: s,
+    wordBestStreak: state.wordBestStreak == null ? s : Math.max(state.wordBestStreak, s),
   };
 }
 

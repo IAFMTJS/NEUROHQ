@@ -4,6 +4,16 @@ import { NextResponse, type NextRequest } from "next/server";
 const APP_ROUTES = ["/dashboard", "/tasks", "/settings", "/budget", "/learning", "/strategy", "/report", "/xp", "/assistant", "/analytics"];
 const AUTH_ROUTES = ["/login", "/signup", "/forgot-password"];
 
+function getProductionHostname(): string {
+  const raw = process.env.NEXT_PUBLIC_APP_URL;
+  if (!raw) return "neurohq.vercel.app";
+  try {
+    return new URL(raw).hostname;
+  } catch {
+    return raw.replace(/^https?:\/\//, "").split("/")[0] || "neurohq.vercel.app";
+  }
+}
+
 function isAdminLoginPath(pathname: string) {
   return pathname === "/admin/login";
 }
@@ -59,6 +69,23 @@ export async function proxy(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
   const base = baseUrl(request);
   const response = NextResponse.next({ request });
+
+  // If someone hits a preview *.vercel.app domain, redirect to production for pages
+  // and block API calls at the edge (prevents wasted Supabase/auth traffic).
+  const host = request.headers.get("x-forwarded-host") ?? request.headers.get("host") ?? "";
+  const productionHost = getProductionHostname();
+  const isVercelAppHost = host.endsWith(".vercel.app");
+  const isProductionHost = host === productionHost;
+  if (isVercelAppHost && !isProductionHost) {
+    if (pathname.startsWith("/api/")) {
+      return NextResponse.json({ error: "Not found" }, { status: 404 });
+    }
+    const url = request.nextUrl.clone();
+    url.hostname = productionHost;
+    url.protocol = "https:";
+    url.port = "";
+    return NextResponse.redirect(url, 308);
+  }
 
   // Cron routes use CRON_SECRET in the handler; never redirect them to login.
   // Match by pathname and URL so we never redirect even if path is normalized differently.

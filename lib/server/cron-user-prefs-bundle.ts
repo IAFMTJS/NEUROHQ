@@ -84,8 +84,9 @@ export async function fetchAllCronUsersForSelect(
     const to = from + CRON_USERS_PAGE_SIZE - 1;
     let q = supabase.from("users").select(selectList).order("id", { ascending: true }).range(from, to);
     if (userIdFilter) q = q.eq("id", userIdFilter);
-    const { data } = await q;
-    const batch = (data ?? []) as CronBundleUserRow[];
+    const { data, error } = await q;
+    if (error) throw error;
+    const batch = (data ?? []) as unknown as CronBundleUserRow[];
     if (!batch.length) break;
     users.push(...batch);
     if (userIdFilter || batch.length < CRON_USERS_PAGE_SIZE) break;

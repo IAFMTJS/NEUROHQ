@@ -23,6 +23,8 @@ import { GroceryMissionPlannerCard } from "@/components/budget/GroceryMissionPla
 import { BudgetLockHub } from "@/components/budget/BudgetLockHub";
 import { BudgetOptimizationHub } from "@/components/budget/BudgetOptimizationHub";
 import { DashboardCommandDeckFrame } from "@/components/layout/DashboardCommandDeckFrame";
+import { isLocalFirstHubEnabled } from "@/lib/hub-bundles/flag";
+import { BudgetLocalFirstPage } from "@/components/budget/BudgetLocalFirstPage";
 
 const BudgetHistorySelector = nextDynamic(() => import("@/components/BudgetHistorySelector").then((m) => ({ default: m.BudgetHistorySelector })), { loading: () => null });
 const ExportBudgetCsvButton = nextDynamic(() => import("@/components/ExportBudgetCsvButton").then((m) => ({ default: m.ExportBudgetCsvButton })), { loading: () => null });
@@ -37,6 +39,9 @@ type Props = { searchParams: Promise<{ month?: string; tab?: string }> };
 export const dynamic = "force-dynamic";
 
 export default async function BudgetPage({ searchParams }: Props) {
+  if (isLocalFirstHubEnabled()) {
+    return <BudgetLocalFirstPage />;
+  }
   const today = getBudgetToday();
   const params = await searchParams;
   const monthParam = params.month;

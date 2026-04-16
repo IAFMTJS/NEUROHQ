@@ -71,6 +71,7 @@ See `.env.example`. Required:
 - `NEXT_PUBLIC_SUPABASE_ANON_KEY` — Supabase anon key  
 - `SUPABASE_SERVICE_ROLE_KEY` — For cron and server-side admin  
 - Optional: `CRON_SECRET` — Protects cron routes on Vercel  
+- Optional: `NEXT_PUBLIC_LOCAL_FIRST_HUB` — Set to `1` to enable local-first hub bundles (Tasks/Budget/Strategy) via IndexedDB cache + background revalidate  
 - Optional (push): `NEXT_PUBLIC_VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY` — from `npm run generate-vapid`  
 - Optional (Assistant): `NEXT_PUBLIC_ASSISTANT_ENABLED` — Set to `true` in development or staging to show the Assistant page and nav entry. Leave unset or `false` in production until the feature is GA.  
 

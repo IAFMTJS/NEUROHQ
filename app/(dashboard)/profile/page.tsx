@@ -8,14 +8,11 @@ import { getUserPreferencesOrDefaults } from "@/app/actions/preferences";
 import { getBehaviorProfile } from "@/app/actions/behavior-profile";
 import { getPlayProfileDocument } from "@/app/actions/play-profile";
 import { getStudyPlan, getAccountabilitySettings } from "@/app/actions/behavior";
-import { getXPFullContext } from "@/app/actions/xp-context";
-import { getDailyState } from "@/app/actions/daily-state";
-import { getProfileDailyChallengeContext } from "@/app/actions/profile-daily-challenges";
 import { todayDateString } from "@/lib/utils/timezone";
 import { ProfileEngineIdentityCard } from "@/components/profile/ProfileEngineIdentityCard";
-import { ProfileHomeCompact } from "@/components/profile/ProfileHomeCompact";
 import { ProfileSpecialEventsClient } from "@/components/profile/ProfileSpecialEventsClient";
 import { ProfileSnapshotFallback } from "@/components/profile/ProfileSnapshotFallback";
+import { ProfileHomeLocalFirst } from "@/components/profile/ProfileHomeLocalFirst";
 import { getProfileSpecialEventsBundle } from "@/app/actions/profile-special-events";
 import {
   parseProfileMainView,
@@ -130,16 +127,8 @@ function redirectLegacyProfileQuery(raw: Search) {
   redirect("/settings");
 }
 
-async function ProfileHomeAsync({ userId }: { userId: string }) {
-  const today = todayDateString();
-  const [prefs, xpCtx, todayDaily, dailyChallengeContext] = await Promise.all([
-    getUserPreferencesOrDefaults(),
-    getXPFullContext(undefined, userId),
-    getDailyState(today),
-    getProfileDailyChallengeContext(today),
-  ]);
-  const { identity, insightState, forecast } = xpCtx;
-  const moodLabel = (todayDaily as { mood_label?: string | null } | null)?.mood_label ?? null;
+async function ProfileHomeWrapper() {
+  const prefs = await getUserPreferencesOrDefaults();
   const simplified = prefs.simplified_content === true;
 
   const deleteAccountSection = (
@@ -163,14 +152,7 @@ async function ProfileHomeAsync({ userId }: { userId: string }) {
         >
           <div className="space-y-4">
             <MainTabNavSimplified active="home" />
-            <ProfileHomeCompact
-              identity={identity}
-              insightState={insightState}
-              forecast={forecast}
-              initialMoodLabel={moodLabel}
-              todayStr={today}
-              dailyChallengeContext={dailyChallengeContext}
-            />
+            <ProfileHomeLocalFirst simplified />
             {deleteAccountSection}
           </div>
         </SimplifiedPageShell>
@@ -180,14 +162,7 @@ async function ProfileHomeAsync({ userId }: { userId: string }) {
 
   return (
     <ProfileCommandDeckLayout main="home">
-      <ProfileHomeCompact
-        identity={identity}
-        insightState={insightState}
-        forecast={forecast}
-        initialMoodLabel={moodLabel}
-        todayStr={today}
-        dailyChallengeContext={dailyChallengeContext}
-      />
+      <ProfileHomeLocalFirst simplified={false} />
       {deleteAccountSection}
     </ProfileCommandDeckLayout>
   );
@@ -322,7 +297,7 @@ export default async function ProfilePage({ searchParams }: { searchParams: Prom
   if (mainView === "home") {
     return (
       <Suspense fallback={<ProfileSnapshotFallback main="home" />}>
-        <ProfileHomeAsync userId={user.id} />
+        <ProfileHomeWrapper />
       </Suspense>
     );
   }

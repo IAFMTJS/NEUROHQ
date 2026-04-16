@@ -36,6 +36,8 @@ import { getGrowthEngineSnapshot } from "@/app/actions/growth-snapshot";
 import { syncGrowthFocusProtocolToCalendarWeek } from "@/app/actions/growth-protocol-calendar-sync";
 import { getBehaviorProfile } from "@/app/actions/behavior-profile";
 import { GrowthMissionsRibbon } from "@/components/growth/GrowthMissionsRibbon";
+import { isLocalFirstHubEnabled } from "@/lib/hub-bundles/flag";
+import { TasksLocalFirstPage } from "@/components/tasks/TasksLocalFirstPage";
 /** Tasks page must always run on the server so latest data is rendered after refresh. */
 export const dynamic = "force-dynamic";
 
@@ -356,6 +358,9 @@ async function RoutineSectionFromPromise({
 }
 
 export default async function TasksPage({ searchParams }: Props) {
+  if (isLocalFirstHubEnabled()) {
+    return <TasksLocalFirstPage />;
+  }
   const dateStr = todayDateString();
   await syncGrowthFocusProtocolToCalendarWeek();
   /** Overlap with `searchParams` (same request); tab shell needs all three panels on first paint. */

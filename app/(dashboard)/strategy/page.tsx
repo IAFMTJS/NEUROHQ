@@ -23,6 +23,8 @@ import { StrategyQuarterContractPanel } from "@/components/strategy/StrategyQuar
 import { StrategyThreeTabShell } from "@/components/strategy/StrategyThreeTabShell";
 import { StrategyCommandTab } from "@/components/strategy/StrategyCommandTab";
 import { StrategyReviewTabPanel } from "@/components/strategy/StrategyReviewTabPanel";
+import { isLocalFirstHubEnabled } from "@/lib/hub-bundles/flag";
+import { StrategyLocalFirstPage } from "@/components/strategy/StrategyLocalFirstPage";
 
 /** Force dynamic: strategy uses cookies (auth) and live data. */
 export const dynamic = "force-dynamic";
@@ -214,6 +216,9 @@ async function StrategyContent({ simplifiedLayout = false }: { simplifiedLayout?
 }
 
 export default async function StrategyPage() {
+  if (isLocalFirstHubEnabled()) {
+    return <StrategyLocalFirstPage />;
+  }
   const prefs = await getUserPreferencesOrDefaults();
   const simplified = prefs.simplified_content === true;
 
