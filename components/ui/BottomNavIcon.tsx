@@ -14,6 +14,8 @@ export function BottomNavIcon({ link, active }: Props) {
   const [useSvg, setUseSvg] = useState(false);
   const Icon = link.Icon;
   const large = "large" in link && link.large === true;
+  const svgOnly = "svgOnly" in link && link.svgOnly === true;
+  if (svgOnly) return <Icon active={active} />;
   if (useSvg) return <Icon active={active} />;
   const px = large ? 32 : 22;
   const src =

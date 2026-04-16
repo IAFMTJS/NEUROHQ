@@ -8,6 +8,7 @@ import {
   IconStrategy,
   IconUser,
   IconSettings,
+  IconXP,
 } from "@/components/hq/NavIcons";
 
 /**
@@ -19,6 +20,7 @@ export const BOTTOM_NAV_LINKS = [
   { href: "/budget", label: "Budget", Icon: IconBudget, pngFile: "Budget.png" },
   { href: "/learning", label: "Growth", Icon: IconGrowth, pngFile: "Growth.png" },
   { href: "/dashboard", label: "Dashboard", Icon: IconHQ, pngFile: "Dashboard.png", large: true },
+  { href: "/brain", label: "Brain", Icon: IconXP, pngFile: "Brain.png", svgOnly: true },
   { href: "/strategy", label: "Strategy", Icon: IconStrategy, pngFile: "Strategy.png" },
   { href: "/profile", label: "User", Icon: IconUser, pngFile: "User.png", iconSrc: "/Icons/User.PNG" },
   { href: "/settings", label: "Settings", Icon: IconSettings, pngFile: "Settings.png" },
