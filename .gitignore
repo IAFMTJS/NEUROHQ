@@ -52,3 +52,6 @@ knip-report*.md
 # Local scratch / notes (not part of the app)
 CATMISS.txt
 SQL LOG.txt
+
+# Local exports / logs (never commit)
+GIThub logs/

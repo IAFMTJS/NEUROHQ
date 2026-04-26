@@ -14,6 +14,7 @@ export function GrowthPageCommandShell({ children }: Props) {
       showBridgeLabel={false}
       compactHorizontal
       compactVertical
+      fullBleedMobile
     >
       {children}
     </DashboardHubCommandShell>

@@ -306,24 +306,7 @@ export function PersonalGrowthHubClient({ initialFocus, weekStats, highlights }:
                 <div className="absolute left-1/2 top-[44%] h-16 w-12 -translate-x-1/2 rounded-[999px] bg-white/10" />
               </div>
             </div>
-            <div className="hidden flex-wrap items-center justify-end gap-2 md:flex">
-              <button
-                type="button"
-                disabled={pending}
-                onClick={() => setEditMode((v) => !v)}
-                className="btn-secondary rounded-lg px-4 py-2 text-sm font-semibold disabled:opacity-50"
-              >
-                {editMode ? "Terug" : "Aanpassen"}
-              </button>
-              <button
-                type="button"
-                disabled={pending || !goalValid}
-                className="btn-primary rounded-lg px-4 py-2 text-sm font-semibold disabled:opacity-50"
-                onClick={openPreview}
-              >
-                Lock focus & start volgende week
-              </button>
-            </div>
+            <div className="hidden md:block" />
           </div>
         </div>
 
@@ -562,6 +545,22 @@ export function PersonalGrowthHubClient({ initialFocus, weekStats, highlights }:
                 <p className="text-sm font-semibold text-[var(--text-primary)]">{evalDay ?? "—"}</p>
               </div>
             </div>
+          </div>
+        ) : null}
+
+        {!editMode ? (
+          <div className="mt-3">
+            <button
+              type="button"
+              disabled={pending || !goalValid}
+              onClick={openPreview}
+              className="primary-btn flex w-full items-center justify-center px-4 py-3 text-center text-sm font-semibold disabled:opacity-50"
+            >
+              Lock focus & start volgende week
+            </button>
+            <p className="mt-2 text-center text-[11px] text-[var(--text-muted)]">
+              Je commit voor 7 dagen. Geen reset zonder <span className="text-rose-200 font-semibold">penalty</span>.
+            </p>
           </div>
         ) : null}
 

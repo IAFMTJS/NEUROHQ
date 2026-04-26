@@ -14,6 +14,11 @@ type Props = {
   compactHorizontal?: boolean;
   /** Less top padding so primary chrome (e.g. tab bar) sits higher — Growth /learning. */
   compactVertical?: boolean;
+  /**
+   * Mobile: remove `container` max-width so cards go full-bleed (still inside safe-area padding from `DashboardMainContent`).
+   * Desktop/tablet keep the normal `container` column.
+   */
+  fullBleedMobile?: boolean;
 };
 
 /**
@@ -27,6 +32,7 @@ export function DashboardHubCommandShell({
   showBridgeLabel: _showBridgeLabel = true,
   compactHorizontal = false,
   compactVertical = false,
+  fullBleedMobile = false,
 }: Props) {
   const dcicMode = useHQStore((s) => s.gameState?.mode?.current ?? "focus");
   const dcicModeVars = useMemo<CSSProperties>(() => {
@@ -49,7 +55,9 @@ export function DashboardHubCommandShell({
       data-mode={dcicMode}
     >
       <div
-        className="container page page-wide dashboard-cinematic relative z-10 pb-10"
+        className={`dashboard-cinematic relative z-10 pb-10 ${
+          fullBleedMobile ? "w-full md:container md:page md:page-wide" : "container page page-wide"
+        }`}
         {...(compactHorizontal ? { "data-hub-compact-x": "true" } : {})}
         {...(compactVertical ? { "data-hub-compact-y": "true" } : {})}
       >
