@@ -255,20 +255,11 @@ export function PersonalGrowthHubClient({ initialFocus, weekStats, highlights }:
   return (
     <div className="space-y-4 sm:space-y-6">
       <section
-        className="relative overflow-hidden rounded-2xl border border-[rgba(var(--mode-rgb),0.26)] bg-[linear-gradient(135deg,rgba(6,18,35,0.92)_0%,rgba(12,32,58,0.86)_50%,rgba(3,10,20,0.95)_100%)] p-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.08),0_0_40px_rgba(var(--mode-rgb),0.08)] md:p-7"
+        className="relative"
         style={{ ["--mode-rgb" as any]: "0, 212, 255", ["--mode-rgb-deep" as any]: "0, 136, 255" }}
         aria-label="Personal growth hub"
       >
-        <div
-          className="pointer-events-none absolute -left-24 -top-24 h-64 w-64 rounded-full bg-[radial-gradient(circle,rgba(var(--mode-rgb),0.34)_0%,rgba(var(--mode-rgb),0.14)_40%,transparent_70%)] blur-2xl"
-          aria-hidden
-        />
-        <div
-          className="pointer-events-none absolute -bottom-28 -right-28 h-72 w-72 rounded-full bg-[radial-gradient(circle,rgba(var(--mode-rgb),0.26)_0%,rgba(var(--mode-rgb-deep),0.10)_42%,transparent_72%)] blur-2xl"
-          aria-hidden
-        />
-
-        <div className="relative z-[1] grid gap-4 border-b border-[rgba(var(--mode-rgb),0.12)] pb-5 md:grid-cols-[1fr_auto] md:items-end">
+        <div className="grid gap-4 md:grid-cols-[1fr_auto] md:items-end">
           <div className="min-w-0">
             <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[var(--semantic-accent)]/90">
               Personal Growth
@@ -310,7 +301,7 @@ export function PersonalGrowthHubClient({ initialFocus, weekStats, highlights }:
           </div>
         </div>
 
-        <div className="relative z-[1] mt-4 overflow-hidden rounded-2xl border border-white/10 bg-white/[0.04] shadow-[inset_0_1px_0_rgba(255,255,255,0.05)]">
+        <div className="mt-4 overflow-hidden rounded-2xl border border-white/10 bg-white/[0.04] shadow-[inset_0_1px_0_rgba(255,255,255,0.05)]">
           <div className="grid grid-cols-2 gap-0 sm:grid-cols-4">
             <div className="p-4">
               <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--text-muted)]">Week progress</p>
