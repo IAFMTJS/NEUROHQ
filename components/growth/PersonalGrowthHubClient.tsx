@@ -58,6 +58,25 @@ function weekdayShort(d: string): string {
   return map[idx] ?? "—";
 }
 
+function timeShort(ts: string): string | null {
+  const d = new Date(ts);
+  if (!Number.isFinite(d.getTime())) return null;
+  const hh = String(d.getHours()).padStart(2, "0");
+  const mm = String(d.getMinutes()).padStart(2, "0");
+  return `${hh}:${mm}`;
+}
+
+function dateLabelNL(tsOrDate: string): string | null {
+  // Accept ISO date (YYYY-MM-DD) or ISO timestamp.
+  const d = tsOrDate.length === 10 ? new Date(`${tsOrDate}T00:00:00.000Z`) : new Date(tsOrDate);
+  if (!Number.isFinite(d.getTime())) return null;
+  const wd = ["Zondag", "Maandag", "Dinsdag", "Woensdag", "Donderdag", "Vrijdag", "Zaterdag"][d.getDay()] ?? null;
+  if (!wd) return null;
+  const dd = String(d.getDate()).padStart(2, "0");
+  const mm = String(d.getMonth() + 1).padStart(2, "0");
+  return `${wd} ${dd}/${mm}`;
+}
+
 function deriveMockWeeklyFeedback(params: {
   focus: string | null;
   tags: string[];
@@ -229,6 +248,9 @@ export function PersonalGrowthHubClient({ initialFocus, weekStats, highlights }:
       : mock.avoidedMoments >= 1
         ? "Goed bezig. Maar niet klaar."
         : "Goed bezig.";
+  const winTime = highlights.biggestWin?.occurredAt ? timeShort(highlights.biggestWin.occurredAt) : null;
+  const winDay = highlights.biggestWin?.occurredAt ? dateLabelNL(highlights.biggestWin.occurredAt) : null;
+  const evalDay = dateLabelNL(weekStats.weekEnd);
 
   return (
     <div className="space-y-4 sm:space-y-6">
@@ -246,221 +268,300 @@ export function PersonalGrowthHubClient({ initialFocus, weekStats, highlights }:
           aria-hidden
         />
 
-        <div className="relative z-[1] flex flex-col gap-4 border-b border-[rgba(var(--mode-rgb),0.12)] pb-5 md:flex-row md:items-end md:justify-between">
+        <div className="relative z-[1] grid gap-4 border-b border-[rgba(var(--mode-rgb),0.12)] pb-5 md:grid-cols-[1fr_auto] md:items-end">
           <div className="min-w-0">
             <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[var(--semantic-accent)]/90">
               Personal Growth
             </p>
-            <h1 className="mt-2 text-2xl font-bold tracking-tight text-[var(--text-primary)] md:text-3xl">{realityHeadline}</h1>
-            <p className="mt-2 text-sm text-[var(--text-secondary)]">
-              Je focus deze week: <span className="font-semibold text-sky-200">{mock.focus}</span>
-            </p>
-            <p className="mt-2 text-sm text-[var(--text-secondary)]">
-              Je hebt{" "}
-              <span className="font-semibold text-rose-200 tabular-nums">{mock.avoidedMoments}</span> momenten genegeerd.
-              <span className="mx-2 text-white/20" aria-hidden>
-                ·
+            <div className="mt-2 flex flex-wrap items-center gap-2">
+              <h1 className="text-2xl font-bold tracking-tight text-[var(--text-primary)] md:text-3xl">{realityHeadline}</h1>
+              <span className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.04] px-3 py-1 text-[11px] font-semibold text-[var(--text-secondary)]">
+                Je focus deze week: <span className="text-sky-200">{mock.focus}</span>
               </span>
-              <span className="font-semibold text-emerald-200 tabular-nums">{mock.successMoments}</span> keer tóch gedaan.
+            </div>
+            <p className="mt-3 text-sm text-[var(--text-secondary)]">
+              Je hebt <span className="font-semibold text-rose-200 tabular-nums">{mock.avoidedMoments}</span> momenten genegeerd,
+              maar <span className="font-semibold text-emerald-200 tabular-nums">{mock.successMoments}</span> keer alsnog doorgezet.
             </p>
           </div>
 
-          <div className="flex flex-wrap items-center gap-2">
+          <div className="flex items-start justify-between gap-3 md:flex-col md:items-end md:justify-end">
             <button
               type="button"
               disabled={pending}
               onClick={() => neuroToast.message("Reflectie komt eraan.")}
-              className="btn-secondary rounded-lg px-4 py-2 text-sm font-semibold disabled:opacity-50"
+              className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.04] px-3 py-1.5 text-xs font-semibold text-slate-200 hover:bg-white/[0.06] disabled:opacity-50"
             >
+              <span className="h-1.5 w-1.5 rounded-full bg-sky-300 shadow-[0_0_10px_rgba(56,189,248,0.55)]" aria-hidden />
               Reflectie
             </button>
-            <button
-              type="button"
-              disabled={pending}
-              onClick={() => setEditMode((v) => !v)}
-              className="btn-secondary rounded-lg px-4 py-2 text-sm font-semibold disabled:opacity-50"
+            <div
+              className="relative h-20 w-20 shrink-0 overflow-hidden rounded-2xl border border-[rgba(var(--mode-rgb),0.22)] bg-[radial-gradient(circle_at_50%_40%,rgba(var(--mode-rgb),0.22),rgba(0,0,0,0.28)_58%,rgba(0,0,0,0.65)_100%)] shadow-[0_0_30px_rgba(var(--mode-rgb),0.12),inset_0_1px_0_rgba(255,255,255,0.06)] md:h-28 md:w-28"
+              aria-hidden
             >
-              {editMode ? "Terug" : "Adjust focus"}
-            </button>
-            <button
-              type="button"
-              disabled={pending || !goalValid}
-              className="btn-primary rounded-lg px-4 py-2 text-sm font-semibold disabled:opacity-50"
-              onClick={openPreview}
-            >
-              Lock focus & start volgende week
-            </button>
+              <div className="absolute inset-0 bg-[radial-gradient(circle_at_55%_30%,rgba(255,255,255,0.10),transparent_55%)]" />
+              <div className="absolute -bottom-6 left-1/2 h-24 w-20 -translate-x-1/2 rounded-full bg-[radial-gradient(circle_at_50%_25%,rgba(56,189,248,0.35),rgba(56,189,248,0.08)_55%,transparent_72%)] blur-[0.5px]" />
+              <div className="absolute inset-0 opacity-70 [mask-image:radial-gradient(circle_at_50%_35%,black_55%,transparent_78%)]">
+                <div className="absolute left-1/2 top-[18%] h-10 w-10 -translate-x-1/2 rounded-full bg-white/10" />
+                <div className="absolute left-1/2 top-[44%] h-16 w-12 -translate-x-1/2 rounded-[999px] bg-white/10" />
+              </div>
+            </div>
+            <div className="hidden flex-wrap items-center justify-end gap-2 md:flex">
+              <button
+                type="button"
+                disabled={pending}
+                onClick={() => setEditMode((v) => !v)}
+                className="btn-secondary rounded-lg px-4 py-2 text-sm font-semibold disabled:opacity-50"
+              >
+                {editMode ? "Terug" : "Aanpassen"}
+              </button>
+              <button
+                type="button"
+                disabled={pending || !goalValid}
+                className="btn-primary rounded-lg px-4 py-2 text-sm font-semibold disabled:opacity-50"
+                onClick={openPreview}
+              >
+                Lock focus & start volgende week
+              </button>
+            </div>
           </div>
         </div>
 
-        <div className="relative z-[1] mt-4 grid gap-3 sm:grid-cols-4">
-          <div className="rounded-xl border border-[rgba(var(--mode-rgb),0.16)] bg-black/20 px-4 py-3">
-            <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--text-muted)]">Week progress</p>
-            <div className="mt-2 flex items-center gap-3">
-              <div
-                className="relative h-14 w-14 shrink-0 rounded-full border border-white/10 bg-black/20"
-                style={{
-                  background: `conic-gradient(rgba(103,232,249,0.95) ${weekPct}%, rgba(255,255,255,0.08) 0)`,
-                }}
-                aria-hidden
-              >
-                <div className="absolute inset-[6px] flex items-center justify-center rounded-full bg-[rgba(6,18,30,0.85)]">
-                  <div className="text-center">
-                    <p className="text-sm font-bold text-[var(--text-primary)] tabular-nums">{weekPct}%</p>
-                    <p className="text-[10px] font-semibold text-[var(--text-muted)]">Voltooid</p>
+        <div className="relative z-[1] mt-4 overflow-hidden rounded-2xl border border-white/10 bg-white/[0.04] shadow-[inset_0_1px_0_rgba(255,255,255,0.05)]">
+          <div className="grid grid-cols-2 gap-0 sm:grid-cols-4">
+            <div className="p-4">
+              <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--text-muted)]">Week progress</p>
+              <div className="mt-2 flex items-center gap-3">
+                <div
+                  className="relative h-14 w-14 shrink-0 rounded-full border border-white/10 bg-black/20"
+                  style={{
+                    background: `conic-gradient(rgba(103,232,249,0.95) ${weekPct}%, rgba(255,255,255,0.08) 0)`,
+                  }}
+                  aria-hidden
+                >
+                  <div className="absolute inset-[6px] flex items-center justify-center rounded-full bg-[rgba(6,18,30,0.88)]">
+                    <div className="text-center">
+                      <p className="text-sm font-bold text-[var(--text-primary)] tabular-nums">{weekPct}%</p>
+                      <p className="text-[10px] font-semibold text-[var(--text-muted)]">Voltooid</p>
+                    </div>
                   </div>
                 </div>
-              </div>
-              <div className="min-w-0">
-                <p className="text-sm font-semibold text-[var(--text-primary)] tabular-nums">
-                  {weekStats.done}/{weekStats.total} missies
-                </p>
-                <p className="text-[11px] text-[var(--text-muted)]">
-                  {weekStats.weekStart} → {weekStats.weekEnd}
-                </p>
+                <div className="min-w-0">
+                  <p className="text-sm font-semibold text-[var(--text-primary)] tabular-nums">
+                    {weekStats.done}/{weekStats.total}
+                  </p>
+                  <p className="text-[11px] text-[var(--text-muted)]">missies</p>
+                </div>
               </div>
             </div>
-          </div>
-          <div className="rounded-xl border border-white/10 bg-white/[0.04] px-4 py-3">
-            <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--text-muted)]">Growth score</p>
-            <p className="mt-1 text-sm font-semibold text-[var(--text-primary)] tabular-nums">
-              {mock.growthScore >= 0 ? `+${mock.growthScore}` : String(mock.growthScore)}
-            </p>
-            <p className="mt-1 text-[11px] text-[var(--text-muted)] tabular-nums">
-              {mock.growthScoreDelta >= 0 ? `+${mock.growthScoreDelta}` : String(mock.growthScoreDelta)} vs vorige week
-            </p>
-          </div>
-          <div className="rounded-xl border border-white/10 bg-white/[0.04] px-4 py-3">
-            <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--text-muted)]">Confidence</p>
-            <p className="mt-1 text-sm font-semibold text-[var(--text-primary)] tabular-nums">{mock.confidence}</p>
-            <p className="mt-1 text-[11px] text-[var(--text-muted)] tabular-nums">
-              {mock.confidenceDelta >= 0 ? `+${mock.confidenceDelta}` : String(mock.confidenceDelta)} deze week
-            </p>
-          </div>
-          <div className="rounded-xl border border-white/10 bg-white/[0.04] px-4 py-3">
-            <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--text-muted)]">Stress level</p>
-            <p className="mt-1 text-sm font-semibold text-[var(--text-primary)] tabular-nums">{mock.stress}</p>
-            <p className="mt-1 text-[11px] text-[var(--text-muted)] tabular-nums">
-              {mock.stressDelta >= 0 ? `+${mock.stressDelta}` : String(mock.stressDelta)} deze week
-            </p>
+            <div className="border-l border-white/10 p-4">
+              <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--text-muted)]">Growth score</p>
+              <p className="mt-2 text-lg font-bold text-emerald-200 tabular-nums">
+                {mock.growthScore >= 0 ? `+${mock.growthScore}` : String(mock.growthScore)}
+              </p>
+              <p className="mt-1 text-[11px] text-[var(--text-muted)] tabular-nums">
+                {mock.growthScoreDelta >= 0 ? `+${mock.growthScoreDelta}` : String(mock.growthScoreDelta)} vs vorige week
+              </p>
+            </div>
+            <div className="border-t border-white/10 p-4 sm:border-t-0 sm:border-l">
+              <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--text-muted)]">Confidence</p>
+              <p className="mt-2 text-lg font-bold text-[var(--text-primary)] tabular-nums">{mock.confidence}</p>
+              <p className="mt-1 text-[11px] text-emerald-200 tabular-nums">
+                {mock.confidenceDelta >= 0 ? `+${mock.confidenceDelta}` : String(mock.confidenceDelta)} deze week
+              </p>
+            </div>
+            <div className="border-l border-t border-white/10 p-4 sm:border-t-0">
+              <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--text-muted)]">Stress level</p>
+              <p className="mt-2 text-lg font-bold text-[var(--text-primary)] tabular-nums">{mock.stress}</p>
+              <p className="mt-1 text-[11px] text-rose-200 tabular-nums">
+                {mock.stressDelta >= 0 ? `+${mock.stressDelta}` : String(mock.stressDelta)} deze week
+              </p>
+            </div>
           </div>
         </div>
 
-        <div className="mt-3 grid gap-3 md:grid-cols-2">
-          <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-4">
+        <div className="mt-3 rounded-2xl border border-white/10 bg-white/[0.04] p-4">
+          <div className="flex items-center justify-between gap-3">
             <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--text-muted)]">Missies deze week</p>
-            <div className="mt-3 flex items-center justify-between gap-3">
-              <div className="text-sm font-semibold text-[var(--text-primary)] tabular-nums">
-                {weekStats.done}/{weekStats.total} voltooid
-              </div>
-              <div className="text-xs text-[var(--text-muted)] tabular-nums">{weekPct}%</div>
-            </div>
-            <div className="mt-3 flex items-center justify-between gap-2">
-              {weekDates.map((d, i) => {
-                const isDone = weekStats.total > 0 ? i < clamp(weekStats.done, 0, 7) : false;
-                const isMiss = weekStats.total > 0 ? i >= clamp(weekStats.done, 0, 7) && i < 7 : false;
-                return (
-                  <div key={d} className="flex min-w-0 flex-1 flex-col items-center gap-1">
-                    <div
-                      className={`h-8 w-8 rounded-full border ${
-                        isDone
-                          ? "border-emerald-300/50 bg-emerald-300/10 shadow-[0_0_18px_rgba(52,211,153,0.25)]"
-                          : isMiss
-                            ? "border-white/10 bg-black/30"
-                            : "border-white/10 bg-black/20"
-                      }`}
-                      aria-hidden
-                    />
-                    <p className="text-[10px] font-semibold text-[var(--text-muted)]">{weekdayShort(d)}</p>
-                    <p className="text-[10px] text-[var(--text-muted)]/80 tabular-nums">{d.slice(8, 10)}/{d.slice(5, 7)}</p>
-                  </div>
-                );
-              })}
-            </div>
+            <p className="text-xs font-semibold text-[var(--text-secondary)] tabular-nums">
+              {weekStats.done}/{weekStats.total} voltooid
+            </p>
           </div>
+          <div className="mt-3 flex items-center justify-between gap-2">
+            {weekDates.map((d, i) => {
+              const isDone = weekStats.total > 0 ? i < clamp(weekStats.done, 0, 7) : false;
+              return (
+                <div key={d} className="flex min-w-0 flex-1 flex-col items-center gap-1.5">
+                  <div
+                    className={`flex h-9 w-9 items-center justify-center rounded-full border text-xs font-bold ${
+                      isDone
+                        ? "border-emerald-300/50 bg-emerald-300/10 text-emerald-100 shadow-[0_0_18px_rgba(52,211,153,0.25)]"
+                        : "border-white/10 bg-black/30 text-white/35"
+                    }`}
+                    aria-hidden
+                  >
+                    {isDone ? "✓" : ""}
+                  </div>
+                  <p className="text-[10px] font-semibold text-[var(--text-muted)]">{weekdayShort(d)}</p>
+                  <p className="text-[10px] text-[var(--text-muted)]/80 tabular-nums">
+                    {d.slice(8, 10)}/{d.slice(5, 7)}
+                  </p>
+                </div>
+              );
+            })}
+          </div>
+        </div>
 
-          <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-4">
+        <div className="mt-3 rounded-2xl border border-white/10 bg-white/[0.04] p-4">
+          <div className="flex items-center justify-between gap-3">
             <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--text-muted)]">Jouw groei deze week</p>
-            <div className="mt-3 space-y-3">
-              {[
-                { label: "Social Comfort", v: mock.weeklyTrend.comfort, color: "from-sky-400/35 via-cyan-300/50 to-blue-500/45" },
-                { label: "Vermijding", v: mock.weeklyTrend.avoidance, color: "from-rose-500/35 via-orange-400/40 to-amber-300/45" },
-                { label: "Consistentie", v: mock.weeklyTrend.consistency, color: "from-emerald-400/35 via-teal-300/45 to-sky-400/35" },
-              ].map((r) => {
-                const pct = clamp(Math.abs(r.v), 0, 100);
-                const up = r.v >= 0;
-                return (
-                  <div key={r.label}>
-                    <div className="flex items-center justify-between gap-3">
-                      <p className="text-xs font-semibold text-[var(--text-secondary)]">{r.label}</p>
-                      <p className={`text-xs font-semibold tabular-nums ${up ? "text-emerald-200" : "text-rose-200"}`}>
-                        {up ? "↑" : "↓"} {pct}%
-                      </p>
-                    </div>
+            <button
+              type="button"
+              className="text-xs font-semibold text-sky-200/90 hover:text-sky-100"
+              onClick={() => neuroToast.message("Trends komen eraan.")}
+            >
+              Bekijk trends →
+            </button>
+          </div>
+          <div className="mt-3 space-y-3">
+            {[
+              { label: "Social Comfort", v: mock.weeklyTrend.comfort, color: "from-sky-400/35 via-cyan-300/50 to-blue-500/45" },
+              { label: "Vermijding", v: mock.weeklyTrend.avoidance, color: "from-rose-500/35 via-orange-400/40 to-amber-300/45" },
+              { label: "Consistentie", v: mock.weeklyTrend.consistency, color: "from-emerald-400/35 via-teal-300/45 to-sky-400/35" },
+            ].map((r) => {
+              const pct = clamp(Math.abs(r.v), 0, 100);
+              const up = r.v >= 0;
+              return (
+                <div key={r.label} className="grid grid-cols-[1fr_auto] items-center gap-3">
+                  <div className="min-w-0">
+                    <p className="text-xs font-semibold text-[var(--text-secondary)]">{r.label}</p>
                     <div className="mt-1.5 h-2 overflow-hidden rounded-full border border-white/10 bg-black/25">
                       <div className={`h-full rounded-full bg-gradient-to-r ${r.color}`} style={{ width: `${pct}%` }} />
                     </div>
                   </div>
-                );
-              })}
-            </div>
-            <div className="mt-3 rounded-lg border border-white/10 bg-black/20 px-3 py-2 text-[11px] text-[var(--text-muted)]">
-              {weekStats.total > 0 ? (
-                <span className="tabular-nums">
-                  Confidence: {mock.confidenceDelta >= 0 ? `+${mock.confidenceDelta}` : mock.confidenceDelta} · Stress:{" "}
-                  {mock.stressDelta >= 0 ? `+${mock.stressDelta}` : mock.stressDelta} · Avoidance: {mock.avoidedMoments}x
-                </span>
-              ) : (
-                <span>Geen growth missies toegewezen — score blijft neutraal tot je deployt.</span>
-              )}
-            </div>
+                  <p className={`text-xs font-semibold tabular-nums ${up ? "text-emerald-200" : "text-rose-200"}`}>
+                    {up ? "↑" : "↓"} {pct}%
+                  </p>
+                </div>
+              );
+            })}
           </div>
         </div>
 
         <div className="mt-3 grid gap-3 md:grid-cols-2">
           <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-4">
             <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--text-muted)]">Grootste win</p>
-            <p className="mt-2 line-clamp-2 text-sm font-semibold text-[var(--text-primary)]">
-              {winLine ?? "Geen win. Dan heb je ook niks bewezen."}
-            </p>
-            <p className="mt-1 text-[11px] text-[var(--text-muted)]">{highlights.biggestWin?.occurredAt ? "Deze week" : "—"}</p>
+            <div className="mt-2 flex gap-3">
+              <div className="flex h-12 w-12 items-center justify-center rounded-xl border border-white/10 bg-black/25">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden>
+                  <path
+                    d="M8 4h8v3a4 4 0 0 1-4 4 4 4 0 0 1-4-4V4Z"
+                    stroke="rgba(56,189,248,0.95)"
+                    strokeWidth="1.6"
+                  />
+                  <path
+                    d="M10 11v2.2c0 1.7-1.2 3.1-2.9 3.4L6 17h12l-1.1-.4A3.7 3.7 0 0 1 14 13.2V11"
+                    stroke="rgba(255,255,255,0.55)"
+                    strokeWidth="1.6"
+                    strokeLinecap="round"
+                  />
+                  <path
+                    d="M9 20h6"
+                    stroke="rgba(255,255,255,0.55)"
+                    strokeWidth="1.6"
+                    strokeLinecap="round"
+                  />
+                  <path
+                    d="M6 6H4.5A2.5 2.5 0 0 0 7 8.5"
+                    stroke="rgba(56,189,248,0.6)"
+                    strokeWidth="1.6"
+                    strokeLinecap="round"
+                  />
+                  <path
+                    d="M18 6h1.5A2.5 2.5 0 0 1 17 8.5"
+                    stroke="rgba(56,189,248,0.6)"
+                    strokeWidth="1.6"
+                    strokeLinecap="round"
+                  />
+                </svg>
+              </div>
+              <div className="min-w-0">
+                <p className="line-clamp-2 text-sm font-semibold text-[var(--text-primary)]">
+                  {winLine ?? "Geen win. Dan heb je ook niks bewezen."}
+                </p>
+                <p className="mt-1 text-[11px] text-[var(--text-muted)]">{winDay ? `${winDay}${winTime ? ` · ${winTime}` : ""}` : "—"}</p>
+              </div>
+            </div>
           </div>
           <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-4">
             <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--text-muted)]">Uitdaging</p>
-            <p className="mt-2 line-clamp-2 text-sm font-semibold text-rose-200">
-              {failLine ?? "Geen misses gelogd. Blijf zo."}
-            </p>
-            <button
-              type="button"
-              className="mt-1 text-left text-[11px] font-semibold text-sky-200/90 hover:text-sky-100"
-              onClick={() => neuroToast.message("Details komen eraan.")}
-            >
-              Bekijk details →
-            </button>
+            <div className="mt-2 flex gap-3">
+              <div className="flex h-12 w-12 items-center justify-center rounded-xl border border-white/10 bg-black/25">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden>
+                  <path
+                    d="M12 3 2.6 20h18.8L12 3Z"
+                    stroke="rgba(251,113,133,0.9)"
+                    strokeWidth="1.6"
+                    strokeLinejoin="round"
+                  />
+                  <path d="M12 9v5" stroke="rgba(255,255,255,0.72)" strokeWidth="1.6" strokeLinecap="round" />
+                  <path d="M12 17.2h.01" stroke="rgba(255,255,255,0.72)" strokeWidth="2.4" strokeLinecap="round" />
+                </svg>
+              </div>
+              <div className="min-w-0">
+                <p className="line-clamp-2 text-sm font-semibold text-rose-200">{failLine ?? "Geen misses. Houd het strak."}</p>
+                <button
+                  type="button"
+                  className="mt-1 text-left text-[11px] font-semibold text-sky-200/90 hover:text-sky-100"
+                  onClick={() => neuroToast.message("Details komen eraan.")}
+                >
+                  Bekijk details →
+                </button>
+              </div>
+            </div>
           </div>
         </div>
 
         {!editMode ? (
-          <div className="mt-3 rounded-2xl border border-[rgba(var(--mode-rgb),0.18)] bg-black/20 p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]">
-            <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--text-muted)]">Jouw huidige focus</p>
-            <div className="mt-2 flex flex-wrap items-center gap-2">
-              <span className="inline-flex items-center gap-2 rounded-full border border-[rgba(var(--mode-rgb),0.28)] bg-[rgba(var(--mode-rgb-deep),0.18)] px-3 py-1 text-[11px] font-semibold text-cyan-100">
-                <span className="h-2 w-2 rounded-full bg-[rgb(var(--mode-rgb))] shadow-[0_0_12px_rgba(var(--mode-rgb),0.55)]" aria-hidden />
-                {effectiveArea ?? "Geen area"}
-              </span>
-              <span className="inline-flex rounded-full border border-white/15 bg-black/25 px-3 py-1 text-[11px] font-semibold text-slate-200">
-                {intensityLabel(intensity)}
-              </span>
-              <span className="inline-flex rounded-full border border-white/15 bg-black/25 px-3 py-1 text-[11px] font-semibold text-slate-200">
-                {horizonDays}d horizon
-              </span>
-              <span className="inline-flex rounded-full border border-white/15 bg-black/25 px-3 py-1 text-[11px] font-semibold text-slate-200">
-                {tags.length > 0 ? tags.slice(0, 3).join(" · ") : "—"}
-              </span>
+          <div className="mt-3 rounded-2xl border border-white/10 bg-white/[0.04] p-4">
+            <div className="flex items-start justify-between gap-3">
+              <div className="min-w-0">
+                <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--text-muted)]">Jouw huidige focus</p>
+                <p className="mt-2 text-xl font-bold text-[var(--text-primary)]">{effectiveArea ?? "Geen focus"}</p>
+                <div className="mt-2 flex flex-wrap gap-2">
+                  {(tags.length > 0 ? tags.slice(0, 4) : ["confidence", "social", "health", "career"]).map((t) => (
+                    <span
+                      key={t}
+                      className="inline-flex items-center rounded-full border border-white/10 bg-black/25 px-2.5 py-1 text-[11px] font-semibold text-[var(--text-secondary)]"
+                    >
+                      {t}
+                    </span>
+                  ))}
+                </div>
+              </div>
+              <button
+                type="button"
+                disabled={pending}
+                onClick={() => setEditMode(true)}
+                className="btn-secondary rounded-lg px-3 py-2 text-sm font-semibold disabled:opacity-50"
+              >
+                Aanpassen
+              </button>
             </div>
-            <p className="mt-2 line-clamp-2 text-sm font-semibold text-[var(--text-primary)]">
-              {goal.trim() ? goal.trim() : "Nog geen goal"}
-            </p>
+            <div className="mt-4 grid gap-2 rounded-xl border border-white/10 bg-black/20 p-3 sm:grid-cols-3">
+              <div className="space-y-0.5">
+                <p className="text-[9px] font-bold uppercase tracking-[0.14em] text-[var(--text-muted)]">Intensiteit</p>
+                <p className="text-sm font-semibold text-[var(--text-primary)]">{intensityLabel(intensity)}</p>
+              </div>
+              <div className="space-y-0.5">
+                <p className="text-[9px] font-bold uppercase tracking-[0.14em] text-[var(--text-muted)]">Horizon</p>
+                <p className="text-sm font-semibold text-[var(--text-primary)] tabular-nums">{horizonDays} dagen</p>
+              </div>
+              <div className="space-y-0.5">
+                <p className="text-[9px] font-bold uppercase tracking-[0.14em] text-[var(--text-muted)]">Volgende evaluatie</p>
+                <p className="text-sm font-semibold text-[var(--text-primary)]">{evalDay ?? "—"}</p>
+              </div>
+            </div>
           </div>
         ) : null}
 
