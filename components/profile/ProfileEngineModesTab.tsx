@@ -19,7 +19,7 @@ export function ProfileEngineModesTab({ initialSimplifiedContent }: Props) {
   return (
     <div className="space-y-4">
       <section
-        className="relative overflow-hidden rounded-md border border-[var(--card-border)]/80 border-t-[rgba(var(--mode-rgb),0.2)] bg-gradient-to-b from-[rgba(var(--mode-rgb-deep),0.09)] to-[var(--bg-surface)]/18 px-4 py-4 sm:px-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]"
+        className="card-simple relative overflow-hidden px-4 py-4 sm:px-5"
         aria-labelledby="engine-modes-heading"
       >
         <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[var(--semantic-accent)]">Engine</p>

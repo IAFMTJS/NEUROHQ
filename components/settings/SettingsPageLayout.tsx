@@ -26,7 +26,7 @@ export function SettingsPageLayout({ children }: { children: ReactNode }) {
   return (
     <SettingsPageLayoutContext.Provider value={value}>
       <div className="space-y-4 md:space-y-5">
-        <header className="overflow-hidden rounded-xl border border-[rgba(var(--mode-rgb),0.1)] bg-[var(--bg-elevated)]/20 px-4 py-4 md:px-5">
+        <header className="card-simple overflow-hidden px-4 py-4 md:px-5">
           <div className="flex flex-wrap items-center justify-end gap-2">
             <a
               href="#settings-section-system"

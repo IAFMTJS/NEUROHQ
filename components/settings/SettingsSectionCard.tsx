@@ -40,10 +40,10 @@ export function SettingsSectionCard({
   return (
     <section
       id={id}
-      className="scroll-mt-28 overflow-hidden rounded-2xl border border-[rgba(var(--mode-rgb),0.12)] bg-gradient-to-b from-[rgba(var(--mode-rgb-deep),0.14)] via-[var(--bg-elevated)]/10 to-[var(--bg-primary)]/24 shadow-[0_8px_32px_rgba(0,0,0,0.28),inset_0_1px_0_rgba(255,255,255,0.05)]"
+      className="card-simple scroll-mt-28 overflow-hidden p-0"
     >
       <details className="group">
-        <summary className="flex cursor-pointer list-none items-start justify-between gap-3 border-b border-[rgba(var(--mode-rgb),0.1)] px-4 py-3 md:px-5 [&::-webkit-details-marker]:hidden">
+        <summary className="flex cursor-pointer list-none items-start justify-between gap-3 border-b border-[var(--card-border)] px-4 py-3 md:px-5 [&::-webkit-details-marker]:hidden">
           <div className="min-w-0">
             <h3 className="text-sm font-bold text-[var(--text-primary)]">{title}</h3>
             <p className="mt-0.5 text-xs text-[var(--text-muted)]">{subtitle}</p>

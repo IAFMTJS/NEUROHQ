@@ -220,7 +220,7 @@ export function ProfileEngineIdentityCard({
 
   return (
     <section
-      className="relative overflow-hidden rounded-md border border-[rgba(var(--mode-rgb),0.2)] bg-gradient-to-br from-[rgba(8,26,42,0.92)] via-[var(--bg-elevated)]/88 to-[rgba(var(--mode-rgb-deep),0.12)] shadow-[inset_0_1px_0_rgba(255,255,255,0.05)]"
+      className="card-simple relative overflow-hidden p-0"
       aria-labelledby="engine-identity-heading"
     >
       <div className="relative z-[1] space-y-5 p-4 sm:p-5">

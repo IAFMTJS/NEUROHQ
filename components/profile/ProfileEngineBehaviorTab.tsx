@@ -94,7 +94,7 @@ export function ProfileEngineBehaviorTab({
   return (
     <div className="space-y-5">
       <section
-        className="relative overflow-hidden rounded-md border border-[var(--card-border)]/80 border-t-[rgba(var(--mode-rgb),0.22)] bg-gradient-to-b from-[rgba(var(--mode-rgb-deep),0.1)] to-[var(--bg-surface)]/22 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]"
+        className="card-simple relative overflow-hidden p-0"
         aria-labelledby="engine-behavior-hero-heading"
       >
         <div className="relative z-[1] space-y-4 p-4 sm:p-5">

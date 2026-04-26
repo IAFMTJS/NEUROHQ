@@ -69,7 +69,7 @@ export function StrategyThesisHero({
     : "Afgelopen";
 
   return (
-    <section className="rounded-[22px] border border-[var(--card-border)] bg-[var(--bg-elevated)] p-5 shadow-[var(--shadow-card)]">
+    <section className="card-simple p-5">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div className="min-w-0 flex-1">
           <h2 className="text-xs font-semibold uppercase tracking-wide text-[var(--text-muted)]">
