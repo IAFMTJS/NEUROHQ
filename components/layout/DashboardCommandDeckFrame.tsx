@@ -9,6 +9,10 @@ type Props = {
   /** Use with `hideTitleBar`: keeps page title for a11y only. */
   hideTitleVisually?: boolean;
   fillViewport?: boolean;
+  /** Make the outer deck visually minimal (transparent, no rim/shadow/blur). */
+  chrome?: "default" | "ghost";
+  /** Padding inside the deck. */
+  padding?: "default" | "none";
   /** Extra classes on the gradient outer shell (e.g. `idle-breathing`, `flex min-h-0 flex-1`). */
   outerClassName?: string;
   /** Extra classes on the inner padded column (e.g. `gap-4`, `min-h-0 flex-1`). */
@@ -26,6 +30,8 @@ export function DashboardCommandDeckFrame({
   deckTitle,
   hideTitleVisually = false,
   fillViewport = false,
+  chrome = "default",
+  padding = "default",
   outerClassName = "",
   innerClassName = "",
   accentFlareClassName,
@@ -33,7 +39,9 @@ export function DashboardCommandDeckFrame({
 }: Props) {
   return (
     <div
-      className={`${dashboardCommandDeckOuterClass} ${fillViewport ? "flex min-h-0 flex-1 flex-col" : ""} ${outerClassName}`.trim()}
+      className={`${dashboardCommandDeckOuterClass} ${
+        chrome === "ghost" ? "dashboard-command-deck-frame--ghost" : ""
+      } ${fillViewport ? "flex min-h-0 flex-1 flex-col" : ""} ${outerClassName}`.trim()}
     >
       <div
         className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_75%_55%_at_50%_0%,rgba(var(--mode-rgb),0.07),transparent_58%)]"
@@ -47,7 +55,9 @@ export function DashboardCommandDeckFrame({
         <div className={`pointer-events-none absolute inset-0 ${accentFlareClassName}`} aria-hidden />
       ) : null}
       <div
-        className={`relative z-[1] flex flex-col gap-0 p-4 md:p-5 ${fillViewport ? "min-h-0 flex-1" : ""} ${innerClassName}`.trim()}
+        className={`relative z-[1] flex flex-col gap-0 ${
+          padding === "none" ? "p-0" : "p-4 md:p-5"
+        } ${fillViewport ? "min-h-0 flex-1" : ""} ${innerClassName}`.trim()}
       >
         <header className="flex shrink-0 flex-wrap items-start justify-between gap-3 border-b border-[var(--border-soft)] pb-4">
           <div className="min-w-0 border-l-2 border-[rgba(var(--semantic-accent),0.55)] pl-3">

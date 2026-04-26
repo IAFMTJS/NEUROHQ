@@ -19,6 +19,8 @@ type Props = {
    * Desktop/tablet keep the normal `container` column.
    */
   fullBleedMobile?: boolean;
+  /** Use a nearly-invisible deck frame (keeps header/back, removes rim/shadow/blur). */
+  ghostDeck?: boolean;
 };
 
 /**
@@ -33,6 +35,7 @@ export function DashboardHubCommandShell({
   compactHorizontal = false,
   compactVertical = false,
   fullBleedMobile = false,
+  ghostDeck = false,
 }: Props) {
   const dcicMode = useHQStore((s) => s.gameState?.mode?.current ?? "focus");
   const dcicModeVars = useMemo<CSSProperties>(() => {
@@ -67,6 +70,8 @@ export function DashboardHubCommandShell({
           <div className="hq-frosted-main-shell">
             <DashboardCommandDeckFrame
               deckTitle={hubLabel}
+              chrome={ghostDeck ? "ghost" : "default"}
+              padding={ghostDeck ? "none" : "default"}
               outerClassName="idle-breathing"
               innerClassName={compactVertical ? "gap-3 md:gap-4" : "gap-4"}
             >
