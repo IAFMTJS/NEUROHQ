@@ -170,7 +170,7 @@ export function ProfileHomeCompact({
   return (
     <div className="space-y-6" data-tutorial="profile-home-orbit">
       <section
-        className="glass-card !rounded-xl !p-3 !shadow-none sm:!p-5"
+        className="card-simple p-3 sm:p-5"
         aria-label="Level orbit"
       >
         <div className="relative z-[1] mx-auto grid max-w-3xl grid-cols-1 gap-5 md:grid-cols-[1fr_minmax(0,220px)_1fr] md:items-center md:gap-3">
@@ -250,7 +250,7 @@ export function ProfileHomeCompact({
       </section>
 
       <section
-        className="glass-card !rounded-xl !p-4 !shadow-none sm:!p-5"
+        className="card-simple p-4 sm:p-5"
         aria-label="XP forecast"
         data-tutorial="xp-content"
       >
