@@ -18,10 +18,23 @@ function isProfileRoute(pathname: string) {
   return p === "/profile" || p.startsWith("/profile/");
 }
 
+function isGrowthRoute(pathname: string) {
+  const p = pathname.replace(/\/$/, "") || "/";
+  return p === "/learning" || p.startsWith("/learning/");
+}
+
 /** Top safe area is on `body` (globals); avoid double-counting here. Horizontal insets keep PWA content off curved edges in landscape. */
 const mainPaddingStyle = {
   paddingLeft: "max(var(--hq-padding-x), env(safe-area-inset-left, 0px))",
   paddingRight: "max(var(--hq-padding-x), env(safe-area-inset-right, 0px))",
+  paddingTop: "var(--main-padding-top, 40px)",
+  paddingBottom:
+    "calc(var(--footer-height, 58px) + var(--bottom-nav-arch, 28px) + env(safe-area-inset-bottom) + var(--main-padding-bottom, 16px))",
+} as const;
+
+const growthMainPaddingStyle = {
+  paddingLeft: "env(safe-area-inset-left, 0px)",
+  paddingRight: "env(safe-area-inset-right, 0px)",
   paddingTop: "var(--main-padding-top, 40px)",
   paddingBottom:
     "calc(var(--footer-height, 58px) + var(--bottom-nav-arch, 28px) + env(safe-area-inset-bottom) + var(--main-padding-bottom, 16px))",
@@ -36,6 +49,7 @@ export function DashboardMainContent({ children }: Props) {
   const pathname = usePathname();
   const tasksShell = isTasksRoute(pathname);
   const profileShell = isProfileRoute(pathname);
+  const growthShell = isGrowthRoute(pathname);
 
   return (
     <main
@@ -43,7 +57,7 @@ export function DashboardMainContent({ children }: Props) {
       data-page-surface="flat-glass"
       data-page-route={tasksShell ? "tasks" : profileShell ? "profile" : undefined}
       className="scrollbar-hide hq-deck-ambient-shell relative z-10 min-h-0 flex-1 overflow-auto"
-      style={mainPaddingStyle}
+      style={growthShell ? growthMainPaddingStyle : mainPaddingStyle}
       tabIndex={-1}
     >
       <TimezoneSyncBanner />
