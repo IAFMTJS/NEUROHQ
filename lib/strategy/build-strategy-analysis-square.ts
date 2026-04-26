@@ -47,14 +47,27 @@ function budgetHealthScore(b: StrategyIntegrationOverview["budget"]): { score: n
   return { score: 72, stress: false };
 }
 
-function growthHealthScore(g: StrategyIntegrationOverview["growth"] | null): { score: number; stress: boolean } {
-  if (!g) return { score: 50, stress: true };
-  if (!g.hasProtocols) return { score: 40, stress: true };
-  if (!g.activeProtocol && g.focus?.slug) return { score: 48, stress: true };
-  if (!g.activeProtocol) return { score: 42, stress: true };
-  if (!g.tierAligned) return { score: 38, stress: true };
-  if (!g.brainLogged) return { score: 52, stress: true };
-  return { score: 90, stress: false };
+function growthHealthScore(
+  gWeek: StrategyIntegrationOverview["growthTasksWeek"] | null,
+): { score: number; stress: boolean } {
+  if (!gWeek) return { score: 42, stress: true };
+
+  const assigned = gWeek.assigned ?? 0;
+  const done = gWeek.done ?? 0;
+  const completionRate = assigned > 0 ? done / assigned : 0;
+
+  // Penalties for “churn”: deletes/reschedules/edits/skips reduce confidence in the loop.
+  const penaltyRaw =
+    (gWeek.deletes ?? 0) * 9 + (gWeek.reschedules ?? 0) * 4 + (gWeek.edits ?? 0) * 2 + (gWeek.skips ?? 0) * 3;
+  const penalty = clamp(Math.round(penaltyRaw), 0, 38);
+
+  // Base score anchored to completion: 20..90-ish, then minus penalty.
+  // If no tasks are assigned, keep non-zero (not blank) but clearly “needs setup”.
+  const base = assigned === 0 ? 34 : clamp(Math.round(18 + completionRate * 82), 18, 95);
+  const score = clamp(base - penalty, 8, 96);
+
+  const stress = assigned === 0 || completionRate < 0.5 || penalty >= 14;
+  return { score, stress };
 }
 
 function missionsHealthScore(w: StrategyIntegrationOverview["week"], todayOpen: number): { score: number; stress: boolean } {
@@ -83,7 +96,7 @@ function collectIssues(
   reviewDue: boolean,
 ): Issue[] {
   const issues: Issue[] = [];
-  const { budget: b, week, growth, todayOpenMissionCount } = data;
+  const { budget: b, week, growthTasksWeek, todayOpenMissionCount } = data;
 
   if (reviewDue) {
     issues.push({
@@ -136,26 +149,36 @@ function collectIssues(
     });
   }
 
-  if (growth && growth.activeProtocol && !growth.tierAligned) {
-    issues.push({
-      id: "growth-tier",
-      severity: 72,
-      headline: "Growth-loop wringt — protocol past niet bij je energy.",
-      bullet: "Growth: tier mismatch",
-    });
-  } else if (growth && growth.activeProtocol && !growth.brainLogged) {
-    issues.push({
-      id: "growth-brain",
-      severity: 58,
-      headline: "Geen brain check-in vandaag — growth mist je signalen.",
-      bullet: "Growth: check-in mist",
-    });
-  } else if (growth && !growth.activeProtocol && growth.hasProtocols) {
+  const gAssigned = growthTasksWeek?.assigned ?? 0;
+  const gDone = growthTasksWeek?.done ?? 0;
+  const gDel = growthTasksWeek?.deletes ?? 0;
+  const gRes = growthTasksWeek?.reschedules ?? 0;
+  const gEd = growthTasksWeek?.edits ?? 0;
+  const gSk = growthTasksWeek?.skips ?? 0;
+
+  if (gAssigned === 0) {
     issues.push({
       id: "growth-none",
-      severity: 55,
-      headline: "Geen actief growth-traject — kies een protocol.",
-      bullet: "Growth: geen traject",
+      severity: 64,
+      headline: "Growth staat leeg — zonder toegewezen taken kun je geen loop bouwen.",
+      bullet: "Growth: geen taken",
+    });
+  } else if (gDone / Math.max(1, gAssigned) < 0.5) {
+    issues.push({
+      id: "growth-low",
+      severity: 58,
+      headline: "Growth loopt stroef — te weinig taken afgerond deze week.",
+      bullet: `Growth: ${gDone}/${gAssigned} done`,
+    });
+  }
+
+  const churn = gDel + gRes + gEd + gSk;
+  if (churn >= 3) {
+    issues.push({
+      id: "growth-churn",
+      severity: 52,
+      headline: "Growth is instabiel — te veel schuiven/weggooien ondermijnt consistentie.",
+      bullet: `Growth churn: -${gDel} del · ${gRes} res · ${gEd} edit`,
     });
   }
 
@@ -280,11 +303,11 @@ function neutralBullets(data: StrategyIntegrationOverview, hints: StrategyPacing
     bullets.push("Budget: plan instellen");
   }
 
-  const g = data.growth;
-  if (g?.activeProtocol) {
-    bullets.push(g.brainLogged ? "Growth: check-in ok" : "Growth: traject loopt");
+  const gW = data.growthTasksWeek;
+  if (gW.assigned > 0) {
+    bullets.push(`Growth: ${gW.done}/${gW.assigned} done`);
   } else {
-    bullets.push("Growth: traject kiezen");
+    bullets.push("Growth: taken toewijzen");
   }
 
   const eng = engineNeutralBullet(hints);
@@ -313,8 +336,8 @@ function pickCta(
   if (top?.id === "engine-savings") return { label: "Bouw spaar-buffer", href: "/budget" };
   if (top?.id === "engine-learning") return { label: "Trek Growth recht", href: "/learning" };
   if (top?.id === "overload" || top?.id === "overload-1") return { label: "Herbalanceer week", href: "/tasks" };
-  if (top?.id === "growth-tier" || top?.id === "growth-brain" || top?.id === "growth-none") {
-    return { label: "Sync Growth", href: "/learning" };
+  if (top?.id === "growth-none" || top?.id === "growth-low" || top?.id === "growth-churn") {
+    return { label: "Fix Growth", href: "/learning" };
   }
   if (top?.id === "alignment") return { label: "Herbalanceer focus", href: "/strategy?tab=focus" };
 
@@ -322,9 +345,6 @@ function pickCta(
   if (!b.hasPlanning) return { label: "Plan budget", href: "/budget" };
   if (b.remainingCents != null && b.remainingCents < 0) return { label: "Fix budget", href: "/budget" };
   if (data.week.overloadDays > 0) return { label: "Ontlast missies", href: "/tasks" };
-  if (data.growth && !data.growth.brainLogged && data.growth.activeProtocol) {
-    return { label: "Brain check-in", href: "/dashboard" };
-  }
   if (engineHints?.savingsOnTrack === false) return { label: "Bouw spaar-buffer", href: "/budget" };
   if (engineHints?.learningOnTrack === false) return { label: "Trek Growth recht", href: "/learning" };
   return { label: "Bekijk alignment", href: "/strategy?tab=alignment" };
@@ -342,7 +362,7 @@ export function buildStrategyAnalysisSnapshot(
   if (!data) return null;
 
   let bH = budgetHealthScore(data.budget);
-  let gH = growthHealthScore(data.growth);
+  let gH = growthHealthScore(data.growthTasksWeek);
   const mHealth = missionsHealthScore(data.week, data.todayOpenMissionCount);
   const issues = [
     ...collectIssues(data, alignmentScore, reviewDue),

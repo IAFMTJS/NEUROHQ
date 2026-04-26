@@ -2,7 +2,7 @@ import { getUserPreferencesOrDefaults } from "@/app/actions/preferences";
 import { GrowthPageCommandShell } from "@/components/growth/GrowthPageCommandShell";
 import { SimplifiedPageShell } from "@/components/layout/SimplifiedPageShell";
 import { SIMPLIFIED_VIEWPORT_WRAPPER } from "@/lib/simplified-page-layout";
-import { getPersonalGrowthFocus, getPersonalGrowthWeekStats } from "@/app/actions/personal-growth";
+import { getPersonalGrowthFocus, getPersonalGrowthWeekStats, getPersonalGrowthWeeklyHighlights } from "@/app/actions/personal-growth";
 import { PersonalGrowthHubClient } from "@/components/growth/PersonalGrowthHubClient";
 
 export const dynamic = "force-dynamic";
@@ -14,8 +14,12 @@ export default async function LearningPage({ searchParams }: Props) {
   const prefs = await getUserPreferencesOrDefaults();
   const simplified = prefs.simplified_content === true;
 
-  const [initialFocus, weekStats] = await Promise.all([getPersonalGrowthFocus(), getPersonalGrowthWeekStats()]);
-  const learningBody = <PersonalGrowthHubClient initialFocus={initialFocus} weekStats={weekStats} />;
+  const [initialFocus, weekStats, highlights] = await Promise.all([
+    getPersonalGrowthFocus(),
+    getPersonalGrowthWeekStats(),
+    getPersonalGrowthWeeklyHighlights(),
+  ]);
+  const learningBody = <PersonalGrowthHubClient initialFocus={initialFocus} weekStats={weekStats} highlights={highlights} />;
 
   if (simplified) {
     return (

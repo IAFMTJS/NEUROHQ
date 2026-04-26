@@ -188,3 +188,82 @@ export const getPersonalGrowthWeekStats = cache(async (): Promise<PersonalGrowth
   return { weekStart: start, weekEnd: end, total, done, open };
 });
 
+export type PersonalGrowthWeeklyHighlights = {
+  biggestWin: { title: string; occurredAt: string } | null;
+  biggestFailure: { title: string; detail: string; occurredAt: string | null } | null;
+};
+
+function nextDayIso(dateStr: string): string {
+  const d = new Date(`${dateStr}T00:00:00.000Z`);
+  d.setUTCDate(d.getUTCDate() + 1);
+  return d.toISOString();
+}
+
+/** Key events (win/failure) for the current budget week for Personal Growth tasks. */
+export const getPersonalGrowthWeeklyHighlights = cache(async (): Promise<PersonalGrowthWeeklyHighlights> => {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  const today = todayDateString();
+  const { start, end } = getBudgetWeekBounds(today);
+  if (!user) return { biggestWin: null, biggestFailure: null };
+
+  const { data: tasks, error: tErr } = await supabase
+    .from("tasks")
+    .select("id, title, completed, completed_at, task_tags, deleted_at")
+    .eq("user_id", user.id)
+    .gte("due_date", start)
+    .lte("due_date", end)
+    .is("deleted_at", null);
+  if (tErr) return { biggestWin: null, biggestFailure: null };
+
+  const growthTasks = (tasks ?? [])
+    .map((t) => t as { id: string; title: string; completed?: boolean | null; completed_at?: string | null; task_tags?: unknown })
+    .filter((t) => hasPersonalGrowthTag(t.task_tags));
+
+  const biggestWinTask = growthTasks
+    .filter((t) => t.completed === true && !!t.completed_at)
+    .sort((a, b) => new Date(b.completed_at!).getTime() - new Date(a.completed_at!).getTime())[0];
+
+  const biggestWin = biggestWinTask
+    ? { title: biggestWinTask.title, occurredAt: String(biggestWinTask.completed_at) }
+    : null;
+
+  // Failures = skip/reschedule/delete outcomes on growth tasks, inside the week.
+  const growthIds = growthTasks.map((t) => t.id);
+  let biggestFailure: PersonalGrowthWeeklyHighlights["biggestFailure"] = null;
+
+  if (growthIds.length > 0) {
+    const { data: outcomes } = await supabase
+      .from("mission_outcome_events")
+      .select("outcome, task_id, occurred_at")
+      .eq("user_id", user.id)
+      .in("task_id", growthIds)
+      .gte("occurred_at", `${start}T00:00:00.000Z`)
+      .lt("occurred_at", nextDayIso(end));
+
+    const rows = (outcomes ?? []) as Array<{ outcome?: string | null; task_id?: string | null; occurred_at?: string | null }>;
+    const bad = rows.filter((r) => r.outcome === "skip" || r.outcome === "reschedule" || r.outcome === "delete");
+    if (bad.length > 0) {
+      const counts = { skip: 0, reschedule: 0, delete: 0 } as Record<"skip" | "reschedule" | "delete", number>;
+      for (const r of bad) counts[r.outcome as "skip" | "reschedule" | "delete"]++;
+
+      const topOutcome = (Object.entries(counts) as Array<[keyof typeof counts, number]>).sort((a, b) => b[1] - a[1])[0]!;
+      const lastBad = bad
+        .slice()
+        .sort((a, b) => new Date(String(b.occurred_at)).getTime() - new Date(String(a.occurred_at)).getTime())[0];
+
+      const label =
+        topOutcome[0] === "skip" ? "momenten genegeerd" : topOutcome[0] === "delete" ? "missies verwijderd" : "missies verschoven";
+      biggestFailure = {
+        title: `${topOutcome[1]} ${label}`,
+        detail: `Outcome: ${topOutcome[0]} · ${topOutcome[1]}× deze week`,
+        occurredAt: lastBad?.occurred_at ?? null,
+      };
+    }
+  }
+
+  return { biggestWin, biggestFailure };
+});
+

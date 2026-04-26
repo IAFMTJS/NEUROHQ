@@ -11,7 +11,12 @@ import {
   getPersonalGrowthAreaPresets,
   type PersonalGrowthIntensity,
 } from "@/lib/user-goal-mission-preview";
-import { setPersonalGrowthFocus, type PersonalGrowthFocusState, type PersonalGrowthWeekStats } from "@/app/actions/personal-growth";
+import {
+  setPersonalGrowthFocus,
+  type PersonalGrowthFocusState,
+  type PersonalGrowthWeekStats,
+  type PersonalGrowthWeeklyHighlights,
+} from "@/app/actions/personal-growth";
 
 const UNDO_MS = 25_000;
 const TAG_OPTIONS = ["discipline", "confidence", "stress", "social", "health", "career"] as const;
@@ -19,6 +24,7 @@ const TAG_OPTIONS = ["discipline", "confidence", "stress", "social", "health", "
 type Props = {
   initialFocus: PersonalGrowthFocusState;
   weekStats: PersonalGrowthWeekStats;
+  highlights: PersonalGrowthWeeklyHighlights;
 };
 
 function intensityLabel(intensity: PersonalGrowthIntensity): string {
@@ -27,7 +33,81 @@ function intensityLabel(intensity: PersonalGrowthIntensity): string {
   return "Normal";
 }
 
-export function PersonalGrowthHubClient({ initialFocus, weekStats }: Props) {
+function clamp(n: number, lo: number, hi: number) {
+  return Math.max(lo, Math.min(hi, n));
+}
+
+function startOfWeekDates(weekStart: string): string[] {
+  // weekStart is YYYY-MM-DD. We keep it timezone-agnostic for UI.
+  const d0 = new Date(`${weekStart}T00:00:00.000Z`);
+  if (!Number.isFinite(d0.getTime())) return [];
+  const out: string[] = [];
+  for (let i = 0; i < 7; i++) {
+    const d = new Date(d0);
+    d.setUTCDate(d0.getUTCDate() + i);
+    out.push(d.toISOString().slice(0, 10));
+  }
+  return out;
+}
+
+function weekdayShort(d: string): string {
+  // nl-ish short labels matching the mock.
+  const dt = new Date(`${d}T00:00:00.000Z`);
+  const idx = dt.getUTCDay(); // 0..6 (Sun..Sat)
+  const map = ["ZO", "MA", "DI", "WO", "DO", "VR", "ZA"];
+  return map[idx] ?? "—";
+}
+
+function deriveMockWeeklyFeedback(params: {
+  focus: string | null;
+  tags: string[];
+  intensity: PersonalGrowthIntensity;
+  horizonDays: number;
+  weekStats: PersonalGrowthWeekStats;
+}) {
+  const { weekStats, horizonDays, intensity, focus } = params;
+  const assigned = weekStats.total;
+  const done = weekStats.done;
+  const open = weekStats.open;
+  const completionRate = assigned > 0 ? done / assigned : 0;
+
+  // “Avoided moments / pushed through” are placeholders but tied to real completion.
+  const avoidedMoments = assigned === 0 ? 0 : clamp(open, 0, 9);
+  const successMoments = assigned === 0 ? 0 : clamp(done, 0, 9);
+
+  // Outcomes: mocked but deterministic to week completion so it “moves”.
+  const growthScore = assigned === 0 ? 0 : Math.round(clamp((completionRate - 0.35) * 40, -18, 22));
+  const confidence = assigned === 0 ? 60 : clamp(Math.round(64 + completionRate * 18), 42, 92);
+  const confidenceDelta = assigned === 0 ? 0 : clamp(Math.round(growthScore * 0.6), -12, 14);
+  const stress = assigned === 0 ? 45 : clamp(Math.round(44 - completionRate * 10), 18, 72);
+  const stressDelta = assigned === 0 ? 0 : clamp(Math.round(-confidenceDelta * 0.8), -12, 12);
+
+  const expectedFailRate = intensity === "intense" ? 0.45 : intensity === "light" ? 0.25 : 0.4;
+  const avgEveryDays = assigned > 0 ? Math.round((horizonDays / assigned) * 10) / 10 : null;
+
+  return {
+    focus: focus ?? "—",
+    avoidedMoments,
+    successMoments,
+    growthScore,
+    growthScoreDelta: assigned === 0 ? 0 : clamp(growthScore, -18, 22),
+    confidence,
+    confidenceDelta,
+    stress,
+    stressDelta,
+    completedMissions: done,
+    totalMissions: assigned,
+    avgEveryDays,
+    expectedFailRatePct: Math.round(expectedFailRate * 100),
+    weeklyTrend: {
+      comfort: clamp(Math.round(completionRate * 22), 0, 26),
+      avoidance: -clamp(Math.round(open * 7), 0, 30),
+      consistency: clamp(Math.round((1 - Math.min(1, open / Math.max(1, assigned))) * 18), 0, 22),
+    },
+  };
+}
+
+export function PersonalGrowthHubClient({ initialFocus, weekStats, highlights }: Props) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
 
@@ -42,8 +122,12 @@ export function PersonalGrowthHubClient({ initialFocus, weekStats }: Props) {
   const [intensity, setIntensity] = useState<PersonalGrowthIntensity>(initialFocus.intensity ?? "normal");
   const [horizonDays, setHorizonDays] = useState<number>(initialFocus.horizonDays ?? 14);
 
+  const needsSetup = !(initialFocus.area || initialFocus.goal);
+  const [editMode, setEditMode] = useState<boolean>(needsSetup);
+
   const [previewOpen, setPreviewOpen] = useState(false);
   const [previewRows, setPreviewRows] = useState<{ title: string; due_date: string }[]>([]);
+  const [commitArmed, setCommitArmed] = useState(false);
 
   const effectiveArea = (areaMode === "custom" ? customArea.trim() : presetArea.trim()) || null;
 
@@ -61,8 +145,9 @@ export function PersonalGrowthHubClient({ initialFocus, weekStats }: Props) {
           intensity,
           horizonDays,
         });
-        neuroToast.success("Personal Growth focus opgeslagen.");
+        neuroToast.success("Focus opgeslagen.");
         router.refresh();
+        setEditMode(false);
       } catch (e) {
         neuroToast.error(e instanceof Error ? e.message : "Opslaan mislukt.");
       }
@@ -80,6 +165,7 @@ export function PersonalGrowthHubClient({ initialFocus, weekStats }: Props) {
       });
       setPreviewRows(rows.map((r) => ({ title: r.title, due_date: r.due_date })));
       setPreviewOpen(true);
+      setCommitArmed(false);
     } catch (e) {
       neuroToast.error(e instanceof Error ? e.message : "Check je invoer.");
     }
@@ -96,7 +182,7 @@ export function PersonalGrowthHubClient({ initialFocus, weekStats }: Props) {
           horizonDays,
         });
         setPreviewOpen(false);
-        neuroToast.success(`${created} personal growth taken toegevoegd op je Missions.`, {
+        neuroToast.success(`${created} growth missies gedeployed.`, {
           duration: UNDO_MS,
           action: {
             label: "Ongedaan maken",
@@ -122,6 +208,27 @@ export function PersonalGrowthHubClient({ initialFocus, weekStats }: Props) {
 
   const goalValid = goal.trim().length >= 8;
   const weekPct = weekStats.total > 0 ? Math.round((weekStats.done / weekStats.total) * 100) : 0;
+  const weekDates = useMemo(() => startOfWeekDates(weekStats.weekStart), [weekStats.weekStart]);
+  const mock = useMemo(
+    () =>
+      deriveMockWeeklyFeedback({
+        focus: effectiveArea,
+        tags,
+        intensity,
+        horizonDays,
+        weekStats,
+      }),
+    [effectiveArea, tags, intensity, horizonDays, weekStats],
+  );
+
+  const winLine = highlights.biggestWin?.title ?? null;
+  const failLine = highlights.biggestFailure?.title ?? null;
+  const realityHeadline =
+    mock.avoidedMoments >= 3
+      ? "Niet mooi. Wel eerlijk."
+      : mock.avoidedMoments >= 1
+        ? "Goed bezig. Maar niet klaar."
+        : "Goed bezig.";
 
   return (
     <div className="space-y-4 sm:space-y-6">
@@ -144,10 +251,199 @@ export function PersonalGrowthHubClient({ initialFocus, weekStats }: Props) {
             <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[var(--semantic-accent)]/90">
               Personal Growth
             </p>
-            <h1 className="mt-2 text-2xl font-bold tracking-tight text-[var(--text-primary)] md:text-3xl">
-              Focus kiezen. Week sturen.
-            </h1>
-            <div className="mt-3 flex flex-wrap items-center gap-2">
+            <h1 className="mt-2 text-2xl font-bold tracking-tight text-[var(--text-primary)] md:text-3xl">{realityHeadline}</h1>
+            <p className="mt-2 text-sm text-[var(--text-secondary)]">
+              Je focus deze week: <span className="font-semibold text-sky-200">{mock.focus}</span>
+            </p>
+            <p className="mt-2 text-sm text-[var(--text-secondary)]">
+              Je hebt{" "}
+              <span className="font-semibold text-rose-200 tabular-nums">{mock.avoidedMoments}</span> momenten genegeerd.
+              <span className="mx-2 text-white/20" aria-hidden>
+                ·
+              </span>
+              <span className="font-semibold text-emerald-200 tabular-nums">{mock.successMoments}</span> keer tóch gedaan.
+            </p>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-2">
+            <button
+              type="button"
+              disabled={pending}
+              onClick={() => neuroToast.message("Reflectie komt eraan.")}
+              className="btn-secondary rounded-lg px-4 py-2 text-sm font-semibold disabled:opacity-50"
+            >
+              Reflectie
+            </button>
+            <button
+              type="button"
+              disabled={pending}
+              onClick={() => setEditMode((v) => !v)}
+              className="btn-secondary rounded-lg px-4 py-2 text-sm font-semibold disabled:opacity-50"
+            >
+              {editMode ? "Terug" : "Adjust focus"}
+            </button>
+            <button
+              type="button"
+              disabled={pending || !goalValid}
+              className="btn-primary rounded-lg px-4 py-2 text-sm font-semibold disabled:opacity-50"
+              onClick={openPreview}
+            >
+              Lock focus & start volgende week
+            </button>
+          </div>
+        </div>
+
+        <div className="relative z-[1] mt-4 grid gap-3 sm:grid-cols-4">
+          <div className="rounded-xl border border-[rgba(var(--mode-rgb),0.16)] bg-black/20 px-4 py-3">
+            <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--text-muted)]">Week progress</p>
+            <div className="mt-2 flex items-center gap-3">
+              <div
+                className="relative h-14 w-14 shrink-0 rounded-full border border-white/10 bg-black/20"
+                style={{
+                  background: `conic-gradient(rgba(103,232,249,0.95) ${weekPct}%, rgba(255,255,255,0.08) 0)`,
+                }}
+                aria-hidden
+              >
+                <div className="absolute inset-[6px] flex items-center justify-center rounded-full bg-[rgba(6,18,30,0.85)]">
+                  <div className="text-center">
+                    <p className="text-sm font-bold text-[var(--text-primary)] tabular-nums">{weekPct}%</p>
+                    <p className="text-[10px] font-semibold text-[var(--text-muted)]">Voltooid</p>
+                  </div>
+                </div>
+              </div>
+              <div className="min-w-0">
+                <p className="text-sm font-semibold text-[var(--text-primary)] tabular-nums">
+                  {weekStats.done}/{weekStats.total} missies
+                </p>
+                <p className="text-[11px] text-[var(--text-muted)]">
+                  {weekStats.weekStart} → {weekStats.weekEnd}
+                </p>
+              </div>
+            </div>
+          </div>
+          <div className="rounded-xl border border-white/10 bg-white/[0.04] px-4 py-3">
+            <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--text-muted)]">Growth score</p>
+            <p className="mt-1 text-sm font-semibold text-[var(--text-primary)] tabular-nums">
+              {mock.growthScore >= 0 ? `+${mock.growthScore}` : String(mock.growthScore)}
+            </p>
+            <p className="mt-1 text-[11px] text-[var(--text-muted)] tabular-nums">
+              {mock.growthScoreDelta >= 0 ? `+${mock.growthScoreDelta}` : String(mock.growthScoreDelta)} vs vorige week
+            </p>
+          </div>
+          <div className="rounded-xl border border-white/10 bg-white/[0.04] px-4 py-3">
+            <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--text-muted)]">Confidence</p>
+            <p className="mt-1 text-sm font-semibold text-[var(--text-primary)] tabular-nums">{mock.confidence}</p>
+            <p className="mt-1 text-[11px] text-[var(--text-muted)] tabular-nums">
+              {mock.confidenceDelta >= 0 ? `+${mock.confidenceDelta}` : String(mock.confidenceDelta)} deze week
+            </p>
+          </div>
+          <div className="rounded-xl border border-white/10 bg-white/[0.04] px-4 py-3">
+            <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--text-muted)]">Stress level</p>
+            <p className="mt-1 text-sm font-semibold text-[var(--text-primary)] tabular-nums">{mock.stress}</p>
+            <p className="mt-1 text-[11px] text-[var(--text-muted)] tabular-nums">
+              {mock.stressDelta >= 0 ? `+${mock.stressDelta}` : String(mock.stressDelta)} deze week
+            </p>
+          </div>
+        </div>
+
+        <div className="mt-3 grid gap-3 md:grid-cols-2">
+          <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-4">
+            <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--text-muted)]">Missies deze week</p>
+            <div className="mt-3 flex items-center justify-between gap-3">
+              <div className="text-sm font-semibold text-[var(--text-primary)] tabular-nums">
+                {weekStats.done}/{weekStats.total} voltooid
+              </div>
+              <div className="text-xs text-[var(--text-muted)] tabular-nums">{weekPct}%</div>
+            </div>
+            <div className="mt-3 flex items-center justify-between gap-2">
+              {weekDates.map((d, i) => {
+                const isDone = weekStats.total > 0 ? i < clamp(weekStats.done, 0, 7) : false;
+                const isMiss = weekStats.total > 0 ? i >= clamp(weekStats.done, 0, 7) && i < 7 : false;
+                return (
+                  <div key={d} className="flex min-w-0 flex-1 flex-col items-center gap-1">
+                    <div
+                      className={`h-8 w-8 rounded-full border ${
+                        isDone
+                          ? "border-emerald-300/50 bg-emerald-300/10 shadow-[0_0_18px_rgba(52,211,153,0.25)]"
+                          : isMiss
+                            ? "border-white/10 bg-black/30"
+                            : "border-white/10 bg-black/20"
+                      }`}
+                      aria-hidden
+                    />
+                    <p className="text-[10px] font-semibold text-[var(--text-muted)]">{weekdayShort(d)}</p>
+                    <p className="text-[10px] text-[var(--text-muted)]/80 tabular-nums">{d.slice(8, 10)}/{d.slice(5, 7)}</p>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-4">
+            <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--text-muted)]">Jouw groei deze week</p>
+            <div className="mt-3 space-y-3">
+              {[
+                { label: "Social Comfort", v: mock.weeklyTrend.comfort, color: "from-sky-400/35 via-cyan-300/50 to-blue-500/45" },
+                { label: "Vermijding", v: mock.weeklyTrend.avoidance, color: "from-rose-500/35 via-orange-400/40 to-amber-300/45" },
+                { label: "Consistentie", v: mock.weeklyTrend.consistency, color: "from-emerald-400/35 via-teal-300/45 to-sky-400/35" },
+              ].map((r) => {
+                const pct = clamp(Math.abs(r.v), 0, 100);
+                const up = r.v >= 0;
+                return (
+                  <div key={r.label}>
+                    <div className="flex items-center justify-between gap-3">
+                      <p className="text-xs font-semibold text-[var(--text-secondary)]">{r.label}</p>
+                      <p className={`text-xs font-semibold tabular-nums ${up ? "text-emerald-200" : "text-rose-200"}`}>
+                        {up ? "↑" : "↓"} {pct}%
+                      </p>
+                    </div>
+                    <div className="mt-1.5 h-2 overflow-hidden rounded-full border border-white/10 bg-black/25">
+                      <div className={`h-full rounded-full bg-gradient-to-r ${r.color}`} style={{ width: `${pct}%` }} />
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+            <div className="mt-3 rounded-lg border border-white/10 bg-black/20 px-3 py-2 text-[11px] text-[var(--text-muted)]">
+              {weekStats.total > 0 ? (
+                <span className="tabular-nums">
+                  Confidence: {mock.confidenceDelta >= 0 ? `+${mock.confidenceDelta}` : mock.confidenceDelta} · Stress:{" "}
+                  {mock.stressDelta >= 0 ? `+${mock.stressDelta}` : mock.stressDelta} · Avoidance: {mock.avoidedMoments}x
+                </span>
+              ) : (
+                <span>Geen growth missies toegewezen — score blijft neutraal tot je deployt.</span>
+              )}
+            </div>
+          </div>
+        </div>
+
+        <div className="mt-3 grid gap-3 md:grid-cols-2">
+          <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-4">
+            <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--text-muted)]">Grootste win</p>
+            <p className="mt-2 line-clamp-2 text-sm font-semibold text-[var(--text-primary)]">
+              {winLine ?? "Geen win. Dan heb je ook niks bewezen."}
+            </p>
+            <p className="mt-1 text-[11px] text-[var(--text-muted)]">{highlights.biggestWin?.occurredAt ? "Deze week" : "—"}</p>
+          </div>
+          <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-4">
+            <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--text-muted)]">Uitdaging</p>
+            <p className="mt-2 line-clamp-2 text-sm font-semibold text-rose-200">
+              {failLine ?? "Geen misses gelogd. Blijf zo."}
+            </p>
+            <button
+              type="button"
+              className="mt-1 text-left text-[11px] font-semibold text-sky-200/90 hover:text-sky-100"
+              onClick={() => neuroToast.message("Details komen eraan.")}
+            >
+              Bekijk details →
+            </button>
+          </div>
+        </div>
+
+        {!editMode ? (
+          <div className="mt-3 rounded-2xl border border-[rgba(var(--mode-rgb),0.18)] bg-black/20 p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]">
+            <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--text-muted)]">Jouw huidige focus</p>
+            <div className="mt-2 flex flex-wrap items-center gap-2">
               <span className="inline-flex items-center gap-2 rounded-full border border-[rgba(var(--mode-rgb),0.28)] bg-[rgba(var(--mode-rgb-deep),0.18)] px-3 py-1 text-[11px] font-semibold text-cyan-100">
                 <span className="h-2 w-2 rounded-full bg-[rgb(var(--mode-rgb))] shadow-[0_0_12px_rgba(var(--mode-rgb),0.55)]" aria-hidden />
                 {effectiveArea ?? "Geen area"}
@@ -158,146 +454,104 @@ export function PersonalGrowthHubClient({ initialFocus, weekStats }: Props) {
               <span className="inline-flex rounded-full border border-white/15 bg-black/25 px-3 py-1 text-[11px] font-semibold text-slate-200">
                 {horizonDays}d horizon
               </span>
-              <span className="inline-flex rounded-full border border-white/15 bg-black/25 px-3 py-1 text-[11px] font-semibold text-slate-200 tabular-nums">
-                {weekStats.done}/{weekStats.total} done
+              <span className="inline-flex rounded-full border border-white/15 bg-black/25 px-3 py-1 text-[11px] font-semibold text-slate-200">
+                {tags.length > 0 ? tags.slice(0, 3).join(" · ") : "—"}
               </span>
             </div>
-          </div>
-
-          <div className="flex flex-wrap items-center gap-2">
-            <button
-              type="button"
-              disabled={pending}
-              onClick={saveFocus}
-              className="btn-secondary rounded-lg px-4 py-2 text-sm font-semibold disabled:opacity-50"
-            >
-              {pending ? "Opslaan…" : "Focus opslaan"}
-            </button>
-            <button
-              type="button"
-              disabled={pending || !goalValid}
-              className="btn-primary rounded-lg px-4 py-2 text-sm font-semibold disabled:opacity-50"
-              onClick={openPreview}
-            >
-              Preview → Missions
-            </button>
-          </div>
-        </div>
-
-        <div className="relative z-[1] mt-4 grid gap-3 sm:grid-cols-3">
-          <div className="rounded-xl border border-[rgba(var(--mode-rgb),0.16)] bg-black/20 px-4 py-3">
-            <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--text-muted)]">Deze week</p>
-            <p className="mt-1 text-sm font-semibold text-[var(--text-primary)]">
-              {weekStats.weekStart} → {weekStats.weekEnd}
-            </p>
-            <div className="mt-2 h-1.5 rounded-full bg-white/10">
-              <div
-                className="h-1.5 rounded-full bg-gradient-to-r from-cyan-300 via-sky-300 to-violet-300"
-                style={{ width: `${weekPct}%` }}
-                role="progressbar"
-                aria-valuenow={weekPct}
-                aria-valuemin={0}
-                aria-valuemax={100}
-              />
-            </div>
-            <p className="mt-2 text-[11px] text-[var(--text-muted)] tabular-nums">{weekPct}% progress</p>
-          </div>
-          <div className="rounded-xl border border-white/10 bg-white/[0.04] px-4 py-3">
-            <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--text-muted)]">Open</p>
-            <p className="mt-1 text-sm font-semibold text-[var(--text-primary)] tabular-nums">{weekStats.open}</p>
-            <p className="mt-1 text-[11px] text-[var(--text-muted)]">Personal growth taken</p>
-          </div>
-          <div className="rounded-xl border border-white/10 bg-white/[0.04] px-4 py-3">
-            <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--text-muted)]">Focus</p>
-            <p className="mt-1 text-sm font-semibold text-[var(--text-primary)] line-clamp-2">
+            <p className="mt-2 line-clamp-2 text-sm font-semibold text-[var(--text-primary)]">
               {goal.trim() ? goal.trim() : "Nog geen goal"}
             </p>
-            <p className="mt-1 text-[11px] text-[var(--text-muted)]">{tags.length > 0 ? tags.slice(0, 3).join(" · ") : "—"}</p>
           </div>
-        </div>
+        ) : null}
 
-        <div className="grid gap-3 md:grid-cols-2">
-          <div className="rounded-2xl border border-[rgba(var(--mode-rgb),0.18)] bg-black/20 p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]">
-            <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--text-muted)]">Growth area</p>
-            <div className="mt-2 flex flex-wrap gap-2">
-              <button
-                type="button"
-                onClick={() => setAreaMode("preset")}
-                className={`rounded-full border px-3 py-1 text-xs font-semibold ${
-                  areaMode === "preset"
-                    ? "border-[var(--accent-focus)] bg-[var(--accent-focus)]/15 text-[var(--text-primary)]"
-                    : "border-[var(--card-border)] text-[var(--text-muted)] hover:border-[var(--accent-focus)]/50"
-                }`}
-              >
-                Preset
-              </button>
-              <button
-                type="button"
-                onClick={() => setAreaMode("custom")}
-                className={`rounded-full border px-3 py-1 text-xs font-semibold ${
-                  areaMode === "custom"
-                    ? "border-[var(--accent-focus)] bg-[var(--accent-focus)]/15 text-[var(--text-primary)]"
-                    : "border-[var(--card-border)] text-[var(--text-muted)] hover:border-[var(--accent-focus)]/50"
-                }`}
-              >
-                Custom
-              </button>
+        {editMode ? (
+          <div className="mt-4 grid gap-3 md:grid-cols-2">
+            <div className="rounded-2xl border border-[rgba(var(--mode-rgb),0.18)] bg-black/20 p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]">
+              <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--text-muted)]">Growth area</p>
+              <div className="mt-2 flex flex-wrap gap-2">
+                <button
+                  type="button"
+                  onClick={() => setAreaMode("preset")}
+                  className={`rounded-full border px-3 py-1 text-xs font-semibold ${
+                    areaMode === "preset"
+                      ? "border-[var(--accent-focus)] bg-[var(--accent-focus)]/15 text-[var(--text-primary)]"
+                      : "border-[var(--card-border)] text-[var(--text-muted)] hover:border-[var(--accent-focus)]/50"
+                  }`}
+                >
+                  Preset
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setAreaMode("custom")}
+                  className={`rounded-full border px-3 py-1 text-xs font-semibold ${
+                    areaMode === "custom"
+                      ? "border-[var(--accent-focus)] bg-[var(--accent-focus)]/15 text-[var(--text-primary)]"
+                      : "border-[var(--card-border)] text-[var(--text-muted)] hover:border-[var(--accent-focus)]/50"
+                  }`}
+                >
+                  Custom
+                </button>
+              </div>
+              {areaMode === "preset" ? (
+                <select
+                  disabled={pending}
+                  value={presetArea}
+                  onChange={(e) => setPresetArea(e.target.value)}
+                  className="mt-3 w-full rounded-lg border border-[var(--card-border)] bg-[var(--bg-primary)] px-3 py-2 text-sm text-[var(--text-primary)] [color-scheme:dark] focus:border-[var(--accent-focus)]/60 focus:outline-none"
+                >
+                  {presets.map((p) => (
+                    <option key={p} value={p}>
+                      {p}
+                    </option>
+                  ))}
+                </select>
+              ) : (
+                <input
+                  disabled={pending}
+                  value={customArea}
+                  onChange={(e) => setCustomArea(e.target.value)}
+                  className="mt-3 w-full rounded-lg border border-[var(--card-border)] bg-[var(--bg-primary)] px-3 py-2 text-sm text-[var(--text-primary)]"
+                  placeholder="Bv. Assertiviteit, Emotionele regulatie…"
+                />
+              )}
             </div>
-            {areaMode === "preset" ? (
-              <select
-                disabled={pending}
-                value={presetArea}
-                onChange={(e) => setPresetArea(e.target.value)}
-                className="mt-3 w-full rounded-lg border border-[var(--card-border)] bg-[var(--bg-primary)] px-3 py-2 text-sm text-[var(--text-primary)] [color-scheme:dark] focus:border-[var(--accent-focus)]/60 focus:outline-none"
-              >
-                {presets.map((p) => (
-                  <option key={p} value={p}>
-                    {p}
-                  </option>
-                ))}
-              </select>
-            ) : (
-              <input
-                disabled={pending}
-                value={customArea}
-                onChange={(e) => setCustomArea(e.target.value)}
-                className="mt-3 w-full rounded-lg border border-[var(--card-border)] bg-[var(--bg-primary)] px-3 py-2 text-sm text-[var(--text-primary)]"
-                placeholder="Bv. Assertiviteit, Emotionele regulatie…"
-              />
-            )}
-          </div>
 
-          <div className="rounded-2xl border border-[rgba(var(--mode-rgb),0.18)] bg-black/20 p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]">
-            <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--text-muted)]">Focus goal</p>
-            <textarea
-              disabled={pending}
-              value={goal}
-              onChange={(e) => setGoal(e.target.value)}
-              rows={3}
-              className="mt-2 w-full rounded-lg border border-[var(--card-border)] bg-[var(--bg-primary)] px-3 py-2 text-sm text-[var(--text-primary)]"
-              placeholder="Bv. meer initiatief nemen op het werk…"
-            />
-            <div className="mt-3">
-              <p className="mb-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--text-muted)]">Tags</p>
-              <div className="flex flex-wrap gap-2">
-                {TAG_OPTIONS.map((t) => (
-                  <button
-                    key={t}
-                    type="button"
-                    onClick={() => toggleTag(t)}
-                    className={`rounded-full border px-2.5 py-1 text-xs font-medium transition-colors ${
-                      tags.includes(t)
-                        ? "border-[var(--accent-focus)] bg-[var(--accent-focus)]/15 text-[var(--text-primary)]"
-                        : "border-[var(--card-border)] text-[var(--text-muted)] hover:border-[var(--accent-focus)]/50"
-                    }`}
-                  >
-                    {t}
-                  </button>
-                ))}
+            <div className="rounded-2xl border border-[rgba(var(--mode-rgb),0.18)] bg-black/20 p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]">
+              <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--text-muted)]">Focus goal</p>
+              <textarea
+                disabled={pending}
+                value={goal}
+                onChange={(e) => setGoal(e.target.value)}
+                rows={3}
+                className="mt-2 w-full rounded-lg border border-[var(--card-border)] bg-[var(--bg-primary)] px-3 py-2 text-sm text-[var(--text-primary)]"
+                placeholder="Bv. meer initiatief nemen op het werk…"
+              />
+              <div className="mt-3">
+                <p className="mb-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--text-muted)]">Tags</p>
+                <div className="flex flex-wrap gap-2">
+                  {TAG_OPTIONS.map((t) => (
+                    <button
+                      key={t}
+                      type="button"
+                      onClick={() => toggleTag(t)}
+                      className={`rounded-full border px-2.5 py-1 text-xs font-medium transition-colors ${
+                        tags.includes(t)
+                          ? "border-[var(--accent-focus)] bg-[var(--accent-focus)]/15 text-[var(--text-primary)]"
+                          : "border-[var(--card-border)] text-[var(--text-muted)] hover:border-[var(--accent-focus)]/50"
+                      }`}
+                    >
+                      {t}
+                    </button>
+                  ))}
+                </div>
+                <p className="mt-2 text-[11px] text-[var(--text-muted)] tabular-nums">
+                  Confidence: {mock.confidenceDelta >= 0 ? `+${mock.confidenceDelta}` : mock.confidenceDelta} · Stress:{" "}
+                  {mock.stressDelta >= 0 ? `+${mock.stressDelta}` : mock.stressDelta} · Social: {mock.successMoments}× doorgezet
+                </p>
               </div>
             </div>
           </div>
-        </div>
+        ) : null}
 
         <div className="grid gap-3 md:grid-cols-2">
           <div className="rounded-2xl border border-[rgba(var(--mode-rgb),0.18)] bg-black/20 p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]">
@@ -319,7 +573,11 @@ export function PersonalGrowthHubClient({ initialFocus, weekStats }: Props) {
                 </button>
               ))}
             </div>
-            <p className="mt-2 text-[11px] text-[var(--text-muted)]">Light = minder taken · Intense = meer density.</p>
+            <p className="mt-2 text-[11px] text-[var(--text-muted)] tabular-nums">
+              Je krijgt <strong>{previewRows.length || "?"}</strong> missies · gemiddeld{" "}
+              <strong>{mock.avgEveryDays ?? "—"}</strong> dagen per missie · fail rate verwacht{" "}
+              <strong>{mock.expectedFailRatePct}%</strong>.
+            </p>
           </div>
 
           <div className="rounded-2xl border border-[rgba(var(--mode-rgb),0.18)] bg-black/20 p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]">
@@ -354,18 +612,43 @@ export function PersonalGrowthHubClient({ initialFocus, weekStats }: Props) {
           >
             Reset
           </button>
+          {editMode ? (
+            <button
+              type="button"
+              disabled={pending}
+              onClick={saveFocus}
+              className="btn-secondary rounded-lg px-4 py-2 text-sm font-semibold disabled:opacity-50"
+            >
+              {pending ? "Opslaan…" : "Save focus"}
+            </button>
+          ) : null}
         </div>
       </section>
 
       <Modal
         open={previewOpen}
         onClose={() => !pending && setPreviewOpen(false)}
-        title="Preview: personal growth taken"
+        title="Deploy week"
         size="lg"
       >
-        <p className="text-xs text-[var(--text-muted)]">
-          We leggen <strong>{previewRows.length}</strong> concrete taken aan op je Missions, verspreid over {horizonDays} dagen.
-        </p>
+        <div className="space-y-2">
+          <p className="text-xs text-[var(--text-muted)]">
+            Je deployt <strong>{previewRows.length}</strong> missies over {horizonDays} dagen.
+          </p>
+          <p className="text-xs text-[var(--text-muted)]">
+            Je commit voor <strong>7 dagen</strong>. Geen reset zonder penalty.
+          </p>
+          <label className="mt-2 flex items-start gap-2 rounded-lg border border-white/10 bg-black/20 px-3 py-2 text-xs text-[var(--text-secondary)]">
+            <input
+              type="checkbox"
+              className="mt-0.5"
+              checked={commitArmed}
+              onChange={(e) => setCommitArmed(e.target.checked)}
+              disabled={pending}
+            />
+            <span>Ik snap het. Ik ga niet “even” resetten omdat het niet lekker voelt.</span>
+          </label>
+        </div>
         <ul className="mt-3 max-h-[min(360px,55dvh)] space-y-1.5 overflow-y-auto rounded-lg border border-[var(--card-border)] bg-[var(--bg-primary)]/40 p-3 text-xs text-[var(--text-secondary)]">
           {previewRows.map((r, i) => (
             <li key={i} className="flex justify-between gap-2 border-b border-[var(--card-border)]/50 pb-1.5 last:border-0">
@@ -377,11 +660,11 @@ export function PersonalGrowthHubClient({ initialFocus, weekStats }: Props) {
         <div className="mt-4 flex flex-wrap gap-2">
           <button
             type="button"
-            disabled={pending}
+            disabled={pending || !commitArmed}
             className="btn-primary rounded-lg px-4 py-2 text-sm font-semibold disabled:opacity-50"
             onClick={confirmCreate}
           >
-            {pending ? "Bezig…" : `${previewRows.length} taken toevoegen`}
+            {pending ? "Bezig…" : "Start run"}
           </button>
           <button
             type="button"
