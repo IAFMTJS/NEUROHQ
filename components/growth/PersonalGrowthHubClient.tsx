@@ -121,31 +121,104 @@ export function PersonalGrowthHubClient({ initialFocus, weekStats }: Props) {
   }
 
   const goalValid = goal.trim().length >= 8;
+  const weekPct = weekStats.total > 0 ? Math.round((weekStats.done / weekStats.total) * 100) : 0;
 
   return (
     <div className="space-y-4 sm:space-y-6">
-      <section className="card-simple space-y-3 border-l-4 border-[var(--semantic-accent)] bg-[var(--bg-elevated)]/30">
-        <div className="flex flex-wrap items-start justify-between gap-3">
+      <section
+        className="relative overflow-hidden rounded-2xl border border-[rgba(var(--mode-rgb),0.26)] bg-[linear-gradient(135deg,rgba(6,18,35,0.92)_0%,rgba(12,32,58,0.86)_50%,rgba(3,10,20,0.95)_100%)] p-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.08),0_0_40px_rgba(var(--mode-rgb),0.08)] md:p-7"
+        style={{ ["--mode-rgb" as any]: "0, 212, 255", ["--mode-rgb-deep" as any]: "0, 136, 255" }}
+        aria-label="Personal growth hub"
+      >
+        <div
+          className="pointer-events-none absolute -left-24 -top-24 h-64 w-64 rounded-full bg-[radial-gradient(circle,rgba(var(--mode-rgb),0.34)_0%,rgba(var(--mode-rgb),0.14)_40%,transparent_70%)] blur-2xl"
+          aria-hidden
+        />
+        <div
+          className="pointer-events-none absolute -bottom-28 -right-28 h-72 w-72 rounded-full bg-[radial-gradient(circle,rgba(var(--mode-rgb),0.26)_0%,rgba(var(--mode-rgb-deep),0.10)_42%,transparent_72%)] blur-2xl"
+          aria-hidden
+        />
+
+        <div className="relative z-[1] flex flex-col gap-4 border-b border-[rgba(var(--mode-rgb),0.12)] pb-5 md:flex-row md:items-end md:justify-between">
           <div className="min-w-0">
-            <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--text-muted)]">Personal growth</p>
-            <h1 className="mt-1 text-lg font-semibold text-[var(--text-primary)]">Kies focus en beïnvloed je week</h1>
-            <p className="mt-1 text-xs text-[var(--text-muted)]">
-              Week {weekStats.weekStart} → {weekStats.weekEnd} · {weekStats.done}/{weekStats.total} done · {weekStats.open} open
+            <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[var(--semantic-accent)]/90">
+              Personal Growth
             </p>
+            <h1 className="mt-2 text-2xl font-bold tracking-tight text-[var(--text-primary)] md:text-3xl">
+              Focus kiezen. Week sturen.
+            </h1>
+            <div className="mt-3 flex flex-wrap items-center gap-2">
+              <span className="inline-flex items-center gap-2 rounded-full border border-[rgba(var(--mode-rgb),0.28)] bg-[rgba(var(--mode-rgb-deep),0.18)] px-3 py-1 text-[11px] font-semibold text-cyan-100">
+                <span className="h-2 w-2 rounded-full bg-[rgb(var(--mode-rgb))] shadow-[0_0_12px_rgba(var(--mode-rgb),0.55)]" aria-hidden />
+                {effectiveArea ?? "Geen area"}
+              </span>
+              <span className="inline-flex rounded-full border border-white/15 bg-black/25 px-3 py-1 text-[11px] font-semibold text-slate-200">
+                {intensityLabel(intensity)}
+              </span>
+              <span className="inline-flex rounded-full border border-white/15 bg-black/25 px-3 py-1 text-[11px] font-semibold text-slate-200">
+                {horizonDays}d horizon
+              </span>
+              <span className="inline-flex rounded-full border border-white/15 bg-black/25 px-3 py-1 text-[11px] font-semibold text-slate-200 tabular-nums">
+                {weekStats.done}/{weekStats.total} done
+              </span>
+            </div>
           </div>
-          <button
-            type="button"
-            disabled={pending}
-            onClick={saveFocus}
-            className="btn-secondary rounded-lg px-4 py-2 text-sm font-semibold disabled:opacity-50"
-          >
-            {pending ? "Opslaan…" : "Focus opslaan"}
-          </button>
+
+          <div className="flex flex-wrap items-center gap-2">
+            <button
+              type="button"
+              disabled={pending}
+              onClick={saveFocus}
+              className="btn-secondary rounded-lg px-4 py-2 text-sm font-semibold disabled:opacity-50"
+            >
+              {pending ? "Opslaan…" : "Focus opslaan"}
+            </button>
+            <button
+              type="button"
+              disabled={pending || !goalValid}
+              className="btn-primary rounded-lg px-4 py-2 text-sm font-semibold disabled:opacity-50"
+              onClick={openPreview}
+            >
+              Preview → Missions
+            </button>
+          </div>
+        </div>
+
+        <div className="relative z-[1] mt-4 grid gap-3 sm:grid-cols-3">
+          <div className="rounded-xl border border-[rgba(var(--mode-rgb),0.16)] bg-black/20 px-4 py-3">
+            <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--text-muted)]">Deze week</p>
+            <p className="mt-1 text-sm font-semibold text-[var(--text-primary)]">
+              {weekStats.weekStart} → {weekStats.weekEnd}
+            </p>
+            <div className="mt-2 h-1.5 rounded-full bg-white/10">
+              <div
+                className="h-1.5 rounded-full bg-gradient-to-r from-cyan-300 via-sky-300 to-violet-300"
+                style={{ width: `${weekPct}%` }}
+                role="progressbar"
+                aria-valuenow={weekPct}
+                aria-valuemin={0}
+                aria-valuemax={100}
+              />
+            </div>
+            <p className="mt-2 text-[11px] text-[var(--text-muted)] tabular-nums">{weekPct}% progress</p>
+          </div>
+          <div className="rounded-xl border border-white/10 bg-white/[0.04] px-4 py-3">
+            <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--text-muted)]">Open</p>
+            <p className="mt-1 text-sm font-semibold text-[var(--text-primary)] tabular-nums">{weekStats.open}</p>
+            <p className="mt-1 text-[11px] text-[var(--text-muted)]">Personal growth taken</p>
+          </div>
+          <div className="rounded-xl border border-white/10 bg-white/[0.04] px-4 py-3">
+            <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--text-muted)]">Focus</p>
+            <p className="mt-1 text-sm font-semibold text-[var(--text-primary)] line-clamp-2">
+              {goal.trim() ? goal.trim() : "Nog geen goal"}
+            </p>
+            <p className="mt-1 text-[11px] text-[var(--text-muted)]">{tags.length > 0 ? tags.slice(0, 3).join(" · ") : "—"}</p>
+          </div>
         </div>
 
         <div className="grid gap-3 md:grid-cols-2">
-          <div className="rounded-xl border border-[var(--card-border)] bg-[var(--bg-primary)]/20 p-3">
-            <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--text-muted)]">Growth area</p>
+          <div className="rounded-2xl border border-[rgba(var(--mode-rgb),0.18)] bg-black/20 p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]">
+            <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--text-muted)]">Growth area</p>
             <div className="mt-2 flex flex-wrap gap-2">
               <button
                 type="button"
@@ -194,8 +267,8 @@ export function PersonalGrowthHubClient({ initialFocus, weekStats }: Props) {
             )}
           </div>
 
-          <div className="rounded-xl border border-[var(--card-border)] bg-[var(--bg-primary)]/20 p-3">
-            <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--text-muted)]">Focus goal</p>
+          <div className="rounded-2xl border border-[rgba(var(--mode-rgb),0.18)] bg-black/20 p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]">
+            <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--text-muted)]">Focus goal</p>
             <textarea
               disabled={pending}
               value={goal}
@@ -227,8 +300,8 @@ export function PersonalGrowthHubClient({ initialFocus, weekStats }: Props) {
         </div>
 
         <div className="grid gap-3 md:grid-cols-2">
-          <div className="rounded-xl border border-[var(--card-border)] bg-[var(--bg-primary)]/20 p-3">
-            <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--text-muted)]">Influence · intensity</p>
+          <div className="rounded-2xl border border-[rgba(var(--mode-rgb),0.18)] bg-black/20 p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]">
+            <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--text-muted)]">Influence · intensity</p>
             <div className="mt-2 flex flex-wrap gap-2">
               {(["light", "normal", "intense"] as const).map((id) => (
                 <button
@@ -246,13 +319,11 @@ export function PersonalGrowthHubClient({ initialFocus, weekStats }: Props) {
                 </button>
               ))}
             </div>
-            <p className="mt-2 text-xs text-[var(--text-muted)]">
-              Light = minder taken · Intense = meer density.
-            </p>
+            <p className="mt-2 text-[11px] text-[var(--text-muted)]">Light = minder taken · Intense = meer density.</p>
           </div>
 
-          <div className="rounded-xl border border-[var(--card-border)] bg-[var(--bg-primary)]/20 p-3">
-            <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--text-muted)]">Influence · horizon</p>
+          <div className="rounded-2xl border border-[rgba(var(--mode-rgb),0.18)] bg-black/20 p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]">
+            <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--text-muted)]">Influence · horizon</p>
             <select
               disabled={pending}
               value={String(horizonDays)}
@@ -265,19 +336,11 @@ export function PersonalGrowthHubClient({ initialFocus, weekStats }: Props) {
                 </option>
               ))}
             </select>
-            <p className="mt-2 text-xs text-[var(--text-muted)]">Spreiding van je personal growth taken.</p>
+            <p className="mt-2 text-[11px] text-[var(--text-muted)]">Spreiding van je personal growth taken.</p>
           </div>
         </div>
 
-        <div className="flex flex-wrap gap-2">
-          <button
-            type="button"
-            disabled={pending || !goalValid}
-            className="btn-primary rounded-lg px-4 py-2 text-sm font-semibold disabled:opacity-50"
-            onClick={openPreview}
-          >
-            Preview taken
-          </button>
+        <div className="mt-2 flex flex-wrap items-center gap-2">
           <button
             type="button"
             disabled={pending}

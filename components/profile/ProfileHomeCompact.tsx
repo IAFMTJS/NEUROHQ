@@ -281,12 +281,6 @@ export function ProfileHomeCompact({
           <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-[var(--semantic-accent)]/90">
             Brain training
           </p>
-          <Link
-            href="/brain"
-            className="rounded-sm text-[11px] font-semibold text-[var(--accent-focus)] underline-offset-2 hover:underline outline-none focus-visible:ring-2 focus-visible:ring-[rgba(var(--mode-rgb),0.45)] focus-visible:ring-offset-0"
-          >
-            Open Daily Brain
-          </Link>
         </div>
         <DailyChallengesPanel
           variant="profile"
