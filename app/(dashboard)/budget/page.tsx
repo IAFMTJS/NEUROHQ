@@ -503,7 +503,6 @@ export default async function BudgetPage({ searchParams }: Props) {
           <div className="relative z-10 flex min-h-[calc(100svh-7rem)] w-full max-w-none flex-1 flex-col pb-6 sm:min-h-[calc(100svh-6.5rem)] dashboard-cinematic">
             <DashboardCommandDeckFrame
               deckTitle="Budget"
-              chrome="ghost"
               fillViewport
               outerClassName="flex min-h-0 flex-1 flex-col"
               innerClassName="min-h-0 flex-1 gap-0"
@@ -513,7 +512,7 @@ export default async function BudgetPage({ searchParams }: Props) {
           </div>
         ) : (
           <div className="container page page-wide dashboard-cinematic relative z-10 pb-10">
-            <DashboardCommandDeckFrame deckTitle="Budget" chrome="ghost" innerClassName="gap-4">
+            <DashboardCommandDeckFrame deckTitle="Budget" innerClassName="gap-4">
               {budgetTabsShell}
             </DashboardCommandDeckFrame>
           </div>

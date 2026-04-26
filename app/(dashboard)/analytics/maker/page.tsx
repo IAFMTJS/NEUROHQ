@@ -34,7 +34,7 @@ export default async function MakerAnalyticsPage() {
 
   return (
     <div className="container page page-wide dashboard-cinematic pb-10">
-      <DashboardCommandDeckFrame deckTitle="Maker dashboard" chrome="ghost" innerClassName="gap-4">
+      <DashboardCommandDeckFrame deckTitle="Maker dashboard" innerClassName="gap-4">
         <div className="space-y-6">
           <HQPageHeader compact title="Maker dashboard" subtitle="High-level funnel and engine health (admin only)." />
 

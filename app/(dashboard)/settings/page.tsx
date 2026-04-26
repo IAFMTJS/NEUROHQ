@@ -202,7 +202,7 @@ export default async function SettingsPage() {
 
   return (
     <div className="container page settings-page dashboard-cinematic pb-10">
-      <DashboardCommandDeckFrame deckTitle="Instellingen" chrome="ghost" innerClassName="gap-4">
+      <DashboardCommandDeckFrame deckTitle="Instellingen" innerClassName="gap-4">
         <div className="space-y-6">
           <SettingsShell />
           <Suspense fallback={<SettingsSnapshotFallback />}>

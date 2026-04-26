@@ -19,13 +19,11 @@ export default async function DashboardPage() {
   // One surface: bridge chrome lives in `DashboardClientShell` (missions-style deck), not a nested gradient shell.
   return (
     <div className="container page page-wide dashboard-page dashboard-cinematic relative z-10 pb-10">
-      <div className="hq-frosted-main-shell">
-        <div className="space-y-4">
-          <Suspense fallback={null}>
-            <GrowthDashboardStrip />
-          </Suspense>
-          <DashboardClientShell />
-        </div>
+      <div className="space-y-4">
+        <Suspense fallback={null}>
+          <GrowthDashboardStrip />
+        </Suspense>
+        <DashboardClientShell />
       </div>
     </div>
   );

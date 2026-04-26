@@ -15,7 +15,6 @@ export function GrowthPageCommandShell({ children }: Props) {
       compactHorizontal
       compactVertical
       fullBleedMobile
-      ghostDeck
     >
       {children}
     </DashboardHubCommandShell>

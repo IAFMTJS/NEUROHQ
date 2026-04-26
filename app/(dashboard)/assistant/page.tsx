@@ -7,7 +7,7 @@ export default function AssistantPage() {
   return (
     <AssistantPageGate>
       <div className="container page page-wide dashboard-cinematic pb-10 pt-4 sm:pt-5">
-        <DashboardCommandDeckFrame deckTitle="Assistant" chrome="ghost" innerClassName="gap-4">
+        <DashboardCommandDeckFrame deckTitle="Assistant" innerClassName="gap-4">
           <Suspense fallback={null}>
             <AssistantPageClient />
           </Suspense>

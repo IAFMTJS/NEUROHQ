@@ -19,8 +19,6 @@ type Props = {
    * Desktop/tablet keep the normal `container` column.
    */
   fullBleedMobile?: boolean;
-  /** Use a nearly-invisible deck frame (keeps header/back, removes rim/shadow/blur). */
-  ghostDeck?: boolean;
 };
 
 /**
@@ -35,7 +33,6 @@ export function DashboardHubCommandShell({
   compactHorizontal = false,
   compactVertical = false,
   fullBleedMobile = false,
-  ghostDeck = false,
 }: Props) {
   const dcicMode = useHQStore((s) => s.gameState?.mode?.current ?? "focus");
   const dcicModeVars = useMemo<CSSProperties>(() => {
@@ -67,29 +64,15 @@ export function DashboardHubCommandShell({
         <div
           className={`${compactVertical ? "space-y-2 pt-0" : "space-y-3 pt-2 md:pt-3"} ${compactHorizontal ? "px-0" : "px-1"}`}
         >
-          {ghostDeck ? (
-            <DashboardCommandDeckFrame
-              deckTitle={hubLabel}
-              chrome="ghost"
-              padding="none"
-              outerClassName=""
-              innerClassName={compactVertical ? "gap-3 md:gap-4" : "gap-4"}
-            >
-              <div className="flex flex-col gap-4 [-webkit-overflow-scrolling:touch]">{children}</div>
-            </DashboardCommandDeckFrame>
-          ) : (
-            <div className="hq-frosted-main-shell">
-              <DashboardCommandDeckFrame
-                deckTitle={hubLabel}
-                chrome="default"
-                padding="default"
-                outerClassName="idle-breathing"
-                innerClassName={compactVertical ? "gap-3 md:gap-4" : "gap-4"}
-              >
-                <div className="flex flex-col gap-4 [-webkit-overflow-scrolling:touch]">{children}</div>
-              </DashboardCommandDeckFrame>
-            </div>
-          )}
+          <DashboardCommandDeckFrame
+            deckTitle={hubLabel}
+            chrome="default"
+            padding="default"
+            outerClassName="idle-breathing"
+            innerClassName={compactVertical ? "gap-3 md:gap-4" : "gap-4"}
+          >
+            <div className="flex flex-col gap-4 [-webkit-overflow-scrolling:touch]">{children}</div>
+          </DashboardCommandDeckFrame>
         </div>
       </div>
     </div>
