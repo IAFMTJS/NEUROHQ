@@ -67,17 +67,29 @@ export function DashboardHubCommandShell({
         <div
           className={`${compactVertical ? "space-y-2 pt-0" : "space-y-3 pt-2 md:pt-3"} ${compactHorizontal ? "px-0" : "px-1"}`}
         >
-          <div className="hq-frosted-main-shell">
+          {ghostDeck ? (
             <DashboardCommandDeckFrame
               deckTitle={hubLabel}
-              chrome={ghostDeck ? "ghost" : "default"}
-              padding={ghostDeck ? "none" : "default"}
-              outerClassName="idle-breathing"
+              chrome="ghost"
+              padding="none"
+              outerClassName=""
               innerClassName={compactVertical ? "gap-3 md:gap-4" : "gap-4"}
             >
               <div className="flex flex-col gap-4 [-webkit-overflow-scrolling:touch]">{children}</div>
             </DashboardCommandDeckFrame>
-          </div>
+          ) : (
+            <div className="hq-frosted-main-shell">
+              <DashboardCommandDeckFrame
+                deckTitle={hubLabel}
+                chrome="default"
+                padding="default"
+                outerClassName="idle-breathing"
+                innerClassName={compactVertical ? "gap-3 md:gap-4" : "gap-4"}
+              >
+                <div className="flex flex-col gap-4 [-webkit-overflow-scrolling:touch]">{children}</div>
+              </DashboardCommandDeckFrame>
+            </div>
+          )}
         </div>
       </div>
     </div>

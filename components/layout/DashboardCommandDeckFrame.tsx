@@ -43,14 +43,18 @@ export function DashboardCommandDeckFrame({
         chrome === "ghost" ? "dashboard-command-deck-frame--ghost" : ""
       } ${fillViewport ? "flex min-h-0 flex-1 flex-col" : ""} ${outerClassName}`.trim()}
     >
-      <div
-        className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_75%_55%_at_50%_0%,rgba(var(--mode-rgb),0.07),transparent_58%)]"
-        aria-hidden
-      />
-      <div
-        className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_80%_0%,rgba(var(--mode-rgb),0.05),transparent_55%)]"
-        aria-hidden
-      />
+      {chrome !== "ghost" ? (
+        <>
+          <div
+            className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_75%_55%_at_50%_0%,rgba(var(--mode-rgb),0.07),transparent_58%)]"
+            aria-hidden
+          />
+          <div
+            className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_80%_0%,rgba(var(--mode-rgb),0.05),transparent_55%)]"
+            aria-hidden
+          />
+        </>
+      ) : null}
       {accentFlareClassName ? (
         <div className={`pointer-events-none absolute inset-0 ${accentFlareClassName}`} aria-hidden />
       ) : null}
@@ -59,7 +63,11 @@ export function DashboardCommandDeckFrame({
           padding === "none" ? "p-0" : "p-4 md:p-5"
         } ${fillViewport ? "min-h-0 flex-1" : ""} ${innerClassName}`.trim()}
       >
-        <header className="flex shrink-0 flex-wrap items-start justify-between gap-3 border-b border-[var(--border-soft)] pb-4">
+        <header
+          className={`flex shrink-0 flex-wrap items-start justify-between gap-3 ${
+            chrome === "ghost" ? "pb-3" : "border-b border-[var(--border-soft)] pb-4"
+          }`}
+        >
           <div className="min-w-0 border-l-2 border-[rgba(var(--semantic-accent),0.55)] pl-3">
             <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[var(--semantic-accent)]/90">
               Command
