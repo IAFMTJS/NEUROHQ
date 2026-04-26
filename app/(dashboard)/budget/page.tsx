@@ -273,6 +273,38 @@ export default async function BudgetPage({ searchParams }: Props) {
     </>
   );
 
+  const budgetStatusHeroTop = !historyMode ? (
+    <>
+      <BudgetSyncStatus historyMode={historyMode} suppressChrome />
+      <RemainingBudgetHero
+        budgetCents={budgetSettings.monthly_budget_cents ?? 0}
+        savingsCents={budgetSettings.monthly_savings_cents ?? 0}
+        expensesCents={expensesCents}
+        currency={currency}
+        periodLabel={periodLabel}
+        budgetPeriod={budgetSettings.budget_period}
+        historyMode={historyMode}
+        logDate={today}
+        daysUntilNextIncome={financialInsights?.daysUntilNextIncome ?? null}
+        nextPaydayShortLabel={nextPaydayShortLabel}
+        safeDailySpendCents={canonicalSafeDailySpendCents}
+        previousPeriodRemaining={previousPeriodRemaining}
+        disciplineXpThisWeek={disciplineXpThisWeek}
+        periodStart={periodStart}
+        periodEnd={periodEnd}
+        executeHref={executeEntriesHref}
+        historyMonthParam={monthParam}
+        commandToolbar={budgetCommandToolbar}
+        flexPayload={flexHeroPayload}
+        lockPanelHref={lockPanelHref}
+        scheduledNextBudget={budgetSettings.scheduled_next_budget}
+        weeklyReviewCompleted={weeklyReviewStatus.completed}
+        budgetLedgerEntries={entries}
+        budgetLedgerGoals={goals}
+      />
+    </>
+  ) : null;
+
   const overviewSection = (
     <div className="space-y-4">
       {historyMode && (
@@ -294,33 +326,7 @@ export default async function BudgetPage({ searchParams }: Props) {
       )}
       {!historyMode && (
         <>
-          <BudgetSyncStatus historyMode={historyMode} suppressChrome />
-          <RemainingBudgetHero
-            budgetCents={budgetSettings.monthly_budget_cents ?? 0}
-            savingsCents={budgetSettings.monthly_savings_cents ?? 0}
-            expensesCents={expensesCents}
-            currency={currency}
-            periodLabel={periodLabel}
-            budgetPeriod={budgetSettings.budget_period}
-            historyMode={historyMode}
-            logDate={today}
-            daysUntilNextIncome={financialInsights?.daysUntilNextIncome ?? null}
-            nextPaydayShortLabel={nextPaydayShortLabel}
-            safeDailySpendCents={canonicalSafeDailySpendCents}
-            previousPeriodRemaining={previousPeriodRemaining}
-            disciplineXpThisWeek={disciplineXpThisWeek}
-            periodStart={periodStart}
-            periodEnd={periodEnd}
-            executeHref={executeEntriesHref}
-            historyMonthParam={monthParam}
-            commandToolbar={budgetCommandToolbar}
-            flexPayload={flexHeroPayload}
-            lockPanelHref={lockPanelHref}
-            scheduledNextBudget={budgetSettings.scheduled_next_budget}
-            weeklyReviewCompleted={weeklyReviewStatus.completed}
-            budgetLedgerEntries={entries}
-            budgetLedgerGoals={goals}
-          />
+          {/* Status hero is rendered above the tab shell so it’s always the first thing you see. */}
         </>
       )}
     </div>
@@ -492,6 +498,13 @@ export default async function BudgetPage({ searchParams }: Props) {
     />
   );
 
+  const deckBody = (
+    <>
+      {budgetStatusHeroTop}
+      {budgetTabsShell}
+    </>
+  );
+
   return (
     <BudgetSnapshotProvider>
       <div
@@ -510,13 +523,13 @@ export default async function BudgetPage({ searchParams }: Props) {
               outerClassName="flex min-h-0 flex-1 flex-col"
               innerClassName="min-h-0 flex-1 gap-0"
             >
-              <div className="flex min-h-0 flex-1 flex-col">{budgetTabsShell}</div>
+              <div className="flex min-h-0 flex-1 flex-col">{deckBody}</div>
             </DashboardCommandDeckFrame>
           </div>
         ) : (
           <div className="container page page-wide dashboard-cinematic relative z-10 pb-10">
             <DashboardCommandDeckFrame deckTitle="Budget" chrome="ghost" innerClassName="gap-4">
-              {budgetTabsShell}
+              {deckBody}
             </DashboardCommandDeckFrame>
           </div>
         )}
