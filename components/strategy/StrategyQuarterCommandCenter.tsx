@@ -33,9 +33,9 @@ export function StrategyQuarterCommandCenter({ snapshot, simplifiedLayout = fals
         : "Je zit achter — de engine draait strakker.";
 
   const growthSub =
-    snapshot.growthProtocolQuarter != null
-      ? `${snapshot.growthProtocolQuarter.completedTasks}/${snapshot.growthProtocolQuarter.expectedTasks} protocoltaken dit kwartaal (w${snapshot.growthProtocolQuarter.weekRangeStart}–w${snapshot.growthProtocolQuarter.weekRangeEnd}) · ${snapshot.growthProtocolQuarter.protocolTitle}`
-      : "protocol / leertraject (% vs kwartaaldoel)";
+    snapshot.growthPersonalQuarter != null
+      ? `${snapshot.growthPersonalQuarter.completedTasks}/${snapshot.growthPersonalQuarter.expectedTasks} Personal Growth missies dit kwartaal`
+      : "Personal Growth (% vs kwartaaldoel)";
 
   const execFocus = normalizeExecutionBehaviorFocus(snapshot.engineParams.execution?.behaviorFocus);
   const execSub = EXECUTION_BEHAVIOR_LABELS_NL[execFocus].measure;
@@ -107,7 +107,7 @@ export function StrategyQuarterCommandCenter({ snapshot, simplifiedLayout = fals
             hieronder.
           </p>
           <p className="mt-2 text-[10px] text-[var(--text-muted)]">
-            Growth volgt je protocolweek op Missions; budget via spaartransacties; executie via mission-log.
+            Growth volgt je Personal Growth missies (Growth-tab); budget via spaartransacties; executie via mission-log.
           </p>
           <div className="mt-3 flex flex-wrap gap-x-3 gap-y-1 text-[10px] font-medium">
             <Link href="/tasks" className="text-[var(--semantic-accent)] underline-offset-2 hover:underline">

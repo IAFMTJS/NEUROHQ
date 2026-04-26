@@ -16,7 +16,10 @@ import {
   type QuarterEngineResult,
 } from "@/lib/strategy/quarter-engine";
 import { todayDateString } from "@/lib/utils/timezone";
-import { getActiveProtocolQuarterMissionStats, type ProtocolQuarterMissionStats } from "@/app/actions/protocol-growth-stats";
+import {
+  getPersonalGrowthQuarterMissionStats,
+  type PersonalGrowthQuarterMissionStats,
+} from "@/app/actions/personal-growth-quarter-stats";
 import { loadExecutionQuarterMetrics } from "@/app/actions/execution-quarter-metrics";
 import {
   computeExecutionDisciplinePillar,
@@ -34,8 +37,8 @@ export type QuarterEngineSnapshot = QuarterEngineResult & {
   daysToDeadline: number;
   thesisDeadlinePassed: boolean;
   pressureBoostAfterDeadline: boolean;
-  /** Growth op basis van protocoltaken dit kalenderkwartaal (verwacht over meerdere protocolweken vs afgerond). */
-  growthProtocolQuarter: ProtocolQuarterMissionStats | null;
+  /** Growth op basis van Personal Growth missies dit kalenderkwartaal (verwacht vs afgerond). */
+  growthPersonalQuarter: PersonalGrowthQuarterMissionStats | null;
   /** Ruwe cijfers voor Command-tab kaarten. */
   commandMetrics: QuarterCommandMetrics;
 };
@@ -114,9 +117,9 @@ export const getQuarterEngineSnapshot = cache(async function getQuarterEngineSna
   );
   const today = todayDateString();
   const { start, end } = calendarQuarterBounds(today);
-  const [pacing, protocolQuarterStats, xpEarned, neg, execMetricsBase] = await Promise.all([
+  const [pacing, personalGrowthQuarterStats, xpEarned, neg, execMetricsBase] = await Promise.all([
     getStrategyPacingHints(),
-    getActiveProtocolQuarterMissionStats(),
+    getPersonalGrowthQuarterMissionStats(),
     sumXpEventsInRange(user.id, start, end),
     countMissionOutcomesInQuarter(user.id, start, end),
     loadExecutionQuarterMetrics(user.id, start, end, today),
@@ -139,14 +142,16 @@ export const getQuarterEngineSnapshot = cache(async function getQuarterEngineSna
 
   let growthTargetPct = engineParams.growth.quarterlyLearningProgressTargetPct;
   let growthActualPct = pacing?.learningRoughPct ?? null;
-  let growthProtocolQuarter: ProtocolQuarterMissionStats | null = null;
+  let growthPersonalQuarter: PersonalGrowthQuarterMissionStats | null = null;
 
-  if (protocolQuarterStats && protocolQuarterStats.expectedTasks > 0) {
-    growthProtocolQuarter = protocolQuarterStats;
+  if (personalGrowthQuarterStats && personalGrowthQuarterStats.expectedTasks > 0) {
+    growthPersonalQuarter = personalGrowthQuarterStats;
     growthTargetPct = 100;
     growthActualPct = Math.min(
       100,
-      Math.round((100 * protocolQuarterStats.completedTasks) / protocolQuarterStats.expectedTasks)
+      Math.round(
+        (100 * personalGrowthQuarterStats.completedTasks) / personalGrowthQuarterStats.expectedTasks
+      )
     );
   }
 
@@ -210,7 +215,7 @@ export const getQuarterEngineSnapshot = cache(async function getQuarterEngineSna
     daysToDeadline,
     thesisDeadlinePassed,
     pressureBoostAfterDeadline: boost,
-    growthProtocolQuarter,
+    growthPersonalQuarter,
     commandMetrics,
   };
 });

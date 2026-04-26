@@ -150,7 +150,7 @@ export function buildPillarCardModel(
 
   if (key === "growth") {
     const contractPct = ep.growth.quarterlyLearningProgressTargetPct;
-    const pq = snapshot.growthProtocolQuarter;
+    const pq = snapshot.growthPersonalQuarter;
     const dataLines: string[] = [];
 
     if (contractPct != null && contractPct > 0) {
@@ -158,17 +158,17 @@ export function buildPillarCardModel(
     }
     if (pq != null) {
       dataLines.push(
-        `Protocol ${pq.protocolTitle}: ${pq.completedTasks}/${pq.expectedTasks} taken afgerond dit kwartaal (verwachte set uit weken ${pq.weekRangeStart}–${pq.weekRangeEnd}).`
+        `Personal Growth: ${pq.completedTasks}/${pq.expectedTasks} missies afgerond dit kwartaal (verwacht op basis van ingeplande Growth-taken in dit kwartaal).`
       );
     }
     if (m.growthActualPct != null && m.growthEngineTargetPct != null) {
       dataLines.push(`Engine meet nu: ${m.growthActualPct}% t.o.v. intern doel ${m.growthEngineTargetPct}%.`);
     } else if (!pq && contractPct == null) {
-      dataLines.push("Geen actief protocol-meetlint of leer-% in contract.");
+      dataLines.push("Geen Personal Growth meetlint en geen leer-% in contract.");
     }
 
     const summary = pq
-      ? `Leerpijler volgt je protocol dit kwartaal: ${pq.completedTasks} van ${pq.expectedTasks} verwachte taken zitten op je bord afgerond.`
+      ? `Leerpijler volgt je Personal Growth missies dit kwartaal: ${pq.completedTasks} van ${pq.expectedTasks} ingeplande missies zijn afgerond.`
       : pillar.committed
         ? `Leerpijler gebruikt je contractpercentage (${contractPct ?? "—"}%) en beschikbare voortgangssignalen.`
         : "Zonder leercommitment of bruikbaar protocol blijft deze pijler neutraal.";
@@ -176,13 +176,13 @@ export function buildPillarCardModel(
     const good: string[] = [];
     const bad: string[] = [];
     if (pq && pq.expectedTasks > 0 && pq.completedTasks >= pq.expectedTasks) {
-      good.push("Alle verwachte protocoltaken voor dit kwartaal zijn afgerond.");
+      good.push("Alle ingeplande Personal Growth missies voor dit kwartaal zijn afgerond.");
     }
     if (pq && pq.expectedTasks > 0 && pq.completedTasks === 0) {
-      bad.push("Nog geen afgeronde protocoltaken dit kwartaal — open Missions en rond minstens één stap af.");
+      bad.push("Nog geen afgeronde Personal Growth missies dit kwartaal — plan/voltooi één Growth-missie om te starten.");
     }
     if (pq && pq.expectedTasks > 0 && pq.completedTasks > 0 && pq.completedTasks < pq.expectedTasks) {
-      good.push(`${pq.completedTasks} van ${pq.expectedTasks} verwachte stappen gedaan — elke volgende taak tilt de pijler.`);
+      good.push(`${pq.completedTasks} van ${pq.expectedTasks} ingeplande stappen gedaan — elke volgende missie tilt de pijler.`);
     }
     const { goodPoints, badPoints } = pushGoodBad(pillar.committed, pillar.displayPct, good, bad);
     return {
