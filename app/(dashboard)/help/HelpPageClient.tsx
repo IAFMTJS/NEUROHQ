@@ -351,11 +351,9 @@ export function HelpPageClient({ simplifiedLayout = false }: { simplifiedLayout?
     <div className="help-page mx-auto max-w-5xl pb-8">{helpMainContent}</div>
   ) : (
     <div className="container page help-page mx-auto max-w-5xl pb-24 dashboard-cinematic">
-      <div className="hq-frosted-main-shell">
-        <DashboardCommandDeckFrame deckTitle="Help" innerClassName="gap-4">
-          <div className="mt-0 space-y-6">{helpMainContent}</div>
-        </DashboardCommandDeckFrame>
-      </div>
+      <DashboardCommandDeckFrame deckTitle="Help" chrome="ghost" innerClassName="gap-4">
+        <div className="mt-0 space-y-6">{helpMainContent}</div>
+      </DashboardCommandDeckFrame>
     </div>
   );
 

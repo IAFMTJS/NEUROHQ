@@ -34,14 +34,9 @@ export default async function MakerAnalyticsPage() {
 
   return (
     <div className="container page page-wide dashboard-cinematic pb-10">
-      <div className="hq-frosted-main-shell">
-        <DashboardCommandDeckFrame deckTitle="Maker dashboard" innerClassName="gap-4">
-          <div className="space-y-6">
-      <HQPageHeader
-        compact
-        title="Maker dashboard"
-        subtitle="High-level funnel and engine health (admin only)."
-      />
+      <DashboardCommandDeckFrame deckTitle="Maker dashboard" chrome="ghost" innerClassName="gap-4">
+        <div className="space-y-6">
+          <HQPageHeader compact title="Maker dashboard" subtitle="High-level funnel and engine health (admin only)." />
 
       <section className="glass-card p-4">
         <div className="flex items-center justify-between gap-2">
@@ -258,9 +253,8 @@ export default async function MakerAnalyticsPage() {
         This page is for internal engine sanity‑checks. Counts for forced confrontations and Minimal
         Integrity missions are based on analytics_events going forward.
       </p>
-          </div>
-        </DashboardCommandDeckFrame>
-      </div>
+        </div>
+      </DashboardCommandDeckFrame>
     </div>
   );
 }

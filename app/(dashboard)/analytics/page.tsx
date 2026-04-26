@@ -361,16 +361,14 @@ async function AnalyticsContent() {
 export default function AnalyticsPage() {
   return (
     <div className="container page page-wide dashboard-cinematic pb-10">
-      <div className="hq-frosted-main-shell">
-        <DashboardCommandDeckFrame deckTitle="Analytics" innerClassName="gap-4">
-          <div className="space-y-6">
-            <AnalyticsShell />
-            <Suspense fallback={<AnalyticsSnapshotFallback />}>
-              <AnalyticsContent />
-            </Suspense>
-          </div>
-        </DashboardCommandDeckFrame>
-      </div>
+      <DashboardCommandDeckFrame deckTitle="Analytics" chrome="ghost" innerClassName="gap-4">
+        <div className="space-y-6">
+          <AnalyticsShell />
+          <Suspense fallback={<AnalyticsSnapshotFallback />}>
+            <AnalyticsContent />
+          </Suspense>
+        </div>
+      </DashboardCommandDeckFrame>
     </div>
   );
 }

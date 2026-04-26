@@ -96,18 +96,16 @@ export default async function LearningAnalyticsPage(_props: Props) {
 
   return (
     <div className="container page page-wide dashboard-cinematic pb-10">
-      <div className="hq-frosted-main-shell">
-        <DashboardCommandDeckFrame deckTitle="Growth analytics" innerClassName="gap-4">
-          <div className="space-y-6">
-            <HQPageHeader
-              compact
-              title="Growth analytics"
-              subtitle="Trends in your learning sessions and topic focus."
-            />
-            {body}
-          </div>
-        </DashboardCommandDeckFrame>
-      </div>
+      <DashboardCommandDeckFrame deckTitle="Growth analytics" chrome="ghost" innerClassName="gap-4">
+        <div className="space-y-6">
+          <HQPageHeader
+            compact
+            title="Growth analytics"
+            subtitle="Trends in your learning sessions and topic focus."
+          />
+          {body}
+        </div>
+      </DashboardCommandDeckFrame>
     </div>
   );
 }
