@@ -585,82 +585,6 @@ export function RemainingBudgetHero({
           </div>
         ) : null}
 
-        {flexPayload != null && !historyMode && !flexPayload.enabled ? (
-          <p className="relative z-[1] mt-3 border-b border-[rgba(var(--mode-rgb),0.08)] pb-3 text-[11px] leading-snug text-[var(--text-muted)]">
-            <span className="font-medium text-[var(--text-secondary)]">Flex-laag</span> (beloningen en straffen) zet je
-            aan en stel je in via <span className="text-[var(--text-primary)]">Budget bewerken</span>.
-          </p>
-        ) : null}
-
-        {flexPayload?.enabled && (
-          <div className="relative z-[1] mt-4 grid gap-2 sm:grid-cols-2">
-            <div className="rounded-xl border border-[rgba(var(--mode-rgb),0.22)] bg-black/25 px-3 py-2.5">
-              <p className="text-[9px] font-bold uppercase tracking-[0.14em] text-[var(--text-muted)]">Base (vast)</p>
-              <p className="mt-0.5 text-lg font-semibold tabular-nums text-[var(--text-primary)]">
-                {formatCents(spendableCents, effectiveCurrency)}
-              </p>
-              <p className="mt-0.5 text-[10px] leading-snug text-[var(--text-muted)]">
-                Budget minus spaarreserve — vaste lijn voor normaal leven.
-              </p>
-            </div>
-            <div className="rounded-xl border border-emerald-500/25 bg-emerald-950/20 px-3 py-2.5">
-              <p className="text-[9px] font-bold uppercase tracking-[0.14em] text-emerald-200/90">Flex (game)</p>
-              <p className="mt-0.5 text-lg font-semibold tabular-nums text-emerald-100">
-                {formatCents(flexPayload.flexCents, effectiveCurrency)}
-                {flexPayload.todayDeltaCents !== 0 ? (
-                  <span
-                    className={`ml-2 text-sm font-medium tabular-nums ${
-                      flexPayload.todayDeltaCents > 0 ? "text-emerald-300" : "text-rose-300"
-                    }`}
-                  >
-                    ({flexPayload.todayDeltaCents > 0 ? "+" : ""}
-                    {formatCents(flexPayload.todayDeltaCents, effectiveCurrency)} vandaag)
-                  </span>
-                ) : null}
-              </p>
-              <p className="mt-0.5 text-[10px] leading-snug text-[var(--text-muted)]">
-                Alleen voor niet-essentieel · Strategy: {flexPayload.strategyMultiplierLabel}
-              </p>
-            </div>
-            {(flexPayload.weekEarnedCents > 0 || flexPayload.weekLostCents > 0) && (
-              <div className="space-y-0.5 text-[11px] leading-snug text-[var(--text-secondary)] sm:col-span-2">
-                {flexPayload.weekEarnedCents > 0 ? (
-                  <p>
-                    Deze week verdiend op flex:{" "}
-                    <span className="font-medium tabular-nums text-emerald-300">
-                      {formatCents(flexPayload.weekEarnedCents, effectiveCurrency)}
-                    </span>
-                  </p>
-                ) : null}
-                {flexPayload.weekLostCents > 0 ? (
-                  <p>
-                    Deze week kwijt door regels:{" "}
-                    <span className="font-medium tabular-nums text-rose-300">
-                      {formatCents(flexPayload.weekLostCents, effectiveCurrency)}
-                    </span>
-                  </p>
-                ) : null}
-              </div>
-            )}
-          </div>
-        )}
-
-        {flexPayload?.enabled && flexPayload.lockTier === "critical" && lockPanelHref ? (
-          <div className="relative z-[1] mt-3 rounded-lg border border-rose-500/35 bg-rose-950/30 px-3 py-2 text-[11px] leading-snug text-rose-100">
-            Flex onder €20 —{" "}
-            <Link href={lockPanelHref} className="font-semibold underline underline-offset-2">
-              open no-spend lock
-            </Link>{" "}
-            en houd base strak.
-          </div>
-        ) : null}
-
-        {flexPayload?.enabled && flexPayload.lockTier === "bonus" ? (
-          <div className="relative z-[1] mt-3 rounded-lg border border-emerald-500/30 bg-emerald-950/25 px-3 py-2 text-[11px] leading-snug text-emerald-100">
-            Flex boven €100 — bonuszone: meer ruimte; blijf niet-essentieel uit flex halen.
-          </div>
-        ) : null}
-
         <div className="relative z-[1] mt-5 grid gap-8 lg:grid-cols-[minmax(0,auto)_1fr] lg:items-center lg:gap-10">
           <div className="flex justify-center lg:justify-start">
             <div className="relative">
@@ -778,6 +702,82 @@ export function RemainingBudgetHero({
             )}
           </div>
         </div>
+
+        {flexPayload != null && !historyMode && !flexPayload.enabled ? (
+          <p className="relative z-[1] mt-3 border-b border-[rgba(var(--mode-rgb),0.08)] pb-3 text-[11px] leading-snug text-[var(--text-muted)]">
+            <span className="font-medium text-[var(--text-secondary)]">Flex-laag</span> (beloningen en straffen) zet je
+            aan en stel je in via <span className="text-[var(--text-primary)]">Budget bewerken</span>.
+          </p>
+        ) : null}
+
+        {flexPayload?.enabled && (
+          <div className="relative z-[1] mt-4 grid gap-2 sm:grid-cols-2">
+            <div className="rounded-xl border border-[rgba(var(--mode-rgb),0.22)] bg-black/25 px-3 py-2.5">
+              <p className="text-[9px] font-bold uppercase tracking-[0.14em] text-[var(--text-muted)]">Base (vast)</p>
+              <p className="mt-0.5 text-lg font-semibold tabular-nums text-[var(--text-primary)]">
+                {formatCents(spendableCents, effectiveCurrency)}
+              </p>
+              <p className="mt-0.5 text-[10px] leading-snug text-[var(--text-muted)]">
+                Budget minus spaarreserve — vaste lijn voor normaal leven.
+              </p>
+            </div>
+            <div className="rounded-xl border border-emerald-500/25 bg-emerald-950/20 px-3 py-2.5">
+              <p className="text-[9px] font-bold uppercase tracking-[0.14em] text-emerald-200/90">Flex (game)</p>
+              <p className="mt-0.5 text-lg font-semibold tabular-nums text-emerald-100">
+                {formatCents(flexPayload.flexCents, effectiveCurrency)}
+                {flexPayload.todayDeltaCents !== 0 ? (
+                  <span
+                    className={`ml-2 text-sm font-medium tabular-nums ${
+                      flexPayload.todayDeltaCents > 0 ? "text-emerald-300" : "text-rose-300"
+                    }`}
+                  >
+                    ({flexPayload.todayDeltaCents > 0 ? "+" : ""}
+                    {formatCents(flexPayload.todayDeltaCents, effectiveCurrency)} vandaag)
+                  </span>
+                ) : null}
+              </p>
+              <p className="mt-0.5 text-[10px] leading-snug text-[var(--text-muted)]">
+                Alleen voor niet-essentieel · Strategy: {flexPayload.strategyMultiplierLabel}
+              </p>
+            </div>
+            {(flexPayload.weekEarnedCents > 0 || flexPayload.weekLostCents > 0) && (
+              <div className="space-y-0.5 text-[11px] leading-snug text-[var(--text-secondary)] sm:col-span-2">
+                {flexPayload.weekEarnedCents > 0 ? (
+                  <p>
+                    Deze week verdiend op flex:{" "}
+                    <span className="font-medium tabular-nums text-emerald-300">
+                      {formatCents(flexPayload.weekEarnedCents, effectiveCurrency)}
+                    </span>
+                  </p>
+                ) : null}
+                {flexPayload.weekLostCents > 0 ? (
+                  <p>
+                    Deze week kwijt door regels:{" "}
+                    <span className="font-medium tabular-nums text-rose-300">
+                      {formatCents(flexPayload.weekLostCents, effectiveCurrency)}
+                    </span>
+                  </p>
+                ) : null}
+              </div>
+            )}
+          </div>
+        )}
+
+        {flexPayload?.enabled && flexPayload.lockTier === "critical" && lockPanelHref ? (
+          <div className="relative z-[1] mt-3 rounded-lg border border-rose-500/35 bg-rose-950/30 px-3 py-2 text-[11px] leading-snug text-rose-100">
+            Flex onder €20 —{" "}
+            <Link href={lockPanelHref} className="font-semibold underline underline-offset-2">
+              open no-spend lock
+            </Link>{" "}
+            en houd base strak.
+          </div>
+        ) : null}
+
+        {flexPayload?.enabled && flexPayload.lockTier === "bonus" ? (
+          <div className="relative z-[1] mt-3 rounded-lg border border-emerald-500/30 bg-emerald-950/25 px-3 py-2 text-[11px] leading-snug text-emerald-100">
+            Flex boven €100 — bonuszone: meer ruimte; blijf niet-essentieel uit flex halen.
+          </div>
+        ) : null}
 
         {!historyMode && cycleMeta.segments.length > 0 && (
           <div className="relative z-[1] mt-6 border-t border-[rgba(var(--mode-rgb),0.1)] pt-5">
