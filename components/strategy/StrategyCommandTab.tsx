@@ -546,7 +546,7 @@ export function StrategyCommandTab({ snapshot }: Props) {
   return (
     <div className="space-y-6">
       <section
-        className="rounded-[22px] border border-[var(--card-border)] bg-[var(--bg-elevated)] p-5 shadow-[var(--shadow-card)] sm:p-6"
+        className="card-simple p-5 sm:p-6"
         aria-label="Command"
       >
         <p className="text-center text-[10px] font-bold uppercase tracking-[0.2em] text-[var(--semantic-accent)]">
@@ -579,7 +579,7 @@ export function StrategyCommandTab({ snapshot }: Props) {
       </div>
 
       {snapshot.ruleLinesNl.length > 0 ? (
-        <section className="rounded-xl border border-[rgba(var(--mode-rgb),0.2)] bg-[rgba(var(--mode-rgb-deep),0.08)] p-4">
+        <section className="card-simple p-4">
           <h3 className="text-[10px] font-bold uppercase tracking-[0.18em] text-[var(--semantic-accent)]">
             Engine-regels actief
           </h3>
